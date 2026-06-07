@@ -573,9 +573,9 @@ it('schema tool whose name collides with a core tool is absent from tools/list (
 	expect($toolNames)->toContain('find_listings');
 
 	// Verify the collision warning was logged to mcp-activity.log.
-	$logDir     = (string)TotalCMS\Support\Config::init()->logger["path"];
-	$today      = date("Y-m-d");
-	$logFile    = $logDir . "/mcp-" . $today . ".log";
+	$logDir     = (string)Config::init()->logger['path'];
+	$today      = date('Y-m-d');
+	$logFile    = $logDir . '/mcp-' . $today . '.log';
 
 	if (file_exists($logFile)) {
 		$logContents = (string)file_get_contents($logFile);
@@ -675,9 +675,9 @@ it('schema-vs-schema collision: find_active defined in two collections is absent
 	expect($toolNames)->toContain('find_listings');
 
 	// Verify the cross-collection collision warning was logged.
-	$logDir  = (string)TotalCMS\Support\Config::init()->logger["path"];
-	$today   = date("Y-m-d");
-	$logFile = $logDir . "/mcp-" . $today . ".log";
+	$logDir  = (string)Config::init()->logger['path'];
+	$today   = date('Y-m-d');
+	$logFile = $logDir . '/mcp-' . $today . '.log';
 
 	if (file_exists($logFile)) {
 		$logContents = (string)file_get_contents($logFile);

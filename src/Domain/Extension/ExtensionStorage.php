@@ -29,7 +29,7 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
  * flags `file_put_contents`/`fopen` in extension code as worth a human look,
  * precisely because writes outside this sanctioned area are unconstrained.
  */
-final class ExtensionStorage
+final readonly class ExtensionStorage
 {
 	/**
 	 * @param StorageAdapterInterface $storage      Datadir-rooted storage adapter
@@ -37,9 +37,9 @@ final class ExtensionStorage
 	 * @param string                  $relativeBase Extension storage dir, relative to datadir
 	 */
 	public function __construct(
-		private readonly StorageAdapterInterface $storage,
-		private readonly string $datadir,
-		private readonly string $relativeBase,
+		private StorageAdapterInterface $storage,
+		private string $datadir,
+		private string $relativeBase,
 	) {
 	}
 

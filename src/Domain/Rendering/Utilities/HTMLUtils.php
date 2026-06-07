@@ -239,10 +239,10 @@ class HTMLUtils
 	/**
 	 * Build a single <option> element from a string or value/label array.
 	 *
-	 * @param string|array<string,string> $option
+	 * @param int|string|array<string,string> $option
 	 * @param array<string> $selectedValues
 	 */
-	private static function buildOptionElement(string|array $option, array $selectedValues): string
+	private static function buildOptionElement(int|string|array $option, array $selectedValues): string
 	{
 		if (is_array($option)) {
 			// String-cast so the strict selected match below isn't defeated by

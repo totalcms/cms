@@ -109,8 +109,8 @@ describe('ExtensionManager::getEnableReview', function (): void {
 		// Re-flag the same manifest as bundled (ships reviewed with core) —
 		// the identical source must now produce zero findings. Risky
 		// capability FYIs are unaffected by the bundled exemption.
-		$reflection = new ReflectionProperty($manager, 'discoveredManifests');
-		$manifests  = $reflection->getValue($manager);
+		$reflection                             = new ReflectionProperty($manager, 'discoveredManifests');
+		$manifests                              = $reflection->getValue($manager);
 		$manifests['test-vendor/dangerous-ext'] = $manifests['test-vendor/dangerous-ext']->withBundled(true);
 		$reflection->setValue($manager, $manifests);
 

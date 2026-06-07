@@ -111,7 +111,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->extensionManager->method('matchExtensionAdminRoute')
 			->with('test-vendor/hello-world', 'GET', '/dashboard')
-			->willReturn(new ExtensionRoute(handler: fn () => null, permission: 'admin'));
+			->willReturn(new ExtensionRoute(handler: fn (): null => null, permission: 'admin'));
 
 		$this->handler->expects($this->never())->method('handle');
 		$this->forbiddenResponse->expects($this->once())->method('withStatus')->with(403);
@@ -125,7 +125,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->extensionManager->method('matchExtensionAdminRoute')
 			->with('test-vendor/hello-world', 'GET', '/everyone')
-			->willReturn(new ExtensionRoute(handler: fn () => null, permission: 'any'));
+			->willReturn(new ExtensionRoute(handler: fn (): null => null, permission: 'any'));
 		$this->accessControl->method('canAccessExtension')
 			->with('regular-user', 'test-vendor/hello-world')
 			->willReturn(true);
@@ -140,7 +140,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 	test('denies a permission-any extension route when the group does not grant the extension', function (): void {
 		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->extensionManager->method('matchExtensionAdminRoute')
-			->willReturn(new ExtensionRoute(handler: fn () => null, permission: 'any'));
+			->willReturn(new ExtensionRoute(handler: fn (): null => null, permission: 'any'));
 		$this->accessControl->method('canAccessExtension')->willReturn(false);
 
 		$this->handler->expects($this->never())->method('handle');

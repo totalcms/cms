@@ -22,7 +22,7 @@ use TotalCMS\Support\Config;
  * with a warning, and the extension itself still loads.
  */
 
-/** @return array{0: ExtensionManager, 1: \DI\Container, 2: object} */
+/** @return array{0: ExtensionManager, 1: DI\Container, 2: object} */
 function containerGuardSetup(): array
 {
 	$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
@@ -56,7 +56,7 @@ function containerGuardSetup(): array
 
 	// Real PHP-DI container so the definition-apply path actually runs.
 	// 'core.protected-entry' stands in for an explicitly defined core entry.
-	$container = new \DI\Container();
+	$container = new DI\Container();
 	$container->set('core.protected-entry', (object)['source' => 'core']);
 
 	$discovery = new ExtensionDiscovery($config, $manifestValidator, $logger);
@@ -106,7 +106,7 @@ describe('Container definition override guard', function (): void {
 		$reflection = new ReflectionMethod($manager, 'isProtectedServiceId');
 
 		expect($reflection->invoke($manager, 'TotalCMS\\Bundled\\Pushover\\PushoverService', []))->toBeFalse()
-			->and($reflection->invoke($manager, 'TotalCMS\\Domain\\Auth\\Service\\LoginService', []))->toBeTrue()
+			->and($reflection->invoke($manager, TotalCMS\Domain\Auth\Service\LoginService::class, []))->toBeTrue()
 			->and($reflection->invoke($manager, 'Acme\\Anything\\Service', []))->toBeFalse()
 			->and($reflection->invoke($manager, 'Acme\\Anything\\Service', ['Acme\\Anything\\Service' => 0]))->toBeTrue();
 	});

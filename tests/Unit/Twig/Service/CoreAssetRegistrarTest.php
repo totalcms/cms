@@ -183,7 +183,6 @@ test('rendered head output contains api-prefixed URLs after registration', funct
 	expect($html)->toContain('href="/myapi/assets/');
 });
 
-
 // ===== Cache-busting =====
 
 test('core asset URLs cache-bust with the file mtime', function (): void {

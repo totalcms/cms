@@ -64,6 +64,6 @@ it('resolves every lazily-registered core event listener from the real container
 // AutomationEventSubscriber is registered with a hand-rolled closure (not $lazy)
 // so the parse above doesn't see it — pin it explicitly.
 it('resolves AutomationEventSubscriber from the real container', function (): void {
-	$subscriber = $this->app->getContainer()->get(\TotalCMS\Domain\Automation\Service\AutomationEventSubscriber::class);
-	expect($subscriber)->toBeInstanceOf(\TotalCMS\Domain\Automation\Service\AutomationEventSubscriber::class);
+	$subscriber = $this->app->getContainer()->get(TotalCMS\Domain\Automation\Service\AutomationEventSubscriber::class);
+	expect($subscriber)->toBeInstanceOf(TotalCMS\Domain\Automation\Service\AutomationEventSubscriber::class);
 });
