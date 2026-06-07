@@ -643,4 +643,52 @@ readonly class AccessControlService
 	{
 		return $group->permissions['builder'] ?? ($group->permissions['templates'] ?? false);
 	}
+
+	/**
+	 * Check if user can access an extension's admin surface (nav items,
+	 * dashboard widgets, and admin pages registered with permission 'any').
+	 * Admin-only extension pages are unaffected — they require a super
+	 * admin regardless of groups.
+	 */
+	public function canAccessExtension(string $userId, string $extensionId): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId)) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true on first match
+		foreach ($groups as $group) {
+			if ($this->groupCanAccessExtension($group, $extensionId)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if a single group can access an extension's admin surface.
+	 *
+	 * Groups saved before the `extensions` block existed fall back to
+	 * all=true — extension nav items marked 'any' were visible to every
+	 * dashboard user until now, so upgrades preserve that. Restriction is
+	 * opt-in via the access-group form.
+	 */
+	private function groupCanAccessExtension(AccessGroupData $group, string $extensionId): bool
+	{
+		$permissions = $group->permissions['extensions'] ?? ['all' => true, 'allowed' => []];
+
+		if (($permissions['all'] ?? false) === true) {
+			return true;
+		}
+
+		return in_array($extensionId, (array)($permissions['allowed'] ?? []), true);
+	}
 }

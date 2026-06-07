@@ -176,6 +176,8 @@ The routes above are accessible at:
 
 Pass `permission: 'any'` per route to open a page to non-admin dashboard users; anything else means admin-only. Set the same value on the [admin navigation item](#admin-navigation) that links to the page — the nav `permission` controls who *sees the link*, the route `permission` controls who *can load the page*.
 
+Operators have the final say over `'any'` surfaces: each access group has an **Extension Access** list (Utilities → Access Groups) that controls which extensions' nav items, widgets, and `'any'` pages its members can see and open. Groups default to all-extensions-granted; `admin` pages are unaffected (super admins only, always).
+
 ### Public Routes
 
 Register unauthenticated routes under `/ext/{vendor}/{name}/`. These routes have no authentication — use for webhooks, embeds, and endpoints that must be accessible without credentials.

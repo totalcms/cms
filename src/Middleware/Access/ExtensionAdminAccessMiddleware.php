@@ -65,18 +65,24 @@ readonly class ExtensionAdminAccessMiddleware extends BaseAccessMiddleware
 	/**
 	 * Super admins bypass in the base class — reaching here means the user
 	 * is NOT an admin, so only routes explicitly registered with
-	 * permission: 'any' pass.
+	 * permission: 'any' pass — and only when the user's access group grants
+	 * this extension (the `extensions` block; missing block = all granted).
 	 */
 	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
 	{
-		$route = $this->matchedExtensionRoute($request);
+		$extensionId = $this->requestedExtensionId($request);
+		$route       = $this->matchedExtensionRoute($request, $extensionId);
 
 		// Unknown extension or path — let the dispatcher 404 it.
 		if (!$route instanceof ExtensionRoute) {
 			return true;
 		}
 
-		return $route->permission === 'any';
+		if ($route->permission !== 'any') {
+			return false;
+		}
+
+		return $this->accessControl->canAccessExtension($userId, $extensionId);
 	}
 
 	/**
@@ -95,24 +101,33 @@ readonly class ExtensionAdminAccessMiddleware extends BaseAccessMiddleware
 		};
 	}
 
-	private function matchedExtensionRoute(ServerRequestInterface $request): ?ExtensionRoute
+	private function requestedExtensionId(ServerRequestInterface $request): string
 	{
-		$route = RouteContext::fromRequest($request)->getRoute();
-		if (!$route instanceof RouteInterface) {
-			return null;
-		}
+		$args = $this->routeArguments($request);
 
-		$args        = $route->getArguments();
-		$extensionId = ($args['vendor'] ?? '') . '/' . ($args['name'] ?? '');
+		return ($args['vendor'] ?? '') . '/' . ($args['name'] ?? '');
+	}
 
+	private function matchedExtensionRoute(ServerRequestInterface $request, string $extensionId): ?ExtensionRoute
+	{
 		if (!$this->extensionManager->isEnabled($extensionId)) {
 			return null;
 		}
+
+		$args = $this->routeArguments($request);
 
 		return $this->extensionManager->matchExtensionAdminRoute(
 			$extensionId,
 			strtoupper($request->getMethod()),
 			'/' . ltrim($args['path'] ?? '', '/'),
 		);
+	}
+
+	/** @return array<string,string> */
+	private function routeArguments(ServerRequestInterface $request): array
+	{
+		$route = RouteContext::fromRequest($request)->getRoute();
+
+		return $route instanceof RouteInterface ? $route->getArguments() : [];
 	}
 }

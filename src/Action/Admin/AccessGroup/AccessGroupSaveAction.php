@@ -89,6 +89,7 @@ readonly class AccessGroupSaveAction
 		$collectionsAll     = isset($data['collections-all']) && in_array('all', (array)$data['collections-all']);
 		$schemasAll         = isset($data['schemas-all']) && in_array('all', (array)$data['schemas-all']);
 		$utilsAll           = isset($data['utils-all']) && in_array('all', (array)$data['utils-all']);
+		$extensionsAll      = isset($data['extensions-all']) && in_array('all', (array)$data['extensions-all']);
 		$settingsAll        = isset($data['settings-all']) && in_array('all', (array)$data['settings-all']);
 
 		return [
@@ -119,6 +120,10 @@ readonly class AccessGroupSaveAction
 			'settings' => [
 				'all'     => $settingsAll,
 				'allowed' => $settingsAll ? [] : ($data['settings-allowed'] ?? []),
+			],
+			'extensions' => [
+				'all'     => $extensionsAll,
+				'allowed' => $extensionsAll ? [] : ($data['extensions-allowed'] ?? []),
 			],
 		];
 	}

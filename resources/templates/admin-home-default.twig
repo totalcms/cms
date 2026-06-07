@@ -53,7 +53,7 @@
 			{# Extension widgets (main area) #}
 			{% if extensionDashWidgets is defined %}
 				{% for widget in extensionDashWidgets %}
-					{% if widget.position == 'main' %}
+					{% if widget.position == 'main' and cms.auth.canAccessExtension(widget.extensionId) %}
 						{% include widget.template ignore missing %}
 					{% endif %}
 				{% endfor %}
@@ -77,7 +77,7 @@
 			{# Extension widgets (sidebar) #}
 			{% if extensionDashWidgets is defined %}
 				{% for widget in extensionDashWidgets %}
-					{% if widget.position == 'sidebar' %}
+					{% if widget.position == 'sidebar' and cms.auth.canAccessExtension(widget.extensionId) %}
 						{% include widget.template ignore missing %}
 					{% endif %}
 				{% endfor %}

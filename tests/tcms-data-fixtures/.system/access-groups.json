@@ -94,6 +94,10 @@
                 "settings": {
                     "all": false,
                     "allowed": []
+                },
+                "extensions": {
+                    "all": false,
+                    "allowed": ["test-vendor/hello-world"]
                 }
             }
         },
@@ -270,6 +274,10 @@
                     "allowed": []
                 },
                 "settings": {
+                    "all": false,
+                    "allowed": []
+                },
+                "extensions": {
                     "all": false,
                     "allowed": []
                 }

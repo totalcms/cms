@@ -68,6 +68,10 @@ readonly class AccessGroupData
 				'all'     => false,
 				'allowed' => [],
 			],
+			'extensions' => [
+				'all'     => true,
+				'allowed' => [],
+			],
 		];
 	}
 

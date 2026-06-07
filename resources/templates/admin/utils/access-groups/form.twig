@@ -176,8 +176,6 @@
 					)|merge(
 						group.permissions.docs ? ["docs"] : []
 					)|merge(
-						{# legacy fallback: groups saved before the builder permission existed
-						   inherit their templates access (which is what gated Builder) #}
 						group.permissions.builder ?? group.permissions.templates ? ["builder"] : []
 					)
 				) : ["docs", "mailer", "playground", "dataviews", "builder"],
@@ -229,6 +227,39 @@
 					}
 				}
 			}) }}
+
+			{% if extensions is defined and extensions|length > 0 %}
+				{{ cms.form.field("multicheckbox", "extensions-all", {
+					label    : t('access_groups.extensions_access'),
+					value    : group ? ((group.permissions.extensions.all ?? true) ? ["all"] : []) : ["all"],
+					options  : [
+						{value: "all", label: t('access_groups.all_extensions')}
+					]
+				}) }}
+
+				{% set extensionOptions = [] %}
+				{% for extId, extName in extensions %}
+					{% set extensionOptions = extensionOptions|merge([{
+						value: extId,
+						label: extName
+					}]) %}
+				{% endfor %}
+
+				{{ cms.form.field("multicheckbox", "extensions-allowed", {
+					label    : t('access_groups.specific_extensions'),
+					help     : t('access_groups.select_extensions'),
+					value    : group ? (group.permissions.extensions.allowed ?? []) : [],
+					options  : extensionOptions,
+					settings : {
+						fieldColumns: "200px",
+						visibility : {
+							watch : "extensions-all",
+							value : "all",
+							operator: "not_in"
+						}
+					}
+				}) }}
+			{% endif %}
 
 		</div>
 	{% endset %}

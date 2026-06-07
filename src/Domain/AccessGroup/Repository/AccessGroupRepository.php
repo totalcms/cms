@@ -56,6 +56,10 @@ class AccessGroupRepository extends StorageRepository
 				'all'     => true,
 				'allowed' => [],
 			],
+			'extensions' => [
+				'all'     => true,
+				'allowed' => [],
+			],
 		],
 	];
 
@@ -92,6 +96,10 @@ class AccessGroupRepository extends StorageRepository
 			'settings' => [
 				'all'     => false,
 				'allowed' => ['general', 'dashboard'],
+			],
+			'extensions' => [
+				'all'     => true,
+				'allowed' => [],
 			],
 		],
 	];
@@ -130,6 +138,10 @@ class AccessGroupRepository extends StorageRepository
 				'all'     => false,
 				'allowed' => [],
 			],
+			'extensions' => [
+				'all'     => true,
+				'allowed' => [],
+			],
 		],
 	];
 
@@ -165,6 +177,10 @@ class AccessGroupRepository extends StorageRepository
 			],
 			'settings' => [
 				'all'     => false,
+				'allowed' => [],
+			],
+			'extensions' => [
+				'all'     => true,
 				'allowed' => [],
 			],
 		],

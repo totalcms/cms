@@ -48,6 +48,7 @@ readonly class AdminUtilsAction
 		private OAuthClientRepository $oauthClientRepository,
 		private OAuthGrantRepository $oauthGrantRepository,
 		private OAuthScopeRegistry $oauthScopeRegistry,
+		private \TotalCMS\Domain\Extension\Service\ExtensionManager $extensionManager,
 	) {
 	}
 
@@ -272,6 +273,7 @@ readonly class AdminUtilsAction
 			'groups'      => $this->accessGroupLister->listAll(),
 			'collections' => $this->collectionLister->listAllCollections(),
 			'schemas'     => $this->schemaLister->listAllSchemas(),
+			'extensions'  => $this->extensionManager->listExtensionsWithAdminSurface(),
 			'group'       => $isEdit ? $this->accessGroupLister->findById($action) : '',
 			'isEdit'      => $isEdit,
 		];

@@ -169,7 +169,7 @@ window.TCMS_QUICK_NAV = [
 {# ── Extension nav items ── #}
 {% if extensionNavItems is defined and extensionNavItems is iterable %}
 {% for item in extensionNavItems %}
-{% if item.permission == 'any' or (item.permission == 'admin' and cms.auth.isAdmin()) %}
+{% if (item.permission == 'any' and cms.auth.canAccessExtension(item.extensionId)) or (item.permission == 'admin' and cms.auth.isAdmin()) %}
 {"label":"{{ item.label | e('js') }}","section":"Extensions","path":"{{ item.url | e('js') }}","keywords":"extension plugin"},
 {% endif %}
 {% endfor %}

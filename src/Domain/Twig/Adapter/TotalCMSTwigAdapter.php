@@ -197,6 +197,7 @@ class TotalCMSTwigAdapter
 			'canAccessProjectSetup'        => ['auth', 'canAccessProjectSetup'],
 			'canAccessDataViews'           => ['auth', 'canAccessDataViews'],
 			'canAccessBuilder'             => ['auth', 'canAccessBuilder'],
+			'canAccessExtension'           => ['auth', 'canAccessExtension'],
 			'canAccessImport'              => ['auth', 'canAccessImport'],
 			'canDeleteObjects'             => ['auth', 'canDeleteObjects'],
 			'canEditObjects'               => ['auth', 'canEditObjects'],

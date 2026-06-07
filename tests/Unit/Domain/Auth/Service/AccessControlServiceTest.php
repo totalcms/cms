@@ -208,6 +208,29 @@ describe('AccessControlService - Builder Access', function (): void {
 	});
 });
 
+describe('AccessControlService - Extensions Access', function (): void {
+	it('allows admin access to any extension', function (): void {
+		expect($this->accessControl->canAccessExtension('admin', 'test-vendor/hello-world'))->toBeTrue();
+	});
+
+	it('falls back to all-granted for groups without an extensions block', function (): void {
+		// editor predates the extensions block — extension nav marked 'any'
+		// was visible to every dashboard user, so upgrades preserve that.
+		expect($this->accessControl->canAccessExtension('editor-user-test-com', 'test-vendor/hello-world'))->toBeTrue();
+	});
+
+	it('honors an explicit allowed list', function (): void {
+		// blogger has extensions all=false, allowed=[test-vendor/hello-world].
+		expect($this->accessControl->canAccessExtension('blogger-user-test-com', 'test-vendor/hello-world'))->toBeTrue();
+		expect($this->accessControl->canAccessExtension('blogger-user-test-com', 'acme/other-ext'))->toBeFalse();
+	});
+
+	it('denies a group with all=false and an empty allowed list', function (): void {
+		// viewer has extensions all=false, allowed=[].
+		expect($this->accessControl->canAccessExtension('viewer-user-test-com', 'test-vendor/hello-world'))->toBeFalse();
+	});
+});
+
 describe('AccessControlService - Docs Access', function (): void {
 	it('allows all users docs access except limited-blogger', function (): void {
 		expect($this->accessControl->canAccessDocs('admin'))->toBeTrue();

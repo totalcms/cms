@@ -1077,7 +1077,11 @@ class ExtensionManager
 			if (!$this->isCapabilityPermitted($id, 'admin:nav')) {
 				continue;
 			}
-			$items = array_merge($items, $context->getRegisteredAdminNavItems());
+			foreach ($context->getRegisteredAdminNavItems() as $item) {
+				// Stamp the owning extension so templates can apply the
+				// access-group extension grant — never author-supplied.
+				$items[] = $item->withExtensionId($id);
+			}
 		}
 
 		usort($items, fn (AdminNavItem $a, AdminNavItem $b): int => $a->priority <=> $b->priority);
@@ -1093,12 +1097,45 @@ class ExtensionManager
 			if (!$this->isCapabilityPermitted($id, 'admin:widgets')) {
 				continue;
 			}
-			$widgets = array_merge($widgets, $context->getRegisteredDashboardWidgets());
+			foreach ($context->getRegisteredDashboardWidgets() as $widget) {
+				// Stamp the owning extension so templates can apply the
+				// access-group extension grant — never author-supplied.
+				$widgets[] = $widget->withExtensionId($id);
+			}
 		}
 
 		usort($widgets, fn (DashboardWidget $a, DashboardWidget $b): int => $a->priority <=> $b->priority);
 
 		return $widgets;
+	}
+
+	/**
+	 * Enabled extensions that registered any admin surface (nav items,
+	 * dashboard widgets, or admin routes), as id => display name. Drives the
+	 * Extension Access list in the access-group form — extensions with no
+	 * admin surface have nothing to grant, so they don't clutter the list.
+	 *
+	 * @return array<string,string>
+	 */
+	public function listExtensionsWithAdminSurface(): array
+	{
+		$result = [];
+		foreach ($this->contexts as $id => $context) {
+			$hasSurface = $context->getRegisteredAdminNavItems() !== []
+				|| $context->getRegisteredDashboardWidgets() !== []
+				|| $context->getRegisteredAdminRoutes() !== [];
+
+			if (!$hasSurface) {
+				continue;
+			}
+
+			$manifest    = $this->discoveredManifests[$id] ?? null;
+			$result[$id] = $manifest instanceof ExtensionManifest ? $manifest->name : $id;
+		}
+
+		ksort($result);
+
+		return $result;
 	}
 
 	/** @return array<string,class-string> */

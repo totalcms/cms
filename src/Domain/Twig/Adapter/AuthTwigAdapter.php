@@ -329,6 +329,20 @@ readonly class AuthTwigAdapter
 		return $this->accessControl->canAccessBuilder($userData['id']);
 	}
 
+	public function canAccessExtension(string $extensionId): bool
+	{
+		if ($this->config->auth['enable'] === false) {
+			return true;
+		}
+
+		$userData = $this->accessManager->userData();
+		if ($userData === [] || !isset($userData['id'])) {
+			return false;
+		}
+
+		return $this->accessControl->canAccessExtension($userData['id'], $extensionId);
+	}
+
 	public function canAccessDocs(): bool
 	{
 		if ($this->config->auth['enable'] === false) {

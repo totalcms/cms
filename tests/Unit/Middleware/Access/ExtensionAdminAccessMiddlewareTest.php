@@ -121,17 +121,34 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 		expect($response)->toBe($this->forbiddenResponse);
 	});
 
-	test('allows a non-admin on a permission-any extension route', function (): void {
+	test('allows a non-admin on a permission-any extension route when their group grants the extension', function (): void {
 		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->extensionManager->method('matchExtensionAdminRoute')
 			->with('test-vendor/hello-world', 'GET', '/everyone')
 			->willReturn(new ExtensionRoute(handler: fn () => null, permission: 'any'));
+		$this->accessControl->method('canAccessExtension')
+			->with('regular-user', 'test-vendor/hello-world')
+			->willReturn(true);
 
 		$this->handler->expects($this->once())->method('handle');
 
 		$response = ($this->make)()->process(($this->requestFor)('everyone'), $this->handler);
 
 		expect($response)->toBe($this->passthroughResponse);
+	});
+
+	test('denies a permission-any extension route when the group does not grant the extension', function (): void {
+		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->extensionManager->method('matchExtensionAdminRoute')
+			->willReturn(new ExtensionRoute(handler: fn () => null, permission: 'any'));
+		$this->accessControl->method('canAccessExtension')->willReturn(false);
+
+		$this->handler->expects($this->never())->method('handle');
+		$this->forbiddenResponse->expects($this->once())->method('withStatus')->with(403);
+
+		$response = ($this->make)()->process(($this->requestFor)('everyone'), $this->handler);
+
+		expect($response)->toBe($this->forbiddenResponse);
 	});
 
 	test('super admins bypass the permission check entirely', function (): void {

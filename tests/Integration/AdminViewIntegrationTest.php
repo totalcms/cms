@@ -225,6 +225,18 @@ describe('Utility and Management Views', function (): void {
 		assertNoAdminErrors($response, '/admin/utils/project-setup');
 	});
 
+	it('loads the access groups list without errors', function (): void {
+		$response = get('/admin/utils/access-groups');
+		assertNoAdminErrors($response, '/admin/utils/access-groups');
+	});
+
+	it('loads the access group form without errors', function (): void {
+		// The form template only renders with an action segment — the list
+		// page alone compiled fine while the form had a Twig syntax error.
+		$response = get('/admin/utils/access-groups/new');
+		assertNoAdminErrors($response, '/admin/utils/access-groups/new');
+	});
+
 	it('loads cache management without errors', function (): void {
 		$response = get('/admin/cache');
 		assertNoAdminErrors($response, '/admin/cache');
