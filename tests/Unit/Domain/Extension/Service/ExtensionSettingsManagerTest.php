@@ -149,6 +149,11 @@ describe('ExtensionSettingsManager', function (): void {
 		$manager->saveSettings('vendor/ext', ['api_key' => 'sk-secret']);
 
 		$file = $datadir . '/.system/extension-settings/vendor/ext.json';
+		if (!chmodReflectsPrivateMode(dirname($file))) {
+			recursiveDelete($datadir);
+			$this->markTestSkipped('Filesystem does not reflect chmod(0600) via fileperms() (e.g. ACL mask on some CI runners)');
+		}
+
 		expect(substr(sprintf('%o', fileperms($file)), -4))->toBe('0600');
 
 		recursiveDelete($datadir);

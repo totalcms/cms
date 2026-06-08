@@ -49,12 +49,12 @@ function bootstrap()
 {
 	// Tests reset state by wiping the data dir (recursiveDelete) and rebuilding
 	// the app, but APCu lives in shared memory for the WHOLE php process and is
-	// not touched by a filesystem wipe. Under php-test.ini (which enables APCu
-	// as CacheManager's L1 backend) that lets cached collections/objects/indexes
-	// leak across tests — causing order-dependent, flaky failures ("object
-	// already exists", X-Total 0, etc.). Clearing it on every app boot makes the
-	// reset complete so each test starts from a clean cache. No-op when APCu
-	// isn't loaded (default php.ini).
+	// not touched by a filesystem wipe. When APCu is enabled (the test scripts
+	// pass `-d apc.enable_cli=1`, making it CacheManager's L1 backend) that lets
+	// cached collections/objects/indexes leak across tests — causing
+	// order-dependent, flaky failures ("object already exists", X-Total 0, etc.).
+	// Clearing it on every app boot makes the reset complete so each test starts
+	// from a clean cache. No-op when APCu isn't loaded.
 	if (function_exists('apcu_clear_cache')) {
 		apcu_clear_cache();
 	}
@@ -187,6 +187,30 @@ function recursiveDelete(string $dir, array $preserve = [], bool $forceComplete 
 	}
 
 	return true;
+}
+
+/**
+ * Whether $dir's filesystem reflects an explicit chmod(0600) back through
+ * fileperms(). Some CI filesystems carry a default POSIX ACL, so the group
+ * bits in st_mode show the ACL mask (0644) even after chmod(0600) — meaning a
+ * 0600 assertion is unverifiable there, not that the code failed to chmod.
+ * Permission tests probe the directory they actually write to and skip the
+ * octal assertion when it returns false, so they still catch a real
+ * regression (chmod works in the dir, but the code didn't apply it).
+ */
+function chmodReflectsPrivateMode(string $dir): bool
+{
+	$probe = $dir . '/.tcms-chmod-probe-' . uniqid();
+	if (@file_put_contents($probe, 'x') === false) {
+		return false;
+	}
+
+	@chmod($probe, 0600);
+	clearstatcache(true, $probe);
+	$reflects = substr(sprintf('%o', fileperms($probe)), -4) === '0600';
+	@unlink($probe);
+
+	return $reflects;
 }
 
 /**
