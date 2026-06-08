@@ -139,19 +139,20 @@ if ($settings['docroot'] === '') {
 
 // URL prefix where the front controller is mounted. For the typical
 // install ("public/" is the doc root), this is empty. For subpath
-// installs (e.g. https://example.com/cms/), this is the subpath
-// ("/cms"). Derived from SCRIPT_NAME — must NOT be derived from
-// filesystem paths because the project root is not necessarily a
-// subdirectory of the document root.
-$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-if ($scriptName === '' || !str_starts_with((string)$scriptName, '/')) {
+// installs (e.g. https://example.com/cms/), this is the subpath ("/cms").
+// For the Stacks layout a docroot rewrite hides "public/" from the URL even
+// though SCRIPT_NAME still points inside it, so a naive dirname(SCRIPT_NAME)
+// wrongly keeps "/public". BasePath::resolve() cross-checks SCRIPT_NAME
+// against the request path to strip the right depth — and shares that logic
+// with BasePathMiddleware so link-building and Slim routing always agree.
+$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
+if ($scriptName === '' || !str_starts_with($scriptName, '/')) {
 	// CLI, cli-server (after the bootstrap workaround rewrites
 	// SCRIPT_NAME to a basename), or other unusual SAPIs.
 	$settings['api'] = '';
 } else {
-	// dirname('/index.php')      === '/'    -> '' after rtrim
-	// dirname('/cms/index.php')  === '/cms' -> '/cms'
-	$settings['api'] = rtrim(dirname((string)$scriptName), '/');
+	$requestPath     = (string)(parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?? '');
+	$settings['api'] = TotalCMS\Support\BasePath::resolve($scriptName, $requestPath);
 }
 
 $settings['debug'] = false; // Set to true for development
@@ -163,6 +164,9 @@ $settings['cache'] = [
 	'filesystem'  => true,
 	'redis'       => true,
 	'memcached'   => true,
+	// Output (fragment) caching via the {% cache %} Twig tag.
+	'fragments'   => true, // master on/off switch for {% cache %}
+	'fragmentTtl' => 3600, // default fragment lifetime (seconds) when ttl= is omitted
 	'redisConfig' => [
 		'host'     => '127.0.0.1',
 		'port'     => 6379,

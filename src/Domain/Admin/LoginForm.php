@@ -262,7 +262,11 @@ readonly class LoginForm implements \Stringable
 		$button = HTMLUtils::button($this->label($this->passkeyLabel, 'login.passkey'), [
 			'type'     => 'button',
 			'class'    => 'dash-button cms-passkey-login no-icon',
-			'data-api' => $this->api,
+			// Passkey routes live under the /api group, but $this->api is the
+			// base URL used for the (non-/api) /admin/login form action — so
+			// the passkey JS needs /api appended (matches the registration
+			// button in AuthTwigAdapter).
+			'data-api' => $this->api . '/api',
 		]);
 
 		$field = HTMLUtils::element('div', $button, [
