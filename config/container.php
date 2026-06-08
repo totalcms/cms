@@ -250,6 +250,15 @@ return [
 
 	StorageAdapterInterface::class => fn (ContainerInterface $container) => $container->get(StorageFilesystemAdapter::class),
 
+	// Explicit definition (not autowired) so the datadir can be passed for
+	// enforcing 0600 on settings files, which may hold extension secrets.
+	ExtensionSettingsManager::class => function (ContainerInterface $container): ExtensionSettingsManager {
+		return new ExtensionSettingsManager(
+			$container->get(StorageFilesystemAdapter::class),
+			(string) $container->get(Config::class)->datadir,
+		);
+	},
+
 	BasePathMiddleware::class => function (ContainerInterface $container): BasePathMiddleware {
 		$app = $container->get(App::class);
 

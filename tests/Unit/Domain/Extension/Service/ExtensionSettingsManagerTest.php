@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 
@@ -135,5 +137,20 @@ describe('ExtensionSettingsManager', function (): void {
 
 		expect($manager->getSettings('vendor/ext-a'))->toBe(['key' => 'a']);
 		expect($manager->getSettings('vendor/ext-b'))->toBe(['key' => 'b']);
+	});
+
+	test('saveSettings writes files with private visibility (0600)', function (): void {
+		$datadir = sys_get_temp_dir() . '/tcms-ext-settings-' . uniqid();
+		mkdir($datadir, 0755, true);
+
+		$adapter = new StorageFilesystemAdapter(new Filesystem(new LocalFilesystemAdapter($datadir)));
+		$manager = new ExtensionSettingsManager($adapter, $datadir);
+
+		$manager->saveSettings('vendor/ext', ['api_key' => 'sk-secret']);
+
+		$file = $datadir . '/.system/extension-settings/vendor/ext.json';
+		expect(substr(sprintf('%o', fileperms($file)), -4))->toBe('0600');
+
+		recursiveDelete($datadir);
 	});
 });
