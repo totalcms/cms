@@ -16,7 +16,7 @@
     "links"   : [
         {
             "label" : "Documentation",
-            "url"   : "docs/extensions/bundled/ab-split"
+            "url"   : "docs/extensions/ab-split"
         }
     ]
 }

@@ -18,7 +18,7 @@
     "links"   : [
         {
             "label" : "Documentation",
-            "url"   : "docs/extensions/bundled/maintenance"
+            "url"   : "docs/extensions/maintenance"
         }
     ]
 }

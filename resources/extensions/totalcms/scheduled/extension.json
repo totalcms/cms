@@ -17,7 +17,7 @@
     "links"   : [
         {
             "label" : "Documentation",
-            "url"   : "docs/extensions/bundled/scheduled"
+            "url"   : "docs/extensions/scheduled"
         }
     ]
 }

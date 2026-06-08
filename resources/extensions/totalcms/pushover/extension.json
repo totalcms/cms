@@ -18,7 +18,7 @@
 	"links"   : [
 		{
 			"label" : "Documentation",
-			"url"   : "docs/extensions/bundled/pushover"
+			"url"   : "docs/extensions/pushover"
 		},
 		{
 			"label" : "Test Notification",
