@@ -13,6 +13,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\RedirectRenderer;
@@ -31,6 +32,7 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		private ResponseFactoryInterface $responseFactory,
 		private RedirectRenderer $redirectRenderer,
 		private PhpSession $session,
+		private SetupStateManager $setupState,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::License);
@@ -41,6 +43,15 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
+		// The setup wizard must never be gated by license validation. Until
+		// setup is complete there is no operator-confirmed license context yet
+		// (the wizard's license step submits the key to the license API
+		// directly), and a stale or expired trial result cached from a previous
+		// install must not block a fresh setup.
+		if (!$this->setupState->isSetupComplete()) {
+			return $handler->handle($request);
+		}
+
 		// AuthLoginSubmitAction sets this flag so the post-login request validates
 		// the license once (regardless of method) instead of blocking the login itself.
 		$checkDue = (bool)$this->session->get(SessionKeys::LICENSE_CHECK_DUE, false);
