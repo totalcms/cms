@@ -130,6 +130,7 @@ class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterfac
 	{
 		return [
 			new CmsGridTokenParser(),
+			new CacheTokenParser(),
 		];
 	}
 }

@@ -32,6 +32,7 @@ use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Cache\FragmentCache;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -43,6 +44,7 @@ use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
 use TotalCMS\Domain\Event\Listener\CollectionMetadataListener;
 use TotalCMS\Domain\Event\Listener\DataViewListener;
 use TotalCMS\Domain\Event\Listener\DeckFileCleanupListener;
+use TotalCMS\Domain\Event\Listener\FragmentCacheInvalidationListener;
 use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Event\Listener\McpResourceSubscriptionListener;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -259,6 +261,19 @@ return [
 		);
 	},
 
+	// Output (fragment) cache behind the {% cache %} Twig tag. Explicit so the
+	// fragmentTtl / fragments config defaults can be passed through.
+	FragmentCache::class => function (ContainerInterface $container): FragmentCache {
+		$cacheConfig = $container->get(Config::class)->cache;
+
+		return new FragmentCache(
+			$container->get(CacheManager::class),
+			$container->get(SessionInterface::class),
+			(int) ($cacheConfig['fragmentTtl'] ?? 3600),
+			(bool) ($cacheConfig['fragments'] ?? true),
+		);
+	},
+
 	BasePathMiddleware::class => function (ContainerInterface $container): BasePathMiddleware {
 		$app = $container->get(App::class);
 
@@ -425,6 +440,16 @@ return [
 		$dispatcher->listen('object.created', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
 		$dispatcher->listen('object.updated', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
 		$dispatcher->listen('object.deleted', $lazy(DataViewListener::class, 'onObjectChanged'), -100);
+
+		// FragmentCacheInvalidationListener — bumps a collection's generational
+		// version counter so {% cache %} fragments tagged with it are busted.
+		// Subscribes to import.created/import.updated too (those replace
+		// object.* during an import).
+		$dispatcher->listen('object.created', $lazy(FragmentCacheInvalidationListener::class, 'onObjectChanged'), -100);
+		$dispatcher->listen('object.updated', $lazy(FragmentCacheInvalidationListener::class, 'onObjectChanged'), -100);
+		$dispatcher->listen('object.deleted', $lazy(FragmentCacheInvalidationListener::class, 'onObjectChanged'), -100);
+		$dispatcher->listen('import.created', $lazy(FragmentCacheInvalidationListener::class, 'onObjectChanged'), -100);
+		$dispatcher->listen('import.updated', $lazy(FragmentCacheInvalidationListener::class, 'onObjectChanged'), -100);
 
 		// DeckFileCleanupListener — diff-on-save deletion of orphaned deck-item uploads
 		$dispatcher->listen('object.updated', $lazy(DeckFileCleanupListener::class, 'onObjectUpdated'), -100);

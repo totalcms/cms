@@ -6,6 +6,7 @@ use Cake\Chronos\Chronos;
 use Cake\I18n\I18n;
 use Cake\I18n\RelativeTimeFormatter;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
+use TotalCMS\Domain\Cache\FragmentCache;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Twig\Designer\DesignerAwareLoader;
@@ -46,6 +47,7 @@ readonly class TwigEngine
 		private TemplateDesignerPreprocessor $designerPreprocessor,
 		TemplateDesignerSync $designerSync,
 		BuilderTemplatePaths $builderTemplatePaths,
+		private readonly FragmentCache $fragmentCache,
 	) {
 		$internalTemplates = TemplateRepository::reservedTemplateDir();
 		if (!file_exists($internalTemplates)) {
@@ -100,11 +102,19 @@ readonly class TwigEngine
 		// This works without intl but translations will default to English
 		Chronos::diffFormatter(new RelativeTimeFormatter());
 
-		$this->twig->addRuntimeLoader(new class implements RuntimeLoaderInterface {
+		$this->twig->addRuntimeLoader(new class ($this->fragmentCache) implements RuntimeLoaderInterface {
+			public function __construct(private readonly FragmentCache $fragmentCache)
+			{
+			}
+
 			public function load(string $class)
 			{
 				if (MarkdownRuntime::class === $class) {
 					return new MarkdownRuntime(new ParsedownMarkdown());
+				}
+
+				if (FragmentCache::class === $class) {
+					return $this->fragmentCache;
 				}
 
 				return null;
