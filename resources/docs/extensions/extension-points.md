@@ -18,6 +18,22 @@ To avoid collisions with core T3 functions and other extensions, always prefix y
 
 If a name collision is detected at boot time, a warning is logged to `extensions.log` and the last registered function/filter wins. Prefixing with your vendor name prevents this.
 
+## Twig rendering model
+
+Total CMS renders templates in **streaming (yield) mode** — the same mode Twig 4 uses exclusively. This is transparent to extensions, with one rule: your Twig functions and filters must **return** their output. Never `echo`, `print`, or open an output buffer (`ob_start()`) inside a function or filter — in streaming mode anything written directly to output bypasses the template stream and lands in the wrong place (or is lost entirely). Build a string and return it.
+
+```php
+// ✅ Correct — return the value; Twig places it in the stream
+new TwigFunction('acme_banner', fn (): string => '<div class="banner">…</div>');
+
+// ❌ Wrong — echo bypasses the render stream under yield mode
+new TwigFunction('acme_banner', function (): void {
+    echo '<div class="banner">…</div>';
+});
+```
+
+Extensions register Twig **functions, filters, and globals** — never custom tags or nodes — so there is nothing else to do to be yield-ready.
+
 ## Twig Functions
 
 Add custom functions available in all Twig templates.

@@ -74,7 +74,7 @@ readonly class TwigEngine
 			'autoescape'       => false,
 			'optimizations'    => -1,               // Enable all optimizations
 			'strict_variables' => false,
-			'use_yield'        => false,
+			'use_yield'        => true,             // Twig 4 render mode (all nodes must be #[YieldReady])
 		]);
 
 		$this->twig->getExtension(CoreExtension::class)->setTimezone($config->timezone);
