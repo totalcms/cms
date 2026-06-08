@@ -95,6 +95,17 @@ class ExtensionManager
 		// Auto-register state for newly discovered extensions
 		foreach ($this->discoveredManifests as $id => $manifest) {
 			if (!isset($states[$id])) {
+				// DIAGNOSTIC: a discovered extension with no stored state is
+				// registered fresh as DISABLED. For a genuinely new extension
+				// this is correct; for one that was previously enabled it means
+				// its entry in extensions.json was lost (state-file reset /
+				// relocated on update) — which presents as "had to re-enable".
+				$this->logger->warning(sprintf(
+					"Extension '%s' has no stored state — registering fresh as DISABLED (version '%s'). "
+					. 'If it was previously enabled, its extensions.json state was lost.',
+					$id,
+					$manifest->version,
+				));
 				$this->stateRepository->saveState($id, new ExtensionState(
 					enabled: false,
 					installedAt: date('c'),
@@ -108,6 +119,20 @@ class ExtensionManager
 			$this->discoveredManifests,
 			fn (ExtensionManifest $m): bool => $this->stateRepository->isEnabled($m->id),
 		);
+
+		// DIAGNOSTIC: snapshot the enabled/disabled split at boot. Comparing
+		// this line across an upgrade shows at a glance whether the enabled set
+		// shrank wholesale (state loss) versus an individual extension being
+		// disabled by the re-consent gate below.
+		$skippedDisabled = array_values(
+			array_diff(array_keys($this->discoveredManifests), array_keys($enabledManifests))
+		);
+		$this->logger->info(sprintf(
+			'Extension load: discovered [%s]; enabled [%s]; skipped-disabled [%s].',
+			implode(', ', array_keys($this->discoveredManifests)),
+			implode(', ', array_keys($enabledManifests)),
+			implode(', ', $skippedDisabled),
+		));
 
 		try {
 			$sortedIds = $this->sorter->sort($enabledManifests);
@@ -156,6 +181,18 @@ class ExtensionManager
 				&& $state->version !== ''
 				&& $manifest->version !== $state->version
 			) {
+				// DIAGNOSTIC: re-consent only triggers when the extension's OWN
+				// on-disk version differs from the version it was enabled at. If
+				// this fires after a Total-CMS-only update where the operator
+				// did not touch the extension, the manifest version is changing
+				// unexpectedly — log both values so we can see exactly what moved.
+				$this->logger->warning(sprintf(
+					"Extension '%s' update re-consent triggered: on-disk version '%s' != enabled-at version '%s'. Scanning new code.",
+					$id,
+					$manifest->version,
+					$state->version,
+				));
+
 				$extPath  = $this->discovery->getExtensionPath($id);
 				$findings = $extPath !== null ? (new DangerousCodeScanner())->scan($extPath) : [];
 
@@ -185,6 +222,11 @@ class ExtensionManager
 
 				// Clean update — record the new version and let it load normally.
 				// Newly-registered capabilities land OFF via updateStoredCapabilities.
+				$this->logger->info(sprintf(
+					"Extension '%s' update re-consent: new version '%s' scanned clean; kept enabled (any new capabilities default off).",
+					$id,
+					$manifest->version,
+				));
 				$state->version = $manifest->version;
 				$this->stateRepository->saveState($id, $state);
 			}
@@ -1654,6 +1696,20 @@ class ExtensionManager
 		if ($state->permissions === $original) {
 			return;
 		}
+
+		// DIAGNOSTIC: the detected capability set changed, so permissions were
+		// reconciled. If this fires after a Total-CMS-only update (extension
+		// untouched), Total CMS changed what capabilities it detects — added
+		// caps land OFF, removed caps are pruned, which presents as the
+		// extension's features turning off even though it stayed enabled.
+		$addedOff = array_values(array_diff(array_keys($state->permissions), array_keys($original)));
+		$pruned   = array_values(array_diff(array_keys($original), array_keys($state->permissions)));
+		$this->logger->info(sprintf(
+			"Extension '%s' capabilities reconciled: added-off [%s]; pruned [%s].",
+			$id,
+			implode(', ', $addedOff),
+			implode(', ', $pruned),
+		));
 
 		$this->stateRepository->saveState($id, $state);
 	}
