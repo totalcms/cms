@@ -635,6 +635,19 @@ Adjusts multiple color properties at once.
 
 ## Array Filters
 
+#### `listify(?string $value, string $delimiter = ','): array`
+Splits a delimited string into a clean list — trims each item and drops empty entries (blanks, stray or trailing delimiters), reindexed. Returns an empty array for empty or null input. Handy for turning a comma-delimited setting into an array.
+
+```twig
+{# "blog, gallery , news" → ['blog', 'gallery', 'news'] #}
+{% for id in settings.collections | listify %}
+    <span class="tag">{{ id }}</span>
+{% endfor %}
+
+{# custom delimiter #}
+{{ "a; b ;c" | listify(';') | join(', ') }}
+```
+
 #### `count(array $array): int`
 Counts array elements.
 
