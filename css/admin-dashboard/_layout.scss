@@ -815,7 +815,8 @@ pre {
 	}
 
 	p {
-		margin : 0;
+		margin    : 0;
+		max-width : none!important;
 
 		&:not(:last-child) {
 			margin-bottom : 0.5rem;
