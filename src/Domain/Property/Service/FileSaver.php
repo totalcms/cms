@@ -250,6 +250,37 @@ class FileSaver
 		}
 	}
 
+	/**
+	 * Convert a HEIC/HEIF upload to JPEG and return the JPEG path. This is the
+	 * single choke point image/gallery saves flow through, so palette extraction
+	 * and EXIF reading always run against a web-readable raster — never the HEIC
+	 * original, which most image libraries (and browsers) can't decode.
+	 *
+	 * The upload action may have already converted the file; in that case it
+	 * arrives as a .jpg and this is a no-op. If the server lacks HEIC support the
+	 * conversion fails and we fall through with the original path unchanged — the
+	 * upload still succeeds, palette/EXIF degrade gracefully.
+	 */
+	protected function convertHeicToJpeg(string $filePath): string
+	{
+		$converter = new \TotalCMS\Domain\Media\Service\HeicConverter();
+		if (!$converter->isHeicFile($filePath)) {
+			return $filePath;
+		}
+
+		$result = $converter->convertAndReplace($filePath);
+		if ($result->success && isset($result->data['path']) && is_string($result->data['path'])) {
+			return $result->data['path'];
+		}
+
+		$this->getLogger()->warning('HEIC conversion unavailable; processing original file', [
+			'file'  => $filePath,
+			'error' => $result->message,
+		]);
+
+		return $filePath;
+	}
+
 	protected function updateObject(
 		string $collection,
 		string $objectID,
