@@ -31,7 +31,7 @@ class BundleRepository extends StorageRepository
 
 	private function getLocalBundlePath(): string
 	{
-		return PathUtils::absolutePath($this->config->datadir, '.system/.bundle');
+		return PathUtils::absolutePath($this->config->systemDir(), '.bundle');
 	}
 
 	public function saveLocalBundle(BundleData $bundle): bool

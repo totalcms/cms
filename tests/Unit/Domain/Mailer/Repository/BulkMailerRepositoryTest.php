@@ -19,7 +19,10 @@ final class BulkMailerRepositoryTest extends TestCase
 		$this->tmpDir = sys_get_temp_dir() . '/tcms-test-' . uniqid('', true);
 		mkdir($this->tmpDir, 0755, true);
 
-		$config          = $this->createMock(Config::class);
+		// Real (unconstructed) Config, not a mock: the repository calls
+		// $config->systemDir(), and a mock stubs that method to null. Setting the
+		// public datadir lets systemDir() compute <datadir>/.system correctly.
+		$config          = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->datadir = $this->tmpDir;
 
 		$this->repository = new BulkMailerRepository($config);

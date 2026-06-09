@@ -158,7 +158,7 @@ class Config
 	 */
 	public function systemDir(): string
 	{
-		return $this->datadir . '/.system';
+		return rtrim($this->datadir, '/\\') . '/.system';
 	}
 
 	/**

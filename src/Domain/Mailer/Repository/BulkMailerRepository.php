@@ -21,7 +21,7 @@ class BulkMailerRepository
 
 	private function getDbPath(): string
 	{
-		return PathUtils::absolutePath($this->config->datadir, '.system/bulkmailer');
+		return PathUtils::absolutePath($this->config->systemDir(), 'bulkmailer');
 	}
 
 	private function dbExists(): bool
