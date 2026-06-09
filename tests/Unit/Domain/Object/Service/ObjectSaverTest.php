@@ -12,6 +12,8 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\DateFieldResetter;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 
@@ -42,12 +44,16 @@ final class ObjectSaverTest extends TestCase
 			$this->dispatchedPayload = $payload;
 		});
 
+		// Non-singleton by default: fetchCollection returns null, so the
+		// singleton guard is skipped and existing save behavior is unchanged.
 		$this->saver = new ObjectSaver(
 			$this->storage,
 			$this->factory,
 			$this->propertyProcessor,
 			$this->dateFieldResetter,
 			$this->eventDispatcher,
+			$this->createMock(CollectionFetcher::class),
+			$this->createMock(IndexRepository::class),
 		);
 	}
 
