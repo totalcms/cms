@@ -22,7 +22,7 @@ test('listener bumps the affected collection tag version on a content change', f
 	});
 
 	$fragmentCache = new FragmentCache($cache, test()->createMock(SessionInterface::class));
-	$listener = new FragmentCacheInvalidationListener($fragmentCache);
+	$listener      = new FragmentCacheInvalidationListener($fragmentCache);
 
 	$listener->onObjectChanged((new ObjectEventPayload('blog', 'post-1'))->toArray());
 	expect($stored['fragver:blog'] ?? null)->toBe(1);

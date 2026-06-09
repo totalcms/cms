@@ -10,9 +10,9 @@ use TotalCMS\Domain\Object\Service\ObjectRemover;
 
 function singletonCollection(string $id = 'settings', bool $flag = true): CollectionData
 {
-	$c = new CollectionData();
-	$c->id = $id;
-	$c->schema = $id;
+	$c            = new CollectionData();
+	$c->id        = $id;
+	$c->schema    = $id;
 	$c->singleton = $flag;
 
 	return $c;

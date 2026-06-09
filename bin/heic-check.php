@@ -12,7 +12,6 @@ declare(strict_types=1);
  * so the OK/FAIL lines tell you which branch each server takes and why one
  * converts HEIC while the other does not.
  */
-
 function line(string $label, string $value): void
 {
 	printf("%-34s %s\n", $label . ':', $value);
@@ -33,11 +32,11 @@ $imagickLoaded = extension_loaded('imagick');
 line('extension_loaded("imagick")', yn($imagickLoaded));
 
 if ($imagickLoaded) {
-	$ver = \Imagick::getVersion();
+	$ver = Imagick::getVersion();
 	line('ImageMagick (via extension)', (string)($ver['versionString'] ?? 'unknown'));
 
-	$heic = \Imagick::queryFormats('HEIC');
-	$heif = \Imagick::queryFormats('HEIF');
+	$heic = Imagick::queryFormats('HEIC');
+	$heif = Imagick::queryFormats('HEIF');
 	line('queryFormats("HEIC")', $heic === [] ? '(empty)' : implode(', ', $heic));
 	line('queryFormats("HEIF")', $heif === [] ? '(empty)' : implode(', ', $heif));
 
@@ -64,7 +63,7 @@ if ($execAvailable) {
 	}
 	$verOut = [];
 	@exec('magick -version 2>&1 || convert -version 2>&1', $verOut);
-	$verStr = implode("\n", $verOut);
+	$verStr  = implode("\n", $verOut);
 	$cliHeic = stripos($verStr, 'heic') !== false || stripos($verStr, 'heif') !== false;
 	echo "\n  CLI -version delegates line:\n";
 	foreach ($verOut as $l) {
@@ -78,7 +77,7 @@ if ($execAvailable) {
 }
 
 echo "\n-- Verdict --\n";
-$canExtension = $imagickLoaded && \Imagick::queryFormats('HEIC') !== [];
+$canExtension = $imagickLoaded && Imagick::queryFormats('HEIC') !== [];
 $canCli       = $execAvailable; // optimistic; the -version check above shows the delegate
 if ($canExtension) {
 	echo "  HEIC conversion WILL use the Imagick extension. ✅\n";

@@ -23,7 +23,7 @@ use TotalCMS\Domain\Session\SessionKeys;
  */
 final class FragmentCache
 {
-	private const FRAG_PREFIX = 'frag:';
+	private const FRAG_PREFIX  = 'frag:';
 	private const VER_PREFIX   = 'fragver:';
 	private const VER_TTL      = 2592000; // 30 days — must outlive fragment TTLs
 
@@ -77,7 +77,7 @@ final class FragmentCache
 	{
 		$suffix = '';
 		foreach ($tags as $tag) {
-			$tag = (string) $tag;
+			$tag = (string)$tag;
 			$suffix .= '|' . $tag . '=' . $this->safeVersion($tag);
 		}
 
@@ -87,7 +87,7 @@ final class FragmentCache
 	private function safeVersion(string $tag): int
 	{
 		try {
-			return (int) ($this->cache->getOperationalData(self::VER_PREFIX . $tag) ?? 0);
+			return (int)($this->cache->getOperationalData(self::VER_PREFIX . $tag) ?? 0);
 		} catch (\Throwable) {
 			return 0;
 		}

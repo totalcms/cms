@@ -42,7 +42,7 @@ test('skips license validation entirely while setup is incomplete', function ():
 
 	$middleware = makeLicenseMiddleware($licenseValidator, setupComplete: false);
 
-	$request = test()->createMock(ServerRequestInterface::class);
+	$request  = test()->createMock(ServerRequestInterface::class);
 	$expected = (new ResponseFactory())->createResponse(200);
 
 	$handler = test()->createMock(RequestHandlerInterface::class);

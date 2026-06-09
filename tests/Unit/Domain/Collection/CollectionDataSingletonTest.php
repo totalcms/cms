@@ -5,8 +5,8 @@ declare(strict_types=1);
 use TotalCMS\Domain\Collection\Data\CollectionData;
 
 test('singleton defaults to false and is present in toArray', function (): void {
-	$c = new CollectionData();
-	$c->id = 'settings';
+	$c         = new CollectionData();
+	$c->id     = 'settings';
 	$c->schema = 'settings';
 
 	expect($c->singleton)->toBeFalse();
@@ -15,9 +15,9 @@ test('singleton defaults to false and is present in toArray', function (): void 
 });
 
 test('singleton round-trips through toArray', function (): void {
-	$c = new CollectionData();
-	$c->id = 'settings';
-	$c->schema = 'settings';
+	$c            = new CollectionData();
+	$c->id        = 'settings';
+	$c->schema    = 'settings';
 	$c->singleton = true;
 
 	expect($c->toArray()['singleton'])->toBeTrue();
