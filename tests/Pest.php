@@ -376,3 +376,30 @@ function recursiveCopy(string $src, string $dst): void
 		}
 	}
 }
+
+/**
+ * Build a DevModeManager rooted at the given data dir. The state file lives at
+ * `<datadir>/.system/totalcms_devmode.json` — per-install, never the shared
+ * global /tmp path (which collides across tenants on shared hosting). Pass the
+ * same $datadir to two calls to exercise shared-file state across managers.
+ */
+function devModeManager(string $datadir): TotalCMS\Domain\Cache\Service\DevModeManager
+{
+	$config          = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config->datadir = $datadir;
+
+	if (!is_dir($config->systemDir())) {
+		@mkdir($config->systemDir(), 0775, true);
+	}
+
+	return new TotalCMS\Domain\Cache\Service\DevModeManager(
+		new TotalCMS\Domain\Event\Service\EventDispatcher(new Psr\Log\NullLogger()),
+		$config,
+	);
+}
+
+/** The per-install dev-mode state file path for a given data dir. */
+function devModeFile(string $datadir): string
+{
+	return $datadir . '/.system/totalcms_devmode.json';
+}

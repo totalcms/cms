@@ -95,7 +95,7 @@ class Config
 		if (($this->logger['path'] ?? '') === '') {
 			$this->logger['path'] = PathResolver::isComposerInstall()
 				? PathResolver::projectRoot() . '/logs'
-				: $this->datadir . '/.system/logs';
+				: $this->systemDir() . '/logs';
 		}
 		$this->sentry             = (bool)($settings['sentry'] ?? true);
 		$this->appLogLevel        = (string)($settings['appLogLevel'] ?? 'info');
@@ -141,6 +141,24 @@ class Config
 	public function toArray(): array
 	{
 		return get_object_vars($this);
+	}
+
+	/**
+	 * Absolute path to the install's private system directory,
+	 * `<datadir>/.system`. This is the per-install home for internal state that
+	 * must survive updates and stay out of the public collection space: logs,
+	 * extension state/settings/data, setup state, dev-mode flag, etc. It lives
+	 * under `.system`, which ships deny-all, so nothing here is web-reachable.
+	 *
+	 * Always derive system-state paths from this rather than `sys_get_temp_dir()`
+	 * — a global temp path collides across tenants on shared hosting.
+	 *
+	 * Computed (not a stored property) so it tracks `datadir` even when that is
+	 * set after construction (e.g. tests building Config via reflection).
+	 */
+	public function systemDir(): string
+	{
+		return $this->datadir . '/.system';
 	}
 
 	/**
