@@ -174,16 +174,25 @@ function createTablePopoverPlugin(editor) {
 		for (let d = $from.depth; d >= 0; d--) {
 			if ($from.node(d).type.name === 'table') {
 				const table = $from.node(d);
+				// Guard every child() access: while ProseMirror reconciles a DOM
+				// change (readDOMChange), the plugin's update() can run against a
+				// transient state where a table or row momentarily has no children.
+				// An unguarded child(0) on an empty fragment throws RangeError.
+				if (table.childCount === 0) break;
+
 				const firstRow = table.child(0);
 
 				// Header row: first row's first cell is a tableHeader
-				if (rowBtn) {
+				if (rowBtn && firstRow.childCount > 0) {
 					rowBtn.classList.toggle('is-active', firstRow.child(0).type.name === 'tableHeader');
 				}
 
 				// Header col: second row's first cell is a tableHeader (if exists)
 				if (colBtn && table.childCount > 1) {
-					colBtn.classList.toggle('is-active', table.child(1).child(0).type.name === 'tableHeader');
+					const secondRow = table.child(1);
+					if (secondRow.childCount > 0) {
+						colBtn.classList.toggle('is-active', secondRow.child(0).type.name === 'tableHeader');
+					}
 				}
 
 				break;
