@@ -8,7 +8,7 @@
 
 {% macro collectionHeader(collection, page) %}
 	<header>
-		{% if page %}
+		{% if page and not collection.singleton|default(false) %}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection.id }}">{{ collection.id }}</a> / <span>{{ page | lower }}</span></h1>
 		{% else %}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection.id }}"><span>{{ collection.id }}</span></a></h1>
