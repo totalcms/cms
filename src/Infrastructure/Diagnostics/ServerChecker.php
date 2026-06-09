@@ -77,6 +77,9 @@ class ServerChecker
 		// Add GD-specific information
 		$info = array_merge($info, $this->getGDInfo());
 
+		// Add HEIC/HEIF conversion capability (real decode probe)
+		$info = array_merge($info, $this->getHeicInfo());
+
 		// Add license information
 		$info = array_merge($info, $this->getLicenseInfo());
 
@@ -435,6 +438,50 @@ class ServerChecker
 		}
 
 		return $gdInfo;
+	}
+
+	/**
+	 * Get HEIC/HEIF conversion capability by actually decoding a probe image.
+	 *
+	 * A simple `extension_loaded('imagick')` (or `queryFormats('HEIC')`) check is
+	 * NOT enough: ImageMagick advertises HEIC while libheif lacks the HEVC
+	 * decoder plugin (libde265), so iPhone HEIC uploads decode-fail at runtime.
+	 * This runs a genuine decode and reports the actionable fix when it can't.
+	 *
+	 * @return array<string,string>
+	 */
+	private function getHeicInfo(): array
+	{
+		$result = (new \TotalCMS\Domain\Media\Service\HeicConverter())->selfTest();
+
+		if ($result->success) {
+			return ['HEIC/HEIF Conversion' => 'Working'];
+		}
+
+		$info                          = [];
+		$info['HEIC/HEIF Conversion']  = 'Not available';
+		$info['HEIC/HEIF Detail']      = $result->message;
+
+		$message      = strtolower($result->message);
+		$execBlocked  = !function_exists('exec') || str_contains((string)ini_get('disable_functions'), 'exec');
+		$hasImagick   = extension_loaded('imagick');
+		$decodeFailed = str_contains($message, 'codec')
+			|| str_contains($message, 'delegate')
+			|| str_contains($message, 'decode')
+			|| str_contains($message, 'unsupported');
+
+		if ($hasImagick && $decodeFailed) {
+			// The exact case from production: coder registered, HEVC decoder absent.
+			$info['HEIC/HEIF Fix'] = 'ImageMagick reports HEIC support but cannot decode HEVC-encoded files (iPhone photos). '
+				. 'Install the libheif HEVC decoder — package "libheif-plugin-libde265" (or "libde265") — and restart PHP.';
+		} elseif (!$hasImagick && $execBlocked) {
+			$info['HEIC/HEIF Fix'] = 'Install the Imagick PHP extension with HEIC/libheif support. '
+				. 'The ImageMagick CLI fallback is unavailable because exec() is disabled.';
+		} else {
+			$info['HEIC/HEIF Fix'] = 'Install Imagick (with libheif + the libde265 HEVC decoder) or make the ImageMagick CLI available.';
+		}
+
+		return $info;
 	}
 
 	/**

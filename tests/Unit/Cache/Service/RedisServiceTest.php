@@ -341,11 +341,16 @@ final class RedisServiceTest extends TestCase
 		$retrievedArray = $this->redisService->get($key);
 		$this->assertEquals($arrayValue, $retrievedArray);
 
-		// Test object serialization
+		// Objects are stored but deliberately NOT reconstructed on read:
+		// RedisService::get() unserializes with allowed_classes => false to
+		// prevent PHP object-injection from a poisoned cache entry. A retrieved
+		// object is neutralized (never a live instance of its original class),
+		// so the cache contract covers arrays and scalars — not class instances.
 		$objectValue = (object)['prop' => 'value'];
 		$this->redisService->set($key, $objectValue);
 		$retrievedObject = $this->redisService->get($key);
-		$this->assertEquals($objectValue, $retrievedObject);
+		$this->assertNotInstanceOf(\stdClass::class, $retrievedObject);
+		$this->assertInstanceOf(\__PHP_Incomplete_Class::class, $retrievedObject);
 
 		// Clean up
 		$this->redisService->delete($key);

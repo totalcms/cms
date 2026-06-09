@@ -5,6 +5,7 @@ namespace TotalCMS\Action\Admin;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Renderer\TwigRenderer;
@@ -18,6 +19,8 @@ readonly class AdminCollectionAction
 		private TwigRenderer $twigRenderer,
 		private CollectionFetcher $collectionFetcher,
 		private ObjectFetcher $objectFetcher,
+		private \TotalCMS\Renderer\RedirectRenderer $redirectRenderer,
+		private \TotalCMS\Domain\Collection\Service\SingletonCollectionResolver $singletonResolver,
 	) {
 	}
 
@@ -64,6 +67,31 @@ readonly class AdminCollectionAction
 			]);
 		}
 
+		// Singleton collections: clicking the collection (list route, no object
+		// id) opens its single object directly. ensureObject() lazy-creates or
+		// re-keys to the collection id; the redirect target is that id. When
+		// dormant (>1 object) isActive() is false and we fall through to the
+		// normal list, which shows the dormant notice.
+		$collectionData = ($collection !== '' && $collection !== 'new')
+			? $this->collectionFetcher->fetchCollection($collection)
+			: null;
+
+		if ($collectionData instanceof CollectionData
+			&& ($args['id'] ?? '') === ''
+			&& $this->singletonResolver->isActive($collectionData)
+		) {
+			// Existing object → edit it (re-keyed to the collection id);
+			// empty → the new-object form ('add'). The first save forces the
+			// id to the collection id via ObjectSaver.
+			$target = $this->singletonResolver->resolveTarget($collectionData);
+
+			return $this->redirectRenderer->redirectFor(
+				$response,
+				'admin-collection',
+				['collection' => $collection, 'id' => $target ?? 'add'],
+			);
+		}
+
 		$templateData = [
 			'url' => [
 				'path'       => $request->getUri()->getPath(),
@@ -73,6 +101,7 @@ readonly class AdminCollectionAction
 				'collection' => $args['collection'] ?? '',
 				'id'         => $args['id'] ?? '',
 			],
+			'singleton' => $collectionData instanceof CollectionData && $collectionData->singleton,
 		];
 
 		// Handle POST request for object duplication

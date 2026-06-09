@@ -51,6 +51,7 @@ class TotalCMSTwigFilters
 		'titleize',
 		'truncate',
 		'truncateWords',
+		'listify',
 		'sortBy',
 		'ksort',
 		'krsort',
@@ -141,6 +142,29 @@ class TotalCMSTwigFilters
 	public static function digitsOnly(string $text): string
 	{
 		return (string)preg_replace('/\D/', '', $text);
+	}
+
+	/**
+	 * Split a delimited string into a clean list: trims each item and drops
+	 * empty entries (blanks, stray/trailing delimiters), reindexed. Useful for
+	 * turning a comma-delimited setting into an array — e.g.
+	 * `{% cache key tags=settings.collections|listify %}`.
+	 *
+	 * @return list<string>
+	 */
+	public static function listify(?string $value, string $delimiter = ','): array
+	{
+		if ($value === null || trim($value) === '') {
+			return [];
+		}
+
+		if ($delimiter === '') {
+			$delimiter = ',';
+		}
+
+		$parts = array_map('trim', explode($delimiter, $value));
+
+		return array_values(array_filter($parts, static fn (string $part): bool => $part !== ''));
 	}
 
 	public static function humanize(string $slug, string $sep = '-'): string

@@ -89,6 +89,13 @@ final readonly class ExtensionStorage
 			'visibility'           => Visibility::PRIVATE,
 			'directory_visibility' => Visibility::PRIVATE,
 		]);
+
+		// Flysystem's PRIVATE visibility is applied inconsistently across
+		// environments — on some Linux/CI setups the file is left at the umask
+		// default (0644) instead of being chmod'd to 0600. These files hold
+		// extension secrets, so enforce the secret-grade invariant explicitly
+		// rather than trusting the adapter's visibility handling.
+		chmod($this->path($relative), 0600);
 	}
 
 	public function exists(string $relative): bool

@@ -30,7 +30,7 @@ use TotalCMS\Support\Config;
  */
 readonly class SetupStateRepository
 {
-	private const RELATIVE_PATH = '.system/setup-state.json';
+	private const FILENAME = 'setup-state.json';
 
 	public function __construct(
 		private Config $config,
@@ -71,7 +71,7 @@ readonly class SetupStateRepository
 			return;
 		}
 
-		$systemDir = PathUtils::absolutePath($this->config->datadir, '.system');
+		$systemDir = $this->config->systemDir();
 		if (!is_dir($systemDir)) {
 			@mkdir($systemDir, 0755, true);
 		}
@@ -84,7 +84,7 @@ readonly class SetupStateRepository
 
 	private function path(): string
 	{
-		return PathUtils::absolutePath($this->config->datadir, self::RELATIVE_PATH);
+		return PathUtils::absolutePath($this->config->systemDir(), self::FILENAME);
 	}
 
 	private function dataPathExists(): bool

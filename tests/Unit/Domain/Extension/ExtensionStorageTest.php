@@ -41,7 +41,12 @@ describe('ExtensionStorage', function (): void {
 	test('files are written with private visibility (0600)', function (): void {
 		$this->storage->write('secret', 'abc123');
 
-		expect(substr(sprintf('%o', fileperms($this->storage->path('secret'))), -4))->toBe('0600');
+		$file = $this->storage->path('secret');
+		if (!chmodReflectsPrivateMode(dirname($file))) {
+			$this->markTestSkipped('Filesystem does not reflect chmod(0600) via fileperms() (e.g. ACL mask on some CI runners)');
+		}
+
+		expect(substr(sprintf('%o', fileperms($file)), -4))->toBe('0600');
 	});
 
 	test('read returns null for missing files', function (): void {

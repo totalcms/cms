@@ -17,7 +17,7 @@ class JobRepository
 
 	private function getDbPath(): string
 	{
-		return PathUtils::absolutePath($this->config->datadir, '.system/jobqueue');
+		return PathUtils::absolutePath($this->config->systemDir(), 'jobqueue');
 	}
 
 	private function dbExists(): bool

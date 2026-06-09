@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Media\Service;
 
 use TotalCMS\Support\OperationResult;
+use TotalCMS\Support\PathResolver;
 
 /**
  * Service for converting HEIC/HEIF images to JPEG for web compatibility.
@@ -202,5 +203,44 @@ class HeicConverter
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Verify this server can ACTUALLY decode a HEIC file, not just that it
+	 * advertises the format.
+	 *
+	 * `\Imagick::queryFormats('HEIC')` returns true whenever the HEIC coder is
+	 * registered — even when the underlying libheif has no HEVC decoder plugin
+	 * (libde265). iPhone HEICs are HEVC-encoded, so on such a server the upload
+	 * path silently fails at decode time with "Unsupported codec". The only
+	 * honest probe is to decode a real HEIC, which is exactly what this does:
+	 * it runs the bundled HEVC probe fixture through the real conversion path.
+	 *
+	 * Returns the converter's own OperationResult so callers can surface the
+	 * underlying error message (e.g. the libheif codec error) to operators.
+	 */
+	public function selfTest(): OperationResult
+	{
+		$probe = PathResolver::packageRoot() . '/resources/diagnostics/heic-probe.heic';
+		if (!is_file($probe)) {
+			return OperationResult::failure('HEIC probe fixture is missing from this install');
+		}
+
+		// Stage a copy in the temp dir — convertAndReplace unlinks its source and
+		// convertToJpeg needs a .heic extension, so we never touch the shipped
+		// fixture itself.
+		$tmpSrc = sys_get_temp_dir() . '/tcms-heic-probe-' . uniqid() . '.heic';
+		$tmpDst = sys_get_temp_dir() . '/tcms-heic-probe-' . uniqid() . '.jpg';
+
+		if (!@copy($probe, $tmpSrc)) {
+			return OperationResult::failure('Could not stage the HEIC probe in the temp directory');
+		}
+
+		try {
+			return $this->convertToJpeg($tmpSrc, $tmpDst);
+		} finally {
+			@unlink($tmpSrc);
+			@unlink($tmpDst);
+		}
 	}
 }

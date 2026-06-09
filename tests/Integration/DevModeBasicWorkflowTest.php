@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
-use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 /**
  * Basic integration tests for DevModeManager without mocking dependencies.
@@ -15,12 +13,14 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 final class DevModeBasicWorkflowTest extends TestCase
 {
 	private DevModeManager $devModeManager;
+	private string $testDataDir;
 	private string $testDevModeFile;
 
 	protected function setUp(): void
 	{
-		$this->devModeManager  = new DevModeManager(new EventDispatcher(new NullLogger()));
-		$this->testDevModeFile = sys_get_temp_dir() . '/totalcms_devmode.json';
+		$this->testDataDir     = sys_get_temp_dir() . '/tcms-devmode-' . uniqid();
+		$this->devModeManager  = devModeManager($this->testDataDir);
+		$this->testDevModeFile = devModeFile($this->testDataDir);
 		$this->cleanupDevModeFile();
 	}
 
@@ -218,9 +218,9 @@ final class DevModeBasicWorkflowTest extends TestCase
 	public function testConcurrentDevModeAccess(): void
 	{
 		// Simulate concurrent access by creating multiple DevModeManager instances
-		$eventDispatcher = new EventDispatcher(new NullLogger());
-		$manager1        = new DevModeManager($eventDispatcher);
-		$manager2        = new DevModeManager($eventDispatcher);
+		// rooted at the SAME data dir so they share the per-install state file.
+		$manager1 = devModeManager($this->testDataDir);
+		$manager2 = devModeManager($this->testDataDir);
 
 		// First manager enables dev mode
 		$manager1->enableDevMode();

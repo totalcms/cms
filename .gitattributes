@@ -40,7 +40,6 @@ code-report.txt      export-ignore
 CLAUDE.md            export-ignore
 esbuild.config.js    export-ignore
 package.json         export-ignore
-php-test.ini         export-ignore
 phpcbf.xml           export-ignore
 phpcs.xml            export-ignore
 phpdoc.xml           export-ignore

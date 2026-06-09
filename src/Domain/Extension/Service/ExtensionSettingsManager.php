@@ -16,8 +16,16 @@ final class ExtensionSettingsManager
 	/** @var array<string,array<string,mixed>> */
 	private array $cache = [];
 
+	/**
+	 * @param string $datadir Absolute datadir path, used to enforce 0600 on
+	 *                        written settings files. Always supplied in
+	 *                        production via the DI container; optional only so
+	 *                        test scaffolding can construct the manager with a
+	 *                        bare storage adapter.
+	 */
 	public function __construct(
 		private readonly StorageFilesystemAdapter $storage,
+		private readonly string $datadir = '',
 	) {
 	}
 
@@ -64,6 +72,14 @@ final class ExtensionSettingsManager
 
 		if ($json !== false) {
 			$this->storage->write($path, $json);
+
+			// Settings can hold admin-entered secrets (API keys, tokens). The
+			// shared storage adapter writes at the umask default (0644 —
+			// group/world-readable on Linux), so enforce secret-grade 0600,
+			// matching ExtensionStorage and the OAuth key convention.
+			if ($this->datadir !== '') {
+				chmod($this->datadir . '/' . $path, 0600);
+			}
 		}
 	}
 

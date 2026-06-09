@@ -6,7 +6,9 @@ namespace Tests\Unit\Domain\Object\Service;
 
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\DateFieldResetter;
@@ -42,12 +44,16 @@ final class ObjectSaverTest extends TestCase
 			$this->dispatchedPayload = $payload;
 		});
 
+		// Non-singleton by default: fetchCollection returns null, so the
+		// singleton guard is skipped and existing save behavior is unchanged.
 		$this->saver = new ObjectSaver(
 			$this->storage,
 			$this->factory,
 			$this->propertyProcessor,
 			$this->dateFieldResetter,
 			$this->eventDispatcher,
+			$this->createMock(CollectionFetcher::class),
+			$this->createMock(IndexRepository::class),
 		);
 	}
 

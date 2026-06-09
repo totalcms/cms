@@ -120,6 +120,7 @@ return [
 					['title' => 'Object Linking',       'path' => 'twig/object-linking'],
 					['title' => 'Views',                'path' => 'twig/views'],
 					['title' => 'CMS Grid Tag',         'path' => 'twig/cmsgrid-tag'],
+					['title' => 'Cache Tag',            'path' => 'twig/cache-tag'],
 					['title' => 'Load More',            'path' => 'twig/load-more'],
 				],
 			],

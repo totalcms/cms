@@ -126,10 +126,11 @@ class TotalCMSTwigExtension extends AbstractExtension implements GlobalsInterfac
 		return $sorter->sort($options);
 	}
 
-	public function getTokenParsers()
+	public function getTokenParsers(): array
 	{
 		return [
 			new CmsGridTokenParser(),
+			new CacheTokenParser(),
 		];
 	}
 }

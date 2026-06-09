@@ -141,6 +141,25 @@ When enabled, saving objects queues an index rebuild instead of rebuilding immed
 - Collections with complex computed fields
 - High-traffic admin environments
 
+### singleton
+
+Marks the collection as holding exactly **one** object — ideal for site-wide settings, global config, or a single homepage record.
+
+```json
+{
+    "singleton": true
+}
+```
+
+When enabled:
+
+- Clicking the collection (in the Collection view or QuickNav) opens its one object directly — no one-row list.
+- An empty singleton opens the new-object form; once saved, the object is reused on every visit.
+- The object's id is **always forced to the collection id**, so its edit URL is a clean `/collections/{collection}/{collection}`.
+- The "Add new" button is hidden — a singleton can't gain a second object.
+
+**Converting an existing collection:** flipping `singleton` on is non-destructive. If the collection already has more than one object, singleton behavior stays dormant (the normal list is shown with a notice) until you delete it down to one — nothing is removed automatically. With exactly one object, it is adopted and re-keyed to the collection id.
+
 ---
 
 ## URL Settings

@@ -21,7 +21,7 @@ class CacheInvalidationSignal
 	public function __construct(
 		private readonly Config $config,
 	) {
-		$this->signalFile = PathUtils::absolutePath($this->config->datadir, '.system/.cache_invalidate');
+		$this->signalFile = PathUtils::absolutePath($this->config->systemDir(), '.cache_invalidate');
 		$dir              = dirname($this->signalFile);
 		if (!is_dir($dir)) {
 			@mkdir($dir, 0755, true);

@@ -41,7 +41,7 @@ class JobsProcessCommand extends BaseCommand
 		}
 
 		// Lock file
-		$lockFilePath = PathUtils::absolutePath($this->totalcms->config->datadir, '.system/.processJobs.lock');
+		$lockFilePath = PathUtils::absolutePath($this->totalcms->config->systemDir(), '.processJobs.lock');
 		$lockFile     = @fopen($lockFilePath, 'c');
 		if ($lockFile === false) {
 			return $this->outputError($input, $output, 'Unable to open lock file.');

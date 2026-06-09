@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -18,12 +19,30 @@ readonly class ObjectSaver
 		private PropertyDataProcessorInterface $propertyProcessor,
 		private DateFieldResetter $dateFieldResetter,
 		private EventDispatcher $eventDispatcher,
+		private \TotalCMS\Domain\Collection\Service\CollectionFetcher $collectionFetcher,
+		private \TotalCMS\Domain\Index\Repository\IndexRepository $indexRepository,
 	) {
 	}
 
 	/** @param array<string,mixed> $objectData */
 	public function saveObject(string $collection, array $objectData): ObjectData
 	{
+		// Singleton: the one object is always stored at the collection id. Force
+		// it before generating, so a submitted/overridden id can't break the
+		// invariant, and reject a second object — the single slot is taken.
+		// (The re-key path uses ObjectCloner, which writes via the repository
+		// and bypasses this.)
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
+		if ($collectionData instanceof CollectionData && $collectionData->singleton) {
+			$objectData['id'] = $collection;
+			if (count($this->indexRepository->fetchObjectIds($collection)) >= 1) {
+				throw new \DomainException(sprintf(
+					'Collection "%s" is a singleton and already holds its object.',
+					$collection,
+				));
+			}
+		}
+
 		$object = $this->factory->generateObject($collection, $objectData);
 
 		if ($this->storage->existsObject($collection, $object->id)) {

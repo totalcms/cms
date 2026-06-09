@@ -29,7 +29,7 @@ class AutomationsProcessCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$lockPath = rtrim($this->totalcms->config->datadir, '/') . '/.system/.processAutomations.lock';
+		$lockPath = $this->totalcms->config->systemDir() . '/.processAutomations.lock';
 		$lock     = @fopen($lockPath, 'c');
 
 		if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {

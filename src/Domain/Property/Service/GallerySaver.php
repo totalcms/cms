@@ -45,6 +45,10 @@ class GallerySaver extends FileSaver
 	): ObjectData {
 		$this->assertNotSvg($filePath);
 
+		// Convert HEIC/HEIF to JPEG before anything reads the file, so the stored
+		// file, palette and EXIF are all derived from the JPEG — not the HEIC.
+		$filePath = $this->convertHeicToJpeg($filePath);
+
 		$objectExists = $this->objectFetcher->existsObject($collection, $objectID);
 		if (!$objectExists) {
 			$this->createObject($collection, $objectID, $property);

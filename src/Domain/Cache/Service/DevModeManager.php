@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Cache\Service;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\SystemEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
+use TotalCMS\Support\Config;
 
 /**
  * Manages temporary development mode state.
@@ -18,8 +19,15 @@ class DevModeManager
 
 	public function __construct(
 		private readonly EventDispatcher $eventDispatcher,
+		Config $config,
 	) {
-		$this->devModeFile = sys_get_temp_dir() . '/totalcms_devmode.json';
+		// Per-install path under the data dir — NOT sys_get_temp_dir(). On shared
+		// hosting /tmp is one directory for every tenant, so a global filename
+		// like /tmp/totalcms_devmode.json collides across all sites on the box:
+		// whichever PHP user writes it first owns it, and /tmp's sticky bit then
+		// gives every other site EPERM ("Operation not permitted") on unlink —
+		// which, promoted to an ErrorException, hard-crashed container build.
+		$this->devModeFile = $config->systemDir() . '/totalcms_devmode.json';
 	}
 
 	/**
@@ -32,6 +40,11 @@ class DevModeManager
 			'expires_at' => time() + $this->devModeDuration,
 			'started_at' => time(),
 		];
+
+		$dir = dirname($this->devModeFile);
+		if (!is_dir($dir)) {
+			@mkdir($dir, 0775, true);
+		}
 
 		file_put_contents(
 			$this->devModeFile,
@@ -48,8 +61,11 @@ class DevModeManager
 	 */
 	public function disableDevMode(): void
 	{
-		if (file_exists($this->devModeFile)) {
-			unlink($this->devModeFile);
+		// Best-effort: a failed cleanup of a non-critical dev flag must never take
+		// down the request (or, as here, container construction). Suppressed so a
+		// filesystem permission quirk can't be promoted to a fatal ErrorException.
+		if (is_file($this->devModeFile)) {
+			@unlink($this->devModeFile);
 		}
 
 		$this->eventDispatcher->dispatch(CoreEvent::DEVMODE_DISABLED, new SystemEventPayload());

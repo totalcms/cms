@@ -3,9 +3,7 @@
 namespace Tests\Unit\Domain\Cache\Service;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
-use TotalCMS\Domain\Event\Service\EventDispatcher;
 
 final class DevModeManagerTest extends TestCase
 {
@@ -13,7 +11,7 @@ final class DevModeManagerTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->manager = new DevModeManager(new EventDispatcher(new NullLogger()));
+		$this->manager = devModeManager(sys_get_temp_dir() . '/tcms-devmode-' . uniqid());
 		// Ensure clean state
 		$this->manager->disableDevMode();
 	}

@@ -46,9 +46,6 @@ class CmsGridNode extends Node
 	{
 		$compiler->addDebugInfo($this);
 
-		// Start output buffering for the grid
-		$compiler->write('ob_start();' . PHP_EOL);
-
 		// Get the objects array
 		$compiler->write('$objects = ');
 		$compiler->subcompile($this->getNode('objects'));
@@ -111,8 +108,5 @@ class CmsGridNode extends Node
 
 		$compiler->outdent();
 		$compiler->write('}' . PHP_EOL);
-
-		// Output the buffered content
-		$compiler->write('yield ob_get_clean();' . PHP_EOL);
 	}
 }
