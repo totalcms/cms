@@ -6,14 +6,14 @@ namespace Tests\Unit\Domain\Object\Service;
 
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\DateFieldResetter;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 

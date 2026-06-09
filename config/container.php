@@ -257,7 +257,7 @@ return [
 	ExtensionSettingsManager::class => function (ContainerInterface $container): ExtensionSettingsManager {
 		return new ExtensionSettingsManager(
 			$container->get(StorageFilesystemAdapter::class),
-			(string) $container->get(Config::class)->datadir,
+			(string)$container->get(Config::class)->datadir,
 		);
 	},
 
@@ -269,8 +269,8 @@ return [
 		return new FragmentCache(
 			$container->get(CacheManager::class),
 			$container->get(SessionInterface::class),
-			(int) ($cacheConfig['fragmentTtl'] ?? 3600),
-			(bool) ($cacheConfig['fragments'] ?? true),
+			(int)($cacheConfig['fragmentTtl'] ?? 3600),
+			(bool)($cacheConfig['fragments'] ?? true),
 		);
 	},
 

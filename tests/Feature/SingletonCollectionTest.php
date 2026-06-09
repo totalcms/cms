@@ -22,6 +22,7 @@ beforeEach(function (): void {
  * Valid `blog`-schema object data (it requires title/created/updated).
  *
  * @param array<string,mixed> $overrides
+ *
  * @return array<string,mixed>
  */
 function validBlogObject(array $overrides = []): array
@@ -35,10 +36,10 @@ function validBlogObject(array $overrides = []): array
 
 function seedSingletonCollection(object $container, string $id): CollectionData
 {
-	$collection = new CollectionData();
-	$collection->id = $id;
-	$collection->name = ucfirst($id);
-	$collection->schema = 'blog';
+	$collection            = new CollectionData();
+	$collection->id        = $id;
+	$collection->name      = ucfirst($id);
+	$collection->schema    = 'blog';
 	$collection->singleton = true;
 	$container->get(CollectionSaver::class)->saveCollection($collection->toArray());
 
@@ -75,7 +76,7 @@ test('ObjectSaver blocks a second object in a singleton', function (): void {
 	$saver->saveObject('sgl3', validBlogObject(['id' => 'sgl3'])); // first object — allowed
 
 	expect(fn () => $saver->saveObject('sgl3', validBlogObject(['id' => 'another'])))
-		->toThrow(\DomainException::class);
+		->toThrow(DomainException::class);
 });
 
 test('resolveTarget returns the object id once a singleton holds its object', function (): void {

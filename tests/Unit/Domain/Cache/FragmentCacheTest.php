@@ -38,9 +38,9 @@ function makeFragmentCache(array &$store, bool $authed = false, bool $disabled =
 describe('FragmentCache', function (): void {
 	test('renders body on first call and serves cached HTML on second', function (): void {
 		$store = [];
-		$fc = makeFragmentCache($store);
+		$fc    = makeFragmentCache($store);
 		$calls = 0;
-		$body = function () use (&$calls): string {
+		$body  = function () use (&$calls): string {
 			$calls++;
 
 			return "<p>hi {$calls}</p>";
@@ -53,9 +53,9 @@ describe('FragmentCache', function (): void {
 
 	test('bypasses cache (always renders) for an authenticated request', function (): void {
 		$store = [];
-		$fc = makeFragmentCache($store, authed: true);
+		$fc    = makeFragmentCache($store, authed: true);
 		$calls = 0;
-		$body = function () use (&$calls): string {
+		$body  = function () use (&$calls): string {
 			$calls++;
 
 			return "n{$calls}";
@@ -68,9 +68,9 @@ describe('FragmentCache', function (): void {
 
 	test('shared=true caches even when authenticated', function (): void {
 		$store = [];
-		$fc = makeFragmentCache($store, authed: true);
+		$fc    = makeFragmentCache($store, authed: true);
 		$calls = 0;
-		$body = function () use (&$calls): string {
+		$body  = function () use (&$calls): string {
 			$calls++;
 
 			return "n{$calls}";
@@ -83,9 +83,9 @@ describe('FragmentCache', function (): void {
 
 	test('bumpTag changes the storage key so the old fragment is no longer served', function (): void {
 		$store = [];
-		$fc = makeFragmentCache($store);
+		$fc    = makeFragmentCache($store);
 		$calls = 0;
-		$body = function () use (&$calls): string {
+		$body  = function () use (&$calls): string {
 			$calls++;
 
 			return "v{$calls}";
@@ -102,9 +102,9 @@ describe('FragmentCache', function (): void {
 
 	test('empty key never caches', function (): void {
 		$store = [];
-		$fc = makeFragmentCache($store);
+		$fc    = makeFragmentCache($store);
 		$calls = 0;
-		$body = function () use (&$calls): string {
+		$body  = function () use (&$calls): string {
 			$calls++;
 
 			return "x{$calls}";
@@ -117,9 +117,9 @@ describe('FragmentCache', function (): void {
 
 	test('disabled cache always renders live', function (): void {
 		$store = [];
-		$fc = makeFragmentCache($store, disabled: true);
+		$fc    = makeFragmentCache($store, disabled: true);
 		$calls = 0;
-		$body = function () use (&$calls): string {
+		$body  = function () use (&$calls): string {
 			$calls++;
 
 			return "x{$calls}";

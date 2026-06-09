@@ -102,7 +102,7 @@ readonly class TwigEngine
 		// This works without intl but translations will default to English
 		Chronos::diffFormatter(new RelativeTimeFormatter());
 
-		$this->twig->addRuntimeLoader(new class ($this->fragmentCache) implements RuntimeLoaderInterface {
+		$this->twig->addRuntimeLoader(new class($this->fragmentCache) implements RuntimeLoaderInterface {
 			public function __construct(private readonly FragmentCache $fragmentCache)
 			{
 			}

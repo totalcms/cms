@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Twig\Extension\CacheTokenParser;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
-use TotalCMS\Domain\Twig\Extension\CacheTokenParser;
 
 /**
  * A duck-typed FragmentCache stand-in. The compiled node resolves the runtime
@@ -20,14 +20,14 @@ function fakeFragmentCacheEnv(object $fragmentCache, array $templates): Environm
 		'use_yield'  => true,
 	]);
 	$twig->addTokenParser(new CacheTokenParser());
-	$twig->addRuntimeLoader(new class ($fragmentCache) implements RuntimeLoaderInterface {
+	$twig->addRuntimeLoader(new class($fragmentCache) implements RuntimeLoaderInterface {
 		public function __construct(private readonly object $fc)
 		{
 		}
 
 		public function load(string $class): ?object
 		{
-			return $class === \TotalCMS\Domain\Cache\FragmentCache::class ? $this->fc : null;
+			return $class === TotalCMS\Domain\Cache\FragmentCache::class ? $this->fc : null;
 		}
 	});
 
@@ -36,7 +36,7 @@ function fakeFragmentCacheEnv(object $fragmentCache, array $templates): Environm
 
 function recordingFragmentCache(array &$captured): object
 {
-	return new class ($captured) {
+	return new class($captured) {
 		/** @var array<int,array<string,mixed>> */
 		public array $captured;
 
@@ -45,7 +45,7 @@ function recordingFragmentCache(array &$captured): object
 			$this->captured = &$c;
 		}
 
-		public function render(string $key, ?int $ttl, array $tags, bool $shared, \Closure $body): string
+		public function render(string $key, ?int $ttl, array $tags, bool $shared, Closure $body): string
 		{
 			$this->captured[] = compact('key', 'ttl', 'tags', 'shared');
 
@@ -56,8 +56,8 @@ function recordingFragmentCache(array &$captured): object
 
 test('cache tag renders body and routes parsed args through FragmentCache::render', function (): void {
 	$captured = [];
-	$fc = recordingFragmentCache($captured);
-	$twig = fakeFragmentCacheEnv($fc, [
+	$fc       = recordingFragmentCache($captured);
+	$twig     = fakeFragmentCacheEnv($fc, [
 		't' => "{% cache 'side:' ~ id ttl=1800 tags=['blog'] shared=true %}<b>{{ id }}</b>{% endcache %}",
 	]);
 
@@ -72,8 +72,8 @@ test('cache tag renders body and routes parsed args through FragmentCache::rende
 
 test('cache tag with only a key defaults ttl=null, tags=[], shared=false', function (): void {
 	$captured = [];
-	$fc = recordingFragmentCache($captured);
-	$twig = fakeFragmentCacheEnv($fc, ['t' => "{% cache 'k' %}X{% endcache %}"]);
+	$fc       = recordingFragmentCache($captured);
+	$twig     = fakeFragmentCacheEnv($fc, ['t' => "{% cache 'k' %}X{% endcache %}"]);
 
 	$twig->render('t', []);
 
@@ -82,7 +82,7 @@ test('cache tag with only a key defaults ttl=null, tags=[], shared=false', funct
 
 test('cache tag rejects an unknown option', function (): void {
 	$discard = [];
-	$twig = fakeFragmentCacheEnv(recordingFragmentCache($discard), ['t' => "{% cache 'k' bogus=1 %}X{% endcache %}"]);
+	$twig    = fakeFragmentCacheEnv(recordingFragmentCache($discard), ['t' => "{% cache 'k' bogus=1 %}X{% endcache %}"]);
 
-	expect(fn () => $twig->render('t', []))->toThrow(\Twig\Error\SyntaxError::class);
+	expect(fn () => $twig->render('t', []))->toThrow(Twig\Error\SyntaxError::class);
 });

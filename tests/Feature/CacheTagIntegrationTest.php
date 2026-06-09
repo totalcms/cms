@@ -23,7 +23,7 @@ test('a tagged fragment is cached, served from cache, then re-rendered after the
 	$fc = fragmentCacheFromContainer();
 
 	$calls = 0;
-	$body = function () use (&$calls): string {
+	$body  = function () use (&$calls): string {
 		$calls++;
 
 		return "render-{$calls}";

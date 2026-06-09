@@ -24,8 +24,8 @@ final class CacheTokenParser extends AbstractTokenParser
 
 		$key = $this->parser->parseExpression();
 
-		$ttl = null;
-		$tags = null;
+		$ttl    = null;
+		$tags   = null;
 		$shared = null;
 
 		while (!$stream->test(Token::BLOCK_END_TYPE)) {
@@ -34,8 +34,8 @@ final class CacheTokenParser extends AbstractTokenParser
 			$value = $this->parser->parseExpression();
 
 			match ($name) {
-				'ttl'    => $ttl = $value,
-				'tags'   => $tags = $value,
+				'ttl'    => $ttl    = $value,
+				'tags'   => $tags   = $value,
 				'shared' => $shared = $value,
 				default  => throw new SyntaxError(
 					sprintf('Unknown option "%s" in "cache" tag. Expected ttl, tags, or shared.', $name),

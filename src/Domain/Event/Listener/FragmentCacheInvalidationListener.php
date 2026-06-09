@@ -25,7 +25,7 @@ final class FragmentCacheInvalidationListener
 	/** @param array<string,mixed> $payload */
 	public function onObjectChanged(array $payload): void
 	{
-		$collection = (string) ($payload['collection'] ?? '');
+		$collection = (string)($payload['collection'] ?? '');
 		if ($collection === '') {
 			return;
 		}
