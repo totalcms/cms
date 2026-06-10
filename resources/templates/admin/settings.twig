@@ -1,92 +1,9 @@
 {% extends "admin-dashboard.twig" %}
 
-{% set sections = {
-	'general': {
-		'label': t('settings.general'),
-		'description': t('settings.general_desc')
-	},
-	'auth': {
-		'label': t('settings.authentication'),
-		'description': t('settings.authentication_desc')
-	},
-	'cache': {
-		'label': t('settings.cache'),
-		'description': t('settings.cache_desc')
-	},
-	'dashboard': {
-		'label': t('settings.dashboard'),
-		'description': t('settings.dashboard_desc')
-	},
-	'extensions': {
-		'label': t('settings.extensions'),
-		'description': t('settings.extensions_desc')
-	},
-	'htmlclean': {
-		'label': t('settings.html_sanitization'),
-		'description': t('settings.html_sanitization_desc')
-	},
-	'i18n': {
-		'label': t('settings.i18n'),
-		'description': t('settings.i18n_desc')
-	},
-	'imageworks': {
-		'label': t('settings.imageworks'),
-		'description': t('settings.imageworks_desc')
-	},
-	'mailer': {
-		'label': t('settings.mailer'),
-		'description': t('settings.mailer_desc')
-	},
-	'mcp': {
-		'label': t('settings.mcp'),
-		'description': t('settings.mcp_desc')
-	},
-	'presets': {
-		'label': t('settings.presets'),
-		'description': t('settings.presets_desc')
-	},
-	'smtp': {
-		'label': t('settings.smtp'),
-		'description': t('settings.smtp_desc')
-	},
-	'search': {
-		'label': t('settings.search'),
-		'description': t('settings.search_desc')
-	},
-	'sync': {
-		'label': t('settings.sync'),
-		'description': t('settings.sync_desc')
-	},
-	'builder': {
-		'label': 'Builder',
-		'description': 'Site Builder stub generation settings'
-	},
-} %}
-
-{% if cms.edition.can('oauth_server') %}
-	{% set sections = sections|merge({
-		'oauth': {
-			'label': t('settings.oauth'),
-			'description': t('settings.oauth_desc')
-		}
-	}) %}
-{% endif %}
-
-{% if cms.license.canSimulateEdition() %}
-	{% set sections = sections|merge({
-		'license': {
-			'label': t('settings.license_simulator'),
-			'description': t('settings.license_simulator_desc')
-		}
-	}) %}
-{% endif %}
-
-{# Sort the sidebar alphabetically by the visible label so it scales as
-   more sections are added. Sorts by label (which is localized) so each
-   operator sees their own language's ordering. Twig's |sort preserves
-   the dict keys, which the for-loop below uses for the `settings-{id}`
-   class and active-state matching. #}
-{% set sections = sections|sort((a, b) => a.label|lower <=> b.label|lower) %}
+{# Settings sections come from cms.admin.settingsSections() — the single source
+   of truth shared with the quick-nav index, already gated (oauth/license),
+   localized, and sorted by label. Keyed by id for routing + active-state. #}
+{% set sections = cms.admin.settingsSections() %}
 
 {% block dashcontent %}
 

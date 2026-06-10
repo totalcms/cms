@@ -126,21 +126,13 @@ window.TCMS_QUICK_NAV = [
 {% endif %}
 
 {# ── Settings ── #}
+{# Derived from cms.admin.settingsSections() — the same source the settings page
+   uses — so quick-nav never drifts as sections are added. The section
+   description doubles as search keywords. Don't hand-maintain a list here. #}
 {% if cms.auth.isAdmin() %}
-{"label":"{{ t('settings.general') | e('js') }}","section":"Settings","path":"settings/general","keywords":""},
-{"label":"{{ t('settings.authentication') | e('js') }}","section":"Settings","path":"settings/auth","keywords":"login password"},
-{"label":"{{ t('settings.cache') | e('js') }}","section":"Settings","path":"settings/cache","keywords":""},
-{"label":"{{ t('settings.dashboard') | e('js') }}","section":"Settings","path":"settings/dashboard","keywords":"admin"},
-{"label":"{{ t('settings.html_sanitization') | e('js') }}","section":"Settings","path":"settings/htmlclean","keywords":"sanitize xss"},
-{"label":"{{ t('settings.imageworks') | e('js') }}","section":"Settings","path":"settings/imageworks","keywords":"image watermark"},
-{"label":"{{ t('settings.mailer') | e('js') }}","section":"Settings","path":"settings/mailer","keywords":"email"},
-{"label":"{{ t('settings.presets') | e('js') }}","section":"Settings","path":"settings/presets","keywords":"field defaults"},
-{"label":"{{ t('settings.smtp') | e('js') }}","section":"Settings","path":"settings/smtp","keywords":"email mail server"},
-{"label":"{{ t('settings.sync') | e('js') }}","section":"Settings","path":"settings/sync","keywords":"remote"},
-{"label":"Builder","section":"Settings","path":"settings/builder","keywords":"site pages"},
-{% if cms.license.canSimulateEdition() %}
-{"label":"{{ t('settings.license_simulator') | e('js') }}","section":"Settings","path":"settings/license","keywords":"edition"},
-{% endif %}
+{% for sectionId, section in cms.admin.settingsSections() %}
+{"label":"{{ section.label | e('js') }}","section":"Settings","path":"settings/{{ sectionId | e('js') }}","keywords":"{{ section.description | e('js') }}"},
+{% endfor %}
 {% endif %}
 
 {# ── Docs ── #}

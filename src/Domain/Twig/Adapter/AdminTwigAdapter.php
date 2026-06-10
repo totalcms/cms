@@ -18,12 +18,15 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Data\JobQueueHealthData;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
@@ -62,6 +65,8 @@ readonly class AdminTwigAdapter
 		private CollectionFetcher $collectionFetcher,
 		private \TotalCMS\Domain\Builder\Service\BuilderTemplatePaths $paths,
 		private JobQueueHealth $jobQueueHealth,
+		private TranslationService $translator,
+		private EditionFeatureService $editionFeatures,
 	) {
 	}
 
@@ -342,6 +347,60 @@ readonly class AdminTwigAdapter
 		}
 
 		return $items;
+	}
+
+	/**
+	 * Canonical list of admin settings sections — the single source of truth for
+	 * both the settings page sidebar (settings.twig) and the quick-nav index, so
+	 * the two can never drift (mirrors how docsMenu() backs the docs nav).
+	 *
+	 * Keyed by section id (== the `settings/{id}` route == the settings schema
+	 * id under resources/schemas/settings/). Each entry carries a resolved
+	 * (translated) label + description. Ordered alphabetically by label so the
+	 * sidebar scales as sections are added.
+	 *
+	 * Edition/license-gated sections are appended only when available: `oauth`
+	 * needs the OAuth Server feature, `license` needs edition simulation — the
+	 * same gating settings.twig previously did inline.
+	 *
+	 * @return array<string,array{label:string,description:string}>
+	 */
+	public function settingsSections(): array
+	{
+		$t = fn (string $key): string => $this->translator->trans($key, [], 'admin');
+
+		$sections = [
+			'general'    => ['label' => $t('settings.general'),           'description' => $t('settings.general_desc')],
+			'auth'       => ['label' => $t('settings.authentication'),    'description' => $t('settings.authentication_desc')],
+			'cache'      => ['label' => $t('settings.cache'),             'description' => $t('settings.cache_desc')],
+			'dashboard'  => ['label' => $t('settings.dashboard'),         'description' => $t('settings.dashboard_desc')],
+			'extensions' => ['label' => $t('settings.extensions'),        'description' => $t('settings.extensions_desc')],
+			'htmlclean'  => ['label' => $t('settings.html_sanitization'), 'description' => $t('settings.html_sanitization_desc')],
+			'i18n'       => ['label' => $t('settings.i18n'),              'description' => $t('settings.i18n_desc')],
+			'imageworks' => ['label' => $t('settings.imageworks'),        'description' => $t('settings.imageworks_desc')],
+			'mailer'     => ['label' => $t('settings.mailer'),            'description' => $t('settings.mailer_desc')],
+			'mcp'        => ['label' => $t('settings.mcp'),               'description' => $t('settings.mcp_desc')],
+			'presets'    => ['label' => $t('settings.presets'),           'description' => $t('settings.presets_desc')],
+			'smtp'       => ['label' => $t('settings.smtp'),              'description' => $t('settings.smtp_desc')],
+			'search'     => ['label' => $t('settings.search'),            'description' => $t('settings.search_desc')],
+			'sync'       => ['label' => $t('settings.sync'),              'description' => $t('settings.sync_desc')],
+			// Builder predates the settings translation keys and ships English-only.
+			'builder'    => ['label' => 'Builder',                        'description' => 'Site Builder stub generation settings'],
+		];
+
+		if ($this->editionFeatures->can(EditionFeature::OAUTH_SERVER)) {
+			$sections['oauth'] = ['label' => $t('settings.oauth'), 'description' => $t('settings.oauth_desc')];
+		}
+
+		if ($this->licenseStatus->canSimulateEdition()) {
+			$sections['license'] = ['label' => $t('settings.license_simulator'), 'description' => $t('settings.license_simulator_desc')];
+		}
+
+		// Sort by visible label (case-insensitive), preserving the id keys the
+		// templates use for routing + active-state matching.
+		uasort($sections, static fn (array $a, array $b): int => strcasecmp($a['label'], $b['label']));
+
+		return $sections;
 	}
 
 	/**
