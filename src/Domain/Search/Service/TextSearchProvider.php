@@ -57,6 +57,13 @@ final readonly class TextSearchProvider implements SearchProvider
 		$filterOptions = $query->persona === 'public' ? ['exclude' => 'draft:true'] : [];
 		$items         = $this->filter->fetchFilteredIndex($query->collection, $filterOptions);
 
+		// Opt-in relevance ranking: best-partial matches first (OR recall),
+		// instead of the all-or-nothing AND filter below. $query->collection is
+		// already non-null here (guarded above) — pass it narrowed.
+		if ($query->relevance) {
+			return $this->rankByRelevance($query, $query->collection, $items);
+		}
+
 		$matches = $this->searcher->search($items, $query->text);
 
 		// Apply offset + limit window.
@@ -77,6 +84,42 @@ final readonly class TextSearchProvider implements SearchProvider
 				collection: $query->collection,
 				id: $id,
 				score: $score,
+			);
+		}
+
+		return $results;
+	}
+
+	/**
+	 * Relevance-scored variant: rank by term coverage (OR recall, AND-biased),
+	 * normalizing the best score to 1.0 so SearchResult stays in the 0-1 range
+	 * SearchService expects. ObjectSearcher::searchScored() sorts before this
+	 * windows, so the offset/limit slice operates on the already-ranked list.
+	 *
+	 * @param array<int,array<string,mixed>> $items
+	 *
+	 * @return list<SearchResult>
+	 */
+	private function rankByRelevance(SearchQuery $query, string $collection, array $items): array
+	{
+		$scored = $this->searcher->searchScored($items, $query->text, $query->weights);
+		if ($scored === []) {
+			return [];
+		}
+
+		$top      = $scored[0]['score'] > 0 ? $scored[0]['score'] : 1.0;
+		$windowed = array_slice($scored, $query->offset, $query->limit);
+
+		$results = [];
+		foreach ($windowed as $entry) {
+			$id = (string)($entry['item']['id'] ?? '');
+			if ($id === '') {
+				continue;
+			}
+			$results[] = new SearchResult(
+				collection: $collection,
+				id: $id,
+				score: $entry['score'] / $top,
 			);
 		}
 

@@ -109,6 +109,10 @@ readonly class SearchCollectionTool
 			collection: $collection,
 			limit: $cappedLimit,
 			persona: $persona->value,
+			// Rank by term coverage (best partial match first) rather than the
+			// all-or-nothing AND filter, so descriptive multi-word queries from
+			// an agent return useful results instead of nothing.
+			relevance: true,
 		));
 
 		// Resolve result IDs back to full object arrays.

@@ -198,4 +198,71 @@ final class ObjectSearcherTest extends TestCase
 		$this->assertCount(1, $results);
 		$this->assertSame('1', $results[0]['id']);
 	}
+
+	public function testSearchScoredRanksByTermCoverageWithOrRecall(): void
+	{
+		$items = [
+			// matches animated + hamburger + menu (3); NOT "navigation"
+			['id' => 'burger', 'name' => 'Burger', 'subtitle' => 'Animated Menu Hamburgers',
+				'tags' => ['nav', 'menu', 'hamburger', 'animation']],
+			// matches menu + navigation (2)
+			['id' => 'rails', 'name' => 'Rails', 'subtitle' => 'On Page Nav',
+				'tags' => ['menu', 'navigation']],
+			// matches navigation only (1), via description prose
+			['id' => 'glider', 'name' => 'Glider', 'description' => 'easy reading and navigation',
+				'tags' => ['slider']],
+		];
+
+		$scored = $this->searcher->searchScored($items, 'animated hamburger menu navigation');
+
+		// OR recall: all three are candidates (each matched >= 1 term).
+		$this->assertCount(3, $scored);
+		$this->assertSame('burger', $scored[0]['item']['id']);
+		$this->assertSame(3, $scored[0]['matched']);
+		$this->assertSame('rails', $scored[1]['item']['id']);
+		$this->assertSame(2, $scored[1]['matched']);
+		$this->assertSame('glider', $scored[2]['item']['id']);
+		$this->assertSame(1, $scored[2]['matched']);
+	}
+
+	public function testSearchScoredReturnsEmptyForEmptyOrStopwordQuery(): void
+	{
+		$items = [['id' => 'x', 'tags' => ['menu']]];
+		$this->assertSame([], $this->searcher->searchScored($items, ''));
+		$this->assertSame([], $this->searcher->searchScored($items, 'and or'));
+	}
+
+	public function testSearchScoredDropsItemsMatchingNoTerm(): void
+	{
+		$items = [
+			['id' => 'burger', 'tags' => ['hamburger']],
+			['id' => 'other', 'tags' => ['slider']],
+		];
+		$scored = $this->searcher->searchScored($items, 'hamburger');
+		$this->assertCount(1, $scored);
+		$this->assertSame('burger', $scored[0]['item']['id']);
+	}
+
+	public function testSearchScoredAppliesFieldWeights(): void
+	{
+		// Equal term coverage (1 each) -> weighted score decides order.
+		$items = [
+			['id' => 'a', 'description' => 'gallery'], // best field weight = 1.0
+			['id' => 'b', 'name' => 'gallery'],        // best field weight = 5.0
+		];
+		$scored = $this->searcher->searchScored($items, 'gallery', ['name' => 5.0, 'description' => 1.0]);
+		$this->assertSame('b', $scored[0]['item']['id']);
+		$this->assertSame('a', $scored[1]['item']['id']);
+	}
+
+	public function testSearchScoredBreaksTiesByIdAscending(): void
+	{
+		$items = [
+			['id' => 'zeta', 'tags' => ['menu']],
+			['id' => 'alpha', 'tags' => ['menu']],
+		];
+		$scored = $this->searcher->searchScored($items, 'menu');
+		$this->assertSame('alpha', $scored[0]['item']['id']);
+		$this->assertSame('zeta', $scored[1]['item']['id']);
+	}
 }

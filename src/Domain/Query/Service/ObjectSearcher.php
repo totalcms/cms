@@ -60,6 +60,103 @@ readonly class ObjectSearcher
 	}
 
 	/**
+	 * Relevance-scored search. Unlike search() (a boolean AND/OR filter), this
+	 * returns every item matching AT LEAST ONE term (OR recall), scored by the
+	 * number of distinct terms matched, weighted by field.
+	 *
+	 * Ordering is AND-biased: more distinct terms matched wins first (a
+	 * full-coverage match always outranks a partial one); ties break by
+	 * weighted score, then by `id` ascending for determinism.
+	 *
+	 * @param array<int,array<string,mixed>> $items
+	 * @param array<string,float> $weights field name => weight (unlisted = 1.0)
+	 *
+	 * @return list<array{item: array<string,mixed>, score: float, matched: int}>
+	 */
+	public function searchScored(array $items, string $query, array $weights = []): array
+	{
+		$query = trim(mb_strtolower($query));
+		if ($query === '') {
+			return [];
+		}
+
+		// Lowercased above so 'AND'/'OR' are stripped too (mirrors search()).
+		$terms = array_values(array_diff($this->parseTerms($query), ['and', 'or']));
+		if ($terms === []) {
+			return [];
+		}
+
+		$scored = [];
+		foreach ($items as $item) {
+			$matched = 0;
+			$score   = 0.0;
+			foreach ($terms as $term) {
+				$weight = self::bestFieldWeight($item, $term, $weights);
+				if ($weight !== null) {
+					$matched++;
+					$score += $weight;
+				}
+			}
+			if ($matched === 0) {
+				continue;
+			}
+			$scored[] = ['item' => $item, 'score' => $score, 'matched' => $matched];
+		}
+
+		usort($scored, static function (array $a, array $b): int {
+			return ($b['matched'] <=> $a['matched'])
+				?: (($b['score'] <=> $a['score'])
+				?: ((string)($a['item']['id'] ?? '') <=> (string)($b['item']['id'] ?? '')));
+		});
+
+		return $scored;
+	}
+
+	/**
+	 * Highest field weight among the fields of $item where $term matches, or
+	 * null when the term matches no field. Uses the same word-prefix + recursive
+	 * array rule as itemMatchesTerm(). Fields absent from $weights count as 1.0.
+	 *
+	 * @param array<string,mixed> $item
+	 * @param array<string,float> $weights
+	 */
+	private static function bestFieldWeight(array $item, string $term, array $weights): ?float
+	{
+		$best = null;
+		foreach ($item as $key => $value) {
+			if (empty($value)) {
+				continue;
+			}
+
+			if (is_array($value)) {
+				$matches = self::searchArrayValues($value, $term);
+			} elseif (is_scalar($value)) {
+				$matches = self::scalarMatchesTerm((string)$value, $term);
+			} else {
+				$matches = false;
+			}
+
+			if ($matches) {
+				$weight = $weights[$key] ?? 1.0;
+				if ($best === null || $weight > $best) {
+					$best = $weight;
+				}
+			}
+		}
+
+		return $best;
+	}
+
+	/**
+	 * Word-prefix match for a single scalar value — the shared rule used by
+	 * itemMatchesTerm()/searchArrayValues() for scalars.
+	 */
+	private static function scalarMatchesTerm(string $value, string $term): bool
+	{
+		return preg_match('/\b' . preg_quote($term, '/') . '/i', $value) === 1;
+	}
+
+	/**
 	 * Parse query string into individual terms, supporting quoted phrases.
 	 *
 	 * @return array<string>

@@ -39,4 +39,20 @@ final class SearchQueryTest extends TestCase
 		$this->assertSame('authenticated', $query->persona);
 		$this->assertSame('en_US', $query->locale);
 	}
+
+	public function testRelevanceAndWeightsDefaultOffAndAcceptOverrides(): void
+	{
+		$default = new SearchQuery(text: 'gallery');
+		$this->assertFalse($default->relevance);
+		$this->assertSame([], $default->weights);
+
+		$tuned = new SearchQuery(
+			text: 'gallery',
+			collection: 'products',
+			relevance: true,
+			weights: ['name' => 3.0, 'tags' => 2.0],
+		);
+		$this->assertTrue($tuned->relevance);
+		$this->assertSame(['name' => 3.0, 'tags' => 2.0], $tuned->weights);
+	}
 }
