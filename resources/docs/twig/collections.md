@@ -127,6 +127,35 @@ Search a collection by query string against one or more properties. Properties a
 | `query` | string | Search query string |
 | `propertyPriorities` | string\|array | Property name or ordered array of properties to search |
 
+### searchScored()
+
+Relevance-ranked search: returns best-partial matches **first**, ranked by how many query terms each object matched (OR recall), instead of the all-or-nothing AND filter `search()` uses. Use it for descriptive, multi-word queries where returning the closest match beats returning nothing.
+
+```twig
+{% set results = cms.collection.searchScored('products', searchTerm) %}
+
+{# Optional per-field weights (field => weight, default 1.0) boost important fields #}
+{% set results = cms.collection.searchScored('products', searchTerm, {'name': 3, 'tags': 2}) %}
+
+{% for item in results %}
+    <a href="{{ cms.collection.objectUrl('products', item) }}">{{ item.name }}</a>
+{% endfor %}
+```
+
+Results are plain object arrays in ranked order — the same shape `search()` returns.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `collection` | string | Collection to search |
+| `query` | string | Search query string |
+| `weights` | object | Optional per-field weights (`field => weight`); unlisted fields default to `1.0` |
+
+**Differences from `search()`:**
+
+- Ranks by term coverage, not field position, and returns partial matches instead of requiring every term.
+- Does **not** support `field:value` scoped queries or explicit `and`/`or` operators — use `search()` for those.
+- Opt-in and additive; `cms.collection.search()` is unchanged. See the [relevance ranking notes](../operations/search#relevance-ranking-mcp--programmatic-search).
+
 ## URL Generation
 
 ### objectUrl()
