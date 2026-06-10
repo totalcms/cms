@@ -268,9 +268,18 @@ body {
 			&[class*="mailer-"] {
 				--collection-icon : var(--icon-plane);
 			}
-			&[class*="automation-"] {
+			&[class*="automation"] {
 				--collection-icon : var(--icon-automations);
 			}
+			&[class*="sitemap"] {
+				--collection-icon : var(--icon-sitemap);
+			}
+			&[class*="mcp-"] {
+				--collection-icon : var(--icon-mcp);
+			}
+			&.schema-preset-item { --collection-icon : var(--icon-settings) }
+			&.schema-preset-item { --collection-icon : var(--icon-settings) }
+			&.schema-dataviews { --collection-icon : var(--icon-data-views) }
 			&.schema-auth, &.collection-auth { --collection-icon : var(--icon-user) }
 			&.schema-blog-legacy,
 			&.schema-blog, &.collection-blog { --collection-icon : var(--icon-blog) }
