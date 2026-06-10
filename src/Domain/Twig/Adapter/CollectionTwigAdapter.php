@@ -185,6 +185,33 @@ readonly class CollectionTwigAdapter
 		return $results->toArray();
 	}
 
+	/**
+	 * Relevance-ranked collection search for Twig: `cms.collection.searchScored(...)`.
+	 * Best-partial matches first (OR recall, term coverage) instead of the
+	 * all-or-nothing AND filter `search()` uses. See operations/search docs.
+	 * Optional $weights boost matches in chosen fields (default 1.0).
+	 *
+	 * @param array<string,float> $weights
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	public function searchScored(string $collection, string $query, array $weights = []): array
+	{
+		try {
+			$results = $this->indexSearcher->searchScored($collection, $query, $weights);
+		} catch (\Exception $e) {
+			$this->logger->warning("Relevance search failed for collection '{$collection}' with query '{$query}'", ['error' => $e->getMessage()]);
+
+			return [];
+		}
+
+		if ($results->isEmpty()) {
+			return [];
+		}
+
+		return $results->toArray();
+	}
+
 	// Get all objects from a collection
 	/** @return array<array<string,mixed>> */
 	public function objects(string $collection): array
