@@ -39,6 +39,7 @@ final class McpServerFactoryTest extends TestCase
 		// Minimum config the factory reads.
 		$this->config->domain    = 'test.local';
 		$this->config->dashboard = [];
+		$this->config->mcp       = [];
 		$this->sessions          = new InMemorySessionStore();
 		$this->logger            = new NullLogger();
 	}
@@ -249,5 +250,44 @@ final class McpServerFactoryTest extends TestCase
 		$this->factory()->build(McpPersona::PUBLIC_);
 
 		$this->assertSame([McpPersona::ADMIN, McpPersona::PUBLIC_], $invocations);
+	}
+
+	public function testResolveToolNameAppliesPrefixToNormalTools(): void
+	{
+		$this->config->mcp = ['toolPrefix' => 'bistro'];
+		$tool              = $this->tool('query_collection');
+		$this->assertSame('bistro_query_collection', $this->factory()->resolveToolName($tool));
+	}
+
+	public function testResolveToolNameExemptsFlaggedTools(): void
+	{
+		$this->config->mcp = ['toolPrefix' => 'bistro'];
+		$exempt            = new McpToolDefinition(
+			name: 'search',
+			description: 'd',
+			access: 'public',
+			handler: static fn (): array => [],
+			exemptFromPrefix: true,
+		);
+		$this->assertSame('search', $this->factory()->resolveToolName($exempt));
+	}
+
+	public function testResolveToolNameNoPrefixConfigured(): void
+	{
+		$this->config->mcp = [];
+		$this->assertSame('query_collection', $this->factory()->resolveToolName($this->tool('query_collection')));
+	}
+
+	public function testResolveToolNameExemptToolWithoutPrefixReturnsLiteralName(): void
+	{
+		$this->config->mcp = [];
+		$exempt            = new McpToolDefinition(
+			name: 'fetch',
+			description: 'd',
+			access: 'public',
+			handler: static fn (): array => [],
+			exemptFromPrefix: true,
+		);
+		$this->assertSame('fetch', $this->factory()->resolveToolName($exempt));
 	}
 }

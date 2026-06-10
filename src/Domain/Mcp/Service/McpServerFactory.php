@@ -15,6 +15,7 @@ use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Support\Config;
@@ -72,6 +73,7 @@ readonly class McpServerFactory
 				. 'Resources: tcms://{collection}/ for collection summaries, tcms://{collection}/{id} for objects — '
 				. 'reachable via resources/read or the get_resource tool. '
 				. 'Drafts are hidden from anonymous callers. '
+				. 'search / fetch are provided for ChatGPT and deep-research clients: search(query) returns {id,title,url}; fetch(id) returns the full document. '
 				. 'Tool descriptions describe their inputs and outputs.'
 			)
 			->setSession($this->sessionStore)
@@ -104,7 +106,6 @@ readonly class McpServerFactory
 		// see the first pass's tools as collisions and skip them — don't do that.
 		$this->schemaToolRegistrar->register($this->toolRegistry);
 
-		$prefix = $this->toolNamePrefix();
 		foreach ($this->toolRegistry->forPersona($persona) as $tool) {
 			// Persona-aware tools (Phase 1 content tools) expose a builder that
 			// renders a per-persona description — e.g., the field catalog must
@@ -122,7 +123,7 @@ readonly class McpServerFactory
 
 			$builder->addTool(
 				handler: $tool->handler,
-				name: $prefix . $tool->name,
+				name: $this->resolveToolName($tool),
 				description: $description,
 				annotations: $annotations,
 				inputSchema: $tool->inputSchema,
@@ -247,6 +248,20 @@ readonly class McpServerFactory
 
 			return $handler($arguments);
 		};
+	}
+
+	/**
+	 * Final tools/list name for a tool: prefix-prepended unless the tool opts
+	 * out via exemptFromPrefix. ChatGPT-compat tools (search/fetch) opt out so
+	 * their literal names survive a configured mcp.toolPrefix.
+	 */
+	public function resolveToolName(McpToolDefinition $tool): string
+	{
+		if ($tool->exemptFromPrefix) {
+			return $tool->name;
+		}
+
+		return $this->toolNamePrefix() . $tool->name;
 	}
 
 	/**
