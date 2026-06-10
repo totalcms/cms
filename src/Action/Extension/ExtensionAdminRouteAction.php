@@ -53,7 +53,9 @@ readonly class ExtensionAdminRouteAction
 		}
 
 		if (is_callable($handler)) {
-			return $handler($request, $response, $args);
+			// Merge any {placeholder} values captured from the registered
+			// route path (e.g. /dashboard/{id}) into the handler's args.
+			return $handler($request, $response, array_merge($args, $routeMatch->params));
 		}
 
 		return $this->renderer->json($response, ['error' => 'Invalid route handler'])->withStatus(500);

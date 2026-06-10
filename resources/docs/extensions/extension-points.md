@@ -216,6 +216,20 @@ The routes above are accessible at:
 - `/ext/acme/seo-pro/webhook`
 - `/ext/acme/seo-pro/embed/{id}`
 
+### Route placeholders
+
+API, public, and admin routes all support Slim-style `{placeholder}` segments. A captured value is passed to the handler in its `$args` array, keyed by the placeholder name:
+
+```php
+$group->get('/embed/{id}', function ($request, $response, array $args) {
+    $id = $args['id'];   // 'abc' for /ext/acme/seo-pro/embed/abc
+    // ...
+    return $response;
+});
+```
+
+`{id}` matches a single path segment; add a regex constraint with `{id:\d+}` to restrict it (e.g. digits only). An exact static route (`/embed/list`) always wins over a placeholder route (`/embed/{id}`) on the same path, regardless of registration order.
+
 ## Admin Navigation
 
 Add items to the admin sidebar.
