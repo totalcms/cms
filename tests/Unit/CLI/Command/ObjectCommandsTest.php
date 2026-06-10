@@ -6,6 +6,7 @@ namespace Tests\Unit\CLI\Command;
 
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
+use TotalCMS\CLI\Command\ObjectDeleteCommand;
 use TotalCMS\CLI\Command\ObjectGetCommand;
 use TotalCMS\CLI\Command\ObjectListCommand;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -13,6 +14,7 @@ use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\TotalCMS;
 
 beforeEach(function (): void {
@@ -123,6 +125,62 @@ describe('object:get', function (): void {
 
 	it('returns error for nonexistent object', function (): void {
 		$this->tester->execute(['collection' => 'blog', 'id' => 'nonexistent']);
+
+		expect($this->tester->getStatusCode())->toBe(1);
+	});
+});
+
+describe('object:delete', function (): void {
+	beforeEach(function (): void {
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$objectFetcher->method('existsObject')->willReturnCallback(
+			fn (string $col, string $id): bool => $col === 'blog' && $id === 'post-1'
+		);
+		$this->totalcms->method('objectFetcher')->willReturn($objectFetcher);
+
+		$this->remover = $this->createMock(ObjectRemover::class);
+		$this->totalcms->method('objectRemover')->willReturn($this->remover);
+
+		$app     = new Application();
+		$command = new ObjectDeleteCommand($this->totalcms);
+		$app->addCommand($command);
+		$this->tester = new CommandTester($command);
+	});
+
+	it('deletes an existing object with --force', function (): void {
+		$this->remover->expects($this->once())
+			->method('deleteObject')
+			->with('blog', 'post-1')
+			->willReturn(true);
+
+		$this->tester->execute(['collection' => 'blog', 'id' => 'post-1', '--force' => true]);
+
+		expect($this->tester->getStatusCode())->toBe(0);
+		expect($this->tester->getDisplay())->toContain('deleted');
+	});
+
+	it('outputs JSON with --json', function (): void {
+		$this->remover->method('deleteObject')->willReturn(true);
+
+		$this->tester->execute(['collection' => 'blog', 'id' => 'post-1', '--json' => true]);
+
+		$data = json_decode((string)$this->tester->getDisplay(), true);
+		expect($data['status'])->toBe('deleted');
+		expect($data['id'])->toBe('post-1');
+	});
+
+	it('returns error for nonexistent object', function (): void {
+		$this->remover->expects($this->never())->method('deleteObject');
+
+		$this->tester->execute(['collection' => 'blog', 'id' => 'nonexistent', '--force' => true]);
+
+		expect($this->tester->getStatusCode())->toBe(1);
+	});
+
+	it('returns error for nonexistent collection', function (): void {
+		$this->remover->expects($this->never())->method('deleteObject');
+
+		$this->tester->execute(['collection' => 'nonexistent', 'id' => 'post-1', '--force' => true]);
 
 		expect($this->tester->getStatusCode())->toBe(1);
 	});
