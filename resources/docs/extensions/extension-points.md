@@ -34,6 +34,8 @@ new TwigFunction('acme_banner', function (): void {
 
 Extensions register Twig **functions, filters, and globals** — never custom tags or nodes — so there is nothing else to do to be yield-ready.
 
+> **Security: Twig autoescaping is OFF.** Total CMS renders content fields as trusted author HTML/Markdown, so Twig does not escape output for you. Any value your extension prints that came from outside the admin — request input, anonymous submissions, third-party APIs — must be escaped explicitly with `{{ value | e }}` (or `| e('html_attr')` inside an attribute), or wrapped in `{% autoescape 'html' %}`. A handler that prints `{{ input }}` has no automatic XSS protection. See [Template Output Escaping](operations/security#template-output-escaping-twig).
+
 ## Twig Functions
 
 Add custom functions available in all Twig templates.
