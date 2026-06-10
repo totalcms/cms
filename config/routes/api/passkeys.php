@@ -22,6 +22,6 @@ return function (RouteCollectorProxyInterface $app): void {
 			$auth->get('/list', Auth\PasskeyListAction::class);
 			$auth->get('/list/html', Auth\PasskeyListHtmlAction::class);
 			$auth->delete('/{credentialId}', Auth\PasskeyDeleteAction::class);
-		})->add(AuthMiddleware::class)->add(PasskeyEditionMiddleware::class);
-	})->add(NoCacheMiddleware::class);
+		})->add(AuthMiddleware::class);
+	})->add(PasskeyEditionMiddleware::class)->add(NoCacheMiddleware::class);
 };
