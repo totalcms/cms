@@ -2,6 +2,38 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-rc.8] - 2026-06-11
+
+### Added
+
+- **Total CMS agent skill**: A built-in skill that teaches AI coding agents how to build a Total CMS site locally — the Site Builder loop, the `tcms` CLI (with `--json`), the frontend/Vite pipeline, and the collections/schemas/objects data model. It installs into the project's `.claude/skills/totalcms/`, where Claude Code auto-loads it when a task matches site-building; an `AGENTS.md` pointer routes other agents (Codex, Cursor) to the same files. The skill is the procedural "how to build" layer and delegates exhaustive reference to the docs already shipped on disk at `vendor/totalcms/cms/resources/docs/` (with the MCP docs server as an optional accelerator), so it works with zero extra setup. Source of truth ships in the package at `resources/skill/`
+- **`totalcms/cms` is now a Composer plugin**: The package ships as a `composer-plugin` so it can run project-side maintenance on every `composer install`/`update` — work a dependency otherwise cannot trigger, since Composer runs scripts only from the root project. It is a thin, fault-isolated bridge that shells out to the `tcms` CLI and can never abort a composer run. Today it installs/refreshes the agent skill; the lifecycle hook is the groundwork for future automation (e.g. post-update cache/migration handling and Composer-distributed extensions)
+- **`tcms skill:install` command**: Installs or refreshes the agent skill into `.claude/skills/totalcms/` from the installed package. Runs automatically via the Composer plugin on install/update, and can be run by hand to refresh after an update
+- **`totalcms` reference schema**: A built-in schema that exercises every field type, as a living reference for schema authors and a fixture for field-rendering coverage
+- **Relevance-scored search**: `cms.collection.searchScored()` returns search results ranked by relevance via `IndexSearcher`, and the built-in MCP search uses the same ranking — so the most relevant matches come first instead of index order. Documented under `twig/`
+- **ChatGPT-compatible MCP search/fetch**: The MCP server detects ChatGPT / deep-research clients and serves them a tools-only surface with the `search`/`fetch` tools those clients expect (`search` returns `{id, title, url}`; `fetch` returns the full document), alongside the existing tool set for other clients
+- **`object:delete` and `repair:index` CLI commands**: Delete a single object (updating the collection index) and rebuild a collection's `.index.json` + count from the objects on disk, from the `tcms` CLI
+- **Locale-aware price field**: The price field is rebuilt as a locale-aware currency input — it formats using the active locale's currency conventions, and formatted/entered strings are coerced to a float via `PriceData` on save
+- **`cms.locale.htmlLang()`**: A Twig helper that returns the active locale as a BCP 47 language tag, now used to set the admin `<html lang>` attribute
+- **`{placeholder}` segments in extension routes**: Extension-registered routes can now contain `{placeholder}` path segments, matching the routing vocabulary core routes already use
+
+### Enhanced
+
+- **Extension boot phase now runs in the CLI bootstrap**: Extensions are booted when the `tcms` CLI starts, so extension-registered commands and event listeners are available to CLI runs (not just web requests)
+- **Importers surface per-record skips**: `collection:import` and the importers now report records that were skipped during an import instead of silently dropping them, so a partial import is visible
+- **MCP tools declare output schemas**: `get_resource` and `search_collection(s)` now publish output schemas, so MCP clients can validate and structure their results
+- **MCP treats a blank CORS allowlist as open**: An empty CORS allowlist is now interpreted as "allow any origin" rather than blocking all cross-origin MCP access
+
+### Fixed
+
+- **Passkeys gated by edition inconsistently + frontend login button**: Passkey availability is now gated by edition consistently across the app, and the frontend passkey login button is fixed
+- **List settings were merged by index instead of replaced on save**: Saving a list-type setting merged the new values onto the old ones by position, so removing an item could leave a stale trailing value. List settings are now replaced wholesale on save
+- **Settings nav could drift from quick-nav**: The settings navigation is now derived from a single source, so the settings sidebar and quick-nav can no longer fall out of sync
+- **Automations appeared in the collections view**: The internal `automations` collection is now hidden from the collections list
+- **Schema icons**: Corrected schema icon rendering
+- **Singleton collection showed a duplicate label**: Removed the double label on singleton collections introduced with that feature in rc.7
+- **Native custom-color picker closed the dropdown**: The color dropdown now stays open while using the browser's native custom-color picker
+
 ## [3.5.0-rc.7] - 2026-06-09
 
 ### Added
