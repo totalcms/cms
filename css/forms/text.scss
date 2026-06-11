@@ -341,27 +341,51 @@
 //------------------------------
 .price-field .form-group-icon {
 	&:after {
-		mask-image : var(--icon-dollar);
+		// Neutral default — the resolved currency (PriceField.php) appends a
+		// specific icon-* class that overrides this. The generic currency glyph
+		// is the right baseline for any price field that renders without that
+		// resolution (previews, the field picker, intl-missing hosts).
+		mask-image : var(--icon-currency);
+	}
+}
+
+// Currency symbol shown alongside the value (left prefix). Marker class lives on
+// .form-group (the input's wrapper); the per-currency icon sits in the separate
+// right-hand .form-group-icon, so a left prefix never collides with it.
+.form-group:has(.totalform-currency-symbol) {
+	position : relative;
+
+	.totalform-currency-symbol {
+		position       : absolute;
+		top            : 50%;
+		left           : 0.75rem;
+		transform      : translateY(-50%);
+		color          : oklch(var(--totalform-darkgray));
+		pointer-events : none;
+	}
+
+	input {
+		padding-left : 2rem;
 	}
 }
 
 // Currency Icon Classes
-.form-field.icon-dollar .form-group-icon {
+.price-field.icon-dollar .form-group-icon {
 	&:after {
 		mask-image : var(--icon-dollar);
 	}
 }
-.form-field.icon-pound .form-group-icon {
+.price-field.icon-pound .form-group-icon {
 	&:after {
 		mask-image : var(--icon-pound);
 	}
 }
-.form-field.icon-euro .form-group-icon {
+.price-field.icon-euro .form-group-icon {
 	&:after {
 		mask-image : var(--icon-euro);
 	}
 }
-.form-field.icon-yen .form-group-icon {
+.price-field.icon-yen .form-group-icon {
 	&:after {
 		mask-image : var(--icon-yen);
 	}

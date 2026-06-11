@@ -61,29 +61,31 @@ describe('Simple form fields', function (): void {
 
 	// --- PriceField ---
 
-	test('PriceField → pins step to 0.01 in settings', function (): void {
-		$field = new PriceField(form: $this->form, name: 'price');
-
-		$settings = (new ReflectionProperty($field, 'settings'))->getValue($field);
-		expect($settings['step'])->toBe(0.01);
-
-		$step = (new ReflectionProperty($field, 'step'))->getValue($field);
-		expect($step)->toBe(0.01);
-	});
-
-	test('PriceField → overrides caller-supplied step', function (): void {
-		$field = new PriceField(form: $this->form, name: 'price', settings: ['step' => 1]);
-
-		$settings = (new ReflectionProperty($field, 'settings'))->getValue($field);
-		expect($settings['step'])->toBe(0.01);
-	});
-
-	test('PriceField → build() renders a number input', function (): void {
+	test('PriceField → build() renders a text input', function (): void {
 		$field = new PriceField(form: $this->form, name: 'price', value: '9.99');
 		$html  = $field->build();
 
-		expect($html)->toContain('type="number"');
+		expect($html)->toContain('type="text"');
+		expect($html)->not->toContain('type="number"');
 		expect($html)->toContain('price-field');
+	});
+
+	test('PriceField → does not emit a step attribute', function (): void {
+		$field = new PriceField(form: $this->form, name: 'price');
+
+		$html     = $field->build();
+		$settings = (new ReflectionProperty($field, 'settings'))->getValue($field);
+
+		expect($html)->not->toContain('step=');
+		expect($settings)->not->toHaveKey('step');
+	});
+
+	test('PriceField → site locale is empty so no locale injected into settings', function (): void {
+		// The mock returns '' for getDefaultLocale (PHPUnit default for string return)
+		$field    = new PriceField(form: $this->form, name: 'price');
+		$settings = (new ReflectionProperty($field, 'settings'))->getValue($field);
+
+		expect($settings)->not->toHaveKey('locale');
 	});
 
 	// --- RangeField ---
