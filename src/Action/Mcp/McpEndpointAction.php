@@ -14,6 +14,7 @@ use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
+use TotalCMS\Domain\Mcp\Service\ToolsOnlyClients;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeEvaluator;
 use TotalCMS\Renderer\JsonRenderer;
@@ -157,12 +158,38 @@ readonly class McpEndpointAction
 			}
 		}
 
+		// Read the client's self-reported identity from the initialize handshake.
+		// It drives two things: the mcp-activity log line, and the tools-only
+		// decision below. clientInfo is only present on `initialize`; subsequent
+		// requests in the session leave $toolsOnly false, which is harmless —
+		// capabilities are negotiated once at initialize, so a ChatGPT client that
+		// was told "tools only" never asks for resources/prompts afterwards.
+		$toolsOnly = false;
+		$initBody  = $request->getParsedBody();
+		if (!is_array($initBody)) {
+			$request->getBody()->rewind();
+			$decoded  = json_decode($request->getBody()->getContents(), true);
+			$initBody = is_array($decoded) ? $decoded : [];
+		}
+		if (($initBody['method'] ?? null) === 'initialize') {
+			$params  = is_array($initBody['params'] ?? null) ? $initBody['params'] : [];
+			$client  = is_array($params['clientInfo'] ?? null) ? $params['clientInfo'] : [];
+			$name    = is_string($client['name'] ?? null) ? $client['name'] : '';
+			$version = is_string($client['version'] ?? null) ? $client['version'] : '';
+			$this->serverFactory->logClientInfo($name, $version);
+
+			// ChatGPT/OpenAI clients are served a tools-only surface (no
+			// resources/prompts) — their connector importer rejects servers that
+			// advertise those. Every other client keeps the full surface.
+			$toolsOnly = ToolsOnlyClients::matches($name);
+		}
+
 		// Slim's BodyParsingMiddleware reads and consumes the body stream.
 		// Rewind so the SDK's StreamableHttpTransport can call getContents()
 		// from the beginning of the stream.
 		$request->getBody()->rewind();
 
-		$server    = $this->serverFactory->build($persona);
+		$server    = $this->serverFactory->build($persona, $toolsOnly);
 		$transport = new StreamableHttpTransport($request);
 
 		return $server->run($transport);

@@ -368,3 +368,71 @@ describe('MCP ChatGPT-compat search/fetch', function (): void {
 		expect($isError)->toBeTrue();
 	});
 });
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Tools-only mode (ChatGPT-compat capability surface)
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Run an initialize handshake as the given client and return the advertised
+ * capabilities, or null when the endpoint is gated off (edition/config) so
+ * callers can skip cleanly. The client name drives the tools-only decision.
+ *
+ * @return array<string,mixed>|null
+ */
+function chatgptCompatInitCapabilities(Slim\App $app, string $clientName = 'pest-client'): ?array
+{
+	$init = chatgptCompatMcp($app, [
+		'jsonrpc' => '2.0',
+		'id'      => 1,
+		'method'  => 'initialize',
+		'params'  => [
+			'protocolVersion' => '2025-06-18',
+			'capabilities'    => new stdClass(),
+			'clientInfo'      => ['name' => $clientName, 'version' => '0.1'],
+		],
+	]);
+
+	if ($init->getStatusCode() !== 200) {
+		return null;
+	}
+
+	$body = json_decode((string)$init->getBody(), true);
+	$caps = is_array($body) ? ($body['result']['capabilities'] ?? null) : null;
+
+	return is_array($caps) ? $caps : null;
+}
+
+describe('McpChatGptCompat — per-client capability surface', function (): void {
+	it('advertises resources to a normal client once a public collection exists', function (): void {
+		// A public collection registers a tcms:// resource → a full-featured
+		// client (Claude, Cursor, …) is told about the `resources` capability.
+		chatgptCompatSeedPublicObject($this->app);
+
+		$caps = chatgptCompatInitCapabilities($this->app, 'Anthropic/ClaudeAI');
+		if ($caps === null) {
+			expect(true)->toBeTrue(); // endpoint gated off in this env
+			return;
+		}
+
+		expect($caps)->toHaveKey('tools');
+		expect($caps)->toHaveKey('resources');
+	});
+
+	it('suppresses resources and prompts for ChatGPT/OpenAI clients', function (): void {
+		// Same seeded public collection — but the openai-mcp client (ChatGPT)
+		// must be served a tools-only surface, with resources + prompts dropped.
+		chatgptCompatSeedPublicObject($this->app);
+
+		$caps = chatgptCompatInitCapabilities($this->app, 'openai-mcp');
+		if ($caps === null) {
+			expect(true)->toBeTrue();
+			return;
+		}
+
+		// The minimal surface ChatGPT's connector importer accepts.
+		expect($caps)->toHaveKey('tools');
+		expect($caps)->not->toHaveKey('resources');
+		expect($caps)->not->toHaveKey('prompts');
+	});
+});

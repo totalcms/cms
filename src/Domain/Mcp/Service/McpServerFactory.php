@@ -55,7 +55,7 @@ readonly class McpServerFactory
 	) {
 	}
 
-	public function build(McpPersona $persona): Server
+	public function build(McpPersona $persona, bool $toolsOnly = false): Server
 	{
 		$readOnlyDefault = new ToolAnnotations(readOnlyHint: true);
 
@@ -95,7 +95,14 @@ readonly class McpServerFactory
 		// kill switch is off the SDK falls back to its per-session-only default
 		// — clients can still call resources/subscribe but no cross-session
 		// push happens.
-		if (($this->config->mcp['subscriptionsEnabled'] ?? true) !== false) {
+		// ChatGPT-compatibility tools-only mode. When $toolsOnly is set the server
+		// advertises a tools-only capability set — no resources, no prompts, no
+		// subscriptions — the minimal surface ChatGPT's connector importer accepts
+		// (it rejects servers that advertise `resources` / `prompts`). The caller
+		// (McpEndpointAction) sets this PER REQUEST from the client's identity:
+		// ChatGPT/OpenAI clients get tools-only, everyone else (Claude, Cursor, …)
+		// keeps the full surface. See ToolsOnlyClients.
+		if (!$toolsOnly && ($this->config->mcp['subscriptionsEnabled'] ?? true) !== false) {
 			$builder->setResourceSubscriptionManager($this->subscriptionManager);
 		}
 
@@ -129,6 +136,12 @@ readonly class McpServerFactory
 				inputSchema: $tool->inputSchema,
 				outputSchema: $tool->outputSchema,
 			);
+		}
+
+		// Tools-only mode stops here — registering no resources or prompts means
+		// the SDK omits those capabilities from the initialize handshake.
+		if ($toolsOnly) {
+			return $builder->build();
 		}
 
 		foreach ($this->resourceRegistry->forPersona($persona) as $resource) {
@@ -291,5 +304,20 @@ readonly class McpServerFactory
 	public function protocolVersion(): string
 	{
 		return self::PROTOCOL_VERSION;
+	}
+
+	/**
+	 * Records the connecting MCP client's self-reported identity in the
+	 * mcp-activity log on initialize. Used to recognise specific clients (e.g.
+	 * ChatGPT) when diagnosing or tuning compatibility. `clientInfo` is
+	 * informational per the spec, so this is for observability only — never
+	 * behaviour gating.
+	 */
+	public function logClientInfo(string $name, string $version): void
+	{
+		$this->logger->info('MCP client connected', [
+			'client'  => $name !== '' ? $name : '(unknown)',
+			'version' => $version,
+		]);
 	}
 }
