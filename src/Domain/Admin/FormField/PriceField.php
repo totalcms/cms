@@ -172,10 +172,10 @@ class PriceField extends FormField
 		}
 
 		$icon = match (true) {
-			str_contains($rendered, '¥') || str_contains($rendered, '￥') => 'icon-yen',
-			str_contains($rendered, '$')                                  => 'icon-dollar',
-			str_contains($rendered, '€')                                  => 'icon-euro',
-			str_contains($rendered, '£')                                  => 'icon-pound',
+			str_contains($rendered, '¥') || str_contains($rendered, '￥')  => 'icon-yen',
+			str_contains($rendered, '$')                                   => 'icon-dollar',
+			str_contains($rendered, '€')                                   => 'icon-euro',
+			str_contains($rendered, '£')                                   => 'icon-pound',
 			default                                                        => '',
 		};
 

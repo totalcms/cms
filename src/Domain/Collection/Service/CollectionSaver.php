@@ -41,7 +41,7 @@ readonly class CollectionSaver
 	{
 		// Reference schemas (totalcms, totalcms-item) are examples only and can
 		// never back a collection.
-		$schema = (string) ($data['schema'] ?? '');
+		$schema = (string)($data['schema'] ?? '');
 		if (SchemaData::isReferenceSchema($schema)) {
 			throw new \DomainException(
 				"The \"{$schema}\" schema is a reference example and cannot be used to create a collection."

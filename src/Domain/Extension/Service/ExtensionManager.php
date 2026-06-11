@@ -1395,6 +1395,7 @@ class ExtensionManager
 	 * registration order.
 	 *
 	 * @param list<array{method: string, path: string, handler: mixed, public: bool, permission: string|null}> $routes
+	 *
 	 * @return array{route: array{method: string, path: string, handler: mixed, public: bool, permission: string|null}, params: array<string,string>}|null
 	 */
 	private function resolveRoute(array $routes, string $method, string $path): ?array
@@ -1439,13 +1440,13 @@ class ExtensionManager
 		preg_match_all('/\{(\w+)(?::([^{}]+))?\}/', $pattern, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
 
 		foreach ($matches as $match) {
-			$placeholder = (string) $match[0][0];
-			$position    = (int) $match[0][1];
-			$name        = (string) $match[1][0];
-			$constraint  = (isset($match[2]) && $match[2][1] !== -1) ? (string) $match[2][0] : '[^/]+';
+			$placeholder = (string)$match[0][0];
+			$position    = (int)$match[0][1];
+			$name        = (string)$match[1][0];
+			$constraint  = (isset($match[2]) && $match[2][1] !== -1) ? (string)$match[2][0] : '[^/]+';
 
-			$regex  .= preg_quote(substr($pattern, $offset, $position - $offset), '#');
-			$regex  .= '(?P<' . $name . '>' . $constraint . ')';
+			$regex .= preg_quote(substr($pattern, $offset, $position - $offset), '#');
+			$regex .= '(?P<' . $name . '>' . $constraint . ')';
 			$offset  = $position + strlen($placeholder);
 		}
 

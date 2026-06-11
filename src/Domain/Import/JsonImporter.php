@@ -22,7 +22,7 @@ class JsonImporter
 	private bool $queueJobs = false;
 
 	/** @var list<array{offset: int|string, id: string|null, reason: string}> */
-	private array $skipped = [];
+	private array $skipped          = [];
 	private ?string $lastSkipReason = null;
 
 	public function __construct(

@@ -38,8 +38,8 @@ class PriceData extends NumberData
 			$lastDot   = strrpos($s, '.');
 			$decimal   = $lastComma > $lastDot ? ',' : '.';
 			$thousands = $decimal === ',' ? '.' : ',';
-			$s = str_replace($thousands, '', $s);
-			$s = str_replace($decimal, '.', $s);
+			$s         = str_replace($thousands, '', $s);
+			$s         = str_replace($decimal, '.', $s);
 		} elseif ($hasComma) {
 			$s = self::resolveSingleSeparator($s, ',');
 		} elseif ($hasDot) {

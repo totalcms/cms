@@ -49,6 +49,7 @@ class SkillInstallCommand extends BaseCommand
 		if (!$data['installed']) {
 			$output->writeln('<comment>Skill source not found at ' . $data['source'] . ' — nothing to install.</comment>');
 			$output->writeln('');
+
 			return;
 		}
 
