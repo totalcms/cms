@@ -25,6 +25,9 @@ class PriceField extends FormField
 
 	private string $currencySymbol = '';
 
+	/** Shared currency formatter for the resolved locale (null when intl is absent). */
+	private ?\NumberFormatter $formatter = null;
+
 	/** Region → ISO currency for locale-derived defaults. */
 	private const REGION_CURRENCY = [
 		'US' => 'USD', 'GB' => 'GBP', 'CA' => 'CAD', 'AU' => 'AUD', 'NZ' => 'NZD',
@@ -53,12 +56,21 @@ class PriceField extends FormField
 			$this->settings['locale'] = $locale;
 		}
 
+		if (extension_loaded('intl')) {
+			$this->formatter = new \NumberFormatter($locale !== '' ? $locale : 'en_US', \NumberFormatter::CURRENCY);
+		}
+
 		$currency                   = $this->resolveCurrency($locale);
 		$this->settings['currency'] = $currency;
-		$this->settings['decimals'] = $this->resolveDecimals($locale, $currency);
-		$this->currencySymbol       = $this->resolveSymbol($locale, $currency);
 
-		$this->appendCurrencyIcon($locale, $currency);
+		// A single formatCurrency() feeds both the symbol shown beside the value
+		// and the icon class — they read the same rendered currency string.
+		$rendered             = $this->formatter?->formatCurrency(0, $currency);
+		$rendered             = is_string($rendered) ? $rendered : '';
+		$this->currencySymbol = $this->extractSymbol($rendered);
+		$this->appendCurrencyIcon($rendered);
+
+		$this->settings['decimals'] = $this->resolveDecimals($currency);
 	}
 
 	/** @return array<string,?string> */
@@ -69,6 +81,16 @@ class PriceField extends FormField
 		$attributes['inputmode'] = (int)($this->settings['decimals'] ?? 2) === 0 ? 'numeric' : 'decimal';
 
 		return $attributes;
+	}
+
+	public function createFormGroup(string $content): string
+	{
+		if ($this->currencySymbol !== '') {
+			$symbol  = HTMLUtils::element('span', $this->currencySymbol, ['class' => 'totalform-currency-symbol']);
+			$content = $symbol . $content;
+		}
+
+		return parent::createFormGroup($content);
 	}
 
 	private function resolveLocale(): string
@@ -106,78 +128,59 @@ class PriceField extends FormField
 		return self::REGION_CURRENCY[$region] ?? 'USD';
 	}
 
-	private function resolveDecimals(string $locale, string $currency): int
+	private function resolveDecimals(string $currency): int
 	{
 		if (isset($this->settings['decimals']) && $this->settings['decimals'] !== '') {
 			return (int)$this->settings['decimals'];
 		}
-		if (!extension_loaded('intl')) {
+		if ($this->formatter === null) {
 			return 2;
 		}
 
-		$fmt = new \NumberFormatter($locale !== '' ? $locale : 'en_US', \NumberFormatter::CURRENCY);
-		$fmt->setTextAttribute(\NumberFormatter::CURRENCY_CODE, $currency);
+		$this->formatter->setTextAttribute(\NumberFormatter::CURRENCY_CODE, $currency);
 
-		return (int)$fmt->getAttribute(\NumberFormatter::FRACTION_DIGITS);
+		return (int)$this->formatter->getAttribute(\NumberFormatter::FRACTION_DIGITS);
 	}
 
 	/**
-	 * Append the currency-symbol icon class (icon-dollar/euro/pound/yen, else
-	 * icon-currency) to the field's class list — unless the operator already set
-	 * an explicit icon-* class, which wins.
+	 * The narrow currency symbol from a rendered currency string: strip digits,
+	 * separators, and spaces, then drop a leading letter-run so "CA$" → "$" while
+	 * all-letter symbols (CHF, kr) stay intact.
 	 */
-	private function appendCurrencyIcon(string $locale, string $currency): void
+	private function extractSymbol(string $rendered): string
 	{
-		if (preg_match('/\bicon-[a-z]+\b/', $this->class) === 1) {
-			return;
-		}
-
-		$this->class = trim($this->class . ' ' . $this->currencyIconClass($locale, $currency));
-	}
-
-	private function resolveSymbol(string $locale, string $currency): string
-	{
-		if (!extension_loaded('intl')) {
+		if ($rendered === '') {
 			return '';
 		}
 
-		$fmt       = new \NumberFormatter($locale !== '' ? $locale : 'en_US', \NumberFormatter::CURRENCY);
-		$formatted = (string)$fmt->formatCurrency(0, $currency);
-		// Strip digits, unicode separators/spaces, and ./, → leaves the symbol.
-		$symbol = preg_replace('/[\p{N}\p{Z}\s.,]/u', '', $formatted) ?? '';
-		// Approximate a narrow symbol: drop a leading letter-run when a glyph
-		// remains (CA$ → $); keep all-letter symbols intact (CHF, kr).
+		$symbol = preg_replace('/[\p{N}\p{Z}\s.,]/u', '', $rendered) ?? '';
 		$narrow = preg_replace('/^\p{L}+/u', '', $symbol) ?? '';
 
 		return $narrow !== '' ? $narrow : $symbol;
 	}
 
-	public function createFormGroup(string $content): string
+	/**
+	 * Append the currency-symbol icon class (icon-dollar/euro/pound/yen) inferred
+	 * from the rendered currency's glyph. Currencies with no dedicated glyph
+	 * append nothing and fall through to the `.price-field` default
+	 * (icon-currency). An explicit operator icon-* class always wins.
+	 */
+	private function appendCurrencyIcon(string $rendered): void
 	{
-		if ($this->currencySymbol !== '') {
-			$symbol  = HTMLUtils::element('span', $this->currencySymbol, ['class' => 'totalform-currency-symbol']);
-			$content = $symbol . $content;
+		if (preg_match('/\bicon-[a-z]+\b/', $this->class) === 1) {
+			return;
 		}
 
-		return parent::createFormGroup($content);
-	}
-
-	private function currencyIconClass(string $locale, string $currency): string
-	{
-		if (!extension_loaded('intl')) {
-			return '';
-		}
-
-		$fmt    = new \NumberFormatter($locale !== '' ? $locale : 'en_US', \NumberFormatter::CURRENCY);
-		$symbol = (string)$fmt->formatCurrency(0, $currency);
-
-		return match (true) {
-			str_contains($symbol, '¥')
-			|| str_contains($symbol, '￥')                  => 'icon-yen',
-			str_contains($symbol, '$')                      => 'icon-dollar',
-			str_contains($symbol, '€')                      => 'icon-euro',
-			str_contains($symbol, '£')                      => 'icon-pound',
-			default                                         => '',
+		$icon = match (true) {
+			str_contains($rendered, '¥') || str_contains($rendered, '￥') => 'icon-yen',
+			str_contains($rendered, '$')                                  => 'icon-dollar',
+			str_contains($rendered, '€')                                  => 'icon-euro',
+			str_contains($rendered, '£')                                  => 'icon-pound',
+			default                                                        => '',
 		};
+
+		if ($icon !== '') {
+			$this->class = trim($this->class . ' ' . $icon);
+		}
 	}
 }
