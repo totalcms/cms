@@ -78,6 +78,7 @@
     "webuni/front-matter": "^2.0"
   },
   "require-dev": {
+    "composer/composer": "^2.4",
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
     "nekofar/pest-plugin-slim": "dev-develop#f55ba25333d964257a24a3c1206948fcf454cb01",
