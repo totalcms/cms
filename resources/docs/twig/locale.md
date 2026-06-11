@@ -43,8 +43,20 @@ Set the active locale for the current request. Requires the PHP `intl` extension
 Get the current active locale. Defaults to `'en_US'` if the `intl` extension is not available.
 
 ```twig
-<html lang="{{ cms.locale.get() }}">
+{{ cms.locale.get() }}{# e.g. en_US #}
 ```
+
+**Returns:** `string` — the active locale code with an underscore separator (e.g., `'en_US'`)
+
+### htmlLang()
+
+Get the active locale as a [BCP 47](https://www.rfc-editor.org/info/bcp47) language tag — the locale with its underscore converted to a hyphen (e.g., `en_US` → `en-US`). This is the correct form for the HTML `lang` attribute; use it instead of `get()` on the `<html>` tag so screen readers, hyphenation, and spellcheck match the rendered language.
+
+```twig
+<html lang="{{ cms.locale.htmlLang() }}">
+```
+
+**Returns:** `string` — the active locale as a BCP 47 tag (e.g., `'en-US'`). Falls back to `'en-US'` when the `intl` extension is not available.
 
 ## Translation
 
