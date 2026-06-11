@@ -40,15 +40,15 @@ function setMcpAllowedOrigins(Slim\App $app, array $origins): void
 }
 
 describe('McpCors — /mcp endpoint', function (): void {
-	it('omits the Allow-Origin header when allowlist is empty', function (): void {
+	it('treats an empty allowlist as open (echoes any origin)', function (): void {
 		setMcpAllowedOrigins($this->app, []);
 
-		// OPTIONS still short-circuits to 204 regardless — the absence of the
-		// Allow-Origin header is what tells the browser to block.
+		// Blank allowlist == `*`: the preflight echoes the request origin so
+		// browser-based AI clients work out of the box.
 		$response = $this->app->handle(corsRequest('OPTIONS', '/mcp', 'https://example.com'));
 
 		expect($response->getStatusCode())->toBe(204);
-		expect($response->getHeaderLine('Access-Control-Allow-Origin'))->toBe('');
+		expect($response->getHeaderLine('Access-Control-Allow-Origin'))->toBe('https://example.com');
 	});
 
 	it('echoes an allowed origin on preflight', function (): void {

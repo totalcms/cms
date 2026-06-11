@@ -14,10 +14,15 @@ use TotalCMS\Support\Config;
 /**
  * CORS middleware scoped to the MCP endpoint and discovery routes.
  *
- * **Default deny.** Empty `mcp.allowedOrigins` produces no CORS headers
- * at all, so a browser blocks any cross-origin request. Operators opt in
- * by adding explicit origins (e.g. `https://claude.ai`) or the `*` wildcard
- * for fully-public sites.
+ * **Open by default.** An empty `mcp.allowedOrigins` is treated the same as
+ * the `*` wildcard — any origin is allowed, so browser-based AI clients work
+ * out of the box. Operators *restrict* access by listing specific origins
+ * (e.g. `https://claude.ai`); the empty/`*` state is wide open. This is safe
+ * because the middleware never sets `Access-Control-Allow-Credentials` and the
+ * session cookie is `SameSite=Lax`, so a cross-origin site can't ride a
+ * victim's session — the only thing an open policy exposes is the already-
+ * public MCP surface. Sites with public-but-sensitive collections should list
+ * explicit origins.
  *
  * **Why a dedicated middleware instead of reusing `ExternalCorsMiddleware`?**
  * The external one sets `Access-Control-Allow-Origin: *` unconditionally —
@@ -93,21 +98,20 @@ final readonly class McpCorsMiddleware implements MiddlewareInterface
 	/**
 	 * Decide which value to echo in Access-Control-Allow-Origin.
 	 *
-	 * - empty allowlist → null (no header emitted, browser blocks).
-	 * - `*` in allowlist → echo the request Origin if present, else `*`.
-	 *   Echoing the origin (instead of `*`) is needed when we ever start
-	 *   sending credentials, so we may as well do it consistently now.
+	 * - empty allowlist OR `*` in allowlist → allow any origin: echo the request
+	 *   Origin if present, else `*`. Echoing the origin (instead of `*`) is
+	 *   needed when we ever start sending credentials, so we do it consistently.
 	 * - specific allowlist → echo origin iff it matches an entry exactly.
+	 *
+	 * A blank allowlist is treated the same as `*` (allow all). Operators opt
+	 * OUT of wide-open browser CORS by listing specific origins, not by leaving
+	 * the field empty — see the class docblock for the security trade-off.
 	 *
 	 * @param list<string> $allowed
 	 */
 	private function resolveAllowedOrigin(string $origin, array $allowed): ?string
 	{
-		if ($allowed === []) {
-			return null;
-		}
-
-		if (in_array('*', $allowed, true)) {
+		if ($allowed === [] || in_array('*', $allowed, true)) {
 			return $origin !== '' ? $origin : '*';
 		}
 

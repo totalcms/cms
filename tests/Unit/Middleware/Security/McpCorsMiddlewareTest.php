@@ -52,17 +52,30 @@ final class McpCorsMiddlewareTest extends TestCase
 		};
 	}
 
-	// ── Default-deny ─────────────────────────────────────────────────────────
+	// ── Open by default (blank == *) ─────────────────────────────────────────
 
-	public function testEmptyAllowlistEmitsNoCorsHeaders(): void
+	public function testEmptyAllowlistAllowsAnyOrigin(): void
 	{
+		// A blank allowlist is treated the same as `*`: the request origin is
+		// echoed so browser-based AI clients work out of the box.
 		$response = $this->middleware([])->process(
 			$this->request('GET', 'https://example.com'),
 			$this->passthroughHandler(),
 		);
 
-		$this->assertSame('', $response->getHeaderLine('Access-Control-Allow-Origin'));
-		$this->assertSame('', $response->getHeaderLine('Vary'));
+		$this->assertSame('https://example.com', $response->getHeaderLine('Access-Control-Allow-Origin'));
+		$this->assertSame('Origin', $response->getHeaderLine('Vary'));
+	}
+
+	public function testEmptyAllowlistWithoutOriginEmitsWildcardLiteral(): void
+	{
+		// Blank + no Origin header → the `*` literal, mirroring explicit `*`.
+		$response = $this->middleware([])->process(
+			$this->request('GET'),
+			$this->passthroughHandler(),
+		);
+
+		$this->assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
 	}
 
 	public function testRequestWithoutOriginPassesThroughCleanly(): void
@@ -164,8 +177,10 @@ final class McpCorsMiddlewareTest extends TestCase
 		$this->assertSame('https://example.com', $response->getHeaderLine('Access-Control-Allow-Origin'));
 	}
 
-	public function testNonArrayConfigDefaultsToEmptyAllowlist(): void
+	public function testNonArrayConfigNormalizesToOpenAllowlist(): void
 	{
+		// A non-array config normalizes to an empty allowlist, which now means
+		// "allow any origin" — so the request origin is echoed.
 		$config      = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->mcp = ['allowedOrigins' => 'not-an-array'];
 
@@ -175,6 +190,6 @@ final class McpCorsMiddlewareTest extends TestCase
 			$this->passthroughHandler(),
 		);
 
-		$this->assertSame('', $response->getHeaderLine('Access-Control-Allow-Origin'));
+		$this->assertSame('https://example.com', $response->getHeaderLine('Access-Control-Allow-Origin'));
 	}
 }
