@@ -66,7 +66,38 @@ readonly class SearchCollectionsTool
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			outputSchema: $this->outputSchema(),
 		));
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	private function outputSchema(): array
+	{
+		return [
+			'type'                 => 'object',
+			'required'             => ['items', 'total', 'limit', 'query'],
+			'additionalProperties' => false,
+			'properties'           => [
+				'items' => [
+					'type'        => 'array',
+					'description' => 'Matched objects across collections, each a flat field map decorated with `collection` (the source collection id) and `url`. Field set varies by collection.',
+					'items'       => [
+						'type'                 => 'object',
+						'additionalProperties' => true,
+						'properties'           => [
+							'id'         => ['type' => 'string', 'description' => 'Object id (slug).'],
+							'collection' => ['type' => 'string', 'description' => 'Collection the hit came from. Pair with id for get_object.'],
+							'url'        => ['type' => 'string', 'description' => 'Public URL when the collection has a URL pattern.'],
+						],
+					],
+				],
+				'total' => ['type' => 'integer', 'description' => 'Number of items returned in aggregate.'],
+				'limit' => ['type' => 'integer', 'description' => 'Applied aggregate result cap.'],
+				'query' => ['type' => 'string', 'description' => 'The query that was run.'],
+			],
+		];
 	}
 
 	/**

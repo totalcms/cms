@@ -46,7 +46,28 @@ readonly class GetResourceTool
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			outputSchema: $this->outputSchema(),
 		));
+	}
+
+	/**
+	 * Returns the resolved object as a flat field map — same shape as get_object
+	 * (this tool delegates to it). Field set varies by collection, so any
+	 * additional property is permitted; id + url are always present.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function outputSchema(): array
+	{
+		return [
+			'type'                 => 'object',
+			'required'             => ['id'],
+			'additionalProperties' => true,
+			'properties'           => [
+				'id'  => ['type' => 'string', 'description' => 'Object id (slug).'],
+				'url' => ['type' => 'string', 'description' => 'Public URL for this object when the collection has a URL pattern configured.'],
+			],
+		];
 	}
 
 	/**
