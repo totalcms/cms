@@ -71,6 +71,9 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 - `jobs:process` / `automations:process` — process queued jobs / fire due automations
 - `update:check` / `update:apply` / `update:rollback`
 - `pull` / `push` — sync schemas + templates with the production server
+- `skill:install` — (re)install this agent skill into `.claude/skills/totalcms` from
+  the installed package; runs automatically on `composer install/update`, but you
+  can run it by hand to refresh after an update
 
 ## collection:import shape
 

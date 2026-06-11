@@ -117,6 +117,9 @@ class CliApplication
 		$app->addCommand(new Command\BuilderRoutesCommand($totalcms));
 		$app->addCommand(new Command\BuilderHistoryCommand($totalcms));
 
+		// Skill commands
+		$app->addCommand(new Command\Skill\SkillInstallCommand($totalcms));
+
 		// Extension management commands
 		$app->addCommand(new Command\Extension\ExtensionListCommand($totalcms));
 		$app->addCommand(new Command\Extension\ExtensionEnableCommand($totalcms));

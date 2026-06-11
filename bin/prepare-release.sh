@@ -400,19 +400,6 @@ else
     print_warning "Docs sync script not found at $DOCS_SYNC - skipping"
 fi
 
-# Sync the agent skill into the project skeleton (lints, copies, does NOT commit)
-SKILL_SYNC="$(dirname "$0")/sync-skill.sh"
-if [ -x "$SKILL_SYNC" ]; then
-    print_info "Syncing agent skill to project skeleton..."
-    if "$SKILL_SYNC"; then
-        print_success "Agent skill synced to skeleton (review + commit it manually)"
-    else
-        print_warning "Agent skill sync failed"
-    fi
-else
-    print_warning "sync-skill.sh not found or not executable - skipping skill sync"
-fi
-
 # Upload source maps to Sentry (before deleting them from dist)
 upload_sourcemaps "$NEW_VERSION"
 
@@ -556,7 +543,6 @@ echo "  ✓ Caches cleared"
 echo "  ✓ Permissions set"
 echo "  ✓ Checksums generated"
 echo "  ✓ Documentation synced to docs site"
-echo "  ✓ Agent skill synced to project skeleton"
 echo "  ✓ Source maps uploaded to Sentry"
 echo "  ✓ Sentry release notified"
 echo "  ✓ Distribution zip created: $DIST_ZIP"
