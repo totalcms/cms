@@ -104,6 +104,13 @@ readonly class SettingsSaver
 	/**
 	 * Deep merge two arrays recursively.
 	 *
+	 * Associative arrays (config maps) are merged key-by-key so a saved section
+	 * can override individual nested settings without replacing the whole map.
+	 * **List arrays** (sequential, e.g. `allowedOrigins`) are REPLACED wholesale,
+	 * not merged — otherwise removed items would be re-merged from the prior
+	 * value by index, making it impossible to clear or shrink a list setting
+	 * (clearing it left the old items; saving one item kept the rest).
+	 *
 	 * @param array<string,mixed> $array1
 	 * @param array<string,mixed> $array2
 	 *
@@ -114,7 +121,12 @@ readonly class SettingsSaver
 		$merged = $array1;
 
 		foreach ($array2 as $key => $value) {
-			if (is_array($value) && isset($merged[$key]) && is_array($merged[$key])) {
+			// Recurse only when BOTH sides are associative maps. If either side
+			// is a list (or the new value isn't an array), replace outright.
+			if (
+				is_array($value) && isset($merged[$key]) && is_array($merged[$key])
+				&& !array_is_list($value) && !array_is_list($merged[$key])
+			) {
 				$merged[$key] = self::deepMergeArrays($merged[$key], $value);
 			} else {
 				$merged[$key] = $value;
