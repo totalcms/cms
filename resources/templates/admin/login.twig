@@ -28,7 +28,7 @@
 		collection    : collection ?? null,
 		redirect      : getData.redirect ?? null,
 		flashMessages : errorMessages,
-		showPasskeys  : authCollection is not empty and cms.config('auth', 'usePasskeys') != false
+		showPasskeys  : authCollection is not empty and cms.config('auth', 'usePasskeys') != false and cms.edition.can('passkeys')
 	} %}
 
 	{% if cms.edition.can('whitelabel_standard') %}

@@ -64,7 +64,37 @@ readonly class SearchCollectionTool
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			outputSchema: $this->outputSchema(),
 		));
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	private function outputSchema(): array
+	{
+		return [
+			'type'                 => 'object',
+			'required'             => ['items', 'total', 'limit', 'query'],
+			'additionalProperties' => false,
+			'properties'           => [
+				'items' => [
+					'type'        => 'array',
+					'description' => 'Matched objects, each a flat field map decorated with a `url`. Field set varies by collection.',
+					'items'       => [
+						'type'                 => 'object',
+						'additionalProperties' => true,
+						'properties'           => [
+							'id'  => ['type' => 'string', 'description' => 'Object id (slug).'],
+							'url' => ['type' => 'string', 'description' => 'Public URL when the collection has a URL pattern.'],
+						],
+					],
+				],
+				'total' => ['type' => 'integer', 'description' => 'Number of items returned.'],
+				'limit' => ['type' => 'integer', 'description' => 'Applied result cap.'],
+				'query' => ['type' => 'string', 'description' => 'The query that was run.'],
+			],
+		];
 	}
 
 	/**
@@ -109,6 +139,10 @@ readonly class SearchCollectionTool
 			collection: $collection,
 			limit: $cappedLimit,
 			persona: $persona->value,
+			// Rank by term coverage (best partial match first) rather than the
+			// all-or-nothing AND filter, so descriptive multi-word queries from
+			// an agent return useful results instead of nothing.
+			relevance: true,
 		));
 
 		// Resolve result IDs back to full object arrays.

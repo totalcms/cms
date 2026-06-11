@@ -99,6 +99,24 @@ final class McpSchemaResolverTest extends TestCase
 		$this->assertFalse($result['resource']);
 	}
 
+	public function testForCollectionDefaultsTitlePropertyToEmptyString(): void
+	{
+		$result = $this->resolver->forCollection($this->collection([]));
+		$this->assertSame('', $result['titleProperty']);
+	}
+
+	public function testForCollectionReturnsConfiguredTitleProperty(): void
+	{
+		$result = $this->resolver->forCollection($this->collection(['titleProperty' => 'headline']));
+		$this->assertSame('headline', $result['titleProperty']);
+	}
+
+	public function testForCollectionCoercesNonStringTitlePropertyToEmpty(): void
+	{
+		$result = $this->resolver->forCollection($this->collection(['titleProperty' => ['oops']]));
+		$this->assertSame('', $result['titleProperty']);
+	}
+
 	// ─── Persona access policy ────────────────────────────────────────────────
 
 	public function testAdminAccessibleByAdminPersona(): void

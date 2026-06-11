@@ -80,6 +80,18 @@ readonly class LocaleTwigAdapter
 	}
 
 	/**
+	 * The current locale as a BCP-47 language tag for the HTML `lang` attribute
+	 * (e.g. 'en_US' → 'en-US'). Put on the <html> tag so screen readers,
+	 * hyphenation, and spellcheck match the admin's rendered language.
+	 *
+	 * Usage in Twig: <html lang="{{ cms.locale.htmlLang() }}">
+	 */
+	public function htmlLang(): string
+	{
+		return str_replace('_', '-', $this->get());
+	}
+
+	/**
 	 * Translate a key from the admin domain.
 	 *
 	 * Usage in Twig: {{ cms.locale.t('nav.collections') }}

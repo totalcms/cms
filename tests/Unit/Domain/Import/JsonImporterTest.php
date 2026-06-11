@@ -243,6 +243,76 @@ final class JsonImporterTest extends TestCase
 		$this->assertEquals(1, $count);
 	}
 
+	public function testGetSkippedReportsExistingObjectsWithReason(): void
+	{
+		$jsonData = json_encode([
+			['id' => 'existing', 'name' => 'Existing'],
+			['id' => 'new', 'name' => 'New'],
+		]);
+
+		$file = $this->createUploadedFile($jsonData);
+
+		$this->collectionFetcher->method('collectionExists')->willReturn(true);
+		$this->objectFetcher->method('existsObject')
+			->willReturnMap([
+				['products', 'existing', true],
+				['products', 'new', false],
+			]);
+
+		$count   = $this->importer->import('products', $file);
+		$skipped = $this->importer->getSkipped();
+
+		$this->assertEquals(1, $count);
+		$this->assertCount(1, $skipped);
+		$this->assertSame('existing', $skipped[0]['id']);
+		$this->assertSame(0, $skipped[0]['offset']);
+		$this->assertStringContainsString('already exists', $skipped[0]['reason']);
+	}
+
+	public function testGetSkippedCapturesImportErrorReason(): void
+	{
+		$jsonData = json_encode([
+			['id' => 'error', 'name' => 'Test'],
+			['id' => 'success', 'name' => 'Test'],
+		]);
+
+		$file = $this->createUploadedFile($jsonData);
+
+		$this->collectionFetcher->method('collectionExists')->willReturn(true);
+		$this->objectFetcher->method('existsObject')->willReturn(false);
+
+		$objectData = $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+		$this->objectImporter->method('importObject')
+			->willReturnCallback(function ($collection, array $record) use ($objectData) {
+				if ($record['id'] === 'error') {
+					throw new \Exception('Boom');
+				}
+
+				return $objectData;
+			});
+
+		$count   = $this->importer->import('products', $file);
+		$skipped = $this->importer->getSkipped();
+
+		$this->assertEquals(1, $count);
+		$this->assertCount(1, $skipped);
+		$this->assertSame('error', $skipped[0]['id']);
+		$this->assertSame('Boom', $skipped[0]['reason']);
+	}
+
+	public function testGetSkippedIsEmptyOnCleanImport(): void
+	{
+		$jsonData = json_encode([['id' => 'a', 'name' => 'A']]);
+		$file     = $this->createUploadedFile($jsonData);
+
+		$this->collectionFetcher->method('collectionExists')->willReturn(true);
+		$this->objectFetcher->method('existsObject')->willReturn(false);
+
+		$this->importer->import('products', $file);
+
+		$this->assertSame([], $this->importer->getSkipped());
+	}
+
 	public function testDispatchesImportCompletedEvent(): void
 	{
 		$jsonData = json_encode([['id' => 'test', 'name' => 'Test']]);

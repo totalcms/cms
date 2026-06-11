@@ -4,7 +4,7 @@
 	"id"          : "mcp-collection",
 	"type"        : "object",
 	"description" : "Per-collection MCP server settings. Used as a card sub-schema on the collection meta. Controls whether the collection is exposed to AI agents via /mcp and how it appears to them.",
-	"formgrid"    : "access\nsearchProvider\ndescription\nresource\ntools",
+	"formgrid"    : "access\nsearchProvider\ntitleProperty\ndescription\nresource\ntools",
 	"required"    : ["id"],
 	"index"       : ["id"],
 	"properties"  : {
@@ -51,6 +51,18 @@
 			"default"     : "",
 			"settings"    : {
 				"rows" : 3
+			}
+		},
+		"titleProperty": {
+			"type"        : "string",
+			"label"       : "Title Property",
+			"help"        : "Which property holds each object's human-readable title, shown to AI agents (e.g. in ChatGPT search results and citations). Leave blank to auto-detect: title, name, label, heading, headline, then the object id.",
+			"field"       : "select",
+			"placeholder" : "Auto-detect (title, name, label…)",
+			"default"     : "",
+			"settings"    : {
+				"propertyOptions" : "schemaProperties",
+				"sortOptions"     : true
 			}
 		},
 		"resource": {

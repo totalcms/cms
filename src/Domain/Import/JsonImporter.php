@@ -21,6 +21,10 @@ class JsonImporter
 	private string $collection;
 	private bool $queueJobs = false;
 
+	/** @var list<array{offset: int|string, id: string|null, reason: string}> */
+	private array $skipped          = [];
+	private ?string $lastSkipReason = null;
+
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly ObjectFetcher $objectFetcher,
@@ -64,11 +68,13 @@ class JsonImporter
 		$this->indexBuildListener->suspendForCollection($collection);
 		$this->eventDispatcher->suspendForImport($collection);
 
-		$importCount = 0;
-		$createdIds  = [];
-		$updatedIds  = [];
+		$importCount   = 0;
+		$createdIds    = [];
+		$updatedIds    = [];
+		$this->skipped = [];
 
 		foreach ($records as $offset => $record) {
+			$this->lastSkipReason = null;
 			try {
 				$imported = $updateObject ?
 					$this->updateObject($record) :
@@ -82,11 +88,14 @@ class JsonImporter
 						$createdIds[] = $id;
 					}
 					$importCount++;
+				} elseif (!$imported) {
+					$this->recordSkip($offset, $record, $this->lastSkipReason ?? 'skipped');
 				}
 			} catch (\Exception $exception) {
 				$this->logger->error(
 					sprintf('Error importing record #%s: %s', $offset, $exception->getMessage())
 				);
+				$this->recordSkip($offset, $record, $exception->getMessage());
 			}
 		}
 
@@ -94,6 +103,32 @@ class JsonImporter
 		$this->eventDispatcher->dispatch(CoreEvent::IMPORT_COMPLETED, new ImportEventPayload($collection, $importCount, $createdIds, $updatedIds));
 
 		return $importCount;
+	}
+
+	/**
+	 * Per-record skip/failure details from the most recent import() call.
+	 * Each entry has the record's offset in the source array, its id (when
+	 * present), and a human-readable reason. Empty when every record imported
+	 * cleanly. Lets callers (e.g. the CLI) surface why objects were skipped
+	 * instead of failing silently.
+	 *
+	 * @return list<array{offset: int|string, id: string|null, reason: string}>
+	 */
+	public function getSkipped(): array
+	{
+		return $this->skipped;
+	}
+
+	/**
+	 * @param array<string,mixed> $record
+	 */
+	private function recordSkip(int|string $offset, array $record, string $reason): void
+	{
+		$this->skipped[] = [
+			'offset' => $offset,
+			'id'     => isset($record['id']) ? (string)$record['id'] : null,
+			'reason' => $reason,
+		];
 	}
 
 	/**
@@ -109,6 +144,7 @@ class JsonImporter
 		if ($this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$error = sprintf('Object with id %s already exists in %s', $record['id'], $this->collection);
 			$this->logger->warning($error);
+			$this->lastSkipReason = $error;
 
 			return false;
 		}
@@ -134,12 +170,14 @@ class JsonImporter
 	{
 		if (!isset($record['id'])) {
 			$this->logger->info('Skipping update of record without ID');
+			$this->lastSkipReason = 'Record has no id (required for update)';
 
 			return false;
 		}
 
 		if (!$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$this->logger->info(sprintf('Skipping update of record %s', $record['id']));
+			$this->lastSkipReason = sprintf('No existing object with id %s to update', $record['id']);
 
 			return false;
 		}

@@ -203,6 +203,34 @@ SVG files can contain JavaScript and other potentially dangerous content. Total 
 }
 ```
 
+### Template Output Escaping (Twig)
+
+**Twig autoescaping is OFF globally in Total CMS.** This is deliberate: content fields hold author-authored HTML and Markdown that must render as markup, not as escaped text (`{{ post.content }}`, `{{ body | markdown }}`, etc.). With autoescape on, every content field would render as visible HTML entities.
+
+The trade-off is that **Twig does not escape output for you**. The write-path HTML sanitizer (above) scrubs rich-text content saved through the admin, which covers the primary content vector — but it does **not** protect everything a template can print:
+
+- Output rendered by an **extension's own templates** (especially anything anonymous/agent-supplied)
+- Free-form `page.data.*` values on Site Builder pages
+- Query-string / request values echoed into a page
+- Fields where `htmlclean` has been disabled
+
+For any value that is not trusted author content, escape it explicitly:
+
+```twig
+{# Escape untrusted text #}
+{{ user_supplied | e }}
+
+{# Escape inside an HTML attribute #}
+<a title="{{ user_supplied | e('html_attr') }}">…</a>
+
+{# Or turn autoescaping on for a whole block #}
+{% autoescape 'html' %}
+    {{ user_supplied }}
+{% endautoescape %}
+```
+
+This is the responsibility of template and **extension authors**: a handler that prints `{{ input }}` has no automatic XSS protection. When in doubt, escape.
+
 
 ## File Upload Security
 

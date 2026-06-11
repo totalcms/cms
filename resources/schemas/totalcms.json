@@ -1,0 +1,300 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/totalcms.json",
+	"id": "totalcms",
+	"type": "object",
+	"description": "Reference schema. Demonstrates every Total CMS field type and its settings in one place. This schema is registered and resolvable but cannot be used to create a collection — it exists purely as a living, validated example to copy from.",
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"label": "ID",
+			"help": "id field. URL-safe slug. Here it auto-generates from the title.",
+			"field": "id",
+			"settings": { "autogen": "${title}" }
+		},
+		"title": {
+			"type": "string",
+			"label": "Title",
+			"help": "text field. The canonical single-line string input.",
+			"field": "text"
+		},
+		"autogenText": {
+			"type": "string",
+			"label": "Autogen Text",
+			"help": "text field with the autogen setting — value is generated from other fields.",
+			"field": "text",
+			"settings": { "autogen": "${title} (${currentyear})" }
+		},
+		"validatedText": {
+			"type": "string",
+			"label": "Validated Text",
+			"help": "text field with property-level validation (pattern, minLength, maxLength).",
+			"field": "text",
+			"pattern": "^[A-Za-z ]+$",
+			"minLength": 3,
+			"maxLength": 50
+		},
+		"hiddenSetting": {
+			"type": "string",
+			"label": "Hidden via setting",
+			"help": "Any field can be hidden from the form with settings.hide while still storing data.",
+			"field": "text",
+			"default": "stored but not shown",
+			"settings": { "hide": true }
+		},
+		"textarea": {
+			"type": "string",
+			"label": "Textarea",
+			"help": "textarea field. Multi-line plain text.",
+			"field": "textarea"
+		},
+		"styledtext": {
+			"type": "string",
+			"label": "Styled Text",
+			"help": "styledtext field. Rich text (Tiptap) editor.",
+			"field": "styledtext"
+		},
+		"code": {
+			"$ref": "https://www.totalcms.co/schemas/properties/code.json",
+			"label": "Code",
+			"help": "code field. CodeMirror editor for HTML/JS/CSS.",
+			"field": "code",
+			"settings": { "mode": "html", "rows": 8, "htmlclean": false }
+		},
+		"email": {
+			"$ref": "https://www.totalcms.co/schemas/properties/email.json",
+			"label": "Email",
+			"help": "email field.",
+			"field": "email"
+		},
+		"phone": {
+			"$ref": "https://www.totalcms.co/schemas/properties/phone.json",
+			"label": "Phone",
+			"help": "phone field.",
+			"field": "phone"
+		},
+		"url": {
+			"$ref": "https://www.totalcms.co/schemas/properties/url.json",
+			"label": "URL",
+			"help": "url field.",
+			"field": "url"
+		},
+		"svg": {
+			"$ref": "https://www.totalcms.co/schemas/properties/svg.json",
+			"label": "SVG",
+			"help": "svg field. Sanitized SVG markup.",
+			"field": "svg"
+		},
+		"time": {
+			"$ref": "https://www.totalcms.co/schemas/properties/time.json",
+			"label": "Time",
+			"help": "time field. 24-hour HH:MM.",
+			"field": "time"
+		},
+		"secret": {
+			"type": "string",
+			"label": "Secret",
+			"help": "secret field. Masked input for sensitive values.",
+			"field": "secret"
+		},
+		"json": {
+			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
+			"label": "JSON",
+			"help": "json field. Arbitrary structured data.",
+			"field": "json"
+		},
+		"hidden": {
+			"type": "string",
+			"label": "Hidden",
+			"help": "hidden field type. Stored, never rendered as a visible input.",
+			"field": "hidden",
+			"default": ""
+		},
+		"radio": {
+			"type": "string",
+			"label": "Radio",
+			"help": "radio field with static options.",
+			"field": "radio",
+			"options": ["one", "two", "three"],
+			"default": "one"
+		},
+		"select": {
+			"type": "string",
+			"label": "Select",
+			"help": "select field with static options.",
+			"field": "select",
+			"options": ["alpha", "beta", "gamma"],
+			"default": "alpha"
+		},
+		"checkbox": {
+			"type": "boolean",
+			"label": "Checkbox",
+			"help": "checkbox field.",
+			"field": "checkbox",
+			"default": false
+		},
+		"toggle": {
+			"type": "boolean",
+			"label": "Toggle",
+			"help": "toggle field. Drives the conditional field below.",
+			"field": "toggle",
+			"default": false
+		},
+		"conditionalEmail": {
+			"$ref": "https://www.totalcms.co/schemas/properties/email.json",
+			"label": "Conditional Email",
+			"help": "Demonstrates conditional visibility + form-level required: only shown (and required) when Toggle is on.",
+			"field": "email",
+			"settings": {
+				"required": true,
+				"visibility": { "watch": "toggle", "value": "1", "operator": "==" }
+			}
+		},
+		"number": {
+			"type": "number",
+			"label": "Number",
+			"help": "number field.",
+			"field": "number",
+			"default": 0
+		},
+		"price": {
+			"type": "number",
+			"label": "Price",
+			"help": "price field. Locale-aware currency input.",
+			"field": "price"
+		},
+		"calcNumber": {
+			"type": "number",
+			"label": "Calc Total",
+			"help": "number field with the calc setting — computed (read-only) from other fields.",
+			"field": "number",
+			"settings": { "calc": "${number} * ${price}", "min": 0 }
+		},
+		"range": {
+			"type": "number",
+			"label": "Range",
+			"help": "range field. Slider with min/max/step.",
+			"field": "range",
+			"settings": { "min": 0, "max": 100, "step": 5 },
+			"default": 50
+		},
+		"date": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Date",
+			"help": "date field.",
+			"field": "date"
+		},
+		"datetime": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Datetime",
+			"help": "datetime field. Here set read-only and auto-updated on save.",
+			"field": "datetime",
+			"settings": { "readonly": true, "onUpdate": true }
+		},
+		"list": {
+			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
+			"label": "List",
+			"help": "list field. A simple array of strings (tags/categories).",
+			"field": "list"
+		},
+		"multicheckbox": {
+			"type": "array",
+			"label": "Multi Checkbox",
+			"help": "multicheckbox field. Multiple selections via checkboxes.",
+			"field": "multicheckbox",
+			"options": ["red", "green", "blue"]
+		},
+		"multiselect": {
+			"type": "array",
+			"label": "Multi Select",
+			"help": "multiselect field. Multiple selections via a dropdown.",
+			"field": "multiselect",
+			"options": ["north", "south", "east", "west"]
+		},
+		"color": {
+			"$ref": "https://www.totalcms.co/schemas/properties/color.json",
+			"label": "Color",
+			"help": "color field. Stored in hex + OKLCH.",
+			"field": "color"
+		},
+		"image": {
+			"$ref": "https://www.totalcms.co/schemas/properties/image.json",
+			"label": "Image",
+			"help": "image field.",
+			"field": "image"
+		},
+		"gallery": {
+			"$ref": "https://www.totalcms.co/schemas/properties/gallery.json",
+			"label": "Gallery",
+			"help": "gallery field. An array of image objects.",
+			"field": "gallery"
+		},
+		"file": {
+			"$ref": "https://www.totalcms.co/schemas/properties/file.json",
+			"label": "File",
+			"help": "file field. A single uploaded file.",
+			"field": "file"
+		},
+		"depot": {
+			"$ref": "https://www.totalcms.co/schemas/properties/depot.json",
+			"label": "Depot",
+			"help": "depot field. A managed set of files and folders.",
+			"field": "depot"
+		},
+		"password": {
+			"$ref": "https://www.totalcms.co/schemas/properties/password.json",
+			"label": "Password",
+			"help": "password field. Stored as an encrypted hash.",
+			"field": "password"
+		},
+		"localizedtext": {
+			"$ref": "https://www.totalcms.co/schemas/properties/localizedtext.json",
+			"label": "Localized Text",
+			"help": "localizedtext field. Locale-keyed single-line text (Pro).",
+			"field": "localizedtext"
+		},
+		"localizedtextarea": {
+			"$ref": "https://www.totalcms.co/schemas/properties/localizedtext.json",
+			"label": "Localized Textarea",
+			"help": "localizedtextarea field. Locale-keyed multi-line text (Pro).",
+			"field": "localizedtextarea"
+		},
+		"localizedstyledtext": {
+			"$ref": "https://www.totalcms.co/schemas/properties/localizedtext.json",
+			"label": "Localized Styled Text",
+			"help": "localizedstyledtext field. Locale-keyed rich text (Pro).",
+			"field": "localizedstyledtext"
+		},
+		"card": {
+			"$ref": "https://www.totalcms.co/schemas/properties/card.json",
+			"label": "Card",
+			"help": "card field. A single nested object whose shape comes from totalcms-item.",
+			"field": "card",
+			"schemaref": "https://www.totalcms.co/schemas/totalcms-item.json"
+		},
+		"deck": {
+			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+			"label": "Deck",
+			"help": "deck field. A list of nested objects whose shape comes from totalcms-item.",
+			"field": "deck",
+			"schemaref": "https://www.totalcms.co/schemas/totalcms-item.json",
+			"settings": { "deckItemLabel": "${title}" },
+			"patternProperties": {
+				"^[a-z0-9][a-z0-9-]*$": { "$ref": "https://www.totalcms.co/schemas/totalcms-item.json" }
+			}
+		},
+		"deckTable": {
+			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+			"label": "Deck Table",
+			"help": "deckTable field. Same as a deck but rendered as an editable table.",
+			"field": "deckTable",
+			"schemaref": "https://www.totalcms.co/schemas/totalcms-item.json",
+			"settings": { "deckItemLabel": "${title}" },
+			"patternProperties": {
+				"^[a-z0-9][a-z0-9-]*$": { "$ref": "https://www.totalcms.co/schemas/totalcms-item.json" }
+			}
+		}
+	},
+	"required": ["id", "title"],
+	"index": ["id", "title", "select", "toggle", "number"]
+}

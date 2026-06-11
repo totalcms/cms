@@ -23,6 +23,10 @@ class CsvImporter
 	private string $collection;
 	private bool $queueJobs = false;
 
+	/** @var list<array{offset: int|string, id: string|null, reason: string}> */
+	private array $skipped          = [];
+	private ?string $lastSkipReason = null;
+
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly ObjectFetcher $objectFetcher,
@@ -83,9 +87,10 @@ class CsvImporter
 		$this->collection = $collection;
 
 		$this->logger->info(sprintf('Starting CSV import for collection: %s', $collection));
-		$importCount = 0;
-		$createdIds  = [];
-		$updatedIds  = [];
+		$importCount   = 0;
+		$createdIds    = [];
+		$updatedIds    = [];
+		$this->skipped = [];
 
 		// Take the uploaded file and update object with related data
 		$csv = Reader::fromString((string)$file->getStream());
@@ -103,6 +108,7 @@ class CsvImporter
 		$this->eventDispatcher->suspendForImport($collection);
 
 		foreach ($cleanedRecords as $offset => $record) {
+			$this->lastSkipReason = null;
 			try {
 				$imported = $updateObject ?
 					$this->updateObject($offset, $record) :
@@ -116,11 +122,14 @@ class CsvImporter
 						$createdIds[] = $id;
 					}
 					$importCount++;
+				} elseif (!$imported) {
+					$this->recordSkip($offset, $record, $this->lastSkipReason ?? 'skipped');
 				}
 			} catch (\Exception $exception) {
 				$this->logger->error(
 					sprintf('Error importing record at row %s: %s', $offset, $exception->getMessage())
 				);
+				$this->recordSkip($offset, $record, $exception->getMessage());
 			}
 		}
 
@@ -130,6 +139,32 @@ class CsvImporter
 		$this->logger->info(sprintf('CSV import completed. Successfully imported %d of %d records into collection: %s', $importCount, $totalRecords, $collection));
 
 		return $importCount;
+	}
+
+	/**
+	 * Per-record skip/failure details from the most recent import() call.
+	 * Each entry has the record's row offset, its id (when present), and a
+	 * human-readable reason. Empty when every record imported cleanly. Lets
+	 * callers (e.g. the CLI) surface why rows were skipped instead of failing
+	 * silently.
+	 *
+	 * @return list<array{offset: int|string, id: string|null, reason: string}>
+	 */
+	public function getSkipped(): array
+	{
+		return $this->skipped;
+	}
+
+	/**
+	 * @param array<string,mixed> $record
+	 */
+	private function recordSkip(int|string $offset, array $record, string $reason): void
+	{
+		$this->skipped[] = [
+			'offset' => $offset,
+			'id'     => isset($record['id']) ? (string)$record['id'] : null,
+			'reason' => $reason,
+		];
 	}
 
 	/**
@@ -145,6 +180,7 @@ class CsvImporter
 		if ($this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$error = sprintf('Object with id %s already exists in %s', $record['id'], $this->collection);
 			$this->logger->warning($error);
+			$this->lastSkipReason = $error;
 
 			return false;
 		}
@@ -175,6 +211,9 @@ class CsvImporter
 
 		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$this->logger->info(sprintf('Skipping update of record (%s) at row %s', $record['id'] ?? 'no-id', $offset));
+			$this->lastSkipReason = isset($record['id'])
+				? sprintf('No existing object with id %s to update', $record['id'])
+				: 'Row has no id (required for update)';
 
 			return false;
 		}

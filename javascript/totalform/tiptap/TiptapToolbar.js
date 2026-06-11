@@ -281,7 +281,7 @@ export default class TiptapToolbar {
 		});
 
 		// Close on outside click
-		document.addEventListener('click', () => this.closeDropdowns());
+		document.addEventListener('click', (e) => this.closeDropdownsOnOutsideClick(e));
 
 		wrapper.appendChild(toggle);
 		wrapper.appendChild(menu);
@@ -331,7 +331,7 @@ export default class TiptapToolbar {
 			if (!isOpen) wrapper.classList.add('is-open');
 		});
 
-		document.addEventListener('click', () => this.closeDropdowns());
+		document.addEventListener('click', (e) => this.closeDropdownsOnOutsideClick(e));
 
 		wrapper.appendChild(toggle);
 		wrapper.appendChild(menu);
@@ -396,7 +396,7 @@ export default class TiptapToolbar {
 			menu.appendChild(item);
 		}
 
-		document.addEventListener('click', () => this.closeDropdowns());
+		document.addEventListener('click', (e) => this.closeDropdownsOnOutsideClick(e));
 
 		wrapper.appendChild(toggle);
 		wrapper.appendChild(menu);
@@ -484,7 +484,7 @@ export default class TiptapToolbar {
 			if (!isOpen) wrapper.classList.add('is-open');
 		});
 
-		document.addEventListener('click', () => this.closeDropdowns());
+		document.addEventListener('click', (e) => this.closeDropdownsOnOutsideClick(e));
 
 		wrapper.appendChild(toggle);
 		wrapper.appendChild(menu);
@@ -577,7 +577,7 @@ export default class TiptapToolbar {
 			if (!isOpen) wrapper.classList.add('is-open');
 		});
 
-		document.addEventListener('click', () => this.closeDropdowns());
+		document.addEventListener('click', (e) => this.closeDropdownsOnOutsideClick(e));
 
 		wrapper.appendChild(toggle);
 		wrapper.appendChild(menu);
@@ -654,7 +654,7 @@ export default class TiptapToolbar {
 			if (!isOpen) wrapper.classList.add('is-open');
 		});
 
-		document.addEventListener('click', () => this.closeDropdowns());
+		document.addEventListener('click', (e) => this.closeDropdownsOnOutsideClick(e));
 
 		wrapper.appendChild(toggle);
 		wrapper.appendChild(menu);
@@ -701,7 +701,7 @@ export default class TiptapToolbar {
 			if (!isOpen) wrapper.classList.add('is-open');
 		});
 
-		document.addEventListener('click', () => this.closeDropdowns());
+		document.addEventListener('click', (e) => this.closeDropdownsOnOutsideClick(e));
 
 		wrapper.appendChild(toggle);
 		wrapper.appendChild(menu);
@@ -766,6 +766,21 @@ export default class TiptapToolbar {
 	closeDropdowns() {
 		this.element.querySelectorAll('.ste-toolbar-dropdown.is-open')
 			.forEach(el => el.classList.remove('is-open'));
+	}
+
+	// Outside-click closer for dropdown menus. A click that originates INSIDE a
+	// dropdown must not close it here — most importantly the native
+	// <input type="color"> custom-color button: its click bubbles to document,
+	// and closing the menu tears down the input the OS color picker is anchored
+	// to, so the picker flashes open and immediately vanishes. Toggles already
+	// stopPropagation; swatches and the eraser close the menu via their own
+	// handlers after acting.
+	closeDropdownsOnOutsideClick(e) {
+		const target = e.target;
+		if (target instanceof Element && target.closest('.ste-toolbar-dropdown')) {
+			return;
+		}
+		this.closeDropdowns();
 	}
 
 	executeCommand(def) {

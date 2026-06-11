@@ -53,8 +53,29 @@ class SchemaData
 		'svg',
 		'text',
 		'toggle',
+		'totalcms',
+		'totalcms-item',
 		'url',
 	];
+
+	/**
+	 * Reserved schemas that exist purely as reference/example definitions.
+	 * They are registered and URL-resolvable (so schema tooling, the schema
+	 * editor, and `schemaref` can see them) but can NEVER back a collection —
+	 * every collection-creation path rejects them.
+	 *
+	 * @var list<string>
+	 */
+	public const REFERENCE_SCHEMAS = [
+		'totalcms',
+		'totalcms-item',
+	];
+
+	public static function isReferenceSchema(string $schemaId): bool
+	{
+		return in_array($schemaId, self::REFERENCE_SCHEMAS, true);
+	}
+
 	/**
 	 * Reserved collections that can execute code or carry security-sensitive
 	 * config, and are therefore writable through the generic object API only by

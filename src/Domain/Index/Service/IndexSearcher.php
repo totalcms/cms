@@ -8,6 +8,7 @@ readonly class IndexSearcher
 {
 	public function __construct(
 		private IndexReader $reader,
+		private \TotalCMS\Domain\Query\Service\ObjectSearcher $objectSearcher,
 	) {
 	}
 
@@ -71,6 +72,30 @@ readonly class IndexSearcher
 		}
 
 		return $results;
+	}
+
+	/**
+	 * Relevance-ranked search: best-partial matches first (OR recall, term
+	 * coverage), instead of the all-or-nothing AND filter that search() applies.
+	 *
+	 * Delegates scoring to the shared ObjectSearcher::searchScored() engine and
+	 * returns the surviving objects in ranked order — the SAME plain-array shape
+	 * search() returns (no score wrapper), so callers/templates are drop-in.
+	 *
+	 * Relevance mode does NOT support `field:value` scoped queries or explicit
+	 * and/or operators — use search() for those. Optional $weights boost matches
+	 * in chosen fields (field name => weight; unlisted fields default to 1.0).
+	 *
+	 * @param array<string,float> $weights
+	 *
+	 * @return Collection<int,array<string,mixed>>
+	 */
+	public function searchScored(string $collection, string $query, array $weights = []): Collection
+	{
+		$index  = $this->reader->fetchIndex($collection);
+		$scored = $this->objectSearcher->searchScored($index->objects->all(), $query, $weights);
+
+		return collect(array_map(static fn (array $entry): array => $entry['item'], $scored));
 	}
 
 	/**

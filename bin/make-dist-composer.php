@@ -5,7 +5,13 @@
  * Generates a composer.json for the totalcms/cms distribution package.
  *
  * Reads the development composer.json, strips dev dependencies and scripts,
- * and outputs a library-type package suitable for Composer distribution.
+ * and outputs a composer-plugin package suitable for Composer distribution.
+ *
+ * The shipped package is a composer-plugin (not a plain library) so it can run
+ * project-side lifecycle work on the customer's `composer install`/`update` —
+ * see src/Composer/Plugin.php. The dev composer.json stays type=library so this
+ * repo does not activate the plugin against itself; the plugin metadata
+ * (type, extra.class, composer-plugin-api) is injected here at dist build.
  *
  * Usage: php bin/make-dist-composer.php [output-dir]
  */
@@ -29,18 +35,26 @@ $repositories = array_values(array_filter(
 	)
 ));
 
+// The plugin needs the composer-plugin-api constraint in `require`; merge it in
+// without clobbering anything already declared in the source require.
+$require = $source['require'] ?? [];
+$require['composer-plugin-api'] ??= '^2.4';
+
 $dist = [
 	'name'         => 'totalcms/cms',
 	'description'  => $source['description'] ?? 'Total CMS',
-	'type'         => 'library',
+	'type'         => 'composer-plugin',
 	'license'      => $source['license'] ?? 'proprietary',
 	'keywords'     => $source['keywords'] ?? [],
 	'repositories' => $repositories,
-	'require'      => $source['require'] ?? [],
+	'require'      => $require,
 	'autoload'     => [
 		'psr-4' => $source['autoload']['psr-4'] ?? [],
 	],
 	'bin'    => ['resources/bin/tcms'],
+	'extra'  => [
+		'class' => 'TotalCMS\\Composer\\Plugin',
+	],
 	'config' => [
 		'sort-packages' => true,
 		'platform'      => $source['config']['platform'] ?? ['php' => '8.2.0'],

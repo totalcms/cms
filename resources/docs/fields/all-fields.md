@@ -503,3 +503,15 @@ This works transparently — no extra configuration beyond setting both `require
 All fields support validation rules like `pattern`, `minLength`, `maxLength`, `minimum`, `maximum`, `enum`, and more. These are added in the **Extra Schema Definitions** section of a property, not in Settings.
 
 For full details and examples, see [Schema Validation](../schemas/validation.md).
+
+## Reference Schema: `totalcms`
+
+Total CMS ships a builtin **reference schema** named `totalcms` that demonstrates every field
+type and its settings in a single valid schema file. It lives at
+`resources/schemas/totalcms.json`, with a companion `resources/schemas/totalcms-item.json`
+backing its `card` and `deck` examples.
+
+The schema is registered and resolvable (you can open it in the schema editor and it is visible
+to schema tooling), but it is **reference-only** — you cannot create a collection from it. Use it
+as a copy-paste catalog when authoring your own schemas: find the field type you want, copy the
+property definition, and adapt it.

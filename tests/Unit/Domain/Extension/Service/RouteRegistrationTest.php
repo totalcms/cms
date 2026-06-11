@@ -64,6 +64,66 @@ describe('Extension route registration', function (): void {
 		expect($match->permission)->toBe('any');
 	});
 
+	test('placeholder routes match and capture params', function (): void {
+		$manager = createRouteTestManager();
+		$manager->discoverAndRegister();
+		$manager->bootAll();
+
+		$match = $manager->matchExtensionRoute('test-vendor/hello-world', 'GET', '/s/abc123');
+
+		expect($match)->not->toBeNull();
+		expect($match->params)->toBe(['id' => 'abc123']);
+	});
+
+	test('static routes have empty params', function (): void {
+		$manager = createRouteTestManager();
+		$manager->discoverAndRegister();
+		$manager->bootAll();
+
+		$match = $manager->matchExtensionRoute('test-vendor/hello-world', 'GET', '/api/data');
+
+		expect($match)->not->toBeNull();
+		expect($match->params)->toBe([]);
+	});
+
+	test('regex-constrained placeholder matches only valid values', function (): void {
+		$manager = createRouteTestManager();
+		$manager->discoverAndRegister();
+		$manager->bootAll();
+
+		expect($manager->matchExtensionRoute('test-vendor/hello-world', 'GET', '/items/42'))->not->toBeNull();
+		// 'abc' fails the {id:\d+} constraint
+		expect($manager->matchExtensionRoute('test-vendor/hello-world', 'GET', '/items/abc'))->toBeNull();
+	});
+
+	test('static path wins over placeholder regardless of registration order', function (): void {
+		$manager = createRouteTestManager();
+		$manager->discoverAndRegister();
+		$manager->bootAll();
+
+		// /embed/{id} is registered BEFORE /embed/list in the fixture; the
+		// exact static match must still win (empty params, not ['id' => 'list']).
+		$match = $manager->matchExtensionRoute('test-vendor/hello-world', 'GET', '/embed/list');
+
+		expect($match)->not->toBeNull();
+		expect($match->params)->toBe([]);
+
+		// A non-static id still resolves to the dynamic route.
+		$dynamic = $manager->matchExtensionRoute('test-vendor/hello-world', 'GET', '/embed/xyz');
+		expect($dynamic->params)->toBe(['id' => 'xyz']);
+	});
+
+	test('placeholder does not match across slash boundaries', function (): void {
+		$manager = createRouteTestManager();
+		$manager->discoverAndRegister();
+		$manager->bootAll();
+
+		// {id} captures a single segment — /s/a/b must not match /s/{id}
+		$match = $manager->matchExtensionRoute('test-vendor/hello-world', 'GET', '/s/a/b');
+
+		expect($match)->toBeNull();
+	});
+
 	test('unknown route returns null', function (): void {
 		$manager = createRouteTestManager();
 		$manager->discoverAndRegister();

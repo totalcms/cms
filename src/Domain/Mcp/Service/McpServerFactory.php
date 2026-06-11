@@ -15,6 +15,7 @@ use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Support\Config;
@@ -54,7 +55,7 @@ readonly class McpServerFactory
 	) {
 	}
 
-	public function build(McpPersona $persona): Server
+	public function build(McpPersona $persona, bool $toolsOnly = false): Server
 	{
 		$readOnlyDefault = new ToolAnnotations(readOnlyHint: true);
 
@@ -72,6 +73,7 @@ readonly class McpServerFactory
 				. 'Resources: tcms://{collection}/ for collection summaries, tcms://{collection}/{id} for objects — '
 				. 'reachable via resources/read or the get_resource tool. '
 				. 'Drafts are hidden from anonymous callers. '
+				. 'search / fetch are provided for ChatGPT and deep-research clients: search(query) returns {id,title,url}; fetch(id) returns the full document. '
 				. 'Tool descriptions describe their inputs and outputs.'
 			)
 			->setSession($this->sessionStore)
@@ -93,7 +95,14 @@ readonly class McpServerFactory
 		// kill switch is off the SDK falls back to its per-session-only default
 		// — clients can still call resources/subscribe but no cross-session
 		// push happens.
-		if (($this->config->mcp['subscriptionsEnabled'] ?? true) !== false) {
+		// ChatGPT-compatibility tools-only mode. When $toolsOnly is set the server
+		// advertises a tools-only capability set — no resources, no prompts, no
+		// subscriptions — the minimal surface ChatGPT's connector importer accepts
+		// (it rejects servers that advertise `resources` / `prompts`). The caller
+		// (McpEndpointAction) sets this PER REQUEST from the client's identity:
+		// ChatGPT/OpenAI clients get tools-only, everyone else (Claude, Cursor, …)
+		// keeps the full surface. See ToolsOnlyClients.
+		if (!$toolsOnly && ($this->config->mcp['subscriptionsEnabled'] ?? true) !== false) {
 			$builder->setResourceSubscriptionManager($this->subscriptionManager);
 		}
 
@@ -104,7 +113,6 @@ readonly class McpServerFactory
 		// see the first pass's tools as collisions and skip them — don't do that.
 		$this->schemaToolRegistrar->register($this->toolRegistry);
 
-		$prefix = $this->toolNamePrefix();
 		foreach ($this->toolRegistry->forPersona($persona) as $tool) {
 			// Persona-aware tools (Phase 1 content tools) expose a builder that
 			// renders a per-persona description — e.g., the field catalog must
@@ -122,12 +130,18 @@ readonly class McpServerFactory
 
 			$builder->addTool(
 				handler: $tool->handler,
-				name: $prefix . $tool->name,
+				name: $this->resolveToolName($tool),
 				description: $description,
 				annotations: $annotations,
 				inputSchema: $tool->inputSchema,
 				outputSchema: $tool->outputSchema,
 			);
+		}
+
+		// Tools-only mode stops here — registering no resources or prompts means
+		// the SDK omits those capabilities from the initialize handshake.
+		if ($toolsOnly) {
+			return $builder->build();
 		}
 
 		foreach ($this->resourceRegistry->forPersona($persona) as $resource) {
@@ -250,6 +264,20 @@ readonly class McpServerFactory
 	}
 
 	/**
+	 * Final tools/list name for a tool: prefix-prepended unless the tool opts
+	 * out via exemptFromPrefix. ChatGPT-compat tools (search/fetch) opt out so
+	 * their literal names survive a configured mcp.toolPrefix.
+	 */
+	public function resolveToolName(McpToolDefinition $tool): string
+	{
+		if ($tool->exemptFromPrefix) {
+			return $tool->name;
+		}
+
+		return $this->toolNamePrefix() . $tool->name;
+	}
+
+	/**
 	 * Resolves the optional tool-name prefix from config. Operators running
 	 * multiple T3 sites in one AI agent can set `mcp.toolPrefix` to namespace
 	 * each site's tools (e.g. `bistro` → `bistro_list_collections`). Returns
@@ -276,5 +304,20 @@ readonly class McpServerFactory
 	public function protocolVersion(): string
 	{
 		return self::PROTOCOL_VERSION;
+	}
+
+	/**
+	 * Records the connecting MCP client's self-reported identity in the
+	 * mcp-activity log on initialize. Used to recognise specific clients (e.g.
+	 * ChatGPT) when diagnosing or tuning compatibility. `clientInfo` is
+	 * informational per the spec, so this is for observability only — never
+	 * behaviour gating.
+	 */
+	public function logClientInfo(string $name, string $version): void
+	{
+		$this->logger->info('MCP client connected', [
+			'client'  => $name !== '' ? $name : '(unknown)',
+			'version' => $version,
+		]);
 	}
 }

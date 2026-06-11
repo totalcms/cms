@@ -256,7 +256,7 @@ These are non-obvious details that are important when working in these areas:
 ### CLI System (`tcms`)
 - **Framework**: Symfony Console via `CliApplication`
 - **Entry Point**: `resources/bin/tcms` (shipped), `bin/tcms` (dev symlink)
-- **Commands**: `collection:list`, `collection:get`, `collection:export`, `collection:import`, `collection:query`, `object:list`, `object:get`, `object:export`, `schema:list`, `schema:get`, `schema:export`, `schema:import`, `jumpstart:export`, `jumpstart:import`, `builder:init`, `builder:frontend`, `builder:routes`, `builder:history`, `extension:list`, `extension:enable`, `extension:disable`, `extension:remove`, `update:check`, `update:apply`, `update:rollback`, `cache:clear`, `info`, `pull`, `push`, `deck:import`, `jobs:process`
+- **Commands**: `collection:list`, `collection:get`, `collection:export`, `collection:import`, `collection:query`, `object:list`, `object:get`, `object:export`, `schema:list`, `schema:get`, `schema:export`, `schema:import`, `jumpstart:export`, `jumpstart:import`, `builder:init`, `builder:frontend`, `builder:routes`, `builder:history`, `extension:list`, `extension:enable`, `extension:disable`, `extension:remove`, `update:check`, `update:apply`, `update:rollback`, `cache:clear`, `info`, `pull`, `push`, `deck:import`, `jobs:process`, `skill:install`
 - **Extension Commands**: Loaded after core commands with collision protection (extensions cannot shadow built-in command names)
 - **Output Formats**: Human-readable tables by default, `--json` flag for machine-readable output
 

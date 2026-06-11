@@ -66,6 +66,33 @@ describe('LocaleTwigAdapter::canonicalizeLocale', function (): void {
 	});
 });
 
+describe('LocaleTwigAdapter::htmlLang', function (): void {
+	test('returns the current locale as a BCP-47 tag (underscore → dash)', function (): void {
+		if (!extension_loaded('intl')) {
+			$this->markTestSkipped('intl extension required for set()/get()');
+		}
+
+		$adapter = makeLocaleAdapter();
+
+		$adapter->set('de_DE');
+		expect($adapter->htmlLang())->toBe('de-DE');
+
+		$adapter->set('en_US');
+		expect($adapter->htmlLang())->toBe('en-US');
+	});
+
+	test('leaves a bare language code unchanged', function (): void {
+		if (!extension_loaded('intl')) {
+			$this->markTestSkipped('intl extension required for set()/get()');
+		}
+
+		$adapter = makeLocaleAdapter();
+		$adapter->set('fr');
+
+		expect($adapter->htmlLang())->toBe('fr');
+	});
+});
+
 describe('LocaleTwigAdapter::text — exact match', function (): void {
 	test('returns exact match for canonical locale', function (): void {
 		$adapter = makeLocaleAdapter();

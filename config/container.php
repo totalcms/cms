@@ -80,6 +80,8 @@ use TotalCMS\Domain\Mcp\Tool\Admin\ExtensionTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\ObjectTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SchemaTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SiteInfoTool;
+use TotalCMS\Domain\Mcp\Tool\Compat\FetchTool;
+use TotalCMS\Domain\Mcp\Tool\Compat\SearchTool;
 use TotalCMS\Domain\Mcp\Tool\Content\GetObjectTool;
 use TotalCMS\Domain\Mcp\Tool\Content\GetResourceTool;
 use TotalCMS\Domain\Mcp\Tool\Content\GetViewTool;
@@ -627,6 +629,15 @@ return [
 		$container->get(DescribeCollectionTool::class)->register($registry);
 		$container->get(SearchCollectionsTool::class)->register($registry);
 		$container->get(GetResourceTool::class)->register($registry);
+
+		// ChatGPT-compatibility tools. Named literally `search` / `fetch`
+		// (exempt from mcp.toolPrefix) per OpenAI's connector contract; thin
+		// adapters over the cross-collection search + get_object paths. Registered
+		// here at container build so they claim the names before SchemaToolRegistrar
+		// runs at request time (a saved-query tool named search/fetch would then
+		// collide and be skipped — acceptable, the literal names are reserved).
+		$container->get(SearchTool::class)->register($registry);
+		$container->get(FetchTool::class)->register($registry);
 
 		// DataView tools (Phase 2 Chunk F) — parallel surface to the
 		// collection tools, scoped to views. Public persona only sees views

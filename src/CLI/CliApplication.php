@@ -71,6 +71,7 @@ class CliApplication
 
 		// Maintenance commands
 		$app->addCommand(new Command\Maintenance\RepairFilesCommand($totalcms));
+		$app->addCommand(new Command\Maintenance\RepairIndexCommand($totalcms));
 
 		// Schema commands
 		$app->addCommand(new Command\SchemaListCommand($totalcms));
@@ -89,6 +90,7 @@ class CliApplication
 		$app->addCommand(new Command\ObjectListCommand($totalcms));
 		$app->addCommand(new Command\ObjectGetCommand($totalcms));
 		$app->addCommand(new Command\ObjectExportCommand($totalcms));
+		$app->addCommand(new Command\ObjectDeleteCommand($totalcms));
 
 		// Deck commands
 		$app->addCommand(new Command\DeckImportCommand($totalcms));
@@ -115,6 +117,9 @@ class CliApplication
 		$app->addCommand(new Command\BuilderRoutesCommand($totalcms));
 		$app->addCommand(new Command\BuilderHistoryCommand($totalcms));
 
+		// Skill commands
+		$app->addCommand(new Command\Skill\SkillInstallCommand($totalcms));
+
 		// Extension management commands
 		$app->addCommand(new Command\Extension\ExtensionListCommand($totalcms));
 		$app->addCommand(new Command\Extension\ExtensionEnableCommand($totalcms));
@@ -127,6 +132,20 @@ class CliApplication
 				\TotalCMS\Domain\Extension\Service\ExtensionManager::class
 			);
 			$extensionManager->discoverAndRegister();
+
+			// Run the boot phase in CLI too. The TotalCMS constructor early-returns
+			// for CLI (TotalCMS.php), so without this the CLI only ever ran the
+			// register phase — leaving extension schema dirs, MCP tools, field
+			// types, event listeners, and boot-time provisioning unwired. That made
+			// CLI a reduced subset of HTTP: collection:import into an extension
+			// schema threw "Schema type does not exist", mcp:status/mcp:test
+			// couldn't see extension tools, and boot-provisioned collections were
+			// empty until the first browser request. bootAll() registers no Slim
+			// routes (it only fills in-memory lookup arrays the CLI never reads),
+			// guards every wire with container->has(), and try/catches each boot(),
+			// so it's safe here. Booting before command collection also means an
+			// extension whose boot() fails is correctly excluded from getAllCommands().
+			$extensionManager->bootAll();
 
 			$coreNames = array_map(
 				fn (string $name): string => $name,

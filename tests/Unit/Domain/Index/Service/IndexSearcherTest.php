@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Index\Service\IndexSearcher;
+use TotalCMS\Domain\Query\Service\ObjectSearcher;
 
 /**
  * Test IndexSearcher word boundary matching.
@@ -21,7 +22,7 @@ final class IndexSearcherTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->indexReader = $this->createMock(IndexReader::class);
-		$this->searcher    = new IndexSearcher($this->indexReader);
+		$this->searcher    = new IndexSearcher($this->indexReader, new ObjectSearcher());
 	}
 
 	private function mockIndexWithObjects(array $objects): void
@@ -309,5 +310,63 @@ final class IndexSearcherTest extends TestCase
 
 		// Performance check - should complete in reasonable time (< 1 second)
 		$this->assertLessThan(1.0, $duration, 'Search should complete within 1 second for 1000 objects');
+	}
+
+	public function testSearchScoredRanksByTermCoverageWithOrRecall(): void
+	{
+		$this->mockIndexWithObjects([
+			['id'   => 'burger', 'name' => 'Burger', 'subtitle' => 'Animated Menu Hamburgers',
+				'tags' => ['nav', 'menu', 'hamburger', 'animation']],   // 3 terms
+			['id'   => 'rails', 'name' => 'Rails', 'subtitle' => 'On Page Nav',
+				'tags' => ['menu', 'navigation']],                        // 2 terms
+			['id'   => 'glider', 'name' => 'Glider', 'description' => 'easy reading and navigation',
+				'tags' => ['slider']],                                    // 1 term
+		]);
+
+		$results = $this->searcher->searchScored('products', 'animated hamburger menu navigation')->all();
+
+		// OR recall: all three are candidates; ranked by coverage, best first.
+		$this->assertCount(3, $results);
+		$this->assertSame('burger', $results[0]['id']);
+		$this->assertSame('rails', $results[1]['id']);
+		$this->assertSame('glider', $results[2]['id']);
+	}
+
+	public function testSearchScoredReturnsPlainObjectArraysWithoutScoreWrapper(): void
+	{
+		$this->mockIndexWithObjects([
+			['id' => 'burger', 'tags' => ['hamburger']],
+		]);
+
+		$results = $this->searcher->searchScored('products', 'hamburger')->all();
+
+		$this->assertCount(1, $results);
+		$this->assertArrayHasKey('id', $results[0]);
+		$this->assertArrayNotHasKey('score', $results[0]);
+		$this->assertArrayNotHasKey('matched', $results[0]);
+		$this->assertArrayNotHasKey('item', $results[0]);
+	}
+
+	public function testSearchScoredReturnsEmptyForEmptyQuery(): void
+	{
+		$this->mockIndexWithObjects([
+			['id' => 'x', 'tags' => ['menu']],
+		]);
+
+		$this->assertTrue($this->searcher->searchScored('products', '')->isEmpty());
+	}
+
+	public function testSearchScoredAppliesFieldWeights(): void
+	{
+		// Equal coverage (1 term each) -> weighted field score decides order.
+		$this->mockIndexWithObjects([
+			['id' => 'a', 'description' => 'gallery'],
+			['id' => 'b', 'name' => 'gallery'],
+		]);
+
+		$results = $this->searcher->searchScored('products', 'gallery', ['name' => 5.0, 'description' => 1.0])->all();
+
+		$this->assertSame('b', $results[0]['id']);
+		$this->assertSame('a', $results[1]['id']);
 	}
 }

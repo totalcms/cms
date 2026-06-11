@@ -50,3 +50,28 @@ In search, it is common that we will want to prioritize the results based on whe
 When you are setting up the search results, you will be able to define a list of properties that you would like to be prioritized. The order of this list will determine the priority. You should only define that properties that you deem special to be at the top.
 
 Adding this step does add additional processing load to generating the search. If you have a very large data set, you may want to test the performance of your search results with and without this enabled. Also try to keep the number of priority properties to a minimum.
+
+## Relevance ranking (MCP & programmatic search)
+
+The AND/OR syntax above describes the Twig/Loop front-end search. The **MCP search tools** (`search_collection`, `search_collections`) and the programmatic `SearchService` use a separate, relevance-ranked path.
+
+A strict AND filter returns *nothing* when a descriptive, multi-word query doesn't match every term — e.g. `animated hamburger menu navigation` returns zero results if one product lacks the literal word "navigation", even when it matches the other three terms. For an AI agent that is a poor experience.
+
+The built-in MCP search tools therefore rank by **term coverage**: an item is a candidate if it matches **at least one** query term (OR recall), and results are ordered best-first by how many distinct terms each matched — a full-coverage match always outranks a partial one. The best partial match comes back first instead of an empty result set.
+
+Programmatic callers (including extension search providers and custom MCP tools) opt into the same behavior per query via `SearchQuery`:
+
+```php
+use TotalCMS\Domain\Search\Data\SearchQuery;
+
+$results = $searchService->search(new SearchQuery(
+    text: 'animated hamburger menu navigation',
+    collection: 'products',
+    relevance: true,                              // rank by term coverage
+    weights: ['name' => 3.0, 'tags' => 2.0],      // optional per-field weights (default 1.0)
+));
+```
+
+`relevance` defaults to `false`, in which case the legacy all-or-nothing AND filter is used unchanged. Optional `weights` boost matches in chosen fields; with no weights the score is simply the number of distinct terms matched.
+
+Twig templates can opt into the same ranking on the front-end search via [`cms.collection.searchScored()`](../twig/collections#searchscored) — the standard `cms.collection.search()` (with its AND/OR syntax and [priority properties](#prioritizing-search-results)) is unchanged.

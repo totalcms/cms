@@ -140,4 +140,48 @@ final class TextSearchProviderTest extends TestCase
 
 		$this->assertSame([], $out);
 	}
+
+	public function testRelevanceFalseKeepsLegacyAndBehavior(): void
+	{
+		$filter = $this->createMock(IndexFilter::class);
+		$items  = [
+			['id' => 'burger', 'name' => 'Burger', 'tags' => ['nav', 'menu', 'hamburger']],
+		];
+		$filter->method('fetchFilteredIndex')->willReturn($items);
+
+		$provider = new TextSearchProvider($filter, new ObjectSearcher());
+
+		$out = $provider->search(new SearchQuery(
+			text: 'hamburger menu navigation',
+			collection: 'products',
+			relevance: false,
+		));
+
+		// Legacy AND filter: "navigation" is absent -> no results.
+		$this->assertSame([], $out);
+	}
+
+	public function testRelevanceTrueReturnsBestPartialFirstNormalized(): void
+	{
+		$filter = $this->createMock(IndexFilter::class);
+		$items  = [
+			['id' => 'burger', 'name' => 'Burger', 'tags' => ['nav', 'menu', 'hamburger']], // 2 terms
+			['id' => 'glider', 'name' => 'Glider', 'description' => 'reading and navigation'], // 1 term
+		];
+		$filter->method('fetchFilteredIndex')->willReturn($items);
+
+		$provider = new TextSearchProvider($filter, new ObjectSearcher());
+
+		$out = $provider->search(new SearchQuery(
+			text: 'hamburger menu navigation',
+			collection: 'products',
+			relevance: true,
+		));
+
+		$this->assertCount(2, $out);
+		$this->assertSame('burger', $out[0]->id);
+		$this->assertSame(1.0, $out[0]->score);   // top normalized to 1.0
+		$this->assertSame('glider', $out[1]->id);
+		$this->assertLessThan(1.0, $out[1]->score);
+	}
 }

@@ -274,4 +274,32 @@ final class SettingsSaverTest extends TestCase
 		$this->assertEquals('value4', $result['b']['b3']);
 		$this->assertEquals('value5', $result['c']);
 	}
+
+	public function testDeepMergeReplacesListArraysInsteadOfMergingByIndex(): void
+	{
+		// The CORS-settings bug: saving a shorter (or empty) list must REPLACE the
+		// stored list, not merge it by index (which left removed items behind).
+		$existing = ['mcp' => ['allowedOrigins' => [
+			'https://chatgpt.com', 'https://claude.ai', 'https://gemini.google.com',
+		]]];
+
+		// Save just '*' → result is exactly ['*'], NOT ['*', 'https://claude.ai', …].
+		$result = SettingsSaver::deepMergeArrays($existing, ['mcp' => ['allowedOrigins' => ['*']]]);
+		$this->assertSame(['*'], $result['mcp']['allowedOrigins']);
+
+		// Clear the list → result is empty, NOT the old list resurrected.
+		$cleared = SettingsSaver::deepMergeArrays($existing, ['mcp' => ['allowedOrigins' => []]]);
+		$this->assertSame([], $cleared['mcp']['allowedOrigins']);
+	}
+
+	public function testDeepMergeStillMergesAssociativeMapsAlongsideLists(): void
+	{
+		// A list replaces; sibling scalar/map keys still deep-merge.
+		$existing = ['mcp' => ['enabled' => true, 'allowedOrigins' => ['a', 'b']]];
+		$new      = ['mcp' => ['allowedOrigins' => ['c']]];
+
+		$result = SettingsSaver::deepMergeArrays($existing, $new);
+		$this->assertTrue($result['mcp']['enabled']);               // preserved (map merge)
+		$this->assertSame(['c'], $result['mcp']['allowedOrigins']); // replaced (list)
+	}
 }

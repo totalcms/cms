@@ -1355,15 +1355,16 @@ class ExtensionManager
 	 */
 	public function matchExtensionRoute(string $extensionId, string $method, string $path): ?ExtensionRoute
 	{
-		$routes = $this->extensionRoutes[$extensionId] ?? [];
-
-		foreach ($routes as $route) {
-			if ($route['method'] === $method && $route['path'] === $path) {
-				return new ExtensionRoute(handler: $route['handler'], public: $route['public']);
-			}
+		$match = $this->resolveRoute($this->extensionRoutes[$extensionId] ?? [], $method, $path);
+		if ($match === null) {
+			return null;
 		}
 
-		return null;
+		return new ExtensionRoute(
+			handler: $match['route']['handler'],
+			public: $match['route']['public'],
+			params: $match['params'],
+		);
 	}
 
 	/**
@@ -1371,22 +1372,100 @@ class ExtensionManager
 	 */
 	public function matchExtensionAdminRoute(string $extensionId, string $method, string $path): ?ExtensionRoute
 	{
-		$routes = $this->extensionAdminRoutes[$extensionId] ?? [];
+		$match = $this->resolveRoute($this->extensionAdminRoutes[$extensionId] ?? [], $method, $path);
+		if ($match === null) {
+			return null;
+		}
 
+		// Admin routes default to super-admin only; 'any' is the explicit
+		// opt-out for pages meant for every logged-in dashboard user. Unknown
+		// values normalize to 'admin' (fail closed).
+		return new ExtensionRoute(
+			handler: $match['route']['handler'],
+			permission: ($match['route']['permission'] ?? null) === 'any' ? 'any' : 'admin',
+			params: $match['params'],
+		);
+	}
+
+	/**
+	 * Resolve a request method+path against a list of registered routes,
+	 * supporting Slim-style {placeholder} segments. An exact static match
+	 * wins over a placeholder pattern (FastRoute-style precedence), so a
+	 * literal `/embed/list` is never shadowed by `/embed/{id}` regardless of
+	 * registration order.
+	 *
+	 * @param list<array{method: string, path: string, handler: mixed, public: bool, permission: string|null}> $routes
+	 *
+	 * @return array{route: array{method: string, path: string, handler: mixed, public: bool, permission: string|null}, params: array<string,string>}|null
+	 */
+	private function resolveRoute(array $routes, string $method, string $path): ?array
+	{
+		// Pass 1: exact static match.
 		foreach ($routes as $route) {
 			if ($route['method'] === $method && $route['path'] === $path) {
-				// Admin routes default to super-admin only; 'any' is the
-				// explicit opt-out for pages meant for every logged-in
-				// dashboard user. Unknown values normalize to 'admin'
-				// (fail closed).
-				return new ExtensionRoute(
-					handler: $route['handler'],
-					permission: ($route['permission'] ?? null) === 'any' ? 'any' : 'admin',
-				);
+				return ['route' => $route, 'params' => []];
+			}
+		}
+
+		// Pass 2: {placeholder} patterns.
+		foreach ($routes as $route) {
+			if ($route['method'] !== $method || !str_contains($route['path'], '{')) {
+				continue;
+			}
+
+			$params = $this->matchRoutePath($route['path'], $path);
+			if ($params !== null) {
+				return ['route' => $route, 'params' => $params];
 			}
 		}
 
 		return null;
+	}
+
+	/**
+	 * Match a request path against a registered route pattern containing
+	 * {placeholder} segments, mirroring Slim/FastRoute semantics: `{id}`
+	 * captures a single non-slash segment, `{id:\d+}` adds a regex
+	 * constraint. Literal portions are matched verbatim (regex-quoted).
+	 * Returns the captured params on a match, or null when the path doesn't
+	 * match the pattern.
+	 *
+	 * @return array<string,string>|null
+	 */
+	private function matchRoutePath(string $pattern, string $path): ?array
+	{
+		$regex  = '';
+		$offset = 0;
+
+		preg_match_all('/\{(\w+)(?::([^{}]+))?\}/', $pattern, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
+
+		foreach ($matches as $match) {
+			$placeholder = (string)$match[0][0];
+			$position    = (int)$match[0][1];
+			$name        = (string)$match[1][0];
+			$constraint  = (isset($match[2]) && $match[2][1] !== -1) ? (string)$match[2][0] : '[^/]+';
+
+			$regex .= preg_quote(substr($pattern, $offset, $position - $offset), '#');
+			$regex .= '(?P<' . $name . '>' . $constraint . ')';
+			$offset  = $position + strlen($placeholder);
+		}
+
+		$regex .= preg_quote(substr($pattern, $offset), '#');
+
+		if (preg_match('#^' . $regex . '$#', $path, $captured) !== 1) {
+			return null;
+		}
+
+		// Keep only the named captures (the {placeholder} values), discarding
+		// preg's parallel numeric-indexed entries.
+		$params = [];
+		foreach ($captured as $key => $value) {
+			if (is_string($key)) {
+				$params[$key] = $value;
+			}
+		}
+
+		return $params;
 	}
 
 	/**

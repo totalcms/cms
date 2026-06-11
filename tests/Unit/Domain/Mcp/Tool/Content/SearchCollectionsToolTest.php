@@ -169,6 +169,8 @@ final class SearchCollectionsToolTest extends TestCase
 		$this->assertCount(1, $capturedQueries);
 		$this->assertSame('blog', $capturedQueries[0]->collection);
 		$this->assertSame('public', $capturedQueries[0]->persona);
+		// Built-in search defaults to relevance ranking (best partial first).
+		$this->assertTrue($capturedQueries[0]->relevance);
 		$this->assertCount(1, $result['items']);
 		$this->assertSame('public-post', $result['items'][0]['id']);
 	}

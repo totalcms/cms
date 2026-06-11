@@ -34,6 +34,8 @@ new TwigFunction('acme_banner', function (): void {
 
 Extensions register Twig **functions, filters, and globals** — never custom tags or nodes — so there is nothing else to do to be yield-ready.
 
+> **Security: Twig autoescaping is OFF.** Total CMS renders content fields as trusted author HTML/Markdown, so Twig does not escape output for you. Any value your extension prints that came from outside the admin — request input, anonymous submissions, third-party APIs — must be escaped explicitly with `{{ value | e }}` (or `| e('html_attr')` inside an attribute), or wrapped in `{% autoescape 'html' %}`. A handler that prints `{{ input }}` has no automatic XSS protection. See [Template Output Escaping](operations/security#template-output-escaping-twig).
+
 ## Twig Functions
 
 Add custom functions available in all Twig templates.
@@ -215,6 +217,20 @@ public function register(ExtensionContext $context): void
 The routes above are accessible at:
 - `/ext/acme/seo-pro/webhook`
 - `/ext/acme/seo-pro/embed/{id}`
+
+### Route placeholders
+
+API, public, and admin routes all support Slim-style `{placeholder}` segments. A captured value is passed to the handler in its `$args` array, keyed by the placeholder name:
+
+```php
+$group->get('/embed/{id}', function ($request, $response, array $args) {
+    $id = $args['id'];   // 'abc' for /ext/acme/seo-pro/embed/abc
+    // ...
+    return $response;
+});
+```
+
+`{id}` matches a single path segment; add a regex constraint with `{id:\d+}` to restrict it (e.g. digits only). An exact static route (`/embed/list`) always wins over a placeholder route (`/embed/{id}`) on the same path, regardless of registration order.
 
 ## Admin Navigation
 

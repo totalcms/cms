@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Collection\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 
 /**
  * Service.
@@ -67,6 +68,11 @@ class CollectionFetcher
 	 */
 	public function fetchOrCreateReserved(string $collectionId): ?CollectionData
 	{
+		// Reference schemas are examples only — never provision a collection for them.
+		if (SchemaData::isReferenceSchema($collectionId)) {
+			return null;
+		}
+
 		// If it already exists, just fetch it
 		if ($this->collectionExists($collectionId)) {
 			return $this->fetchCollection($collectionId);

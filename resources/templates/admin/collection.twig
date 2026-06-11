@@ -8,7 +8,7 @@
 
 {% macro collectionHeader(collection, page) %}
 	<header>
-		{% if page %}
+		{% if page and not collection.singleton|default(false) %}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection.id }}">{{ collection.id }}</a> / <span>{{ page | lower }}</span></h1>
 		{% else %}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection.id }}"><span>{{ collection.id }}</span></a></h1>
@@ -68,7 +68,7 @@
 
 	<nav class="links" id="collection-links">
 		{% for category, collections in cms.collection.byCategory() %}
-			{% set collections = collections | filter(c => cms.auth.canAccessCollection(c.id, 'read') and c.id not in ['playground', 'mailer', 'dataviews', 'builder-pages']) %}
+			{% set collections = collections | filter(c => cms.auth.canAccessCollection(c.id, 'read') and c.id not in ['playground', 'mailer', 'dataviews', 'builder-pages', 'automations']) %}
 			{% if collections | length > 0 %}
 			<details id="category-{{ category | slug }}" open>
 				<summary>{{ category }}</summary>

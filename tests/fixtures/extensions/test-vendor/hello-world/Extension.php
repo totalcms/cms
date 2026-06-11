@@ -80,6 +80,33 @@ class Extension implements ExtensionInterface
 
 				return $response;
 			});
+
+			// Placeholder route — {id} is captured and merged into handler args
+			$group->get('/s/{id}', function ($request, $response, $args) {
+				$response->getBody()->write($args['id'] ?? '');
+
+				return $response;
+			});
+
+			// Regex-constrained placeholder — only matches digits
+			$group->get('/items/{id:\d+}', function ($request, $response) {
+				$response->getBody()->write('item');
+
+				return $response;
+			});
+
+			// Static + dynamic on the same prefix: the static path must win
+			// regardless of registration order (dynamic registered first here).
+			$group->get('/embed/{id}', function ($request, $response) {
+				$response->getBody()->write('dynamic');
+
+				return $response;
+			});
+			$group->get('/embed/list', function ($request, $response) {
+				$response->getBody()->write('static');
+
+				return $response;
+			});
 		});
 
 		// Admin route (full admin auth)

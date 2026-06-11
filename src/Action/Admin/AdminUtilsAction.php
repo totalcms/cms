@@ -367,13 +367,13 @@ readonly class AdminUtilsAction
 
 	/**
 	 * Create all default/reserved collections.
-	 * Skips blog-legacy as it's deprecated.
+	 * Skips blog-legacy (deprecated), builder-page (different collection ID), and reference-only schemas.
 	 */
 	private function createDefaultCollections(): void
 	{
 		foreach (SchemaData::RESERVED_SCHEMAS as $schemaId) {
 			// Skip schemas that don't map 1:1 to a collection
-			if ($schemaId === 'blog-legacy' || $schemaId === 'builder-page') {
+			if ($schemaId === 'blog-legacy' || $schemaId === 'builder-page' || SchemaData::isReferenceSchema($schemaId)) {
 				continue;
 			}
 			$this->collectionFetcher->fetchOrCreateReserved($schemaId);

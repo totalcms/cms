@@ -40,6 +40,9 @@ readonly class McpToolDefinition
 	 *                                                      hosts can pre-validate before passing results to the LLM.
 	 *                                                      When set, McpServerFactory forwards it to addTool's
 	 *                                                      outputSchema argument; the SDK exposes it in tools/list.
+	 * @param bool                      $exemptFromPrefix   When true, McpServerFactory does NOT prepend mcp.toolPrefix
+	 *                                                      to this tool's name. Used by the ChatGPT-compat search/fetch
+	 *                                                      tools, which must keep their exact literal names.
 	 */
 	public function __construct(
 		public string $name,
@@ -50,6 +53,7 @@ readonly class McpToolDefinition
 		public ?\Closure $descriptionBuilder = null,
 		public ?ToolAnnotations $annotations = null,
 		public ?array $outputSchema = null,
+		public bool $exemptFromPrefix = false,
 	) {
 	}
 

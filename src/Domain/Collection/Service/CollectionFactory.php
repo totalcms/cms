@@ -64,6 +64,10 @@ readonly class CollectionFactory
 	 */
 	public function generateReservedCollection(string $collectionId): CollectionData
 	{
+		if (SchemaData::isReferenceSchema($collectionId)) {
+			throw new \DomainException("Cannot generate collection $collectionId. It is a reference-only schema.");
+		}
+
 		if (!in_array($collectionId, SchemaData::RESERVED_SCHEMAS)) {
 			throw new \DomainException("Cannot generate collection $collectionId. No reserved schema found.");
 		}

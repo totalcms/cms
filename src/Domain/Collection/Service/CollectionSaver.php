@@ -11,6 +11,7 @@ use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Data\DateData;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 
 /**
  * Service.
@@ -38,6 +39,15 @@ readonly class CollectionSaver
 	 */
 	public function saveCollection(array $data): CollectionData
 	{
+		// Reference schemas (totalcms, totalcms-item) are examples only and can
+		// never back a collection.
+		$schema = (string)($data['schema'] ?? '');
+		if (SchemaData::isReferenceSchema($schema)) {
+			throw new \DomainException(
+				"The \"{$schema}\" schema is a reference example and cannot be used to create a collection."
+			);
+		}
+
 		// Check edition requirements for schema-specific features
 		$this->validateSchemaEdition($data['schema'] ?? '');
 

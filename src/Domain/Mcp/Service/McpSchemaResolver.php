@@ -49,7 +49,7 @@ readonly class McpSchemaResolver
 	/**
 	 * Effective MCP config for a collection, with defaults applied.
 	 *
-	 * @return array{access: string, description: ?string, resource: bool}
+	 * @return array{access: string, description: ?string, resource: bool, titleProperty: string}
 	 */
 	public function forCollection(CollectionData $collection): array
 	{
@@ -61,9 +61,10 @@ readonly class McpSchemaResolver
 		}
 
 		return [
-			'access'      => $access,
-			'description' => $this->descriptions->forCollection($collection),
-			'resource'    => (bool)($mcp['resource'] ?? true),
+			'access'        => $access,
+			'description'   => $this->descriptions->forCollection($collection),
+			'resource'      => (bool)($mcp['resource'] ?? true),
+			'titleProperty' => is_string($mcp['titleProperty'] ?? null) ? $mcp['titleProperty'] : '',
 		];
 	}
 

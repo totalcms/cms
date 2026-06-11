@@ -285,6 +285,24 @@ tcms object:export blog my-post
 | `--format, -f` | Export format: `json` or `zip` (default: json) |
 | `--output, -o` | Output file path (omit for stdout; zip generates a default filename) |
 
+### `object:delete`
+
+Delete a single object. The deletion goes through the same index-aware path as the admin UI, so the collection's `.index.json` and object count stay consistent — unlike removing the flat file by hand, which leaves them stale.
+
+```bash
+tcms object:delete blog my-post
+tcms object:delete blog my-post --force
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `collection` | Yes | Collection ID |
+| `id` | Yes | Object ID |
+
+| Option | Description |
+|--------|-------------|
+| `--force, -f` | Skip the confirmation prompt (required for non-interactive/CI use) |
+
 ---
 
 ## Deck Commands
@@ -525,6 +543,27 @@ Webhook and event triggers do not depend on this command — webhooks fire on HT
 ```bash
 * * * * * php /path/to/resources/bin/tcms automations:process
 ```
+
+---
+
+## Maintenance Commands
+
+### `repair:index`
+
+Rebuild a collection's `.index.json` and `totalObjects` count from the objects on disk. Use this when the index has drifted from the actual files — for example after an object's flat file was added or removed out-of-band. (`search:reindex` only touches the search provider; `repair:files` only rebuilds file/image metadata.)
+
+```bash
+tcms repair:index blog
+tcms repair:index --all
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `collection` | No | Collection ID (omit and use `--all` to rebuild every collection) |
+
+| Option | Description |
+|--------|-------------|
+| `--all` | Rebuild the index for every collection |
 
 ---
 
