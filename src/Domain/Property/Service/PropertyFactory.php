@@ -44,7 +44,14 @@ readonly class PropertyFactory
 			return $this->createCard($definition, $value, $definition->settings, $propertyName);
 		}
 
-		$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
+		// `price` stores as a number but needs currency-aware parsing on input,
+		// so it has its own Data class even though resolveType() returns 'number'.
+		if ($field === 'price') {
+			$className = \TotalCMS\Domain\Property\Data\PriceData::class;
+		} else {
+			$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
+		}
+
 		if (!class_exists($className)) {
 			throw new \UnexpectedValueException('Unknown property type for object.');
 		}
