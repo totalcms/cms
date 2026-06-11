@@ -77,7 +77,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface
 				return;
 			}
 
-			$vendorDir = (string)$this->composer->getConfig()->get('vendor-dir');
+			$vendorDir   = (string)$this->composer->getConfig()->get('vendor-dir');
 			$projectRoot = dirname($vendorDir);
 
 			$command = ProcessExecutor::escape(PHP_BINARY)

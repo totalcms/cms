@@ -15,7 +15,9 @@ namespace TotalCMS\Domain\Mcp\Tool\Compat;
 final readonly class CompositeObjectId
 {
 	// Static utility — not instantiable.
-	private function __construct() {}
+	private function __construct()
+	{
+	}
 
 	public static function encode(string $collection, string $id): string
 	{

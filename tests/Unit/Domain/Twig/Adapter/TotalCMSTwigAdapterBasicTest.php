@@ -362,7 +362,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
 			$this->createMock(\TotalCMS\Domain\Builder\Service\BuilderTemplatePaths::class),
 			$this->createMock(\TotalCMS\Domain\JobQueue\Service\JobQueueHealth::class),
-			$this->createMock(\TotalCMS\Domain\Translation\TranslationService::class),
+			$this->createMock(TranslationService::class),
 			$this->createMock(\TotalCMS\Domain\License\Service\EditionFeatureService::class),
 		);
 

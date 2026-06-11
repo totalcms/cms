@@ -203,13 +203,13 @@ final class ObjectSearcherTest extends TestCase
 	{
 		$items = [
 			// matches animated + hamburger + menu (3); NOT "navigation"
-			['id' => 'burger', 'name' => 'Burger', 'subtitle' => 'Animated Menu Hamburgers',
+			['id'   => 'burger', 'name' => 'Burger', 'subtitle' => 'Animated Menu Hamburgers',
 				'tags' => ['nav', 'menu', 'hamburger', 'animation']],
 			// matches menu + navigation (2)
-			['id' => 'rails', 'name' => 'Rails', 'subtitle' => 'On Page Nav',
+			['id'   => 'rails', 'name' => 'Rails', 'subtitle' => 'On Page Nav',
 				'tags' => ['menu', 'navigation']],
 			// matches navigation only (1), via description prose
-			['id' => 'glider', 'name' => 'Glider', 'description' => 'easy reading and navigation',
+			['id'   => 'glider', 'name' => 'Glider', 'description' => 'easy reading and navigation',
 				'tags' => ['slider']],
 		];
 

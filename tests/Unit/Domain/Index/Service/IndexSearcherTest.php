@@ -315,11 +315,11 @@ final class IndexSearcherTest extends TestCase
 	public function testSearchScoredRanksByTermCoverageWithOrRecall(): void
 	{
 		$this->mockIndexWithObjects([
-			['id' => 'burger', 'name' => 'Burger', 'subtitle' => 'Animated Menu Hamburgers',
+			['id'   => 'burger', 'name' => 'Burger', 'subtitle' => 'Animated Menu Hamburgers',
 				'tags' => ['nav', 'menu', 'hamburger', 'animation']],   // 3 terms
-			['id' => 'rails', 'name' => 'Rails', 'subtitle' => 'On Page Nav',
+			['id'   => 'rails', 'name' => 'Rails', 'subtitle' => 'On Page Nav',
 				'tags' => ['menu', 'navigation']],                        // 2 terms
-			['id' => 'glider', 'name' => 'Glider', 'description' => 'easy reading and navigation',
+			['id'   => 'glider', 'name' => 'Glider', 'description' => 'easy reading and navigation',
 				'tags' => ['slider']],                                    // 1 term
 		]);
 

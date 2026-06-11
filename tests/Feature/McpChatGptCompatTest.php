@@ -412,6 +412,7 @@ describe('McpChatGptCompat — per-client capability surface', function (): void
 		$caps = chatgptCompatInitCapabilities($this->app, 'Anthropic/ClaudeAI');
 		if ($caps === null) {
 			expect(true)->toBeTrue(); // endpoint gated off in this env
+
 			return;
 		}
 
@@ -427,6 +428,7 @@ describe('McpChatGptCompat — per-client capability surface', function (): void
 		$caps = chatgptCompatInitCapabilities($this->app, 'openai-mcp');
 		if ($caps === null) {
 			expect(true)->toBeTrue();
+
 			return;
 		}
 
