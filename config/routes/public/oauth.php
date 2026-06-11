@@ -7,6 +7,7 @@ use TotalCMS\Action\OAuth\OAuthApproveAction;
 use TotalCMS\Action\OAuth\OAuthAuthorizeAction;
 use TotalCMS\Action\OAuth\OAuthDiscoveryAction;
 use TotalCMS\Action\OAuth\OAuthJwksAction;
+use TotalCMS\Action\OAuth\OAuthProtectedResourceAction;
 use TotalCMS\Action\OAuth\OAuthRegisterAction;
 use TotalCMS\Action\OAuth\OAuthRevokeAction;
 use TotalCMS\Action\OAuth\OAuthTokenAction;
@@ -30,6 +31,12 @@ return function (RouteCollectorProxyInterface $app): void {
 	// for signature validation.
 	$app->get('/.well-known/jwks.json', OAuthJwksAction::class)
 		->setName('oauth.jwks');
+
+	// RFC 9728 — protected resource metadata. The MCP endpoint's 401
+	// WWW-Authenticate header points clients here (resource_metadata=...) so
+	// they can discover the authorization server protecting the MCP resource.
+	$app->get('/.well-known/oauth-protected-resource', OAuthProtectedResourceAction::class)
+		->setName('oauth.protected-resource');
 
 	// Authorization endpoint. GET renders the consent screen for a logged-in
 	// admin; POST captures the approve/deny decision and completes the flow

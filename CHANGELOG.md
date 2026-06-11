@@ -2,6 +2,20 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-rc.9] - 2026-06-11
+
+### Added
+
+- **OAuth protected-resource metadata (RFC 9728)**: New `/.well-known/oauth-protected-resource` endpoint, and the MCP endpoint's 401 `WWW-Authenticate` challenge now carries a `resource_metadata` pointer to it, so an MCP client can discover the authorization server straight from a failed request
+
+### Enhanced
+
+- **MCP SDK updated to 0.6; protocol revision 2025-11-25**: `mcp/sdk` is upgraded to `^0.6.0` and the server now advertises MCP protocol revision `2025-11-25` (negotiated on the wire by the SDK; older clients still negotiate down cleanly). T3's own registry/definition wrappers insulate core from the SDK's breaking renames, so there is no author-facing fallout
+
+### Fixed
+
+- **MCP DNS-rebinding protection made production-safe**: The 0.6 SDK's Streamable HTTP transport installs DNS-rebinding protection with a **localhost-only** allowlist by default — which would have 403'd every MCP request on a real domain (the `Host` header is the site, not `localhost`). The MCP endpoint now drives that allowlist from `mcp.allowedOrigins`: open by default (no Origin restriction), or — when origins are configured — enforcing the spec's 403-on-invalid-Origin scoped to the server's own host plus the configured origins, so same-origin and server-to-server requests always pass
+
 ## [3.5.0-rc.8] - 2026-06-11
 
 ### Added

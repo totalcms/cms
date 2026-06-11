@@ -39,7 +39,7 @@ use TotalCMS\Support\Version;
  */
 readonly class McpServerFactory
 {
-	private const PROTOCOL_VERSION = '2025-06-18';
+	private const PROTOCOL_VERSION = '2025-11-25';
 
 	public function __construct(
 		private ToolRegistry $toolRegistry,
