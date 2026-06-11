@@ -1,6 +1,9 @@
 {
   "name": "totalcms/cms",
-  "type": "library",
+  "type": "composer-plugin",
+  "extra": {
+    "class": "TotalCMS\\Composer\\Plugin"
+  },
   "description": "Total CMS",
   "keywords": [
     "total-cms",
@@ -15,6 +18,7 @@
   ],
   "require": {
     "php": "^8.2",
+    "composer-plugin-api": "^2.4",
     "algolia/algoliasearch-client-php": "^4.43",
     "bacon/bacon-qr-code": "^3.0",
     "cakephp/chronos": "^3.1",

@@ -14,6 +14,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Fixed
 
+- **Composer plugin now actually ships as a plugin (agent skill auto-install)**: rc.8 advertised installing/refreshing the agent skill on `composer install`/`update`, but the published `totalcms/cms` manifest was `type: library` — the `composer-plugin` type only reached the update-system zip, never Packagist — so the plugin never activated and the skill was never installed. The repo's root `composer.json` (what Packagist publishes) is now `type: composer-plugin` with `extra.class` + a `composer-plugin-api` requirement. This is safe for the repo itself: Composer never activates the root package's own plugin, only when `totalcms/cms` is installed as a dependency. Existing projects from before this fix: run `vendor/bin/tcms skill:install` once to install the skill
 - **MCP DNS-rebinding protection made production-safe**: The 0.6 SDK's Streamable HTTP transport installs DNS-rebinding protection with a **localhost-only** allowlist by default — which would have 403'd every MCP request on a real domain (the `Host` header is the site, not `localhost`). The MCP endpoint now drives that allowlist from `mcp.allowedOrigins`: open by default (no Origin restriction), or — when origins are configured — enforcing the spec's 403-on-invalid-Origin scoped to the server's own host plus the configured origins, so same-origin and server-to-server requests always pass
 
 ## [3.5.0-rc.8] - 2026-06-11
