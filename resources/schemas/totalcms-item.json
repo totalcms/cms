@@ -1,0 +1,65 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/totalcms-item.json",
+	"id": "totalcms-item",
+	"type": "object",
+	"description": "Example item schema used by the card and deck fields in the `totalcms` reference schema. Demonstrates a representative subset of fields suitable for nesting inside a card or deck (no gallery/depot/folder and no nested decks, per card/deck restrictions).",
+	"formgrid": "title title\nkind active\nquantity price\nthumbnail thumbnail\ndescription description",
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"label": "Item ID",
+			"help": "Unique ID for this item.",
+			"field": "id",
+			"settings": { "autogen": "${title}" }
+		},
+		"title": {
+			"type": "string",
+			"label": "Title",
+			"help": "The item title.",
+			"field": "text"
+		},
+		"kind": {
+			"type": "string",
+			"label": "Kind",
+			"help": "Example select with static options.",
+			"field": "select",
+			"options": ["basic", "standard", "premium"],
+			"default": "standard"
+		},
+		"active": {
+			"type": "boolean",
+			"label": "Active",
+			"help": "Example toggle.",
+			"field": "toggle",
+			"default": true
+		},
+		"quantity": {
+			"type": "number",
+			"label": "Quantity",
+			"help": "Example number field.",
+			"field": "number",
+			"default": 1
+		},
+		"price": {
+			"type": "number",
+			"label": "Unit Price",
+			"help": "Example price field.",
+			"field": "price"
+		},
+		"thumbnail": {
+			"$ref": "https://www.totalcms.co/schemas/properties/image.json",
+			"label": "Thumbnail",
+			"help": "Example image field nested inside a card/deck item.",
+			"field": "image"
+		},
+		"description": {
+			"type": "string",
+			"label": "Description",
+			"help": "Example multi-line text field.",
+			"field": "textarea"
+		}
+	},
+	"required": ["id", "title"],
+	"index": ["id", "title", "kind", "price"]
+}

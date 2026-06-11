@@ -1,6 +1,8 @@
-{# Skip blog-legacy schema #}
+{# Skip blog-legacy and reference-only schemas (totalcms, totalcms-item) #}
 {% set reservedSchemas = cms.schema.reserved() | filterCollection([
 	{ property : "id", operator : "not-equal", value : "blog-legacy" },
+	{ property : "id", operator : "not-equal", value : "totalcms" },
+	{ property : "id", operator : "not-equal", value : "totalcms-item" },
 ]) %}
 
 <p>Creating default collections...</p>
