@@ -11,7 +11,6 @@ use Mcp\Server\Session\SessionManager as McpSessionManager;
 use Mcp\Server\Session\SessionStoreInterface as McpSessionStoreInterface;
 use Monolog\Level;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Odan\Session\Middleware\SessionStartMiddleware;
 use Odan\Session\PhpSession;
 use Odan\Session\SessionInterface;
 use Psr\Container\ContainerInterface;
@@ -146,6 +145,7 @@ use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
 use TotalCMS\Middleware\BasePathMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
+use TotalCMS\Middleware\LazySessionStartMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -165,7 +165,7 @@ return [
 		return AppFactory::create();
 	},
 
-	SessionStartMiddleware::class => fn (ContainerInterface $container): SessionStartMiddleware => new SessionStartMiddleware($container->get(PhpSession::class)),
+	LazySessionStartMiddleware::class => fn (ContainerInterface $container): LazySessionStartMiddleware => new LazySessionStartMiddleware($container->get(PhpSession::class)),
 
 	PhpSession::class => function (ContainerInterface $container): PhpSession {
 		$sessionConfig = $container->get(Config::class)->session;

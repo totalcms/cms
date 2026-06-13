@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Middlewares\TrailingSlash;
-use Odan\Session\Middleware\SessionStartMiddleware;
 use Selective\Validation\Middleware\ValidationExceptionMiddleware;
 use Slim\App;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Middleware\MethodOverrideMiddleware;
 use TotalCMS\Middleware\BasePathMiddleware;
 use TotalCMS\Middleware\CacheInvalidationMiddleware;
+use TotalCMS\Middleware\LazySessionStartMiddleware;
 use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\Development\ExtensionProfileFlushMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
@@ -63,11 +63,16 @@ return function (App $app): void {
 	// Session must wrap PageRouter so the session is still open when
 	// PageRouter does its post-Slim work (matching builder pages, running
 	// per-page middleware like `auth`, rendering templates that read session
-	// state). If SessionStartMiddleware were registered earlier, save() would
+	// state). If the session middleware were registered earlier, save() would
 	// close the session before PageRouter got control back, and auth checks
 	// would see an empty session — which is what caused the /admin → builder
 	// page redirect loop.
-	$app->add(SessionStartMiddleware::class);
+	//
+	// LazySessionStartMiddleware behaves like odan's SessionStartMiddleware but
+	// skips starting the session on the `/imageworks/*` image hot path, where
+	// the per-request session file lock would otherwise serialize the parallel
+	// image requests on an image-heavy page.
+	$app->add(LazySessionStartMiddleware::class);
 
 	// OUTERMOST layer. In Slim, the middleware added LAST wraps everything else,
 	// so its after-handle() code runs LAST — after route rendering AND after
