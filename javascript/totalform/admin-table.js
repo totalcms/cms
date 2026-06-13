@@ -181,6 +181,7 @@ export default class AdminTable {
 			if (e.target.closest('.bulk-clear'))         { this.clearSelection(); return; }
 			if (e.target.closest('.bulk-done'))          { this.exitSelectionMode(); return; }
 			if (e.target.closest('.bulk-show-selected')) { this.toggleShowSelected(); return; }
+			if (e.target.closest('.bulk-download'))      { this.runDownload(); return; }
 			if (e.target.closest('.bulk-delete'))        { e.preventDefault(); this.runDelete(); return; }
 		});
 
@@ -302,6 +303,17 @@ export default class AdminTable {
 		if (!banner) return;
 		['processing', 'success', 'error', 'warning'].forEach(s => banner.classList.remove(s));
 		if (status) banner.classList.add(status);
+	}
+
+	runDownload() {
+		const ids = [...this.selected];
+		if (ids.length === 0) return;
+
+		// GET the existing collection-zip endpoint with an ids filter. The
+		// response is an attachment, so the browser downloads it without
+		// navigating away — no fetch/blob needed. Selection is left intact.
+		const url = `${this.api}/export/collections/${this.collection}/zip?ids=${encodeURIComponent(ids.join(','))}`;
+		window.location.href = url;
 	}
 
 	async runDelete() {
