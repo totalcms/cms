@@ -87,6 +87,17 @@ class SchemaData
 	public const SYSTEM_COLLECTIONS = [
 		'automations',
 	];
+
+	/**
+	 * Whether the given collection id is a code-executing / security-sensitive
+	 * system collection. Writes to these require a super-admin (see
+	 * SystemCollectionGuardMiddleware and JumpStartImporter).
+	 */
+	public static function isSystemCollection(string $id): bool
+	{
+		return in_array($id, self::SYSTEM_COLLECTIONS, true);
+	}
+
 	public const PROPERTY_TYPES = [
 		'array',
 		'boolean',

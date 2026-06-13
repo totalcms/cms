@@ -29,9 +29,11 @@ use TotalCMS\Support\Config;
  *
  * No API-key / OAuth / public-submission bypass: a PHP-handler write is
  * RCE-grade and must require a real super-admin session, not just any trusted
- * credential. Reads are not gated here (that is a separate hardening); Sync
- * provisions automations through `/api/sync/import`, not this route, so it is
- * unaffected.
+ * credential. Reads are not gated here (that is a separate hardening). The
+ * import/sync write paths (`/api/import/jumpstart`, `/api/sync/import`) reach
+ * the object store through JumpStartImporter rather than this route, so they
+ * enforce the same super-admin requirement themselves — see
+ * JumpStartImporter::$allowSystemCollections and the two import/sync actions.
  *
  * Marked `readonly` (not `final`) so tests can override route-argument
  * resolution — mirroring the `BaseAccessMiddleware` testing approach.
