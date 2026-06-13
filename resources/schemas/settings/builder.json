@@ -6,10 +6,14 @@
 	"properties"  : {
 		"pagesCollection": {
 			"type"        : "string",
-			"field"       : "text",
+			"field"       : "select",
 			"label"       : "Pages Collection",
 			"help"        : "The collection used for page metadata. Change this if you use a custom schema that extends <code>builder-page</code>.",
-			"placeholder" : "builder-pages"
+			"placeholder" : "builder-pages",
+			"settings"    : {
+				"propertyOptions" : "collectionIds",
+				"sortOptions"     : true
+			}
 		},
 		"assetsPath": {
 			"type"        : "string",
