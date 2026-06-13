@@ -15,6 +15,14 @@ class MemcachedService implements CacheInterface
 	private readonly int $port;
 	private ?\Memcached $memcached = null;
 
+	/**
+	 * Cached availability result. Connection state is stable within a single
+	 * request, so we run the set/get probe once instead of on every cache op
+	 * (and avoid a fresh connect attempt per operation when no server is
+	 * running). Mirrors APCuService.
+	 */
+	private ?bool $availabilityCache = null;
+
 	public function __construct(
 		Config $config,
 	) {
@@ -26,19 +34,23 @@ class MemcachedService implements CacheInterface
 
 	public function isAvailable(): bool
 	{
+		if ($this->availabilityCache !== null) {
+			return $this->availabilityCache;
+		}
+
 		if (!$this->enabled || !extension_loaded('memcached') || !class_exists('Memcached')) {
-			return false;
+			return $this->availabilityCache = false;
 		}
 
 		try {
 			$memcached = $this->getConnection();
 			$memcached->set('test_key', 'test_value', 1);
 
-			return $memcached->get('test_key') === 'test_value';
+			return $this->availabilityCache = ($memcached->get('test_key') === 'test_value');
 		} catch (\Exception) {
 			$this->memcached = null;
 
-			return false;
+			return $this->availabilityCache = false;
 		}
 	}
 
