@@ -164,6 +164,7 @@ readonly class OperationDetector
 	 */
 	private const DELETE_ROUTES = [
 		'object-delete',
+		'object-bulk-delete',
 		'schema-delete',
 		'collection-delete',    // Collection metadata
 		'template-delete',

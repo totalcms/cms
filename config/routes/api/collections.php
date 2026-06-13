@@ -53,6 +53,10 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->post('/{collection}', Action\Object\ObjectSaveAction::class)->setName('object-save');
 		$group->get('/{collection}/{id}', Action\Object\ObjectFetchAction::class)->setName('object-fetch');
 		$group->delete('/{collection}/{id}', Action\Object\ObjectDeleteAction::class)->setName('object-delete');
+		// Bulk delete — body carries the explicit `ids` to remove. Uses POST (not
+		// DELETE) so the id list rides in the request body. Registered BEFORE the
+		// `/{collection}/{id}` routes so `bulk` isn't captured as an object id.
+		$group->post('/{collection}/bulk/delete', Action\Object\ObjectBulkDeleteAction::class)->setName('object-bulk-delete');
 		$group->put('/{collection}/{id}', Action\Object\ObjectUpdateAction::class)->setName('object-update');
 		$group->patch('/{collection}/{id}', Action\Object\ObjectPatchAction::class)->setName('object-patch');
 		$group->post('/{collection}/{id}/clone', Action\Object\ObjectCloneAction::class)->setName('object-clone');

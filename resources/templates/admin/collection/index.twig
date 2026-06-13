@@ -23,7 +23,22 @@
 
 {% if actualObjectCount > 0 %}
 
-	<div class="admin-table-wrapper" data-collection="{{ url.collection }}">
+	{% set canBulkDelete = cms.auth.canAccessCollection(url.collection, 'delete') %}
+	<div class="admin-table-wrapper{% if canBulkDelete %} bulk-enabled{% endif %}" data-collection="{{ url.collection }}" data-can-delete="{{ canBulkDelete ? '1' : '0' }}">
+		{% if canBulkDelete %}
+		<div class="bulk-action-bar">
+			<span class="bulk-count">0 selected</span>
+			<button type="button" class="bulk-show-selected">Show selected</button>
+			<button type="button" class="bulk-clear">Clear</button>
+			<button type="button" class="bulk-done">Done</button>
+			<button type="button" class="bulk-actions-toggle" popovertarget="bulk-actions-{{ url.collection }}">Actions</button>
+			<nav popover id="bulk-actions-{{ url.collection }}" class="object-action-popover bulk-actions-popover">
+				<ul>
+					<li class="delete"><button type="button" class="bulk-delete">Delete selected</button></li>
+				</ul>
+			</nav>
+		</div>
+		{% endif %}
 		<header class="admin-table-header">
 			<input type="search" name="filter" placeholder="Filter {{ actualObjectCount|number_format }} {{ labelPlural }}"
 				hx-get="{{ cms.api }}/collections/{{ url.collection }}/query"
@@ -39,7 +54,7 @@
 				data-api="{{ cms.api }}" data-limit="{{ limit }}">
 				<thead>
 					<tr>
-						<th class="action"></th>
+						<th class="action">{% if canBulkDelete %}<input type="checkbox" class="select-all" aria-label="Select all">{% endif %}</th>
 						{% for prop in schema.index %}
 							{% set propData = schema.properties[prop]|default({}) %}
 							{% set propType = propData.type|default('') %}

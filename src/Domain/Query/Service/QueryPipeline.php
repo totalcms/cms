@@ -41,9 +41,10 @@ readonly class QueryPipeline
 		$sort   = $params['sort'] ?? '';
 		$search = $params['search'] ?? '';
 		$filter = $params['filter'] ?? '';
+		$ids    = $params['ids'] ?? '';
 
-		// Check cache (skip for search and filter queries)
-		$useCache = $search === '' && $filter === '';
+		// Check cache (skip for search, filter, and explicit-id queries)
+		$useCache = $search === '' && $filter === '' && $ids === '';
 		if ($useCache) {
 			$cached = $this->cacheManager->getApiResponse($cachePrefix, $params);
 			if ($cached instanceof QueryResult) {
@@ -51,8 +52,11 @@ readonly class QueryPipeline
 			}
 		}
 
-		// Filter, search, or include/exclude (mutually exclusive)
-		if ($filter !== '') {
+		// Explicit id set (the table's "show selected" view) takes precedence
+		// over filter/search — it renders exactly the chosen objects.
+		if ($ids !== '') {
+			$items = $this->idsFilter($items, $ids);
+		} elseif ($filter !== '') {
 			$items = $this->containsFilter($items, $filter);
 		} elseif ($search !== '') {
 			$items = $this->objectSearcher->search($items, $search);
@@ -82,6 +86,30 @@ readonly class QueryPipeline
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Restrict items to an explicit set of ids (comma-separated). Used by the
+	 * collection table's "show selected" view to render only the rows the
+	 * operator ticked, regardless of the active filter.
+	 *
+	 * @param array<int,array<string,mixed>> $items
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function idsFilter(array $items, string $ids): array
+	{
+		$wanted = array_filter(array_map('trim', explode(',', $ids)), static fn (string $id): bool => $id !== '');
+		if ($wanted === []) {
+			return [];
+		}
+
+		$lookup = array_flip($wanted);
+
+		return array_values(array_filter(
+			$items,
+			static fn (array $item): bool => isset($item['id']) && isset($lookup[(string)$item['id']]),
+		));
 	}
 
 	/**

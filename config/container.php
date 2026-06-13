@@ -437,6 +437,9 @@ return [
 		$dispatcher->listen('object.deleted', $lazy(IndexBuildListener::class, 'onObjectDeleted'), -100);
 		$dispatcher->listen('schema.saved', $lazy(IndexBuildListener::class, 'onSchemaSaved'), -100);
 		$dispatcher->listen('import.completed', $lazy(IndexBuildListener::class, 'onImportCompleted'), -100);
+		// bulk.deleted — single index rebuild after a bulk delete batch (the
+		// per-object object.deleted rebuilds are suspended for the duration).
+		$dispatcher->listen('bulk.deleted', $lazy(IndexBuildListener::class, 'onBulkDeleted'), -100);
 
 		// DataViewListener
 		$dispatcher->listen('object.created', $lazy(DataViewListener::class, 'onObjectChanged'), -100);

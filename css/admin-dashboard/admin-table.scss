@@ -2,6 +2,8 @@
 
 .admin-table-wrapper {
 	font-size: 0.9em;
+	// Anchor the absolutely-positioned bulk toolbar (below) to the wrapper.
+	position: relative;
 
 	// Stop clicking to the form page when a popover is open
 	:has(:popover-open) td:not(:first-child) {
@@ -28,6 +30,83 @@
 	.dash-action-dots {
 		mask-size : var(--action-button-size);
 		height    : var(--action-button-size);
+	}
+
+	// --- Bulk selection ---------------------------------------------------
+	// "Select items" only makes sense when the operator can delete; hidden
+	// otherwise (the whole feature is gated by `.bulk-enabled`).
+	&:not(.bulk-enabled) li.select {
+		display : none;
+	}
+
+	// Checkboxes live in the action column but only show in selection mode.
+	.row-select, .select-all {
+		display : none;
+	}
+	&.selecting {
+		.row-select, .select-all {
+			display : inline-block;
+		}
+		// In selection mode the checkbox is the row's affordance — drop the
+		// per-row dots so the action column stays tidy.
+		td.action .dash-action-dots {
+			display : none;
+		}
+		// Reveal the slim toolbar. (Filtering stays available during selection
+		// — the search header is intentionally left visible.)
+		.bulk-action-bar {
+			display : flex;
+		}
+	}
+
+	// Slim toolbar shown above the table header only while selecting. Absolutely
+	// positioned and pulled up by its own height so it overlays the space above
+	// the wrapper instead of pushing the search/table down when it toggles in.
+	.bulk-action-bar {
+		display       : none;
+		position      : absolute;
+		left          : 0;
+		right         : 0;
+		translate     : 0 -100%;
+		align-items   : center;
+		gap           : 0.25rem;
+		flex-wrap     : wrap;
+		margin-bottom : 1rem;
+		padding       : 0.25rem 0.5rem;
+		border        : 1px solid oklch(var(--totalform-border-color));
+		border-radius : var(--totalform-radius);
+		background    : oklch(var(--totalform-nearwhite));
+		font-size     : 0.85em;
+
+		.bulk-count {
+			font-weight  : 600;
+			margin-right : auto;
+		}
+
+		button {
+			appearance    : none;
+			border        : 0;
+			background    : transparent;
+			color         : oklch(var(--totalform-text-color));
+			cursor        : pointer;
+			padding       : 0.2rem 0.5rem;
+			border-radius : var(--totalform-radius);
+			font-size     : inherit;
+			line-height   : 1.4;
+
+			&:hover {
+				background : oklch(var(--totalform-icon-bg));
+			}
+		}
+
+		// The destructive action reads in the accent/error color on hover.
+		.bulk-actions-toggle {
+			font-weight : 600;
+		}
+	}
+
+	.bulk-actions-popover .delete button {
+		color : oklch(var(--totalform-error));
 	}
 
 	.color-preview {
