@@ -188,9 +188,6 @@ export default class AdminTable {
 		this.wrapper.addEventListener('click', (e) => {
 			const box = e.target.closest('.row-select');
 			if (box) { this.onRowToggle(box, e.shiftKey); return; }
-
-			const all = e.target.closest('.select-all');
-			if (all) { this.onSelectAll(all.checked); return; }
 		});
 
 		// Re-derive checkbox state from the selection after every tbody swap
@@ -259,7 +256,6 @@ export default class AdminTable {
 
 		this.lastChecked = box;
 		this.updateBar();
-		this.updateSelectAll();
 	}
 
 	setSelected(id, on) {
@@ -267,29 +263,11 @@ export default class AdminTable {
 		if (on) this.selected.add(id); else this.selected.delete(id);
 	}
 
-	onSelectAll(checked) {
-		this.table.querySelectorAll('.row-select').forEach(b => {
-			b.checked = checked;
-			this.setSelected(b.value, checked);
-		});
-		this.updateBar();
-	}
-
 	restoreChecks() {
 		this.table.querySelectorAll('.row-select').forEach(b => {
 			b.checked = this.selected.has(b.value);
 		});
-		this.updateSelectAll();
 		this.updateBar();
-	}
-
-	updateSelectAll() {
-		const all = this.wrapper.querySelector('.select-all');
-		if (!all) return;
-		const boxes = Array.from(this.table.querySelectorAll('.row-select'));
-		const checked = boxes.filter(b => b.checked).length;
-		all.checked = boxes.length > 0 && checked === boxes.length;
-		all.indeterminate = checked > 0 && checked < boxes.length;
 	}
 
 	updateBar() {
@@ -310,7 +288,9 @@ export default class AdminTable {
 		const btn = this.wrapper.querySelector('.bulk-show-selected');
 		if (!btn) return;
 		btn.classList.toggle('active', this.showingSelected);
-		btn.textContent = this.showingSelected ? 'Show all' : 'Show selected';
+		const label = this.showingSelected ? 'Show all' : 'Show selected';
+		btn.title = label;
+		btn.setAttribute('aria-label', label);
 	}
 
 	// Drive the shared form status banner (#totalcms-status-banner, created by
@@ -328,8 +308,6 @@ export default class AdminTable {
 		if (this.deleting) return; // guard against a double-submit
 		const ids = [...this.selected];
 		if (ids.length === 0) return;
-
-		document.querySelector(`#bulk-actions-${this.collection}`)?.hidePopover?.();
 
 		if (!window.confirm(`Delete ${ids.length} item${ids.length === 1 ? '' : 's'}? This cannot be undone.`)) {
 			return;
@@ -414,19 +392,6 @@ export default class AdminTable {
 
 		const rect = target.getBoundingClientRect();
 		const offset = 10;
-
-		// The bulk "Actions" button sits at the right of the toolbar, so a
-		// left-anchored dropdown runs off the page. Right-align it instead:
-		// anchor the popover's RIGHT edge to the button's right edge. The
-		// translateX(-100%) shifts it left by its own width, which we don't
-		// have to measure (the popover is still closed at pointerdown).
-		if (popover.classList.contains('bulk-actions-popover')) {
-			popover.style.top = `${rect.bottom + window.scrollY + 4}px`;
-			popover.style.left = `${rect.right + window.scrollX}px`;
-			popover.style.transform = 'translateX(-100%)';
-			return;
-		}
-
 		popover.style.top = `${rect.top + window.scrollY - offset}px`;
 		popover.style.left = `${rect.left + window.scrollX + offset}px`;
 	}

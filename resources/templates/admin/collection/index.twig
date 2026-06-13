@@ -28,15 +28,16 @@
 		{% if canBulkDelete %}
 		<div class="bulk-action-bar">
 			<span class="bulk-count">0 selected</span>
-			<button type="button" class="bulk-show-selected">Show selected</button>
-			<button type="button" class="bulk-clear">Clear</button>
-			<button type="button" class="bulk-done">Done</button>
-			<button type="button" class="bulk-actions-toggle" popovertarget="bulk-actions-{{ url.collection }}">Actions</button>
-			<nav popover id="bulk-actions-{{ url.collection }}" class="object-action-popover bulk-actions-popover">
-				<ul>
-					<li class="delete"><button type="button" class="bulk-delete">Delete selected</button></li>
-				</ul>
-			</nav>
+			<div class="bulk-group selection-tools">
+				<button type="button" class="bulk-icon bulk-show-selected" title="Show selected" aria-label="Show selected"></button>
+				<button type="button" class="bulk-icon bulk-clear" title="Clear selection" aria-label="Clear selection"></button>
+			</div>
+			<div class="bulk-group action-tools">
+				<button type="button" class="bulk-icon bulk-delete" title="Delete selected" aria-label="Delete selected"></button>
+			</div>
+			<div class="bulk-group close-tool">
+				<button type="button" class="bulk-icon bulk-done" title="Done" aria-label="Done"></button>
+			</div>
 		</div>
 		{% endif %}
 		<header class="admin-table-header">
@@ -54,7 +55,7 @@
 				data-api="{{ cms.api }}" data-limit="{{ limit }}">
 				<thead>
 					<tr>
-						<th class="action">{% if canBulkDelete %}<input type="checkbox" class="select-all" aria-label="Select all">{% endif %}</th>
+						<th class="action"></th>
 						{% for prop in schema.index %}
 							{% set propData = schema.properties[prop]|default({}) %}
 							{% set propType = propData.type|default('') %}

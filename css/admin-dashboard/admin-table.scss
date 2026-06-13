@@ -39,12 +39,12 @@
 		display : none;
 	}
 
-	// Checkboxes live in the action column but only show in selection mode.
-	.row-select, .select-all {
+	// Row checkboxes live in the action column but only show in selection mode.
+	.row-select {
 		display : none;
 	}
 	&.selecting {
-		.row-select, .select-all {
+		.row-select {
 			display : inline-block;
 		}
 		// In selection mode the checkbox is the row's affordance — drop the
@@ -83,30 +83,61 @@
 			margin-right : auto;
 		}
 
-		button {
-			appearance    : none;
+		// Tool groups: selection tools (show / clear / done) then a divider then
+		// action tools (delete, later download).
+		.bulk-group {
+			display     : flex;
+			align-items : center;
+			gap         : 0.25rem;
+		}
+		// Divider before the action group and before the far-right close button.
+		.action-tools, .close-tool {
+			margin-left  : 0.5rem;
+			padding-left : 0.5rem;
+			border-left  : 1px solid oklch(var(--totalform-border-color));
+		}
+
+		// Icon-only buttons. The glyph is a masked ::before so the button itself
+		// keeps a normal hover background.
+		.bulk-icon {
+			position      : relative;
+			width         : 1.75rem;
+			height        : 1.75rem;
+			padding       : 0;
 			border        : 0;
 			background    : transparent;
-			color         : oklch(var(--totalform-text-color));
 			cursor        : pointer;
-			padding       : 0.2rem 0.5rem;
 			border-radius : var(--totalform-radius);
-			font-size     : inherit;
-			line-height   : 1.4;
+
+			&::before {
+				content          : "";
+				position         : absolute;
+				inset            : 0;
+				background-color : oklch(var(--totalform-text-color));
+				mask-image       : var(--bulk-icon);
+				mask-repeat      : no-repeat;
+				mask-position    : center;
+				mask-size        : 1rem;
+			}
 
 			&:hover {
 				background : oklch(var(--totalform-icon-bg));
 			}
+			// Toggled-on state for "show selected".
+			&.active {
+				background : oklch(var(--totalform-icon-bg));
+			}
 		}
 
-		// The destructive action reads in the accent/error color on hover.
-		.bulk-actions-toggle {
-			font-weight : 600;
-		}
-	}
+		.bulk-show-selected { --bulk-icon : var(--icon-eye) }
+		.bulk-clear         { --bulk-icon : var(--icon-clean) }
+		.bulk-done          { --bulk-icon : var(--icon-close) }
+		.bulk-delete        { --bulk-icon : var(--icon-trash) }
 
-	.bulk-actions-popover .delete button {
-		color : oklch(var(--totalform-error));
+		// Destructive action reads red.
+		.bulk-delete::before {
+			background-color : oklch(var(--totalform-error));
+		}
 	}
 
 	.color-preview {
