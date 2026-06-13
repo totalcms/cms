@@ -64,6 +64,17 @@ export default class PropertyField {
 		const properties = {};
 
 		for (const field of fields) {
+			// Only collect this property's OWN top-level fields. Composite
+			// fields (e.g. the MCP `card`) render their sub-fields as nested
+			// .form-field elements; those belong to the composite's own
+			// getValue(), not the property root. Without this guard a card
+			// sub-field like `expose` leaks to the top level of the property
+			// alongside its correct `mcp.expose` home (empty sub-fields get
+			// dropped by the truthiness check below, so the checkbox `expose`
+			// was the one that slipped through).
+			const parentField = field.parentElement?.closest(".form-field");
+			if (parentField && this.container.contains(parentField)) continue;
+
 			let value = field.totalfield.getValue();
 			if (value) {
 				properties[field.totalfield.property] = value;
