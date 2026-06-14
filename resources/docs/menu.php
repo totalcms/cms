@@ -262,6 +262,7 @@ return [
 			['title' => 'Supported Locales', 'path' => 'operations/supported-locales'],
 			['title' => 'Licenses',          'path' => 'operations/licenses'],
 			['title' => 'Migration from v1', 'path' => 'operations/migration-total-cms-one'],
+			['title' => 'Migrating v1 Macros', 'path' => 'operations/migration-total-cms-one-macros'],
 			['title' => 'Configuration',     'path' => 'operations/configuration'],
 		],
 	],

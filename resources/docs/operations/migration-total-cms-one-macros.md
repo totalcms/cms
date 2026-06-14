@@ -32,8 +32,8 @@ Because the reserved-collection defaults match v1's content types, the `cmsid` y
 |--------------|-------------|------------------|
 | `%cmsData(cmsid)%` | Raw stored value | `{{ cms.data('text', 'cmsid', 'text') }}` |
 | `%cmsText(cmsid)%` | Text | `{{ cms.data.text('cmsid') }}` |
-| `%cmsTextFormat(cmsid)%` | Markdown → HTML | `{{ cms.data.text('cmsid')\| markdown }}` |
-| `%cmsTextStripHTML(cmsid)%` | Strip HTML | `{{ cms.data.text('cmsid')\| striptags }}` |
+| `%cmsTextFormat(cmsid)%` | Markdown → HTML | `{{ cms.data.text('cmsid')| markdown }}` |
+| `%cmsTextStripHTML(cmsid)%` | Strip HTML | `{{ cms.data.text('cmsid')| striptags }}` |
 | `%cmsToggle(cmsid)%` | Boolean toggle | `{{ cms.data.toggle('cmsid') }}` |
 
 > `cms.data('text', 'cmsid', 'text')` is the [callable shorthand](docs/twig/data#raw-data-access) for `cms.data.raw(...)` — it returns the value exactly as stored. For everyday text use `cms.data.text('cmsid')`.
@@ -43,7 +43,7 @@ Because the reserved-collection defaults match v1's content types, the `cmsid` y
 | Total CMS v1 | Description | Total CMS 3 Twig |
 |--------------|-------------|------------------|
 | `%cmsImageAlt(cmsid)%` | Image alt | `{{ cms.render.alt('cmsid') }}` |
-| `%cmsImageAltFormat(cmsid)%` | Image alt (markdown) | `{{ cms.render.alt('cmsid')\| markdownInline }}` |
+| `%cmsImageAltFormat(cmsid)%` | Image alt (markdown) | `{{ cms.render.alt('cmsid')| markdownInline }}` |
 
 ## Gallery alt text
 
@@ -52,11 +52,11 @@ The v1 `Featured` / `First` / `Last` macros become the [dynamic selectors](docs/
 | Total CMS v1 | Description | Total CMS 3 Twig |
 |--------------|-------------|------------------|
 | `%cmsGalleryImageFeaturedAlt(cmsid)%` | Featured image alt | `{{ cms.render.galleryAlt('cmsid', 'featured') }}` |
-| `%cmsGalleryImageFeaturedAltFormat(cmsid)%` | Featured alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'featured')\| markdownInline }}` |
+| `%cmsGalleryImageFeaturedAltFormat(cmsid)%` | Featured alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'featured')| markdownInline }}` |
 | `%cmsGalleryImageFirstAlt(cmsid)%` | First image alt | `{{ cms.render.galleryAlt('cmsid', 'first') }}` |
-| `%cmsGalleryImageFirstAltFormat(cmsid)%` | First alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'first')\| markdownInline }}` |
+| `%cmsGalleryImageFirstAltFormat(cmsid)%` | First alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'first')| markdownInline }}` |
 | `%cmsGalleryImageLastAlt(cmsid)%` | Last image alt | `{{ cms.render.galleryAlt('cmsid', 'last') }}` |
-| `%cmsGalleryImageLastAltFormat(cmsid)%` | Last alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'last')\| markdownInline }}` |
+| `%cmsGalleryImageLastAltFormat(cmsid)%` | Last alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'last')| markdownInline }}` |
 
 ## Image path macros
 
@@ -94,16 +94,26 @@ The `Featured` / `First` / `Last` / `Random` variants all collapse into a single
 
 > To render a whole gallery with a lightbox (rather than one image URL), reach for [`cms.render.gallery('cmsid')`](docs/twig/render#galleries).
 
-## File, DataStore & download macros
+## File & download macros
 
-Total CMS 3 consolidates v1's **File** and **DataStore** into the single `file` field/collection. Use `stream()` for an inline URL (viewing in the browser, range requests for video/audio) and `download()` to force a save dialog. Note that v1 addressed files by `filename.ext`; T3 addresses them by object **id**.
+Use `stream()` for an inline URL (viewing in the browser, range requests for video/audio) and `download()` to force a save dialog. Note that v1 addressed files by `filename.ext`; T3 addresses them by object **id**.
 
 | Total CMS v1 | Description | Total CMS 3 Twig |
 |--------------|-------------|------------------|
 | `%cmsFile(cmsid.ext)%` | File URL (inline) | `{{ cms.media.stream('cmsid') }}` |
 | `%cmsFileDownload(cmsid.ext)%` | File download URL | `{{ cms.media.download('cmsid') }}` |
-| `%cmsDataStore(cmsid)%` | DataStore URL (inline) | `{{ cms.media.stream('cmsid', {collection: 'file'}) }}` |
-| `%cmsDataStoreDownload(cmsid)%` | DataStore download URL | `{{ cms.media.download('cmsid', {collection: 'file'}) }}` |
+
+## DataStore
+
+The v1 **DataStore** macros (`%cmsDataStore%`, `%cmsDataStoreDownload%`) backed a form that appended submissions to a CSV file. **There is no direct equivalent in Total CMS 3** — the CSV-backed form no longer exists in that form.
+
+Migrate the pattern like this:
+
+1. **Create a custom collection** with a schema matching your form fields.
+2. **Build a form** that saves submissions into that collection with the [Form Builder](docs/forms/builder) — each submission becomes an object instead of a CSV row.
+3. **Export to CSV** when you need the flat file: use [collection export](docs/collections/export) in the admin, or `tcms collection:export` from the [CLI](docs/extensions/cli).
+
+This gives you everything the old DataStore did (capture form data, download it as CSV) plus queryable, editable records in the admin.
 
 ## Before & after
 
