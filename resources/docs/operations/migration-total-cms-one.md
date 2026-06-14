@@ -1,134 +1,265 @@
 ---
-title: "Migration of Total CMS v1 Data"
-description: "Migrate content from Total CMS v1 to v3 including blogs, galleries, images, files, depots, text, dates, and feeds with job queue processing."
+title: "Migrating from Total CMS v1"
+description: "Everything you need to move a Total CMS v1 site to Total CMS 3: the built-in v1 importer, what it brings over, rethinking repurposed blogs as custom schemas, and a full mapping of every v1 page macro to its Twig equivalent."
+related:
+  - twig/data
+  - twig/media
+  - twig/render
+  - collections/export
+  - forms/builder
 ---
 
-# Migration of Total CMS v1 Data
+# Migrating from Total CMS v1
 
-If you look at the filesystem of Total CMS 1, you will see that it's quite different. The data is always stored at
-DOCROOT/cms-data. Below we will look at all of the folders that need to be imported and how they are to be migrated
-into Total CMS 3.
+Total CMS 3 is a ground-up rewrite, so a v1 site moves over in two parts:
 
-Every import job for this should be added to the job import queue.
+1. **Your content** — the data in `cms-data/` (blogs, galleries, images, files, dates, feeds). Total CMS 3 ships a built-in importer that brings this across for you.
+2. **Your templates** — the `%macro(cmsid)%` tags scattered through your v1 HTML become `{{ cms... }}` calls inside [Twig templates](docs/twig/overview). The [macro mapping table](#update-your-templates-v1-macros--twig) below covers every one.
 
-Its possible that not all of these folders will exist. It depends on what features the user was using.
+This page is the one-stop guide for both. Read it top to bottom before you start a migration.
 
-TODO: Update the image and gallery upload process to add alt tags from .cms or .txt files.
+## You probably don't need a custom admin
 
-## blog
+In Total CMS v1 you had to **build your own admin pages** to manage content. You can still do that in Total CMS 3 if you want a fully custom admin area — the API and Twig layer make it entirely possible.
 
-The blog folder contains blogs. This is the closest that we have to a collection in Total CMS 3.
-Inside the "blog" folder there can be multiple blog folders. Each of these sub-folders will be imported as a collection
-into Total CMS 3. These collections need to have a schema of "blog-legacy". The blog-legacy schema is a special schema
-that is designed for backwards support for Total CMS 1 blogs.
+But you rarely need to. Total CMS 3 includes a complete, pre-built admin with a form builder, collections, media handling, and user management out of the box. For the vast majority of sites the built-in admin saves many hours of work, and a custom admin is reserved for genuinely special cases. **Start with the built-in admin** — only reach for a custom one if you hit a wall.
 
-The collection id should be the name of the folder inside "blog". So if there is a folder "blog/myblog". Then the
-collection id of that blog should be "myblog".
+## Import your content
 
-From now on, when I reference the "blog folder", I am referring to the subfolder that contains the blog content that
-needs to be migrated.
+Total CMS 3 has a dedicated **Total CMS 1 importer**. In the admin go to **Utilities → Import Total CMS 1**. It auto-detects a `cms-data/` folder (or you can type the path manually), shows you what it found, and queues everything for import. Migrated items run through the job queue — watch progress under **Utilities → Job Queue**.
 
-There is a special file inside of the blog folder called "myblog.posturl" where the myblog is the name of
-the collection. This file is a text file that contains a URL. This URL should be saved as the "url" of the blog
-collection. If this url does not contain "?permalink=" then you need to also set the "prettyUrl" attribute of the
-collection to true.
+> **The importer never deletes your `cms-data/` folder.** It reads from it and leaves the originals untouched, so you can re-run the import safely.
 
-Now inside the blog folder, there are many *.cms files. These files are the blog posts. They are JSON files. The data
-should map almost exactly to the blog-legacy schema. This is the data that needs to be imported as the blog post.
-There are a few exceptions.
+### What the importer brings over
 
-* The permalink field should be renamed to be the id.
-* We may want to clear out the image and gallery fields as this data will get reprocessed when the files upload.
+Your v1 `cms-data/` is organized into folders by content type. The importer maps each one into a Total CMS 3 collection. Folders only exist for the features you actually used, so expect to see a subset of this:
 
-At this point the blog post can be added to the import queue.
+| Total CMS v1 folder | Becomes in Total CMS 3 | Notes |
+|---------------------|------------------------|-------|
+| `blog/<name>/` | A collection per blog (id = the folder name) | Uses the special **`blog-legacy`** schema for v1 compatibility. The blog's `.posturl` becomes the collection URL (pretty URLs are detected automatically). |
+| `date/` | The `date` collection | v1 stored dates as Unix timestamps; the importer converts them to ISO‑8601. |
+| `depot/<name>/` | Objects in the `depot` collection | One object per depot folder. |
+| `feed/<name>/` | A collection per feed | The `.cms` filename becomes the object id and title; the file contents become the body. |
+| `file/` | The `file` collection | One object per file, addressed by id. |
+| `gallery/<name>/` | Objects in the `gallery` collection | The `blog/` and `feed-*` gallery folders are skipped — they belong to blogs and feeds and are handled with those records. |
+| `image/` | The `image` collection | One object per image, addressed by id. |
+| `text/` | The `text` collection | One object per text snippet. |
+| `video/` | The `url` collection | The stored video URL becomes the object's `url`. |
 
-Lets talk about where the image and gallery files are that will need to be uplaoded for this blog post.
+Images and galleries are **re-processed** on import — Total CMS 3 regenerates its own metadata, color palettes, and resized variants from your original files, so you don't carry v1's derived files across.
 
-Inside the blog folder, you will see a folder for the ID of the blog post that was just processed. Inside of that
-folder, that should be an image folder. This folder contains the image for the blog post. The image should have
-a base file name equal to the blog post id. You can add an import job to import the path to this image as the blog post
-"image" property.
+### Images inside styled text aren't imported automatically
 
-The gallery images for this blog post should be contained in a completely different location. They can be found at
-`cms-data/gallery/blog/myblog/id`, where `myblog` is the name of the collection and `id` is the id of the blog post.
-You can add the path of this folder to the import queue as the "gallery" of this blog post.
+There is one important exception. Images that were **uploaded directly into a v1 styled‑text area** are *not* migrated by the importer. To keep those images working:
 
-## date
+- **Keep your `cms-data/` folder in place** on the server. The existing image URLs inside that styled text will continue to resolve from it.
+- Or **manually re-add** the images into the styled text in Total CMS 3 (uploading them through the editor) and then remove the dependency on `cms-data/`.
 
-If this folder exists, then there will be a cms files inside. The basename of these files will be the ID of objects
-added to the "date" collection. If the "date" collection does not exist, we can create it and assign that to the "date"
-schema.
+## Rethink "abused" blogs as custom schemas
 
-These data `.cms` files will contain the date that will be stored into the "date" property of the new object. However,
-the date will need to be converted since the date is stored as a unix timestamp. It will need to be converted to
-ISO8601 formatted date.
+In Total CMS v1 the blog was the only thing resembling a collection, so people **repurposed blogs to build everything** — online stores, directories, event listings, you name it. The trick was to reuse the fixed blog fields for other meanings: *"the `author` field is really my price, the `category` is really the brand."* It worked, but you had to remember which field meant what.
 
-## depot
+Total CMS 3 removes that constraint: you can **define a custom schema** with properties named for exactly what they hold (`price`, `brand`, `sku`). Migrating a repurposed blog into a proper custom collection is well worth the effort — your data finally matches its labels, and the admin forms make sense.
 
-The depot folder contains depots. Inside the "depot" folder there can be multiple depot object folders.
-Each of these sub-folders will be imported as a depot object inside the "depot" collection. If the "depot"
-collection does not exist, we can create it and assign that to the "depot" schema.
+Recommended workflow:
 
-The depot object id should be the name of the folder inside "depot". So if there is a folder "depot/mydepot".
-Then the depot object id should be "mydepot".
+1. **Export the v1 blog to CSV** — import it as a `blog-legacy` collection (above), then use [collection export](docs/collections/export) to get a CSV.
+2. **Rename the CSV headers** to your new field names (`author` → `price`, `category` → `brand`, …).
+3. **Create your custom collection** with a matching [schema](docs/schemas/reference), then **import the CSV** into it.
 
-You can add the path of this folder to the import queue as the "depot" of this depot object.
+You end up with a clean, purpose-built collection instead of a blog wearing a disguise.
 
+## Update your templates: v1 macros → Twig
 
-## feed
+Total CMS v1 injected content into a page with `%macro(cmsid)%` tags placed directly in your HTML. Total CMS 3 has no macro processor — content is pulled into [Twig templates](docs/twig/overview) through the global `cms` variable instead. This section maps every v1 macro to its Total CMS 3 Twig equivalent so you can update your templates field by field.
 
-The feed folder contains feeds. Inside the "feed" folder there can be multiple feed folders.
-Each of these sub-folders will be imported as a collection into Total CMS 3. These collections need to have a schema
-of "feed" and the id of the collection should be the name of the subfolder.
+### How the model changed
 
-From now on, when I reference the "feed folder", I am referring to the subfolder that contains the feed content.
+| Concept | Total CMS v1 | Total CMS 3 |
+|---------|--------------|-------------|
+| **Where tags live** | `%cmsText(headline)%` placed anywhere in the page HTML | `{{ cms.data.text('headline') }}` inside a `.twig` template |
+| **Content addressing** | A single global `cmsid` per content type | A **collection** + object **id**. The reserved collections (`text`, `image`, `gallery`, `file`, `toggle`, `date`, …) are the defaults, so a lone `cmsid` still maps 1:1 |
+| **Image sizes** | Fixed `Thumb` / `Square` presets baked into the macro name | Any dimensions on demand via [ImageWorks](docs/twig/imageworks) options — `{w: 300, h: 300, fit: 'crop'}` |
+| **PNG output** | Separate `…Png…` macros | One option: `{fm: 'png'}` |
+| **Markdown / formatting** | Separate `…Format` macros | A Twig filter: `| markdown` or `| markdownInline` |
 
-Inside the individual feed folder, you will find many `.cms` files. These are just text files. The basename of the
-`.cms` file will be the ID of the object added to the new feed collection. It should also be added to the "title"
-property as well. The contents of the `.cms` file should be added to the "content" property of the object.
+Because the reserved-collection defaults match v1's content types, the `cmsid` you used in v1 becomes the object **id** in T3 with no extra arguments. If you migrated content into a *custom* collection, add a context object: `{collection: 'pages', property: 'body'}`.
 
-The image for each feed object can be found at `cms-data/gallery/feed-{id}/feed-{id}.jpg` where `{id}` is the ID of
-the object.
+### Text macros
 
-## file
+| Total CMS v1 | Description | Total CMS 3 Twig |
+|--------------|-------------|------------------|
+| `%cmsData(cmsid)%` | Raw stored value | `{{ cms.data('text', 'cmsid', 'text') }}` |
+| `%cmsText(cmsid)%` | Text | `{{ cms.data.text('cmsid') }}` |
+| `%cmsTextFormat(cmsid)%` | Markdown → HTML | `{{ cms.data.text('cmsid')| markdown }}` |
+| `%cmsTextStripHTML(cmsid)%` | Strip HTML | `{{ cms.data.text('cmsid')| striptags }}` |
+| `%cmsToggle(cmsid)%` | Boolean toggle | `{{ cms.data.toggle('cmsid') }}` |
 
-The file folder will contain files. Each file inside this folder should be added to the "file" collection. If the
-"file" collection does not exist, then it should be created and assigned to the "file" schema.
+> `cms.data('text', 'cmsid', 'text')` is the [callable shorthand](docs/twig/data#raw-data-access) for `cms.data.raw(...)` — it returns the value exactly as stored. For everyday text use `cms.data.text('cmsid')`.
 
-Each file should be uploaded to the file collection. The basename of the file should be used as the ID of the object.
-The file should be uploaded to the "file" property of the object.
+### Image alt text
 
-## gallery
+| Total CMS v1 | Description | Total CMS 3 Twig |
+|--------------|-------------|------------------|
+| `%cmsImageAlt(cmsid)%` | Image alt | `{{ cms.render.alt('cmsid') }}` |
+| `%cmsImageAltFormat(cmsid)%` | Image alt (markdown) | `{{ cms.render.alt('cmsid')| markdownInline }}` |
 
-The gallery folder contains galleries. Inside the "gallery" folder there can be multiple gallery folders. However,
-you can ignore the "blog" folder and any folder starting with "feed-". These are not galleries and used for other
-purposes already descirbed. All of the other folders should be added as a new gallery object to the "gallery"
-collection. If the "gallery" collection does not exist, then it should be created and assigned to the "gallery"
-schema.
+### Gallery alt text
 
-The id of the gallery object should be the name of the folder inside "gallery". So if there is a folder "gallery/mygallery".
-Then the gallery object id should be "mygallery". You can add the path of this folder to the import queue as the
-"gallery" property of this object.
+The v1 `Featured` / `First` / `Last` macros become the [dynamic selectors](docs/twig/media#galleries) `'featured'`, `'first'`, `'last'` (and `'random'`) passed to `galleryAlt()`.
 
-## image
+| Total CMS v1 | Description | Total CMS 3 Twig |
+|--------------|-------------|------------------|
+| `%cmsGalleryImageFeaturedAlt(cmsid)%` | Featured image alt | `{{ cms.render.galleryAlt('cmsid', 'featured') }}` |
+| `%cmsGalleryImageFeaturedAltFormat(cmsid)%` | Featured alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'featured')| markdownInline }}` |
+| `%cmsGalleryImageFirstAlt(cmsid)%` | First image alt | `{{ cms.render.galleryAlt('cmsid', 'first') }}` |
+| `%cmsGalleryImageFirstAltFormat(cmsid)%` | First alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'first')| markdownInline }}` |
+| `%cmsGalleryImageLastAlt(cmsid)%` | Last image alt | `{{ cms.render.galleryAlt('cmsid', 'last') }}` |
+| `%cmsGalleryImageLastAltFormat(cmsid)%` | Last alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'last')| markdownInline }}` |
 
-The image folder will contain images. Each image inside this folder should be added to the "image" collection. If the
-"image" collection does not exist, then it should be created and assigned to the "image" schema.
+### Image path macros
 
-Each image should be uploaded to the image collection. The basename of the image should be used as the ID of the object.
-The image should be uploaded to the "image" property of the object.
+In v1, `Thumb` and `Square` were fixed-size presets. In T3 you request **any** size through ImageWorks, so the examples below are starting points — pick the dimensions your layout needs. `Square` is simply an equal width/height with `fit: 'crop'`; PNG output is `fm: 'png'`.
 
-## text
+| Total CMS v1 | Description | Total CMS 3 Twig |
+|--------------|-------------|------------------|
+| `%cmsImage(cmsid)%` | Full image URL | `{{ cms.media.imagePath('cmsid') }}` |
+| `%cmsImageThumb(cmsid)%` | Thumbnail | `{{ cms.media.imagePath('cmsid', {w: 300}) }}` |
+| `%cmsImageSquare(cmsid)%` | Square crop | `{{ cms.media.imagePath('cmsid', {w: 300, h: 300, fit: 'crop'}) }}` |
+| `%cmsImagePng(cmsid)%` | Full image (PNG) | `{{ cms.media.imagePath('cmsid', {fm: 'png'}) }}` |
+| `%cmsImagePngThumb(cmsid)%` | Thumbnail (PNG) | `{{ cms.media.imagePath('cmsid', {w: 300, fm: 'png'}) }}` |
+| `%cmsImagePngSquare(cmsid)%` | Square crop (PNG) | `{{ cms.media.imagePath('cmsid', {w: 300, h: 300, fit: 'crop', fm: 'png'}) }}` |
 
-If this folder exists, then there will be a cms files inside. The basename of these files will be the ID of objects
-added to the "text" collection. If the "text" collection does not exist, we can create it and assign that to the "text"
-schema.
+> `cms.media.imagePath()` returns a **URL** for use in `src`/`url()`. To emit a complete `<img>` tag with alt text and lazy loading, use [`cms.render.image('cmsid', {w: 300})`](docs/twig/render#images) instead.
 
-The contents of the text file should be added to the "text" property of the object.
+### Gallery path macros
 
-## video
+The `Featured` / `First` / `Last` / `Random` variants all collapse into a single `galleryPath()` call with the matching selector. Apply the same `Thumb` / `Square` sizing options shown above.
 
-The video folder will contain videos. Each video inside this folder should be added to the "url" collection. If the
-"url" collection does not exist, then it should be created and assigned to the "url" schema.
+| Total CMS v1 | Description | Total CMS 3 Twig |
+|--------------|-------------|------------------|
+| `%cmsGalleryImageFeatured(cmsid)%` | Featured image | `{{ cms.media.galleryPath('cmsid', 'featured') }}` |
+| `%cmsGalleryImageFeaturedThumb(cmsid)%` | Featured thumbnail | `{{ cms.media.galleryPath('cmsid', 'featured', {w: 300}) }}` |
+| `%cmsGalleryImageFeaturedSquare(cmsid)%` | Featured square | `{{ cms.media.galleryPath('cmsid', 'featured', {w: 300, h: 300, fit: 'crop'}) }}` |
+| `%cmsGalleryImageFirst(cmsid)%` | First image | `{{ cms.media.galleryPath('cmsid', 'first') }}` |
+| `%cmsGalleryImageFirstThumb(cmsid)%` | First thumbnail | `{{ cms.media.galleryPath('cmsid', 'first', {w: 300}) }}` |
+| `%cmsGalleryImageFirstSquare(cmsid)%` | First square | `{{ cms.media.galleryPath('cmsid', 'first', {w: 300, h: 300, fit: 'crop'}) }}` |
+| `%cmsGalleryImageLast(cmsid)%` | Last image | `{{ cms.media.galleryPath('cmsid', 'last') }}` |
+| `%cmsGalleryImageLastThumb(cmsid)%` | Last thumbnail | `{{ cms.media.galleryPath('cmsid', 'last', {w: 300}) }}` |
+| `%cmsGalleryImageLastSquare(cmsid)%` | Last square | `{{ cms.media.galleryPath('cmsid', 'last', {w: 300, h: 300, fit: 'crop'}) }}` |
+| `%cmsGalleryImageRandom(cmsid)%` | Random image | `{{ cms.media.galleryPath('cmsid', 'random') }}` |
+| `%cmsGalleryImageRandomThumb(cmsid)%` | Random thumbnail | `{{ cms.media.galleryPath('cmsid', 'random', {w: 300}) }}` |
+| `%cmsGalleryImageRandomSquare(cmsid)%` | Random square | `{{ cms.media.galleryPath('cmsid', 'random', {w: 300, h: 300, fit: 'crop'}) }}` |
 
-The contents of the file should be added to the "url" property of the object.
+> To render a whole gallery with a lightbox (rather than one image URL), reach for [`cms.render.gallery('cmsid')`](docs/twig/render#galleries).
+
+### File & download macros
+
+Use `stream()` for an inline URL (viewing in the browser, range requests for video/audio) and `download()` to force a save dialog. Note that v1 addressed files by `filename.ext`; T3 addresses them by object **id**.
+
+| Total CMS v1 | Description | Total CMS 3 Twig |
+|--------------|-------------|------------------|
+| `%cmsFile(cmsid.ext)%` | File URL (inline) | `{{ cms.media.stream('cmsid') }}` |
+| `%cmsFileDownload(cmsid.ext)%` | File download URL | `{{ cms.media.download('cmsid') }}` |
+
+### DataStore
+
+The v1 **DataStore** macros (`%cmsDataStore%`, `%cmsDataStoreDownload%`) backed a form that appended submissions to a CSV file. **There is no direct equivalent in Total CMS 3** — the CSV-backed form no longer exists in that form.
+
+Migrate the pattern like this:
+
+1. **Create a custom collection** with a schema matching your form fields.
+2. **Build a form** that saves submissions into that collection with the [Form Builder](docs/forms/builder) — each submission becomes an object instead of a CSV row.
+3. **Export to CSV** when you need the flat file: use [collection export](docs/collections/export) in the admin, or `tcms collection:export` from the [CLI](docs/extensions/cli).
+
+This gives you everything the old DataStore did (capture form data, download it as CSV) plus queryable, editable records in the admin.
+
+### Blog post page macros
+
+Total CMS v1 blog post pages had their own large family of `%blogXxx()%` macros that pulled fields from "the current post." Total CMS 3 has no implicit current post — you **load the post object once** at the top of the template, then read its fields like any other object.
+
+```twig
+{# Load the post for the id in the URL (e.g. /blog/my-post) #}
+{% set post = cms.collection.object('blog', getData.id) %}
+
+<h1>{{ post.title }}</h1>
+```
+
+> On a [Site Builder](docs/site-builder/overview) blog page the matched record is already provided as `object`, so you can skip the `set` and use `object.*` directly. Everything below works the same either way — just swap `post` for your variable name.
+
+Migrated blogs use the **`blog-legacy`** schema, whose property names are shown below. (The v1 `permalink` becomes the object **id**.)
+
+#### Text fields
+
+| Total CMS v1 | Total CMS 3 Twig |
+|--------------|------------------|
+| `%blogPermalink()%` | `{{ post.id }}` |
+| `%blogTitle()%` | `{{ post.title }}` |
+| `%blogAuthor()%` | `{{ post.author }}` |
+| `%blogGenre()%` | `{{ post.genre }}` |
+| `%blogContent()%` | `{{ post.content }}` |
+| `%blogSummary()%` | `{{ post.summary }}` |
+| `%blogExtraContent()%` | `{{ post.extra }}` |
+| `%blogExtraContent2()%` | `{{ post.extra2 }}` |
+| `%blogMedia()%` | `{{ post.media }}` |
+| `%blogTags()%` | `{{ post.tags| join(', ') }}` |
+| `%blogCategories()%` | `{{ post.categories| join(', ') }}` |
+| `%blogLabels()%` | `{{ post.labels| join(', ') }}` |
+
+The v1 `…Format` and `…StripHTML` variants are just Twig filters on the same field — append `| markdown` (or `| markdownInline`) for the formatted version and `| striptags` to strip HTML. For example `%blogContentFormat()%` → `{{ post.content| markdown }}` and `%blogContentStripHTML()%` → `{{ post.content| striptags }}`. The `tags` / `categories` / `labels` fields are lists, so render them with `| join(', ')` (or loop over them).
+
+#### Date fields
+
+The post's `date` is stored as ISO‑8601; format it with Twig's [`date`](docs/twig/filters) filter.
+
+| Total CMS v1 | Output | Total CMS 3 Twig |
+|--------------|--------|------------------|
+| `%blogDateMonth()%` | `01`–`12` | `{{ post.date| date('m') }}` |
+| `%blogDateMonthName()%` | `January`–`December` | `{{ post.date| date('F') }}` |
+| `%blogDateMonthNameShort()%` | `Jan`–`Dec` | `{{ post.date| date('M') }}` |
+| `%blogDateDay()%` | `01`–`31` | `{{ post.date| date('d') }}` |
+| `%blogDateDayName()%` | `Monday`–`Sunday` | `{{ post.date| date('l') }}` |
+| `%blogDateDayNameShort()%` | `Mon`–`Sun` | `{{ post.date| date('D') }}` |
+| `%blogDateYear()%` | `2017` | `{{ post.date| date('Y') }}` |
+| `%blogDateYearShort()%` | `17` | `{{ post.date| date('y') }}` |
+| `%blogDateISO8601()%` | `2022-06-04T00:50:29+00:00` | `{{ post.date| date('c') }}` |
+
+#### Images & galleries
+
+A blog post has two media fields: a single **`image`** and a **`gallery`**. The plain `%blogImage…%` macros read the `image` field; the `Featured` / `First` / `Last` / `Random` variants are gallery selectors. Pass the loaded `post` object plus the field context.
+
+| Total CMS v1 | Total CMS 3 Twig |
+|--------------|------------------|
+| `%blogImage()%` | `{{ cms.media.imagePath(post, {}, {collection: 'blog', property: 'image'}) }}` |
+| `%blogImageThumb()%` | `{{ cms.media.imagePath(post, {w: 300}, {collection: 'blog', property: 'image'}) }}` |
+| `%blogImageSquare()%` | `{{ cms.media.imagePath(post, {w: 300, h: 300, fit: 'crop'}, {collection: 'blog', property: 'image'}) }}` |
+| `%blogImageAlt()%` | `{{ cms.render.alt(post, {collection: 'blog', property: 'image'}) }}` |
+| `%blogImageFeatured()%` | `{{ cms.media.galleryPath(post, 'featured', {}, {collection: 'blog', property: 'gallery'}) }}` |
+| `%blogImageFirst()%` | `{{ cms.media.galleryPath(post, 'first', {}, {collection: 'blog', property: 'gallery'}) }}` |
+| `%blogImageLast()%` | `{{ cms.media.galleryPath(post, 'last', {}, {collection: 'blog', property: 'gallery'}) }}` |
+| `%blogImageRandom()%` | `{{ cms.media.galleryPath(post, 'random', {}, {collection: 'blog', property: 'gallery'}) }}` |
+| `%blogImageFeaturedAlt()%` | `{{ cms.render.galleryAlt(post, 'featured', {collection: 'blog', property: 'gallery'}) }}` |
+
+Apply the same `{w: 300}` / `{w: 300, h: 300, fit: 'crop'}` sizing options shown for `image` to any gallery selector (the v1 `…Thumb` / `…Square` variants), and the same `First` / `Last` / `Random` selectors to the alt calls. To emit a complete `<img>` tag (URL + dimensions + alt + lazy loading) instead of a bare URL, use [`cms.render.image(post, {w: 300}, {collection: 'blog', property: 'image'})`](docs/twig/render#images); to render the whole gallery with a lightbox, use [`cms.render.gallery(post)`](docs/twig/render#galleries).
+
+### Before & after
+
+A typical v1 page fragment:
+
+```html
+<h1>%cmsText(headline)%</h1>
+<div>%cmsTextFormat(intro)%</div>
+<img src="%cmsImageSquare(team)%" alt="%cmsImageAlt(team)%">
+<a href="%cmsFileDownload(brochure.pdf)%">Download the brochure</a>
+```
+
+The same fragment in a Total CMS 3 Twig template:
+
+```twig
+<h1>{{ cms.data.text('headline') }}</h1>
+<div>{{ cms.data.text('intro')|markdown }}</div>
+{{ cms.render.image('team', {w: 300, h: 300, fit: 'crop'}) }}
+<a href="{{ cms.media.download('brochure') }}">Download the brochure</a>
+```
+
+Note how `cms.render.image()` replaces the paired `%cmsImageSquare%` + `%cmsImageAlt%` macros with a single call that emits the sized `<img>` tag and its alt text together.
