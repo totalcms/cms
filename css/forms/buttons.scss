@@ -80,6 +80,7 @@ nav[popover]  {
 		--action-icon : var(--icon-logo);
 
 		&.select { --action-icon : var(--icon-checks) }
+		&.visualize { --action-icon : var(--icon-sitemap) }
 		&.edit { --action-icon : var(--icon-edit) }
 		&.profile { --action-icon : var(--icon-user) }
 		&.logout { --action-icon : var(--icon-logout) }

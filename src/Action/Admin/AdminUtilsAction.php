@@ -25,6 +25,8 @@ use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
+use TotalCMS\Domain\Visualizer\Service\MermaidErdRenderer;
+use TotalCMS\Domain\Visualizer\Service\RelationshipAnalyzer;
 use TotalCMS\Renderer\TwigRenderer;
 
 readonly class AdminUtilsAction
@@ -49,6 +51,8 @@ readonly class AdminUtilsAction
 		private OAuthGrantRepository $oauthGrantRepository,
 		private OAuthScopeRegistry $oauthScopeRegistry,
 		private \TotalCMS\Domain\Extension\Service\ExtensionManager $extensionManager,
+		private RelationshipAnalyzer $relationshipAnalyzer,
+		private MermaidErdRenderer $mermaidRenderer,
 	) {
 	}
 
@@ -202,6 +206,39 @@ readonly class AdminUtilsAction
 			}
 		}
 
+		// Collection Visualizer — relationship graph rendered as a Mermaid ERD.
+		$visualizerData = null;
+		if ($page === 'collection-visualizer') {
+			$graph        = $this->relationshipAnalyzer->analyze();
+			$focus        = trim((string)($query['collection'] ?? ''));
+			$showIsolated = ($query['isolated'] ?? '') === '1';
+			$hiddenCount  = 0;
+
+			if ($focus !== '' && isset($graph['nodes'][$focus])) {
+				$graph = $this->relationshipAnalyzer->egoGraph($graph, $focus);
+			} else {
+				$focus = '';
+				// Global view: hide unconnected collections unless asked for.
+				if (!$showIsolated) {
+					$before = count($graph['nodes']);
+					$graph  = $this->relationshipAnalyzer->pruneIsolated($graph);
+					$hiddenCount = $before - count($graph['nodes']);
+				}
+			}
+
+			$mermaid        = $this->mermaidRenderer->render($graph);
+			$visualizerData = [
+				'mermaid'      => $mermaid,
+				'edgeTypes'    => $this->mermaidRenderer->edgeTypes(),
+				'focus'        => $focus,
+				'collections'  => $this->collectionLister->listAllCollections(),
+				'nodeCount'    => count($graph['nodes']),
+				'edgeCount'    => count($graph['edges']),
+				'showIsolated' => $showIsolated,
+				'hiddenCount'  => $hiddenCount,
+			];
+		}
+
 		return $this->twigRenderer->template($response, 'admin/utils.twig', [
 			'page'   => $page,
 			'action' => $action,
@@ -225,6 +262,7 @@ readonly class AdminUtilsAction
 			'updateInfo'             => $updateInfo,
 			'composerInstall'        => \TotalCMS\Support\PathResolver::isComposerInstall(),
 			'syncData'               => $syncData,
+			'visualizerData'         => $visualizerData,
 			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}

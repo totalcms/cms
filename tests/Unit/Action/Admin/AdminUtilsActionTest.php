@@ -51,6 +51,8 @@ final class AdminUtilsActionTest extends TestCase
 	private string $oauthGrantsTmpFile;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private \PHPUnit\Framework\MockObject\MockObject $relationshipAnalyzer;
+	private \TotalCMS\Domain\Visualizer\Service\MermaidErdRenderer $mermaidRenderer;
 
 	protected function setUp(): void
 	{
@@ -80,6 +82,8 @@ final class AdminUtilsActionTest extends TestCase
 		$this->oauthScopeRegistry    = new OAuthScopeRegistry();
 		$this->request               = $this->createMock(ServerRequestInterface::class);
 		$this->response              = $this->createMock(ResponseInterface::class);
+		$this->relationshipAnalyzer  = $this->createMock(\TotalCMS\Domain\Visualizer\Service\RelationshipAnalyzer::class);
+		$this->mermaidRenderer       = new \TotalCMS\Domain\Visualizer\Service\MermaidErdRenderer();
 
 		$this->action = new AdminUtilsAction(
 			$this->renderer,
@@ -101,6 +105,8 @@ final class AdminUtilsActionTest extends TestCase
 			$this->oauthGrantRepository,
 			$this->oauthScopeRegistry,
 			$this->extensionManager,
+			$this->relationshipAnalyzer,
+			$this->mermaidRenderer,
 		);
 	}
 

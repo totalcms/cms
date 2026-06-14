@@ -1,0 +1,52 @@
+<h1>Collection Visualizer</h1>
+
+<section class="dash-content-section">
+
+	<p>A relationship map of your collections and schemas — reference (foreign-key) links, deck/card composition, schema inheritance, and data-view dependencies.</p>
+
+	{# `totalform` for styling; data-method=GET + no-save/no-unsaved-warning keep
+	   TotalForm from hijacking this plain GET filter form (it only intercepts
+	   submit + warns on unsaved when the method isn't GET / ajax is on). #}
+	<form class="visualizer-controls totalform no-save no-unsaved-warning" method="get" data-method="GET" data-ajax="false" action="utils/collection-visualizer">
+		<label>Focus
+			<select name="collection" id="visualizer-focus" data-autosubmit>
+				<option value="">All collections</option>
+				{% for c in visualizerData.collections %}
+					<option value="{{ c.id }}" {{ c.id == visualizerData.focus ? 'selected' }}>{{ c.name|default(c.id) }}</option>
+				{% endfor %}
+			</select>
+		</label>
+		{% if visualizerData.focus == '' %}
+			<label class="visualizer-toggle">
+				<input type="checkbox" name="isolated" value="1" data-autosubmit {{ visualizerData.showIsolated ? 'checked' }}>
+				Show unconnected
+			</label>
+		{% endif %}
+		<button class="dash-button transparent" type="submit">Apply</button>
+		<span class="visualizer-stats">
+			{{ visualizerData.nodeCount }} nodes · {{ visualizerData.edgeCount }} relationships{% if visualizerData.hiddenCount > 0 %} · {{ visualizerData.hiddenCount }} unconnected hidden{% endif %}
+		</span>
+	</form>
+
+	<ul class="visualizer-legend">
+		<li class="rel-relational">reference</li>
+		<li class="rel-composition">composition (deck/card)</li>
+		<li class="rel-inheritance">inheritance</li>
+		<li class="rel-dataview">data-view dependency</li>
+	</ul>
+
+	<div class="visualizer-canvas" id="collection-visualizer" data-edge-types='{{ visualizerData.edgeTypes|json_encode }}'>
+		{% if visualizerData.nodeCount == 0 %}
+			<p>No collections found to visualize.</p>
+		{% else %}
+			<div class="visualizer-zoom" hidden>
+				<button type="button" class="vz-btn" data-zoom="in" title="Zoom in" aria-label="Zoom in">+</button>
+				<button type="button" class="vz-btn" data-zoom="out" title="Zoom out" aria-label="Zoom out">&minus;</button>
+				<button type="button" class="vz-btn vz-icon vz-reset" data-zoom="reset" title="Reset view" aria-label="Reset view"></button>
+				<button type="button" class="vz-btn vz-icon vz-fullscreen" data-zoom="fullscreen" title="Full screen" aria-label="Full screen"></button>
+			</div>
+			<pre class="mermaid" id="collection-visualizer-graph">{{ visualizerData.mermaid }}</pre>
+		{% endif %}
+	</div>
+
+</section>

@@ -37,3 +37,41 @@ config/env.php
 /docs/audits
 /docs/superpowers
 graphify-out/
+
+# Mermaid ships a lazy chunk per diagram type; the Collection Visualizer only
+# renders erDiagram, so these other renderers are emitted by the build but never
+# loaded. Keep them out of git (computed from mermaid.core's import graph minus
+# erDiagram + our own code — see docs/planning/data-visualizers.md).
+/public/assets/architecture-*
+/public/assets/architectureDiagram-*
+/public/assets/blockDiagram-*
+/public/assets/c4Diagram-*
+/public/assets/classDiagram-*
+/public/assets/diagram-*
+/public/assets/eventmodeling-*
+/public/assets/flowDiagram-*
+/public/assets/ganttDiagram-*
+/public/assets/gitGraph-*
+/public/assets/gitGraphDiagram-*
+/public/assets/info-*
+/public/assets/infoDiagram-*
+/public/assets/ishikawaDiagram-*
+/public/assets/journeyDiagram-*
+/public/assets/kanban-definition-*
+/public/assets/mindmap-definition-*
+/public/assets/packet-*
+/public/assets/pie-*
+/public/assets/pieDiagram-*
+/public/assets/quadrantDiagram-*
+/public/assets/radar-*
+/public/assets/requirementDiagram-*
+/public/assets/sankeyDiagram-*
+/public/assets/sequenceDiagram-*
+/public/assets/stateDiagram-*
+/public/assets/timeline-definition-*
+/public/assets/treeView-*
+/public/assets/treemap-*
+/public/assets/vennDiagram-*
+/public/assets/wardley-*
+/public/assets/wardleyDiagram-*
+/public/assets/xychartDiagram-*

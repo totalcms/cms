@@ -7,6 +7,7 @@ import FilterList from './totalform/filter-list';
 import TreeView from './tree-view';
 import initBuilderPageSortable from './builder-page-sortable';
 import AdminTable from './totalform/admin-table';
+import DataVisualizer from './totalform/data-visualizer';
 import SortableTable from './totalform/sortable-table';
 import ClipButton from './clipboard-button';
 import JSONField from './totalform/json';
@@ -124,6 +125,10 @@ document.addEventListener("DOMContentLoaded", event => {
 	// HTMX-powered collection tables
 	const tableWrappers = Array.from(document.getElementsByClassName("admin-table-wrapper"));
 	tableWrappers.forEach(wrapper => new AdminTable(wrapper));
+
+	// Collection Visualizer (lazy-loads Mermaid only on its page)
+	const visualizer = document.getElementById("collection-visualizer");
+	if (visualizer) new DataVisualizer(visualizer);
 
 	// Sortable static tables (logs page)
 	const sortableTables = Array.from(document.querySelectorAll("table.admin-table[data-sort]"));

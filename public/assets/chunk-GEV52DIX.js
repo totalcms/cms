@@ -1,0 +1,2 @@
+import{a as e,b as o,c as n,d as t,e as i,g as u,n as l,s,t as c}from"./chunk-OC53G7BN.js";import{a}from"./chunk-B4JUHIHW.js";var v=a(class extends c{static{e(this,"RadarTokenBuilder")}constructor(){super(["radar-beta"])}},"RadarTokenBuilder"),R={parser:{TokenBuilder:e(()=>new v,"TokenBuilder"),ValueConverter:e(()=>new s,"ValueConverter")}};function M(m=i){let r=t(n(m),u),d=t(o({shared:r}),l,R);return r.ServiceRegistry.register(d),{shared:r,Radar:d}}a(M,"createRadarServices");e(M,"createRadarServices");export{R as a,M as b};
+//# sourceMappingURL=chunk-GEV52DIX.js.map
