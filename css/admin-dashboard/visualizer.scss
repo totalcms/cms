@@ -52,15 +52,22 @@
 	overflow      : hidden;
 	position      : relative;
 
-	// Pre-render placeholder (before Mermaid swaps in the SVG host).
+	// Pre-render placeholder: the raw Mermaid source lives here until JS swaps
+	// in the SVG. Keep it hidden so the definition text never flashes on load.
 	.mermaid {
-		margin     : 1rem;
-		text-align : center;
+		opacity : 0;
 	}
 
+	// Fade the rendered diagram in once it's ready (JS adds .is-ready).
 	.visualizer-svg {
-		width  : 100%;
-		height : 100%;
+		width      : 100%;
+		height     : 100%;
+		opacity    : 0;
+		transition : opacity 0.3s ease;
+
+		&.is-ready {
+			opacity : 1;
+		}
 	}
 	svg {
 		display : block;

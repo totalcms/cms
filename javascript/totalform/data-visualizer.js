@@ -72,6 +72,8 @@ export default class DataVisualizer {
 			await this.enablePanZoom(host.querySelector('svg'));
 			this.styleEdges();
 			this.toolbar?.removeAttribute('hidden');
+			// Fade the finished diagram in (next frame so the transition runs).
+			requestAnimationFrame(() => host.classList.add('is-ready'));
 		} catch (err) {
 			console.error('Collection Visualizer render failed:', err);
 			this.graphEl.insertAdjacentHTML(
