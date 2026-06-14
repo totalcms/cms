@@ -117,7 +117,14 @@ readonly class RelationshipAnalyzer
 		}
 
 		// DataView dependency edges (deps are indexed on the dataviews collection).
-		foreach ($this->dataViewLister->listViews() as $view) {
+		// Best-effort: these are supplementary, so a missing/unbuildable dataviews
+		// collection must not sink the whole graph.
+		try {
+			$views = $this->dataViewLister->listViews();
+		} catch (\Throwable) {
+			$views = [];
+		}
+		foreach ($views as $view) {
 			if (!is_array($view)) {
 				continue;
 			}
@@ -215,6 +222,37 @@ readonly class RelationshipAnalyzer
 		}
 
 		return ['nodes' => $nodes, 'edges' => $graph['edges']];
+	}
+
+	/**
+	 * Inbound + outbound relational references for one collection, derived from
+	 * the relational (FK) edges. Powers the Object Visualizer: outbound tells it
+	 * which of a record's properties point elsewhere; inbound is the bounded set
+	 * of (collection, property) pairs to reverse-look-up for "what references me".
+	 *
+	 * @return array{
+	 *     inbound: list<array{collection:string,property:string}>,
+	 *     outbound: list<array{property:string,target:string}>
+	 * }
+	 */
+	public function relationsFor(string $collection): array
+	{
+		$inbound  = [];
+		$outbound = [];
+
+		foreach ($this->analyze()['edges'] as $edge) {
+			if (($edge['type'] ?? '') !== 'relational') {
+				continue;
+			}
+			if ($edge['to'] === $collection) {
+				$inbound[] = ['collection' => (string)$edge['from'], 'property' => (string)$edge['via']];
+			}
+			if ($edge['from'] === $collection) {
+				$outbound[] = ['property' => (string)$edge['via'], 'target' => (string)$edge['to']];
+			}
+		}
+
+		return ['inbound' => $inbound, 'outbound' => $outbound];
 	}
 
 	/**

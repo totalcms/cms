@@ -1,0 +1,45 @@
+<h1>Object Visualizer</h1>
+
+<section class="dash-content-section">
+
+	<p>See what records reference — and what references them (handy before deleting). Pick a collection on its own to map <strong>every object</strong> in it, or add an object ID (or use the <strong>Relationships</strong> link on an object's edit page) to focus on a single record. Arrows point <em>from</em> a record <em>to</em> what it references.</p>
+
+	<form class="visualizer-controls totalform no-save no-unsaved-warning" method="get" data-method="GET" data-ajax="false" action="utils/object-visualizer">
+		<label>Collection
+			<select name="collection">
+				<option value="">Choose…</option>
+				{% for c in objectVisualizerData.collections %}
+					<option value="{{ c.id }}" {{ c.id == objectVisualizerData.collection ? 'selected' }}>{{ c.name|default(c.id) }}</option>
+				{% endfor %}
+			</select>
+		</label>
+		<label>Object ID <span class="visualizer-optional">(optional)</span>
+			<input type="text" name="id" value="{{ objectVisualizerData.id }}" placeholder="leave blank for the whole collection" autocomplete="off">
+		</label>
+		<button class="dash-button transparent" type="submit">Visualize</button>
+		{% if objectVisualizerData.nodeCount > 0 %}
+			<span class="visualizer-stats">
+				{{ objectVisualizerData.nodeCount }} nodes · {{ objectVisualizerData.edgeCount }} references{% if objectVisualizerData.truncated %} · capped (showing a subset — focus an object ID to drill in){% endif %}
+			</span>
+		{% endif %}
+	</form>
+
+	{% if objectVisualizerData.nodeCount > 0 %}
+		<div class="visualizer-canvas" id="object-visualizer">
+			<div class="visualizer-zoom" hidden>
+				<button type="button" class="vz-btn" data-zoom="in" title="Zoom in" aria-label="Zoom in">+</button>
+				<button type="button" class="vz-btn" data-zoom="out" title="Zoom out" aria-label="Zoom out">&minus;</button>
+				<button type="button" class="vz-btn vz-icon vz-reset" data-zoom="reset" title="Reset view" aria-label="Reset view"></button>
+				<button type="button" class="vz-btn vz-icon vz-fullscreen" data-zoom="fullscreen" title="Full screen" aria-label="Full screen"></button>
+			</div>
+			<pre class="mermaid" id="object-visualizer-graph">{{ objectVisualizerData.mermaid }}</pre>
+		</div>
+	{% elseif objectVisualizerData.mode == 'collection' %}
+		<p>No objects found in <code>{{ objectVisualizerData.collection }}</code>.</p>
+	{% elseif objectVisualizerData.mode == 'object' %}
+		<p>No relationships found for <code>{{ objectVisualizerData.collection }}/{{ objectVisualizerData.id }}</code>.</p>
+	{% else %}
+		<p>Choose a collection to map every object in it, or add an object ID to focus on a single record.</p>
+	{% endif %}
+
+</section>

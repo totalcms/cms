@@ -126,9 +126,10 @@ document.addEventListener("DOMContentLoaded", event => {
 	const tableWrappers = Array.from(document.getElementsByClassName("admin-table-wrapper"));
 	tableWrappers.forEach(wrapper => new AdminTable(wrapper));
 
-	// Collection Visualizer (lazy-loads Mermaid only on its page)
-	const visualizer = document.getElementById("collection-visualizer");
-	if (visualizer) new DataVisualizer(visualizer);
+	// Data visualizers (Collection erDiagram + Object flowchart) — both render a
+	// Mermaid diagram in a .visualizer-canvas and lazy-load Mermaid on their page.
+	const visualizers = Array.from(document.getElementsByClassName("visualizer-canvas"));
+	visualizers.forEach(canvas => new DataVisualizer(canvas));
 
 	// Sortable static tables (logs page)
 	const sortableTables = Array.from(document.querySelectorAll("table.admin-table[data-sort]"));

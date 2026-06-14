@@ -38,10 +38,11 @@ config/env.php
 /docs/superpowers
 graphify-out/
 
-# Mermaid ships a lazy chunk per diagram type; the Collection Visualizer only
-# renders erDiagram, so these other renderers are emitted by the build but never
-# loaded. Keep them out of git (computed from mermaid.core's import graph minus
-# erDiagram + our own code — see docs/planning/data-visualizers.md).
+# Mermaid ships a lazy chunk per diagram type; the data visualizers only render
+# erDiagram (Collection Visualizer) and flowchart (Object Visualizer), so the
+# other renderers are emitted by the build but never loaded. Keep them out of git
+# (computed from mermaid.core's import graph minus erDiagram + flowDiagram + our
+# own code — see docs/planning/data-visualizers.md).
 /public/assets/architecture-*
 /public/assets/architectureDiagram-*
 /public/assets/blockDiagram-*
@@ -49,7 +50,6 @@ graphify-out/
 /public/assets/classDiagram-*
 /public/assets/diagram-*
 /public/assets/eventmodeling-*
-/public/assets/flowDiagram-*
 /public/assets/ganttDiagram-*
 /public/assets/gitGraph-*
 /public/assets/gitGraphDiagram-*

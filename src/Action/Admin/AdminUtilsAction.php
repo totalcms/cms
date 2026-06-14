@@ -26,6 +26,8 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Domain\Visualizer\Service\MermaidErdRenderer;
+use TotalCMS\Domain\Visualizer\Service\MermaidFlowchartRenderer;
+use TotalCMS\Domain\Visualizer\Service\ObjectRelationshipResolver;
 use TotalCMS\Domain\Visualizer\Service\RelationshipAnalyzer;
 use TotalCMS\Renderer\TwigRenderer;
 
@@ -53,6 +55,8 @@ readonly class AdminUtilsAction
 		private \TotalCMS\Domain\Extension\Service\ExtensionManager $extensionManager,
 		private RelationshipAnalyzer $relationshipAnalyzer,
 		private MermaidErdRenderer $mermaidRenderer,
+		private ObjectRelationshipResolver $objectRelationshipResolver,
+		private MermaidFlowchartRenderer $mermaidFlowchartRenderer,
 	) {
 	}
 
@@ -239,6 +243,41 @@ readonly class AdminUtilsAction
 			];
 		}
 
+		// Object Visualizer — one record's actual inbound/outbound references.
+		$objectVisualizerData = null;
+		if ($page === 'object-visualizer') {
+			$ovCollection = trim((string)($query['collection'] ?? ''));
+			$ovId         = trim((string)($query['id'] ?? ''));
+			$mermaid      = null;
+			$nodeCount    = 0;
+			$edgeCount    = 0;
+			$truncated    = false;
+			$mode         = '';
+
+			if ($ovCollection !== '') {
+				// ID set → one record's ego graph; ID blank → whole-collection view.
+				$graph = $ovId !== ''
+					? $this->objectRelationshipResolver->resolve($ovCollection, $ovId)
+					: $this->objectRelationshipResolver->resolveCollection($ovCollection);
+				$mode      = $ovId !== '' ? 'object' : 'collection';
+				$mermaid   = $this->mermaidFlowchartRenderer->render($graph);
+				$nodeCount = count($graph['nodes']);
+				$edgeCount = count($graph['edges']);
+				$truncated = $graph['truncated'];
+			}
+
+			$objectVisualizerData = [
+				'collection'  => $ovCollection,
+				'id'          => $ovId,
+				'mode'        => $mode,
+				'collections' => $this->collectionLister->listAllCollections(),
+				'mermaid'     => $mermaid,
+				'nodeCount'   => $nodeCount,
+				'edgeCount'   => $edgeCount,
+				'truncated'   => $truncated,
+			];
+		}
+
 		return $this->twigRenderer->template($response, 'admin/utils.twig', [
 			'page'   => $page,
 			'action' => $action,
@@ -263,6 +302,7 @@ readonly class AdminUtilsAction
 			'composerInstall'        => \TotalCMS\Support\PathResolver::isComposerInstall(),
 			'syncData'               => $syncData,
 			'visualizerData'         => $visualizerData,
+			'objectVisualizerData'   => $objectVisualizerData,
 			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}

@@ -10,6 +10,12 @@
 		color     : oklch(var(--totalform-darkgray));
 		font-size : 0.85em;
 	}
+
+	.visualizer-optional {
+		color       : oklch(var(--totalform-darkgray));
+		font-size   : 0.85em;
+		font-weight : normal;
+	}
 }
 
 .visualizer-legend {

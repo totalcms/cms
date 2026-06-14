@@ -53,6 +53,8 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 	private \PHPUnit\Framework\MockObject\MockObject $relationshipAnalyzer;
 	private \TotalCMS\Domain\Visualizer\Service\MermaidErdRenderer $mermaidRenderer;
+	private \PHPUnit\Framework\MockObject\MockObject $objectResolver;
+	private \TotalCMS\Domain\Visualizer\Service\MermaidFlowchartRenderer $flowchartRenderer;
 
 	protected function setUp(): void
 	{
@@ -84,6 +86,8 @@ final class AdminUtilsActionTest extends TestCase
 		$this->response              = $this->createMock(ResponseInterface::class);
 		$this->relationshipAnalyzer  = $this->createMock(\TotalCMS\Domain\Visualizer\Service\RelationshipAnalyzer::class);
 		$this->mermaidRenderer       = new \TotalCMS\Domain\Visualizer\Service\MermaidErdRenderer();
+		$this->objectResolver        = $this->createMock(\TotalCMS\Domain\Visualizer\Service\ObjectRelationshipResolver::class);
+		$this->flowchartRenderer     = new \TotalCMS\Domain\Visualizer\Service\MermaidFlowchartRenderer();
 
 		$this->action = new AdminUtilsAction(
 			$this->renderer,
@@ -107,6 +111,8 @@ final class AdminUtilsActionTest extends TestCase
 			$this->extensionManager,
 			$this->relationshipAnalyzer,
 			$this->mermaidRenderer,
+			$this->objectResolver,
+			$this->flowchartRenderer,
 		);
 	}
 
