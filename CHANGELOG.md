@@ -2,20 +2,41 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.5.0-rc.9] - 2026-06-11
+## [3.5.0-rc.9] - 2026-06-15
 
 ### Added
 
+- **Data Visualizers**: Two admin relationship-diagram utilities under **Utilities → Reporting**, sharing one `RelationshipAnalyzer` and a lazy-loaded Mermaid renderer (the diagram library is only fetched when a chart is actually on the page). The **Collection Visualizer** draws an ER-style map of how every collection relates — relational (FK) references, deck/card composition, schema inheritance, and DataView dependencies — with type-styled edges and pan/zoom/fullscreen. The **Object Visualizer** maps a single record's *actual* inbound/outbound references (what it points at, and what points back at it — handy before deleting), and with the object id left blank it maps an entire collection's objects at once (capped). Both are reachable from the **Visualize** / **Relationships** links in the collection-actions menu. Node labels flow through the same MCP `ObjectTitleResolver` the search tools use (honoring a collection's `mcp.titleProperty`)
+- **Multi-select bulk actions in the collection table**: A select mode in the admin collection list lets you act on many objects at once via an icon toolbar — **bulk delete** and **bulk download** (selected objects exported together as a single zip). The collection index is rebuilt once after the whole batch completes rather than per object, so deleting a large selection stays fast
 - **OAuth protected-resource metadata (RFC 9728)**: New `/.well-known/oauth-protected-resource` endpoint, and the MCP endpoint's 401 `WWW-Authenticate` challenge now carries a `resource_metadata` pointer to it, so an MCP client can discover the authorization server straight from a failed request
 
 ### Enhanced
 
 - **MCP SDK updated to 0.6; protocol revision 2025-11-25**: `mcp/sdk` is upgraded to `^0.6.0` and the server now advertises MCP protocol revision `2025-11-25` (negotiated on the wire by the SDK; older clients still negotiate down cleanly). T3's own registry/definition wrappers insulate core from the SDK's breaking renames, so there is no author-facing fallout
+- **Site Builder `pagesCollection` is a collection picker**: The Site Builder setting for which collection holds pages is now a collection-list select instead of a free-text field, so it can't be set to a non-existent collection id
 
 ### Fixed
 
 - **Composer plugin now actually ships as a plugin (agent skill auto-install)**: rc.8 advertised installing/refreshing the agent skill on `composer install`/`update`, but the published `totalcms/cms` manifest was `type: library` — the `composer-plugin` type only reached the update-system zip, never Packagist — so the plugin never activated and the skill was never installed. The repo's root `composer.json` (what Packagist publishes) is now `type: composer-plugin` with `extra.class` + a `composer-plugin-api` requirement. This is safe for the repo itself: Composer never activates the root package's own plugin, only when `totalcms/cms` is installed as a dependency. Existing projects from before this fix: run `vendor/bin/tcms skill:install` once to install the skill
 - **MCP DNS-rebinding protection made production-safe**: The 0.6 SDK's Streamable HTTP transport installs DNS-rebinding protection with a **localhost-only** allowlist by default — which would have 403'd every MCP request on a real domain (the `Host` header is the site, not `localhost`). The MCP endpoint now drives that allowlist from `mcp.allowedOrigins`: open by default (no Origin restriction), or — when origins are configured — enforcing the spec's 403-on-invalid-Origin scoped to the server's own host plus the configured origins, so same-origin and server-to-server requests always pass
+- **Settings save (and other admin forms) could 404 when a page had a second form**: The JS API client auto-detected its base URL by scanning the whole page (`document.querySelector('form.totalform[data-api]')`) whenever a form's own base came through blank — which it correctly is on a root install. So a form would adopt *another* form's `data-api`. On the SMTP settings page the test-email form carries `data-api="/api"`, so the save form picked it up and POSTed to `/api/admin/settings/smtp` → 404. A form now honors its own base (including an explicit empty string) and never falls through to the page-wide scan; the auto-detect runs only when no URL was provided at all
+- **Gallery lost an uploaded image's data when the server renamed the file**: On a filename collision the server uniquifies the upload (`photo.png` → `photo-2a3f1.png`), but the gallery field matched the response back to the file by exact name only — so the renamed image was never written into the field's data and the next form save (on an existing object, before a refresh) serialized it as empty, wiping it. The field now correlates the saved image even when renamed and binds it to the right preview, keying everything off the saved name
+- **Card/deck sub-field values leaked to the property top level**: Saving a schema with a `card` (or deck) field could write the child field's settings (e.g. an MCP `expose` flag) onto the parent property's top level as well as under the sub-field where it belongs. Sub-field settings now stay scoped to the sub-field
+- **Factory skipped boolean fields and mis-parsed a lone `0` argument**: The test-data factory never generated values for `toggle`/`checkbox` (boolean) fields, and a factory directive whose only argument was `0` (e.g. `boolean(0)`) was dropped during argument parsing. Boolean fields now get generated values and a lone `0` argument is honored
+
+### Security
+
+- **Importing code-executing system collections now requires a super-admin**: Collections whose objects carry executable handler code (e.g. `automations`) could be imported by any admin via the import paths. Importing these system collections is now restricted to super-admins, closing a privilege-escalation route where a lower-privileged admin could introduce server-side code
+
+### Performance
+
+- **Redis/Memcached availability is probed once per request**: The cache layer was probing backend availability (a network round-trip) repeatedly while selecting a cache backend. The probe result is now memoized, so backend selection costs at most one check per backend per request
+- **Session start skipped on the ImageWorks image hot path**: Serving a transformed/cached image no longer starts a PHP session, removing the session-file open/lock from the highest-frequency request path (image delivery)
+
+### Documentation
+
+- **Unified Total CMS v1 migration guide**: The data-migration and macro-mapping pages are merged into one user-facing guide covering the built-in v1 importer, what it brings over, rethinking repurposed blogs as custom schemas, and the full `%macro%` → Twig mapping (including blog-post-page macros via the load-the-object pattern)
+- **`cms.locale.htmlLang()`** documented in the locale Twig reference
 
 ## [3.5.0-rc.8] - 2026-06-11
 
