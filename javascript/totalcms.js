@@ -22,6 +22,14 @@ export default class TotalCMS {
         // Create global element references
         this.collection = null;
 
+        // Whether the caller explicitly passed a url. Captured before the merge so
+        // an explicit empty string ("" — a valid base path on a root install) can be
+        // told apart from "no url provided". Without this, a form whose correct base
+        // is "" falls through to the page-wide auto-detect below and wrongly adopts
+        // another form's data-api (e.g. the SMTP save form, base "", picking up the
+        // test form's "/api" and 404ing on /api/admin/settings/smtp).
+        const urlProvided = Object.prototype.hasOwnProperty.call(options, "url");
+
         const defaults = {
             passport        : null,
             cache           : true,
@@ -37,8 +45,9 @@ export default class TotalCMS {
 
         this.cache = this.options.cache;
 
-        // Auto-detect API URL from page forms if not provided
-        if (!this.options.url) {
+        // Auto-detect API URL from a page form ONLY when no url was provided at all.
+        // An explicitly provided url (including "") is authoritative.
+        if (!urlProvided && !this.options.url) {
             const form = document.querySelector('form.totalform[data-api]');
             if (form) this.options.url = form.dataset.api;
         }
