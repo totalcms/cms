@@ -50,6 +50,29 @@ final readonly class OAuthDiscoveryProvider
 		return $meta;
 	}
 
+	/**
+	 * RFC 9728 OAuth 2.0 Protected Resource Metadata.
+	 *
+	 * Served at `/.well-known/oauth-protected-resource` and pointed to by the MCP
+	 * endpoint's `WWW-Authenticate: ... resource_metadata="..."` challenge, so a
+	 * client that hits a 401 can discover which authorization server protects this
+	 * resource. T3 is its own authorization server, so `authorization_servers`
+	 * lists this issuer.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function protectedResourceMetadata(): array
+	{
+		$resource = rtrim($this->config->url, '/') . rtrim($this->config->api, '/');
+
+		return [
+			'resource'                 => $resource,
+			'authorization_servers'    => [$this->resolveIssuer()],
+			'scopes_supported'         => array_map(fn (\TotalCMS\Domain\OAuth\Data\OAuthScopeData $s): string => $s->identifier, $this->scopes->all()),
+			'bearer_methods_supported' => ['header'],
+		];
+	}
+
 	private function resolveIssuer(): string
 	{
 		// Prefer explicit oauth.jwtIssuer (operator supplies a full URL); fall

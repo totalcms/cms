@@ -1,2 +1,2 @@
-import{a}from"./chunk-2W6DHBJQ.js";import"./chunk-B4JUHIHW.js";export{a as default};
+import{a}from"./chunk-GZN7K3HF.js";import"./chunk-B4JUHIHW.js";export{a as default};
 //# sourceMappingURL=totalcms.js.map

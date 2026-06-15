@@ -199,7 +199,10 @@ readonly class SyncService
 		// Same authoritative-source rule as push, just in the other
 		// direction. Public `/api/import/jumpstart` keeps its skip-existing
 		// default for the starter-kit flow.
-		$result = $this->jumpStartImporter->importFromDefinition($payload, true);
+		// Pull is initiated by the operator from their local shell (`tcms pull`),
+		// so it carries shell trust and may apply code-executing system
+		// collections mirrored down from production.
+		$result = $this->jumpStartImporter->importFromDefinition($payload, true, allowSystemCollections: true);
 
 		return OperationResult::success('Pull complete.', [
 			'schemas'       => $schemaCount,

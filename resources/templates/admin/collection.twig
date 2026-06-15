@@ -42,7 +42,12 @@
 					<li class="object-download" style="display:none">
 						<a href="{{ cms.api }}/export/collections/{{ collection.id }}/{{ page }}/zip">{{ t('collection.download_zip') }}</a>
 					</li>
+					{# Show relationships only when editing an object (css in object.twig) #}
+					<li class="relationships" style="display:none">
+						<a href="utils/object-visualizer?collection={{ collection.id }}&id={{ page }}">Relationships</a>
+					</li>
 					<li class="export"><a href="collections/{{ collection.id }}/-export">{{ t('btn.export') }}</a></li>
+						<li class="visualize"><a href="utils/collection-visualizer?collection={{ collection.id }}">Visualize</a></li>
 					{% if cms.auth.canAccessCollection(collection.id, 'create') %}
 						<li class="import"><a href="collections/{{ collection.id }}/-import">{{ t('btn.import') }}</a></li>
 						<li class="collection-report"><a href="utils/collection-report?collection={{ collection.id }}">{{ t('btn.report') }}</a></li>

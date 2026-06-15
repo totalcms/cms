@@ -13,6 +13,7 @@ use TotalCMS\Domain\Factory\Service\FactoryImporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Factory\LogChannel;
@@ -35,6 +36,18 @@ class JumpStartImporter
 
 	/** @var array<int, string> */
 	private array $errors = [];
+
+	/**
+	 * Whether this import is allowed to write code-executing system collections
+	 * (e.g. `automations`, whose handler is unsandboxed PHP — a direct RCE
+	 * vector). Set per-call from importFromDefinition(). Defaults to refusing
+	 * them: only callers that have established a super-admin operator (the
+	 * admin-UI actions) or that run with shell trust (CLI commands, the local
+	 * sync-apply) opt in. This mirrors SystemCollectionGuardMiddleware's policy
+	 * for the generic `/api/collections` write path, so every write surface
+	 * enforces the same "super-admin only" rule regardless of route.
+	 */
+	private bool $allowSystemCollections = false;
 
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
@@ -108,6 +121,28 @@ class JumpStartImporter
 		$this->logger->error($message);
 	}
 
+	/**
+	 * Refuse a write targeting a code-executing system collection (e.g.
+	 * `automations`) unless this import was explicitly authorized for it.
+	 * Records an error and returns true when the write must be skipped, so the
+	 * rest of the import can proceed and the caller still sees a failure result.
+	 */
+	private function refuseSystemCollection(string $id, string $kind): bool
+	{
+		if ($this->allowSystemCollections || !SchemaData::isSystemCollection($id)) {
+			return false;
+		}
+
+		$this->addError(sprintf(
+			'%s %s: refused — the "%s" collection executes code and can only be imported by a super-admin',
+			$kind,
+			$id,
+			$id,
+		));
+
+		return true;
+	}
+
 	private function addResult(string $message): void
 	{
 		$this->results[] = $message;
@@ -115,9 +150,12 @@ class JumpStartImporter
 	}
 
 	/**
-	 * @param string $filePath Path to the jumpstart JSON file
+	 * @param string $filePath               Path to the jumpstart JSON file
+	 * @param bool   $allowSystemCollections  See $this->allowSystemCollections — pass true only for shell-trusted callers (CLI)
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function importFromFile(string $filePath): OperationResult
+	public function importFromFile(string $filePath, bool $allowSystemCollections = false): OperationResult
 	{
 		if (!file_exists($filePath)) {
 			throw new \Exception("Jumpstart file not found: {$filePath}");
@@ -133,12 +171,13 @@ class JumpStartImporter
 			throw new \Exception('Invalid JSON in jumpstart file: ' . json_last_error_msg());
 		}
 
-		return $this->importFromDefinition($definition);
+		return $this->importFromDefinition($definition, false, $allowSystemCollections);
 	}
 
-	public function importDemoDefinition(): OperationResult
+	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
+	public function importDemoDefinition(bool $allowSystemCollections = false): OperationResult
 	{
-		return $this->importFromFile($this->demoJumpstartFile());
+		return $this->importFromFile($this->demoJumpstartFile(), $allowSystemCollections);
 	}
 
 	/**
@@ -158,13 +197,15 @@ class JumpStartImporter
 	 * environment lands a true mirror of local on the remote.
 	 *
 	 * @param array<string, mixed> $definition
+	 * @param bool                 $allowSystemCollections  See $this->allowSystemCollections — true only for super-admin/shell-trusted callers
 	 *
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function importFromDefinition(array $definition, bool $upsert = false): OperationResult
+	public function importFromDefinition(array $definition, bool $upsert = false, bool $allowSystemCollections = false): OperationResult
 	{
-		$this->results = [];
-		$this->errors  = [];
+		$this->results                = [];
+		$this->errors                 = [];
+		$this->allowSystemCollections = $allowSystemCollections;
 
 		// Increase execution time for image generation
 		set_time_limit(300); // 5 minutes
@@ -211,6 +252,9 @@ class JumpStartImporter
 	private function processSchemas(array $schemas): void
 	{
 		foreach ($schemas as $schema) {
+			if ($this->refuseSystemCollection((string)($schema['id'] ?? ''), 'Schema')) {
+				continue;
+			}
 			try {
 				$this->schemaSaver->saveSchema($schema);
 				$this->addResult(sprintf('Schema %s: created', $schema['id'] ?? 'unknown'));
@@ -242,6 +286,9 @@ class JumpStartImporter
 		// Process custom collections
 		if (isset($collections['custom'])) {
 			foreach ($collections['custom'] as $collectionDef) {
+				if ($this->refuseSystemCollection((string)($collectionDef['id'] ?? ''), 'Collection')) {
+					continue;
+				}
 				try {
 					$this->createCustomCollection($collectionDef);
 				} catch (\Exception $e) {
@@ -259,6 +306,9 @@ class JumpStartImporter
 		if (isset($collections['reserved'])) {
 			foreach ($collections['reserved'] as $entry) {
 				$id = is_string($entry) ? $entry : (string)($entry['id'] ?? 'unknown');
+				if ($this->refuseSystemCollection($id, 'Collection')) {
+					continue;
+				}
 				try {
 					$this->createReservedCollection($entry);
 				} catch (\Exception $e) {
@@ -362,6 +412,10 @@ class JumpStartImporter
 	 */
 	private function processObject(string $collectionId, string $objectId, array $objectData, bool $upsert): string
 	{
+		if ($this->refuseSystemCollection($collectionId, 'Object')) {
+			return 'skipped';
+		}
+
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
 
 		if (!$collection instanceof CollectionData) {
@@ -436,6 +490,10 @@ class JumpStartImporter
 			$collectionId = $factoryDef['collection'];
 			$factoryData  = $factoryDef['data'] ?? [];
 			$factoryId    = $factoryDef['id'] ?? '';
+
+			if ($this->refuseSystemCollection((string)$collectionId, 'Factory')) {
+				continue;
+			}
 
 			try {
 				// Check if this is a specific ID factory item

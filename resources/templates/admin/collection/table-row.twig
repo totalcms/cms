@@ -1,8 +1,10 @@
 <tr data-object-id="{{ object.id }}">
 	<td class="action">
+		<input type="checkbox" class="row-select" value="{{ object.id }}" aria-label="Select {{ object.id }}">
 		<button class="dash-action-dots" title="{{ _labelSingular }} Actions" popovertarget="object-action-{{ object.id }}"></button>
 		<nav popover class="object-action-popover" id="object-action-{{ object.id }}">
 			<ul>
+				<li class="select"><button type="button" class="bulk-select-start">Select items</button></li>
 				<li class="edit"><a href="collections/{{ _collection }}/{{ object.id }}">Edit {{ _labelSingular }}</a></li>
 				{% if _collectionUrl %}
 					<li class="link"><a href="{{ _objectUrl }}" target="_blank">Link to Webpage</a></li>

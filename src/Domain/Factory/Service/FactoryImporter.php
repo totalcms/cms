@@ -86,19 +86,17 @@ class FactoryImporter
 	{
 		// Extract method name and arguments string
 		preg_match('/^(\w+)(\((.*)\))*$/', $rule, $matches);
-		$method = $matches[1] ?? '';
-		$args   = $matches[3] ?? '';
-		$args   = trim($args);
+		$method     = $matches[1] ?? '';
+		$argsString = trim($matches[3] ?? '');
 
-		if ($args !== '' && $args !== '0') {
-			$args = preg_split('/\s*,\s*/', trim($args));
-			if ($args === false) {
-				$args = [];
-			}
-		}
-
-		if (empty($args)) {
-			$args = [];
+		// Split the argument list. A single `0` is a valid argument (e.g.
+		// `boolean(0)` = never true) — the old `$args !== '0'` guard plus an
+		// empty() normalization silently dropped it, collapsing `boolean(0)` to
+		// the default 50%.
+		$args = [];
+		if ($argsString !== '') {
+			$split = preg_split('/\s*,\s*/', $argsString);
+			$args  = $split === false ? [] : $split;
 		}
 
 		// Loop through $args and convert values to int or bool if applicable
@@ -183,12 +181,27 @@ class FactoryImporter
 		// Filter out null values to only return properties that have factory definitions
 		$factories = array_filter($factories);
 
-		// Detect relationalOptions on properties that have no explicit factory rule
+		// Derive implicit factory rules for properties with no explicit `factory`.
 		foreach ($schema->properties as $propName => $propDef) {
 			if (isset($factories[$propName])) {
 				continue; // Explicit factory rule takes precedence
 			}
+			if (!is_array($propDef)) {
+				continue;
+			}
 
+			// Boolean fields (toggle / checkbox) auto-generate true/false. The
+			// type fully determines the generator, so operators shouldn't have to
+			// hand-write `factory: "boolean"` on every flag — without this, a
+			// toggle/checkbox is never populated and always lands on its default.
+			$type  = $propDef['type'] ?? '';
+			$field = $propDef['field'] ?? '';
+			if ($type === 'boolean' || in_array($field, ['toggle', 'checkbox'], true)) {
+				$factories[$propName] = 'boolean';
+				continue;
+			}
+
+			// relationalOptions properties resolve to a random referenced id.
 			$settings = $propDef['settings'] ?? [];
 			if (!is_array($settings)) {
 				continue;

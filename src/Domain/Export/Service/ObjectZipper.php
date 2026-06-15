@@ -66,6 +66,71 @@ readonly class ObjectZipper
 	}
 
 	/**
+	 * Create a zip of several objects' JSON files and asset folders. Each object
+	 * lands at the zip root as `{id}.json` plus its `{id}/` assets folder, the
+	 * same layout createObjectZip() produces for a single object. Ids that no
+	 * longer exist are skipped.
+	 *
+	 * @param array<int,string> $ids
+	 *
+	 * @throws \RuntimeException If zip creation fails or no ids resolve to objects
+	 *
+	 * @return string The path to the created zip file
+	 */
+	public function createObjectsZip(string $collection, array $ids): string
+	{
+		$datadir = $this->config->datadir;
+
+		$tempZipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR .
+			'objects-' . $collection . '-' . time() . '.zip';
+
+		$zip    = new \ZipArchive();
+		$result = $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+
+		if ($result !== true) {
+			throw new \RuntimeException(sprintf('Failed to create zip file: %s (Error code: %d)', $tempZipPath, $result));
+		}
+
+		$added = 0;
+		foreach ($ids as $id) {
+			$id = trim((string)$id);
+			if ($id === '') {
+				continue;
+			}
+
+			$objectFile     = PathUtils::buildPath(collection: $collection, filename: $id . '.json');
+			$fullObjectPath = PathUtils::absolutePath($datadir, $objectFile);
+			if (!file_exists($fullObjectPath)) {
+				continue; // skip missing ids and move on
+			}
+
+			$zip->addFile($fullObjectPath, $id . '.json');
+
+			$assetsPath     = PathUtils::buildPath(collection: $collection, filename: $id);
+			$fullAssetsPath = PathUtils::absolutePath($datadir, $assetsPath);
+			if (is_dir($fullAssetsPath) && $this->hasNonCacheContents($fullAssetsPath)) {
+				$this->addDirectoryToZip($zip, $fullAssetsPath, $id);
+			}
+
+			$added++;
+		}
+
+		if ($added === 0) {
+			$zip->close();
+			// ZipArchive doesn't write a file to disk when no entries were added,
+			// so only unlink if it actually exists.
+			if (file_exists($tempZipPath)) {
+				unlink($tempZipPath);
+			}
+			throw new \RuntimeException("No objects found to export in collection: {$collection}");
+		}
+
+		$zip->close();
+
+		return $tempZipPath;
+	}
+
+	/**
 	 * Check if a directory has any contents that are not .cache directories.
 	 */
 	private function hasNonCacheContents(string $path): bool
@@ -127,5 +192,13 @@ readonly class ObjectZipper
 	public function getZipFilename(string $collection, string $id): string
 	{
 		return sprintf('%s--%s.zip', $collection, $id);
+	}
+
+	/**
+	 * Get the filename for a multi-object zip download.
+	 */
+	public function getObjectsZipFilename(string $collection): string
+	{
+		return sprintf('%s-objects.zip', $collection);
 	}
 }

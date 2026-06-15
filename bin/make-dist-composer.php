@@ -5,13 +5,15 @@
  * Generates a composer.json for the totalcms/cms distribution package.
  *
  * Reads the development composer.json, strips dev dependencies and scripts,
- * and outputs a composer-plugin package suitable for Composer distribution.
+ * and outputs a manifest for the distribution zip (the update system).
  *
- * The shipped package is a composer-plugin (not a plain library) so it can run
- * project-side lifecycle work on the customer's `composer install`/`update` —
- * see src/Composer/Plugin.php. The dev composer.json stays type=library so this
- * repo does not activate the plugin against itself; the plugin metadata
- * (type, extra.class, composer-plugin-api) is injected here at dist build.
+ * Packagist publishes the package from the repo's ROOT composer.json, so the
+ * composer-plugin identity (`type` + `extra.class` + the `composer-plugin-api`
+ * requirement — see src/Composer/Plugin.php) lives there and is the single
+ * source of truth. This script just mirrors `type` and `extra` through rather
+ * than redefining them, so the zip manifest can't drift from what Packagist
+ * ships. (A root composer-plugin is safe for this repo: Composer never activates
+ * the root package's own plugin — only when totalcms/cms is a dependency.)
  *
  * Usage: php bin/make-dist-composer.php [output-dir]
  */
@@ -35,26 +37,19 @@ $repositories = array_values(array_filter(
 	)
 ));
 
-// The plugin needs the composer-plugin-api constraint in `require`; merge it in
-// without clobbering anything already declared in the source require.
-$require = $source['require'] ?? [];
-$require['composer-plugin-api'] ??= '^2.4';
-
 $dist = [
 	'name'         => 'totalcms/cms',
 	'description'  => $source['description'] ?? 'Total CMS',
-	'type'         => 'composer-plugin',
+	'type'         => $source['type'] ?? 'library',
 	'license'      => $source['license'] ?? 'proprietary',
 	'keywords'     => $source['keywords'] ?? [],
 	'repositories' => $repositories,
-	'require'      => $require,
+	'require'      => $source['require'] ?? [],
 	'autoload'     => [
 		'psr-4' => $source['autoload']['psr-4'] ?? [],
 	],
 	'bin'    => ['resources/bin/tcms'],
-	'extra'  => [
-		'class' => 'TotalCMS\\Composer\\Plugin',
-	],
+	'extra'  => $source['extra'] ?? [],
 	'config' => [
 		'sort-packages' => true,
 		'platform'      => $source['config']['platform'] ?? ['php' => '8.2.0'],

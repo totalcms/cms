@@ -8,21 +8,27 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use TotalCMS\Action\Export\ExportZipAction;
 use TotalCMS\Domain\Export\Service\CollectionZipper;
+use TotalCMS\Domain\Export\Service\ObjectZipper;
 
 final class ExportZipActionTest extends TestCase
 {
 	private ExportZipAction $action;
 	private \PHPUnit\Framework\MockObject\MockObject $collectionZipper;
+	private \PHPUnit\Framework\MockObject\MockObject $objectZipper;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 
 	protected function setUp(): void
 	{
 		$this->collectionZipper = $this->createMock(CollectionZipper::class);
+		$this->objectZipper     = $this->createMock(ObjectZipper::class);
 		$this->request          = $this->createMock(ServerRequestInterface::class);
 		$this->response         = $this->createMock(ResponseInterface::class);
 
-		$this->action = new ExportZipAction($this->collectionZipper);
+		// No `ids` query param by default → the whole-collection branch runs.
+		$this->request->method('getQueryParams')->willReturn([]);
+
+		$this->action = new ExportZipAction($this->collectionZipper, $this->objectZipper);
 	}
 
 	public function testExportsZipSuccessfully(): void
@@ -51,6 +57,28 @@ final class ExportZipActionTest extends TestCase
 		$result = ($this->action)($this->request, $this->response, ['collection' => 'products']);
 
 		$this->assertInstanceOf(ResponseInterface::class, $result);
+	}
+
+	public function testExportsSelectedIdsWhenIdsQueryPresent(): void
+	{
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getQueryParams')->willReturn(['ids' => 'a, b']);
+
+		$zipPath = sys_get_temp_dir() . '/test-' . uniqid() . '.zip';
+		file_put_contents($zipPath, 'zip');
+
+		// Ids are trimmed and passed through; the whole-collection path is skipped.
+		$this->objectZipper->expects($this->once())
+			->method('createObjectsZip')
+			->with('posts', ['a', 'b'])
+			->willReturn($zipPath);
+		$this->objectZipper->method('getObjectsZipFilename')->willReturn('posts-objects.zip');
+		$this->collectionZipper->expects($this->never())->method('createCollectionZip');
+
+		$this->response->method('withHeader')->willReturnSelf();
+		$this->response->method('withBody')->willReturnSelf();
+
+		($this->action)($request, $this->response, ['collection' => 'posts']);
 	}
 
 	public function testSetsZipContentType(): void

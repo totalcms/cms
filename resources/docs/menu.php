@@ -261,7 +261,7 @@ return [
 			['title' => 'Search Backends',   'path' => 'operations/search'],
 			['title' => 'Supported Locales', 'path' => 'operations/supported-locales'],
 			['title' => 'Licenses',          'path' => 'operations/licenses'],
-			['title' => 'Migration from v1', 'path' => 'operations/migration-total-cms-one'],
+			['title' => 'Migrating from v1', 'path' => 'operations/migration-total-cms-one'],
 			['title' => 'Configuration',     'path' => 'operations/configuration'],
 		],
 	],

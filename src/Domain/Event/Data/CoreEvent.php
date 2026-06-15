@@ -30,6 +30,7 @@ final class CoreEvent
 	public const IMPORT_CREATED     = 'import.created';
 	public const IMPORT_UPDATED     = 'import.updated';
 	public const IMPORT_COMPLETED   = 'import.completed';
+	public const BULK_DELETED       = 'bulk.deleted';
 	public const EXTENSION_ENABLED  = 'extension.enabled';
 	public const EXTENSION_DISABLED = 'extension.disabled';
 	public const DEVMODE_ENABLED    = 'devmode.enabled';
@@ -56,6 +57,7 @@ final class CoreEvent
 		self::IMPORT_CREATED,
 		self::IMPORT_UPDATED,
 		self::IMPORT_COMPLETED,
+		self::BULK_DELETED,
 		self::EXTENSION_ENABLED,
 		self::EXTENSION_DISABLED,
 		self::DEVMODE_ENABLED,

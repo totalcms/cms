@@ -23,7 +23,24 @@
 
 {% if actualObjectCount > 0 %}
 
-	<div class="admin-table-wrapper" data-collection="{{ url.collection }}">
+	{% set canBulkDelete = cms.auth.canAccessCollection(url.collection, 'delete') %}
+	<div class="admin-table-wrapper{% if canBulkDelete %} bulk-enabled{% endif %}" data-collection="{{ url.collection }}" data-can-delete="{{ canBulkDelete ? '1' : '0' }}">
+		{% if canBulkDelete %}
+		<div class="bulk-action-bar">
+			<span class="bulk-count">0 selected</span>
+			<div class="bulk-group selection-tools">
+				<button type="button" class="bulk-icon bulk-show-selected" title="Show selected" aria-label="Show selected"></button>
+				<button type="button" class="bulk-icon bulk-clear" title="Clear selection" aria-label="Clear selection"></button>
+			</div>
+			<div class="bulk-group action-tools">
+				<button type="button" class="bulk-icon bulk-download" title="Download selected" aria-label="Download selected"></button>
+				<button type="button" class="bulk-icon bulk-delete" title="Delete selected" aria-label="Delete selected"></button>
+			</div>
+			<div class="bulk-group close-tool">
+				<button type="button" class="bulk-icon bulk-done" title="Done" aria-label="Done"></button>
+			</div>
+		</div>
+		{% endif %}
 		<header class="admin-table-header">
 			<input type="search" name="filter" placeholder="Filter {{ actualObjectCount|number_format }} {{ labelPlural }}"
 				hx-get="{{ cms.api }}/collections/{{ url.collection }}/query"

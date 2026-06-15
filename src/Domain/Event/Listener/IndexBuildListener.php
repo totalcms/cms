@@ -30,6 +30,7 @@ class IndexBuildListener
 		$dispatcher->listen('object.deleted', $this->onObjectDeleted(...), -100);
 		$dispatcher->listen('schema.saved', $this->onSchemaSaved(...), -100);
 		$dispatcher->listen('import.completed', $this->onImportCompleted(...), -100);
+		$dispatcher->listen('bulk.deleted', $this->onBulkDeleted(...), -100);
 	}
 
 	/**
@@ -89,6 +90,12 @@ class IndexBuildListener
 		$collection = (string)$payload['collection'];
 		$id         = (string)$payload['id'];
 
+		// During a bulk delete the per-object rebuild is suspended; the single
+		// rebuild happens once in onBulkDeleted at the end of the batch.
+		if (isset($this->suspendedCollections[$collection])) {
+			return;
+		}
+
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 		$queueReindex   = $collectionData instanceof CollectionData && $collectionData->queueRebuildOnSave;
 
@@ -114,6 +121,21 @@ class IndexBuildListener
 
 	/** @param array<string,mixed> $payload */
 	public function onImportCompleted(array $payload): void
+	{
+		$collection = (string)$payload['collection'];
+
+		$this->resumeForCollection($collection);
+		$this->indexBuilder->buildIndex($collection);
+	}
+
+	/**
+	 * End of a bulk delete: resume per-object rebuilds and do the single index
+	 * rebuild the batch deferred. `totalObjects` self-heals from the rebuilt
+	 * index, so the suppressed per-object metadata decrements need no flush.
+	 *
+	 * @param array<string,mixed> $payload
+	 */
+	public function onBulkDeleted(array $payload): void
 	{
 		$collection = (string)$payload['collection'];
 

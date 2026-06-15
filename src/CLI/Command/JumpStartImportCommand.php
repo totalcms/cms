@@ -33,7 +33,9 @@ class JumpStartImportCommand extends BaseCommand
 		}
 
 		try {
-			$result = $this->totalcms->jumpStartImporter()->importFromFile($filePath);
+			// CLI runs with shell trust (equivalent to a super-admin), so it is
+			// allowed to import code-executing system collections (e.g. automations).
+			$result = $this->totalcms->jumpStartImporter()->importFromFile($filePath, allowSystemCollections: true);
 		} catch (\Throwable $e) {
 			return $this->outputError($input, $output, "Import failed: {$e->getMessage()}");
 		}

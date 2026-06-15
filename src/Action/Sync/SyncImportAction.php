@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Sync;
 
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
@@ -35,7 +38,22 @@ readonly class SyncImportAction
 	public function __construct(
 		private JumpStartImporter $jumpStartImporter,
 		private JsonRenderer $renderer,
+		private SessionInterface $session,
+		private UserValidationService $userValidation,
 	) {
+	}
+
+	/**
+	 * A sync push that mirrors `automations` (code-executing system collection)
+	 * is RCE-grade on the receiving side, so it requires a real super-admin
+	 * session — an API key alone is not sufficient. This matches
+	 * SystemCollectionGuardMiddleware's policy for the generic write path.
+	 */
+	private function callerIsSuperAdmin(): bool
+	{
+		$userId = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+
+		return $userId !== '' && $this->userValidation->isSuperAdmin($userId);
 	}
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
@@ -55,7 +73,7 @@ readonly class SyncImportAction
 			throw new HttpBadRequestException($request, 'JSON root must be an object');
 		}
 
-		$result = $this->jumpStartImporter->importFromDefinition($definition, true);
+		$result = $this->jumpStartImporter->importFromDefinition($definition, true, $this->callerIsSuperAdmin());
 
 		return $this->renderer->json($response, $result->toArray());
 	}

@@ -311,7 +311,9 @@ readonly class StarterService
 		}
 
 		try {
-			$result = $this->jumpStartImporter->importFromFile($path);
+			// Builder scaffolding runs from the CLI (`tcms builder:init`), which
+			// has shell trust, so starters may seed system collections.
+			$result = $this->jumpStartImporter->importFromFile($path, allowSystemCollections: true);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Starter jumpstart import threw', [
 				'starter' => $manifest->name,

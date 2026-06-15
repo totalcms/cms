@@ -371,20 +371,49 @@ export default class GalleryField extends ImageField {
 	fileUploaded(file, response) {
 		const images = response.data[this.property];
 		if (!Array.isArray(images)) return;
-		const image = images.filter(image => image.name === file.name).shift();
+
+		const image = this.matchUploadedImage(images, file.name);
 		if (image && image.name) {
-			// Add to data store
+			// Add to data store under the *saved* name (the server renames on a
+			// name collision, e.g. "photo.png" -> "photo-2a3f1.png").
 			this.imageDataStore.set(image.name, image);
-			// Set data-image-name on the new preview element
-			const newPreview = Array.from(this.previewContainer.children).find(el => {
+
+			// Bind the saved name to this upload's preview. Dropzone tracks the
+			// file -> previewElement mapping reliably, so prefer it over searching
+			// by alt (which still holds the original, pre-rename file name). Sync
+			// the thumbnail alt too — setupPreview and the edit dialog match on it.
+			const newPreview = file.previewElement || Array.from(this.previewContainer.children).find(el => {
 				const img = el.querySelector('img');
-				return img && img.alt === image.name && !el.dataset.imageName;
+				return img && img.alt === file.name && !el.dataset.imageName;
 			});
 			if (newPreview) {
 				newPreview.dataset.imageName = image.name;
+				const img = newPreview.querySelector('img');
+				if (img) img.alt = image.name;
 			}
 		}
 		this.setupPreview(image);
+	}
+
+	// Correlate a just-uploaded file with its saved image in the response. The
+	// server uniquifies the name on a collision ("name.ext" -> "name-XXXXX.ext"),
+	// so an exact match on the original file name is not enough.
+	matchUploadedImage(images, fileName) {
+		// 1) Exact match — the common case, and correct under parallel uploads.
+		let image = images.find(img => img.name === fileName);
+		if (image) return image;
+
+		// 2) Server renamed this file on collision. Match the "name-XXXXX.ext"
+		//    shape, preferring an image the store hasn't tracked yet (the new one).
+		const dot  = fileName.lastIndexOf(".");
+		const base = dot === -1 ? fileName : fileName.slice(0, dot);
+		const ext  = dot === -1 ? "" : fileName.slice(dot);
+		const renamed = images.filter(img => img.name && img.name.startsWith(`${base}-`) && img.name.endsWith(ext));
+		image = renamed.find(img => !this.imageDataStore.has(img.name)) || renamed[0];
+		if (image) return image;
+
+		// 3) Last resort — the single image not already in the store.
+		return images.find(img => img.name && !this.imageDataStore.has(img.name));
 	}
 
 	validate() {

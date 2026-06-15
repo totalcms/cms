@@ -4,17 +4,36 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Import;
 
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Slim\Exception\HttpBadRequestException;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 
 readonly class ImportJumpStartAction
 {
-	public function __construct(private JumpStartImporter $jumpStartImporter, private JsonRenderer $renderer)
+	public function __construct(
+		private JumpStartImporter $jumpStartImporter,
+		private JsonRenderer $renderer,
+		private SessionInterface $session,
+		private UserValidationService $userValidation,
+	) {
+	}
+
+	/**
+	 * System collections (e.g. `automations`) execute code, so importing them
+	 * is RCE-grade and requires a real super-admin session — never an API key,
+	 * OAuth token, or public submission. Mirrors SystemCollectionGuardMiddleware.
+	 */
+	private function callerIsSuperAdmin(): bool
 	{
+		$userId = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+
+		return $userId !== '' && $this->userValidation->isSuperAdmin($userId);
 	}
 
 	/**
@@ -59,14 +78,14 @@ readonly class ImportJumpStartAction
 			throw new HttpBadRequestException($request, 'JSON root must be an object');
 		}
 
-		$result = $this->jumpStartImporter->importFromDefinition($definition);
+		$result = $this->jumpStartImporter->importFromDefinition($definition, false, $this->callerIsSuperAdmin());
 
 		return $this->renderer->json($response, $result->toArray());
 	}
 
 	private function importDemoDefinition(ResponseInterface $response): ResponseInterface
 	{
-		$result = $this->jumpStartImporter->importDemoDefinition();
+		$result = $this->jumpStartImporter->importDemoDefinition($this->callerIsSuperAdmin());
 
 		return $this->renderer->json($response, $result->toArray());
 	}
@@ -93,7 +112,7 @@ readonly class ImportJumpStartAction
 		}
 
 		// Import using JumpstartImporter
-		$result = $this->jumpStartImporter->importFromDefinition($definition);
+		$result = $this->jumpStartImporter->importFromDefinition($definition, false, $this->callerIsSuperAdmin());
 
 		return $this->renderer->json($response, $result->toArray());
 	}

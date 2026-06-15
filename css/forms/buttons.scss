@@ -79,6 +79,9 @@ nav[popover]  {
 	li {
 		--action-icon : var(--icon-logo);
 
+		&.select { --action-icon : var(--icon-checks) }
+		&.visualize { --action-icon : var(--icon-sitemap) }
+		&.relationships { --action-icon : var(--icon-data-views) }
 		&.edit { --action-icon : var(--icon-edit) }
 		&.profile { --action-icon : var(--icon-user) }
 		&.logout { --action-icon : var(--icon-logout) }
@@ -98,7 +101,7 @@ nav[popover]  {
 		&.download { --action-icon : var(--icon-download) }
 		&.object-download { --action-icon : var(--icon-download) }
 	}
-	a {
+	a, button {
 		display         : flex;
 		align-items     : center;
 		text-decoration : none;
@@ -107,6 +110,16 @@ nav[popover]  {
 		// border-radius   : var(--totalform-radius);
 		transition      : background-color 200ms ease-in-out;
 		min-width       : 200px;
+
+		// Reset native <button> chrome so button menu items (e.g. "Select
+		// items", bulk "Delete selected") render identically to the <a> items.
+		appearance      : none;
+		width           : 100%;
+		text-align      : left;
+		font            : inherit;
+		border          : 0;
+		background      : transparent;
+		cursor          : pointer;
 
 		&.active,
 		&:hover {

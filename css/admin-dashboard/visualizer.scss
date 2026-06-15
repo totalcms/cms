@@ -1,0 +1,144 @@
+// Collection Visualizer — relationship diagram utility
+.visualizer-controls {
+	display       : flex;
+	align-items   : center;
+	gap           : 0.75rem;
+	flex-wrap     : wrap;
+	margin-bottom : 1rem;
+
+	.visualizer-stats {
+		color     : oklch(var(--totalform-darkgray));
+		font-size : 0.85em;
+	}
+
+	.visualizer-optional {
+		color       : oklch(var(--totalform-darkgray));
+		font-size   : 0.85em;
+		font-weight : normal;
+	}
+}
+
+.visualizer-legend {
+	list-style    : none;
+	display       : flex;
+	flex-wrap     : wrap;
+	max-width     : none !important; // Override admin-dashboard.scss .card ul
+	gap           : 1rem;
+	padding       : 0;
+	margin        : 0;
+	color         : oklch(var(--totalform-darkgray));
+
+	li {
+		display     : flex;
+		align-items : center;
+		gap         : 0.4rem;
+
+		&::before {
+			content       : "";
+			display       : inline-block;
+			width         : 1.25rem;
+			height        : 0;
+			border-top    : 2px solid oklch(var(--totalform-border-color));
+		}
+		// Keep in sync with DataVisualizer.styleEdges() (colour + dash per type).
+		&.rel-relational::before  { border-top-style : solid;  border-top-color : oklch(var(--totalform-accent)); }
+		&.rel-composition::before { border-top-style : dashed; border-top-color : oklch(var(--totalform-accent)); }
+		&.rel-inheritance::before { border-top-style : dotted; border-top-color : oklch(var(--totalform-darkgray)); }
+		&.rel-dataview::before    { border-top-style : dashed; border-top-color : oklch(var(--totalform-success)); }
+	}
+}
+
+.visualizer-canvas {
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	background    : oklch(var(--totalform-purewhite));
+	// Fixed viewport — svg-pan-zoom navigates the diagram inside it.
+	height        : 72vh;
+	min-height    : 24rem;
+	overflow      : hidden;
+	position      : relative;
+
+	// Pre-render placeholder: the raw Mermaid source lives here until JS swaps
+	// in the SVG. Keep it hidden so the definition text never flashes on load.
+	.mermaid {
+		opacity : 0;
+	}
+
+	// Fade the rendered diagram in once it's ready (JS adds .is-ready).
+	.visualizer-svg {
+		width      : 100%;
+		height     : 100%;
+		opacity    : 0;
+		transition : opacity 0.3s ease;
+
+		&.is-ready {
+			opacity : 1;
+		}
+	}
+	svg {
+		display : block;
+		width   : 100%;
+		height  : 100%;
+		cursor  : grab;
+
+		// While dragging to pan.
+		&:active {
+			cursor : grabbing;
+		}
+	}
+
+	// Fullscreen fills the screen (native :fullscreen + a JS-toggled fallback).
+	&:fullscreen,
+	&.is-fullscreen {
+		width      : 100vw;
+		height     : 100vh;
+		border     : 0;
+		background : oklch(var(--totalform-purewhite));
+	}
+}
+
+// Custom pan/zoom controls (svg-pan-zoom's built-in icons are disabled).
+.visualizer-zoom {
+	position       : absolute;
+	top            : 0.75rem;
+	right          : 0.75rem;
+	z-index        : 2;
+	display        : flex;
+	flex-direction : column;
+	gap            : 0.35rem;
+
+	.vz-btn {
+		width            : 2rem;
+		height           : 2rem;
+		padding          : 0;
+		display          : flex;
+		align-items      : center;
+		justify-content  : center;
+		font-size        : 1.2rem;
+		line-height      : 1;
+		color            : oklch(var(--totalform-text-color));
+		background       : oklch(var(--totalform-purewhite));
+		border           : 1px solid oklch(var(--totalform-border-color));
+		border-radius    : var(--totalform-radius);
+		box-shadow       : 0 1px 3px oklch(var(--totalform-shadow) / 0.4);
+		cursor           : pointer;
+
+		&:hover { background : oklch(var(--totalform-nearwhite)); }
+	}
+
+	.vz-icon {
+		position : relative;
+
+		&::before {
+			content          : "";
+			position         : absolute;
+			inset            : 0;
+			background-color : currentColor;
+			mask-repeat      : no-repeat;
+			mask-position    : center;
+			mask-size        : 1rem;
+		}
+	}
+	.vz-reset::before      { mask-image : var(--icon-crosshairs); }
+	.vz-fullscreen::before { mask-image : var(--icon-ste-fullscreen); }
+}

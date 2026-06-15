@@ -64,3 +64,9 @@ yarn.lock            export-ignore
 # out of PR diffs and language stats; `binary` stops unreadable minified diffs
 # and line-level merge conflicts on the release "Build assets" commit. They ship.
 /public/assets/**    binary linguist-generated
+
+# The docs search index is generated (bin/build-docs-index.php) and all-or-nothing
+# — regenerated wholesale, never hand-edited. `binary` silences its diffs and
+# avoids line-level merge conflicts (regenerate on conflict); `linguist-generated`
+# collapses it in GitHub PRs. It still ships (fresh installs need working search).
+/resources/docs/search-index.json  binary linguist-generated

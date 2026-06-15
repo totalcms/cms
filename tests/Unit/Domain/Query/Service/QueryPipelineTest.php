@@ -153,6 +153,46 @@ final class QueryPipelineTest extends TestCase
 		$this->assertSame('1', $result->items[0]['id']);
 	}
 
+	// --- Ids (show-selected) ---
+
+	public function testIdsFilterRestrictsToTheGivenIds(): void
+	{
+		$items  = $this->makeItems(5);
+		$result = $this->pipeline->execute($items, ['ids' => '2,4'], 'test');
+
+		$this->assertSame(2, $result->total);
+		$this->assertSame(['2', '4'], array_column($result->items, 'id'));
+	}
+
+	public function testIdsFilterTrimsAndIgnoresUnknownIds(): void
+	{
+		$items  = $this->makeItems(3);
+		$result = $this->pipeline->execute($items, ['ids' => ' 1 , nope , 3 '], 'test');
+
+		$this->assertSame(['1', '3'], array_column($result->items, 'id'));
+	}
+
+	public function testIdsFilterTakesPrecedenceOverFilter(): void
+	{
+		$items = [
+			['id' => '1', 'title' => 'keep me'],
+			['id' => '2', 'title' => 'other'],
+		];
+
+		// Both ids and filter present — ids wins, so the filter term is ignored.
+		$result = $this->pipeline->execute($items, ['ids' => '2', 'filter' => 'keep'], 'test');
+
+		$this->assertSame(['2'], array_column($result->items, 'id'));
+	}
+
+	public function testIdsFilterSkipsCache(): void
+	{
+		$this->cacheManager->expects($this->never())->method('getApiResponse');
+		$this->cacheManager->expects($this->never())->method('storeApiResponse');
+
+		$this->pipeline->execute($this->makeItems(3), ['ids' => '1'], 'test');
+	}
+
 	// --- Sort ---
 
 	public function testSortByField(): void

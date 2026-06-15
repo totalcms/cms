@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Mcp;
 
+use Mcp\Server\Transport\Http\Middleware\DnsRebindingProtectionMiddleware;
+use Mcp\Server\Transport\Http\Middleware\ProtocolVersionMiddleware;
 use Mcp\Server\Transport\StreamableHttpTransport;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,6 +16,7 @@ use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
+use TotalCMS\Domain\Mcp\Service\McpTransportSecurity;
 use TotalCMS\Domain\Mcp\Service\ToolsOnlyClients;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeEvaluator;
@@ -77,7 +80,11 @@ readonly class McpEndpointAction
 
 			return $response->withHeader(
 				'WWW-Authenticate',
-				sprintf('Bearer realm="MCP", error="%s"', $e->reason),
+				sprintf(
+					'Bearer realm="MCP", error="%s", resource_metadata="%s"',
+					$e->reason,
+					$this->protectedResourceMetadataUrl(),
+				),
 			);
 		}
 
@@ -153,7 +160,10 @@ readonly class McpEndpointAction
 
 				return $response->withHeader(
 					'WWW-Authenticate',
-					'Bearer realm="MCP", error="insufficient_scope"',
+					sprintf(
+						'Bearer realm="MCP", error="insufficient_scope", resource_metadata="%s"',
+						$this->protectedResourceMetadataUrl(),
+					),
 				);
 			}
 		}
@@ -189,9 +199,39 @@ readonly class McpEndpointAction
 		// from the beginning of the stream.
 		$request->getBody()->rewind();
 
-		$server    = $this->serverFactory->build($persona, $toolsOnly);
-		$transport = new StreamableHttpTransport($request);
+		$server = $this->serverFactory->build($persona, $toolsOnly);
+
+		// Compose the transport's HTTP middleware ourselves. The SDK's default
+		// stack installs DnsRebindingProtectionMiddleware with a localhost-only
+		// allowlist, which would 403 every production request (Host = the site's
+		// domain). We apply DNS-rebinding / Origin enforcement only in restricted
+		// mode (an explicit mcp.allowedOrigins list), scoped to the server's own
+		// host plus the configured origins — satisfying the spec's
+		// 403-on-invalid-Origin without breaking the open-by-default policy.
+		// ProtocolVersionMiddleware is always on (validates the MCP-Protocol-Version
+		// header; tolerant of its absence during initialize and for legacy clients).
+		$allowedOrigins = (array)($this->config->mcp['allowedOrigins'] ?? []);
+		$middleware     = [];
+		if (!McpTransportSecurity::isOpen($allowedOrigins)) {
+			$middleware[] = new DnsRebindingProtectionMiddleware(
+				McpTransportSecurity::allowedHosts($allowedOrigins, $request->getUri()->getHost()),
+			);
+		}
+		$middleware[] = new ProtocolVersionMiddleware();
+
+		$transport = new StreamableHttpTransport($request, middleware: $middleware);
 
 		return $server->run($transport);
+	}
+
+	/**
+	 * RFC 9728 protected-resource-metadata URL, advertised in WWW-Authenticate so
+	 * a client can discover the authorization server from a 401. Points at this
+	 * resource server's own well-known endpoint (scheme+host plus the app's mount
+	 * prefix), independent of any external authorization-server issuer.
+	 */
+	private function protectedResourceMetadataUrl(): string
+	{
+		return rtrim($this->config->url, '/') . rtrim($this->config->api, '/') . '/.well-known/oauth-protected-resource';
 	}
 }

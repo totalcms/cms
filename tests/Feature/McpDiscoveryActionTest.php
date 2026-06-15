@@ -31,7 +31,7 @@ describe('McpDiscoveryAction', function (): void {
 
 		expect($payload)->toBeArray()
 			->and($payload)->toHaveKey('mcpVersion')
-			->and($payload['mcpVersion'])->toBe('2025-06-18');
+			->and($payload['mcpVersion'])->toBe('2025-11-25');
 	});
 
 	it('returns content-type application/json', function (): void {

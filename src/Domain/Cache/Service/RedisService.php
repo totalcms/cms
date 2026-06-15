@@ -18,6 +18,14 @@ class RedisService implements CacheInterface
 	private readonly int $database;
 	private ?\Redis $redis = null;
 
+	/**
+	 * Cached availability result. Connection success/failure is stable within a
+	 * single request, so we probe once instead of pinging on every cache op
+	 * (and, on hosts where the extension is loaded but no server is running,
+	 * avoid a fresh TCP connect attempt per operation). Mirrors APCuService.
+	 */
+	private ?bool $availabilityCache = null;
+
 	public function __construct(
 		Config $config,
 	) {
@@ -32,20 +40,24 @@ class RedisService implements CacheInterface
 
 	public function isAvailable(): bool
 	{
+		if ($this->availabilityCache !== null) {
+			return $this->availabilityCache;
+		}
+
 		if (!$this->enabled || !extension_loaded('redis') || !class_exists('Redis')) {
-			return false;
+			return $this->availabilityCache = false;
 		}
 
 		try {
 			$redis = $this->getConnection();
 			$redis->ping();
 
-			return true;
+			return $this->availabilityCache = true;
 		} catch (\Exception) {
 			// Reset the connection so next call can reconnect
 			$this->redis = null;
 
-			return false;
+			return $this->availabilityCache = false;
 		}
 	}
 
