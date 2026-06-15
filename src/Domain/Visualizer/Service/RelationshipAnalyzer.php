@@ -182,8 +182,8 @@ readonly class RelationshipAnalyzer
 		foreach ($graph['edges'] as $edge) {
 			if ($edge['from'] === $focusId || $edge['to'] === $focusId) {
 				$edges[]              = $edge;
-				$keep[$edge['from']] = true;
-				$keep[$edge['to']]   = true;
+				$keep[$edge['from']]  = true;
+				$keep[$edge['to']]    = true;
 			}
 		}
 

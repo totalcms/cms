@@ -17,11 +17,11 @@ beforeEach(function (): void {
 	$cols    = $c->get(CollectionSaver::class);
 
 	$schemas->saveSchema([
-		'id' => 'author', 'name' => 'Author', 'type' => 'object',
+		'id'         => 'author', 'name' => 'Author', 'type' => 'object',
 		'properties' => ['id' => ['type' => 'string', 'field' => 'id'], 'name' => ['type' => 'string', 'field' => 'text']],
 	]);
 	$schemas->saveSchema([
-		'id' => 'post', 'name' => 'Post', 'type' => 'object',
+		'id'         => 'post', 'name' => 'Post', 'type' => 'object',
 		'properties' => [
 			'id'     => ['type' => 'string', 'field' => 'id'],
 			'title'  => ['type' => 'string', 'field' => 'text'],
@@ -30,7 +30,7 @@ beforeEach(function (): void {
 		],
 	]);
 	$schemas->saveSchema([
-		'id' => 'page', 'name' => 'Page', 'type' => 'object',
+		'id'         => 'page', 'name' => 'Page', 'type' => 'object',
 		'properties' => [
 			'id'   => ['type' => 'string', 'field' => 'id'],
 			// Composition → a sub-schema with no backing collection.
@@ -38,7 +38,7 @@ beforeEach(function (): void {
 		],
 	]);
 	$schemas->saveSchema([
-		'id' => 'special-post', 'name' => 'Special Post', 'type' => 'object',
+		'id'          => 'special-post', 'name' => 'Special Post', 'type' => 'object',
 		'inheritFrom' => ['post'],
 		'properties'  => ['id' => ['type' => 'string', 'field' => 'id'], 'extra' => ['type' => 'string', 'field' => 'text']],
 	]);

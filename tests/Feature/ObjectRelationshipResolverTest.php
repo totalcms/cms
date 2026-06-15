@@ -19,13 +19,13 @@ beforeEach(function (): void {
 	$objects = $c->get(ObjectSaver::class);
 
 	$schemas->saveSchema([
-		'id' => 'author', 'name' => 'Author', 'type' => 'object',
-		'index' => ['id', 'name'], // name indexed so the visualizer can label by it
+		'id'         => 'author', 'name' => 'Author', 'type' => 'object',
+		'index'      => ['id', 'name'], // name indexed so the visualizer can label by it
 		'properties' => ['id' => ['type' => 'string', 'field' => 'id'], 'name' => ['type' => 'string', 'field' => 'text']],
 	]);
 	$schemas->saveSchema([
-		'id' => 'post', 'name' => 'Post', 'type' => 'object',
-		'index' => ['id', 'title', 'writer'], // writer must be indexed for the reverse-lookup
+		'id'         => 'post', 'name' => 'Post', 'type' => 'object',
+		'index'      => ['id', 'title', 'writer'], // writer must be indexed for the reverse-lookup
 		'properties' => [
 			'id'     => ['type' => 'string', 'field' => 'id'],
 			'title'  => ['type' => 'string', 'field' => 'text'],

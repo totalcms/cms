@@ -224,8 +224,8 @@ readonly class AdminUtilsAction
 				$focus = '';
 				// Global view: hide unconnected collections unless asked for.
 				if (!$showIsolated) {
-					$before = count($graph['nodes']);
-					$graph  = $this->relationshipAnalyzer->pruneIsolated($graph);
+					$before      = count($graph['nodes']);
+					$graph       = $this->relationshipAnalyzer->pruneIsolated($graph);
 					$hiddenCount = $before - count($graph['nodes']);
 				}
 			}
