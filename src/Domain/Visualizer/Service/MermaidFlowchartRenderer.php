@@ -39,8 +39,8 @@ final class MermaidFlowchartRenderer
 		foreach ($byCollection as $collection => $nodes) {
 			$lines[] = sprintf('    subgraph %s["%s"]', $this->subgraphId((string)$collection), $this->esc((string)$collection));
 			foreach ($nodes as $node) {
-				$nid   = $this->nodeId((string)$node['id']);
-				$label = $this->esc((string)($node['label'] ?? $node['id']));
+				$nid     = $this->nodeId((string)$node['id']);
+				$label   = $this->esc((string)($node['label'] ?? $node['id']));
 				$lines[] = !empty($node['focal'])
 					? sprintf('        %s["%s"]:::focal', $nid, $label)
 					: sprintf('        %s["%s"]', $nid, $label);
@@ -49,9 +49,9 @@ final class MermaidFlowchartRenderer
 		}
 
 		foreach ($graph['edges'] as $edge) {
-			$from  = $this->nodeId((string)$edge['from']);
-			$to    = $this->nodeId((string)$edge['to']);
-			$label = $this->esc((string)($edge['via'] ?? ''));
+			$from    = $this->nodeId((string)$edge['from']);
+			$to      = $this->nodeId((string)$edge['to']);
+			$label   = $this->esc((string)($edge['via'] ?? ''));
 			$lines[] = $label !== ''
 				? sprintf('    %s -->|%s| %s', $from, $label, $to)
 				: sprintf('    %s --> %s', $from, $to);

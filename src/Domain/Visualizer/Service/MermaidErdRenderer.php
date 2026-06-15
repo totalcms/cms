@@ -57,8 +57,8 @@ final class MermaidErdRenderer
 			}
 			$seen[$key] = true;
 
-			$from = $this->entityId((string)$edge['from']);
-			$to   = $this->entityId((string)$edge['to']);
+			$from  = $this->entityId((string)$edge['from']);
+			$to    = $this->entityId((string)$edge['to']);
 			$label = $this->label((string)($edge['via'] ?? ''), (string)$edge['type']);
 
 			$lines[]           = sprintf('    %s %s %s : "%s"', $from, self::RELATION, $to, $label);
@@ -102,8 +102,8 @@ final class MermaidErdRenderer
 				$rows[] = sprintf('        more fields_%d', $more);
 				break;
 			}
-			$type = $this->token((string)($field['type'] ?? 'string')) ?: 'string';
-			$name = $this->token((string)($field['name'] ?? '')) ?: 'field';
+			$type   = $this->token((string)($field['type'] ?? 'string')) ?: 'string';
+			$name   = $this->token((string)($field['name'] ?? '')) ?: 'field';
 			$rows[] = sprintf('        %s %s', $type, $name);
 			$shown++;
 		}

@@ -14,10 +14,10 @@ beforeEach(function (): void {
 	}
 	$this->setUpApp(bootstrap());
 
-	$container        = $this->app->getContainer();
-	$collection       = new CollectionData();
-	$collection->id   = 'posts';
-	$collection->name = 'Posts';
+	$container          = $this->app->getContainer();
+	$collection         = new CollectionData();
+	$collection->id     = 'posts';
+	$collection->name   = 'Posts';
 	$collection->schema = 'blog';
 	$container->get(CollectionSaver::class)->saveCollection($collection->toArray());
 
