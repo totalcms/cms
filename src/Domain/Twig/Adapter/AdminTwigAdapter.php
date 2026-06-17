@@ -142,9 +142,15 @@ readonly class AdminTwigAdapter
 	 */
 	public function tcmsCommandPrefix(): string
 	{
-		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
-		$installDir = PathResolver::packageRoot();
-		$command    = $installDir . '/resources/bin/tcms';
+		$phpPath = defined(PHP_BINARY) ? PHP_BINARY : 'php';
+		// Composer installs must use the generated bin proxy (vendor/bin/tcms): it
+		// sets _composer_autoload_path so the CLI finds the project's autoloader.
+		// The package's own resources/bin/tcms has no nested vendor/ to autoload
+		// from, so pointing cron at it would fail. Zip installs ship their own
+		// vendor at the package root, so the shipped script path is correct there.
+		$command = PathResolver::isComposerInstall()
+			? PathResolver::projectRoot() . '/vendor/bin/tcms'
+			: PathResolver::packageRoot() . '/resources/bin/tcms';
 
 		// Quote path if it contains spaces
 		$quotedCommand = str_contains($command, ' ') ? '"' . $command . '"' : $command;
