@@ -271,7 +271,7 @@ $objectSaver = $totalcms->objectSaver();
 $objectSaver->saveObject('blog', [
     'id'    => 'my-new-post',
     'title' => 'Hello World',
-    'body'  => 'This is my first post.',
+    'content' => 'This is my first post.',
 ]);
 ```
 
@@ -288,14 +288,17 @@ $objectUpdater->updateObject('blog', 'my-new-post', [
 
 ```php
 $objectRemover = $totalcms->objectRemover();
-$objectRemover->removeObject('blog', 'my-new-post');
+$objectRemover->deleteObject('blog', 'my-new-post');
 ```
 
 #### Cloning Objects
 
 ```php
 $objectCloner = $totalcms->objectCloner();
-$objectCloner->cloneObject('blog', 'my-post', 'my-post-copy');
+$objectCloner->cloneObject(
+    ['collection' => 'blog', 'id' => 'my-post'],
+    ['collection' => 'blog', 'id' => 'my-post-copy'],
+);
 ```
 
 #### Incrementing Properties
@@ -340,7 +343,7 @@ $totalcms->deckItemRemover()->removeDeckItem('orders', 'order-123', 'line_items'
 
 ```php
 // List all available schemas
-$schemas = $totalcms->schemaLister()->listSchemas();
+$schemas = $totalcms->schemaLister()->listAllSchemas();
 
 // Fetch a specific schema definition
 $schema = $totalcms->schemaFetcher()->fetchSchema('blog');
@@ -352,7 +355,7 @@ $collections = $totalcms->collectionLister();
 $collection = $totalcms->collectionFetcher();
 
 // Rebuild a collection's index
-$totalcms->indexBuilder()->rebuildIndex('blog');
+$totalcms->indexBuilder()->buildIndex('blog');
 ```
 
 ### Email
@@ -378,8 +381,8 @@ $jobRunner = $totalcms->jobRunner();
 
 ```php
 // Save files and images programmatically
-$totalcms->fileSaver()->saveFile('documents', 'doc-id', 'file', $uploadedFile);
-$totalcms->imageSaver()->saveImage('gallery', 'gallery-id', 'image', $uploadedFile);
+$totalcms->fileSaver()->save('documents', 'doc-id', 'file', '/path/to/upload.pdf');
+$totalcms->imageSaver()->save('gallery', 'gallery-id', 'image', '/path/to/photo.jpg');
 
 // Get filesystem paths
 $path = $totalcms->filePath('my-document');

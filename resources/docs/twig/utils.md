@@ -182,22 +182,10 @@ Build a simple search form that sets the URL parameter:
 ```twig
 {% set filters = cms.utils.urlFilters() %}
 
-{# With galleries #}
-{{ cms.render.gallery('photos', 'main', {
+{# With galleries — filter options go in the 4th argument #}
+{{ cms.render.gallery('photos', {}, {}, {
     include: filters.include,
     exclude: filters.exclude,
     sort: filters.sort
-}) }}
-
-{# With RSS feeds #}
-{{ cms.render.rssFeed('blog', {
-    include: filters.include,
-    exclude: filters.exclude
-}) }}
-
-{# With sitemaps #}
-{{ cms.render.sitemap('blog', {
-    include: filters.include,
-    exclude: filters.exclude
 }) }}
 ```

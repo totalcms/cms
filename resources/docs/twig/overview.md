@@ -45,8 +45,8 @@ Display variables using double curly braces:
 Control structures use curly braces with percent signs:
 
 ```twig
-{% if cms.userLoggedIn %}
-    Welcome, {{ cms.userData.name }}!
+{% if cms.auth.userLoggedIn() %}
+    Welcome, {{ cms.auth.userData().name }}!
 {% endif %}
 
 {% for item in items %}
@@ -168,7 +168,7 @@ Extend the base layout:
     <div class="grid">
         {% for image in gallery.images %}
             <figure>
-                <img src="{{ image.url | resize(400, 300) }}"
+                <img src="{{ cms.render.image(image.id, {w: 400, h: 300}) }}"
                      alt="{{ image.alt }}"
                      loading="lazy">
                 <figcaption>{{ image.caption }}</figcaption>
@@ -201,7 +201,6 @@ Total CMS adds many custom filters to Twig:
 {{ text | nl2br }}                 {# Convert newlines to <br> #}
 {{ text | truncate(100) }}         {# Truncate to 100 characters #}
 {{ text | title }}                 {# Title Case Text #}
-{{ text | slug }}                  {# convert-to-slug #}
 ```
 
 ### Date Filters
@@ -209,7 +208,7 @@ Total CMS adds many custom filters to Twig:
 ```twig
 {{ post.date | date('F j, Y') }}           {# January 15, 2024 #}
 {{ post.date | date('Y-m-d') }}            {# 2024-01-15 #}
-{{ post.date | time_ago }}                 {# 2 hours ago #}
+{{ post.date | dateRelative }}             {# 2 hours ago #}
 {{ post.date | date_modify('+1 day') }}    {# Add one day #}
 ```
 

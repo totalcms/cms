@@ -44,7 +44,7 @@ Cached for 15 minutes, then re-rendered on the next request.
 ```twig
 {% cache 'latest-posts' tags=['blog'] %}
     {% for post in cms.collection.objects('blog')|slice(0, 5) %}
-        <a href="{{ cms.url(post) }}">{{ post.title }}</a>
+        <a href="{{ cms.collection.objectUrl('blog', post) }}">{{ post.title }}</a>
     {% endfor %}
 {% endcache %}
 ```

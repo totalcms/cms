@@ -58,17 +58,16 @@ The simplest way to create a deck item form:
 
 ```twig
 {# Create new deck item #}
-{{ cms.form.deck('products', productId, 'features') }}
+{{ cms.form.deck('products', 'features', {id: productId}) }}
 
 {# Edit existing deck item #}
-{{ cms.form.deck('products', productId, 'features', {itemId: 'feature-1'}) }}
+{{ cms.form.deck('products', 'features', {id: productId, itemId: 'feature-1'}) }}
 ```
 
 **Parameters:**
 - **collection** (string) - The parent collection name (e.g., 'products')
-- **id** (string) - The parent object ID (e.g., product ID)
 - **property** (string) - The deck property name (e.g., 'features')
-- **options** (object) - Optional configuration (see below)
+- **options** (object) - Optional configuration (see below). Pass the parent object ID as `options.id` (e.g., `{id: productId}`).
 
 ## Deck Form Builder
 
@@ -76,7 +75,7 @@ For custom layouts and advanced control:
 
 ```twig
 {# Create a deck form builder instance #}
-{% set form = cms.form.deckBuilder('products', productId, 'features') %}
+{% set form = cms.form.deckBuilder('products', 'features', {id: productId}) %}
 
 {# Build custom layout #}
 {{ form.build(
@@ -92,7 +91,8 @@ For custom layouts and advanced control:
 All standard form options are supported, plus deck-specific options:
 
 ```twig
-{{ cms.form.deck('products', productId, 'features', {
+{{ cms.form.deck('products', 'features', {
+	id: productId,                 # Parent object ID
 	itemId: 'feature-1',          # Deck item ID (empty for new items)
 	save: 'Save Feature',          # Custom save button text
 	delete: 'Delete Feature',      # Custom delete button text
@@ -127,7 +127,7 @@ Deck forms support automatic ID detection from URL parameters:
 
 ```twig
 {# Form will read ?id=product-123&itemId=feature-1 from URL #}
-{{ cms.form.deck('products', '', 'features') }}
+{{ cms.form.deck('products', 'features') }}
 ```
 
 This is useful for admin interfaces where IDs come from the URL.
@@ -163,7 +163,8 @@ This is useful for admin interfaces where IDs come from the URL.
 <h2>Edit Feature</h2>
 
 {# Auto-built form with custom actions #}
-{{ cms.form.deck('products', productId, 'features', {
+{{ cms.form.deck('products', 'features', {
+	id: productId,
 	itemId: featureId,
 	save: 'Save Feature',
 	delete: 'Delete Feature',
@@ -186,7 +187,8 @@ This is useful for admin interfaces where IDs come from the URL.
 
 ```twig
 {# Custom two-column layout for deck items #}
-{% set form = cms.form.deckBuilder('products', productId, 'features', {
+{% set form = cms.form.deckBuilder('products', 'features', {
+	id: productId,
 	itemId: featureId,
 	save: 'Save Feature'
 }) %}
@@ -208,7 +210,8 @@ This is useful for admin interfaces where IDs come from the URL.
 
 ```twig
 {# Portfolio collection with "projectItems" deck property #}
-{% set form = cms.form.deckBuilder('portfolio', portfolioId, 'projectItems', {
+{% set form = cms.form.deckBuilder('portfolio', 'projectItems', {
+	id: portfolioId,
 	itemId: itemId,
 	newActions: [
 		{

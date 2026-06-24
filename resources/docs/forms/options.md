@@ -45,7 +45,7 @@ Use `addOnly: true` for forms on the public side of your website to prevent user
 
 ```twig
 {# Public form - secure against ID manipulation #}
-{{ cms.form.builder('inquiries', {
+{% set form = cms.form.builder('inquiries', {
     addOnly: true,
     newActions: [
         {
@@ -53,7 +53,11 @@ Use `addOnly: true` for forms on the public side of your website to prevent user
             text: 'Thanks — we\'ll be in touch.'
         }
     ]
-}).addField('name').addField('email').addField('message', {field: 'textarea'}).build() }}
+}) %}
+{% do form.addField('name') %}
+{% do form.addField('email') %}
+{% do form.addField('message', {field: 'textarea'}) %}
+{{ form.build() }}
 ```
 
 **Security Note:** When `addOnly` is enabled:
@@ -67,7 +71,7 @@ For user-registration forms specifically, prefer `register: true` over plain `ad
 
 ```twig
 {# Public sign-up form - creates the user and signs them in #}
-{{ cms.form.builder('members', {
+{% set form = cms.form.builder('members', {
     register: true,
     newActions: [
         {
@@ -75,7 +79,11 @@ For user-registration forms specifically, prefer `register: true` over plain `ad
             link: '/welcome'
         }
     ]
-}).addField('name').addField('email').addField('password', {field: 'password'}).build() }}
+}) %}
+{% do form.addField('name') %}
+{% do form.addField('email') %}
+{% do form.addField('password', {field: 'password'}) %}
+{{ form.build() }}
 ```
 
 **Behaviour:**
@@ -109,10 +117,10 @@ When enabled:
 3. The response JSON carries `meta.requiresVerification: true`; the form builder hides the form and reveals any element marked `data-verification-message`:
 
    ```twig
-   {{ cms.form.builder('members', {register: true})
-       .addField('email')
-       .addField('password', {field: 'password'})
-       .build() }}
+   {% set form = cms.form.builder('members', {register: true}) %}
+   {% do form.addField('email') %}
+   {% do form.addField('password', {field: 'password'}) %}
+   {{ form.build() }}
 
    <div data-verification-message hidden>
        <h3>Check your email</h3>
@@ -335,9 +343,12 @@ By default, Total CMS displays a full-screen status banner overlay when forms ar
 
 ```twig
 {# Disable the global status banner for this form #}
-{{ cms.form.builder('products', {
+{% set form = cms.form.builder('products', {
     class: 'no-status-banner'
-}).addField('title').addField('price').build() }}
+}) %}
+{% do form.addField('title') %}
+{% do form.addField('price') %}
+{{ form.build() }}
 ```
 
 When `no-status-banner` is set:

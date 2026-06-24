@@ -165,7 +165,7 @@ Check if an image property exists for an object before attempting to display it.
 
 ```twig
 {% if imageExists(post.image) %}
-    {{ cms.render.image(post.id, {collection: 'blog', property: 'image'}) }}
+    {{ cms.render.image(post.id, {}, {collection: 'blog', property: 'image'}) }}
 {% else %}
     <img src="placeholder.jpg">
 {% endif %}
@@ -406,8 +406,8 @@ Check which environment the site is running in.
 Check if a user is logged in.
 
 ```twig
-{% if cms.user %}
-    Welcome back, {{ cms.user.name }}!
+{% if cms.auth.userLoggedIn() %}
+    Welcome back, {{ cms.auth.userData().name }}!
 {% else %}
     <a href="/login">Login</a>
 {% endif %}
@@ -418,7 +418,7 @@ Check if a user is logged in.
 Check if the logged-in user has specific roles or permissions.
 
 ```twig
-{% if cms.user and "editor" in cms.user.roles %}
+{% if cms.auth.userHasAccess('editor') %}
     <a href="/admin/edit">Edit Content</a>
 {% endif %}
 ```
@@ -567,7 +567,7 @@ Always check if objects exist before accessing their properties to avoid errors:
 Make complex conditions more readable by using variables:
 
 ```twig
-{% set isAdmin = cms.user and "admin" in cms.user.roles %}
+{% set isAdmin = cms.auth.userHasAccess('admin') %}
 {% set isPublished = post.published and post.date <= "now"|date %}
 
 {% if isAdmin or isPublished %}
@@ -609,7 +609,7 @@ Always check existence before accessing files or images:
 ```twig
 {# Check if image exists #}
 {% if imageExists(post.image) %}
-    {{ cms.render.image(post.id, {property: 'hero'}) }}
+    {{ cms.render.image(post.id, {}, {property: 'hero'}) }}
 {% endif %}
 
 {# Check if file exists #}
@@ -725,11 +725,8 @@ Always check existence before accessing files or images:
 
 ```twig
 {# Check user permissions #}
-{% set canEdit = cms.user and (
-    "admin" in cms.user.roles or
-    "editor" in cms.user.roles or
-    cms.user.id == post.authorId
-) %}
+{% set canEdit = cms.auth.userHasAccess(['admin', 'editor'])
+    or cms.auth.userData().id == post.authorId %}
 
 {% if canEdit %}
     <a href="/edit/{{ post.id }}">Edit</a>

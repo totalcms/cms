@@ -451,7 +451,14 @@ Provider ids must be globally unique across all registered providers plus the bu
 
 ### Edition gating
 
-The framework does not gate search providers by edition. Extensions are responsible for their own checks. If your provider is a paid add-on, check `$context->editionAllows()` in `register()` and return early if the site's edition doesn't qualify — the provider simply won't register and the site falls back to text search silently.
+The framework does not gate search providers by edition. Extensions are responsible for their own checks. If your provider is a paid add-on, resolve the `EditionFeatureService` and check the relevant feature flag in `register()`, returning early if the site's edition doesn't qualify — the provider simply won't register and the site falls back to text search silently:
+
+```php
+$editionFeatures = $context->get(EditionFeatureService::class);
+if (!$editionFeatures->can(EditionFeature::ALGOLIA_SEARCH)) {
+    return;
+}
+```
 
 ### Worked example: Meilisearch
 
@@ -548,9 +555,9 @@ Register it in `boot.php`:
 use Acme\MeilisearchProvider\Service\MeilisearchSearchProvider;
 
 $context->registerSearchProvider(new MeilisearchSearchProvider(
-    host:      $context->getSetting('host', ''),
-    apiKey:    $context->getSetting('apiKey', ''),
-    indexName: $context->getSetting('indexName', 'totalcms'),
+    host:      $context->setting('host', ''),
+    apiKey:    $context->setting('apiKey', ''),
+    indexName: $context->setting('indexName', 'totalcms'),
 ));
 ```
 

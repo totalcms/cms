@@ -77,10 +77,18 @@ search="exact phrase"          # Quoted phrase (matches exact sequence)
 
 **PHP Code:**
 ```php
-$results = $pipeline->execute($items, [
-    'search' => 'travel adventure',
+use TotalCMS\Domain\Query\Service\QueryPipeline;
+
+// QueryPipeline is available via dependency injection.
+public function __construct(private QueryPipeline $pipeline) {}
+
+// QueryPipeline::execute() runs search + include/exclude over pre-loaded
+// items. The third argument is a cache-key prefix (search queries bypass
+// the cache automatically).
+$result = $this->pipeline->execute($items, [
+    'search'  => 'travel adventure',
     'include' => 'published:true',
-]);
+], 'collection-query:blog');
 ```
 
 > **Note:** Search results are not cached. When a `search` parameter is present, the cache is bypassed to ensure accurate results.
@@ -508,32 +516,32 @@ The `IndexFilter` service is used throughout Total CMS:
 The collection index API endpoint supports filtering via URL parameters:
 
 ```
-GET /collections/{collection}/index?include=published:true&exclude=draft:true
+GET /api/collections/{collection}/index?include=published:true&exclude=draft:true
 ```
 
 **Examples:**
 
 ```bash
 # Get all published blog posts
-GET /collections/blog/index?include=published:true
+GET /api/collections/blog/index?include=published:true
 
 # Get featured products that are in stock
-GET /collections/products/index?include=featured:true,instock:true
+GET /api/collections/products/index?include=featured:true,instock:true
 
 # Get events excluding cancelled
-GET /collections/events/index?exclude=cancelled:true
+GET /api/collections/events/index?exclude=cancelled:true
 
 # Get blog posts with "travel" tag
-GET /collections/blog/index?include=tags:travel
+GET /api/collections/blog/index?include=tags:travel
 
 # Complex filtering: published posts with travel tag, excluding drafts
-GET /collections/blog/index?include=published:true,tags:travel&exclude=draft:true
+GET /api/collections/blog/index?include=published:true,tags:travel&exclude=draft:true
 
 # Full-text search
-GET /collections/blog/index?search=adventure
+GET /api/collections/blog/index?search=adventure
 
 # Search combined with filters
-GET /collections/blog/index?search=adventure&include=published:true&exclude=draft:true
+GET /api/collections/blog/index?search=adventure&include=published:true&exclude=draft:true
 ```
 
 The API returns a filtered `IndexData` object with only matching objects.

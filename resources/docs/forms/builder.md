@@ -19,9 +19,9 @@ The form builder provides the most flexibility for creating custom forms.
 {% set form = cms.form.builder('mycollection') %}
 
 {# Add fields to the form #}
-{% set form = form.addField('title') %}
-{% set form = form.addField('content', {field: 'styledtext'}) %}
-{% set form = form.addField('date') %}
+{% do form.addField('title') %}
+{% do form.addField('content', {field: 'styledtext'}) %}
+{% do form.addField('date') %}
 
 {# Build and render the form #}
 {{ form.build() }}

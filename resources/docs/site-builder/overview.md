@@ -128,7 +128,7 @@ Extracted URL parameters from dynamic routes:
 Use params to fetch collection data:
 
 ```twig
-{% set product = cms.data.raw('products', params.id) %}
+{% set product = cms.data.object('products', params.id) %}
 <h1>{{ product.title }}</h1>
 ```
 
@@ -176,10 +176,10 @@ The `data` field is **not indexed** — it's only available when the full page i
 The `image` field stores an image used for `og:image` social previews and as a hero image when the template renders one. It's a standard image-property field with shape transforms — same as any image field in T3.
 
 ```twig
-<meta property="og:image" content="{{ cms.media.imagePath(page, 'shape:1200x630') }}">
+<meta property="og:image" content="{{ cms.media.imagePath(page, {w:1200, h:630}) }}">
 
 {% if page.image.filename %}
-<img src="{{ cms.media.imagePath(page, 'shape:1920x1080') }}" alt="{{ page.title }}">
+<img src="{{ cms.media.imagePath(page, {w:1920, h:1080}) }}" alt="{{ page.title }}">
 {% endif %}
 ```
 
@@ -345,7 +345,7 @@ Set the blog collection's URL to `/blog` (Pretty URLs enabled) so `objectUrl()` 
 
 ```twig
 {# pages/blog-post.twig — both `page` and `params.id` available #}
-{% set post = cms.data.raw('blog', params.id) %}
+{% set post = cms.data.object('blog', params.id) %}
 
 {% if post %}
     <h1>{{ post.title }}</h1>

@@ -9,8 +9,8 @@ Total CMS provides built-in validation patterns that can be used in form fields:
 
 ```twig
 {{ cms.form.text('my-field', {}, {
-    pattern: patterns.email,
-    help: 'Please enter a valid email address'
+    pattern: patterns.domain,
+    help: 'Please enter a valid domain name'
 }) }}
 ```
 
@@ -26,13 +26,10 @@ patterns.dateTime              # Date and time format
 patterns.integer               # Whole numbers only
 patterns.decimal               # Decimal numbers
 patterns.hex                   # Hexadecimal values
-patterns.ipv4                  # IPv4 address
-patterns.ipv6                  # IPv6 address
 patterns.domain                # Domain name
 patterns.slug                  # URL-friendly slug
 patterns.uuid                  # UUID format
 patterns.macAddress            # MAC address
-patterns.creditCard            # Credit card number
 patterns.isbn                  # ISBN number
 patterns.currency              # Currency format
 patterns.latitudeLongitude     # Coordinates

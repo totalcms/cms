@@ -476,7 +476,7 @@ Override schema property attributes for this collection. Allows customizing fiel
             "label": "Headline",
             "placeholder": "Enter a compelling headline..."
         },
-        "category": {
+        "categories": {
             "options": [
                 {"label": "News", "value": "news"},
                 {"label": "Tutorial", "value": "tutorial"},

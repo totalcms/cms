@@ -251,7 +251,7 @@ Configure upload restrictions in your collection schemas:
 	"rules" : {
 		"size"     : {"min":0,"max":300},
 		"filetype" : ["image/jpeg", "image/png", "application/pdf"],
-		"filename" : ["image.jpg"],
+		"filename" : ["image.jpg"]
 	}
 }
 ```

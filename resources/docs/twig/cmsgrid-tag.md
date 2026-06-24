@@ -276,7 +276,7 @@ Override these variables on `.cms-grid` or a custom class to customize the grid 
 
 ### Dynamic Collection Names
 ```twig
-{% set collection_type = get.type|default('blog') %}
+{% set collection_type = getData.type|default('blog') %}
 {% cmsgrid cms.collection.objects(collection_type) from collection_type with 'responsive-grid' %}
     {# Template adapts based on collection type #}
 {% endcmsgrid %}

@@ -606,7 +606,7 @@ Checks if an image file exists.
     {% for image in gallery.images %}
         {% if imageExists(image) %}
             <figure>
-                <img src="{{ image.url | resize(400, 300) }}" alt="{{ image.alt }}">
+                <img src="{{ image.url }}" alt="{{ image.alt }}">
                 <figcaption>{{ image.caption }}</figcaption>
             </figure>
         {% endif %}
@@ -818,31 +818,28 @@ Total CMS provides comprehensive access control functions for checking user perm
 
 ```twig
 {# Collections #}
-{% if cms.canAccessCollection('blog', 'GET') %}...{% endif %}
-{% if cms.canAccessCollectionsMethod('POST') %}...{% endif %}
+{% if cms.auth.canAccessCollection('blog', 'GET') %}...{% endif %}
+{% if cms.auth.canAccessCollectionsOperation('POST') %}...{% endif %}
+
+{# Collection metadata #}
+{% if cms.auth.canAccessCollectionMeta('blog', 'GET') %}...{% endif %}
+{% if cms.auth.canAccessCollectionsMetaOperation('POST') %}...{% endif %}
 
 {# Schemas #}
-{% if cms.canAccessSchema('blog', 'GET') %}...{% endif %}
-{% if cms.canAccessSchemasMethod('POST') %}...{% endif %}
-
-{# Templates #}
-{% if cms.canAccessTemplatesMethod('GET') %}...{% endif %}
-
-{# Settings #}
-{% if cms.canAccessSetting('cache', 'GET') %}...{% endif %}
-{% if cms.canAccessSettingsMethod('POST') %}...{% endif %}
+{% if cms.auth.canAccessSchema('blog', 'GET') %}...{% endif %}
+{% if cms.auth.canAccessSchemasOperation('POST') %}...{% endif %}
 
 {# Utils #}
-{% if cms.canAccessUtil('cache-manager', 'GET') %}...{% endif %}
-{% if cms.canAccessUtilsMethod('POST') %}...{% endif %}
+{% if cms.auth.canAccessUtil('cache-manager') %}...{% endif %}
+{% if cms.auth.canAccessUtils() %}...{% endif %}
 
 {# Boolean permissions #}
-{% if cms.canAccessMailer() %}...{% endif %}
-{% if cms.canAccessPlayground() %}...{% endif %}
-{% if cms.canAccessDocs() %}...{% endif %}
+{% if cms.auth.canAccessMailer() %}...{% endif %}
+{% if cms.auth.canAccessPlayground() %}...{% endif %}
+{% if cms.auth.canAccessDocs() %}...{% endif %}
 
 {# Admin check #}
-{% if cms.isAdmin() %}...{% endif %}
+{% if cms.auth.isAdmin() %}...{% endif %}
 ```
 
 For complete documentation including practical examples, access group configuration, and best practices, see the [Access Groups Documentation](docs/auth/access-groups).

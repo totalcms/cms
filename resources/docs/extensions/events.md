@@ -331,12 +331,12 @@ If two listeners have the same priority, they execute in the order they were reg
 
 ## Sending Notifications from Event Listeners
 
-Extensions can use events to trigger notifications automatically when content changes. The built-in `PushoverService` and `EmailService` are available via the DI container in the `boot()` phase.
+Extensions can use events to trigger notifications automatically when content changes. The `PushoverService` is provided by the bundled **Pushover** extension and is only available via the DI container when that extension is installed and enabled (it registers its own container definition). The `EmailService` is part of core.
 
 ### Pushover Notification on Object Created
 
 ```php
-use TotalCMS\Domain\Notification\Service\PushoverService;
+use TotalCMS\Bundled\Pushover\PushoverService;
 
 public function boot(ExtensionContext $context): void
 {

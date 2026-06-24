@@ -385,7 +385,7 @@ Email must be unique. The value 'john@example.com' already exists in another obj
 		"id": {
 			"type": "string",
 			"label": "ID",
-			"field": "input"
+			"field": "id"
 		},
 		"email": {
 			"$ref": "https://www.totalcms.co/schemas/properties/email.json",

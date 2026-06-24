@@ -15,7 +15,7 @@ Get all accessible schemas (filtered by edition restrictions).
 
 ```twig
 {% for schema in cms.schema.list() %}
-    <p>{{ schema.id }} — {{ schema.name }}</p>
+    <p>{{ schema.id }} — {{ schema.description }}</p>
 {% endfor %}
 ```
 
@@ -36,7 +36,7 @@ Get all accessible custom schemas (Pro edition only).
 ```twig
 {% if cms.edition.getIsPro() %}
     {% for schema in cms.schema.custom() %}
-        <p>{{ schema.id }} — {{ schema.name }}</p>
+        <p>{{ schema.id }} — {{ schema.description }}</p>
     {% endfor %}
 {% endif %}
 ```
@@ -50,7 +50,7 @@ Get schemas grouped by their category.
     <h3>{{ category }}</h3>
     <ul>
         {% for schema in schemas %}
-            <li>{{ schema.name }}</li>
+            <li>{{ schema.id }}</li>
         {% endfor %}
     </ul>
 {% endfor %}
@@ -64,12 +64,12 @@ Get a single schema definition as an array.
 
 ```twig
 {% set schema = cms.schema.get('blog') %}
-<h2>{{ schema.name }}</h2>
+<h2>{{ schema.id }}</h2>
 <p>{{ schema.description }}</p>
 
 {# Access schema properties #}
-{% for prop in schema.properties %}
-    <p>{{ prop.name }}: {{ prop.type }}</p>
+{% for name, prop in schema.properties %}
+    <p>{{ name }}: {{ prop.type }}</p>
 {% endfor %}
 ```
 
@@ -79,7 +79,7 @@ Get the schema assigned to a specific collection.
 
 ```twig
 {% set schema = cms.schema.forCollection('my-blog') %}
-<p>This collection uses the {{ schema.name }} schema</p>
+<p>This collection uses the {{ schema.id }} schema</p>
 ```
 
 ## Schema Properties

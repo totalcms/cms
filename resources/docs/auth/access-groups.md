@@ -194,52 +194,52 @@ Total CMS provides helper functions to check permissions in your templates, allo
 
 **Check specific collection object access:**
 ```twig
-{% if cms.canAccessCollection('blog', 'read') %}
+{% if cms.auth.canAccessCollection('blog', 'read') %}
     <a href="/admin/collections/blog">View Blog Posts</a>
 {% endif %}
 
-{% if cms.canAccessCollection('blog', 'create') %}
+{% if cms.auth.canAccessCollection('blog', 'create') %}
     <a href="/admin/collections/blog/new">New Post</a>
 {% endif %}
 
-{% if cms.canAccessCollection('blog', 'update') %}
+{% if cms.auth.canAccessCollection('blog', 'update') %}
     <button>Edit Post</button>
 {% endif %}
 
-{% if cms.canAccessCollection('blog', 'delete') %}
+{% if cms.auth.canAccessCollection('blog', 'delete') %}
     <button class="delete">Delete Post</button>
 {% endif %}
 ```
 
 **Check general collection object access:**
 ```twig
-{% if cms.canAccessCollectionsOperation('read') %}
+{% if cms.auth.canAccessCollectionsOperation('read') %}
     <p>You can view collections</p>
 {% endif %}
 ```
 
 **Check collection metadata access:**
 ```twig
-{% if cms.canAccessCollectionMeta('blog', 'read') %}
+{% if cms.auth.canAccessCollectionMeta('blog', 'read') %}
     <a href="/admin/collections/blog/settings">View Collection Settings</a>
 {% endif %}
 
-{% if cms.canAccessCollectionMeta('blog', 'update') %}
+{% if cms.auth.canAccessCollectionMeta('blog', 'update') %}
     <button>Edit Collection Settings</button>
 {% endif %}
 
-{% if cms.canAccessCollectionMeta('blog', 'delete') %}
+{% if cms.auth.canAccessCollectionMeta('blog', 'delete') %}
     <button class="delete">Delete Collection</button>
 {% endif %}
 ```
 
 **Check general collection metadata access:**
 ```twig
-{% if cms.canAccessCollectionsMetaOperation('read') %}
+{% if cms.auth.canAccessCollectionsMetaOperation('read') %}
     <a href="/admin/collections">View Collections List</a>
 {% endif %}
 
-{% if cms.canAccessCollectionsMetaOperation('create') %}
+{% if cms.auth.canAccessCollectionsMetaOperation('create') %}
     <a href="/admin/collections/new">New Collection</a>
 {% endif %}
 ```
@@ -255,26 +255,26 @@ Total CMS provides helper functions to check permissions in your templates, allo
 
 **Check specific schema access:**
 ```twig
-{% if cms.canAccessSchema('blog', 'read') %}
+{% if cms.auth.canAccessSchema('blog', 'read') %}
     <a href="/admin/schemas/blog">View Blog Schema</a>
 {% endif %}
 
-{% if cms.canAccessSchema('blog', 'update') %}
+{% if cms.auth.canAccessSchema('blog', 'update') %}
     <a href="/admin/schemas/blog/edit">Edit Schema</a>
 {% endif %}
 
-{% if cms.canAccessSchema('blog', 'delete') %}
+{% if cms.auth.canAccessSchema('blog', 'delete') %}
     <button class="delete">Delete Schema</button>
 {% endif %}
 ```
 
 **Check general schemas access:**
 ```twig
-{% if cms.canAccessSchemasOperation('read') %}
+{% if cms.auth.canAccessSchemasOperation('read') %}
     <a href="/admin/schemas">View Schemas</a>
 {% endif %}
 
-{% if cms.canAccessSchemasOperation('create') %}
+{% if cms.auth.canAccessSchemasOperation('create') %}
     <a href="/admin/schemas/new">New Schema</a>
 {% endif %}
 ```
@@ -283,7 +283,7 @@ Total CMS provides helper functions to check permissions in your templates, allo
 
 **Check Site Builder access (boolean):**
 ```twig
-{% if cms.canAccessBuilder() %}
+{% if cms.auth.canAccessBuilder() %}
     <a href="/admin/builder">Builder</a>
 {% endif %}
 ```
@@ -292,7 +292,7 @@ Total CMS provides helper functions to check permissions in your templates, allo
 
 **Check extension access (boolean):**
 ```twig
-{% if cms.canAccessExtension('acme/seo-pro') %}
+{% if cms.auth.canAccessExtension('acme/seo-pro') %}
     <a href="/admin/ext/acme/seo-pro/reports">SEO Reports</a>
 {% endif %}
 ```
@@ -301,18 +301,18 @@ Total CMS provides helper functions to check permissions in your templates, allo
 
 **Check specific utils page:**
 ```twig
-{% if cms.canAccessUtil('cache-manager') %}
+{% if cms.auth.canAccessUtil('cache-manager') %}
     <a href="/admin/utils/cache-manager">Cache Manager</a>
 {% endif %}
 
-{% if cms.canAccessUtil('jumpstart') %}
+{% if cms.auth.canAccessUtil('jumpstart') %}
     <a href="/admin/utils/jumpstart">JumpStart</a>
 {% endif %}
 ```
 
 **Check general utils access:**
 ```twig
-{% if cms.canAccessUtils() %}
+{% if cms.auth.canAccessUtils() %}
     <a href="/admin/utils">Utils</a>
 {% endif %}
 ```
@@ -321,21 +321,21 @@ Total CMS provides helper functions to check permissions in your templates, allo
 
 **Check mailer access:**
 ```twig
-{% if cms.canAccessMailer() %}
+{% if cms.auth.canAccessMailer() %}
     <a href="/admin/mailer">Mailer</a>
 {% endif %}
 ```
 
 **Check playground access:**
 ```twig
-{% if cms.canAccessPlayground() %}
+{% if cms.auth.canAccessPlayground() %}
     <a href="/admin/utils/twig-playground">Twig Playground</a>
 {% endif %}
 ```
 
 **Check docs access:**
 ```twig
-{% if cms.canAccessDocs() %}
+{% if cms.auth.canAccessDocs() %}
     <a href="/admin/docs">Documentation</a>
 {% endif %}
 ```
@@ -344,7 +344,7 @@ Total CMS provides helper functions to check permissions in your templates, allo
 
 **Check if user is super admin:**
 ```twig
-{% if cms.isAdmin() %}
+{% if cms.auth.isAdmin() %}
     <div class="admin-only-feature">
         <a href="/admin/utils/access-groups">Manage Access Groups</a>
     </div>
@@ -359,23 +359,23 @@ Super admins bypass all access checks and have full access to everything.
 
 ```twig
 <nav>
-    {% if cms.canAccessCollectionsMetaOperation('read') %}
+    {% if cms.auth.canAccessCollectionsMetaOperation('read') %}
     <a href="/admin/collections">Collections</a>
     {% endif %}
 
-    {% if cms.canAccessSchemasOperation('read') %}
+    {% if cms.auth.canAccessSchemasOperation('read') %}
     <a href="/admin/schemas">Schemas</a>
     {% endif %}
 
-    {% if cms.canAccessBuilder() %}
+    {% if cms.auth.canAccessBuilder() %}
     <a href="/admin/builder">Builder</a>
     {% endif %}
 
-    {% if cms.canAccessUtils() %}
+    {% if cms.auth.canAccessUtils() %}
     <a href="/admin/utils">Utils</a>
     {% endif %}
 
-    {% if cms.isAdmin() %}
+    {% if cms.auth.isAdmin() %}
     <a href="/admin/utils/access-groups">Access Groups</a>
     {% endif %}
 </nav>
@@ -386,15 +386,15 @@ Super admins bypass all access checks and have full access to everything.
 ```twig
 <ul>
 {% for collection in collections %}
-    {% if cms.canAccessCollection(collection.id, 'read') %}
+    {% if cms.auth.canAccessCollection(collection.id, 'read') %}
     <li>
         <a href="/admin/collections/{{ collection.id }}">{{ collection.name }}</a>
 
-        {% if cms.canAccessCollection(collection.id, 'create') %}
+        {% if cms.auth.canAccessCollection(collection.id, 'create') %}
         <a href="/admin/collections/{{ collection.id }}/new">New Item</a>
         {% endif %}
 
-        {% if cms.canAccessCollectionMeta(collection.id, 'update') %}
+        {% if cms.auth.canAccessCollectionMeta(collection.id, 'update') %}
         <a href="/admin/collections/{{ collection.id }}/settings">Settings</a>
         {% endif %}
     </li>
@@ -407,15 +407,15 @@ Super admins bypass all access checks and have full access to everything.
 
 ```twig
 <div class="object-actions">
-    {% if cms.canAccessCollection(collection, 'create') %}
+    {% if cms.auth.canAccessCollection(collection, 'create') %}
     <a href="/admin/collections/{{ collection }}/new" class="btn">New Object</a>
     {% endif %}
 
-    {% if cms.canAccessCollection(collection, 'update') %}
+    {% if cms.auth.canAccessCollection(collection, 'update') %}
     <button class="btn" data-action="edit">Edit</button>
     {% endif %}
 
-    {% if cms.canAccessCollection(collection, 'delete') %}
+    {% if cms.auth.canAccessCollection(collection, 'delete') %}
     <button class="btn btn-danger" data-action="delete">Delete</button>
     {% endif %}
 </div>
@@ -425,15 +425,15 @@ Super admins bypass all access checks and have full access to everything.
 
 ```twig
 <div class="schema-actions">
-    {% if cms.canAccessSchemasOperation('create') %}
+    {% if cms.auth.canAccessSchemasOperation('create') %}
     <a href="/admin/schemas/new" class="btn">New Schema</a>
     {% endif %}
 
-    {% if cms.canAccessSchema(schema.id, 'update') %}
+    {% if cms.auth.canAccessSchema(schema.id, 'update') %}
     <a href="/admin/schemas/{{ schema.id }}/edit" class="btn">Edit</a>
     {% endif %}
 
-    {% if cms.canAccessSchema(schema.id, 'delete') %}
+    {% if cms.auth.canAccessSchema(schema.id, 'delete') %}
     <button class="btn btn-danger" data-schema="{{ schema.id }}">Delete</button>
     {% endif %}
 </div>
@@ -607,7 +607,7 @@ Super admins bypass all access checks and have full access to everything.
 
 4. **Graceful Degradation**: Hide buttons/actions users can't perform rather than showing disabled buttons.
 
-5. **Admin-Only Features**: Use `cms.isAdmin()` for features that should never be delegated (like managing access groups, API keys, or user accounts).
+5. **Admin-Only Features**: Use `cms.auth.isAdmin()` for features that should never be delegated (like managing access groups, API keys, or user accounts).
 
 6. **Operation-Level Checks**: Use general operation checks (e.g., `canAccessCollectionsOperation()`) for listing pages where no specific resource is selected yet.
 
