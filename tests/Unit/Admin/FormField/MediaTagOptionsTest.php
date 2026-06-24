@@ -1,5 +1,6 @@
 <?php
 
+use TotalCMS\Domain\Admin\FormField\FileField;
 use TotalCMS\Domain\Admin\FormField\GalleryField;
 use TotalCMS\Domain\Admin\FormField\ImageField;
 use TotalCMS\Domain\Admin\FormField\ListField;
@@ -88,6 +89,42 @@ describe('ImageField tag-suggestion wiring', function (): void {
 
 		// nestedPath set => field lives inside a card/deck; v1 scope is top-level only.
 		$field = new ImageField($form, 'photo', nestedPath: 'mycard');
+
+		expect($invoke($field, []))->not->toHaveKey('settings');
+	});
+});
+
+describe('FileField tag-suggestion wiring', function (): void {
+	$invoke = function (object $field, array $fileData): array {
+		$method = new ReflectionMethod($field, 'tagFieldSettings');
+		return $method->invoke($field, $fileData);
+	};
+
+	test('attaches mediaTags propertyOptions (type file) under settings when indexed', function () use ($invoke): void {
+		$form = test()->createMock(TotalForm::class);
+		$form->id = '';
+		$form->method('isPropertyIndexed')->willReturn(true);
+
+		$field = new FileField($form, 'myfile');
+
+		expect($invoke($field, [])['settings']['propertyOptions'])
+			->toBe(['source' => 'mediaTags', 'field' => 'myfile', 'type' => 'file']);
+	});
+
+	test('omits the source when not indexed', function () use ($invoke): void {
+		$form = test()->createMock(TotalForm::class);
+		$form->id = '';
+		$form->method('isPropertyIndexed')->willReturn(false);
+
+		expect($invoke(new FileField($form, 'myfile'), []))->not->toHaveKey('settings');
+	});
+
+	test('nested (card/deck) file fields never source suggestions, even if indexed', function () use ($invoke): void {
+		$form = test()->createMock(TotalForm::class);
+		$form->id = '';
+		$form->method('isPropertyIndexed')->willReturn(true);
+
+		$field = new FileField($form, 'doc', nestedPath: 'mycard');
 
 		expect($invoke($field, []))->not->toHaveKey('settings');
 	});

@@ -140,16 +140,37 @@ class FileField extends FormField
 			'value'       => $fileData['comments'] ?? '',
 			'required'    => false,
 		]);
-		$content .= $this->form->subField('tags', [
+		$content .= $this->form->subField('tags', $this->tagFieldSettings($fileData));
+
+		return HTMLUtils::details('Info', $content);
+	}
+
+	/**
+	 * Settings for the generated `tags` sub-field. Attaches tag-suggestion
+	 * options sourced from the collection index when this file property is
+	 * top-level and indexed (mirrors ImageField; suggestions are additive).
+	 *
+	 * @param array<string,mixed> $fileData
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function tagFieldSettings(array $fileData): array
+	{
+		$settings = [
 			'field'       => 'list',
 			'label'       => 'Tags',
 			'help'        => 'Add tags to help organize your files.',
 			'placeholder' => 'Add Tags',
 			'value'       => $fileData['tags'] ?? [],
 			'required'    => false,
-		]);
+		];
 
-		return HTMLUtils::details('Info', $content);
+		$options = $this->mediaTagOptions();
+		if ($options !== null) {
+			$settings['settings'] = ['propertyOptions' => $options];
+		}
+
+		return $settings;
 	}
 
 	/** @param array<string,mixed> $fileData */

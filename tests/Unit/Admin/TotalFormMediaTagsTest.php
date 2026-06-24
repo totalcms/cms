@@ -33,6 +33,16 @@ describe('TotalForm::extractMediaTags', function (): void {
 			->toBe(['blue', 'wide', 'tall']);
 	});
 
+	test('file → single-object tags (same shape as image)', function (): void {
+		$objects = [
+			['id' => 'a', 'myfile' => ['name' => 'a.pdf', 'tags' => ['spec', 'pdf']]],
+			['id' => 'b', 'myfile' => ['name' => 'b.zip', 'tags' => ['pdf', 'archive']]],
+		];
+
+		expect(TotalForm::extractMediaTags($objects, 'myfile', 'file'))
+			->toBe(['spec', 'pdf', 'archive']);
+	});
+
 	test('returns an empty array when no tags are present', function (): void {
 		expect(TotalForm::extractMediaTags([['id' => 'a']], 'myimage', 'image'))->toBe([]);
 	});

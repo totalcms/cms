@@ -221,21 +221,9 @@ class ImageField extends FormField
 			'required'    => false,
 		];
 
-		// v1 scope: top-level indexed media properties only. A nested field
-		// (inside a card/deck) carries a nestedPath and its bare name could
-		// collide with a top-level indexed property, so it never sources
-		// suggestions — the index can't represent its dotted path anyway.
-		if ($this->nestedPath === null && $this->form->isPropertyIndexed($this->name)) {
-			// Must live under `settings`: subField()/field() route only declared
-			// FormField constructor params, and propertyOptions is read from the
-			// field's `$settings`. A top-level key here is silently dropped.
-			$settings['settings'] = [
-				'propertyOptions' => [
-					'source' => 'mediaTags',
-					'field'  => $this->name,
-					'type'   => $this->field, // 'image' | 'gallery'
-				],
-			];
+		$options = $this->mediaTagOptions();
+		if ($options !== null) {
+			$settings['settings'] = ['propertyOptions' => $options];
 		}
 
 		return $settings;

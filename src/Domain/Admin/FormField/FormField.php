@@ -362,6 +362,31 @@ class FormField
 	}
 
 	/**
+	 * propertyOptions descriptor that makes a media `tags` sub-field autocomplete
+	 * from tags already used on the same property across the collection. Returns
+	 * null when suggestions shouldn't apply: a nested field (card/deck — its bare
+	 * name can't be resolved against the index in v1) or an unindexed property.
+	 *
+	 * Callers MUST place the result under the sub-field's `settings` key:
+	 * subField()/field() route only declared constructor params, and
+	 * propertyOptions is read from the field's $settings.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	protected function mediaTagOptions(): ?array
+	{
+		if ($this->nestedPath !== null || !$this->form->isPropertyIndexed($this->name)) {
+			return null;
+		}
+
+		return [
+			'source' => 'mediaTags',
+			'field'  => $this->name,
+			'type'   => $this->field, // 'image' | 'gallery' | 'file'
+		];
+	}
+
+	/**
 	 * Build options for propertyOptions setting.
 	 * Supports:
 	 * - true: fetch unique values from current collection for this property
