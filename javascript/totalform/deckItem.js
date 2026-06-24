@@ -1,4 +1,5 @@
 import Dialog from "./dialog";
+import { collectScopedFieldValues } from "./fieldCollection.mjs";
 
 //-----------------------------------------------
 // Total CMS Deck Item
@@ -166,47 +167,13 @@ export default class DeckItem {
     }
 
     getValue() {
-        const data = {};
-
-        // Collect all form field containers within this item's dialog
-        const formFieldContainers = this.dialog.dialog.querySelectorAll('.form-field');
-
-        for (const container of formFieldContainers) {
-            // Check if the container has a TotalField instance
-            if (container.totalfield && container.totalfield.input && container.totalfield.input.name) {
-                const fieldName = container.totalfield.input.name;
-                try {
-                    // Use the TotalField's getValue method to get the proper value
-                    data[fieldName] = container.totalfield.getValue();
-                } catch (error) {
-                    // If getValue fails (e.g., field not fully initialized), fall back to input value
-                    console.warn(`Failed to get value for field ${fieldName} in deck item:`, error);
-                    if (container.totalfield.input) {
-                        data[fieldName] = container.totalfield.input.value || '';
-                    }
-                }
-            }
-        }
-
-        // Fallback: collect any remaining input fields that don't have TotalField instances
-        const formFields = this.dialog.dialog.querySelectorAll('input, textarea, select');
-
-        for (const field of formFields) {
-            if (field.name && !data.hasOwnProperty(field.name)) {
-                // Handle different field types for fields without TotalField instances
-                if (field.type === 'checkbox') {
-                    data[field.name] = field.checked;
-                } else if (field.type === 'radio') {
-                    if (field.checked) {
-                        data[field.name] = field.value;
-                    }
-                } else if (field.tagName === 'SELECT' && field.multiple) {
-                    data[field.name] = Array.from(field.selectedOptions).map(option => option.value);
-                } else {
-                    data[field.name] = field.value;
-                }
-            }
-        }
+        // Collect only this deck item's own top-level fields. Composite fields
+        // (image, file, …) render sub-fields as nested .form-field elements with
+        // names that can collide with the item's own properties (e.g. an image's
+        // readonly `name`/"Filename" sub-field clobbering the item's `name`);
+        // collectScopedFieldValues skips those so the composite's own getValue()
+        // remains the single source for its nested data.
+        const data = collectScopedFieldValues(this.dialog.dialog);
 
         return Object.keys(data).length > 0 ? data : null;
     }

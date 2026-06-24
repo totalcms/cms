@@ -3,6 +3,8 @@
 // Provides pattern-based value generation for any field.
 // Used by TotalField for generic autogen and by Identifier for ID-specific autogen.
 //-----------------------------------------------
+import { collectScopedInputValues } from "./fieldCollection.mjs";
+
 export default class Autogen {
 
 	constructor(field) {
@@ -63,10 +65,11 @@ export default class Autogen {
 	 */
 	collectFormData() {
 		if (this.field.isInDeck) {
-			const data = {};
-			const fields = this.field.deckItem.querySelectorAll('input, textarea, select');
-			fields.forEach(field => data[field.name] = field.value);
-			return data;
+			// Read only the deck item's own inputs; composite sub-fields (e.g. an
+			// image's `name`/"Filename") must not shadow the item's own fields, or
+			// patterns like ${name} would resolve to the image filename. See
+			// fieldCollection.mjs.
+			return collectScopedInputValues(this.field.deckItem);
 		}
 
 		// Get the field data from the form

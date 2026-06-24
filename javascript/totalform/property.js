@@ -1,5 +1,6 @@
 import Dialog from "./dialog";
 import Details from "./details";
+import { isNestedField } from "./fieldCollection.mjs";
 
 //-----------------------------------------------
 // Total CMS Properties
@@ -71,9 +72,9 @@ export default class PropertyField {
 			// sub-field like `expose` leaks to the top level of the property
 			// alongside its correct `mcp.expose` home (empty sub-fields get
 			// dropped by the truthiness check below, so the checkbox `expose`
-			// was the one that slipped through).
-			const parentField = field.parentElement?.closest(".form-field");
-			if (parentField && this.container.contains(parentField)) continue;
+			// was the one that slipped through). Shared with the deck paths via
+			// fieldCollection.mjs.
+			if (isNestedField(field, this.container)) continue;
 
 			let value = field.totalfield.getValue();
 			if (value) {

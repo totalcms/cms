@@ -1,5 +1,6 @@
 import TotalField from "./totalfield";
 import TotalSortable from "./total-sortable";
+import { collectScopedFieldValues } from "./fieldCollection.mjs";
 
 //-----------------------------------------------
 // Total CMS Deck Table Field
@@ -202,27 +203,11 @@ export default class DeckTableField extends TotalField {
 
         const rows = this.tableBody.querySelectorAll('.deck-table-row');
         for (const row of rows) {
-            const rowData = {};
-            let itemId = '';
-
-            const formFieldContainers = row.querySelectorAll('.form-field');
-            for (const container of formFieldContainers) {
-                if (container.totalfield && container.totalfield.input && container.totalfield.input.name) {
-                    const fieldName = container.totalfield.input.name;
-                    try {
-                        rowData[fieldName] = container.totalfield.getValue();
-                    } catch (error) {
-                        console.warn(`Failed to get value for field ${fieldName} in deck table row:`, error);
-                        if (container.totalfield.input) {
-                            rowData[fieldName] = container.totalfield.input.value || '';
-                        }
-                    }
-
-                    if (fieldName === 'id') {
-                        itemId = String(rowData[fieldName]);
-                    }
-                }
-            }
+            // Collect only the row's own top-level fields; composite sub-fields
+            // (e.g. an image's `name`/"Filename") must not leak into the row and
+            // overwrite its real properties. See fieldCollection.mjs.
+            const rowData = collectScopedFieldValues(row);
+            const itemId = rowData.id ? String(rowData.id) : '';
 
             if (itemId) {
                 deckData[itemId] = rowData;

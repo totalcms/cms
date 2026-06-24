@@ -2,7 +2,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "bin/build.sh",
-    "build:assets": "bin/build-assets.sh"
+    "build:assets": "bin/build-assets.sh",
+    "test:js": "node --test 'tests/js/**/*.test.mjs'"
   },
   "devDependencies": {
     "esbuild": "^0.16.17",
@@ -10,6 +11,7 @@
     "esbuild-plugin-copy": "^2.0.1",
     "esbuild-plugin-glob": "^2.2.1",
     "esbuild-sass-plugin": "^2.4.5",
+    "jsdom": "^29.1.1",
     "sass-extended-importer": "^0.4.2"
   },
   "dependencies": {
