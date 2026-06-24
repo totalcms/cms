@@ -100,3 +100,25 @@ test('no composite internal keys leak to the card top level', () => {
 		assert.ok(!(leaked in value), `'${leaked}' must not leak into the card`);
 	}
 });
+
+// A composite's getValue() returns a fresh object each call, so changed() must
+// compare by value — otherwise a stray no-op change event (e.g. a field's native
+// `change` firing on blur after a successful save) re-marks the card unsaved.
+test('changed() does not re-mark a composite field unsaved when nothing changed', () => {
+	const card = buildCard();
+	card.container.classList.remove('unsaved');
+
+	card.changed(); // value identical to storedValue captured at construction
+
+	assert.equal(card.container.classList.contains('unsaved'), false);
+});
+
+test('changed() still marks the card unsaved when a value actually changes', () => {
+	const card = buildCard();
+	const nameField = card.subFields().find(f => f.property === 'name');
+	nameField.getValue = () => 'Renamed';
+
+	card.changed();
+
+	assert.ok(card.container.classList.contains('unsaved'));
+});

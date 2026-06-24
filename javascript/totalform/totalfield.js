@@ -319,11 +319,16 @@ export default class TotalField {
 		this.input.setCustomValidity("");
 		this.container.classList.remove("error");
 
-		// Check if value actually changed first - if not, return early
-		if (this.storedValue === this.getValue()) return;
+		// Check if value actually changed first - if not, return early.
+		// Compare by value: composite fields (card/image/file/deck/gallery) return
+		// a fresh object/array from getValue() every call, so a reference check is
+		// always false and would re-mark them unsaved on any stray change event
+		// (e.g. a field's native `change` firing on blur after a successful save).
+		const current = this.getValue();
+		if (this.valuesEqual(this.storedValue, current)) return;
 
 		// Value changed - update stored value and dispatch event
-		this.storedValue = this.getValue();
+		this.storedValue = current;
 		this.container.classList.add("unsaved");
 
 		// Always dispatch field-change when value changes
@@ -334,6 +339,21 @@ export default class TotalField {
 		}
 		this.dispatcher.dispatchEvent("field-change", { field: this });
     }
+
+	// Value-equality for dirty tracking. Primitives use a fast strict compare;
+	// objects/arrays (composite field values) compare structurally so a freshly
+	// built-but-identical value isn't treated as a change.
+	valuesEqual(a, b) {
+		if (a === b) return true;
+		if (a && b && typeof a === "object" && typeof b === "object") {
+			try {
+				return JSON.stringify(a) === JSON.stringify(b);
+			} catch {
+				return false;
+			}
+		}
+		return false;
+	}
 
 	validate() {
 		if (!this.isVisible()) return true;
