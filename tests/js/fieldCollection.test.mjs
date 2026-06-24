@@ -1,7 +1,3 @@
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { JSDOM } from 'jsdom';
-
 import {
 	isNestedField,
 	collectScopedFieldValues,
@@ -14,21 +10,9 @@ import {
 // composite markup includes a readonly `name` ("Filename") sub-field and
 // other meta sub-fields (width, size). The image's sub-fields are nested
 // inside the image's own `.form-field`, exactly as ImageField renders them.
-//
-//   .form-field[deck]            <- the outer `mydeck` field (OUTSIDE the dialog)
-//     .deck-item
-//       <dialog>                 <- the deck item scope (this.dialog.dialog)
-//         .form-field id
-//         .form-field name       <- deck item's OWN name  ("Star Dust")
-//         .form-field image      <- composite field (myimage)
-//           input[name=myimage]
-//           <details>
-//             .form-field name   <- image filename sub-field ("beach.jpg")
-//             .form-field width
-//             .form-field size
 //-----------------------------------------------
 function buildDeckItemDom() {
-	const dom = new JSDOM(`<!DOCTYPE html><body>
+	document.body.innerHTML = `
 		<div class="form-field" data-type="deck">
 			<div class="deck-item">
 				<dialog>
@@ -44,80 +28,69 @@ function buildDeckItemDom() {
 					</div>
 				</dialog>
 			</div>
-		</div>
-	</body>`);
+		</div>`;
 
-	const doc = dom.window.document;
-	const dialog = doc.querySelector('dialog');
-	const deckItem = doc.querySelector('.deck-item');
+	const dialog = document.querySelector('dialog');
+	const deckItem = document.querySelector('.deck-item');
 
 	// Attach TotalField-like stubs to each .form-field, mirroring runtime wiring.
-	const wire = (selector, name, value) => {
-		const container = selector;
+	const wire = (container, value) => {
 		container.totalfield = { input: container.querySelector('input'), getValue: () => value };
 	};
 	const fields = dialog.querySelectorAll('.form-field');
-	// id, name, image(myimage), [image-name, image-width, image-size]
-	wire(fields[0], 'id', 'star_dust');
-	wire(fields[1], 'name', 'Star Dust');
-	wire(fields[2], 'myimage', { name: 'beach.jpg', width: 800, size: 1234 });
-	wire(fields[3], 'name', 'beach.jpg'); // image's filename sub-field
-	wire(fields[4], 'width', 800);
-	wire(fields[5], 'size', 1234);
+	wire(fields[0], 'star_dust');
+	wire(fields[1], 'Star Dust');
+	wire(fields[2], { name: 'beach.jpg', width: 800, size: 1234 });
+	wire(fields[3], 'beach.jpg'); // image's filename sub-field
+	wire(fields[4], 800);
+	wire(fields[5], 1234);
 
-	return { dialog, deckItem, doc };
+	return { dialog, deckItem };
 }
 
-// Replicates the PRE-FIX deckItem.getValue() primary pass (no scoping guard)
-// to prove the collision reproduces.
+// Replicates the PRE-FIX deckItem.getValue() primary pass (no scoping guard).
 function legacyCollect(scopeEl) {
 	const data = {};
 	for (const container of scopeEl.querySelectorAll('.form-field')) {
 		const tf = container.totalfield;
-		if (tf && tf.input && tf.input.name) {
-			data[tf.input.name] = tf.getValue();
-		}
+		if (tf && tf.input && tf.input.name) data[tf.input.name] = tf.getValue();
 	}
 	return data;
 }
 
-test('REPRODUCES the bug: legacy unscoped collection lets the image name overwrite the deck name', () => {
-	const { dialog } = buildDeckItemDom();
-	const data = legacyCollect(dialog);
+describe('fieldCollection', () => {
+	test('REPRODUCES the bug: legacy unscoped collection lets the image name overwrite the deck name', () => {
+		const data = legacyCollect(buildDeckItemDom().dialog);
 
-	// The bug: the deck item's own name is clobbered by the image's filename,
-	// and image meta sub-fields leak to the deck item's top level.
-	assert.equal(data.name, 'beach.jpg', 'demonstrates the collision (image name wins)');
-	assert.equal(data.width, 800, 'demonstrates stray image meta leaking up');
-	assert.equal(data.size, 1234, 'demonstrates stray image meta leaking up');
-});
+		expect(data.name).toBe('beach.jpg'); // collision: image name wins
+		expect(data.width).toBe(800);         // stray image meta leaks up
+		expect(data.size).toBe(1234);
+	});
 
-test('collectScopedFieldValues keeps the deck item name and drops image sub-fields', () => {
-	const { dialog } = buildDeckItemDom();
-	const data = collectScopedFieldValues(dialog);
+	test('collectScopedFieldValues keeps the deck item name and drops image sub-fields', () => {
+		const data = collectScopedFieldValues(buildDeckItemDom().dialog);
 
-	assert.equal(data.name, 'Star Dust', 'deck item keeps its own name');
-	assert.equal(data.id, 'star_dust');
-	assert.deepEqual(data.myimage, { name: 'beach.jpg', width: 800, size: 1234 }, 'image value stays nested under its own property');
-	assert.ok(!('width' in data), 'no stray image meta leaked to top level');
-	assert.ok(!('size' in data), 'no stray image meta leaked to top level');
-});
+		expect(data.name).toBe('Star Dust');
+		expect(data.id).toBe('star_dust');
+		expect(data.myimage).toEqual({ name: 'beach.jpg', width: 800, size: 1234 });
+		expect('width' in data).toBe(false);
+		expect('size' in data).toBe(false);
+	});
 
-test('collectScopedInputValues (autogen) reads the deck name, not the image filename', () => {
-	const { deckItem } = buildDeckItemDom();
-	// Autogen scopes to the .deck-item element at runtime.
-	const data = collectScopedInputValues(deckItem);
+	test('collectScopedInputValues (autogen) reads the deck name, not the image filename', () => {
+		const data = collectScopedInputValues(buildDeckItemDom().deckItem);
 
-	assert.equal(data.name, 'Star Dust', '${name} autogen resolves to the deck item name');
-	assert.equal(data.id, 'star_dust');
-});
+		expect(data.name).toBe('Star Dust');
+		expect(data.id).toBe('star_dust');
+	});
 
-test('isNestedField distinguishes composite sub-fields from a scope\'s own fields', () => {
-	const { dialog } = buildDeckItemDom();
-	const fields = dialog.querySelectorAll('.form-field');
+	test('isNestedField distinguishes composite sub-fields from a scope\'s own fields', () => {
+		const { dialog } = buildDeckItemDom();
+		const fields = dialog.querySelectorAll('.form-field');
 
-	assert.equal(isNestedField(fields[1], dialog), false, 'deck item own name is a top-level field');
-	assert.equal(isNestedField(fields[2], dialog), false, 'image composite field is a top-level field');
-	assert.equal(isNestedField(fields[3], dialog), true, 'image filename sub-field is nested');
-	assert.equal(isNestedField(fields[4], dialog), true, 'image width sub-field is nested');
+		expect(isNestedField(fields[1], dialog)).toBe(false); // deck item's own name
+		expect(isNestedField(fields[2], dialog)).toBe(false); // image composite field
+		expect(isNestedField(fields[3], dialog)).toBe(true);  // image filename sub-field
+		expect(isNestedField(fields[4], dialog)).toBe(true);  // image width sub-field
+	});
 });

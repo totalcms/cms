@@ -1,13 +1,4 @@
-import { test, before } from 'node:test';
-import assert from 'node:assert/strict';
-import { JSDOM } from 'jsdom';
-import * as esbuild from 'esbuild';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { dirname, join } from 'node:path';
-import { writeFileSync, mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import CardField from '../../javascript/totalform/card.js';
 
 //-----------------------------------------------
 // CardField.getValue() must collect ONLY the card's own top-level sub-fields,
@@ -18,33 +9,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // the card's own `name`, which then reverts on refresh.
 //-----------------------------------------------
 
-let CardField;
-
-before(async () => {
-	const dom = new JSDOM('<!DOCTYPE html><body></body>', { pretendToBeVisual: true });
-	const w = dom.window;
-	for (const k of ['window', 'document', 'Node', 'Element', 'HTMLElement', 'DocumentFragment', 'getComputedStyle', 'MutationObserver', 'Event', 'CustomEvent', 'KeyboardEvent']) {
-		try { globalThis[k] = w[k]; } catch { /* read-only */ }
-	}
-	globalThis.requestAnimationFrame = (cb) => cb(0);
-	globalThis.cancelAnimationFrame = () => {};
-
-	const result = await esbuild.build({
-		entryPoints: [join(__dirname, '../../javascript/totalform/card.js')],
-		bundle: true,
-		format: 'esm',
-		platform: 'browser',
-		write: false,
-		logLevel: 'silent',
-	});
-	const bundlePath = join(mkdtempSync(join(tmpdir(), 'card-')), 'bundle.mjs');
-	writeFileSync(bundlePath, result.outputFiles[0].text);
-	CardField = (await import(pathToFileURL(bundlePath).href)).default;
-});
-
 // Build a card containing a name field plus an image and a file composite, each
 // with internal sub-fields (including their own `name`) that must NOT leak.
 function buildCard() {
+	document.body.innerHTML = '';
+
 	const field = (type, name) => {
 		const el = document.createElement('div');
 		el.className = 'form-field';
@@ -66,8 +35,8 @@ function buildCard() {
 
 	const image = wire(field('image', 'image'), 'image', { name: 'pic.jpg', alt: 'astro' });
 	const imageMeta = document.createElement('details');
-	imageMeta.appendChild(wire(field('text', 'alt'), 'alt', 'astro'));        // internal — must skip
-	imageMeta.appendChild(wire(field('text', 'name'), 'name', 'pic.jpg'));    // internal — would clobber card.name
+	imageMeta.appendChild(wire(field('text', 'alt'), 'alt', 'astro'));     // internal — must skip
+	imageMeta.appendChild(wire(field('text', 'name'), 'name', 'pic.jpg')); // internal — would clobber card.name
 	image.appendChild(imageMeta);
 	cardFields.appendChild(image);
 
@@ -82,43 +51,41 @@ function buildCard() {
 	return new CardField(card, { form: { form: document.body } });
 }
 
-test('getValue collects only the card\'s own fields, not composite internals', () => {
-	const value = buildCard().getValue();
-
-	assert.deepEqual(value, {
-		id: 'card1',
-		name: 'My Card', // NOT clobbered by the image/file `name` sub-fields
-		image: { name: 'pic.jpg', alt: 'astro' },
-		file: { name: 'cms-data.zip' },
+describe('CardField', () => {
+	test('getValue collects only the card\'s own fields, not composite internals', () => {
+		expect(buildCard().getValue()).toEqual({
+			id: 'card1',
+			name: 'My Card', // NOT clobbered by the image/file `name` sub-fields
+			image: { name: 'pic.jpg', alt: 'astro' },
+			file: { name: 'cms-data.zip' },
+		});
 	});
-});
 
-test('no composite internal keys leak to the card top level', () => {
-	const value = buildCard().getValue();
+	test('no composite internal keys leak to the card top level', () => {
+		const value = buildCard().getValue();
 
-	for (const leaked of ['alt', 'ext']) {
-		assert.ok(!(leaked in value), `'${leaked}' must not leak into the card`);
-	}
-});
+		expect('alt' in value).toBe(false);
+		expect('ext' in value).toBe(false);
+	});
 
-// A composite's getValue() returns a fresh object each call, so changed() must
-// compare by value — otherwise a stray no-op change event (e.g. a field's native
-// `change` firing on blur after a successful save) re-marks the card unsaved.
-test('changed() does not re-mark a composite field unsaved when nothing changed', () => {
-	const card = buildCard();
-	card.container.classList.remove('unsaved');
+	// A composite's getValue() returns a fresh object each call, so changed() must
+	// compare by value — otherwise a stray no-op change event (e.g. a field's native
+	// `change` firing on blur after a successful save) re-marks the card unsaved.
+	test('changed() does not re-mark a composite field unsaved when nothing changed', () => {
+		const card = buildCard();
+		card.container.classList.remove('unsaved');
 
-	card.changed(); // value identical to storedValue captured at construction
+		card.changed(); // value identical to storedValue captured at construction
 
-	assert.equal(card.container.classList.contains('unsaved'), false);
-});
+		expect(card.container.classList.contains('unsaved')).toBe(false);
+	});
 
-test('changed() still marks the card unsaved when a value actually changes', () => {
-	const card = buildCard();
-	const nameField = card.subFields().find(f => f.property === 'name');
-	nameField.getValue = () => 'Renamed';
+	test('changed() still marks the card unsaved when a value actually changes', () => {
+		const card = buildCard();
+		card.subFields().find(f => f.property === 'name').getValue = () => 'Renamed';
 
-	card.changed();
+		card.changed();
 
-	assert.ok(card.container.classList.contains('unsaved'));
+		expect(card.container.classList.contains('unsaved')).toBe(true);
+	});
 });
