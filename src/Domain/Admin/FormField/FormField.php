@@ -379,6 +379,13 @@ class FormField
 	{
 		$source = $this->settings['propertyOptions'] ?? true;
 
+		if (is_array($source) && ($source['source'] ?? null) === 'mediaTags') {
+			return $this->form->mediaTagsForCollection(
+				(string)($source['field'] ?? ''),
+				(string)($source['type'] ?? 'image'),
+			);
+		}
+
 		if ($source === 'collections') {
 			return $this->form->categoryListForCollections();
 		}
@@ -527,9 +534,10 @@ class FormField
 	 */
 	protected function buildOptions(string $options = ''): string
 	{
-		// propertyOptions can be true (use current collection) or a string source ("collections", "schemas")
+		// propertyOptions can be true (use current collection), a string source ("collections", "schemas"),
+		// or an array descriptor (e.g. ['source' => 'mediaTags', 'field' => ..., 'type' => ...])
 		$propertyOptions = $this->settings['propertyOptions'] ?? null;
-		if ($propertyOptions === true || is_string($propertyOptions)) {
+		if ($propertyOptions === true || is_string($propertyOptions) || is_array($propertyOptions)) {
 			$this->options = array_merge($this->options, $this->buildOptionsForProperty());
 		}
 		if (isset($this->settings['relationalOptions'])) {

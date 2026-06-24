@@ -196,16 +196,49 @@ class ImageField extends FormField
 			'value'       => $imageData['link'] ?? '',
 			'required'    => false,
 		]);
-		$content .= $this->form->subField('tags', [
+		$content .= $this->form->subField('tags', $this->tagFieldSettings($imageData));
+
+		return HTMLUtils::details('Info', $content);
+	}
+
+	/**
+	 * Settings for the generated `tags` sub-field. Attaches tag-suggestion
+	 * options sourced from the collection index when the parent media property
+	 * is indexed (the index requirement is the opt-in).
+	 *
+	 * @param array<string,mixed> $imageData
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function tagFieldSettings(array $imageData): array
+	{
+		$settings = [
 			'field'       => 'list',
 			'label'       => 'Tags',
 			'help'        => 'Add tags to help organize your images.',
 			'placeholder' => 'Add Tags',
 			'value'       => $imageData['tags'] ?? [],
 			'required'    => false,
-		]);
+		];
 
-		return HTMLUtils::details('Info', $content);
+		// v1 scope: top-level indexed media properties only. A nested field
+		// (inside a card/deck) carries a nestedPath and its bare name could
+		// collide with a top-level indexed property, so it never sources
+		// suggestions — the index can't represent its dotted path anyway.
+		if ($this->nestedPath === null && $this->form->isPropertyIndexed($this->name)) {
+			// Must live under `settings`: subField()/field() route only declared
+			// FormField constructor params, and propertyOptions is read from the
+			// field's `$settings`. A top-level key here is silently dropped.
+			$settings['settings'] = [
+				'propertyOptions' => [
+					'source' => 'mediaTags',
+					'field'  => $this->name,
+					'type'   => $this->field, // 'image' | 'gallery'
+				],
+			];
+		}
+
+		return $settings;
 	}
 
 	/** @param array<string,mixed> $imageData */

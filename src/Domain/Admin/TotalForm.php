@@ -908,6 +908,65 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Extract a flat, de-duplicated list of tag strings from indexed media objects.
+	 * Image values are single image arrays; gallery values are maps of
+	 * imageId => imageData. Used by the `mediaTags` propertyOptions source.
+	 *
+	 * @param array<int,array<string,mixed>> $objects Indexed object summaries.
+	 * @param string                         $field   The image/gallery property name.
+	 * @param string                         $type    'image' or 'gallery'.
+	 *
+	 * @return array<int,string>
+	 */
+	public static function extractMediaTags(array $objects, string $field, string $type): array
+	{
+		$images = collect($objects)
+			->pluck($field)
+			->filter(fn ($value): bool => is_array($value));
+
+		if ($type === 'gallery') {
+			// Gallery values are maps of imageId => imageData; flatten to image items.
+			$images = $images
+				->flatMap(fn ($gallery): array => is_array($gallery) ? array_values($gallery) : [])
+				->filter(fn ($value): bool => is_array($value));
+		}
+
+		return $images
+			->pluck('tags')
+			->flatten()
+			->filter(fn ($tag): bool => is_string($tag) && $tag !== '')
+			->unique()
+			->values()
+			->all();
+	}
+
+	/**
+	 * Whether $property is listed in the active schema's index array.
+	 */
+	public function isPropertyIndexed(string $property): bool
+	{
+		return $this->schemaData instanceof SchemaData
+			&& in_array($property, $this->schemaData->index, true);
+	}
+
+	/**
+	 * Resolve unique existing tags for an image/gallery property from the
+	 * collection index. Backs the `mediaTags` propertyOptions source.
+	 *
+	 * @return array<int,string>
+	 */
+	public function mediaTagsForCollection(string $field, string $type, string $collection = ''): array
+	{
+		if ($collection === '') {
+			$collection = $this->collection;
+		}
+
+		$index = $this->collectionReader->fetchIndex($collection);
+
+		return self::extractMediaTags($index->objects->all(), $field, $type);
+	}
+
+	/**
 	 * @param array<string,mixed> $options
 	 *
 	 * @return array<string,mixed>
