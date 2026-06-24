@@ -72,15 +72,27 @@ export default class TiptapEditor {
 		// Build extensions
 		const extensions = this.buildExtensions();
 
+		// Mount element for ProseMirror. Created up front and passed straight to
+		// the editor so the instance is constructed exactly once. The previous
+		// approach built the editor with `element: null` then destroyed and
+		// recreated it inside createEditorElement(); a transaction dispatched
+		// during that re-mount fired onUpdate while `this.editor` still pointed
+		// at the torn-down instance (null schema), crashing
+		// DOMSerializer.fromSchema ("Cannot read properties of null").
+		const editorEl = document.createElement('div');
+		editorEl.className = 'ste-prosemirror';
+
 		// Create Tiptap editor instance
 		this.editor = new Editor({
-			element: null, // we'll attach manually
+			element: editorEl,
 			extensions: extensions,
 			content: this.textarea.value || '',
 			imageUploadConfig: this.buildUploadConfig('image'),
 			editorProps: this.buildEditorProps(),
 			onUpdate: ({ editor }) => {
-				this.syncToTextarea();
+				// Use the editor handed to the callback, not this.editor: during
+				// the constructor's initial mount this.editor isn't assigned yet.
+				this.syncToTextarea(editor);
 				this.updateFooter();
 				this.options.onContentChanged?.();
 			},
@@ -103,8 +115,8 @@ export default class TiptapEditor {
 		editorWrapper.className = 'ste-editor-wrapper';
 		this.container.appendChild(editorWrapper);
 
-		// Mount editor to the wrapper
-		editorWrapper.appendChild(this.editor.options.element || this.createEditorElement());
+		// Move the already-mounted editor element into the wrapper
+		editorWrapper.appendChild(editorEl);
 
 		// Set height constraints
 		const heightMin = this.options.heightMin || 200;
@@ -129,37 +141,6 @@ export default class TiptapEditor {
 		// Update active states initially
 		this.toolbar.updateActiveStates();
 		this.updateFooter();
-	}
-
-	createEditorElement() {
-		// Tiptap needs an element to mount to - create one and re-init
-		const el = document.createElement('div');
-		el.className = 'ste-prosemirror';
-
-		// Destroy and recreate with the element
-		const content = this.editor.getHTML();
-		this.editor.destroy();
-
-		this.editor = new Editor({
-			element: el,
-			extensions: this.buildExtensions(),
-			content: content,
-			imageUploadConfig: this.buildUploadConfig('image'),
-			editorProps: this.buildEditorProps(),
-			onUpdate: ({ editor }) => {
-				this.syncToTextarea();
-				this.updateFooter();
-				this.options.onContentChanged?.();
-			},
-			onSelectionUpdate: () => {
-				this.toolbar?.updateActiveStates();
-			},
-		});
-
-		// Re-bind toolbar's editor reference
-		this.toolbar.editor = this.editor;
-
-		return el;
 	}
 
 	buildExtensions() {
@@ -479,14 +460,18 @@ export default class TiptapEditor {
 		return div.innerHTML;
 	}
 
-	syncToTextarea() {
-		this.textarea.value = this.cleanHTML(this.editor.getHTML());
+	syncToTextarea(editor = this.editor) {
+		// Guard against a not-yet-assigned or torn-down editor: a transaction can
+		// dispatch onUpdate mid-mount, before this.editor is set.
+		if (!editor || editor.isDestroyed) return;
+		this.textarea.value = this.cleanHTML(editor.getHTML());
 	}
 
 	getHTML() {
 		if (this.codeView?.isActive()) {
 			return this.codeView.getValue();
 		}
+		if (!this.editor || this.editor.isDestroyed) return this.textarea.value;
 		return this.cleanHTML(this.editor.getHTML());
 	}
 
