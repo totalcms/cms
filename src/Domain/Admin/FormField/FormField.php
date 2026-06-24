@@ -364,8 +364,14 @@ class FormField
 	/**
 	 * propertyOptions descriptor that makes a media `tags` sub-field autocomplete
 	 * from tags already used on the same property across the collection. Returns
-	 * null when suggestions shouldn't apply: a nested field (card/deck — its bare
-	 * name can't be resolved against the index in v1) or an unindexed property.
+	 * null when suggestions can't be sourced.
+	 *
+	 * Resolves the index path whose `.tags` seed the suggestions:
+	 * - top-level field  → its own name (the property must be indexed);
+	 * - field nested directly in a top-level card → "<card>.<field>" (the card
+	 *   property must be indexed; Collection::pluck reads the dotted path).
+	 * Deeper nesting (deck items / card-in-card — a dotted nestedPath) needs
+	 * wildcard resolution and is out of scope for now.
 	 *
 	 * Callers MUST place the result under the sub-field's `settings` key:
 	 * subField()/field() route only declared constructor params, and
@@ -375,13 +381,20 @@ class FormField
 	 */
 	protected function mediaTagOptions(): ?array
 	{
-		if ($this->nestedPath !== null || !$this->form->isPropertyIndexed($this->name)) {
+		if ($this->nestedPath === null) {
+			if (!$this->form->isPropertyIndexed($this->name)) {
+				return null;
+			}
+			$field = $this->name;
+		} elseif (!str_contains($this->nestedPath, '.') && $this->form->isPropertyIndexed($this->nestedPath)) {
+			$field = "{$this->nestedPath}.{$this->name}";
+		} else {
 			return null;
 		}
 
 		return [
 			'source' => 'mediaTags',
-			'field'  => $this->name,
+			'field'  => $field,
 			'type'   => $this->field, // 'image' | 'gallery' | 'file'
 		];
 	}

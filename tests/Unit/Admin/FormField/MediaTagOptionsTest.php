@@ -82,13 +82,34 @@ describe('ImageField tag-suggestion wiring', function (): void {
 		expect($invoke($field, [])['settings']['propertyOptions']['type'])->toBe('gallery');
 	});
 
-	test('nested (card/deck) image fields never source suggestions, even if indexed', function () use ($invoke): void {
+	test('image nested directly in an indexed card sources suggestions at the card path', function () use ($invoke): void {
 		$form = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(true);
 
-		// nestedPath set => field lives inside a card/deck; v1 scope is top-level only.
 		$field = new ImageField($form, 'photo', nestedPath: 'mycard');
+
+		expect($invoke($field, [])['settings']['propertyOptions'])
+			->toBe(['source' => 'mediaTags', 'field' => 'mycard.photo', 'type' => 'image']);
+	});
+
+	test('image nested in an unindexed card sources nothing', function () use ($invoke): void {
+		$form = test()->createMock(TotalForm::class);
+		$form->id = '';
+		$form->method('isPropertyIndexed')->willReturn(false);
+
+		$field = new ImageField($form, 'photo', nestedPath: 'mycard');
+
+		expect($invoke($field, []))->not->toHaveKey('settings');
+	});
+
+	test('image nested below a card (deck item path) sources nothing — deferred', function () use ($invoke): void {
+		$form = test()->createMock(TotalForm::class);
+		$form->id = '';
+		$form->method('isPropertyIndexed')->willReturn(true);
+
+		// Dotted nestedPath = a deck item (mydeck.item1); needs wildcard resolution, out of scope.
+		$field = new ImageField($form, 'photo', nestedPath: 'mydeck.item1');
 
 		expect($invoke($field, []))->not->toHaveKey('settings');
 	});
@@ -119,12 +140,23 @@ describe('FileField tag-suggestion wiring', function (): void {
 		expect($invoke(new FileField($form, 'myfile'), []))->not->toHaveKey('settings');
 	});
 
-	test('nested (card/deck) file fields never source suggestions, even if indexed', function () use ($invoke): void {
+	test('file nested directly in an indexed card sources suggestions at the card path', function () use ($invoke): void {
 		$form = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(true);
 
 		$field = new FileField($form, 'doc', nestedPath: 'mycard');
+
+		expect($invoke($field, [])['settings']['propertyOptions'])
+			->toBe(['source' => 'mediaTags', 'field' => 'mycard.doc', 'type' => 'file']);
+	});
+
+	test('file nested below a card (deck item path) sources nothing — deferred', function () use ($invoke): void {
+		$form = test()->createMock(TotalForm::class);
+		$form->id = '';
+		$form->method('isPropertyIndexed')->willReturn(true);
+
+		$field = new FileField($form, 'doc', nestedPath: 'mydeck.item1');
 
 		expect($invoke($field, []))->not->toHaveKey('settings');
 	});

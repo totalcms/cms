@@ -43,6 +43,17 @@ describe('TotalForm::extractMediaTags', function (): void {
 			->toBe(['spec', 'pdf', 'archive']);
 	});
 
+	test('card-nested → a dotted field path reaches the nested media tags', function (): void {
+		$objects = [
+			['id' => 'a', 'mycard' => ['image' => ['tags' => ['sky', 'sea']]]],
+			['id' => 'b', 'mycard' => ['image' => ['tags' => ['sea', 'sand']]]],
+			['id' => 'c', 'mycard' => ['name' => 'no image here']],
+		];
+
+		expect(TotalForm::extractMediaTags($objects, 'mycard.image', 'image'))
+			->toBe(['sky', 'sea', 'sand']);
+	});
+
 	test('returns an empty array when no tags are present', function (): void {
 		expect(TotalForm::extractMediaTags([['id' => 'a']], 'myimage', 'image'))->toBe([]);
 	});
