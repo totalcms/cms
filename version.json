@@ -1,6 +1,7 @@
 {
     "version": "3.5.0-rc.9",
-    "build": "f7f32969",
-    "date": "2026-06-15",
-    "signature": "31d576ee6e95db122879ec53a73b97b97dcfd8506725d61e7fb5ebff5ede749a"
+    "build": "a4bd774d",
+    "commits": 4,
+    "date": "2026-06-24",
+    "signature": "8c9ce525258f30eb69e32cd99a205b567f78b7a386beea43ee1094657fc0db1c"
 }
