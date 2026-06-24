@@ -19,8 +19,20 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22 # Vitest 4 / Vite 8 require Node >= 20.19 / 22.12
+          cache: yarn
+
       - name: Install Yarn
         run: npm install -g yarn
+
+      - name: Install JS dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run JS tests
+        run: yarn test:js
 
       - name: Check PHP version
         run: php -v
