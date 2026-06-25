@@ -22,21 +22,25 @@ export default class Identifier extends TotalField {
 			this.autogen = new Autogen(this);
 		}
 
-		// Check if we're editing an existing item (form has an ID).
-		// Deck items have no form-level id, so key off the field's own value: an
-		// existing item is rendered with a saved ID, while new items start empty
-		// (autogen fills them) and duplicates are cleared before init. Disabling
-		// the existing item's ID — not just leaving it readonly — stops autogen
-		// from regenerating it when a referenced field changes, which would move
-		// the item's saved image/file location. readonly is deliberately NOT the
-		// trigger: a schema can render a readonly-but-autogen ID, and a new item
-		// has no value yet, so autogen still runs for those.
+		// Only the object-identity field (property "id") locks when editing an
+		// existing record. Other id-type fields on the same form (e.g. user_id)
+		// share this class but are ordinary, always-editable properties — they
+		// must never be disabled just because the object has an id, or because
+		// the id field autogenned one (autogen also sets form.id).
+		//
+		// "Editing an existing object" = the FORM has an id (data-id). That is
+		// blank for new objects AND duplicates — even with keepIdOnDuplicate,
+		// where the id field is pre-filled but the form id stays blank — so a
+		// duplicate's id remains editable. Deck items have no form id, so an
+		// existing deck item is detected by its own saved value (new items start
+		// empty / autogen, duplicates are cleared before init). Locking stops
+		// autogen from moving the record's saved image/file storage when a
+		// referenced field changes; readonly is deliberately NOT the trigger so a
+		// readonly-but-autogen id still updates.
+		const isExistingObject   = this.form.id && this.form.id.length > 0 && !this.isInDeck && !this.form.isTemplateForm();
 		const isExistingDeckItem = this.isInDeck && this.getValue() !== "";
 
-		if (
-			(this.form.id && this.form.id.length > 0 && !this.isInDeck && !this.form.isTemplateForm()) ||
-			isExistingDeckItem
-		) {
+		if (this.property === "id" && (isExistingObject || isExistingDeckItem)) {
 			// The ID cannot be changed when editing (except templates which support rename/move)
 			this.disable();
 			this.valid = true; // ID is valid in edit mode since it can't be changed
@@ -51,8 +55,10 @@ export default class Identifier extends TotalField {
     }
 
 	changed() {
-		// Don't update form ID when in deck context (deck items have their own IDs)
-		if (!this.isInDeck) {
+		// Only the identity field (property "id") drives the form's id. Deck
+		// items have their own IDs, and other id-type fields (user_id, …) are
+		// ordinary properties that must not overwrite the form id.
+		if (!this.isInDeck && this.property === "id") {
 			this.form.setId(this.getValue());
 		}
 		// don't trigger change events for ID field

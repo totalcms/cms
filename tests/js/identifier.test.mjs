@@ -77,3 +77,35 @@ describe('Identifier.isLocked', () => {
 		expect(withState({ readonly: true }).isLocked()).toBe(false);
 	});
 });
+
+describe('Identifier.changed', () => {
+	function field(property, { isInDeck = false, value = 'abc' } = {}) {
+		const id = Object.create(Identifier.prototype);
+		id.property = property;
+		id.isInDeck = isInDeck;
+		const setIdCalls = [];
+		id.form = { setId: v => setIdCalls.push(v) };
+		id.getValue = () => value;
+		return { id, setIdCalls };
+	}
+
+	test('the identity field (property "id") drives the form id', () => {
+		const { id, setIdCalls } = field('id', { value: 'my-post' });
+		id.changed();
+		expect(setIdCalls).toEqual(['my-post']);
+	});
+
+	// The fix: a second id-type field (user_id) is an ordinary property and must
+	// not overwrite the form's id when edited.
+	test('a non-id id-type field (user_id) does not touch the form id', () => {
+		const { id, setIdCalls } = field('user_id', { value: 'user-123' });
+		id.changed();
+		expect(setIdCalls).toEqual([]);
+	});
+
+	test('a deck id field does not touch the form id', () => {
+		const { id, setIdCalls } = field('id', { isInDeck: true });
+		id.changed();
+		expect(setIdCalls).toEqual([]);
+	});
+});
