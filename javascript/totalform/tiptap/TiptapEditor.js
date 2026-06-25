@@ -355,6 +355,12 @@ export default class TiptapEditor {
 	}
 
 	openLinkDialog() {
+		// A link needs something to attach to: selected text, or the cursor
+		// inside an existing link (edit mode). With an empty selection on plain
+		// text, setLink() silently no-ops — so don't open a dialog that can't
+		// apply anything. The toolbar also disables the button in this state.
+		const { empty } = this.editor.state.selection;
+		if (empty && !this.editor.isActive('link')) return;
 		createLinkDialog(this.editor);
 	}
 

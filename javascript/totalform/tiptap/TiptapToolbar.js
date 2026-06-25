@@ -844,6 +844,13 @@ export default class TiptapToolbar {
 				case 'link':           isActive = this.editor.isActive('link'); break;
 			}
 
+			// A link needs a selection (or an existing link to edit). Disable the
+			// button when there's nothing to act on, so it isn't a dead click that
+			// opens a dialog which can't apply anything.
+			if (name === 'link') {
+				btn.disabled = this.editor.state.selection.empty && !isActive;
+			}
+
 			btn.classList.toggle('is-active', isActive);
 		}
 	}
