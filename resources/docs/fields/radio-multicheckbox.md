@@ -37,6 +37,21 @@ Use the `fieldColumns` setting to arrange options in CSS columns. Options flow *
 - The browser creates as many columns as will fit in the container
 - Column-major reading order (top-to-bottom within a column)
 
+## Checklist Layout (`layout: "checklist"`)
+
+Use the `layout: "checklist"` setting to render the multicheckbox field as a compact, bordered, multi-column card with a "select all / none" toggle button. The stored array value remains unchanged — this is purely a visual presentation. Pair with `fieldColumns` to tune column width. This layout is only available for multicheckbox fields; radio fields do not support it.
+
+```json
+{
+    "layout": "checklist"
+}
+```
+
+- Renders as a compact, bordered card containing all options
+- Includes a "select all / none" toggle button positioned at the top-right
+- Can be combined with `fieldColumns` to control how options flow within the card
+- Multicheckbox-only; does not apply to radio fields
+
 ## Required Behavior
 
 Radio and multicheckbox fields handle the `required` setting differently, because the semantics of "required" don't translate cleanly to a group of inputs.
