@@ -81,7 +81,7 @@ Total CMS v1 injected content into a page with `%macro(cmsid)%` tags placed dire
 | **Content addressing** | A single global `cmsid` per content type | A **collection** + object **id**. The reserved collections (`text`, `image`, `gallery`, `file`, `toggle`, `date`, …) are the defaults, so a lone `cmsid` still maps 1:1 |
 | **Image sizes** | Fixed `Thumb` / `Square` presets baked into the macro name | Any dimensions on demand via [ImageWorks](docs/twig/imageworks) options — `{w: 300, h: 300, fit: 'crop'}` |
 | **PNG output** | Separate `…Png…` macros | One option: `{fm: 'png'}` |
-| **Markdown / formatting** | Separate `…Format` macros | A Twig filter: `| markdown` or `| markdownInline` |
+| **Markdown / formatting** | Separate `…Format` macros | A Twig filter: `\| markdown` or `\| markdownInline` |
 
 Because the reserved-collection defaults match v1's content types, the `cmsid` you used in v1 becomes the object **id** in T3 with no extra arguments. If you migrated content into a *custom* collection, add a context object: `{collection: 'pages', property: 'body'}`.
 
@@ -91,8 +91,8 @@ Because the reserved-collection defaults match v1's content types, the `cmsid` y
 |--------------|-------------|------------------|
 | `%cmsData(cmsid)%` | Raw stored value | `{{ cms.data('text', 'cmsid', 'text') }}` |
 | `%cmsText(cmsid)%` | Text | `{{ cms.data.text('cmsid') }}` |
-| `%cmsTextFormat(cmsid)%` | Markdown → HTML | `{{ cms.data.text('cmsid')| markdown }}` |
-| `%cmsTextStripHTML(cmsid)%` | Strip HTML | `{{ cms.data.text('cmsid')| striptags }}` |
+| `%cmsTextFormat(cmsid)%` | Markdown → HTML | `{{ cms.data.text('cmsid') \| markdown }}` |
+| `%cmsTextStripHTML(cmsid)%` | Strip HTML | `{{ cms.data.text('cmsid') \| striptags }}` |
 | `%cmsToggle(cmsid)%` | Boolean toggle | `{{ cms.data.toggle('cmsid') }}` |
 
 > `cms.data('text', 'cmsid', 'text')` is the [callable shorthand](docs/twig/data#raw-data-access) for `cms.data.raw(...)` — it returns the value exactly as stored. For everyday text use `cms.data.text('cmsid')`.
@@ -102,7 +102,7 @@ Because the reserved-collection defaults match v1's content types, the `cmsid` y
 | Total CMS v1 | Description | Total CMS 3 Twig |
 |--------------|-------------|------------------|
 | `%cmsImageAlt(cmsid)%` | Image alt | `{{ cms.render.alt('cmsid') }}` |
-| `%cmsImageAltFormat(cmsid)%` | Image alt (markdown) | `{{ cms.render.alt('cmsid')| markdownInline }}` |
+| `%cmsImageAltFormat(cmsid)%` | Image alt (markdown) | `{{ cms.render.alt('cmsid') \| markdownInline }}` |
 
 ### Gallery alt text
 
@@ -111,11 +111,11 @@ The v1 `Featured` / `First` / `Last` macros become the [dynamic selectors](docs/
 | Total CMS v1 | Description | Total CMS 3 Twig |
 |--------------|-------------|------------------|
 | `%cmsGalleryImageFeaturedAlt(cmsid)%` | Featured image alt | `{{ cms.render.galleryAlt('cmsid', 'featured') }}` |
-| `%cmsGalleryImageFeaturedAltFormat(cmsid)%` | Featured alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'featured')| markdownInline }}` |
+| `%cmsGalleryImageFeaturedAltFormat(cmsid)%` | Featured alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'featured') \| markdownInline }}` |
 | `%cmsGalleryImageFirstAlt(cmsid)%` | First image alt | `{{ cms.render.galleryAlt('cmsid', 'first') }}` |
-| `%cmsGalleryImageFirstAltFormat(cmsid)%` | First alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'first')| markdownInline }}` |
+| `%cmsGalleryImageFirstAltFormat(cmsid)%` | First alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'first') \| markdownInline }}` |
 | `%cmsGalleryImageLastAlt(cmsid)%` | Last image alt | `{{ cms.render.galleryAlt('cmsid', 'last') }}` |
-| `%cmsGalleryImageLastAltFormat(cmsid)%` | Last alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'last')| markdownInline }}` |
+| `%cmsGalleryImageLastAltFormat(cmsid)%` | Last alt (markdown) | `{{ cms.render.galleryAlt('cmsid', 'last') \| markdownInline }}` |
 
 ### Image path macros
 
@@ -202,9 +202,9 @@ Migrated blogs use the **`blog-legacy`** schema, whose property names are shown 
 | `%blogExtraContent()%` | `{{ post.extra }}` |
 | `%blogExtraContent2()%` | `{{ post.extra2 }}` |
 | `%blogMedia()%` | `{{ post.media }}` |
-| `%blogTags()%` | `{{ post.tags| join(', ') }}` |
-| `%blogCategories()%` | `{{ post.categories| join(', ') }}` |
-| `%blogLabels()%` | `{{ post.labels| join(', ') }}` |
+| `%blogTags()%` | `{{ post.tags \| join(', ') }}` |
+| `%blogCategories()%` | `{{ post.categories \| join(', ') }}` |
+| `%blogLabels()%` | `{{ post.labels \| join(', ') }}` |
 
 The v1 `…Format` and `…StripHTML` variants are just Twig filters on the same field — append `| markdown` (or `| markdownInline`) for the formatted version and `| striptags` to strip HTML. For example `%blogContentFormat()%` → `{{ post.content| markdown }}` and `%blogContentStripHTML()%` → `{{ post.content| striptags }}`. The `tags` / `categories` / `labels` fields are lists, so render them with `| join(', ')` (or loop over them).
 
@@ -214,15 +214,15 @@ The post's `date` is stored as ISO‑8601; format it with Twig's [`date`](docs/t
 
 | Total CMS v1 | Output | Total CMS 3 Twig |
 |--------------|--------|------------------|
-| `%blogDateMonth()%` | `01`–`12` | `{{ post.date| date('m') }}` |
-| `%blogDateMonthName()%` | `January`–`December` | `{{ post.date| date('F') }}` |
-| `%blogDateMonthNameShort()%` | `Jan`–`Dec` | `{{ post.date| date('M') }}` |
-| `%blogDateDay()%` | `01`–`31` | `{{ post.date| date('d') }}` |
-| `%blogDateDayName()%` | `Monday`–`Sunday` | `{{ post.date| date('l') }}` |
-| `%blogDateDayNameShort()%` | `Mon`–`Sun` | `{{ post.date| date('D') }}` |
-| `%blogDateYear()%` | `2017` | `{{ post.date| date('Y') }}` |
-| `%blogDateYearShort()%` | `17` | `{{ post.date| date('y') }}` |
-| `%blogDateISO8601()%` | `2022-06-04T00:50:29+00:00` | `{{ post.date| date('c') }}` |
+| `%blogDateMonth()%` | `01`–`12` | `{{ post.date \| date('m') }}` |
+| `%blogDateMonthName()%` | `January`–`December` | `{{ post.date \| date('F') }}` |
+| `%blogDateMonthNameShort()%` | `Jan`–`Dec` | `{{ post.date \| date('M') }}` |
+| `%blogDateDay()%` | `01`–`31` | `{{ post.date \| date('d') }}` |
+| `%blogDateDayName()%` | `Monday`–`Sunday` | `{{ post.date \| date('l') }}` |
+| `%blogDateDayNameShort()%` | `Mon`–`Sun` | `{{ post.date \| date('D') }}` |
+| `%blogDateYear()%` | `2017` | `{{ post.date \| date('Y') }}` |
+| `%blogDateYearShort()%` | `17` | `{{ post.date \| date('y') }}` |
+| `%blogDateISO8601()%` | `2022-06-04T00:50:29+00:00` | `{{ post.date \| date('c') }}` |
 
 #### Images & galleries
 

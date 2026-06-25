@@ -10,7 +10,7 @@ other field values. When used on the ID field, the generated value is automatica
 slugified (lowercased, spaces replaced with hyphens, special characters removed).
 
 For using autogen on non-ID fields (text, textarea, etc.), see the
-[All Field Settings](all-fields.md) documentation.
+[All Field Settings](docs/fields/all-fields) documentation.
 
 ```json
 {
