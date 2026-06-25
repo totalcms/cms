@@ -114,7 +114,15 @@ export default class Identifier extends TotalField {
 	}
 
 	isLocked() {
-		return this.container.classList.contains("locked") || this.input.hasAttribute("disabled");
+		// A readonly ID input is an existing-item ID: IdField renders it readonly
+		// whenever the ID already has a value (objects AND deck items), and only
+		// then. Treating readonly as locked stops autogen from regenerating an
+		// existing ID when a referenced field changes — which would move the
+		// object/deck-item's saved image & file locations (the id is their path).
+		// New / duplicate / template IDs aren't readonly, so autogen still runs.
+		return this.container.classList.contains("locked")
+			|| this.input.hasAttribute("disabled")
+			|| this.input.hasAttribute("readonly");
 	}
 
     slugify(id) {

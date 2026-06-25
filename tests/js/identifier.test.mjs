@@ -49,3 +49,30 @@ describe('Identifier.autogenId', () => {
 		expect(withAutogen({ raw: 'My Post', settings: { snakeCase: true } }).autogenId()).toBe('my_post');
 	});
 });
+
+describe('Identifier.isLocked', () => {
+	function withState({ locked = false, disabled = false, readonly = false } = {}) {
+		const id = Object.create(Identifier.prototype);
+		id.container = { classList: { contains: cls => cls === 'locked' && locked } };
+		id.input = { hasAttribute: attr => (attr === 'disabled' && disabled) || (attr === 'readonly' && readonly) };
+		return id;
+	}
+
+	test('unlocked when nothing is set (new / editable ID — autogen may run)', () => {
+		expect(withState().isLocked()).toBe(false);
+	});
+
+	// The fix: an existing-item ID is rendered readonly by IdField, so autogen
+	// must treat it as locked and not regenerate it.
+	test('locked when the input is readonly (existing-item ID)', () => {
+		expect(withState({ readonly: true }).isLocked()).toBe(true);
+	});
+
+	test('locked via the disabled attribute', () => {
+		expect(withState({ disabled: true }).isLocked()).toBe(true);
+	});
+
+	test('locked via the locked class', () => {
+		expect(withState({ locked: true }).isLocked()).toBe(true);
+	});
+});
