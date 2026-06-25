@@ -784,6 +784,14 @@ export default class TiptapToolbar {
 	}
 
 	executeCommand(def) {
+		// The editor can be torn down (e.g. a deck/dialog styledtext field
+		// closing) while a toolbar click is still in flight; reading
+		// editor.commands then throws "null is not an object (commandManager.
+		// commands)". Bail when the editor is gone or destroyed.
+		if (!this.editor || this.editor.isDestroyed) {
+			return;
+		}
+
 		const { command, args } = def;
 
 		// Commands that need to be handled by TiptapEditor (not direct editor commands)

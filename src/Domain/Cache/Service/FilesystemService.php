@@ -62,10 +62,13 @@ readonly class FilesystemService implements CacheInterface
 			return false;
 		}
 
-		// Try to create cache directory if it doesn't exist
+		// Try to create cache directory if it doesn't exist. The `@` swallows
+		// the "File exists" warning when a concurrent request wins the race
+		// between this check and mkdir() — the trailing is_dir() re-check is
+		// the real success test, so the race is benign and must stay silent.
 		if (!is_dir($this->cacheDir)) {
 			try {
-				if (!mkdir($this->cacheDir, 0755, true) && !is_dir($this->cacheDir)) {
+				if (!@mkdir($this->cacheDir, 0755, true) && !is_dir($this->cacheDir)) {
 					return false;
 				}
 			} catch (\Exception) {
@@ -253,7 +256,10 @@ readonly class FilesystemService implements CacheInterface
 					continue;
 				}
 
-				$content = file_get_contents($file->getPathname());
+				// `@` swallows the warning when another request (or an expiring
+				// read) unlinks the file between the iterator listing it and
+				// this read — a benign race during a concurrent pattern clear.
+				$content = @file_get_contents($file->getPathname());
 				if ($content === false) {
 					continue;
 				}
@@ -328,12 +334,12 @@ readonly class FilesystemService implements CacheInterface
 		$subDir = substr($hash, 0, 2);
 		$dir    = $this->cacheDir . '/' . $subDir;
 
+		// `@` swallows the "File exists" warning from the check-then-mkdir race
+		// when a concurrent request creates the same shard dir first (TOCTOU).
+		// A genuine failure (e.g. permissions) is harmless here — the cache
+		// write that follows fails gracefully in writeEntry().
 		if (!is_dir($dir)) {
-			try {
-				mkdir($dir, 0755, true);
-			} catch (\Exception) {
-				// Directory creation failed, will use parent dir
-			}
+			@mkdir($dir, 0755, true);
 		}
 
 		return $dir . '/' . $hash . '.cache';

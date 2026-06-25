@@ -37,8 +37,11 @@ class LoggerFactory
 		$this->path  = (string)($settings['path'] ?? '');
 		$this->level = is_a($settings['level'], Level::class) ? $settings['level'] : Level::Debug;
 
+		// `@` keeps a raced or permission-denied mkdir from raising a warning
+		// that the error handler would promote to an exception — logging setup
+		// must never crash the request it's trying to instrument.
 		if ($this->path !== '' && !is_dir($this->path)) {
-			mkdir($this->path, 0755, true);
+			@mkdir($this->path, 0755, true);
 		}
 
 		// This can be used for testing to make the Factory testable
