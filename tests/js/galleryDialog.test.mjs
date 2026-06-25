@@ -46,3 +46,53 @@ describe('GalleryField.readSharedDialog', () => {
 		expect(data).toEqual({ name: 'pic.jpg', exif: { nodata: '' } });
 	});
 });
+
+//-----------------------------------------------
+// ROUND-TRIP: populateSharedDialog() flattens an image into the dialog fields and
+// readSharedDialog() rebuilds it. If that isn't lossless, editing an image in a
+// gallery silently corrupts its data on save — the highest-stakes failure here.
+//-----------------------------------------------
+function galleryWithFields(fieldKeys) {
+	const plain = (property) => {
+		let stored;
+		return { totalfield: { property, setValue: (v) => { stored = v; }, getValue: () => stored, saved: () => {} } };
+	};
+	// palette-* are color fields: setValue takes a hex string, getValue returns {hex}.
+	const color = (property) => {
+		let stored = '';
+		return { totalfield: { property, setValue: (v) => { stored = v; }, getValue: () => ({ hex: stored }), saved: () => {} } };
+	};
+
+	const gallery = Object.create(GalleryField.prototype);
+	gallery.sharedDialogFields = fieldKeys.map((k) => (k.startsWith('palette-') ? color(k) : plain(k)));
+	gallery.sharedDialog = { dialog: document.createElement('div') };
+	gallery.activePreview = { container: document.createElement('div') };
+	return gallery;
+}
+
+describe('GalleryField populate -> read round-trip', () => {
+	test('preserves a fully-populated image exactly', () => {
+		const fields = ['name', 'alt', 'link', 'focalpoint-x', 'focalpoint-y', 'exif-author', 'exif-camera', 'palette-0', 'palette-1'];
+		const gallery = galleryWithFields(fields);
+
+		const original = {
+			name: 'pic.jpg',
+			alt: 'astronaut',
+			link: 'https://example.com',
+			focalpoint: { x: 30, y: 70 },
+			exif: { author: 'Jane', camera: 'Canon' },
+			palette: ['#ffffff', '#000000'],
+		};
+
+		gallery.populateSharedDialog(original);
+		expect(gallery.readSharedDialog()).toEqual(original);
+	});
+
+	test('an image with no exif comes back with the {nodata} placeholder (documented quirk)', () => {
+		const gallery = galleryWithFields(['name', 'exif-author']);
+
+		gallery.populateSharedDialog({ name: 'pic.jpg' }); // no exif on the source
+
+		expect(gallery.readSharedDialog()).toEqual({ name: 'pic.jpg', exif: { nodata: '' } });
+	});
+});
