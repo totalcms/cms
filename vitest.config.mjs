@@ -8,9 +8,11 @@ export default defineConfig({
 		globals: true, // describe / test / expect available without imports
 		coverage: {
 			provider: 'v8',
-			// Report against the whole source tree (not just files a test imported),
-			// so the real coverage gap is visible.
-			include: ['javascript/**/*.{js,mjs}'],
+			// Scope to the unit-testable surface — the admin form system — so the
+			// percentage reflects code we actually intend to cover, not page-bootstrap
+			// entry points (admin.js, content.js, …) or vendor re-export bundles
+			// (codemirror-bundle.js) that aren't economically unit-tested.
+			include: ['javascript/totalform/**/*.{js,mjs}'],
 			reporter: ['text-summary', 'text', 'html'],
 		},
 	},
