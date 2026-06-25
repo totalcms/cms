@@ -14,6 +14,15 @@ export default defineConfig({
 			// (codemirror-bundle.js) that aren't economically unit-tested.
 			include: ['javascript/totalform/**/*.{js,mjs}'],
 			reporter: ['text-summary', 'text', 'html'],
+			// Ratchet floor: set just below current so it passes now but blocks
+			// regression. Bump these up as coverage grows (enforced by
+			// `test:js:coverage`, which CI runs).
+			thresholds: {
+				statements: 11,
+				branches: 8,
+				functions: 11,
+				lines: 11,
+			},
 		},
 	},
 });
