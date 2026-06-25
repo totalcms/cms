@@ -7,6 +7,20 @@ export default class MultiCheckboxField extends TotalField {
 
     constructor(container, settings) {
         super(...arguments);
+        this.initToggleAll();
+    }
+
+    initToggleAll() {
+        const toggle = this.container.querySelector('.choice-field-toggle-all');
+        if (!toggle) return;
+        toggle.addEventListener('click', () => {
+            const boxes = Array.from(this.container.querySelectorAll('input[type=checkbox]'));
+            const allChecked = boxes.length > 0 && boxes.every(cb => cb.checked);
+            boxes.forEach(cb => { cb.checked = !allChecked; });
+            toggle.textContent = allChecked ? '+' : '−';
+            toggle.title = allChecked ? 'Select all' : 'Deselect all';
+            this.changed();
+        });
     }
 
 	validate() {
