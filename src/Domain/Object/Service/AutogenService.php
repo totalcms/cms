@@ -140,6 +140,11 @@ readonly class AutogenService
 				return str_pad((string)$oidValue, $paddingLength, '0', STR_PAD_LEFT);
 			}
 
+			// uid-N → a random id of N characters (bare ${uid} stays the default).
+			if (preg_match('/^uid-(\d+)$/', $key, $matches)) {
+				return AutogenIdService::generateUid((int)$matches[1]);
+			}
+
 			return (string)($data[$key] ?? '');
 		});
 	}
@@ -158,6 +163,11 @@ readonly class AutogenService
 				$oidValue      = $oidCount + 1;
 
 				return str_pad((string)$oidValue, $paddingLength, '0', STR_PAD_LEFT);
+			}
+
+			// uid-N → a random id of N characters (bare ${uid} stays the default).
+			if (preg_match('/^uid-(\d+)$/', $key, $matches)) {
+				return AutogenIdService::generateUid((int)$matches[1]);
 			}
 
 			return (string)($data[$key] ?? '');

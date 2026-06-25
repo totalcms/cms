@@ -48,7 +48,8 @@ identifiers starting with a digit).
 * **now** - Current timestamp in milliseconds (e.g., 1692123456789)
 * **timestamp** - Current date/time in ISO format without colons/dashes (e.g., 20230815T143056)
 * **uuid** - Real UUID v4 format (e.g., 550e8400-e29b-41d4-a716-446655440000)
-* **uid** - Short random alphanumeric string (e.g., a4k7m2x)
+* **uid** - Short random alphanumeric string, 7 characters (e.g., a4k7m2x)
+* **uid-N** - Random alphanumeric string of N characters (e.g., `uid-12` → a 12-character id)
 * **oid** - Object ID counter (increments with each new object in collection)
 * **oid-00000** - Zero-padded Object ID (e.g., oid-00001, oid-12345)
 * **currentyear** - Full 4-digit year (e.g., 2025)
@@ -89,6 +90,14 @@ Generates: `my-post-550e8400-e29b-41d4-a716-446655440000`
 }
 ```
 Generates: `my-post-a4k7m2x`
+
+**Custom-length uid:** append `-N` to set the character count (the bare `${uid}` stays 7):
+```json
+{
+	"autogen" : "${title}-${uid-12}"
+}
+```
+Generates: `my-post-a4k7m2xq8r3z`
 
 ## OID (Object ID) Examples
 

@@ -26,6 +26,10 @@ describe('Autogen.getFieldNames', () => {
 	test('returns nothing when the pattern is only reserved variables', () => {
 		expect(makeAutogen('${currentyear}-${uuid}-${oid}').getFieldNames()).toEqual([]);
 	});
+
+	test('excludes sized uid- tokens (they are special variables, not fields)', () => {
+		expect(makeAutogen('${title}-${uid-8}').getFieldNames()).toEqual(['title']);
+	});
 });
 
 describe('Autogen.generate', () => {
@@ -56,5 +60,20 @@ describe('Autogen.generate', () => {
 		expect(makeAutogen('${uuid}').generate()).toMatch(
 			/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
 		);
+	});
+
+	test('bare ${uid} produces exactly 7 base-36 chars', () => {
+		expect(makeAutogen('${uid}').generate()).toMatch(/^[0-9a-z]{7}$/);
+	});
+
+	test('${uid-N} produces exactly N base-36 chars (including lengths beyond one draw)', () => {
+		expect(makeAutogen('${uid-12}').generate()).toMatch(/^[0-9a-z]{12}$/);
+		expect(makeAutogen('${uid-3}').generate()).toMatch(/^[0-9a-z]{3}$/);
+		expect(makeAutogen('${uid-40}').generate()).toMatch(/^[0-9a-z]{40}$/);
+	});
+
+	test('${uid-N} composes with other tokens', () => {
+		const out = makeAutogen('${title}-${uid-5}', { fields: { title: 'post' } }).generate();
+		expect(out).toMatch(/^post-[0-9a-z]{5}$/);
 	});
 });

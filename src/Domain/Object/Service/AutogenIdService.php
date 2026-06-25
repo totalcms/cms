@@ -71,15 +71,21 @@ readonly class AutogenIdService
 	}
 
 	/**
-	 * Generate a short random UID similar to JavaScript version.
+	 * Generate a short random UID similar to the JavaScript version.
 	 *
-	 * @return string 7-character alphanumeric string
+	 * @param int $length Number of characters (default 7); `${uid-N}` passes N
+	 *
+	 * @return string Alphanumeric string of $length characters
 	 */
-	public static function generateUid(): string
+	public static function generateUid(int $length = 7): string
 	{
+		if ($length <= 0) {
+			return '';
+		}
+
 		$characters = '0123456789abcdefghijklmnopqrstuvwxyz';
 		$uid        = '';
-		for ($i = 0; $i < 7; $i++) {
+		for ($i = 0; $i < $length; $i++) {
 			$uid .= $characters[random_int(0, strlen($characters) - 1)];
 		}
 

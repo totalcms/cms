@@ -29,6 +29,7 @@ Use `${fieldname}` to reference any other property in the same form. There are a
 * **timestamp** - Current date/time in compact ISO format (e.g., 20230815T143056)
 * **uuid** - UUID v4 (e.g., 550e8400-e29b-41d4-a716-446655440000)
 * **uid** - Short random 7-character alphanumeric string
+* **uid-N** - Random alphanumeric string of N characters (e.g., `uid-12`)
 * **oid** - Object ID counter (increments per object in collection)
 * **oid-00000** - Zero-padded Object ID
 * **currentyear** - Full 4-digit year

@@ -1,0 +1,144 @@
+{
+	"_comment": "Single source of truth for the autogen special-variable feature set. Asserted by BOTH the JS engine (tests/js/autogenParity.test.mjs \u2192 javascript/totalform/autogen.js) and the PHP engine (tests/Domain/Object/Service/AutogenFeatureSetTest.php \u2192 src/Domain/Object/Service/AutogenService.php) against the same cases. Add a case here whenever you add/change a token in either engine \u2014 the other engine's test fails until it matches, which is how drift is caught. Inputs: 'pattern' (raw, un-slugified), 'fields' (object data), 'oid' (current collection count; next oid = oid + 1). Output assertion: 'equals' for deterministic output, 'matches' (anchored regex, no delimiters \u2014 kept to a JS/PCRE-common subset) for random or time-based output.",
+	"cases": [
+		{
+			"name": "field interpolation",
+			"pattern": "${title}",
+			"fields": {
+				"title": "Hello World"
+			},
+			"oid": 0,
+			"equals": "Hello World"
+		},
+		{
+			"name": "multiple fields + separator",
+			"pattern": "${a}-${b}",
+			"fields": {
+				"a": "x",
+				"b": "y"
+			},
+			"oid": 0,
+			"equals": "x-y"
+		},
+		{
+			"name": "numeric field coercion",
+			"pattern": "${count}",
+			"fields": {
+				"count": 5
+			},
+			"oid": 0,
+			"equals": "5"
+		},
+		{
+			"name": "non-scalar field ignored",
+			"pattern": "x${obj}y",
+			"fields": {
+				"obj": {
+					"nested": true
+				}
+			},
+			"oid": 0,
+			"equals": "xy"
+		},
+		{
+			"name": "oid bare",
+			"pattern": "${oid}",
+			"fields": {},
+			"oid": 6,
+			"equals": "7"
+		},
+		{
+			"name": "oid zero-padded width 3",
+			"pattern": "${oid-000}",
+			"fields": {},
+			"oid": 6,
+			"equals": "007"
+		},
+		{
+			"name": "oid zero-padded width 5",
+			"pattern": "${oid-00000}",
+			"fields": {},
+			"oid": 0,
+			"equals": "00001"
+		},
+		{
+			"name": "oid combined with field",
+			"pattern": "${title}-${oid-00}",
+			"fields": {
+				"title": "hi"
+			},
+			"oid": 0,
+			"equals": "hi-01"
+		},
+		{
+			"name": "currentyear",
+			"pattern": "${currentyear}",
+			"fields": {},
+			"oid": 0,
+			"matches": "^[0-9]{4}$"
+		},
+		{
+			"name": "currentyear2",
+			"pattern": "${currentyear2}",
+			"fields": {},
+			"oid": 0,
+			"matches": "^[0-9]{2}$"
+		},
+		{
+			"name": "currentmonth",
+			"pattern": "${currentmonth}",
+			"fields": {},
+			"oid": 0,
+			"matches": "^[0-9]{2}$"
+		},
+		{
+			"name": "currentday",
+			"pattern": "${currentday}",
+			"fields": {},
+			"oid": 0,
+			"matches": "^[0-9]{2}$"
+		},
+		{
+			"name": "timestamp",
+			"pattern": "${timestamp}",
+			"fields": {},
+			"oid": 0,
+			"matches": "^[0-9]{8}T[0-9]{6}$"
+		},
+		{
+			"name": "now",
+			"pattern": "${now}",
+			"fields": {},
+			"oid": 0,
+			"matches": "^[0-9]+$"
+		},
+		{
+			"name": "uuid v4",
+			"pattern": "${uuid}",
+			"fields": {},
+			"oid": 0,
+			"matches": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+		},
+		{
+			"name": "uid default length 7",
+			"pattern": "${uid}",
+			"fields": {},
+			"oid": 0,
+			"matches": "^[0-9a-z]{7}$"
+		},
+		{
+			"name": "uid custom length",
+			"pattern": "${uid-12}",
+			"fields": {},
+			"oid": 0,
+			"matches": "^[0-9a-z]{12}$"
+		},
+		{
+			"name": "uid custom length + field",
+			"pattern": "item-${uid-3}",
+			"fields": {},
+			"oid": 0,
+			"matches": "^item-[0-9a-z]{3}$"
+		}
+	]
+}
