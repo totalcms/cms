@@ -268,6 +268,29 @@ final class AdminDocsActionTest extends TestCase
 		$this->assertSame($expectedResponse, $result);
 	}
 
+	public function testUnescapesPipesInsideTableCellsOnly(): void
+	{
+		$method = new \ReflectionMethod(AdminDocsAction::class, 'unescapeTablePipes');
+
+		// A table cell code span with a GFM-escaped pipe, plus a fenced code
+		// block (outside any cell) that legitimately contains a backslash-pipe.
+		$html = '<table><tbody><tr>'
+			. '<th><code>\| hex</code></th>'
+			. '<td>the <code>\| markdown</code> filter</td>'
+			. '</tr></tbody></table>'
+			. '<pre><code>grep "a\|b"</code></pre>';
+
+		$result = (string)$method->invoke($this->action, $html);
+
+		// Escaped pipes inside table cells become literal pipes (matches GFM/Astro).
+		$this->assertStringContainsString('<code>| hex</code>', $result);
+		$this->assertStringContainsString('<code>| markdown</code>', $result);
+		$this->assertStringNotContainsString('<code>\| hex</code>', $result);
+
+		// A backslash-pipe in a fenced code block (not a table cell) is preserved.
+		$this->assertStringContainsString('a\|b', $result);
+	}
+
 	public function testHandlesLeadingAndTrailingSlashes(): void
 	{
 		$uri = $this->createMock(UriInterface::class);
