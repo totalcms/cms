@@ -114,3 +114,37 @@ describe('TotalField.validate', () => {
 		expect(f.validate()).toBe(true);
 	});
 });
+
+describe('TotalField visibility', () => {
+	test('hide() marks the field hidden and show() reveals it', () => {
+		const f = makeField();
+		expect(f.isVisible()).toBe(true);
+
+		f.hide();
+		expect(f.isHidden()).toBe(true);
+		expect(f.isVisible()).toBe(false);
+		expect(f.container.style.display).toBe('none');
+		expect(f.container.classList.contains('field-hidden')).toBe(true);
+
+		f.show();
+		expect(f.isVisible()).toBe(true);
+		expect(f.container.classList.contains('field-hidden')).toBe(false);
+		expect(f.container.classList.contains('field-visible')).toBe(true);
+		expect(f.container.style.display).toBe('');
+	});
+});
+
+describe('TotalField value', () => {
+	test('setValue writes the input and marks the field unsaved on a real change', () => {
+		const f = makeField({ value: 'one' });
+		f.setValue('two');
+		expect(f.input.value).toBe('two');
+		expect(f.container.classList.contains('unsaved')).toBe(true);
+	});
+
+	test('clearValue empties the input', () => {
+		const f = makeField({ value: 'something' });
+		f.clearValue();
+		expect(f.input.value).toBe('');
+	});
+});
