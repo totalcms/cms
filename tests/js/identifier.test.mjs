@@ -62,17 +62,18 @@ describe('Identifier.isLocked', () => {
 		expect(withState().isLocked()).toBe(false);
 	});
 
-	// The fix: an existing-item ID is rendered readonly by IdField, so autogen
-	// must treat it as locked and not regenerate it.
-	test('locked when the input is readonly (existing-item ID)', () => {
-		expect(withState({ readonly: true }).isLocked()).toBe(true);
-	});
-
 	test('locked via the disabled attribute', () => {
 		expect(withState({ disabled: true }).isLocked()).toBe(true);
 	});
 
 	test('locked via the locked class', () => {
 		expect(withState({ locked: true }).isLocked()).toBe(true);
+	});
+
+	// readonly intentionally does NOT lock: a schema can render an ID readonly
+	// (non-editable) while still letting autogen update it. Existing deck items
+	// are disabled (not just readonly) to block autogen — see the constructor.
+	test('readonly alone does not lock (a readonly-but-autogen ID stays autogen-updatable)', () => {
+		expect(withState({ readonly: true }).isLocked()).toBe(false);
 	});
 });
