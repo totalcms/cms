@@ -760,7 +760,7 @@ GET /api/schemas/{collection}
 
 Save, move, delete, and manage files attached to a property on an object. These are the endpoints the admin UI uses behind every image, file, gallery, and depot field — and the ones to call from your own integrations.
 
-Files are stored under `tcms-data/{collection}/{id}/{property}/[{path}/]{filename}` and served back over the public `imageworks` / `download` / `stream` endpoints documented in [File Downloads & Streaming](#file-downloads--streaming).
+Files are stored under `tcms-data/{collection}/{id}/{property}/[{path}/]{filename}` and served back over the public `imageworks` / `download` / `stream` endpoints documented in [File Downloads & Streaming](#file-downloads-streaming).
 
 ### Save a File to a Property
 

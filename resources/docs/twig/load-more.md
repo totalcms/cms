@@ -359,4 +359,4 @@ If you pre-rendered items server-side, set `offset` to skip those:
 - [URL Filters Utility](docs/twig/utils) — Let visitors filter, sort, and search via URL query parameters
 - [Index Filtering](docs/apis/index-filter) — Include/exclude filter syntax
 - [Total CMS Twig Adapter](docs/twig/totalcms) — Full `cms` variable reference
-- [Pagination](docs/twig/totalcms#pagination) — Traditional page-based pagination
+- [Pagination](docs/twig/render#pagination) — Traditional page-based pagination

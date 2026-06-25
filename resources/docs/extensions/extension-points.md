@@ -419,7 +419,7 @@ Once registered, `geo-redirect` shows up in the page form's middleware multisele
 
 **Capability:** `page-middleware`
 
-See the [Page Middleware section in the Builder overview](docs/site-builder/overview#page-middleware) for the user-facing perspective.
+See the [Page Middleware section in the Builder overview](docs/site-builder/overview#page-features-middleware) for the user-facing perspective.
 
 ## Form Actions
 

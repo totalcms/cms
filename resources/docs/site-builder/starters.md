@@ -226,7 +226,7 @@ Or after the fact (idempotent):
 tcms builder:frontend
 ```
 
-Both install the same Vite scaffold to `<projectRoot>/frontend/`. See [`builder:frontend`](docs/site-builder/cli#builderfrontend) for the full reference.
+Both install the same Vite scaffold to `<projectRoot>/frontend/`. See [`builder:frontend`](docs/site-builder/cli#builder-frontend) for the full reference.
 
 ## Customizing After Scaffolding
 

@@ -10,10 +10,10 @@ The Site Builder provides four CLI commands: scaffolding from starters, installi
 
 | Command | Purpose |
 |---------|---------|
-| [`builder:init`](#builderinit) | Scaffold a new site from a starter template |
-| [`builder:frontend`](#builderfrontend) | Install a Vite-based frontend asset pipeline |
-| [`builder:routes`](#builderroutes) | List every route the page router would serve, with conflicts flagged |
-| [`builder:history`](#builderhistory) | List, view, or restore template snapshot versions |
+| [`builder:init`](#builder-init) | Scaffold a new site from a starter template |
+| [`builder:frontend`](#builder-frontend) | Install a Vite-based frontend asset pipeline |
+| [`builder:routes`](#builder-routes) | List every route the page router would serve, with conflicts flagged |
+| [`builder:history`](#builder-history) | List, view, or restore template snapshot versions |
 
 All commands accept `--json` for machine-readable output.
 
@@ -58,7 +58,7 @@ If the import fails (e.g., schema validation), the scaffold itself still succeed
 
 ### `--frontend` Behavior
 
-Convenience flag for the greenfield happy path. Runs `tcms builder:frontend` immediately after the scaffold completes, installing the Vite scaffold into `<projectRoot>/frontend/`. If you don't pass `--frontend`, you can always add the pipeline later — see [`builder:frontend`](#builderfrontend).
+Convenience flag for the greenfield happy path. Runs `tcms builder:frontend` immediately after the scaffold completes, installing the Vite scaffold into `<projectRoot>/frontend/`. If you don't pass `--frontend`, you can always add the pipeline later — see [`builder:frontend`](#builder-frontend).
 
 ### `--force` Behavior
 

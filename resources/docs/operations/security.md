@@ -7,42 +7,6 @@ description: "Secure your Total CMS installation with tcms-data folder protectio
 
 This guide provides essential security recommendations for protecting your Total CMS installation and data.
 
-## Table of Contents
-- [Total CMS Security Guide](#total-cms-security-guide)
-	- [Table of Contents](#table-of-contents)
-	- [Protecting the tcms-data Folder](#protecting-the-tcms-data-folder)
-		- [Best Practice: Move Outside Document Root](#best-practice-move-outside-document-root)
-		- [Alternative: Restrict Access Within Document Root](#alternative-restrict-access-within-document-root)
-			- [Apache (.htaccess)](#apache-htaccess)
-			- [Nginx](#nginx)
-			- [Caddy](#caddy)
-	- [Authentication and Session Security](#authentication-and-session-security)
-		- [Strong Password Requirements](#strong-password-requirements)
-		- [Session Security](#session-security)
-		- [Account Security](#account-security)
-	- [Content Security](#content-security)
-		- [HTML Sanitization](#html-sanitization)
-		- [SVG Security](#svg-security)
-	- [File Upload Security](#file-upload-security)
-		- [Best Practices](#best-practices)
-		- [Configuration](#configuration)
-	- [HTTPS and Transport Security](#https-and-transport-security)
-		- [Always Use HTTPS](#always-use-https)
-		- [Apache HTTPS Configuration](#apache-https-configuration)
-		- [Nginx HTTPS Configuration](#nginx-https-configuration)
-		- [Caddy HTTPS Configuration](#caddy-https-configuration)
-	- [Additional Security Headers](#additional-security-headers)
-		- [Apache](#apache)
-		- [Nginx](#nginx-1)
-		- [Caddy](#caddy-1)
-	- [Regular Security Maintenance](#regular-security-maintenance)
-		- [Keep Software Updated](#keep-software-updated)
-		- [Security Monitoring](#security-monitoring)
-		- [Backup Strategy](#backup-strategy)
-		- [Security Checklist](#security-checklist)
-	- [Emergency Response](#emergency-response)
-	- [Additional Resources](#additional-resources)
-
 ## Protecting the tcms-data Folder
 
 The `tcms-data` folder contains all your CMS content, including potentially sensitive information (API keys, user data, collection data). It's crucial to protect this directory from unauthorized web access.

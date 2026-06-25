@@ -14,7 +14,7 @@ related:
 Total CMS 3 is a ground-up rewrite, so a v1 site moves over in two parts:
 
 1. **Your content** — the data in `cms-data/` (blogs, galleries, images, files, dates, feeds). Total CMS 3 ships a built-in importer that brings this across for you.
-2. **Your templates** — the `%macro(cmsid)%` tags scattered through your v1 HTML become `{{ cms... }}` calls inside [Twig templates](docs/twig/overview). The [macro mapping table](#update-your-templates-v1-macros--twig) below covers every one.
+2. **Your templates** — the `%macro(cmsid)%` tags scattered through your v1 HTML become `{{ cms... }}` calls inside [Twig templates](docs/twig/overview). The [macro mapping table](#update-your-templates-v1-macros-twig) below covers every one.
 
 This page is the one-stop guide for both. Read it top to bottom before you start a migration.
 

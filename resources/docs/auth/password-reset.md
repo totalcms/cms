@@ -302,7 +302,7 @@ Resets a user's password using a valid token.
 
 ## Related Documentation
 
-- [Authentication Configuration](docs/operations/configuration#authentication)
+- [Authentication Configuration](docs/operations/configuration)
 - [Whitelabel Templates](docs/admin/whitelabel)
-- [Email/SMTP Configuration](docs/operations/configuration#email-smtp)
+- [Email/SMTP Configuration](docs/operations/configuration)
 - [Mailer Collection](docs/notifications/mailer)
