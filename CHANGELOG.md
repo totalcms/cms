@@ -2,6 +2,30 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-rc.10] - 2026-06-25
+
+### Added
+
+- **Tag suggestions on media fields**: Image, gallery, and file tag inputs now autocomplete from tags already used on the same property elsewhere in the collection — auto-enabled when the media property is indexed, with free entry preserved. Suggestions are sourced per-property from the index. Covers top-level fields and an image/file nested directly in an indexed top-level card; deck items and deeper nesting are deferred (they need wildcard index resolution). As part of this, the shared list field no longer clears its Choices.js suggestion pool on `setValue()`, so suggestions stop vanishing in the gallery's shared edit dialog
+
+### Enhanced
+
+- **Refreshed bundled CakePHP localized locale data**: The vendored CakePHP localization data (used for locale-aware number/date/currency formatting) is updated in the public build
+
+### Fixed
+
+- **Cron command pointed at an unrunnable `tcms` path on Composer installs**: The Job Queue Manager (and the automations cron line) built their displayed command from the package's `resources/bin/tcms` — which on a Composer install is `vendor/totalcms/cms/resources/bin/tcms`, a path with no nested `vendor/` to autoload from, so it fatals on a missing `autoload.php` (exactly what a customer hit after copying the command from the admin). Composer installs now use the generated `vendor/bin/tcms` proxy (which wires up the project autoloader); zip installs keep the shipped script. The command builder no longer relies on `TCMS_PROJECT_ROOT` (which isn't defined during a plain web request), and `resources/bin/tcms` itself is hardened to resolve its autoloader across the proxy, installed-dependency, and standalone invocation styles
+- **Styledtext link tool opened a dialog that couldn't do anything**: Clicking the link tool with no text selected opened a dialog that could never apply a link — `setLink()` silently no-ops on an empty selection, so users entered a URL, hit Done, and got nothing. The dialog now requires a selection (or the cursor inside an existing link, for editing), and the toolbar Link button disables itself when there's nothing to act on so it isn't a dead click
+- **Styledtext field could crash on init (null schema)**: The Tiptap wrapper built the editor against a `null` element and then destroyed and recreated it; a transaction dispatched during that re-mount fired `onUpdate` against the torn-down instance and crashed in `DOMSerializer` ("Cannot read properties of null"), so the field failed to initialize. The editor is now constructed once, and the update/sync path guards against a null or destroyed editor
+- **Composite sub-fields leaked into card and deck values**: A composite child's internal sub-fields (e.g. an image's readonly `name`/`alt`/`focalpoint`, a file's `name`/`ext`) were collected into the parent card or deck item, overwriting its own properties — a file's `name` clobbered the card/item `name` and reverted on refresh — and poisoned `${name}` autogen. Cards and deck items now collect only their own top-level fields via a shared scoping helper
+- **Card columns crashed the admin collection table**: A populated card column arrived from the index as a raw array and reached `{{ value|striptags }}`; `strip_tags()` rejects arrays and crashed the table row. Card columns now render a scalar-field summary, and any unhandled array-valued column falls back to an item count instead of crashing
+- **Fields flagged "unsaved" after a successful save**: `changed()` compared composite values by reference, so card/image/file/deck/gallery fields (which return a fresh object/array each call) always looked changed — a field's native `change` event firing on blur right after a save re-added the `unsaved` marker. Composite values are now compared structurally, so no-op events are ignored
+
+### Documentation
+
+- **Broken doc links fixed; redundant security TOC removed**: Corrected anchor links across the docs to match the admin renderer's slug rules (h2/h3 only, single-hyphen slugs), repointed a few links at their real target pages, and removed the hand-written Table of Contents from the security guide — the admin already renders an auto sidebar TOC from the page's headings
+- **Docs refresh across many pages**: Broad content and syntax updates spanning the API, auth, forms, collections, schemas, MCP, site builder, and operations sections
+
 ## [3.5.0-rc.9] - 2026-06-15
 
 ### Added
