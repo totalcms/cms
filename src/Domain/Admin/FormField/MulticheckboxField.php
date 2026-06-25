@@ -16,6 +16,7 @@ class MulticheckboxField extends ChoiceField
 	protected const GROUP_LEGEND_CLASS     = 'checkbox-group-legend';
 	protected const INPUT_CLASS            = 'checkbox';
 	protected const REQUIRED_ON_CONTAINER  = true;
+	protected const SUPPORTS_TOGGLE_ALL    = true;
 
 	protected function isOptionSelected(string $optionValue): bool
 	{

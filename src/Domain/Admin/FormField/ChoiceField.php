@@ -47,6 +47,9 @@ abstract class ChoiceField extends FormField
 	 */
 	protected const REQUIRED_ON_CONTAINER = false;
 
+	/** Whether this variant gets a "select all" toggle in checklist layout. */
+	protected const SUPPORTS_TOGGLE_ALL = false;
+
 	public function build(): string
 	{
 		$choices = $this->renderChoices();
@@ -61,12 +64,27 @@ abstract class ChoiceField extends FormField
 			$extraClasses[]                    = static::COLUMNS_CLASS;
 		}
 
+		$isChecklist = ($this->settings['layout'] ?? '') === 'checklist';
+		if ($isChecklist) {
+			$extraClasses[] = 'choice-field--checklist';
+		}
+
 		$attributes = $this->buildFieldAttributes($extraStyles, $extraClasses);
 		if (static::REQUIRED_ON_CONTAINER && $this->required) {
 			$attributes['data-required'] = 'true';
 		}
 
-		$fieldset = HTMLUtils::element('fieldset', $this->createFieldLabel('legend') . $choices);
+		$legend = $this->createFieldLabel('legend');
+		if ($isChecklist && static::SUPPORTS_TOGGLE_ALL) {
+			$legend .= HTMLUtils::element('button', '+', [
+				'type'       => 'button',
+				'class'      => 'choice-field-toggle-all',
+				'title'      => 'Select all',
+				'aria-label' => 'Select all',
+			]);
+		}
+
+		$fieldset = HTMLUtils::element('fieldset', $legend . $choices);
 
 		return HTMLUtils::element('div', $fieldset . $this->createHelpText(), $attributes);
 	}
