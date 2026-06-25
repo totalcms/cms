@@ -79,3 +79,38 @@
 		overflow    : hidden;
 	}
 }
+
+.choice-field--checklist {
+	fieldset {
+		border: 1px solid oklch(var(--totalform-border-color));
+		border-radius: var(--totalform-radius);
+		padding: 1rem;
+		background: oklch(var(--totalform-nearwhite));
+		position: relative;
+		column-width: var(--fieldset-columns, 150px);
+		column-gap: 1rem;
+	}
+	.checkbox { break-inside: avoid; }
+	legend { font-weight: bold; }
+
+	.choice-field-toggle-all {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		width: 1.5rem;
+		height: 1.5rem;
+		line-height: 1;
+		font-weight: bold;
+		cursor: pointer;
+		border-radius: var(--totalform-radius);
+		border: 1px solid oklch(var(--totalform-border-color));
+		background: transparent;
+		color: oklch(var(--totalform-darkgray));
+
+		&:hover {
+			background: oklch(var(--totalform-accent));
+			color: oklch(var(--totalform-purewhite));
+			border-color: oklch(var(--totalform-accent));
+		}
+	}
+}
