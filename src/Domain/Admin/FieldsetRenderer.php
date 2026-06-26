@@ -21,25 +21,32 @@ class FieldsetRenderer
 	 */
 	public function render(?string $legend, string $membersHtml, FormGridBuilder $inner, string $extraClass = '', ?string $gridArea = null): string
 	{
-		$gridId = 'fieldset-' . bin2hex(random_bytes(6));
-
 		$legendHtml = ($legend === null || $legend === '')
 			? ''
 			: HTMLUtils::element('legend', htmlspecialchars($legend, ENT_QUOTES, 'UTF-8'));
 
-		$style = $inner->hasGrid() ? $inner->toNestedStyleTag($gridId) : '';
-
-		$grid = HTMLUtils::element('div', $inner->buildGridSectionHtml() . $membersHtml, [
-			'id'    => $gridId,
-			'class' => 'formgrid',
-		]);
+		// Only build a nested `.formgrid` (with its scoped grid-template-areas) when
+		// the fieldset actually has an inner grid. Without one, wrapping in
+		// `.formgrid` would make `.formgrid > .form-field { grid-area: var(--grid-area) }`
+		// apply each field's `--grid-area` against an undefined template, throwing
+		// off the layout — so members go straight into the fieldset and flow normally.
+		if ($inner->hasGrid()) {
+			$gridId = 'fieldset-' . bin2hex(random_bytes(6));
+			$body   = $inner->toNestedStyleTag($gridId)
+				. HTMLUtils::element('div', $inner->buildGridSectionHtml() . $membersHtml, [
+					'id'    => $gridId,
+					'class' => 'formgrid',
+				]);
+		} else {
+			$body = $membersHtml;
+		}
 
 		$attrs = ['class' => trim('form-grid-fieldset ' . $extraClass)];
 		if ($gridArea !== null) {
 			$attrs['style'] = "grid-area: {$gridArea};";
 		}
 
-		return HTMLUtils::element('fieldset', $legendHtml . $style . $grid, $attrs);
+		return HTMLUtils::element('fieldset', $legendHtml . $body, $attrs);
 	}
 
 	/**

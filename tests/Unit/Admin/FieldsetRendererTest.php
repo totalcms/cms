@@ -62,6 +62,15 @@ describe('FieldsetRenderer::render', function (): void {
 		expect($html)->not->toContain('<style>');
 	});
 
+	test('no inner grid: members are not wrapped in a .formgrid (no stray grid-area placement)', function (): void {
+		$field = '<div class="form-field" style="--grid-area: schemas;">x</div>';
+		$html  = (new FieldsetRenderer())->render('Schemas', $field, new FormGridBuilder(''), '');
+		// The field must render, but NOT inside a `.formgrid` (which would apply its --grid-area)
+		expect($html)
+			->not->toContain('class="formgrid"')
+			->toContain($field);
+	});
+
 	test('escapes special characters in legend', function (): void {
 		$html = (new FieldsetRenderer())->render('<script>bad</script>', '', new FormGridBuilder(''), '');
 		expect($html)->not->toContain('<script>bad</script>');
