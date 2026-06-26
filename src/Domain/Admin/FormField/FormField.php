@@ -626,13 +626,43 @@ class FormField
 			$this->options = self::deduplicateOptionsByValue($this->options);
 		}
 
-		if (($this->settings['sortOptions'] ?? false) === true) {
-			sort($this->options);
+		// Sort options by label. Defaults ON when the options are derived from
+		// propertyOptions (a checklist of ids/values reads better alphabetized);
+		// set "sortOptions": false to preserve a curated source's order.
+		$sortOptions = $this->settings['sortOptions'] ?? isset($this->settings['propertyOptions']);
+		if ($sortOptions === true) {
+			$this->options = self::sortOptionsByLabel($this->options);
 		}
 
 		$selected = is_array($this->value) ? $this->value : (string)($this->value ?? '');
 
 		return $options . HTMLUtils::options($this->options, $selected);
+	}
+
+	/**
+	 * Sort a flat option list by label, case-insensitive + natural order.
+	 * Handles both option shapes — plain strings (label = the string) and
+	 * `{value, label}` dicts. Grouped (optgroup) structures use string keys
+	 * and are left untouched so `<optgroup>` ordering is preserved.
+	 *
+	 * @param  array<mixed> $options
+	 *
+	 * @return array<mixed>
+	 */
+	protected static function sortOptionsByLabel(array $options): array
+	{
+		if (!array_is_list($options)) {
+			return $options;
+		}
+
+		usort($options, static function (mixed $a, mixed $b): int {
+			$labelA = is_array($a) ? (string)($a['label'] ?? $a['value'] ?? '') : (string)$a;
+			$labelB = is_array($b) ? (string)($b['label'] ?? $b['value'] ?? '') : (string)$b;
+
+			return strnatcasecmp($labelA, $labelB);
+		});
+
+		return $options;
 	}
 
 	/** @param array<mixed> $array */
