@@ -860,16 +860,40 @@ class TotalForm implements \Stringable
 			}
 		}
 
-		$content = '';
+		$content  = '';
+		$fieldsets = [];
 
-		// If using formgrid, inject section headers and dividers
 		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
 			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
-			$content .= $gridBuilder->buildGridSectionHtml();
+			$content    .= $gridBuilder->buildGridSectionHtml();
+			$fieldsets   = $gridBuilder->getFieldsets();
 		}
 
-		foreach ($this->fields as $field) {
-			$content .= $field->build();
+		// Map: field name => owning fieldset index (members render inside, not flat).
+		$memberOf = [];
+		foreach ($fieldsets as $idx => $fs) {
+			foreach ($fs['fields'] as $name) {
+				$memberOf[$name] = $idx;
+			}
+		}
+
+		/** @var array<int,string> $buckets */
+		$buckets = array_fill(0, count($fieldsets), '');
+		foreach ($this->fields as $name => $field) {
+			$html = $field->build();
+			if (isset($memberOf[$name])) {
+				$buckets[$memberOf[$name]] .= $html;
+			} else {
+				$content .= $html; // flat outer field, as today
+			}
+		}
+
+		// Fieldsets are appended after the flat fields in DOM order; their visual
+		// position comes from the outer grid-area, not source order (the same way
+		// section headers/dividers already render ahead of all fields).
+		$renderer = new FieldsetRenderer();
+		foreach ($fieldsets as $idx => $fs) {
+			$content .= $renderer->render($fs['legend'], $buckets[$idx], $fs['inner'], '', $fs['id']);
 		}
 
 		return $content;

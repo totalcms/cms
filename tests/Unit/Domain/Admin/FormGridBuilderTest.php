@@ -215,4 +215,29 @@ describe('FormGridBuilder', function (): void {
 		expect($m2[1] ?? '')->not->toBe('');
 		expect($m1[1])->not->toBe($m2[1]);
 	});
+
+	test('a fieldset occupies a full-width row in the outer desktop areas', function (): void {
+		$b   = new FormGridBuilder("id name\n[[\na b\nc d\n]]");
+		$css = $b->toStyleTag('grid-x');
+		// outer grid is 2 columns; the fieldset area spans both:
+		expect($css)->toContain("'formgrid-fieldset-1 formgrid-fieldset-1'");
+		// inner member rows are NOT in the outer template:
+		expect($css)->not->toContain("'a b'");
+	});
+
+	test('toNestedStyleTag emits grid areas without a container-type declaration', function (): void {
+		$inner = (new FormGridBuilder("a b\nc d"));
+		$css   = $inner->toNestedStyleTag('fs-1');
+		expect($css)->toContain("#fs-1")->toContain("'a b'")->not->toContain('container-type');
+	});
+
+	test('a fieldset-only formgrid emits a valid full-width desktop area (no repeat(0))', function (): void {
+		$b   = new FormGridBuilder("[[ Legend\na b\nc d\n]]");
+		$css = $b->toStyleTag('grid-z');
+		// no outer rows, but the fieldset still gets a 1-column full-width area:
+		expect($css)
+			->toContain("'formgrid-fieldset-1'")
+			->toContain('repeat(1, 1fr)')
+			->not->toContain('repeat(0');
+	});
 });

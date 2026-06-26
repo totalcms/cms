@@ -78,6 +78,25 @@
 	}
 }
 
+// Fieldsets added via the formgrid `[[ ]]` syntax or cms.form.fieldset(). The
+// grid-area is set inline by FieldsetRenderer when inside an outer formgrid;
+// `grid-column: 1 / -1` is the full-width guarantee and also covers the Twig
+// usage where there's no outer grid-template-areas. The nested grid lives in
+// the inner `.formgrid` div, so field placement reuses the rule above.
+.form-grid-fieldset {
+	grid-column   : 1 / -1;
+	background    : oklch(var(--totalform-nearwhite) / 0.5);
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 1.5rem;
+	margin-block  : 0.5rem;
+
+	> legend {
+		font-weight    : bold;
+		padding-inline : 0.5rem;
+	}
+}
+
 .totalform:not(.edit-mode) {
 	.customProperties-field,
 	.properties-field {

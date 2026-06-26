@@ -89,6 +89,43 @@ For basic form submission without full object management:
 }) }}
 ```
 
+## Fieldsets
+
+Use `cms.form.fieldset()` to group fields inside a styled fieldset container. Capture your rendered fields with a `{% set %}` block and pass them as the content:
+
+```twig
+{% set inner %}
+  {{ cms.form.field("text", "first_name", { label: "First name" }) }}
+  {{ cms.form.field("text", "last_name",  { label: "Last name" }) }}
+{% endset %}
+
+{{ cms.form.fieldset("Contact", inner, { formgrid: "first_name last_name" }) }}
+```
+
+### Fieldset Options
+
+- **legend** (string, optional): The fieldset legend text. Leave empty for no legend.
+- **content** (string): Pre-rendered field HTML (typically captured with `{% set %}`).
+- **options** (object, optional):
+  - `formgrid` (string): Inner grid layout string using the same row syntax as schema `formgrid` definitions.
+  - `class` (string): Extra CSS classes to add to the fieldset element.
+
+### Example with Inner Grid
+
+```twig
+{% set contact_fields %}
+  {{ cms.form.field("text", "email", { label: "Email" }) }}
+  {{ cms.form.field("text", "phone", { label: "Phone" }) }}
+{% endset %}
+
+{{ cms.form.fieldset("Contact", contact_fields, {
+    formgrid: "email phone",
+    class: "contact-section"
+}) }}
+```
+
+This produces the same `.form-grid-fieldset` markup as the schema `[[ ]]` syntax.
+
 ## Blog Form Options
 
 ```twig
