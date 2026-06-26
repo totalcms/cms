@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Admin\FormField\CheckboxField;
 use TotalCMS\Domain\Admin\FormField\FormField;
-use TotalCMS\Domain\Admin\FormField\MulticheckboxField;
+use TotalCMS\Domain\Admin\FormField\ChecklistField;
 use TotalCMS\Domain\Admin\FormField\RadioField;
 use TotalCMS\Domain\Admin\FormField\ToggleField;
 use TotalCMS\Domain\Admin\TotalForm;
@@ -31,7 +31,7 @@ describe('FormField grid-area contract', function (): void {
 		'CheckboxField'      => [fn ($form): CheckboxField => new CheckboxField($form, 'foo')],
 		'ToggleField'        => [fn ($form): ToggleField => new ToggleField($form, 'foo')],
 		'RadioField'         => [fn ($form): RadioField => new RadioField($form, 'foo', options: ['A'])],
-		'MulticheckboxField' => [fn ($form): MulticheckboxField => new MulticheckboxField($form, 'foo', options: ['A'])],
+		'ChecklistField'     => [fn ($form): ChecklistField => new ChecklistField($form, 'foo', options: ['A'])],
 	]);
 
 	test('emits --grid-area CSS variable, never a bare grid-area declaration', function (Closure $factory): void {

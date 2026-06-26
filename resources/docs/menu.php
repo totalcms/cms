@@ -70,7 +70,7 @@ return [
 					['title' => 'Number & Range',        'path' => 'fields/number-range'],
 					['title' => 'Password',              'path' => 'fields/password'],
 					['title' => 'Price',                 'path' => 'fields/price'],
-					['title' => 'Radio & Multicheckbox', 'path' => 'fields/radio-multicheckbox'],
+					['title' => 'Radio & Checklist', 'path' => 'fields/radio-checklist'],
 					['title' => 'Secret',                'path' => 'fields/secret'],
 					['title' => 'Select',                'path' => 'fields/select'],
 					['title' => 'Styled Text',           'path' => 'fields/styled-text'],

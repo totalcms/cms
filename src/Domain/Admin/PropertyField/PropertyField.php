@@ -33,7 +33,9 @@ class PropertyField
 			'label'       => 'Type of Form Field',
 			'placeholder' => 'Select a field type',
 			'help'        => 'The type form field that this field will use',
-			'value'       => $this->field,
+			// Canonicalize stored alias (e.g. multicheckbox → checklist) so the
+			// <select> finds a matching <option> instead of falling back to first.
+			'value'       => TotalForm::canonicalFieldType($this->field),
 			// 'disabled'    => ($this->property === 'id'), // Disable field type for id property
 			'options'     => TotalForm::getFieldsByType(),
 			'settings'    => ['clearValue' => false],

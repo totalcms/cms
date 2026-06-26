@@ -94,7 +94,7 @@ readonly class PageData
 
 	/**
 	 * Coerce a string-list field (`middleware`, `accessGroups`). Accepts a
-	 * JSON-encoded array (from multicheckbox / list form widgets), a plain
+	 * JSON-encoded array (from checklist / list form widgets), a plain
 	 * PHP array, or a comma-separated string fallback. Empty/non-string
 	 * entries are dropped so a malformed value can't inject garbage downstream.
 	 *

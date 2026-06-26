@@ -1,6 +1,6 @@
 <?php
 
-use TotalCMS\Domain\Admin\FormField\MulticheckboxField;
+use TotalCMS\Domain\Admin\FormField\ChecklistField;
 use TotalCMS\Domain\Admin\FormField\RadioField;
 use TotalCMS\Domain\Admin\TotalForm;
 
@@ -11,7 +11,7 @@ describe('Multicheckbox select-all toggle', function (): void {
 	});
 
 	test('multicheckbox renders the select-all toggle by default', function (): void {
-		$field = new MulticheckboxField(
+		$field = new ChecklistField(
 			$this->form,
 			'tags',
 			options: [['value' => 'a', 'label' => 'A'], ['value' => 'b', 'label' => 'B']],
@@ -21,7 +21,7 @@ describe('Multicheckbox select-all toggle', function (): void {
 	});
 
 	test('toggleAll:false suppresses the toggle button', function (): void {
-		$field = new MulticheckboxField(
+		$field = new ChecklistField(
 			$this->form,
 			'tags',
 			options: [['value' => 'a', 'label' => 'A'], ['value' => 'b', 'label' => 'B']],

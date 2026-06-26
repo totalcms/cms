@@ -1,9 +1,9 @@
 import TotalField from './totalfield';
 
 //-----------------------------------------------
-// Total CMS MultiCheckbox Field
+// Total CMS Checklist Field
 //-----------------------------------------------
-export default class MultiCheckboxField extends TotalField {
+export default class ChecklistField extends TotalField {
 
     constructor(container, settings) {
         super(...arguments);
@@ -65,7 +65,7 @@ export default class MultiCheckboxField extends TotalField {
 
     setValue(value) {
         if (typeof value !== "object") {
-            console.error(`Unable to set value for multicheckbox: ${this.form.id}`);
+            console.error(`Unable to set value for checklist: ${this.form.id}`);
         }
         // Select Options
         const options = Array.from(this.container.querySelectorAll("input[type=checkbox]"));
@@ -82,7 +82,7 @@ export default class MultiCheckboxField extends TotalField {
     schema() {
         return {
             "type"     : "array",
-            "fieldset" : "multicheckbox"
+            "fieldset" : "checklist"
         };
     }
 }

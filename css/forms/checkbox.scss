@@ -62,11 +62,11 @@
 }
 
 //------------------------------
-// Multicheckbox Field (multicheckbox-specific visual treatment)
+// Checklist Field (checklist-specific visual treatment)
 //------------------------------
 // Shared fieldset/label/option-wrapper layout lives in choice-field.scss.
 // This file only renders the custom checkbox tick via pseudo-elements.
-.multicheckbox-field {
+.checklist-field {
 
 	input[type="checkbox"] {
 		width        : 1rem;

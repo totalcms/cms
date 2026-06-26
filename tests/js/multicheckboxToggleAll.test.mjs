@@ -1,4 +1,4 @@
-import MultiCheckboxField from '../../javascript/totalform/multicheckbox.js';
+import ChecklistField from '../../javascript/totalform/checklist.js';
 
 function mount(checked = [false, false]) {
 	const el = document.createElement('div');
@@ -15,7 +15,7 @@ function mount(checked = [false, false]) {
 
 test('toggle-all checks all when not all checked, then unchecks all', () => {
 	const el = mount([true, false]);
-	const field = Object.create(MultiCheckboxField.prototype);
+	const field = Object.create(ChecklistField.prototype);
 	field.container = el;
 	field.changed = () => {};
 	field.initToggleAll();

@@ -12,7 +12,7 @@
 			required    : true,
 		}) }}
 
-		{{ cms.form.field("multicheckbox", "methods", {
+		{{ cms.form.field("checklist", "methods", {
 			label    : t('api_keys.http_methods_label'),
 			help     : t('api_keys.http_methods_help'),
 			required : true,
@@ -59,7 +59,7 @@
 		{% set endpointOptions = endpointOptions|merge({(t('api_keys.choose_collections')): collectionOptions}) %}
 		{% set endpointOptions = endpointOptions|merge({(t('api_keys.choose_dataviews')): dataviewOptions}) %}
 
-		{{ cms.form.field("multicheckbox", "paths", {
+		{{ cms.form.field("checklist", "paths", {
 			label    : t('api_keys.select_endpoints'),
 			help     : t('api_keys.select_endpoints_help'),
 			required : true,

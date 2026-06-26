@@ -1,7 +1,7 @@
 //------------------------------
-// Choice Field (shared base for Radio + Multicheckbox)
+// Choice Field (shared base for Radio + Checklist)
 //------------------------------
-// Layout scaffolding that radio and multicheckbox share: the fieldset grid,
+// Layout scaffolding that radio and checklist share: the fieldset grid,
 // nested group fieldset, option labels, column-layout modifier, and the
 // individual option wrapper. The type-specific input visuals (radio circle,
 // checkbox tick) live in their own files.

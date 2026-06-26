@@ -13,4 +13,4 @@ You can sort the options in all form inputs that support options or datalist wit
 }
 ```
 
-This works with any field that supports options: **select**, **multiselect**, **radio**, **multicheckbox**, **list**, and **text** (datalist).
+This works with any field that supports options: **select**, **multiselect**, **radio**, **checklist**, **list**, and **text** (datalist).

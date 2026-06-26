@@ -1,6 +1,6 @@
 import MultiSelectField from '../../javascript/totalform/multiselect.js';
 import SelectField from '../../javascript/totalform/select.js';
-import MultiCheckboxField from '../../javascript/totalform/multicheckbox.js';
+import ChecklistField from '../../javascript/totalform/checklist.js';
 
 //-----------------------------------------------
 // Select-backed fields read/write the <select>'s option selection. We drive the
@@ -79,13 +79,13 @@ function multicheckbox(options, checked = []) {
 		input.checked = checked.includes(o);
 		container.appendChild(input);
 	}
-	const field = Object.create(MultiCheckboxField.prototype);
+	const field = Object.create(ChecklistField.prototype);
 	field.container = container;
 	field.changed = () => {};
 	return field;
 }
 
-describe('MultiCheckboxField', () => {
+describe('ChecklistField', () => {
 	test('getValue returns the checked values', () => {
 		expect(multicheckbox(['a', 'b', 'c'], ['a', 'c']).getValue()).toEqual(['a', 'c']);
 	});

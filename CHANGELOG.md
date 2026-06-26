@@ -10,6 +10,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Enhanced
 
+- **Checklist field (renamed from Multicheckbox)**: the multi-checkbox field type is now `checklist`; `multicheckbox` continues to work as a permanent alias, so existing schemas need no changes. Note for custom styling: the rendered wrapper class changed from `.multicheckbox-field` to `.checklist-field` — update any custom CSS that targeted the old class.
 - **Refreshed bundled CakePHP localized locale data**: The vendored CakePHP localization data (used for locale-aware number/date/currency formatting) is updated in the public build
 
 ### Fixed

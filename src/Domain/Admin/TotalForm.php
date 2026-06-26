@@ -78,8 +78,8 @@ class TotalForm implements \Stringable
 			'datetime',
 		],
 		'List (Array) Fields' => [
+			'checklist',
 			'list',
-			'multicheckbox',
 			'multiselect',
 		],
 		'Special Fields' => [
@@ -129,6 +129,7 @@ class TotalForm implements \Stringable
 		'localizedtext'       => 'localizedtext',
 		'localizedtextarea'   => 'localizedtext',
 		'localizedstyledtext' => 'localizedtext',
+		'checklist'           => 'array',
 		'multicheckbox'       => 'array',
 		'multiselect'         => 'array',
 		'number'              => 'number',
@@ -147,6 +148,22 @@ class TotalForm implements \Stringable
 		'toggle'              => 'boolean',
 		'url'                 => 'url',
 	];
+
+	/**
+	 * Field-type aliases: old name => canonical name. Populated when the type is renamed.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function getFieldAliases(): array
+	{
+		return ['multicheckbox' => 'checklist'];
+	}
+
+	/** Resolve a field-type alias to its canonical name (e.g. multicheckbox → checklist). */
+	public static function canonicalFieldType(string $fieldType): string
+	{
+		return self::getFieldAliases()[$fieldType] ?? $fieldType;
+	}
 
 	/** @var array<string,class-string> Extension-registered field types: name => FQCN */
 	private static array $extensionFieldTypes = [];
@@ -228,11 +245,11 @@ class TotalForm implements \Stringable
 		'id',
 		'image',
 		'json',
+		'checklist',
 		'list',
 		'localizedtext',
 		'localizedtextarea',
 		'localizedstyledtext',
-		'multicheckbox',
 		'multiselect',
 		'number',
 		'password',
@@ -1060,6 +1077,26 @@ class TotalForm implements \Stringable
 		return $this->field($name, $options);
 	}
 
+	/**
+	 * Resolve a field-type string to its FormField class-string: apply type
+	 * aliases, then the built-in `…\FormField\{Ucfirst}Field`, then extension
+	 * field types, falling back to the base FormField for unknown types.
+	 *
+	 * @return class-string<FormField>
+	 */
+	public static function resolveFieldClass(string $fieldType): string
+	{
+		$fieldType    = self::canonicalFieldType($fieldType);
+		$builtInClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($fieldType) . 'Field';
+		$typeClass    = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
+			? $builtInClass
+			: (self::getExtensionFieldTypes()[$fieldType] ?? $builtInClass);
+
+		return (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class))
+			? $typeClass
+			: FormField::class;
+	}
+
 	/** @param array<string,mixed> $options */
 	private function createDynamicField(string $name, array $options = []): FormField
 	{
@@ -1071,15 +1108,10 @@ class TotalForm implements \Stringable
 		unset($options['deck_context']);
 		unset($options['subfield']);
 
-		$fieldType    = $options['field'] ?? '';
-		$builtInClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($fieldType) . 'Field';
-		$typeClass    = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
-			? $builtInClass
-			: (self::getExtensionFieldTypes()[$fieldType] ?? $builtInClass);
-
-		if (!class_exists($typeClass) || !is_subclass_of($typeClass, FormField::class)) {
-			$typeClass = FormField::class;
-		}
+		$fieldType        = $options['field'] ?? '';
+		$fieldType        = self::canonicalFieldType($fieldType); // canonicalize (multicheckbox → checklist)
+		$options['field'] = $fieldType;                                        // render wrapper class + data-type as canonical
+		$typeClass        = self::resolveFieldClass($fieldType);
 
 		// Strip keys that aren't valid constructor parameters to avoid errors
 		// from schema-only keys (e.g. $ref, factory, type) leaking through

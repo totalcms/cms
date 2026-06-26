@@ -376,7 +376,7 @@ Page metadata is stored in the `builder-pages` collection using the `builder-pag
 | `data` | JSON | Free-form JSON exposed as `page.data.*` |
 | `status` | select | HTTP status code returned (200, 301, 302, 404, 410, 451, 503) |
 | `redirectTo` | text | Destination for 301/302 redirects |
-| `middleware` | multicheckbox | Page features (middleware) to run before render (e.g. `auth`) — see [Page Features](#page-features-middleware) |
+| `middleware` | checklist | Page features (middleware) to run before render (e.g. `auth`) — see [Page Features](#page-features-middleware) |
 | `accessGroups` | list | Restricts the `auth` feature to specific access groups (empty = any login) |
 | `draft` | toggle | Exclude from routing |
 | `nav` | toggle | Include in navigation menus (default: true) |

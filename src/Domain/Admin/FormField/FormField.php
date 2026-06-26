@@ -121,7 +121,7 @@ class FormField
 
 	/**
 	 * Render the field's visible label. Defaults to `<label for="field-{uuid}">`;
-	 * pass `'legend'` for fieldset-based fields (radio, multicheckbox).
+	 * pass `'legend'` for fieldset-based fields (radio, checklist).
 	 */
 	protected function createFieldLabel(string $tag = 'label', ?string $content = null): string
 	{
@@ -597,7 +597,7 @@ class FormField
 			&& !isset($this->settings['relationalOptions'])
 		) {
 			// Only merge values that aren't already represented in the options
-			// to avoid duplicating predefined options (e.g. multicheckbox fields)
+			// to avoid duplicating predefined options (e.g. checklist fields)
 			$existingValues = [];
 			foreach ($this->options as $key => $option) {
 				if (is_array($option) && isset($option['value'])) {

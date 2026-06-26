@@ -88,12 +88,14 @@
 			"type"     : "array",
 			"label"    : "Features",
 			"help"     : "Optional behaviors to enable on this page — for example, requiring a logged-in visitor (<code>auth</code>). Features run in order; the first one to short-circuit (e.g. redirect to login) stops the rest. Additional features can be added by extensions.",
-			"field"    : "multicheckbox",
+			"field"    : "checklist",
 			"settings" : {
 				"propertyOptions"   : "pageMiddleware",
 				"mergeStoredValues" : false,
 				"sortOptions"       : true,
-				"fieldColumns"      : "200px"
+				"fieldColumns"      : "200px",
+				"class"             : "styled-checkbox",
+				"toggleAll"         : false
 			}
 		},
 		"accessGroups": {

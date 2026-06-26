@@ -201,7 +201,7 @@
 			"type": "array",
 			"label": "Multi Checkbox",
 			"help": "multicheckbox field. Multiple selections via checkboxes.",
-			"field": "multicheckbox",
+			"field": "checklist",
 			"options": ["red", "green", "blue"]
 		},
 		"multiselect": {

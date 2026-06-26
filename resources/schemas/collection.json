@@ -89,7 +89,7 @@
 		"publicOperations": {
 			"type"  : "array",
 			"label" : "Allow unauthenticated users to perform these operations on this collection",
-			"field" : "multicheckbox",
+			"field" : "checklist",
 			"default" : [],
 			"options" : [
 				{"label": "Create", "value": "create"},
@@ -98,7 +98,9 @@
 				{"label": "Delete", "value": "delete"}
 			],
 			"settings": {
-				"fieldGrid": "100px"
+				"fieldGrid" : "100px",
+				"class"     : "styled-checkbox",
+				"toggleAll" : false
 			}
 		},
         "category": {
