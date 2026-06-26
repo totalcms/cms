@@ -2,16 +2,19 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.5.0-rc.10] - 2026-06-25
+## [3.5.0-rc.10] - 2026-06-26
 
 ### Added
 
 - **Tag suggestions on media fields**: Image, gallery, and file tag inputs now autocomplete from tags already used on the same property elsewhere in the collection — auto-enabled when the media property is indexed, with free entry preserved. Suggestions are sourced per-property from the index. Covers top-level fields and an image/file nested directly in an indexed top-level card; deck items and deeper nesting are deferred (they need wildcard index resolution). As part of this, the shared list field no longer clears its Choices.js suggestion pool on `setValue()`, so suggestions stop vanishing in the gallery's shared edit dialog
+- **Form fieldsets**: Group fields into styled fieldset cards — declaratively in a schema's formgrid with `[[ … ]]` blocks (an optional legend follows `[[`; dividers and headers work inside), or in hand-built Twig forms with `cms.form.fieldset(legend, content, { formgrid, class })`. Both paths share one renderer, so the markup is identical. The formgrid section-header syntax also gained a shorthand — `--- My Header` (the trailing `---` is now optional; `--- My Header ---` still works)
 
 ### Enhanced
 
-- **Checklist field (renamed from Multicheckbox)**: the multi-checkbox field type is now `checklist`; `multicheckbox` continues to work as a permanent alias, so existing schemas need no changes. Note for custom styling: the rendered wrapper class changed from `.multicheckbox-field` to `.checklist-field` — update any custom CSS that targeted the old class.
+- **Checklist field (renamed from Multicheckbox)**: the multi-checkbox field type is now `checklist`; `multicheckbox` continues to work as a permanent alias, so existing schemas need no changes. It now renders compactly by default with a built-in select-all/none toggle (set `toggleAll: false` to hide it), and the previous custom-drawn checkbox is opt-in via a `styled-checkbox` class. Note for custom styling: the rendered wrapper class changed from `.multicheckbox-field` to `.checklist-field` — update any custom CSS that targeted the old class.
 - **Refreshed bundled CakePHP localized locale data**: The vendored CakePHP localization data (used for locale-aware number/date/currency formatting) is updated in the public build
+- **`propertyOptions` options sort by label**: Options derived from a field's `propertyOptions` source now sort alphabetically by label by default — case-insensitive, natural order, handling both plain-string and `{value, label}` option shapes. Set `"sortOptions": false` on the field to keep the source order
+- **Configurable JumpStart export**: The JumpStart export is no longer all-or-nothing — a form on the JumpStart page lets you choose what to include (objects, templates) and which schemas and collections. Everything is selected by default, so an untouched Export still produces a full export; selected collections export their definitions, and ticking Objects also exports their records. `?mode=sync` and the no-marker full-export download are unchanged
 
 ### Fixed
 
