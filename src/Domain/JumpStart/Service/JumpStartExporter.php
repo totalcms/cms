@@ -9,6 +9,7 @@ use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
+use TotalCMS\Domain\JumpStart\Data\JumpStartExportOptions;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -98,18 +99,26 @@ readonly class JumpStartExporter
 
 	/**
 	 * Export current CMS data to jumpstart definition.
+	 *
+	 * Pass a {@see JumpStartExportOptions} to restrict which categories/ids are
+	 * included. Each filter uses the tristate contract:
+	 *   - null  → export everything in that category (default)
+	 *   - []    → export nothing in that category
+	 *   - list  → export only those ids
 	 */
-	public function exportCurrentData(): JumpStartData
+	public function exportCurrentData(?JumpStartExportOptions $options = null): JumpStartData
 	{
+		$options ??= new JumpStartExportOptions();
+
 		$this->logger->info('Starting jumpstart export');
 
 		// Make sure we do not have any cached data
 		$this->cacheManager->clearAllCaches();
 
-		$this->exportCustomSchemas();
-		$this->exportCollections();
-		$this->exportObjects();
-		$this->exportTemplates();
+		$this->exportCustomSchemas($options->schemaFilter);
+		$this->exportCollections($options->collectionFilter);
+		$this->exportObjects($options->objectFilter);
+		$this->exportTemplates($options->templateFilter);
 
 		$this->logger->info('Completed jumpstart export', [
 			'schemas'              => count($this->jumpstart->schemas),
@@ -135,11 +144,16 @@ readonly class JumpStartExporter
 		}
 	}
 
-	private function exportCollections(): void
+	/** @param list<string>|null $filter */
+	private function exportCollections(?array $filter = null): void
 	{
 		$collections = $this->collectionLister->listAllCollections();
 
 		foreach ($collections as $collection) {
+			if ($filter !== null && !in_array($collection->id, $filter, true)) {
+				continue;
+			}
+
 			if (in_array($collection->schema, SchemaData::RESERVED_SCHEMAS)) {
 				$this->jumpstart->addReservedCollection($collection->schema);
 				continue;
@@ -153,11 +167,16 @@ readonly class JumpStartExporter
 		}
 	}
 
-	private function exportObjects(): void
+	/** @param list<string>|null $filter */
+	private function exportObjects(?array $filter = null): void
 	{
 		$collections = $this->collectionLister->listAllCollections();
 
 		foreach ($collections as $collection) {
+			if ($filter !== null && !in_array($collection->id, $filter, true)) {
+				continue;
+			}
+
 			$this->logger->info('Exporting objects from collection', [
 				'collection' => $collection->id,
 			]);

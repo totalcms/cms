@@ -191,6 +191,19 @@ readonly class AdminUtilsAction
 			];
 		}
 
+		// JumpStart utility data
+		$jumpstartData = null;
+		if ($page === 'jumpstart') {
+			$jumpstartData = [
+				// Only custom schema *definitions* are exported (exportCustomSchemas),
+				// so the picker lists custom schemas only — reserved/extension schemas
+				// would be non-functional choices. Collections list all (reserved
+				// collections' objects DO export).
+				'schemas'     => $this->schemaLister->listCustomSchemas(),
+				'collections' => $this->collectionLister->listAllCollections(),
+			];
+		}
+
 		// Handle twig-debugger page
 		$lintResults = null;
 		if ($page === 'twig-debugger') {
@@ -301,6 +314,7 @@ readonly class AdminUtilsAction
 			'updateInfo'             => $updateInfo,
 			'composerInstall'        => \TotalCMS\Support\PathResolver::isComposerInstall(),
 			'syncData'               => $syncData,
+			'jumpstartData'          => $jumpstartData,
 			'visualizerData'         => $visualizerData,
 			'objectVisualizerData'   => $objectVisualizerData,
 			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
