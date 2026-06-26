@@ -36,13 +36,15 @@
 					{value: "delete", label: t('access_groups.op_delete')}
 				],
 				settings : {
-					fieldGrid: "150px"
+					toggleAll : false,
+					fieldGrid : "150px"
 				}
 			}) }}
 
 			{{ cms.form.field("checklist", "collections-all", {
 				label    : t('access_groups.collection_access'),
 				value    : group ? (group.permissions.collections.all ? ["all"] : []) : ["all"],
+				settings : { toggleAll : false },
 				options  : [
 					{value: "all", label: t('access_groups.all_obj_collections')}
 				]
@@ -85,13 +87,15 @@
 					{value: "delete", label: t('access_groups.op_delete')}
 				],
 				settings : {
-					fieldGrid: "150px"
+					toggleAll : false,
+					fieldGrid : "150px"
 				}
 			}) }}
 
 			{{ cms.form.field("checklist", "collectionsMeta-all", {
 				label    : t('access_groups.meta_access'),
 				value    : group ? (group.permissions.collectionsMeta.all ? ["all"] : []) : ["all"],
+				settings : { toggleAll : false },
 				options  : [
 					{value: "all", label: t('access_groups.all_collections_meta')}
 				]
@@ -126,13 +130,15 @@
 					{value: "delete", label: t('access_groups.op_delete')}
 				],
 				settings : {
-					fieldGrid: "150px"
+					toggleAll : false,
+					fieldGrid : "150px"
 				}
 			}) }}
 
 			{{ cms.form.field("checklist", "schemas-all", {
 				label    : t('access_groups.schema_access'),
 				value    : group ? (group.permissions.schemas.all ? ["all"] : []) : ["all"],
+				settings : { toggleAll : false },
 				options  : [
 					{value: "all", label: t('access_groups.all_schemas')}
 				]
@@ -152,7 +158,7 @@
 				value    : group ? group.permissions.schemas.allowed : [],
 				options  : schemaOptions,
 				settings : {
-					fieldGrid: "150px",
+					fieldGrid  : "150px",
 					visibility : {
 						watch    : "schemas-all",
 						value    : "all",
@@ -187,13 +193,15 @@
 					{value: "dataviews", label: t('access_groups.feature_dataviews')},
 				],
 				settings : {
-					fieldColumns: "150px"
+					toggleAll    : false,
+					fieldColumns : "150px"
 				}
 			}) }}
 
 			{{ cms.form.field("checklist", "utils-all", {
 				label    : t('access_groups.utils_access'),
 				value    : group ? (group.permissions.utils.all ? ["all"] : []) : ["all"],
+				settings : { toggleAll : false },
 				options  : [
 					{value: "all", label: t('access_groups.all_utils')}
 				]
@@ -232,6 +240,7 @@
 				{{ cms.form.field("checklist", "extensions-all", {
 					label    : t('access_groups.extensions_access'),
 					value    : group ? ((group.permissions.extensions.all ?? true) ? ["all"] : []) : ["all"],
+					settings : { toggleAll : false },
 					options  : [
 						{value: "all", label: t('access_groups.all_extensions')}
 					]
