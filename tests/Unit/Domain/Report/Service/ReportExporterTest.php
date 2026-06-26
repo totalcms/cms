@@ -9,6 +9,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Data\BooleanData;
 use TotalCMS\Domain\Property\Data\DeckData;
+use TotalCMS\Domain\Property\Data\ListData;
 use TotalCMS\Domain\Property\Data\StringData;
 use TotalCMS\Domain\Report\Service\ReportExporter;
 use TotalCMS\Factory\LoggerFactory;
@@ -246,6 +247,18 @@ describe('ReportExporter', function (): void {
 		$result = $this->exporter->exportCsv('blog', ['title', 'draft']);
 
 		expect($result['data'][0][1])->toBe('true');
+	});
+
+	test('exportCsv joins a flat list of scalars with commas instead of JSON', function (): void {
+		$this->storage->method('fetchObjectIds')->willReturn(['p1']);
+		$this->objectFetcher->method('fetchObject')->willReturn(makeObject('p1', [
+			'title' => new StringData('Post'),
+			'tags'  => new ListData(['php', 'js', 'css']),
+		]));
+
+		$result = $this->exporter->exportCsv('blog', ['title', 'tags']);
+
+		expect($result['data'][0][1])->toBe('php, js, css');
 	});
 
 	test('exportCsv escapes newlines in scalar values to literal \\n', function (): void {
