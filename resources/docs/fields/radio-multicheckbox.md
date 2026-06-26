@@ -37,20 +37,30 @@ Use the `fieldColumns` setting to arrange options in CSS columns. Options flow *
 - The browser creates as many columns as will fit in the container
 - Column-major reading order (top-to-bottom within a column)
 
-## Checklist Layout (`layout: "checklist"`)
+## Select-all Toggle (`toggleAll`)
 
-Use the `layout: "checklist"` setting to render the multicheckbox field as a compact, bordered, multi-column card with a "select all / none" toggle button. The stored array value remains unchanged — this is purely a visual presentation. Pair with `fieldColumns` to tune column width. This layout is only available for multicheckbox fields; radio fields do not support it.
+Multicheckbox fields show a **"select all / none" toggle** in the legend by default — one click checks every option, the next clears them. To hide it, set `toggleAll` to `false`:
 
 ```json
 {
-    "layout": "checklist"
+    "field": "multicheckbox",
+    "settings": { "toggleAll": false }
 }
 ```
 
-- Renders as a compact, bordered card containing all options
-- Includes a "select all / none" toggle button positioned at the top-right
-- Can be combined with `fieldColumns` to control how options flow within the card
-- Multicheckbox-only; does not apply to radio fields
+- On by default for multicheckbox; radio fields never show it (single-select).
+- Purely a UI affordance — the stored array value is unaffected.
+
+## Styled Checkboxes (`styled-checkbox`)
+
+By default checkboxes render using the browser's native control (with the theme accent color). To use Total CMS's custom-drawn checkbox instead, add the `styled-checkbox` class to the field via the `class` setting:
+
+```json
+{
+    "field": "multicheckbox",
+    "settings": { "class": "styled-checkbox" }
+}
+```
 
 ## Required Behavior
 

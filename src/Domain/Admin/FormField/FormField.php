@@ -123,15 +123,15 @@ class FormField
 	 * Render the field's visible label. Defaults to `<label for="field-{uuid}">`;
 	 * pass `'legend'` for fieldset-based fields (radio, multicheckbox).
 	 */
-	protected function createFieldLabel(string $tag = 'label'): string
+	protected function createFieldLabel(string $tag = 'label', ?string $content = null): string
 	{
-		if ($this->label === '') {
+		if ($this->label === '' && $content === null) {
 			return '';
 		}
 
 		$attributes = $tag === 'label' ? ['for' => "field-{$this->uuid}"] : [];
 
-		return HTMLUtils::element($tag, $this->label, $attributes);
+		return HTMLUtils::element($tag, $content ?? $this->label, $attributes);
 	}
 
 	/**

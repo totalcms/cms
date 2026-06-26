@@ -47,7 +47,7 @@ abstract class ChoiceField extends FormField
 	 */
 	protected const REQUIRED_ON_CONTAINER = false;
 
-	/** Whether this variant gets a "select all" toggle in checklist layout. */
+	/** Whether this variant supports a "select all / none" toggle (multicheckbox yes, radio no). Further gated by the `toggleAll` setting (default on). */
 	protected const SUPPORTS_TOGGLE_ALL = false;
 
 	public function build(): string
@@ -64,24 +64,25 @@ abstract class ChoiceField extends FormField
 			$extraClasses[]                    = static::COLUMNS_CLASS;
 		}
 
-		$isChecklist = ($this->settings['layout'] ?? '') === 'checklist';
-		if ($isChecklist) {
-			$extraClasses[] = 'choice-field--checklist';
-		}
-
 		$attributes = $this->buildFieldAttributes($extraStyles, $extraClasses);
 		if (static::REQUIRED_ON_CONTAINER && $this->required) {
 			$attributes['data-required'] = 'true';
 		}
 
+		// Multicheckbox gets a "select all / none" toggle in its legend by
+		// default; set `toggleAll: false` to suppress it. Radio never gets one
+		// (SUPPORTS_TOGGLE_ALL is false there).
 		$legend = $this->createFieldLabel('legend');
-		if ($isChecklist && static::SUPPORTS_TOGGLE_ALL) {
-			$legend .= HTMLUtils::element('button', '+', [
+		if (static::SUPPORTS_TOGGLE_ALL && ($this->settings['toggleAll'] ?? true)) {
+			// Empty button — the +/× glyph is drawn by the .choice-field-toggle-all
+			// CSS (masked add icon, rotated to × in the deselect-all state).
+			$toggle = HTMLUtils::element('button', '', [
 				'type'       => 'button',
 				'class'      => 'choice-field-toggle-all',
 				'title'      => 'Select all',
 				'aria-label' => 'Select all',
 			]);
+			$legend = $this->createFieldLabel('legend', $this->label . $toggle);
 		}
 
 		$fieldset = HTMLUtils::element('fieldset', $legend . $choices);

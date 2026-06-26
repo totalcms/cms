@@ -17,7 +17,8 @@ export default class MultiCheckboxField extends TotalField {
             const boxes = Array.from(this.container.querySelectorAll('input[type=checkbox]'));
             const allChecked = boxes.length > 0 && boxes.every(cb => cb.checked);
             boxes.forEach(cb => { cb.checked = !allChecked; });
-            toggle.textContent = allChecked ? '+' : '−';
+            // `is-all` rotates the add icon into an "×" (deselect-all state).
+            toggle.classList.toggle('is-all', !allChecked);
             toggle.title = allChecked ? 'Select all' : 'Deselect all';
             this.changed();
         });
