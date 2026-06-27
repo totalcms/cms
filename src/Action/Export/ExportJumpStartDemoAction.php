@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Action\Export;
 
 use Nyholm\Psr7\Stream;
@@ -11,7 +13,10 @@ class ExportJumpStartDemoAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$demojumpstart = __DIR__ . '/../../../resources/jumpstart/demo.json';
-		$jsonData      = (string)file_get_contents($demojumpstart);
+		$jsonData      = file_get_contents($demojumpstart);
+		if ($jsonData === false) {
+			throw new \RuntimeException(sprintf('Failed to read demo JumpStart file: %s', $demojumpstart));
+		}
 
 		// Set response headers for JSON download
 		$filename = sprintf('jumpstart-demo-%s.json', date('Ymd-His'));

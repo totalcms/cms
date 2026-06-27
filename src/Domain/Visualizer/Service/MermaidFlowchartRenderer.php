@@ -48,10 +48,19 @@ final class MermaidFlowchartRenderer
 			$lines[] = '    end';
 		}
 
+		// De-dupe (from, to, via) so repeated multi-value targets or bidirectional
+		// in+out scans don't emit doubled arrows. Mirrors MermaidErdRenderer's $seen map.
+		$seen = [];
 		foreach ($graph['edges'] as $edge) {
-			$from    = $this->nodeId((string)$edge['from']);
-			$to      = $this->nodeId((string)$edge['to']);
-			$label   = $this->esc((string)($edge['via'] ?? ''));
+			$from   = $this->nodeId((string)$edge['from']);
+			$to     = $this->nodeId((string)$edge['to']);
+			$via    = (string)($edge['via'] ?? '');
+			$dedupKey = $from . '|' . $to . '|' . $via;
+			if (isset($seen[$dedupKey])) {
+				continue;
+			}
+			$seen[$dedupKey] = true;
+			$label   = $this->esc($via);
 			$lines[] = $label !== ''
 				? sprintf('    %s -->|%s| %s', $from, $label, $to)
 				: sprintf('    %s --> %s', $from, $to);

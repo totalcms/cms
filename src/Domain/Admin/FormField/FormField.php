@@ -294,8 +294,15 @@ class FormField
 		}
 
 		// Handle array current values (checkboxes, multiselect, etc.)
+		// Mirror the JS evaluateCondition() switch in field-visibility.js (lines 148-162).
 		if (is_array($currentValue)) {
-			return in_array($expectedValue, $currentValue, false);
+			return match ($operator) {
+				'in', '=='      => in_array($expectedValue, $currentValue, false),
+				'not_in', '!=' => !in_array($expectedValue, $currentValue, false),
+				'empty'         => count($currentValue) === 0,
+				'not_empty'     => count($currentValue) > 0,
+				default         => in_array($expectedValue, $currentValue, false),
+			};
 		}
 
 		// Evaluate based on operator
@@ -466,7 +473,7 @@ class FormField
 		}
 
 		if ($source === 'collectionIds') {
-			return $this->form->collectionIdList();
+			return $this->form->collectionIdListWithLabels();
 		}
 
 		if ($source === 'viewIds') {

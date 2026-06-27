@@ -181,10 +181,6 @@ readonly class ObjectRelationshipResolver
 
 			$count = 0;
 			foreach ($srcIndex->objects->all() as $entry) {
-				if ($count >= self::CAP_PER_SOURCE) {
-					$truncated = true;
-					break;
-				}
 				$srcId = (string)($entry['id'] ?? '');
 				if ($srcId === '') {
 					continue;
@@ -192,6 +188,10 @@ readonly class ObjectRelationshipResolver
 				foreach ($this->idsFromValue($entry[$rel['property']] ?? null) as $refId) {
 					if (!isset($focalIds[$refId])) {
 						continue; // points at a focal object we didn't render (capped out)
+					}
+					if ($count >= self::CAP_PER_SOURCE) {
+						$truncated = true;
+						break 2;
 					}
 					$srcKey         = $this->nodeKey($rel['collection'], $srcId);
 					$nodes[$srcKey] ??= $this->node($rel['collection'], $srcId, $this->label($entry, $titlePropFor($rel['collection'])), false);

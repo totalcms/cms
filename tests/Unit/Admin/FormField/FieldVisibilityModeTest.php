@@ -50,3 +50,69 @@ test('an ACTIVE disable-mode field is not disabled', function (): void {
 	expect($html)->toContain('field-visible');
 	expect($html)->not->toMatch('/<input[^>]*\bdisabled/');
 });
+
+// ---------------------------------------------------------------------------
+// Array current-value branch (checklist / multiselect watch-fields)
+// The JS evaluateCondition() switch (field-visibility.js:148-162) and the
+// PHP evaluateCondition() array branch must stay in sync.
+// ---------------------------------------------------------------------------
+
+test('array current value with not_in operator hides when value IS in array', function (): void {
+	$form     = $this->createMock(TotalForm::class);
+	$form->id = '123';
+	$form->method('getFieldValue')->willReturn(['red', 'green']); // 'red' IS in array → not_in → false → hidden
+	$html = (new ChecklistField($form, 'choice', settings: [
+		'visibility' => ['watch' => 'tags', 'value' => 'red', 'operator' => 'not_in'],
+	], options: ['A']))->build();
+	expect($html)->toContain('field-hidden');
+});
+
+test('array current value with not_in operator shows when value is NOT in array', function (): void {
+	$form     = $this->createMock(TotalForm::class);
+	$form->id = '123';
+	$form->method('getFieldValue')->willReturn(['blue', 'green']); // 'red' NOT in array → not_in → true → visible
+	$html = (new ChecklistField($form, 'choice', settings: [
+		'visibility' => ['watch' => 'tags', 'value' => 'red', 'operator' => 'not_in'],
+	], options: ['A']))->build();
+	expect($html)->toContain('field-visible');
+});
+
+test('array current value with empty operator shows when array is empty', function (): void {
+	$form     = $this->createMock(TotalForm::class);
+	$form->id = '123';
+	$form->method('getFieldValue')->willReturn([]); // empty → true → visible
+	$html = (new ChecklistField($form, 'choice', settings: [
+		'visibility' => ['watch' => 'tags', 'value' => 'ignored', 'operator' => 'empty'],
+	], options: ['A']))->build();
+	expect($html)->toContain('field-visible');
+});
+
+test('array current value with empty operator hides when array is non-empty', function (): void {
+	$form     = $this->createMock(TotalForm::class);
+	$form->id = '123';
+	$form->method('getFieldValue')->willReturn(['red']); // non-empty → false → hidden
+	$html = (new ChecklistField($form, 'choice', settings: [
+		'visibility' => ['watch' => 'tags', 'value' => 'ignored', 'operator' => 'empty'],
+	], options: ['A']))->build();
+	expect($html)->toContain('field-hidden');
+});
+
+test('array current value with not_empty operator shows when array is non-empty', function (): void {
+	$form     = $this->createMock(TotalForm::class);
+	$form->id = '123';
+	$form->method('getFieldValue')->willReturn(['red']); // non-empty → true → visible
+	$html = (new ChecklistField($form, 'choice', settings: [
+		'visibility' => ['watch' => 'tags', 'value' => 'ignored', 'operator' => 'not_empty'],
+	], options: ['A']))->build();
+	expect($html)->toContain('field-visible');
+});
+
+test('array current value with not_empty operator hides when array is empty', function (): void {
+	$form     = $this->createMock(TotalForm::class);
+	$form->id = '123';
+	$form->method('getFieldValue')->willReturn([]); // empty → false → hidden
+	$html = (new ChecklistField($form, 'choice', settings: [
+		'visibility' => ['watch' => 'tags', 'value' => 'ignored', 'operator' => 'not_empty'],
+	], options: ['A']))->build();
+	expect($html)->toContain('field-hidden');
+});

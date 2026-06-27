@@ -83,7 +83,7 @@ readonly class McpEndpointAction
 				sprintf(
 					'Bearer realm="MCP", error="%s", resource_metadata="%s"',
 					$e->reason,
-					$this->protectedResourceMetadataUrl(),
+					$this->protectedResourceMetadataUrl($request),
 				),
 			);
 		}
@@ -162,7 +162,7 @@ readonly class McpEndpointAction
 					'WWW-Authenticate',
 					sprintf(
 						'Bearer realm="MCP", error="insufficient_scope", resource_metadata="%s"',
-						$this->protectedResourceMetadataUrl(),
+						$this->protectedResourceMetadataUrl($request),
 					),
 				);
 			}
@@ -229,9 +229,20 @@ readonly class McpEndpointAction
 	 * a client can discover the authorization server from a 401. Points at this
 	 * resource server's own well-known endpoint (scheme+host plus the app's mount
 	 * prefix), independent of any external authorization-server issuer.
+	 *
+	 * Derives scheme+host from the inbound request so proxied installs advertise
+	 * the correct public URL — mirrors the same logic in McpDiscoveryAction. Falls
+	 * back to the configured site URL when the request host is non-routable (Docker,
+	 * reverse proxy that doesn't forward Host).
 	 */
-	private function protectedResourceMetadataUrl(): string
+	private function protectedResourceMetadataUrl(ServerRequestInterface $request): string
 	{
-		return rtrim($this->config->url, '/') . rtrim($this->config->api, '/') . '/.well-known/oauth-protected-resource';
+		$uri       = $request->getUri();
+		$authority = $uri->getAuthority();
+		$base      = Config::isNonRoutableHost($authority) && !Config::isNonRoutableHost($this->config->domain)
+			? rtrim($this->config->url, '/')
+			: rtrim($uri->getScheme() . '://' . $authority, '/');
+
+		return $base . rtrim($this->config->api, '/') . '/.well-known/oauth-protected-resource';
 	}
 }

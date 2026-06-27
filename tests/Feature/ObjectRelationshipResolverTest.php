@@ -111,3 +111,26 @@ it('resolves outbound edges for every object in a collection', function (): void
 	// All three posts are rendered as focal-collection nodes.
 	expect($graph['nodes'])->toHaveKeys(['posts::p1', 'posts::p2', 'posts::p3']);
 });
+
+it('cap check fires only on matching edges — non-matching rows do not burn the cap', function (): void {
+	// Regression for the bug where the cap was checked at the OUTER (source-row)
+	// loop entry before any inner edge landed. This meant that source rows whose
+	// relational property doesn't point at any rendered focal object still
+	// incremented (or rather pre-empted) the cap, causing real edges from later
+	// rows to be silently dropped.
+	//
+	// Setup: resolve the "authors" collection. The inbound source is "posts".
+	// p1 and p2 reference jane (rendered); p3 references "someone-else" (not
+	// rendered). Under the old (broken) logic p3's iteration would be counted
+	// against the cap. The correct behaviour is that only p1 and p2 consume cap
+	// slots, and truncated stays false for this tiny dataset.
+	$graph = $this->resolver->resolveCollection('authors');
+
+	// Both valid inbound edges must be present.
+	expect(edgeExists($graph['edges'], 'posts::p1', 'authors::jane', 'inbound'))->toBeTrue();
+	expect(edgeExists($graph['edges'], 'posts::p2', 'authors::jane', 'inbound'))->toBeTrue();
+	// Non-matching rows must not create phantom edges.
+	expect(edgeExists($graph['edges'], 'posts::p3', 'authors::jane', 'inbound'))->toBeFalse();
+	// With only 2 real matches the cap (50) is never reached.
+	expect($graph['truncated'])->toBeFalse();
+});

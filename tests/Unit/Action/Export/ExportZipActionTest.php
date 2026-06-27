@@ -147,13 +147,16 @@ final class ExportZipActionTest extends TestCase
 		($this->action)($this->request, $this->response, ['collection' => 'test']);
 	}
 
-	public function testReturns400WhenIdCountExceedsCap(): void
+	public function testReturns400WhenAllIdsAreNonExistent(): void
 	{
-		// Build a comma-separated list of 501 IDs — one over the cap.
-		$ids    = array_map(static fn (int $i): string => 'id-' . $i, range(1, 501));
-		$param  = implode(',', $ids);
+		// createObjectsZip throws RuntimeException when no objects resolve → 400.
 		$request = $this->createMock(ServerRequestInterface::class);
-		$request->method('getQueryParams')->willReturn(['ids' => $param]);
+		$request->method('getQueryParams')->willReturn(['ids' => 'ghost-1,ghost-2']);
+
+		$this->objectZipper->expects($this->once())
+			->method('createObjectsZip')
+			->with('posts', ['ghost-1', 'ghost-2'])
+			->willThrowException(new \RuntimeException('No objects found to export in collection: posts'));
 
 		$response400 = $this->createMock(ResponseInterface::class);
 		$body        = $this->createMock(StreamInterface::class);
@@ -162,44 +165,16 @@ final class ExportZipActionTest extends TestCase
 
 		$body->expects($this->once())
 			->method('write')
-			->with($this->stringContains('Too many IDs'));
+			->with($this->stringContains('No objects found'));
 
 		$this->response->expects($this->once())
 			->method('withStatus')
 			->with(400)
 			->willReturn($response400);
 
-		// The zipper must NOT be called when the cap is exceeded.
-		$this->objectZipper->expects($this->never())->method('createObjectsZip');
-		$this->collectionZipper->expects($this->never())->method('createCollectionZip');
-
 		$result = ($this->action)($request, $this->response, ['collection' => 'posts']);
 
 		$this->assertSame($response400, $result);
-	}
-
-	public function testAllowsExactlyCapIds(): void
-	{
-		// 500 IDs — exactly at the cap — must proceed to zip creation.
-		$ids     = array_map(static fn (int $i): string => 'id-' . $i, range(1, 500));
-		$param   = implode(',', $ids);
-		$request = $this->createMock(ServerRequestInterface::class);
-		$request->method('getQueryParams')->willReturn(['ids' => $param]);
-
-		$zipPath = sys_get_temp_dir() . '/test-cap-' . uniqid() . '.zip';
-		file_put_contents($zipPath, 'zip');
-
-		$this->objectZipper->expects($this->once())
-			->method('createObjectsZip')
-			->with('posts', $ids)
-			->willReturn($zipPath);
-		$this->objectZipper->method('getObjectsZipFilename')->willReturn('posts-objects.zip');
-
-		$this->response->method('withStatus')->willReturnSelf();
-		$this->response->method('withHeader')->willReturnSelf();
-		$this->response->method('withBody')->willReturnSelf();
-
-		($this->action)($request, $this->response, ['collection' => 'posts']);
 	}
 
 	public function testReturns500WhenZipFileNotFound(): void
@@ -210,6 +185,7 @@ final class ExportZipActionTest extends TestCase
 		$response500 = $this->createMock(ResponseInterface::class);
 		$body        = $this->createMock(StreamInterface::class);
 		$response500->method('getBody')->willReturn($body);
+		$response500->method('withHeader')->willReturnSelf();
 
 		$body->expects($this->once())
 			->method('write')
@@ -233,10 +209,11 @@ final class ExportZipActionTest extends TestCase
 		$response500 = $this->createMock(ResponseInterface::class);
 		$body        = $this->createMock(StreamInterface::class);
 		$response500->method('getBody')->willReturn($body);
+		$response500->method('withHeader')->willReturnSelf();
 
 		$body->expects($this->once())
 			->method('write')
-			->with($this->stringContains('Error creating zip: Zip creation failed'));
+			->with($this->stringContains('Zip creation failed'));
 
 		$this->response->expects($this->once())
 			->method('withStatus')

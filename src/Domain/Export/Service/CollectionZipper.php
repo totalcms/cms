@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Export\Service;
 
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
@@ -33,7 +35,7 @@ readonly class CollectionZipper
 		}
 
 		// Create temporary zip file
-		$tempZipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'collection-' . $collection . '-' . time() . '.zip';
+		$tempZipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'collection-' . $collection . '-' . uniqid('', true) . '.zip';
 
 		$zip    = new \ZipArchive();
 		$result = $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);

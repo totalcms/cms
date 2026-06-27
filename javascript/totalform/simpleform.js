@@ -108,6 +108,11 @@ export default class SimpleForm {
 				container.classList.remove('error');
 				container.classList.add('field-disabled');
 				container.querySelectorAll('input, select, textarea, button').forEach(el => {
+					// Mirror hide() pattern: save required so enable() can restore it.
+					if (el.required) {
+						el.setAttribute('data-original-required', 'true');
+						el.required = false;
+					}
 					el.disabled = true;
 					el.setAttribute('aria-disabled', 'true');
 				});
@@ -118,6 +123,11 @@ export default class SimpleForm {
 				container.querySelectorAll('input, select, textarea, button').forEach(el => {
 					el.disabled = false;
 					el.removeAttribute('aria-disabled');
+					// Restore required saved by disable() (mirrors show() pattern).
+					if (el.hasAttribute('data-original-required')) {
+						el.required = true;
+						el.removeAttribute('data-original-required');
+					}
 				});
 			},
 

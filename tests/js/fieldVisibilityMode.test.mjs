@@ -70,6 +70,104 @@ describe('TotalField disable/enable', () => {
 	});
 });
 
+// ---------------------------------------------------------------------------
+// SimpleForm field wrapper — disable/enable required save-restore
+// Tests the fix to simpleform.js createFieldWrapper().disable()/enable():
+// a required field that gets disabled must have `required` restored on enable.
+// The wrapper object is replicated inline to avoid pulling in the full
+// SimpleForm → TotalCMS import chain (same strategy used by totalForm.test.mjs).
+// ---------------------------------------------------------------------------
+
+function makeSimpleWrapper({ required = false } = {}) {
+	document.body.innerHTML = '';
+	const container = document.createElement('div');
+	container.className = 'form-field field-visible';
+	const input = document.createElement('input');
+	input.name = 'title';
+	input.required = required;
+	container.appendChild(input);
+	document.body.appendChild(container);
+
+	// Mirror createFieldWrapper() return value from simpleform.js exactly.
+	return {
+		container,
+		property: input.name,
+		input,
+		getValue() { return input.value; },
+		show() {
+			container.style.display = '';
+			container.classList.remove('field-hidden');
+			container.classList.add('field-visible');
+			if (input && input.hasAttribute('data-original-required')) {
+				input.required = true;
+			}
+		},
+		hide() {
+			container.style.display = 'none';
+			container.classList.remove('field-visible');
+			container.classList.add('field-hidden');
+			if (input && input.required) {
+				input.setAttribute('data-original-required', 'true');
+				input.required = false;
+			}
+			if (input) { input.setCustomValidity(''); }
+			container.classList.remove('error');
+		},
+		disable() {
+			container.classList.remove('field-hidden');
+			container.classList.remove('error');
+			container.classList.add('field-disabled');
+			container.querySelectorAll('input, select, textarea, button').forEach(el => {
+				if (el.required) {
+					el.setAttribute('data-original-required', 'true');
+					el.required = false;
+				}
+				el.disabled = true;
+				el.setAttribute('aria-disabled', 'true');
+			});
+		},
+		enable() {
+			container.classList.remove('field-disabled');
+			container.querySelectorAll('input, select, textarea, button').forEach(el => {
+				el.disabled = false;
+				el.removeAttribute('aria-disabled');
+				if (el.hasAttribute('data-original-required')) {
+					el.required = true;
+					el.removeAttribute('data-original-required');
+				}
+			});
+		},
+		isVisible() { return !container.classList.contains('field-hidden'); },
+	};
+}
+
+describe('SimpleForm field wrapper disable/enable required save-restore', () => {
+	test('disable() clears required and enable() restores it', () => {
+		const w = makeSimpleWrapper({ required: true });
+		expect(w.input.required).toBe(true);
+		w.disable();
+		expect(w.input.required).toBe(false);
+		expect(w.input.getAttribute('data-original-required')).toBe('true');
+		w.enable();
+		expect(w.input.required).toBe(true);
+		expect(w.input.hasAttribute('data-original-required')).toBe(false);
+	});
+
+	test('disable() does not set data-original-required for non-required inputs', () => {
+		const w = makeSimpleWrapper({ required: false });
+		w.disable();
+		expect(w.input.hasAttribute('data-original-required')).toBe(false);
+		expect(w.input.required).toBe(false);
+	});
+
+	test('enable() after disable() of a non-required field leaves required false', () => {
+		const w = makeSimpleWrapper({ required: false });
+		w.disable();
+		w.enable();
+		expect(w.input.required).toBe(false);
+	});
+});
+
 describe('FieldVisibility deck-table scoping', () => {
 	function deckTableDom() {
 		document.body.innerHTML = '';

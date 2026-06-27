@@ -613,6 +613,23 @@ class TotalForm implements \Stringable
 		return array_map(fn (CollectionData $c): string => $c->id, $collections);
 	}
 
+	/**
+	 * Get a list of all collections as {value, label} pairs.
+	 * Used by the "collectionIds" propertyOptions source so select/multiselect
+	 * fields show human names instead of bare ids.
+	 *
+	 * @return array<int,array{value: string, label: string}>
+	 */
+	public function collectionIdListWithLabels(): array
+	{
+		$collections = $this->collectionLister->listAllCollections();
+
+		return array_values(array_map(fn (CollectionData $c): array => [
+			'value' => $c->id,
+			'label' => $c->name !== '' ? $c->name : $c->id,
+		], $collections));
+	}
+
 	protected ?TemplateLister $templateLister                  = null;
 	protected ?PageMiddlewareRegistry $pageMiddlewareRegistry  = null;
 	protected ?DataViewLister $dataViewLister                  = null;

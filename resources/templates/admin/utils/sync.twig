@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			body.append(`${key}_mode`, 'all');
 			return;
 		}
-		// multicheckbox renders each option with a bare `name` (no `[]`), so the
+		// checklist renders each option with a bare `name` (no `[]`), so the
 		// selector must match that — `${itemsFieldName}`, not `${itemsFieldName}[]`.
 		// The body.append below still uses `[]` so PHP parses it as an array.
 		const selected = Array.from(form.querySelectorAll(`input[name="${itemsFieldName}"]:checked`))

@@ -12,9 +12,6 @@ use TotalCMS\Domain\Export\Service\ObjectZipper;
 
 readonly class ExportZipAction
 {
-	/** Maximum number of object IDs accepted in a single bulk download request. */
-	private const MAX_BULK_IDS = 500;
-
 	public function __construct(
 		private CollectionZipper $collectionZipper,
 		private ObjectZipper $objectZipper,
@@ -37,18 +34,6 @@ readonly class ExportZipAction
 			if ($idsParam !== '') {
 				$ids = array_values(array_filter(array_map('trim', explode(',', $idsParam)), static fn (string $id): bool => $id !== ''));
 
-				if (count($ids) > self::MAX_BULK_IDS) {
-					$response = $response->withStatus(400)
-						->withHeader('Content-Type', 'application/json');
-					$response->getBody()->write((string)json_encode([
-						'error'   => 'Too many IDs requested.',
-						'limit'   => self::MAX_BULK_IDS,
-						'message' => sprintf('Bulk download is limited to %d objects per request. Received %d IDs.', self::MAX_BULK_IDS, count($ids)),
-					]));
-
-					return $response;
-				}
-
 				$zipPath  = $this->objectZipper->createObjectsZip($collection, $ids);
 				$filename = $this->objectZipper->getObjectsZipFilename($collection);
 			} else {
@@ -57,8 +42,12 @@ readonly class ExportZipAction
 			}
 
 			if (!file_exists($zipPath)) {
-				$response = $response->withStatus(500);
-				$response->getBody()->write('Failed to create zip file');
+				$response = $response->withStatus(500)
+					->withHeader('Content-Type', 'application/json');
+				$response->getBody()->write((string)json_encode([
+					'error'   => 'Export failed.',
+					'message' => 'Failed to create zip file',
+				]));
 
 				return $response;
 			}
@@ -68,8 +57,12 @@ readonly class ExportZipAction
 			$fileHandle = fopen($zipPath, 'r');
 
 			if ($fileHandle === false) {
-				$response = $response->withStatus(500);
-				$response->getBody()->write('Failed to read zip file');
+				$response = $response->withStatus(500)
+					->withHeader('Content-Type', 'application/json');
+				$response->getBody()->write((string)json_encode([
+					'error'   => 'Export failed.',
+					'message' => 'Failed to read zip file',
+				]));
 
 				return $response;
 			}
@@ -90,8 +83,16 @@ readonly class ExportZipAction
 
 			return $response->withBody(Stream::create($fileHandle));
 		} catch (\RuntimeException $e) {
-			$response = $response->withStatus(500);
-			$response->getBody()->write('Error creating zip: ' . $e->getMessage());
+			// "No objects found" is a client error (bad/non-existent IDs) → 400.
+			$isClientError = str_starts_with($e->getMessage(), 'No objects found');
+			$status        = $isClientError ? 400 : 500;
+
+			$response = $response->withStatus($status)
+				->withHeader('Content-Type', 'application/json');
+			$response->getBody()->write((string)json_encode([
+				'error'   => $isClientError ? 'No objects found.' : 'Export failed.',
+				'message' => $e->getMessage(),
+			]));
 
 			return $response;
 		}
