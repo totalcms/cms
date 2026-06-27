@@ -58,7 +58,9 @@ describe('OperationDetector', function (): void {
 	});
 
 	test('detectOperation returns update for update routes', function (): void {
-		foreach (['object-update', 'object-patch', 'schema-update', 'collection-reindex'] as $routeName) {
+		// property-file-save (top-level) and property-file-save-nested (card/deck child)
+		// must both resolve to update — a missing nested mapping 403'd nested image uploads.
+		foreach (['object-update', 'object-patch', 'schema-update', 'collection-reindex', 'property-file-save', 'property-file-save-nested'] as $routeName) {
 			$request = ($this->requestWithRoute)($routeName);
 			expect($this->detector->detectOperation($request))->toBe('update', "route: $routeName");
 		}
