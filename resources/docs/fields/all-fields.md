@@ -433,6 +433,26 @@ The `visibility` setting controls when a field is displayed in forms based on th
 ```
 Field is visible if `deliveryMethod` matches ANY value in the array.
 
+### Visibility Mode
+
+By default, when a condition is not met the field collapses entirely (`display: none`). The optional `mode` key changes this behavior:
+
+- **`"hide"`** (default) — field is collapsed and removed from the layout when the condition is not met.
+- **`"disable"`** — field remains visible but is greyed-out and non-interactive. Its value is preserved and still saved. The field still counts as visible, so other fields that watch it will read its current value normally.
+
+```json
+{
+	"visibility": {
+		"watch": "plan",
+		"value": "free",
+		"operator": "==",
+		"mode": "disable"
+	}
+}
+```
+
+Use `"disable"` when you want the user to see a field's current value but prevent editing it under certain conditions.
+
 ### Default Behavior
 
 Fields with a `visibility` setting are **hidden by default** until the condition is met. This ensures fields appear only when they should, even on initial form load.

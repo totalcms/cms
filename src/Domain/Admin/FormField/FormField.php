@@ -87,6 +87,22 @@ class FormField
 			$this->disabled = true;
 		}
 
+		// Visibility 'disable' mode: lock the field server-side when it is initially
+		// inactive, so it isn't editable in the window before JS runs (CSS greys it
+		// but can't block keyboard input). FieldVisibility re-enables it on the client
+		// if the condition is met. Only `disabled` is set (not `readonly`) so the
+		// client's disabled-based enable() reverses it cleanly. The value is still
+		// saved — TotalForm reads getValue(); SimpleForm.generateData includes disabled
+		// inputs explicitly.
+		if (
+			isset($this->settings['visibility'])
+			&& is_array($this->settings['visibility'])
+			&& ($this->settings['visibility']['mode'] ?? 'hide') === 'disable'
+			&& !$this->evaluateVisibility($this->settings['visibility'])
+		) {
+			$this->disabled = true;
+		}
+
 		// Allow required to be set via the field settings. This makes the form field required but
 		// it may not be enforced at the schema level. This can be useful when a field using visibility.
 		if (isset($this->settings['required']) && $this->settings['required'] === true) {
@@ -201,15 +217,28 @@ class FormField
 		}
 
 		$visibility = $this->settings['visibility'];
+		$mode       = (($visibility['mode'] ?? 'hide') === 'disable') ? 'disable' : 'hide';
 
-		// Calculate initial visibility state for server-side rendering
-		$isVisible           = $this->evaluateVisibility($visibility);
-		$attributes['class'] = ($attributes['class'] ?? '') . ($isVisible ? ' field-visible' : ' field-hidden');
+		// Calculate initial visibility state for server-side rendering.
+		$isVisible = $this->evaluateVisibility($visibility);
 
-		// Add inline style to hide if needed
-		if (!$isVisible) {
-			$attributes['style'] = ($attributes['style'] ?? '') . ' display: none;';
+		if ($isVisible) {
+			$attributes['class'] = ($attributes['class'] ?? '') . ' field-visible';
+
+			return;
 		}
+
+		// Inactive. In 'disable' mode keep the field visible but greyed (no
+		// field-hidden, so isVisible() stays true and dependents read its value);
+		// in 'hide' mode collapse it as before.
+		if ($mode === 'disable') {
+			$attributes['class'] = ($attributes['class'] ?? '') . ' field-disabled';
+
+			return;
+		}
+
+		$attributes['class'] = ($attributes['class'] ?? '') . ' field-hidden';
+		$attributes['style'] = ($attributes['style'] ?? '') . ' display: none;';
 	}
 
 	/**

@@ -103,6 +103,7 @@
 		// disable for new collection forms
 		opacity        : 0.25;
 		pointer-events : none;
+		cursor         : not-allowed;
 	}
 }
 
@@ -149,6 +150,11 @@
 	}
 	&.field-hidden {
 		display : none !important;
+	}
+	&.field-disabled {
+		opacity        : 0.55;
+		pointer-events : none;
+		cursor         : not-allowed;
 	}
 }
 

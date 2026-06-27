@@ -392,6 +392,27 @@ export default class TotalField {
 		this.enableValidation();
 	}
 
+	disable() {
+		this.container.classList.remove('field-hidden');
+		this.container.classList.add('field-disabled');
+		this.container.querySelectorAll('input, select, textarea, button').forEach(el => {
+			el.disabled = true;
+			el.setAttribute('aria-disabled', 'true');
+		});
+		this.input.setCustomValidity("");
+		this.container.classList.remove("error");
+		this.disableValidation();
+	}
+
+	enable() {
+		this.container.classList.remove('field-disabled');
+		this.container.querySelectorAll('input, select, textarea, button').forEach(el => {
+			el.disabled = false;
+			el.removeAttribute('aria-disabled');
+		});
+		this.enableValidation();
+	}
+
 	isVisible() {
 		return !this.container.classList.contains('field-hidden');
 	}

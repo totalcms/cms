@@ -115,6 +115,23 @@ export default class DeckTableField extends TotalField {
 
         // Process fields in the row
         this.form?.processFields();
+
+        // Wire conditional visibility for this row, scoped to the row so a field's
+        // `watch` resolves against its sibling cells (mirrors DeckItem.initVisibility,
+        // which scopes to the item dialog). Without this, visibility/disable settings
+        // are inert in deck-table layouts.
+        this.initRowVisibility(row);
+    }
+
+    initRowVisibility(row) {
+        if (!this.form?.visibility) return;
+        const fields = [];
+        row.querySelectorAll('.form-field').forEach(el => {
+            if (el.totalfield) fields.push(el.totalfield);
+        });
+        if (fields.length > 0) {
+            this.form.visibility.initializeScope(row, fields);
+        }
     }
 
     updateAddButton() {

@@ -103,6 +103,24 @@ export default class SimpleForm {
 				container.classList.remove("error");
 			},
 
+			disable() {
+				container.classList.remove('field-hidden');
+				container.classList.remove('error');
+				container.classList.add('field-disabled');
+				container.querySelectorAll('input, select, textarea, button').forEach(el => {
+					el.disabled = true;
+					el.setAttribute('aria-disabled', 'true');
+				});
+			},
+
+			enable() {
+				container.classList.remove('field-disabled');
+				container.querySelectorAll('input, select, textarea, button').forEach(el => {
+					el.disabled = false;
+					el.removeAttribute('aria-disabled');
+				});
+			},
+
 			// Matches TotalField.isVisible() so FieldVisibility can treat
 			// SimpleForm wrappers and full TotalField instances interchangeably.
 			isVisible() {
@@ -221,6 +239,15 @@ export default class SimpleForm {
 			} else {
 				// Convert checkbox values to boolean
 				data[checkbox.name] = checkbox.checked;
+			}
+		});
+
+		// FormData also omits disabled inputs. Visibility 'disable' mode keeps a
+		// field's value but disables it, so include disabled inputs explicitly to
+		// avoid dropping their values on save (checkboxes are already handled above).
+		this.form.querySelectorAll('[name][disabled]').forEach(el => {
+			if (!data.hasOwnProperty(el.name)) {
+				data[el.name] = el.value;
 			}
 		});
 
