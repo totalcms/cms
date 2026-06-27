@@ -114,13 +114,13 @@ describe('FormGridBuilder::ensureFieldsIncluded with fieldset members', function
 		// calling ensureFieldsIncluded with all four names must not add email/phone as outer rows
 		$b->ensureFieldsIncluded(['id', 'title', 'email', 'phone']);
 
-		$css = $b->toCssGridAreas();
+		$style = $b->toStyleTag('form-test');
 
 		// The outer grid should still have 'id title'
-		expect($css)->toContain("'id title'");
+		expect($style)->toContain("'id title'");
 		// email and phone must NOT appear as extra outer rows
-		expect($css)->not->toContain("'email email'");
-		expect($css)->not->toContain("'phone phone'");
+		expect($style)->not->toContain("'email email'");
+		expect($style)->not->toContain("'phone phone'");
 	});
 
 	test('non-member fields not in grid are still appended as outer rows', function (): void {
@@ -128,10 +128,10 @@ describe('FormGridBuilder::ensureFieldsIncluded with fieldset members', function
 
 		$b->ensureFieldsIncluded(['id', 'title', 'email', 'phone', 'notes']);
 
-		$css = $b->toCssGridAreas();
+		$style = $b->toStyleTag('form-test');
 
 		// 'notes' is not a fieldset member and not an outer row — it should be appended
-		expect($css)->toContain("'notes notes'");
+		expect($style)->toContain("'notes notes'");
 	});
 });
 

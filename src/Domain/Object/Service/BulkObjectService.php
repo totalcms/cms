@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Event\Payload\BulkEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 
@@ -15,9 +14,9 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
  * The expensive per-object work in a bulk delete is the index rebuild:
  * IndexBuildListener rebuilds the whole collection index on every
  * `object.deleted`. Deleting N objects naively means N full rebuilds. So we
- * suspend per-object rebuilds for the duration (the same listener-level
- * suspension the batch importers use) and fire one `bulk.deleted` at the end,
- * which resumes the listener and does a single rebuild.
+ * suspend per-object rebuilds for the duration via
+ * EventDispatcher::suspendIndexRebuild() and fire one `bulk.deleted` at the
+ * end, which resumes the dispatcher-owned suspension and does a single rebuild.
  *
  * Per-object `object.deleted` events still fire inside the loop, so search,
  * MCP-subscription, dataview, and metadata listeners stay correct without any
@@ -27,7 +26,6 @@ readonly class BulkObjectService
 {
 	public function __construct(
 		private ObjectRemover $remover,
-		private IndexBuildListener $indexBuildListener,
 		private EventDispatcher $eventDispatcher,
 	) {
 	}
@@ -44,7 +42,7 @@ readonly class BulkObjectService
 		$deleted = [];
 		$failed  = [];
 
-		$this->indexBuildListener->suspendForCollection($collection);
+		$this->eventDispatcher->suspendIndexRebuild($collection);
 
 		try {
 			foreach ($ids as $id) {

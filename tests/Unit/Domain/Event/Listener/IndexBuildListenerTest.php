@@ -36,6 +36,7 @@ final class IndexBuildListenerTest extends TestCase
 			$this->indexBuilder,
 			$this->collectionFetcher,
 			$this->collectionLister,
+			$this->dispatcher,
 		);
 		$this->listener->register($this->dispatcher);
 	}
@@ -142,7 +143,7 @@ final class IndexBuildListenerTest extends TestCase
 
 	public function testSuspendedCollectionSkipsIndexOnCreate(): void
 	{
-		$this->listener->suspendForCollection('posts');
+		$this->dispatcher->suspendIndexRebuild('posts');
 
 		$this->indexBuilder
 			->expects($this->never())
@@ -153,7 +154,7 @@ final class IndexBuildListenerTest extends TestCase
 
 	public function testSuspendedCollectionSkipsIndexOnUpdate(): void
 	{
-		$this->listener->suspendForCollection('posts');
+		$this->dispatcher->suspendIndexRebuild('posts');
 
 		$this->indexBuilder
 			->expects($this->never())
@@ -164,7 +165,7 @@ final class IndexBuildListenerTest extends TestCase
 
 	public function testSuspendOnlyAffectsTargetCollection(): void
 	{
-		$this->listener->suspendForCollection('posts');
+		$this->dispatcher->suspendIndexRebuild('posts');
 
 		$this->indexBuilder
 			->expects($this->once())
@@ -178,8 +179,8 @@ final class IndexBuildListenerTest extends TestCase
 	{
 		$object = $this->createMock(ObjectData::class);
 
-		$this->listener->suspendForCollection('posts');
-		$this->listener->resumeForCollection('posts');
+		$this->dispatcher->suspendIndexRebuild('posts');
+		$this->dispatcher->resumeIndexRebuild('posts');
 
 		$this->indexBuilder
 			->expects($this->once())
@@ -191,7 +192,7 @@ final class IndexBuildListenerTest extends TestCase
 
 	public function testImportCompletedRebuildsIndexAndResumes(): void
 	{
-		$this->listener->suspendForCollection('posts');
+		$this->dispatcher->suspendIndexRebuild('posts');
 
 		$this->indexBuilder
 			->expects($this->once())
