@@ -315,7 +315,11 @@ class FormField
 			'pattern'          => $this->pattern === '' ? null : $this->pattern,
 			'placeholder'      => $this->placeholder === '' ? null : $this->placeholder,
 			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
-			'value'            => ($this->value === null || $this->value === '') ? null : $this->value,
+			// A scalar input's value attribute can only hold a scalar — guard against an
+			// array value (e.g. a property whose stored data is `[]` or a list value
+			// rendered through the base input) so it omits the attribute instead of
+			// triggering an "Array to string conversion" warning / rendering value="Array".
+			'value'            => ($this->value === null || $this->value === '' || is_array($this->value)) ? null : $this->value,
 			'min'              => is_null($this->min) ? null : (string)$this->min,
 			'max'              => is_null($this->max) ? null : (string)$this->max,
 			'step'             => is_null($this->step) ? null : (string)$this->step,
