@@ -301,9 +301,15 @@ readonly class JumpStartExporter
 
 		// Process each field according to its schema type
 		foreach ($schema->properties as $fieldName => $property) {
-			if (isset($processedData[$fieldName])) {
-				$fieldType = $property['field'] ?? $property['type'] ?? '';
+			$fieldType = $property['field'] ?? $property['type'] ?? '';
 
+			if (in_array($fieldType, SchemaData::SENSITIVE_FIELD_TYPES, true)) {
+				// Strip credential/secret values — never export password hashes or secrets
+				unset($processedData[$fieldName]);
+				continue;
+			}
+
+			if (isset($processedData[$fieldName])) {
 				switch ($fieldType) {
 					case 'image':
 					case 'gallery':

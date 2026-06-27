@@ -63,6 +63,8 @@ class ImageField extends FormField
 
 	protected function imagePreview(string $imagePath, string $alt): string
 	{
+		$escapedAlt = htmlspecialchars($alt, ENT_QUOTES, 'UTF-8');
+
 		return <<<HTML
 		<div class="dz-preview dz-file-preview not-found">
 			<div class="actionbar">
@@ -75,7 +77,7 @@ class ImageField extends FormField
 				<button type="button" class="clear"    title="Clear Cache"></button>
 				<button type="button" class="trash"    title="Delete Image"></button>
 			</div>
-			<img src="{$imagePath}" alt="{$alt}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
+			<img src="{$imagePath}" alt="{$escapedAlt}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 			<div class="dz-progress">
 				<span class="dz-upload" data-dz-uploadprogress></span>
 				<span class="dz-upload-progress-label" data-dz-uploadprogress>0%</span>

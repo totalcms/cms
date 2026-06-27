@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Action\Export;
 
 use PHPUnit\Framework\TestCase;
@@ -145,6 +147,61 @@ final class ExportZipActionTest extends TestCase
 		($this->action)($this->request, $this->response, ['collection' => 'test']);
 	}
 
+	public function testReturns400WhenIdCountExceedsCap(): void
+	{
+		// Build a comma-separated list of 501 IDs — one over the cap.
+		$ids    = array_map(static fn (int $i): string => 'id-' . $i, range(1, 501));
+		$param  = implode(',', $ids);
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getQueryParams')->willReturn(['ids' => $param]);
+
+		$response400 = $this->createMock(ResponseInterface::class);
+		$body        = $this->createMock(StreamInterface::class);
+		$response400->method('getBody')->willReturn($body);
+		$response400->method('withHeader')->willReturnSelf();
+
+		$body->expects($this->once())
+			->method('write')
+			->with($this->stringContains('Too many IDs'));
+
+		$this->response->expects($this->once())
+			->method('withStatus')
+			->with(400)
+			->willReturn($response400);
+
+		// The zipper must NOT be called when the cap is exceeded.
+		$this->objectZipper->expects($this->never())->method('createObjectsZip');
+		$this->collectionZipper->expects($this->never())->method('createCollectionZip');
+
+		$result = ($this->action)($request, $this->response, ['collection' => 'posts']);
+
+		$this->assertSame($response400, $result);
+	}
+
+	public function testAllowsExactlyCapIds(): void
+	{
+		// 500 IDs — exactly at the cap — must proceed to zip creation.
+		$ids     = array_map(static fn (int $i): string => 'id-' . $i, range(1, 500));
+		$param   = implode(',', $ids);
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getQueryParams')->willReturn(['ids' => $param]);
+
+		$zipPath = sys_get_temp_dir() . '/test-cap-' . uniqid() . '.zip';
+		file_put_contents($zipPath, 'zip');
+
+		$this->objectZipper->expects($this->once())
+			->method('createObjectsZip')
+			->with('posts', $ids)
+			->willReturn($zipPath);
+		$this->objectZipper->method('getObjectsZipFilename')->willReturn('posts-objects.zip');
+
+		$this->response->method('withStatus')->willReturnSelf();
+		$this->response->method('withHeader')->willReturnSelf();
+		$this->response->method('withBody')->willReturnSelf();
+
+		($this->action)($request, $this->response, ['collection' => 'posts']);
+	}
+
 	public function testReturns500WhenZipFileNotFound(): void
 	{
 		$this->collectionZipper->method('createCollectionZip')->willReturn('/nonexistent/file.zip');
@@ -191,21 +248,31 @@ final class ExportZipActionTest extends TestCase
 		$this->assertSame($response500, $result);
 	}
 
-	public function testCleansUpTemporaryFile(): void
+	public function testStreamsZipBodyFromFileHandle(): void
 	{
-		$zipPath = sys_get_temp_dir() . '/test-cleanup-' . uniqid() . '.zip';
+		// With streaming, the action opens a file handle and passes it as the
+		// stream body — it does NOT read the entire file into memory.
+		$zipPath = sys_get_temp_dir() . '/test-stream-' . uniqid() . '.zip';
 		file_put_contents($zipPath, 'test content');
 
 		$this->collectionZipper->method('createCollectionZip')->willReturn($zipPath);
 		$this->collectionZipper->method('getZipFilename')->willReturn('test.zip');
 
 		$this->response->method('withHeader')->willReturnSelf();
-		$this->response->method('withBody')->willReturnSelf();
+
+		$capturedStream = null;
+		$this->response->expects($this->once())
+			->method('withBody')
+			->with($this->isInstanceOf(StreamInterface::class))
+			->willReturnCallback(function ($stream) use (&$capturedStream): ResponseInterface {
+				$capturedStream = $stream;
+
+				return $this->response;
+			});
 
 		($this->action)($this->request, $this->response, ['collection' => 'test']);
 
-		// Verify temporary file was deleted
-		$this->assertFileDoesNotExist($zipPath);
+		$this->assertNotNull($capturedStream);
 	}
 
 	public function testReturnsResponseWithZipBody(): void

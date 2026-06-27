@@ -112,6 +112,13 @@ final readonly class McpCorsMiddleware implements MiddlewareInterface
 	private function resolveAllowedOrigin(string $origin, array $allowed): ?string
 	{
 		if ($allowed === [] || in_array('*', $allowed, true)) {
+			// The literal string "null" is sent by sandboxed iframes and data: URIs.
+			// Echoing it back as the allowed origin grants cross-origin access to
+			// those contexts, which is never the intent — treat it as absent.
+			if ($origin === 'null') {
+				return null;
+			}
+
 			return $origin !== '' ? $origin : '*';
 		}
 

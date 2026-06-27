@@ -87,6 +87,27 @@ final class MermaidErdRendererTest extends TestCase
 		$this->assertStringContainsString('builder_pages ||--|| schema_block', $mermaid);
 	}
 
+	public function testEscapeAliasStripsNewlinesAndPercent(): void
+	{
+		$renderer = new MermaidErdRenderer();
+		$mermaid  = $renderer->render([
+			'nodes' => [
+				'posts' => ['id' => 'posts', 'kind' => 'collection', 'label' => "Injected\nclick X\n%%{init}%%", 'schema' => 'post', 'fields' => []],
+			],
+			'edges' => [
+				['from' => 'posts', 'to' => 'posts', 'type' => 'self', 'via' => "evil\n%%{init}%%"],
+			],
+		]);
+
+		// The injection sequence \n%% must not survive: a newline followed by %%
+		// would break out of a quoted label and inject a Mermaid directive/statement.
+		$this->assertStringNotContainsString("\n%%", $mermaid);
+		// No bare % in any label (stripped to prevent %%{init}%% directive injection).
+		$this->assertStringNotContainsString('%', $mermaid);
+		// Sanitised safe content should still appear in the output.
+		$this->assertStringContainsString('Injected', $mermaid);
+	}
+
 	public function testExposesEdgeTypesInEmitOrder(): void
 	{
 		$renderer = new MermaidErdRenderer();

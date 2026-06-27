@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Action\Export;
 
 use Nyholm\Psr7\Stream;
@@ -10,6 +12,9 @@ use TotalCMS\Domain\Export\Service\ObjectZipper;
 
 readonly class ExportZipAction
 {
+	/** Maximum number of object IDs accepted in a single bulk download request. */
+	private const MAX_BULK_IDS = 500;
+
 	public function __construct(
 		private CollectionZipper $collectionZipper,
 		private ObjectZipper $objectZipper,
@@ -30,7 +35,20 @@ readonly class ExportZipAction
 
 		try {
 			if ($idsParam !== '') {
-				$ids      = array_values(array_filter(array_map('trim', explode(',', $idsParam)), static fn (string $id): bool => $id !== ''));
+				$ids = array_values(array_filter(array_map('trim', explode(',', $idsParam)), static fn (string $id): bool => $id !== ''));
+
+				if (count($ids) > self::MAX_BULK_IDS) {
+					$response = $response->withStatus(400)
+						->withHeader('Content-Type', 'application/json');
+					$response->getBody()->write((string)json_encode([
+						'error'   => 'Too many IDs requested.',
+						'limit'   => self::MAX_BULK_IDS,
+						'message' => sprintf('Bulk download is limited to %d objects per request. Received %d IDs.', self::MAX_BULK_IDS, count($ids)),
+					]));
+
+					return $response;
+				}
+
 				$zipPath  = $this->objectZipper->createObjectsZip($collection, $ids);
 				$filename = $this->objectZipper->getObjectsZipFilename($collection);
 			} else {
@@ -45,23 +63,32 @@ readonly class ExportZipAction
 				return $response;
 			}
 
-			$zipContent = file_get_contents($zipPath);
+			// Stream the zip file directly from disk rather than reading it fully
+			// into memory — prevents memory exhaustion for large collections.
+			$fileHandle = fopen($zipPath, 'r');
 
-			// Clean up temporary file
-			unlink($zipPath);
-
-			if ($zipContent === false) {
+			if ($fileHandle === false) {
 				$response = $response->withStatus(500);
 				$response->getBody()->write('Failed to read zip file');
 
 				return $response;
 			}
 
-			$response = $response->withHeader('Content-Type', 'application/zip')
-				->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $filename))
-				->withHeader('Content-Length', (string)strlen($zipContent));
+			$fileSize = filesize($zipPath);
 
-			return $response->withBody(Stream::create($zipContent));
+			// Remove the temp zip from disk now that the read handle is open: on POSIX
+			// the data stays available through the handle for streaming, and the inode
+			// is freed when the stream closes — so the temp file isn't leaked.
+			unlink($zipPath);
+
+			$response = $response->withHeader('Content-Type', 'application/zip')
+				->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $filename));
+
+			if ($fileSize !== false) {
+				$response = $response->withHeader('Content-Length', (string)$fileSize);
+			}
+
+			return $response->withBody(Stream::create($fileHandle));
 		} catch (\RuntimeException $e) {
 			$response = $response->withStatus(500);
 			$response->getBody()->write('Error creating zip: ' . $e->getMessage());

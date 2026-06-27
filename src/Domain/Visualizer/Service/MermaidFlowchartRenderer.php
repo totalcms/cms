@@ -95,7 +95,8 @@ final class MermaidFlowchartRenderer
 	private function esc(string $value): string
 	{
 		// Quoted Mermaid labels can't contain a double quote; brackets confuse
-		// the flowchart parser even inside quotes.
-		return str_replace(['"', '[', ']'], ['', '(', ')'], $value);
+		// the flowchart parser even inside quotes. Newlines and `%` can inject
+		// Mermaid directives (%%{init}%%, click callbacks, etc.).
+		return str_replace(['"', '[', ']', "\n", "\r", '%'], ['', '(', ')', '', '', ''], $value);
 	}
 }

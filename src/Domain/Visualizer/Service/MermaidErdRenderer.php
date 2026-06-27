@@ -161,6 +161,6 @@ final class MermaidErdRenderer
 	/** Escape a quoted alias/label so it can't break the Mermaid string. */
 	private function escapeAlias(string $value): string
 	{
-		return str_replace('"', '', $value);
+		return str_replace(['"', "\n", "\r", '%'], '', $value);
 	}
 }

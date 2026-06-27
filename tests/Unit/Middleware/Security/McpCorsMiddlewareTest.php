@@ -177,6 +177,29 @@ final class McpCorsMiddlewareTest extends TestCase
 		$this->assertSame('https://example.com', $response->getHeaderLine('Access-Control-Allow-Origin'));
 	}
 
+	public function testNullOriginIsNeverEchoedInOpenMode(): void
+	{
+		// The literal "null" Origin is sent by sandboxed iframes / data: URIs.
+		// An open allowlist must not echo it back — doing so grants cross-origin
+		// access to those opaque contexts.
+		$response = $this->middleware([])->process(
+			$this->request('GET', 'null'),
+			$this->passthroughHandler(),
+		);
+
+		$this->assertSame('', $response->getHeaderLine('Access-Control-Allow-Origin'));
+	}
+
+	public function testNullOriginIsNeverEchoedWithWildcardAllowlist(): void
+	{
+		$response = $this->middleware(['*'])->process(
+			$this->request('GET', 'null'),
+			$this->passthroughHandler(),
+		);
+
+		$this->assertSame('', $response->getHeaderLine('Access-Control-Allow-Origin'));
+	}
+
 	public function testNonArrayConfigNormalizesToOpenAllowlist(): void
 	{
 		// A non-array config normalizes to an empty allowlist, which now means
