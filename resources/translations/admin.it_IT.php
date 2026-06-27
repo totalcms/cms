@@ -240,6 +240,9 @@ return [
 
 	// ── Collection Sitemap ──────────────────────────────────────────────────
 	'collection.sitemap_title'             => 'Generatore di sitemap per {collection}',
+	'collection.sitemap_disabled_title'    => 'Sitemap non abilitata',
+	'collection.sitemap_disabled_desc'     => 'Questa raccolta non ha la sitemap abilitata, quindi l\'URL sottostante non verrà servito. Abilitala prima nelle impostazioni della raccolta.',
+	'collection.sitemap_disabled_link'     => 'Modifica impostazioni raccolta',
 	'collection.sitemap_desc'              => 'Le seguenti impostazioni produrranno un URL da inviare ai motori di ricerca o da aggiungere a un indice di sitemap esistente. Tutti i campi sotto sono opzionali. La proprietà data fornita sarà unica per ogni pagina web aggiunta alla sitemap. Tuttavia, i campi frequenza e priorità saranno gli stessi per tutti gli oggetti aggiunti.',
 	'collection.sitemap_date_prop'         => 'Proprietà data per sitemap (deve essere indicizzata)',
 	'collection.sitemap_select_prop'       => 'Seleziona una proprietà',

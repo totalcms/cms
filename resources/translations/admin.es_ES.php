@@ -240,6 +240,9 @@ return [
 
 	// ── Collection Sitemap ──────────────────────────────────────────────────
 	'collection.sitemap_title'             => 'Constructor de mapa del sitio para {collection}',
+	'collection.sitemap_disabled_title'    => 'Mapa del sitio no habilitado',
+	'collection.sitemap_disabled_desc'     => 'Esta colección no tiene el mapa del sitio habilitado, por lo que la URL siguiente no se servirá. Actívalo primero en la configuración de la colección.',
+	'collection.sitemap_disabled_link'     => 'Editar configuración de la colección',
 	'collection.sitemap_desc'              => 'Lo siguiente producirá una URL que puede utilizar para enviar a motores de búsqueda o añadir a un índice de mapa del sitio existente. Todos los campos a continuación son opcionales. La propiedad de fecha proporcionada será única para cada página web añadida al mapa del sitio. Sin embargo, los campos de frecuencia y prioridad serán los mismos para todos los Objects añadidos.',
 	'collection.sitemap_date_prop'         => 'Propiedad de fecha para el mapa del sitio (debe estar indexada)',
 	'collection.sitemap_select_prop'       => 'Seleccionar una propiedad',

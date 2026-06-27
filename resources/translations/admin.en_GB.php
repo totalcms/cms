@@ -240,6 +240,9 @@ return [
 
 	// ── Collection Sitemap ──────────────────────────────────────────────────
 	'collection.sitemap_title'             => 'Sitemap Builder for {collection}',
+	'collection.sitemap_disabled_title'    => 'Sitemap Not Enabled',
+	'collection.sitemap_disabled_desc'     => 'This collection does not have its sitemap enabled, so the URL below will not be served. Enable it in the collection settings first.',
+	'collection.sitemap_disabled_link'     => 'Edit collection settings',
 	'collection.sitemap_desc'              => 'The following will produce a URL that you can use to submit to search engines or add to an existing Sitemap Index. All of the fields below are optional. The provided date property will be unique for webpage added to the sitemap. However, the frequency and priority fields will the same across all objects added.',
 	'collection.sitemap_date_prop'         => 'Date Property for Sitemap (must be indexed)',
 	'collection.sitemap_select_prop'       => 'Select a Property',

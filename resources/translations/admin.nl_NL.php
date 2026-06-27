@@ -240,6 +240,9 @@ return [
 
 	// ── Collection Sitemap ──────────────────────────────────────────────────
 	'collection.sitemap_title'             => 'Sitemap-bouwer voor {collection}',
+	'collection.sitemap_disabled_title'    => 'Sitemap niet ingeschakeld',
+	'collection.sitemap_disabled_desc'     => 'Voor deze collectie is de sitemap niet ingeschakeld, dus de onderstaande URL wordt niet aangeboden. Schakel deze eerst in bij de collectie-instellingen.',
+	'collection.sitemap_disabled_link'     => 'Collectie-instellingen bewerken',
 	'collection.sitemap_desc'              => 'Het volgende genereert een URL die u kunt gebruiken om in te dienen bij zoekmachines of toe te voegen aan een bestaande Sitemap-index. Alle onderstaande velden zijn optioneel. De opgegeven datumeigenschap is uniek voor elke webpagina die aan de sitemap wordt toegevoegd. De frequentie- en prioriteitsvelden zijn echter voor alle toegevoegde Objects gelijk.',
 	'collection.sitemap_date_prop'         => 'Datumeigenschap voor sitemap (moet geïndexeerd zijn)',
 	'collection.sitemap_select_prop'       => 'Selecteer een eigenschap',

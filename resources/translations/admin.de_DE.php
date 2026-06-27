@@ -240,6 +240,9 @@ return [
 
 	// ── Collection Sitemap ──────────────────────────────────────────────────
 	'collection.sitemap_title'             => 'Sitemap-Generator für {collection}',
+	'collection.sitemap_disabled_title'    => 'Sitemap nicht aktiviert',
+	'collection.sitemap_disabled_desc'     => 'Für diese Sammlung ist die Sitemap nicht aktiviert, daher wird die untenstehende URL nicht bereitgestellt. Aktivieren Sie sie zuerst in den Sammlungseinstellungen.',
+	'collection.sitemap_disabled_link'     => 'Sammlungseinstellungen bearbeiten',
 	'collection.sitemap_desc'              => 'Das Folgende erzeugt eine URL, die Sie bei Suchmaschinen einreichen oder einem bestehenden Sitemap-Index hinzufügen können. Alle untenstehenden Felder sind optional. Die angegebene Datumseigenschaft wird für jede zur Sitemap hinzugefügte Webseite eindeutig sein. Die Felder für Häufigkeit und Priorität gelten jedoch für alle hinzugefügten Objects gleichermaßen.',
 	'collection.sitemap_date_prop'         => 'Datumseigenschaft für Sitemap (muss indiziert sein)',
 	'collection.sitemap_select_prop'       => 'Eigenschaft auswählen',
