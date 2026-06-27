@@ -30,12 +30,13 @@ class SessionKeysTest extends TestCase
 		$allKeys = SessionKeys::getAllKeys();
 
 		$this->assertIsArray($allKeys);
-		$this->assertCount(12, $allKeys);
+		$this->assertCount(13, $allKeys);
 
 		// Ensure all expected keys are present
 		$this->assertContains(SessionKeys::AUTH_USER, $allKeys);
 		$this->assertContains(SessionKeys::AUTH_COLLECTION, $allKeys);
 		$this->assertContains(SessionKeys::AUTH_PERSISTENT_LOGIN, $allKeys);
+		$this->assertContains(SessionKeys::IMPERSONATOR, $allKeys);
 		$this->assertContains(SessionKeys::REQUEST_ORIGIN_URL, $allKeys);
 		$this->assertContains(SessionKeys::REQUEST_REFERER_URL, $allKeys);
 		$this->assertContains(SessionKeys::LAST_ACTIVITY, $allKeys);
@@ -65,10 +66,11 @@ class SessionKeysTest extends TestCase
 		$authKeys = SessionKeys::getAuthKeys();
 
 		$this->assertIsArray($authKeys);
-		$this->assertCount(3, $authKeys);
+		$this->assertCount(4, $authKeys);
 		$this->assertContains(SessionKeys::AUTH_USER, $authKeys);
 		$this->assertContains(SessionKeys::AUTH_COLLECTION, $authKeys);
 		$this->assertContains(SessionKeys::AUTH_PERSISTENT_LOGIN, $authKeys);
+		$this->assertContains(SessionKeys::IMPERSONATOR, $authKeys);
 	}
 
 	public function testGetRequestKeys(): void

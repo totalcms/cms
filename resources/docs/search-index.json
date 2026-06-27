@@ -2159,6 +2159,21 @@
         "keywords": "updates how updates work checking for updates applying updates update process maintenance mode rollback version severity troubleshooting version-specific upgrade notes"
     },
     {
+        "path": "operations/impersonation",
+        "title": "User Impersonation",
+        "group": "Operations",
+        "sections": [
+            "How It Works",
+            "Starting Impersonation",
+            "Restrictions",
+            "Ending Impersonation",
+            "Audit Trail"
+        ],
+        "excerpt": "--- title: \"User Impersonation\" description: \"Super-admins can temporarily browse and edit the site as another user to debug permission and access issues. All actions taken while impersonating are rec...",
+        "content": "--- title: \"user impersonation\" description: \"super-admins can temporarily browse and edit the site as another user to debug permission and access issues. all actions taken while impersonating are recorded in the access log.\" updated: 2026-06-26 --- user impersonation super-admins can temporarily act as any other user \u2014 operator or front-end member \u2014 to reproduce and diagnose permission or access issues without sharing credentials. how it works impersonation is a full session swap. while active, every request \u2014 reads and writes \u2014 executes as the target user. if you save, delete, or modify content while impersonating, those changes are attributed to the target, not to you. use this feature carefully. a fixed banner appears at the top of every page admin and front-end while impersonation is active. click return to your account in that banner to end the session immediately and return to your own account. starting impersonation 1. open an auth-enabled collection the auth operator collection or any public-registration member collection in the admin. 2. open the object for the user you want to impersonate. 3. click the \u22ef collection-actions menu. 4. select impersonate user . total cms redirects you automatically based on the target's type: - operator targets land in the admin dashboard. - member targets land on the front-end home page the admin is gated to operators . restrictions - super-admin only. only super-admins can start an impersonation session. - cannot impersonate super-admins. the target must not be a super-admin. - cannot impersonate yourself. - no nesting. you cannot start a new impersonation while one is already active. ending impersonation click return to your account in the fixed banner. this works from any page \u2014 admin or front-end \u2014 and is the only way to end the session. the banner's return action is csrf-protected. audit trail both the start and the stop of every impersonation session are recorded in the access log with the super-admin's identity, the target user, and the timestamp. review the log in admin \u2192 access log to audit impersonation activity.",
+        "keywords": "user impersonation how it works starting impersonation restrictions ending impersonation audit trail"
+    },
+    {
         "path": "extensions/ai-integration",
         "title": "Using Total CMS with AI",
         "group": "Extensions & CLI",

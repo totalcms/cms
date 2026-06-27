@@ -254,6 +254,7 @@ return [
 			['title' => 'Apache',            'path' => 'operations/apache'],
 			['title' => 'Nginx',             'path' => 'operations/nginx'],
 			['title' => 'Security',          'path' => 'operations/security'],
+			['title' => 'Impersonation',     'path' => 'operations/impersonation'],
 			['title' => 'Server Sizing',     'path' => 'operations/server-sizing'],
 			['title' => 'Filesystem',        'path' => 'operations/filesystem'],
 			['title' => 'Sync',              'path' => 'operations/sync'],

@@ -115,6 +115,8 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Search\Listener\ContentChangeListener;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
 use TotalCMS\Domain\Search\Service\SearchService;
+use TotalCMS\Domain\Auth\Service\ImpersonationService;
+use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 use TotalCMS\Domain\Search\Service\SearchServiceInterface;
 use TotalCMS\Domain\Search\Service\TextSearchProvider;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
@@ -850,4 +852,8 @@ return [
 	// SearchServiceInterface injections (e.g. in the MCP search tools) to
 	// the same singleton SearchService instance.
 	SearchServiceInterface::class => fn (ContainerInterface $container): SearchService => $container->get(SearchService::class),
+
+	// ImpersonationServiceInterface → concrete service (actions type-hint the interface
+	// so unit tests can mock it without removing the final keyword from the class).
+	ImpersonationServiceInterface::class => fn (ContainerInterface $container): ImpersonationService => $container->get(ImpersonationService::class),
 ];

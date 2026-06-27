@@ -19,6 +19,7 @@ final class SessionKeys
 	public const AUTH_USER             = 'totalcms.auth.user';
 	public const AUTH_COLLECTION       = 'totalcms.auth.collection';
 	public const AUTH_PERSISTENT_LOGIN = 'totalcms.auth.persistent_login';
+	public const IMPERSONATOR          = 'totalcms.auth.impersonator';
 
 	// Request Tracking Keys
 	public const REQUEST_ORIGIN_URL  = 'totalcms.requestOriginUrl';
@@ -51,6 +52,7 @@ final class SessionKeys
 			self::AUTH_USER,
 			self::AUTH_COLLECTION,
 			self::AUTH_PERSISTENT_LOGIN,
+			self::IMPERSONATOR,
 			self::REQUEST_ORIGIN_URL,
 			self::REQUEST_REFERER_URL,
 			self::LAST_ACTIVITY,
@@ -86,6 +88,7 @@ final class SessionKeys
 			self::AUTH_USER,
 			self::AUTH_COLLECTION,
 			self::AUTH_PERSISTENT_LOGIN,
+			self::IMPERSONATOR,
 		];
 	}
 

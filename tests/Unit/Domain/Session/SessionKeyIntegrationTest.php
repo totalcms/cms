@@ -60,7 +60,8 @@ class SessionKeyIntegrationTest extends TestCase
 		$this->assertContains(SessionKeys::AUTH_USER, $authKeys);
 		$this->assertContains(SessionKeys::AUTH_COLLECTION, $authKeys);
 		$this->assertContains(SessionKeys::AUTH_PERSISTENT_LOGIN, $authKeys);
-		$this->assertCount(3, $authKeys);
+		$this->assertContains(SessionKeys::IMPERSONATOR, $authKeys);
+		$this->assertCount(4, $authKeys);
 
 		$requestKeys = SessionKeys::getRequestKeys();
 		$this->assertContains(SessionKeys::REQUEST_ORIGIN_URL, $requestKeys);
