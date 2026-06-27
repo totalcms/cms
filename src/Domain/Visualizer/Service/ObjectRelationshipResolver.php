@@ -331,7 +331,6 @@ readonly class ObjectRelationshipResolver
 			'objectId'   => $id,
 			'label'      => $label,
 			'focal'      => $focal,
-			'url'        => 'collections/' . $collection . '/' . $id,
 		];
 	}
 

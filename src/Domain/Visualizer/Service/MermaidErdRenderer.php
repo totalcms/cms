@@ -73,6 +73,9 @@ final class MermaidErdRenderer
 	 * the frontend colour/dash each rendered `.relationshipLine` path by type
 	 * (Mermaid's erDiagram has no per-edge styling in the syntax).
 	 *
+	 * NOTE: This method returns an empty array until {@see render()} has been
+	 * called. Always call render() first, then read edgeTypes().
+	 *
 	 * @return list<string>
 	 */
 	public function edgeTypes(): array

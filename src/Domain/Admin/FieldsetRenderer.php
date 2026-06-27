@@ -19,7 +19,7 @@ class FieldsetRenderer
 	 *
 	 * @param FormGridBuilder $inner the parsed interior grid (may be empty)
 	 */
-	public function render(?string $legend, string $membersHtml, FormGridBuilder $inner, string $extraClass = '', ?string $gridArea = null): string
+	public function render(?string $legend, string $membersHtml, FormGridBuilder $inner, string $extraClass = '', ?string $gridArea = null, ?string $gridId = null): string
 	{
 		$legendHtml = ($legend === null || $legend === '')
 			? ''
@@ -31,7 +31,7 @@ class FieldsetRenderer
 		// apply each field's `--grid-area` against an undefined template, throwing
 		// off the layout — so members go straight into the fieldset and flow normally.
 		if ($inner->hasGrid()) {
-			$gridId = 'fieldset-' . bin2hex(random_bytes(6));
+			$gridId ??= 'fieldset-' . bin2hex(random_bytes(6));
 			$body   = $inner->toNestedStyleTag($gridId)
 				. HTMLUtils::element('div', $inner->buildGridSectionHtml() . $membersHtml, [
 					'id'    => $gridId,

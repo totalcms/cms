@@ -70,7 +70,7 @@ export default class ChecklistField extends TotalField {
         // Select Options
         const options = Array.from(this.container.querySelectorAll("input[type=checkbox]"));
         for (const option of options) {
-			option.checked = (value.indexOf(option.value)>=0);
+			option.checked = value.includes(option.value);
         }
         this.changed();
     }

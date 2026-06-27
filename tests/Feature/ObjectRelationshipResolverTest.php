@@ -78,7 +78,6 @@ it('resolves outbound references — what this record points at', function (): v
 
 	expect(edgeExists($graph['edges'], 'posts::p1', 'authors::jane', 'outbound'))->toBeTrue();
 	expect($graph['nodes']['authors::jane']['label'])->toBe('Jane');
-	expect($graph['nodes']['authors::jane']['url'])->toBe('collections/authors/jane');
 });
 
 it('handles a record with no relationships (focal node only)', function (): void {

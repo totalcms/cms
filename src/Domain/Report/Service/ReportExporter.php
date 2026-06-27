@@ -51,7 +51,7 @@ readonly class ReportExporter
 
 		$fieldsParam = $params['fields'] ?? '';
 		if (is_array($fieldsParam)) {
-			$fields = array_filter(array_map(trim(...), $fieldsParam));
+			$fields = array_values(array_filter(array_map(trim(...), $fieldsParam)));
 		} elseif (is_string($fieldsParam) && $fieldsParam !== '') {
 			$fields = array_filter(array_map(trim(...), explode(',', $fieldsParam)));
 		} else {

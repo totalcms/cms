@@ -20,6 +20,7 @@ export default class AdminTable {
 		this.selected        = new Set();
 		this.selecting       = false;
 		this.showingSelected = false;
+		this.deleting        = false;
 		this.lastChecked     = null;
 		this.bar             = this.wrapper.querySelector('.bulk-action-bar');
 		this.countEl         = this.wrapper.querySelector('.bulk-count');
@@ -357,7 +358,7 @@ export default class AdminTable {
 				this.setBanner(null);
 				this.deleting = false;
 				window.alert(
-					`${data.deleted} deleted, but ${failed.length} could not be removed:\n` +
+					`${Array.isArray(data.deleted) ? data.deleted.length : data.deleted} deleted, but ${failed.length} could not be removed:\n` +
 					failed.join(', '),
 				);
 				return;

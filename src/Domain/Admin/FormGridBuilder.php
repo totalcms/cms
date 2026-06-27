@@ -541,7 +541,7 @@ HTML;
 	 * @param string $content Pre-rendered field HTML
 	 * @param string $extraClass Additional class names for the inner grid element
 	 */
-	public function renderLayout(string $content, string $extraClass = ''): string
+	public function renderLayout(string $content, string $extraClass = '', ?string $gridId = null): string
 	{
 		$classes = trim('formgrid ' . $extraClass);
 
@@ -549,7 +549,7 @@ HTML;
 			return HTMLUtils::element('div', $content, ['class' => $classes]);
 		}
 
-		$gridId = 'formgrid-' . bin2hex(random_bytes(8));
+		$gridId ??= 'formgrid-' . bin2hex(random_bytes(8));
 		$inner  = HTMLUtils::element('div', $this->buildGridSectionHtml() . $content, [
 			'id'    => $gridId,
 			'class' => $classes,
@@ -623,9 +623,7 @@ HTML;
 		$lines = preg_split('/\r\n|\r|\n/', trim($this->formgrid));
 		$lines = $lines === false ? [] : array_map(trim(...), $lines);
 
-		return array_values(array_filter($lines, function (string $line): bool {
-			return $line !== '' && $line !== '0'; // Filter out empty lines
-		}));
+		return array_values(array_filter($lines, fn (string $line): bool => $line !== ''));
 	}
 
 	/**

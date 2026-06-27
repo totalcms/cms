@@ -669,6 +669,9 @@ class FormField
 		// Sort options by label. Defaults ON when the options are derived from
 		// propertyOptions (a checklist of ids/values reads better alphabetized);
 		// set "sortOptions": false to preserve a curated source's order.
+		// Note: media-tag suggestions also go through this path, so they are
+		// alphabetized by default too — intentional, but add "sortOptions": false
+		// to the field schema if frequency/recency order is preferred instead.
 		$sortOptions = $this->settings['sortOptions'] ?? isset($this->settings['propertyOptions']);
 		if ($sortOptions === true) {
 			$this->options = self::sortOptionsByLabel($this->options);

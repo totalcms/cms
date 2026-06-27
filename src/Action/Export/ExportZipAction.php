@@ -71,7 +71,9 @@ readonly class ExportZipAction
 
 			// Remove the temp zip from disk now that the read handle is open: on POSIX
 			// the data stays available through the handle for streaming, and the inode
-			// is freed when the stream closes — so the temp file isn't leaked.
+			// is freed when the stream closes — so the temp file isn't leaked. This
+			// relies on POSIX unlink semantics; named temp files cannot be removed while
+			// open on Windows, but T3 targets POSIX servers only.
 			unlink($zipPath);
 
 			$response = $response->withHeader('Content-Type', 'application/zip')

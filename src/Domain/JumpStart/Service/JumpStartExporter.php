@@ -350,7 +350,7 @@ readonly class JumpStartExporter
 					'id'       => $template->id,
 					'template' => $template->contents,
 				]);
-			} catch (\Exception $e) {
+			} catch (\Throwable $e) {
 				$this->logger->warning('Failed to export template', [
 					'path'  => $templatePath,
 					'error' => $e->getMessage(),
