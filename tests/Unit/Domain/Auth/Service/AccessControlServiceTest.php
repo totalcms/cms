@@ -133,8 +133,10 @@ describe('AccessControlService - Utils Access', function (): void {
 		expect($this->accessControl->canAccessAnyUtils('admin'))->toBeTrue();
 	});
 
-	it('allows editor access to specific utils', function (): void {
-		expect($this->accessControl->canAccessUtils('editor-user-test-com', 'jumpstart'))->toBeTrue();
+	it('denies editor access to jumpstart (super-admin-only util)', function (): void {
+		// jumpstart is in SUPER_ADMIN_ONLY_UTILS — no access-group can grant it.
+		expect($this->accessControl->canAccessUtils('editor-user-test-com', 'jumpstart'))->toBeFalse();
+		// The editor group still has access to other utils it is granted.
 		expect($this->accessControl->canAccessUtils('editor-user-test-com', 'cache-manager'))->toBeFalse();
 		expect($this->accessControl->canAccessAnyUtils('editor-user-test-com'))->toBeTrue();
 	});

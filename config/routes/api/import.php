@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Import;
+use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
@@ -29,8 +30,10 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->post('/rss', Import\ImportRssAction::class)->setName('import-rss')->add(RssImportEditionMiddleware::class);
 	})->add(AuthMiddleware::class);
 
-	// JumpStart import route — support API key auth for CLI push/pull
+	// JumpStart import route — super-admin only; support API key auth for CLI push/pull.
+	// AdminOnlyMiddleware (inner) runs after DualAuthMiddleware (outer) has established auth.
+	// API-key callers bypass BaseAccessMiddleware's group check so CLI/push-pull keep working.
 	$app->group('/import', function (RouteCollectorProxy $group): void {
 		$group->post('/jumpstart', Import\ImportJumpStartAction::class)->setName('import-jumpstart');
-	})->add(DualAuthMiddleware::class);
+	})->add(AdminOnlyMiddleware::class)->add(DualAuthMiddleware::class);
 };

@@ -225,6 +225,16 @@ readonly class AccessControlService
 	}
 
 	/**
+	 * Utils pages that require a super-admin session regardless of access-group
+	 * configuration. A full JumpStart export dumps every schema, collection, and
+	 * object on the site; an import overwrites collections and can seed factory
+	 * data — both are equivalent in risk to direct filesystem access.
+	 *
+	 * @var list<string>
+	 */
+	private const SUPER_ADMIN_ONLY_UTILS = ['jumpstart'];
+
+	/**
 	 * Check if user can access a specific util with the given CRUD operation.
 	 */
 	public function canAccessUtils(string $userId, string $util): bool
@@ -232,6 +242,11 @@ readonly class AccessControlService
 		// Admin users have full access
 		if ($this->userValidation->isSuperAdmin($userId)) {
 			return true;
+		}
+
+		// Certain utils require a super-admin session; no access-group bypass.
+		if (in_array($util, self::SUPER_ADMIN_ONLY_UTILS, true)) {
+			return false;
 		}
 
 		// Get user's access groups
