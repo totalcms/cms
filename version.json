@@ -1,7 +1,6 @@
 {
-    "version": "3.5.0-rc.9",
-    "build": "f6af7ed0",
-    "commits": 30,
-    "date": "2026-06-25",
-    "signature": "13140953bb98c45a1df9959d9869d01340daa626e76fa5cc27d17f1b72cb0753"
+    "version": "3.5.0-rc.10",
+    "build": "1aafaa3c",
+    "date": "2026-06-28",
+    "signature": "6d454fd06791f2af2511822b8d5e567dd5fc9195b47ea50fc1f9697af3b0f71d"
 }
