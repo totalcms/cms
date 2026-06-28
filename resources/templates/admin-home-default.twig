@@ -1,15 +1,12 @@
 {% import 'dashboard-widgets.twig' as dashboard %}
 
-{# Job queue health warning — stalled queue (jobs:process not running) #}
-{{ dashboard.jobQueueHealthAlert(cms.admin.dashboardJobQueueHealth()) }}
-
-{# Edition simulation warning #}
-{% if cms.edition.isSimulating %}
-<div class="simulation-warning">
-	<span class="icon-warn"></span>
-	{{ t('dashboard.simulation_warning', {'{edition}': cms.edition.current | capitalize}) | raw }}
-	<a href="settings/license">{{ t('dashboard.disable_simulation') }}</a>
-</div>
+{# Unified alert panel — folds in job-queue, extension boot failures, update, license, and simulation #}
+{% if cms.auth.isAdmin() %}
+	{% set alerts = cms.admin.dashboardAlerts() %}
+	{% if cms.edition.isSimulating %}
+		{% set alerts = [{level: 'warning', message: t('dashboard.simulation_warning', {'{edition}': cms.edition.current | capitalize}), link: 'settings/license', linkText: t('dashboard.disable_simulation')}]|merge(alerts) %}
+	{% endif %}
+	{{ dashboard.needsAttention(alerts) }}
 {% endif %}
 
 {# Get dashboard data #}
@@ -72,6 +69,14 @@
 			{# System status #}
 			{% if cms.auth.isAdmin() %}
 				{{ dashboard.systemStatus(systemStatus) }}
+			{% endif %}
+
+			{# Automations widget #}
+			{% if cms.auth.isAdmin() %}
+				{% set automations = cms.admin.dashboardAutomations() %}
+				{% if automations %}
+					{{ dashboard.automationsWidget(automations) }}
+				{% endif %}
 			{% endif %}
 
 			{# Extension widgets (sidebar) #}

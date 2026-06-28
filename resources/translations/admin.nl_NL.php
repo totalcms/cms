@@ -1070,6 +1070,11 @@ return [
 	'dashboard.welcome'                => 'Welkom bij Total CMS 3!',
 	'dashboard.subtitle'               => 'Beheer uw content, Schemas en sjablonen op één plek.',
 	'dashboard.simulation_warning'     => 'U simuleert de <strong>{edition}</strong>-editie.',
+	'dashboard.automations' => 'Automatiseringen',
+	'dashboard.enabled' => 'Ingeschakeld',
+	'dashboard.disabled' => 'Uitgeschakeld',
+	'dashboard.never_run' => 'Nooit uitgevoerd',
+	'dashboard.view_all_automations' => 'Alle automatiseringen weergeven',
 	'dashboard.disable_simulation'     => 'Simulatie uitschakelen',
 
 	// ── Dashboard Stats ─────────────────────────────────────────────────────

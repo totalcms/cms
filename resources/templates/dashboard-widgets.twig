@@ -321,6 +321,64 @@
 {% endif %}
 {% endmacro %}
 
+{# Needs Attention — unified alert panel. Renders nothing when alerts is empty. #}
+{% macro needsAttention(alerts) %}
+{% if alerts|length > 0 %}
+<div class="dashboard-alerts-panel">
+	{% for alert in alerts %}
+	<div class="warning-box warning-box--{{ alert.level }}" role="alert">
+		<div>
+			{{ alert.message | raw }}
+			{% if alert.link is not null and alert.link %}
+			<a href="{{ alert.link }}">{{ alert.linkText ?? alert.link }}</a>
+			{% endif %}
+		</div>
+	</div>
+	{% endfor %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{# Automations Widget — compact sidebar card listing active automations. #}
+{% macro automationsWidget(automations) %}
+<div class="dashboard-section automations-widget">
+	<h2>{{ t('dashboard.automations') }}</h2>
+	<div class="automations-list">
+		{% for auto in automations %}
+		<div class="automation-row">
+			<div class="automation-name-row">
+				<span class="automation-name">{{ auto.name }}</span>
+				{% if auto.enabled %}
+				<span class="status-badge status-active" style="font-size: 0.7em;">{{ t('dashboard.enabled') }}</span>
+				{% else %}
+				<span class="status-badge status-inactive" style="font-size: 0.7em;">{{ t('dashboard.disabled') }}</span>
+				{% endif %}
+			</div>
+			<div class="automation-meta">
+				{% if auto.trigger %}
+				<span class="automation-trigger" style="color: oklch(var(--totalform-text-color)); font-size: 0.8em;">{{ auto.trigger }}</span>
+				{% endif %}
+				{% if auto.lastResult is not null %}
+				<span class="automation-result automation-result--{{ auto.lastResult }}" style="font-size: 0.8em; font-weight: {% if auto.lastResult == 'failed' %}600{% else %}400{% endif %}; color: {% if auto.lastResult == 'failed' %}oklch(var(--totalform-error)){% else %}oklch(var(--totalform-success)){% endif %};">
+					{% if auto.lastResult == 'success' %}✓{% else %}✗{% endif %}
+					{{ auto.lastResult }}
+					{% if auto.lastRunAt is not null %}
+					· <span title="{{ auto.lastRunAt|date('Y-m-d H:i') }}">{{ auto.lastRunAt|date('M j') }}</span>
+					{% endif %}
+				</span>
+				{% else %}
+				<span class="automation-never-run" style="font-size: 0.8em; color: oklch(var(--totalform-darkgray));">{{ t('dashboard.never_run') }}</span>
+				{% endif %}
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+	<div class="automations-widget-footer">
+		<a href="automations" class="btn-small">{{ t('dashboard.view_all_automations') }}</a>
+	</div>
+</div>
+{% endmacro %}
+
 {# New User Welcome - Shows when no collections exist #}
 {% macro newUserWelcome() %}
 <div class="dashboard-new-user-welcome">

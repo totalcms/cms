@@ -1070,6 +1070,11 @@ return [
 	'dashboard.welcome'                => 'Welcome to Total CMS 3!',
 	'dashboard.subtitle'               => 'Manage your content, schemas, and templates all in one place.',
 	'dashboard.simulation_warning'     => 'You are simulating <strong>{edition}</strong> edition.',
+	'dashboard.automations' => 'Automations',
+	'dashboard.enabled' => 'Enabled',
+	'dashboard.disabled' => 'Disabled',
+	'dashboard.never_run' => 'Never run',
+	'dashboard.view_all_automations' => 'View all automations',
 	'dashboard.disable_simulation'     => 'Disable simulation',
 
 	// ── Dashboard Stats ─────────────────────────────────────────────────────
