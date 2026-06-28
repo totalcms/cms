@@ -47,7 +47,7 @@ readonly class TwigEngine
 		private TemplateDesignerPreprocessor $designerPreprocessor,
 		TemplateDesignerSync $designerSync,
 		BuilderTemplatePaths $builderTemplatePaths,
-		private readonly FragmentCache $fragmentCache,
+		private FragmentCache $fragmentCache,
 	) {
 		$internalTemplates = TemplateRepository::reservedTemplateDir();
 		if (!file_exists($internalTemplates)) {

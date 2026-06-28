@@ -79,11 +79,11 @@ readonly class AccessGroupAnalyzer
 	public function analyze(): array
 	{
 		$collectionIds = array_values(array_map(
-			fn ($c): string => $c->id,
+			fn (\TotalCMS\Domain\Collection\Data\CollectionData $c): string => $c->id,
 			$this->collectionLister->listAllCollections(),
 		));
 		$schemaIds = array_values(array_map(
-			fn ($s): string => $s->id,
+			fn (\TotalCMS\Domain\Schema\Data\SchemaData $s): string => $s->id,
 			$this->schemaLister->listAllSchemas(),
 		));
 		// Use listExtensionsWithAdminSurface() so the matrix columns match the
@@ -104,6 +104,7 @@ readonly class AccessGroupAnalyzer
 	 * @param list<string> $collectionIds
 	 * @param list<string> $schemaIds
 	 * @param list<string> $extensionIds
+	 *
 	 * @return array{
 	 *   id: string,
 	 *   name: string,
@@ -126,10 +127,10 @@ readonly class AccessGroupAnalyzer
 		$isSuperAdmin = $group->id === UserValidationService::ADMINGROUP;
 
 		return [
-			'id'          => $group->id,
-			'name'        => $group->description,
+			'id'           => $group->id,
+			'name'         => $group->description,
 			'isSuperAdmin' => $isSuperAdmin,
-			'dimensions'  => [
+			'dimensions'   => [
 				'collections'     => $this->resolveCollectionDimension($group, $collectionIds, $isSuperAdmin),
 				'collectionsMeta' => $this->resolveCollectionMetaDimension($group, $collectionIds, $isSuperAdmin),
 				'schemas'         => $this->resolveSchemasDimension($group, $schemaIds, $isSuperAdmin),
@@ -141,6 +142,7 @@ readonly class AccessGroupAnalyzer
 
 	/**
 	 * @param list<string> $collectionIds
+	 *
 	 * @return array<string, array{ops: list<string>, all: bool}>
 	 */
 	private function resolveCollectionDimension(
@@ -157,6 +159,7 @@ readonly class AccessGroupAnalyzer
 
 	/**
 	 * @param list<string> $collectionIds
+	 *
 	 * @return array<string, array{ops: list<string>, all: bool}>
 	 */
 	private function resolveCollectionMetaDimension(
@@ -173,6 +176,7 @@ readonly class AccessGroupAnalyzer
 
 	/**
 	 * @param list<string> $schemaIds
+	 *
 	 * @return array<string, array{ops: list<string>, all: bool}>
 	 */
 	private function resolveSchemasDimension(
@@ -189,6 +193,7 @@ readonly class AccessGroupAnalyzer
 
 	/**
 	 * @param list<string> $extensionIds
+	 *
 	 * @return array<string, array{ops: list<string>, all: bool}>
 	 */
 	private function resolveExtensionsDimension(
@@ -206,7 +211,7 @@ readonly class AccessGroupAnalyzer
 
 		$result = [];
 		foreach ($extensionIds as $id) {
-			$granted = $all || in_array($id, $allowed, true);
+			$granted     = $all || in_array($id, $allowed, true);
 			$result[$id] = [
 				'ops' => $granted ? ['access'] : [],
 				'all' => $granted && $all,
@@ -258,6 +263,7 @@ readonly class AccessGroupAnalyzer
 	 *
 	 * @param list<string>         $resourceIds
 	 * @param array<string,mixed>  $permissions
+	 *
 	 * @return array<string, array{ops: list<string>, all: bool}>
 	 */
 	private function resolveResourceDimension(
@@ -289,6 +295,7 @@ readonly class AccessGroupAnalyzer
 	 * Build a full-access entry map for super-admin resolution.
 	 *
 	 * @param list<string> $ids
+	 *
 	 * @return array<string, array{ops: list<string>, all: bool}>
 	 */
 	private function fullAccessMap(array $ids): array

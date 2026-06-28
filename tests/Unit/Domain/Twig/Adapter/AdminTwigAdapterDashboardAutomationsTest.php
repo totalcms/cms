@@ -125,7 +125,7 @@ final class AdminTwigAdapterDashboardAutomationsTest extends TestCase
 	 */
 	private function stubRunReader(array $latest): AutomationRunReader
 	{
-		$filesystem = new class ($latest) implements StorageAdapterInterface {
+		$filesystem = new class($latest) implements StorageAdapterInterface {
 			/** @param array<string,array<string,mixed>> $latest */
 			public function __construct(private readonly array $latest)
 			{
@@ -178,17 +178,60 @@ final class AdminTwigAdapterDashboardAutomationsTest extends TestCase
 				return '{}';
 			}
 
-			public function fileExists(string $location): bool { return false; }
-			public function write(string $location, string $contents): bool { return true; }
-			public function import(string $import, string $dest): bool { return true; }
-			public function move(string $old, string $new): bool { return true; }
-			public function copyDirectory(string $old, string $new): bool { return true; }
-			public function delete(string $location): bool { return true; }
-			public function deleteDirectory(string $location): bool { return true; }
-			public function mimeType(string $location): string { return ''; }
-			public function fileSize(string $location): int { return 0; }
-			public function readStream(string $location) { return fopen('php://memory', 'r'); }
-			public function flysystem(): FilesystemOperator { throw new \LogicException('not needed in tests'); }
+			public function fileExists(string $location): bool
+			{
+				return false;
+			}
+
+			public function write(string $location, string $contents): bool
+			{
+				return true;
+			}
+
+			public function import(string $import, string $dest): bool
+			{
+				return true;
+			}
+
+			public function move(string $old, string $new): bool
+			{
+				return true;
+			}
+
+			public function copyDirectory(string $old, string $new): bool
+			{
+				return true;
+			}
+
+			public function delete(string $location): bool
+			{
+				return true;
+			}
+
+			public function deleteDirectory(string $location): bool
+			{
+				return true;
+			}
+
+			public function mimeType(string $location): string
+			{
+				return '';
+			}
+
+			public function fileSize(string $location): int
+			{
+				return 0;
+			}
+
+			public function readStream(string $location)
+			{
+				return fopen('php://memory', 'r');
+			}
+
+			public function flysystem(): FilesystemOperator
+			{
+				throw new \LogicException('not needed in tests');
+			}
 		};
 
 		return new AutomationRunReader($filesystem);
@@ -203,7 +246,7 @@ final class AdminTwigAdapterDashboardAutomationsTest extends TestCase
 	 */
 	private function makeAutomationsAdapter(array $overrides = []): AdminTwigAdapter
 	{
-		$loader    = $overrides['loader']    ?? $this->stubLoader([]);
+		$loader    = $overrides['loader'] ?? $this->stubLoader([]);
 		$runReader = $overrides['runReader'] ?? $this->stubRunReader([]);
 
 		$adapter = (new \ReflectionClass(AdminTwigAdapter::class))->newInstanceWithoutConstructor();
@@ -321,7 +364,8 @@ final class AdminTwigAdapterDashboardAutomationsTest extends TestCase
 	public function testTriggerTypeExtractedFromFirstTrigger(): void
 	{
 		$obj = $this->makeAutomationObject(
-			'scheduled', 'Scheduled Job',
+			'scheduled',
+			'Scheduled Job',
 			triggers: [['id' => 't1', 'type' => 'schedule', 'cron' => '0 1 * * *']],
 		);
 
@@ -332,7 +376,8 @@ final class AdminTwigAdapterDashboardAutomationsTest extends TestCase
 	public function testTriggerIsWebhookType(): void
 	{
 		$obj = $this->makeAutomationObject(
-			'hook', 'Webhook Job',
+			'hook',
+			'Webhook Job',
 			triggers: [['id' => 't1', 'type' => 'webhook']],
 		);
 
@@ -355,7 +400,8 @@ final class AdminTwigAdapterDashboardAutomationsTest extends TestCase
 	public function testNextRunAtIsNull(): void
 	{
 		$obj = $this->makeAutomationObject(
-			'cron-job', 'Cron Job',
+			'cron-job',
+			'Cron Job',
 			triggers: [['id' => 't1', 'type' => 'schedule', 'cron' => '0 1 * * *']],
 		);
 
@@ -396,7 +442,8 @@ final class AdminTwigAdapterDashboardAutomationsTest extends TestCase
 	public function testReturnShapeIsCorrect(): void
 	{
 		$obj = $this->makeAutomationObject(
-			'shape-test', 'Shape Test',
+			'shape-test',
+			'Shape Test',
 			triggers: [['id' => 't1', 'type' => 'webhook']],
 		);
 

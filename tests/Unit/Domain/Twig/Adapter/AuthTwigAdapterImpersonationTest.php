@@ -23,16 +23,16 @@ use TotalCMS\Support\Config;
  */
 describe('AuthTwigAdapter impersonation helpers', function (): void {
 	beforeEach(function (): void {
-		$this->config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$this->session         = $this->createMock(SessionInterface::class);
-		$this->accessManager   = $this->createMock(AccessManager::class);
-		$this->fileAccess      = $this->createMock(FileAccessManager::class);
-		$this->accessControl   = $this->createMock(AccessControlService::class);
+		$this->config           = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$this->session          = $this->createMock(SessionInterface::class);
+		$this->accessManager    = $this->createMock(AccessManager::class);
+		$this->fileAccess       = $this->createMock(FileAccessManager::class);
+		$this->accessControl    = $this->createMock(AccessControlService::class);
 		$this->collectionLister = $this->createMock(CollectionLister::class);
-		$this->translator      = $this->createMock(TranslationService::class);
-		$this->editionFeatures = $this->createMock(EditionFeatureService::class);
-		$this->userValidation  = $this->createMock(UserValidationService::class);
-		$this->impersonation   = $this->createMock(ImpersonationServiceInterface::class);
+		$this->translator       = $this->createMock(TranslationService::class);
+		$this->editionFeatures  = $this->createMock(EditionFeatureService::class);
+		$this->userValidation   = $this->createMock(UserValidationService::class);
+		$this->impersonation    = $this->createMock(ImpersonationServiceInterface::class);
 
 		$this->adapter = new AuthTwigAdapter(
 			$this->config,

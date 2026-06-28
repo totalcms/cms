@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Admin\FormField\CheckboxField;
-use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\ChecklistField;
+use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\RadioField;
 use TotalCMS\Domain\Admin\FormField\ToggleField;
 use TotalCMS\Domain\Admin\TotalForm;

@@ -27,9 +27,9 @@ use Psr\Http\Server\RequestHandlerInterface;
  * still get a session so CSRF tokens can be issued on form pages (see
  * CSRFTokenManager, which no-ops when the session isn't started).
  */
-final class LazySessionStartMiddleware implements MiddlewareInterface
+final readonly class LazySessionStartMiddleware implements MiddlewareInterface
 {
-	public function __construct(private readonly SessionManagerInterface $session)
+	public function __construct(private SessionManagerInterface $session)
 	{
 	}
 

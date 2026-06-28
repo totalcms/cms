@@ -61,9 +61,9 @@ describe('TotalForm::extractMediaTags', function (): void {
 
 describe('TotalForm::isPropertyIndexed', function (): void {
 	test('true only when the property is in the schema index', function (): void {
-		$form = (new ReflectionClass(TotalForm::class))->newInstanceWithoutConstructor();
-		$schema = new SchemaData();
-		$schema->index = ['myimage', 'id'];
+		$form             = (new ReflectionClass(TotalForm::class))->newInstanceWithoutConstructor();
+		$schema           = new SchemaData();
+		$schema->index    = ['myimage', 'id'];
 		$form->schemaData = $schema;
 
 		expect($form->isPropertyIndexed('myimage'))->toBeTrue();

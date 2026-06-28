@@ -10,7 +10,7 @@ use Slim\Interfaces\RouteParserInterface;
 use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 
 /**
- * POST /admin/impersonate/stop
+ * POST /admin/impersonate/stop.
  *
  * Delegates to ImpersonationService::stop() and redirects to the admin
  * dashboard. This route must remain reachable by the impersonated session

@@ -56,9 +56,7 @@ final readonly class ObjectTitleResolver
 			return '';
 		}
 
-		$trimmed = trim((string)$object[$key]);
-
-		return $trimmed === '' ? '' : $trimmed;
+		return trim((string)$object[$key]);
 	}
 
 	private function normalize(string $value): string

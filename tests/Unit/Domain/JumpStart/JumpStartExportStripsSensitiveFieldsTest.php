@@ -25,11 +25,11 @@ final class JumpStartExportStripsSensitiveFieldsTest extends TestCase
 {
 	private function makeExporter(SchemaFetcher $schemaFetcher, ObjectFetcher $objectFetcher, CollectionLister $collectionLister, IndexReader $indexReader): JumpStartExporter
 	{
-		$schemaLister   = $this->createMock(SchemaLister::class);
-		$templateLister = $this->createMock(TemplateLister::class);
+		$schemaLister    = $this->createMock(SchemaLister::class);
+		$templateLister  = $this->createMock(TemplateLister::class);
 		$templateFetcher = $this->createMock(TemplateFetcher::class);
-		$cacheManager   = $this->createMock(CacheManager::class);
-		$loggerFactory  = $this->createMock(LoggerFactory::class);
+		$cacheManager    = $this->createMock(CacheManager::class);
+		$loggerFactory   = $this->createMock(LoggerFactory::class);
 
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(
@@ -68,7 +68,7 @@ final class JumpStartExportStripsSensitiveFieldsTest extends TestCase
 		);
 
 		// Object has email (safe) + password (sensitive) + a secret (sensitive)
-		$objectData = $this->createMock(ObjectData::class);
+		$objectData     = $this->createMock(ObjectData::class);
 		$objectData->id = 'user-1';
 		$objectData->method('toArray')->willReturn([
 			'id'       => 'user-1',
@@ -129,7 +129,7 @@ final class JumpStartExportStripsSensitiveFieldsTest extends TestCase
 			new IndexData([['id' => 'user-2']])
 		);
 
-		$objectData = $this->createMock(ObjectData::class);
+		$objectData     = $this->createMock(ObjectData::class);
 		$objectData->id = 'user-2';
 		$objectData->method('toArray')->willReturn([
 			'id'   => 'user-2',

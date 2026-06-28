@@ -99,7 +99,7 @@ readonly class QueryPipeline
 	 */
 	private function idsFilter(array $items, string $ids): array
 	{
-		$wanted = array_filter(array_map('trim', explode(',', $ids)), static fn (string $id): bool => $id !== '');
+		$wanted = array_filter(array_map(trim(...), explode(',', $ids)), static fn (string $id): bool => $id !== '');
 		if ($wanted === []) {
 			return [];
 		}

@@ -35,13 +35,13 @@ final class VisualizerServiceAccessFilterTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->analyzer          = $this->createMock(RelationshipAnalyzer::class);
-		$this->erdRenderer       = new MermaidErdRenderer();
-		$this->objectResolver    = $this->createMock(ObjectRelationshipResolver::class);
-		$this->flowchartRenderer = new MermaidFlowchartRenderer();
+		$this->analyzer            = $this->createMock(RelationshipAnalyzer::class);
+		$this->erdRenderer         = new MermaidErdRenderer();
+		$this->objectResolver      = $this->createMock(ObjectRelationshipResolver::class);
+		$this->flowchartRenderer   = new MermaidFlowchartRenderer();
 		$this->accessGroupAnalyzer = $this->createMock(AccessGroupAnalyzer::class);
-		$this->matrixPresenter   = new AccessGroupMatrixPresenter();
-		$this->accessControl     = $this->createMock(AccessControlService::class);
+		$this->matrixPresenter     = new AccessGroupMatrixPresenter();
+		$this->accessControl       = $this->createMock(AccessControlService::class);
 
 		$this->allCollections = [
 			$this->makeCollection('posts', 'Posts'),

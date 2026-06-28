@@ -32,7 +32,7 @@ describe('Field type resolution contract', function (): void {
 			['value' => 'b', 'label' => 'B'],
 		]);
 
-		expect((string) $field->build())
+		expect((string)$field->build())
 			->toContain('type="checkbox"')
 			->toContain('name="tags"');
 	});

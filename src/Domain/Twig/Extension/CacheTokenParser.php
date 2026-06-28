@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Extension;
 
 use Twig\Error\SyntaxError;
-use Twig\Node\Node;
 use Twig\Token;
 use Twig\TokenParser\AbstractTokenParser;
 
@@ -17,7 +16,7 @@ use Twig\TokenParser\AbstractTokenParser;
  */
 final class CacheTokenParser extends AbstractTokenParser
 {
-	public function parse(Token $token): Node
+	public function parse(Token $token): CacheNode
 	{
 		$lineno = $token->getLine();
 		$stream = $this->parser->getStream();

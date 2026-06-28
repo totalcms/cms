@@ -5,7 +5,6 @@ namespace TotalCMS\Domain\Admin;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
-use TotalCMS\Domain\Admin\FieldsetRenderer;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;

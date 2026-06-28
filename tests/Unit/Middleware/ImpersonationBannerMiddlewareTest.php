@@ -7,7 +7,6 @@ namespace Tests\Unit\Middleware;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\App;

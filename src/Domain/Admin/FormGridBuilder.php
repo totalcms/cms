@@ -56,6 +56,7 @@ class FormGridBuilder
 
 	/**
 	 * @param  list<string>            $lines
+	 *
 	 * @return list<array<string,mixed>>
 	 */
 	private function parseBlocks(array $lines): array

@@ -188,7 +188,7 @@ readonly class RelationshipAnalyzer
 		}
 
 		$nodes = [];
-		foreach ($keep as $id => $_) {
+		foreach (array_keys($keep) as $id) {
 			if (isset($graph['nodes'][$id])) {
 				$nodes[$id] = $graph['nodes'][$id];
 			}
@@ -354,8 +354,6 @@ readonly class RelationshipAnalyzer
 	}
 
 	/**
-	 * @param mixed $value
-	 *
 	 * @return list<string>
 	 */
 	private function toList(mixed $value): array

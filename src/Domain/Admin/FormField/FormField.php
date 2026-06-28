@@ -298,7 +298,7 @@ class FormField
 		if (is_array($currentValue)) {
 			return match ($operator) {
 				'in', '=='      => in_array($expectedValue, $currentValue, false),
-				'not_in', '!=' => !in_array($expectedValue, $currentValue, false),
+				'not_in', '!='  => !in_array($expectedValue, $currentValue, false),
 				'empty'         => count($currentValue) === 0,
 				'not_empty'     => count($currentValue) > 0,
 				default         => in_array($expectedValue, $currentValue, false),

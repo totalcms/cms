@@ -28,7 +28,7 @@ use TotalCMS\Domain\Auth\Service\OperationDetector;
  * otherwise add it to EXEMPT here.
  */
 test('every named route is mapped in OperationDetector or explicitly exempt', function (): void {
-	/** @var App<\Psr\Container\ContainerInterface> $app */
+	/** @var App<Psr\Container\ContainerInterface> $app */
 	$app = bootstrap();
 
 	$routeNames = [];
@@ -176,8 +176,8 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 
 	$unaccounted = array_values(array_diff(array_keys($routeNames), $mapped, $exempt));
 
-	expect($unaccounted)->toBe([], "Route(s) neither mapped in OperationDetector nor exempt: "
+	expect($unaccounted)->toBe([], 'Route(s) neither mapped in OperationDetector nor exempt: '
 		. implode(', ', $unaccounted)
-		. ". If a route is guarded by an operation-detecting access middleware, map its name in "
-		. "OperationDetector; otherwise add it to EXEMPT in this test.");
+		. '. If a route is guarded by an operation-detecting access middleware, map its name in '
+		. 'OperationDetector; otherwise add it to EXEMPT in this test.');
 });

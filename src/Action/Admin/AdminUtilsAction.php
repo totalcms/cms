@@ -22,10 +22,10 @@ use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Sync\Data\SyncableCollections;
 use TotalCMS\Domain\Template\Service\TemplateLister;
-use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
@@ -248,7 +248,7 @@ readonly class AdminUtilsAction
 		$permissionMatrixData = null;
 		if ($page === 'permission-matrix') {
 			$group                     = isset($query['group']) ? trim((string)$query['group']) : '';
-			$permissionMatrixData = [
+			$permissionMatrixData      = [
 				'matrix' => $this->visualizerService->accessGroupMatrix(),
 				'group'  => $group,
 			];
@@ -263,24 +263,24 @@ readonly class AdminUtilsAction
 				'params' => $args,
 				'page'   => 'utils',
 			],
-			'results'                => $results,
-			'totalcms1DetectionData' => $totalcms1DetectionData,
-			'apiKeys'                => $apiKeys,
-			'accessGroupsData'       => $accessGroupsData,
-			'oauthClients'           => $oauthClients,
-			'oauthClientsForm'       => $oauthClientsForm,
-			'oauthGrants'            => $oauthGrants,
-			'lintResults'            => $lintResults,
-			'rssAnalysis'            => $rssAnalysis,
-			'rssError'               => $rssError,
-			'rssCollections'         => $rssAnalysis !== null ? $this->collectionLister->listAllCollections() : null,
-			'updateInfo'             => $updateInfo,
-			'composerInstall'        => \TotalCMS\Support\PathResolver::isComposerInstall(),
-			'syncData'               => $syncData,
-			'jumpstartData'          => $jumpstartData,
+			'results'                   => $results,
+			'totalcms1DetectionData'    => $totalcms1DetectionData,
+			'apiKeys'                   => $apiKeys,
+			'accessGroupsData'          => $accessGroupsData,
+			'oauthClients'              => $oauthClients,
+			'oauthClientsForm'          => $oauthClientsForm,
+			'oauthGrants'               => $oauthGrants,
+			'lintResults'               => $lintResults,
+			'rssAnalysis'               => $rssAnalysis,
+			'rssError'                  => $rssError,
+			'rssCollections'            => $rssAnalysis !== null ? $this->collectionLister->listAllCollections() : null,
+			'updateInfo'                => $updateInfo,
+			'composerInstall'           => \TotalCMS\Support\PathResolver::isComposerInstall(),
+			'syncData'                  => $syncData,
+			'jumpstartData'             => $jumpstartData,
 			'visualizerData'            => $visualizerData,
 			'objectVisualizerData'      => $objectVisualizerData,
-			'permissionMatrixData' => $permissionMatrixData,
+			'permissionMatrixData'      => $permissionMatrixData,
 			'postData'                  => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}

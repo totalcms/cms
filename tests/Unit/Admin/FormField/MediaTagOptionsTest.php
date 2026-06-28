@@ -8,7 +8,7 @@ use TotalCMS\Domain\Admin\TotalForm;
 
 describe('mediaTags propertyOptions source', function (): void {
 	test('list field renders tags returned by mediaTagsForCollection', function (): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = 123;
 		$form->method('mediaTagsForCollection')->willReturn(['sky', 'sea']);
 
@@ -25,6 +25,7 @@ describe('mediaTags propertyOptions source', function (): void {
 describe('ImageField tag-suggestion wiring', function (): void {
 	$invoke = function (object $field, array $imageData): array {
 		$method = new ReflectionMethod($field, 'tagFieldSettings');
+
 		return $method->invoke($field, $imageData);
 	};
 
@@ -33,7 +34,7 @@ describe('ImageField tag-suggestion wiring', function (): void {
 	// from its `$settings`. A top-level key would be silently dropped (the
 	// original regression: the tags field rendered no suggestions).
 	test('attaches mediaTags propertyOptions under settings when the field is indexed', function () use ($invoke): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(true);
 
@@ -49,13 +50,13 @@ describe('ImageField tag-suggestion wiring', function (): void {
 	// If propertyOptions ever moves back to the top level, $settings['settings']
 	// is empty and the options never render — this test fails.
 	test('tagFieldSettings output resolves to rendered options through a list field', function () use ($invoke): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(true);
 		$form->method('mediaTagsForCollection')->willReturn(['sky', 'sea']);
 
 		$settings = $invoke(new ImageField($form, 'myimage'), []);
-		$list = new ListField($form, 'tags', settings: $settings['settings'] ?? []);
+		$list     = new ListField($form, 'tags', settings: $settings['settings'] ?? []);
 
 		expect($list->build())
 			->toContain('sky')
@@ -63,7 +64,7 @@ describe('ImageField tag-suggestion wiring', function (): void {
 	});
 
 	test('omits the source when the field is not indexed', function () use ($invoke): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(false);
 
@@ -73,7 +74,7 @@ describe('ImageField tag-suggestion wiring', function (): void {
 	});
 
 	test('gallery fields use type gallery', function () use ($invoke): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(true);
 
@@ -83,7 +84,7 @@ describe('ImageField tag-suggestion wiring', function (): void {
 	});
 
 	test('image nested directly in an indexed card sources suggestions at the card path', function () use ($invoke): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(true);
 
@@ -94,7 +95,7 @@ describe('ImageField tag-suggestion wiring', function (): void {
 	});
 
 	test('image nested in an unindexed card sources nothing', function () use ($invoke): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(false);
 
@@ -104,7 +105,7 @@ describe('ImageField tag-suggestion wiring', function (): void {
 	});
 
 	test('image nested below a card (deck item path) sources nothing — deferred', function () use ($invoke): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(true);
 
@@ -118,11 +119,12 @@ describe('ImageField tag-suggestion wiring', function (): void {
 describe('FileField tag-suggestion wiring', function (): void {
 	$invoke = function (object $field, array $fileData): array {
 		$method = new ReflectionMethod($field, 'tagFieldSettings');
+
 		return $method->invoke($field, $fileData);
 	};
 
 	test('attaches mediaTags propertyOptions (type file) under settings when indexed', function () use ($invoke): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(true);
 
@@ -133,7 +135,7 @@ describe('FileField tag-suggestion wiring', function (): void {
 	});
 
 	test('omits the source when not indexed', function () use ($invoke): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(false);
 
@@ -141,7 +143,7 @@ describe('FileField tag-suggestion wiring', function (): void {
 	});
 
 	test('file nested directly in an indexed card sources suggestions at the card path', function () use ($invoke): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(true);
 
@@ -152,7 +154,7 @@ describe('FileField tag-suggestion wiring', function (): void {
 	});
 
 	test('file nested below a card (deck item path) sources nothing — deferred', function () use ($invoke): void {
-		$form = test()->createMock(TotalForm::class);
+		$form     = test()->createMock(TotalForm::class);
 		$form->id = '';
 		$form->method('isPropertyIndexed')->willReturn(true);
 

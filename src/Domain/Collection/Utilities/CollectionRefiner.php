@@ -329,7 +329,7 @@ class CollectionRefiner
 
 	protected static function contains(string $haystack, string $needle): bool
 	{
-		return mb_strpos($haystack, $needle) !== false;
+		return str_contains($haystack, $needle);
 	}
 
 	protected static function starts(string $haystack, string $needle): bool

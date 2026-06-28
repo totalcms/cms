@@ -35,10 +35,10 @@ final class AccessGroupMatrixPresenterTest extends TestCase
 	{
 		return [
 			[
-				'id'          => 'editors',
-				'name'        => 'Editors',
+				'id'           => 'editors',
+				'name'         => 'Editors',
 				'isSuperAdmin' => false,
-				'dimensions'  => [
+				'dimensions'   => [
 					'collections' => [
 						'blog'     => ['ops' => ['read', 'create', 'update', 'delete'], 'all' => true],
 						'products' => ['ops' => ['read', 'update'], 'all' => false],
@@ -54,16 +54,16 @@ final class AccessGroupMatrixPresenterTest extends TestCase
 						'vendor/ext-a' => ['ops' => ['access'], 'all' => false],
 					],
 					'utils' => [
-						'cache'    => ['ops' => ['access'], 'all' => false],
+						'cache'     => ['ops' => ['access'], 'all' => false],
 						'jumpstart' => ['ops' => [], 'all' => false],
 					],
 				],
 			],
 			[
-				'id'          => 'admin',
-				'name'        => 'Administrators',
+				'id'           => 'admin',
+				'name'         => 'Administrators',
 				'isSuperAdmin' => true,
-				'dimensions'  => [
+				'dimensions'   => [
 					'collections' => [
 						'blog'     => ['ops' => ['read', 'create', 'update', 'delete'], 'all' => true],
 						'products' => ['ops' => ['read', 'create', 'update', 'delete'], 'all' => true],
@@ -79,16 +79,16 @@ final class AccessGroupMatrixPresenterTest extends TestCase
 						'vendor/ext-a' => ['ops' => ['access'], 'all' => true],
 					],
 					'utils' => [
-						'cache'    => ['ops' => ['access'], 'all' => true],
+						'cache'     => ['ops' => ['access'], 'all' => true],
 						'jumpstart' => ['ops' => ['access'], 'all' => true],
 					],
 				],
 			],
 			[
-				'id'          => 'guests',
-				'name'        => 'Guests',
+				'id'           => 'guests',
+				'name'         => 'Guests',
 				'isSuperAdmin' => false,
-				'dimensions'  => [
+				'dimensions'   => [
 					'collections' => [
 						'blog'     => ['ops' => [], 'all' => false],
 						'products' => ['ops' => [], 'all' => false],
@@ -104,7 +104,7 @@ final class AccessGroupMatrixPresenterTest extends TestCase
 						'vendor/ext-a' => ['ops' => [], 'all' => false],
 					],
 					'utils' => [
-						'cache'    => ['ops' => [], 'all' => false],
+						'cache'     => ['ops' => [], 'all' => false],
 						'jumpstart' => ['ops' => [], 'all' => false],
 					],
 				],
@@ -240,10 +240,10 @@ final class AccessGroupMatrixPresenterTest extends TestCase
 		// Build a model where a non-super-admin has all 4 ops but all=false
 		$model = [
 			[
-				'id'          => 'power',
-				'name'        => 'Power Users',
+				'id'           => 'power',
+				'name'         => 'Power Users',
 				'isSuperAdmin' => false,
-				'dimensions'  => [
+				'dimensions'   => [
 					'collections' => [
 						'news' => ['ops' => ['create', 'read', 'update', 'delete'], 'all' => false],
 					],
@@ -265,10 +265,10 @@ final class AccessGroupMatrixPresenterTest extends TestCase
 		// Read-only: ops=['read'] → "·R··"
 		$model = [
 			[
-				'id'          => 'readonly',
-				'name'        => 'Read Only',
+				'id'           => 'readonly',
+				'name'         => 'Read Only',
 				'isSuperAdmin' => false,
-				'dimensions'  => [
+				'dimensions'   => [
 					'collections' => [
 						'blog' => ['ops' => ['read'], 'all' => false],
 					],

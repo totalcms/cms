@@ -67,7 +67,7 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 	 */
 	private function stubRunReader(array $latest): AutomationRunReader
 	{
-		$filesystem = new class ($latest) implements StorageAdapterInterface {
+		$filesystem = new class($latest) implements StorageAdapterInterface {
 			/** @param array<string,array<string,mixed>> $latest */
 			public function __construct(private readonly array $latest)
 			{
@@ -123,17 +123,60 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 				return '{}';
 			}
 
-			public function fileExists(string $location): bool { return false; }
-			public function write(string $location, string $contents): bool { return true; }
-			public function import(string $import, string $dest): bool { return true; }
-			public function move(string $old, string $new): bool { return true; }
-			public function copyDirectory(string $old, string $new): bool { return true; }
-			public function delete(string $location): bool { return true; }
-			public function deleteDirectory(string $location): bool { return true; }
-			public function mimeType(string $location): string { return ''; }
-			public function fileSize(string $location): int { return 0; }
-			public function readStream(string $location) { return fopen('php://memory', 'r'); }
-			public function flysystem(): FilesystemOperator { throw new \LogicException('not needed in tests'); }
+			public function fileExists(string $location): bool
+			{
+				return false;
+			}
+
+			public function write(string $location, string $contents): bool
+			{
+				return true;
+			}
+
+			public function import(string $import, string $dest): bool
+			{
+				return true;
+			}
+
+			public function move(string $old, string $new): bool
+			{
+				return true;
+			}
+
+			public function copyDirectory(string $old, string $new): bool
+			{
+				return true;
+			}
+
+			public function delete(string $location): bool
+			{
+				return true;
+			}
+
+			public function deleteDirectory(string $location): bool
+			{
+				return true;
+			}
+
+			public function mimeType(string $location): string
+			{
+				return '';
+			}
+
+			public function fileSize(string $location): int
+			{
+				return 0;
+			}
+
+			public function readStream(string $location)
+			{
+				return fopen('php://memory', 'r');
+			}
+
+			public function flysystem(): FilesystemOperator
+			{
+				throw new \LogicException('not needed in tests');
+			}
 		};
 
 		return new AutomationRunReader($filesystem);
@@ -170,11 +213,11 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 	 */
 	private function makeAlertsAdapter(array $overrides = []): AdminTwigAdapter
 	{
-		$updateChecker  = $overrides['updateChecker']  ?? $this->mockUpdateChecker($this->noUpdateInfo());
-		$licenseStatus  = $overrides['licenseStatus']  ?? $this->mockLicenseStatus(new LicenseStatusData(showIcon: false));
+		$updateChecker  = $overrides['updateChecker'] ?? $this->mockUpdateChecker($this->noUpdateInfo());
+		$licenseStatus  = $overrides['licenseStatus'] ?? $this->mockLicenseStatus(new LicenseStatusData(showIcon: false));
 		$jobQueueHealth = $overrides['jobQueueHealth'] ?? $this->mockJobQueueHealth($this->healthyQueueData());
-		$runReader      = $overrides['runReader']      ?? $this->stubRunReader([]);
-		$stateRepo      = $overrides['stateRepo']      ?? $this->stubStateRepo([]);
+		$runReader      = $overrides['runReader'] ?? $this->stubRunReader([]);
+		$stateRepo      = $overrides['stateRepo'] ?? $this->stubStateRepo([]);
 
 		$adapter = (new \ReflectionClass(AdminTwigAdapter::class))->newInstanceWithoutConstructor();
 		$ref     = new \ReflectionClass($adapter);
@@ -228,8 +271,13 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 	public function testUpdateAvailableEmitsWarningAlert(): void
 	{
 		$update = new UpdateInfo(
-			available: true, version: '3.6.0', releaseDate: '2026-07-01',
-			severity: 'minor', changelog: '', buildHash: '', downloadUrl: '',
+			available: true,
+			version: '3.6.0',
+			releaseDate: '2026-07-01',
+			severity: 'minor',
+			changelog: '',
+			buildHash: '',
+			downloadUrl: '',
 		);
 
 		$alerts = $this->makeAlertsAdapter(['updateChecker' => $this->mockUpdateChecker($update)])->dashboardAlerts();
@@ -370,8 +418,13 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 	public function testAlertShapeIsCorrect(): void
 	{
 		$update = new UpdateInfo(
-			available: true, version: '3.6.0', releaseDate: '',
-			severity: 'minor', changelog: '', buildHash: '', downloadUrl: '',
+			available: true,
+			version: '3.6.0',
+			releaseDate: '',
+			severity: 'minor',
+			changelog: '',
+			buildHash: '',
+			downloadUrl: '',
 		);
 
 		$adapter = $this->makeAlertsAdapter(['updateChecker' => $this->mockUpdateChecker($update)]);

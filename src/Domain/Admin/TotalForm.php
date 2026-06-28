@@ -877,12 +877,12 @@ class TotalForm implements \Stringable
 			}
 		}
 
-		$content  = '';
+		$content   = '';
 		$fieldsets = [];
 
 		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
 			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
-			$content    .= $gridBuilder->buildGridSectionHtml();
+			$content .= $gridBuilder->buildGridSectionHtml();
 			$fieldsets   = $gridBuilder->getFieldsets();
 		}
 
@@ -970,9 +970,9 @@ class TotalForm implements \Stringable
 	 * Image values are single image arrays; gallery values are maps of
 	 * imageId => imageData. Used by the `mediaTags` propertyOptions source.
 	 *
-	 * @param array<int,array<string,mixed>> $objects Indexed object summaries.
-	 * @param string                         $field   The image/gallery property name.
-	 * @param string                         $type    'image' or 'gallery'.
+	 * @param array<int,array<string,mixed>> $objects indexed object summaries
+	 * @param string                         $field   the image/gallery property name
+	 * @param string                         $type    'image' or 'gallery'
 	 *
 	 * @return array<int,string>
 	 */

@@ -191,7 +191,7 @@ describe('FormGridBuilder', function (): void {
 	test('toNestedStyleTag emits grid areas without a container-type declaration', function (): void {
 		$inner = (new FormGridBuilder("a b\nc d"));
 		$css   = $inner->toNestedStyleTag('fs-1');
-		expect($css)->toContain("#fs-1")->toContain("'a b'")->not->toContain('container-type');
+		expect($css)->toContain('#fs-1')->toContain("'a b'")->not->toContain('container-type');
 	});
 
 	test('a fieldset-only formgrid emits a valid full-width desktop area (no repeat(0))', function (): void {

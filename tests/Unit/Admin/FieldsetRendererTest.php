@@ -143,7 +143,7 @@ describe('TotalForm fieldContent with formgrid fieldset', function (): void {
 	test('member fields render inside fieldset, non-members render outside', function (): void {
 		$schema = new SchemaData();
 		// 'title' is an outer field; 'email' and 'phone' are fieldset members
-		$schema->formgrid = "title\n[[ Contact\nemail phone\n]]";
+		$schema->formgrid   = "title\n[[ Contact\nemail phone\n]]";
 		$schema->properties = [
 			'title' => ['type' => 'text', 'label' => 'Title'],
 			'email' => ['type' => 'text', 'label' => 'Email'],
@@ -160,7 +160,7 @@ describe('TotalForm fieldContent with formgrid fieldset', function (): void {
 		// Build real FormField stubs that produce identifiable HTML
 		$fields = [];
 		foreach (['title', 'email', 'phone'] as $name) {
-			$mock = test()->getMockBuilder(\TotalCMS\Domain\Admin\FormField\FormField::class)
+			$mock = test()->getMockBuilder(TotalCMS\Domain\Admin\FormField\FormField::class)
 				->disableOriginalConstructor()
 				->onlyMethods(['build'])
 				->getMock();

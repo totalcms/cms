@@ -18,16 +18,16 @@ use TotalCMS\Support\Config;
  * identity in SessionKeys::IMPERSONATOR, then swaps the active user via
  * SessionLogin so every access check (which reads AUTH_USER) sees the target.
  */
-final class ImpersonationService implements ImpersonationServiceInterface
+final readonly class ImpersonationService implements ImpersonationServiceInterface
 {
 	private LoggerInterface $logger;
 
 	public function __construct(
-		private readonly SessionInterface $session,
-		private readonly SessionLogin $sessionLogin,
-		private readonly UserValidationService $userValidation,
-		private readonly ObjectFetcher $objectFetcher,
-		private readonly Config $config,
+		private SessionInterface $session,
+		private SessionLogin $sessionLogin,
+		private UserValidationService $userValidation,
+		private ObjectFetcher $objectFetcher,
+		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Access);
@@ -50,9 +50,9 @@ final class ImpersonationService implements ImpersonationServiceInterface
 
 	public function start(string $collection, string $userId): void
 	{
-		$realUser       = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+		$realUser          = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
 		$defaultCollection = (string)($this->config->auth['collection'] ?? 'auth');
-		$realCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? $defaultCollection);
+		$realCollection    = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? $defaultCollection);
 
 		if (!$this->userValidation->isSuperAdmin($realUser)) {
 			throw new ImpersonationException('Only super-admins may impersonate.');

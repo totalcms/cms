@@ -162,7 +162,7 @@ class TotalCMSTwigFilters
 			$delimiter = ',';
 		}
 
-		$parts = array_map('trim', explode($delimiter, $value));
+		$parts = array_map(trim(...), explode($delimiter, $value));
 
 		return array_values(array_filter($parts, static fn (string $part): bool => $part !== ''));
 	}

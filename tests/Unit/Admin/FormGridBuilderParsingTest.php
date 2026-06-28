@@ -24,7 +24,7 @@ describe('FormGridBuilder parsing', function (): void {
 	});
 
 	test('[[ with no text means no legend; unclosed [[ is lenient', function (): void {
-		$b = new FormGridBuilder("[[\nfield1 field2");           // never closed
+		$b  = new FormGridBuilder("[[\nfield1 field2");           // never closed
 		$fs = $b->getFieldsets();
 		expect($fs[0]['legend'])->toBeNull();
 		expect($fs[0]['fields'])->toBe(['field1', 'field2']);

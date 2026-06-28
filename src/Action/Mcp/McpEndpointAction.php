@@ -225,5 +225,4 @@ readonly class McpEndpointAction
 
 		return $server->run($transport);
 	}
-
 }

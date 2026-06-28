@@ -374,10 +374,10 @@ readonly class ReportExporter
 			// better as a comma-separated list than raw JSON. Nested or associative
 			// arrays (cards, decks) keep their JSON form.
 			$isFlatList = array_is_list($value)
-				&& array_filter($value, static fn (mixed $item): bool => is_array($item)) === [];
+				&& array_filter($value, is_array(...)) === [];
 
 			if ($isFlatList) {
-				return implode(', ', array_map(fn (mixed $item): string => $this->formatCsvValue($item), $value));
+				return implode(', ', array_map($this->formatCsvValue(...), $value));
 			}
 
 			return (string)json_encode($value, JSON_UNESCAPED_SLASHES);

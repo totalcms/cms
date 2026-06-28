@@ -133,13 +133,13 @@ class PriceField extends FormField
 		if (isset($this->settings['decimals']) && $this->settings['decimals'] !== '') {
 			return (int)$this->settings['decimals'];
 		}
-		if ($this->formatter === null) {
+		if (!$this->formatter instanceof \NumberFormatter) {
 			return 2;
 		}
 
 		$this->formatter->setTextAttribute(\NumberFormatter::CURRENCY_CODE, $currency);
 
-		return (int)$this->formatter->getAttribute(\NumberFormatter::FRACTION_DIGITS);
+		return $this->formatter->getAttribute(\NumberFormatter::FRACTION_DIGITS);
 	}
 
 	/**

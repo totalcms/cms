@@ -29,13 +29,13 @@ readonly class VisualizerService
 	 *
 	 * @param array<CollectionData> $allCollections
 	 * @param array<string,string>  $query
-	 * @param string|null           $userId Current operator id; null or super-admin → no filtering.
+	 * @param string|null           $userId current operator id; null or super-admin → no filtering
 	 *
 	 * @return array<string,mixed>
 	 */
 	public function collectionGraph(array $allCollections, array $query, ?string $userId = null): array
 	{
-		$permitted    = $this->permittedCollectionIds($userId, $allCollections);
+		$permitted      = $this->permittedCollectionIds($userId, $allCollections);
 		$allCollections = $permitted !== null ? array_values(array_filter(
 			$allCollections,
 			static fn (CollectionData $c): bool => in_array($c->id, $permitted, true),
@@ -77,13 +77,13 @@ readonly class VisualizerService
 	 *
 	 * @param array<CollectionData> $allCollections
 	 * @param array<string,string>  $query
-	 * @param string|null           $userId Current operator id; null or super-admin → no filtering.
+	 * @param string|null           $userId current operator id; null or super-admin → no filtering
 	 *
 	 * @return array<string,mixed>
 	 */
 	public function objectGraph(array $allCollections, array $query, ?string $userId = null): array
 	{
-		$permitted    = $this->permittedCollectionIds($userId, $allCollections);
+		$permitted      = $this->permittedCollectionIds($userId, $allCollections);
 		$allCollections = $permitted !== null ? array_values(array_filter(
 			$allCollections,
 			static fn (CollectionData $c): bool => in_array($c->id, $permitted, true),
@@ -236,7 +236,7 @@ readonly class VisualizerService
 		// Determine which nodes to keep: keep if their collection is permitted.
 		$keepNode = [];
 		foreach ($graph['nodes'] as $id => $node) {
-			$collection = (string)($node['collection'] ?? '');
+			$collection    = (string)($node['collection'] ?? '');
 			$keepNode[$id] = $collection === '' || isset($permittedSet[$collection]);
 		}
 

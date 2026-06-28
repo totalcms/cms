@@ -19,7 +19,7 @@ final class SelectionFilter
 	public static function ticked(array $params, string $key): array
 	{
 		return array_values(array_filter(
-			array_map('strval', (array)($params[$key] ?? [])),
+			array_map(strval(...), (array)($params[$key] ?? [])),
 			static fn (string $id): bool => $id !== '',
 		));
 	}

@@ -24,16 +24,16 @@ use TotalCMS\Domain\Session\SessionKeys;
  * POST form targeting the stop-impersonation route and is base-path-aware so
  * it works on subpath installs.
  */
-final class ImpersonationBannerMiddleware implements MiddlewareInterface
+final readonly class ImpersonationBannerMiddleware implements MiddlewareInterface
 {
 	/**
 	 * @param App<\Psr\Container\ContainerInterface> $app
 	 */
 	public function __construct(
-		private readonly ImpersonationServiceInterface $impersonation,
-		private readonly SessionInterface $session,
-		private readonly CSRFTokenManager $csrfTokenManager,
-		private readonly App $app,
+		private ImpersonationServiceInterface $impersonation,
+		private SessionInterface $session,
+		private CSRFTokenManager $csrfTokenManager,
+		private App $app,
 	) {
 	}
 

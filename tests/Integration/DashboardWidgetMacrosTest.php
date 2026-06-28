@@ -11,7 +11,6 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
  * so macro markup, t() calls, and variable bindings are all exercised through the
  * real Twig environment.
  */
-
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
 
@@ -96,7 +95,7 @@ it('automationsWidget renders a row per automation', function (): void {
 
 	$automations = [
 		['id' => 'send-digest',  'name' => 'Send Digest',  'trigger' => 'schedule', 'enabled' => true,  'lastResult' => 'success', 'lastRunAt' => mktime(10, 0, 0, 6, 1, 2026), 'nextRunAt' => null],
-		['id' => 'clean-images', 'name' => 'Clean Images', 'trigger' => 'webhook',  'enabled' => false, 'lastResult' => 'failed',  'lastRunAt' => mktime(9,  0, 0, 6, 1, 2026), 'nextRunAt' => null],
+		['id' => 'clean-images', 'name' => 'Clean Images', 'trigger' => 'webhook',  'enabled' => false, 'lastResult' => 'failed',  'lastRunAt' => mktime(9, 0, 0, 6, 1, 2026), 'nextRunAt' => null],
 	];
 
 	$html = $twig->renderString(

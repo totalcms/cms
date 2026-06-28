@@ -302,8 +302,8 @@ readonly class ObjectRelationshipResolver
 	private function label(array $entry, string $titleProperty): string
 	{
 		if ($titleProperty === '') {
-			$first  = is_string($entry['first'] ?? null) ? trim((string)$entry['first']) : '';
-			$last   = is_string($entry['last'] ?? null) ? trim((string)$entry['last']) : '';
+			$first  = is_string($entry['first'] ?? null) ? trim($entry['first']) : '';
+			$last   = is_string($entry['last'] ?? null) ? trim($entry['last']) : '';
 			$person = trim($first . ' ' . $last);
 			if ($person !== '') {
 				return $person;

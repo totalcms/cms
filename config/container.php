@@ -29,6 +29,8 @@ use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
+use TotalCMS\Domain\Auth\Service\ImpersonationService;
+use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\FragmentCache;
@@ -115,8 +117,6 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Search\Listener\ContentChangeListener;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
 use TotalCMS\Domain\Search\Service\SearchService;
-use TotalCMS\Domain\Auth\Service\ImpersonationService;
-use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 use TotalCMS\Domain\Search\Service\SearchServiceInterface;
 use TotalCMS\Domain\Search\Service\TextSearchProvider;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
@@ -258,12 +258,10 @@ return [
 
 	// Explicit definition (not autowired) so the datadir can be passed for
 	// enforcing 0600 on settings files, which may hold extension secrets.
-	ExtensionSettingsManager::class => function (ContainerInterface $container): ExtensionSettingsManager {
-		return new ExtensionSettingsManager(
-			$container->get(StorageFilesystemAdapter::class),
-			(string)$container->get(Config::class)->datadir,
-		);
-	},
+	ExtensionSettingsManager::class => fn (ContainerInterface $container): ExtensionSettingsManager => new ExtensionSettingsManager(
+		$container->get(StorageFilesystemAdapter::class),
+		(string)$container->get(Config::class)->datadir,
+	),
 
 	// Output (fragment) cache behind the {% cache %} Twig tag. Explicit so the
 	// fragmentTtl / fragments config defaults can be passed through.

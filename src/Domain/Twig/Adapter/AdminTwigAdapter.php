@@ -875,7 +875,6 @@ readonly class AdminTwigAdapter
 			// deck (keyed array of rows); we take the first row's 'type' field.
 			// Cast through mixed so PHPStan does not narrow based on Collection
 			// PHPDoc return types that conflict with the runtime value.
-			/** @var mixed $triggersRaw */
 			$triggersRaw = $object->properties->get('triggers');
 			$triggerType = '';
 			if (is_array($triggersRaw) && $triggersRaw !== []) {

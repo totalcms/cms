@@ -13,11 +13,11 @@ class PriceData extends NumberData
 {
 	public function __construct(string|int|float $price = 0, array $settings = [])
 	{
-		parent::__construct(self::normalize($price), $settings);
+		parent::__construct($this->normalize($price), $settings);
 	}
 
 	/** Coerce a possibly-formatted price into a numeric string floatval() accepts. */
-	private static function normalize(string|int|float $value): string
+	private function normalize(string|int|float $value): string
 	{
 		if (is_int($value) || is_float($value)) {
 			return (string)$value;
@@ -41,9 +41,9 @@ class PriceData extends NumberData
 			$s         = str_replace($thousands, '', $s);
 			$s         = str_replace($decimal, '.', $s);
 		} elseif ($hasComma) {
-			$s = self::resolveSingleSeparator($s, ',');
+			$s = $this->resolveSingleSeparator($s, ',');
 		} elseif ($hasDot) {
-			$s = self::resolveSingleSeparator($s, '.');
+			$s = $this->resolveSingleSeparator($s, '.');
 		}
 
 		return $s;
@@ -55,7 +55,7 @@ class PriceData extends NumberData
 	 *  - appears once with exactly 3 trailing digits → thousands ("100,000")
 	 *  - otherwise → decimal point ("100,50" / "100.5")
 	 */
-	private static function resolveSingleSeparator(string $s, string $sep): string
+	private function resolveSingleSeparator(string $s, string $sep): string
 	{
 		if (substr_count($s, $sep) > 1) {
 			return str_replace($sep, '', $s);

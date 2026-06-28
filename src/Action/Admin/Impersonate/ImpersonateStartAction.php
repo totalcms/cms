@@ -12,7 +12,7 @@ use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 use TotalCMS\Support\Config;
 
 /**
- * POST /admin/impersonate/{collection}/{userId}
+ * POST /admin/impersonate/{collection}/{userId}.
  *
  * Delegates to ImpersonationService::start(). On success, redirects to the
  * front-end home page for member targets or to the admin dashboard for
@@ -52,11 +52,7 @@ readonly class ImpersonateStartAction
 
 		$operatorCollection = (string)($this->config->auth['collection'] ?? 'auth');
 
-		if ($collection === $operatorCollection) {
-			$redirectUrl = $this->routeParser->urlFor('admin-index');
-		} else {
-			$redirectUrl = '/';
-		}
+		$redirectUrl = $collection === $operatorCollection ? $this->routeParser->urlFor('admin-index') : '/';
 
 		return $response
 			->withHeader('Location', $redirectUrl)

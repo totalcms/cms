@@ -41,18 +41,18 @@ use TotalCMS\Support\Config;
 
 describe('JumpStart AdminOnlyMiddleware gate (export + import routes)', function (): void {
 	beforeEach(function (): void {
-		$this->session         = $this->createMock(SessionInterface::class);
-		$this->userValidation  = $this->createMock(UserValidationService::class);
-		$this->accessControl   = $this->createMock(AccessControlService::class);
-		$this->jsonRenderer    = $this->createMock(JsonRenderer::class);
-		$this->twigRenderer    = $this->createMock(TwigRenderer::class);
-		$this->responseFactory = $this->createMock(ResponseFactoryInterface::class);
+		$this->session           = $this->createMock(SessionInterface::class);
+		$this->userValidation    = $this->createMock(UserValidationService::class);
+		$this->accessControl     = $this->createMock(AccessControlService::class);
+		$this->jsonRenderer      = $this->createMock(JsonRenderer::class);
+		$this->twigRenderer      = $this->createMock(TwigRenderer::class);
+		$this->responseFactory   = $this->createMock(ResponseFactoryInterface::class);
 		$this->operationDetector = $this->createMock(OperationDetector::class);
-		$this->loggerFactory   = $this->createMock(LoggerFactory::class);
+		$this->loggerFactory     = $this->createMock(LoggerFactory::class);
 
-		$this->config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$this->config->auth = ['enable' => true];
-		$this->config->env  = 'prod';
+		$this->config        = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$this->config->auth  = ['enable' => true];
+		$this->config->env   = 'prod';
 		$this->config->debug = false;
 
 		$this->handler     = $this->createMock(RequestHandlerInterface::class);

@@ -32,7 +32,7 @@ readonly class ExportZipAction
 
 		try {
 			if ($idsParam !== '') {
-				$ids = array_values(array_filter(array_map('trim', explode(',', $idsParam)), static fn (string $id): bool => $id !== ''));
+				$ids = array_values(array_filter(array_map(trim(...), explode(',', $idsParam)), static fn (string $id): bool => $id !== ''));
 
 				$zipPath  = $this->objectZipper->createObjectsZip($collection, $ids);
 				$filename = $this->objectZipper->getObjectsZipFilename($collection);

@@ -37,13 +37,13 @@ final class MermaidFlowchartRenderer
 		}
 
 		foreach ($byCollection as $collection => $nodes) {
-			$lines[] = sprintf('    subgraph %s["%s"]', $this->subgraphId((string)$collection), $this->esc((string)$collection));
+			$lines[] = sprintf('    subgraph %s["%s"]', $this->subgraphId($collection), $this->esc($collection));
 			foreach ($nodes as $node) {
 				$nid     = $this->nodeId((string)$node['id']);
 				$label   = $this->esc((string)($node['label'] ?? $node['id']));
-				$lines[] = !empty($node['focal'])
-					? sprintf('        %s["%s"]:::focal', $nid, $label)
-					: sprintf('        %s["%s"]', $nid, $label);
+				$lines[] = empty($node['focal'])
+					? sprintf('        %s["%s"]', $nid, $label)
+					: sprintf('        %s["%s"]:::focal', $nid, $label);
 			}
 			$lines[] = '    end';
 		}
@@ -52,16 +52,16 @@ final class MermaidFlowchartRenderer
 		// in+out scans don't emit doubled arrows. Mirrors MermaidErdRenderer's $seen map.
 		$seen = [];
 		foreach ($graph['edges'] as $edge) {
-			$from   = $this->nodeId((string)$edge['from']);
-			$to     = $this->nodeId((string)$edge['to']);
-			$via    = (string)($edge['via'] ?? '');
+			$from     = $this->nodeId((string)$edge['from']);
+			$to       = $this->nodeId((string)$edge['to']);
+			$via      = (string)($edge['via'] ?? '');
 			$dedupKey = $from . '|' . $to . '|' . $via;
 			if (isset($seen[$dedupKey])) {
 				continue;
 			}
 			$seen[$dedupKey] = true;
-			$label   = $this->esc($via);
-			$lines[] = $label !== ''
+			$label           = $this->esc($via);
+			$lines[]         = $label !== ''
 				? sprintf('    %s -->|%s| %s', $from, $label, $to)
 				: sprintf('    %s --> %s', $from, $to);
 		}

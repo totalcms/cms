@@ -86,9 +86,9 @@ readonly class AccessGroupMatrixPresenter
 	 */
 	public function present(array $model): array
 	{
-		$resourceIds = $this->collectResourceIds($model);
+		$resourceIds  = $this->collectResourceIds($model);
 		$columnGroups = $this->buildColumnGroups($resourceIds);
-		$rows = $this->buildRows($model, $resourceIds);
+		$rows         = $this->buildRows($model, $resourceIds);
 
 		return [
 			'columnGroups' => $columnGroups,
@@ -135,6 +135,7 @@ readonly class AccessGroupMatrixPresenter
 	 * Build the ordered column-group structure for the template header row.
 	 *
 	 * @param array<string, list<string>> $resourceIds
+	 *
 	 * @return list<array{dimension: string, label: string, columns: list<array{id: string, label: string}>}>
 	 */
 	private function buildColumnGroups(array $resourceIds): array
@@ -165,6 +166,7 @@ readonly class AccessGroupMatrixPresenter
 	 *   dimensions: array<string, array<string, array{ops: list<string>, all: bool}>>,
 	 * }> $model
 	 * @param array<string, list<string>> $resourceIds
+	 *
 	 * @return list<array{id: string, name: string, isSuperAdmin: bool, cells: array<string, string>}>
 	 */
 	private function buildRows(array $model, array $resourceIds): array
@@ -174,10 +176,10 @@ readonly class AccessGroupMatrixPresenter
 
 		foreach ($model as $group) {
 			$row = [
-				'id'          => $group['id'],
-				'name'        => $group['name'] !== '' ? $group['name'] : $group['id'],
+				'id'           => $group['id'],
+				'name'         => $group['name'] !== '' ? $group['name'] : $group['id'],
 				'isSuperAdmin' => $group['isSuperAdmin'],
-				'cells'       => $this->buildCells($group['dimensions'], $resourceIds),
+				'cells'        => $this->buildCells($group['dimensions'], $resourceIds),
 			];
 
 			if ($group['isSuperAdmin']) {
@@ -198,6 +200,7 @@ readonly class AccessGroupMatrixPresenter
 	 *
 	 * @param array<string, array<string, array{ops: list<string>, all: bool}>> $dimensions
 	 * @param array<string, list<string>> $resourceIds
+	 *
 	 * @return array<string, string>
 	 */
 	private function buildCells(array $dimensions, array $resourceIds): array
@@ -206,7 +209,7 @@ readonly class AccessGroupMatrixPresenter
 
 		foreach (array_keys(self::DIMENSION_ORDER) as $dim) {
 			$resources = $dimensions[$dim] ?? [];
-			$isCrud = in_array($dim, self::CRUD_DIMENSIONS, true);
+			$isCrud    = in_array($dim, self::CRUD_DIMENSIONS, true);
 
 			foreach ($resourceIds[$dim] as $resourceId) {
 				$entry = $resources[$resourceId] ?? ['ops' => [], 'all' => false];
