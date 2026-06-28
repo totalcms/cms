@@ -874,7 +874,9 @@ readonly class AdminTwigAdapter
 			// Extract the type of the first trigger. Triggers are stored as a
 			// deck (keyed array of rows); we take the first row's 'type' field.
 			// Cast through mixed so PHPStan does not narrow based on Collection
-			// PHPDoc return types that conflict with the runtime value.
+			// PHPDoc return types that conflict with the runtime value (the
+			// triggers deck is stored as a raw array, not a PropertyData).
+			/** @var mixed $triggersRaw */
 			$triggersRaw = $object->properties->get('triggers');
 			$triggerType = '';
 			if (is_array($triggersRaw) && $triggersRaw !== []) {
