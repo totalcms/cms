@@ -1,474 +1,133 @@
 ---
 title: "Configuration"
-description: "Configure Total CMS with hierarchical PHP settings for security, storage, caching, email, API, logging, and environment-specific overrides."
+description: "Configure Total CMS with the config/tcms.php bootstrap file, the deep-merge override model, real settings keys, the logger path, and reading config in Twig."
 ---
 
 # Configuration
 
-Total CMS uses a hierarchical configuration system based on PHP files. This allows for flexible environment-specific settings while maintaining secure defaults.
+Most of Total CMS is configured from the **Admin UI** (the Settings page) — domains, email, image presets, auth, dashboard appearance, and so on are all stored in your data directory and edited from the browser. You only need a config file for the handful of **bootstrap** settings that have to be known before the data directory is loaded, or to override a default that the admin UI doesn't expose.
 
-## Configuration Load Order
+## Where Configuration Lives
 
-Configuration files are loaded in a specific order, with later files overriding earlier ones:
+Total CMS ships two PHP files in `config/`:
 
-1. `config/defaults.php` - Base application defaults
-2. `config/env.php` - Environment detection
-3. `config/{environment}.php` - Environment-specific settings (e.g., `production.php`, `development.php`)
-4. `{DOCUMENT_ROOT}/env.php` - Server-specific overrides (optional)
+- **`config/defaults.php`** — the base settings array for the whole application. This file is part of the codebase and is replaced on updates. **Do not edit it.**
+- **`config/tcms.php`** — your optional override file. It does not exist by default. To create it, copy the sample:
 
-This hierarchy allows you to:
-- Set safe defaults for all environments
-- Override settings per environment (dev, staging, production)
-- Apply server-specific settings without modifying the codebase
+```bash
+cp config/tcms-sample.php config/tcms.php
+```
 
-## Core Configuration Files
-
-### defaults.php
-
-The base configuration file that sets application-wide defaults:
+The sample is intentionally tiny. Out of the box it returns an empty array and documents only the two bootstrap keys you might need:
 
 ```php
 <?php
-// config/defaults.php
 
-// Error reporting (production safe)
-error_reporting(0);
-ini_set('display_errors', '0');
+declare(strict_types=1);
 
-// Locale settings
-setlocale(LC_ALL, 'C.UTF-8', 'en_US.UTF-8', 'en_US');
+// Total CMS Bootstrap Configuration
+// Only path settings that are needed before the data directory is loaded.
+//
+// NOTE: Most settings should be configured via the Admin UI (Settings page).
+return [
+	// Data directory location. Default: document root + /tcms-data
+	// 'datadir' => __DIR__ . '/tcms-data',
 
-// Core settings
-$settings = [
-    'env' => 'prod',
-    'locale' => 'en_US',
-    'timezone' => 'UTC',
-    'debug' => false,
-];
-
-// Database settings
-$settings['db'] = [
-    'driver' => 'sqlite',
-    'database' => __DIR__ . '/../data/database.sqlite',
-];
-
-// Paths
-$settings['paths'] = [
-    'root' => dirname(__DIR__),
-    'public' => dirname(__DIR__) . '/public',
-    'cache' => dirname(__DIR__) . '/cache',
-    'logs' => dirname(__DIR__) . '/logs',
-    'data' => dirname(__DIR__) . '/tcms-data',
+	// URL prefix where the API is mounted. Default: '/api'
+	// 'api' => '/api',
 ];
 ```
 
-### Environment Configuration
+## The Deep-Merge Override Model
 
-Environment-specific files override defaults:
+Whatever array you return from `config/tcms.php` is **deep-merged** over `config/defaults.php`. You only specify the keys you want to change — nested arrays merge rather than replace, so you can override a single sub-key without restating the whole block.
+
+For example, to keep all of the default `auth` settings but raise the maximum login attempts and turn off passkeys:
 
 ```php
 <?php
-// config/development.php
 
-// Enable debugging in development
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-
-$settings['debug'] = true;
-$settings['env'] = 'dev';
-
-// Development database
-$settings['db']['database'] = __DIR__ . '/../data/dev-database.sqlite';
-
-// Disable caching
-$settings['cache']['enabled'] = false;
-
-// Verbose logging
-$settings['logger']['level'] = 'debug';
-```
-
-## Configuration Categories
-
-### Application Settings
-
-```php
-// Basic application settings
-$settings['app'] = [
-    'name' => 'Total CMS',
-    'version' => '3.0.0',
-    'timezone' => 'America/New_York',
-    'locale' => 'en_US',
-    'charset' => 'UTF-8',
-];
-
-// URL and domain settings
-$settings['domain'] = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$settings['url'] = 'https://' . $settings['domain'];
-$settings['api'] = $settings['url'] . '/api/v3';
-```
-
-### Security Settings
-
-```php
-// Security configuration
-$settings['security'] = [
-    // Session settings
-    'session' => [
-        'name' => 'TCMS_SESSION',
-        'lifetime' => 7200, // 2 hours
-        'path' => '/',
-        'domain' => '',
-        'secure' => true,
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ],
-    
-    // CSRF protection
-    'csrf' => [
-        'enabled' => true,
-        'token_name' => 'csrf_token',
-        'header_name' => 'X-CSRF-Token',
-    ],
-    
-    // Password hashing
-    'password' => [
-        'algorithm' => PASSWORD_BCRYPT,
-        'options' => ['cost' => 12],
-    ],
+return [
+	'auth' => [
+		'maxAttempts' => 5,
+		'usePasskeys' => false,
+	],
 ];
 ```
 
-### Storage Settings
-
-```php
-// File storage configuration
-$settings['storage'] = [
-    // Data storage
-    'data_path' => $settings['paths']['data'],
-    'collections_path' => $settings['paths']['data'] . '/collections',
-    'schemas_path' => $settings['paths']['data'] . '/schemas',
-    
-    // Media storage
-    'media' => [
-        'path' => $settings['paths']['public'] . '/media',
-        'url' => '/media',
-        'allowed_extensions' => ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx'],
-        'max_upload_size' => '10M',
-    ],
-    
-    // Image processing
-    'images' => [
-        'driver' => 'gd', // or 'imagick'
-        'quality' => 85,
-        'cache' => true,
-        'cache_path' => $settings['paths']['cache'] . '/images',
-    ],
-];
-```
-
-### Cache Configuration
-
-```php
-// Caching settings
-$settings['cache'] = [
-    'enabled' => true,
-    'driver' => 'file', // file, redis, memcached
-    'ttl' => 3600, // 1 hour default
-    
-    // File cache settings
-    'file' => [
-        'path' => $settings['paths']['cache'],
-    ],
-    
-    // Redis settings (if using Redis)
-    'redis' => [
-        'host' => '127.0.0.1',
-        'port' => 6379,
-        'database' => 0,
-    ],
-    
-    // Template cache
-    'templates' => [
-        'enabled' => true,
-        'path' => $settings['paths']['cache'] . '/twig',
-    ],
-];
-```
-
-### Database Configuration
-
-```php
-// Database settings
-$settings['db'] = [
-    // SQLite (default for job queue)
-    'sqlite' => [
-        'driver' => 'sqlite',
-        'database' => $settings['paths']['data'] . '/jobqueue.db',
-    ],
-    
-    // MySQL (optional)
-    'mysql' => [
-        'driver' => 'mysql',
-        'host' => 'localhost',
-        'database' => 'totalcms',
-        'username' => 'root',
-        'password' => '',
-        'charset' => 'utf8mb4',
-        'collation' => 'utf8mb4_unicode_ci',
-        'prefix' => '',
-    ],
-];
-```
-
-### Logging Configuration
-
-```php
-// Logging settings
-$settings['logger'] = [
-    'name' => 'totalcms',
-    'path' => $settings['paths']['logs'] . '/app.log',
-    'level' => 'warning', // debug, info, notice, warning, error, critical
-    'max_files' => 30,
-    
-    // Separate logs for different components
-    'channels' => [
-        'security' => $settings['paths']['logs'] . '/security.log',
-        'api' => $settings['paths']['logs'] . '/api.log',
-        'jobs' => $settings['paths']['logs'] . '/jobs.log',
-    ],
-];
-```
-
-### API Configuration
-
-```php
-// API settings
-$settings['api'] = [
-    'version' => 'v3',
-    'rate_limit' => [
-        'enabled' => true,
-        'requests_per_minute' => 60,
-        'burst' => 10,
-    ],
-    'cors' => [
-        'enabled' => true,
-        'origins' => ['*'],
-        'methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        'headers' => ['Content-Type', 'Authorization', 'X-Requested-With'],
-        'credentials' => true,
-        'max_age' => 86400,
-    ],
-];
-```
-
-### Email Configuration
-
-```php
-// Email settings
-$settings['mail'] = [
-    'driver' => 'smtp', // smtp, sendmail, mail
-    'from' => [
-        'address' => 'noreply@example.com',
-        'name' => 'Total CMS',
-    ],
-    
-    // SMTP settings
-    'smtp' => [
-        'host' => 'smtp.mailtrap.io',
-        'port' => 2525,
-        'encryption' => 'tls', // tls or ssl
-        'username' => '',
-        'password' => '',
-    ],
-];
-```
-
-### License Configuration
-
-```php
-// License settings
-$settings['license'] = [
-    'enabled' => true,
-    'api_url' => 'https://license.totalcms.co/api',
-    'cache_ttl' => 86400, // 24 hours
-    'trial_days' => 30,
-    'features' => [
-        'collections' => ['blog', 'image', 'gallery', 'file'],
-        'max_objects' => 1000,
-        'custom_schemas' => false,
-    ],
-];
-```
-
-## Environment Variables
-
-You can also use environment variables for sensitive configuration:
-
-```php
-// Using environment variables
-$settings['api_key'] = $_ENV['TOTALCMS_API_KEY'] ?? null;
-$settings['db']['password'] = $_ENV['DB_PASSWORD'] ?? '';
-$settings['mail']['smtp']['password'] = $_ENV['SMTP_PASSWORD'] ?? '';
-```
-
-## Creating Custom Configuration
-
-### Server-Specific Configuration
-
-Create a file at `{DOCUMENT_ROOT}/env.php` for server-specific settings:
+Every other key under `auth` (`loginWith`, `collection`, `persistentLoginDays`, and so on) keeps its default value. The same pattern works for any nested settings block:
 
 ```php
 <?php
-// /path/to/document/root/env.php
 
-// Override domain for this server
-$settings['domain'] = 'mysite.com';
-$settings['url'] = 'https://mysite.com';
-
-// Production database
-$settings['db']['mysql'] = [
-    'host' => 'localhost',
-    'database' => 'prod_totalcms',
-    'username' => 'prod_user',
-    'password' => 'secure_password',
-];
-
-// Disable debug mode
-$settings['debug'] = false;
-error_reporting(0);
-```
-
-### Feature Flags
-
-Enable/disable features via configuration:
-
-```php
-// Feature flags
-$settings['features'] = [
-    'blog' => true,
-    'ecommerce' => false,
-    'multi_language' => true,
-    'api_v4' => false,
-    'beta_features' => false,
-];
-
-// Check feature in code
-if ($settings['features']['ecommerce'] ?? false) {
-    // Enable e-commerce functionality
-}
-```
-
-## Configuration Best Practices
-
-### 1. Never Commit Sensitive Data
-
-Keep sensitive configuration out of version control:
-
-```php
-// BAD - Don't commit passwords
-$settings['db']['password'] = 'my-secret-password';
-
-// GOOD - Use environment variables
-$settings['db']['password'] = $_ENV['DB_PASSWORD'] ?? '';
-```
-
-### 2. Use Environment Detection
-
-Automatically detect the environment:
-
-```php
-// config/env.php
-$settings['env'] = match ($_SERVER['HTTP_HOST'] ?? '') {
-    'localhost', '127.0.0.1' => 'development',
-    'staging.example.com' => 'staging',
-    default => 'production',
-};
-```
-
-### 3. Validate Configuration
-
-Add configuration validation:
-
-```php
-// Validate required settings
-$required = ['domain', 'paths.data', 'paths.cache'];
-foreach ($required as $key) {
-    if (empty(array_get($settings, $key))) {
-        throw new ConfigurationException("Missing required config: {$key}");
-    }
-}
-```
-
-### 4. Document Settings
-
-Always document custom configuration:
-
-```php
-// Custom image processing settings
-$settings['image_processing'] = [
-    // Maximum dimension for auto-resize (0 = disabled)
-    'max_dimension' => 2048,
-    
-    // Automatically convert uploads to WebP
-    'auto_webp' => true,
-    
-    // Strip EXIF data from uploads
-    'strip_exif' => true,
+return [
+	'datadir' => '/var/www/shared/tcms-data',
+	'dashboard' => [
+		'title' => "Joe's Bistro Admin",
+	],
+	'cache' => [
+		'redis' => false,
+	],
 ];
 ```
 
-## Accessing Configuration
+The merge and type-safety handling lives in `TotalCMS\Support\Config`. Each settings block is validated with `is_array()` before it is applied, so a malformed override falls back to the default rather than breaking the app.
 
-### In PHP Code
+## What Lives in the Bootstrap File
+
+These are the keys you are most likely to set in `config/tcms.php`. They all exist in `config/defaults.php` — refer to that file for the complete list and the inline comments that document each one.
+
+- **`datadir`** — absolute path to your `tcms-data` directory. Auto-detected by default (document root, or its parent if a `tcms-data` folder exists there). Set this explicitly for custom layouts or shared data directories.
+- **`api`** — URL prefix where the front controller is mounted. Empty at the domain root, or a subpath like `/cms` for subfolder installs.
+- **`domain`** — the site domain. Auto-detected from the request `Host` header, but behind Docker or a reverse proxy that doesn't forward `Host`, set it explicitly so licensing and link-building resolve correctly.
+- **`debug`** — `false` in production; set `true` for development.
+- **`logger`** — log channel name, level, retention, and path (see below).
+- **`session`** — cookie name, lifetime, SameSite, secure flag, and garbage-collection lifetime.
+- **`cache`** — backend toggles (`apcu`, `redis`, `memcached`, `filesystem`) plus Redis/Memcached connection details and fragment-cache settings.
+
+### Logger Path
+
+The logger's `path` is empty in `defaults.php` on purpose — Total CMS resolves it **after** the merge so a `datadir` override is respected:
+
+- **Composer installs** → `logs/` at the project root (survives `composer update`).
+- **Zip installs** → `<datadir>/.system/logs/` (survives the application-directory swap during updates).
+
+To override the location entirely, set it in `tcms.php`:
 
 ```php
-// Get the container
-$container = $app->getContainer();
+<?php
 
-// Access settings
-$settings = $container->get('settings');
-$debug = $settings['debug'];
-$dbConfig = $settings['db'];
-
-// Using helper function
-$value = config('app.name'); // "Total CMS"
-$apiUrl = config('api.url', 'http://localhost'); // With default
+return [
+	'logger' => [
+		'path'  => '/var/log/totalcms',
+		'level' => Monolog\Level::Warning,
+	],
+];
 ```
 
-### In Twig Templates
+## Reading Configuration in Twig
+
+Configuration is exposed in templates through the `cms` global, using `cms.config()`. There is **no** `config` global.
+
+`cms.config()` takes the settings block as the first argument and an optional sub-key as the second:
 
 ```twig
-{# Access configuration in templates #}
-{{ config.app.name }}
-{{ config.domain }}
+{# The whole auth block #}
+{{ cms.config('auth') }}
 
-{# Check feature flags #}
-{% if config.features.blog %}
-    {# Show blog features #}
-{% endif %}
+{# A single sub-key #}
+{{ cms.config('auth', 'collection') }}
+{{ cms.config('dashboard', 'title') }}
 ```
 
-## Troubleshooting Configuration
+Common scalar settings are also available directly on `cms`:
 
-### Debug Configuration Loading
-
-```php
-// Add to config/env.php for debugging
-if ($_GET['debug_config'] ?? false) {
-    echo '<pre>';
-    print_r($settings);
-    echo '</pre>';
-    exit;
-}
+```twig
+{{ cms.env }}
+{{ cms.domain }}
+{{ cms.url }}
 ```
-
-### Common Issues
-
-1. **Configuration not loading**: Check file permissions and path
-2. **Settings being overridden**: Check the load order
-3. **Environment detection failing**: Verify $_SERVER variables
-4. **Cache not clearing**: Manually clear cache directory
 
 ## Configuration Reference
 
-For a complete list of all configuration options, see the `config/defaults.php` file in your Total CMS installation. Each setting is documented with its purpose and acceptable values.
+For the authoritative, fully-commented list of every setting and its default, read `config/defaults.php` in your installation. Anything you can set there can be overridden by returning the same key from `config/tcms.php`.

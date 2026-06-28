@@ -67,6 +67,6 @@ To disable this and show *only* what the source emits, set `mergeStoredValues` t
 }
 ```
 
-This is useful when the option source is fully owned by code — for example, a `pageMiddleware` multicheckbox driven by extensions. With `mergeStoredValues: false`, disabling an extension also removes its middleware from the rendered options, even if a page still has the orphaned value stored.
+This is useful when the option source is fully owned by code — for example, a `pageMiddleware` checklist driven by extensions. With `mergeStoredValues: false`, disabling an extension also removes its middleware from the rendered options, even if a page still has the orphaned value stored.
 
 The setting also applies to plain static option lists — set it to `false` whenever you want the rendered options to be exactly the configured set, with no rescue of stale stored values.

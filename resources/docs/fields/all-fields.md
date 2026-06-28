@@ -29,6 +29,7 @@ Use `${fieldname}` to reference any other property in the same form. There are a
 * **timestamp** - Current date/time in compact ISO format (e.g., 20230815T143056)
 * **uuid** - UUID v4 (e.g., 550e8400-e29b-41d4-a716-446655440000)
 * **uid** - Short random 7-character alphanumeric string
+* **uid-N** - Random alphanumeric string of N characters (e.g., `uid-12`)
 * **oid** - Object ID counter (increments per object in collection)
 * **oid-00000** - Zero-padded Object ID
 * **currentyear** - Full 4-digit year
@@ -431,6 +432,26 @@ The `visibility` setting controls when a field is displayed in forms based on th
 }
 ```
 Field is visible if `deliveryMethod` matches ANY value in the array.
+
+### Visibility Mode
+
+By default, when a condition is not met the field collapses entirely (`display: none`). The optional `mode` key changes this behavior:
+
+- **`"hide"`** (default) — field is collapsed and removed from the layout when the condition is not met.
+- **`"disable"`** — field remains visible but is greyed-out and non-interactive. Its value is preserved and still saved. The field still counts as visible, so other fields that watch it will read its current value normally.
+
+```json
+{
+	"visibility": {
+		"watch": "plan",
+		"value": "free",
+		"operator": "==",
+		"mode": "disable"
+	}
+}
+```
+
+Use `"disable"` when you want the user to see a field's current value but prevent editing it under certain conditions.
 
 ### Default Behavior
 

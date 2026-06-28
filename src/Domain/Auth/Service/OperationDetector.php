@@ -38,6 +38,7 @@ readonly class OperationDetector
 		'deck-item-update',
 		'deck-item-delete',
 		'property-file-save',
+		'property-file-save-nested',
 		'property-folder-save',
 		'property-clear-cache',
 		'property-file-delete',
@@ -68,10 +69,13 @@ readonly class OperationDetector
 		'import-factory',
 		'import-csv',
 		'import-json',
+		'import-deck-csv',
+		'import-deck-json',
 		'import-schema',
 		'playground-save',
 		'admin-collection-new',
 		'dataview-test',
+		'dataview-test-html',
 	];
 
 	/**
@@ -99,6 +103,9 @@ readonly class OperationDetector
 		'admin-docs',
 		'admin-utils',
 		'admin-utils-post',
+		'admin-utils-logs-download',
+		'admin-builder',
+		'admin-builder-preview',
 		'admin-playground',
 		'admin-mail',
 		'admin-settings',
@@ -111,6 +118,8 @@ readonly class OperationDetector
 		'dataview-query',
 		'export-json',
 		'export-csv',
+		'export-deck-json',
+		'export-deck-csv',
 		'export-zip',
 		'export-schema',
 		'playground-list',
@@ -141,6 +150,7 @@ readonly class OperationDetector
 		'deck-item-update',
 		'deck-item-delete',
 		'property-file-save',
+		'property-file-save-nested',
 		'property-folder-save',
 		'property-clear-cache',
 		'property-file-delete',
@@ -157,6 +167,7 @@ readonly class OperationDetector
 		'property-decrement',
 		'property-folder-rename',
 		'dataview-rebuild',
+		'admin-builder-reorder',
 	];
 
 	/**

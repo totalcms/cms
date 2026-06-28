@@ -37,6 +37,46 @@ final class MermaidFlowchartRendererTest extends TestCase
 		$this->assertStringContainsString('classDef focal', $mermaid);
 	}
 
+	public function testEscStripsNewlinesAndPercent(): void
+	{
+		$mermaid = (new MermaidFlowchartRenderer())->render([
+			'nodes' => [
+				'posts::p1' => ['id' => 'posts::p1', 'collection' => 'posts', 'objectId' => 'p1', 'label' => "Evil\nclick X\n%%{init}%%", 'focal' => false, 'url' => ''],
+			],
+			'edges' => [
+				['from' => 'posts::p1', 'to' => 'posts::p1', 'direction' => 'outbound', 'via' => "bad\n%%{init}%%"],
+			],
+		]);
+
+		// The injection sequence \n%% must not survive: a newline followed by %%
+		// would break out of a quoted label and inject a Mermaid directive/statement.
+		$this->assertStringNotContainsString("\n%%", $mermaid);
+		// No bare % in any label (stripped to prevent %%{init}%% directive injection).
+		$this->assertStringNotContainsString('%', $mermaid);
+		// The safe part of the label should still be present.
+		$this->assertStringContainsString('Evil', $mermaid);
+	}
+
+	public function testDeduplicatesEdgesWithSameFromToVia(): void
+	{
+		$graph = [
+			'nodes' => [
+				'authors::jane' => ['id' => 'authors::jane', 'collection' => 'authors', 'objectId' => 'jane', 'label' => 'Jane', 'focal' => true,  'url' => ''],
+				'posts::p1'     => ['id' => 'posts::p1',     'collection' => 'posts',   'objectId' => 'p1',   'label' => 'First', 'focal' => false, 'url' => ''],
+			],
+			// Duplicate edges (same from, to, via) — only one arrow should appear.
+			'edges' => [
+				['from' => 'posts::p1', 'to' => 'authors::jane', 'direction' => 'inbound',  'via' => 'writer'],
+				['from' => 'posts::p1', 'to' => 'authors::jane', 'direction' => 'outbound', 'via' => 'writer'],
+			],
+		];
+
+		$mermaid = (new MermaidFlowchartRenderer())->render($graph);
+
+		// Only one arrow with the "writer" label should appear.
+		$this->assertSame(1, substr_count($mermaid, '-->|writer|'));
+	}
+
 	public function testSanitizesIdsAndStripsBracketsFromLabels(): void
 	{
 		$mermaid = (new MermaidFlowchartRenderer())->render([

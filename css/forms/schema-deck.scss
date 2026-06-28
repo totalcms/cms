@@ -494,7 +494,8 @@
 		display : none;
 	}
 }
-.multicheckbox-field {
+.multicheckbox-field,
+.checklist-field {
 	--schema-icon : var(--icon-checks);
 
 	&.list-type:after {

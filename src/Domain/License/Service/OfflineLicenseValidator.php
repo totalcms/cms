@@ -167,7 +167,6 @@ EOD;
 			message            : $this->getStatusMessage($updatesValid, $updatesValidUntil),
 			validationToken    : null,
 			updatesValid       : $updatesValid,
-			trialDaysRemaining : null,
 			dnsVerified        : true,
 			versionAuthorized  : $versionAuthorized,
 			allowedVersion     : $allowedVersion,

@@ -51,7 +51,7 @@ readonly class ReportExporter
 
 		$fieldsParam = $params['fields'] ?? '';
 		if (is_array($fieldsParam)) {
-			$fields = array_filter(array_map(trim(...), $fieldsParam));
+			$fields = array_values(array_filter(array_map(trim(...), $fieldsParam)));
 		} elseif (is_string($fieldsParam) && $fieldsParam !== '') {
 			$fields = array_filter(array_map(trim(...), explode(',', $fieldsParam)));
 		} else {
@@ -370,6 +370,16 @@ readonly class ReportExporter
 	private function formatCsvValue(mixed $value): string
 	{
 		if (is_array($value)) {
+			// A flat list of scalars (checklist / multiselect / list fields) reads
+			// better as a comma-separated list than raw JSON. Nested or associative
+			// arrays (cards, decks) keep their JSON form.
+			$isFlatList = array_is_list($value)
+				&& array_filter($value, is_array(...)) === [];
+
+			if ($isFlatList) {
+				return implode(', ', array_map($this->formatCsvValue(...), $value));
+			}
+
 			return (string)json_encode($value, JSON_UNESCAPED_SLASHES);
 		}
 

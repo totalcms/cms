@@ -17,6 +17,7 @@ use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Service\McpTransportSecurity;
+use TotalCMS\Domain\Mcp\Service\McpUrlBuilder;
 use TotalCMS\Domain\Mcp\Service\ToolsOnlyClients;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeEvaluator;
@@ -46,6 +47,7 @@ readonly class McpEndpointAction
 		private Config $config,
 		private OAuthScopeEvaluator $scopeEvaluator,
 		private OAuthActivityLogger $activityLogger,
+		private McpUrlBuilder $urlBuilder,
 	) {
 	}
 
@@ -83,7 +85,7 @@ readonly class McpEndpointAction
 				sprintf(
 					'Bearer realm="MCP", error="%s", resource_metadata="%s"',
 					$e->reason,
-					$this->protectedResourceMetadataUrl(),
+					$this->urlBuilder->protectedResourceMetadataUrl($request),
 				),
 			);
 		}
@@ -162,7 +164,7 @@ readonly class McpEndpointAction
 					'WWW-Authenticate',
 					sprintf(
 						'Bearer realm="MCP", error="insufficient_scope", resource_metadata="%s"',
-						$this->protectedResourceMetadataUrl(),
+						$this->urlBuilder->protectedResourceMetadataUrl($request),
 					),
 				);
 			}
@@ -222,16 +224,5 @@ readonly class McpEndpointAction
 		$transport = new StreamableHttpTransport($request, middleware: $middleware);
 
 		return $server->run($transport);
-	}
-
-	/**
-	 * RFC 9728 protected-resource-metadata URL, advertised in WWW-Authenticate so
-	 * a client can discover the authorization server from a 401. Points at this
-	 * resource server's own well-known endpoint (scheme+host plus the app's mount
-	 * prefix), independent of any external authorization-server issuer.
-	 */
-	private function protectedResourceMetadataUrl(): string
-	{
-		return rtrim($this->config->url, '/') . rtrim($this->config->api, '/') . '/.well-known/oauth-protected-resource';
 	}
 }

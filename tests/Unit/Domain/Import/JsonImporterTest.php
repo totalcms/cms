@@ -7,7 +7,6 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Import\JsonImporter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -21,18 +20,18 @@ final class JsonImporterTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $objectImporter;
-	private \PHPUnit\Framework\MockObject\MockObject $indexBuildListener;
+	private EventDispatcher $eventDispatcher;
 	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
 	private \PHPUnit\Framework\MockObject\MockObject $logger;
 
 	protected function setUp(): void
 	{
-		$this->collectionFetcher  = $this->createMock(CollectionFetcher::class);
-		$this->objectFetcher      = $this->createMock(ObjectFetcher::class);
-		$this->objectImporter     = $this->createMock(ObjectImporter::class);
-		$this->indexBuildListener = $this->createMock(IndexBuildListener::class);
-		$this->jobQueuer          = $this->createMock(JobQueuer::class);
-		$this->logger             = $this->createMock(LoggerInterface::class);
+		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
+		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
+		$this->objectImporter    = $this->createMock(ObjectImporter::class);
+		$this->eventDispatcher   = new EventDispatcher(new \Psr\Log\NullLogger());
+		$this->jobQueuer         = $this->createMock(JobQueuer::class);
+		$this->logger            = $this->createMock(LoggerInterface::class);
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
@@ -42,8 +41,7 @@ final class JsonImporterTest extends TestCase
 			$this->collectionFetcher,
 			$this->objectFetcher,
 			$this->objectImporter,
-			$this->indexBuildListener,
-			new EventDispatcher(new \Psr\Log\NullLogger()),
+			$this->eventDispatcher,
 			$this->jobQueuer,
 			$loggerFactory
 		);
@@ -322,11 +320,13 @@ final class JsonImporterTest extends TestCase
 		$this->collectionFetcher->method('collectionExists')->willReturn(true);
 		$this->objectFetcher->method('existsObject')->willReturn(false);
 
-		$this->indexBuildListener->expects($this->once())
-			->method('suspendForCollection')
-			->with('products');
-
 		$count = $this->importer->import('products', $file);
+
+		// The importer suspends per-object index rebuilds via the dispatcher for
+		// the duration of the batch. No IndexBuildListener is registered on this
+		// dispatcher, so nothing resumes it — the suspended state proves the
+		// importer routed suspension through the dispatcher seam.
+		$this->assertTrue($this->eventDispatcher->isIndexRebuildSuspended('products'));
 
 		$this->assertEquals(1, $count);
 	}

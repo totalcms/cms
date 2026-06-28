@@ -34,7 +34,7 @@ The handler is stored in its own `.php` file next to the automation object (an *
 | `$ctx->objectFetcher` | Read objects — `fetchObject($collection, $id)` |
 | `$ctx->objectSaver` | Create objects — `saveObject($collection, $data)` |
 | `$ctx->objectUpdater` | Update objects — `updateObject($collection, $id, $data)` |
-| `$ctx->objectRemover` | Delete objects — `removeObject($collection, $id)` |
+| `$ctx->objectRemover` | Delete objects — `deleteObject($collection, $id)` |
 | `$ctx->objectCloner` | Duplicate an object — `cloneObject($from, $to)` |
 | `$ctx->propertyIncrementer` | Atomic counters — `incrementProperty($collection, $id, $property, $amount = 1)` / `decrementProperty(...)` |
 

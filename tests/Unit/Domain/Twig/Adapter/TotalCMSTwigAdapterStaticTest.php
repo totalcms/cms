@@ -506,6 +506,9 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 			$this->createMock(\TotalCMS\Domain\JobQueue\Service\JobQueueHealth::class),
 			$this->createMock(\TotalCMS\Domain\Translation\TranslationService::class),
 			$this->createMock(\TotalCMS\Domain\License\Service\EditionFeatureService::class),
+			(new \ReflectionClass(\TotalCMS\Domain\Automation\Service\AutomationLoader::class))->newInstanceWithoutConstructor(),
+			(new \ReflectionClass(\TotalCMS\Domain\Automation\Service\AutomationRunReader::class))->newInstanceWithoutConstructor(),
+			(new \ReflectionClass(\TotalCMS\Domain\Extension\Repository\ExtensionStateRepository::class))->newInstanceWithoutConstructor(),
 		);
 
 		// Mock $_SERVER for test

@@ -38,6 +38,10 @@
 				{% if value.hex is defined %}
 					<div class="color-preview" style="background-color: {{ value.hex }}">{{ value.hex }}</div>
 				{% endif %}
+			{% elseif col.type == 'card' %}
+				{# A card is a single sub-object. Show a summary of its scalar fields
+				   (skip the internal id and nested composites like image/file). #}
+				{{ value|filter((v, k) => k != 'id' and v is not iterable)|join(', ')|striptags }}
 			{% elseif col.type in ['deck', 'depot', 'array'] %}
 				{{ value|length }}
 			{% elseif col.type == 'file' %}
@@ -61,7 +65,9 @@
 				{% endif %}
 				{{ displayValue|striptags }}
 			{% else %}
-				{{ value|striptags }}
+				{# Defensive: never strip_tags() an array — an unhandled composite
+				   (array-valued) column falls back to its item count instead of crashing. #}
+				{% if value is iterable %}{{ value|length }}{% else %}{{ value|striptags }}{% endif %}
 			{% endif %}
 		</td>
 	{% endfor %}

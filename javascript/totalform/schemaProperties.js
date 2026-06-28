@@ -2,6 +2,11 @@ import PropertiesField from "./properties";
 import PropertyField from "./property";
 const slugify = require('slugify')
 
+// Mirrors TotalForm::getFieldAliases() — maps renamed field types to their
+// canonical name so legacy schemas (e.g. field:"multicheckbox") select the
+// correct option in the field-type dropdown instead of falling back to first.
+const FIELD_ALIASES = { multicheckbox: 'checklist' };
+
 //-----------------------------------------------
 // Total CMS Properties
 //-----------------------------------------------
@@ -45,10 +50,12 @@ export default class SchemaPropertiesField extends PropertiesField {
 			nameInput.value = name;
 		}
 
-		// Populate the field type dropdown (uses name="field" attribute)
+		// Populate the field type dropdown (uses name="field" attribute).
+		// Apply alias map so legacy types (e.g. multicheckbox) select the
+		// canonical option (checklist) instead of falling back to first.
 		const fieldSelect = field.querySelector('[name=field]');
 		if (fieldSelect && definition.field) {
-			fieldSelect.value = definition.field;
+			fieldSelect.value = FIELD_ALIASES[definition.field] ?? definition.field;
 			// Trigger change event to update UI
 			fieldSelect.dispatchEvent(new Event('change', { bubbles: true }));
 		}

@@ -1440,10 +1440,10 @@ class ExtensionManager
 		preg_match_all('/\{(\w+)(?::([^{}]+))?\}/', $pattern, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
 
 		foreach ($matches as $match) {
-			$placeholder = (string)$match[0][0];
-			$position    = (int)$match[0][1];
-			$name        = (string)$match[1][0];
-			$constraint  = (isset($match[2]) && $match[2][1] !== -1) ? (string)$match[2][0] : '[^/]+';
+			$placeholder = $match[0][0];
+			$position    = $match[0][1];
+			$name        = $match[1][0];
+			$constraint  = (isset($match[2]) && $match[2][1] !== -1) ? $match[2][0] : '[^/]+';
 
 			$regex .= preg_quote(substr($pattern, $offset, $position - $offset), '#');
 			$regex .= '(?P<' . $name . '>' . $constraint . ')';

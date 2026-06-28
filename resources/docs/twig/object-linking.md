@@ -341,13 +341,7 @@ Objects with missing template data will have broken URLs. The sitemap and RSS bu
 
 Objects with valid templated URLs are automatically included in sitemaps and RSS feeds. Objects with empty URL segments (missing template data) are automatically excluded.
 
-```twig
-{# Sitemap generation handles templated URLs automatically #}
-{{ cms.sitemap('blog') }}
-
-{# RSS feed also uses templated URLs #}
-{{ cms.rssFeed('blog') }}
-```
+Total CMS generates sitemaps and RSS feeds through the user-facing builder utilities in the admin (not via Twig helpers). Templated URLs are resolved for you when those feeds are built.
 
 ## Migration from Simple URLs
 

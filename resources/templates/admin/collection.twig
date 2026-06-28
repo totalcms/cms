@@ -46,6 +46,13 @@
 					<li class="relationships" style="display:none">
 						<a href="utils/object-visualizer?collection={{ collection.id }}&id={{ page }}">Relationships</a>
 					</li>
+					{# Show "Impersonate User" only when editing an auth-collection object that is not itself a super-admin #}
+					{% set isAuthCollection = collection.id == cms.config('auth', 'collection') or collection.id in (cms.config('auth', 'publicRegistration')|default([])) %}
+					{% if page and cms.auth.isSuperAdmin() and isAuthCollection and not cms.auth.isSuperAdmin(page) %}
+					<li class="impersonate" style="display:none">
+						<form method="post" action="impersonate/{{ collection.id }}/{{ page }}">{{ csrf_field() }}<button type="submit">Impersonate User</button></form>
+					</li>
+					{% endif %}
 					<li class="export"><a href="collections/{{ collection.id }}/-export">{{ t('btn.export') }}</a></li>
 						<li class="visualize"><a href="utils/collection-visualizer?collection={{ collection.id }}">Visualize</a></li>
 					{% if cms.auth.canAccessCollection(collection.id, 'create') %}

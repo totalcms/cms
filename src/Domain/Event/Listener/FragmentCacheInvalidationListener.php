@@ -15,10 +15,10 @@ use TotalCMS\Domain\Cache\FragmentCache;
  * events that replace them during an import. Listeners receive the event
  * payload as an array (EventDispatcher::dispatch calls $payload->toArray()).
  */
-final class FragmentCacheInvalidationListener
+final readonly class FragmentCacheInvalidationListener
 {
 	public function __construct(
-		private readonly FragmentCache $fragmentCache,
+		private FragmentCache $fragmentCache,
 	) {
 	}
 

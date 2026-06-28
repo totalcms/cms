@@ -240,6 +240,9 @@ return [
 
 	// ── Collection Sitemap ──────────────────────────────────────────────────
 	'collection.sitemap_title'             => 'Sitemap-bouwer voor {collection}',
+	'collection.sitemap_disabled_title'    => 'Sitemap niet ingeschakeld',
+	'collection.sitemap_disabled_desc'     => 'Voor deze collectie is de sitemap niet ingeschakeld, dus de onderstaande URL wordt niet aangeboden. Schakel deze eerst in bij de collectie-instellingen.',
+	'collection.sitemap_disabled_link'     => 'Collectie-instellingen bewerken',
 	'collection.sitemap_desc'              => 'Het volgende genereert een URL die u kunt gebruiken om in te dienen bij zoekmachines of toe te voegen aan een bestaande Sitemap-index. Alle onderstaande velden zijn optioneel. De opgegeven datumeigenschap is uniek voor elke webpagina die aan de sitemap wordt toegevoegd. De frequentie- en prioriteitsvelden zijn echter voor alle toegevoegde Objects gelijk.',
 	'collection.sitemap_date_prop'         => 'Datumeigenschap voor sitemap (moet geïndexeerd zijn)',
 	'collection.sitemap_select_prop'       => 'Selecteer een eigenschap',
@@ -585,15 +588,21 @@ return [
 	'jobqueue.stalled_link'         => 'Taakwachtrij-beheer openen',
 
 	// ── JumpStart ───────────────────────────────────────────────────────────
-	'jumpstart.title'               => 'JumpStart-gegevens',
-	'jumpstart.desc'                => 'JumpStart is een functie van het CMS waarmee u gegevens kunt importeren en exporteren.',
-	'jumpstart.docs_link'           => 'JumpStart-documentatie',
-	'jumpstart.demo_title'          => 'Demo JumpStart-gegevens',
-	'jumpstart.export_title'        => 'JumpStart-gegevens exporteren',
-	'jumpstart.export_desc'         => 'Dit exporteert alle gegevens uit het CMS.',
-	'jumpstart.import_title'        => 'JumpStart-gegevens importeren',
-	'jumpstart.import_desc'         => 'Importeer gegevens uit een bestaand JumpStart JSON-bestand.',
-	'jumpstart.logs_link'           => 'JumpStart-logs',
+	'jumpstart.title'                   => 'JumpStart-gegevens',
+	'jumpstart.desc'                    => 'JumpStart is een functie van het CMS waarmee u gegevens kunt importeren en exporteren.',
+	'jumpstart.docs_link'               => 'JumpStart-documentatie',
+	'jumpstart.demo_title'              => 'Demo JumpStart-gegevens',
+	'jumpstart.export_title'            => 'JumpStart-gegevens exporteren',
+	'jumpstart.export_desc'             => 'Dit exporteert alle gegevens uit het CMS.',
+	'jumpstart.export_include'          => 'Ook opnemen',
+	'jumpstart.export_objects'          => 'Objecten uit geselecteerde collecties',
+	'jumpstart.export_templates'        => 'Sjablonen',
+	'jumpstart.export_schemas'          => 'Schema\'s',
+	'jumpstart.export_collections'      => 'Collecties',
+	'jumpstart.export_collections_help' => 'Geselecteerde collecties exporteren hun metadata. Schakel hieronder de optie Objecten in om ook hun objecten te exporteren.',
+	'jumpstart.import_title'            => 'JumpStart-gegevens importeren',
+	'jumpstart.import_desc'             => 'Importeer gegevens uit een bestaand JumpStart JSON-bestand.',
+	'jumpstart.logs_link'               => 'JumpStart-logs',
 
 	// ── Project Setup ───────────────────────────────────────────────────────
 	'setup.actions_title'            => 'Projectinstellingen-acties',
@@ -1061,6 +1070,11 @@ return [
 	'dashboard.welcome'                => 'Welkom bij Total CMS 3!',
 	'dashboard.subtitle'               => 'Beheer uw content, Schemas en sjablonen op één plek.',
 	'dashboard.simulation_warning'     => 'U simuleert de <strong>{edition}</strong>-editie.',
+	'dashboard.automations'            => 'Automatiseringen',
+	'dashboard.enabled'                => 'Ingeschakeld',
+	'dashboard.disabled'               => 'Uitgeschakeld',
+	'dashboard.never_run'              => 'Nooit uitgevoerd',
+	'dashboard.view_all_automations'   => 'Alle automatiseringen weergeven',
 	'dashboard.disable_simulation'     => 'Simulatie uitschakelen',
 
 	// ── Dashboard Stats ─────────────────────────────────────────────────────

@@ -34,7 +34,7 @@ class OAuthServerFactory
 
 	public function buildAuthorizationServer(): AuthorizationServer
 	{
-		$privateKey    = new CryptKey((string)$this->config->oauth['signingKeyPath']);
+		$privateKey    = $this->loadSigningKey();
 		$encryptionKey = $this->deriveEncryptionKey();
 
 		$server = new AuthorizationServer(
@@ -91,6 +91,28 @@ class OAuthServerFactory
 		$publicKey = new CryptKey((string)$this->config->oauth['publicKeyPath'], null, false);
 
 		return new ResourceServer($this->accessTokens, $publicKey);
+	}
+
+	/**
+	 * Load the OAuth signing key, translating league's cryptic
+	 * `LogicException('Invalid key supplied')` into a clear operator-facing
+	 * error. That exception fires when the signing key is missing, unreadable,
+	 * or malformed — i.e. the operator never ran `tcms oauth:setup` — and as a
+	 * raw LogicException it surfaced in Sentry as an unactionable crash on
+	 * `/oauth/authorize`. Rethrowing as a RuntimeException with guidance lets
+	 * SentryMiddleware classify it as operator misconfiguration, not a bug.
+	 */
+	private function loadSigningKey(): CryptKey
+	{
+		try {
+			return new CryptKey((string)$this->config->oauth['signingKeyPath']);
+		} catch (\LogicException $e) {
+			throw new \RuntimeException(
+				'OAuth signing key is missing or invalid. Run `tcms oauth:setup` to generate the OAuth keypair.',
+				0,
+				$e,
+			);
+		}
 	}
 
 	/**

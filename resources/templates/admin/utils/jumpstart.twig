@@ -2,7 +2,7 @@
 
 {% set exportapi = cms.api ~ "/export/jumpstart" %}
 
-<section style="display:grid;align-content:start;gap:3rem">
+<section style="display:grid;align-content:start;gap:5rem">
 
 	<div>
 		<p>{{ t('jumpstart.desc') }} See the
@@ -13,17 +13,61 @@
 	</div>
 
 	<div>
-		<h3>{{ t('jumpstart.export_title') }}</h3>
-		<p>{{ t('jumpstart.export_desc') }}</p>
-		<p><a href="{{ exportapi }}" class="dash-button" download target="_blank">{{ t('jumpstart.export_title') }}</a></p>
-	</div>
-
-	<div>
 		<h3>{{ t('jumpstart.import_title') }}</h3>
 		<p>{{ t('jumpstart.import_desc') }}
 		If there are any errors, you can see the details
 		in the <strong>{{ t('jumpstart.logs_link') }}</strong> in the <a href="utils/logs">{{ t('logs.title') }}</a>.</p>
 		{{ cms.form.importJumpStart() }}
+	</div>
+
+	<div>
+		<h3>{{ t('jumpstart.export_title') }}</h3>
+		<p>{{ t('jumpstart.export_desc') }}</p>
+
+		{# Build option lists from the action-provided data (mirrors sync.twig). #}
+		{% set schemaItems = [] %}{% set schemaValues = [] %}
+		{% for schema in jumpstartData.schemas %}
+			{% set schemaItems = schemaItems|merge([{value: schema.id, label: schema.id}]) %}
+			{% set schemaValues = schemaValues|merge([schema.id]) %}
+		{% endfor %}
+
+		{% set collectionItems = [] %}{% set collectionValues = [] %}
+		{% for collection in jumpstartData.collections %}
+			{% set collectionItems = collectionItems|merge([{value: collection.id, label: collection.name}]) %}
+			{% set collectionValues = collectionValues|merge([collection.id]) %}
+		{% endfor %}
+
+		{% set exportFields %}
+			{% if schemaItems|length > 0 %}
+			{% set schemasField %}{{ cms.form.field("checklist", "schemas", {
+				label    : t('jumpstart.export_schemas'),
+				options  : schemaItems,
+				settings : { fieldColumns : "200px" }
+			}) }}{% endset %}
+			{{ cms.form.fieldset('', schemasField) }}
+			{% endif %}
+			{% if collectionItems|length > 0 %}
+			{% set collectionsField %}{{ cms.form.field("checklist", "collections", {
+				label    : t('jumpstart.export_collections'),
+				help     : t('jumpstart.export_collections_help'),
+				options  : collectionItems,
+				settings : { fieldColumns : "200px" }
+			}) }}{% endset %}
+			{{ cms.form.fieldset('', collectionsField) }}
+			{% endif %}
+			{% set includeField %}{{ cms.form.field("checklist", "include", {
+				options : [
+					{value: "objects",   label: t('jumpstart.export_objects')},
+					{value: "templates", label: t('jumpstart.export_templates')}
+				],
+				settings: { toggleAll: false }
+			}) }}{% endset %}
+			{{ cms.form.fieldset(t('jumpstart.export_include'), includeField) }}
+		{% endset %}
+
+		{{ cms.form.totalform("", exportFields, { class: "jumpstart-export-form no-unsaved-warning", save: false }) }}
+
+		<button type="button" class="dash-button" id="jumpstart-export-btn">{{ t('jumpstart.export_title') }}</button>
 	</div>
 
 </section>
@@ -32,3 +76,25 @@
 <style>
 .import-form { margin-top: 1rem; }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+	const form = document.querySelector('.jumpstart-export-form');
+	const btn  = document.getElementById('jumpstart-export-btn');
+	if (!form || !btn) return;
+
+	btn.addEventListener('click', function () {
+		const params = new URLSearchParams();
+		params.append('configured', '1');
+		// Each checklist renders checkboxes with a bare name (see sync.twig);
+		// append `[]` so PHP parses an array.
+		['include', 'schemas', 'collections'].forEach(function (key) {
+			form.querySelectorAll('input[name="' + key + '"]:checked').forEach(function (cb) {
+				params.append(key + '[]', cb.value);
+			});
+		});
+		// The endpoint responds with Content-Disposition: attachment, so this downloads.
+		window.location.href = '{{ cms.api }}/export/jumpstart?' + params.toString();
+	});
+});
+</script>

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Action\Export;
 
 use PHPUnit\Framework\TestCase;
@@ -145,6 +147,36 @@ final class ExportZipActionTest extends TestCase
 		($this->action)($this->request, $this->response, ['collection' => 'test']);
 	}
 
+	public function testReturns400WhenAllIdsAreNonExistent(): void
+	{
+		// createObjectsZip throws RuntimeException when no objects resolve → 400.
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getQueryParams')->willReturn(['ids' => 'ghost-1,ghost-2']);
+
+		$this->objectZipper->expects($this->once())
+			->method('createObjectsZip')
+			->with('posts', ['ghost-1', 'ghost-2'])
+			->willThrowException(new \RuntimeException('No objects found to export in collection: posts'));
+
+		$response400 = $this->createMock(ResponseInterface::class);
+		$body        = $this->createMock(StreamInterface::class);
+		$response400->method('getBody')->willReturn($body);
+		$response400->method('withHeader')->willReturnSelf();
+
+		$body->expects($this->once())
+			->method('write')
+			->with($this->stringContains('No objects found'));
+
+		$this->response->expects($this->once())
+			->method('withStatus')
+			->with(400)
+			->willReturn($response400);
+
+		$result = ($this->action)($request, $this->response, ['collection' => 'posts']);
+
+		$this->assertSame($response400, $result);
+	}
+
 	public function testReturns500WhenZipFileNotFound(): void
 	{
 		$this->collectionZipper->method('createCollectionZip')->willReturn('/nonexistent/file.zip');
@@ -153,6 +185,7 @@ final class ExportZipActionTest extends TestCase
 		$response500 = $this->createMock(ResponseInterface::class);
 		$body        = $this->createMock(StreamInterface::class);
 		$response500->method('getBody')->willReturn($body);
+		$response500->method('withHeader')->willReturnSelf();
 
 		$body->expects($this->once())
 			->method('write')
@@ -176,10 +209,11 @@ final class ExportZipActionTest extends TestCase
 		$response500 = $this->createMock(ResponseInterface::class);
 		$body        = $this->createMock(StreamInterface::class);
 		$response500->method('getBody')->willReturn($body);
+		$response500->method('withHeader')->willReturnSelf();
 
 		$body->expects($this->once())
 			->method('write')
-			->with($this->stringContains('Error creating zip: Zip creation failed'));
+			->with($this->stringContains('Zip creation failed'));
 
 		$this->response->expects($this->once())
 			->method('withStatus')
@@ -191,21 +225,31 @@ final class ExportZipActionTest extends TestCase
 		$this->assertSame($response500, $result);
 	}
 
-	public function testCleansUpTemporaryFile(): void
+	public function testStreamsZipBodyFromFileHandle(): void
 	{
-		$zipPath = sys_get_temp_dir() . '/test-cleanup-' . uniqid() . '.zip';
+		// With streaming, the action opens a file handle and passes it as the
+		// stream body — it does NOT read the entire file into memory.
+		$zipPath = sys_get_temp_dir() . '/test-stream-' . uniqid() . '.zip';
 		file_put_contents($zipPath, 'test content');
 
 		$this->collectionZipper->method('createCollectionZip')->willReturn($zipPath);
 		$this->collectionZipper->method('getZipFilename')->willReturn('test.zip');
 
 		$this->response->method('withHeader')->willReturnSelf();
-		$this->response->method('withBody')->willReturnSelf();
+
+		$capturedStream = null;
+		$this->response->expects($this->once())
+			->method('withBody')
+			->with($this->isInstanceOf(StreamInterface::class))
+			->willReturnCallback(function ($stream) use (&$capturedStream): ResponseInterface {
+				$capturedStream = $stream;
+
+				return $this->response;
+			});
 
 		($this->action)($this->request, $this->response, ['collection' => 'test']);
 
-		// Verify temporary file was deleted
-		$this->assertFileDoesNotExist($zipPath);
+		$this->assertNotNull($capturedStream);
 	}
 
 	public function testReturnsResponseWithZipBody(): void

@@ -166,7 +166,7 @@ Generate a hidden template element with gallery data for programmatic lightbox i
 }) }}
 ```
 
-Filtering uses the same syntax as [Index Filtering](docs/apis/index-filter), including [wildcard patterns](#wildcard-patterns) for flexible string matching.
+Filtering uses the same syntax as [Index Filtering](docs/apis/index-filter), including [wildcard patterns](docs/apis/index-filter#wildcard-patterns) for flexible string matching.
 
 For complete launcher usage with trigger methods and opening at specific images, see [totalcms.md](docs/twig/totalcms).
 
@@ -363,11 +363,11 @@ Render a clone dialog for duplicating objects in a collection. Used in the admin
 The render adapter includes a `grid` sub-object with helper methods for content grids:
 
 ```twig
-{{ cms.render.grid.date(item, 'M j, Y') }}        {# Format date with fallback #}
-{{ cms.render.grid.tags(item, '/blog/tag') }}       {# Render tag list with links #}
-{{ cms.render.grid.excerpt(item, 160) }}            {# Generate text excerpt #}
-{{ cms.render.grid.price(item) }}                   {# Format price #}
-{{ cms.render.grid.meta(item) }}                    {# Render metadata (author, date) #}
+{{ cms.render.grid.date(item.date, 'M j, Y') }}     {# Format date with fallback #}
+{{ cms.render.grid.tags(item.tags, '/blog/tag') }}  {# Render tag list with links #}
+{{ cms.render.grid.excerpt(item.summary, 160) }}    {# Generate text excerpt #}
+{{ cms.render.grid.price(item.price) }}             {# Format price #}
+{{ cms.render.grid.meta(item.author) }}             {# Render metadata (author, date) #}
 ```
 
 See [cmsgrid tag](docs/twig/cmsgrid-tag) for the `{% cmsgrid %}` template tag documentation.

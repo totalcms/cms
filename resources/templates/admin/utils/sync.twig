@@ -27,12 +27,12 @@
 		<div class="sync-section">
 			<h3>{{ t('sync.schemas_title') }}</h3>
 
-			{{ cms.form.field("multicheckbox", "schemas-all", {
+			{{ cms.form.field("checklist", "schemas-all", {
 				value   : [],
 				options : [
 					{value: "all", label: t('sync.select_all')}
 				],
-				settings : { relationalOptions: false }
+				settings : { toggleAll : false }
 			}) }}
 
 			{% set schemaOptions = [] %}
@@ -43,7 +43,7 @@
 				}]) %}
 			{% endfor %}
 
-			{{ cms.form.field("multicheckbox", "schemas", {
+			{{ cms.form.field("checklist", "schemas", {
 				label    : t('sync.specific_schemas'),
 				value    : [],
 				options  : schemaOptions,
@@ -63,12 +63,12 @@
 		<div class="sync-section">
 			<h3>{{ t('sync.templates_title') }}</h3>
 
-			{{ cms.form.field("multicheckbox", "templates-all", {
+			{{ cms.form.field("checklist", "templates-all", {
 				value   : [],
 				options : [
 					{value: "all", label: t('sync.select_all')}
 				],
-				settings : { relationalOptions: false }
+				settings : { toggleAll : false }
 			}) }}
 
 			{% set templateOptions = [] %}
@@ -79,7 +79,7 @@
 				}]) %}
 			{% endfor %}
 
-			{{ cms.form.field("multicheckbox", "templates", {
+			{{ cms.form.field("checklist", "templates", {
 				label    : t('sync.specific_templates'),
 				value    : [],
 				options  : templateOptions,
@@ -103,12 +103,12 @@
 				<p class="sync-empty">{{ t('sync.no_objects') }}</p>
 			{% else %}
 
-				{{ cms.form.field("multicheckbox", "collection-" ~ collection.id ~ "-all", {
+				{{ cms.form.field("checklist", "collection-" ~ collection.id ~ "-all", {
 					value   : [],
 					options : [
 						{value: "all", label: t('sync.select_all')}
 					],
-					settings : { relationalOptions: false }
+					settings : { toggleAll : false }
 				}) }}
 
 				{% set objectOptions = [] %}
@@ -119,7 +119,7 @@
 					}]) %}
 				{% endfor %}
 
-				{{ cms.form.field("multicheckbox", "collection-" ~ collection.id, {
+				{{ cms.form.field("checklist", "collection-" ~ collection.id, {
 					label    : t('sync.specific_objects'),
 					value    : [],
 					options  : objectOptions,
@@ -199,7 +199,7 @@
 	margin-block-end: 1rem;
 }
 
-.sync-section .multicheckbox-field {
+.sync-section .checklist-field {
 	margin-block-start: 1rem;
 }
 
@@ -209,7 +209,7 @@
 	font-style: italic;
 }
 
-.sync-section .multicheckbox-field label {
+.sync-section .checklist-field label {
 	max-width : 200px;
 }
 
@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			body.append(`${key}_mode`, 'all');
 			return;
 		}
-		// multicheckbox renders each option with a bare `name` (no `[]`), so the
+		// checklist renders each option with a bare `name` (no `[]`), so the
 		// selector must match that — `${itemsFieldName}`, not `${itemsFieldName}[]`.
 		// The body.append below still uses `[]` so PHP parses it as an array.
 		const selected = Array.from(form.querySelectorAll(`input[name="${itemsFieldName}"]:checked`))

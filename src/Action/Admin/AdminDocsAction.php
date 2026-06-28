@@ -109,6 +109,7 @@ readonly class AdminDocsAction
 
 			$data         = $document->getData();
 			$html         = $parsedown->text($document->getContent());
+			$html         = $this->unescapeTablePipes($html);
 			[$html, $toc] = $this->injectHeadingAnchorsAndBuildToc($html);
 
 			$data['content'] = $html;
@@ -163,6 +164,27 @@ readonly class AdminDocsAction
 		}
 
 		return $normalized;
+	}
+
+	/**
+	 * Unescape `\|` to `|` inside table cells.
+	 *
+	 * In a GFM table, a pipe inside a code span must be written `\|` so the
+	 * table parser doesn't treat it as a column delimiter — and GFM (and Astro
+	 * on docs.totalcms.co) strip that escaping backslash before inline parsing,
+	 * so `` `\| markdown` `` renders as `| markdown`. Parsedown 1.8 recognizes
+	 * `\|` as a non-delimiter but leaves the backslash in the code span, so the
+	 * same source showed a literal `\|` in the admin viewer. Within a table cell
+	 * an escaped pipe is *always* a literal pipe (a literal backslash-pipe would
+	 * be written `\\\|`), so stripping it here is loss-free and matches GFM.
+	 */
+	private function unescapeTablePipes(string $html): string
+	{
+		return (string)preg_replace_callback(
+			'/<(td|th)\b[^>]*>.*?<\/\1>/is',
+			static fn (array $cell): string => str_replace('\\|', '|', $cell[0]),
+			$html,
+		);
 	}
 
 	/**

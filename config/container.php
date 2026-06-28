@@ -29,6 +29,8 @@ use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
+use TotalCMS\Domain\Auth\Service\ImpersonationService;
+use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\FragmentCache;
@@ -256,12 +258,10 @@ return [
 
 	// Explicit definition (not autowired) so the datadir can be passed for
 	// enforcing 0600 on settings files, which may hold extension secrets.
-	ExtensionSettingsManager::class => function (ContainerInterface $container): ExtensionSettingsManager {
-		return new ExtensionSettingsManager(
-			$container->get(StorageFilesystemAdapter::class),
-			(string)$container->get(Config::class)->datadir,
-		);
-	},
+	ExtensionSettingsManager::class => fn (ContainerInterface $container): ExtensionSettingsManager => new ExtensionSettingsManager(
+		$container->get(StorageFilesystemAdapter::class),
+		(string)$container->get(Config::class)->datadir,
+	),
 
 	// Output (fragment) cache behind the {% cache %} Twig tag. Explicit so the
 	// fragmentTtl / fragments config defaults can be passed through.
@@ -850,4 +850,8 @@ return [
 	// SearchServiceInterface injections (e.g. in the MCP search tools) to
 	// the same singleton SearchService instance.
 	SearchServiceInterface::class => fn (ContainerInterface $container): SearchService => $container->get(SearchService::class),
+
+	// ImpersonationServiceInterface → concrete service (actions type-hint the interface
+	// so unit tests can mock it without removing the final keyword from the class).
+	ImpersonationServiceInterface::class => fn (ContainerInterface $container): ImpersonationService => $container->get(ImpersonationService::class),
 ];

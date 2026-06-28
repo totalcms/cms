@@ -26,7 +26,7 @@
 		<div class="permission-section">
 			<h3>{{ t('access_groups.obj_permissions') }}</h3>
 
-			{{ cms.form.field("multicheckbox", "collections-operations", {
+			{{ cms.form.field("checklist", "collections-operations", {
 				label    : t('access_groups.obj_operations'),
 				value    : group ? group.permissions.collections.operations : ["read"],
 				options  : [
@@ -36,13 +36,15 @@
 					{value: "delete", label: t('access_groups.op_delete')}
 				],
 				settings : {
-					fieldGrid: "150px"
+					toggleAll : false,
+					fieldGrid : "150px"
 				}
 			}) }}
 
-			{{ cms.form.field("multicheckbox", "collections-all", {
+			{{ cms.form.field("checklist", "collections-all", {
 				label    : t('access_groups.collection_access'),
 				value    : group ? (group.permissions.collections.all ? ["all"] : []) : ["all"],
+				settings : { toggleAll : false },
 				options  : [
 					{value: "all", label: t('access_groups.all_obj_collections')}
 				]
@@ -56,7 +58,7 @@
 				}]) %}
 			{% endfor %}
 
-			{{ cms.form.field("multicheckbox", "collections-allowed", {
+			{{ cms.form.field("checklist", "collections-allowed", {
 				label    : t('access_groups.specific_collections'),
 				help     : t('access_groups.select_collections'),
 				value    : group ? group.permissions.collections.allowed : [],
@@ -75,7 +77,7 @@
 		<div class="permission-section">
 			<h3>{{ t('access_groups.meta_permissions') }}</h3>
 
-			{{ cms.form.field("multicheckbox", "collectionsMeta-operations", {
+			{{ cms.form.field("checklist", "collectionsMeta-operations", {
 				label    : t('access_groups.meta_operations'),
 				value    : group ? group.permissions.collectionsMeta.operations : ["read"],
 				options  : [
@@ -85,19 +87,21 @@
 					{value: "delete", label: t('access_groups.op_delete')}
 				],
 				settings : {
-					fieldGrid: "150px"
+					toggleAll : false,
+					fieldGrid : "150px"
 				}
 			}) }}
 
-			{{ cms.form.field("multicheckbox", "collectionsMeta-all", {
+			{{ cms.form.field("checklist", "collectionsMeta-all", {
 				label    : t('access_groups.meta_access'),
 				value    : group ? (group.permissions.collectionsMeta.all ? ["all"] : []) : ["all"],
+				settings : { toggleAll : false },
 				options  : [
 					{value: "all", label: t('access_groups.all_collections_meta')}
 				]
 			}) }}
 
-			{{ cms.form.field("multicheckbox", "collectionsMeta-allowed", {
+			{{ cms.form.field("checklist", "collectionsMeta-allowed", {
 				label    : t('access_groups.specific_collections'),
 				help     : t('access_groups.select_meta'),
 				value    : group ? group.permissions.collectionsMeta.allowed : [],
@@ -116,7 +120,7 @@
 		<div class="permission-section">
 			<h3>{{ t('access_groups.schema_permissions') }}</h3>
 
-			{{ cms.form.field("multicheckbox", "schemas-operations", {
+			{{ cms.form.field("checklist", "schemas-operations", {
 				label    : t('access_groups.schema_operations'),
 				value    : group ? group.permissions.schemas.operations : ["read"],
 				options  : [
@@ -126,13 +130,15 @@
 					{value: "delete", label: t('access_groups.op_delete')}
 				],
 				settings : {
-					fieldGrid: "150px"
+					toggleAll : false,
+					fieldGrid : "150px"
 				}
 			}) }}
 
-			{{ cms.form.field("multicheckbox", "schemas-all", {
+			{{ cms.form.field("checklist", "schemas-all", {
 				label    : t('access_groups.schema_access'),
 				value    : group ? (group.permissions.schemas.all ? ["all"] : []) : ["all"],
+				settings : { toggleAll : false },
 				options  : [
 					{value: "all", label: t('access_groups.all_schemas')}
 				]
@@ -146,13 +152,13 @@
 				}]) %}
 			{% endfor %}
 
-			{{ cms.form.field("multicheckbox", "schemas-allowed", {
+			{{ cms.form.field("checklist", "schemas-allowed", {
 				label    : t('access_groups.specific_schemas'),
 				help     : t('access_groups.select_schemas'),
 				value    : group ? group.permissions.schemas.allowed : [],
 				options  : schemaOptions,
 				settings : {
-					fieldGrid: "150px",
+					fieldGrid  : "150px",
 					visibility : {
 						watch    : "schemas-all",
 						value    : "all",
@@ -165,7 +171,7 @@
 		<div class="permission-section">
 			<h3>{{ t('access_groups.other_permissions') }}</h3>
 
-			{{ cms.form.field("multicheckbox", "permissions-simple", {
+			{{ cms.form.field("checklist", "permissions-simple", {
 				label    : t('access_groups.dashboard_features'),
 				help     : t('access_groups.select_features'),
 				value    : group ? (
@@ -187,19 +193,21 @@
 					{value: "dataviews", label: t('access_groups.feature_dataviews')},
 				],
 				settings : {
-					fieldColumns: "150px"
+					toggleAll    : false,
+					fieldColumns : "150px"
 				}
 			}) }}
 
-			{{ cms.form.field("multicheckbox", "utils-all", {
+			{{ cms.form.field("checklist", "utils-all", {
 				label    : t('access_groups.utils_access'),
 				value    : group ? (group.permissions.utils.all ? ["all"] : []) : ["all"],
+				settings : { toggleAll : false },
 				options  : [
 					{value: "all", label: t('access_groups.all_utils')}
 				]
 			}) }}
 
-			{{ cms.form.field("multicheckbox", "utils-allowed", {
+			{{ cms.form.field("checklist", "utils-allowed", {
 				label    : t('access_groups.specific_utils'),
 				help     : t('access_groups.select_utils'),
 				value    : group ? group.permissions.utils.allowed : [],
@@ -229,9 +237,10 @@
 			}) }}
 
 			{% if extensions is defined and extensions|length > 0 %}
-				{{ cms.form.field("multicheckbox", "extensions-all", {
+				{{ cms.form.field("checklist", "extensions-all", {
 					label    : t('access_groups.extensions_access'),
 					value    : group ? ((group.permissions.extensions.all ?? true) ? ["all"] : []) : ["all"],
+					settings : { toggleAll : false },
 					options  : [
 						{value: "all", label: t('access_groups.all_extensions')}
 					]
@@ -245,7 +254,7 @@
 					}]) %}
 				{% endfor %}
 
-				{{ cms.form.field("multicheckbox", "extensions-allowed", {
+				{{ cms.form.field("checklist", "extensions-allowed", {
 					label    : t('access_groups.specific_extensions'),
 					help     : t('access_groups.select_extensions'),
 					value    : group ? (group.permissions.extensions.allowed ?? []) : [],
@@ -295,7 +304,7 @@
 h3 {
 	margin-block : 2rem 1rem;
 }
-.multicheckbox-field {
+.checklist-field {
 	margin-block-start : 1rem;
 	margin-inline-start : 1rem;
 }

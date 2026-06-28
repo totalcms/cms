@@ -15,6 +15,15 @@
 		"never"   : t('sitemap.freq_never'),
 	 } %}
 
+	{% if collection.sitemap is not empty and not collection.sitemap.enabled %}
+		<div class="warning-box sitemap-disabled-warning">
+			<div>
+				<strong>{{ t('collection.sitemap_disabled_title') }}</strong>
+				<p>{{ t('collection.sitemap_disabled_desc') }} <a href="collections/{{ collection.id }}/edit">{{ t('collection.sitemap_disabled_link') }}</a></p>
+			</div>
+		</div>
+	{% endif %}
+
 	<form id="sitemap-builder"
 		class="totalform"
 		method="POST"

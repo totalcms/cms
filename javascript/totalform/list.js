@@ -53,13 +53,24 @@ export default class ListField extends MultiSelectField {
 	setValue(value) {
 		if (!this.choices) return;
 
-		// Clear all existing items
-		this.choices.clearStore();
+		// Clear the current SELECTION only — not the available choices.
+		// clearStore() wipes the whole choice pool (suggestions included), which
+		// broke propertyOptions-driven suggestions whenever a field is repopulated
+		// via setValue (e.g. the gallery's shared edit dialog switching images).
+		this.choices.removeActiveItems();
 
-		// Add each value as a new item
+		// Re-select existing suggestions via setChoiceByValue (setValue won't
+		// select a value that's already a choice); add any value not in the pool
+		// as a fresh item.
+		const known = new Set(Array.from(this.input.options).map(option => option.value));
 		const items = Array.isArray(value) ? value : [];
 		items.forEach(item => {
-			if (item) this.choices.setValue([item]);
+			if (!item) return;
+			if (known.has(item)) {
+				this.choices.setChoiceByValue(item);
+			} else {
+				this.choices.setValue([item]);
+			}
 		});
 	}
 

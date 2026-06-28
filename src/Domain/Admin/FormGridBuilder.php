@@ -9,80 +9,142 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
  *
  * Handles the conversion of text-based grid layouts to CSS Grid properties
  * and generates section headers/dividers for visual organization.
+ *
+ * Block types:
+ *   - ['type' => 'row',      'line'   => string]
+ *   - ['type' => 'divider']
+ *   - ['type' => 'header',   'title'  => string]
+ *   - ['type' => 'fieldset', 'id'     => string, 'legend' => ?string, 'inner' => self]
  */
 class FormGridBuilder
 {
-	private const HEADER_REGEX = '/^---(.+?)---$/';
-	private const DIVIDER      = '---';
+	private const DIVIDER        = '---';
+	private const FIELDSET_OPEN  = '[[';
+	private const FIELDSET_CLOSE = ']]';
+	private const FIELDSET_AREA  = 'formgrid-fieldset-'; // reserved synthetic-area prefix
 
-	/** @var array<string> */
-	private array $lines = [];
+	/** @var list<array<string,mixed>> */
+	private array $blocks = [];
 
 	public function __construct(private readonly string $formgrid = '')
 	{
-		$this->lines = $this->cleanupFormGrid();
+		$this->blocks = $this->parseBlocks($this->cleanupFormGrid());
 	}
 
-	public function toCssGridAreas(): string
+	// -------------------------------------------------------------------------
+	// Parsing
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Classify a non-fieldset line. `---` → divider; `--- X` / `--- X ---` → header.
+	 *
+	 * @return array{type:string,title?:string}|null  null when the line is not a section marker
+	 */
+	private function classifySection(string $line): ?array
 	{
-		$gridLines      = [];
-		$sectionCounter = 0;
-		$columnCount    = $this->getColumnCount();
-
-		// Generates extra "." columns for headers and dividers
-		// to ensure they span the same number of columns as the grid.
-		$extraColumns = '';
-		for ($i = 1; $i < $columnCount; $i++) {
-			$extraColumns .= ' .';
+		if (!str_starts_with($line, self::DIVIDER)) {
+			return null;
 		}
 
-		foreach ($this->lines as $line) {
-			// Process dividers: ---
-			if (self::DIVIDER === $line) {
-				$sectionCounter++;
-				$gridLines[] = "'section-divider-$sectionCounter $extraColumns'";
-				continue;
-			}
+		// Strip the mandatory leading run of dashes, then an optional trailing run
+		$rest  = (string)preg_replace('/^-+/', '', $line);
+		$rest  = (string)preg_replace('/-+$/', '', $rest);
+		$title = trim($rest);
 
-			// Process section headers: ---Title---
-			if (preg_match(self::HEADER_REGEX, $line)) {
-				$sectionCounter++;
-				$gridLines[] = "'section-header-$sectionCounter $extraColumns'";
-				continue;
-			}
+		return $title === '' ? ['type' => 'divider'] : ['type' => 'header', 'title' => $title];
+	}
 
-			// Process regular grid areas
-			$normalized = (string)preg_replace('/\s+/', ' ', $line);
-			$columns    = explode(' ', $normalized);
+	/**
+	 * @param  list<string>            $lines
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	private function parseBlocks(array $lines): array
+	{
+		$blocks     = [];
+		$fieldsetNo = 0;
+		$i          = 0;
+		$count      = count($lines);
 
-			// Validate each area name
-			foreach ($columns as $area) {
-				if (!$this->isValidGridAreaName($area)) {
-					// Skip invalid lines or throw exception
-					continue 2;
+		while ($i < $count) {
+			$line = $lines[$i];
+
+			// Fieldset open: [[ optional legend text
+			if (str_starts_with($line, self::FIELDSET_OPEN)) {
+				$fieldsetNo++;
+				$legend = trim(substr($line, strlen(self::FIELDSET_OPEN)));
+				$inner  = [];
+				$i++;
+				// Collect inner lines until closing ]] or end-of-input (lenient)
+				while ($i < $count && trim($lines[$i]) !== self::FIELDSET_CLOSE) {
+					$inner[] = $lines[$i];
+					$i++;
 				}
+				$i++; // consume the closing ]] (or fall off the end — lenient)
+
+				$blocks[] = [
+					'type'   => 'fieldset',
+					'id'     => self::FIELDSET_AREA . $fieldsetNo,
+					'legend' => $legend === '' ? null : $legend,
+					'inner'  => new self(implode("\n", $inner)),
+				];
+				continue;
 			}
 
-			// Escape area names for CSS
-			$escapedAreas = array_map(fn (string $area): string => htmlspecialchars($area, ENT_QUOTES, 'UTF-8'), $columns);
+			// Divider / header
+			$section = $this->classifySection($line);
+			if ($section !== null) {
+				$blocks[] = $section;
+				$i++;
+				continue;
+			}
 
-			$gridLines[]   = "'" . implode(' ', $escapedAreas) . "'";
-			$columnCount   = max($columnCount, count($columns));
+			// Regular grid row
+			$blocks[] = ['type' => 'row', 'line' => $line];
+			$i++;
 		}
 
-		// Return empty string if no valid lines
-		if ($gridLines === []) {
-			return '';
+		return $blocks;
+	}
+
+	// -------------------------------------------------------------------------
+	// Public accessors (used by Task 3 + tests)
+	// -------------------------------------------------------------------------
+
+	/** @return list<array{id:string,legend:?string,fields:list<string>,inner:self}> */
+	public function getFieldsets(): array
+	{
+		$out = [];
+		foreach ($this->blocks as $b) {
+			if (($b['type'] ?? '') === 'fieldset') {
+				/** @var self $inner */
+				$inner = $b['inner'];
+				/** @var list<string> $fields */
+				$fields = $inner->getFieldNames();
+				$out[]  = [
+					'id'     => (string)$b['id'],
+					'legend' => $b['legend'],
+					'fields' => $fields,
+					'inner'  => $inner,
+				];
+			}
 		}
 
-		// Return the formatted CSS
-		$areas = implode("\n", $gridLines);
+		return $out;
+	}
 
-		return <<<CSS
-		grid-template-areas:
-			$areas;
-		grid-template-columns: repeat($columnCount, 1fr);
-		CSS;
+	/** @return list<string> */
+	public function sectionTitles(): array
+	{
+		return array_values(array_map(
+			static fn (array $b): string => (string)$b['title'],
+			array_filter($this->blocks, static fn (array $b): bool => ($b['type'] ?? '') === 'header'),
+		));
+	}
+
+	public function dividerCount(): int
+	{
+		return count(array_filter($this->blocks, static fn (array $b): bool => ($b['type'] ?? '') === 'divider'));
 	}
 
 	/**
@@ -103,8 +165,8 @@ class FormGridBuilder
 		}
 
 		$columnCount     = $this->getColumnCount();
-		$desktopAreasStr = implode("\n\t\t\t", array_map(fn (string $area): string => "'$area'", $desktopAreas));
-		$mobileAreasStr  = implode("\n\t\t", array_map(fn (string $area): string => "'$area'", $mobileAreas));
+		$desktopAreasStr = $this->buildAreasString($desktopAreas, "\n\t\t\t");
+		$mobileAreasStr  = $this->buildAreasString($mobileAreas, "\n\t\t");
 
 		return <<<HTML
 <style>
@@ -128,6 +190,53 @@ HTML;
 	}
 
 	/**
+	 * Generate a <style> tag for a nested fieldset grid — identical to toStyleTag()
+	 * but without the `#$gridId-container { container-type: inline-size }` block,
+	 * because the outer form already provides the container ancestor.
+	 */
+	public function toNestedStyleTag(string $gridId): string
+	{
+		$desktopAreas = $this->getDesktopGridAreas();
+		$mobileAreas  = $this->getMobileGridAreas();
+
+		if ($desktopAreas === [] || $mobileAreas === []) {
+			return '';
+		}
+
+		$columnCount     = $this->getColumnCount();
+		$desktopAreasStr = $this->buildAreasString($desktopAreas, "\n\t\t\t");
+		$mobileAreasStr  = $this->buildAreasString($mobileAreas, "\n\t\t");
+
+		return <<<HTML
+<style>
+#$gridId {
+	grid-template-areas:
+		$mobileAreasStr;
+	grid-template-columns: 1fr;
+}
+@container (min-width: 500px) {
+	#$gridId {
+		grid-template-areas:
+			$desktopAreasStr;
+		grid-template-columns: repeat($columnCount, 1fr);
+	}
+}
+</style>
+HTML;
+	}
+
+	/**
+	 * Build a CSS grid-template-areas string from an array of area-row strings,
+	 * wrapping each row in single quotes and joining with the given separator.
+	 *
+	 * @param array<string> $areas
+	 */
+	private function buildAreasString(array $areas, string $separator): string
+	{
+		return implode($separator, array_map(fn (string $area): string => "'$area'", $areas));
+	}
+
+	/**
 	 * Get desktop grid areas as an array of strings.
 	 *
 	 * @return array<string>
@@ -144,35 +253,45 @@ HTML;
 			$extraColumns .= ' .';
 		}
 
-		foreach ($this->lines as $line) {
-			// Process dividers: ---
-			if (self::DIVIDER === $line) {
-				$sectionCounter++;
-				$gridLines[] = "section-divider-$sectionCounter $extraColumns";
-				continue;
+		foreach ($this->blocks as $block) {
+			switch ($block['type'] ?? '') {
+				case 'divider':
+					$sectionCounter++;
+					$gridLines[] = "section-divider-$sectionCounter $extraColumns";
+					break;
+
+				case 'header':
+					$sectionCounter++;
+					$gridLines[] = "section-header-$sectionCounter $extraColumns";
+					break;
+
+				case 'fieldset':
+					$id          = (string)($block['id'] ?? '');
+					$gridLines[] = implode(' ', array_fill(0, $columnCount, $id));
+					break;
+
+				case 'row':
+					$line       = (string)($block['line'] ?? '');
+					$normalized = (string)preg_replace('/\s+/', ' ', $line);
+					$columns    = explode(' ', $normalized);
+
+					// Validate each area name — skip the entire row if any name is invalid
+					$valid = true;
+					foreach ($columns as $area) {
+						if (!$this->isValidGridAreaName($area)) {
+							$valid = false;
+							break;
+						}
+					}
+					if (!$valid) {
+						break;
+					}
+
+					// Escape area names for CSS
+					$escapedAreas = array_map(fn (string $area): string => htmlspecialchars($area, ENT_QUOTES, 'UTF-8'), $columns);
+					$gridLines[]  = implode(' ', $escapedAreas);
+					break;
 			}
-
-			// Process section headers: ---Title---
-			if (preg_match(self::HEADER_REGEX, $line)) {
-				$sectionCounter++;
-				$gridLines[] = "section-header-$sectionCounter $extraColumns";
-				continue;
-			}
-
-			// Process regular grid areas
-			$normalized = (string)preg_replace('/\s+/', ' ', $line);
-			$columns    = explode(' ', $normalized);
-
-			// Validate each area name
-			foreach ($columns as $area) {
-				if (!$this->isValidGridAreaName($area)) {
-					continue 2;
-				}
-			}
-
-			// Escape area names for CSS
-			$escapedAreas = array_map(fn (string $area): string => htmlspecialchars($area, ENT_QUOTES, 'UTF-8'), $columns);
-			$gridLines[]  = implode(' ', $escapedAreas);
 		}
 
 		return $gridLines;
@@ -190,43 +309,51 @@ HTML;
 		$sectionCounter = 0;
 		$seenAreas      = [];
 
-		foreach ($this->lines as $line) {
-			// Process dividers: ---
-			if (self::DIVIDER === $line) {
-				$sectionCounter++;
-				$mobileAreas[] = "section-divider-$sectionCounter";
-				continue;
-			}
+		foreach ($this->blocks as $block) {
+			switch ($block['type'] ?? '') {
+				case 'divider':
+					$sectionCounter++;
+					$mobileAreas[] = "section-divider-$sectionCounter";
+					break;
 
-			// Process section headers: ---Title---
-			if (preg_match(self::HEADER_REGEX, $line)) {
-				$sectionCounter++;
-				$mobileAreas[] = "section-header-$sectionCounter";
-				continue;
-			}
+				case 'header':
+					$sectionCounter++;
+					$mobileAreas[] = "section-header-$sectionCounter";
+					break;
 
-			// Process regular grid areas - split into individual rows
-			$normalized = (string)preg_replace('/\s+/', ' ', $line);
-			$columns    = explode(' ', $normalized);
+				case 'fieldset':
+					$mobileAreas[] = (string)($block['id'] ?? '');
+					break;
 
-			foreach ($columns as $area) {
-				// Skip invalid names and dots (empty cells)
-				if (!$this->isValidGridAreaName($area) || $area === '.') {
-					continue;
-				}
+				case 'row':
+					$line       = (string)($block['line'] ?? '');
+					$normalized = (string)preg_replace('/\s+/', ' ', $line);
+					$columns    = explode(' ', $normalized);
 
-				// Skip duplicate areas (e.g., 'id id' becomes just 'id')
-				if (isset($seenAreas[$area])) {
-					continue;
-				}
-				$seenAreas[$area] = true;
+					foreach ($columns as $area) {
+						// Skip invalid names and dots (empty cells)
+						if (!$this->isValidGridAreaName($area) || $area === '.') {
+							continue;
+						}
 
-				$mobileAreas[] = htmlspecialchars($area, ENT_QUOTES, 'UTF-8');
+						// Skip duplicate areas (e.g., 'id id' becomes just 'id')
+						if (isset($seenAreas[$area])) {
+							continue;
+						}
+						$seenAreas[$area] = true;
+
+						$mobileAreas[] = htmlspecialchars($area, ENT_QUOTES, 'UTF-8');
+					}
+					break;
 			}
 		}
 
 		return $mobileAreas;
 	}
+
+	// -------------------------------------------------------------------------
+	// Section HTML
+	// -------------------------------------------------------------------------
 
 	/**
 	 * Build HTML for section headers and dividers.
@@ -277,64 +404,57 @@ HTML;
 		$sections       = [];
 		$sectionCounter = 0;
 
-		foreach ($this->lines as $line) {
-			// Process dividers: ---
-			if (self::DIVIDER === $line) {
-				$sectionCounter++;
-				$sections[] = [
-					'type' => 'divider',
-					'area' => 'section-divider-' . $sectionCounter,
-				];
-				continue;
-			}
+		foreach ($this->blocks as $block) {
+			switch ($block['type'] ?? '') {
+				case 'divider':
+					$sectionCounter++;
+					$sections[] = [
+						'type' => 'divider',
+						'area' => 'section-divider-' . $sectionCounter,
+					];
+					break;
 
-			// Process section headers: ---Title---
-			if (preg_match(self::HEADER_REGEX, $line, $matches)) {
-				$sectionCounter++;
-				$sections[] = [
-					'type'  => 'header',
-					'title' => trim($matches[1]),
-					'area'  => 'section-header-' . $sectionCounter,
-				];
-				continue;
+				case 'header':
+					$sectionCounter++;
+					$sections[] = [
+						'type'  => 'header',
+						'title' => (string)$block['title'],
+						'area'  => 'section-header-' . $sectionCounter,
+					];
+					break;
 			}
 		}
 
 		return $sections;
 	}
 
-	/** @return array<string> */
-	private function cleanupFormGrid(): array
-	{
-		$lines = preg_split('/\r\n|\r|\n/', trim($this->formgrid));
-		$lines = $lines === false ? [] : array_map(trim(...), $lines);
-
-		return array_filter($lines, function (string $line): bool {
-			return $line !== '' && $line !== '0'; // Filter out empty lines
-		});
-	}
+	// -------------------------------------------------------------------------
+	// Layout helpers
+	// -------------------------------------------------------------------------
 
 	private function getColumnCount(): int
 	{
 		$maxColumns = 0;
 
-		foreach ($this->lines as $line) {
-			// Skip dividers and headers - they always span full width
-			if (self::DIVIDER === $line || preg_match(self::HEADER_REGEX, $line)) {
+		foreach ($this->blocks as $block) {
+			// Only row blocks contribute column counts
+			if (($block['type'] ?? '') !== 'row') {
 				continue;
 			}
 
-			// Count columns in the current line
-			$columns    = preg_split('/\s+/', $line) ?: [];
+			$columns    = preg_split('/\s+/', (string)($block['line'] ?? '')) ?: [];
 			$maxColumns = max($maxColumns, count($columns));
 		}
 
-		return $maxColumns;
+		// Floor at 1 column when there's any layout block (e.g. a formgrid that is
+		// only a fieldset, or only dividers) so full-width areas don't emit an
+		// empty template / `repeat(0, 1fr)`. Grids with rows are unaffected.
+		return $this->blocks === [] ? 0 : max(1, $maxColumns);
 	}
 
 	public function hasGrid(): bool
 	{
-		return $this->lines !== [];
+		return $this->blocks !== [];
 	}
 
 	/**
@@ -348,7 +468,7 @@ HTML;
 	 * @param string $content Pre-rendered field HTML
 	 * @param string $extraClass Additional class names for the inner grid element
 	 */
-	public function renderLayout(string $content, string $extraClass = ''): string
+	public function renderLayout(string $content, string $extraClass = '', ?string $gridId = null): string
 	{
 		$classes = trim('formgrid ' . $extraClass);
 
@@ -356,7 +476,7 @@ HTML;
 			return HTMLUtils::element('div', $content, ['class' => $classes]);
 		}
 
-		$gridId = 'formgrid-' . bin2hex(random_bytes(8));
+		$gridId ??= 'formgrid-' . bin2hex(random_bytes(8));
 		$inner  = HTMLUtils::element('div', $this->buildGridSectionHtml() . $content, [
 			'id'    => $gridId,
 			'class' => $classes,
@@ -375,7 +495,12 @@ HTML;
 	public function ensureFieldsIncluded(array $fieldNames): void
 	{
 		$existingFields = $this->getFieldNames();
-		$columnCount    = max(1, $this->getColumnCount());
+		// Fieldset members live in their fieldset's inner grid, not the outer grid —
+		// treat them as already included so they aren't appended as outer rows.
+		foreach ($this->getFieldsets() as $fs) {
+			$existingFields = array_merge($existingFields, $fs['fields']);
+		}
+		$columnCount = max(1, $this->getColumnCount());
 
 		foreach ($fieldNames as $name) {
 			if (!$this->isValidGridAreaName($name) || $name === '.' || in_array($name, $existingFields, true)) {
@@ -383,26 +508,28 @@ HTML;
 			}
 
 			// Add as a full-width row by repeating the name across all columns
-			$this->lines[] = implode(' ', array_fill(0, $columnCount, $name));
+			$line           = implode(' ', array_fill(0, $columnCount, $name));
+			$this->blocks[] = ['type' => 'row', 'line' => $line];
 		}
 	}
 
 	/**
 	 * Get all unique field names referenced in the grid layout.
+	 * Only outer `row` blocks contribute — fieldset inner fields are NOT outer fields.
 	 *
-	 * @return array<string>
+	 * @return list<string>
 	 */
-	private function getFieldNames(): array
+	public function getFieldNames(): array
 	{
 		$fields = [];
 
-		foreach ($this->lines as $line) {
-			// Skip dividers and headers
-			if (self::DIVIDER === $line || preg_match(self::HEADER_REGEX, $line)) {
+		foreach ($this->blocks as $block) {
+			// Only row blocks contribute field names
+			if (($block['type'] ?? '') !== 'row') {
 				continue;
 			}
 
-			$columns = preg_split('/\s+/', $line) ?: [];
+			$columns = preg_split('/\s+/', (string)($block['line'] ?? '')) ?: [];
 			foreach ($columns as $area) {
 				if ($area !== '.' && $this->isValidGridAreaName($area)) {
 					$fields[$area] = true;
@@ -411,6 +538,19 @@ HTML;
 		}
 
 		return array_keys($fields);
+	}
+
+	// -------------------------------------------------------------------------
+	// Utilities
+	// -------------------------------------------------------------------------
+
+	/** @return list<string> */
+	private function cleanupFormGrid(): array
+	{
+		$lines = preg_split('/\r\n|\r|\n/', trim($this->formgrid));
+		$lines = $lines === false ? [] : array_map(trim(...), $lines);
+
+		return array_values(array_filter($lines, fn (string $line): bool => $line !== ''));
 	}
 
 	/**

@@ -51,6 +51,33 @@ class PathResolver
 	}
 
 	/**
+	 * Absolute path to the `tcms` executable, for cron / shell display.
+	 *
+	 * Composer installs must use the generated bin proxy (`vendor/bin/tcms`):
+	 * it sets `_composer_autoload_path` so the CLI finds the project's
+	 * autoloader. The package's own `resources/bin/tcms` has no nested
+	 * `vendor/` to autoload from, so a cron pointed at it would fail.
+	 *
+	 * We detect the Composer layout from the package path structure
+	 * (`<project>/vendor/totalcms/cms`) rather than `isComposerInstall()`:
+	 * that flag depends on `TCMS_PROJECT_ROOT`, which is only defined by the
+	 * CLI / skeleton entry points — NOT during a plain web request — so it
+	 * wrongly reports "zip" while rendering the admin job-queue page. The
+	 * path structure is reliable in every context (mirrors CliApplication's
+	 * own project-root detection).
+	 */
+	public static function tcmsBinary(): string
+	{
+		$vendorTotalcms = dirname(self::packageRoot()); // <project>/vendor/totalcms
+		$vendorDir      = dirname($vendorTotalcms);      // <project>/vendor
+		if (basename($vendorTotalcms) === 'totalcms' && basename($vendorDir) === 'vendor') {
+			return $vendorDir . '/bin/tcms';
+		}
+
+		return self::packageRoot() . '/resources/bin/tcms';
+	}
+
+	/**
 	 * Location of the writable installation config (`tcms.php`).
 	 *
 	 * Composer installs keep it at `<project-root>/config/tcms.php` so the

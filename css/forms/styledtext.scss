@@ -106,6 +106,14 @@
 		cursor         : not-allowed;
 	}
 
+	// Selection-dependent commands (e.g. Link) disable themselves when there's
+	// nothing to act on. Mirror the dimmed look of the upload-disabled buttons.
+	&:disabled {
+		opacity        : 0.4;
+		pointer-events : none;
+		cursor         : not-allowed;
+	}
+
 	&::before {
 		content          : '';
 		display          : block;

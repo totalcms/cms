@@ -24,6 +24,8 @@ use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Action\Admin\Builder\BuilderPreviewAction;
 use TotalCMS\Action\Admin\Builder\BuilderReorderAction;
 use TotalCMS\Action\Admin\ExtensionToggleAction;
+use TotalCMS\Action\Admin\Impersonate\ImpersonateStartAction;
+use TotalCMS\Action\Admin\Impersonate\ImpersonateStopAction;
 use TotalCMS\Action\Admin\LogDownloadAction;
 use TotalCMS\Action\Admin\SyncAction;
 use TotalCMS\Action\Admin\UpdateAction;
@@ -53,6 +55,21 @@ use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
 use TotalCMS\Middleware\UserLocaleMiddleware;
 
 return function (App $app): void {
+	// Stop impersonation — registered BEFORE the /admin group on purpose. FastRoute throws
+	// if a static route is shadowed by a *previously* defined variable route, and the group
+	// ends in a catch-all (`/admin/{path:...}`). Registering this static route first avoids
+	// that shadow error and still wins at dispatch (static beats variable). It lives OUTSIDE
+	// the group so it skips AuthMiddleware's operator-collection gate — an impersonated member
+	// session (and the front-end banner) must always be able to return.
+	//
+	// No CSRF middleware here on purpose: stop() is a no-op unless the caller's OWN session
+	// holds the IMPERSONATOR key, and a forged stop only returns that user to their real
+	// account — it exposes nothing and acts as no one, so CSRF adds no meaningful protection.
+	// It is also the reliable choice: the return control is injected by middleware in the
+	// response phase, where a session-bound CSRF token is not dependably available.
+	$app->post('/admin/impersonate/stop', ImpersonateStopAction::class)
+		->setName('admin-impersonate-stop');
+
 	$app->group('/admin', function (RouteCollectorProxy $group): void {
 		// Display Admin Interface
 		$group->get('', AdminIndexAction::class)->setName('admin-index');
@@ -115,6 +132,11 @@ return function (App $app): void {
 
 		// Extension admin pages (routed by extension system)
 		$group->any('/ext/{vendor}/{name}/{path:.+}', TotalCMS\Action\Extension\ExtensionAdminRouteAction::class)->setName('admin-ext-route')->add(TotalCMS\Middleware\Access\ExtensionAdminAccessMiddleware::class);
+
+		// Start impersonation: super-admin only (enforced by ImpersonationService). Lives in
+		// the admin group — the operator starting it passes AuthMiddleware. (Stop is registered
+		// OUTSIDE the group below so an impersonated member session can still return.)
+		$group->post('/impersonate/{collection}/{userId}', ImpersonateStartAction::class)->setName('admin-impersonate-start');
 
 		// Catch-all 404 route - MUST BE LAST (excludes /admin/ext/ which is handled by extensions)
 		$group->any('/{path:(?!ext/).*}', Admin404Action::class)->setName('admin-404');

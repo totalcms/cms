@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Domain\Export\Service;
 
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
@@ -42,7 +44,7 @@ readonly class ObjectZipper
 
 		// Create temp zip
 		$tempZipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR .
-			'object-' . $collection . '-' . $id . '-' . time() . '.zip';
+			'object-' . $collection . '-' . $id . '-' . uniqid('', true) . '.zip';
 
 		$zip    = new \ZipArchive();
 		$result = $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
@@ -82,7 +84,7 @@ readonly class ObjectZipper
 		$datadir = $this->config->datadir;
 
 		$tempZipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR .
-			'objects-' . $collection . '-' . time() . '.zip';
+			'objects-' . $collection . '-' . uniqid('', true) . '.zip';
 
 		$zip    = new \ZipArchive();
 		$result = $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);

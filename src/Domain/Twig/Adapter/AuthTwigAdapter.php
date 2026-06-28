@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
-use Odan\Session\PhpSession;
+use Odan\Session\SessionInterface;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
+use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
 
@@ -24,13 +27,15 @@ readonly class AuthTwigAdapter
 {
 	public function __construct(
 		private Config $config,
-		private PhpSession $session,
+		private SessionInterface $session,
 		private AccessManager $accessManager,
 		private FileAccessManager $fileAccessManager,
 		private AccessControlService $accessControl,
 		private CollectionLister $collectionLister,
 		private TranslationService $translator,
 		private EditionFeatureService $editionFeatures,
+		private UserValidationService $userValidation,
+		private ImpersonationServiceInterface $impersonation,
 	) {
 	}
 
@@ -401,5 +406,52 @@ readonly class AuthTwigAdapter
 			'id'       => 'passkeys-manager',
 			'data-api' => $this->config->api . '/api',
 		]);
+	}
+
+	/**
+	 * Check whether a user is a super-admin (in the `admin` group of the
+	 * primary auth collection).
+	 *
+	 * When `$userId` is empty the current session user is resolved automatically,
+	 * making the method useful both as an entry-point gate
+	 * (`cms.auth.isSuperAdmin()`) and as a per-target check
+	 * (`cms.auth.isSuperAdmin(page)`).
+	 */
+	public function isSuperAdmin(string $userId = ''): bool
+	{
+		if ($userId === '') {
+			$userId = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+		}
+
+		if ($userId === '') {
+			return false;
+		}
+
+		return $this->userValidation->isSuperAdmin($userId);
+	}
+
+	/**
+	 * Return whether a super-admin is currently impersonating another user.
+	 */
+	public function isImpersonating(): bool
+	{
+		return $this->impersonation->isImpersonating();
+	}
+
+	/**
+	 * Return the id of the currently-impersonated user, or an empty string
+	 * when no impersonation is active.
+	 *
+	 * During impersonation `SessionKeys::AUTH_USER` holds the target's id
+	 * (because `ImpersonationService::start()` calls `SessionLogin::establish()`
+	 * which swaps the session user).
+	 */
+	public function impersonatedUserId(): string
+	{
+		if (!$this->impersonation->isImpersonating()) {
+			return '';
+		}
+
+		return (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
 	}
 }

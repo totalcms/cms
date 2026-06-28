@@ -93,10 +93,7 @@ When you export your current CMS data to JumpStart format:
 - **Collection Settings**: Labels, sorting, and other collection configurations
 
 ### ❌ **What Gets Removed**
-- **Images**: Image files are stripped out (only metadata remains)
-- **Galleries**: Gallery images are removed (gallery structure remains)
-- **Files**: Uploaded files are removed from file objects
-- **Depot**: Uploaded files are removed from depot objects
+- **Binary Uploads**: Image files, gallery images, uploaded files, and depot files are **not included** in JumpStart exports. Image, file, depot, and gallery field values are normalized/referenced but not embedded. If you need to preserve all files and binary data, use the **Export to Zip** option in each collection instead.
 
 ### 🔧 **What Supports Factory Generation**
 - **Images**: Can use `"image": "imageBlur"` factory rules
@@ -213,13 +210,6 @@ During import, certain field types are automatically filtered:
 
 ## Using JumpStart
 
-### Exporting Your Data
-
-1. Go to **[Admin Utils → JumpStart](/admin/utils/jumpstart)**
-2. Click **Export Current Data**
-3. Review and edit the exported JSON file as needed
-4. Save your customized JumpStart definition
-
 ### Importing JumpStart Data
 
 Use the API endpoint to import JumpStart definitions:
@@ -234,6 +224,19 @@ Content-Type: application/json
   // ... your jumpstart definition
 }
 ```
+
+### Exporting Your Data
+
+1. Go to **[Admin Utils → JumpStart](/admin/utils/jumpstart)**
+2. Configure what to include:
+   - **Also include**: Toggle checkboxes for **Objects** (collection data) and **Templates**
+   - **Schemas**: Checklist of schemas to export; use the toggle to select/deselect all
+   - **Collections**: Checklist of collections to export; use the toggle to select/deselect all
+3. By default, all schemas and collections are selected, so clicking **Export** with no changes exports everything (same as before)
+4. Untick items to narrow the export to specific collections and schemas
+5. When a collection is selected with **Objects** included, both the collection definition and its object data are exported
+6. Review and edit the exported JSON file as needed
+7. Save your customized JumpStart definition
 
 ### Demo JumpStart
 

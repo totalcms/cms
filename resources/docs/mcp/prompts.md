@@ -75,10 +75,10 @@ Begin the article now.
 
 ### Object-aware workflow
 
-Pull live collection data into the prompt body using `cms.object()`:
+Pull live collection data into the prompt body using `cms.collection.object()`:
 
 ```twig
-{% set post = cms.object(args.post_id, 'blog') %}
+{% set post = cms.collection.object('blog', args.post_id) %}
 You are editing an existing blog post.
 
 Title:     {{ post.title }}

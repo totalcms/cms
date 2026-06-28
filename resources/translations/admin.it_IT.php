@@ -240,6 +240,9 @@ return [
 
 	// ── Collection Sitemap ──────────────────────────────────────────────────
 	'collection.sitemap_title'             => 'Generatore di sitemap per {collection}',
+	'collection.sitemap_disabled_title'    => 'Sitemap non abilitata',
+	'collection.sitemap_disabled_desc'     => 'Questa raccolta non ha la sitemap abilitata, quindi l\'URL sottostante non verrà servito. Abilitala prima nelle impostazioni della raccolta.',
+	'collection.sitemap_disabled_link'     => 'Modifica impostazioni raccolta',
 	'collection.sitemap_desc'              => 'Le seguenti impostazioni produrranno un URL da inviare ai motori di ricerca o da aggiungere a un indice di sitemap esistente. Tutti i campi sotto sono opzionali. La proprietà data fornita sarà unica per ogni pagina web aggiunta alla sitemap. Tuttavia, i campi frequenza e priorità saranno gli stessi per tutti gli oggetti aggiunti.',
 	'collection.sitemap_date_prop'         => 'Proprietà data per sitemap (deve essere indicizzata)',
 	'collection.sitemap_select_prop'       => 'Seleziona una proprietà',
@@ -585,15 +588,21 @@ return [
 	'jobqueue.stalled_link'         => 'Apri il gestore della coda dei lavori',
 
 	// ── JumpStart ───────────────────────────────────────────────────────────
-	'jumpstart.title'               => 'Dati JumpStart',
-	'jumpstart.desc'                => 'JumpStart è una funzionalità del CMS che permette di importare ed esportare dati.',
-	'jumpstart.docs_link'           => 'Documentazione JumpStart',
-	'jumpstart.demo_title'          => 'Dati demo JumpStart',
-	'jumpstart.export_title'        => 'Esporta dati JumpStart',
-	'jumpstart.export_desc'         => 'Questo esporterà tutti i dati dal CMS.',
-	'jumpstart.import_title'        => 'Importa dati JumpStart',
-	'jumpstart.import_desc'         => 'Importa dati da un file JSON JumpStart esistente.',
-	'jumpstart.logs_link'           => 'Log JumpStart',
+	'jumpstart.title'                   => 'Dati JumpStart',
+	'jumpstart.desc'                    => 'JumpStart è una funzionalità del CMS che permette di importare ed esportare dati.',
+	'jumpstart.docs_link'               => 'Documentazione JumpStart',
+	'jumpstart.demo_title'              => 'Dati demo JumpStart',
+	'jumpstart.export_title'            => 'Esporta dati JumpStart',
+	'jumpstart.export_desc'             => 'Questo esporterà tutti i dati dal CMS.',
+	'jumpstart.export_include'          => 'Includi anche',
+	'jumpstart.export_objects'          => 'Oggetti dalle collezioni selezionate',
+	'jumpstart.export_templates'        => 'Template',
+	'jumpstart.export_schemas'          => 'Schemi',
+	'jumpstart.export_collections'      => 'Collezioni',
+	'jumpstart.export_collections_help' => 'Le collezioni selezionate esportano i loro metadati. Attiva l\'opzione Oggetti qui sotto per esportare anche i loro oggetti.',
+	'jumpstart.import_title'            => 'Importa dati JumpStart',
+	'jumpstart.import_desc'             => 'Importa dati da un file JSON JumpStart esistente.',
+	'jumpstart.logs_link'               => 'Log JumpStart',
 
 	// ── Project Setup ───────────────────────────────────────────────────────
 	'setup.actions_title'            => 'Azioni di configurazione progetto',
@@ -1061,6 +1070,11 @@ return [
 	'dashboard.welcome'                => 'Benvenuto in Total CMS 3!',
 	'dashboard.subtitle'               => 'Gestisci contenuti, schemi e template tutti in un unico posto.',
 	'dashboard.simulation_warning'     => 'Stai simulando la versione <strong>{edition}</strong>.',
+	'dashboard.automations'            => 'Automazioni',
+	'dashboard.enabled'                => 'Abilitato',
+	'dashboard.disabled'               => 'Disabilitato',
+	'dashboard.never_run'              => 'Mai eseguito',
+	'dashboard.view_all_automations'   => 'Visualizza tutte le automazioni',
 	'dashboard.disable_simulation'     => 'Disabilita simulazione',
 
 	// ── Dashboard Stats ─────────────────────────────────────────────────────

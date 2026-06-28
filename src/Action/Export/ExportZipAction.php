@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Action\Export;
 
 use Nyholm\Psr7\Stream;
@@ -30,7 +32,8 @@ readonly class ExportZipAction
 
 		try {
 			if ($idsParam !== '') {
-				$ids      = array_values(array_filter(array_map('trim', explode(',', $idsParam)), static fn (string $id): bool => $id !== ''));
+				$ids = array_values(array_filter(array_map(trim(...), explode(',', $idsParam)), static fn (string $id): bool => $id !== ''));
+
 				$zipPath  = $this->objectZipper->createObjectsZip($collection, $ids);
 				$filename = $this->objectZipper->getObjectsZipFilename($collection);
 			} else {
@@ -39,32 +42,59 @@ readonly class ExportZipAction
 			}
 
 			if (!file_exists($zipPath)) {
-				$response = $response->withStatus(500);
-				$response->getBody()->write('Failed to create zip file');
+				$response = $response->withStatus(500)
+					->withHeader('Content-Type', 'application/json');
+				$response->getBody()->write((string)json_encode([
+					'error'   => 'Export failed.',
+					'message' => 'Failed to create zip file',
+				]));
 
 				return $response;
 			}
 
-			$zipContent = file_get_contents($zipPath);
+			// Stream the zip file directly from disk rather than reading it fully
+			// into memory — prevents memory exhaustion for large collections.
+			$fileHandle = fopen($zipPath, 'r');
 
-			// Clean up temporary file
+			if ($fileHandle === false) {
+				$response = $response->withStatus(500)
+					->withHeader('Content-Type', 'application/json');
+				$response->getBody()->write((string)json_encode([
+					'error'   => 'Export failed.',
+					'message' => 'Failed to read zip file',
+				]));
+
+				return $response;
+			}
+
+			$fileSize = filesize($zipPath);
+
+			// Remove the temp zip from disk now that the read handle is open: on POSIX
+			// the data stays available through the handle for streaming, and the inode
+			// is freed when the stream closes — so the temp file isn't leaked. This
+			// relies on POSIX unlink semantics; named temp files cannot be removed while
+			// open on Windows, but T3 targets POSIX servers only.
 			unlink($zipPath);
 
-			if ($zipContent === false) {
-				$response = $response->withStatus(500);
-				$response->getBody()->write('Failed to read zip file');
+			$response = $response->withHeader('Content-Type', 'application/zip')
+				->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $filename));
 
-				return $response;
+			if ($fileSize !== false) {
+				$response = $response->withHeader('Content-Length', (string)$fileSize);
 			}
 
-			$response = $response->withHeader('Content-Type', 'application/zip')
-				->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $filename))
-				->withHeader('Content-Length', (string)strlen($zipContent));
-
-			return $response->withBody(Stream::create($zipContent));
+			return $response->withBody(Stream::create($fileHandle));
 		} catch (\RuntimeException $e) {
-			$response = $response->withStatus(500);
-			$response->getBody()->write('Error creating zip: ' . $e->getMessage());
+			// "No objects found" is a client error (bad/non-existent IDs) → 400.
+			$isClientError = str_starts_with($e->getMessage(), 'No objects found');
+			$status        = $isClientError ? 400 : 500;
+
+			$response = $response->withStatus($status)
+				->withHeader('Content-Type', 'application/json');
+			$response->getBody()->write((string)json_encode([
+				'error'   => $isClientError ? 'No objects found.' : 'Export failed.',
+				'message' => $e->getMessage(),
+			]));
 
 			return $response;
 		}

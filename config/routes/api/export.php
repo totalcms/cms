@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Export;
+use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
@@ -21,9 +22,11 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->get('/schemas/{schema}', Export\ExportSchemaAction::class)->setName('export-schema')->add(SchemaAccessMiddleware::class);
 	})->add(AuthMiddleware::class);
 
-	// JumpStart export routes — support API key auth for CLI push/pull
+	// JumpStart export routes — super-admin only; support API key auth for CLI push/pull.
+	// AdminOnlyMiddleware (inner) runs after DualAuthMiddleware (outer) has established auth.
+	// API-key callers bypass BaseAccessMiddleware's group check so CLI/push-pull keep working.
 	$app->group('/export', function (RouteCollectorProxy $group): void {
 		$group->get('/jumpstart', Export\ExportJumpStartAction::class)->setName('export-jumpstart');
 		$group->get('/jumpstart/demo', Export\ExportJumpStartDemoAction::class)->setName('export-jumpstart-demo');
-	})->add(DualAuthMiddleware::class);
+	})->add(AdminOnlyMiddleware::class)->add(DualAuthMiddleware::class);
 };

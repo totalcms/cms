@@ -38,6 +38,14 @@ export default class FieldVisibility {
 			// Skip fields without visibility settings
 			if (!visibility || !visibility.watch) return;
 
+			// A field inside a deck-table row belongs to that row's own scoped init
+			// (DeckTableField.initRowVisibility). Skip it in any other scope — e.g.
+			// the top-level form scan — otherwise, with multiple rows sharing field
+			// names, its `watch` would resolve against the first row's field and
+			// every row would react to row one.
+			const ownerRow = fieldElement.closest('.deck-table-row');
+			if (ownerRow && ownerRow !== container) return;
+
 			const watchField = visibility.watch;
 
 			// Find the watched field element within the scoped container
@@ -72,14 +80,14 @@ export default class FieldVisibility {
 		if (!watchedField) {
 			// If watched field not found, hide by default
 			const field = fields.find(f => f.container === fieldElement);
-			if (field) this.setVisibility(field, false);
+			if (field) this.setVisibility(field, false, visibility.mode);
 			return;
 		}
 
 		// If the watched field is hidden, this field should also be hidden
 		if (!watchedField.isVisible()) {
 			const field = fields.find(f => f.container === fieldElement);
-			if (field) this.setVisibility(field, false);
+			if (field) this.setVisibility(field, false, visibility.mode);
 			return;
 		}
 
@@ -91,7 +99,7 @@ export default class FieldVisibility {
 		// Get the field object and toggle visibility
 		const field = fields.find(f => f.container === fieldElement);
 		if (field) {
-			this.setVisibility(field, isVisible);
+			this.setVisibility(field, isVisible, visibility.mode);
 		}
 	}
 
@@ -103,14 +111,23 @@ export default class FieldVisibility {
 	// edit because their getValue() returns a fresh object each call, defeating
 	// the storedValue === getValue() guard).
 	//-------------------------
-	setVisibility(field, isVisible) {
+	setVisibility(field, isActive, mode = 'hide') {
+		if (mode === 'disable') {
+			const wasActive = !field.container.classList.contains('field-disabled');
+			isActive ? field.enable() : field.disable();
+			if (wasActive !== isActive) {
+				field.container.dispatchEvent(new Event('visibility-change', { bubbles: true }));
+			}
+			return;
+		}
+
 		// Ask the field directly — both TotalField and SimpleForm wrappers
 		// toggle `field-hidden` (the legacy `cms-hide` class was never set by
 		// either path, so the previous read here always returned `true`).
 		const wasVisible = field.isVisible();
-		isVisible ? field.show() : field.hide();
+		isActive ? field.show() : field.hide();
 
-		if (wasVisible !== isVisible) {
+		if (wasVisible !== isActive) {
 			field.container.dispatchEvent(new Event('visibility-change', { bubbles: true }));
 		}
 	}

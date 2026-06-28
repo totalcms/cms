@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Action\Export;
 
 use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Admin\Form\SelectionFilter;
+use TotalCMS\Domain\JumpStart\Data\JumpStartExportOptions;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Support\Config;
 
@@ -28,9 +32,21 @@ readonly class ExportJumpStartAction
 		// Selective export mode for CLI push/pull
 		$mode = $queryParams['mode'] ?? 'full';
 
-		$jumpStartData = $mode === 'sync'
-			? $this->jumpStartExporter->exportSyncData()
-			: $this->jumpStartExporter->exportCurrentData();
+		if ($mode === 'sync') {
+			$jumpStartData = $this->jumpStartExporter->exportSyncData();
+		} elseif (!isset($queryParams['configured'])) {
+			$jumpStartData = $this->jumpStartExporter->exportCurrentData(); // back-compat full export
+		} else {
+			$include          = SelectionFilter::ticked($queryParams, 'include');
+			$collectionFilter = SelectionFilter::ticked($queryParams, 'collections');
+
+			$jumpStartData = $this->jumpStartExporter->exportCurrentData(new JumpStartExportOptions(
+				schemaFilter: SelectionFilter::ticked($queryParams, 'schemas'),
+				collectionFilter: $collectionFilter,
+				objectFilter: in_array('objects', $include, true) ? $collectionFilter : [],
+				templateFilter: in_array('templates', $include, true) ? null : [],
+			));
+		}
 
 		$date = date('Ymd-His');
 

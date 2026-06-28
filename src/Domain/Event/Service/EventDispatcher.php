@@ -29,6 +29,9 @@ final class EventDispatcher
 	/** @var array<string,bool> Collections currently mid-import — object.* events skip these */
 	private array $suspendedImports = [];
 
+	/** @var array<string,bool> Collections with suspended per-object index rebuilds (bulk-delete batch) */
+	private array $suspendedIndexCollections = [];
+
 	public function __construct(
 		private readonly LoggerInterface $logger,
 	) {
@@ -62,6 +65,36 @@ final class EventDispatcher
 	public function isImportSuspended(string $collection): bool
 	{
 		return isset($this->suspendedImports[$collection]);
+	}
+
+	/**
+	 * Suspend per-object index rebuilds for a collection during a bulk-delete
+	 * batch. While suspended, IndexBuildListener skips the per-object rebuild
+	 * on `object.deleted` and defers to the single rebuild fired by
+	 * `bulk.deleted` at the end of the batch.
+	 *
+	 * Must be paired with {@see resumeIndexRebuild()} (the `bulk.deleted`
+	 * handler in IndexBuildListener calls this automatically).
+	 */
+	public function suspendIndexRebuild(string $collection): void
+	{
+		$this->suspendedIndexCollections[$collection] = true;
+	}
+
+	/**
+	 * Resume per-object index rebuilds for a collection.
+	 */
+	public function resumeIndexRebuild(string $collection): void
+	{
+		unset($this->suspendedIndexCollections[$collection]);
+	}
+
+	/**
+	 * Check if per-object index rebuilds are suspended for a collection.
+	 */
+	public function isIndexRebuildSuspended(string $collection): bool
+	{
+		return isset($this->suspendedIndexCollections[$collection]);
 	}
 
 	/**

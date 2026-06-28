@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
+use TotalCMS\Domain\Automation\Service\AutomationLoader;
+use TotalCMS\Domain\Automation\Service\AutomationRunReader;
 use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Util\NestedFileTree;
@@ -13,6 +15,7 @@ use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Data\JobQueueHealthData;
@@ -67,6 +70,9 @@ readonly class AdminTwigAdapter
 		private JobQueueHealth $jobQueueHealth,
 		private TranslationService $translator,
 		private EditionFeatureService $editionFeatures,
+		private AutomationLoader $automationLoader,
+		private AutomationRunReader $automationRunReader,
+		private ExtensionStateRepository $extensionStateRepository,
 	) {
 	}
 
@@ -142,9 +148,13 @@ readonly class AdminTwigAdapter
 	 */
 	public function tcmsCommandPrefix(): string
 	{
-		$phpPath    = defined(PHP_BINARY) ? PHP_BINARY : 'php';
-		$installDir = PathResolver::packageRoot();
-		$command    = $installDir . '/resources/bin/tcms';
+		$phpPath = defined(PHP_BINARY) ? PHP_BINARY : 'php';
+		// Composer installs must use the generated bin proxy (vendor/bin/tcms); zip
+		// installs use the shipped resources/bin/tcms. PathResolver::tcmsBinary()
+		// picks the right one from the package path structure — unlike
+		// isComposerInstall(), it does not depend on TCMS_PROJECT_ROOT being
+		// defined, which it isn't during a plain web request.
+		$command = PathResolver::tcmsBinary();
 
 		// Quote path if it contains spaces
 		$quotedCommand = str_contains($command, ' ') ? '"' . $command . '"' : $command;
@@ -715,6 +725,201 @@ readonly class AdminTwigAdapter
 
 		// Return only the 10 most recent
 		return array_slice($recentObjects, 0, 10);
+	}
+
+	/**
+	 * Aggregated dashboard alerts — one entry per actionable condition.
+	 *
+	 * Returns `[]` when everything is healthy (all-clear). Each entry:
+	 *   level    : 'warning'|'error'|'info'
+	 *   message  : human-readable description
+	 *   link     : ?string — relative admin path (no leading slash) or null
+	 *   linkText : ?string — CTA label or null
+	 *
+	 * Never forces a cache refresh; reads cached status only so this is cheap
+	 * on every page load.
+	 *
+	 * Edition simulation is intentionally excluded — the template owns that
+	 * alert (it requires the raw simulation flag from the request context which
+	 * is not cleanly available here without contorting the adapter).
+	 *
+	 * @return list<array{level:string,message:string,link:?string,linkText:?string}>
+	 */
+	public function dashboardAlerts(): array
+	{
+		$alerts = [];
+
+		// 1. Update available
+		try {
+			$update = $this->updateChecker->checkForUpdate(false);
+			if ($update->available) {
+				$alerts[] = [
+					'level'    => 'warning',
+					'message'  => "Total CMS {$update->version} is available.",
+					'link'     => 'updates',
+					'linkText' => 'View update',
+				];
+			}
+		} catch (\Throwable) {
+			// Update check is non-critical — skip silently
+		}
+
+		// 2. License / version-authorization
+		$licenseData = $this->licenseStatus->getSidebarStatus();
+		if ($licenseData->showIcon) {
+			$alerts[] = [
+				'level'    => $this->mapLicenseSeverity($licenseData->severity),
+				'message'  => $licenseData->tooltip !== '' ? $licenseData->tooltip : 'License requires attention.',
+				'link'     => 'license',
+				'linkText' => 'License Manager',
+			];
+		}
+
+		// 3. Job queue stalled
+		$queueHealth = $this->jobQueueHealth->status();
+		if ($queueHealth->stalled) {
+			$alerts[] = [
+				'level'    => 'warning',
+				'message'  => "Job queue appears stalled — {$queueHealth->pendingCount} job(s) waiting over {$queueHealth->thresholdMinutes} minutes.",
+				'link'     => 'jobs',
+				'linkText' => 'Job Queue',
+			];
+		}
+
+		// 4. Failed automations
+		$latestRuns  = $this->automationRunReader->latestPerAutomation();
+		$failedCount = 0;
+		foreach ($latestRuns as $run) {
+			if (($run['status'] ?? '') === 'failed') {
+				$failedCount++;
+			}
+		}
+
+		if ($failedCount > 0) {
+			$noun     = $failedCount === 1 ? 'automation' : 'automations';
+			$alerts[] = [
+				'level'    => 'warning',
+				'message'  => "{$failedCount} {$noun} failed on last run.",
+				'link'     => 'automations',
+				'linkText' => 'View automations',
+			];
+		}
+
+		// 5. Extension boot failures (enabled extensions only)
+		$failedExtensions = [];
+		foreach ($this->extensionStateRepository->loadAll() as $extId => $state) {
+			if ($state->enabled && $state->error !== null) {
+				$failedExtensions[] = $extId;
+			}
+		}
+
+		if ($failedExtensions !== []) {
+			$count    = count($failedExtensions);
+			$noun     = $count === 1 ? 'extension' : 'extensions';
+			$alerts[] = [
+				'level'    => 'warning',
+				'message'  => "{$count} {$noun} failed to load: " . implode(', ', $failedExtensions) . '.',
+				'link'     => 'extensions',
+				'linkText' => 'View extensions',
+			];
+		}
+
+		return $alerts;
+	}
+
+	/**
+	 * Map a LicenseStatusData severity string to a dashboardAlerts level value.
+	 * LicenseStatusData uses 'info'|'warning'|'error' which already matches our
+	 * alert level vocabulary, but we validate to be safe.
+	 */
+	private function mapLicenseSeverity(string $severity): string
+	{
+		return match ($severity) {
+			'error'   => 'error',
+			'warning' => 'warning',
+			default   => 'info',
+		};
+	}
+
+	/**
+	 * Dashboard automation list — all enabled automations combined with their
+	 * latest run status.
+	 *
+	 * Each entry:
+	 *   id         : automation object id
+	 *   name       : human-readable name
+	 *   trigger    : type of first trigger ('schedule'|'webhook'|'event'|'')
+	 *   enabled    : always true (only enabled automations are returned)
+	 *   lastResult : 'success'|'failed'|null (null = never run)
+	 *   lastRunAt  : Unix timestamp of last run, or null
+	 *   nextRunAt  : always null (computation deferred — non-trivial for cron)
+	 *
+	 * Returns `[]` when there are no enabled automations.
+	 *
+	 * @return list<array{id:string,name:string,trigger:string,enabled:bool,lastResult:?string,lastRunAt:?int,nextRunAt:?int}>
+	 */
+	public function dashboardAutomations(): array
+	{
+		$objects = $this->automationLoader->enabled();
+		if ($objects === []) {
+			return [];
+		}
+
+		$latestRuns = $this->automationRunReader->latestPerAutomation();
+
+		$result = [];
+		foreach ($objects as $object) {
+			$id = $object->id;
+
+			// Trigger type via a mixed-typed helper: the Collection's generic
+			// (PropertyData) conflicts with the runtime value (a raw deck array),
+			// and a helper param avoids a @var tag that rector strips each clean.
+			$triggerType = $this->firstTriggerType($object->properties->get('triggers'));
+
+			// Run reader data
+			$run        = $latestRuns[$id] ?? null;
+			$lastResult = null;
+			$lastRunAt  = null;
+
+			if ($run !== null) {
+				$rawStatus  = $run['status'] ?? null;
+				$lastResult = is_string($rawStatus) && in_array($rawStatus, ['success', 'failed'], true)
+					? $rawStatus
+					: null;
+				$rawRunAt  = $run['runAt'] ?? null;
+				$lastRunAt = is_int($rawRunAt) ? $rawRunAt : (is_numeric($rawRunAt) ? (int)$rawRunAt : null);
+			}
+
+			$result[] = [
+				'id'         => $id,
+				'name'       => (string)$object->properties->get('name'),
+				'trigger'    => $triggerType,
+				'enabled'    => true,
+				'lastResult' => $lastResult,
+				'lastRunAt'  => $lastRunAt,
+				'nextRunAt'  => null,
+			];
+		}
+
+		return $result;
+	}
+
+	/**
+	 * First trigger's `type` from an automation's raw `triggers` value.
+	 *
+	 * Typed `mixed` deliberately: the automation object's Illuminate Collection
+	 * is generically typed as holding PropertyData, but the `triggers` deck is
+	 * stored as a raw array at runtime, so the value is handled dynamically.
+	 */
+	private function firstTriggerType(mixed $triggers): string
+	{
+		if (!is_array($triggers) || $triggers === []) {
+			return '';
+		}
+
+		$first = array_values($triggers)[0];
+
+		return is_array($first) ? (string)($first['type'] ?? '') : '';
 	}
 
 	// -------------------------

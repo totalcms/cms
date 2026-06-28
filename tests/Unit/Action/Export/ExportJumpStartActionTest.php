@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use TotalCMS\Action\Export\ExportJumpStartAction;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
+use TotalCMS\Domain\JumpStart\Data\JumpStartExportOptions;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Support\Config;
 
@@ -222,5 +223,57 @@ final class ExportJumpStartActionTest extends TestCase
 		$result = ($this->action)($this->request, $this->response);
 
 		$this->assertSame($responseWithBody, $result);
+	}
+
+	public function testConfiguredMarkerNarrowsToSelectedCollectionsObjectsOnTemplatesOff(): void
+	{
+		$this->request->method('getQueryParams')->willReturn([
+			'configured'  => '1',
+			'schemas'     => [],
+			'collections' => ['blog', 'team'],
+			'include'     => ['objects'], // templates absent
+		]);
+
+		$jumpStartData = $this->createMock(JumpStartData::class);
+		$jumpStartData->method('streamJsonToFile');
+
+		$captured = null;
+		$this->jumpStartExporter->expects($this->once())
+			->method('exportCurrentData')
+			->with($this->callback(function (?JumpStartExportOptions $opts) use (&$captured): bool {
+				$captured = $opts;
+
+				return true;
+			}))
+			->willReturn($jumpStartData);
+
+		$this->response->method('withHeader')->willReturnSelf();
+		$this->response->method('withBody')->willReturnSelf();
+
+		($this->action)($this->request, $this->response);
+
+		$this->assertInstanceOf(JumpStartExportOptions::class, $captured);
+		$this->assertSame(['blog', 'team'], $captured->collectionFilter);
+		$this->assertSame(['blog', 'team'], $captured->objectFilter);
+		$this->assertSame([], $captured->schemaFilter);
+		$this->assertSame([], $captured->templateFilter);
+	}
+
+	public function testNoConfiguredMarkerCallsExportCurrentDataWithNull(): void
+	{
+		$this->request->method('getQueryParams')->willReturn([]);
+
+		$jumpStartData = $this->createMock(JumpStartData::class);
+		$jumpStartData->method('streamJsonToFile');
+
+		$this->jumpStartExporter->expects($this->once())
+			->method('exportCurrentData')
+			->with($this->isNull())
+			->willReturn($jumpStartData);
+
+		$this->response->method('withHeader')->willReturnSelf();
+		$this->response->method('withBody')->willReturnSelf();
+
+		($this->action)($this->request, $this->response);
 	}
 }

@@ -32,7 +32,7 @@ The second parameter accepts an options object:
 
 ```twig
 {{ cms.form.report('blog', {
-    include: 'published:true',
+    include: 'draft:false',
     exclude: 'draft:true',
 }) }}
 ```
@@ -48,9 +48,9 @@ With datalist, users see suggestions but can still type freely:
 ```twig
 {{ cms.form.report('blog', {
     includeOptions: [
-        'published:true',
+        'draft:false',
         'featured:true',
-        'category:news',
+        'categories:news',
         'author:admin',
     ],
     excludeOptions: [
@@ -67,9 +67,9 @@ Set `includeSelect` or `excludeSelect` to `true` to lock the filter to predefine
 ```twig
 {{ cms.form.report('blog', {
     includeOptions: [
-        'published:true',
+        'draft:false',
         'featured:true',
-        'category:news',
+        'categories:news',
     ],
     includeSelect: true,
     excludeOptions: [
@@ -85,7 +85,7 @@ You can mix modes — for example, a locked include select with a flexible exclu
 ```twig
 {{ cms.form.report('blog', {
     includeOptions: [
-        'published:true',
+        'draft:false',
         'featured:true',
     ],
     includeSelect: true,
@@ -105,9 +105,9 @@ For more descriptive items, use `{value, label}` objects. Works with both datali
 ```twig
 {{ cms.form.report('blog', {
     includeOptions: [
-        { value: 'published:true', label: 'Published posts' },
+        { value: 'draft:false', label: 'Published posts' },
         { value: 'featured:true', label: 'Featured posts' },
-        { value: 'category:news,published:true', label: 'Published news' },
+        { value: 'categories:news,draft:false', label: 'Published news' },
         { value: 'author:admin,featured:true', label: 'Featured by admin' },
     ],
     includeSelect: true,
@@ -138,8 +138,8 @@ You can mix plain strings and label/value objects in the same array:
 The include and exclude filters use the format `field:value` with multiple filters separated by commas:
 
 ```
-published:true                     # Single filter
-category:news,featured:true        # Multiple filters (AND)
+draft:false                        # Single filter
+categories:news,featured:true      # Multiple filters (AND)
 ```
 
 ## How It Works

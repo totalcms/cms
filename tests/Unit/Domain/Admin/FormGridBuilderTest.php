@@ -11,43 +11,6 @@ use TotalCMS\Domain\Admin\FormGridBuilder;
  * break form layouts across the admin.
  */
 describe('FormGridBuilder', function (): void {
-	test('toCssGridAreas produces grid-template-areas + columns from a simple layout', function (): void {
-		$builder = new FormGridBuilder("title title\ndate author");
-
-		$css = $builder->toCssGridAreas();
-
-		expect($css)->toContain("'title title'");
-		expect($css)->toContain("'date author'");
-		expect($css)->toContain('grid-template-columns: repeat(2, 1fr);');
-	});
-
-	test('toCssGridAreas returns empty string for empty input', function (): void {
-		$builder = new FormGridBuilder('');
-
-		expect($builder->toCssGridAreas())->toBe('');
-	});
-
-	test('toCssGridAreas handles single-column layouts', function (): void {
-		$builder = new FormGridBuilder("title\ncontent");
-
-		$css = $builder->toCssGridAreas();
-
-		expect($css)->toContain("'title'");
-		expect($css)->toContain("'content'");
-		expect($css)->toContain('grid-template-columns: repeat(1, 1fr);');
-	});
-
-	test('toCssGridAreas converts dividers and section headers into named grid rows', function (): void {
-		$builder = new FormGridBuilder("title date\n---\nimage image\n---URL Setup---\nurl slug");
-
-		$css = $builder->toCssGridAreas();
-
-		expect($css)->toContain('section-divider-1');
-		expect($css)->toContain('section-header-2');
-		expect($css)->toContain("'image image'");
-		expect($css)->toContain("'url slug'");
-	});
-
 	test('toStyleTag generates mobile-first responsive CSS with container queries', function (): void {
 		$builder = new FormGridBuilder("title date\ncontent content");
 
@@ -116,13 +79,13 @@ describe('FormGridBuilder', function (): void {
 
 		$builder->ensureFieldsIncluded(['title', 'date', 'content', 'summary']);
 
-		$css = $builder->toCssGridAreas();
+		$style = $builder->toStyleTag('form-test');
 
 		// title/date stay in their original row; content and summary each get
 		// a full-width row repeating their name across every column.
-		expect($css)->toContain("'title date'");
-		expect($css)->toContain("'content content'");
-		expect($css)->toContain("'summary summary'");
+		expect($style)->toContain("'title date'");
+		expect($style)->toContain("'content content'");
+		expect($style)->toContain("'summary summary'");
 	});
 
 	test('ensureFieldsIncluded leaves already-present fields alone', function (): void {
@@ -130,10 +93,10 @@ describe('FormGridBuilder', function (): void {
 
 		$builder->ensureFieldsIncluded(['title', 'date']);
 
-		$css = $builder->toCssGridAreas();
+		$style = $builder->toStyleTag('form-test');
 
-		expect(substr_count($css, 'title'))->toBe(1);
-		expect(substr_count($css, 'date'))->toBe(1);
+		expect(substr_count($style, 'title'))->toBe(2); // desktop + mobile
+		expect(substr_count($style, 'date'))->toBe(2);  // desktop + mobile
 	});
 
 	test('ensureFieldsIncluded ignores empty cell markers and invalid names', function (): void {
@@ -141,22 +104,22 @@ describe('FormGridBuilder', function (): void {
 
 		$builder->ensureFieldsIncluded(['.', '123invalid', 'valid_name']);
 
-		$css = $builder->toCssGridAreas();
+		$style = $builder->toStyleTag('form-test');
 
-		expect($css)->toContain("'valid_name valid_name'");
+		expect($style)->toContain("'valid_name valid_name'");
 		// The `.` marker and invalid-name row should not appear as cells
 		// beyond their normal empty-cell usage.
-		expect($css)->not->toContain("'123invalid 123invalid'");
+		expect($style)->not->toContain("'123invalid 123invalid'");
 	});
 
 	test('invalid area names on a line cause that line to be skipped', function (): void {
 		$builder = new FormGridBuilder("title date\n123invalid 123invalid\ncontent content");
 
-		$css = $builder->toCssGridAreas();
+		$style = $builder->toStyleTag('form-test');
 
-		expect($css)->toContain("'title date'");
-		expect($css)->toContain("'content content'");
-		expect($css)->not->toContain('123invalid');
+		expect($style)->toContain("'title date'");
+		expect($style)->toContain("'content content'");
+		expect($style)->not->toContain('123invalid');
 	});
 
 	test('hasGrid reports whether any usable layout lines were provided', function (): void {
@@ -214,5 +177,30 @@ describe('FormGridBuilder', function (): void {
 		expect($m1[1] ?? '')->not->toBe('');
 		expect($m2[1] ?? '')->not->toBe('');
 		expect($m1[1])->not->toBe($m2[1]);
+	});
+
+	test('a fieldset occupies a full-width row in the outer desktop areas', function (): void {
+		$b   = new FormGridBuilder("id name\n[[\na b\nc d\n]]");
+		$css = $b->toStyleTag('grid-x');
+		// outer grid is 2 columns; the fieldset area spans both:
+		expect($css)->toContain("'formgrid-fieldset-1 formgrid-fieldset-1'");
+		// inner member rows are NOT in the outer template:
+		expect($css)->not->toContain("'a b'");
+	});
+
+	test('toNestedStyleTag emits grid areas without a container-type declaration', function (): void {
+		$inner = (new FormGridBuilder("a b\nc d"));
+		$css   = $inner->toNestedStyleTag('fs-1');
+		expect($css)->toContain('#fs-1')->toContain("'a b'")->not->toContain('container-type');
+	});
+
+	test('a fieldset-only formgrid emits a valid full-width desktop area (no repeat(0))', function (): void {
+		$b   = new FormGridBuilder("[[ Legend\na b\nc d\n]]");
+		$css = $b->toStyleTag('grid-z');
+		// no outer rows, but the fieldset still gets a 1-column full-width area:
+		expect($css)
+			->toContain("'formgrid-fieldset-1'")
+			->toContain('repeat(1, 1fr)')
+			->not->toContain('repeat(0');
 	});
 });

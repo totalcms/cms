@@ -78,8 +78,8 @@ class TotalForm implements \Stringable
 			'datetime',
 		],
 		'List (Array) Fields' => [
+			'checklist',
 			'list',
-			'multicheckbox',
 			'multiselect',
 		],
 		'Special Fields' => [
@@ -129,6 +129,7 @@ class TotalForm implements \Stringable
 		'localizedtext'       => 'localizedtext',
 		'localizedtextarea'   => 'localizedtext',
 		'localizedstyledtext' => 'localizedtext',
+		'checklist'           => 'array',
 		'multicheckbox'       => 'array',
 		'multiselect'         => 'array',
 		'number'              => 'number',
@@ -147,6 +148,22 @@ class TotalForm implements \Stringable
 		'toggle'              => 'boolean',
 		'url'                 => 'url',
 	];
+
+	/**
+	 * Field-type aliases: old name => canonical name. Populated when the type is renamed.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function getFieldAliases(): array
+	{
+		return ['multicheckbox' => 'checklist'];
+	}
+
+	/** Resolve a field-type alias to its canonical name (e.g. multicheckbox → checklist). */
+	public static function canonicalFieldType(string $fieldType): string
+	{
+		return self::getFieldAliases()[$fieldType] ?? $fieldType;
+	}
 
 	/** @var array<string,class-string> Extension-registered field types: name => FQCN */
 	private static array $extensionFieldTypes = [];
@@ -228,11 +245,11 @@ class TotalForm implements \Stringable
 		'id',
 		'image',
 		'json',
+		'checklist',
 		'list',
 		'localizedtext',
 		'localizedtextarea',
 		'localizedstyledtext',
-		'multicheckbox',
 		'multiselect',
 		'number',
 		'password',
@@ -596,6 +613,23 @@ class TotalForm implements \Stringable
 		return array_map(fn (CollectionData $c): string => $c->id, $collections);
 	}
 
+	/**
+	 * Get a list of all collections as {value, label} pairs.
+	 * Used by the "collectionIds" propertyOptions source so select/multiselect
+	 * fields show human names instead of bare ids.
+	 *
+	 * @return array<int,array{value: string, label: string}>
+	 */
+	public function collectionIdListWithLabels(): array
+	{
+		$collections = $this->collectionLister->listAllCollections();
+
+		return array_values(array_map(fn (CollectionData $c): array => [
+			'value' => $c->id,
+			'label' => $c->name !== '' ? $c->name : $c->id,
+		], $collections));
+	}
+
 	protected ?TemplateLister $templateLister                  = null;
 	protected ?PageMiddlewareRegistry $pageMiddlewareRegistry  = null;
 	protected ?DataViewLister $dataViewLister                  = null;
@@ -843,16 +877,40 @@ class TotalForm implements \Stringable
 			}
 		}
 
-		$content = '';
+		$content   = '';
+		$fieldsets = [];
 
-		// If using formgrid, inject section headers and dividers
 		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
 			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
 			$content .= $gridBuilder->buildGridSectionHtml();
+			$fieldsets   = $gridBuilder->getFieldsets();
 		}
 
-		foreach ($this->fields as $field) {
-			$content .= $field->build();
+		// Map: field name => owning fieldset index (members render inside, not flat).
+		$memberOf = [];
+		foreach ($fieldsets as $idx => $fs) {
+			foreach ($fs['fields'] as $name) {
+				$memberOf[$name] = $idx;
+			}
+		}
+
+		/** @var array<int,string> $buckets */
+		$buckets = array_fill(0, count($fieldsets), '');
+		foreach ($this->fields as $name => $field) {
+			$html = $field->build();
+			if (isset($memberOf[$name])) {
+				$buckets[$memberOf[$name]] .= $html;
+			} else {
+				$content .= $html; // flat outer field, as today
+			}
+		}
+
+		// Fieldsets are appended after the flat fields in DOM order; their visual
+		// position comes from the outer grid-area, not source order (the same way
+		// section headers/dividers already render ahead of all fields).
+		$renderer = new FieldsetRenderer();
+		foreach ($fieldsets as $idx => $fs) {
+			$content .= $renderer->render($fs['legend'], $buckets[$idx], $fs['inner'], '', $fs['id']);
 		}
 
 		return $content;
@@ -905,6 +963,65 @@ class TotalForm implements \Stringable
 		// Remove any keys that are not needed for the field
 		// Since PHP will unknown named parameters
 		return array_filter($properties, fn ($key): bool => !in_array($key, TotalForm::PROPERTY_FIELDS), ARRAY_FILTER_USE_KEY);
+	}
+
+	/**
+	 * Extract a flat, de-duplicated list of tag strings from indexed media objects.
+	 * Image values are single image arrays; gallery values are maps of
+	 * imageId => imageData. Used by the `mediaTags` propertyOptions source.
+	 *
+	 * @param array<int,array<string,mixed>> $objects indexed object summaries
+	 * @param string                         $field   the image/gallery property name
+	 * @param string                         $type    'image' or 'gallery'
+	 *
+	 * @return array<int,string>
+	 */
+	public static function extractMediaTags(array $objects, string $field, string $type): array
+	{
+		$images = collect($objects)
+			->pluck($field)
+			->filter(fn ($value): bool => is_array($value));
+
+		if ($type === 'gallery') {
+			// Gallery values are maps of imageId => imageData; flatten to image items.
+			$images = $images
+				->flatMap(fn ($gallery): array => is_array($gallery) ? array_values($gallery) : [])
+				->filter(fn ($value): bool => is_array($value));
+		}
+
+		return $images
+			->pluck('tags')
+			->flatten()
+			->filter(fn ($tag): bool => is_string($tag) && $tag !== '')
+			->unique()
+			->values()
+			->all();
+	}
+
+	/**
+	 * Whether $property is listed in the active schema's index array.
+	 */
+	public function isPropertyIndexed(string $property): bool
+	{
+		return $this->schemaData instanceof SchemaData
+			&& in_array($property, $this->schemaData->index, true);
+	}
+
+	/**
+	 * Resolve unique existing tags for an image/gallery property from the
+	 * collection index. Backs the `mediaTags` propertyOptions source.
+	 *
+	 * @return array<int,string>
+	 */
+	public function mediaTagsForCollection(string $field, string $type, string $collection = ''): array
+	{
+		if ($collection === '') {
+			$collection = $this->collection;
+		}
+
+		$index = $this->collectionReader->fetchIndex($collection);
+
+		return self::extractMediaTags($index->objects->all(), $field, $type);
 	}
 
 	/**
@@ -1001,6 +1118,26 @@ class TotalForm implements \Stringable
 		return $this->field($name, $options);
 	}
 
+	/**
+	 * Resolve a field-type string to its FormField class-string: apply type
+	 * aliases, then the built-in `…\FormField\{Ucfirst}Field`, then extension
+	 * field types, falling back to the base FormField for unknown types.
+	 *
+	 * @return class-string<FormField>
+	 */
+	public static function resolveFieldClass(string $fieldType): string
+	{
+		$fieldType    = self::canonicalFieldType($fieldType);
+		$builtInClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($fieldType) . 'Field';
+		$typeClass    = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
+			? $builtInClass
+			: (self::getExtensionFieldTypes()[$fieldType] ?? $builtInClass);
+
+		return (class_exists($typeClass) && is_subclass_of($typeClass, FormField::class))
+			? $typeClass
+			: FormField::class;
+	}
+
 	/** @param array<string,mixed> $options */
 	private function createDynamicField(string $name, array $options = []): FormField
 	{
@@ -1012,15 +1149,10 @@ class TotalForm implements \Stringable
 		unset($options['deck_context']);
 		unset($options['subfield']);
 
-		$fieldType    = $options['field'] ?? '';
-		$builtInClass = 'TotalCMS\\Domain\\Admin\\FormField\\' . ucfirst($fieldType) . 'Field';
-		$typeClass    = (class_exists($builtInClass) && is_subclass_of($builtInClass, FormField::class))
-			? $builtInClass
-			: (self::getExtensionFieldTypes()[$fieldType] ?? $builtInClass);
-
-		if (!class_exists($typeClass) || !is_subclass_of($typeClass, FormField::class)) {
-			$typeClass = FormField::class;
-		}
+		$fieldType        = $options['field'] ?? '';
+		$fieldType        = self::canonicalFieldType($fieldType); // canonicalize (multicheckbox → checklist)
+		$options['field'] = $fieldType;                                        // render wrapper class + data-type as canonical
+		$typeClass        = self::resolveFieldClass($fieldType);
 
 		// Strip keys that aren't valid constructor parameters to avoid errors
 		// from schema-only keys (e.g. $ref, factory, type) leaking through

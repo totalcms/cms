@@ -2,15 +2,21 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "bin/build.sh",
-    "build:assets": "bin/build-assets.sh"
+    "build:assets": "bin/build-assets.sh",
+    "test:js": "vitest run",
+    "test:js:watch": "vitest",
+    "test:js:coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.9",
     "esbuild": "^0.16.17",
     "esbuild-plugin-clean": "^1.0.1",
     "esbuild-plugin-copy": "^2.0.1",
     "esbuild-plugin-glob": "^2.2.1",
     "esbuild-sass-plugin": "^2.4.5",
-    "sass-extended-importer": "^0.4.2"
+    "jsdom": "^29.1.1",
+    "sass-extended-importer": "^0.4.2",
+    "vitest": "^4.1.9"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.1",

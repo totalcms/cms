@@ -5,7 +5,6 @@ declare(strict_types=1);
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
@@ -59,7 +58,7 @@ beforeEach(function (): void {
 function runBatchImport(object $container, string $collection, int $count): array
 {
 	$container->get(EventDispatcher::class)->suspendForImport($collection);
-	$container->get(IndexBuildListener::class)->suspendForCollection($collection);
+	$container->get(EventDispatcher::class)->suspendIndexRebuild($collection);
 
 	$created = [];
 	for ($i = 1; $i <= $count; $i++) {

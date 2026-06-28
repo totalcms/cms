@@ -1,4 +1,5 @@
 import TotalField from "./totalfield";
+import { isNestedField } from "./fieldCollection.mjs";
 
 //-----------------------------------------------
 // Total CMS Card Field
@@ -65,6 +66,13 @@ export default class CardField extends TotalField {
         const fields = [];
         cardFields.querySelectorAll('.form-field').forEach(el => {
             if (el.closest('.card-fields') !== cardFields) return; // belongs to a nested card
+            // Skip a composite child's internal sub-fields — an image's
+            // alt/name/focalpoint, a file's name/ext, a nested deck item's fields.
+            // They live inside their parent's own .form-field (which is in this
+            // card's .card-fields), so the check above doesn't catch them; without
+            // this guard they flatten into the card and collide with its own
+            // properties (e.g. a file's `name` clobbering the card's `name`).
+            if (isNestedField(el, cardFields)) return;
             if (!el.totalfield) return;
             fields.push(el.totalfield);
         });

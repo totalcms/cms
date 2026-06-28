@@ -395,16 +395,13 @@ abstract class Util
 		$from = self::toColorSpace(
 			value : $from ??= self::findColorSpace(
 				value    : $value,
-				fallback : null,
 				throw    : $throw,
 			),
-			fallback : null,
 			throw    : $throw,
 		);
 
 		$to = self::toColorSpace(
 			value    : $to ?? $from,
-			fallback : null,
 			throw    : $throw,
 		);
 

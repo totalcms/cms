@@ -117,19 +117,19 @@ This creates:
 
 ## Section Headers
 
-Use `---Title Here---` to add a styled section heading:
+Use `--- My Header` or the legacy `---Title Here---` syntax to add a styled section heading:
 
 ```
 id id
 name name
----URL Setup---
+--- URL Setup
 url url
 slug slug
----Dashboard Setup---
+--- Dashboard Setup
 category sortBy
 ```
 
-This creates:
+Both `--- My Header` (new) and `---Title Here---` (still supported) produce the same result:
 
 ```
 +------------------+------------------+
@@ -148,6 +148,57 @@ This creates:
 |     category     |      sortBy      |
 +------------------+------------------+
 ```
+
+## Fieldsets
+
+Use `[[ ]]` to group related fields inside a styled fieldset container. The text after `[[` on the same line is an optional legend:
+
+```
+id id
+name name
+---
+[[ My Legend
+field1 field2
+field3 field4
+]]
+```
+
+This creates:
+
+```
++------------------+------------------+
+|                 id                  |
++------------------+------------------+
+|                name                 |
++------------------+------------------+
+|  ─────────────────────────────────  |  <- divider
++--────────────────────────────────── +
+| My Legend                           |  <- fieldset with legend
+| +------------------+---------------+|
+| | field1          | field2         ||
+| +------------------+---------------+|
+| | field3          | field4         ||
+| +------------------+---------------+|
++--────────────────────────────────── +
+```
+
+Fields named inside a `[[ ]]` block render inside that styled fieldset and leave the outer grid. The interior is laid out as its own mini-grid using the same row syntax. Dividers (`---`) and headers work inside a fieldset too:
+
+```
+id id
+---
+[[ Contact Details
+first_name last_name
+---
+email phone
+]]
+address address
+```
+
+**Important notes:**
+- Fieldsets are one level deep — no nesting fieldsets inside other fieldsets
+- The reserved area prefix `formgrid-fieldset-N` should not be used as a field name
+- If the legend is omitted (e.g. `[[` with nothing after it), the fieldset renders without a legend
 
 ## Three or More Columns
 

@@ -21,7 +21,7 @@
 }
 
 .check-field .help,
-.multicheckbox-field .help,
+.checklist-field .help,
 .radio-field .help {
 	flex-basis         : 100%;
 	margin-block-start : 1rem;
@@ -67,7 +67,7 @@
         background-position : 0.5rem 0.6875rem;
         transition: box-shadow .5s, border-color .25s ease-in-out;
     }
-	.toggle-field, .checkbox-field, .multicheckbox-field, .radio-field, .color-field {
+	.toggle-field, .checkbox-field, .checklist-field, .radio-field, .color-field {
 		.help {
 			border-radius : var(--totalform-radius);
 		}
@@ -162,9 +162,9 @@
     }
 }
 
-.help-label .form-field:not(.check-field):not(.radio-field):not(.multicheckbox-field) > label,
+.help-label .form-field:not(.check-field):not(.radio-field):not(.checklist-field) > label,
 .help-label .form-field.radio-field legend,
-.help-label .form-field.multicheckbox-field legend,
+.help-label .form-field.checklist-field legend,
 .help-label .localized-header > label {
     transition: opacity var(--help-animation-timing);
 }
@@ -176,14 +176,14 @@
 }
 
 // Hide the field's own label/legend when the help overlay is showing.
-// Radio + multicheckbox use a <legend> inside a <fieldset>; everything
+// Radio + checklist use a <legend> inside a <fieldset>; everything
 // else uses a direct <label> child.
 .help-on-focus.help-label .form-field.radio-field:has(input:focus):has(.help:not(:empty)) legend,
-.help-on-focus.help-label .form-field.multicheckbox-field:has(input:focus):has(.help:not(:empty)) legend,
+.help-on-focus.help-label .form-field.checklist-field:has(input:focus):has(.help:not(:empty)) legend,
 .help-on-hover.help-label .form-field.radio-field:has(.help:not(:empty)):hover legend,
-.help-on-hover.help-label .form-field.multicheckbox-field:has(.help:not(:empty)):hover legend,
-.help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):not(.multicheckbox-field):has(input:focus):has(.help:not(:empty)) > label,
-.help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):not(.multicheckbox-field):has(.help:not(:empty)):hover > label,
+.help-on-hover.help-label .form-field.checklist-field:has(.help:not(:empty)):hover legend,
+.help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):not(.checklist-field):has(input:focus):has(.help:not(:empty)) > label,
+.help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):not(.checklist-field):has(.help:not(:empty)):hover > label,
 .help-on-focus.help-label .form-field:has(input:focus):has(.help:not(:empty)) > .localized-stack > .localized-header > label,
 .help-on-hover.help-label .form-field:has(.help:not(:empty)):hover > .localized-stack > .localized-header > label {
     opacity: 0;

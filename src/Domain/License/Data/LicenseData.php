@@ -42,10 +42,8 @@ readonly class LicenseData
 			message            : 'Preview mode',
 			validationToken    : null,
 			updatesValid       : true,
-			trialDaysRemaining : null,
 			dnsVerified        : true,
 			versionAuthorized  : true,
-			allowedVersion     : null,
 			timestamp          : time(),
 		);
 	}

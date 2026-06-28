@@ -36,16 +36,19 @@ abstract class ChoiceField extends FormField
 
 	/**
 	 * Whether to emit `required` on each individual <input>. Radio groups need
-	 * this for native HTML validation; multicheckbox cannot because it would
+	 * this for native HTML validation; checklist cannot because it would
 	 * require every box to be checked.
 	 */
 	protected const REQUIRED_ON_OPTION = false;
 
 	/**
 	 * Whether to mirror the required state as `data-required` on the container
-	 * for JS-driven validation. Used by multicheckbox.
+	 * for JS-driven validation. Used by checklist.
 	 */
 	protected const REQUIRED_ON_CONTAINER = false;
+
+	/** Whether this variant supports a "select all / none" toggle (checklist yes, radio no). Further gated by the `toggleAll` setting (default on). */
+	protected const SUPPORTS_TOGGLE_ALL = false;
 
 	public function build(): string
 	{
@@ -66,7 +69,23 @@ abstract class ChoiceField extends FormField
 			$attributes['data-required'] = 'true';
 		}
 
-		$fieldset = HTMLUtils::element('fieldset', $this->createFieldLabel('legend') . $choices);
+		// Checklist gets a "select all / none" toggle in its legend by
+		// default; set `toggleAll: false` to suppress it. Radio never gets one
+		// (SUPPORTS_TOGGLE_ALL is false there).
+		$legend = $this->createFieldLabel('legend');
+		if (static::SUPPORTS_TOGGLE_ALL && ($this->settings['toggleAll'] ?? true)) {
+			// Empty button — the +/× glyph is drawn by the .choice-field-toggle-all
+			// CSS (masked add icon, rotated to × in the deselect-all state).
+			$toggle = HTMLUtils::element('button', '', [
+				'type'       => 'button',
+				'class'      => 'choice-field-toggle-all',
+				'title'      => 'Select all',
+				'aria-label' => 'Select all',
+			]);
+			$legend = $this->createFieldLabel('legend', $this->label . $toggle);
+		}
+
+		$fieldset = HTMLUtils::element('fieldset', $legend . $choices);
 
 		return HTMLUtils::element('div', $fieldset . $this->createHelpText(), $attributes);
 	}
@@ -161,7 +180,7 @@ abstract class ChoiceField extends FormField
 
 	/**
 	 * Whether a given option value is currently selected. Subclasses encode
-	 * their value semantics (single value for radio, array membership for multicheckbox).
+	 * their value semantics (single value for radio, array membership for checklist).
 	 */
 	abstract protected function isOptionSelected(string $optionValue): bool;
 

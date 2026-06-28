@@ -21,17 +21,17 @@ use TotalCMS\Domain\Session\SessionKeys;
  * the author opts in with shared=true. Cache-layer failures fall back to a
  * live render and never break the page.
  */
-final class FragmentCache
+final readonly class FragmentCache
 {
 	private const FRAG_PREFIX  = 'frag:';
 	private const VER_PREFIX   = 'fragver:';
 	private const VER_TTL      = 2592000; // 30 days — must outlive fragment TTLs
 
 	public function __construct(
-		private readonly CacheManager $cache,
-		private readonly SessionInterface $session,
-		private readonly int $defaultTtl = 3600,
-		private readonly bool $enabled = true,
+		private CacheManager $cache,
+		private SessionInterface $session,
+		private int $defaultTtl = 3600,
+		private bool $enabled = true,
 	) {
 	}
 

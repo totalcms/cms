@@ -91,7 +91,7 @@ class LocalizedtextField extends FormField
 	 * own label inside the header row (next to the locale tabs) via
 	 * buildHeaderLabel(); without this override the label would appear twice.
 	 */
-	protected function createFieldLabel(string $tag = 'label'): string
+	protected function createFieldLabel(string $tag = 'label', ?string $content = null): string
 	{
 		return '';
 	}

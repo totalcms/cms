@@ -47,7 +47,6 @@ abstract class ColorFactory
 			value     : $value,
 			to        : $to,
 			from      : $from,
-			fallback  : null,
 			throw     : $throw,
 		);
 

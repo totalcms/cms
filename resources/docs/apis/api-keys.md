@@ -171,15 +171,16 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
 $response = curl_exec($ch);
 ```
 
-### Query Parameter Authentication
+### Authorization: Bearer Header
 
-Alternatively, pass the API key as a query parameter:
+You can also send the key as a standard Bearer token:
 
+```bash
+curl -H "Authorization: Bearer tcms_1234567890abcdef1234567890abcdef" \
+     https://yoursite.com/api/collections/blog
 ```
-https://yoursite.com/api/collections/blog?api_key=tcms_1234567890abcdef1234567890abcdef
-```
 
-**Note**: Header authentication is preferred for better security (query parameters may be logged).
+**Note**: API keys are only read from the `X-API-Key` or `Authorization: Bearer` request headers. There is no query-parameter (`?api_key=…`) authentication.
 
 ### Authentication Precedence
 
@@ -204,7 +205,7 @@ If both session authentication and API key are present, Total CMS uses:
 ### Network Security
 - **Use HTTPS**: Always use encrypted connections in production
 - **Restrict by IP**: Consider firewall rules for server-to-server integrations
-- **Header authentication**: Prefer `X-API-Key` header over query parameters
+- **Header authentication**: Keys are only accepted via the `X-API-Key` or `Authorization: Bearer` headers — never in the URL
 
 ### Incident Response
 - **Immediate revocation**: Delete compromised keys immediately

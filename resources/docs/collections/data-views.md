@@ -58,10 +58,10 @@ A view that combines team members with their department names:
 
 {% set result = [] %}
 {% for member in members %}
-    {% set result = result|append({
+    {% set result = result|merge([{
         "name": member.name,
         "department": deptMap[member.departmentId] ?? 'Unknown'
-    }) %}
+    }]) %}
 {% endfor %}
 
 {% set data = {
@@ -81,7 +81,7 @@ A view that builds statistics for a dashboard:
 {% set data = {
     "blog": {
         "total": posts|length,
-        "published": posts|filter(p => p.published)|length
+        "published": posts|filter(p => not p.draft)|length
     },
     "products": {
         "total": products|length,

@@ -207,16 +207,6 @@ Check if the user can perform operations on schemas in general.
 {% endif %}
 ```
 
-### canAccessTemplates()
-
-Check if the user can access templates.
-
-```twig
-{% if cms.auth.canAccessTemplates() %}
-    <a href="/admin/templates">Templates</a>
-{% endif %}
-```
-
 ### canAccessUtil()
 
 Check if the user can access a specific utility page.

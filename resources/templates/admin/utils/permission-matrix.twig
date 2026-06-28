@@ -1,0 +1,211 @@
+<h1>Permission Matrix</h1>
+
+<section class="dash-content-section">
+
+	<p>Permission matrix showing what each access group can do across collections, schemas, extensions, and utils. Super-admin groups always show full access.</p>
+
+	{% set currentGroup = permissionMatrixData.group %}
+	{% set matrix = permissionMatrixData.matrix %}
+	{% set rows = matrix.rows %}
+	{% set columnGroups = matrix.columnGroups %}
+
+	<div class="pm-toolbar">
+		<form class="pm-filter totalform no-save no-unsaved-warning" method="get" data-method="GET" data-ajax="false" action="utils/permission-matrix">
+			<label class="pm-filter-field">
+				<span>Group</span>
+				<select name="group" data-autosubmit>
+					<option value="">All groups</option>
+					{% for row in rows %}
+						<option value="{{ row.id }}" {{ row.id == currentGroup ? 'selected' }}>{{ row.id }}</option>
+					{% endfor %}
+				</select>
+			</label>
+			<noscript><button class="dash-button transparent" type="submit">Apply</button></noscript>
+		</form>
+	</div>
+
+	{% set filteredRows = currentGroup ? rows|filter(r => r.id == currentGroup) : rows %}
+
+	{% if rows|length == 0 %}
+		<p>No access groups found.</p>
+	{% else %}
+		{% for colGroup in columnGroups %}
+		{% if colGroup.columns|length > 0 %}
+		<details class="pm-dimension" open>
+			<summary class="pm-dimension-label">{{ colGroup.label }}</summary>
+			<div class="pm-table-wrap">
+				<table class="pm-matrix" aria-label="{{ colGroup.label }} permissions">
+					<thead>
+						<tr>
+							<th scope="col" class="pm-th-group">Group</th>
+							{% for col in colGroup.columns %}
+								<th scope="col" class="pm-th-resource" title="{{ col.id }}">{{ col.label }}</th>
+							{% endfor %}
+						</tr>
+					</thead>
+					<tbody>
+						{% for row in filteredRows %}
+						<tr class="{{ row.isSuperAdmin ? 'pm-row-superadmin' : '' }}">
+							<th scope="row" class="pm-th-name">
+								{{ row.id }}
+								{% if row.isSuperAdmin %}<span class="pm-badge-admin" aria-label="super-admin">★</span>{% endif %}
+							</th>
+							{% for col in colGroup.columns %}
+							{% set cellKey = colGroup.dimension ~ ':' ~ col.id %}
+							{% set cell = row.cells[cellKey] ?? '' %}
+							{% if cell == 'ALL' %}
+								<td class="pm-cell pm-cell-all" title="Full access">ALL</td>
+							{% elseif cell == '' %}
+								<td class="pm-cell pm-cell-none" title="No access" aria-label="none"></td>
+							{% elseif cell == '·' %}
+								<td class="pm-cell pm-cell-none" title="No access" aria-label="none">·</td>
+							{% elseif cell == '✓' %}
+								<td class="pm-cell pm-cell-partial" title="Access granted">✓</td>
+							{% else %}
+								<td class="pm-cell pm-cell-partial" title="{{ cell }}">{{ cell }}</td>
+							{% endif %}
+							{% endfor %}
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</details>
+		{% endif %}
+		{% endfor %}
+
+		<p class="pm-legend">
+			<span class="pm-cell pm-cell-all">ALL</span> = full access &nbsp;
+			<span class="pm-cell pm-cell-partial">CRUD / ✓</span> = partial &nbsp;
+			<span class="pm-cell pm-cell-none">—</span> = no access &nbsp;
+			<span class="pm-badge-admin">★</span> = super-admin
+		</p>
+	{% endif %}
+
+</section>
+
+<style>
+.pm-toolbar {
+	display: flex;
+	align-items: flex-end;
+	gap: 1.5rem;
+	flex-wrap: wrap;
+	margin-bottom: 1.25rem;
+}
+.pm-toolbar .pm-filter {
+	display: grid;
+	gap: 0.75rem;
+	margin: 0;
+}
+.pm-filter-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	font-size: 0.85rem;
+	color: oklch(var(--totalform-darkgray));
+}
+.pm-toolbar .pm-filter select {
+	width: auto;
+	min-width: 12rem;
+}
+.dash-content-section:has(.pm-toolbar) {
+	min-width: 0;
+}
+.pm-dimension {
+	margin-bottom: 1.25rem;
+	min-width: 0;
+	max-width: 100%;
+}
+.pm-dimension-label {
+	font-weight: 600;
+	cursor: pointer;
+	padding: 0.35rem 0;
+	color: oklch(var(--totalform-darkgray));
+}
+.pm-table-wrap {
+	overflow-x: auto;
+	max-width: 100%;
+}
+.pm-matrix {
+	/* `separate` (not `collapse`) so the sticky first column carries its own
+	   borders — collapsed borders paint on the table and scroll away from the
+	   pinned column, leaving a 1px seam where content peeks under it. */
+	border-collapse: separate;
+	border-spacing: 0;
+	font-size: 0.8125rem;
+	white-space: nowrap;
+}
+.pm-matrix th,
+.pm-matrix td {
+	border-right: 1px solid oklch(var(--totalform-border-color));
+	border-bottom: 1px solid oklch(var(--totalform-border-color));
+	padding: 0.3rem 0.5rem;
+	text-align: center;
+}
+.pm-matrix tr:first-child th {
+	border-top: 1px solid oklch(var(--totalform-border-color));
+}
+.pm-matrix th:first-child,
+.pm-matrix td:first-child {
+	border-left: 1px solid oklch(var(--totalform-border-color));
+}
+.pm-th-group {
+	text-align: left;
+	min-width: 10rem;
+	background: oklch(var(--totalform-nearwhite));
+	position: sticky;
+	left: 0;
+	z-index: 2;
+}
+.pm-th-resource {
+	max-width: 6rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	background: oklch(var(--totalform-nearwhite));
+	color: oklch(var(--totalform-darkgray));
+}
+.pm-th-name {
+	text-align: left;
+	font-weight: normal;
+	background: oklch(var(--totalform-nearwhite));
+	position: sticky;
+	left: 0;
+	z-index: 1;
+}
+.pm-row-superadmin .pm-th-name {
+	color: oklch(var(--totalform-accent));
+}
+.pm-cell-all {
+	background: oklch(var(--totalform-success) / 0.15);
+	color: oklch(var(--totalform-success));
+	font-weight: 600;
+}
+.pm-cell-partial {
+	background: oklch(var(--totalform-accent) / 0.1);
+	color: oklch(var(--totalform-accent));
+	font-weight: 600;
+}
+.pm-cell-none {
+	color: oklch(var(--totalform-border-color));
+}
+.pm-badge-admin {
+	font-size: 0.7em;
+	margin-left: 0.3em;
+	color: oklch(var(--totalform-accent));
+}
+.pm-legend {
+	font-size: 0.8rem;
+	color: oklch(var(--totalform-darkgray));
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	flex-wrap: wrap;
+	margin-top: 0.5rem;
+}
+.pm-legend .pm-cell {
+	display: inline-block;
+	padding: 0.1rem 0.4rem;
+	border-radius: var(--totalform-radius);
+	border: 1px solid oklch(var(--totalform-border-color));
+}
+</style>

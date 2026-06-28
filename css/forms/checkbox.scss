@@ -4,13 +4,17 @@
 .checkbox-field {
 	width : auto;
 
+	.form-group {
+		gap : 0.5rem;
+	}
+
     [type="checkbox"] {
         appearance  : auto;
         width       : 1.2rem;
         height      : 1.2rem;
         display     : inline-block;
         position    : relative;
-        margin      : 0 0.2rem 0 0;
+        margin      : 0;
         border      : none;
         line-height : 1;
         box-shadow  : none;
@@ -58,57 +62,60 @@
 }
 
 //------------------------------
-// Multicheckbox Field (multicheckbox-specific visual treatment)
+// Checklist Field (checklist-specific visual treatment)
 //------------------------------
 // Shared fieldset/label/option-wrapper layout lives in choice-field.scss.
 // This file only renders the custom checkbox tick via pseudo-elements.
-.multicheckbox-field .checkbox input[type="checkbox"] {
-	appearance  : auto;
-	width       : 1.2rem;
-	height      : 1.2rem;
-	display     : inline-block;
-	position    : relative;
-	margin      : 0;
-	border      : none;
-	line-height : 1;
-	box-shadow  : none;
-	cursor      : pointer;
+.checklist-field {
 
-	&:before {
-		transition : all .2s ease-in-out;
-		content    : "";
-		position   : absolute;
-		left       : 0;
-		top        : 0;
-		z-index    : 1;
-		width      : 1.2rem;
-		height     : 1.2rem;
-		border     : 2px solid oklch(var(--totalform-border-color));
+	input[type="checkbox"] {
+		width        : 1rem;
+		height       : 1rem;
+		accent-color : oklch(var(--totalform-accent));
 	}
 
-	&:checked:before {
-		transform          : rotate(-45deg);
-		height             : .5rem;
-		top                : 20%;
-		border-color       : oklch(var(--totalform-accent));
-		border-top-style   : none;
-		border-right-style : none;
-	}
+	&.styled-checkbox input[type="checkbox"] {
+		width       : 1.2rem;
+		height      : 1.2rem;
+		appearance  : auto;
+		display     : inline-block;
+		position    : relative;
+		margin      : 0;
+		border      : none;
+		line-height : 1;
+		box-shadow  : none;
+		cursor      : pointer;
 
-	&:after { // hides the actual checkbox
-		content    : "";
-		position   : absolute;
-		top        : -0.1rem;
-		left       : -0.1rem;
-		width      : 1.4rem;
-		height     : 1.4rem;
-		background : oklch(var(--totalform-background));
-		cursor     : pointer;
-	}
+		&:before {
+			transition : all .2s ease-in-out;
+			content    : "";
+			position   : absolute;
+			left       : 0;
+			top        : 0;
+			z-index    : 1;
+			width      : 1.2rem;
+			height     : 1.2rem;
+			border     : 2px solid oklch(var(--totalform-border-color));
+		}
 
-	// Spacing between the input and its label; base label typography lives
-	// in choice-field.scss.
-	+ .checkbox-label {
-		margin-left : 0.5rem;
+		&:checked:before {
+			transform          : rotate(-45deg);
+			height             : .5rem;
+			top                : 20%;
+			border-color       : oklch(var(--totalform-accent));
+			border-top-style   : none;
+			border-right-style : none;
+		}
+
+		&:after { // hides the actual checkbox
+			content    : "";
+			position   : absolute;
+			top        : -0.1rem;
+			left       : -0.1rem;
+			width      : 1.4rem;
+			height     : 1.4rem;
+			background : oklch(var(--totalform-background));
+			cursor     : pointer;
+		}
 	}
 }

@@ -6,7 +6,6 @@ use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\Listener\IndexBuildListener;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -29,7 +28,6 @@ class JsonImporter
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly ObjectImporter $objectImporter,
-		private readonly IndexBuildListener $indexBuildListener,
 		private readonly EventDispatcher $eventDispatcher,
 		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
@@ -65,7 +63,7 @@ class JsonImporter
 		// import-time notifications subscribe to `import.created` /
 		// `import.updated` instead — those fire from ObjectImporter and
 		// JobRunner regardless of suspension state.
-		$this->indexBuildListener->suspendForCollection($collection);
+		$this->eventDispatcher->suspendIndexRebuild($collection);
 		$this->eventDispatcher->suspendForImport($collection);
 
 		$importCount   = 0;

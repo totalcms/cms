@@ -44,6 +44,27 @@ class AutogenIdServiceTest extends TestCase
 		$this->assertEquals(7, strlen($uid));
 	}
 
+	public function testGenerateUidWithCustomLength(): void
+	{
+		$uid = AutogenIdService::generateUid(12);
+		$this->assertMatchesRegularExpression('/^[a-z0-9]{12}$/', $uid);
+		$this->assertEquals(12, strlen($uid));
+
+		// A non-positive length yields an empty string.
+		$this->assertSame('', AutogenIdService::generateUid(0));
+	}
+
+	public function testGenerateIdWithSizedUidToken(): void
+	{
+		// ${uid-N} (server-side mirror of the admin autogen) → N characters.
+		$result = AutogenIdService::generateIdWithOidCount('item-${uid-12}', [], 5);
+		$this->assertMatchesRegularExpression('/^item-[a-z0-9]{12}$/', $result);
+
+		// A bare ${uid} stays the default 7.
+		$bare = AutogenIdService::generateIdWithOidCount('item-${uid}', [], 5);
+		$this->assertMatchesRegularExpression('/^item-[a-z0-9]{7}$/', $bare);
+	}
+
 	public function testGenerateIdWithOidCount(): void
 	{
 		$objectData = ['title' => 'Test Post', 'author' => 'John'];

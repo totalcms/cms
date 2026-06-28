@@ -12,6 +12,7 @@ use TotalCMS\Middleware\CacheInvalidationMiddleware;
 use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\Development\ExtensionProfileFlushMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
+use TotalCMS\Middleware\ImpersonationBannerMiddleware;
 use TotalCMS\Middleware\LazySessionStartMiddleware;
 use TotalCMS\Middleware\License\BundleMiddleware;
 use TotalCMS\Middleware\License\LicenseValidationMiddleware;
@@ -59,6 +60,12 @@ return function (App $app): void {
 
 	// Page router wraps everything — catches 404s from Slim and tries builder pages.
 	$app->add(PageRouterMiddleware::class);
+
+	// Impersonation banner: inject a "Return to your account" bar into HTML
+	// responses while a super-admin is impersonating another user. Placed
+	// inside the session layer (added before LazySessionStartMiddleware in the
+	// file) so the session is guaranteed open when it reads AUTH_USER.
+	$app->add(ImpersonationBannerMiddleware::class);
 
 	// Session must wrap PageRouter so the session is still open when
 	// PageRouter does its post-Slim work (matching builder pages, running

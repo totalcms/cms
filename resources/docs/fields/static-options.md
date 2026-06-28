@@ -1,11 +1,11 @@
 ---
 title: "Static Options"
-description: "Define static options for select, radio, multicheckbox, and list fields in Total CMS using simple lists, label/value pairs, or grouped options."
+description: "Define static options for select, radio, checklist, and list fields in Total CMS using simple lists, label/value pairs, or grouped options."
 ---
 
 # Static Options
 
-Options can be used on the following field types: **text** (as datalist), **select**, **multiselect**, **radio**, **multicheckbox**, **list**, and **color**.
+Options can be used on the following field types: **text** (as datalist), **select**, **multiselect**, **radio**, **checklist**, **list**, and **color** (`multicheckbox` is a supported alias for `checklist`).
 
 ## Simple List of Options
 
@@ -53,7 +53,7 @@ Options can be used on the following field types: **text** (as datalist), **sele
 |-----------|-----------|-----------|----------|
 | `radio` | Single | String | Mutually exclusive options (size, status, priority) |
 | `select` | Single | String | Dropdown for single choice |
-| `multicheckbox` | Multiple | Array | Non-exclusive options (features, amenities, tags) |
+| `checklist` | Multiple | Array | Non-exclusive options (features, amenities, tags) |
 | `multiselect` | Multiple | Array | Dropdown for multiple choices |
 
 **Important:** Ensure your schema `type` matches the field behavior:
@@ -69,15 +69,15 @@ Options can be used on the following field types: **text** (as datalist), **sele
 }
 ```
 
-**Multicheckbox/Multiselect (multiple selection):**
+**Checklist/Multiselect (multiple selection):**
 ```json
 {
 	"tags": {
 		"type": "array",
-		"field": "multicheckbox",
+		"field": "checklist",
 		"options": ["News", "Featured", "Tutorial"]
 	}
 }
 ```
 
-Using the wrong type (e.g., `type: "string"` with `field: "multicheckbox"`) may cause validation errors or unexpected data storage.
+Using the wrong type (e.g., `type: "string"` with `field: "checklist"`) may cause validation errors or unexpected data storage.

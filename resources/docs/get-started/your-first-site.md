@@ -64,7 +64,8 @@ There is no database. Your blog post is a file. Open `tcms-data/blog/` in your c
 {
   "id": "hello-total-cms",
   "title": "Hello, Total CMS",
-  "body": "A paragraph or two — whatever you like",
+  "summary": "A paragraph or two — whatever you like",
+  "content": "A paragraph or two — whatever you like",
   "date": "2026-05-13T14:23:00",
   "draft": false
 }

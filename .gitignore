@@ -1,6 +1,7 @@
 *.log
 .idea
 .claude
+/coverage
 composer.phar
 composer.lock
 .DS_STORE

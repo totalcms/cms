@@ -38,6 +38,14 @@ final class ObjectBulkDeleteActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('json')
+			->with(
+				$this->response,
+				[
+					'collection' => 'blog',
+					'deleted'    => ['a', 'b', 'c'],
+					'failed'     => [],
+				],
+			)
 			->willReturn($this->response);
 
 		$result = ($this->action)($this->request, $this->response, ['collection' => 'blog']);

@@ -23,6 +23,7 @@ use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
+use TotalCMS\Domain\Visualizer\Service\VisualizerService;
 use TotalCMS\Renderer\TwigRenderer;
 
 final class AdminUtilsActionTest extends TestCase
@@ -51,10 +52,8 @@ final class AdminUtilsActionTest extends TestCase
 	private string $oauthGrantsTmpFile;
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
-	private \PHPUnit\Framework\MockObject\MockObject $relationshipAnalyzer;
-	private \TotalCMS\Domain\Visualizer\Service\MermaidErdRenderer $mermaidRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $objectResolver;
-	private \TotalCMS\Domain\Visualizer\Service\MermaidFlowchartRenderer $flowchartRenderer;
+	private \PHPUnit\Framework\MockObject\MockObject $visualizerService;
+	private \Odan\Session\SessionInterface&\PHPUnit\Framework\MockObject\MockObject $session;
 
 	protected function setUp(): void
 	{
@@ -84,10 +83,8 @@ final class AdminUtilsActionTest extends TestCase
 		$this->oauthScopeRegistry    = new OAuthScopeRegistry();
 		$this->request               = $this->createMock(ServerRequestInterface::class);
 		$this->response              = $this->createMock(ResponseInterface::class);
-		$this->relationshipAnalyzer  = $this->createMock(\TotalCMS\Domain\Visualizer\Service\RelationshipAnalyzer::class);
-		$this->mermaidRenderer       = new \TotalCMS\Domain\Visualizer\Service\MermaidErdRenderer();
-		$this->objectResolver        = $this->createMock(\TotalCMS\Domain\Visualizer\Service\ObjectRelationshipResolver::class);
-		$this->flowchartRenderer     = new \TotalCMS\Domain\Visualizer\Service\MermaidFlowchartRenderer();
+		$this->visualizerService     = $this->createMock(VisualizerService::class);
+		$this->session               = $this->createMock(\Odan\Session\SessionInterface::class);
 
 		$this->action = new AdminUtilsAction(
 			$this->renderer,
@@ -109,10 +106,8 @@ final class AdminUtilsActionTest extends TestCase
 			$this->oauthGrantRepository,
 			$this->oauthScopeRegistry,
 			$this->extensionManager,
-			$this->relationshipAnalyzer,
-			$this->mermaidRenderer,
-			$this->objectResolver,
-			$this->flowchartRenderer,
+			$this->visualizerService,
+			$this->session,
 		);
 	}
 

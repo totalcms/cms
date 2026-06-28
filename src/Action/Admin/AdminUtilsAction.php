@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace TotalCMS\Action\Admin;
 
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
@@ -19,16 +22,14 @@ use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Sync\Data\SyncableCollections;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
-use TotalCMS\Domain\Visualizer\Service\MermaidErdRenderer;
-use TotalCMS\Domain\Visualizer\Service\MermaidFlowchartRenderer;
-use TotalCMS\Domain\Visualizer\Service\ObjectRelationshipResolver;
-use TotalCMS\Domain\Visualizer\Service\RelationshipAnalyzer;
+use TotalCMS\Domain\Visualizer\Service\VisualizerService;
 use TotalCMS\Renderer\TwigRenderer;
 
 readonly class AdminUtilsAction
@@ -53,10 +54,8 @@ readonly class AdminUtilsAction
 		private OAuthGrantRepository $oauthGrantRepository,
 		private OAuthScopeRegistry $oauthScopeRegistry,
 		private \TotalCMS\Domain\Extension\Service\ExtensionManager $extensionManager,
-		private RelationshipAnalyzer $relationshipAnalyzer,
-		private MermaidErdRenderer $mermaidRenderer,
-		private ObjectRelationshipResolver $objectRelationshipResolver,
-		private MermaidFlowchartRenderer $mermaidFlowchartRenderer,
+		private VisualizerService $visualizerService,
+		private SessionInterface $session,
 	) {
 	}
 
@@ -191,6 +190,19 @@ readonly class AdminUtilsAction
 			];
 		}
 
+		// JumpStart utility data
+		$jumpstartData = null;
+		if ($page === 'jumpstart') {
+			$jumpstartData = [
+				// Only custom schema *definitions* are exported (exportCustomSchemas),
+				// so the picker lists custom schemas only — reserved/extension schemas
+				// would be non-functional choices. Collections list all (reserved
+				// collections' objects DO export).
+				'schemas'     => $this->schemaLister->listCustomSchemas(),
+				'collections' => $this->collectionLister->listAllCollections(),
+			];
+		}
+
 		// Handle twig-debugger page
 		$lintResults = null;
 		if ($page === 'twig-debugger') {
@@ -210,71 +222,35 @@ readonly class AdminUtilsAction
 			}
 		}
 
+		$currentUserId = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+
 		// Collection Visualizer — relationship graph rendered as a Mermaid ERD.
 		$visualizerData = null;
 		if ($page === 'collection-visualizer') {
-			$graph        = $this->relationshipAnalyzer->analyze();
-			$focus        = trim((string)($query['collection'] ?? ''));
-			$showIsolated = ($query['isolated'] ?? '') === '1';
-			$hiddenCount  = 0;
-
-			if ($focus !== '' && isset($graph['nodes'][$focus])) {
-				$graph = $this->relationshipAnalyzer->egoGraph($graph, $focus);
-			} else {
-				$focus = '';
-				// Global view: hide unconnected collections unless asked for.
-				if (!$showIsolated) {
-					$before      = count($graph['nodes']);
-					$graph       = $this->relationshipAnalyzer->pruneIsolated($graph);
-					$hiddenCount = $before - count($graph['nodes']);
-				}
-			}
-
-			$mermaid        = $this->mermaidRenderer->render($graph);
-			$visualizerData = [
-				'mermaid'      => $mermaid,
-				'edgeTypes'    => $this->mermaidRenderer->edgeTypes(),
-				'focus'        => $focus,
-				'collections'  => $this->collectionLister->listAllCollections(),
-				'nodeCount'    => count($graph['nodes']),
-				'edgeCount'    => count($graph['edges']),
-				'showIsolated' => $showIsolated,
-				'hiddenCount'  => $hiddenCount,
-			];
+			$visualizerData = $this->visualizerService->collectionGraph(
+				$this->collectionLister->listAllCollections(),
+				$query,
+				$currentUserId !== '' ? $currentUserId : null,
+			);
 		}
 
 		// Object Visualizer — one record's actual inbound/outbound references.
 		$objectVisualizerData = null;
 		if ($page === 'object-visualizer') {
-			$ovCollection = trim((string)($query['collection'] ?? ''));
-			$ovId         = trim((string)($query['id'] ?? ''));
-			$mermaid      = null;
-			$nodeCount    = 0;
-			$edgeCount    = 0;
-			$truncated    = false;
-			$mode         = '';
+			$objectVisualizerData = $this->visualizerService->objectGraph(
+				$this->collectionLister->listAllCollections(),
+				$query,
+				$currentUserId !== '' ? $currentUserId : null,
+			);
+		}
 
-			if ($ovCollection !== '') {
-				// ID set → one record's ego graph; ID blank → whole-collection view.
-				$graph = $ovId !== ''
-					? $this->objectRelationshipResolver->resolve($ovCollection, $ovId)
-					: $this->objectRelationshipResolver->resolveCollection($ovCollection);
-				$mode      = $ovId !== '' ? 'object' : 'collection';
-				$mermaid   = $this->mermaidFlowchartRenderer->render($graph);
-				$nodeCount = count($graph['nodes']);
-				$edgeCount = count($graph['edges']);
-				$truncated = $graph['truncated'];
-			}
-
-			$objectVisualizerData = [
-				'collection'  => $ovCollection,
-				'id'          => $ovId,
-				'mode'        => $mode,
-				'collections' => $this->collectionLister->listAllCollections(),
-				'mermaid'     => $mermaid,
-				'nodeCount'   => $nodeCount,
-				'edgeCount'   => $edgeCount,
-				'truncated'   => $truncated,
+		// Permission Matrix — what each access group can do, as a matrix.
+		$permissionMatrixData = null;
+		if ($page === 'permission-matrix') {
+			$group                     = isset($query['group']) ? trim((string)$query['group']) : '';
+			$permissionMatrixData      = [
+				'matrix' => $this->visualizerService->accessGroupMatrix(),
+				'group'  => $group,
 			];
 		}
 
@@ -287,23 +263,25 @@ readonly class AdminUtilsAction
 				'params' => $args,
 				'page'   => 'utils',
 			],
-			'results'                => $results,
-			'totalcms1DetectionData' => $totalcms1DetectionData,
-			'apiKeys'                => $apiKeys,
-			'accessGroupsData'       => $accessGroupsData,
-			'oauthClients'           => $oauthClients,
-			'oauthClientsForm'       => $oauthClientsForm,
-			'oauthGrants'            => $oauthGrants,
-			'lintResults'            => $lintResults,
-			'rssAnalysis'            => $rssAnalysis,
-			'rssError'               => $rssError,
-			'rssCollections'         => $rssAnalysis !== null ? $this->collectionLister->listAllCollections() : null,
-			'updateInfo'             => $updateInfo,
-			'composerInstall'        => \TotalCMS\Support\PathResolver::isComposerInstall(),
-			'syncData'               => $syncData,
-			'visualizerData'         => $visualizerData,
-			'objectVisualizerData'   => $objectVisualizerData,
-			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
+			'results'                   => $results,
+			'totalcms1DetectionData'    => $totalcms1DetectionData,
+			'apiKeys'                   => $apiKeys,
+			'accessGroupsData'          => $accessGroupsData,
+			'oauthClients'              => $oauthClients,
+			'oauthClientsForm'          => $oauthClientsForm,
+			'oauthGrants'               => $oauthGrants,
+			'lintResults'               => $lintResults,
+			'rssAnalysis'               => $rssAnalysis,
+			'rssError'                  => $rssError,
+			'rssCollections'            => $rssAnalysis !== null ? $this->collectionLister->listAllCollections() : null,
+			'updateInfo'                => $updateInfo,
+			'composerInstall'           => \TotalCMS\Support\PathResolver::isComposerInstall(),
+			'syncData'                  => $syncData,
+			'jumpstartData'             => $jumpstartData,
+			'visualizerData'            => $visualizerData,
+			'objectVisualizerData'      => $objectVisualizerData,
+			'permissionMatrixData'      => $permissionMatrixData,
+			'postData'                  => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}
 

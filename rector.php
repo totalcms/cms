@@ -26,6 +26,10 @@ return RectorConfig::configure()
 		__DIR__ . '/css',
 		__DIR__ . '/patches',
 
+		// Pest/PHPUnit test closures break under rector's return-type rules
+		// (it adds wrong closure/arrow-fn return types) — exclude tests entirely.
+		__DIR__ . '/tests',
+
 		// Test fixtures are intentionally "wrong" (dangerous calls, dead code,
 		// malformed data) so the code under test has something to react to.
 		// Rector MUST NOT touch them — e.g. it would strip the deliberately

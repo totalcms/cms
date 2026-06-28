@@ -709,7 +709,7 @@ Randomly shuffles array elements.
 Returns a paginated slice of an array.
 
 ```twig
-{% set page = get.page | default(1) | int %}
+{% set page = getData.page | default(1) | int %}
 {% set perPage = 10 %}
 {% set posts = cms.collection.objects('blog') | paginate(perPage, page) %}
 
@@ -738,7 +738,7 @@ Removes duplicate values from an array.
 {# Get unique categories from blog posts #}
 {% set allCategories = [] %}
 {% for post in cms.collection.objects('blog') %}
-    {% set allCategories = allCategories | merge([post.category]) %}
+    {% set allCategories = allCategories | merge(post.categories) %}
 {% endfor %}
 {% set uniqueCategories = allCategories | unique %}
 
@@ -785,7 +785,7 @@ Calculates the sum of a numeric property across all items in a collection.
 
 {# Sum with filtering #}
 {% set completedTotal = cms.collection.objects('orders')
-    | filterCollection([{property: 'status', operator: 'eq', value: 'completed'}])
+    | filterCollection([{property: 'status', operator: 'equal', value: 'completed'}])
     | sum('amount') %}
 
 {# Real-world example: Business totals #}
@@ -1053,7 +1053,7 @@ Counts items grouped by a property value. Like `groupBy`, but returns counts ins
 
 {# Combine with other filters for insights #}
 {% set activeMembers = cms.collection.objects('members')
-    | filterCollection([{property: 'active', operator: 'eq', value: true}]) %}
+    | filterCollection([{property: 'active', operator: 'equal', value: true}]) %}
 {% set byCity = activeMembers | countBy('city') %}
 <h3>Active Members by City</h3>
 {% for city, count in byCity | ksort %}
@@ -1068,7 +1068,7 @@ These filters can be chained together for powerful data analysis:
 ```twig
 {# Get statistics for active products #}
 {% set activeProducts = cms.collection.objects('products')
-    | filterCollection([{property: 'status', operator: 'eq', value: 'active'}]) %}
+    | filterCollection([{property: 'status', operator: 'equal', value: 'active'}]) %}
 
 <div class="product-stats">
     <p>Total products: {{ activeProducts | length }}</p>
@@ -1135,8 +1135,8 @@ Converts to string.
 Converts to integer.
 
 ```twig
-{% set page = get.page | int | default(1) %}
-{% set limit = get.limit | int | default(10) %}
+{% set page = getData.page | int | default(1) %}
+{% set limit = getData.limit | int | default(10) %}
 ```
 
 #### `float(mixed $variable): float`
@@ -1609,7 +1609,7 @@ The date filters support natural language strings powered by Chronos:
     },
     {
         property: "status",
-        operator: "eq",
+        operator: "equal",
         value: "published"
     }
 ]) %}
@@ -1618,7 +1618,7 @@ The date filters support natural language strings powered by Chronos:
 {% set recentPosts = cms.collection.objects('blog') | filterCollection([
     {
         property: "date",
-        operator: "gte",
+        operator: "greatereq",
         value: "now -30 days" | date('Y-m-d')
     }
 ]) %}
@@ -1628,12 +1628,12 @@ The date filters support natural language strings powered by Chronos:
     {
         property: "price",
         operator: "between",
-        value: [get.min_price | default(0), get.max_price | default(1000)]
+        value: [getData.min_price | default(0), getData.max_price | default(1000)]
     },
     {
         property: "category",
-        operator: "in",
-        value: get.categories | default([])
+        operator: "contains",
+        value: getData.categories | default([])
     }
 ]) %}
 ```
@@ -1812,8 +1812,8 @@ Returns items that match **ALL** of the values in the array:
 ```twig
 {% set posts = cms.collection.objects('blog')
     | filterCollection([
-        {property: "status", operator: "eq", value: "published"},
-        {property: "date", operator: "lte", value: "now" | date('Y-m-d')}
+        {property: "status", operator: "equal", value: "published"},
+        {property: "date", operator: "lesseq", value: "now" | date('Y-m-d')}
     ])
     | sortCollection([
         {property: "featured", reverse: true},
@@ -1988,7 +1988,7 @@ Formats price values with currency symbols.
 {% endfor %}
 
 {# International pricing #}
-{% set currency = get.currency | default('USD') %}
+{% set currency = getData.currency | default('USD') %}
 {% for product in products %}
     <span class="price">
         {{ product.price | price(currency, 'append') }}

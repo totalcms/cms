@@ -192,7 +192,10 @@ class SchemaForm extends TotalForm
 					if (!in_array($propName, $ownPropertyNames, true) && !isset($inheritedProperties[$propName])) {
 						$inheritedProperties[$propName] = [
 							'source'     => $parentId,
-							'field'      => $propDef['field'] ?? 'text',
+							// Canonicalize stored alias (e.g. multicheckbox → checklist)
+							// so the override button's data-property-definition feeds the
+							// canonical type to the JS field-type select.
+							'field'      => TotalForm::canonicalFieldType($propDef['field'] ?? 'text'),
 							'type'       => SchemaSaver::extractPropertyType($propDef),
 							'definition' => $propDef,
 						];

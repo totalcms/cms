@@ -54,7 +54,7 @@ readonly class ObjectBulkDeleteAction
 
 		return $this->renderer->json($response, [
 			'collection' => $collection,
-			'deleted'    => count($result['deleted']),
+			'deleted'    => $result['deleted'],
 			'failed'     => $result['failed'],
 		]);
 	}

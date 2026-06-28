@@ -6,7 +6,7 @@ since: "3.5.0"
 
 # cms.builder
 
-The builder adapter provides navigation helpers and asset management for Site Builder sites. Navigation functions automatically filter out draft pages and pages with `nav` set to false, and sort results by the `sort` field (ascending). Asset functions handle path resolution and cache busting.
+The builder adapter provides navigation helpers and asset management for Site Builder sites. Navigation functions automatically filter out draft pages and pages with `nav` set to false, and order results by the page order file (`tcms-data/{collection}/.order.json`). Asset functions handle path resolution and cache busting.
 
 ## Navigation
 
@@ -25,7 +25,7 @@ Returns a flat array of page objects from the configured pages collection, filte
 
 - `draft` is `false`
 - `nav` is `true` (or missing — defaults to `true` for backwards compatibility)
-- `parent` is empty
+- the page is a top-level page in the order file (`.order.json` — no parent)
 
 #### Custom Collection
 
@@ -45,12 +45,14 @@ Pass a collection ID to use a different pages collection:
 | `title` | string | Page title |
 | `route` | string | URL path (e.g., `/about`) |
 | `template` | string | Template name from `builder/pages/` |
-| `layout` | string | Layout template name |
-| `description` | string | Meta description |
 | `draft` | boolean | Always `false` (drafts are filtered out) |
 | `nav` | boolean | Always `true` (nav-hidden pages are filtered out) |
-| `sort` | number | Sort order |
-| `parent` | string | Parent page ID (always empty for `nav()` results) |
+| `status` | number | HTTP status code |
+| `sitemap` | boolean | Whether the page is included in the sitemap |
+| `changeFrequency` | string | Sitemap change-frequency hint |
+| `priority` | number | Sitemap priority |
+| `updated` | string | Last modified date |
+| `created` | string | Creation date |
 
 ### subnav()
 

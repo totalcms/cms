@@ -240,6 +240,9 @@ return [
 
 	// ── Collection Sitemap ──────────────────────────────────────────────────
 	'collection.sitemap_title'             => 'Constructor de mapa del sitio para {collection}',
+	'collection.sitemap_disabled_title'    => 'Mapa del sitio no habilitado',
+	'collection.sitemap_disabled_desc'     => 'Esta colección no tiene el mapa del sitio habilitado, por lo que la URL siguiente no se servirá. Actívalo primero en la configuración de la colección.',
+	'collection.sitemap_disabled_link'     => 'Editar configuración de la colección',
 	'collection.sitemap_desc'              => 'Lo siguiente producirá una URL que puede utilizar para enviar a motores de búsqueda o añadir a un índice de mapa del sitio existente. Todos los campos a continuación son opcionales. La propiedad de fecha proporcionada será única para cada página web añadida al mapa del sitio. Sin embargo, los campos de frecuencia y prioridad serán los mismos para todos los Objects añadidos.',
 	'collection.sitemap_date_prop'         => 'Propiedad de fecha para el mapa del sitio (debe estar indexada)',
 	'collection.sitemap_select_prop'       => 'Seleccionar una propiedad',
@@ -585,15 +588,21 @@ return [
 	'jobqueue.stalled_link'         => 'Abrir el gestor de la cola de trabajos',
 
 	// ── JumpStart ───────────────────────────────────────────────────────────
-	'jumpstart.title'               => 'Datos de JumpStart',
-	'jumpstart.desc'                => 'JumpStart es una función del CMS que le permite importar y exportar datos.',
-	'jumpstart.docs_link'           => 'Documentación de JumpStart',
-	'jumpstart.demo_title'          => 'Datos de demostración de JumpStart',
-	'jumpstart.export_title'        => 'Exportar datos de JumpStart',
-	'jumpstart.export_desc'         => 'Esto exportará todos los datos del CMS.',
-	'jumpstart.import_title'        => 'Importar datos de JumpStart',
-	'jumpstart.import_desc'         => 'Importe datos desde un archivo JSON de JumpStart existente.',
-	'jumpstart.logs_link'           => 'Registros de JumpStart',
+	'jumpstart.title'                   => 'Datos de JumpStart',
+	'jumpstart.desc'                    => 'JumpStart es una función del CMS que le permite importar y exportar datos.',
+	'jumpstart.docs_link'               => 'Documentación de JumpStart',
+	'jumpstart.demo_title'              => 'Datos de demostración de JumpStart',
+	'jumpstart.export_title'            => 'Exportar datos de JumpStart',
+	'jumpstart.export_desc'             => 'Esto exportará todos los datos del CMS.',
+	'jumpstart.export_include'          => 'Incluir también',
+	'jumpstart.export_objects'          => 'Objetos de las colecciones seleccionadas',
+	'jumpstart.export_templates'        => 'Plantillas',
+	'jumpstart.export_schemas'          => 'Esquemas',
+	'jumpstart.export_collections'      => 'Colecciones',
+	'jumpstart.export_collections_help' => 'Las colecciones seleccionadas exportan sus metadatos. Activa la opción Objetos a continuación para exportar también sus objetos.',
+	'jumpstart.import_title'            => 'Importar datos de JumpStart',
+	'jumpstart.import_desc'             => 'Importe datos desde un archivo JSON de JumpStart existente.',
+	'jumpstart.logs_link'               => 'Registros de JumpStart',
 
 	// ── Project Setup ───────────────────────────────────────────────────────
 	'setup.actions_title'            => 'Acciones de configuración de proyecto',
@@ -1061,6 +1070,11 @@ return [
 	'dashboard.welcome'                => '¡Bienvenido a Total CMS 3!',
 	'dashboard.subtitle'               => 'Administre su contenido, schemas y plantillas en un solo lugar.',
 	'dashboard.simulation_warning'     => 'Está simulando la edición <strong>{edition}</strong>.',
+	'dashboard.automations'            => 'Automatizaciones',
+	'dashboard.enabled'                => 'Activado',
+	'dashboard.disabled'               => 'Desactivado',
+	'dashboard.never_run'              => 'Nunca ejecutado',
+	'dashboard.view_all_automations'   => 'Ver todas las automatizaciones',
 	'dashboard.disable_simulation'     => 'Desactivar simulación',
 
 	// ── Dashboard Stats ─────────────────────────────────────────────────────

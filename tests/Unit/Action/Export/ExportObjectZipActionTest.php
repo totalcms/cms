@@ -203,9 +203,11 @@ final class ExportObjectZipActionTest extends TestCase
 		$this->assertSame($response500, $result);
 	}
 
-	public function testCleansUpTemporaryFile(): void
+	public function testStreamsZipBodyFromFileHandle(): void
 	{
-		$zipPath = sys_get_temp_dir() . '/test-cleanup-' . uniqid() . '.zip';
+		// With streaming, the action opens a file handle and passes it as the
+		// stream body — it does NOT read the entire file into memory.
+		$zipPath = sys_get_temp_dir() . '/test-stream-' . uniqid() . '.zip';
 		file_put_contents($zipPath, 'test content');
 
 		$this->objectFetcher->method('existsObject')->willReturn(true);
@@ -213,12 +215,20 @@ final class ExportObjectZipActionTest extends TestCase
 		$this->objectZipper->method('getZipFilename')->willReturn('test.zip');
 
 		$this->response->method('withHeader')->willReturnSelf();
-		$this->response->method('withBody')->willReturnSelf();
+
+		$capturedStream = null;
+		$this->response->expects($this->once())
+			->method('withBody')
+			->with($this->isInstanceOf(StreamInterface::class))
+			->willReturnCallback(function ($stream) use (&$capturedStream): ResponseInterface {
+				$capturedStream = $stream;
+
+				return $this->response;
+			});
 
 		($this->action)($this->request, $this->response, ['collection' => 'test', 'id' => 'obj']);
 
-		// Verify temporary file was deleted
-		$this->assertFileDoesNotExist($zipPath);
+		$this->assertNotNull($capturedStream);
 	}
 
 	public function testReturnsResponseWithZipBody(): void

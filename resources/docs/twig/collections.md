@@ -154,7 +154,7 @@ Results are plain object arrays in ranked order — the same shape `search()` re
 
 - Ranks by term coverage, not field position, and returns partial matches instead of requiring every term.
 - Does **not** support `field:value` scoped queries or explicit `and`/`or` operators — use `search()` for those.
-- Opt-in and additive; `cms.collection.search()` is unchanged. See the [relevance ranking notes](../operations/search#relevance-ranking-mcp--programmatic-search).
+- Opt-in and additive; `cms.collection.search()` is unchanged. See the [relevance ranking notes](../operations/search#relevance-ranking-mcp-programmatic-search).
 
 ## URL Generation
 

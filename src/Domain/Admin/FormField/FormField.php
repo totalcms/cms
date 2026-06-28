@@ -87,6 +87,22 @@ class FormField
 			$this->disabled = true;
 		}
 
+		// Visibility 'disable' mode: lock the field server-side when it is initially
+		// inactive, so it isn't editable in the window before JS runs (CSS greys it
+		// but can't block keyboard input). FieldVisibility re-enables it on the client
+		// if the condition is met. Only `disabled` is set (not `readonly`) so the
+		// client's disabled-based enable() reverses it cleanly. The value is still
+		// saved — TotalForm reads getValue(); SimpleForm.generateData includes disabled
+		// inputs explicitly.
+		if (
+			isset($this->settings['visibility'])
+			&& is_array($this->settings['visibility'])
+			&& ($this->settings['visibility']['mode'] ?? 'hide') === 'disable'
+			&& !$this->evaluateVisibility($this->settings['visibility'])
+		) {
+			$this->disabled = true;
+		}
+
 		// Allow required to be set via the field settings. This makes the form field required but
 		// it may not be enforced at the schema level. This can be useful when a field using visibility.
 		if (isset($this->settings['required']) && $this->settings['required'] === true) {
@@ -121,17 +137,17 @@ class FormField
 
 	/**
 	 * Render the field's visible label. Defaults to `<label for="field-{uuid}">`;
-	 * pass `'legend'` for fieldset-based fields (radio, multicheckbox).
+	 * pass `'legend'` for fieldset-based fields (radio, checklist).
 	 */
-	protected function createFieldLabel(string $tag = 'label'): string
+	protected function createFieldLabel(string $tag = 'label', ?string $content = null): string
 	{
-		if ($this->label === '') {
+		if ($this->label === '' && $content === null) {
 			return '';
 		}
 
 		$attributes = $tag === 'label' ? ['for' => "field-{$this->uuid}"] : [];
 
-		return HTMLUtils::element($tag, $this->label, $attributes);
+		return HTMLUtils::element($tag, $content ?? $this->label, $attributes);
 	}
 
 	/**
@@ -201,15 +217,28 @@ class FormField
 		}
 
 		$visibility = $this->settings['visibility'];
+		$mode       = (($visibility['mode'] ?? 'hide') === 'disable') ? 'disable' : 'hide';
 
-		// Calculate initial visibility state for server-side rendering
-		$isVisible           = $this->evaluateVisibility($visibility);
-		$attributes['class'] = ($attributes['class'] ?? '') . ($isVisible ? ' field-visible' : ' field-hidden');
+		// Calculate initial visibility state for server-side rendering.
+		$isVisible = $this->evaluateVisibility($visibility);
 
-		// Add inline style to hide if needed
-		if (!$isVisible) {
-			$attributes['style'] = ($attributes['style'] ?? '') . ' display: none;';
+		if ($isVisible) {
+			$attributes['class'] = ($attributes['class'] ?? '') . ' field-visible';
+
+			return;
 		}
+
+		// Inactive. In 'disable' mode keep the field visible but greyed (no
+		// field-hidden, so isVisible() stays true and dependents read its value);
+		// in 'hide' mode collapse it as before.
+		if ($mode === 'disable') {
+			$attributes['class'] = ($attributes['class'] ?? '') . ' field-disabled';
+
+			return;
+		}
+
+		$attributes['class'] = ($attributes['class'] ?? '') . ' field-hidden';
+		$attributes['style'] = ($attributes['style'] ?? '') . ' display: none;';
 	}
 
 	/**
@@ -265,8 +294,15 @@ class FormField
 		}
 
 		// Handle array current values (checkboxes, multiselect, etc.)
+		// Mirror the JS evaluateCondition() switch in field-visibility.js (lines 148-162).
 		if (is_array($currentValue)) {
-			return in_array($expectedValue, $currentValue, false);
+			return match ($operator) {
+				'in', '=='      => in_array($expectedValue, $currentValue, false),
+				'not_in', '!='  => !in_array($expectedValue, $currentValue, false),
+				'empty'         => count($currentValue) === 0,
+				'not_empty'     => count($currentValue) > 0,
+				default         => in_array($expectedValue, $currentValue, false),
+			};
 		}
 
 		// Evaluate based on operator
@@ -315,7 +351,11 @@ class FormField
 			'pattern'          => $this->pattern === '' ? null : $this->pattern,
 			'placeholder'      => $this->placeholder === '' ? null : $this->placeholder,
 			'aria-describedby' => $this->help === '' ? null : "help-{$this->uuid}",
-			'value'            => ($this->value === null || $this->value === '') ? null : $this->value,
+			// A scalar input's value attribute can only hold a scalar — guard against an
+			// array value (e.g. a property whose stored data is `[]` or a list value
+			// rendered through the base input) so it omits the attribute instead of
+			// triggering an "Array to string conversion" warning / rendering value="Array".
+			'value'            => ($this->value === null || $this->value === '' || is_array($this->value)) ? null : $this->value,
 			'min'              => is_null($this->min) ? null : (string)$this->min,
 			'max'              => is_null($this->max) ? null : (string)$this->max,
 			'step'             => is_null($this->step) ? null : (string)$this->step,
@@ -362,6 +402,44 @@ class FormField
 	}
 
 	/**
+	 * propertyOptions descriptor that makes a media `tags` sub-field autocomplete
+	 * from tags already used on the same property across the collection. Returns
+	 * null when suggestions can't be sourced.
+	 *
+	 * Resolves the index path whose `.tags` seed the suggestions:
+	 * - top-level field  → its own name (the property must be indexed);
+	 * - field nested directly in a top-level card → "<card>.<field>" (the card
+	 *   property must be indexed; Collection::pluck reads the dotted path).
+	 * Deeper nesting (deck items / card-in-card — a dotted nestedPath) needs
+	 * wildcard resolution and is out of scope for now.
+	 *
+	 * Callers MUST place the result under the sub-field's `settings` key:
+	 * subField()/field() route only declared constructor params, and
+	 * propertyOptions is read from the field's $settings.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	protected function mediaTagOptions(): ?array
+	{
+		if ($this->nestedPath === null) {
+			if (!$this->form->isPropertyIndexed($this->name)) {
+				return null;
+			}
+			$field = $this->name;
+		} elseif (!str_contains($this->nestedPath, '.') && $this->form->isPropertyIndexed($this->nestedPath)) {
+			$field = "{$this->nestedPath}.{$this->name}";
+		} else {
+			return null;
+		}
+
+		return [
+			'source' => 'mediaTags',
+			'field'  => $field,
+			'type'   => $this->field, // 'image' | 'gallery' | 'file'
+		];
+	}
+
+	/**
 	 * Build options for propertyOptions setting.
 	 * Supports:
 	 * - true: fetch unique values from current collection for this property
@@ -379,6 +457,13 @@ class FormField
 	{
 		$source = $this->settings['propertyOptions'] ?? true;
 
+		if (is_array($source) && ($source['source'] ?? null) === 'mediaTags') {
+			return $this->form->mediaTagsForCollection(
+				(string)($source['field'] ?? ''),
+				(string)($source['type'] ?? 'image'),
+			);
+		}
+
 		if ($source === 'collections') {
 			return $this->form->categoryListForCollections();
 		}
@@ -388,7 +473,7 @@ class FormField
 		}
 
 		if ($source === 'collectionIds') {
-			return $this->form->collectionIdList();
+			return $this->form->collectionIdListWithLabels();
 		}
 
 		if ($source === 'viewIds') {
@@ -527,9 +612,10 @@ class FormField
 	 */
 	protected function buildOptions(string $options = ''): string
 	{
-		// propertyOptions can be true (use current collection) or a string source ("collections", "schemas")
+		// propertyOptions can be true (use current collection), a string source ("collections", "schemas"),
+		// or an array descriptor (e.g. ['source' => 'mediaTags', 'field' => ..., 'type' => ...])
 		$propertyOptions = $this->settings['propertyOptions'] ?? null;
-		if ($propertyOptions === true || is_string($propertyOptions)) {
+		if ($propertyOptions === true || is_string($propertyOptions) || is_array($propertyOptions)) {
 			$this->options = array_merge($this->options, $this->buildOptionsForProperty());
 		}
 		if (isset($this->settings['relationalOptions'])) {
@@ -551,7 +637,7 @@ class FormField
 			&& !isset($this->settings['relationalOptions'])
 		) {
 			// Only merge values that aren't already represented in the options
-			// to avoid duplicating predefined options (e.g. multicheckbox fields)
+			// to avoid duplicating predefined options (e.g. checklist fields)
 			$existingValues = [];
 			foreach ($this->options as $key => $option) {
 				if (is_array($option) && isset($option['value'])) {
@@ -580,13 +666,46 @@ class FormField
 			$this->options = self::deduplicateOptionsByValue($this->options);
 		}
 
-		if (($this->settings['sortOptions'] ?? false) === true) {
-			sort($this->options);
+		// Sort options by label. Defaults ON when the options are derived from
+		// propertyOptions (a checklist of ids/values reads better alphabetized);
+		// set "sortOptions": false to preserve a curated source's order.
+		// Note: media-tag suggestions also go through this path, so they are
+		// alphabetized by default too — intentional, but add "sortOptions": false
+		// to the field schema if frequency/recency order is preferred instead.
+		$sortOptions = $this->settings['sortOptions'] ?? isset($this->settings['propertyOptions']);
+		if ($sortOptions === true) {
+			$this->options = self::sortOptionsByLabel($this->options);
 		}
 
 		$selected = is_array($this->value) ? $this->value : (string)($this->value ?? '');
 
 		return $options . HTMLUtils::options($this->options, $selected);
+	}
+
+	/**
+	 * Sort a flat option list by label, case-insensitive + natural order.
+	 * Handles both option shapes — plain strings (label = the string) and
+	 * `{value, label}` dicts. Grouped (optgroup) structures use string keys
+	 * and are left untouched so `<optgroup>` ordering is preserved.
+	 *
+	 * @param  array<mixed> $options
+	 *
+	 * @return array<mixed>
+	 */
+	protected static function sortOptionsByLabel(array $options): array
+	{
+		if (!array_is_list($options)) {
+			return $options;
+		}
+
+		usort($options, static function (mixed $a, mixed $b): int {
+			$labelA = is_array($a) ? (string)($a['label'] ?? $a['value'] ?? '') : (string)$a;
+			$labelB = is_array($b) ? (string)($b['label'] ?? $b['value'] ?? '') : (string)$b;
+
+			return strnatcasecmp($labelA, $labelB);
+		});
+
+		return $options;
 	}
 
 	/** @param array<mixed> $array */

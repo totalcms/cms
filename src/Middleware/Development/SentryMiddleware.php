@@ -38,8 +38,14 @@ class SentryMiddleware implements MiddlewareInterface
 			\League\Flysystem\CorruptedPathDetected::class,
 			\FastRoute\BadRouteException::class, // Duplicate route registration - user configuration issue
 			\Opis\JsonSchema\Exceptions\InvalidKeywordException::class, // Invalid schema definition - user error
+			\Opis\JsonSchema\Exceptions\UnresolvedReferenceException::class, // User schema $ref points at a missing/external schema
 			\ParseError::class, // Corrupted PHP files - user installation issue
 			\ArgumentCountError::class, // Constructor mismatch - stale deployment or corrupted installation
+			// Every Symfony Console exception is a CLI-usage mistake at the
+			// terminal (unknown command/namespace, unknown option, wrong arg
+			// count) — never a T3 bug. A genuine failure inside a command body
+			// throws an application exception, not a Console\Exception.
+			\Symfony\Component\Console\Exception\ExceptionInterface::class,
 		],
 		'user_error_exceptions' => [
 			\DomainException::class,
@@ -137,6 +143,25 @@ class SentryMiddleware implements MiddlewareInterface
 			'is marked as unique but is not included in the schema index',
 			// User Twig template passing null to adapter methods
 			'TotalCMSTwigAdapter',
+			// Logging infrastructure couldn't open its file — the data dir or
+			// <datadir>/.system/logs isn't writable/present on this install
+			// (permissions, or a sync-managed filesystem). An environment/
+			// operator issue, not a T3 bug; a failed log write must not page us.
+			'could not be opened in append mode',
+			// Bot/user passed a malformed UUID to the MCP endpoint — input
+			// validation correctly rejecting bad input, not a bug.
+			'Invalid UUID',
+			// Object data carries invalid byte sequences (bad import / paste);
+			// schema validation correctly refuses to re-encode it.
+			'Malformed UTF-8 characters',
+			// User schema references a property type that doesn't exist.
+			'Unknown property type for object',
+			// Operator never ran `tcms oauth:setup`, so the OAuth signing key is
+			// missing/invalid (see OAuthServerFactory::loadSigningKey).
+			'OAuth signing key is missing or invalid',
+			// Request body stream couldn't be read — a truncated/aborted upload
+			// or client disconnect, not a server bug.
+			'Could not read from stream',
 		],
 	];
 

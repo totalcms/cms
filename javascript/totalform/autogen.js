@@ -3,6 +3,8 @@
 // Provides pattern-based value generation for any field.
 // Used by TotalField for generic autogen and by Identifier for ID-specific autogen.
 //-----------------------------------------------
+import { collectScopedInputValues } from "./fieldCollection.mjs";
+
 export default class Autogen {
 
 	constructor(field) {
@@ -21,7 +23,9 @@ export default class Autogen {
 		];
 		return (this.pattern.match(/\${(.*?)}/g) || [])
 			.map(v => v.slice(2, -1))
-			.filter(name => !reservedNames.includes(name) && !name.startsWith('oid-'));
+			.filter(name => !reservedNames.includes(name)
+				&& !name.startsWith('oid-')
+				&& !name.startsWith('uid-'));
 	}
 
 	/**
@@ -54,6 +58,11 @@ export default class Autogen {
 				const oidValue = this.getCollectionCount();
 				return oidValue.toString().padStart(paddingLength, '0');
 			}
+			// Handle uid with a custom length: uid-12 → a 12-char random id.
+			// Bare ${uid} stays the default length (see addSpecialVariables).
+			if (/^uid-\d+$/.test(key)) {
+				return this.generateUid(parseInt(key.substring(4), 10));
+			}
 			return data[key] ?? "";
 		});
 	}
@@ -63,10 +72,11 @@ export default class Autogen {
 	 */
 	collectFormData() {
 		if (this.field.isInDeck) {
-			const data = {};
-			const fields = this.field.deckItem.querySelectorAll('input, textarea, select');
-			fields.forEach(field => data[field.name] = field.value);
-			return data;
+			// Read only the deck item's own inputs; composite sub-fields (e.g. an
+			// image's `name`/"Filename") must not shadow the item's own fields, or
+			// patterns like ${name} would resolve to the image filename. See
+			// fieldCollection.mjs.
+			return collectScopedInputValues(this.field.deckItem);
 		}
 
 		// Get the field data from the form
@@ -90,7 +100,7 @@ export default class Autogen {
 		data.now       = Date.now();
 		data.timestamp = now.toISOString().slice(0, -5).replace(/-|:/g, '');
 		data.uuid      = this.generateUuid();
-		data.uid       = Math.random().toString(36).substring(2, 9);
+		data.uid       = this.generateUid();
 		data.oid       = this.getCollectionCount();
 
 		data.currentyear  = now.getFullYear().toString();
@@ -112,5 +122,21 @@ export default class Autogen {
 			const v = c == 'x' ? r : (r & 0x3 | 0x8);
 			return v.toString(16);
 		});
+	}
+
+	/**
+	 * Generate a base-36 random id of exactly `length` characters (default 7).
+	 * Concatenating multiple Math.random() draws both supports lengths beyond a
+	 * single draw (~11 chars) and avoids the truncation that
+	 * `Math.random().toString(36).substring(2, 9)` produced when a draw had
+	 * trailing zeros (occasionally yielding a shorter-than-expected id).
+	 */
+	generateUid(length = 7) {
+		if (length <= 0) return '';
+		let uid = '';
+		while (uid.length < length) {
+			uid += Math.random().toString(36).substring(2);
+		}
+		return uid.substring(0, length);
 	}
 }

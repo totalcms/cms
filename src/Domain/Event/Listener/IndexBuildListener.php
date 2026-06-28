@@ -13,13 +13,11 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 
 class IndexBuildListener
 {
-	/** @var array<string,bool> Collections with suspended per-object index rebuilds */
-	private array $suspendedCollections = [];
-
 	public function __construct(
 		private readonly IndexBuilder $indexBuilder,
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly CollectionLister $collectionLister,
+		private readonly EventDispatcher $eventDispatcher,
 	) {
 	}
 
@@ -33,29 +31,12 @@ class IndexBuildListener
 		$dispatcher->listen('bulk.deleted', $this->onBulkDeleted(...), -100);
 	}
 
-	/**
-	 * Suspend per-object index rebuilds for a collection.
-	 * Used during batch imports to avoid rebuilding after every object.
-	 */
-	public function suspendForCollection(string $collection): void
-	{
-		$this->suspendedCollections[$collection] = true;
-	}
-
-	/**
-	 * Resume per-object index rebuilds for a collection.
-	 */
-	public function resumeForCollection(string $collection): void
-	{
-		unset($this->suspendedCollections[$collection]);
-	}
-
 	/** @param array<string,mixed> $payload */
 	public function onObjectCreated(array $payload): void
 	{
 		$collection = (string)$payload['collection'];
 
-		if (isset($this->suspendedCollections[$collection])) {
+		if ($this->eventDispatcher->isIndexRebuildSuspended($collection)) {
 			return;
 		}
 
@@ -72,7 +53,7 @@ class IndexBuildListener
 	{
 		$collection = (string)$payload['collection'];
 
-		if (isset($this->suspendedCollections[$collection])) {
+		if ($this->eventDispatcher->isIndexRebuildSuspended($collection)) {
 			return;
 		}
 
@@ -92,7 +73,7 @@ class IndexBuildListener
 
 		// During a bulk delete the per-object rebuild is suspended; the single
 		// rebuild happens once in onBulkDeleted at the end of the batch.
-		if (isset($this->suspendedCollections[$collection])) {
+		if ($this->eventDispatcher->isIndexRebuildSuspended($collection)) {
 			return;
 		}
 
@@ -124,7 +105,7 @@ class IndexBuildListener
 	{
 		$collection = (string)$payload['collection'];
 
-		$this->resumeForCollection($collection);
+		$this->eventDispatcher->resumeIndexRebuild($collection);
 		$this->indexBuilder->buildIndex($collection);
 	}
 
@@ -139,7 +120,7 @@ class IndexBuildListener
 	{
 		$collection = (string)$payload['collection'];
 
-		$this->resumeForCollection($collection);
+		$this->eventDispatcher->resumeIndexRebuild($collection);
 		$this->indexBuilder->buildIndex($collection);
 	}
 }

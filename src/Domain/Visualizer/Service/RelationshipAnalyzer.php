@@ -188,7 +188,7 @@ readonly class RelationshipAnalyzer
 		}
 
 		$nodes = [];
-		foreach ($keep as $id => $_) {
+		foreach (array_keys($keep) as $id) {
 			if (isset($graph['nodes'][$id])) {
 				$nodes[$id] = $graph['nodes'][$id];
 			}
@@ -292,13 +292,12 @@ readonly class RelationshipAnalyzer
 		return is_string($ref) ? $ref : '';
 	}
 
-	/** A `$id` URL like `https://…/schemas/foo.json` resolves to `foo`. */
+	/**
+	 * A `$id` URL like `https://…/schemas/foo.json` resolves to `foo`.
+	 * basename() handles both slashed paths/URLs and bare filenames correctly.
+	 */
 	private function schemaIdFromRef(string $ref): string
 	{
-		if (str_contains($ref, '/')) {
-			return basename($ref, '.json');
-		}
-
 		return basename($ref, '.json');
 	}
 
@@ -355,8 +354,6 @@ readonly class RelationshipAnalyzer
 	}
 
 	/**
-	 * @param mixed $value
-	 *
 	 * @return list<string>
 	 */
 	private function toList(mixed $value): array

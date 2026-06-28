@@ -117,7 +117,7 @@ Zapier's test step triggers the consent flow. Approve it from a T3 admin session
 
 ## Connecting Claude Desktop or Cursor
 
-AI clients that follow the MCP spec auto-discover everything — you do nothing in the T3 admin beyond ensuring **Allow Dynamic Registration** is on (the default).
+AI clients that follow the MCP spec auto-discover everything — provided you have turned on **Allow Dynamic Registration**, which is **off by default** and must be enabled first.
 
 In Claude Desktop, add a remote MCP server and paste your site URL:
 

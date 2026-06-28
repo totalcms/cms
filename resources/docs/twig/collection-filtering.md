@@ -785,9 +785,9 @@ When multiple items have the same ordered value, the remainder rule sorts them:
 
 ```twig
 {# Dynamic filtering based on URL parameters #}
-{% set minPrice = get.min | default(0) %}
-{% set maxPrice = get.max | default(1000) %}
-{% set category = get.category | default('') %}
+{% set minPrice = getData.min | default(0) %}
+{% set maxPrice = getData.max | default(1000) %}
+{% set category = getData.category | default('') %}
 
 {% set products = cms.collection.objects('products')
     | filterCollection([
@@ -795,7 +795,7 @@ When multiple items have the same ordered value, the remainder rule sorts them:
         {property: "category", operator: "equal", value: category}
     ])
     | sortCollection([
-        {property: get.sort | default('price'), reverse: get.order == 'desc'}
+        {property: getData.sort | default('price'), reverse: getData.order == 'desc'}
     ]) %}
 ```
 

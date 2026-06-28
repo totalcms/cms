@@ -170,6 +170,23 @@ readonly class TotalFormFactory
 		return $form->build($content);
 	}
 
+	/**
+	 * Wrap pre-rendered field HTML in a styled fieldset. Twig:
+	 *   {% set inner %}{{ cms.form.field(...) }}{% endset %}
+	 *   {{ cms.form.fieldset('Legend', inner, { formgrid: 'a b\nc d' }) }}
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function fieldset(string $legend = '', string $content = '', array $options = []): string
+	{
+		return (new FieldsetRenderer())->wrap(
+			$legend === '' ? null : $legend,
+			$content,
+			(string)($options['formgrid'] ?? ''),
+			(string)($options['class'] ?? ''),
+		);
+	}
+
 	/** @param array<string,mixed> $options */
 	public function factory(string $collection, array $options = []): string
 	{

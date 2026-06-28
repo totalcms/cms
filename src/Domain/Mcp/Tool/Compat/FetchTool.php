@@ -82,7 +82,7 @@ readonly class FetchTool
 		$textParts = [];
 		foreach ($renderable as $prop) {
 			if (isset($object[$prop]) && is_scalar($object[$prop]) && trim((string)$object[$prop]) !== '') {
-				$textParts[] = '## ' . ucfirst($prop) . "\n\n" . (string)$object[$prop];
+				$textParts[] = '## ' . ucfirst($prop) . "\n\n" . $object[$prop];
 			}
 		}
 		$text = implode("\n\n", $textParts);
@@ -103,7 +103,7 @@ readonly class FetchTool
 		if ($text === '') {
 			$dump = [];
 			foreach ($metadata as $k => $v) {
-				$dump[] = '## ' . ucfirst((string)$k) . "\n\n" . (string)$v;
+				$dump[] = '## ' . ucfirst((string)$k) . "\n\n" . $v;
 			}
 			$text = implode("\n\n", $dump);
 		}

@@ -385,8 +385,11 @@ final class ExtensionContext
 	 * `register()` lifecycle method:
 	 *
 	 *   public function register(ExtensionContext $context): void {
-	 *       if (!$context->editionAllows(EditionFeature::ALGOLIA_SEARCH)) return;
-	 *       $context->registerSearchProvider(new AlgoliaSearchProvider(...));
+	 *       if (!$context->get(EditionFeatureService::class)->can(EditionFeature::ALGOLIA_SEARCH)) return;
+	 *       $context->registerSearchProvider(new AlgoliaSearchProvider(
+	 *           $context->setting('appId', ''),
+	 *           // ...
+	 *       ));
 	 *   }
 	 */
 	public function registerSearchProvider(\TotalCMS\Domain\Search\Service\SearchProvider $provider): void

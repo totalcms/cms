@@ -91,7 +91,7 @@ readonly class ObjectSearcher
 			$matched = 0;
 			$score   = 0.0;
 			foreach ($terms as $term) {
-				$weight = self::bestFieldWeight($item, $term, $weights);
+				$weight = $this->bestFieldWeight($item, $term, $weights);
 				if ($weight !== null) {
 					$matched++;
 					$score += $weight;
@@ -103,11 +103,9 @@ readonly class ObjectSearcher
 			$scored[] = ['item' => $item, 'score' => $score, 'matched' => $matched];
 		}
 
-		usort($scored, static function (array $a, array $b): int {
-			return ($b['matched'] <=> $a['matched'])
+		usort($scored, static fn (array $a, array $b): int => ($b['matched'] <=> $a['matched'])
 				?: (($b['score'] <=> $a['score'])
-				?: ((string)($a['item']['id'] ?? '') <=> (string)($b['item']['id'] ?? '')));
-		});
+				?: ((string)($a['item']['id'] ?? '') <=> (string)($b['item']['id'] ?? ''))));
 
 		return $scored;
 	}
@@ -120,7 +118,7 @@ readonly class ObjectSearcher
 	 * @param array<string,mixed> $item
 	 * @param array<string,float> $weights
 	 */
-	private static function bestFieldWeight(array $item, string $term, array $weights): ?float
+	private function bestFieldWeight(array $item, string $term, array $weights): ?float
 	{
 		$best = null;
 		foreach ($item as $key => $value) {
@@ -131,7 +129,7 @@ readonly class ObjectSearcher
 			if (is_array($value)) {
 				$matches = self::searchArrayValues($value, $term);
 			} elseif (is_scalar($value)) {
-				$matches = self::scalarMatchesTerm((string)$value, $term);
+				$matches = $this->scalarMatchesTerm((string)$value, $term);
 			} else {
 				$matches = false;
 			}
@@ -151,7 +149,7 @@ readonly class ObjectSearcher
 	 * Word-prefix match for a single scalar value — the shared rule used by
 	 * itemMatchesTerm()/searchArrayValues() for scalars.
 	 */
-	private static function scalarMatchesTerm(string $value, string $term): bool
+	private function scalarMatchesTerm(string $value, string $term): bool
 	{
 		return preg_match('/\b' . preg_quote($term, '/') . '/i', $value) === 1;
 	}

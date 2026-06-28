@@ -10,6 +10,7 @@ use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
+use TotalCMS\Domain\Mcp\Service\McpUrlBuilder;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -30,6 +31,7 @@ readonly class McpDiscoveryAction
 		private EditionFeatureService $editionFeatures,
 		private JsonRenderer $renderer,
 		private Config $config,
+		private McpUrlBuilder $urlBuilder,
 	) {
 	}
 
@@ -59,18 +61,10 @@ readonly class McpDiscoveryAction
 		// scheme/host the agent reached us at (proxies, dev overrides). The base
 		// path is folded in via Config::mcpEndpoint() so subpath / Stacks installs
 		// advertise a reachable `<base>/mcp` rather than the wrong domain-root URL.
-		$uri       = $request->getUri();
-		$authority = $uri->getAuthority();
+		// Non-routable-host fallback is handled by McpUrlBuilder::mcpEndpointUrl().
+		$endpoint = $this->urlBuilder->mcpEndpointUrl($request);
 
-		// ...except when the request reached us on a loopback/IP host (typical
-		// inside Docker or behind a reverse proxy that doesn't forward Host) while
-		// we have a real configured domain. Advertising 127.0.0.1 there hands
-		// agents an unreachable endpoint, so fall back to the configured site URL.
-		$endpoint = Config::isNonRoutableHost($authority) && !Config::isNonRoutableHost($this->config->domain)
-			? $this->config->mcpEndpoint()
-			: $this->config->mcpEndpoint($uri->getScheme() . '://' . $authority);
-
-		return $this->renderer->json($response, [
+		$body = [
 			'mcpVersion'  => $this->serverFactory->protocolVersion(),
 			'endpoint'    => $endpoint,
 			'name'        => $this->config->domain,
@@ -80,6 +74,16 @@ readonly class McpDiscoveryAction
 				'apiKey' => ['header' => 'X-API-Key'],
 			],
 			'publicTools' => $publicTools,
-		], 200);
+		];
+
+		// RFC 9728: advertise the protected-resource-metadata URL so OAuth-aware
+		// clients can discover the authorization server without a 401 round-trip.
+		// Only present when the OAuth server feature is enabled — it points at
+		// /.well-known/oauth-protected-resource, which returns 404 on non-Pro.
+		if ($this->editionFeatures->can(EditionFeature::OAUTH_SERVER)) {
+			$body['resourceMetadata'] = $this->urlBuilder->protectedResourceMetadataUrl($request);
+		}
+
+		return $this->renderer->json($response, $body, 200);
 	}
 }
