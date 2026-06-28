@@ -871,18 +871,10 @@ readonly class AdminTwigAdapter
 		foreach ($objects as $object) {
 			$id = $object->id;
 
-			// Extract the type of the first trigger. Triggers are stored as a
-			// deck (keyed array of rows); we take the first row's 'type' field.
-			// Cast through mixed so PHPStan does not narrow based on Collection
-			// PHPDoc return types that conflict with the runtime value (the
-			// triggers deck is stored as a raw array, not a PropertyData).
-			/** @var mixed $triggersRaw */
-			$triggersRaw = $object->properties->get('triggers');
-			$triggerType = '';
-			if (is_array($triggersRaw) && $triggersRaw !== []) {
-				$first       = array_values($triggersRaw)[0];
-				$triggerType = is_array($first) ? (string)($first['type'] ?? '') : '';
-			}
+			// Trigger type via a mixed-typed helper: the Collection's generic
+			// (PropertyData) conflicts with the runtime value (a raw deck array),
+			// and a helper param avoids a @var tag that rector strips each clean.
+			$triggerType = $this->firstTriggerType($object->properties->get('triggers'));
 
 			// Run reader data
 			$run        = $latestRuns[$id] ?? null;
@@ -910,6 +902,24 @@ readonly class AdminTwigAdapter
 		}
 
 		return $result;
+	}
+
+	/**
+	 * First trigger's `type` from an automation's raw `triggers` value.
+	 *
+	 * Typed `mixed` deliberately: the automation object's Illuminate Collection
+	 * is generically typed as holding PropertyData, but the `triggers` deck is
+	 * stored as a raw array at runtime, so the value is handled dynamically.
+	 */
+	private function firstTriggerType(mixed $triggers): string
+	{
+		if (!is_array($triggers) || $triggers === []) {
+			return '';
+		}
+
+		$first = array_values($triggers)[0];
+
+		return is_array($first) ? (string)($first['type'] ?? '') : '';
 	}
 
 	// -------------------------
