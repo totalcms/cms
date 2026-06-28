@@ -131,6 +131,12 @@ document.addEventListener("DOMContentLoaded", event => {
 	const visualizers = Array.from(document.getElementsByClassName("visualizer-canvas"));
 	visualizers.forEach(canvas => new DataVisualizer(canvas));
 
+	// Auto-submit any GET filter control marked data-autosubmit, on change
+	// (page-agnostic — works without a visualizer canvas; kept out of markup for CSP).
+	document.querySelectorAll('[data-autosubmit]').forEach(el =>
+		el.addEventListener('change', () => el.form?.submit()),
+	);
+
 	// Sortable static tables (logs page)
 	const sortableTables = Array.from(document.querySelectorAll("table.admin-table[data-sort]"));
 	sortableTables.forEach(table => new SortableTable(table));

@@ -17,11 +17,6 @@ export default class DataVisualizer {
 		this.instance  = null;
 		this.svgEl     = null;
 
-		// Auto-submit the filter controls on change (kept out of the markup for CSP).
-		document.querySelectorAll('[data-autosubmit]').forEach(el =>
-			el.addEventListener('change', () => el.form?.submit()),
-		);
-
 		this.initControls();
 
 		if (this.graphEl) this.render();

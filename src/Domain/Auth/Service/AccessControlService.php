@@ -230,9 +230,12 @@ readonly class AccessControlService
 	 * object on the site; an import overwrites collections and can seed factory
 	 * data — both are equivalent in risk to direct filesystem access.
 	 *
+	 * Public so the Permission Matrix can include these ids in its utils
+	 * dimension and mark them super-admin-only without maintaining a second copy.
+	 *
 	 * @var list<string>
 	 */
-	private const SUPER_ADMIN_ONLY_UTILS = ['jumpstart'];
+	public const SUPER_ADMIN_ONLY_UTILS = ['jumpstart', 'permission-matrix'];
 
 	/**
 	 * Check if user can access a specific util with the given CRUD operation.

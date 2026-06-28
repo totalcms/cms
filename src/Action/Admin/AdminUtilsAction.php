@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Admin;
 
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
@@ -24,6 +25,7 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Sync\Data\SyncableCollections;
 use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
@@ -53,6 +55,7 @@ readonly class AdminUtilsAction
 		private OAuthScopeRegistry $oauthScopeRegistry,
 		private \TotalCMS\Domain\Extension\Service\ExtensionManager $extensionManager,
 		private VisualizerService $visualizerService,
+		private SessionInterface $session,
 	) {
 	}
 
@@ -219,12 +222,15 @@ readonly class AdminUtilsAction
 			}
 		}
 
+		$currentUserId = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+
 		// Collection Visualizer — relationship graph rendered as a Mermaid ERD.
 		$visualizerData = null;
 		if ($page === 'collection-visualizer') {
 			$visualizerData = $this->visualizerService->collectionGraph(
 				$this->collectionLister->listAllCollections(),
 				$query,
+				$currentUserId !== '' ? $currentUserId : null,
 			);
 		}
 
@@ -234,7 +240,18 @@ readonly class AdminUtilsAction
 			$objectVisualizerData = $this->visualizerService->objectGraph(
 				$this->collectionLister->listAllCollections(),
 				$query,
+				$currentUserId !== '' ? $currentUserId : null,
 			);
+		}
+
+		// Permission Matrix — what each access group can do, as a matrix.
+		$permissionMatrixData = null;
+		if ($page === 'permission-matrix') {
+			$group                     = isset($query['group']) ? trim((string)$query['group']) : '';
+			$permissionMatrixData = [
+				'matrix' => $this->visualizerService->accessGroupMatrix(),
+				'group'  => $group,
+			];
 		}
 
 		return $this->twigRenderer->template($response, 'admin/utils.twig', [
@@ -261,9 +278,10 @@ readonly class AdminUtilsAction
 			'composerInstall'        => \TotalCMS\Support\PathResolver::isComposerInstall(),
 			'syncData'               => $syncData,
 			'jumpstartData'          => $jumpstartData,
-			'visualizerData'         => $visualizerData,
-			'objectVisualizerData'   => $objectVisualizerData,
-			'postData'               => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
+			'visualizerData'            => $visualizerData,
+			'objectVisualizerData'      => $objectVisualizerData,
+			'permissionMatrixData' => $permissionMatrixData,
+			'postData'                  => $request->getMethod() === 'POST' ? (array)$request->getParsedBody() : [],
 		]);
 	}
 

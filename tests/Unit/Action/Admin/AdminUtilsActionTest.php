@@ -53,6 +53,7 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $request;
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 	private \PHPUnit\Framework\MockObject\MockObject $visualizerService;
+	private \Odan\Session\SessionInterface&\PHPUnit\Framework\MockObject\MockObject $session;
 
 	protected function setUp(): void
 	{
@@ -83,6 +84,7 @@ final class AdminUtilsActionTest extends TestCase
 		$this->request               = $this->createMock(ServerRequestInterface::class);
 		$this->response              = $this->createMock(ResponseInterface::class);
 		$this->visualizerService     = $this->createMock(VisualizerService::class);
+		$this->session               = $this->createMock(\Odan\Session\SessionInterface::class);
 
 		$this->action = new AdminUtilsAction(
 			$this->renderer,
@@ -105,6 +107,7 @@ final class AdminUtilsActionTest extends TestCase
 			$this->oauthScopeRegistry,
 			$this->extensionManager,
 			$this->visualizerService,
+			$this->session,
 		);
 	}
 
