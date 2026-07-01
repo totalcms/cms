@@ -193,8 +193,19 @@ export default class TotalForm {
 		this.form.dataset.id = id;
 	}
 
+	// Extract the saved object id from a save response. Object saves are
+	// Fractal data-wrapped ({ data: { id, ... } }); older code read response.id
+	// (undefined), so an add-only form never learned its autogen id.
+	responseId(response) {
+		return response?.data?.id ?? response?.id ?? null;
+	}
+
 	getId() {
 		if (this.isEditMode()) return this.id;
+
+		// Once a save has assigned an id (e.g. an add-only form whose id field was
+		// removed for autogen), prefer it — there may be no id field to read back.
+		if (this.id && this.id.length > 0) return this.id;
 
 		// Filter for main form's ID field, excluding subfields (like deck item IDs)
 		const idField = this.fields.filter(field => {
@@ -621,6 +632,17 @@ export default class TotalForm {
     afterSave(response) {
         if (!response) return;
 
+		// Adopt the saved id BEFORE flushing deferred uploads. Add-only forms with
+		// an autogen id have no id field, so queued file/image droplets would post
+		// to a URL with an empty id and fail. saveDroplets() rebuilds each upload
+		// URL from getId(), so the id must be set first. We deliberately do NOT
+		// enter edit mode here: afterSaveAction() selects new-vs-edit post-save
+		// actions from isEditMode(), and a fresh add must still run the new actions.
+		const savedId = this.responseId(response);
+		if (savedId && (!this.id || this.id.length === 0)) {
+			this.setId(savedId);
+		}
+
 		const unsavedDroplets = this.droplets.filter(field => field.isUnsaved());
         if (unsavedDroplets.length > 0) {
             return this.saveDroplets(() => this.afterSaveAction(response));
@@ -642,10 +664,12 @@ export default class TotalForm {
 			return;
 		}
 
-		// Extract ID from response for new objects (needed for actions like redirect-object)
-		if (response && response.id && (!this.id || this.id.length === 0)) {
-			this.id = response.id;
-			this.form.dataset.id = response.id;
+		// Extract ID from response for new objects (needed for actions like
+		// redirect-object). Normally already set in afterSave(); kept for the
+		// direct-call path and as a guard.
+		const savedId = this.responseId(response);
+		if (savedId && (!this.id || this.id.length === 0)) {
+			this.setId(savedId);
 		}
 		this.setupEditMode();
 
@@ -935,9 +959,9 @@ export default class TotalForm {
 
     success(response = null) {
 		// Extract ID from response for new objects
-		if (response && response.id && (!this.id || this.id.length === 0)) {
-			this.id = response.id;
-			this.form.dataset.id = response.id;
+		const savedId = this.responseId(response);
+		if (savedId && (!this.id || this.id.length === 0)) {
+			this.setId(savedId);
 		}
 		this.setupEditMode();
 		this.changeState("success", response);

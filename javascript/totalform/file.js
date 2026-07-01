@@ -76,6 +76,10 @@ export default class FileField extends TotalField {
 	}
 
 	isUnsaved() {
+		// Queued/uploading droplet files count as unsaved work even when getValue()
+		// and the dirty class don't reflect them (see ImageField.isUnsaved), so the
+		// form's deferred saveDroplets() flush is never skipped.
+		if (this.droplet && this.droplet.pendingFiles().length > 0) return true;
 		const unsavedChildren = this.previewContainer.querySelectorAll(".unsaved");
 		return this.container.classList.contains("unsaved") || unsavedChildren.length > 0;
 	}

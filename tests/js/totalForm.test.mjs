@@ -58,3 +58,54 @@ describe('TotalForm.isUnsaved', () => {
 		expect(form.isUnsaved()).toBe(false);
 	});
 });
+
+//-----------------------------------------------
+// Add-only forms with an autogen id have no id field. The saved id must be
+// pulled from the (Fractal data-wrapped) response and set on the form BEFORE
+// deferred file/image uploads flush, or they post to a URL with an empty id.
+//-----------------------------------------------
+
+describe('TotalForm.responseId', () => {
+	const form = Object.create(TotalForm.prototype);
+
+	test('reads the id from the data envelope', () => {
+		expect(form.responseId({ data: { id: 'obj-1' } })).toBe('obj-1');
+	});
+
+	test('falls back to a top-level id', () => {
+		expect(form.responseId({ id: 'obj-2' })).toBe('obj-2');
+	});
+
+	test('returns null when there is no id or no response', () => {
+		expect(form.responseId({})).toBeNull();
+		expect(form.responseId(null)).toBeNull();
+	});
+});
+
+describe('TotalForm.getId', () => {
+	test('prefers an already-assigned id outside edit mode (autogen add-only)', () => {
+		const form = Object.create(TotalForm.prototype);
+		form.isEditMode = () => false;
+		form.id = 'saved-9';
+		expect(form.getId()).toBe('saved-9');
+	});
+});
+
+describe('TotalForm.afterSave', () => {
+	test('adopts the saved id before flushing deferred uploads', () => {
+		const form = Object.create(TotalForm.prototype);
+		form.id = '';
+		form.form = { dataset: {} };
+		form.droplets = [{ isUnsaved: () => true }];
+
+		let idAtFlush = null;
+		form.saveDroplets = () => { idAtFlush = form.id; };
+
+		form.afterSave({ data: { id: 'new-123' } });
+
+		// Set on the form (and its dataset) and available when droplets flush.
+		expect(form.id).toBe('new-123');
+		expect(form.form.dataset.id).toBe('new-123');
+		expect(idAtFlush).toBe('new-123');
+	});
+});

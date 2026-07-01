@@ -96,3 +96,27 @@ describe('GalleryField populate -> read round-trip', () => {
 		expect(gallery.readSharedDialog()).toEqual({ name: 'pic.jpg', exif: { nodata: '' } });
 	});
 });
+
+//-----------------------------------------------
+// isUnsaved() must report queued droplet files as unsaved. A new-form gallery's
+// getValue() is [] until edit mode, so changed() never adds the dirty class —
+// without the pending-files check, afterSave() filters the gallery out and the
+// deferred uploads never flush.
+//-----------------------------------------------
+describe('GalleryField.isUnsaved', () => {
+	function galleryWith(pending) {
+		const g = Object.create(GalleryField.prototype);
+		g.droplet = { pendingFiles: () => pending };
+		g.container = document.createElement('div');
+		g.previewContainer = document.createElement('div');
+		return g;
+	}
+
+	test('true when the droplet has queued/uploading files', () => {
+		expect(galleryWith([{}]).isUnsaved()).toBe(true);
+	});
+
+	test('false when there are no pending files and nothing is dirty', () => {
+		expect(galleryWith([]).isUnsaved()).toBe(false);
+	});
+});
