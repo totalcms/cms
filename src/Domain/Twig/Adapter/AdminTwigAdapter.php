@@ -766,7 +766,11 @@ readonly class AdminTwigAdapter
 
 		// 2. License / version-authorization
 		$licenseData = $this->licenseStatus->getSidebarStatus();
-		if ($licenseData->showIcon) {
+		// Trial statuses carry a non-null daysRemaining (no other license
+		// condition does). Keep the trial out of the alerts panel until it has
+		// 30 days or less left — the sidebar icon still reflects it earlier.
+		$isDistantTrial = $licenseData->daysRemaining !== null && $licenseData->daysRemaining > 30;
+		if ($licenseData->showIcon && !$isDistantTrial) {
 			$alerts[] = [
 				'level'    => $this->mapLicenseSeverity($licenseData->severity),
 				'message'  => $licenseData->tooltip !== '' ? $licenseData->tooltip : 'License requires attention.',
