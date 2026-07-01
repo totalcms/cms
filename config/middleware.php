@@ -19,6 +19,7 @@ use TotalCMS\Middleware\License\LicenseValidationMiddleware;
 use TotalCMS\Middleware\MaintenanceModeMiddleware;
 use TotalCMS\Middleware\MigrationMiddleware;
 use TotalCMS\Middleware\PageRouterMiddleware;
+use TotalCMS\Middleware\PostMaxSizeMiddleware;
 use TotalCMS\Middleware\Response\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Response\RobotsTagMiddleware;
@@ -80,6 +81,12 @@ return function (App $app): void {
 	// the per-request session file lock would otherwise serialize the parallel
 	// image requests on an image-heavy page.
 	$app->add(LazySessionStartMiddleware::class);
+
+	// Reject oversized uploads (body > post_max_size) up front with a clear 413,
+	// before session/routing — otherwise PHP has already discarded the body and
+	// upload handlers 404 with a misleading "no file in request". Added late so
+	// it runs early (near-outermost), doing minimal work before short-circuiting.
+	$app->add(PostMaxSizeMiddleware::class);
 
 	// OUTERMOST layer. In Slim, the middleware added LAST wraps everything else,
 	// so its after-handle() code runs LAST — after route rendering AND after

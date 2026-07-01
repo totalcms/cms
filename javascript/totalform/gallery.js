@@ -337,6 +337,9 @@ export default class GalleryField extends ImageField {
 			// allow). SVG belongs in the dedicated SVG field; the server also
 			// rejects SVG here (GallerySaver). Defense-in-depth + cleaner UX.
 			acceptedFiles    : "image/jpeg,image/png,image/gif,image/webp,image/bmp,image/x-icon,image/avif,image/heic,image/heif,image/tiff",
+			// Chunk large photos into 5MB parts so uploads aren't capped by the
+			// server's post_max_size (assembled server-side in FileSaveAction).
+			chunking         : true,
 			rules            : this.settings.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());

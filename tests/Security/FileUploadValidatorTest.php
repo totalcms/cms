@@ -55,13 +55,13 @@ final class FileUploadValidatorTest extends TestCase
 
 	public function testFileTooBigFailsValidation(): void
 	{
-		// 15MB image (over 10MB limit)
-		$file = $this->createMockUploadedFile('large.jpg', 15 * 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg');
+		// 30MB image (over the 25MB image limit)
+		$file = $this->createMockUploadedFile('large.jpg', 30 * 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg');
 
 		$result = $this->validator->validateFile($file, 'image');
 
 		$this->assertFalse($result['valid']);
-		$this->assertStringContainsString('File size (15 MB) exceeds maximum allowed size (10 MB)', implode(' ', $result['errors']));
+		$this->assertStringContainsString('File size (30 MB) exceeds maximum allowed size (25 MB)', implode(' ', $result['errors']));
 	}
 
 	public function testDangerousExtensionFailsValidation(): void
@@ -252,11 +252,11 @@ final class FileUploadValidatorTest extends TestCase
 	public function testFormatBytes(): void
 	{
 		// We can't directly test the private method, but we can test it through the error messages
-		$file   = $this->createMockUploadedFile('large.jpg', 15 * 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg');
+		$file   = $this->createMockUploadedFile('large.jpg', 30 * 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg');
 		$result = $this->validator->validateFile($file, 'image');
 
-		$this->assertStringContainsString('15 MB', $result['errors'][0]);
-		$this->assertStringContainsString('10 MB', $result['errors'][0]);
+		$this->assertStringContainsString('30 MB', $result['errors'][0]);
+		$this->assertStringContainsString('25 MB', $result['errors'][0]);
 	}
 
 	public function testMultipleErrors(): void

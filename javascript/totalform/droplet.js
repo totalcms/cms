@@ -60,8 +60,14 @@ export default class Droplet {
 			parallelUploads   : 3,
 			paramName         : this.settings.paramName,
 			autoProcessQueue  : this.settings.autoProcessQueue,
-			thumbnailWidth    : null,
-			thumbnailHeight   : null,
+			// Bound the thumbnail canvas. With null/null Dropzone builds a
+			// full-resolution canvas for the preview, which large photos (e.g.
+			// 24MP) push past the browser's canvas-area limit — the "thumbnail"
+			// event then never fires and the preview stays hidden. 'contain'
+			// preserves aspect ratio (no crop) within the box.
+			thumbnailWidth    : 600,
+			thumbnailHeight   : 600,
+			thumbnailMethod   : "contain",
 			previewsContainer : this.settings.previewsContainer,
 			previewTemplate   : this.previewTemplate,
 			clickable         : Array.from(this.container.getElementsByClassName("dz-clickable")),
@@ -133,16 +139,21 @@ export default class Droplet {
         file.acceptFile = done;
         file.rejectFile = function(msg){ done(msg); };
 
-        // HEIC files may not trigger thumbnail event, so process tests here
-        if (this.isHeicFile(file)) {
+        // HEIC and non-image files never emit a browser "thumbnail" event, so
+        // run their full validation here and accept/reject immediately.
+        if (this.isHeicFile(file) || !file.type.startsWith("image")) {
             this.processTestSet(file);
             file.testSetProcessed = true; // Mark as processed to avoid double-processing
-        } else if (!file.type.startsWith("image")) {
-            // If the file is not an image, process the tests
-            // Other images will get processed after the thumbnail is generated in the event_thumbnail method
-            this.processTestSet(file);
-            file.testSetProcessed = true; // Mark as processed to avoid double-processing
+            return;
         }
+
+        // Regular images are accepted up front. Acceptance must NOT wait on the
+        // "thumbnail" event: very large images exceed the browser's decode/canvas
+        // limits, the event never fires, and the upload would be silently
+        // stranded (no request, no error). Dimension-aware test-set rules are
+        // enforced once the image decodes in event_thumbnail(), which removes the
+        // file if it violates a rule.
+        done();
     }
 
     processTestSet(file) {
@@ -187,6 +198,12 @@ export default class Droplet {
         // For HEIC files, show a placeholder since browser can't generate thumbnail
         if (this.isHeicFile(file)) {
             this.showHeicPlaceholder(file);
+        } else if (file.type && file.type.startsWith("image")) {
+            // Show a neutral placeholder immediately so the preview (and its
+            // progress bar) is visible right away — and stays visible even if the
+            // real thumbnail never generates (very large photos). event_thumbnail
+            // replaces it with the actual thumbnail when one is produced.
+            this.showImagePlaceholder(file);
         }
 
         if (!this.dropzone.options.autoProcessQueue) {
@@ -210,9 +227,20 @@ export default class Droplet {
 
         file.previewElement.classList.remove("dz-file-preview");
 
-        // Only process test set if not already processed (e.g., non-image files and HEIC already processed)
+        // The file was already accepted in accept(); now that the image has
+        // decoded (its width/height are known) enforce any test-set rules and
+        // remove the file if it violates one. Skipped when already processed
+        // (non-image / HEIC handled in accept()).
         if (!file.testSetProcessed) {
-            this.processTestSet(file);
+            file.testSetProcessed = true;
+            if (this.testSet) {
+                const count = this.container.querySelectorAll(".dz-preview").length;
+                if (!this.testSet.processRules(file, count)) {
+                    this.displayTestSetErrors();
+                    this.dropzone.removeFile(file);
+                    return;
+                }
+            }
         }
 
         const thumbs = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
@@ -262,6 +290,37 @@ export default class Droplet {
 
         // Remove the file-preview class since we have a visual placeholder
         file.previewElement.classList.remove("dz-file-preview");
+    }
+
+    // Neutral image placeholder shown while a photo uploads, before (or instead
+    // of) its generated thumbnail. Unlike the HEIC placeholder we KEEP the
+    // data-dz-thumbnail attribute so event_thumbnail can replace this with the
+    // real thumbnail once it's produced. Text-free so btoa() is safe for any
+    // filename.
+    showImagePlaceholder(file) {
+        if (!file.previewElement) return;
+
+        const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+                <rect width="600" height="400" fill="#f0f0f0"/>
+                <g fill="none" stroke="#bbb" stroke-width="8" stroke-linejoin="round">
+                    <rect x="180" y="140" width="240" height="160" rx="10"/>
+                    <circle cx="245" cy="195" r="20"/>
+                    <path d="M195 285l55-55 40 40 55-70 55 85z"/>
+                </g>
+            </svg>
+        `;
+        const dataUrl = 'data:image/svg+xml;base64,' + btoa(svg);
+
+        const thumbs = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
+        for (const thumb of thumbs) {
+            thumb.src = dataUrl;
+            thumb.alt = file.name;
+        }
+
+        // Reveal the preview (the template starts as `not-found`, hidden until an
+        // image loads) so the upload progress is visible immediately.
+        file.previewElement.classList.remove("not-found", "dz-file-preview");
     }
 
     // Gets called periodically whenever the file upload progress changes

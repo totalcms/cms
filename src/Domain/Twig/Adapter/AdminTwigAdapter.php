@@ -828,7 +828,54 @@ readonly class AdminTwigAdapter
 			];
 		}
 
+		// 6. PHP upload limits too low for a single upload chunk. Image, gallery,
+		// file and depot uploads are chunked at 5MB, so the whole-file size no
+		// longer matters — but post_max_size and upload_max_filesize must each
+		// still fit one chunk (plus overhead) or every chunk POST fails. Only
+		// meaningful under a web SAPI — the CLI ini values don't reflect the web
+		// server's real capacity, so skip the check when running from the CLI.
+		$minChunkMb = 6; // 5MB chunk (see droplet.js) + multipart overhead
+		$postMax    = PHP_SAPI === 'cli' ? 0 : $this->iniSizeToBytes((string)ini_get('post_max_size'));
+		$uploadMax  = PHP_SAPI === 'cli' ? 0 : $this->iniSizeToBytes((string)ini_get('upload_max_filesize'));
+		// A value of 0 means "unlimited" (post_max_size) or CLI — never warn on that.
+		$limits = array_filter([$postMax, $uploadMax], static fn (int $b): bool => $b > 0);
+		if ($limits !== [] && min($limits) < $minChunkMb * 1024 * 1024) {
+			$alerts[] = [
+				'level'    => 'warning',
+				'message'  => sprintf(
+					'PHP upload limits are very low (post_max_size: %s, upload_max_filesize: %s). Uploads are chunked at 5MB, so raise both to at least %dMB in php.ini.',
+					ini_get('post_max_size') ?: 'unset',
+					ini_get('upload_max_filesize') ?: 'unset',
+					$minChunkMb,
+				),
+				'link'     => null,
+				'linkText' => null,
+			];
+		}
+
 		return $alerts;
+	}
+
+	/**
+	 * Parse a PHP ini shorthand size ("8M", "2G", "512K", "8388608") to bytes.
+	 * Returns 0 for empty/"0" so callers can treat it as "unlimited".
+	 */
+	private function iniSizeToBytes(string $value): int
+	{
+		$value = trim($value);
+		if ($value === '') {
+			return 0;
+		}
+
+		$number = (int)$value;
+		$unit   = strtolower($value[strlen($value) - 1]);
+
+		return match ($unit) {
+			'g'     => $number * 1024 * 1024 * 1024,
+			'm'     => $number * 1024 * 1024,
+			'k'     => $number * 1024,
+			default => $number,
+		};
 	}
 
 	/**
