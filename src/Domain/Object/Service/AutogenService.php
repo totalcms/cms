@@ -14,6 +14,16 @@ use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
  */
 readonly class AutogenService
 {
+	/**
+	 * Maximum length of any single field value substituted into an autogen
+	 * pattern. Generous for real titles/names, but caps rich-text fields
+	 * (e.g. styletext) that would otherwise blow the generated ID past the
+	 * filesystem's ~255-char filename limit. The special tokens (oid, uid,
+	 * timestamp, date parts) are added after filtering, so uniqueness
+	 * suffixes are never truncated.
+	 */
+	public const MAX_FIELD_LENGTH = 100;
+
 	public function __construct(
 		private CollectionFetcher $collectionFetcher,
 	) {
@@ -115,9 +125,9 @@ readonly class AutogenService
 		$data = [];
 		foreach ($objectData as $key => $value) {
 			if (is_string($value)) {
-				$data[$key] = $value;
+				$data[$key] = mb_substr($value, 0, self::MAX_FIELD_LENGTH);
 			} elseif (is_numeric($value)) {
-				$data[$key] = (string)$value;
+				$data[$key] = mb_substr((string)$value, 0, self::MAX_FIELD_LENGTH);
 			}
 		}
 

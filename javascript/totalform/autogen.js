@@ -7,6 +7,14 @@ import { collectScopedInputValues } from "./fieldCollection.mjs";
 
 export default class Autogen {
 
+	// Maximum length of any single field value substituted into a pattern.
+	// Generous for real titles/names, but caps rich-text fields (e.g. styletext)
+	// that would otherwise blow the generated ID past the filesystem's ~255-char
+	// filename limit. Special tokens (oid, uid, timestamp, ...) are added after
+	// collection, so uniqueness suffixes are never truncated. Mirrors
+	// AutogenService::MAX_FIELD_LENGTH (PHP).
+	static MAX_FIELD_LENGTH = 100;
+
 	constructor(field) {
 		this.field = field;
 		this.pattern = field.settings.autogen;
@@ -71,22 +79,20 @@ export default class Autogen {
 	 * Collect current form data from the appropriate scope.
 	 */
 	collectFormData() {
-		if (this.field.isInDeck) {
-			// Read only the deck item's own inputs; composite sub-fields (e.g. an
-			// image's `name`/"Filename") must not shadow the item's own fields, or
-			// patterns like ${name} would resolve to the image filename. See
-			// fieldCollection.mjs.
-			return collectScopedInputValues(this.field.deckItem);
-		}
+		// Read only the deck item's own inputs when in a deck; composite sub-fields
+		// (e.g. an image's `name`/"Filename") must not shadow the item's own fields,
+		// or patterns like ${name} would resolve to the image filename. See
+		// fieldCollection.mjs.
+		const raw = this.field.isInDeck
+			? collectScopedInputValues(this.field.deckItem)
+			: this.field.form.generateData();
 
-		// Get the field data from the form
-		let data = this.field.form.generateData();
-		// Filter to only string and number values
-		return Object.entries(data).reduce((acc, [key, value]) => {
+		// Filter to string/number values and cap each to MAX_FIELD_LENGTH.
+		return Object.entries(raw).reduce((acc, [key, value]) => {
 			if (typeof value === 'string') {
-				acc[key] = value;
+				acc[key] = value.slice(0, Autogen.MAX_FIELD_LENGTH);
 			} else if (typeof value === 'number') {
-				acc[key] = String(value);
+				acc[key] = String(value).slice(0, Autogen.MAX_FIELD_LENGTH);
 			}
 			return acc;
 		}, {});
