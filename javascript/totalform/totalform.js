@@ -886,6 +886,13 @@ export default class TotalForm {
 		// chaining keeps a missing field from blowing up the form init.
 		if (idField?.disable) {
 			idField.disable();
+		}
+		// lock() is only defined on the Identifier field; the id field can
+		// also render as a plain hidden/text field (base TotalField), which
+		// has disable() but no lock(). Guard it the same way disable() is
+		// guarded so the unguarded call can't throw and abort form init
+		// (which would leave Save/dirty-tracking unwired on edit forms).
+		if (idField?.lock) {
 			idField.lock();
 		}
 
