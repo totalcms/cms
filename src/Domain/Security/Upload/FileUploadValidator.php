@@ -14,10 +14,12 @@ class FileUploadValidator
 	private const DEFAULT_MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 	/**
-	 * Maximum file sizes by category (in bytes).
+	 * Maximum file sizes by category (in bytes). Note: the property-upload path
+	 * (image/gallery/file/depot) chunks at 5MB and does not enforce these — they
+	 * apply to callers that pass an explicit category to validateFile().
 	 */
 	private const MAX_FILE_SIZES = [
-		'image'    => 10 * 1024 * 1024,   // 10MB for images
+		'image'    => 25 * 1024 * 1024,   // 25MB for images
 		'video'    => 100 * 1024 * 1024,  // 100MB for videos
 		'audio'    => 50 * 1024 * 1024,   // 50MB for audio
 		'document' => 20 * 1024 * 1024,   // 20MB for documents
@@ -80,6 +82,18 @@ class FileUploadValidator
 	];
 
 	/**
+	 * Resolve the max upload size (bytes) for a category.
+	 */
+	private function maxSizeForCategory(?string $category): int
+	{
+		if ($category === null) {
+			return self::DEFAULT_MAX_FILE_SIZE;
+		}
+
+		return self::MAX_FILE_SIZES[$category] ?? self::MAX_FILE_SIZES['file'];
+	}
+
+	/**
 	 * Validate uploaded file against security criteria.
 	 *
 	 * By default only dangerous extensions are blocked — any safe file type is allowed.
@@ -102,7 +116,7 @@ class FileUploadValidator
 		}
 
 		// 2. Validate file size
-		$maxSize = $config['max_size'] ?? ($category !== null ? (self::MAX_FILE_SIZES[$category] ?? self::MAX_FILE_SIZES['file']) : self::DEFAULT_MAX_FILE_SIZE);
+		$maxSize = $config['max_size'] ?? $this->maxSizeForCategory($category);
 		if ($file->getSize() > $maxSize) {
 			$errors[] = sprintf(
 				'File size (%s) exceeds maximum allowed size (%s)',

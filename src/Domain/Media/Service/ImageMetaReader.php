@@ -260,14 +260,57 @@ class ImageMetaReader
 		// Extract keywords from multiple sources (IPTC, XMP, EXIF)
 		$keywords = self::extractKeywords($exifData, $xmpData);
 
-		return array_filter([
+		// EXIF/IPTC/XMP text is frequently stored in Latin-1/Windows-1252 or
+		// carries raw binary (maker notes, UserComment charset prefixes). Those
+		// bytes would otherwise reach json_encode() during schema validation and
+		// abort the whole save with "Malformed UTF-8 characters". Scrub every
+		// string value to valid UTF-8 before it leaves this reader.
+		return self::scrubUtf8(array_filter([
 			'exif'   => $data,
 			'tags'   => $keywords,
 			'alt'    => $data['title'] ?? $data['description'] ?? '',
 			'mime'   => $basicData['mime'],
 			'width'  => $basicData['width'],
 			'height' => $basicData['height'],
-		]);
+		]));
+	}
+
+	/**
+	 * Recursively coerce every string in a metadata structure to valid UTF-8.
+	 * Best-effort: values that are already valid UTF-8 pass through untouched;
+	 * otherwise we try Windows-1252 (a superset of Latin-1, so accented names
+	 * and the © symbol survive), then fall back to dropping invalid bytes.
+	 *
+	 * @param array<mixed,mixed> $data
+	 *
+	 * @return array<mixed,mixed>
+	 */
+	private static function scrubUtf8(array $data): array
+	{
+		foreach ($data as $key => $value) {
+			if (is_string($value)) {
+				$data[$key] = self::toValidUtf8($value);
+			} elseif (is_array($value)) {
+				$data[$key] = self::scrubUtf8($value);
+			}
+		}
+
+		return $data;
+	}
+
+	private static function toValidUtf8(string $value): string
+	{
+		if ($value === '' || mb_check_encoding($value, 'UTF-8')) {
+			return $value;
+		}
+
+		$converted = @mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+		if ($converted !== '' && mb_check_encoding($converted, 'UTF-8')) {
+			return $converted;
+		}
+
+		// Last resort: substitute/drop any remaining invalid byte sequences.
+		return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
 	}
 
 	/**

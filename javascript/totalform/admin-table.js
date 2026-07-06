@@ -322,7 +322,9 @@ export default class AdminTable {
 		const ids = [...this.selected];
 		if (ids.length === 0) return;
 
-		if (!window.confirm(`Delete ${ids.length} item${ids.length === 1 ? '' : 's'}? This cannot be undone.`)) {
+		// Bulk delete never honors no-delete-confirm — deleting many objects
+		// always deserves a dialog, so no element is passed here.
+		if (!(await tcmsConfirm({ message: `Delete ${ids.length} item${ids.length === 1 ? '' : 's'}? This cannot be undone.` }))) {
 			return;
 		}
 

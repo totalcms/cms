@@ -98,4 +98,72 @@ class PathUtils
 	{
 		return str_replace('+', ' ', urldecode($filename));
 	}
+
+	/**
+	 * Reduce an uploaded filename to a filesystem- and URL-safe form: only
+	 * `[A-Za-z0-9._-]` survive; every other run of characters (spaces, `&`,
+	 * accented/exotic unicode, etc.) collapses to a single underscore.
+	 *
+	 * Exotic characters (e.g. U+2017, U+00BA) are handled inconsistently across
+	 * the upload → filesystem → URL pipeline — the browser, PHP, macOS's on-disk
+	 * normalization and URL-encoding don't always agree, so the stored name, the
+	 * file on disk and the imageworks URL can diverge and 404. Normalizing to a
+	 * plain-ASCII name at write time keeps all three identical.
+	 */
+	public static function safeFilename(string $filename): string
+	{
+		$filename = basename($filename);
+
+		$ext  = pathinfo($filename, PATHINFO_EXTENSION);
+		$name = pathinfo($filename, PATHINFO_FILENAME);
+
+		// Transliterate to ASCII first (café → cafe, Москва → Moskva) so names
+		// stay readable, then strip anything still outside the safe set.
+		$name = self::transliterate($name);
+
+		$name = (string)preg_replace('/[^A-Za-z0-9._-]+/', '_', $name);
+		$name = (string)preg_replace('/_{2,}/', '_', $name);
+		$name = trim($name, '._-');
+
+		if ($name === '') {
+			$name = 'file';
+		}
+
+		$ext = (string)preg_replace('/[^A-Za-z0-9]+/', '', $ext);
+
+		return $ext !== '' ? $name . '.' . $ext : $name;
+	}
+
+	/**
+	 * Best-effort transliteration of Unicode text to ASCII (é → e, ü → u,
+	 * non-Latin scripts to Latin where possible). Prefers the intl
+	 * Transliterator, falls back to iconv, and returns the input unchanged if
+	 * neither is available — {@see self::safeFilename()} still strips whatever
+	 * survives, so a safe result is guaranteed either way.
+	 */
+	private static function transliterate(string $value): string
+	{
+		if ($value === '') {
+			return $value;
+		}
+
+		if (class_exists(\Transliterator::class)) {
+			$translit = \Transliterator::create('Any-Latin; Latin-ASCII');
+			if ($translit !== null) {
+				$result = $translit->transliterate($value);
+				if (is_string($result)) {
+					return $result;
+				}
+			}
+		}
+
+		if (function_exists('iconv')) {
+			$result = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
+			if ($result !== false) {
+				return $result;
+			}
+		}
+
+		return $value;
+	}
 }

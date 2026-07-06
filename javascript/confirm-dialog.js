@@ -23,6 +23,15 @@
  *
  * Countdown resolution order:
  *   options.countdown -> window.TCMS_CONFIG.confirmCountdown -> 5
+ *
+ * Opting out:
+ *   Pass the triggering element via options.element. When that element (or any
+ *   ancestor) carries the `no-delete-confirm` class, the dialog is skipped and
+ *   the promise resolves true immediately. Currently only the object-delete
+ *   path (TotalForm.delete) passes an element — e.g. frontend pin/unpin flows.
+ *   This is a UX affordance only; deletes are still authorized server-side.
+ *   Bulk and field-level delete call sites deliberately pass no element, so
+ *   they always confirm.
  */
 
 const DEFAULT_COUNTDOWN = 5;
@@ -41,7 +50,12 @@ export default function tcmsConfirm(options = {}) {
 		confirmLabel = "Yes, I'm sure",
 		cancelLabel  = 'Cancel',
 		countdown    = null,
+		element      = null,
 	} = options;
+
+	if (element?.closest?.('.no-delete-confirm')) {
+		return Promise.resolve(true);
+	}
 
 	const seconds = resolveCountdown(countdown);
 

@@ -20,7 +20,7 @@ describe('FileUploadValidator', function (): void {
 		expect($categories)->toHaveKey('archive');
 
 		// Check image limits
-		expect($categories['image']['max_size'])->toBe(10 * 1024 * 1024); // 10MB
+		expect($categories['image']['max_size'])->toBe(25 * 1024 * 1024); // 25MB
 		expect($categories['video']['max_size'])->toBe(100 * 1024 * 1024); // 100MB
 		expect($categories['file']['max_size'])->toBe(50 * 1024 * 1024); // 50MB
 		expect($categories['document']['max_size'])->toBe(20 * 1024 * 1024); // 20MB
@@ -249,12 +249,12 @@ describe('FileUploadValidator', function (): void {
 
 	test('FileUploadValidator → rejects oversized files', function (): void {
 		$validator = new FileUploadValidator();
-		$file      = createMockUploadedFile('huge.jpg', 20 * 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg'); // 20MB
+		$file      = createMockUploadedFile('huge.jpg', 30 * 1024 * 1024, UPLOAD_ERR_OK, 'image/jpeg'); // 30MB
 
 		$result = $validator->validateFile($file, 'image');
 
 		expect($result['valid'])->toBe(false);
-		expect($result['errors'])->toContain('File size (20 MB) exceeds maximum allowed size (10 MB)');
+		expect($result['errors'])->toContain('File size (30 MB) exceeds maximum allowed size (25 MB)');
 	});
 
 	test('FileUploadValidator → rejects dangerous file extensions', function (): void {
@@ -397,7 +397,7 @@ describe('FileUploadValidator', function (): void {
 		$validator  = new FileUploadValidator();
 		$categories = $validator->getFileCategories();
 
-		expect($categories['image']['max_size_formatted'])->toBe('10 MB');
+		expect($categories['image']['max_size_formatted'])->toBe('25 MB');
 		expect($categories['video']['max_size_formatted'])->toBe('100 MB');
 		expect($categories['file']['max_size_formatted'])->toBe('50 MB');
 		expect($categories['document']['max_size_formatted'])->toBe('20 MB');

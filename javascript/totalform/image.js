@@ -55,6 +55,9 @@ export default class ImageField extends TotalField {
 			// allow). SVG belongs in the dedicated SVG field; the server also
 			// rejects SVG here (ImageSaver). Defense-in-depth + cleaner UX.
 			acceptedFiles    : "image/jpeg,image/png,image/gif,image/webp,image/bmp,image/x-icon,image/avif,image/heic,image/heif,image/tiff",
+			// Chunk large photos into 5MB parts so uploads aren't capped by the
+			// server's post_max_size (assembled server-side in FileSaveAction).
+			chunking         : true,
 			rules            : this.settings.rules,
 		});
 		this.droplet.onQueueComplete(() => this.uploadComplete());
@@ -79,6 +82,11 @@ export default class ImageField extends TotalField {
 	}
 
 	isUnsaved() {
+		// Queued/uploading droplet files are unsaved work even when getValue() and
+		// the dirty class don't reflect them. A new-form gallery's getValue() is []
+		// until edit mode, so changed() never flags it — without this, afterSave()
+		// filters the gallery out and saveDroplets() never flushes the uploads.
+		if (this.droplet && this.droplet.pendingFiles().length > 0) return true;
 		const unsavedChildren = this.previewContainer.querySelectorAll(".unsaved");
 		return this.container.classList.contains("unsaved") || unsavedChildren.length > 0;
 	}

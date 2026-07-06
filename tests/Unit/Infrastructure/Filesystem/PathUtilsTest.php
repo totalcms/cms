@@ -201,4 +201,66 @@ final class PathUtilsTest extends TestCase
 	{
 		$this->assertSame('photo.jpg', PathUtils::decodeFilename('photo.jpg'));
 	}
+
+	// ──────────────────────────────────────────────────────────────────────
+	// safeFilename
+	// ──────────────────────────────────────────────────────────────────────
+
+	public function testSafeFilenameLeavesPlainAsciiUntouched(): void
+	{
+		$this->assertSame('photo-01.jpg', PathUtils::safeFilename('photo-01.jpg'));
+	}
+
+	public function testSafeFilenameStripsExoticUnicodeAndCollapsesRuns(): void
+	{
+		// U+2017, U+00BA, spaces and '&' all become a single underscore each.
+		$this->assertSame(
+			'14_DOLPHIN_Front_seats_download_JPG_2500px.jpg',
+			PathUtils::safeFilename("14\u{2017} DOLPHIN_Front seats\u{00BA}_download_JPG 2500px.jpg"),
+		);
+	}
+
+	public function testSafeFilenameReplacesAmpersandAndSpaces(): void
+	{
+		$this->assertSame('G_Awed_5356.jpg', PathUtils::safeFilename('G&Awed 5356.jpg'));
+	}
+
+	public function testSafeFilenameStripsLeadingPathComponents(): void
+	{
+		$this->assertSame('file.jpg', PathUtils::safeFilename('/tmp/evil/../file.jpg'));
+	}
+
+	public function testSafeFilenameFallsBackWhenNameIsAllUnsafe(): void
+	{
+		$this->assertSame('file.jpg', PathUtils::safeFilename("\u{2017}\u{00BA}.jpg"));
+	}
+
+	public function testSafeFilenameHandlesNoExtension(): void
+	{
+		$this->assertSame('my_file', PathUtils::safeFilename('my file'));
+	}
+
+	public function testSafeFilenameTransliteratesAccentedLatin(): void
+	{
+		if (!class_exists(\Transliterator::class)) {
+			$this->markTestSkipped('intl Transliterator not available');
+		}
+		$this->assertSame('cafe_resume.jpg', PathUtils::safeFilename('café résumé.jpg'));
+	}
+
+	public function testSafeFilenameTransliteratesFacadeAndNaive(): void
+	{
+		if (!class_exists(\Transliterator::class)) {
+			$this->markTestSkipped('intl Transliterator not available');
+		}
+		$this->assertSame('naive_facade.png', PathUtils::safeFilename('naïve façade.png'));
+	}
+
+	public function testSafeFilenameTransliteratesNonLatinScript(): void
+	{
+		if (!class_exists(\Transliterator::class)) {
+			$this->markTestSkipped('intl Transliterator not available');
+		}
+		$this->assertSame('Moskva.jpg', PathUtils::safeFilename('Москва.jpg'));
+	}
 }

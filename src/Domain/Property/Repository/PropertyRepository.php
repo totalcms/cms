@@ -64,7 +64,7 @@ class PropertyRepository extends StorageRepository
 	/** @return array<string,string|int> */
 	public function saveFile(string $collection, string $objectID, string $property, string $filePath, ?string $subpath = null): array
 	{
-		$filename = basename($filePath);
+		$filename = PathUtils::safeFilename($filePath);
 		$newpath  = PathUtils::buildPath($collection, $objectID, $property, $filename, $subpath);
 
 		// File already exists, rename it
@@ -135,7 +135,7 @@ class PropertyRepository extends StorageRepository
 	/** @return array<string,string|int> */
 	public function saveImage(string $collection, string $objectID, string $property, string $filePath): array
 	{
-		$filename = basename($filePath);
+		$filename = PathUtils::safeFilename($filePath);
 		$newpath  = PathUtils::buildPath($collection, $objectID, $property, $filename);
 
 		$data = getimagesize($filePath);

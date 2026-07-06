@@ -411,3 +411,30 @@ form.no-status-banner.error {
 - Multiple forms on a page where you want individual feedback
 - Custom-designed forms that need specific visual feedback
 - Modal/dialog forms where the overlay conflicts with the modal
+
+## Disabling the Delete Confirmation
+
+By default, deleting an object through a form shows a confirmation dialog before the object is removed. Some frontend workflows make that dialog pure friction — the classic example is a pin/unpin (favorite/unfavorite) feature, where each pin is an object and unpinning deletes it. A visitor toggling pins shouldn't have to confirm every click.
+
+Add the `no-delete-confirm` class to the form to skip the dialog for its object delete:
+
+```twig
+{# Unpin deletes the pin object immediately — no confirmation dialog #}
+{% set form = cms.form.builder('pins', {
+    class: 'no-delete-confirm'
+}) %}
+```
+
+The class is honored on the form element or any ancestor, so you can also set it on a wrapper that contains many pin forms.
+
+**What it affects:**
+- The object delete triggered by a form's delete action (`DELETE /collections/{collection}/{id}`) — including schema, collection, and template forms if you add the class to those.
+
+**What it never affects:**
+- Field-level deletes (images, files, gallery items, Depot) — those keep their confirmation.
+- Bulk deletes in the admin always show a confirmation — the class is deliberately ignored there.
+- Server-side authorization: this is a UX convenience only. Deletes are always authorized by the server regardless of any client-side dialog, so removing the dialog grants no additional capability.
+
+**Tip:** for destructive-but-frequent flows you can also keep the dialog but remove the countdown wait by setting `data-confirm-countdown="0"` — see the confirm dialog's countdown options.
+
+**Related:** the `no-change-listener` class on a field container similarly opts a field out of unsaved-change tracking (it won't mark the form `.unsaved` or trigger the leave-page warning).
