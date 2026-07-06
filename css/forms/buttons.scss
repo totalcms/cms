@@ -102,7 +102,11 @@ nav[popover]  {
 		&.download { --action-icon : var(--icon-download) }
 		&.object-download { --action-icon : var(--icon-download) }
 	}
-	a, button {
+	// Menu items only: direct children of an li (links, the bulk-select
+	// buttons) or a form-wrapped button (Impersonate User). Deeper-nested
+	// controls — e.g. the theme-selector buttons in #user-actions, which sit
+	// inside a div — are NOT menu items and must not inherit this styling.
+	li > a, li > button, li > form > button {
 		display         : flex;
 		align-items     : center;
 		text-decoration : none;
