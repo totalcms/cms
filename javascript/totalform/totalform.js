@@ -604,7 +604,9 @@ export default class TotalForm {
         // Only delete if editing object (templates always allow delete since they skip edit mode)
         if (!this.isEditMode() && !this.isTemplateForm()) return;
 
-        if (await tcmsConfirm({ message: t("confirm.delete_item") })) {
+        // A no-delete-confirm class on the form (or an ancestor) skips the dialog —
+        // e.g. frontend pin/unpin flows where the visitor deletes their own object.
+        if (await tcmsConfirm({ message: t("confirm.delete_item"), element: this.form })) {
             this.validated = true;
             this.processing();
 
