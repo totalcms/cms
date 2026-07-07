@@ -756,7 +756,7 @@ readonly class AdminTwigAdapter
 				$alerts[] = [
 					'level'    => 'warning',
 					'message'  => "Total CMS {$update->version} is available.",
-					'link'     => 'updates',
+					'link'     => 'utils/update',
 					'linkText' => 'View update',
 				];
 			}
@@ -774,7 +774,7 @@ readonly class AdminTwigAdapter
 			$alerts[] = [
 				'level'    => $this->mapLicenseSeverity($licenseData->severity),
 				'message'  => $licenseData->tooltip !== '' ? $licenseData->tooltip : 'License requires attention.',
-				'link'     => 'license',
+				'link'     => 'utils/license-manager',
 				'linkText' => 'License Manager',
 			];
 		}
@@ -785,7 +785,7 @@ readonly class AdminTwigAdapter
 			$alerts[] = [
 				'level'    => 'warning',
 				'message'  => "Job queue appears stalled — {$queueHealth->pendingCount} job(s) waiting over {$queueHealth->thresholdMinutes} minutes.",
-				'link'     => 'jobs',
+				'link'     => 'utils/jobqueue',
 				'linkText' => 'Job Queue',
 			];
 		}
