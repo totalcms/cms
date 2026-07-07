@@ -258,9 +258,10 @@ $testClasses = [
 	'Slim\\App',
 	'DI\\Container',
 	'Twig\\Environment',
-	'TotalCMS\\App',
-	'TotalCMS\\Domain\\Settings\\Settings',
-	'TotalCMS\\Domain\\Collection\\CollectionService',
+	'TotalCMS\\TotalCMS',
+	'TotalCMS\\Support\\Config',
+	'TotalCMS\\Domain\\Settings\\Services\\SettingsFetcher',
+	'TotalCMS\\Domain\\Collection\\Service\\CollectionFetcher',
 ];
 
 foreach ($testClasses as $class) {
@@ -314,8 +315,8 @@ try {
 		}
 	}
 
-	// Try to load the App class and create container
-	if (class_exists('TotalCMS\\App')) {
+	// Try to load the main class and create container
+	if (class_exists('TotalCMS\\TotalCMS')) {
 		echo "\nAttempting to create DI container...\n";
 
 		// Load container definitions
