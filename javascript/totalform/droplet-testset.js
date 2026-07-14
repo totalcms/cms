@@ -74,21 +74,20 @@ export default class DropletTestSet {
 			this.aspectRatio(this.rules.aspectratio,file.width,file.height);
 		}
         if (this.rules.filetype) {
-            this.patternMatch(this.rules.filetype, file.type);
+            this.patternMatch(this.rules.filetype, file.type, this.errorStrings.filetype);
         }
         if (this.rules.filename) {
-            this.patternMatch(this.rules.filename, file.name);
+            this.patternMatch(this.rules.filename, file.name, this.errorStrings.filename);
         }
         return this.pass;
     }
 
-	patternMatch(rules, value) {
-		for (const rule of rules) {
-			const pattern = new RegExp(rule);
-			if (!pattern.test(value)) {
-				this.errors.push(this.errorStrings.filetype);
-				this.pass = false;
-			}
+	patternMatch(rules, value, errorString) {
+		// Rules are alternatives — the value only needs to match one of them
+		const matched = rules.some((rule) => new RegExp(rule).test(value));
+		if (!matched) {
+			this.errors.push(errorString);
+			this.pass = false;
 		}
 		return this.pass;
 	}
