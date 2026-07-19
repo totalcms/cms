@@ -128,6 +128,24 @@ export default class ImageField extends TotalField {
 			image = image?.[this.property];
 		}
 		this.setupPreview(image);
+		this.swapServerPreview(file, response);
+	}
+
+	// Replace the local browser thumbnail (or placeholder) with the server-side
+	// ImageWorks preview — the same URL a page refresh would render, so the
+	// preview always shows exactly what the server stored (resizing, EXIF
+	// rotation, HEIC conversion). Only swaps once the server image has actually
+	// loaded; if it never does, the local preview simply stays.
+	swapServerPreview(file, response) {
+		const preview = response?.meta?.preview;
+		if (!preview || !file.previewElement) return;
+
+		const loader = new Image();
+		loader.onload = () => {
+			if (!file.previewElement) return;
+			file.previewElement.querySelectorAll("img").forEach(img => { img.src = preview; });
+		};
+		loader.src = preview;
 	}
 
 	validate() {

@@ -4,8 +4,11 @@ namespace TotalCMS\Action\Property\File;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Admin\FormField\ImageField;
 use TotalCMS\Domain\Media\Service\HeicConverter;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\SaverFactory;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -133,7 +136,81 @@ readonly class FileSaveAction
 			$subpath,
 		);
 
-		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
+		// Ship the exact ImageWorks preview URL the admin form field would render
+		// on a page refresh, so the droplet UI can swap its local thumbnail or
+		// placeholder for the stored image. Additive meta — omitted when it can't
+		// be built; never fail the upload over it.
+		$meta    = [];
+		$preview = $this->buildPreviewUrl($saver->type, $args, $subpath, $object);
+		if ($preview !== '') {
+			$meta['preview'] = $preview;
+		}
+
+		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer(), $meta);
+	}
+
+	/**
+	 * Build the admin-preview ImageWorks URL for the file that was just saved —
+	 * identical to the one ImageField/GalleryField render on a page refresh
+	 * (same dimensions, quality and cache token). Returns '' for non-image
+	 * property types or when the URL cannot be determined.
+	 *
+	 * @param array<string,string> $args
+	 */
+	private function buildPreviewUrl(string $type, array $args, ?string $subpath, ObjectData $object): string
+	{
+		if (!in_array($type, ['image', 'gallery'], true)) {
+			return '';
+		}
+
+		try {
+			// ImageWorks is a PUBLIC route mounted at `{base}/imageworks/...` —
+			// NOT under `/api`. `config->api` is the site base path, the same
+			// base TotalForm::baseApi() hands the form fields.
+			$api = $this->config->api;
+
+			$imageworks = [
+				'w' => ImageField::PREVIEW_WIDTH,
+				'h' => ImageField::PREVIEW_HEIGHT,
+				'q' => ImageField::PREVIEW_QUALITY,
+			];
+
+			$data  = $object->toArray();
+			$image = $data[$args['property']] ?? null;
+
+			if ($type === 'gallery') {
+				// GallerySaver appends the new upload, so it is the last entry.
+				$image = is_array($image) ? end($image) : null;
+				if (!is_array($image) || empty($image['name'])) {
+					return '';
+				}
+
+				return MediaTwigAdapter::buildImageworksGalleryAPI($api, $args['id'], (string)$image['name'], $image, $imageworks, [
+					'collection' => $args['collection'],
+					'property'   => $args['property'],
+				]);
+			}
+
+			// Image field — possibly nested in a card/deck: walk the subpath down
+			// to the saved child and mirror it in the dot-notation property path.
+			$propertyPath = $args['property'];
+			if ($subpath !== null && $subpath !== '') {
+				foreach (explode('/', $subpath) as $segment) {
+					$image = is_array($image) ? ($image[$segment] ?? null) : null;
+				}
+				$propertyPath .= '.' . str_replace('/', '.', $subpath);
+			}
+			if (!is_array($image) || empty($image['name'])) {
+				return '';
+			}
+
+			return MediaTwigAdapter::buildImageworksAPI($api, $args['id'], $image, $imageworks, [
+				'collection' => $args['collection'],
+				'property'   => $propertyPath,
+			]);
+		} catch (\Throwable) {
+			return '';
+		}
 	}
 
 	private function assembleChunks(string $originalFilename, int $totalChunks): string
