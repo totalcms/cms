@@ -270,7 +270,16 @@ example.com {
 
 ## Additional Security Headers
 
-Total CMS automatically sets several security headers, but you can enhance them:
+Total CMS sets security headers on every admin, login, and setup page automatically — no server configuration needed:
+
+| Header | Value |
+|---|---|
+| `Content-Security-Policy` | `frame-ancestors 'self'` (clickjacking protection) |
+| `X-Frame-Options` | `SAMEORIGIN` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+
+Your **public pages** are a different story: whether they may be framed, what referrer they send, and any Content Security Policy are decisions for your site, not the CMS. Set those at the server level if you want them:
 
 ### Apache
 ```apache
@@ -302,6 +311,18 @@ header {
     Permissions-Policy "geolocation=(), microphone=(), camera=()"
 }
 ```
+
+## Error Monitoring
+
+Total CMS can report application errors to the developer so bugs get discovered and fixed quickly — often before you notice anything went wrong, and without you having to file a report. You choose during the setup wizard, and you can change your mind at any time in **Settings → General** ("Share Application Errors with Developer").
+
+**What a report contains:** the exception, its stack trace, the request URL and method, and the Total CMS version.
+
+**What is never sent:** the reporting client is explicitly configured to never attach request bodies, cookies, session data, IP addresses, or user information. Your content, credentials, and CMS data stay on your server.
+
+**Air-gapped deployments:** installing an [offline license](docs/operations/licenses#offline-licensing) disables error monitoring automatically at the configuration layer — a network-isolated install never attempts an outbound call, regardless of the settings toggle.
+
+When disabled, errors are still logged locally on your server — see the log files in your data directory.
 
 ## Regular Security Maintenance
 

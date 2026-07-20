@@ -469,14 +469,16 @@ Reverses obfuscation applied by `obfuscate`.
 ```
 
 #### `encrypt(string $string): string`
-Encrypts a string using the application's encryption key.
+Encrypts a string with AES-256, keyed to a secret unique to your deployment. The key is generated automatically on first use and stored at `tcms-data/.system/site.key` — it is never part of the Total CMS source, so possessing the code doesn't allow decrypting your data.
 
 ```twig
 {{ sensitiveData | encrypt }}
 ```
 
+> The site key is part of your deployment's identity: include `tcms-data/.system/site.key` in backups, and note that values encrypted on one site only decrypt on a site with the same key (`tcms pull`/`push` sync it automatically).
+
 #### `decrypt(string $string): string`
-Decrypts a string that was encrypted with `encrypt`.
+Decrypts a string that was encrypted with `encrypt`. Values encrypted by Total CMS versions before the per-site key existed continue to decrypt transparently.
 
 ```twig
 {{ encryptedData | decrypt }}

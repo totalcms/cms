@@ -67,6 +67,22 @@ Trial licenses have full Pro-level access.
 
 Development licenses have full Pro-level access.
 
+## Offline Licensing
+
+For deployments that cannot (or must not) reach the internet — air-gapped networks, classified environments, strict data-sovereignty setups — Total CMS supports a fully offline license. Available for Pro licenses; [contact us](https://totalcms.co/support) to arrange one for a specific deployment.
+
+**How it works:** we generate a cryptographically signed license file for your domain, which you install at:
+
+```
+tcms-data/.system/{domain}-offline-license.key
+```
+
+The file is checked before any online validation, so with it in place there is **no validation callback, no periodic check-in, and no outbound connectivity of any kind**. The signature is verified locally against a public key that ships with Total CMS.
+
+Installing an offline license also **disables error monitoring automatically** — a network-isolated deployment never attempts an outbound call, regardless of the settings toggle. See [Error Monitoring](docs/operations/security#error-monitoring).
+
+Updates for offline deployments are downloaded separately, transferred across the network boundary by whatever process your environment permits, and installed manually.
+
 ## Edition Simulation
 
 During a trial or with a development license, you can simulate lower editions
