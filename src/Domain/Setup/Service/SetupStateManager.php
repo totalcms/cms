@@ -13,7 +13,7 @@ use TotalCMS\Support\Config;
 /**
  * Tracks wizard progress through the multi-step setup flow.
  *
- * Steps: environment → data-path → account → license → server-config
+ * Steps: environment → data-path → account → license → error-monitoring → server-config
  *
  * The manager owns the wizard semantics — which steps exist, what the
  * "current" step is, when the wizard is fully done. Persistence of the
@@ -27,7 +27,7 @@ class SetupStateManager
 	private const SESSION_KEY = 'setup_state';
 
 	/** @var list<string> */
-	private const STEPS = ['environment', 'data-path', 'account', 'license', 'server-config'];
+	private const STEPS = ['environment', 'data-path', 'account', 'license', 'error-monitoring', 'server-config'];
 
 	public function __construct(
 		private readonly SessionInterface $session,

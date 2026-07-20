@@ -6,6 +6,9 @@
 			release: "totalcms@{{ cms.version.number }}",
 			tracesSampleRate: 0,
 			profilesSampleRate: 0,
+			// Explicit privacy guarantee (also the SDK default): no client
+			// IPs or user info attached to browser error reports.
+			sendDefaultPii: false,
 			beforeSend(event, hint) {
 				const error = hint.originalException;
 

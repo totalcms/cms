@@ -20,6 +20,13 @@ namespace TotalCMS\Domain\Security\Encryption;
  *    - Security: Cryptographically secure using AES-256-CBC
  *    - Use cases: File download passwords, secure data transmission
  *    - Random: Same input produces different output each time (more secure)
+ *
+ * Key resolution for encrypt/decrypt when no key is passed: the per-site
+ * secret from {@see SiteKey} (generated at `<datadir>/.system/site.key`),
+ * falling back to the SALT constant only when no site key is available.
+ * decrypt() additionally retries legacy ciphertext against SALT so data
+ * encrypted before the site key existed keeps working. Obfuscation
+ * deliberately stays on the shipped constant — it was never a secret.
  */
 class Cipher
 {
@@ -166,8 +173,10 @@ class Cipher
 		return base64_encode($contextHash);
 	}
 
-	public static function encrypt(string $data, string $key = self::SALT): string
+	public static function encrypt(string $data, ?string $key = null): string
 	{
+		$key ??= SiteKey::get() ?? self::SALT;
+
 		$cipher = 'aes-256-cbc';  // Cipher algorithm
 		$ivlen  = openssl_cipher_iv_length($cipher);
 		// @phpstan-ignore function.alreadyNarrowedType (openssl_cipher_iv_length can return false at runtime)
@@ -192,7 +201,26 @@ class Cipher
 		return base64_encode($hmac . $iv . $encrypted);
 	}
 
-	public static function decrypt(string $data, string $key = self::SALT): string
+	public static function decrypt(string $data, ?string $key = null): string
+	{
+		if ($key !== null) {
+			return self::decryptWithKey($data, $key);
+		}
+
+		$siteKey = SiteKey::get();
+		if ($siteKey !== null) {
+			try {
+				return self::decryptWithKey($data, $siteKey);
+			} catch (\Exception) {
+				// Legacy fallback below: ciphertext from before the site key
+				// existed (or from a pre-3.5 install) used the SALT constant.
+			}
+		}
+
+		return self::decryptWithKey($data, self::SALT);
+	}
+
+	private static function decryptWithKey(string $data, string $key): string
 	{
 		$cipher  = 'aes-256-cbc';
 		$decoded = base64_decode($data, true);

@@ -152,5 +152,8 @@ return function (App $app): void {
 		// meta tag in admin-dashboard.twig.
 		->add(CSRFProtectionMiddleware::class)
 		->add(AuthMiddleware::class)
-		->add(NoCacheMiddleware::class);
+		->add(NoCacheMiddleware::class)
+		// Outermost so the headers land on every admin response, including
+		// auth redirects produced by the middlewares above.
+		->add(TotalCMS\Middleware\Security\SecurityHeadersMiddleware::class);
 };

@@ -26,6 +26,13 @@ class SentryMiddleware implements MiddlewareInterface
 		'dsn'                  => 'p16xTYgwpMx9Z9UBsuOuqV7N7v9NgKpf_3RN7XSvTAiFs3OQXJcSlY5n4IGK-4dbKnAhOvY59eZujBuqmIJN7kAlximb86OwSyrMs9lzODhTfr6jMGXQp2Vs1fLlHRY',
 		'traces_sample_rate'   => 0,
 		'profiles_sample_rate' => 0,
+		// Privacy guarantees: no cookies, session data, client IPs, or auth
+		// user info (send_default_pii) and no request bodies — the SDK's
+		// default body size is 'medium', which would attach small POST
+		// payloads, i.e. CMS content. Only the exception, stack trace, and
+		// request URL/method reach the monitoring service.
+		'send_default_pii'      => false,
+		'max_request_body_size' => 'none',
 		'ignore_exceptions'    => [
 			HttpNotFoundException::class,
 			HttpMethodNotAllowedException::class,

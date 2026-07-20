@@ -52,6 +52,14 @@ if (file_exists($settingsJsonFile)) {
 	}
 }
 
+// Air-gapped deployments: an offline license file signals a network-isolated
+// install — force error monitoring off so nothing (PHP SDK, CLI, browser
+// loader, MCP) ever attempts an outbound call, regardless of the UI toggle.
+if (($settings['sentry'] ?? false)
+	&& (glob($settings['datadir'] . '/.system/*-offline-license.key') ?: []) !== []) {
+	$settings['sentry'] = false;
+}
+
 // Environment variable wins over the settings.json toggle.
 // (settings.json was merged last above; re-apply APP_ENV so a server-level
 // APP_ENV — including Stacks' 'preview' — always overrides the UI setting.)

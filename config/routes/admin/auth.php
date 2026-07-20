@@ -27,5 +27,6 @@ return function (App $app): void {
 		$group->get('/verify-email/{token}', Auth\AuthVerifyEmailAction::class)->setName('verify-email');
 		$group->get('/resend-verification[/{collection}]', Auth\ResendVerificationAction::class)->setName('resend-verification');
 		$group->post('/resend-verification[/{collection}]', Auth\ResendVerificationSubmitAction::class);
-	})->add(NoCacheMiddleware::class);
+	})->add(NoCacheMiddleware::class)
+		->add(TotalCMS\Middleware\Security\SecurityHeadersMiddleware::class);
 };
