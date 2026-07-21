@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Nekofar\Slim\Pest\post;
+use function TotalCMS\Slim\Pest\post;
 
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {

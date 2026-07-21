@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use function Nekofar\Slim\Pest\postJson;
+use function TotalCMS\Slim\Pest\postJson;
 
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {

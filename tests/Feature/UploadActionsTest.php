@@ -1,7 +1,7 @@
 <?php
 
-use function Nekofar\Slim\Pest\delete;
-use function Nekofar\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\delete;
+use function TotalCMS\Slim\Pest\get;
 
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());

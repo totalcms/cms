@@ -1,6 +1,6 @@
 <?php
 
-use function Nekofar\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\get;
 
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());

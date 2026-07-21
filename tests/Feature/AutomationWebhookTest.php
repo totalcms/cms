@@ -6,7 +6,7 @@ use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 
-use function Nekofar\Slim\Pest\postJson;
+use function TotalCMS\Slim\Pest\postJson;
 
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());

@@ -1,6 +1,6 @@
 <?php
 
-use function Nekofar\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\get;
 
 beforeEach(function (): void {
 	$this->setUpApp(bootstrap());

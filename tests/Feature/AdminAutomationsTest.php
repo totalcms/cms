@@ -13,7 +13,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 
-use function Nekofar\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\get;
 
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());

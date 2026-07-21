@@ -1,12 +1,12 @@
 <?php
 
-use function Nekofar\Slim\Pest\delete;
-use function Nekofar\Slim\Pest\get;
-use function Nekofar\Slim\Pest\head;
-use function Nekofar\Slim\Pest\patchJson;
-use function Nekofar\Slim\Pest\postJson;
-use function Nekofar\Slim\Pest\put;
-use function Nekofar\Slim\Pest\putJson;
+use function TotalCMS\Slim\Pest\delete;
+use function TotalCMS\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\head;
+use function TotalCMS\Slim\Pest\patchJson;
+use function TotalCMS\Slim\Pest\postJson;
+use function TotalCMS\Slim\Pest\put;
+use function TotalCMS\Slim\Pest\putJson;
 
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());

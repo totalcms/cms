@@ -14,7 +14,7 @@ namespace Tests\Feature;
 
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 
-use function Nekofar\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\get;
 
 describe('Permission Matrix — canAccessUtils gate', function (): void {
 	beforeEach(function (): void {

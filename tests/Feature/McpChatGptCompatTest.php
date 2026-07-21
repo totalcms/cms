@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Nyholm\Psr7\Factory\Psr17Factory;
 use TotalCMS\Support\Config;
 
-use function Nekofar\Slim\Pest\postJson;
+use function TotalCMS\Slim\Pest\postJson;
 
 /**
  * End-to-end test for the ChatGPT-compatibility `search` / `fetch` MCP tools.
