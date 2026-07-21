@@ -29,8 +29,6 @@ interface HttpClientInterface
 	 *   - 'max_bytes'       => int Maximum download size in bytes (0 = unlimited)
 	 *
 	 * @throws \RuntimeException on connection/transport errors
-	 *
-	 * @return HttpResponse
 	 */
 	public function request(string $method, string $url, array $options = []): HttpResponse;
 }
