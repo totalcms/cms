@@ -63,6 +63,11 @@ class SentryMiddleware implements MiddlewareInterface
 			\TypeError::class,
 			\Error::class,
 			LicenseException::class,
+			// PHP warnings/fatals promoted to exceptions (includes Sentry's
+			// FatalErrorException). Only dropped when the message matches a
+			// known environment pattern below — e.g. "Failed to open stream"
+			// includes on half-uploaded installs, "Permission denied" writes.
+			\ErrorException::class,
 		],
 		'user_error_messages' => [
 			'Required field(s) cannot be empty',
@@ -169,6 +174,38 @@ class SentryMiddleware implements MiddlewareInterface
 			// Request body stream couldn't be read — a truncated/aborted upload
 			// or client disconnect, not a server bug.
 			'Could not read from stream',
+			// include/require/fopen warnings on files that should exist —
+			// half-uploaded or corrupted installs (missing vendor files, absent
+			// config). Same family as 'Failed opening required' above.
+			'Failed to open stream',
+			// Corrupted vendor tree — an abstract class resolved where its
+			// concrete provider file is missing (e.g. broken Faker install).
+			'Cannot instantiate abstract class',
+			// User Twig template calling an adapter/function without its
+			// required arguments (surfaces as a shutdown fatal, so the
+			// ArgumentCountError ignore above doesn't catch it).
+			'Too few arguments to function',
+			// User Twig template arithmetic on incompatible values — e.g.
+			// `{{ user-response }}` parses as subtraction, not a variable name.
+			'Unsupported operand types',
+			// A chunk vanished from tmp between upload and assembly — host tmp
+			// cleaner or a same-named concurrent upload, not a T3 bug.
+			'Unable to open chunk file',
+			// Template/form references a depot file that no longer exists on
+			// disk — operator deleted or moved user data.
+			'Unable to load file from depot',
+			// Filesystem refuses a recursive delete (permissions / sync-managed
+			// storage) — same family as the Permission denied pattern above.
+			'Unable to delete directory',
+			// Correct rejection of a save aimed at a singleton collection that
+			// already holds its object (form resubmission / API misuse).
+			'is a singleton and already holds its object',
+			// Correct rejection of a file save aimed at a nonexistent object.
+			'does not exist in collection',
+			// Stored JSON hand-edited or imported with a wrong-typed field —
+			// the serializer is correctly refusing it, and the operator sees
+			// the message directly. T3's writers can't produce these shapes.
+			'Failed to denormalize attribute',
 		],
 	];
 
