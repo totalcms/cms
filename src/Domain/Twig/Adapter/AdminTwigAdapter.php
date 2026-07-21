@@ -987,7 +987,7 @@ readonly class AdminTwigAdapter
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^$start([\w-]+)$ $path?id=$1 [L,QSA]
+RewriteRule ^$start([\w-]+)/?$ $path?id=$1 [L,QSA]
 HTACCESS;
 	}
 
