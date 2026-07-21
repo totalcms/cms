@@ -39,8 +39,6 @@ use TotalCMS\Support\Version;
  */
 readonly class McpServerFactory
 {
-	private const PROTOCOL_VERSION = '2025-11-25';
-
 	public function __construct(
 		private ToolRegistry $toolRegistry,
 		private ResourceRegistry $resourceRegistry,
@@ -303,7 +301,9 @@ readonly class McpServerFactory
 
 	public function protocolVersion(): string
 	{
-		return self::PROTOCOL_VERSION;
+		// Sourced from the SDK so the discovery document can never drift from
+		// the version the transport actually negotiates.
+		return \Mcp\Schema\JsonRpc\MessageInterface::PROTOCOL_VERSION->value;
 	}
 
 	/**

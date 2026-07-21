@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\OAuth;
 
+use Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadataHandler;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\OAuth\Service\OAuthDiscoveryProvider;
-use TotalCMS\Renderer\JsonRenderer;
 
 /**
  * RFC 9728 OAuth 2.0 Protected Resource Metadata at
@@ -17,15 +19,20 @@ use TotalCMS\Renderer\JsonRenderer;
  *
  * MCP clients that receive a 401 from the MCP endpoint follow the
  * `WWW-Authenticate: ... resource_metadata="..."` pointer here to learn which
- * authorization server protects the resource. Mirrors OAuthDiscoveryAction's
+ * authorization server protects the resource.
+ *
+ * Serving is delegated to the SDK's ProtectedResourceMetadataHandler so the
+ * response shape tracks the spec; what stays ours is the metadata content
+ * (OAuthDiscoveryProvider) and the edition gate — mirrors OAuthDiscoveryAction's
  * non-Pro behavior: 404 when the OAuth server feature is unavailable.
  */
 readonly class OAuthProtectedResourceAction
 {
 	public function __construct(
 		private OAuthDiscoveryProvider $provider,
-		private JsonRenderer $renderer,
 		private EditionFeatureService $editionFeatures,
+		private ResponseFactoryInterface $responseFactory,
+		private StreamFactoryInterface $streamFactory,
 	) {
 	}
 
@@ -35,6 +42,12 @@ readonly class OAuthProtectedResourceAction
 			return $response->withStatus(404);
 		}
 
-		return $this->renderer->json($response, $this->provider->protectedResourceMetadata());
+		$handler = new ProtectedResourceMetadataHandler(
+			$this->provider->protectedResourceMetadata(),
+			$this->responseFactory,
+			$this->streamFactory,
+		);
+
+		return $handler->handle($request);
 	}
 }

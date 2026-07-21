@@ -643,7 +643,7 @@ abstract class Util
 		}
 
 		return \array_map(
-			function (float|int|string|\Stringable $v, int $i) use ($opacityFactor, $opacityIndex): int|string|\Stringable|float {
+			function (float|int|string|\Stringable $v, int $i) use ($opacityFactor, $opacityIndex): string|\Stringable|float {
 				$sv = \is_scalar($v) ? (string)$v : '';
 				if (($i === $opacityIndex) && !\str_ends_with($sv, '%')) {
 					$v = $opacityFactor * ((float)$sv);
