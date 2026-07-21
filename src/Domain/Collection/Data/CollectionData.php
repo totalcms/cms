@@ -174,12 +174,29 @@ class CollectionData
 		}
 
 		if ($collectionData->prettyUrl) {
-			$url = rtrim($collectionData->url, '/');
-
-			return sprintf('%s/%s', $url, $id);
+			return sprintf('%s/%s', self::prettyUrlBase($collectionData->url), $id);
 		}
 
 		return sprintf('%s?id=%s', $collectionData->url, $id);
+	}
+
+	/**
+	 * Base path for pretty object URLs. A collection URL pointing at the page
+	 * file (`/blog/post.php`) would otherwise produce PATH_INFO-style links
+	 * (`/blog/post.php/my-slug`) that the Pretty URL builder's rewrite rules
+	 * never match — the rules anchor at the folder and only use the `.php`
+	 * path as the rewrite target. Pretty links anchor at the folder too.
+	 * Query-string URLs keep the filename; only pretty generation strips it.
+	 */
+	public static function prettyUrlBase(string $url): string
+	{
+		$url = rtrim($url, '/');
+
+		if (str_ends_with(strtolower($url), '.php')) {
+			$url = rtrim(dirname($url), '/');
+		}
+
+		return $url;
 	}
 
 	/**

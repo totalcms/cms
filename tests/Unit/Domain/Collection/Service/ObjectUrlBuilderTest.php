@@ -56,6 +56,41 @@ final class ObjectUrlBuilderTest extends TestCase
 		expect($result)->toBe('/news/?id=my-post');
 	}
 
+	public function testBuildUrlStripsPageFilenameWhenPrettyUrlEnabled(): void
+	{
+		// /blog/post.php + prettyUrl must anchor at the folder — the .php form
+		// would produce PATH_INFO links the generated rewrite rules never match.
+		$collection = $this->createCollection('/blog/post.php');
+		$object     = ['id' => 'my-post'];
+
+		expect($this->builder->buildUrl($collection, $object))->toBe('/blog/my-post');
+	}
+
+	public function testBuildUrlStripsIndexPhpWhenPrettyUrlEnabled(): void
+	{
+		$collection = $this->createCollection('/blog/index.php');
+		$object     = ['id' => 'my-post'];
+
+		expect($this->builder->buildUrl($collection, $object))->toBe('/blog/my-post');
+	}
+
+	public function testBuildUrlStripsRootLevelPageFilename(): void
+	{
+		$collection = $this->createCollection('/post.php');
+		$object     = ['id' => 'my-post'];
+
+		expect($this->builder->buildUrl($collection, $object))->toBe('/my-post');
+	}
+
+	public function testBuildUrlKeepsPageFilenameForQueryStringUrls(): void
+	{
+		// Query-string mode needs the actual page file to execute.
+		$collection = $this->createCollection('/blog/post.php', false);
+		$object     = ['id' => 'my-post'];
+
+		expect($this->builder->buildUrl($collection, $object))->toBe('/blog/post.php?id=my-post');
+	}
+
 	public function testBuildUrlRendersTemplateEvenWhenPrettyUrlFlagDisabled(): void
 	{
 		// Templated URLs are implicitly pretty — the `prettyUrl` flag is
