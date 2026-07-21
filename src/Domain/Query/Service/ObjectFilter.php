@@ -91,7 +91,7 @@ readonly class ObjectFilter
 			return false;
 		}
 
-		return !(isset($filterOptions['include']) && !$this->isIncluded($object, $filterOptions['include']));
+		return !isset($filterOptions['include']) || $this->isIncluded($object, $filterOptions['include']);
 	}
 
 	/**

@@ -23,7 +23,7 @@ abstract class HexRgb
 			$values = (\strlen($value) > 3)
 				? \str_split($value, 2)
 				: \array_map(
-					callback : fn ($v): string => $v . $v,
+					callback : fn (string $v): string => $v . $v,
 					array    : \str_split($value),
 				)
 			;

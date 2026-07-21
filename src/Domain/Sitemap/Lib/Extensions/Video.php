@@ -176,8 +176,6 @@ class Video implements VisitorInterface
 	 * URL pointing to the player file (normally a SWF).
 	 *
 	 * @param string $playerLoc
-	 *
-	 * @return $this
 	 */
 	public function setPlayerLoc($playerLoc): static
 	{
@@ -230,8 +228,6 @@ class Video implements VisitorInterface
 	 * URL pointing to the actual media file (mp4).
 	 *
 	 * @param string $contentLoc
-	 *
-	 * @return $this
 	 */
 	public function setContentLoc($contentLoc): static
 	{
@@ -254,8 +250,6 @@ class Video implements VisitorInterface
 	 * Duration of the video in seconds.
 	 *
 	 * @param int $duration
-	 *
-	 * @return $this
 	 */
 	public function setDuration($duration): static
 	{
@@ -276,8 +270,6 @@ class Video implements VisitorInterface
 
 	/**
 	 * The date after which the video will no longer be available.
-	 *
-	 * @return $this
 	 */
 	public function setExpirationDate(\DateTimeInterface $expirationDate): static
 	{
@@ -300,8 +292,6 @@ class Video implements VisitorInterface
 	 * The rating of the video. Allowed values are float numbers in the range 0.0 to 5.0.
 	 *
 	 * @param float $rating
-	 *
-	 * @return $this
 	 */
 	public function setRating($rating): static
 	{
@@ -324,8 +314,6 @@ class Video implements VisitorInterface
 	 * The number of times the video has been viewed.
 	 *
 	 * @param int $viewCount
-	 *
-	 * @return $this
 	 */
 	public function setViewCount($viewCount): static
 	{
@@ -346,8 +334,6 @@ class Video implements VisitorInterface
 
 	/**
 	 * The date the video was first published, in W3C format.
-	 *
-	 * @return $this
 	 */
 	public function setPublicationDate(\DateTimeInterface $publicationDate): static
 	{
@@ -370,8 +356,6 @@ class Video implements VisitorInterface
 	 * No if the video should be available only to users with SafeSearch turned off.
 	 *
 	 * @param string $familyFriendly
-	 *
-	 * @return $this
 	 */
 	public function setFamilyFriendly($familyFriendly): static
 	{
@@ -394,8 +378,6 @@ class Video implements VisitorInterface
 	 * A tag associated with the video.
 	 *
 	 * @param list<string> $tags
-	 *
-	 * @return $this
 	 */
 	public function setTags($tags): static
 	{
@@ -418,8 +400,6 @@ class Video implements VisitorInterface
 	 * The video's category. For example, cooking.
 	 *
 	 * @param string $category
-	 *
-	 * @return $this
 	 */
 	public function setCategory($category): static
 	{
@@ -442,8 +422,6 @@ class Video implements VisitorInterface
 	 * A space-delimited list of countries where the video may or may not be played.
 	 *
 	 * @param string $restriction
-	 *
-	 * @return $this
 	 */
 	public function setRestriction($restriction): static
 	{
@@ -466,8 +444,6 @@ class Video implements VisitorInterface
 	 * Link to gallery of which this video appears in.
 	 *
 	 * @param string $galleryLoc
-	 *
-	 * @return $this
 	 */
 	public function setGalleryLoc($galleryLoc): static
 	{
@@ -490,8 +466,6 @@ class Video implements VisitorInterface
 	 * The price to download or view the video in ISO 4217 format.
 	 *
 	 * @param string $price
-	 *
-	 * @return $this
 	 */
 	public function setPrice($price): static
 	{
@@ -534,8 +508,6 @@ class Video implements VisitorInterface
 	 * Does the video require a subscription?
 	 *
 	 * @param bool $requiresSubscription
-	 *
-	 * @return $this
 	 */
 	public function setRequiresSubscription($requiresSubscription): static
 	{
@@ -558,8 +530,6 @@ class Video implements VisitorInterface
 	 * The video uploader's name. Only one <video:uploader> is allowed per video.
 	 *
 	 * @param string $uploader
-	 *
-	 * @return $this
 	 */
 	public function setUploader($uploader): static
 	{
@@ -586,8 +556,6 @@ class Video implements VisitorInterface
 	 * Allowed values are web, mobile, and tv.
 	 *
 	 * @param string $platform
-	 *
-	 * @return $this
 	 */
 	public function setPlatform($platform): static
 	{
@@ -610,8 +578,6 @@ class Video implements VisitorInterface
 	 * Indicates whether the video is live.
 	 *
 	 * @param bool $live
-	 *
-	 * @return $this
 	 */
 	public function setLive($live): static
 	{

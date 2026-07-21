@@ -33,7 +33,7 @@ class SentryMiddleware implements MiddlewareInterface
 		// request URL/method reach the monitoring service.
 		'send_default_pii'      => false,
 		'max_request_body_size' => 'none',
-		'ignore_exceptions'    => [
+		'ignore_exceptions'     => [
 			HttpNotFoundException::class,
 			HttpMethodNotAllowedException::class,
 			HttpUnauthorizedException::class,

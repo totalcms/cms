@@ -267,7 +267,7 @@ class ServerChecker
 	{
 		return match ($extension) {
 			// OPcache detection (incl. file-cache-only hosts) lives in the service
-			'opcache' => $this->opcacheService->isAvailable(),
+			'opcache'   => $this->opcacheService->isAvailable(),
 			'intl'      => extension_loaded('intl') && class_exists('Locale') && class_exists('NumberFormatter'),
 			'apcu'      => extension_loaded('apcu') && function_exists('apcu_store') && function_exists('apcu_fetch'),
 			'redis'     => extension_loaded('redis') && class_exists('Redis'),

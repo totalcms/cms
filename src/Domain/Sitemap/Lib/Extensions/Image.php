@@ -74,8 +74,6 @@ class Image implements VisitorInterface
 	 * Set the caption of the image.
 	 *
 	 * @param string $caption
-	 *
-	 * @return $this
 	 */
 	public function setCaption($caption): static
 	{
@@ -98,8 +96,6 @@ class Image implements VisitorInterface
 	 * Set the geographic location of the image.
 	 *
 	 * @param string $geoLocation
-	 *
-	 * @return $this
 	 */
 	public function setGeoLocation($geoLocation): static
 	{
@@ -122,8 +118,6 @@ class Image implements VisitorInterface
 	 * Set the title of the image.
 	 *
 	 * @param string $title
-	 *
-	 * @return $this
 	 */
 	public function setTitle($title): static
 	{
@@ -146,8 +140,6 @@ class Image implements VisitorInterface
 	 * Set a URL to the license of the image.
 	 *
 	 * @param string $license
-	 *
-	 * @return $this
 	 */
 	public function setLicense($license): static
 	{

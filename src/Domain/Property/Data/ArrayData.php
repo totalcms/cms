@@ -100,6 +100,6 @@ class ArrayData extends PropertyData implements \Stringable
 			}
 		}
 
-		return implode(',', array_map(static fn ($v): string => (string)$v, $this->data));
+		return implode(',', array_map(static fn (bool|float|int|string|null $v): string => (string)$v, $this->data));
 	}
 }

@@ -82,8 +82,6 @@ class News implements VisitorInterface
 	 * Set the publication name.
 	 *
 	 * @param string $publicationName
-	 *
-	 * @return $this
 	 */
 	public function setPublicationName($publicationName): static
 	{
@@ -106,8 +104,6 @@ class News implements VisitorInterface
 	 * Set the publication language.
 	 *
 	 * @param string $publicationLanguage
-	 *
-	 * @return $this
 	 */
 	public function setPublicationLanguage($publicationLanguage): static
 	{
@@ -130,8 +126,6 @@ class News implements VisitorInterface
 	 * Set access.
 	 *
 	 * @param string $access
-	 *
-	 * @return $this
 	 */
 	public function setAccess($access): static
 	{
@@ -154,8 +148,6 @@ class News implements VisitorInterface
 	 * Set list of genres, comma-separated string values.
 	 *
 	 * @param string $genres
-	 *
-	 * @return $this
 	 */
 	public function setGenres($genres): static
 	{
@@ -176,8 +168,6 @@ class News implements VisitorInterface
 
 	/**
 	 * Set date of publication.
-	 *
-	 * @return $this
 	 */
 	public function setPublicationDate(\DateTimeInterface $publicationDate): static
 	{
@@ -200,8 +190,6 @@ class News implements VisitorInterface
 	 * Set title.
 	 *
 	 * @param string $title
-	 *
-	 * @return $this
 	 */
 	public function setTitle($title): static
 	{
@@ -224,8 +212,6 @@ class News implements VisitorInterface
 	 * Set key words, comma-separated string values.
 	 *
 	 * @param string $keywords
-	 *
-	 * @return $this
 	 */
 	public function setKeywords($keywords): static
 	{
