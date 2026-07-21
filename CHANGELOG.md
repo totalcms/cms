@@ -2,6 +2,33 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-rc.12] - 2026-07-21
+
+### Added
+
+- **Error-monitoring consent in the Setup Wizard**: A new wizard step between License and Server Config asks at install time whether the site should send anonymous error reports, instead of enabling monitoring by default and leaving the toggle buried in settings. The choice persists through the same general-settings pipeline as the admin toggle (translated in all six languages). Installs licensed offline (air-gapped) force error monitoring off at the config layer — web, CLI, browser loader, and MCP — regardless of the setting
+
+### Enhanced
+
+- **Upload previews show the real stored image**: After an image or gallery upload, the preview swaps from the browser's local thumbnail to the actual server-processed ImageWorks image — the same size and quality the form renders on a refresh — so the preview always shows exactly what the server stored. HEIC uploads benefit most: they previously kept their "Converting to JPEG" placeholder until a page reload
+- **MCP server transport hardening (SDK 0.7)**: The built-in MCP server's SDK is updated with a request-body size cap, stricter JSON-RPC parsing, and malformed-session handling. OAuth protected-resource discovery is now served by the SDK's standards-based (RFC 9728) handler, and the advertised protocol version is sourced from the SDK itself so the discovery document can never drift from what the transport actually negotiates
+- **Fewer false-alarm error reports**: Error monitoring now filters warning-class events that aren't Total CMS bugs — half-uploaded or corrupted installs, file-permission failures, user Twig template mistakes, and hand-edited data files — so reports that reach us represent real defects
+- **Frontend build toolchain refreshed**: esbuild 0.28, the modern Sass compiler pipeline, and js-beautify 2 (no change to built-asset behavior); the bundled illuminate/collections library moves to 12
+
+### Fixed
+
+- **Pretty URLs: three gaps fixed together**: A collection URL pointing at the page file (`/blog/post.php`) with pretty URLs enabled generated `/blog/post.php/my-slug` links that the generated rewrite rules never match — pretty links now anchor at the folder (`/blog/my-slug`), while query-string URLs keep the filename since that page must execute. The generated Apache rewrite rule ignored trailing slashes (`/blog/my-post/` rendered the detail page without its object) — it now matches both, as the Nginx rule always did. And hitting a detail page with no slug at all crashed with a TypeError — `cms.collection.object()` now tolerates a missing id and returns empty
+- **Uploads rejected valid files when multiple file types were allowed**: An upload rule listing several allowed filetypes or filename patterns required a file to match *all* of them at once — impossible, since a file has exactly one type — so every file was rejected with a doubled error message. Multiple rule entries are now alternatives: the file passes when any entry matches, and a single clear error is shown when none do
+- **`.htaccess` rewrites 404'd on hosts with broken per-directory mapping (IONOS)**: Some shared hosts (e.g. IONOS symlinked docroots) cannot reverse-map relative rewrite targets in per-directory `.htaccess` context, so every rewritten URL silently 404'd. The shipped rules now compute the directory URL prefix at request time and substitute absolute URLs — no hardcoded paths, and a no-op on healthy hosts. Also fixed `diagnose.php`'s class-loading test, which checked class names that no longer exist and reported false failures on every install
+- **JumpStart export crashed on hosts that disable `tmpfile()`**: On PHP 8 a disabled function throws an error that can't be suppressed, so the export died before its in-memory fallback could engage. The fallback now engages properly on those hosts
+- **OPcache reported as "not installed" on file-cache-only hosts**: On shared hosting without shared memory (e.g. `opcache.file_cache_only=1`), the OPcache status API returns nothing even though opcode caching is running, so the server info panel claimed OPcache was missing. Detection now falls back to the ini settings and reports "Enabled (file cache only)" honestly, including in cache recommendations
+
+### Security
+
+- **Security headers on admin, auth, and setup pages**: All admin, authentication, and setup routes now send clickjacking protection (`X-Frame-Options: SAMEORIGIN`, `frame-ancestors 'self'`), `nosniff`, and a strict referrer policy
+- **Per-site encryption key**: The `encrypt`/`decrypt` Twig filters are now keyed to a per-site secret generated at `tcms-data/.system/site.key` instead of a constant shipped in public source code. Existing encrypted values keep working via a legacy fallback — and `site.key` should be included in your data-directory backups
+- **Error reports carry less data**: The error-monitoring SDK is now explicitly configured to never attach personal data or request bodies (previously, small POST bodies — i.e. CMS content — could be attached to some reports)
+
 ## [3.5.0-rc.11] - 2026-07-05
 
 ### Added
