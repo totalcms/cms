@@ -9,13 +9,13 @@
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.9",
-    "esbuild": "^0.16.17",
+    "esbuild": "^0.28.1",
     "esbuild-plugin-clean": "^1.0.1",
     "esbuild-plugin-copy": "^2.0.1",
     "esbuild-plugin-glob": "^2.2.1",
-    "esbuild-sass-plugin": "^2.4.5",
+    "esbuild-sass-plugin": "^3.7.0",
     "jsdom": "^29.1.1",
-    "sass-extended-importer": "^0.4.2",
+    "sass-embedded": "^1.97.3",
     "vitest": "^4.1.9"
   },
   "dependencies": {
@@ -67,7 +67,7 @@
     "highlight.js": "^11.11.1",
     "htmx.org": "4.0.0-beta4",
     "imask": "^7.6.1",
-    "js-beautify": "^1.15.4",
+    "js-beautify": "^2.0.3",
     "lightgallery": "^2.8.2",
     "mermaid": "^11.15.0",
     "slugify": "^1.6.6",
