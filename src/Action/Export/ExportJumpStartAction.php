@@ -66,8 +66,10 @@ readonly class ExportJumpStartAction
 			->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $filename));
 
 		// Use streaming to avoid memory exhaustion with large datasets
-		// php://temp is used as fallback since some hosts disable tmpfile()
-		$tempFile = @\tmpfile();
+		// php://temp is used as fallback since some hosts disable tmpfile().
+		// On PHP 8 a disabled function throws "Call to undefined function",
+		// which @ cannot suppress — function_exists() reports it as missing.
+		$tempFile = \function_exists('tmpfile') ? @\tmpfile() : false;
 		if ($tempFile === false) {
 			$tempFile = \fopen('php://temp', 'r+');
 		}

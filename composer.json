@@ -12,10 +12,6 @@
     "cms"
   ],
   "license": "proprietary",
-  "repositories": [
-	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/slim-test" },
-	{ "type": "vcs", "url": "https://github.com/joeworkman-forks/pest-plugin-slim" }
-  ],
   "require": {
     "php": "^8.2",
     "composer-plugin-api": "^2.4",
@@ -36,7 +32,7 @@
     "glenscott/url-normalizer": "^1.4",
     "guzzlehttp/guzzle": "^7",
     "halaxa/json-machine": "^1.1",
-    "illuminate/collections": "^11.45",
+    "illuminate/collections": "^11.45 || ^12.0",
     "khanzadimahdi/uploadmanager": "^1.0",
     "laminas/laminas-feed": "^2.26",
     "league/commonmark": "^2.7",
@@ -47,7 +43,7 @@
     "league/html-to-markdown": "^5.0",
     "league/oauth2-server": "^9.0",
     "league/uri": "^7.4",
-    "mcp/sdk": "^0.6.0",
+    "mcp/sdk": "^0.7.0",
     "middlewares/trailing-slash": "^2.0",
     "monolog/monolog": "^3.2",
     "nyholm/psr7": "^1.8",
@@ -85,8 +81,8 @@
     "composer/composer": "^2.4",
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
-    "nekofar/pest-plugin-slim": "dev-develop#f55ba25333d964257a24a3c1206948fcf454cb01",
-    "nekofar/slim-test": "dev-develop#7cd84a847ba14ef8424635b55bbcfd50d0e85349",
+    "totalcms/pest-plugin-slim": "^4.0",
+    "totalcms/slim-test": "^4.0",
     "overtrue/phplint": "^9.0",
     "pestphp/pest": "^3.0",
     "pestphp/pest-plugin-arch": "^3.0",

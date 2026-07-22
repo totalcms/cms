@@ -192,6 +192,7 @@ class FileField extends FormField
 			'help'     => 'Require a password to download this file. This overrides all collection level access controls.',
 			'value'    => $fileData['password'] ?? '',
 			'required' => false,
+			'settings' => ['ignoreManagers' => true],
 		]);
 
 		return HTMLUtils::details('Protection', $content);

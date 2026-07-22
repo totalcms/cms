@@ -1,6 +1,6 @@
 <?php
 
-use function Nekofar\Slim\Pest\postJson;
+use function TotalCMS\Slim\Pest\postJson;
 
 beforeEach(function (): void {
 	// Clean data directory before each test for proper isolation

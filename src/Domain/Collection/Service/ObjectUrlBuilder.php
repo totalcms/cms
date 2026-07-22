@@ -66,9 +66,7 @@ readonly class ObjectUrlBuilder
 			return sprintf('%s?id=%s', $url, $id);
 		}
 
-		$url = rtrim($url, '/');
-
-		return sprintf('%s/%s', $url, $id);
+		return sprintf('%s/%s', CollectionData::prettyUrlBase($url), $id);
 	}
 
 	/**

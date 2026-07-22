@@ -1,8 +1,8 @@
 <?php
 
-use function Nekofar\Slim\Pest\get;
-use function Nekofar\Slim\Pest\patchJson;
-use function Nekofar\Slim\Pest\postJson;
+use function TotalCMS\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\patchJson;
+use function TotalCMS\Slim\Pest\postJson;
 
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());

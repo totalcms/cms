@@ -20,6 +20,23 @@ class PasswordField extends FormField
 			$attributes['inputmode'] = 'numeric';
 		}
 
+		// Browsers ignore unknown autocomplete tokens (the inherited 'nofill')
+		// on type=password inputs and silently fill saved site credentials —
+		// which set file/depot protection passwords behind users' backs.
+		// 'new-password' is the standard "not the login password" signal.
+		// The login form builds its own raw input, so saved-password fill on
+		// login is unaffected.
+		$attributes['autocomplete'] = 'new-password';
+
+		if (!empty($this->settings['ignoreManagers'])) {
+			// Full password-manager opt-out for fields that are never account
+			// credentials (media protection passwords). Vendor attributes for
+			// 1Password, LastPass, and Bitwarden.
+			$attributes['data-1p-ignore'] = '';
+			$attributes['data-lpignore']  = 'true';
+			$attributes['data-bwignore']  = 'true';
+		}
+
 		return $attributes;
 	}
 

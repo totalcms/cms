@@ -1,0 +1,72 @@
+{% extends "admin-layout.twig" %}
+
+{% block title %}{{ t('wizard.monitoring_title') }}{% endblock %}
+
+{% block content %}
+<main class="login-layout admin-layout">
+	<section class="setup-header">
+		<h1>{{ t('wizard.monitoring_title') }}</h1>
+		<p>{{ t('wizard.monitoring_desc') }}</p>
+	</section>
+
+	<form method="post" action="{{ cms.base }}/setup/error-monitoring" class="monitoring-form">
+		<label class="monitoring-choice">
+			<input type="checkbox" name="sentry" checked>
+			<span>
+				<strong>{{ t('wizard.monitoring_label') }}</strong>
+				<small>{{ t('wizard.monitoring_help') }}</small>
+			</span>
+		</label>
+
+		<p class="monitoring-note">{{ t('wizard.monitoring_note') }}</p>
+
+		<button type="submit" class="dash-button setup-continue">{{ t('wizard.continue') }}</button>
+	</form>
+</main>
+
+<style>
+.monitoring-form {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	max-width: 480px;
+}
+
+.monitoring-choice {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+	padding: 1rem;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	background: oklch(var(--totalform-nearwhite));
+	cursor: pointer;
+}
+
+.monitoring-choice input {
+	margin-top: 0.2rem;
+}
+
+.monitoring-choice span {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.monitoring-choice small {
+	color: oklch(var(--totalform-darkgray));
+	line-height: 1.4;
+}
+
+.monitoring-note {
+	margin: 0;
+	font-size: 0.8rem;
+	color: oklch(var(--totalform-darkgray) / 0.7);
+}
+
+.setup-continue {
+	text-align: center;
+	margin-top: 0.5rem;
+}
+</style>
+{% endblock %}

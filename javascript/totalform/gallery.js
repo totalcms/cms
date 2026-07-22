@@ -396,6 +396,7 @@ export default class GalleryField extends ImageField {
 			}
 		}
 		this.setupPreview(image);
+		this.swapServerPreview(file, response);
 	}
 
 	// Correlate a just-uploaded file with its saved image in the response. The

@@ -1,10 +1,10 @@
 <?php
 
-use function Nekofar\Slim\Pest\delete;
-use function Nekofar\Slim\Pest\get;
-use function Nekofar\Slim\Pest\head;
-use function Nekofar\Slim\Pest\postJson;
-use function Nekofar\Slim\Pest\putJson;
+use function TotalCMS\Slim\Pest\delete;
+use function TotalCMS\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\head;
+use function TotalCMS\Slim\Pest\postJson;
+use function TotalCMS\Slim\Pest\putJson;
 
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
@@ -188,13 +188,13 @@ it('always allows HEAD requests for object existence checking', function (): voi
 	postJson('/api/collections/private-head-test', $objectData);
 
 	// HEAD request should work even though read is not in publicOperations
-	$response = \Nekofar\Slim\Pest\head('/api/collections/private-head-test/test-exists');
+	$response = \TotalCMS\Slim\Pest\head('/api/collections/private-head-test/test-exists');
 
 	// Should succeed - HEAD always allowed
 	expect($response->getStatusCode())->toBe(200);
 
 	// HEAD for non-existent object
-	$response404 = \Nekofar\Slim\Pest\head('/api/collections/private-head-test/does-not-exist');
+	$response404 = \TotalCMS\Slim\Pest\head('/api/collections/private-head-test/does-not-exist');
 
 	// Should return 404 (not auth error)
 	expect($response404->getStatusCode())->toBe(404);

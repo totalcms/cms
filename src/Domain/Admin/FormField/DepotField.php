@@ -61,6 +61,7 @@ class DepotField extends FormField
 			'help'     => 'Require a password to download files from this depot. This overrides all collection level access controls.',
 			'value'    => $depot['password'] ?? '',
 			'required' => false,
+			'settings' => ['ignoreManagers' => true],
 		]);
 		$content .= $this->closeSection();
 

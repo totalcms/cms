@@ -239,8 +239,17 @@ readonly class CollectionTwigAdapter
 
 	// Get an object from a collection
 	/** @return array<string,mixed> */
-	public function object(string $collection, string $id): array
+	public function object(string $collection, ?string $id): array
 	{
+		// Null/empty id is a template-level fact of life — e.g. a pretty-URL
+		// blog-post page visited without a slug passes getData.id = null.
+		// Degrade to "no object" instead of letting PHP throw a TypeError.
+		if ($id === null || $id === '') {
+			$this->logger->debug("Empty object id requested from collection '{$collection}'");
+
+			return [];
+		}
+
 		// if there is an exception, return an empty array for the template
 		try {
 			$object = $this->objectFetcher->fetchObject($collection, $id);

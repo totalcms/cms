@@ -105,6 +105,7 @@ Choose your preferred language for the admin interface:
 | `en_GB` | English (UK) |
 | `de_DE` | Deutsch |
 | `es_ES` | Español |
+| `it_IT` | Italiano |
 | `nl_NL` | Nederlands |
 
 > This setting only affects the admin. Your public-facing site uses its own translations.
@@ -149,7 +150,17 @@ You can change the license later from **Settings → License Manager** in the ad
 
 ![Setup Wizard — License](docs/get-started/images/wizard-license.jpg)
 
-### 6. Server config
+### 6. Error monitoring
+
+Choose whether Total CMS may report application errors to the developer. Leaving this on means bugs get discovered and fixed quickly — often before you notice anything went wrong, and without you having to file a report.
+
+Reports contain only the error and where it occurred in the code. No content, credentials, or private data ever leaves your server — the reporting client is explicitly configured to never attach request bodies, cookies, session data, or IP addresses. See [Error Monitoring](docs/operations/security#error-monitoring) for the full details.
+
+You can change this choice at any time in **Settings → General** ("Share Application Errors with Developer").
+
+<!-- TODO: screenshot — docs/get-started/images/wizard-error-monitoring.jpg -->
+
+### 7. Server config
 
 The wizard renders the exact rewrite-rule snippets you need for your server. For Composer installs, the Apache rules ship in `.htaccess` automatically — the wizard tells you everything's already in place. For other servers (Nginx, Caddy), copy the snippet into your server config and reload.
 

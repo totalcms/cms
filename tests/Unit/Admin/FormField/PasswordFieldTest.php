@@ -179,6 +179,34 @@ describe('PasswordField', function (): void {
 		expect($html)->not->toContain('class="form-group-icon"');
 	});
 
+	test('PasswordField → marks both inputs as new-password so browsers never fill saved site credentials', function (): void {
+		$field = new PasswordField($this->form, 'password');
+
+		$html = $field->build();
+
+		expect(substr_count($html, 'autocomplete="new-password"'))->toBe(2);
+		expect($html)->not->toContain('autocomplete="nofill"');
+	});
+
+	test('PasswordField → ignoreManagers setting opts both inputs out of password managers', function (): void {
+		$field = new PasswordField($this->form, 'password', settings: ['ignoreManagers' => true]);
+
+		$html = $field->build();
+
+		expect(substr_count($html, 'data-1p-ignore'))->toBe(2);
+		expect(substr_count($html, 'data-lpignore="true"'))->toBe(2);
+		expect(substr_count($html, 'data-bwignore="true"'))->toBe(2);
+	});
+
+	test('PasswordField → password manager opt-out attributes absent by default', function (): void {
+		$field = new PasswordField($this->form, 'password');
+
+		$html = $field->build();
+
+		expect($html)->not->toContain('data-1p-ignore');
+		expect($html)->not->toContain('data-lpignore');
+	});
+
 	test('PasswordField → applies minlength and maxlength to both inputs', function (): void {
 		$field = new PasswordField($this->form, 'password', minlength: 8, maxlength: 32);
 

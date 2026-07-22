@@ -12,8 +12,32 @@ class OPcacheService implements CacheInterface
 
 	public function isAvailable(): bool
 	{
-		// Check if OPcache is actually enabled and working in PHP
-		return function_exists('opcache_get_status') && opcache_get_status() !== false;
+		if (!function_exists('opcache_get_status')) {
+			return false;
+		}
+
+		// Normal shared-memory mode reports a status array.
+		if (opcache_get_status() !== false) {
+			return true;
+		}
+
+		// File-cache-only mode (no shared memory — common on shared hosting
+		// like IONOS): opcode caching runs, but opcache_get_status() returns
+		// false because the status API only reports shared memory.
+		return $this->isFileCacheOnly();
+	}
+
+	/**
+	 * OPcache running purely from its file cache (opcache.file_cache_only=1).
+	 * In this mode there are no SHM statistics and opcache_reset() is a no-op.
+	 */
+	public function isFileCacheOnly(): bool
+	{
+		$enabled = PHP_SAPI === 'cli'
+			? filter_var(ini_get('opcache.enable_cli'), FILTER_VALIDATE_BOOL)
+			: filter_var(ini_get('opcache.enable'), FILTER_VALIDATE_BOOL);
+
+		return $enabled && filter_var(ini_get('opcache.file_cache_only'), FILTER_VALIDATE_BOOL);
 	}
 
 	public function isInstalled(): bool
@@ -65,7 +89,16 @@ class OPcacheService implements CacheInterface
 
 		$status = opcache_get_status(false);
 		if ($status === false) {
-			return ['available' => false];
+			// isAvailable() passed but there is no SHM status: file-cache-only mode.
+			return [
+				'available'       => true,
+				'opcache_enabled' => true,
+				'file_cache_only' => true,
+				'cache_full'      => false,
+				'memory_usage'    => [],
+				'hit_rate'        => 0,
+				'scripts_cached'  => 0,
+			];
 		}
 
 		return [
@@ -93,6 +126,10 @@ class OPcacheService implements CacheInterface
 
 		$stats           = $this->getStats();
 		$recommendations = [];
+
+		if ($stats['file_cache_only'] ?? false) {
+			return ['✅ OPcache is active in file-cache mode (no shared memory) — compiled Twig templates are still accelerated'];
+		}
 
 		if (($stats['available'] ?? false) && ($stats['opcache_enabled'] ?? false)) {
 			$recommendations[] = '✅ OPcache is enabled and will accelerate compiled Twig templates';

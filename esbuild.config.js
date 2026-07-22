@@ -3,7 +3,6 @@ const copy               = require('esbuild-plugin-copy');
 const { clean }          = require('esbuild-plugin-clean');
 const { globPlugin }     = require('esbuild-plugin-glob');
 const { sassPlugin }     = require("esbuild-sass-plugin");
-const { createImporter } = require("sass-extended-importer");
 
 // Production mode optimizations
 const isProduction = process.env.PRODUCTION === '1';
@@ -93,7 +92,6 @@ esbuild.build({
 
                 "node_modules/highlight.js/styles/"
             ],
-            importer: createImporter(),
         }),
     ],
 }).catch(() => process.exit(1));

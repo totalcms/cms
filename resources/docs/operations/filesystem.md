@@ -148,6 +148,12 @@ fields get added to the collection digest.
 Custom schemas will be stored inside of a
 `.schemas` folder inside the `tcms-data` directory.
 
+## The .system Directory
+
+`tcms-data/.system/` holds the installation's operational state — settings (`settings.json`), setup-wizard progress, extension state and permissions, OAuth signing keys, and (on zip installs) logs.
+
+One file deserves a special call-out: **`site.key`** is your deployment's encryption secret, generated automatically the first time the `encrypt` Twig filter or an encrypted download URL is used. Values encrypted on this site can only be decrypted with this key. It is part of your deployment's identity: **always include `tcms-data/.system/` in backups**, and know that `tcms pull`/`push` sync it between environments automatically.
+
 ## Logs
 
 Total CMS writes its log files to a layout-aware location:

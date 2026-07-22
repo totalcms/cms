@@ -620,7 +620,7 @@ abstract class Util
 		);
 
 		$values = \array_map(
-			callback : fn ($v): mixed => \is_numeric($v)
+			callback : fn (float|int|string|\Stringable $v): mixed => \is_numeric($v)
 				? (float)$v
 				: $v,
 			array    : \array_values(
@@ -643,7 +643,7 @@ abstract class Util
 		}
 
 		return \array_map(
-			function ($v, int $i) use ($opacityFactor, $opacityIndex) {
+			function (float|int|string|\Stringable $v, int $i) use ($opacityFactor, $opacityIndex): string|\Stringable|float {
 				$sv = \is_scalar($v) ? (string)$v : '';
 				if (($i === $opacityIndex) && !\str_ends_with($sv, '%')) {
 					$v = $opacityFactor * ((float)$sv);

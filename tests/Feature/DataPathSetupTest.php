@@ -1,7 +1,7 @@
 <?php
 
-use function Nekofar\Slim\Pest\get;
-use function Nekofar\Slim\Pest\post;
+use function TotalCMS\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\post;
 
 beforeAll(function (): void {
 	// Setup wizard tests simulate a fresh install — wipe EVERYTHING and

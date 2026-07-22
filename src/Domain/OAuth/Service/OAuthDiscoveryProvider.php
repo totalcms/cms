@@ -57,20 +57,19 @@ final readonly class OAuthDiscoveryProvider
 	 * endpoint's `WWW-Authenticate: ... resource_metadata="..."` challenge, so a
 	 * client that hits a 401 can discover which authorization server protects this
 	 * resource. T3 is its own authorization server, so `authorization_servers`
-	 * lists this issuer.
-	 *
-	 * @return array<string,mixed>
+	 * lists this issuer. Returned as the SDK value object so serialization
+	 * tracks the spec; `bearer_methods_supported` rides in `extra`.
 	 */
-	public function protectedResourceMetadata(): array
+	public function protectedResourceMetadata(): \Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata
 	{
 		$resource = rtrim($this->config->url, '/') . rtrim($this->config->api, '/');
 
-		return [
-			'resource'                 => $resource,
-			'authorization_servers'    => [$this->resolveIssuer()],
-			'scopes_supported'         => array_map(fn (\TotalCMS\Domain\OAuth\Data\OAuthScopeData $s): string => $s->identifier, $this->scopes->all()),
-			'bearer_methods_supported' => ['header'],
-		];
+		return new \Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata(
+			authorizationServers: [$this->resolveIssuer()],
+			scopesSupported: array_map(fn (\TotalCMS\Domain\OAuth\Data\OAuthScopeData $s): string => $s->identifier, $this->scopes->all()),
+			resource: $resource,
+			extra: ['bearer_methods_supported' => ['header']],
+		);
 	}
 
 	private function resolveIssuer(): string

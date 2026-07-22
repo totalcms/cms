@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 
-use function Nekofar\Slim\Pest\postJson;
-use function Nekofar\Slim\Pest\putJson;
+use function TotalCMS\Slim\Pest\postJson;
+use function TotalCMS\Slim\Pest\putJson;
 
 /**
  * Feature tests for mcp.tools save-time validation.

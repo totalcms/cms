@@ -1,9 +1,9 @@
 <?php
 
-use function Nekofar\Slim\Pest\deleteJson;
-use function Nekofar\Slim\Pest\get;
-use function Nekofar\Slim\Pest\postJson;
-use function Nekofar\Slim\Pest\putJson;
+use function TotalCMS\Slim\Pest\deleteJson;
+use function TotalCMS\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\postJson;
+use function TotalCMS\Slim\Pest\putJson;
 
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());

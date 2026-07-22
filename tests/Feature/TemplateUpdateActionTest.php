@@ -1,6 +1,6 @@
 <?php
 
-use function Nekofar\Slim\Pest\putJson;
+use function TotalCMS\Slim\Pest\putJson;
 
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());

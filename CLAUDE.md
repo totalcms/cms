@@ -4,12 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Total CMS is a modern PHP-based Content Management System using flat-file JSON storage. Built with Slim 4 framework, it provides a RESTful API with Twig templating and a comprehensive admin interface. The product is in production with 200+ sites. Current development is on 3.5 which adds the CLI, extension system, event system, Composer distribution, Site Builder, public registration, and platform-installation flow.
+Total CMS is a modern PHP-based Content Management System using flat-file JSON storage. Built with Slim 4 framework, it provides a RESTful API with Twig templating and a comprehensive admin interface. The product is in production with 200+ sites. Version 3.5 (currently in release candidates) adds the CLI, extension system, event system, Composer distribution, Site Builder, public registration, platform-installation flow, built-in MCP server, and Automations.
 
 ### Related Projects
 - **Total CMS License API** ([totalcms/license.totalcms.co](https://github.com/totalcms/license.totalcms.co)): License validation and trial management with similar Slim 4 architecture
 - **Total CMS 3 Stacks**: Stacks plugin for the Stacks platform
-- **Documentation Site** ([totalcms/docs.totalcms.co](https://github.com/totalcms/docs.totalcms.co)): Public docs at docs.totalcms.co. Source of truth is `/resources/docs/` in this repo; synced to the docs site via the build script
+- **Documentation Site** ([totalcms/docs.totalcms.co](https://github.com/totalcms/docs.totalcms.co)): Public docs at docs.totalcms.co (Astro Starlight). Source of truth is `/resources/docs/` in this repo; synced to the docs site via the build script
+- **Marketing Site**: totalcms.co — static HTML site (local: `~/Websites/totalcms.co`)
 - **Extension Starter** ([totalcms/extension-starter](https://github.com/totalcms/extension-starter)): Template repo for building T3 extensions, demonstrates every extension point
 - **MCP Docs Server** ([totalcms/mcp.totalcms.co](https://github.com/totalcms/mcp.totalcms.co)): MCP server that serves T3 documentation to AI agents
 - **Project Repo** ([totalcms/totalcms-project](https://github.com/totalcms/totalcms-project)): Composer project template for installing T3 via `composer create-project`
@@ -62,6 +63,7 @@ composer run test:all
 - **`/src/Domain/`** - Business logic layer with services, repositories, and data objects
   - **`/src/Domain/Extension/`** - Extension system: discovery, lifecycle, permissions, settings, route collection
   - **`/src/Domain/Event/`** - Core event dispatcher (used by extensions and internal services)
+  - **`/src/Domain/Automation/`** - Automations: schedule/webhook/event triggers, queue, runner, state store
   - **`/src/Domain/JumpStart/`** - JumpStart data import/export system
   - **`/src/Domain/Import/`** - CMS import systems (Alloy, Total CMS 1, Wordpress, CSV, JSON, RSS, URL)
   - **`/src/Domain/Factory/`** - Factory system for generating test data using Faker
@@ -90,7 +92,7 @@ composer run test:all
 
 ## Key Features
 
-- **Collection System**: 24 reserved schemas (`SchemaData::RESERVED_SCHEMAS` — blog, image, gallery, builder-page, etc.) plus user-defined custom schemas, all stored as JSON files
+- **Collection System**: 33 reserved schemas (`SchemaData::RESERVED_SCHEMAS` — blog, image, gallery, builder-page, automations, mcp-*, etc.) plus user-defined custom schemas, all stored as JSON files
 - **Collection Reports**: Reporting API and admin utility for collection data
 - **Site Builder**: Dynamic page router serving `builder-pages` collection objects at configurable URL patterns, with starter scaffolding, template designer, and optional Vite frontend pipeline
 - **Setup Wizard**: First-run web wizard (welcome → environment → data-path → account → license → server-config → complete) for operator onboarding, with auto-login on account creation
@@ -108,7 +110,9 @@ composer run test:all
 - **Cache System**: Multi-backend caching with APCu-first priority (APCu -> Redis -> Memcached -> Filesystem)
 - **CLI Tool (`tcms`)**: Symfony Console CLI for collections, schemas, objects, JumpStart, sync, updates, builder scaffolding, and extension management
 - **Extension System**: Two-phase lifecycle (register → boot) for third-party extensions with capability-based permissions
-- **Event System**: Synchronous event dispatcher with 17 core events (object/collection/schema/template/user CRUD, import.created/updated/completed, extension lifecycle, devmode, cache.cleared)
+- **Event System**: Synchronous event dispatcher with 20 core events (object/collection/schema/template/user CRUD, import.*, bulk.deleted, extension lifecycle, devmode, cache.cleared)
+- **Automations**: Schedule, webhook, and event-triggered automations with a job queue, run history, and guard rails; handlers are externalized code fields
+- **Built-in MCP Server**: OAuth 2.1, schema/collection tools, resources, prompts, and search providers so AI agents can query the site directly
 - **Composer Distribution**: Public Packagist distribution via `composer create-project totalcms/totalcms`
 - **Build System**: ESBuild with code splitting
 
@@ -122,6 +126,8 @@ composer run test:all
 - **Enhanced Libraries**: Custom couleur fork with OKLCH improvements ([joeworkman-forks/couleur](https://github.com/joeworkman-forks/couleur))
 - **Memory Management**: Streaming patterns for large datasets (see `JumpStartData::streamJsonToFile()` for examples)
 - **Emergency Cache**: `/emergency/cache/clear` endpoint for customer self-service cache clearing
+- **Logging**: Zip installs log to `tcms-data/.system/logs` (survives updates); Composer installs log to `projectRoot/logs`. Nine-file LogFile/LogChannel taxonomy.
+- **Releases**: `bin/prepare-release.sh` builds the dist zip, registers the version with the license API, and uploads to S3 (`totalcms-archive/releases/`). Licensed downloads via `license.totalcms.co/version/download/{version|latest}`; public latest-zip via `license.totalcms.co/download/latest`.
 
 ## Security Architecture
 
@@ -169,11 +175,14 @@ composer run test:all
 - **Change Tracking**: Keep git diffs clean by focusing on specific files being worked on
 
 ### Testing Best Practices
+- **Run tests via Composer**: `composer test -- --filter=X` (sets `apc.enable_cli`, avoids MCP rate-limit flakiness) — never invoke `vendor/bin/pest` directly
 - **API Endpoint Testing**: Use `postJson()` instead of `post()` for JSON endpoints
 - **Flexible Status Codes**: Use `toBeIn([200, 400, 404, 405])` instead of exact matches for better test framework compatibility
 - **Framework Compatibility**: Follow existing working test patterns (e.g., `AuthTest.php`) for reliable results
 - **Test Data**: Maintain comprehensive test datasets in `/tests/test-data/` for integration testing
 - **Error Handling**: Test both success and failure scenarios with graceful error handling
+- **Stale Twig cache**: Twig render tests can serve stale compiled templates after a `.twig` edit (test env has `auto_reload` off) — `rm -rf cache/*` before re-running locally
+- **Bundle integrity**: `resources/bundle` is a config-integrity manifest. After editing `config/`, verify with `composer run test` (runs @bundle); never hand-edit the bundle (stale bundle → 400 "corrupted")
 
 ### CSS Styling Guidelines
 - **Use Design System Variables**: Always use CSS variables from `/css/variables.scss` instead of hardcoding colors or values
@@ -255,17 +264,24 @@ These are non-obvious details that are important when working in these areas:
 
 ### CLI System (`tcms`)
 - **Framework**: Symfony Console via `CliApplication`
-- **Entry Point**: `resources/bin/tcms` (shipped), `bin/tcms` (dev symlink)
-- **Commands**: `collection:list`, `collection:get`, `collection:export`, `collection:import`, `collection:query`, `object:list`, `object:get`, `object:export`, `schema:list`, `schema:get`, `schema:export`, `schema:import`, `jumpstart:export`, `jumpstart:import`, `builder:init`, `builder:frontend`, `builder:routes`, `builder:history`, `extension:list`, `extension:enable`, `extension:disable`, `extension:remove`, `update:check`, `update:apply`, `update:rollback`, `cache:clear`, `info`, `pull`, `push`, `deck:import`, `jobs:process`, `skill:install`
+- **Entry Point**: `resources/bin/tcms` (shipped; exposed as `vendor/bin/tcms` via Composer `bin`). In this repo run it as `php resources/bin/tcms` — there is no `bin/tcms` symlink.
+- **Commands**: `collection:list|get|export|import|query`, `object:list|get|export|delete`, `schema:list|get|export|import`, `jumpstart:export|import`, `builder:init|frontend|routes|history`, `extension:list|enable|disable|remove`, `update:check|apply|rollback`, `automations:process`, `jobs:process`, `mcp:status`, `mcp:test`, `oauth:setup`, `oauth:gc`, `repair:files`, `repair:index`, `rss:import`, `search:reindex`, `deck:import`, `cache:clear`, `skill:install`, `deploy`, `info`, `pull`, `push`
 - **Extension Commands**: Loaded after core commands with collision protection (extensions cannot shadow built-in command names)
 - **Output Formats**: Human-readable tables by default, `--json` flag for machine-readable output
 
 ### Event System
-- **Dispatcher**: `src/Domain/Event/EventDispatcher.php` — synchronous, priority-ordered
-- **Core Events** (17): `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.deleted`, `schema.saved`, `schema.deleted`, `template.saved`, `user.login`, `user.logout`, `import.created`, `import.updated`, `import.completed`, `extension.enabled`, `extension.disabled`, `devmode.enabled`, `devmode.disabled`, `cache.cleared`
+- **Dispatcher**: `src/Domain/Event/Service/EventDispatcher.php` — synchronous, priority-ordered
+- **Event names**: Always use the `CoreEvent` consts (`src/Domain/Event/Data/CoreEvent.php`) at `dispatch()`/`listen()` call sites, never raw strings
+- **Core Events** (20): `object.created`, `object.updated`, `object.deleted`, `collection.created`, `collection.updated`, `collection.deleted`, `schema.saved`, `schema.deleted`, `template.saved`, `user.login`, `user.logout`, `import.created`, `import.updated`, `import.completed`, `bulk.deleted`, `extension.enabled`, `extension.disabled`, `devmode.enabled`, `devmode.disabled`, `cache.cleared`
 - **Integration**: EventDispatcher is injected into ObjectSaver, ObjectUpdater, ObjectRemover, CollectionSaver, CollectionRemover, LoginService, LogoutService, SchemaSaver, SchemaRemover, TemplateSaver, ExtensionManager, ObjectImporter, JumpStartImporter, DeckJsonImporter, DeckCsvImporter
 - **Extension Listeners**: Registered via `$context->addEventListener()`, wired into the dispatcher during boot. Listeners execute in try/catch so a broken listener cannot affect core operations.
 - **Import-Time Behavior**: While a collection is mid-import (`EventDispatcher::suspendForImport($collection)`), `object.created` and `object.updated` events are **suppressed** for that collection — importers fire `import.created` / `import.updated` per object instead, with the same `ObjectEventPayload` shape. Listeners that want to react to import-time writes specifically subscribe to the `import.*` events. `import.completed` auto-resumes the suspension (safety net for forgetful importers). `ObjectImporter` self-suspends when called outside an explicit lifecycle (e.g. `JobRunner` processing a single queued job).
+
+### Automations
+- **Triggers**: `schedule` (cron-style via `ScheduleTicker`), `webhook` (`AutomationWebhookAction`), and `event` (`AutomationEventSubscriber` bridging the core event dispatcher)
+- **Storage**: Automations are objects in the reserved `automations` collection (`automations` + `automation-trigger` schemas); handlers are externalized code fields (`code.json` `$ref` → `CodeData`)
+- **Execution**: `AutomationRunner` executes handlers with an `AutomationContext` (schedule runs have `request`/`event` null; event runs carry the event payload). `AutomationQueue` + `tcms automations:process` handle queued runs; `AutomationGuard` provides guard rails; run history via `RunRecord`/`AutomationRunReader`
+- **Key files**: `src/Domain/Automation/`, `src/Action/Automation/` (webhook, run-now, re-enable), `src/Middleware/Automation/`
 
 ### Configuration System
 - **Deep Merge**: Override specific nested settings without replacing entire arrays
@@ -280,7 +296,7 @@ These are non-obvious details that are important when working in these areas:
 
 ### Documentation (`resources/docs/`)
 - **Source of truth**: `resources/docs/*.md` is mirrored to docs.totalcms.co. Template changes to `resources/templates/admin/docs.twig` only affect the in-admin viewer — the public site has its own template that needs parallel changes.
-- **Sidebar menu** lives in `resources/docs/menu.php` (shared by `AdminDocsAction` and `bin/build-docs-index.php`). 13 top-level groups: Get Started, Collections, Schemas, Fields, Site Builder, Twig, Forms, Admin, Notifications, Auth, APIs, Extensions & CLI, Operations. Adding a new doc page = add a `{title, path}` entry to the appropriate group. Fields, Twig, and Extensions & CLI use nested subgroups (the last via mixed `sub` + `groups`); everything else is flat.
+- **Sidebar menu** lives in `resources/docs/menu.php` (shared by `AdminDocsAction` and `bin/build-docs-index.php`). 15 top-level groups: Get Started, Collections, Schemas, Fields, Site Builder, Twig, Forms, Automations, Admin, Notifications, Auth, APIs, MCP, Extensions & CLI, Operations. Adding a new doc page = add a `{title, path}` entry to the appropriate group. Fields, Twig, and Extensions & CLI use nested subgroups (the last via mixed `sub` + `groups`); everything else is flat.
 - **Folder convention**: each doc lives in `resources/docs/<kebab-cased-group-name>/<page>.md` matching its menu group (e.g. `get-started/`, `site-builder/`, `apis/`, `operations/`). Subgroups (Field Types, Field Options, Twig Basics, etc.) exist only in the menu — the files themselves are flat within the group folder. URL = path = file path under `resources/docs/`.
 - **Images & screenshots**: co-locate with the section that uses them, in `resources/docs/<section>/images/<name>.png`. Reference in markdown as `docs/<section>/images/<name>.png` (the `docs/` prefix is required because of the admin's `<base href>`). `AdminDocsAction` serves png/jpg/gif/svg/webp at the same route as markdown pages — see the image-mime branch in that file. Use kebab-case filenames.
 - **Navigation primitives**: breadcrumbs, prev/next, and the related-pages footer are all derived from the menu — no extra config needed. Breadcrumb group label = whichever menu group the page lives in.

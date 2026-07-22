@@ -1,8 +1,0 @@
-Bundled license information:
-
-mermaid/dist/chunks/mermaid.core/chunk-XPW4576I.mjs:
-  /*! Bundled license information:
-  
-  js-yaml/dist/js-yaml.mjs:
-    (*! js-yaml 4.1.1 https://github.com/nodeca/js-yaml @license MIT *)
-  */

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Nekofar\Slim\Pest\postJson;
+use function TotalCMS\Slim\Pest\postJson;
 
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());
@@ -86,7 +86,7 @@ describe('McpEndpointAction', function (): void {
 	});
 
 	it('rejects bogus API key with 401', function (): void {
-		// Use the Nekofar helper's underlying request — we need to pass an
+		// Use the slim-test helper's underlying request — we need to pass an
 		// X-API-Key header. Slim test helpers don't support headers directly,
 		// so build via the app instance.
 		$app     = $this->app;
@@ -123,7 +123,7 @@ describe('McpEndpointAction', function (): void {
 	it('GET /mcp resolves the same action', function (): void {
 		// SDK's StreamableHttpTransport dispatches on method+Accept; we route
 		// both POST and GET to the same Action. Verify the route resolves.
-		$response = \Nekofar\Slim\Pest\get('/mcp');
+		$response = \TotalCMS\Slim\Pest\get('/mcp');
 
 		// GET without SSE Accept usually yields a non-200 from the SDK protocol
 		// layer, but the route must resolve (not 405 Method Not Allowed).

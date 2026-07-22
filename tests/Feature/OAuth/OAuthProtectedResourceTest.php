@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Nekofar\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\get;
 
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());

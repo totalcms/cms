@@ -69,6 +69,7 @@ final class SetupStateManagerTest extends TestCase
 		$this->manager->completeStep('data-path');
 		$this->manager->completeStep('account');
 		$this->manager->completeStep('license');
+		$this->manager->completeStep('error-monitoring');
 		$this->manager->completeStep('server-config');
 
 		expect($this->manager->getCurrentStep())->toBe('setup-complete');
@@ -80,6 +81,7 @@ final class SetupStateManagerTest extends TestCase
 		$this->manager->completeStep('data-path');
 		$this->manager->completeStep('account');
 		$this->manager->completeStep('license');
+		$this->manager->completeStep('error-monitoring');
 		$this->manager->completeStep('server-config');
 
 		expect($this->manager->isSetupComplete())->toBeTrue();
@@ -188,6 +190,7 @@ final class SetupStateManagerTest extends TestCase
 			$manager->completeStep('data-path');
 			$manager->completeStep('account');
 			$manager->completeStep('license');
+			$manager->completeStep('error-monitoring');
 
 			$state = json_decode((string)file_get_contents($tmpDir . '/.system/setup-state.json'), true);
 			expect($state['completed_at'])->toBeNull();
@@ -215,7 +218,7 @@ final class SetupStateManagerTest extends TestCase
 			$config  = createTestConfig(['datadir' => $tmpDir, 'auth' => ['collection' => 'auth']]);
 			$first   = $this->makeManager(new MemorySession(), $config);
 
-			foreach (['environment', 'data-path', 'account', 'license', 'server-config'] as $step) {
+			foreach (['environment', 'data-path', 'account', 'license', 'error-monitoring', 'server-config'] as $step) {
 				$first->completeStep($step);
 			}
 

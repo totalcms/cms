@@ -1,8 +1,15 @@
 RewriteEngine On
 
+# Compute this directory's URL prefix dynamically (equivalent to RewriteBase,
+# but with no hardcoded path). Some hosts cannot reverse-map relative rewrite
+# substitutions in per-directory context (e.g. IONOS symlinked docroots), so
+# rewrites there silently 404 without an explicit base.
+RewriteCond %{REQUEST_URI}::$1 ^(.*?/)(.*)::\2$
+RewriteRule ^(.*)$ - [E=TCMS_BASE:%1]
+
 # Don't rewrite if "public/" is already in the path
 RewriteCond %{REQUEST_URI} !public/
-RewriteRule ^$ public/ [L]
+RewriteRule ^$ %{ENV:TCMS_BASE}public/ [L]
 
 RewriteCond %{REQUEST_URI} !public/
-RewriteRule ^(.*)$ public/$1 [L]
+RewriteRule ^(.*)$ %{ENV:TCMS_BASE}public/$1 [L]

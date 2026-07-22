@@ -5,6 +5,7 @@ namespace TotalCMS\Infrastructure\Diagnostics;
 use Memcached;
 use Redis;
 use TotalCMS\Domain\Bundle\Service\BundleChecker;
+use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
@@ -39,6 +40,7 @@ class ServerChecker
 		private readonly BundleChecker $bundleChecker,
 		private readonly Config $config,
 		private readonly LicenseValidator $licenseValidator,
+		private readonly OPcacheService $opcacheService,
 	) {
 	}
 
@@ -264,10 +266,8 @@ class ServerChecker
 	private function checkExtension(string $extension): bool
 	{
 		return match ($extension) {
-			// OPcache has specific detection requirements and naming variations
-			'opcache' => (extension_loaded('opcache') || extension_loaded('Zend OPcache'))
-					   && function_exists('opcache_get_status')
-					   && opcache_get_status() !== false,
+			// OPcache detection (incl. file-cache-only hosts) lives in the service
+			'opcache'   => $this->opcacheService->isAvailable(),
 			'intl'      => extension_loaded('intl') && class_exists('Locale') && class_exists('NumberFormatter'),
 			'apcu'      => extension_loaded('apcu') && function_exists('apcu_store') && function_exists('apcu_fetch'),
 			'redis'     => extension_loaded('redis') && class_exists('Redis'),
@@ -340,6 +340,9 @@ class ServerChecker
 					$usedMemory                       = round($status['memory_usage']['used_memory'] / 1024 / 1024, 2);
 					$cacheInfo['OPcache Memory Used'] = $usedMemory . ' MB';
 				}
+			} elseif ($this->opcacheService->isFileCacheOnly()) {
+				// No SHM status on file-cache-only hosts, but opcode caching runs.
+				$cacheInfo['OPcache Status'] = 'Enabled (file cache only)';
 			}
 		}
 

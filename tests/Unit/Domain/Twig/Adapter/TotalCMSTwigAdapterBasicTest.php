@@ -125,6 +125,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		expect($result)->toContain('RewriteRule');
 		expect($result)->toContain('/blog/post.php');
 		expect($result)->toContain('blog');
+		// Must match both /blog/my-post and /blog/my-post/ — a missed
+		// trailing slash renders the post page without ?id= (mirrors nginxRule).
+		expect($result)->toContain('([\w-]+)/?$');
 	}
 
 	public function testNginxRuleGeneratesCorrectRewriteRules(): void
