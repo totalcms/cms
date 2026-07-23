@@ -107,6 +107,7 @@ Choose your preferred language for the admin interface:
 | `es_ES` | Español |
 | `it_IT` | Italiano |
 | `nl_NL` | Nederlands |
+| `pl_PL` | Polski |
 
 > This setting only affects the admin. Your public-facing site uses its own translations.
 

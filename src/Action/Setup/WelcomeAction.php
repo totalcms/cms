@@ -22,6 +22,7 @@ readonly class WelcomeAction
 		'es_ES' => 'Español',
 		'it_IT' => 'Italiano',
 		'nl_NL' => 'Nederlands',
+		'pl_PL' => 'Polski',
 	];
 
 	public function __construct(
