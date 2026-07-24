@@ -2,6 +2,16 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-rc.13] - Unreleased
+
+### Added
+
+- **Polish (pl_PL) admin language**: Full admin translation (all 1,232 admin strings plus the JavaScript string table), selectable in the setup wizard and user profile. Domain terms (Collections, Schemas, Objects) stay in English, matching the other locales
+
+### Enhanced
+
+- **`quickActionButton` can target any route** *(breaking for custom templates)*: `cms.admin.quickActionButton()` no longer force-prefixes `/api` onto its route — the route is now relative to the site base, so buttons can fire public routes like automation webhooks (`/automations/my-automation`) straight from a page. If a custom template or whitelabel dashboard uses this helper, add the `/api` prefix to its route explicitly (`'/cache/clear'` → `'/api/cache/clear'`). All shipped templates are updated, and the previously documented `/api/...` example — which silently produced a double `/api/api/...` URL — now works as written
+
 ## [3.5.0-rc.12] - 2026-07-21
 
 ### Added

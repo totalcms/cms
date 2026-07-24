@@ -29,7 +29,7 @@
 							<a href="utils/access-groups/{{ group.id }}"
 							   class="dash-card-action edit"
 							   title="{{ t('btn.edit') }}">{{ t('btn.edit') }}</a>
-							{{ cms.admin.quickActionButton('', 'access-groups/' ~ group.id, {
+							{{ cms.admin.quickActionButton('', '/api/access-groups/' ~ group.id, {
 								method: 'delete',
 								confirm: t('access_groups.confirm_delete'),
 								reload: true,
