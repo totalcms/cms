@@ -26,6 +26,14 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
 readonly class PageRouterMiddleware implements MiddlewareInterface
 {
 	/**
+	 * Request attribute marking a request this middleware may augment into a
+	 * rendered builder page. Every builder-page view starts life as a Slim
+	 * routing 404, so the error handler must not ERROR-log (or Sentry-report)
+	 * these — the middleware logs genuine misses itself at info level.
+	 */
+	public const AUGMENTS_404 = 'tcms_page_router_augments_404';
+
+	/**
 	 * Map of common file extensions to their MIME types.
 	 * Used to auto-detect Content-Type for routes like /robots.txt, /llms.txt, etc.
 	 *
@@ -44,58 +52,69 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		'xml'         => 'application/xml; charset=utf-8',
 	];
 
+	private \Psr\Log\LoggerInterface $logger;
+
 	public function __construct(
 		private PageRouter $pageRouter,
 		private TwigEngine $twigEngine,
 		private PageMiddlewareRunner $pageMiddlewareRunner,
 		private PageInspectorRenderer $pageInspector,
 		private PageReloadInjectorRenderer $pageReloadInjector,
+		\TotalCMS\Factory\LoggerFactory $loggerFactory,
 	) {
+		$this->logger = $loggerFactory->channelLogger(\TotalCMS\Factory\LogChannel::App);
 	}
 
 	public function process(
 		ServerRequestInterface $request,
 		RequestHandlerInterface $handler,
 	): ResponseInterface {
-		// Let Slim handle the request first
-		$response = $handler->handle($request);
-
-		// We only ever augment Slim 404s.
-		if ($response->getStatusCode() !== 404) {
-			return $response;
-		}
-
 		// Page rendering is GET-only, but page-feature middleware (e.g. the
 		// Protect passcode form) needs to handle its own POST submissions back to
 		// the page URL — Slim has no POST route for a builder page, so those land
 		// here as 404s. So GET and POST both run the page-middleware chain below;
 		// a POST simply never falls through to rendering (if no middleware handles
 		// it, the 404 stands). Other verbs have no page semantics — pass through.
-		$method = $request->getMethod();
-		if ($method !== 'GET' && $method !== 'POST') {
-			return $response;
-		}
-
-		// Don't override admin or API 404s with the public fallback page.
+		//
+		// Admin and API 404s are never overridden with the public fallback page:
 		// /admin/* has its own Admin404Action; /api/* returns JSON 404s that
 		// should never be replaced with a rendered builder page.
-		$path = $request->getUri()->getPath();
-		if (
-			$path === '/admin' || str_starts_with($path, '/admin/')
-			|| $path === '/api' || str_starts_with($path, '/api/')
-		) {
+		$method = $request->getMethod();
+		$path   = $request->getUri()->getPath();
+
+		$mayAugment = ($method === 'GET' || $method === 'POST')
+			&& $path !== '/admin' && !str_starts_with($path, '/admin/')
+			&& $path !== '/api' && !str_starts_with($path, '/api/');
+
+		if ($mayAugment) {
+			// Tell the error handler this routing 404 may become a page render —
+			// it must not be ERROR-logged or reported (see AUGMENTS_404).
+			$request = $request->withAttribute(self::AUGMENTS_404, true);
+		}
+
+		// Let Slim handle the request first
+		$response = $handler->handle($request);
+
+		// We only ever augment Slim 404s.
+		if ($response->getStatusCode() !== 404 || !$mayAugment) {
 			return $response;
 		}
 
 		// Try to match a builder page or collection URL
 		$match = $this->pageRouter->match($path);
 
-		// Nothing matched — fall back to the page flagged as the universal 404
-		// (if any). Lets users ship a custom-styled 404 from the admin without
-		// touching code; the page's own status field controls the response code.
-		// GET only: the fallback renders an HTML page, which a POST must never do.
-		if (!$match instanceof \TotalCMS\Domain\Builder\Data\RouteMatch && $method === 'GET') {
-			$match = $this->pageRouter->fallback404();
+		if (!$match instanceof \TotalCMS\Domain\Builder\Data\RouteMatch) {
+			// A genuine miss — the routing 404 above was suppressed from the
+			// error log, so record it here without the exception theatrics.
+			$this->logger->info(sprintf('404: %s %s matched no route, builder page, or collection URL', $method, $path));
+
+			// Fall back to the page flagged as the universal 404 (if any). Lets
+			// users ship a custom-styled 404 from the admin without touching
+			// code; the page's own status field controls the response code.
+			// GET only: the fallback renders an HTML page, which a POST must never do.
+			if ($method === 'GET') {
+				$match = $this->pageRouter->fallback404();
+			}
 		}
 
 		if (!$match instanceof \TotalCMS\Domain\Builder\Data\RouteMatch) {
