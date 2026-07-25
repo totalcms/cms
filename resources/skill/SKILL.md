@@ -36,7 +36,9 @@ Prefer looking things up over guessing; training data is often stale on exact si
    `portfolio`, or `minimal`. Add `--frontend` to also install the Vite pipeline.
    This copies templates, ensures the `builder-pages` collection, and seeds demo pages.
 3. **Edit templates** on the filesystem under
-   `tcms-data/builder/{layouts,pages,partials,macros}/*.twig`. Twig global is `cms`;
+   `builder/{layouts,pages,partials,macros}/*.twig` when a project-root `builder/`
+   directory exists (git-managed mode: it wins over `tcms-data/`, and the admin's
+   template editor is read-only), otherwise `tcms-data/builder/`. Twig global is `cms`;
    builder helpers are `cms.builder.nav()`, `cms.builder.url(id, params)`,
    `cms.builder.css/js/asset()`. See `references/site-builder.md`.
 4. **Add a page record.** A page is an object in the `builder-pages` collection.
@@ -46,9 +48,12 @@ Prefer looking things up over guessing; training data is often stale on exact si
    - `vendor/bin/tcms jumpstart:import <file>` for bulk seeding.
    Key `builder-pages` fields: `route`, `template`, `title`, `draft`, `data` (free-form
    JSON exposed as `page.data.*`). Full list in `references/site-builder.md`.
-5. **Preview:** serve `public/` (`php -S localhost:8080 -t public`) and visit the
-   page's `route`. Clear caches after template changes if needed:
-   `vendor/bin/tcms cache:clear`.
+5. **Preview:** `php -S localhost:8080 -t public public/index.php` and visit the
+   page's `route`. Pass `public/index.php` as the router script — without it the
+   built-in server only serves files that exist on disk and never reaches the page
+   router, so every builder page 404s. Clear caches after template changes if
+   needed: `vendor/bin/tcms cache:clear`. Restart the server after adding page
+   records — the route index is cached in the server process.
 
 ## Reference files (read on demand)
 
