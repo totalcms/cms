@@ -53,6 +53,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private CollectionFetcher $collectionFetcher,
 		private OperationDetector $operationDetector,
 		private EditionFeatureService $editionFeatures,
+		private \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator $csrfValidator,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::DualAuth);
@@ -154,6 +155,16 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		// Pass empty string to accept any authenticated user, regardless of which collection they're in
 		if (!$this->accessManager->userLoggedIn('')) {
 			return $this->redirectToDenied($request);
+		}
+
+		// Session-cookie auth is the one mode CSRF can ride (browsers attach
+		// the cookie cross-site). API-key, OAuth Bearer, and public paths all
+		// exited above; state-changing session requests must carry the token.
+		if ($this->csrfValidator->methodRequiresValidation($request) && !$this->csrfValidator->validate($request)) {
+			return $this->jsonRenderer->json(
+				$this->responseFactory->createResponse()->withStatus(403),
+				['error' => ['message' => 'CSRF token validation failed. Session-authenticated API requests must include the CSRF token (X-CSRF-Token header or csrf_token field). Use an API key for scripted access.']]
+			);
 		}
 
 		// Mark as session auth

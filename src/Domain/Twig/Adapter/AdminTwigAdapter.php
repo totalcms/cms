@@ -99,6 +99,11 @@ readonly class AdminTwigAdapter
 	/**
 	 * Build an HTMX-powered quick action button.
 	 *
+	 * The route is relative to the site base — include the `/api` prefix for
+	 * API routes (`/api/cache/clear`). Public routes (automation webhooks,
+	 * imageworks) need no prefix (`/automations/my-automation`). A leading
+	 * slash is optional.
+	 *
 	 * Options: method (default POST), confirm, reload (bool), redirect (string), class
 	 *
 	 * @param array<string,mixed> $options
@@ -111,7 +116,7 @@ readonly class AdminTwigAdapter
 		$redirect = (string)($options['redirect'] ?? '');
 		$class    = (string)($options['class'] ?? '');
 
-		$url = rtrim($this->config->api . '/api', '/') . '/' . ltrim($route, '/');
+		$url = rtrim($this->config->api, '/') . '/' . ltrim($route, '/');
 		$on  = ['error' => 'QuickAction.error(this, event)'];
 
 		if ($redirect !== '') {

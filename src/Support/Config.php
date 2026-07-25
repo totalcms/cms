@@ -190,6 +190,30 @@ class Config
 	}
 
 	/**
+	 * Browser title for admin dashboard pages.
+	 *
+	 * Fallback chain (first match wins):
+	 *   1. `dashboard.title` — only if customized away from the shipped
+	 *      default "Total CMS Admin" (same sentinel rule as displayName())
+	 *   2. `siteName` + " Admin" — so a named site gets a branded tab title
+	 *      with zero configuration
+	 *   3. "Total CMS Admin"
+	 */
+	public function adminTitle(): string
+	{
+		$dashboardTitle = (string)($this->dashboard['title'] ?? '');
+		if ($dashboardTitle !== '' && $dashboardTitle !== 'Total CMS Admin') {
+			return $dashboardTitle;
+		}
+
+		if ($this->siteName !== '') {
+			return $this->siteName . ' Admin';
+		}
+
+		return 'Total CMS Admin';
+	}
+
+	/**
 	 * Slugified variant of {@see displayName()} — safe for filenames, URL
 	 * slugs, and any context that needs a single token without spaces or
 	 * punctuation. Same fallback chain as `displayName()`, then run through

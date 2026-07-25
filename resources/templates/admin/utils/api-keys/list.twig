@@ -16,7 +16,7 @@
 				<header>
 					<h3>{{ apiKey.name }}</h3>
 					<div class="dash-card-actions">
-						{{ cms.admin.quickActionButton('', 'apikeys/' ~ apiKey.id, {
+						{{ cms.admin.quickActionButton('', '/api/apikeys/' ~ apiKey.id, {
 							method: 'delete',
 							confirm: t('api_keys.confirm_delete'),
 							reload: true,

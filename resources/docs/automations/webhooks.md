@@ -51,14 +51,16 @@ Grant it when creating the key: in **Utilities → API Keys → New**, include *
 
 ## Synchronous vs. asynchronous
 
-The trigger's `sync` flag controls the response:
+The trigger's `sync` flag (the **Synchronous** toggle in the trigger form) controls the response. It is **`false` by default** — webhooks queue their runs unless you opt in to synchronous execution:
 
 | `sync` | Behaviour | Response |
 |--------|-----------|----------|
-| on | The handler runs inline and the request blocks until it finishes. | `200` with the handler's return value as JSON. |
-| off | The run is queued and processed on the next `automations:process` tick. | `202 Accepted` with `{ "status": "queued", "runId": "…" }`. |
+| `true` | The handler runs inline and the request blocks until it finishes. | `200` with the handler's return value as JSON. |
+| `false` (default) | The run is queued and processed on the next `automations:process` tick. | `202 Accepted` with `{ "status": "queued", "runId": "…" }`. |
 
 Use **sync** when the caller needs the result (e.g. a lookup). Use **async** for fire-and-forget work, or anything slow — the caller isn't kept waiting and a long handler can't tie up a web worker.
+
+> When editing trigger JSON by hand, `sync` must be the literal boolean `true` — string values like `"true"` or `"on"` are treated as `false` (the run falls back to the safe queued path).
 
 ## The payload
 

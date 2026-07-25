@@ -4,11 +4,18 @@ use Slim\App;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\ContainerFactory;
 
-// Workaround for routes with a dot in local php server
+// PHP built-in dev server (router-script mode, e.g.
+// `php -S localhost:8080 -t public public/index.php`): serve existing static
+// files directly and let everything else fall through to Slim. The check runs
+// against the docroot with is_file() — file_exists() matched directories, so
+// `/` resolved to a directory and returned false, which the entry point then
+// tried to ->run(). Entry points must propagate this `false` to the server
+// instead of calling ->run() on it.
 if (php_sapi_name() == 'cli-server') {
 	$_SERVER['SCRIPT_NAME'] = basename((string)$_SERVER['SCRIPT_FILENAME']);
-	$file                   = parse_url((string)$_SERVER['REQUEST_URI'], PHP_URL_PATH);
-	if (file_exists(__DIR__ . $file)) {
+	$file                   = (string)parse_url((string)$_SERVER['REQUEST_URI'], PHP_URL_PATH);
+	$docroot                = (string)($_SERVER['DOCUMENT_ROOT'] ?? '');
+	if ($docroot !== '' && $file !== '' && is_file($docroot . $file)) {
 		/* Return contents of the static file. */
 		return false;
 	}

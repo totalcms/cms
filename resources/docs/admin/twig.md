@@ -168,7 +168,11 @@ Generate Nginx rewrite rules for pretty URLs.
 
 ### quickActionButton()
 
-Build an HTMX-powered quick action button for admin operations.
+Build an HTMX-powered quick action button. The route is relative to the site
+base, so it can target any route — include the `/api` prefix for API routes,
+or point at a public route like an [automation webhook](../automations/webhooks.md).
+(A leading slash is optional; `/api/cache/clear` and `api/cache/clear` are
+equivalent.)
 
 ```twig
 {{ cms.admin.quickActionButton('Clear Cache', '/api/cache/clear', {
@@ -176,6 +180,11 @@ Build an HTMX-powered quick action button for admin operations.
     confirm: 'Are you sure?',
     reload: true,
     class: 'btn-danger'
+})|raw }}
+
+{# Fire an automation webhook (sameOrigin auth) from a page #}
+{{ cms.admin.quickActionButton('Run Report', '/automations/build-report', {
+    confirm: 'Queue the report build?'
 })|raw }}
 ```
 
@@ -186,6 +195,13 @@ Build an HTMX-powered quick action button for admin operations.
 | `reload` | bool | `false` | Reload page after action completes |
 | `redirect` | string | `''` | Redirect URL after action completes |
 | `class` | string | `''` | Additional CSS classes |
+
+The response is not swapped into the page (`hx-swap: none`) — use `reload` or
+`redirect` when the action's effect should become visible.
+
+> Prior to 3.5.0-rc.13 the `/api` prefix was added automatically, which made it
+> impossible to target public routes. Update any custom templates by adding the
+> prefix explicitly (`'/cache/clear'` → `'/api/cache/clear'`).
 
 ## Edition Restrictions
 

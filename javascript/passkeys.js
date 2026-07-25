@@ -58,10 +58,15 @@ export default class PasskeyManager {
 				},
 			});
 
+			// Session-authenticated API writes require the CSRF token.
+			const csrf    = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+			const headers = { 'Content-Type': 'application/json' };
+			if (csrf) headers['X-CSRF-Token'] = csrf;
+
 			const regRes = await fetch(`${this.api}/passkeys/register`, {
 				method:      'POST',
 				credentials: 'same-origin',
-				headers:     { 'Content-Type': 'application/json' },
+				headers,
 				body,
 			});
 

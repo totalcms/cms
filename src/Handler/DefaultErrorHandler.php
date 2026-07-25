@@ -60,10 +60,16 @@ readonly class DefaultErrorHandler
 			$this->opcacheService->clear();
 		}
 
-		// Log error (skip expected 404s from HEAD existence checks)
+		// Log error (skip expected 404s: HEAD existence checks, and requests the
+		// PageRouterMiddleware may augment into a rendered builder page — every
+		// builder-page view starts as a Slim routing 404. The page router logs
+		// genuine misses itself at info level.)
 		$isExpected404 = $exception instanceof HttpException
 			&& $exception->getCode() === StatusCodeInterface::STATUS_NOT_FOUND
-			&& $request->getMethod() === 'HEAD';
+			&& (
+				$request->getMethod() === 'HEAD'
+				|| (bool)$request->getAttribute(\TotalCMS\Middleware\PageRouterMiddleware::AUGMENTS_404)
+			);
 
 		if ($logErrors && !$isExpected404) {
 			$this->logger->error(

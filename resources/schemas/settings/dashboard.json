@@ -8,7 +8,7 @@
 			"type"        : "string",
 			"field"       : "text",
 			"label"       : "Admin Dashboard Browser Title",
-			"help"        : "The browser title displayed in admin dashboard pages. This appears in the browser tab and bookmarks.",
+			"help"        : "The browser title displayed in admin dashboard pages. This appears in the browser tab and bookmarks. Leave at the default to use \"{Site Name} Admin\" whenever a site name is set.",
 			"placeholder" : "Total CMS Admin"
 		},
 		"pagination": {

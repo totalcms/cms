@@ -4,12 +4,33 @@
   "extra": {
     "class": "TotalCMS\\Composer\\Plugin"
   },
-  "description": "Total CMS",
+  "description": "A modern flat-file CMS for PHP. Stores content as JSON instead of a database, with Twig templating, a REST API, a Site Builder, and a built-in MCP server for AI agents.",
+  "homepage": "https://totalcms.co",
+  "support": {
+    "docs": "https://docs.totalcms.co",
+    "email": "support@totalcms.co"
+  },
+  "authors": [
+    {
+      "name": "Joe Workman",
+      "homepage": "https://totalcms.co"
+    }
+  ],
   "keywords": [
+    "cms",
+    "flat-file",
+    "flat-file-cms",
+    "no-database",
+    "headless-cms",
+    "content-management",
+    "php-cms",
+    "twig",
+    "slim",
+    "json",
+    "api",
+    "mcp",
     "total-cms",
-    "totalcms",
-    "dynamics",
-    "cms"
+    "totalcms"
   ],
   "license": "proprietary",
   "require": {

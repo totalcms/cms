@@ -51,6 +51,17 @@ class ExtensionRemoveCommand extends BaseCommand
 			);
 		}
 
+		// Project extensions live in the site's source-controlled extensions/
+		// directory — deleting files behind the repo's back invites a git-vs-disk
+		// mismatch. Removal belongs in source control.
+		if ($manifest !== null && $manifest->project) {
+			return $this->outputError(
+				$input,
+				$output,
+				"Extension '{$id}' lives in the project extensions directory and cannot be removed here. Delete it from source control instead, or use `tcms extension:disable {$id}` to turn it off.",
+			);
+		}
+
 		if (!$input->getOption('force') && !$this->isJson($input)) {
 			/** @var \Symfony\Component\Console\Helper\QuestionHelper $helper */
 			$helper   = $this->getHelper('question');

@@ -17,7 +17,7 @@
 					<header>
 						<h3>{{ row.clientName }}</h3>
 						<div class="dash-card-actions">
-							{{ cms.admin.quickActionButton('', 'oauth-grants/' ~ grant.id, {
+							{{ cms.admin.quickActionButton('', '/api/oauth-grants/' ~ grant.id, {
 								method: 'delete',
 								confirm: t('oauth_grants.confirm_revoke'),
 								reload: true,

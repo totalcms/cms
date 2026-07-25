@@ -40,6 +40,7 @@ readonly class AuthMiddleware implements MiddlewareInterface
 		private Config $config,
 		private AccessManager $accessManager,
 		private PersistentLoginService $persistentLoginService,
+		private \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator $csrfValidator,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->defaultAuthCollection = $this->config->auth['collection'];
@@ -82,6 +83,20 @@ readonly class AuthMiddleware implements MiddlewareInterface
 			$this->logger->debug('User not in required auth collection', ['collection' => $this->defaultAuthCollection]);
 
 			return $this->redirectToDenied($request);
+		}
+
+		// This middleware authenticates via the session cookie — the one auth
+		// mode CSRF can ride. State-changing requests must carry the token.
+		// (OAuth Bearer requests exited above; admin routes also mount
+		// CSRFProtectionMiddleware, which validates the same session-bound
+		// token, so double validation is harmless.)
+		if ($this->csrfValidator->methodRequiresValidation($request) && !$this->csrfValidator->validate($request)) {
+			$this->logger->debug('CSRF validation failed for session-authenticated request', ['path' => $request->getUri()->getPath()]);
+
+			throw new \Slim\Exception\HttpForbiddenException(
+				$request,
+				'CSRF token validation failed. Session-authenticated requests must include the CSRF token (X-CSRF-Token header or csrf_token field). Use an API key for scripted access.'
+			);
 		}
 
 		return $handler->handle($request);

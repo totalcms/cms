@@ -48,7 +48,16 @@ final class PageRouterMiddlewareTest extends TestCase
 			$this->pageMiddlewareRunner,
 			$this->pageInspector,
 			$this->pageReloadInjector,
+			$this->loggerFactory(),
 		);
+	}
+
+	private function loggerFactory(): \TotalCMS\Factory\LoggerFactory
+	{
+		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
+
+		return $loggerFactory;
 	}
 
 	private function createHandler(int $statusCode = 200, string $body = ''): RequestHandlerInterface
@@ -119,6 +128,7 @@ final class PageRouterMiddlewareTest extends TestCase
 			$runner,
 			$this->pageInspector,
 			$this->pageReloadInjector,
+			$this->loggerFactory(),
 		);
 
 		$response = $middleware->process($request, $handler);
@@ -587,6 +597,7 @@ final class PageRouterMiddlewareTest extends TestCase
 			$this->pageMiddlewareRunner,
 			$inspector,
 			$this->pageReloadInjector,
+			$this->loggerFactory(),
 		);
 
 		$response = $middleware->process($request, $handler);
@@ -631,6 +642,7 @@ final class PageRouterMiddlewareTest extends TestCase
 			$runner,
 			$inspector,
 			$this->pageReloadInjector,
+			$this->loggerFactory(),
 		);
 
 		$response = $middleware->process($request, $handler);
@@ -670,6 +682,7 @@ final class PageRouterMiddlewareTest extends TestCase
 			$runner,
 			$inspector,
 			$this->pageReloadInjector,
+			$this->loggerFactory(),
 		);
 
 		$response = $middleware->process($request, $handler);
@@ -701,6 +714,7 @@ final class PageRouterMiddlewareTest extends TestCase
 			$this->pageMiddlewareRunner,
 			$inspector,
 			$this->pageReloadInjector,
+			$this->loggerFactory(),
 		);
 
 		$middleware->process($request, $handler);

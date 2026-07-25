@@ -1,0 +1,94 @@
+---
+description: Total CMS (T3) — a flat-file PHP CMS. Use when working in a project that has tcms-data/ or vendor/totalcms/cms/, when building Site Builder pages, working with collections, schemas, or objects, writing Twig templates, or using the tcms CLI.
+globs: ["**/*.twig", "tcms-data/**", "builder/**", "config/tcms.php"]
+alwaysApply: false
+---
+
+# Total CMS (T3)
+
+This project is a website built on Total CMS, a flat-file PHP CMS (PHP 8.2+, Slim 4,
+Twig 3). **There is no database** — all content is JSON on disk under `tcms-data/`.
+
+- The CMS core is installed by Composer into `vendor/totalcms/cms/`. **Never edit
+  `vendor/`** — it is replaced on every update.
+- Configure in `config/tcms.php`. It is deep-merged over defaults, so specify only
+  the keys you are changing.
+- The CLI is `vendor/bin/tcms`. Run `vendor/bin/tcms list` to see every command.
+  Most accept `--json` for machine-readable output — prefer that when scripting.
+
+## Look things up; do not guess
+
+Field options and Twig signatures ship on disk — read them rather than recalling them:
+
+- `vendor/totalcms/cms/resources/docs/<section>/` — `menu.php` is the table of
+  contents. Sections: `site-builder/`, `collections/`, `schemas/`, `fields/`,
+  `twig/`, `forms/`, `apis/`, `extensions/`, `operations/`.
+- `https://docs.totalcms.co/llms-full.txt` — the entire documentation in one fetch.
+
+Training data is frequently stale on exact signatures. Check the on-disk docs.
+
+## Content model
+
+- A **collection** holds objects of one **schema**. 33 schemas are built in (blog,
+  image, gallery, file, styledtext, builder-page, …); custom schemas are unlimited.
+- An **object** is a single content record, stored as
+  `tcms-data/{collection}/{id}.json`, with uploads under `{collection}/{id}/{property}/`.
+- **There is no `object:create` CLI command.** Create content via the admin UI,
+  `tcms collection:import <collection> <file.json>`, or `tcms jumpstart:import <file>`.
+
+## Twig
+
+The global is `cms`. Correct forms:
+
+```twig
+{# list objects — apply sorting explicitly; index order is not sorted #}
+{% for post in cms.collection.objects('blog')|sortBy('date')|reverse %}
+  <h2>{{ post.title }}</h2>
+  {{ post.content|markdown }}
+{% endfor %}
+
+{# config, not `config` #}
+{{ cms.config('debug') }}
+```
+
+- Use `cms.collection.objects()`. The bare `cms.objects()` is a deprecated proxy.
+- `cms.collection.objects()` returns records in raw index order and includes only
+  fields listed in the schema's `index` array. Anything a template reads must be
+  in that array, and sorting must be applied with `|sortBy('key')` (plus `|reverse`
+  for descending).
+- Images: `cms.media.imagePath(object, {w: 720, fm: 'webp'}, {collection: 'x', property: 'image'})`
+  takes three arguments — object, image options, collection context. Never merge them.
+
+## Site Builder
+
+Pages are records in the `builder-pages` collection, routed at request time — there
+is no build or generate step. Add a page, it is live.
+
+- Templates live in `builder/{layouts,pages,partials,macros}/*.twig` when a
+  project-root `builder/` directory exists (git-managed mode: it takes precedence
+  over `tcms-data/`, and the admin's template editor is locked read-only).
+  Otherwise they live in `tcms-data/builder/`.
+- Key `builder-pages` fields: `route`, `template`, `title`, `draft`, `nav`,
+  `sitemap`, `status`, `redirectTo`, and `data` (free-form JSON exposed as `page.data.*`).
+- Helpers: `cms.builder.nav()`, `cms.builder.url(pageId, params)`,
+  `cms.builder.css/js/asset()` (mtime cache-busted).
+- `vendor/bin/tcms builder:routes` lists everything the router serves and flags
+  conflicts. `builder:init <minimal|blog|business|portfolio>` scaffolds a starter.
+
+## Running it locally
+
+```bash
+php -S localhost:8080 -t public public/index.php
+```
+
+Pass `public/index.php` as the router script. Without it the built-in server only
+serves files that exist on disk and never reaches the page router, so every builder
+page 404s. Restart the server after adding page records — the route index is cached
+in the server process. After editing templates: `vendor/bin/tcms cache:clear`.
+
+## Conventions
+
+- **Tabs** for indentation in PHP and Twig.
+- Never edit `vendor/`; never hand-edit `resources/bundle` (a config-integrity manifest).
+- Content in `tcms-data/` is usually edited in the admin on the live site. Check
+  whether the project commits it before assuming git is the source of truth.

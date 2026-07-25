@@ -66,6 +66,13 @@ fetch('/api/collections/blog', {
 });
 ```
 
+The CSRF token is **required** on state-changing requests (POST, PUT,
+PATCH, DELETE) that authenticate via the session cookie — send it as the
+`X-CSRF-Token` header or a `csrf_token` body field, or the request is
+rejected with 403. GET requests, API-keyed requests, and OAuth Bearer
+requests never need it. Scripted callers should use an API key instead
+of a session cookie.
+
 **When to use session authentication:**
 - Admin panel JavaScript
 - Same-origin web applications

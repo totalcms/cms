@@ -4,7 +4,7 @@
 	<header>
 		<h3>{{ client.name }}</h3>
 		<div class="dash-card-actions">
-			{{ cms.admin.quickActionButton('', 'oauth-clients/' ~ client.id, {
+			{{ cms.admin.quickActionButton('', '/api/oauth-clients/' ~ client.id, {
 				method: 'delete',
 				confirm: t('oauth_clients.confirm_delete'),
 				reload: true,
