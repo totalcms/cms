@@ -99,6 +99,12 @@ When you export your current CMS data to JumpStart format:
 - **Images**: Can use `"image": "imageBlur"` factory rules
 - **Galleries**: Can use factory rules to generate sample gallery items
 
+> **Note**: Schema-level `factory` definitions apply only to entries in the
+> `factory` array. Objects imported through the `objects` array are treated
+> as real data — only image/gallery faker rules written directly into the
+> object data are generated, and any property you omit falls back to its
+> schema default (it is never faker-filled).
+
 > **💡 Tip**: You may want to review and clean up the exported objects before creating your final JumpStart
 > definition. Consider moving repetitive objects to the factory array for easier maintenance.
 

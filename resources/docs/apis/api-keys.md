@@ -184,9 +184,13 @@ curl -H "Authorization: Bearer tcms_1234567890abcdef1234567890abcdef" \
 
 ### Authentication Precedence
 
-If both session authentication and API key are present, Total CMS uses:
-1. Session authentication (if valid session exists)
-2. API key authentication (fallback)
+On endpoints that accept both methods, Total CMS checks in this order:
+1. OAuth Bearer token (if already validated upstream)
+2. API key (if an `X-API-Key` or `Authorization` header is present — an
+   invalid key is rejected with an error and never falls back to the
+   session cookie)
+3. Session authentication (state-changing requests additionally require
+   the CSRF token — see [REST API](docs/apis/rest-api))
 
 ## Security Best Practices
 
