@@ -40,9 +40,9 @@ final class ExtensionDiscovery
 	private array $discoveredPaths = [];
 
 	/**
-	 * @param string|null $projectExtensionsDir Override for the project-level
+	 * @param string|null $projectExtensionsDir override for the project-level
 	 *                                          extensions directory (tests);
-	 *                                          defaults to `<projectRoot>/extensions`.
+	 *                                          defaults to `<projectRoot>/extensions`
 	 */
 	public function __construct(
 		private readonly Config $config,

@@ -485,7 +485,7 @@ class JumpStartImporter
 	 * and static values.
 	 *
 	 * @param array<string,mixed>              $objectData
-	 * @param null|callable(string):bool $filterFakerRule
+	 * @param callable(string):bool|null $filterFakerRule
 	 *
 	 * @return array{0:array<string,string>,1:array<string,mixed>}
 	 */

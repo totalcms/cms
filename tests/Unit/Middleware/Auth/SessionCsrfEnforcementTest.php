@@ -55,12 +55,12 @@ function csrfTestConfig(): Config
  * public-collection check needs (RouteContext requires them; route itself
  * is null, so the check simply returns false).
  */
-function csrfTestRequest(string $method, string $uri): \Psr\Http\Message\ServerRequestInterface
+function csrfTestRequest(string $method, string $uri): Psr\Http\Message\ServerRequestInterface
 {
 	return (new ServerRequestFactory())
 		->createServerRequest($method, $uri)
-		->withAttribute(\Slim\Routing\RouteContext::ROUTE_PARSER, test()->createMock(\Slim\Interfaces\RouteParserInterface::class))
-		->withAttribute(\Slim\Routing\RouteContext::ROUTING_RESULTS, test()->createMock(\Slim\Routing\RoutingResults::class));
+		->withAttribute(Slim\Routing\RouteContext::ROUTE_PARSER, test()->createMock(Slim\Interfaces\RouteParserInterface::class))
+		->withAttribute(Slim\Routing\RouteContext::ROUTING_RESULTS, test()->createMock(Slim\Routing\RoutingResults::class));
 }
 
 function csrfTestLoggerFactory(): LoggerFactory
@@ -189,7 +189,7 @@ it('AuthMiddleware rejects a session-authenticated POST without a CSRF token', f
 	$request    = csrfTestRequest('POST', '/api/passkeys/register');
 
 	$middleware->process($request, csrfTestHandler());
-})->throws(\Slim\Exception\HttpForbiddenException::class);
+})->throws(Slim\Exception\HttpForbiddenException::class);
 
 it('AuthMiddleware allows a session-authenticated POST with the CSRF token field', function (): void {
 	$token = $this->csrfManager->generateToken();
