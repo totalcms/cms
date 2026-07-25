@@ -11,25 +11,44 @@ use TotalCMS\Support\PathResolver;
 use TotalCMS\Support\Version;
 
 /**
- * Discovers extensions by scanning both the bundled path (in the T3 package)
- * and the user-installed path (in tcms-data). Bundled extensions are flagged
- * on the returned manifest so the admin UI / CLI can hide destructive actions.
+ * Discovers extensions by scanning three roots:
  *
- * Conflict resolution: if the same extension id is present in both paths, the
- * **user-installed copy wins**. This gives admins a deliberate override path
- * for bundled extensions (e.g. patching a bug locally before the next release)
- * — same idea as a `node_modules` package shadowing a global one. A warning is
- * logged so the override doesn't go unnoticed.
+ *  1. the bundled path shipped in the T3 package (`resources/extensions/`)
+ *  2. the user-installed path (`tcms-data/extensions/`)
+ *  3. the project path (`extensions/` at the project root, next to tcms-data)
+ *
+ * The project root exists for site-specific extensions that live in the
+ * site's own git repo: tcms-data is content (backed up, not versioned), while
+ * a project extension is code — keeping it outside tcms-data means source
+ * control needs no gitignore allow-list carving. Directory-existence gated:
+ * no `extensions/` folder, no scan (same convention as the builder folder).
+ *
+ * Bundled/project origins are flagged on the returned manifest so the admin
+ * UI / CLI can hide destructive actions (neither can be "removed" — bundled
+ * ships with the package, project belongs to source control).
+ *
+ * Conflict resolution: later roots win — project over user-installed over
+ * bundled. User-over-bundled gives admins a deliberate override path for
+ * bundled extensions (e.g. patching a bug locally before the next release) —
+ * same idea as a `node_modules` package shadowing a global one. Project-over-
+ * user resolves a half-finished migration in favor of the source-controlled
+ * copy. A warning is logged so no override goes unnoticed.
  */
 final class ExtensionDiscovery
 {
 	/** @var array<string,string> Extension ID => absolute directory path */
 	private array $discoveredPaths = [];
 
+	/**
+	 * @param string|null $projectExtensionsDir Override for the project-level
+	 *                                          extensions directory (tests);
+	 *                                          defaults to `<projectRoot>/extensions`.
+	 */
 	public function __construct(
 		private readonly Config $config,
 		private readonly ManifestValidator $validator,
 		private readonly LoggerInterface $logger,
+		private readonly ?string $projectExtensionsDir = null,
 	) {
 	}
 
@@ -45,11 +64,12 @@ final class ExtensionDiscovery
 		// Reset between calls so re-discovery in tests doesn't accumulate paths.
 		$this->discoveredPaths = [];
 
-		// Bundled first; user-installed can override.
+		// Bundled first; user-installed overrides bundled; project overrides both.
 		$bundled = $this->scanPath($this->getBundledExtensionsDirectory(), bundled: true);
 		$user    = $this->scanPath($this->getExtensionsDirectory(), bundled: false);
+		$project = $this->scanPath($this->getProjectExtensionsDirectory(), bundled: false, project: true);
 
-		// User-installed wins on collision. Log so the override is visible.
+		// Later roots win on collision. Log so no override goes unnoticed.
 		foreach (array_keys($user) as $id) {
 			if (isset($bundled[$id])) {
 				$this->logger->info(
@@ -57,8 +77,19 @@ final class ExtensionDiscovery
 				);
 			}
 		}
+		foreach (array_keys($project) as $id) {
+			if (isset($user[$id])) {
+				$this->logger->warning(
+					"Extension '{$id}' exists in both the project extensions directory and tcms-data/extensions — the project copy will be loaded. Remove the tcms-data copy to silence this warning.",
+				);
+			} elseif (isset($bundled[$id])) {
+				$this->logger->info(
+					"Extension '{$id}' is bundled with Total CMS but also present in the project extensions directory — the project copy will be loaded.",
+				);
+			}
+		}
 
-		return array_merge($bundled, $user);
+		return array_merge($bundled, $user, $project);
 	}
 
 	/**
@@ -71,14 +102,14 @@ final class ExtensionDiscovery
 			return $this->discoveredPaths[$extensionId];
 		}
 
-		// Fallback: reconstruct from ID. Check user dir first (matches override
-		// semantics), then bundled.
+		// Fallback: reconstruct from ID. Check in override order — project
+		// first, then user, then bundled (matches discover() precedence).
 		$parts = explode('/', $extensionId, 2);
 		if (count($parts) !== 2) {
 			return null;
 		}
 
-		foreach ([$this->getExtensionsDirectory(), $this->getBundledExtensionsDirectory()] as $base) {
+		foreach ([$this->getProjectExtensionsDirectory(), $this->getExtensionsDirectory(), $this->getBundledExtensionsDirectory()] as $base) {
 			$path = $base . '/' . $parts[0] . '/' . $parts[1];
 			if (is_dir($path)) {
 				return $path;
@@ -94,6 +125,17 @@ final class ExtensionDiscovery
 	}
 
 	/**
+	 * Path to project-level extensions: `extensions/` at the project root,
+	 * next to tcms-data. Site-owned source code, typically committed to the
+	 * site's git repo. Purely convention-based — the directory existing is
+	 * the only switch.
+	 */
+	public function getProjectExtensionsDirectory(): string
+	{
+		return $this->projectExtensionsDir ?? PathResolver::projectRoot() . '/extensions';
+	}
+
+	/**
 	 * Path to bundled extensions shipped with the T3 package. These cannot
 	 * be removed — only disabled via the existing extension-permission UI.
 	 */
@@ -103,12 +145,13 @@ final class ExtensionDiscovery
 	}
 
 	/**
-	 * Scan a single base path. Sets the bundled flag on each manifest so
-	 * downstream code can distinguish package-shipped from user-installed.
+	 * Scan a single base path. Sets the bundled/project flags on each manifest
+	 * so downstream code can distinguish package-shipped, user-installed, and
+	 * project-owned extensions.
 	 *
 	 * @return array<string,ExtensionManifest>
 	 */
-	private function scanPath(string $extensionsDir, bool $bundled): array
+	private function scanPath(string $extensionsDir, bool $bundled, bool $project = false): array
 	{
 		if (!is_dir($extensionsDir)) {
 			return [];
@@ -132,7 +175,7 @@ final class ExtensionDiscovery
 
 				$manifest = $this->loadManifest($manifestFile);
 				if ($manifest instanceof ExtensionManifest) {
-					$flagged = $manifest->withBundled($bundled);
+					$flagged = $manifest->withBundled($bundled)->withProject($project);
 
 					// Bundled extensions ship in the T3 package — they can't
 					// have a different version than core. Force the manifest

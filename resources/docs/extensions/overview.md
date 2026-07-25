@@ -39,6 +39,28 @@ tcms-data/extensions/
 
 Total CMS also ships **bundled extensions** in `resources/extensions/` — included with every install but disabled by default. They appear in the admin alongside user-installed extensions but cannot be removed (only disabled). See [Bundled Extensions](docs/extensions/bundled).
 
+### Project Extensions
+
+Site-specific extensions can instead live in an `extensions/` directory at the **project root**, next to `tcms-data/`:
+
+```
+my-site/
+    extensions/
+        my-vendor/
+            my-extension/
+                extension.json
+                Extension.php
+                ...
+    tcms-data/
+    public/
+```
+
+The directory is purely convention-based — if `extensions/` exists it is scanned, exactly like `tcms-data/extensions/` (same layout, same manifest, same lifecycle). The difference is ownership: `tcms-data` is content (backed up, usually gitignored), while a project extension is **code that belongs in your site's git repo**. Keeping it outside `tcms-data` means committing it requires no gitignore gymnastics, and `git pull` deploys it.
+
+Project extensions can be disabled but not removed from the admin or CLI — they belong to source control, so removal happens there.
+
+If the same extension id exists in more than one location, the most specific copy wins: project over `tcms-data/extensions/` over bundled. A log entry is written whenever one copy shadows another.
+
 ## Quick Example
 
 A minimal extension that adds a Twig function:

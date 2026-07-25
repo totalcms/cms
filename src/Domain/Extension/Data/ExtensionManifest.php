@@ -28,6 +28,12 @@ final readonly class ExtensionManifest
 	 *                                                                rather than installed by the user. Bundled extensions can be
 	 *                                                                disabled but not removed. Set by ExtensionDiscovery — not declared
 	 *                                                                in the manifest JSON.
+	 * @param bool                                    $project        True when loaded from the project-level `extensions/` directory
+	 *                                                                (next to tcms-data) rather than `tcms-data/extensions/`. Project
+	 *                                                                extensions are site-owned source code — typically committed to the
+	 *                                                                site's git repo — so they can be disabled but not removed through
+	 *                                                                the CLI/admin. Set by ExtensionDiscovery — not declared in the
+	 *                                                                manifest JSON.
 	 * @param bool                                    $hidden         When true, the extension is excluded from the admin Extensions
 	 *                                                                page and `extension:list` CLI output. It still loads, registers,
 	 *                                                                and boots normally — it's just invisible to operators. Useful for
@@ -50,6 +56,7 @@ final readonly class ExtensionManifest
 		public bool $bundled = false,
 		public bool $hidden = false,
 		public string $reviewNote = '',
+		public bool $project = false,
 	) {
 	}
 
@@ -148,6 +155,35 @@ final readonly class ExtensionManifest
 			bundled: $bundled,
 			hidden: $this->hidden,
 			reviewNote: $this->reviewNote,
+			project: $this->project,
+		);
+	}
+
+	/**
+	 * Return a copy with the project flag set. Used by ExtensionDiscovery when
+	 * it finds a manifest under the project-level `extensions/` directory
+	 * rather than `tcms-data/extensions/`. Manifest JSON itself never declares
+	 * `project` — it's derived from the discovery path.
+	 */
+	public function withProject(bool $project): self
+	{
+		return new self(
+			id: $this->id,
+			name: $this->name,
+			description: $this->description,
+			version: $this->version,
+			requires: $this->requires,
+			entrypoint: $this->entrypoint,
+			settingsSchema: $this->settingsSchema,
+			minEdition: $this->minEdition,
+			author: $this->author,
+			license: $this->license,
+			links: $this->links,
+			icon: $this->icon,
+			bundled: $this->bundled,
+			hidden: $this->hidden,
+			reviewNote: $this->reviewNote,
+			project: $project,
 		);
 	}
 
@@ -175,6 +211,7 @@ final readonly class ExtensionManifest
 			bundled: $this->bundled,
 			hidden: $this->hidden,
 			reviewNote: $this->reviewNote,
+			project: $this->project,
 		);
 	}
 

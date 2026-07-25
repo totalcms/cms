@@ -14,8 +14,8 @@ use TotalCMS\Support\PathResolver;
 use TotalCMS\Support\Version;
 
 /**
- * Focused tests for the bundled-vs-user discovery path. Broader extension
- * lifecycle tests live in ExtensionManagerTest.
+ * Focused tests for the bundled-vs-user-vs-project discovery paths. Broader
+ * extension lifecycle tests live in ExtensionManagerTest.
  */
 final class ExtensionDiscoveryTest extends TestCase
 {
@@ -23,6 +23,7 @@ final class ExtensionDiscoveryTest extends TestCase
 	private ?string $originalPackageRoot;
 	private string $userExtensionsDir;
 	private string $bundledExtensionsDir;
+	private string $projectExtensionsDir;
 	private ExtensionDiscovery $discovery;
 
 	protected function setUp(): void
@@ -30,8 +31,10 @@ final class ExtensionDiscoveryTest extends TestCase
 		$this->tmpRoot              = sys_get_temp_dir() . '/tcms-extdiscovery-' . uniqid();
 		$this->userExtensionsDir    = $this->tmpRoot . '/tcms-data/extensions';
 		$this->bundledExtensionsDir = $this->tmpRoot . '/resources/extensions';
+		$this->projectExtensionsDir = $this->tmpRoot . '/extensions';
 		mkdir($this->userExtensionsDir, 0755, true);
 		mkdir($this->bundledExtensionsDir, 0755, true);
+		mkdir($this->projectExtensionsDir, 0755, true);
 
 		// Redirect PathResolver::packageRoot so getBundledExtensionsDirectory()
 		// points at our tmp dir rather than the real package — keeps the test
@@ -44,7 +47,9 @@ final class ExtensionDiscoveryTest extends TestCase
 		$config->datadir = $this->tmpRoot . '/tcms-data';
 
 		$validator       = new ManifestValidator($this->createMock(EditionFeatureService::class));
-		$this->discovery = new ExtensionDiscovery($config, $validator, new NullLogger());
+		// The project dir is injected explicitly (rather than derived from
+		// PathResolver::projectRoot()) so the test stays hermetic.
+		$this->discovery = new ExtensionDiscovery($config, $validator, new NullLogger(), $this->projectExtensionsDir);
 	}
 
 	protected function tearDown(): void
@@ -153,6 +158,95 @@ final class ExtensionDiscoveryTest extends TestCase
 		$this->assertCount(2, $manifests);
 		$this->assertTrue($manifests['totalcms/ab-split']->bundled);
 		$this->assertFalse($manifests['acme/custom']->bundled);
+	}
+
+	public function testFlagsProjectExtensions(): void
+	{
+		$this->writeManifest($this->projectExtensionsDir, 'bsh', 'ops', [
+			'id'   => 'bsh/ops',
+			'name' => 'BSH Ops',
+		]);
+
+		$manifests = $this->discovery->discover();
+
+		$this->assertArrayHasKey('bsh/ops', $manifests);
+		$this->assertTrue($manifests['bsh/ops']->project);
+		$this->assertFalse($manifests['bsh/ops']->bundled);
+	}
+
+	public function testUserExtensionsAreNotFlaggedProject(): void
+	{
+		$this->writeManifest($this->userExtensionsDir, 'acme', 'thing', ['id' => 'acme/thing']);
+
+		$manifests = $this->discovery->discover();
+
+		$this->assertFalse($manifests['acme/thing']->project);
+	}
+
+	public function testProjectOverridesUserInstalledOnIdCollision(): void
+	{
+		// A half-finished migration leaves the extension in both roots — the
+		// source-controlled project copy wins.
+		$this->writeManifest($this->userExtensionsDir, 'bsh', 'ops', [
+			'id'      => 'bsh/ops',
+			'name'    => 'Old tcms-data Copy',
+			'version' => '1.0.0',
+		]);
+		$this->writeManifest($this->projectExtensionsDir, 'bsh', 'ops', [
+			'id'      => 'bsh/ops',
+			'name'    => 'Project Copy',
+			'version' => '1.1.0',
+		]);
+
+		$manifests = $this->discovery->discover();
+		$winner    = $manifests['bsh/ops'] ?? null;
+
+		$this->assertNotNull($winner);
+		$this->assertSame('Project Copy', $winner->name);
+		$this->assertSame('1.1.0', $winner->version);
+		$this->assertTrue($winner->project);
+	}
+
+	public function testProjectOverridesBundledOnIdCollision(): void
+	{
+		$this->writeManifest($this->bundledExtensionsDir, 'totalcms', 'ab-split', [
+			'id'   => 'totalcms/ab-split',
+			'name' => 'Bundled Version',
+		]);
+		$this->writeManifest($this->projectExtensionsDir, 'totalcms', 'ab-split', [
+			'id'   => 'totalcms/ab-split',
+			'name' => 'Project Override',
+		]);
+
+		$manifests = $this->discovery->discover();
+
+		$this->assertSame('Project Override', $manifests['totalcms/ab-split']->name);
+		$this->assertTrue($manifests['totalcms/ab-split']->project);
+		$this->assertFalse($manifests['totalcms/ab-split']->bundled);
+	}
+
+	public function testGetExtensionPathPrefersProjectDir(): void
+	{
+		// Fallback path (no discover() call): project dir wins over the others,
+		// matching discover() precedence.
+		mkdir($this->userExtensionsDir . '/bsh/ops', 0755, true);
+		mkdir($this->projectExtensionsDir . '/bsh/ops', 0755, true);
+
+		$this->assertSame(
+			$this->projectExtensionsDir . '/bsh/ops',
+			$this->discovery->getExtensionPath('bsh/ops'),
+		);
+	}
+
+	public function testMissingProjectDirIsSimplySkipped(): void
+	{
+		rmdir($this->projectExtensionsDir);
+		$this->writeManifest($this->userExtensionsDir, 'acme', 'thing', ['id' => 'acme/thing']);
+
+		$manifests = $this->discovery->discover();
+
+		$this->assertCount(1, $manifests);
+		$this->assertArrayHasKey('acme/thing', $manifests);
 	}
 
 	public function testGetExtensionPathFindsBundled(): void
