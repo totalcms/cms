@@ -5,7 +5,7 @@
  */
 
 import Youtube from '@tiptap/extension-youtube';
-import { getUploadUrl, getListUrl, uploadFileWithProgress } from '../upload.js';
+import { getUploadUrl, getListUrl, uploadFileWithProgress, getCsrfToken } from '../upload.js';
 import tcmsConfirm from '../../../confirm-dialog';
 import { t } from '../../../i18n';
 
@@ -240,7 +240,7 @@ function createVideoDialog(editor, uploadConfig) {
 		const listUrl = getUploadUrl(uploadConfig);
 		const deleteUrl = `${listUrl}/${encodeURIComponent(filename)}`;
 
-		fetch(deleteUrl, { method: 'DELETE' })
+		fetch(deleteUrl, { method: 'DELETE', headers: getCsrfToken() ? { 'X-CSRF-Token': getCsrfToken() } : {} })
 			.then(resp => {
 				if (!resp.ok) throw new Error(`Delete failed: ${resp.status}`);
 				row.remove();

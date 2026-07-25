@@ -95,6 +95,22 @@ function buildFormData(file, uploadConfig) {
 }
 
 /**
+ * Read the admin layout's CSRF token from <meta name="csrf-token">.
+ * Session-authenticated state-changing API requests must send it as
+ * X-CSRF-Token; returns null outside the admin (API-keyed callers
+ * don't need it).
+ */
+export function getCsrfToken() {
+	const tag = document.querySelector('meta[name="csrf-token"]');
+	return tag ? tag.getAttribute('content') : null;
+}
+
+function applyCsrfHeader(xhr) {
+	const csrf = getCsrfToken();
+	if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrf);
+}
+
+/**
  * Upload a file via XHR.
  * Resolves with the parsed JSON response data.
  */
@@ -107,6 +123,7 @@ export function uploadFile(file, url, uploadConfig) {
 
 		const xhr = new XMLHttpRequest();
 		xhr.open('POST', url);
+		applyCsrfHeader(xhr);
 
 		xhr.addEventListener('load', () => {
 			if (xhr.status >= 200 && xhr.status < 300) {
@@ -137,6 +154,7 @@ export function uploadFileWithProgress(file, url, uploadConfig, { onProgress, on
 
 	const xhr = new XMLHttpRequest();
 	xhr.open('POST', url);
+	applyCsrfHeader(xhr);
 
 	xhr.upload.addEventListener('progress', (e) => {
 		if (e.lengthComputable) {

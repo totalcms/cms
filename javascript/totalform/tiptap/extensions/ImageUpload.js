@@ -8,7 +8,7 @@
 import Image from '@tiptap/extension-image';
 import { mergeAttributes } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
-import { getUploadUrl, getListUrl, uploadFile, uploadFileWithProgress, validateFile } from '../upload.js';
+import { getUploadUrl, getListUrl, uploadFile, uploadFileWithProgress, validateFile, getCsrfToken } from '../upload.js';
 import tcmsConfirm from '../../../confirm-dialog';
 import { createImagePopoverPlugin } from './ImagePopover.js';
 import { t } from '../../../i18n';
@@ -254,7 +254,7 @@ function createImageDialog(editor, uploadConfig) {
 		const listUrl = getUploadUrl(uploadConfig);
 		const deleteUrl = `${listUrl}/${encodeURIComponent(filename)}`;
 
-		fetch(deleteUrl, { method: 'DELETE' })
+		fetch(deleteUrl, { method: 'DELETE', headers: getCsrfToken() ? { 'X-CSRF-Token': getCsrfToken() } : {} })
 			.then(resp => {
 				if (!resp.ok) throw new Error(`Delete failed: ${resp.status}`);
 				card.remove();

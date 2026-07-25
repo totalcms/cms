@@ -169,9 +169,13 @@ async function handleDrop(event, reorderUrl) {
 	formData.append('tree', JSON.stringify(tree));
 
 	try {
+		// Session-authenticated API writes require the CSRF token.
+		const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
 		const res = await fetch(reorderUrl, {
 			method: 'POST',
 			credentials: 'same-origin',
+			headers: csrf ? { 'X-CSRF-Token': csrf } : {},
 			body: formData,
 		});
 
