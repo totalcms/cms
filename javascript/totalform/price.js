@@ -26,16 +26,18 @@ export default class PriceField extends TotalField {
 
 		const sep = PriceField.separators(this.locale, this.currency);
 
+		// signed + no min: balances, credits, and adjustments can be negative.
+		// An unsigned mask silently clamps a negative server value to positive
+		// (display AND getValue()), which then persists the wrong sign on save.
 		this.mask = IMask(this.input, {
 			mask: Number,
 			scale: this.decimals,
-			signed: false,
+			signed: true,
 			thousandsSeparator: sep.group,
 			radix: sep.decimal,
 			mapToRadix: ['.', ','],
 			normalizeZeros: true,
 			padFractionalZeros: this.decimals > 0,
-			min: 0,
 		});
 
 		// Seed from the existing server value (the raw number lives in the `value`
