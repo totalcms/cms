@@ -13,4 +13,12 @@ if (!isset($_SERVER['APP_ENV']) || $_SERVER['APP_ENV'] != 'preview') {
 	$_SERVER['REQUEST_URI'] = str_replace('tcms/public', 'tcms', $_SERVER['REQUEST_URI']);
 }
 
-(require __DIR__ . '/../config/bootstrap.php')->run();
+$app = require __DIR__ . '/../config/bootstrap.php';
+
+if ($app === false) {
+	// PHP built-in dev server: bootstrap flagged a static file — return false
+	// so the server serves it directly.
+	return false;
+}
+
+$app->run();
