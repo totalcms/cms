@@ -151,8 +151,23 @@ class FormField
 	}
 
 	/**
+	 * Tags whose content model is raw text or RCDATA rather than markup. Left
+	 * unescaped in help text, one of these makes the browser treat everything
+	 * after it as that element's text content.
+	 */
+	private const HELP_RAW_TEXT_TAGS = 'title|textarea|script|style|xmp|iframe|noscript|noembed|plaintext';
+
+	/**
 	 * Render the field's help text paragraph. Returns an empty string when no
 	 * help is configured. The id matches the `aria-describedby` emitted by inputs.
+	 *
+	 * Help is intentionally HTML — schemas use `<code>`, `<strong>`, and links
+	 * to explain a field. The exception is the handful of raw-text tags above:
+	 * a schema documenting the `<title>` tag would otherwise emit a real
+	 * `<title>`, and the browser would swallow the rest of the admin page, so
+	 * the form silently truncated from that field down with nothing in the
+	 * logs. Escaping just those turns that into visible literal text; all other
+	 * markup passes through untouched.
 	 */
 	protected function createHelpText(): string
 	{
@@ -160,7 +175,14 @@ class FormField
 			return '';
 		}
 
-		return HTMLUtils::element('p', $this->help, [
+		// Escape rather than strip, so the author sees what they actually wrote.
+		$help = (string)preg_replace_callback(
+			'#</?(' . self::HELP_RAW_TEXT_TAGS . ')(\s[^>]*)?/?>#i',
+			static fn (array $m): string => htmlspecialchars($m[0], ENT_QUOTES, 'UTF-8'),
+			$this->help,
+		);
+
+		return HTMLUtils::element('p', $help, [
 			'class' => 'help',
 			'id'    => "help-{$this->uuid}",
 		]);
