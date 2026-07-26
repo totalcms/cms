@@ -2,7 +2,15 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.5.0-rc.13] - Unreleased
+## [Unreleased]
+
+### Fixed
+
+- **Price fields showed nothing instead of zero**: The `price` filter decided emptiness with checks that spared the integer `0` and the string `'0'` but not the float `0.0` — which is what a summed or calculated price actually is — so any template totalling prices rendered a blank cell when the total came to zero. Emptiness is now decided by whether the value is numeric at all, so every real number formats and only genuinely absent values blank out
+- **A tag in help text could swallow the rest of the admin page**: Schema help is rendered as HTML, so a field documenting the `<title>` tag emitted a real `<title>` element — and because that element's content is parsed as raw text, the browser treated the remainder of the page as its contents. The form silently truncated from that field down, with a valid response and nothing in the logs. The handful of tags that behave this way (`title`, `textarea`, `script`, `style`, and similar) are now escaped to visible text; all other markup in help still renders, so no existing schema changed
+- **Rejected deck data now says which rule it broke**: Importing a deck through JumpStart, the API, or a script could fail with "Deck must be a dictionary of named objects" for four different reasons — a list instead of a dictionary, an invalid item key, an item that isn't an object, or an `id` that disagrees with its key. The message described the valid shape without identifying the problem, which made a hyphen in an item key (the likeliest mistake, since the admin converts hyphens silently and only hand-written JSON hits the rule) a hunt through the whole payload. Each cause now reports itself, names the offending key, and suggests the corrected form. Two shipped schemas also advertised hyphens as valid deck keys in their `patternProperties` when the runtime rejects them — corrected, so schemas copied as a starting point no longer inherit the wrong pattern
+
+## [3.5.0-rc.13] - 2026-07-25
 
 ### Added
 
