@@ -280,7 +280,7 @@
 			"schemaref": "https://www.totalcms.co/schemas/totalcms-item.json",
 			"settings": { "deckItemLabel": "${title}" },
 			"patternProperties": {
-				"^[a-z0-9][a-z0-9-]*$": { "$ref": "https://www.totalcms.co/schemas/totalcms-item.json" }
+				"^[a-z0-9][a-z0-9_]*$": { "$ref": "https://www.totalcms.co/schemas/totalcms-item.json" }
 			}
 		},
 		"deckTable": {
@@ -291,7 +291,7 @@
 			"schemaref": "https://www.totalcms.co/schemas/totalcms-item.json",
 			"settings": { "deckItemLabel": "${title}" },
 			"patternProperties": {
-				"^[a-z0-9][a-z0-9-]*$": { "$ref": "https://www.totalcms.co/schemas/totalcms-item.json" }
+				"^[a-z0-9][a-z0-9_]*$": { "$ref": "https://www.totalcms.co/schemas/totalcms-item.json" }
 			}
 		}
 	},

@@ -59,6 +59,20 @@ The global is `cms`. Correct forms:
 - Images: `cms.media.imagePath(object, {w: 720, fm: 'webp'}, {collection: 'x', property: 'image'})`
   takes three arguments — object, image options, collection context. Never merge them.
 
+## Writing schemas and content by hand
+
+The admin enforces these for you; they only bite when authoring JSON directly
+(JumpStart files, imports, the API).
+
+- **Every schema must define an `id` property**, not merely list `id` in
+  `required`. Omitting it fails with `The required properties (id) are missing`,
+  which blames your data when the schema is at fault.
+- **Decks are dictionaries of named items, not arrays**, and each key must equal
+  the item's `id`: `{"rows": {"first_row": {"id": "first_row", ...}}}`
+- **Deck item keys allow only letters, numbers, and underscores** — no hyphens,
+  so Twig can read them as `deck.first_row`.
+- `field: "deckTable"` stores identically to a deck but edits as a table.
+
 ## Site Builder
 
 Pages are records in the `builder-pages` collection, routed at request time — there

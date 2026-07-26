@@ -50,7 +50,7 @@ describe('DeckData', function (): void {
 		];
 
 		expect(fn (): DeckData => new DeckData($invalidNames))
-			->toThrow(InvalidArgumentException::class, 'Deck must be a dictionary of named objects');
+			->toThrow(InvalidArgumentException::class, 'hyphens are not allowed');
 	});
 
 	test('DeckData → throws exception for indexed array (must be associative)', function (): void {
@@ -60,7 +60,7 @@ describe('DeckData', function (): void {
 		];
 
 		expect(fn (): DeckData => new DeckData($indexedArray))
-			->toThrow(InvalidArgumentException::class, 'Deck must be a dictionary of named objects');
+			->toThrow(InvalidArgumentException::class, 'must be a dictionary of named items');
 	});
 
 	test('DeckData → throws exception for non-array items', function (): void {
@@ -69,7 +69,7 @@ describe('DeckData', function (): void {
 		];
 
 		expect(fn (): DeckData => new DeckData($invalidItems))
-			->toThrow(InvalidArgumentException::class, 'Deck must be a dictionary of named objects');
+			->toThrow(InvalidArgumentException::class, 'must be an object of its own fields');
 	});
 
 	test('DeckData → validates id field matches dictionary key', function (): void {
@@ -88,7 +88,7 @@ describe('DeckData', function (): void {
 		];
 
 		expect(fn (): DeckData => new DeckData($invalidId))
-			->toThrow(InvalidArgumentException::class, 'Deck must be a dictionary of named objects');
+			->toThrow(InvalidArgumentException::class, 'must match the key it is stored under');
 	});
 
 	test('DeckData → handles numeric keys', function (): void {

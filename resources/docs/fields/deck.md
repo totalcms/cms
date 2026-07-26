@@ -1,6 +1,87 @@
 ---
 title: "Deck Item Label"
-description: "Customize deck item labels in the Total CMS admin using template syntax with field references, minItems, maxItems, and modalSize settings."
+description: "Customize deck item labels in the Total CMS admin using template syntax with field references, minItems, maxItems, and modalSize settings. Includes the on-disk shape of deck data and how to define a deck in a schema."
+---
+
+# How a Deck Is Stored
+
+Read this first if you are writing deck data by hand — in a JumpStart file, through
+the API, or from a script. The admin handles all of this for you; these rules only
+surface when you author the JSON yourself.
+
+A deck is **a dictionary of named items, not a list**. Each key names one item, and
+that key must also appear as the item's `id`:
+
+```json
+{
+	"myDeck": {
+		"first_item":  { "id": "first_item",  "name": "First",  "qty": 1 },
+		"second_item": { "id": "second_item", "name": "Second", "qty": 2 }
+	}
+}
+```
+
+Three rules the runtime enforces:
+
+1. **A dictionary, never an array.** `[{...}, {...}]` is rejected — items are keyed so
+   templates can reach a specific one by name.
+2. **Keys may contain only letters, numbers, and underscores.** No hyphens (see
+   *Important Notes* below).
+3. **An item's `id` must equal its key.** Omitting `id` is allowed; contradicting the
+   key is not.
+
+In Twig, iterate the deck or address an item by name:
+
+```twig
+{% for item in object.myDeck %}{{ item.name }}{% endfor %}
+
+{{ object.myDeck.first_item.name }}
+```
+
+## Defining a Deck in a Schema
+
+A deck points at a **second schema** describing one item, via `schemaref` plus a
+matching `patternProperties` entry:
+
+```json
+"myDeck": {
+	"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
+	"field": "deck",
+	"label": "My Deck",
+	"schemaref": "https://www.totalcms.co/schemas/custom/my-item.json",
+	"settings": { "deckItemLabel": "${name}" },
+	"patternProperties": {
+		"^[a-z0-9][a-z0-9_]*$": {
+			"$ref": "https://www.totalcms.co/schemas/custom/my-item.json"
+		}
+	}
+}
+```
+
+The item schema is an ordinary object schema, and — like every Total CMS schema — it
+**must define an `id` property**, not merely list `id` in `required`. Leaving it out
+produces a validation error that points at your data (`The required properties (id)
+are missing`) when the real problem is the schema:
+
+```json
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/custom/my-item.json",
+	"id": "my-item",
+	"type": "object",
+	"title": "My Item",
+	"properties": {
+		"id":   { "$ref": "https://www.totalcms.co/schemas/properties/slug.json", "field": "id", "label": "Key" },
+		"name": { "type": "string", "field": "text", "label": "Name" }
+	},
+	"required": ["id"],
+	"index": ["id", "name"]
+}
+```
+
+Use `"field": "deckTable"` instead of `"deck"` to render the same data as an editable
+table in the admin — a good fit for rows of short, uniform values.
+
 ---
 
 # Deck Item Label
@@ -49,7 +130,7 @@ The `deckItemLabel` setting controls how deck items are labeled in the admin int
 > **Note:** `${oid}` is not supported for deck items. Use `${uuid}` or `${uid}` for auto-generated deck item IDs instead.
 
 - **No slugification:** Values are displayed as-is without URL-safe transformation. If a field contains "The Big Red Fox", the label will show exactly that.
-- **Twig compatibility:** Deck item IDs are automatically sanitized to use underscores instead of hyphens for Twig dot notation access (`mydeck.item_id`).
+- **Twig compatibility:** Deck item IDs may contain only letters, numbers, and underscores — **hyphens are not allowed**. The admin converts hyphens to underscores as you type, so this only bites when you write deck data by hand (JumpStart files, the API, imports), where a hyphenated key is rejected. The rule exists so items are readable with dot notation in Twig (`mydeck.item_id` rather than `mydeck['item-id']`).
 - **SVG support:** If a field contains SVG code, it will be displayed as a small icon in the label.
 - **Long text:** Labels automatically truncate with ellipsis (...) if content is too long.
 
