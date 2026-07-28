@@ -11,10 +11,24 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 final class AuthFieldPolicyTest extends TestCase
 {
+	private \Psr\Log\LoggerInterface $logger;
+
+	protected function setUp(): void
+	{
+		$this->logger = $this->makeLogger();
+	}
+
+	/** @return list<array{level:mixed,message:string,context:array<string,mixed>}> */
+	private function logRecords(): array
+	{
+		return $this->logger->records; // @phpstan-ignore-line anonymous class property
+	}
+
 	/**
 	 * @param list<string>             $props    schema property names
 	 * @param array<string,mixed>|null $existing stored record, or null when it doesn't exist
@@ -44,10 +58,30 @@ final class AuthFieldPolicyTest extends TestCase
 			$objectFetcher->method('fetchObject')->willReturn($object);
 		}
 
-		$config          = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$config->auth    = ['enable' => $authEnabled, 'collection' => 'auth'];
+		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->auth = ['enable' => $authEnabled, 'collection' => 'auth'];
 
-		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher, $config);
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('channelLogger')->willReturn($this->logger);
+
+		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher, $config, $loggerFactory);
+	}
+
+	/** Collects log records so tests can assert on the audit trail. */
+	private function makeLogger(): \Psr\Log\LoggerInterface
+	{
+		return new class extends \Psr\Log\AbstractLogger {
+			/** @var list<array{level:mixed,message:string,context:array<string,mixed>}> */
+			public array $records = [];
+
+			/**
+			 * @param array<string,mixed> $context
+			 */
+			public function log($level, string|\Stringable $message, array $context = []): void
+			{
+				$this->records[] = ['level' => $level, 'message' => (string)$message, 'context' => $context];
+			}
+		};
 	}
 
 	// -----------------------------------------------------------------------
@@ -78,6 +112,75 @@ final class AuthFieldPolicyTest extends TestCase
 
 		expect($policy->canWriteProperty('', 'auth', 'active'))->toBeTrue();
 		expect($policy->canWriteProperty('', 'auth', 'groups'))->toBeTrue();
+	}
+
+	// -----------------------------------------------------------------------
+	// Audit trail. The admin form PUTs the whole object, so privileged fields
+	// ride along on every save whether or not anyone touched them. Only a value
+	// that actually differs from what is stored is an attempted write — that
+	// distinction is what keeps the log signal rather than noise.
+	// -----------------------------------------------------------------------
+
+	public function testDoesNotLogWhenPrivilegedFieldsRideAlongUnchanged(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			existing: ['active' => true, 'groups' => ['viewer'], 'name' => 'Old'],
+		);
+
+		$out = $policy->enforce('viewer1', 'auth', 'viewer1', ['active' => true, 'groups' => ['viewer'], 'name' => 'New']);
+
+		expect($out['name'])->toBe('New');
+		expect($this->logRecords())->toBe([]);
+	}
+
+	public function testLogsWhenAPrivilegedFieldIsActuallyChanged(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			existing: ['active' => true, 'groups' => ['viewer'], 'name' => 'Old'],
+		);
+
+		$out = $policy->enforce('viewer1', 'auth', 'viewer1', ['active' => false, 'groups' => ['viewer'], 'name' => 'New']);
+
+		expect($out['active'])->toBe(true); // still reverted
+		expect($out['name'])->toBe('New');  // ordinary field still saved
+
+		$records = $this->logRecords();
+		expect($records)->toHaveCount(1);
+		expect($records[0]['context']['reverted'])->toBe(['active']);
+		expect($records[0]['context']['actor'])->toBe('viewer1');
+		expect($records[0]['context']['collection'])->toBe('auth');
+		expect($records[0]['context']['object'])->toBe('viewer1');
+	}
+
+	public function testLogsStrippedFieldsOnCreate(): void
+	{
+		$policy = $this->makePolicy(isSuperAdmin: false);
+
+		$policy->enforce('viewer1', 'auth', 'newuser', ['groups' => ['admin'], 'name' => 'X']);
+
+		$records = $this->logRecords();
+		expect($records)->toHaveCount(1);
+		expect($records[0]['context']['stripped'])->toBe(['groups']);
+	}
+
+	public function testDoesNotLogForSuperAdmin(): void
+	{
+		$policy = $this->makePolicy(isSuperAdmin: true, existing: ['active' => true]);
+
+		$policy->enforce('admin', 'auth', 'u1', ['active' => false]);
+
+		expect($this->logRecords())->toBe([]);
+	}
+
+	public function testDoesNotLogWhenAuthIsDisabled(): void
+	{
+		$policy = $this->makePolicy(isSuperAdmin: false, existing: ['active' => true], authEnabled: false);
+
+		$policy->enforce('', 'auth', 'u1', ['active' => false]);
+
+		expect($this->logRecords())->toBe([]);
 	}
 
 	public function testStripProtectedStillStripsWhenAuthIsDisabled(): void

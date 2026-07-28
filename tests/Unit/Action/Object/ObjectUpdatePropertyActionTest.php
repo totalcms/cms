@@ -39,11 +39,14 @@ final class ObjectUpdatePropertyActionTest extends TestCase
 		$schemaFetcher->method('fetchSchemaForCollection')->willReturn(new SchemaData());
 		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->auth = ['enable' => true, 'collection' => 'auth'];
-		$policy       = new AuthFieldPolicy(
+		$policyLoggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$policyLoggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
+		$policy = new AuthFieldPolicy(
 			$schemaFetcher,
 			$this->createMock(UserValidationService::class),
 			$this->createMock(ObjectFetcher::class),
 			$config,
+			$policyLoggerFactory,
 		);
 		$guard = new PrivilegedFieldGuard($policy, $this->createMock(SessionInterface::class));
 

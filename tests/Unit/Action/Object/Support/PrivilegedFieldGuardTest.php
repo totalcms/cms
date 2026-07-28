@@ -50,7 +50,10 @@ final class PrivilegedFieldGuardTest extends TestCase
 		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->auth = ['enable' => true, 'collection' => 'auth'];
 
-		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher, $config);
+		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
+
+		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher, $config, $loggerFactory);
 	}
 
 	private function guard(AuthFieldPolicy $policy, string $actor = 'member1'): PrivilegedFieldGuard

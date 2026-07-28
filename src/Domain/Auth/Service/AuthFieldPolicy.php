@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Auth\Service;
 
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LogChannel;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
@@ -32,12 +35,16 @@ final readonly class AuthFieldPolicy
 	/** Schema id whose records are user/auth records. */
 	private const AUTH_SCHEMA = 'auth';
 
+	private LoggerInterface $logger;
+
 	public function __construct(
 		private SchemaFetcher $schemaFetcher,
 		private UserValidationService $userValidation,
 		private ObjectFetcher $objectFetcher,
 		private Config $config,
+		LoggerFactory $loggerFactory,
 	) {
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Access);
 	}
 
 	/**
@@ -119,15 +126,45 @@ final readonly class AuthFieldPolicy
 			$existing = $this->objectFetcher->fetchObject($collection, $objectId)->toArray();
 		}
 
+		$reverted = [];
+		$stripped = [];
+
 		foreach ($protected as $field) {
 			if (!array_key_exists($field, $incoming)) {
 				continue;
 			}
+
 			if (array_key_exists($field, $existing)) {
+				// The admin form PUTs the whole object, so privileged fields ride
+				// along on every save whether or not anyone touched them. Only a
+				// value that differs from what is stored is an attempted write —
+				// without this check the audit log would fire on every save by a
+				// non-admin and be worthless.
+				if ($incoming[$field] === $existing[$field]) {
+					continue;
+				}
+
+				$reverted[]       = $field;
 				$incoming[$field] = $existing[$field];
 			} else {
+				$stripped[] = $field;
 				unset($incoming[$field]);
 			}
+		}
+
+		if ($reverted !== [] || $stripped !== []) {
+			// The write is neutralized silently as far as the client is concerned
+			// — returning an error would confirm to a prober which fields are
+			// privileged, and the request's ordinary fields did save. The log is
+			// how an operator finds out afterwards why a change didn't stick.
+			// Field names only: `passkeys` values are large and credential-ish.
+			$this->logger->warning('Privileged field write neutralized', [
+				'actor'      => $actorId === '' ? '(none)' : $actorId,
+				'collection' => $collection,
+				'object'     => $objectId,
+				'reverted'   => $reverted,
+				'stripped'   => $stripped,
+			]);
 		}
 
 		return $incoming;
