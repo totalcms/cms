@@ -15,6 +15,16 @@ beforeEach(function (): void {
 	$container         = $this->app->getContainer();
 	$collectionFetcher = $container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
 	$collectionFetcher->fetchOrCreateReserved('blog');
+
+	// Seed here rather than inside the first test, so every test in this file
+	// stands on its own. `--filter` matches test NAMES, not just files — e.g.
+	// `--filter=property` selects "sorts results by property ascending" without
+	// selecting whichever test created the posts, and the sort assertions then
+	// run against an empty collection. Guarded because a duplicate id throws.
+	$objectFetcher = $container->get(TotalCMS\Domain\Object\Service\ObjectFetcher::class);
+	if (!$objectFetcher->existsObject('blog', 'test-post-1')) {
+		createBlogPosts(5);
+	}
 });
 
 /**
@@ -50,8 +60,6 @@ function createBlogPosts(int $count = 5): array
 // ─── JSON Format ───────────────────────────────────────────────────
 
 it('returns paginated JSON with default params', function (): void {
-	createBlogPosts(5);
-
 	get('/api/collections/blog/query')
 		->assertOk()
 		->assertJson()
