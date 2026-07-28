@@ -174,6 +174,10 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'uploads-image-fetch',
 		'verify-email',
 		'watermark-cache-delete',
+		// XML-RPC routes handle auth in the handler via XmlRpcAuth; no middleware-level authorization.
+		'xmlrpc',
+		'xmlrpc-collection',
+		'xmlrpc-discovery',
 	];
 
 	$unaccounted = array_values(array_diff(array_keys($routeNames), $mapped, $exempt));
