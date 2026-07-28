@@ -7,7 +7,6 @@ namespace TotalCMS\Domain\XmlRpc\Handler;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\XmlRpc\Data\XmlRpcIdentity;
 use TotalCMS\Domain\XmlRpc\Service\BlogRegistry;
 use TotalCMS\Domain\XmlRpc\Service\PostMapper;
 use TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth;
@@ -58,7 +57,7 @@ readonly class PostReadHandler implements MethodHandler
 		$this->auth->assertOperation($identity, 'GET');
 
 		$postId = (string)($params[0] ?? '');
-		$blog   = $this->resolveBlog($identity, $collection);
+		$blog   = $this->registry->resolveFor($identity, $collection);
 
 		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
 			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
@@ -82,7 +81,7 @@ readonly class PostReadHandler implements MethodHandler
 		$identity = $this->auth->authenticate($params, 1, 2);
 		$this->auth->assertOperation($identity, 'GET');
 
-		$blog  = $this->resolveBlog($identity, $collection, (string)($params[0] ?? ''));
+		$blog  = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$count = $this->clampCount($this->requestedCount($params[3] ?? null));
 
 		$structs = [];
@@ -114,7 +113,7 @@ readonly class PostReadHandler implements MethodHandler
 		$identity = $this->auth->authenticate($params, 1, 2);
 		$this->auth->assertOperation($identity, 'GET');
 
-		$blog  = $this->resolveBlog($identity, $collection, (string)($params[0] ?? ''));
+		$blog  = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$count = $this->clampCount($this->requestedCount($params[3] ?? null));
 
 		$titles = [];
@@ -129,28 +128,6 @@ readonly class PostReadHandler implements MethodHandler
 		}
 
 		return $titles;
-	}
-
-	private function resolveBlog(XmlRpcIdentity $identity, ?string $collection, string $blogId = ''): CollectionData
-	{
-		// URL-pinned collection wins; blogid is ignored entirely on that route,
-		// which is what makes us immune to clients that hardcode blogid=1.
-		if ($collection !== null) {
-			return $this->registry->assertBlog($identity, $collection);
-		}
-
-		if ($blogId !== '') {
-			return $this->registry->assertBlog($identity, $blogId);
-		}
-
-		$blogs = $this->registry->blogsFor($identity);
-		if ($blogs === []) {
-			throw XmlRpcFault::notFound('This API key has access to no blog collections.');
-		}
-
-		// Single-blog sites: pick the only one rather than faulting on a client
-		// that omitted blogid.
-		return reset($blogs);
 	}
 
 	/**

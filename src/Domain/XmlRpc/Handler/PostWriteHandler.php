@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\XmlRpc\Handler;
 
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
@@ -56,7 +55,7 @@ readonly class PostWriteHandler implements MethodHandler
 		$identity = $this->auth->authenticate($params, 1, 2);
 		$this->auth->assertOperation($identity, 'POST');
 
-		$blog   = $this->resolveBlog($identity, $collection, (string)($params[0] ?? ''));
+		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$struct = is_array($params[3] ?? null) ? $params[3] : [];
 		// A create with no publish flag still publishes — that is WordPress's
 		// behavior for newPost — so the "not supplied" case is resolved to
@@ -84,7 +83,7 @@ readonly class PostWriteHandler implements MethodHandler
 		$this->auth->assertOperation($identity, 'PUT');
 
 		$postId = (string)($params[0] ?? '');
-		$blog   = $this->resolveBlog($identity, $collection);
+		$blog   = $this->registry->resolveFor($identity, $collection);
 
 		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
 			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
@@ -132,7 +131,7 @@ readonly class PostWriteHandler implements MethodHandler
 	{
 		$this->auth->assertOperation($identity, 'DELETE');
 
-		$blog = $this->resolveBlog($identity, $collection, $blogId);
+		$blog = $this->registry->resolveFor($identity, $collection, $blogId);
 
 		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
 			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
@@ -211,23 +210,5 @@ readonly class PostWriteHandler implements MethodHandler
 		}
 
 		return true;
-	}
-
-	private function resolveBlog(XmlRpcIdentity $identity, ?string $collection, string $blogId = ''): CollectionData
-	{
-		if ($collection !== null) {
-			return $this->registry->assertBlog($identity, $collection);
-		}
-
-		if ($blogId !== '') {
-			return $this->registry->assertBlog($identity, $blogId);
-		}
-
-		$blogs = $this->registry->blogsFor($identity);
-		if ($blogs === []) {
-			throw XmlRpcFault::notFound('This API key has access to no blog collections.');
-		}
-
-		return reset($blogs);
 	}
 }

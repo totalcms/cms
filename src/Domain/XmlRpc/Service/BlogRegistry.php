@@ -64,6 +64,34 @@ readonly class BlogRegistry
 	}
 
 	/**
+	 * Resolve which blog collection a call targets, shared by every handler.
+	 *
+	 * URL-pinned collection wins outright — `blogid` is ignored entirely on
+	 * that route, which is what makes the endpoint immune to clients that
+	 * hardcode `blogid=1`. Otherwise `blogid` is used if the client sent one.
+	 * Failing both, a single-blog site falls back to the only blog the key can
+	 * see, so a client that omits `blogid` altogether still works. A key with
+	 * no blogs at all faults.
+	 */
+	public function resolveFor(XmlRpcIdentity $identity, ?string $urlCollection, string $blogId = ''): CollectionData
+	{
+		if ($urlCollection !== null) {
+			return $this->assertBlog($identity, $urlCollection);
+		}
+
+		if ($blogId !== '') {
+			return $this->assertBlog($identity, $blogId);
+		}
+
+		$blogs = $this->blogsFor($identity);
+		if ($blogs === []) {
+			throw XmlRpcFault::notFound('This API key has access to no blog collections.');
+		}
+
+		return reset($blogs);
+	}
+
+	/**
 	 * Whether the key's `paths` scope grants this specific collection.
 	 *
 	 * `ApiKeyPermissionChecker::allowsPath()` matches with `str_starts_with()`,
