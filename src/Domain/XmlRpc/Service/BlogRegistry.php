@@ -8,6 +8,7 @@ use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyPermissionChecker;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\XmlRpc\Data\XmlRpcIdentity;
 use TotalCMS\Domain\XmlRpc\Transport\XmlRpcFault;
 
@@ -27,6 +28,7 @@ readonly class BlogRegistry
 	public function __construct(
 		private CollectionLister $collectionLister,
 		private ApiKeyPermissionChecker $permissions,
+		private ObjectFetcher $objectFetcher,
 	) {
 	}
 
@@ -64,14 +66,23 @@ readonly class BlogRegistry
 	}
 
 	/**
-	 * Resolve which blog collection a call targets, shared by every handler.
+	 * Resolve which blog collection a call targets, for methods that carry a
+	 * `blogid` parameter.
 	 *
 	 * URL-pinned collection wins outright — `blogid` is ignored entirely on
 	 * that route, which is what makes the endpoint immune to clients that
 	 * hardcode `blogid=1`. Otherwise `blogid` is used if the client sent one.
-	 * Failing both, a single-blog site falls back to the only blog the key can
-	 * see, so a client that omits `blogid` altogether still works. A key with
-	 * no blogs at all faults.
+	 * Failing both — no URL pin and no blogid — this falls back to
+	 * `reset($blogs)`, the alphabetically first collection the key can see.
+	 * That fallback is only correct when the key can see exactly one blog; at
+	 * any higher blog count it is a guess. It applies here because every
+	 * caller of this method carries a genuine `blogid` in the WordPress
+	 * protocol, so the guess only fires when the client's own blogid was
+	 * empty — a caller misbehaving, not this method's normal path. Methods
+	 * whose protocol carries no blogid at all (`metaWeblog.getPost`,
+	 * `metaWeblog.editPost`, `mt.getPostCategories`, `mt.setPostCategories`,
+	 * `blogger.deletePost`) must NOT use this method — see
+	 * `resolveForPost()`. A key with no blogs at all faults.
 	 */
 	public function resolveFor(XmlRpcIdentity $identity, ?string $urlCollection, string $blogId = ''): CollectionData
 	{
@@ -92,42 +103,62 @@ readonly class BlogRegistry
 	}
 
 	/**
-	 * Whether the key's `paths` scope grants this specific collection.
+	 * Resolve which blog collection a call targets, for the five methods
+	 * whose WordPress protocol carries no `blogid` at all: only a `postid`.
 	 *
-	 * `ApiKeyPermissionChecker::allowsPath()` matches with `str_starts_with()`,
-	 * so a key scoped to `/collections/blog` also matches `/collections/
-	 * blog-archive` — a real authorization hole for this endpoint, since a key
-	 * meant for one blog would silently reach sibling collections that merely
-	 * share a name prefix. That looser matching is correct (and load-bearing
-	 * elsewhere) for the umbrella grants — `*` and `/collections` itself — so
-	 * those are still delegated to the shared checker to stay consistent with
-	 * it. Anything more specific is re-verified here with a path-segment
-	 * boundary: a granted prefix only counts if the next character in the
-	 * target path is `/` (a true parent segment) or nothing (an exact match).
-	 *
-	 * This is deliberately NOT a fix to `ApiKeyPermissionChecker` itself — that
-	 * checker is shared with the REST API, which has its own review underway;
-	 * this tightens only the boundary this class owns.
+	 * A URL-pinned collection still wins outright, same as `resolveFor()`.
+	 * Otherwise, guessing (`reset($blogs)`) is exactly the bug this method
+	 * exists to remove: with more than one visible blog, the wrong post could
+	 * be read, edited, or deleted. Instead this locates the post by searching
+	 * every collection the key can see. Exactly one match resolves cleanly.
+	 * No match faults 404 naming the post. More than one match faults rather
+	 * than picking — silently touching the wrong copy of a shared id is worse
+	 * than a client's editor reporting an error — and points the client at the
+	 * `/xmlrpc/{collection}` endpoint form to disambiguate.
 	 */
-	private function grantsCollection(ApiKeyData $apiKey, string $collectionId): bool
+	public function resolveForPost(XmlRpcIdentity $identity, ?string $urlCollection, string $postId): CollectionData
 	{
-		if ($this->permissions->allowsPath($apiKey, '/collections')) {
-			return true;
+		if ($urlCollection !== null) {
+			return $this->assertBlog($identity, $urlCollection);
 		}
 
-		$target = strtolower('collections/' . $collectionId);
+		$blogs = $this->blogsFor($identity);
+		if ($blogs === []) {
+			throw XmlRpcFault::notFound('This API key has access to no blog collections.');
+		}
 
-		/** @var array<int,mixed> $paths */
-		$paths = is_array($apiKey->scopes['paths'] ?? null) ? $apiKey->scopes['paths'] : [];
-
-		foreach ($paths as $path) {
-			$path = strtolower(ltrim((string)$path, '/'));
-
-			if ($path === $target || str_starts_with($target, $path . '/')) {
-				return true;
+		$matches = [];
+		foreach ($blogs as $blog) {
+			if ($this->objectFetcher->existsObject($blog->id, $postId)) {
+				$matches[] = $blog;
 			}
 		}
 
-		return false;
+		if (count($matches) === 1) {
+			return $matches[0];
+		}
+
+		if ($matches === []) {
+			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
+		}
+
+		throw XmlRpcFault::forbidden(sprintf(
+			'Post id "%s" is ambiguous: it exists in more than one blog collection this API key '
+				. 'can see (%s). Use the /xmlrpc/{collection} endpoint form to target one directly.',
+			$postId,
+			implode(', ', array_map(static fn (CollectionData $blog): string => $blog->id, $matches))
+		));
+	}
+
+	/**
+	 * Whether the key's `paths` scope grants this specific collection.
+	 *
+	 * Delegates entirely to the shared checker, which now matches on path-
+	 * segment boundaries itself, so a key scoped to `/collections/blog` no
+	 * longer also matches `/collections/blog-archive`.
+	 */
+	private function grantsCollection(ApiKeyData $apiKey, string $collectionId): bool
+	{
+		return $this->permissions->allowsPath($apiKey, '/collections/' . $collectionId);
 	}
 }

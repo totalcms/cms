@@ -53,6 +53,8 @@ Use the collection-pinned form (`/xmlrpc/{collection}`) if your host's firewall 
 
 On a subfolder install, both shapes hang off the same subfolder your site already lives in — e.g. `https://example.com/mysite/xmlrpc.php` — there is nothing extra to configure.
 
+**With more than one blog collection granted:** several WordPress methods (`metaWeblog.getPost`, `metaWeblog.editPost`, `mt.getPostCategories`, `mt.setPostCategories`, `blogger.deletePost`) carry a post id but no `blogid` at all — that's the WordPress protocol, not a T3 limitation. These operations locate the post by looking for it in every collection the key can see. If exactly one contains it, the call proceeds normally. If the same id happens to exist in two or more granted collections, the call faults rather than guessing which one you meant — use the `/xmlrpc/{collection}` endpoint form to target the collection directly and remove the ambiguity.
+
 A bare `GET` to either endpoint returns the plain-text string `XML-RPC server accepts POST requests only.` (used by some clients to verify the URL); `GET {site}/xmlrpc.php?rsd` returns the RSD discovery document.
 
 ## What round-trips and what doesn't

@@ -147,8 +147,10 @@ readonly class TaxonomyHandler implements MethodHandler
 		$identity = $this->auth->authenticate($params, 1, 2);
 		$this->auth->assertOperation($identity, 'GET');
 
-		$blog   = $this->registry->resolveFor($identity, $collection);
 		$postId = (string)($params[0] ?? '');
+		// getPostCategories carries no blogid — resolveForPost() locates the post
+		// rather than guessing which blog was meant.
+		$blog = $this->registry->resolveForPost($identity, $collection, $postId);
 
 		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
 			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
@@ -179,8 +181,10 @@ readonly class TaxonomyHandler implements MethodHandler
 		$identity = $this->auth->authenticate($params, 1, 2);
 		$this->auth->assertOperation($identity, 'PUT');
 
-		$blog   = $this->registry->resolveFor($identity, $collection);
 		$postId = (string)($params[0] ?? '');
+		// setPostCategories carries no blogid — resolveForPost() locates the post
+		// rather than guessing which blog was meant.
+		$blog = $this->registry->resolveForPost($identity, $collection, $postId);
 
 		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
 			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));

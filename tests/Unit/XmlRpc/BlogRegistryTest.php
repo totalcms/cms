@@ -6,6 +6,7 @@ use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyPermissionChecker;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\XmlRpc\Data\XmlRpcIdentity;
 use TotalCMS\Domain\XmlRpc\Service\BlogRegistry;
 use TotalCMS\Domain\XmlRpc\Transport\XmlRpcFault;
@@ -33,6 +34,12 @@ function xmlRpcIdentity(array $scopes): XmlRpcIdentity
  * UserValidationService doubles. `ApiKeyPermissionChecker` has no
  * dependencies, so the real service is used directly rather than doubled.
  *
+ * `ObjectFetcher` is only exercised by `resolveForPost()`, which this suite
+ * does not test (that behavior is pinned at the feature level in
+ * XmlRpcPostResolutionTest.php, where real posts and real collections exist).
+ * A double that reports every id absent keeps the constructor honest without
+ * needing real storage here.
+ *
  * @param array<CollectionData> $collections
  */
 function makeBlogRegistry(array $collections): BlogRegistry
@@ -52,7 +59,18 @@ function makeBlogRegistry(array $collections): BlogRegistry
 		}
 	};
 
-	return new BlogRegistry($lister, new ApiKeyPermissionChecker());
+	$objectFetcher = new readonly class extends ObjectFetcher {
+		public function __construct()
+		{
+		}
+
+		public function existsObject(string $collection, string $id): bool
+		{
+			return false;
+		}
+	};
+
+	return new BlogRegistry($lister, new ApiKeyPermissionChecker(), $objectFetcher);
 }
 
 it('returns only blog collections the key scopes permit', function (): void {

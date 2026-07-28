@@ -34,9 +34,23 @@ readonly class XmlRpcRequestParser
 			throw XmlRpcFault::malformed('Request body is too large.');
 		}
 
+		// Reject anything that is not plain UTF-8 before the DOCTYPE check below
+		// even looks at the body: that check is a byte-level regex over `<!DOCTYPE`,
+		// which only matches ASCII-compatible encodings. A UTF-16 body (with or
+		// without a BOM) encodes `<` as a two-byte sequence the regex never sees,
+		// so a UTF-16 DOCTYPE would otherwise sail through to libxml. XML-RPC
+		// clients send UTF-8 by convention, so refusing anything else costs
+		// nothing real. This also catches an XML declaration naming an encoding
+		// other than UTF-8, for the same reason.
+		if ($this->hasNonUtf8Encoding($body)) {
+			throw XmlRpcFault::malformed('Request body must be UTF-8 encoded.');
+		}
+
 		// Reject DOCTYPE before parsing rather than trusting libxml defaults.
-		// This closes XXE and entity-expansion (billion laughs) categorically:
-		// no DTD means no entities to expand or resolve.
+		// Combined with the UTF-8 check above (which rules out the one encoding
+		// bypass for this byte-level regex), this closes XXE and entity
+		// expansion (billion laughs): no DTD means no entities to expand or
+		// resolve.
 		if (preg_match('/<!DOCTYPE/i', $body) === 1) {
 			throw XmlRpcFault::malformed('DOCTYPE declarations are not accepted.');
 		}
@@ -73,6 +87,31 @@ readonly class XmlRpcRequestParser
 		}
 
 		return ['method' => $method, 'params' => $params];
+	}
+
+	/**
+	 * Whether the body is anything but plain UTF-8: a UTF-16/UTF-32 byte-order
+	 * mark, or an XML declaration that explicitly names a different encoding.
+	 * Deliberately does not try to detect encoding without a declared marker —
+	 * a body with neither a BOM nor an `encoding=` attribute is treated as
+	 * UTF-8 by both this check and libxml's own default, so there is nothing
+	 * further to guess here.
+	 */
+	private function hasNonUtf8Encoding(string $body): bool
+	{
+		// Longer UTF-32 markers checked first since they share a leading prefix
+		// with the 2-byte UTF-16 ones.
+		foreach (["\x00\x00\xFE\xFF", "\xFF\xFE\x00\x00", "\xFE\xFF", "\xFF\xFE"] as $bom) {
+			if (str_starts_with($body, $bom)) {
+				return true;
+			}
+		}
+
+		if (preg_match('/<\?xml\b[^>]*\bencoding\s*=\s*(["\'])([^"\']*)\1/i', $body, $matches) === 1) {
+			return strtolower($matches[2]) !== 'utf-8';
+		}
+
+		return false;
 	}
 
 	private function parseValue(\SimpleXMLElement $value, int $depth): mixed

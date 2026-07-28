@@ -57,7 +57,11 @@ readonly class PostReadHandler implements MethodHandler
 		$this->auth->assertOperation($identity, 'GET');
 
 		$postId = (string)($params[0] ?? '');
-		$blog   = $this->registry->resolveFor($identity, $collection);
+		// getPost carries no blogid at all — resolveForPost() locates the post by
+		// searching the collections this key can see, rather than guessing which
+		// blog was meant. On the URL-pinned route it still just pins the
+		// collection, so the existence check below still applies there.
+		$blog = $this->registry->resolveForPost($identity, $collection, $postId);
 
 		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
 			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));

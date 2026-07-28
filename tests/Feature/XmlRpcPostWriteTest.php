@@ -174,6 +174,35 @@ it('leaves a draft alone when an edit sends only a title and no publish flag', f
 	expect($object['draft'])->toBeTrue();
 });
 
+it('leaves a draft alone when an edit sends an empty-string publish value', function (): void {
+	// An empty string is not a client asking to publish — it's XML-RPC's usual
+	// shape for "no value here" (an empty <string></string>). Before the fix,
+	// publishFlag()'s "unrecognized value" default of `true` caught this case
+	// too, so a client sending "" for the fifth param would silently publish
+	// a draft it never asked to change.
+	$container = $this->app->getContainer();
+	$container->get(ObjectSaver::class)->saveObject('blog', [
+		'id'      => 'empty-publish-stays-draft',
+		'title'   => 'Original title',
+		'content' => '<p>Original body</p>',
+		'draft'   => true,
+	]);
+
+	$key = xmlRpcKey();
+
+	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+		xmlRpcParam('empty-publish-stays-draft') . xmlRpcParam('joe') . xmlRpcParam($key)
+		. xmlRpcStructParam(['title' => 'New title'])
+		. xmlRpcParam('')))->getBody();
+
+	expect($body)->not->toContain('<fault>');
+
+	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'empty-publish-stays-draft')->toArray();
+
+	expect($object['title'])->toBe('New title');
+	expect($object['draft'])->toBeTrue();
+});
+
 it('turns a published post into a draft when an edit explicitly sends publish=false', function (): void {
 	$container = $this->app->getContainer();
 	$container->get(ObjectSaver::class)->saveObject('blog', [

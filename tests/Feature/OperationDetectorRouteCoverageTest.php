@@ -177,6 +177,7 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		// XML-RPC routes handle auth in the handler via XmlRpcAuth; no middleware-level authorization.
 		'xmlrpc',
 		'xmlrpc-collection',
+		'xmlrpc-collection-discovery',
 		'xmlrpc-discovery',
 	];
 

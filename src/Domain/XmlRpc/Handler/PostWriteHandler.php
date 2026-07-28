@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\XmlRpc\Handler;
 
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\XmlRpc\Data\XmlRpcIdentity;
 use TotalCMS\Domain\XmlRpc\Service\BlogRegistry;
 use TotalCMS\Domain\XmlRpc\Service\PostMapper;
 use TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth;
@@ -83,7 +83,11 @@ readonly class PostWriteHandler implements MethodHandler
 		$this->auth->assertOperation($identity, 'PUT');
 
 		$postId = (string)($params[0] ?? '');
-		$blog   = $this->registry->resolveFor($identity, $collection);
+		// editPost carries no blogid — resolveForPost() locates the post by
+		// searching the collections this key can see, rather than guessing which
+		// blog was meant (the bug that let one blog's post be overwritten by an
+		// edit meant for another).
+		$blog = $this->registry->resolveForPost($identity, $collection, $postId);
 
 		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
 			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
@@ -105,34 +109,43 @@ readonly class PostWriteHandler implements MethodHandler
 	/**
 	 * blogger.deletePost(appkey, postid, username, password, publish)
 	 *
+	 * Carries no blogid at all, so the blog is resolved by finding the post —
+	 * guessing here is exactly what let this call delete the wrong post out of
+	 * the wrong collection.
+	 *
 	 * @param array<int,mixed> $params
 	 */
 	public function bloggerDeletePost(array $params, ?string $collection): bool
 	{
 		$identity = $this->auth->authenticate($params, 2, 3);
+		$this->auth->assertOperation($identity, 'DELETE');
 
-		return $this->delete($identity, $collection, (string)($params[1] ?? ''));
+		$postId = (string)($params[1] ?? '');
+		$blog   = $this->registry->resolveForPost($identity, $collection, $postId);
+
+		return $this->deleteFrom($blog, $postId);
 	}
 
 	/**
 	 * wp.deletePost(blogid, username, password, postid) — different order from
 	 * the blogger dialect above, and getting it wrong reads as an auth failure.
+	 * This dialect DOES carry a blogid, so it stays on the ordinary resolver.
 	 *
 	 * @param array<int,mixed> $params
 	 */
 	public function wpDeletePost(array $params, ?string $collection): bool
 	{
 		$identity = $this->auth->authenticate($params, 1, 2);
-
-		return $this->delete($identity, $collection, (string)($params[3] ?? ''), (string)($params[0] ?? ''));
-	}
-
-	private function delete(XmlRpcIdentity $identity, ?string $collection, string $postId, string $blogId = ''): bool
-	{
 		$this->auth->assertOperation($identity, 'DELETE');
 
-		$blog = $this->registry->resolveFor($identity, $collection, $blogId);
+		$postId = (string)($params[3] ?? '');
+		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 
+		return $this->deleteFrom($blog, $postId);
+	}
+
+	private function deleteFrom(CollectionData $blog, string $postId): bool
+	{
 		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
 			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
 		}
@@ -187,16 +200,29 @@ readonly class PostWriteHandler implements MethodHandler
 
 	/**
 	 * Whether the client actually sent a publish flag at this position — `null`
-	 * when the param is genuinely absent (a shorter param list), distinct from
-	 * a value that resolves to `false`. Distinguishing "not supplied" from
-	 * "supplied as false" is exactly what protects a draft from being silently
-	 * published by an edit that only touches text.
+	 * when the param is genuinely absent (a shorter param list) or sent as an
+	 * empty string, distinct from a value that resolves to `false`. An empty
+	 * string is not a client asking to publish; it is XML-RPC's usual shape for
+	 * "no value here" (an empty `<string></string>`), so it is treated the same
+	 * as an absent param rather than falling through to `publishFlag()`'s
+	 * default of `true`. Distinguishing "not supplied" from "supplied as false"
+	 * is exactly what protects a draft from being silently published by an edit
+	 * that only touches text.
 	 *
 	 * @param array<int,mixed> $params
 	 */
 	private function requestedPublishFlag(array $params, int $index): ?bool
 	{
-		return array_key_exists($index, $params) ? $this->publishFlag($params[$index]) : null;
+		if (!array_key_exists($index, $params)) {
+			return null;
+		}
+
+		$flag = $params[$index];
+		if ($flag === '') {
+			return null;
+		}
+
+		return $this->publishFlag($flag);
 	}
 
 	private function publishFlag(mixed $flag): bool

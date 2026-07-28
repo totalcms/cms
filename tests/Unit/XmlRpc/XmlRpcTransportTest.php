@@ -67,6 +67,38 @@ describe('XmlRpcRequestParser', function (): void {
 			->toThrow(XmlRpcFault::class, 'DOCTYPE');
 	});
 
+	it('rejects a UTF-16LE body with a BOM before it ever reaches the DOCTYPE check', function (): void {
+		// The DOCTYPE regex is byte-level ASCII and never fires on a UTF-16
+		// body, so a UTF-16-encoded DOCTYPE would otherwise sail through to
+		// libxml. This body carries no DOCTYPE at all — it only has to prove
+		// the encoding guard rejects the transfer encoding itself, on sight.
+		$xml = "\xFF\xFE" . mb_convert_encoding(
+			xmlRpcCall('demo', '<param><value><string>hi</string></value></param>'),
+			'UTF-16LE',
+			'UTF-8'
+		);
+
+		expect(fn (): array => (new XmlRpcRequestParser())->parse($xml))
+			->toThrow(XmlRpcFault::class, 'UTF-8');
+	});
+
+	it('rejects an XML declaration naming a non-UTF-8 encoding', function (): void {
+		$xml = '<?xml version="1.0" encoding="ISO-8859-1"?><methodCall><methodName>demo</methodName>'
+			. '<params /></methodCall>';
+
+		expect(fn (): array => (new XmlRpcRequestParser())->parse($xml))
+			->toThrow(XmlRpcFault::class, 'UTF-8');
+	});
+
+	it('accepts a body whose declaration explicitly names UTF-8', function (): void {
+		$xml = '<?xml version="1.0" encoding="UTF-8"?><methodCall><methodName>demo</methodName>'
+			. '<params /></methodCall>';
+
+		$call = (new XmlRpcRequestParser())->parse($xml);
+
+		expect($call['method'])->toBe('demo');
+	});
+
 	it('rejects a body over the size cap', function (): void {
 		$xml = xmlRpcCall('demo', '<param><value><string>'
 			. str_repeat('x', XmlRpcRequestParser::MAX_BODY_BYTES) . '</string></value></param>');
