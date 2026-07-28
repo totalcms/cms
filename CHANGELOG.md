@@ -4,6 +4,10 @@ All notable changes to Total CMS will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Publish from MarsEdit, Byword, Ulysses, and Open Live Writer**: A WordPress-compatible XML-RPC endpoint (`/xmlrpc.php` and `/xmlrpc/{collection}`) lets writing apps that already speak WordPress publish straight into a `blog`-schema collection — list existing posts, create and edit new ones, manage categories and tags — authenticated with a scoped API key rather than a real password. It's off by default (Settings → WordPress Publishing) since an exposed `xmlrpc.php` is a routine security-scanner target, and it's a Pro-edition feature. Two honest limits worth knowing before enabling it: media upload is not supported in v1 — images must be added in the Total CMS admin, and MarsEdit specifically will refuse to publish a post that contains one until you strip it out — and iA Writer is not covered at all, since it publishes over the WordPress REST API rather than XML-RPC. Access groups are not consulted for these calls; the API key's own scopes are the complete authorization story
+
 ### Fixed
 
 - **Price fields showed nothing instead of zero**: The `price` filter decided emptiness with checks that spared the integer `0` and the string `'0'` but not the float `0.0` — which is what a summed or calculated price actually is — so any template totalling prices rendered a blank cell when the total came to zero. Emptiness is now decided by whether the value is numeric at all, so every real number formats and only genuinely absent values blank out

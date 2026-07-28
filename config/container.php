@@ -874,6 +874,7 @@ return [
 			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\PostReadHandler::class);
 			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\PostWriteHandler::class);
 			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\TaxonomyHandler::class);
+			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\UnsupportedHandler::class);
 		};
 
 		return new TotalCMS\Domain\XmlRpc\Service\MethodRouter($handlers());
