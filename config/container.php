@@ -854,4 +854,11 @@ return [
 	// ImpersonationServiceInterface → concrete service (actions type-hint the interface
 	// so unit tests can mock it without removing the final keyword from the class).
 	ImpersonationServiceInterface::class => fn (ContainerInterface $container): ImpersonationService => $container->get(ImpersonationService::class),
+
+	// === XML-RPC Publishing ===
+
+	TotalCMS\Domain\XmlRpc\Service\MethodRouter::class => fn (ContainerInterface $c): TotalCMS\Domain\XmlRpc\Service\MethodRouter => new TotalCMS\Domain\XmlRpc\Service\MethodRouter([
+		// Handlers are registered here as they land: SystemHandler, BlogHandler,
+		// PostReadHandler, PostWriteHandler, TaxonomyHandler, UnsupportedHandler.
+	]),
 ];

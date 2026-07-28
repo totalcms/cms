@@ -369,6 +369,8 @@ return [
 	'settings.smtp_desc'               => 'Configurazione del server email',
 	'settings.sync'                    => 'Sincronizzazione dati',
 	'settings.sync_desc'               => 'Invia e recupera schemi e template da un server di produzione',
+	'settings.xmlrpc'                  => 'Pubblicazione WordPress',
+	'settings.xmlrpc_desc'             => 'Pubblica da app di scrittura compatibili con WordPress',
 	'settings.license_simulator'       => 'Simulatore licenza',
 	'settings.license_simulator_desc'  => 'Impostazioni di licenza e simulazione versione durante il periodo di prova',
 	'settings.smtp_test_title'         => 'Test configurazione SMTP',

@@ -399,6 +399,7 @@ readonly class AdminTwigAdapter
 			'smtp'       => ['label' => $t('settings.smtp'),              'description' => $t('settings.smtp_desc')],
 			'search'     => ['label' => $t('settings.search'),            'description' => $t('settings.search_desc')],
 			'sync'       => ['label' => $t('settings.sync'),              'description' => $t('settings.sync_desc')],
+			'xmlrpc'     => ['label' => $t('settings.xmlrpc'),            'description' => $t('settings.xmlrpc_desc')],
 			// Builder predates the settings translation keys and ships English-only.
 			'builder'    => ['label' => 'Builder',                        'description' => 'Site Builder stub generation settings'],
 		];

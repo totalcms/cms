@@ -369,6 +369,8 @@ return [
 	'settings.smtp_desc'               => 'E-mailserverconfiguratie',
 	'settings.sync'                    => 'Sync',
 	'settings.sync_desc'               => "Schema's en templates synchroniseren met een productieserver",
+	'settings.xmlrpc'                  => 'WordPress-publicatie',
+	'settings.xmlrpc_desc'             => 'Publiceren vanuit schrijf-apps die WordPress ondersteunen',
 	'settings.license_simulator'       => 'Licentiesimulator',
 	'settings.license_simulator_desc'  => 'Licentie- en editiesimulatieinstelling tijdens de proefperiode',
 	'settings.smtp_test_title'         => 'SMTP-configuratie testen',

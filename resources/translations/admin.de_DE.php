@@ -369,6 +369,8 @@ return [
 	'settings.smtp_desc'               => 'E-Mail-Server-Konfiguration',
 	'settings.sync'                    => 'Sync',
 	'settings.sync_desc'               => 'Schemas und Templates mit einem Produktionsserver synchronisieren',
+	'settings.xmlrpc'                  => 'WordPress-Veröffentlichung',
+	'settings.xmlrpc_desc'             => 'Veröffentlichen aus Schreib-Apps mit WordPress-Unterstützung',
 	'settings.license_simulator'       => 'Lizenzsimulator',
 	'settings.license_simulator_desc'  => 'Lizenz- und Editionssimulation während des Testzeitraums',
 	'settings.smtp_test_title'         => 'SMTP-Konfiguration testen',

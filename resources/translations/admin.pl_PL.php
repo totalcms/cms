@@ -369,6 +369,8 @@ return [
 	'settings.smtp_desc'               => 'Konfiguracja serwera poczty',
 	'settings.sync'                    => 'Synchronizacja danych',
 	'settings.sync_desc'               => 'Wysyłaj i pobieraj schemas oraz szablony z serwera produkcyjnego',
+	'settings.xmlrpc'                  => 'Publikowanie WordPress',
+	'settings.xmlrpc_desc'             => 'Publikuj z aplikacji do pisania obsługujących WordPress',
 	'settings.license_simulator'       => 'Symulator licencji',
 	'settings.license_simulator_desc'  => 'Ustawienia symulacji licencji i edycji w okresie próbnym',
 	'settings.smtp_test_title'         => 'Testuj konfigurację SMTP',
