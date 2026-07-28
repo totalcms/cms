@@ -171,6 +171,17 @@ readonly class PostMapper
 		// one — absolutizeUrls() never turns an empty string into a non-empty
 		// one, but checking the source value keeps this rule readable next to
 		// the write-side split() below, which also judges the raw struct.
+		//
+		// The rejoin always uses the bare `<!--more-->` literal, never whatever
+		// variant (teaser text, extra whitespace) the client originally wrote —
+		// `extra` is a T3 schema field shared verbatim with the metaWeblog
+		// dialect's `mt_text_more` and the admin's own "Extended Entry" editor,
+		// so storing the original marker text inside it would leak
+		// `<!--more Read on-->` into both of those. There is no field to stash
+		// a marker in without a schema change, so this is a deliberate
+		// normalization, not an oversight: the split itself (which text lands
+		// in `content` vs. `extra`) round-trips exactly; the marker's own
+		// wording does not.
 		$postContent = trim($rawExtra) !== ''
 			? $content . '<!--more-->' . $this->absolutizeUrls($rawExtra)
 			: $content;
@@ -478,7 +489,24 @@ readonly class PostMapper
 	}
 
 	/**
-	 * Split a wp.* `post_content` on its first `<!--more-->` marker.
+	 * WordPress recognizes more than the bare `<!--more-->` literal: a teaser
+	 * variant carries text after the keyword (`<!--more Read on-->`), and
+	 * whitespace inside the comment is tolerated (`<!-- more -->`). This
+	 * matches any HTML comment whose content starts with the word `more` —
+	 * `\b` after it rules out a comment like `<!--moreover-->` that merely
+	 * starts with the same four letters — split on the FIRST such marker
+	 * only, matching how the bare-literal version behaved.
+	 */
+	private const MORE_MARKER_PATTERN = '/<!--\s*more\b.*?-->/s';
+
+	/**
+	 * Split a wp.* `post_content` on its first extended-entry marker (see
+	 * MORE_MARKER_PATTERN above).
+	 *
+	 * The marker's own text (e.g. a custom teaser like "Read on", or the
+	 * exact whitespace the author used) is deliberately NOT preserved here —
+	 * see toWpStruct()'s use of the literal `<!--more-->` on the read side
+	 * for why.
 	 *
 	 * @return array{0:string,1:string|null} [content, extra]. `extra` is
 	 *                                       null when no marker was found —
@@ -488,14 +516,14 @@ readonly class PostMapper
 	 */
 	private function splitExtendedEntry(string $postContent): array
 	{
-		$marker = '<!--more-->';
-		$pos    = strpos($postContent, $marker);
-
-		if ($pos === false) {
+		if (preg_match(self::MORE_MARKER_PATTERN, $postContent, $matches, PREG_OFFSET_CAPTURE) !== 1) {
 			return [$postContent, null];
 		}
 
-		return [substr($postContent, 0, $pos), substr($postContent, $pos + strlen($marker))];
+		$marker = $matches[0][0];
+		$offset = $matches[0][1];
+
+		return [substr($postContent, 0, $offset), substr($postContent, $offset + strlen($marker))];
 	}
 
 	private function localDate(mixed $date): \DateTimeImmutable

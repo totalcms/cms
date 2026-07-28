@@ -9,6 +9,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\XmlRpc\Data\XmlRpcIdentity;
 use TotalCMS\Domain\XmlRpc\Service\BlogRegistry;
 use TotalCMS\Domain\XmlRpc\Service\PostMapper;
 use TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth;
@@ -63,13 +64,7 @@ readonly class PostWriteHandler implements MethodHandler
 		// behavior for newPost — so the "not supplied" case is resolved to
 		// `true` explicitly here, rather than the mapper inventing a value.
 		$fields = $this->mapper->toObject($struct, $this->requestedPublishFlag($params, 4) ?? true, true);
-
-		$id = is_string($fields['id'] ?? null) && $fields['id'] !== ''
-			? $fields['id']
-			: $this->mapper->titleSlug((string)($fields['title'] ?? ''));
-
-		$fields['id']     = $this->uniqueId($blog->id, $id);
-		$fields['author'] = $fields['author'] ?? $identity->authorName;
+		$fields = $this->finalizeNewPost($fields, $blog->id, $identity);
 
 		return $this->objectSaver->saveObject($blog->id, $fields)->id;
 	}
@@ -165,13 +160,7 @@ readonly class PostWriteHandler implements MethodHandler
 		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$struct = is_array($params[3] ?? null) ? $params[3] : [];
 		$fields = $this->mapper->fromWpStruct($struct, true, true);
-
-		$id = is_string($fields['id'] ?? null) && $fields['id'] !== ''
-			? $fields['id']
-			: $this->mapper->titleSlug((string)($fields['title'] ?? ''));
-
-		$fields['id']     = $this->uniqueId($blog->id, $id);
-		$fields['author'] = $fields['author'] ?? $identity->authorName;
+		$fields = $this->finalizeNewPost($fields, $blog->id, $identity);
 
 		return $this->objectSaver->saveObject($blog->id, $fields)->id;
 	}
@@ -238,6 +227,27 @@ readonly class PostWriteHandler implements MethodHandler
 		}
 
 		$this->objectPatcher->patchObject($collection, $postId, $fields);
+	}
+
+	/**
+	 * Finalize a create's field set with a unique id and an author fallback —
+	 * shared by both dialects' "new post" methods so a slug rule or an
+	 * attribution fallback can never quietly diverge between them.
+	 *
+	 * @param array<string,mixed> $fields
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function finalizeNewPost(array $fields, string $collection, XmlRpcIdentity $identity): array
+	{
+		$id = is_string($fields['id'] ?? null) && $fields['id'] !== ''
+			? $fields['id']
+			: $this->mapper->titleSlug((string)($fields['title'] ?? ''));
+
+		$fields['id']     = $this->uniqueId($collection, $id);
+		$fields['author'] = $fields['author'] ?? $identity->authorName;
+
+		return $fields;
 	}
 
 	/**

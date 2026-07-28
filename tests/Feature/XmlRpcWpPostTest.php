@@ -272,6 +272,87 @@ it('round-trips an extended entry through the <!--more--> marker', function (): 
 	expect($object['extra'])->toBe('<p>The rest.</p>');
 });
 
+it('splits post_content on every marker variant WordPress supports', function (): void {
+	// WordPress recognizes more than the bare literal: whitespace inside the
+	// comment (`<!-- more -->`) and a teaser variant with text after the
+	// keyword (`<!--more Read on-->`) both count.
+	$container = $this->app->getContainer();
+	$fetcher   = $container->get(ObjectFetcher::class);
+	$key       = xmlRpcKey();
+
+	$cases = [
+		'wp-marker-bare'   => '<p>Body one.</p><!--more--><p>Extra one.</p>',
+		'wp-marker-spaced' => '<p>Body two.</p><!-- more --><p>Extra two.</p>',
+		'wp-marker-teaser' => '<p>Body three.</p><!--more Read on--><p>Extra three.</p>',
+	];
+
+	foreach ($cases as $id => $postContent) {
+		$body = (string)postXmlRpc(xmlRpcBody('wp.newPost',
+			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+			. xmlRpcStructParam(['post_title' => $id, 'post_name' => $id, 'post_content' => $postContent])))->getBody();
+		expect($body)->not->toContain('<fault>');
+	}
+
+	$bare = $fetcher->fetchObject('blog', 'wp-marker-bare')->toArray();
+	expect($bare['content'])->toBe('<p>Body one.</p>');
+	expect($bare['extra'])->toBe('<p>Extra one.</p>');
+
+	$spaced = $fetcher->fetchObject('blog', 'wp-marker-spaced')->toArray();
+	expect($spaced['content'])->toBe('<p>Body two.</p>');
+	expect($spaced['extra'])->toBe('<p>Extra two.</p>');
+
+	$teaser = $fetcher->fetchObject('blog', 'wp-marker-teaser')->toArray();
+	expect($teaser['content'])->toBe('<p>Body three.</p>');
+	expect($teaser['extra'])->toBe('<p>Extra three.</p>');
+});
+
+it('round-trips a teaser marker\'s content/extra split, but normalizes the marker wording on read', function (): void {
+	// The split itself (which text lands in `content` vs. `extra`) round-trips
+	// exactly. The marker's own wording does not: `extra` is shared verbatim
+	// with the metaWeblog dialect's mt_text_more and the admin's own Extended
+	// Entry editor, and there is no field to stash "Read on" (or the original
+	// whitespace) in without a schema change — so every read normalizes back
+	// to the bare `<!--more-->` form. This is a deliberate tradeoff, not a bug.
+	$container = $this->app->getContainer();
+	$key       = xmlRpcKey();
+
+	postXmlRpc(xmlRpcBody('wp.newPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+		. xmlRpcStructParam([
+			'post_title'   => 'Teaser round trip',
+			'post_name'    => 'wp-teaser-round-trip',
+			'post_content' => '<p>Main body.</p><!--more Read on--><p>Teaser body.</p>',
+		])));
+
+	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'wp-teaser-round-trip')->toArray();
+	expect($object['content'])->toBe('<p>Main body.</p>');
+	expect($object['extra'])->toBe('<p>Teaser body.</p>');
+
+	$body = (string)postXmlRpc(xmlRpcBody('wp.getPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-teaser-round-trip')))->getBody();
+
+	expect($body)->not->toContain('Read on');
+	expect($body)->toContain('Main body.&lt;/p&gt;&lt;!--more--&gt;&lt;p&gt;Teaser body.');
+});
+
+it('splits post_content on the first marker only when it contains two', function (): void {
+	$key = xmlRpcKey();
+
+	postXmlRpc(xmlRpcBody('wp.newPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+		. xmlRpcStructParam([
+			'post_title'   => 'Two markers',
+			'post_name'    => 'wp-two-markers',
+			'post_content' => '<p>First.</p><!--more--><p>Middle.</p><!--more--><p>Last.</p>',
+		])));
+
+	$object = $this->app->getContainer()->get(ObjectFetcher::class)->fetchObject('blog', 'wp-two-markers')->toArray();
+	expect($object['content'])->toBe('<p>First.</p>');
+	// The second marker's literal text is NOT re-split on — it survives
+	// untouched as part of the teaser body.
+	expect($object['extra'])->toBe('<p>Middle.</p><!--more--><p>Last.</p>');
+});
+
 it('leaves an existing extra untouched when wp.editPost sends post_content with no marker', function (): void {
 	$container = $this->app->getContainer();
 	$container->get(ObjectSaver::class)->saveObject('blog', [
