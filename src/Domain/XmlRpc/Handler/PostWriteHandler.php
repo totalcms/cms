@@ -58,7 +58,10 @@ readonly class PostWriteHandler implements MethodHandler
 
 		$blog   = $this->resolveBlog($identity, $collection, (string)($params[0] ?? ''));
 		$struct = is_array($params[3] ?? null) ? $params[3] : [];
-		$fields = $this->mapper->toObject($struct, $this->publishFlag($params[4] ?? true), true);
+		// A create with no publish flag still publishes — that is WordPress's
+		// behavior for newPost — so the "not supplied" case is resolved to
+		// `true` explicitly here, rather than the mapper inventing a value.
+		$fields = $this->mapper->toObject($struct, $this->requestedPublishFlag($params, 4) ?? true, true);
 
 		$id = is_string($fields['id'] ?? null) && $fields['id'] !== ''
 			? $fields['id']
@@ -88,7 +91,12 @@ readonly class PostWriteHandler implements MethodHandler
 		}
 
 		$struct = is_array($params[3] ?? null) ? $params[3] : [];
-		$fields = $this->mapper->toObject($struct, $this->publishFlag($params[4] ?? true), false);
+		// Unlike newPost, an omitted publish flag on edit must NOT be treated as
+		// "publish": a client that sends only a title (or an empty struct) must
+		// leave the post's current draft/published state alone. `null` here
+		// means "the client sent nothing" and toObject() will drop `draft`
+		// entirely rather than inventing a value.
+		$fields = $this->mapper->toObject($struct, $this->requestedPublishFlag($params, 4), false);
 
 		$this->applyEdit($blog->id, $postId, $fields);
 
@@ -176,6 +184,20 @@ readonly class PostWriteHandler implements MethodHandler
 		}
 
 		return $candidate . '-' . $suffix;
+	}
+
+	/**
+	 * Whether the client actually sent a publish flag at this position — `null`
+	 * when the param is genuinely absent (a shorter param list), distinct from
+	 * a value that resolves to `false`. Distinguishing "not supplied" from
+	 * "supplied as false" is exactly what protects a draft from being silently
+	 * published by an edit that only touches text.
+	 *
+	 * @param array<int,mixed> $params
+	 */
+	private function requestedPublishFlag(array $params, int $index): ?bool
+	{
+		return array_key_exists($index, $params) ? $this->publishFlag($params[$index]) : null;
 	}
 
 	private function publishFlag(mixed $flag): bool

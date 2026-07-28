@@ -16,7 +16,11 @@ use TotalCMS\Support\Config;
  * sent. WordPress's struct has no concept of `image`, `gallery`, `media` or any
  * custom field, so a mapper that filled in defaults would let a text-only edit
  * from a writing app silently destroy an admin-set hero image. Callers patch
- * with what they get here and nothing else is touched.
+ * with what they get here and nothing else is touched. `draft` is the one
+ * field that takes a little care to keep that promise: it is derived, not
+ * copied verbatim from a single struct key, so it is only ever set when the
+ * struct carries `post_status` or the caller passes an explicit (non-null)
+ * publish flag — never invented from a missing flag defaulting to a value.
  */
 readonly class PostMapper
 {
@@ -35,10 +39,16 @@ readonly class PostMapper
 
 	/**
 	 * @param array<string,mixed> $struct
+	 * @param bool|null           $publish Explicit publish/draft switch, or
+	 *                                     `null` when the caller has none to
+	 *                                     offer (the client sent no fifth
+	 *                                     param). `null` here is not "false" —
+	 *                                     it means `draft` is left unset below
+	 *                                     unless `post_status` says otherwise.
 	 *
 	 * @return array<string,mixed>
 	 */
-	public function toObject(array $struct, bool $publish, bool $isNew): array
+	public function toObject(array $struct, ?bool $publish, bool $isNew): array
 	{
 		$fields = [];
 
@@ -87,7 +97,10 @@ readonly class PostMapper
 			$fields['id'] = SlugData::slugify(trim($struct['wp_slug']));
 		}
 
-		$fields['draft'] = $this->isDraft($struct, $publish);
+		$draft = $this->isDraft($struct, $publish);
+		if ($draft !== null) {
+			$fields['draft'] = $draft;
+		}
 
 		// Deliberately never mapped: wp_post_thumbnail (media is unsupported in
 		// v1, and reading an empty value as "remove the image" is exactly how a
@@ -213,13 +226,18 @@ readonly class PostMapper
 		return $html;
 	}
 
-	/** @param array<string,mixed> $struct */
-	private function isDraft(array $struct, bool $publish): bool
+	/**
+	 * @param array<string,mixed> $struct
+	 *
+	 * @return bool|null `null` means "leave `draft` unset": no `post_status`
+	 *                    in the struct and no explicit publish flag supplied.
+	 */
+	private function isDraft(array $struct, ?bool $publish): ?bool
 	{
 		$status = is_string($struct['post_status'] ?? null) ? strtolower(trim($struct['post_status'])) : '';
 
 		if ($status === '') {
-			return !$publish;
+			return $publish === null ? null : !$publish;
 		}
 
 		// `private` has no T3 equivalent and `future` cannot auto-publish, so both

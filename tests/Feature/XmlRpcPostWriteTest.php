@@ -67,6 +67,21 @@ it('publishes an unpublished post as a draft', function (): void {
 	expect($object['draft'])->toBeTrue();
 });
 
+it('creates as published when no publish flag is sent at all', function (): void {
+	// newPost's default (no fifth param) is still "publish" — that is
+	// WordPress's behavior for creates and must not change.
+	$key = xmlRpcKey();
+
+	postXmlRpc(xmlRpcBody('metaWeblog.newPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+		. xmlRpcStructParam(['title' => 'No flag at all', 'wp_slug' => 'no-flag-at-all'])));
+
+	$object = $this->app->getContainer()->get(ObjectFetcher::class)
+		->fetchObject('blog', 'no-flag-at-all')->toArray();
+
+	expect($object['draft'])->toBeFalse();
+});
+
 it('refuses to write without a valid key', function (): void {
 	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.newPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam('tcms_not_real')
@@ -127,6 +142,106 @@ it('preserves an admin-set image when an edit only changes text', function (): v
 	expect($object['image']['name'] ?? null)->toBe('hero.jpg');
 	expect($object['image']['alt'] ?? null)->toBe('Hero shot');
 	expect($object['featured'])->toBeTrue();
+});
+
+it('leaves a draft alone when an edit sends only a title and no publish flag', function (): void {
+	// THE regression this fix round guards. metaWeblog.editPost's fifth param
+	// is a deliberate publish/draft switch, but when a client omits it
+	// entirely (a genuinely 4-param call), the mapper must not invent
+	// "publish" just because that is newPost's default — the post's current
+	// draft state must survive untouched.
+	$container = $this->app->getContainer();
+	$container->get(ObjectSaver::class)->saveObject('blog', [
+		'id'      => 'stays-draft',
+		'title'   => 'Original title',
+		'content' => '<p>Original body</p>',
+		'draft'   => true,
+	]);
+
+	$key = xmlRpcKey();
+
+	// Deliberately only 4 params: postid, username, password, struct — no
+	// fifth (publish) param at all.
+	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+		xmlRpcParam('stays-draft') . xmlRpcParam('joe') . xmlRpcParam($key)
+		. xmlRpcStructParam(['title' => 'New title, still a draft'])))->getBody();
+
+	expect($body)->not->toContain('<fault>');
+
+	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'stays-draft')->toArray();
+
+	expect($object['title'])->toBe('New title, still a draft');
+	expect($object['draft'])->toBeTrue();
+});
+
+it('turns a published post into a draft when an edit explicitly sends publish=false', function (): void {
+	$container = $this->app->getContainer();
+	$container->get(ObjectSaver::class)->saveObject('blog', [
+		'id'      => 'goes-to-draft',
+		'title'   => 'Published post',
+		'content' => '<p>Body</p>',
+		'draft'   => false,
+	]);
+
+	$key = xmlRpcKey();
+
+	postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+		xmlRpcParam('goes-to-draft') . xmlRpcParam('joe') . xmlRpcParam($key)
+		. xmlRpcStructParam(['title' => 'Pulled back to draft'])
+		. xmlRpcBoolParam(false)));
+
+	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'goes-to-draft')->toArray();
+
+	expect($object['draft'])->toBeTrue();
+});
+
+it('publishes a draft when an edit explicitly sends publish=true', function (): void {
+	// Proves the intended switch still works: an explicit flag is honoured
+	// exactly as before, only an ABSENT flag is now treated differently.
+	$container = $this->app->getContainer();
+	$container->get(ObjectSaver::class)->saveObject('blog', [
+		'id'      => 'goes-live',
+		'title'   => 'Draft post',
+		'content' => '<p>Body</p>',
+		'draft'   => true,
+	]);
+
+	$key = xmlRpcKey();
+
+	postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+		xmlRpcParam('goes-live') . xmlRpcParam('joe') . xmlRpcParam($key)
+		. xmlRpcStructParam(['title' => 'Now published'])
+		. xmlRpcBoolParam(true)));
+
+	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'goes-live')->toArray();
+
+	expect($object['draft'])->toBeFalse();
+});
+
+it('changes nothing at all when an edit sends an empty struct and no publish flag', function (): void {
+	// This is what makes the `$fields === []` short-circuit in applyEdit()
+	// live again: with `draft` no longer set unconditionally, an empty struct
+	// with no publish flag maps to a genuinely empty field set.
+	$container = $this->app->getContainer();
+	$container->get(ObjectSaver::class)->saveObject('blog', [
+		'id'      => 'untouched',
+		'title'   => 'Leave me alone',
+		'content' => '<p>Do not change</p>',
+		'summary' => 'Untouched summary',
+		'draft'   => true,
+	]);
+
+	$before = $container->get(ObjectFetcher::class)->fetchObject('blog', 'untouched')->toArray();
+
+	$key = xmlRpcKey();
+
+	postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+		xmlRpcParam('untouched') . xmlRpcParam('joe') . xmlRpcParam($key)
+		. xmlRpcStructParam([])));
+
+	$after = $container->get(ObjectFetcher::class)->fetchObject('blog', 'untouched')->toArray();
+
+	expect($after)->toBe($before);
 });
 
 it('never renames a post when a client sends a different wp_slug', function (): void {

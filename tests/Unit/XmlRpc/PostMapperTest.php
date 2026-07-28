@@ -55,6 +55,24 @@ describe('toObject', function (): void {
 		expect(makePostMapper()->toObject(['title' => 'x'], publish: false, isNew: true)['draft'])->toBeTrue();
 	});
 
+	it('leaves draft unset when the caller supplies neither post_status nor a publish flag', function (): void {
+		// This is the guard for the "silent publish on edit" regression: a
+		// title-only edit with no fifth param must not invent a draft value —
+		// the key must be absent so a patch leaves the post's current state
+		// alone, exactly like every other field the client didn't send.
+		$fields = makePostMapper()->toObject(['title' => 'Only a title'], publish: null, isNew: false);
+
+		expect($fields)->not->toHaveKey('draft');
+		expect(array_keys($fields))->toBe(['title']);
+	});
+
+	it('still honours post_status when no publish flag is supplied', function (): void {
+		expect(makePostMapper()->toObject(['post_status' => 'draft'], publish: null, isNew: false)['draft'])
+			->toBeTrue();
+		expect(makePostMapper()->toObject(['post_status' => 'publish'], publish: null, isNew: false)['draft'])
+			->toBeFalse();
+	});
+
 	it('accepts wp_slug on create and ignores it on edit', function (): void {
 		$mapper = makePostMapper();
 
