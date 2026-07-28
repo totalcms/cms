@@ -159,11 +159,12 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 
 		// Session-cookie auth is the one mode CSRF can ride (browsers attach
 		// the cookie cross-site). API-key, OAuth Bearer, and public paths all
-		// exited above; state-changing session requests must carry the token.
-		if ($this->csrfValidator->methodRequiresValidation($request) && !$this->csrfValidator->validate($request)) {
+		// exited above; state-changing session requests must prove they came
+		// from us, by same origin or by token.
+		if (!$this->csrfValidator->passes($request)) {
 			return $this->jsonRenderer->json(
 				$this->responseFactory->createResponse()->withStatus(403),
-				['error' => ['message' => 'CSRF token validation failed. Session-authenticated API requests must include the CSRF token (X-CSRF-Token header or csrf_token field). Use an API key for scripted access.']]
+				['error' => ['message' => 'CSRF validation failed. Session-authenticated API requests must come from this site, or carry the CSRF token (X-CSRF-Token header or csrf_token field). Use an API key for scripted access.']]
 			);
 		}
 

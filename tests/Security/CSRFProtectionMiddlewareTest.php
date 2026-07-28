@@ -48,7 +48,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 
 		$this->middleware = new CSRFProtectionMiddleware(
 			$this->apiKeyAuthenticator,
-			new \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator($this->csrfManager),
+			csrfValidatorFor($this->csrfManager),
 		);
 
 		// Create mocks
@@ -124,7 +124,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$this->request->method('getQueryParams')->willReturn([]);
 
 		$this->expectException(HttpForbiddenException::class);
-		$this->expectExceptionMessage('CSRF token validation failed');
+		$this->expectExceptionMessage('CSRF validation failed');
 
 		$this->middleware->process($this->request, $this->handler);
 	}
@@ -393,7 +393,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 
 		$middleware = new CSRFProtectionMiddleware(
 			$this->apiKeyAuthenticator,
-			new \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator($this->csrfManager),
+			csrfValidatorFor($this->csrfManager),
 		);
 
 		$this->expectException(HttpForbiddenException::class);
@@ -430,7 +430,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 
 		$middleware = new CSRFProtectionMiddleware(
 			$this->apiKeyAuthenticator,
-			new \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator($this->csrfManager),
+			csrfValidatorFor($this->csrfManager),
 		);
 
 		// No CSRF token in body/headers — should still pass because key is valid

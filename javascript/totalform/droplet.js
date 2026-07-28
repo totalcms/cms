@@ -1,6 +1,7 @@
 import DropletTestSet from "./droplet-testset";
 import Dropzone from "@deltablot/dropzone";
 import FileField from "./file";
+import { csrfHeaders } from "../csrf";
 globalThis.Dropzone = Dropzone;
 
 //-----------------------------------------------
@@ -56,7 +57,10 @@ export default class Droplet {
         return new Dropzone(this.container, {
 			url               : this.settings.apiUrl,
 			method            : "post",
-			headers           : this.settings.requestHeaders,
+			// Dropzone builds its own XHR, so it never sees the CSRF header
+			// TotalCMSApi adds to fetch(). Session-authenticated /api writes
+			// are rejected without it.
+			headers           : Object.assign({}, csrfHeaders(), this.settings.requestHeaders),
 			parallelUploads   : 3,
 			paramName         : this.settings.paramName,
 			autoProcessQueue  : this.settings.autoProcessQueue,

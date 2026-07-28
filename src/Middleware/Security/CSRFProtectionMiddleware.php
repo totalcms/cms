@@ -92,11 +92,11 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		// Validate CSRF token
+		// Same origin or valid token — see CSRFRequestValidator::passes()
 		if (!$this->validateCSRFToken($request)) {
 			throw new HttpForbiddenException(
 				$request,
-				'CSRF token validation failed. This request appears to be a cross-site request forgery.'
+				'CSRF validation failed. This request appears to be a cross-site request forgery.'
 			);
 		}
 
@@ -112,11 +112,11 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 	}
 
 	/**
-	 * Validate CSRF token from the request.
+	 * Validate the request against the CSRF policy — same origin or token.
 	 */
 	private function validateCSRFToken(ServerRequestInterface $request): bool
 	{
-		return $this->csrfValidator->validate($request);
+		return $this->csrfValidator->passes($request);
 	}
 
 	/**

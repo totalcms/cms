@@ -5,6 +5,7 @@ import FieldVisibility from './field-visibility';
 import Identifier from './identifier';
 import tcmsConfirm from '../confirm-dialog';
 import { t } from '../i18n';
+import { csrfHeadersFor } from '../csrf';
 import Checkbox from './checkbox';
 import RadioField from './radio';
 import Textarea from './textarea';
@@ -773,7 +774,10 @@ export default class TotalForm {
 				const response = await fetch(action.link, {
 					method  : 'POST',
 					mode    : 'cors',
-					headers : { 'Content-Type': 'application/json' },
+					// Same-origin targets are session-authenticated API routes that
+					// now require the CSRF token. Third-party webhooks must not get
+					// the header — it would force a preflight they can't answer.
+					headers : Object.assign({ 'Content-Type': 'application/json' }, csrfHeadersFor(action.link)),
 					body    : JSON.stringify(this.generateData()),
 				});
 				if (!response.ok) {
