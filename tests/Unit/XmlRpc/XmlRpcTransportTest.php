@@ -95,6 +95,35 @@ describe('XmlRpcRequestParser', function (): void {
 		expect(fn (): array => (new XmlRpcRequestParser())->parse('<methodCall><methodName>x'))
 			->toThrow(XmlRpcFault::class);
 	});
+
+	it('rejects more params than the cap', function (): void {
+		$paramsXml = str_repeat(
+			'<param><value><string>x</string></value></param>',
+			XmlRpcRequestParser::MAX_PARAMS + 1
+		);
+
+		expect(fn (): array => (new XmlRpcRequestParser())->parse(xmlRpcCall('demo', $paramsXml)))
+			->toThrow(XmlRpcFault::class, 'Too many parameters');
+	});
+
+	it('rejects a struct with more members than the cap', function (): void {
+		$members = '';
+		for ($i = 0; $i < XmlRpcRequestParser::MAX_MEMBERS + 1; $i++) {
+			$members .= '<member><name>m' . $i . '</name><value><string>x</string></value></member>';
+		}
+		$xml = xmlRpcCall('demo', '<param><value><struct>' . $members . '</struct></value></param>');
+
+		expect(fn (): array => (new XmlRpcRequestParser())->parse($xml))
+			->toThrow(XmlRpcFault::class, 'too many members');
+	});
+
+	it('rejects an array with more elements than the cap', function (): void {
+		$values = str_repeat('<value><string>x</string></value>', XmlRpcRequestParser::MAX_MEMBERS + 1);
+		$xml = xmlRpcCall('demo', '<param><value><array><data>' . $values . '</data></array></value></param>');
+
+		expect(fn (): array => (new XmlRpcRequestParser())->parse($xml))
+			->toThrow(XmlRpcFault::class, 'too many elements');
+	});
 });
 
 describe('XmlRpcResponseWriter', function (): void {
@@ -131,5 +160,43 @@ describe('XmlRpcResponseWriter', function (): void {
 		expect($xml)->toContain('<fault>');
 		expect($xml)->toContain('<name>faultCode</name><value><int>403</int></value>');
 		expect($xml)->toContain('Bad login/pass combination.');
+	});
+});
+
+describe('XmlRpcFault', function (): void {
+	it('builds unknownMethod with the method name and the standard code', function (): void {
+		$fault = XmlRpcFault::unknownMethod('wp.foo');
+
+		expect($fault->getCode())->toBe(-32601);
+		expect($fault->getMessage())->toContain('wp.foo');
+		expect($fault->getMessage())->toContain('does not exist');
+	});
+
+	it('builds badCredentials with the standard code and message', function (): void {
+		$fault = XmlRpcFault::badCredentials();
+
+		expect($fault->getCode())->toBe(403);
+		expect($fault->getMessage())->toBe('Bad login/pass combination.');
+	});
+
+	it('builds forbidden with the given message and the standard code', function (): void {
+		$fault = XmlRpcFault::forbidden('nope');
+
+		expect($fault->getCode())->toBe(401);
+		expect($fault->getMessage())->toBe('nope');
+	});
+
+	it('builds notFound with the given message and the standard code', function (): void {
+		$fault = XmlRpcFault::notFound('gone');
+
+		expect($fault->getCode())->toBe(404);
+		expect($fault->getMessage())->toBe('gone');
+	});
+
+	it('builds malformed with the given message and the standard code', function (): void {
+		$fault = XmlRpcFault::malformed('bad xml');
+
+		expect($fault->getCode())->toBe(-32700);
+		expect($fault->getMessage())->toBe('bad xml');
 	});
 });
