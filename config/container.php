@@ -871,6 +871,7 @@ return [
 		$handlers = function () use ($c): Generator {
 			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\BlogHandler::class);
 			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\SystemHandler::class);
+			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\PostReadHandler::class);
 		};
 
 		return new TotalCMS\Domain\XmlRpc\Service\MethodRouter($handlers());
