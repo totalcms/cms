@@ -5,6 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>{% block title %}{{ cms.config('domain') }}{% endblock %}</title>
 	<meta name="description" content="{% block description %}{% endblock %}">
+	{# Core CSS for the {% cmsgrid %} grid on Work and any project galleries, plus pagination — this is what makes the work grid and image galleries look right without touching a line of CSS. Comes before style.css so your design choices win. #}
+	{{ cms.assetsHead() }}
 	{# Site stylesheet at <docroot>/assets/style.css. Edit it directly — cms.builder.css adds an mtime cache-buster automatically. #}
 	{{ cms.builder.css('style.css') }}
 	{% block head %}{% endblock %}
@@ -17,5 +19,8 @@
 	</main>
 
 	{% include 'partials/footer.twig' %}
+
+	{# Core scripts: content.js, gallery.js, and htmx — htmx is the engine behind the Load More button, so this has to stay if any page uses one. #}
+	{{ cms.assetsBody() }}
 </body>
 </html>

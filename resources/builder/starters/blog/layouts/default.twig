@@ -5,6 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>{% block title %}{{ cms.config('domain') }}{% endblock %}</title>
 	<meta name="description" content="{% block description %}{% endblock %}">
+	{# Core frontend CSS: styles the {% cmsgrid %} used on the blog index, any galleries embedded in posts, and the pagination controls on long post lists. Loaded before style.css so your design always wins the cascade. #}
+	{{ cms.assetsHead() }}
 	{# Site stylesheet at <docroot>/assets/style.css. Edit it directly — cms.builder.css adds an mtime cache-buster automatically. #}
 	{{ cms.builder.css('style.css') }}
 	{% block head %}{% endblock %}
@@ -17,5 +19,8 @@
 	</main>
 
 	{% include 'partials/footer.twig' %}
+
+	{# Core frontend JS, including htmx — this is what actually fires the request when a reader clicks Load More on the blog index. Remove it and the button just sits there. #}
+	{{ cms.assetsBody() }}
 </body>
 </html>
