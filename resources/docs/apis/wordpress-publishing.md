@@ -38,7 +38,7 @@ Tested against the classic WordPress XML-RPC dialect (MetaWeblog, Blogger, and t
    - **Username** — any Total CMS user's login. This is **not verified as a password** — it is used only to attribute authorship on posts you create. Whatever you type here just needs to resolve to a real user for the author name to show up correctly; a value that doesn't resolve to anyone still works, falling back to the key's name.
    - **Password** — the API key itself
 
-Many clients (MarsEdit included) can also discover the endpoint automatically from just your site's home page URL, via the RSD document served at `{endpoint}?rsd`.
+Many clients (MarsEdit included) can also discover the endpoint automatically from just your site's home page URL, via the RSD document served at `{endpoint}?rsd`. This only works if the page the client fetches renders `{{ cms.assetsHead() }}` — that call is what emits the `<link rel="EditURI">` tag clients look for, and it only appears when XML-RPC Publishing is enabled. A template that doesn't render `cms.assetsHead()` won't advertise the endpoint, and auto-detect will fail even though the endpoint itself works fine. If auto-detect doesn't find it, just paste the **Endpoint URL** directly — that always works.
 
 ## Endpoint URLs
 

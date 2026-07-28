@@ -6,20 +6,37 @@ use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
 use TotalCMS\Domain\Twig\Service\CoreAdminAssetRegistrar;
 use TotalCMS\Domain\Twig\Service\CoreFrontendAssetRegistrar;
+use TotalCMS\Support\Config;
 
 /**
  * Build a TotalCMSTwigAdapter without invoking its 16-parameter constructor,
  * pre-configure the api base, and pre-set the asset lists. Used to exercise
  * addFrontendAssets/addAdminAssets and the registrars without dragging the
  * full DI graph into tests.
+ *
+ * `$base` mirrors `$config->api`/`TotalCMSTwigAdapter::$base` (the site's base
+ * path, e.g. '' at a domain root or '/mysite' in a subfolder) — distinct from
+ * `$api`, which is `$base . '/api'`. `null` (the default) falls back to `$api`,
+ * which is fine for tests that never assert on the xmlrpc discovery tag's
+ * href; pass an explicit string (including '') to pin the base independently.
+ * `$xmlrpcEnabled` defaults to false, matching the shipped default, so
+ * existing assertions about plain css/js output are unaffected.
  */
-function makeAdapter(string $api = '/api'): TotalCMSTwigAdapter
+function makeAdapter(string $api = '/api', ?string $base = null, bool $xmlrpcEnabled = false): TotalCMSTwigAdapter
 {
 	$ref     = new ReflectionClass(TotalCMSTwigAdapter::class);
 	$adapter = $ref->newInstanceWithoutConstructor();
 
 	$apiProp = $ref->getProperty('api');
 	$apiProp->setValue($adapter, $api);
+
+	$baseProp = $ref->getProperty('base');
+	$baseProp->setValue($adapter, $base ?? $api);
+
+	$config         = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->xmlrpc = ['enable' => $xmlrpcEnabled];
+	$configProp     = $ref->getProperty('config');
+	$configProp->setValue($adapter, $config);
 
 	$frontProp = $ref->getProperty('frontendAssetsList');
 	$frontProp->setValue($adapter, []);
@@ -181,6 +198,58 @@ test('rendered head output contains api-prefixed URLs after registration', funct
 	$html = $adapter->assetsHead();
 
 	expect($html)->toContain('href="/myapi/assets/');
+});
+
+// ===== XML-RPC EditURI discovery tag =====
+
+test('assetsHead emits the EditURI RSD link when xmlrpc is enabled', function (): void {
+	$adapter = makeAdapter(api: '/api', base: '', xmlrpcEnabled: true);
+
+	$html = $adapter->assetsHead();
+
+	expect($html)->toContain('<link rel="EditURI" type="application/rsd+xml" title="RSD" href="/xmlrpc.php?rsd"/>');
+});
+
+test('assetsHead emits nothing xmlrpc-related when the feature is disabled', function (): void {
+	$adapter = makeAdapter(api: '/api', base: '', xmlrpcEnabled: false);
+
+	$html = $adapter->assetsHead();
+
+	expect($html)->not->toContain('EditURI');
+	expect($html)->not->toContain('rsd');
+	expect($html)->toBe('');
+});
+
+test('assetsHead reflects a subfolder-style configured API base in the EditURI href', function (): void {
+	$adapter = makeAdapter(api: '/mysite/api', base: '/mysite', xmlrpcEnabled: true);
+
+	$html = $adapter->assetsHead();
+
+	expect($html)->toContain('href="/mysite/xmlrpc.php?rsd"');
+	expect($html)->not->toContain('href="/xmlrpc.php?rsd"');
+});
+
+test('assetsHead still renders css/js output unchanged alongside the EditURI tag', function (): void {
+	$adapter = makeAdapter(api: '/api', base: '', xmlrpcEnabled: true);
+
+	(new CoreFrontendAssetRegistrar())->register($adapter);
+
+	$html = $adapter->assetsHead();
+
+	expect($html)->toContain('href="/api/assets/');
+	expect($html)->toContain('<link rel="EditURI"');
+});
+
+test('assetsHead emits no xmlrpc hint when the adapter has no config at all', function (): void {
+	// Defensive path: an adapter built via newInstanceWithoutConstructor with no
+	// config set (uninitialized readonly typed property) must not fatal.
+	$ref     = new ReflectionClass(TotalCMSTwigAdapter::class);
+	$adapter = $ref->newInstanceWithoutConstructor();
+
+	$ref->getProperty('frontendAssetsList')->setValue($adapter, []);
+	$ref->getProperty('adminAssetsList')->setValue($adapter, []);
+
+	expect($adapter->assetsHead())->toBe('');
 });
 
 // ===== Cache-busting =====
