@@ -8,6 +8,10 @@
 	</header>
 
 	<nav class="links" id="automation-links">
+		{# Extension automations are deliberately absent here. They have no editor to
+		   open — the handler is a closure in PHP — so a sidebar row for one would be
+		   the only unclickable entry in a nav made of links. Their status lives on
+		   the landing page instead. #}
 		{% set automations = cms.collection.objects("automations") %}
 		{% if automations|length == 0 %}
 			<h3>Automations</h3>
@@ -70,6 +74,127 @@
 			<button type="button" class="cms-clip-button dash-button transparent" data-clip="#automations-command-text">{{ t('btn.copy_command') }}</button>
 		</section>
 	</section>
+
+	{# Hidden entirely when no installed extension registers an automation, which
+	   is the common case — the heading lives inside the section so it disappears
+	   with it and picks up the section's own grid spacing. #}
+	{% if extensionAutomations is not empty %}
+	<section class="dash-content-section spaced">
+		<h2>Extension Automations</h2>
+		<p>These are contributed by installed extensions and run through the same
+		scheduler. They cannot be edited here — the handler lives in the extension's
+		PHP, not in a code field — but they can fail and auto-disable like any other
+		automation, so their status is shown. To turn a set of them off, use the
+		<strong>automations</strong> permission on the extension's own settings page.</p>
+
+		{% for extension, rows in extensionAutomations %}
+		<section class="ext-automation">
+			<h3>{{ extension }}</h3>
+			{% for automation in rows %}
+			{% set last = (lastRuns is defined and lastRuns[automation.id] is defined) ? lastRuns[automation.id] : null %}
+			<details class="cms-accordion">
+				{# The summary carries only what answers "is this healthy?" — everything
+				that answers "what happened" lives inside. #}
+				<summary>
+					<span class="ext-automation-name">{{ automation.name }}</span>
+					{% if last %}
+						<span class="dash-badge {{ last.status == 'success' ? 'success' : 'danger' }}">{{ last.status }}</span>
+					{% else %}
+						<span class="dash-badge muted">never run</span>
+					{% endif %}
+					{% if automation.failures %}<span class="dash-badge danger">{{ automation.failures }} consecutive {{ automation.failures == 1 ? 'failure' : 'failures' }}</span>{% endif %}
+					{% if not automation.permitted %}<span class="dash-badge muted" title="Turned off by the extension's automations permission">permission off</span>{% endif %}
+				</summary>
+
+				<div class="content">
+				<dl class="ext-automation-detail">
+					<dt>Id</dt>
+					<dd><code class="dash-code-inline">{{ automation.id }}</code></dd>
+
+					<dt>Triggers</dt>
+					<dd>
+						{%- for trigger in automation.triggers -%}
+							{{ trigger.type | default('?') }}
+							{%- if trigger.cron is defined %} <code class="dash-code-inline">{{ trigger.cron }}</code>{% endif -%}
+							{%- if trigger.event is defined %} <code class="dash-code-inline">{{ trigger.event }}</code>{% endif -%}
+							{%- if not loop.last %}, {% endif -%}
+						{%- else -%}
+							—
+						{%- endfor -%}
+					</dd>
+
+					<dt>Last run</dt>
+					<dd>
+						{%- if last -%}
+							{{ last.startedAt | default(last.finishedAt) | default('unknown') }}
+							{%- if last.durationMs is defined %} <span class="dash-sub">({{ last.durationMs }} ms)</span>{% endif -%}
+						{%- else -%}
+							Never
+						{%- endif -%}
+					</dd>
+
+					{# Newest run only. Full history belongs to an editor this automation
+					does not have — the handler is a closure in the extension's PHP. #}
+					{% if last and last.exception %}
+					<dt>Error</dt>
+					<dd><pre class="ext-automation-output"><code>{{ last.exception | e }}</code></pre></dd>
+					{% elseif last and last.return is not null %}
+					<dt>Returned</dt>
+					<dd><pre class="ext-automation-output"><code>{{ last.return | json_encode(constant('JSON_PRETTY_PRINT')) | e }}</code></pre></dd>
+					{% endif %}
+				</dl>
+
+				{# Operational, not editorial — the closure stays untouchable, but a job
+				the failure guard disabled has to be recoverable from here. #}
+				{% if automation.permitted %}
+				<div class="ext-automation-actions" data-error="">
+					<button type="button" class="dash-button transparent small"
+						onclick="postAutomation(event, '{{ automation.id | escape('js') }}', 'run')">Run now</button>
+					{% if automation.failures %}
+					<button type="button" class="dash-button transparent small"
+						onclick="postAutomation(event, '{{ automation.id | escape('js') }}', 'enable')">Reset failures</button>
+					{% endif %}
+				</div>
+				{% endif %}
+				</div>
+			</details>
+			{% endfor %}
+		</section>
+		{% endfor %}
+	</section>
+
+	{# The editor-mode script below is gated on url.id, so the list view needs its
+	   own. Same CSRF convention: meta tag, header plus body. #}
+	<script>
+	async function postAutomation(event, id, action) {
+		const button = event.currentTarget;
+		const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+		const original = button.textContent;
+		button.disabled = true;
+		button.textContent = '…';
+		try {
+			// Ids contain slashes, so each segment is encoded individually — encoding
+			// the whole id would escape the separators the route needs.
+			const path = id.split('/').map(encodeURIComponent).join('/');
+			const res = await fetch(`automations/${path}/${action}`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+				body: JSON.stringify({ csrf_token: csrf }),
+			});
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			window.location.reload();
+		} catch (err) {
+			// Inline, matching the editor's run button — a modal here would block the
+			// page, and the row itself is where the operator is looking.
+			button.disabled = false;
+			button.textContent = original;
+			const note = button.closest('td');
+			if (note) note.dataset.error = `${action} failed`;
+			button.classList.add('danger');
+		}
+	}
+	</script>
+	{% endif %}
 
 
 {% else %}

@@ -114,8 +114,12 @@ return function (App $app): void {
 
 		$group->get('/automations[/{id}]', AdminAutomationsAction::class)->setName('admin-automations')->add(AutomationsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
 		$group->post('/automations[/{id}]', AdminAutomationsAction::class)->setName('admin-automations-post')->add(AutomationsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
-		$group->post('/automations/{id}/run', AutomationRunNowAction::class)->setName('admin-automations-run')->add(AutomationsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
-		$group->post('/automations/{id}/enable', AutomationReenableAction::class)->setName('admin-automations-enable')->add(AutomationsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
+		// `{id:.+}` rather than `{id}`: extension automation ids are
+		// `{vendor}/{name}:{automation}`, and the default placeholder stops at a
+		// slash, so run and re-enable were unreachable for every extension
+		// automation — including re-enabling one the failure guard had disabled.
+		$group->post('/automations/{id:.+}/run', AutomationRunNowAction::class)->setName('admin-automations-run')->add(AutomationsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
+		$group->post('/automations/{id:.+}/enable', AutomationReenableAction::class)->setName('admin-automations-enable')->add(AutomationsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
 
 		$group->get('/settings[/{section}]', AdminSettingsAction::class)->setName('admin-settings')->add(AdminOnlyMiddleware::class);
 		$group->post('/settings/{section}', AdminSettingsSaveSectionAction::class)->setName('admin-settings-save-section')->add(AdminOnlyMiddleware::class);

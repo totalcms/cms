@@ -10,13 +10,15 @@ use TotalCMS\Domain\Automation\Service\AutomationRunReader;
 use TotalCMS\Domain\Automation\Service\AutomationStateStore;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Extension\Service\DangerousCodeScanner;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
- * Admin section for automations — list, code editor, and run history. Mirrors
- * AdminMailerAction (thin controller; the Twig template + form builder do the
- * work). Editor extras: a DangerousCodeScanner advisory on the handler, the
+ * Admin section for automations — list, code editor, and run history, covering
+ * both file-based automations and the read-only ones contributed by extensions.
+ * Mirrors AdminMailerAction (thin controller; the Twig template + form builder
+ * do the work). Editor extras: a DangerousCodeScanner advisory on the handler, the
  * per-run history (via AutomationRunReader), and the consecutive-failure count
  * that drives the auto-disabled banner.
  */
@@ -29,6 +31,7 @@ readonly class AdminAutomationsAction
 		private DangerousCodeScanner $scanner,
 		private AutomationStateStore $state,
 		private AutomationRunReader $runReader,
+		private ExtensionManager $extensions,
 	) {
 	}
 
@@ -49,6 +52,11 @@ readonly class AdminAutomationsAction
 			// The sidebar renders in every mode, so the newest-run-per-automation
 			// status badges are always needed.
 			'lastRuns' => $this->runReader->latestPerAutomation(),
+			// Extension-contributed automations run through the same runner and
+			// already write run history, but nothing listed them — so a scheduled
+			// extension job could fail, hit the auto-disable threshold and stop,
+			// with no row in the admin to show it or re-enable it.
+			'extensionAutomations' => $this->extensionAutomations(),
 		];
 
 		$reserved = ['', 'new', '-export', '-import'];
@@ -77,5 +85,32 @@ readonly class AdminAutomationsAction
 		}
 
 		return $this->twigRenderer->template($response, 'admin/automations.twig', $templateData);
+	}
+
+	/**
+	 * Extension automations grouped by owning extension, with their failure count
+	 * and whether the `automations` capability currently permits them.
+	 *
+	 * Read-only by nature rather than by policy: the handler is a PHP closure
+	 * inside the extension, so there is no source to edit and nothing to persist.
+	 * Disabling stays in the extension's own settings, where the capability
+	 * toggle already lives.
+	 *
+	 * @return array<string,list<array<string,mixed>>>
+	 */
+	private function extensionAutomations(): array
+	{
+		$grouped = [];
+		foreach ($this->extensions->listAutomationsForAdmin() as $row) {
+			$grouped[$row['extension']][] = [
+				'id'        => $row['key'],
+				'name'      => $row['label'],
+				'triggers'  => $row['triggers'],
+				'permitted' => $row['permitted'],
+				'failures'  => $this->state->failures($row['key']),
+			];
+		}
+
+		return $grouped;
 	}
 }

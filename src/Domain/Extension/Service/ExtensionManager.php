@@ -1351,6 +1351,38 @@ class ExtensionManager
 	}
 
 	/**
+	 * Every extension automation for the admin, including ones the `automations`
+	 * capability currently forbids.
+	 *
+	 * Separate from getAllAutomations() on purpose. That accessor is the dispatch
+	 * path and must omit what is not permitted; this one is the status view, and
+	 * omitting a disabled automation there would make it disappear from the admin
+	 * entirely — the same blindness as not listing extension automations at all,
+	 * one toggle away. So permission becomes a flag rather than a filter.
+	 *
+	 * @return list<array{key:string,extension:string,id:string,label:string,triggers:list<array<string,mixed>>,permitted:bool}>
+	 */
+	public function listAutomationsForAdmin(): array
+	{
+		$rows = [];
+		foreach ($this->contexts as $extensionId => $context) {
+			$permitted = $this->isCapabilityPermitted($extensionId, 'automations');
+			foreach ($context->getRegisteredAutomations() as $automation) {
+				$rows[] = [
+					'key'       => "{$extensionId}:{$automation->id}",
+					'extension' => $extensionId,
+					'id'        => $automation->id,
+					'label'     => $automation->label,
+					'triggers'  => $automation->triggers,
+					'permitted' => $permitted,
+				];
+			}
+		}
+
+		return $rows;
+	}
+
+	/**
 	 * Match a request against extension-registered routes.
 	 */
 	public function matchExtensionRoute(string $extensionId, string $method, string $path): ?ExtensionRoute

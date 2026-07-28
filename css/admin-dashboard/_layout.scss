@@ -769,6 +769,72 @@ body {
 	p:not(.help), ul, ol {
 		max-width : 65ch;
 	}
+
+	/* For a second section stacked under the first on the same page. The grid gap
+	   only spaces a section's own children, so consecutive sections otherwise
+	   butt together and read as one block. */
+	&.spaced {
+		margin-block-start : 2rem;
+	}
+}
+
+/* Extension automations — chrome comes from details.cms-accordion; only the
+   things it does not do are here.
+   A table needed seven columns to say this and still hid the run output behind a
+   nested disclosure inside a cell. One accordion per automation puts the health
+   badges on a scannable line and gives the output room to be read. */
+.ext-automation {
+
+	h3 {
+		margin-block-end : 1rem;
+	}
+
+	.cms-accordion > summary {
+		overflow : hidden;
+
+		.dash-badge {
+			float : right;
+		}
+	}
+
+	/* Label/value pairs. Padding is the accordion's job, not this element's. */
+	.ext-automation-detail {
+		display               : grid;
+		grid-template-columns : max-content 1fr;
+		gap                   : 0.4rem 1rem;
+		margin                : 0;
+
+		dt {
+			font-weight : 600;
+			color       : oklch(var(--totalform-darkgray));
+		}
+
+		dd {
+			margin : 0;
+		}
+	}
+
+	/* Output can be long; scroll it rather than stretch the page. */
+	.ext-automation-output {
+		margin     : 0;
+		max-height : 14rem;
+		overflow   : auto;
+		font-size  : 0.85rem;
+	}
+
+	.ext-automation-actions {
+		display     : flex;
+		gap         : 0.5rem;
+		align-items : center;
+
+		/* Set by postAutomation() when a request fails, so the message lands next
+		   to the button that caused it. */
+		&[data-error]:not([data-error=""])::after {
+			content   : attr(data-error);
+			color     : oklch(var(--totalform-error));
+			font-size : 0.85rem;
+		}
+	}
 }
 
 pre {
