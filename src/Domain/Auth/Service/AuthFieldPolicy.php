@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Auth\Service;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Support\Config;
 
 /**
  * Server-side authorization for privileged user-record fields.
@@ -35,7 +36,23 @@ final readonly class AuthFieldPolicy
 		private SchemaFetcher $schemaFetcher,
 		private UserValidationService $userValidation,
 		private ObjectFetcher $objectFetcher,
+		private Config $config,
 	) {
+	}
+
+	/**
+	 * Whether authentication is switched off for the whole install.
+	 *
+	 * In that mode both auth middlewares pass every request straight through
+	 * (AuthMiddleware / DualAuthMiddleware), no session user can resolve as a
+	 * super-admin, and the admin is open to anyone who can reach it. Field-level
+	 * authz therefore protects nothing — it only makes privileged fields
+	 * permanently unwritable. BaseAccessMiddleware and
+	 * SystemCollectionGuardMiddleware already stand down here; this matches them.
+	 */
+	private function authDisabled(): bool
+	{
+		return ($this->config->auth['enable'] ?? true) === false;
 	}
 
 	/**
@@ -85,6 +102,10 @@ final readonly class AuthFieldPolicy
 	 */
 	public function enforce(string $actorId, string $collection, string $objectId, array $incoming): array
 	{
+		if ($this->authDisabled()) {
+			return $incoming;
+		}
+
 		$protected = $this->protectedFieldsFor($collection);
 		if ($protected === []) {
 			return $incoming;
@@ -117,6 +138,12 @@ final readonly class AuthFieldPolicy
 	 * context. Used by public registration, which must also positively assign
 	 * its own defaults afterwards.
 	 *
+	 * Deliberately NOT relaxed when auth is disabled, unlike the actor-based
+	 * methods above. This one guards an endpoint anonymous callers can reach, so
+	 * there is no actor to trust either way; letting it through would bake
+	 * `groups:['admin']` into records that become live escalations the moment
+	 * auth is switched back on.
+	 *
 	 * @param array<string,mixed> $data
 	 *
 	 * @return array<string,mixed>
@@ -137,6 +164,9 @@ final readonly class AuthFieldPolicy
 	 */
 	public function canWriteProperty(string $actorId, string $collection, string $property): bool
 	{
+		if ($this->authDisabled()) {
+			return true;
+		}
 		if (!in_array($property, $this->protectedFieldsFor($collection), true)) {
 			return true;
 		}

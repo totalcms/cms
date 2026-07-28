@@ -11,6 +11,7 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Support\Config;
 
 final class AuthFieldPolicyTest extends TestCase
 {
@@ -22,7 +23,7 @@ final class AuthFieldPolicyTest extends TestCase
 	 * @param list<string> $props
 	 * @param list<string> $inheritFrom
 	 */
-	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = []): AuthFieldPolicy
+	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = [], bool $authEnabled = true): AuthFieldPolicy
 	{
 		$schema              = new SchemaData();
 		$schema->id          = $schemaId;
@@ -43,7 +44,53 @@ final class AuthFieldPolicyTest extends TestCase
 			$objectFetcher->method('fetchObject')->willReturn($object);
 		}
 
-		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher);
+		$config          = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->auth    = ['enable' => $authEnabled, 'collection' => 'auth'];
+
+		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher, $config);
+	}
+
+	// -----------------------------------------------------------------------
+	// auth.enable = false — there is no privilege model to enforce
+	// -----------------------------------------------------------------------
+
+	public function testEnforceIsNoOpWhenAuthIsDisabled(): void
+	{
+		// With auth off, both middlewares pass every request straight through and
+		// no session user can ever resolve as a super-admin. Reverting privileged
+		// fields would make them permanently unwritable — which is what silently
+		// broke the Active toggle on a dev install running auth.enable = false.
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			existing: ['active' => false, 'groups' => ['viewer']],
+			authEnabled: false,
+		);
+
+		$out = $policy->enforce('', 'auth', 'viewer-user', ['active' => true, 'groups' => ['admin'], 'name' => 'V']);
+
+		expect($out['active'])->toBe(true);
+		expect($out['groups'])->toBe(['admin']);
+	}
+
+	public function testCanWritePropertyAllowsPrivilegedPropsWhenAuthIsDisabled(): void
+	{
+		$policy = $this->makePolicy(isSuperAdmin: false, authEnabled: false);
+
+		expect($policy->canWriteProperty('', 'auth', 'active'))->toBeTrue();
+		expect($policy->canWriteProperty('', 'auth', 'groups'))->toBeTrue();
+	}
+
+	public function testStripProtectedStillStripsWhenAuthIsDisabled(): void
+	{
+		// Deliberate exception. stripProtected() serves public registration, which
+		// is reachable by anonymous callers and has no actor to trust. Letting it
+		// through with auth off would bake `groups:['admin']` into records that
+		// become live escalations the moment auth is switched back on.
+		$policy = $this->makePolicy(isSuperAdmin: false, authEnabled: false);
+
+		$out = $policy->stripProtected('auth', ['name' => 'x', 'groups' => ['admin'], 'active' => true]);
+
+		expect($out)->toBe(['name' => 'x']);
 	}
 
 	public function testRevertsPrivilegedFieldsToStoredForNonAdmin(): void

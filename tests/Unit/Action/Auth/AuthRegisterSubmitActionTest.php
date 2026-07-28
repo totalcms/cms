@@ -80,6 +80,7 @@ final class AuthRegisterSubmitActionTest extends TestCase
 			$schemaFetcher,
 			$this->createMock(UserValidationService::class),
 			$this->createMock(ObjectFetcher::class),
+			$this->config,
 		);
 
 		$this->action = new AuthRegisterSubmitAction(

@@ -16,6 +16,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Support\Config;
 
 /**
  * The guard wraps a real {@see AuthFieldPolicy} (both are final, so they're
@@ -46,7 +47,10 @@ final class PrivilegedFieldGuardTest extends TestCase
 			$objectFetcher->method('fetchObject')->willReturn($object);
 		}
 
-		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher);
+		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->auth = ['enable' => true, 'collection' => 'auth'];
+
+		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher, $config);
 	}
 
 	private function guard(AuthFieldPolicy $policy, string $actor = 'member1'): PrivilegedFieldGuard
