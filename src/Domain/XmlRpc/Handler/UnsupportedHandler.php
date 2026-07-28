@@ -28,6 +28,8 @@ readonly class UnsupportedHandler implements MethodHandler
 		return [
 			'metaWeblog.newMediaObject' => $this->media(...),
 			'wp.uploadFile'             => $this->media(...),
+			'wp.getMediaLibrary'        => $this->media(...),
+			'wp.getMediaItem'           => $this->media(...),
 			'wp.getPages'               => $this->pages(...),
 			'wp.getPageList'            => $this->pages(...),
 			'wp.getPage'                => $this->pages(...),

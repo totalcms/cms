@@ -148,6 +148,187 @@ readonly class PostMapper
 	}
 
 	/**
+	 * The `wp.*` dialect's read-side post struct (wp.getPost / wp.getPosts
+	 * entries). Deliberately built from the same primitives as toStruct()
+	 * above — absolutizeUrls(), localDate(), stringList() — so the two
+	 * dialects can never quietly drift apart on URL rewriting, timezone
+	 * handling, or what counts as an extended entry.
+	 *
+	 * @param array<string,mixed> $object
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function toWpStruct(array $object, CollectionData $collection): array
+	{
+		$id       = (string)($object['id'] ?? '');
+		$local    = $this->localDate($object['date'] ?? null);
+		$modified = $this->localDate($object['updated'] ?? $object['date'] ?? null);
+		$url      = $this->urlBuilder->buildUrl($collection, $object);
+
+		$content  = $this->absolutizeUrls((string)($object['content'] ?? ''));
+		$rawExtra = (string)($object['extra'] ?? '');
+		// "extra is non-empty" is judged on the raw field, not the absolutized
+		// one — absolutizeUrls() never turns an empty string into a non-empty
+		// one, but checking the source value keeps this rule readable next to
+		// the write-side split() below, which also judges the raw struct.
+		$postContent = trim($rawExtra) !== ''
+			? $content . '<!--more-->' . $this->absolutizeUrls($rawExtra)
+			: $content;
+
+		$terms = [];
+		foreach ($this->stringList($object['categories'] ?? []) as $name) {
+			$terms[] = $this->termStruct($name, 'category');
+		}
+		foreach ($this->stringList($object['tags'] ?? []) as $name) {
+			$terms[] = $this->termStruct($name, 'post_tag');
+		}
+
+		return [
+			'post_id'           => $id,
+			'post_title'        => (string)($object['title'] ?? ''),
+			'post_content'      => $postContent,
+			'post_excerpt'      => (string)($object['summary'] ?? ''),
+			'post_status'       => ($object['draft'] ?? false) ? 'draft' : 'publish',
+			'post_type'         => 'post',
+			'post_name'         => $id,
+			'post_author'       => (string)($object['author'] ?? ''),
+			'post_date'         => $local,
+			'post_date_gmt'     => $local->setTimezone(new \DateTimeZone('UTC')),
+			'post_modified'     => $modified,
+			'post_modified_gmt' => $modified->setTimezone(new \DateTimeZone('UTC')),
+			'link'              => $url,
+			'sticky'            => (bool)($object['featured'] ?? false),
+			// T3 has no comment system at all, so both are permanently 'closed'
+			// rather than reflecting a setting that does not exist.
+			'comment_status'    => 'closed',
+			'ping_status'       => 'closed',
+			'post_password'     => '',
+			'post_parent'       => '0',
+			'menu_order'        => 0,
+			'custom_fields'     => [],
+			'enclosure'         => [],
+			'terms'             => $terms,
+		];
+	}
+
+	/**
+	 * The `wp.*` dialect's write-side mapping (wp.newPost / wp.editPost
+	 * `content_struct`). Same "absent means absent" contract as toObject()
+	 * above and for the same reason: WordPress's struct has no concept of
+	 * `image`, `gallery`, `media` or any custom field, so a text-only edit
+	 * from a writing app must never invent a value for one of them.
+	 *
+	 * @param array<string,mixed> $struct
+	 * @param bool|null           $publish Same meaning as toObject()'s
+	 *                                     $publish: an explicit switch, or
+	 *                                     null when the caller has none to
+	 *                                     offer. The wp.* dialect carries no
+	 *                                     separate publish parameter at all —
+	 *                                     `post_status` inside the struct is
+	 *                                     the only signal — so callers pass
+	 *                                     null on edit (never invent a status)
+	 *                                     and true on create (WordPress's
+	 *                                     newPost default), mirroring
+	 *                                     PostWriteHandler's metaWeblog calls.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function fromWpStruct(array $struct, ?bool $publish, bool $isNew): array
+	{
+		$fields = [];
+
+		if (array_key_exists('post_title', $struct)) {
+			$fields['title'] = (string)$struct['post_title'];
+		}
+
+		if (array_key_exists('post_content', $struct)) {
+			[$content, $extra] = $this->splitExtendedEntry((string)$struct['post_content']);
+			$fields['content'] = $this->relativizeUrls($content);
+
+			// No marker found means $extra is null: leave the key OUT of the
+			// result entirely (not even set to ''), so an existing extended
+			// entry survives an edit whose post_content never mentioned it.
+			if ($extra !== null) {
+				$fields['extra'] = $this->relativizeUrls($extra);
+			}
+		}
+
+		if (array_key_exists('post_excerpt', $struct)) {
+			$fields['summary'] = (string)$struct['post_excerpt'];
+		}
+
+		if (array_key_exists('sticky', $struct)) {
+			$fields['featured'] = (bool)$struct['sticky'];
+		}
+
+		if (is_array($struct['terms_names'] ?? null)) {
+			$terms = $struct['terms_names'];
+
+			if (array_key_exists('category', $terms)) {
+				$fields['categories'] = $this->stringList($terms['category']);
+			}
+
+			if (array_key_exists('post_tag', $terms)) {
+				$fields['tags'] = $this->stringList($terms['post_tag']);
+			}
+		}
+
+		$date = $this->normalizeDateFrom($struct, 'post_date_gmt', 'post_date');
+		if ($date !== null) {
+			$fields['date'] = $date;
+		}
+
+		// post_name is honoured on create only, for the same reason wp_slug is
+		// in toObject(): the id IS the storage location in T3, so accepting a
+		// rename here would mean delete-and-recreate. Renaming stays an admin
+		// operation.
+		if ($isNew && is_string($struct['post_name'] ?? null) && trim($struct['post_name']) !== '') {
+			$fields['id'] = SlugData::slugify(trim($struct['post_name']));
+		}
+
+		$draft = $this->isDraft($struct, $publish);
+		if ($draft !== null) {
+			$fields['draft'] = $draft;
+		}
+
+		// Deliberately never mapped: post_thumbnail (media is unsupported, and
+		// reading an empty value as "remove the image" is exactly how a
+		// round-trip edit destroys an admin-set hero image), post_author,
+		// post_password, custom_fields, comment_status, ping_status, terms
+		// (the legacy raw-term array — terms_names is the write-capable form),
+		// enclosure.
+
+		return $fields;
+	}
+
+	/**
+	 * Shared WP term struct — the same shape whether it is describing a
+	 * single post's categories/tags (toWpStruct()'s `terms`) or the
+	 * collection-wide distinct values `wp.getTerms` reports. T3 has no
+	 * integer term ids, so the name doubles as `term_id` and
+	 * `term_taxonomy_id`; `slug` is left as the bare name rather than a
+	 * slugified variant, matching the existing wp.getTags dialect
+	 * (TaxonomyHandler::getTags) so the two do not report different slugs
+	 * for the same tag.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function termStruct(string $name, string $taxonomy): array
+	{
+		return [
+			'term_id'          => $name,
+			'name'             => $name,
+			'slug'             => $name,
+			'taxonomy'         => $taxonomy,
+			'description'      => '',
+			'parent'           => '0',
+			'count'            => 0,
+			'term_group'       => '0',
+			'term_taxonomy_id' => $name,
+		];
+	}
+
+	/**
 	 * Expand our own path-relative upload URLs to absolute ones so a client's
 	 * editor can render image previews. Relativizes first, which makes this
 	 * idempotent — content already holding absolute URLs is unchanged.
@@ -252,23 +433,38 @@ readonly class PostMapper
 	 */
 	private function normalizeDate(array $struct): ?string
 	{
+		return $this->normalizeDateFrom($struct, 'date_created_gmt', 'dateCreated');
+	}
+
+	/**
+	 * Shared by normalizeDate() (metaWeblog's `dateCreated`/`date_created_gmt`
+	 * keys) and fromWpStruct() (wp's `post_date`/`post_date_gmt` keys) — same
+	 * GMT-preferred timezone rule either dialect uses, kept in one place so the
+	 * two can never drift apart on it.
+	 *
+	 * @param array<string,mixed> $struct
+	 *
+	 * @return string|null ISO 8601 in the site timezone, or null when absent
+	 */
+	private function normalizeDateFrom(array $struct, string $gmtKey, string $localKey): ?string
+	{
 		$zone = new \DateTimeZone($this->config->timezone);
 
-		// Prefer the GMT field: `dateCreated` is client-local with no zone, which
-		// is the classic source of posts landing hours off.
-		$gmt = $struct['date_created_gmt'] ?? null;
+		// Prefer the GMT field: the local-named field is client-local with no
+		// zone, which is the classic source of posts landing hours off.
+		$gmt = $struct[$gmtKey] ?? null;
 		if ($gmt instanceof \DateTimeInterface) {
 			return \DateTimeImmutable::createFromInterface($gmt)
 				->setTimezone($zone)
 				->format('c');
 		}
 
-		$local = $struct['dateCreated'] ?? null;
+		$local = $struct[$localKey] ?? null;
 		if ($local instanceof \DateTimeInterface) {
 			return \DateTimeImmutable::createFromInterface($local)->setTimezone($zone)->format('c');
 		}
 
-		foreach (['date_created_gmt', 'dateCreated'] as $key) {
+		foreach ([$gmtKey, $localKey] as $key) {
 			if (is_string($struct[$key] ?? null) && trim($struct[$key]) !== '') {
 				try {
 					return (new \DateTimeImmutable($struct[$key]))->setTimezone($zone)->format('c');
@@ -279,6 +475,27 @@ readonly class PostMapper
 		}
 
 		return null;
+	}
+
+	/**
+	 * Split a wp.* `post_content` on its first `<!--more-->` marker.
+	 *
+	 * @return array{0:string,1:string|null} [content, extra]. `extra` is
+	 *                                       null when no marker was found —
+	 *                                       the caller must leave the `extra`
+	 *                                       key out entirely in that case, not
+	 *                                       set it to ''.
+	 */
+	private function splitExtendedEntry(string $postContent): array
+	{
+		$marker = '<!--more-->';
+		$pos    = strpos($postContent, $marker);
+
+		if ($pos === false) {
+			return [$postContent, null];
+		}
+
+		return [substr($postContent, 0, $pos), substr($postContent, $pos + strlen($marker))];
 	}
 
 	private function localDate(mixed $date): \DateTimeImmutable

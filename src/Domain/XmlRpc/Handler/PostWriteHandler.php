@@ -42,6 +42,8 @@ readonly class PostWriteHandler implements MethodHandler
 			'metaWeblog.editPost' => $this->editPost(...),
 			'blogger.deletePost'  => $this->bloggerDeletePost(...),
 			'wp.deletePost'       => $this->wpDeletePost(...),
+			'wp.newPost'          => $this->wpNewPost(...),
+			'wp.editPost'         => $this->wpEditPost(...),
 		];
 	}
 
@@ -142,6 +144,68 @@ readonly class PostWriteHandler implements MethodHandler
 		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 
 		return $this->deleteFrom($blog, $postId);
+	}
+
+	/**
+	 * wp.newPost(blog_id, username, password, content_struct)
+	 *
+	 * Unlike metaWeblog.newPost, this dialect carries no separate publish
+	 * parameter — `post_status` inside the struct is the only signal — so
+	 * `true` is passed for the same reason metaWeblog.newPost resolves an
+	 * absent flag to `true`: a create with no status said at all still
+	 * publishes, matching WordPress's own newPost default.
+	 *
+	 * @param array<int,mixed> $params
+	 */
+	public function wpNewPost(array $params, ?string $collection): string
+	{
+		$identity = $this->auth->authenticate($params, 1, 2);
+		$this->auth->assertOperation($identity, 'POST');
+
+		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
+		$struct = is_array($params[3] ?? null) ? $params[3] : [];
+		$fields = $this->mapper->fromWpStruct($struct, true, true);
+
+		$id = is_string($fields['id'] ?? null) && $fields['id'] !== ''
+			? $fields['id']
+			: $this->mapper->titleSlug((string)($fields['title'] ?? ''));
+
+		$fields['id']     = $this->uniqueId($blog->id, $id);
+		$fields['author'] = $fields['author'] ?? $identity->authorName;
+
+		return $this->objectSaver->saveObject($blog->id, $fields)->id;
+	}
+
+	/**
+	 * wp.editPost(blog_id, username, password, post_id, content_struct)
+	 *
+	 * Unlike metaWeblog.editPost, this dialect DOES carry a blog_id, so it
+	 * resolves via resolveFor() rather than searching for the post. `null` is
+	 * passed for publish so an edit that never mentions `post_status` leaves
+	 * the post's current draft/published state alone — same rule as
+	 * metaWeblog.editPost, just with no separate flag to distinguish
+	 * "omitted" from "sent" in the first place.
+	 *
+	 * @param array<int,mixed> $params
+	 */
+	public function wpEditPost(array $params, ?string $collection): bool
+	{
+		$identity = $this->auth->authenticate($params, 1, 2);
+		$this->auth->assertOperation($identity, 'PUT');
+
+		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
+		$postId = (string)($params[3] ?? '');
+
+		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
+			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
+		}
+
+		$struct = is_array($params[4] ?? null) ? $params[4] : [];
+		$fields = $this->mapper->fromWpStruct($struct, null, false);
+
+		$this->applyEdit($blog->id, $postId, $fields);
+
+		return true;
 	}
 
 	private function deleteFrom(CollectionData $blog, string $postId): bool

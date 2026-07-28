@@ -8,6 +8,7 @@ use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\XmlRpc\Service\BlogRegistry;
+use TotalCMS\Domain\XmlRpc\Service\PostMapper;
 use TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth;
 use TotalCMS\Domain\XmlRpc\Transport\XmlRpcFault;
 use TotalCMS\Support\Config;
@@ -32,6 +33,7 @@ readonly class TaxonomyHandler implements MethodHandler
 		private ObjectFetcher $objectFetcher,
 		private ObjectPatcher $objectPatcher,
 		private Config $config,
+		private PostMapper $mapper,
 	) {
 	}
 
@@ -46,6 +48,8 @@ readonly class TaxonomyHandler implements MethodHandler
 			'mt.getPostCategories'     => $this->getPostCategories(...),
 			'mt.setPostCategories'     => $this->setPostCategories(...),
 			'wp.newCategory'           => $this->newCategory(...),
+			'wp.getTaxonomies'         => $this->getTaxonomies(...),
+			'wp.getTerms'              => $this->getTerms(...),
 		];
 	}
 
@@ -234,6 +238,67 @@ readonly class TaxonomyHandler implements MethodHandler
 		}
 
 		return $name;
+	}
+
+	/**
+	 * wp.getTaxonomies(blog_id, username, password)
+	 *
+	 * T3 has exactly two flat taxonomies — no hierarchy, so `hierarchical` is
+	 * `false` for both.
+	 *
+	 * @param array<int,mixed> $params
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	public function getTaxonomies(array $params, ?string $collection): array
+	{
+		$identity = $this->auth->authenticate($params, 1, 2);
+		$this->auth->assertOperation($identity, 'GET');
+		$this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
+
+		return [
+			'category' => ['name' => 'category', 'label' => 'Categories', 'hierarchical' => false, 'public' => true],
+			'post_tag' => ['name' => 'post_tag', 'label' => 'Tags',       'hierarchical' => false, 'public' => true],
+		];
+	}
+
+	/**
+	 * wp.getTerms(blog_id, username, password, taxonomy, filter?)
+	 *
+	 * Derives distinct values from the index exactly as getCategories()/
+	 * getTags() already do above, only wrapped in the fuller wp.* term struct
+	 * (shared with the `terms` field on wp.getPost/getPosts, via
+	 * PostMapper::termStruct()) instead of the metaWeblog-specific shapes.
+	 * `filter` (5th param) is accepted and ignored. An unknown taxonomy name
+	 * faults rather than returning an empty list, since that is far more
+	 * likely to be a client typo than a genuinely empty result.
+	 *
+	 * @param array<int,mixed> $params
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function getTerms(array $params, ?string $collection): array
+	{
+		$identity = $this->auth->authenticate($params, 1, 2);
+		$this->auth->assertOperation($identity, 'GET');
+
+		$blog     = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
+		$taxonomy = is_string($params[3] ?? null) ? trim($params[3]) : '';
+
+		$property = match ($taxonomy) {
+			'category' => 'categories',
+			'post_tag' => 'tags',
+			default    => null,
+		};
+
+		if ($property === null) {
+			throw XmlRpcFault::notFound(sprintf('Unknown taxonomy "%s".', $taxonomy));
+		}
+
+		return array_map(
+			fn (string $name): array => $this->mapper->termStruct($name, $taxonomy),
+			$this->distinctValues($blog->id, $property)
+		);
 	}
 
 	/** @param array<int,string> $names */
