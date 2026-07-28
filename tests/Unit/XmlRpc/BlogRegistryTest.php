@@ -10,15 +10,7 @@ use TotalCMS\Domain\XmlRpc\Data\XmlRpcIdentity;
 use TotalCMS\Domain\XmlRpc\Service\BlogRegistry;
 use TotalCMS\Domain\XmlRpc\Transport\XmlRpcFault;
 
-function blogCollection(string $id, string $schema = 'blog'): CollectionData
-{
-	$collection         = new CollectionData();
-	$collection->id     = $id;
-	$collection->name   = ucfirst($id);
-	$collection->schema = $schema;
-
-	return $collection;
-}
+require_once __DIR__ . '/XmlRpcUnitHelpers.php';
 
 function xmlRpcIdentity(array $scopes): XmlRpcIdentity
 {
