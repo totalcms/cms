@@ -21,9 +21,8 @@ it('lists supported methods without credentials', function (): void {
 	$response = postXmlRpc(xmlRpcBody('mt.supportedMethods'));
 	$body     = (string)$response->getBody();
 
-	// metaWeblog.newPost ships with PostWriteHandler in Task 7 — not asserted
-	// here since this task (SystemHandler + BlogHandler) predates it.
 	expect($body)->toContain('blogger.getUsersBlogs');
+	expect($body)->toContain('metaWeblog.newPost');
 	// The two features behind WordPress's XML-RPC reputation must never appear.
 	expect($body)->not->toContain('system.multicall');
 	expect($body)->not->toContain('pingback');

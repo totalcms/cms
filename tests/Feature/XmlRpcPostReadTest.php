@@ -118,6 +118,22 @@ it('returns titles only from mt.getRecentPostTitles', function (): void {
 	expect(strpos($body, 'read-post-z'))->toBeLessThan((int)strpos($body, 'read-post-m'));
 });
 
+it('lets a GET-only key read a post', function (): void {
+	// The capability model's whole point: a key scoped to GET only must still
+	// be able to authenticate and read, because XmlRpcAuth::authenticate() now
+	// checks only the path grant — the transport being HTTP POST is a detail
+	// of XML-RPC, not the caller's requested capability. Before the fix, a
+	// GET-only key failed authentication outright (it lacked the hardcoded
+	// 'POST' scope check) and could not even read.
+	$key  = xmlRpcKey(['blog'], ['GET']);
+	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getPost',
+		xmlRpcParam('read-post-a') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+
+	expect($body)->not->toContain('<fault>');
+	expect($body)->toContain('<name>postid</name><value><string>read-post-a</string></value>');
+	expect($body)->toContain('Read post A');
+});
+
 it('refuses reads from a key without the collection grant', function (): void {
 	$key = xmlRpcKey(['news']);   // scoped to a collection that does not exist here
 

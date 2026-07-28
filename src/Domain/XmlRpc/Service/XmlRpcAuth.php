@@ -53,7 +53,13 @@ readonly class XmlRpcAuth
 			throw XmlRpcFault::badCredentials();
 		}
 
-		$apiKey = $this->apiKeyFetcher->validateKey($password, 'POST', self::SCOPE_PATH);
+		// The transport is always an HTTP POST regardless of which RPC operation
+		// is being called, so authentication checks only the path grant here —
+		// a method check at this point would consume the caller's POST grant on
+		// every call (reads included) and make a GET-only key unable to
+		// authenticate at all. `assertOperation()` is the sole gate on what the
+		// caller may actually do.
+		$apiKey = $this->apiKeyFetcher->validateKeyForPath($password, self::SCOPE_PATH);
 
 		if ($apiKey === null) {
 			throw XmlRpcFault::badCredentials();

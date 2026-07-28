@@ -47,6 +47,37 @@ readonly class ApiKeyFetcher
 	}
 
 	/**
+	 * Validate an API key against a path grant only, with no HTTP-method check.
+	 *
+	 * For surfaces where the HTTP verb is a transport detail rather than the
+	 * capability being authorized — XML-RPC is always an HTTP POST regardless
+	 * of which RPC operation (read/create/edit/delete) is being called — a
+	 * method check at authentication time would consume the caller's POST
+	 * grant for every request, including reads, and make a GET-only (read-only)
+	 * key unable to authenticate at all. Callers on such surfaces authenticate
+	 * with this method and then gate the actual operation separately (e.g.
+	 * `XmlRpcAuth::assertOperation()`), so the key's method scopes still mean
+	 * what they say.
+	 */
+	public function validateKeyForPath(string $keyString, string $path): ?ApiKeyData
+	{
+		$apiKey = $this->repository->findByKey($keyString);
+
+		if (!$apiKey instanceof ApiKeyData) {
+			return null;
+		}
+
+		if (!$this->permissionChecker->allowsPath($apiKey, $path)) {
+			return null;
+		}
+
+		// Update last used timestamp
+		$this->repository->updateLastUsed($keyString);
+
+		return $apiKey;
+	}
+
+	/**
 	 * Get all API keys.
 	 *
 	 * @return array<ApiKeyData>

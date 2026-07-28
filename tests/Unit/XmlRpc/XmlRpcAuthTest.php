@@ -47,7 +47,7 @@ function makeXmlRpcAuth(?ApiKeyData $validatedKey, bool $proEdition, ?array $use
 		{
 		}
 
-		public function validateKey(string $keyString, string $method, string $path): ?ApiKeyData
+		public function validateKeyForPath(string $keyString, string $path): ?ApiKeyData
 		{
 			return $this->key;
 		}
