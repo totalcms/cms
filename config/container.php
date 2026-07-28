@@ -857,8 +857,22 @@ return [
 
 	// === XML-RPC Publishing ===
 
-	TotalCMS\Domain\XmlRpc\Service\MethodRouter::class => fn (ContainerInterface $c): TotalCMS\Domain\XmlRpc\Service\MethodRouter => new TotalCMS\Domain\XmlRpc\Service\MethodRouter([
+	TotalCMS\Domain\XmlRpc\Service\MethodRouter::class => function (ContainerInterface $c): TotalCMS\Domain\XmlRpc\Service\MethodRouter {
+		// SystemHandler needs MethodRouter (to report mt.supportedMethods), and
+		// MethodRouter builds its map from the handlers below — a genuine cycle
+		// if handlers were resolved eagerly. A generator defers `$c->get()` calls
+		// until MethodRouter iterates over $handlers, which happens inside its
+		// own constructor — by which point the MethodRouter instance being
+		// constructed already exists (PHP-DI can return the in-progress
+		// singleton), so SystemHandler's constructor resolves cleanly.
+		//
 		// Handlers are registered here as they land: SystemHandler, BlogHandler,
 		// PostReadHandler, PostWriteHandler, TaxonomyHandler, UnsupportedHandler.
-	]),
+		$handlers = function () use ($c): Generator {
+			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\BlogHandler::class);
+			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\SystemHandler::class);
+		};
+
+		return new TotalCMS\Domain\XmlRpc\Service\MethodRouter($handlers());
+	},
 ];
