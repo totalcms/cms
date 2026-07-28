@@ -62,11 +62,12 @@ readonly class PostMapper
 			$fields['tags'] = $this->splitKeywords($struct['mt_keywords']);
 		}
 
-		if (array_key_exists('categories', $struct) && is_array($struct['categories'])) {
-			$fields['categories'] = array_values(array_map(
-				static fn (mixed $category): string => trim((string)$category),
-				$struct['categories']
-			));
+		// A present-but-non-array value (e.g. `categories: null`) yields an empty
+		// list rather than dropping the key, matching mt_keywords/tags below —
+		// consistent "client sent it, we just couldn't read anything out of it"
+		// handling rather than one field vanishing and its sibling not.
+		if (array_key_exists('categories', $struct)) {
+			$fields['categories'] = $this->stringList($struct['categories']);
 		}
 
 		if (array_key_exists('sticky', $struct)) {
@@ -137,20 +138,37 @@ readonly class PostMapper
 	 * Expand our own path-relative upload URLs to absolute ones so a client's
 	 * editor can render image previews. Relativizes first, which makes this
 	 * idempotent — content already holding absolute URLs is unchanged.
+	 *
+	 * A domain-root install (`config->api` with no path component, e.g.
+	 * `https://mysite.com`) has an empty `pathBase()` — `''` is still a valid
+	 * base (it means "root-relative"), so we no longer bail out on it; only a
+	 * genuinely unconfigured base (`$full === $path`, both empty) skips the
+	 * rewrite. Because an empty path base makes the search string as generic
+	 * as `/imageworks/upload/`, the replacement is anchored on the opening
+	 * attribute quote (`"` or `'`) so it can only match a URL that *starts*
+	 * with our own path — never a third-party absolute URL that merely
+	 * contains that path fragment further in (which would otherwise get
+	 * mangled into a double-host URL).
 	 */
 	public function absolutizeUrls(string $html): string
 	{
 		$full = $this->fullBase();
 		$path = $this->pathBase();
 
-		if ($html === '' || $path === '' || $full === $path) {
+		if ($html === '' || $full === $path) {
 			return $html;
 		}
 
 		$html = $this->relativizeUrls($html);
 
 		foreach (self::UPLOAD_PREFIXES as $prefix) {
-			$html = str_replace($path . '/' . $prefix, $full . '/' . $prefix, $html);
+			foreach (['"', "'"] as $quote) {
+				$html = str_replace(
+					$quote . $path . '/' . $prefix,
+					$quote . $full . '/' . $prefix,
+					$html
+				);
+			}
 		}
 
 		return $html;
@@ -159,13 +177,17 @@ readonly class PostMapper
 	/**
 	 * Collapse absolute upload URLs back to path-relative before storing, so
 	 * content stays portable across domains (staging → production keeps working).
+	 *
+	 * No quote-anchoring is needed here: the search string always includes the
+	 * full scheme+host, which a third-party URL cannot share, so a plain
+	 * substring match is already safe.
 	 */
 	public function relativizeUrls(string $html): string
 	{
 		$full = $this->fullBase();
 		$path = $this->pathBase();
 
-		if ($html === '' || $path === '' || $full === $path) {
+		if ($html === '' || $full === $path) {
 			return $html;
 		}
 

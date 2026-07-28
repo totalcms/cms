@@ -25,12 +25,18 @@ function blogCollection(string $id, string $schema = 'blog'): CollectionData
 	return $collection;
 }
 
-function makePostMapper(string $timezone = 'UTC'): PostMapper
+/**
+ * @param string $api Base URL used for upload URL absolutize/relativize.
+ *                     Defaults to a subpath install (`/tcms`); pass
+ *                     `'https://demo.test'` (no path component) to build a
+ *                     domain-root mapper instead.
+ */
+function makePostMapper(string $timezone = 'UTC', string $api = 'https://demo.test/tcms'): PostMapper
 {
 	$config     = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$reflection = new ReflectionClass($config);
 
-	foreach (['api' => 'https://demo.test/tcms', 'timezone' => $timezone] as $property => $value) {
+	foreach (['api' => $api, 'timezone' => $timezone] as $property => $value) {
 		$prop = $reflection->getProperty($property);
 		$prop->setValue($config, $value);
 	}
