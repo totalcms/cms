@@ -29,6 +29,11 @@ readonly class ApiKeyPermissionChecker
 	 * - Direct paths: "/collections/text"
 	 * - Child paths: "/collections/text/123"
 	 * - Case-insensitive matching
+	 *
+	 * A granted path only matches on a segment boundary: "/collections/blog"
+	 * grants "/collections/blog" and "/collections/blog/123", but must NOT
+	 * grant "/collections/blog-archive" or "/collections/blogroll" merely
+	 * because the string happens to start with the granted path.
 	 */
 	public function allowsPath(ApiKeyData $apiKey, string $path): bool
 	{
@@ -36,9 +41,9 @@ readonly class ApiKeyPermissionChecker
 		$allowedPaths = $apiKey->scopes['paths'] ?? [];
 
 		foreach ($allowedPaths as $allowedPath) {
-			$allowedPath = strtolower(ltrim((string)$allowedPath, '/'));
+			$allowedPath = strtolower(trim((string)$allowedPath, '/'));
 
-			if ($allowedPath === '*' || $path === $allowedPath || str_starts_with($path, $allowedPath)) {
+			if ($allowedPath === '*' || $path === $allowedPath || str_starts_with($path, $allowedPath . '/')) {
 				return true;
 			}
 		}
