@@ -88,3 +88,41 @@ it('includes blog-legacy collections', function (): void {
 
 	expect(array_keys($registry->blogsFor($identity)))->toBe(['old']);
 });
+
+/*
+ * ApiKeyPermissionChecker::allowsPath() matches with str_starts_with(), so a
+ * key scoped to "/collections/blog" would also match "/collections/blog-
+ * archive" under that logic alone. BlogRegistry must not let that stand: it
+ * builds authorization directly on this scoping, so a naive prefix match
+ * would silently grant publish access to sibling collections that merely
+ * share a name prefix. These four cases pin the segment-boundary fix.
+ */
+it('does not let a collection-scoped key see a sibling collection sharing its name prefix', function (): void {
+	$registry = makeBlogRegistry([blogCollection('blog'), blogCollection('blog-archive')]);
+	$identity = xmlRpcIdentity(['methods' => ['GET'], 'paths' => ['/collections/blog']]);
+
+	expect(array_keys($registry->blogsFor($identity)))->toBe(['blog']);
+});
+
+it('still sees the exact collection a collection-scoped key names', function (): void {
+	$registry = makeBlogRegistry([blogCollection('blog'), blogCollection('blog-archive')]);
+	$identity = xmlRpcIdentity(['methods' => ['GET'], 'paths' => ['/collections/blog']]);
+
+	expect($registry->blogsFor($identity))->toHaveKey('blog');
+});
+
+it('sees every collection when scoped to the /collections umbrella', function (): void {
+	$registry = makeBlogRegistry([blogCollection('blog'), blogCollection('blog-archive')]);
+	$identity = xmlRpcIdentity(['methods' => ['GET'], 'paths' => ['/collections']]);
+
+	// blogsFor() ksort()s its result, so alphabetical order is deterministic.
+	expect(array_keys($registry->blogsFor($identity)))->toBe(['blog', 'blog-archive']);
+});
+
+it('sees every collection when scoped to the wildcard', function (): void {
+	$registry = makeBlogRegistry([blogCollection('blog'), blogCollection('blog-archive')]);
+	$identity = xmlRpcIdentity(['methods' => ['GET'], 'paths' => ['*']]);
+
+	// blogsFor() ksort()s its result, so alphabetical order is deterministic.
+	expect(array_keys($registry->blogsFor($identity)))->toBe(['blog', 'blog-archive']);
+});

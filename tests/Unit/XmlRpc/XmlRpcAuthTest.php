@@ -130,3 +130,34 @@ it('asserts operations against the key method scopes', function (): void {
 	expect(fn (): mixed => $auth->assertOperation($identity, 'DELETE'))
 		->toThrow(XmlRpcFault::class);
 });
+
+it('honours lowercase method scopes when asserting operations', function (): void {
+	// assertOperation() uppercases both sides before comparing, so a key
+	// stored with lowercase scopes (however that happened) must still work.
+	$auth     = makeXmlRpcAuth(validatedKey: xmlRpcApiKey(['methods' => ['get', 'delete'], 'paths' => ['/xmlrpc.php']]), proEdition: true);
+	$identity = $auth->authenticate(['blog', 'joe', 'tcms_testkey']);
+
+	$auth->assertOperation($identity, 'DELETE'); // lowercase "delete" scope still authorizes it
+
+	expect(fn (): mixed => $auth->assertOperation($identity, 'PUT'))
+		->toThrow(XmlRpcFault::class);
+});
+
+it('never lets the username elevate what the key is authorized to do', function (): void {
+	// The username resolves to a privileged-sounding user, but authorization
+	// must come from the key's scopes alone — naming a super admin must buy
+	// the caller nothing beyond display attribution.
+	$auth = makeXmlRpcAuth(
+		validatedKey: xmlRpcApiKey(['methods' => ['GET'], 'paths' => ['/xmlrpc.php']]),
+		proEdition: true,
+		user: ['id' => 'root-admin', 'name' => 'Root Admin', 'groups' => ['admin']],
+	);
+
+	$identity = $auth->authenticate(['blog', 'root-admin', 'tcms_testkey']);
+
+	expect($identity->authorName)->toBe('Root Admin');
+	$auth->assertOperation($identity, 'GET'); // still allowed: the key permits GET
+
+	expect(fn (): mixed => $auth->assertOperation($identity, 'DELETE'))
+		->toThrow(XmlRpcFault::class);
+});

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\XmlRpc\Service;
 
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyPermissionChecker;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -36,7 +37,7 @@ readonly class BlogRegistry
 
 		foreach (self::BLOG_SCHEMAS as $schema) {
 			foreach ($this->collectionLister->listCollectionsWithSchema($schema) as $collection) {
-				if ($this->permissions->allowsPath($identity->apiKey, '/collections/' . $collection->id)) {
+				if ($this->grantsCollection($identity->apiKey, $collection->id)) {
 					$blogs[$collection->id] = $collection;
 				}
 			}
@@ -60,5 +61,45 @@ readonly class BlogRegistry
 		}
 
 		return $blogs[$collection];
+	}
+
+	/**
+	 * Whether the key's `paths` scope grants this specific collection.
+	 *
+	 * `ApiKeyPermissionChecker::allowsPath()` matches with `str_starts_with()`,
+	 * so a key scoped to `/collections/blog` also matches `/collections/
+	 * blog-archive` — a real authorization hole for this endpoint, since a key
+	 * meant for one blog would silently reach sibling collections that merely
+	 * share a name prefix. That looser matching is correct (and load-bearing
+	 * elsewhere) for the umbrella grants — `*` and `/collections` itself — so
+	 * those are still delegated to the shared checker to stay consistent with
+	 * it. Anything more specific is re-verified here with a path-segment
+	 * boundary: a granted prefix only counts if the next character in the
+	 * target path is `/` (a true parent segment) or nothing (an exact match).
+	 *
+	 * This is deliberately NOT a fix to `ApiKeyPermissionChecker` itself — that
+	 * checker is shared with the REST API, which has its own review underway;
+	 * this tightens only the boundary this class owns.
+	 */
+	private function grantsCollection(ApiKeyData $apiKey, string $collectionId): bool
+	{
+		if ($this->permissions->allowsPath($apiKey, '/collections')) {
+			return true;
+		}
+
+		$target = strtolower('collections/' . $collectionId);
+
+		/** @var array<int,mixed> $paths */
+		$paths = is_array($apiKey->scopes['paths'] ?? null) ? $apiKey->scopes['paths'] : [];
+
+		foreach ($paths as $path) {
+			$path = strtolower(ltrim((string)$path, '/'));
+
+			if ($path === $target || str_starts_with($target, $path . '/')) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
