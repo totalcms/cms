@@ -158,11 +158,14 @@ readonly class PostReadHandler implements MethodHandler
 	 */
 	private function recentRows(CollectionData $blog, int $count): array
 	{
-		$sortBy = $blog->sortBy !== '' ? $blog->sortBy : 'date';
-
+		// Deliberately NOT $blog->sortBy — that setting is an admin display
+		// preference for the collection listing (and defaults to 'id', not
+		// ''), whereas these RPC methods have a fixed contract with the client:
+		// most recently published first, always. `date` is present in the
+		// index for both blog schemas, so it is always available here.
 		$result = $this->queryService->query($blog->id, [
 			'limit' => (string)$count,
-			'sort'  => $sortBy . ':desc',
+			'sort'  => 'date:desc',
 		]);
 
 		return $result->items;

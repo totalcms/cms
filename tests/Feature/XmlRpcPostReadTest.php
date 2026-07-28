@@ -17,19 +17,30 @@ beforeEach(function (): void {
 	$container = $this->app->getContainer();
 	$container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)->fetchOrCreateReserved('blog');
 
+	// Ids are deliberately NOT in date order: alphabetically 'read-post-a' <
+	// 'read-post-m' < 'read-post-z', but by date the order is a (newest),
+	// z (middle), m (oldest). Neither ascending nor descending id order
+	// matches that — so a test asserting date order can't pass by accident
+	// if the handler regresses to sorting by id.
 	$saver = $container->get(ObjectSaver::class);
-	foreach ([1, 2, 3] as $index) {
+	foreach (
+		[
+			'a' => '2026-07-27T09:00:00Z', // newest
+			'z' => '2026-07-20T09:00:00Z', // middle
+			'm' => '2026-07-10T09:00:00Z', // oldest
+		] as $suffix => $date
+	) {
 		$saver->saveObject('blog', [
-			'id'         => 'read-post-' . $index,
-			'title'      => 'Read post ' . $index,
-			'content'    => '<p>Body ' . $index . '</p>',
-			'summary'    => 'Summary ' . $index,
-			'extra'      => '<p>Extended ' . $index . '</p>',
+			'id'         => 'read-post-' . $suffix,
+			'title'      => 'Read post ' . strtoupper($suffix),
+			'content'    => '<p>Body ' . strtoupper($suffix) . '</p>',
+			'summary'    => 'Summary ' . strtoupper($suffix),
+			'extra'      => '<p>Extended ' . strtoupper($suffix) . '</p>',
 			'categories' => ['Tech'],
 			'tags'       => ['php'],
 			'author'     => 'Joe Workman',
 			'draft'      => false,
-			'date'       => '2026-07-2' . $index . 'T09:00:00Z',
+			'date'       => $date,
 		]);
 	}
 });
@@ -37,15 +48,15 @@ beforeEach(function (): void {
 it('returns a full post struct for getPost', function (): void {
 	$key  = xmlRpcKey();
 	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getPost',
-		xmlRpcParam('read-post-1') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+		xmlRpcParam('read-post-a') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
 
 	expect($body)->not->toContain('<fault>');
-	expect($body)->toContain('<name>postid</name><value><string>read-post-1</string></value>');
-	expect($body)->toContain('Read post 1');
+	expect($body)->toContain('<name>postid</name><value><string>read-post-a</string></value>');
+	expect($body)->toContain('Read post A');
 	// The client needs body text to edit — proving reads load the full object and
 	// not just the index, which omits `content`.
-	expect($body)->toContain('Body 1');
-	expect($body)->toContain('<name>mt_excerpt</name><value><string>Summary 1</string></value>');
+	expect($body)->toContain('Body A');
+	expect($body)->toContain('<name>mt_excerpt</name><value><string>Summary A</string></value>');
 	expect($body)->toContain('<name>post_status</name><value><string>publish</string></value>');
 });
 
@@ -66,8 +77,12 @@ it('returns recent posts newest first and honours the requested count', function
 
 	expect($body)->not->toContain('<fault>');
 	expect(substr_count($body, '<name>postid</name>'))->toBe(2);
-	// Newest first: post 3 has the latest date, so it must precede post 2.
-	expect(strpos($body, 'read-post-3'))->toBeLessThan((int)strpos($body, 'read-post-2'));
+	// The two most recent by DATE are 'a' (newest) then 'z' (middle) — 'm' (oldest)
+	// must be excluded. Sorting by id (asc: a,m / desc: z,m) would either include
+	// 'm' or put the pair in the wrong order, so this fails under an id-sort
+	// regression rather than passing by coincidence.
+	expect($body)->not->toContain('read-post-m');
+	expect(strpos($body, 'read-post-a'))->toBeLessThan((int)strpos($body, 'read-post-z'));
 });
 
 it('clamps a request for every post to the maximum', function (): void {
@@ -82,6 +97,9 @@ it('clamps a request for every post to the maximum', function (): void {
 	expect($body)->not->toContain('<fault>');
 	// Only three posts exist, so the clamp shows up as "all of them, no error".
 	expect(substr_count($body, '<name>postid</name>'))->toBe(3);
+	// Full date-descending order: a (newest), z (middle), m (oldest).
+	expect(strpos($body, 'read-post-a'))->toBeLessThan((int)strpos($body, 'read-post-z'));
+	expect(strpos($body, 'read-post-z'))->toBeLessThan((int)strpos($body, 'read-post-m'));
 });
 
 it('returns titles only from mt.getRecentPostTitles', function (): void {
@@ -92,15 +110,20 @@ it('returns titles only from mt.getRecentPostTitles', function (): void {
 
 	expect($body)->toContain('<name>title</name>');
 	// Index-only method: no body text should be serialized.
-	expect($body)->not->toContain('Body 1');
+	expect($body)->not->toContain('Body A');
+	// Same disagreement between id order and date order as getRecentPosts,
+	// so this also fails under an id-sort regression rather than passing
+	// coincidentally.
+	expect(strpos($body, 'read-post-a'))->toBeLessThan((int)strpos($body, 'read-post-z'));
+	expect(strpos($body, 'read-post-z'))->toBeLessThan((int)strpos($body, 'read-post-m'));
 });
 
 it('refuses reads from a key without the collection grant', function (): void {
 	$key = xmlRpcKey(['news']);   // scoped to a collection that does not exist here
 
 	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getPost',
-		xmlRpcParam('read-post-1') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+		xmlRpcParam('read-post-a') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
 
 	expect($body)->toContain('<fault>');
-	expect($body)->not->toContain('Read post 1');
+	expect($body)->not->toContain('Read post A');
 });
