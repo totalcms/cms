@@ -55,7 +55,8 @@
 			{value: "/collections", label: t('api_keys.all_collections_ep')},
 			{value: "/dataviews", label: t('api_keys.all_dataviews_ep')},
 			{value: "/mcp", label: t('api_keys.all_mcp_ep')},
-			{value: "/automations", label: t('api_keys.all_automations_ep')}
+			{value: "/automations", label: t('api_keys.all_automations_ep')},
+			{value: "/xmlrpc.php", label: t('api_keys.xmlrpc_ep')}
 		] %}
 		{% set endpointOptions = endpointOptions|merge({(t('api_keys.choose_collections')): collectionOptions}) %}
 		{% set endpointOptions = endpointOptions|merge({(t('api_keys.choose_dataviews')): dataviewOptions}) %}

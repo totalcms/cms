@@ -941,6 +941,7 @@ return [
 	'api_keys.select_endpoints'      => 'Wybierz endpointy',
 	'api_keys.select_endpoints_help' => 'Zaznacz endpointy, do których ten klucz ma mieć dostęp.',
 	'api_keys.all_automations_ep'    => 'Wszystkie Automations',
+	'api_keys.xmlrpc_ep'             => 'Publikowanie XML-RPC (/xmlrpc.php)',
 	'api_keys.create_submit'         => 'Utwórz klucz API',
 	'api_keys.success_title'         => 'Klucz API utworzony pomyślnie',
 	'api_keys.save_warning'          => 'Zapisz ten klucz teraz!',
