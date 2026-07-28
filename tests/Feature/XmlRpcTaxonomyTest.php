@@ -123,3 +123,52 @@ it('faults on unauthenticated category reads', function (): void {
 	expect($body)->toContain('<int>403</int>');
 	expect($body)->not->toContain('categoryName');
 });
+
+it('lets a GET-only key list categories and tags', function (): void {
+	$key = xmlRpcKey(['blog'], ['GET']);
+
+	$categories = (string)postXmlRpc(xmlRpcBody('metaWeblog.getCategories',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$tags = (string)postXmlRpc(xmlRpcBody('wp.getTags',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+
+	expect($categories)->not->toContain('<fault>');
+	expect($categories)->toContain('Tech');
+	expect($tags)->not->toContain('<fault>');
+	expect($tags)->toContain('flat-file');
+});
+
+it('refuses mt.setPostCategories with a key that cannot PUT, leaving the post unchanged', function (): void {
+	$key = xmlRpcKey(['blog'], ['GET']);
+
+	$body = (string)postXmlRpc(xmlRpcBody('mt.setPostCategories',
+		xmlRpcParam('taxonomy-two') . xmlRpcParam('joe') . xmlRpcParam($key)
+		. '<param><value><array><data>'
+		. '<value><struct><member><name>categoryName</name><value><string>Rewritten</string></value></member></struct></value>'
+		. '</data></array></value></param>'))->getBody();
+
+	// The key authenticates fine (it is granted the path) and is refused at
+	// assertOperation()'s RPC-level check — the operation gate, not the
+	// credential gate.
+	expect($body)->toContain('<int>401</int>');
+
+	$object = $this->app->getContainer()->get(ObjectFetcher::class)
+		->fetchObject('blog', 'taxonomy-two')->toArray();
+
+	expect($object['categories'])->toBe(['Tech']);
+});
+
+it('refuses wp.newCategory with a key that cannot POST', function (): void {
+	$key = xmlRpcKey(['blog'], ['GET']);
+
+	$body = (string)postXmlRpc(xmlRpcBody('wp.newCategory',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+		. xmlRpcStructParam(['name' => 'Should Not Land'])))->getBody();
+
+	expect($body)->toContain('<int>401</int>');
+
+	$listed = (string)postXmlRpc(xmlRpcBody('metaWeblog.getCategories',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+
+	expect($listed)->not->toContain('Should Not Land');
+});

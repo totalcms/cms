@@ -118,3 +118,44 @@ it('sees every collection when scoped to the wildcard', function (): void {
 	// blogsFor() ksort()s its result, so alphabetical order is deterministic.
 	expect(array_keys($registry->blogsFor($identity)))->toBe(['blog', 'blog-archive']);
 });
+
+/*
+ * resolveFor() is now the single resolver behind every XML-RPC handler, so its
+ * branches are pinned directly rather than relying on handler-level tests —
+ * every prior fixture had exactly one visible blog, which never exercised the
+ * "choose among several" or "no visible blogs" paths.
+ */
+it('resolves the blog named by blogid when the key can see more than one', function (): void {
+	$registry = makeBlogRegistry([blogCollection('blog'), blogCollection('news')]);
+	$identity = xmlRpcIdentity(['methods' => ['GET'], 'paths' => ['/collections']]);
+
+	expect($registry->resolveFor($identity, null, 'news')->id)->toBe('news');
+});
+
+it('ignores blogid when the route is URL-pinned, even to a different visible blog', function (): void {
+	$registry = makeBlogRegistry([blogCollection('blog'), blogCollection('news')]);
+	$identity = xmlRpcIdentity(['methods' => ['GET'], 'paths' => ['/collections']]);
+
+	// URL names "blog", blogid names "news" — the URL must win outright.
+	expect($registry->resolveFor($identity, 'blog', 'news')->id)->toBe('blog');
+});
+
+it('faults resolveFor when the key is scoped to no collection at all', function (): void {
+	$registry = makeBlogRegistry([blogCollection('blog'), blogCollection('news')]);
+	$identity = xmlRpcIdentity(['methods' => ['GET'], 'paths' => ['/xmlrpc.php']]);
+
+	expect(fn (): CollectionData => $registry->resolveFor($identity, null))
+		->toThrow(XmlRpcFault::class);
+});
+
+it('faults resolveFor on a blogid outside the key scope rather than falling back to a visible blog', function (): void {
+	$registry = makeBlogRegistry([blogCollection('blog'), blogCollection('news')]);
+	// Scoped to "blog" only, but the call asks for "news" by blogid — this must
+	// fault, not silently resolve to "blog" (the one blog it *can* see). A
+	// fallback here would let a blogid typo or a compromised client publish
+	// into a collection the key was never granted.
+	$identity = xmlRpcIdentity(['methods' => ['GET'], 'paths' => ['/xmlrpc.php', '/collections/blog']]);
+
+	expect(fn (): CollectionData => $registry->resolveFor($identity, null, 'news'))
+		->toThrow(XmlRpcFault::class);
+});
