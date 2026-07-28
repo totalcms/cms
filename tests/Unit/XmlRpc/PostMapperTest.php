@@ -214,6 +214,57 @@ describe('toStruct', function (): void {
 		expect($mapper->absolutizeUrls($html))->toBe($html);
 		expect($mapper->relativizeUrls($html))->toBe($html);
 	});
+
+	/*
+	 * The quote anchor alone (opening-quote-only) is too narrow: it makes a
+	 * bare, unquoted URL in plain text or a markdown link target come back
+	 * from a round trip stripped of its host with no way to put it back —
+	 * strictly worse than leaving it alone, since it worked before this
+	 * method ever touched it. The boundary set (quote, opening paren,
+	 * whitespace, start-of-string) covers those shapes as well as the
+	 * quoted-attribute case.
+	 */
+	it('keeps a bare unquoted upload URL absolute across a relativize/absolutize round trip', function (): void {
+		$mapper = makePostMapper();
+		$text   = 'See https://demo.test/tcms/imageworks/upload/blog/p1/content/a.jpg for the photo';
+
+		$stored = $mapper->relativizeUrls($text);
+		expect($stored)->toBe('See /tcms/imageworks/upload/blog/p1/content/a.jpg for the photo');
+		expect($mapper->absolutizeUrls($stored))->toBe($text);
+	});
+
+	it('keeps a markdown link target absolute across a relativize/absolutize round trip', function (): void {
+		$mapper   = makePostMapper();
+		$markdown = '[pic](https://demo.test/tcms/imageworks/upload/blog/p1/content/a.jpg)';
+
+		$stored = $mapper->relativizeUrls($markdown);
+		expect($stored)->toBe('[pic](/tcms/imageworks/upload/blog/p1/content/a.jpg)');
+		expect($mapper->absolutizeUrls($stored))->toBe($markdown);
+	});
+
+	it('absolutizes a single-quoted src attribute', function (): void {
+		$mapper = makePostMapper();
+		$html   = "<img src='/tcms/imageworks/upload/blog/p1/content/a.jpg'>";
+
+		expect($mapper->absolutizeUrls($html))
+			->toBe("<img src='https://demo.test/tcms/imageworks/upload/blog/p1/content/a.jpg'>");
+	});
+
+	it('leaves a third-party host untouched when the URL is bare, unquoted text', function (): void {
+		$mapper = makePostMapper();
+		$text   = 'See https://othersite.com/tcms/imageworks/upload/pic.jpg here';
+
+		expect($mapper->absolutizeUrls($text))->toBe($text);
+		expect($mapper->relativizeUrls($text))->toBe($text);
+	});
+
+	it('is idempotent for a bare unquoted upload URL', function (): void {
+		$mapper = makePostMapper();
+		$text   = 'See https://demo.test/tcms/imageworks/upload/blog/p1/content/a.jpg for the photo';
+
+		expect($mapper->absolutizeUrls($text))->toBe($text);
+		expect($mapper->absolutizeUrls($mapper->absolutizeUrls($text)))->toBe($text);
+	});
 });
 
 describe('root-domain installs (no path component in config->api)', function (): void {
@@ -253,5 +304,47 @@ describe('root-domain installs (no path component in config->api)', function ():
 
 		expect($mapper->absolutizeUrls($html))->toBe($html);
 		expect($mapper->relativizeUrls($html))->toBe($html);
+	});
+
+	it('keeps a bare unquoted upload URL absolute across a relativize/absolutize round trip', function (): void {
+		$mapper = makePostMapper(api: 'https://demo.test');
+		$text   = 'See https://demo.test/imageworks/upload/blog/p1/content/a.jpg for the photo';
+
+		$stored = $mapper->relativizeUrls($text);
+		expect($stored)->toBe('See /imageworks/upload/blog/p1/content/a.jpg for the photo');
+		expect($mapper->absolutizeUrls($stored))->toBe($text);
+	});
+
+	it('keeps a markdown link target absolute across a relativize/absolutize round trip', function (): void {
+		$mapper   = makePostMapper(api: 'https://demo.test');
+		$markdown = '[pic](https://demo.test/imageworks/upload/blog/p1/content/a.jpg)';
+
+		$stored = $mapper->relativizeUrls($markdown);
+		expect($stored)->toBe('[pic](/imageworks/upload/blog/p1/content/a.jpg)');
+		expect($mapper->absolutizeUrls($stored))->toBe($markdown);
+	});
+
+	it('absolutizes a single-quoted src attribute', function (): void {
+		$mapper = makePostMapper(api: 'https://demo.test');
+		$html   = "<img src='/imageworks/upload/blog/p1/content/a.jpg'>";
+
+		expect($mapper->absolutizeUrls($html))
+			->toBe("<img src='https://demo.test/imageworks/upload/blog/p1/content/a.jpg'>");
+	});
+
+	it('leaves a third-party host untouched when the URL is bare, unquoted text', function (): void {
+		$mapper = makePostMapper(api: 'https://demo.test');
+		$text   = 'See https://othersite.com/imageworks/upload/pic.jpg here';
+
+		expect($mapper->absolutizeUrls($text))->toBe($text);
+		expect($mapper->relativizeUrls($text))->toBe($text);
+	});
+
+	it('is idempotent for a bare unquoted upload URL', function (): void {
+		$mapper = makePostMapper(api: 'https://demo.test');
+		$text   = 'See https://demo.test/imageworks/upload/blog/p1/content/a.jpg for the photo';
+
+		expect($mapper->absolutizeUrls($text))->toBe($text);
+		expect($mapper->absolutizeUrls($mapper->absolutizeUrls($text)))->toBe($text);
 	});
 });

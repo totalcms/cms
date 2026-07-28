@@ -143,12 +143,26 @@ readonly class PostMapper
 	 * `https://mysite.com`) has an empty `pathBase()` — `''` is still a valid
 	 * base (it means "root-relative"), so we no longer bail out on it; only a
 	 * genuinely unconfigured base (`$full === $path`, both empty) skips the
-	 * rewrite. Because an empty path base makes the search string as generic
-	 * as `/imageworks/upload/`, the replacement is anchored on the opening
-	 * attribute quote (`"` or `'`) so it can only match a URL that *starts*
-	 * with our own path — never a third-party absolute URL that merely
-	 * contains that path fragment further in (which would otherwise get
-	 * mangled into a double-host URL).
+	 * rewrite.
+	 *
+	 * Because an empty path base makes the search string as generic as
+	 * `/imageworks/upload/`, the replacement only fires immediately after a
+	 * character that can legitimately precede a URL start: an opening quote
+	 * (`"`/`'`, HTML attributes), an opening parenthesis (markdown link
+	 * targets), whitespace (a bare URL in plain text), or the very start of
+	 * the string. It deliberately does NOT fire mid-host — in a third-party
+	 * URL like `https://othersite.com/imageworks/upload/pic.jpg` the
+	 * character immediately before `/imageworks` is `m`, which is in none of
+	 * those classes, so the URL is left untouched rather than spliced into a
+	 * mangled double-host URL. An earlier version of this method anchored on
+	 * the opening quote only, which is safe but too narrow: it left a bare
+	 * unquoted URL (plain text, or a markdown link target) stripped of its
+	 * host with no way back — strictly worse than not rewriting at all,
+	 * since that URL worked before this method ever ran. `config->api` is
+	 * operator-controlled but may contain regex-significant characters, so
+	 * the interpolated needle is `preg_quote()`-d; the replacement runs
+	 * through a callback (not a plain replacement string) so a `$` or `\` in
+	 * the URL can never be misread as a backreference.
 	 */
 	public function absolutizeUrls(string $html): string
 	{
@@ -162,13 +176,14 @@ readonly class PostMapper
 		$html = $this->relativizeUrls($html);
 
 		foreach (self::UPLOAD_PREFIXES as $prefix) {
-			foreach (['"', "'"] as $quote) {
-				$html = str_replace(
-					$quote . $path . '/' . $prefix,
-					$quote . $full . '/' . $prefix,
-					$html
-				);
-			}
+			$needle  = $path . '/' . $prefix;
+			$pattern = '/(^|["\'(\s])' . preg_quote($needle, '/') . '/';
+
+			$html = (string)preg_replace_callback(
+				$pattern,
+				static fn (array $matches): string => $matches[1] . $full . '/' . $prefix,
+				$html
+			);
 		}
 
 		return $html;
