@@ -27,4 +27,13 @@ return function (RouteCollectorProxyInterface $app): void {
 	$app->post('/xmlrpc/{collection}', XmlRpcAction::class)
 		->add(XmlRpcRateLimitMiddleware::class)
 		->setName('xmlrpc-collection');
+	// Same discovery action as /xmlrpc.php: MarsEdit (and others) validate a typed
+	// endpoint URL with a GET, checking for the exact WordPress probe string. An
+	// operator whose host firewall blocks the literal xmlrpc.php path is forced
+	// onto this collection-pinned route, so it must answer the same GET probe —
+	// otherwise that URL fails client-side validation on the one path those
+	// operators can actually use. `?rsd` still advertises `/xmlrpc.php` (see
+	// XmlRpcDiscoveryAction): a discovering client has no collection pinned yet,
+	// so there is no per-collection RSD to invent.
+	$app->get('/xmlrpc/{collection}', XmlRpcDiscoveryAction::class)->setName('xmlrpc-collection-discovery');
 };

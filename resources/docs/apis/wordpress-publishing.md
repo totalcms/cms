@@ -81,7 +81,7 @@ The `username` parameter is display attribution only — it is never checked aga
 | `sticky` | `featured` | Only written when the client actually sends it |
 | `wp_slug` | `id` | **Create only** — ignored on edit, see above |
 | `post_status` / the `publish` flag | `draft` | `publish` → `draft: false`; `draft`/`pending`/`private` → `draft: true`; `future` → `draft: true` with the given `date` (no autopublish) |
-| `wp_author_display_name` | `author` | Read side; writes attribute to the resolved username |
+| `wp_author_display_name` | `author` | Read side; on write, **create only** — `metaWeblog.newPost` attributes the resolved username, but editing a post never changes its author |
 | `postid` | `id` | Carried as a string — T3 slugs pass through unchanged |
 | `permaLink` / `link` | — | Read-only, built from the collection's URL settings |
 | `wp_password`, `mt_allow_comments`, `mt_allow_pings`, `custom_fields`, `wp_post_thumbnail` | — | Accepted on the wire and silently ignored |

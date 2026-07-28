@@ -19,6 +19,9 @@ it('returns 404 for every route when xmlrpc is disabled', function (): void {
 
 	$get = $this->app->handle((new Psr17Factory())->createServerRequest('GET', '/xmlrpc.php'));
 	expect($get->getStatusCode())->toBe(404);
+
+	$collectionGet = $this->app->handle((new Psr17Factory())->createServerRequest('GET', '/xmlrpc/blog'));
+	expect($collectionGet->getStatusCode())->toBe(404);
 });
 
 describe('with xmlrpc enabled', function (): void {
@@ -29,6 +32,16 @@ describe('with xmlrpc enabled', function (): void {
 
 	it('answers the GET probe with the exact WordPress string', function (): void {
 		$response = $this->app->handle((new Psr17Factory())->createServerRequest('GET', '/xmlrpc.php'));
+
+		expect($response->getStatusCode())->toBe(200);
+		expect((string)$response->getBody())->toBe('XML-RPC server accepts POST requests only.');
+	});
+
+	it('answers the GET probe on the collection-pinned route with the same exact string', function (): void {
+		// MarsEdit (and others) validate a typed endpoint URL by GETting it and
+		// checking for this exact string. Operators whose host firewall blocks
+		// xmlrpc.php are forced onto this route, so it must answer the probe too.
+		$response = $this->app->handle((new Psr17Factory())->createServerRequest('GET', '/xmlrpc/blog'));
 
 		expect($response->getStatusCode())->toBe(200);
 		expect((string)$response->getBody())->toBe('XML-RPC server accepts POST requests only.');
