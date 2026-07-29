@@ -15,6 +15,13 @@ class CurlHttpClient implements HttpClientInterface
 	 */
 	public function request(string $method, string $url, array $options = []): HttpResponse
 	{
+		// cURL rejects an empty custom request, and every caller means a real
+		// verb — an empty one here would otherwise reach curl_setopt_array and
+		// fail somewhere far less obvious than the call site.
+		if ($method === '') {
+			throw new \InvalidArgumentException('HTTP method cannot be empty');
+		}
+
 		$ch = curl_init($url);
 		if ($ch === false) {
 			throw new \RuntimeException('Failed to initialize cURL');
@@ -45,9 +52,14 @@ class CurlHttpClient implements HttpClientInterface
 			$curlOptions[CURLOPT_MAXREDIRS]      = is_int($followRedirects) ? $followRedirects : 5;
 		}
 
-		// User agent
+		// User agent — an empty string would tell cURL to send no agent at all,
+		// which is not what a caller passing the option means, so ignore it and
+		// leave cURL's own default in place.
 		if (isset($options['user_agent'])) {
-			$curlOptions[CURLOPT_USERAGENT] = (string)$options['user_agent'];
+			$userAgent = (string)$options['user_agent'];
+			if ($userAgent !== '') {
+				$curlOptions[CURLOPT_USERAGENT] = $userAgent;
+			}
 		}
 
 		// Headers
