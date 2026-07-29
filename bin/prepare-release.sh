@@ -266,7 +266,7 @@ print_success "JavaScript dependencies installed"
 print_info "Running quality checks..."
 
 print_info "Running code style fixer..."
-if composer run cs:fix; then
+if composer run clean; then
     print_success "Code style fixed"
 
     # Check if cs:fix made any changes
@@ -299,11 +299,35 @@ else
     fi
 fi
 
-print_info "Running tests..."
-if composer run test; then
-    print_success "Tests passed"
+print_info "Validating documentation..."
+if composer run docs:validate; then
+    print_success "Docs validated"
 else
-    print_error "Tests failed"
+    print_error "Docs validation failed"
+    read -p "Continue anyway? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+print_info "Running PHP tests..."
+if composer run test; then
+    print_success "PHP Tests passed"
+else
+    print_error "PHP Tests failed"
+    read -p "Continue anyway? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+print_info "Running JS tests..."
+if composer run test:js; then
+    print_success "JS Tests passed"
+else
+    print_error "JS Tests failed"
     read -p "Continue anyway? (y/N) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then

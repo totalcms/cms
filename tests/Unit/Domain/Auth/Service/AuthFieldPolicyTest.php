@@ -11,9 +11,24 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 final class AuthFieldPolicyTest extends TestCase
 {
+	private \Psr\Log\LoggerInterface $logger;
+
+	protected function setUp(): void
+	{
+		$this->logger = $this->makeLogger();
+	}
+
+	/** @return list<array{level:mixed,message:string,context:array<string,mixed>}> */
+	private function logRecords(): array
+	{
+		return $this->logger->records; // @phpstan-ignore-line anonymous class property
+	}
+
 	/**
 	 * @param list<string>             $props    schema property names
 	 * @param array<string,mixed>|null $existing stored record, or null when it doesn't exist
@@ -22,7 +37,7 @@ final class AuthFieldPolicyTest extends TestCase
 	 * @param list<string> $props
 	 * @param list<string> $inheritFrom
 	 */
-	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = []): AuthFieldPolicy
+	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = [], bool $authEnabled = true): AuthFieldPolicy
 	{
 		$schema              = new SchemaData();
 		$schema->id          = $schemaId;
@@ -43,7 +58,143 @@ final class AuthFieldPolicyTest extends TestCase
 			$objectFetcher->method('fetchObject')->willReturn($object);
 		}
 
-		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher);
+		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->auth = ['enable' => $authEnabled, 'collection' => 'auth'];
+
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('channelLogger')->willReturn($this->logger);
+
+		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher, $config, $loggerFactory);
+	}
+
+	/** Collects log records so tests can assert on the audit trail. */
+	private function makeLogger(): \Psr\Log\LoggerInterface
+	{
+		return new class extends \Psr\Log\AbstractLogger {
+			/** @var list<array{level:mixed,message:string,context:array<string,mixed>}> */
+			public array $records = [];
+
+			/**
+			 * @param array<string,mixed> $context
+			 * @param mixed $level
+			 */
+			public function log($level, string|\Stringable $message, array $context = []): void
+			{
+				$this->records[] = ['level' => $level, 'message' => (string)$message, 'context' => $context];
+			}
+		};
+	}
+
+	// -----------------------------------------------------------------------
+	// auth.enable = false — there is no privilege model to enforce
+	// -----------------------------------------------------------------------
+
+	public function testEnforceIsNoOpWhenAuthIsDisabled(): void
+	{
+		// With auth off, both middlewares pass every request straight through and
+		// no session user can ever resolve as a super-admin. Reverting privileged
+		// fields would make them permanently unwritable — which is what silently
+		// broke the Active toggle on a dev install running auth.enable = false.
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			existing: ['active' => false, 'groups' => ['viewer']],
+			authEnabled: false,
+		);
+
+		$out = $policy->enforce('', 'auth', 'viewer-user', ['active' => true, 'groups' => ['admin'], 'name' => 'V']);
+
+		expect($out['active'])->toBe(true);
+		expect($out['groups'])->toBe(['admin']);
+	}
+
+	public function testCanWritePropertyAllowsPrivilegedPropsWhenAuthIsDisabled(): void
+	{
+		$policy = $this->makePolicy(isSuperAdmin: false, authEnabled: false);
+
+		expect($policy->canWriteProperty('', 'auth', 'active'))->toBeTrue();
+		expect($policy->canWriteProperty('', 'auth', 'groups'))->toBeTrue();
+	}
+
+	// -----------------------------------------------------------------------
+	// Audit trail. The admin form PUTs the whole object, so privileged fields
+	// ride along on every save whether or not anyone touched them. Only a value
+	// that actually differs from what is stored is an attempted write — that
+	// distinction is what keeps the log signal rather than noise.
+	// -----------------------------------------------------------------------
+
+	public function testDoesNotLogWhenPrivilegedFieldsRideAlongUnchanged(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			existing: ['active' => true, 'groups' => ['viewer'], 'name' => 'Old'],
+		);
+
+		$out = $policy->enforce('viewer1', 'auth', 'viewer1', ['active' => true, 'groups' => ['viewer'], 'name' => 'New']);
+
+		expect($out['name'])->toBe('New');
+		expect($this->logRecords())->toBe([]);
+	}
+
+	public function testLogsWhenAPrivilegedFieldIsActuallyChanged(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			existing: ['active' => true, 'groups' => ['viewer'], 'name' => 'Old'],
+		);
+
+		$out = $policy->enforce('viewer1', 'auth', 'viewer1', ['active' => false, 'groups' => ['viewer'], 'name' => 'New']);
+
+		expect($out['active'])->toBe(true); // still reverted
+		expect($out['name'])->toBe('New');  // ordinary field still saved
+
+		$records = $this->logRecords();
+		expect($records)->toHaveCount(1);
+		expect($records[0]['context']['reverted'])->toBe(['active']);
+		expect($records[0]['context']['actor'])->toBe('viewer1');
+		expect($records[0]['context']['collection'])->toBe('auth');
+		expect($records[0]['context']['object'])->toBe('viewer1');
+	}
+
+	public function testLogsStrippedFieldsOnCreate(): void
+	{
+		$policy = $this->makePolicy(isSuperAdmin: false);
+
+		$policy->enforce('viewer1', 'auth', 'newuser', ['groups' => ['admin'], 'name' => 'X']);
+
+		$records = $this->logRecords();
+		expect($records)->toHaveCount(1);
+		expect($records[0]['context']['stripped'])->toBe(['groups']);
+	}
+
+	public function testDoesNotLogForSuperAdmin(): void
+	{
+		$policy = $this->makePolicy(isSuperAdmin: true, existing: ['active' => true]);
+
+		$policy->enforce('admin', 'auth', 'u1', ['active' => false]);
+
+		expect($this->logRecords())->toBe([]);
+	}
+
+	public function testDoesNotLogWhenAuthIsDisabled(): void
+	{
+		$policy = $this->makePolicy(isSuperAdmin: false, existing: ['active' => true], authEnabled: false);
+
+		$policy->enforce('', 'auth', 'u1', ['active' => false]);
+
+		expect($this->logRecords())->toBe([]);
+	}
+
+	public function testStripProtectedStillStripsWhenAuthIsDisabled(): void
+	{
+		// Deliberate exception. stripProtected() serves public registration, which
+		// is reachable by anonymous callers and has no actor to trust. Letting it
+		// through with auth off would bake `groups:['admin']` into records that
+		// become live escalations the moment auth is switched back on.
+		$policy = $this->makePolicy(isSuperAdmin: false, authEnabled: false);
+
+		$out = $policy->stripProtected('auth', ['name' => 'x', 'groups' => ['admin'], 'active' => true]);
+
+		expect($out)->toBe(['name' => 'x']);
 	}
 
 	public function testRevertsPrivilegedFieldsToStoredForNonAdmin(): void

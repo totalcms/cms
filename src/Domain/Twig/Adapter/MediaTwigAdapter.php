@@ -17,13 +17,31 @@ use TotalCMS\Support\Config;
  *
  * Accessed in Twig as `cms.media.*`.
  */
-readonly class MediaTwigAdapter
+class MediaTwigAdapter
 {
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
+
+	/**
+	 * Memo of fetchData() results, keyed `collection:id:property`.
+	 *
+	 * Passing an object ID (rather than the object) to `cms.render.image()` /
+	 * `galleryImage()` inside a loop is the single most common performance trap
+	 * in user templates: every call re-hydrates the whole object and transforms
+	 * it back to an array just to read one property, making an N-image gallery
+	 * O(N^2). Callers who already hold the object never reach this path, so
+	 * memoizing here closes the gap between the two idioms.
+	 *
+	 * Scoped to this instance, which the container shares for one render. Only
+	 * template rendering touches these helpers, so there is no write to go stale
+	 * against mid-request.
+	 *
+	 * @var array<string,mixed>
+	 */
+	private array $dataCache = [];
 
 	public function __construct(
-		private ObjectFetcher $objectFetcher,
-		private Config $config,
+		private readonly ObjectFetcher $objectFetcher,
+		private readonly Config $config,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Twig);
@@ -570,22 +588,28 @@ readonly class MediaTwigAdapter
 	 */
 	private function fetchData(string $collection, string $id, string $property): mixed
 	{
+		$key = "{$collection}:{$id}:{$property}";
+
+		if (array_key_exists($key, $this->dataCache)) {
+			return $this->dataCache[$key];
+		}
+
 		try {
 			$object = $this->objectFetcher->fetchObject($collection, $id);
 		} catch (\Exception $e) {
 			$this->logger->warning("Object '{$id}' not found in collection '{$collection}'", ['error' => $e->getMessage()]);
 
-			return '';
+			return $this->dataCache[$key] = '';
 		}
 
 		$data = $object->toArray();
 
 		if (array_key_exists($property, $data)) {
-			return $data[$property];
+			return $this->dataCache[$key] = $data[$property];
 		}
 
 		$this->logger->debug("Property '{$property}' not found on object '{$id}' in collection '{$collection}'");
 
-		return '';
+		return $this->dataCache[$key] = '';
 	}
 }

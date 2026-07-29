@@ -50,7 +50,7 @@ final class DeckDataTest extends TestCase
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
+		$this->expectExceptionMessage('must be a dictionary of named items');
 		new DeckData($invalidDeck);
 	}
 
@@ -61,7 +61,7 @@ final class DeckDataTest extends TestCase
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
+		$this->expectExceptionMessage('hyphens are not allowed');
 		new DeckData($invalidDeck);
 	}
 
@@ -73,7 +73,7 @@ final class DeckDataTest extends TestCase
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
+		$this->expectExceptionMessage('must be an object of its own fields');
 		new DeckData($invalidDeck);
 	}
 
@@ -358,7 +358,7 @@ final class DeckDataTest extends TestCase
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
+		$this->expectExceptionMessage('hyphens are not allowed');
 		new DeckData($invalidNames);
 	}
 
@@ -369,7 +369,7 @@ final class DeckDataTest extends TestCase
 		];
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('Deck must be a dictionary of named objects');
+		$this->expectExceptionMessage('must match the key it is stored under');
 		new DeckData($inconsistentDeck);
 	}
 

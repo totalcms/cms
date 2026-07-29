@@ -403,3 +403,24 @@ function devModeFile(string $datadir): string
 {
 	return $datadir . '/.system/totalcms_devmode.json';
 }
+
+/**
+ * Build a CSRFRequestValidator wired to a real origin validator.
+ *
+ * The CSRF policy is "same origin OR valid token", so every consumer needs both
+ * halves. Requests without Origin/Referer land on the token path, which is what
+ * the token-focused suites exercise; pass a $domain matching the request's
+ * Origin to exercise the same-origin path instead.
+ */
+function csrfValidatorFor(
+	TotalCMS\Domain\Security\CSRF\CSRFTokenManager $manager,
+	string $domain = 'tests.local',
+): TotalCMS\Domain\Security\CSRF\CSRFRequestValidator {
+	$config         = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config->domain = $domain;
+
+	return new TotalCMS\Domain\Security\CSRF\CSRFRequestValidator(
+		$manager,
+		new TotalCMS\Domain\Security\CSRF\RequestOriginValidator($config),
+	);
+}

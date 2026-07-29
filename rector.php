@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
 use Rector\CodingStyle\Rector\ArrowFunction\ArrowFunctionDelegatingCallToFirstClassCallableRector;
+use Rector\DeadCode\Rector\Property\RemoveDefaultValueFromAssignedPropertyRector;
 use Rector\Php71\Rector\FuncCall\RemoveExtraParametersRector;
 use Rector\Php84\Rector\Param\ExplicitNullableParamTypeRector;
 use Rector\Set\ValueObject\LevelSetList;
@@ -62,6 +63,16 @@ return RectorConfig::configure()
     	ArrowFunctionDelegatingCallToFirstClassCallableRector::class => [
 			__DIR__ . '/config/container.php',
 		],
+
+		// Strips a property's default because the constructor always assigns it.
+		// That reasoning ignores how this codebase builds objects: our tests
+		// construct Config and friends with newInstanceWithoutConstructor() (the
+		// documented convention in CLAUDE.md), and DepotData/GalleryData are
+		// hydrated field by field. Without the default those properties are
+		// uninitialized, so reading one is a fatal Error rather than the empty
+		// string or array every caller expects. Removing it broke 21 tests across
+		// Config, SyncConfig, FormField and DepotData in one run.
+		RemoveDefaultValueFromAssignedPropertyRector::class,
 	])
 	->withSets([
 		// Apply PHP 8.2 level set (current project requirement)

@@ -62,7 +62,7 @@
 			"$ref"             : "https://www.totalcms.co/schemas/properties/deck.json",
 			"settings"         : { "deckItemLabel": "${type}: ${cron}${event}" },
 			"patternProperties": {
-				"^[a-z0-9][a-z0-9-]*$": { "$ref": "https://www.totalcms.co/schemas/automation-trigger.json" }
+				"^[a-z0-9][a-z0-9_]*$": { "$ref": "https://www.totalcms.co/schemas/automation-trigger.json" }
 			}
 		},
 		"handler": {

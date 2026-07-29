@@ -13,6 +13,7 @@ use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Automation\Service\AutomationResolver;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\CSRF\RequestOriginValidator;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -36,6 +37,7 @@ final readonly class AutomationWebhookMiddleware implements MiddlewareInterface
 		private JsonRenderer $renderer,
 		private ResponseFactoryInterface $responseFactory,
 		private Config $config,
+		private RequestOriginValidator $originValidator,
 	) {
 	}
 
@@ -62,7 +64,7 @@ final readonly class AutomationWebhookMiddleware implements MiddlewareInterface
 			// other origins' JS/forms (the browser stamps a truthful Origin that
 			// JS cannot forge), but a non-browser client can spoof it — so this is
 			// CSRF-grade, not a substitute for an API key.
-			if ($auth === 'sameOrigin' && !$this->isSameOrigin($request)) {
+			if ($auth === 'sameOrigin' && !$this->originValidator->isSameOrigin($request)) {
 				return $this->error(403, 'This webhook only accepts same-origin requests.');
 			}
 		} else {
@@ -113,41 +115,6 @@ final readonly class AutomationWebhookMiddleware implements MiddlewareInterface
 		}
 
 		return $request->getServerParams()['REMOTE_ADDR'] ?? '0.0.0.0';
-	}
-
-	/**
-	 * Whether the request originates from this site's own host. Compares the
-	 * browser-set Origin host (falling back to Referer) against the request host.
-	 * Host-only — scheme and port are ignored, matching "same domain". Returns
-	 * false when neither header is present (a non-browser caller we can't verify).
-	 */
-	private function isSameOrigin(ServerRequestInterface $request): bool
-	{
-		$host = $this->requestHost($request);
-		if ($host === '') {
-			return false;
-		}
-
-		foreach (['Origin', 'Referer'] as $header) {
-			$value = $request->getHeaderLine($header);
-			if ($value !== '') {
-				// Origin is authoritative; Referer is only the fallback for
-				// browsers that omit Origin on same-origin POSTs. First one present
-				// decides — a present-but-mismatched Origin is a hard no.
-				return strtolower((string)parse_url($value, PHP_URL_HOST)) === strtolower($host);
-			}
-		}
-
-		return false;
-	}
-
-	private function requestHost(ServerRequestInterface $request): string
-	{
-		if ($request->hasHeader('X-Forwarded-Host')) {
-			return trim(explode(',', $request->getHeaderLine('X-Forwarded-Host'))[0]);
-		}
-
-		return $request->getUri()->getHost();
 	}
 
 	private function error(int $status, string $message): ResponseInterface

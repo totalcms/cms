@@ -101,6 +101,9 @@ enum LogChannel: string
 	// --------------------------------------------------------- License
 	case License = 'license';
 
+	// ----------------------------------------------------------- XmlRpc
+	case XmlRpc = 'xmlrpc';
+
 	/**
 	 * The log file this channel writes to.
 	 */
@@ -125,7 +128,8 @@ enum LogChannel: string
 			self::TextWatermark,
 			self::TotalForm,
 			self::Update,
-			self::WatermarkCleanup => LogFile::App,
+			self::WatermarkCleanup,
+			self::XmlRpc => LogFile::App,
 
 			self::Access,
 			self::AuthMiddleware,

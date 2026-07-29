@@ -24,8 +24,13 @@ use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
 // Session-cookie authentication is the one auth mode CSRF can ride, so both
-// auth middlewares must demand the CSRF token on state-changing requests that
-// were authorized by the session — while API-keyed requests stay exempt.
+// auth middlewares must verify state-changing requests that were authorized by
+// the session — while API-keyed requests stay exempt.
+//
+// A request passes on EITHER a browser-verified same origin OR a valid CSRF
+// token. Origin is stamped by the browser and unforgeable from script, so it
+// proves the same thing the token does without the client having to cooperate;
+// the token remains the fallback for callers that send no browser headers.
 
 beforeEach(function (): void {
 	$this->session = new PhpSession();
@@ -46,8 +51,14 @@ function csrfTestConfig(): Config
 	$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->auth    = ['enable' => true, 'collection' => 'auth'];
 	$config->session = ['gc_maxlifetime' => 1440];
+	$config->domain  = 'example.com';
 
 	return $config;
+}
+
+function csrfTestValidator(CSRFTokenManager $csrfManager): CSRFRequestValidator
+{
+	return csrfValidatorFor($csrfManager, 'example.com');
 }
 
 /**
@@ -114,7 +125,7 @@ function makeDualAuthMiddleware(PhpSession $session, CSRFTokenManager $csrfManag
 		test()->createMock(CollectionFetcher::class),
 		test()->createMock(OperationDetector::class),
 		$editionFeatures,
-		new CSRFRequestValidator($csrfManager),
+		csrfTestValidator($csrfManager),
 		csrfTestLoggerFactory(),
 	);
 }
@@ -127,7 +138,7 @@ function makeAuthMiddleware(PhpSession $session, CSRFTokenManager $csrfManager):
 		csrfTestConfig(),
 		csrfTestAccessManager(),
 		test()->createMock(PersistentLoginService::class),
-		new CSRFRequestValidator($csrfManager),
+		csrfTestValidator($csrfManager),
 		csrfTestLoggerFactory(),
 	);
 }
@@ -211,4 +222,99 @@ it('AuthMiddleware allows GET requests without a CSRF token', function (): void 
 	$response = $middleware->process($request, csrfTestHandler());
 
 	expect($response->getStatusCode())->toBe(200);
+});
+
+// ---------------------------------------------------------------------------
+// Same-origin acceptance — the path that lets Dropzone, Tiptap and third-party
+// callers work without being taught to send a token
+// ---------------------------------------------------------------------------
+
+it('allows a same-origin API write with no CSRF token at all', function (): void {
+	$this->csrfManager->generateToken();
+
+	$middleware = makeDualAuthMiddleware($this->session, $this->csrfManager);
+	$request    = csrfTestRequest('POST', '/api/collections/image/demo/image')
+		->withHeader('Origin', 'https://example.com');
+
+	$response = $middleware->process($request, csrfTestHandler());
+
+	expect($response->getStatusCode())->toBe(200);
+});
+
+it('AuthMiddleware allows a same-origin write with no CSRF token', function (): void {
+	$this->csrfManager->generateToken();
+
+	$middleware = makeAuthMiddleware($this->session, $this->csrfManager);
+	$request    = csrfTestRequest('POST', '/api/passkeys/register')
+		->withHeader('Origin', 'https://example.com');
+
+	$response = $middleware->process($request, csrfTestHandler());
+
+	expect($response->getStatusCode())->toBe(200);
+});
+
+it('accepts a same-origin write verified by Referer when Origin is absent', function (): void {
+	$this->csrfManager->generateToken();
+
+	$middleware = makeDualAuthMiddleware($this->session, $this->csrfManager);
+	$request    = csrfTestRequest('POST', '/api/collections/image/demo/image')
+		->withHeader('Referer', 'https://example.com/admin/collection/image');
+
+	$response = $middleware->process($request, csrfTestHandler());
+
+	expect($response->getStatusCode())->toBe(200);
+});
+
+// ---------------------------------------------------------------------------
+// Cross-origin is a hard reject — a leaked token must not be usable elsewhere
+// ---------------------------------------------------------------------------
+
+it('rejects a cross-origin write even when it carries a valid CSRF token', function (): void {
+	$token = $this->csrfManager->generateToken();
+
+	$middleware = makeDualAuthMiddleware($this->session, $this->csrfManager);
+	$request    = csrfTestRequest('POST', '/api/collections/blog/post-1')
+		->withHeader('Origin', 'https://evil.com')
+		->withHeader('X-CSRF-Token', $token);
+
+	$response = $middleware->process($request, csrfTestHandler());
+
+	expect($response->getStatusCode())->toBe(403);
+});
+
+it('rejects a same-site sibling subdomain that SameSite=Lax would allow', function (): void {
+	$token = $this->csrfManager->generateToken();
+
+	$middleware = makeDualAuthMiddleware($this->session, $this->csrfManager);
+	$request    = csrfTestRequest('POST', '/api/collections/blog/post-1')
+		->withHeader('Origin', 'https://evil.example.com')
+		->withHeader('X-CSRF-Token', $token);
+
+	$response = $middleware->process($request, csrfTestHandler());
+
+	expect($response->getStatusCode())->toBe(403);
+});
+
+it('AuthMiddleware rejects a cross-origin write carrying a valid token', function (): void {
+	$token = $this->csrfManager->generateToken();
+
+	$middleware = makeAuthMiddleware($this->session, $this->csrfManager);
+	$request    = csrfTestRequest('POST', '/api/collections')
+		->withHeader('Origin', 'https://evil.com')
+		->withHeader('X-CSRF-Token', $token);
+
+	$middleware->process($request, csrfTestHandler());
+})->throws(Slim\Exception\HttpForbiddenException::class);
+
+it('ignores X-Forwarded-Host when deciding what counts as same-origin', function (): void {
+	$this->csrfManager->generateToken();
+
+	$middleware = makeDualAuthMiddleware($this->session, $this->csrfManager);
+	$request    = csrfTestRequest('POST', '/api/collections/blog/post-1')
+		->withHeader('Origin', 'https://evil.com')
+		->withHeader('X-Forwarded-Host', 'evil.com');
+
+	$response = $middleware->process($request, csrfTestHandler());
+
+	expect($response->getStatusCode())->toBe(403);
 });

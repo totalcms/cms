@@ -5,6 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>{% block title %}{{ cms.config('domain') }}{% endblock %}</title>
 	<meta name="description" content="{% block description %}{% endblock %}">
+	{# Total CMS core styles: {% cmsgrid %} grids (e.g. Services), galleries, and pagination controls. Placed ahead of the site stylesheet so your branding always takes precedence over the defaults. #}
+	{{ cms.assetsHead() }}
 	{# Site stylesheet at <docroot>/assets/style.css. Edit it directly — cms.builder.css adds an mtime cache-buster automatically. #}
 	{{ cms.builder.css('style.css') }}
 	{% block head %}{% endblock %}
@@ -17,5 +19,8 @@
 	</main>
 
 	{% include 'partials/footer.twig' %}
+
+	{# Total CMS core scripts, including htmx, which powers the Load More button used on longer listings. Take this out and Load More has nothing left to drive it. #}
+	{{ cms.assetsBody() }}
 </body>
 </html>

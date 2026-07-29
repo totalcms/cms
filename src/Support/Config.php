@@ -69,6 +69,8 @@ class Config
 	public array $search = [];
 	/** @var array<string,mixed> */
 	public array $automations = [];
+	/** @var array<string,mixed> */
+	public array $xmlrpc = [];
 
 	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
@@ -130,6 +132,7 @@ class Config
 		$this->oauth              = is_array($settings['oauth'] ?? null) ? $settings['oauth'] : [];
 		$this->search             = is_array($settings['search'] ?? null) ? $settings['search'] : [];
 		$this->automations        = is_array($settings['automations'] ?? null) ? $settings['automations'] : [];
+		$this->xmlrpc             = is_array($settings['xmlrpc'] ?? null) ? $settings['xmlrpc'] : [];
 
 		$presets               = $settings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];
@@ -282,9 +285,62 @@ class Config
 		return rtrim($baseUrl ?? $this->url, '/') . $this->api . '/mcp';
 	}
 
+	/**
+	 * Memoized result of requiring `config/settings.php`, with the mutable
+	 * globals that file reads recorded alongside it.
+	 *
+	 * @var array<string,mixed>|null
+	 */
+	private static ?array $settings    = null;
+	private static string $settingsKey = '';
+
+	/**
+	 * Build a Config from the app settings.
+	 *
+	 * Returns a NEW instance every call — callers mutate what they get back
+	 * (DataPathInstaller syncs `datadir`; a lot of tests poke `env`), so the
+	 * instance itself must never be shared.
+	 *
+	 * What *is* memoized is the settings array behind it, because requiring
+	 * `config/settings.php` costs ~200us — it pulls in defaults.php, probes
+	 * several tcms.php locations, and merges settings.json off disk — while
+	 * constructing the Config from an in-hand array costs ~4us. DateData,
+	 * StringData and CodeData all call init() from their constructors, so that
+	 * require was being charged per property on every object hydration: a
+	 * gallery rebuilt once per image in a Twig loop spent seconds here alone.
+	 *
+	 * The memo is keyed on the mutable globals settings.php actually reads, so
+	 * a test (or the setup wizard) repointing DOCUMENT_ROOT or APP_ENV still
+	 * gets a fresh read. Call reset() when the files themselves change.
+	 *
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 */
 	public static function init(): self
 	{
-		return new Config(require PathResolver::packageRoot() . '/config/settings.php');
+		$docroot = (string)($_SERVER['DOCUMENT_ROOT'] ?? '');
+		$appEnv  = $_SERVER['APP_ENV'] ?? $_ENV['APP_ENV'] ?? getenv('APP_ENV');
+		$key     = $docroot . '|' . (is_string($appEnv) ? $appEnv : '');
+
+		$settings = self::$settings;
+
+		if ($settings === null || self::$settingsKey !== $key) {
+			/** @var array<string,mixed> $settings */
+			$settings          = require PathResolver::packageRoot() . '/config/settings.php';
+			self::$settings    = $settings;
+			self::$settingsKey = $key;
+		}
+
+		return new Config($settings);
+	}
+
+	/**
+	 * Drop the memoized settings so the next init() re-reads them from disk.
+	 * Needed whenever the underlying files change — see SettingsSaver.
+	 */
+	public static function reset(): void
+	{
+		self::$settings    = null;
+		self::$settingsKey = '';
 	}
 
 	/**

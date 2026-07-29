@@ -854,4 +854,29 @@ return [
 	// ImpersonationServiceInterface → concrete service (actions type-hint the interface
 	// so unit tests can mock it without removing the final keyword from the class).
 	ImpersonationServiceInterface::class => fn (ContainerInterface $container): ImpersonationService => $container->get(ImpersonationService::class),
+
+	// === XML-RPC Publishing ===
+
+	TotalCMS\Domain\XmlRpc\Service\MethodRouter::class => function (ContainerInterface $c): TotalCMS\Domain\XmlRpc\Service\MethodRouter {
+		// SystemHandler needs MethodRouter (to report mt.supportedMethods), and
+		// MethodRouter builds its map from the handlers below — a genuine cycle
+		// if handlers were resolved eagerly. A generator defers `$c->get()` calls
+		// until MethodRouter iterates over $handlers, which happens inside its
+		// own constructor — by which point the MethodRouter instance being
+		// constructed already exists (PHP-DI can return the in-progress
+		// singleton), so SystemHandler's constructor resolves cleanly.
+		//
+		// Handlers are registered here as they land: SystemHandler, BlogHandler,
+		// PostReadHandler, PostWriteHandler, TaxonomyHandler, UnsupportedHandler.
+		$handlers = function () use ($c): Generator {
+			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\BlogHandler::class);
+			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\SystemHandler::class);
+			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\PostReadHandler::class);
+			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\PostWriteHandler::class);
+			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\TaxonomyHandler::class);
+			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\UnsupportedHandler::class);
+		};
+
+		return new TotalCMS\Domain\XmlRpc\Service\MethodRouter($handlers());
+	},
 ];

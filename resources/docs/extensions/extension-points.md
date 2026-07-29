@@ -348,7 +348,9 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-Extension automations appear in the automations admin **read-only** — operators can run or disable them (via the capability toggle) but cannot edit the closure, since it lives in your code. Returning a value records it on the run record; throwing marks the run failed.
+Extension automations appear in the automations admin **read-only**, grouped under your extension's id in the sidebar and listed with their triggers, last run, and consecutive-failure count on the Automations landing page. Operators can **Run now** and reset a failure count there, but cannot edit the closure, since it lives in your code — there is no code field to show. To switch a whole extension's automations off, they use the `automations` capability toggle on your extension's settings page; a forbidden automation still appears, marked *permission off*, rather than vanishing. Returning a value records it on the run record; throwing marks the run failed.
+
+Note that the failure guard applies to your automations too: five consecutive failures on Production auto-disables one, so a handler that throws every tick will stop being scheduled. The failure count and the reset button are how an operator sees and recovers from that.
 
 For **HTTP triggers**, register a [public route](#public-routes) rather than a `webhook` trigger — an extension automation's id (`vendor/name:id`) isn't a URL path, so webhook triggers stay reserved for user-authored automations.
 

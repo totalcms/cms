@@ -5,6 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>{% block title %}{{ cms.config('domain') }}{% endblock %}</title>
 	<meta name="description" content="{% block description %}{% endblock %}">
+	{# Core CSS: icons, {% cmsgrid %}, galleries, pagination. Goes first so style.css below (and anything in {% block head %}) can override it. #}
+	{{ cms.assetsHead() }}
 	{# Site stylesheet at <docroot>/assets/style.css. Edit it directly — cms.builder.css adds an mtime cache-buster automatically. #}
 	{{ cms.builder.css('style.css') }}
 	{% block head %}{% endblock %}
@@ -17,5 +19,8 @@
 	</main>
 
 	{% include 'partials/footer.twig' %}
+
+	{# Core JS: content.js, gallery.js, htmx. Drop this and Load More buttons stop working — there's no htmx to fire the request. #}
+	{{ cms.assetsBody() }}
 </body>
 </html>

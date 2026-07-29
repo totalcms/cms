@@ -110,12 +110,16 @@ it('rejects an apiKey webhook for a key not scoped for /automations (401)', func
 	expect(postJson('/automations/secure2', [], ['X-API-Key' => $key->key])->getStatusCode())->toBe(401);
 });
 
+// The host a request is compared against comes from the request URI (the
+// browser-set Host header) or the operator's configured `domain` — never from
+// X-Forwarded-Host, which any caller can send and would otherwise let a request
+// nominate its own origin.
+
 it('allows a sameOrigin webhook from the site\'s own host', function (): void {
 	saveWebhookAutomation($this->app->getContainer(), 'form', 'sameOrigin', true, "<?php\n\nreturn function (\$ctx) { return ['ok' => true]; };\n");
 
-	$response = postJson('/automations/form', ['name' => 'Joe'], [
-		'X-Forwarded-Host' => 'mysite.test',
-		'Origin'           => 'https://mysite.test',
+	$response = postJson('https://mysite.test/automations/form', ['name' => 'Joe'], [
+		'Origin' => 'https://mysite.test',
 	]);
 
 	expect($response->getStatusCode())->toBe(200);
@@ -125,9 +129,8 @@ it('allows a sameOrigin webhook from the site\'s own host', function (): void {
 it('allows a sameOrigin webhook via the Referer fallback when Origin is absent', function (): void {
 	saveWebhookAutomation($this->app->getContainer(), 'form-ref', 'sameOrigin', true, "<?php\n\nreturn function (\$ctx) { return 'ok'; };\n");
 
-	$response = postJson('/automations/form-ref', [], [
-		'X-Forwarded-Host' => 'mysite.test',
-		'Referer'          => 'https://mysite.test/contact',
+	$response = postJson('https://mysite.test/automations/form-ref', [], [
+		'Referer' => 'https://mysite.test/contact',
 	]);
 
 	expect($response->getStatusCode())->toBe(200);
@@ -136,16 +139,24 @@ it('allows a sameOrigin webhook via the Referer fallback when Origin is absent',
 it('rejects a sameOrigin webhook from a different origin (403)', function (): void {
 	saveWebhookAutomation($this->app->getContainer(), 'form2', 'sameOrigin', false, "<?php\n\nreturn function (\$ctx) { return true; };\n");
 
-	expect(postJson('/automations/form2', [], [
-		'X-Forwarded-Host' => 'mysite.test',
-		'Origin'           => 'https://evil.test',
+	expect(postJson('https://mysite.test/automations/form2', [], [
+		'Origin' => 'https://evil.test',
 	])->getStatusCode())->toBe(403);
 });
 
 it('rejects a sameOrigin webhook with no Origin or Referer (403)', function (): void {
 	saveWebhookAutomation($this->app->getContainer(), 'form3', 'sameOrigin', false, "<?php\n\nreturn function (\$ctx) { return true; };\n");
 
-	expect(postJson('/automations/form3', [], ['X-Forwarded-Host' => 'mysite.test'])->getStatusCode())->toBe(403);
+	expect(postJson('https://mysite.test/automations/form3')->getStatusCode())->toBe(403);
+});
+
+it('does not let X-Forwarded-Host nominate the origin for a sameOrigin webhook', function (): void {
+	saveWebhookAutomation($this->app->getContainer(), 'form4', 'sameOrigin', false, "<?php\n\nreturn function (\$ctx) { return true; };\n");
+
+	expect(postJson('https://mysite.test/automations/form4', [], [
+		'Origin'           => 'https://evil.test',
+		'X-Forwarded-Host' => 'evil.test',
+	])->getStatusCode())->toBe(403);
 });
 
 it('404s for an unknown webhook id', function (): void {

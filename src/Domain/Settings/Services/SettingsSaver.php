@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Settings\Services;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Mcp\Service\McpSessionInvalidator;
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
+use TotalCMS\Support\Config;
 
 /**
  * Saves settings to settings.json in tcms-data/.system/.
@@ -99,6 +100,11 @@ readonly class SettingsSaver
 	private function writeSettings(array $settings): void
 	{
 		$this->settingsRepository->save($settings);
+
+		// Config::init() is memoized and settings.php reads settings.json, so the
+		// memo is stale the moment we write. Drop it here — the single funnel for
+		// every settings.json write — to keep read-after-write within a request.
+		Config::reset();
 	}
 
 	/**

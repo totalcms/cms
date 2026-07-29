@@ -42,7 +42,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$noApiKey = $this->createMock(ApiKeyAuthenticator::class);
 		$noApiKey->method('hasApiKeyHeader')->willReturn(false);
 
-		$this->middleware = new CSRFProtectionMiddleware($noApiKey, new \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator($this->csrfManager));
+		$this->middleware = new CSRFProtectionMiddleware($noApiKey, csrfValidatorFor($this->csrfManager));
 	}
 
 	protected function tearDown(): void
@@ -142,7 +142,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$authenticator->method('hasApiKeyHeader')->willReturn(true);
 		$authenticator->method('authenticate')->willReturn($apiKeyData);
 
-		$middleware = new CSRFProtectionMiddleware($authenticator, new \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator($this->csrfManager));
+		$middleware = new CSRFProtectionMiddleware($authenticator, csrfValidatorFor($this->csrfManager));
 
 		$handler = $this->makeHandler(new Response());
 		$request = (new ServerRequestFactory())
@@ -164,7 +164,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$authenticator->method('hasApiKeyHeader')->willReturn(true);
 		$authenticator->method('authenticate')->willReturn(null); // key doesn't validate
 
-		$middleware = new CSRFProtectionMiddleware($authenticator, new \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator($this->csrfManager));
+		$middleware = new CSRFProtectionMiddleware($authenticator, csrfValidatorFor($this->csrfManager));
 
 		$handler = $this->makeHandler(new Response());
 		$request = (new ServerRequestFactory())
@@ -186,7 +186,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$authenticator->method('hasApiKeyHeader')->willReturn(true);
 		$authenticator->method('authenticate')->willReturn(null); // Bearer token is not a stored API key
 
-		$middleware = new CSRFProtectionMiddleware($authenticator, new \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator($this->csrfManager));
+		$middleware = new CSRFProtectionMiddleware($authenticator, csrfValidatorFor($this->csrfManager));
 
 		$handler = $this->makeHandler(new Response());
 		$request = (new ServerRequestFactory())

@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Auth\Service;
 
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LogChannel;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 /**
  * Server-side authorization for privileged user-record fields.
@@ -31,11 +35,31 @@ final readonly class AuthFieldPolicy
 	/** Schema id whose records are user/auth records. */
 	private const AUTH_SCHEMA = 'auth';
 
+	private LoggerInterface $logger;
+
 	public function __construct(
 		private SchemaFetcher $schemaFetcher,
 		private UserValidationService $userValidation,
 		private ObjectFetcher $objectFetcher,
+		private Config $config,
+		LoggerFactory $loggerFactory,
 	) {
+		$this->logger = $loggerFactory->channelLogger(LogChannel::Access);
+	}
+
+	/**
+	 * Whether authentication is switched off for the whole install.
+	 *
+	 * In that mode both auth middlewares pass every request straight through
+	 * (AuthMiddleware / DualAuthMiddleware), no session user can resolve as a
+	 * super-admin, and the admin is open to anyone who can reach it. Field-level
+	 * authz therefore protects nothing — it only makes privileged fields
+	 * permanently unwritable. BaseAccessMiddleware and
+	 * SystemCollectionGuardMiddleware already stand down here; this matches them.
+	 */
+	private function authDisabled(): bool
+	{
+		return ($this->config->auth['enable'] ?? true) === false;
 	}
 
 	/**
@@ -85,6 +109,10 @@ final readonly class AuthFieldPolicy
 	 */
 	public function enforce(string $actorId, string $collection, string $objectId, array $incoming): array
 	{
+		if ($this->authDisabled()) {
+			return $incoming;
+		}
+
 		$protected = $this->protectedFieldsFor($collection);
 		if ($protected === []) {
 			return $incoming;
@@ -98,15 +126,45 @@ final readonly class AuthFieldPolicy
 			$existing = $this->objectFetcher->fetchObject($collection, $objectId)->toArray();
 		}
 
+		$reverted = [];
+		$stripped = [];
+
 		foreach ($protected as $field) {
 			if (!array_key_exists($field, $incoming)) {
 				continue;
 			}
+
 			if (array_key_exists($field, $existing)) {
+				// The admin form PUTs the whole object, so privileged fields ride
+				// along on every save whether or not anyone touched them. Only a
+				// value that differs from what is stored is an attempted write —
+				// without this check the audit log would fire on every save by a
+				// non-admin and be worthless.
+				if ($incoming[$field] === $existing[$field]) {
+					continue;
+				}
+
+				$reverted[]       = $field;
 				$incoming[$field] = $existing[$field];
 			} else {
+				$stripped[] = $field;
 				unset($incoming[$field]);
 			}
+		}
+
+		if ($reverted !== [] || $stripped !== []) {
+			// The write is neutralized silently as far as the client is concerned
+			// — returning an error would confirm to a prober which fields are
+			// privileged, and the request's ordinary fields did save. The log is
+			// how an operator finds out afterwards why a change didn't stick.
+			// Field names only: `passkeys` values are large and credential-ish.
+			$this->logger->warning('Privileged field write neutralized', [
+				'actor'      => $actorId === '' ? '(none)' : $actorId,
+				'collection' => $collection,
+				'object'     => $objectId,
+				'reverted'   => $reverted,
+				'stripped'   => $stripped,
+			]);
 		}
 
 		return $incoming;
@@ -116,6 +174,12 @@ final readonly class AuthFieldPolicy
 	 * Remove every schema-present privileged field from a payload, no actor
 	 * context. Used by public registration, which must also positively assign
 	 * its own defaults afterwards.
+	 *
+	 * Deliberately NOT relaxed when auth is disabled, unlike the actor-based
+	 * methods above. This one guards an endpoint anonymous callers can reach, so
+	 * there is no actor to trust either way; letting it through would bake
+	 * `groups:['admin']` into records that become live escalations the moment
+	 * auth is switched back on.
 	 *
 	 * @param array<string,mixed> $data
 	 *
@@ -137,6 +201,9 @@ final readonly class AuthFieldPolicy
 	 */
 	public function canWriteProperty(string $actorId, string $collection, string $property): bool
 	{
+		if ($this->authDisabled()) {
+			return true;
+		}
 		if (!in_array($property, $this->protectedFieldsFor($collection), true)) {
 			return true;
 		}

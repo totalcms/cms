@@ -22,6 +22,7 @@ return function (App $app): void {
 	(require __DIR__ . '/routes/public/stream.php')($app);
 	(require __DIR__ . '/routes/public/livereload.php')($app);
 	(require __DIR__ . '/routes/public/mcp.php')($app);
+	(require __DIR__ . '/routes/public/xmlrpc.php')($app);
 	(require __DIR__ . '/routes/public/oauth.php')($app);
 	(require __DIR__ . '/routes/public/automations.php')($app);
 

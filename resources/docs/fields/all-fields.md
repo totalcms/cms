@@ -1,11 +1,38 @@
 ---
 title: "All Field Settings"
-description: "Universal settings for all Total CMS field types including autogen, calc (computed fields), hidden fields, and conditional visibility."
+description: "Universal settings for all Total CMS field types including help text, autogen, calc (computed fields), hidden fields, and conditional visibility."
 ---
 
 # All Field Settings
 
 These settings can be applied to **any field type**. They control universal behaviors like hiding fields and conditional visibility.
+
+## Help
+
+The `help` string renders under the field in the admin form. **It is rendered as
+HTML**, so you can mark up an explanation:
+
+```json
+"data": {
+	"type": "string",
+	"field": "json",
+	"label": "Page Data",
+	"help": "Exposed to the template as <code>page.data.*</code>. See <a href=\"docs/site-builder/overview\">the guide</a>."
+}
+```
+
+Because it is HTML, **escape any tag you want the reader to see literally**:
+
+```json
+"help": "The &lt;title&gt; tag. Include the product name."
+```
+
+Writing `<title>` unescaped would otherwise emit a real `<title>` element. As a
+safety net, tags whose content model is raw text — `title`, `textarea`, `script`,
+`style`, `iframe`, `xmp`, `noscript`, `noembed`, `plaintext` — are escaped for you
+rather than emitted, because a single one of them left open makes the browser
+swallow the remainder of the admin page and the form truncates from that field
+down. Every other tag renders as markup, so escaping the rest is up to you.
 
 ## Autogen
 

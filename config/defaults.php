@@ -430,6 +430,14 @@ $settings['mcp'] = [
 	'subscriptionsEnabled' => true,
 ];
 
+// WordPress-compatible XML-RPC publishing endpoint. Off by default: the path is
+// a standard security-scanner finding, and an operator enabling it is already in
+// the admin creating the API key their writing app needs.
+$settings['xmlrpc'] = [
+	'enable'    => false,
+	'ratePerIp' => 60,
+];
+
 // Search providers — Phase 5.
 // activeProvider: 'text' (built-in) or any registered provider id (e.g. 'algolia').
 // indexOnSave: when true, T3 pushes object.created/updated events to the active

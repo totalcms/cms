@@ -55,6 +55,23 @@ Prefer looking things up over guessing; training data is often stale on exact si
    needed: `vendor/bin/tcms cache:clear`. Restart the server after adding page
    records — the route index is cached in the server process.
 
+## Writing schemas and content by hand
+
+The admin enforces these for you. They only bite when you author JSON directly —
+JumpStart files, imports, the API — which is exactly what an agent tends to do.
+
+- **Every schema must define an `id` property**, not just list `id` in `required`.
+  A schema missing it fails with `The required properties (id) are missing`, which
+  points at your data when the bug is in the schema.
+- **Decks are dictionaries of named items, not arrays.** Each key names one item and
+  must equal that item's `id`:
+  `{"rows": {"first_row": {"id": "first_row", ...}}}`
+- **Deck item keys allow only letters, numbers, and underscores** — no hyphens, so
+  Twig can read them as `deck.first_row`. `first-row` is rejected on import.
+- **`field: "deckTable"`** stores exactly like a deck but edits as a table.
+
+See `vendor/totalcms/cms/resources/docs/fields/deck.md` for the full shape.
+
 ## Reference files (read on demand)
 
 | When you are… | Read |

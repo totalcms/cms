@@ -16,6 +16,7 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Support\Config;
 
 final class ObjectUpdatePropertyActionTest extends TestCase
 {
@@ -36,10 +37,16 @@ final class ObjectUpdatePropertyActionTest extends TestCase
 		// empty for these non-auth collections, so guardProperty() never blocks.
 		$schemaFetcher = $this->createMock(SchemaFetcher::class);
 		$schemaFetcher->method('fetchSchemaForCollection')->willReturn(new SchemaData());
+		$config              = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->auth        = ['enable' => true, 'collection' => 'auth'];
+		$policyLoggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$policyLoggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
 		$policy = new AuthFieldPolicy(
 			$schemaFetcher,
 			$this->createMock(UserValidationService::class),
 			$this->createMock(ObjectFetcher::class),
+			$config,
+			$policyLoggerFactory,
 		);
 		$guard = new PrivilegedFieldGuard($policy, $this->createMock(SessionInterface::class));
 

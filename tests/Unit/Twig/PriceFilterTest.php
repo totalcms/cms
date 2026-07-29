@@ -60,6 +60,16 @@ test('price filter handles empty and zero values', function (): void {
 	// Zero values should be formatted
 	expect(TotalCMSTwigFilters::price(0))->toBe('$0.00');
 	expect(TotalCMSTwigFilters::price('0'))->toBe('$0.00');
+
+	// Float zero is what a summed or calculated price actually is — it must
+	// format like any other zero rather than vanishing.
+	expect(TotalCMSTwigFilters::price(0.0))->toBe('$0.00');
+	expect(TotalCMSTwigFilters::price('0.00'))->toBe('$0.00');
+	expect(TotalCMSTwigFilters::price(0.0, '€', 'append'))->toBe('0.00€');
+
+	// Non-numeric emptiness still blanks out.
+	expect(TotalCMSTwigFilters::price(false))->toBe('');
+	expect(TotalCMSTwigFilters::price([]))->toBe('');
 });
 
 test('price filter handles non-numeric values', function (): void {

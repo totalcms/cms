@@ -1379,7 +1379,11 @@ class TotalCMSTwigFilters
 	 */
 	public static function price(mixed $price, string $currency = '$', string $format = 'prepend'): string
 	{
-		if (empty($price) && $price !== 0 && $price !== '0') {
+		// Blank out genuinely absent values (null, '', false, []) but never a real
+		// zero. The previous strict checks only spared int 0 and string '0', so a
+		// float 0.0 — what a summed or calculated price is — rendered as an empty
+		// string instead of the currency zero.
+		if (empty($price) && !is_numeric($price)) {
 			return '';
 		}
 

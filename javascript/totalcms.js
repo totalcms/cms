@@ -15,6 +15,8 @@
  * </pre>
  *
 **/
+import { getCsrfToken as readCsrfToken } from "./csrf";
+
 export default class TotalCMS {
 
     // Creates an instance of TotalCMS.
@@ -127,14 +129,12 @@ export default class TotalCMS {
         sessionStorage.clear();
     }
 
-	// Read the CSRF token from the admin layout's <meta name="csrf-token"> tag.
-	// Returns null if the tag is absent (e.g. public-facing pages where the
-	// admin layout isn't rendered) — callers can omit the header in that case.
-	// CSRFProtectionMiddleware is only mounted on the admin route group, so
-	// public callers don't need the header anyway.
+	// Read the CSRF token from the admin layout's <meta name="csrf-token"> tag,
+	// falling back to a form's hidden csrf_token field. Returns null when the
+	// page carries neither — callers omit the header in that case, which is
+	// correct for genuinely public (non-session) requests.
 	getCsrfToken() {
-		const tag = document.querySelector('meta[name="csrf-token"]');
-		return tag ? tag.getAttribute('content') : null;
+		return readCsrfToken();
 	}
 
 	putAPI(api, data) {

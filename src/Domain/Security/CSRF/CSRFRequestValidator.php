@@ -7,11 +7,14 @@ namespace TotalCMS\Domain\Security\CSRF;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * PSR-7 adapter for CSRF token validation: extracts the token from the
- * request (POST body field, X-CSRF-Token header, or query param) and
- * validates it against the session token. Shared by
- * CSRFProtectionMiddleware (admin routes) and the auth middlewares'
- * session-auth enforcement on the API routes.
+ * PSR-7 adapter for CSRF validation, and the single place the CSRF policy
+ * lives. Shared by CSRFProtectionMiddleware (admin routes), the auth
+ * middlewares' session-auth enforcement on the API routes, and
+ * ExtensionRouteAction's in-handler session check.
+ *
+ * The policy is `passes()`: a state-changing request is accepted on EITHER a
+ * browser-verified same origin OR a valid CSRF token. See that method for why
+ * the origin check is equivalent protection and why it comes first.
  */
 readonly class CSRFRequestValidator
 {
@@ -23,7 +26,37 @@ readonly class CSRFRequestValidator
 
 	public function __construct(
 		private CSRFTokenManager $csrfManager,
+		private RequestOriginValidator $originValidator,
 	) {
+	}
+
+	/**
+	 * Whether a request clears CSRF protection.
+	 *
+	 * Read-only methods pass untouched. For state-changing methods:
+	 *
+	 *   - **Same origin** → pass. The browser stamps Origin and script cannot
+	 *     forge it, so this proves what a token proves, without the client
+	 *     having to send anything. This is what lets Dropzone uploads, Tiptap
+	 *     XHRs and third-party extension JS work without being taught about
+	 *     tokens — the omission that broke uploads in 3.5.0-rc.13.
+	 *   - **Cross origin** → fail, even with a valid token. A token that leaks
+	 *     (log, referrer, shoulder-surf) must not be replayable from elsewhere.
+	 *   - **Unknown** → fall back to the token. No browser headers means a
+	 *     non-browser caller, which has no CSRF surface, but we ask for proof
+	 *     rather than assume.
+	 */
+	public function passes(ServerRequestInterface $request): bool
+	{
+		if (!$this->methodRequiresValidation($request)) {
+			return true;
+		}
+
+		return match ($this->originValidator->verdict($request)) {
+			OriginVerdict::SameOrigin  => true,
+			OriginVerdict::CrossOrigin => false,
+			OriginVerdict::Unknown     => $this->validate($request),
+		};
 	}
 
 	/**

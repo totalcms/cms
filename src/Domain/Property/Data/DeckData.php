@@ -13,24 +13,36 @@ class DeckData extends PropertyData implements \Stringable
 	/** @param array<mixed> $deck */
 	public function __construct(array $deck = [], public array $settings = [])
 	{
-		if (!$this->verifyDeck($deck)) {
-			throw new \InvalidArgumentException('Deck must be a dictionary of named objects');
+		$error = $this->deckError($deck);
+		if ($error !== null) {
+			throw new \InvalidArgumentException($error);
 		}
 
 		$this->deck = $deck;
 	}
 
-	/** @param array<mixed> $deck */
-	private function verifyDeck(array $deck): bool
+	/**
+	 * Describe why a deck payload is invalid, or null when it is valid.
+	 *
+	 * Returns the specific broken rule rather than a generic "bad deck":
+	 * these errors surface to operators writing JumpStart files and to AI
+	 * agents authoring content, and "must be a dictionary of named objects"
+	 * gives neither of them anything to act on when the real problem is a
+	 * hyphen in a key.
+	 *
+	 * @param array<mixed> $deck
+	 */
+	private function deckError(array $deck): ?string
 	{
 		// Empty deck is valid (both empty associative array and empty indexed array)
 		if ($deck === []) {
-			return true;
+			return null;
 		}
 
 		// Must be associative array (dictionary), not indexed list
 		if (array_is_list($deck)) {
-			return false;
+			return 'Deck must be a dictionary of named items ({"item_name": {...}}), not a list. '
+				. 'Each key names one item and matches that item\'s "id".';
 		}
 
 		foreach ($deck as $name => $item) {
@@ -38,21 +50,34 @@ class DeckData extends PropertyData implements \Stringable
 			$stringName = (string)$name;
 			// Allow alphanumeric characters and underscores (no hyphens for Twig dot notation)
 			if (!preg_match('/^\w+$/', $stringName)) {
-				return false;
+				$suggestion = preg_replace('/[^a-zA-Z0-9_]+/', '_', $stringName);
+
+				return sprintf(
+					'Deck item name "%s" may only contain letters, numbers, and underscores — '
+					. 'hyphens are not allowed because item names are read in Twig with dot '
+					. 'notation (deck.%s). Use "%s" instead.',
+					$stringName,
+					$suggestion,
+					$suggestion,
+				);
 			}
 
 			// Each item must be an array (object)
 			if (!is_array($item)) {
-				return false;
+				return sprintf('Deck item "%s" must be an object of its own fields, %s given.', $stringName, get_debug_type($item));
 			}
 
 			// If item has an 'id' field, it must match the dictionary key (as string)
 			if (isset($item['id']) && $item['id'] !== $stringName) {
-				return false;
+				return sprintf(
+					'Deck item "%s" has id "%s" — an item\'s "id" must match the key it is stored under.',
+					$stringName,
+					is_scalar($item['id']) ? (string)$item['id'] : get_debug_type($item['id']),
+				);
 			}
 		}
 
-		return true;
+		return null;
 	}
 
 	/** @return array<int|string,array<string,mixed>> */
