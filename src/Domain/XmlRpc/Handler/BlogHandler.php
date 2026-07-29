@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\XmlRpc\Handler;
 use TotalCMS\Domain\XmlRpc\Data\XmlRpcIdentity;
 use TotalCMS\Domain\XmlRpc\Service\BlogRegistry;
 use TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth;
+use TotalCMS\Domain\XmlRpc\Transport\XmlRpcFault;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
 
@@ -70,6 +71,17 @@ readonly class BlogHandler implements MethodHandler
 		$blogs = $collection !== null
 			? [$collection => $this->registry->assertBlog($identity, $collection)]
 			: $this->registry->blogsFor($identity);
+
+		// An authenticated key scoped to zero blog collections would otherwise
+		// come back as a silent empty list — a client shows no blogs and no
+		// reason why. Fault instead, and name the fix: this is what the
+		// repository owner himself lost time to while testing with MarsEdit.
+		if ($collection === null && $blogs === []) {
+			throw XmlRpcFault::forbidden(
+				'This API key is not scoped to any blog collection. In Total CMS, edit the key under '
+					. 'Utilities → API Keys and grant /collections for every collection, or /collections/{id} for one.'
+			);
+		}
 
 		$list = [];
 		foreach ($blogs as $id => $blogCollection) {

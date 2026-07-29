@@ -84,8 +84,9 @@ it('advertises Total CMS and no thumbnail support in wp.getOptions', function ()
 });
 
 it('refuses a key that lacks the collection grant', function (): void {
-	// Endpoint grant without a collection grant authenticates, then reports no
-	// blogs — the confusing failure the key UI is meant to prevent.
+	// Endpoint grant without a collection grant authenticates fine, then must
+	// fault rather than silently reporting no blogs — the confusing failure
+	// the key UI is meant to prevent.
 	$key = xmlRpcTestApp()->getContainer()
 		->get(TotalCMS\Domain\ApiKey\Service\ApiKeyCreator::class)
 		->createApiKey('endpoint only', ['methods' => ['GET'], 'paths' => ['/xmlrpc.php']])
@@ -94,5 +95,68 @@ it('refuses a key that lacks the collection grant', function (): void {
 	$body = (string)postXmlRpc(xmlRpcBody('blogger.getUsersBlogs',
 		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
 
+	expect($body)->toContain('<fault>');
+	expect($body)->toMatch('/<int>401<\/int>/');
+	expect($body)->toContain('Utilities');
+	expect($body)->toContain('API Keys');
 	expect($body)->not->toContain('<name>blogid</name>');
+});
+
+it('faults both getUsersBlogs methods for a key scoped to no blog collection, naming the fix', function (): void {
+	$key = xmlRpcTestApp()->getContainer()
+		->get(TotalCMS\Domain\ApiKey\Service\ApiKeyCreator::class)
+		->createApiKey('endpoint only', ['methods' => ['GET'], 'paths' => ['/xmlrpc.php']])
+		->key;
+
+	$bloggerBody = (string)postXmlRpc(xmlRpcBody('blogger.getUsersBlogs',
+		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$wpBody = (string)postXmlRpc(xmlRpcBody('wp.getUsersBlogs',
+		xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+
+	foreach ([$bloggerBody, $wpBody] as $body) {
+		expect($body)->toContain('<fault>');
+		expect($body)->toMatch('/<int>401<\/int>/');
+		expect($body)->toContain('not scoped to any blog collection');
+		expect($body)->toContain('Utilities');
+		expect($body)->toContain('API Keys');
+		expect($body)->toContain('/collections');
+		expect($body)->not->toContain('<name>blogid</name>');
+	}
+});
+
+it('lists exactly one blog for a key granted a single /collections/{id} path', function (): void {
+	$container = xmlRpcTestApp()->getContainer();
+
+	// A second blog collection the key is NOT scoped to must not appear.
+	$container->get(TotalCMS\Domain\Collection\Service\CollectionSaver::class)
+		->saveCollection(['id' => 'news', 'name' => 'News', 'schema' => 'blog']);
+
+	$key  = xmlRpcKey(['blog']);
+	$body = (string)postXmlRpc(xmlRpcBody('blogger.getUsersBlogs',
+		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+
+	expect($body)->not->toContain('<fault>');
+	expect($body)->toContain('<name>blogid</name><value><string>blog</string></value>');
+	expect($body)->not->toContain('<string>news</string>');
+});
+
+it('lists every blog collection for a key granted /collections', function (): void {
+	$container = xmlRpcTestApp()->getContainer();
+
+	$container->get(TotalCMS\Domain\Collection\Service\CollectionSaver::class)
+		->saveCollection(['id' => 'news', 'name' => 'News', 'schema' => 'blog']);
+
+	$key = $container->get(TotalCMS\Domain\ApiKey\Service\ApiKeyCreator::class)
+		->createApiKey('all collections', [
+			'methods' => ['GET', 'POST', 'PUT', 'DELETE'],
+			'paths'   => [TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth::SCOPE_PATH, '/collections'],
+		])
+		->key;
+
+	$body = (string)postXmlRpc(xmlRpcBody('wp.getUsersBlogs',
+		xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+
+	expect($body)->not->toContain('<fault>');
+	expect($body)->toContain('<name>blogid</name><value><string>blog</string></value>');
+	expect($body)->toContain('<string>news</string>');
 });

@@ -31,7 +31,7 @@ Tested against the classic WordPress XML-RPC dialect (MetaWeblog, Blogger, and t
    - **XML-RPC Publishing (`/xmlrpc.php`)** — required to authenticate at all
    - **each collection** you want to publish into (e.g. `/collections/blog`)
 
-   A key scoped to only the XML-RPC endpoint authenticates fine but then reports **zero blogs** — it has nowhere to publish. This is the single likeliest support question this feature will generate, so if a client connects but shows no blog in its site list, this is almost certainly why. Go back and add the collection.
+   A key scoped to only the XML-RPC endpoint authenticates fine but is not scoped to any blog collection — it has nowhere to publish. `blogger.getUsersBlogs` / `wp.getUsersBlogs` fault in this case rather than silently reporting zero blogs, and the fault message names this exact fix. This is the single likeliest support question this feature will generate, so if a client connects but shows an error instead of a blog in its site list, this is almost certainly why. Go back and add the collection.
 3. Grant HTTP methods on the key to match what the app needs to do: `GET` to read, `POST` to create, `PUT` to edit, `DELETE` to remove. A read-only key can list and open posts but not publish.
 4. In your writing app, add a new WordPress/MetaWeblog site using:
    - **Endpoint URL** — see below
@@ -97,15 +97,15 @@ A field a client never sends is never touched — `metaWeblog.editPost` patches 
 | Code | Meaning |
 |---|---|
 | `403` | Bad credentials — the password (API key) didn't validate for the XML-RPC path |
-| `401` | The key authenticated, but is not permitted to do this: either the HTTP method isn't in its scope (e.g. a GET-only key tried to publish), or the call hit a deliberately unsupported method (media upload, pages) |
+| `401` | The key authenticated, but is not permitted to do this: either the HTTP method isn't in its scope (e.g. a GET-only key tried to publish), the call hit a deliberately unsupported method (media upload, pages), or `getUsersBlogs` found the key scoped to no blog collection at all |
 | `404` | Unknown post or blog — including a key that authenticates but has no `/collections/{id}` grant matching the target collection |
 | `429` | Rate limit exceeded for this IP (see the **Rate Limit** setting alongside the enable toggle) |
 | `-32601` | Unknown method — the call isn't one T3 registers at all |
 | `-32700` | Malformed request body |
 
-### "My client connects but lists no blogs"
+### "My client connects but getUsersBlogs faults instead of showing a site"
 
-The API key authenticated (it has the `/xmlrpc.php` grant) but was not also scoped to any `/collections/{id}` path — or was scoped to a blog-schema collection the key holder can't otherwise see. Edit the key and add the specific collection path(s) you want to publish into.
+The API key authenticated (it has the `/xmlrpc.php` grant) but was not also scoped to any `/collections/{id}` path. `blogger.getUsersBlogs` / `wp.getUsersBlogs` fault with a 401 explaining exactly this, rather than returning an empty list with no explanation. Go to **Utilities → API Keys**, edit the key, and grant `/collections` for every collection or `/collections/{id}` for one.
 
 ### "The connection times out or is refused before I even see an error"
 
