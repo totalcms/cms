@@ -50,6 +50,8 @@ readonly class TaxonomyHandler implements MethodHandler
 			'wp.newCategory'           => $this->newCategory(...),
 			'wp.getTaxonomies'         => $this->getTaxonomies(...),
 			'wp.getTerms'              => $this->getTerms(...),
+			'wp.getAuthors'            => $this->getAuthors(...),
+			'wp.getUsers'              => $this->getUsers(...),
 		];
 	}
 
@@ -299,6 +301,71 @@ readonly class TaxonomyHandler implements MethodHandler
 			fn (string $name): array => $this->mapper->termStruct($name, $taxonomy),
 			$this->distinctValues($blog->id, $property)
 		);
+	}
+
+	/**
+	 * wp.getAuthors(blog_id, username, password)
+	 *
+	 * Distinct author names across the collection index, sourced exactly the
+	 * way getCategories()/getTags() above source their lists — via
+	 * distinctValues(). T3's `author` field is free text with no numeric id,
+	 * so — same as a category id — the name doubles as user_id/user_login/
+	 * display_name. The authenticated caller's own resolved author name is
+	 * folded in even when no existing post uses it, so a client's author
+	 * picker can always select the person actually publishing.
+	 *
+	 * @param array<int,mixed> $params
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function getAuthors(array $params, ?string $collection): array
+	{
+		$identity = $this->auth->authenticate($params, 1, 2);
+		$this->auth->assertOperation($identity, 'GET');
+
+		$blog = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
+
+		return array_map(
+			static fn (string $name): array => ['user_id' => $name, 'user_login' => $name, 'display_name' => $name],
+			$this->authorNames($blog->id, $identity->authorName)
+		);
+	}
+
+	/**
+	 * wp.getUsers(blog_id, username, password, filter?, fields?)
+	 *
+	 * WordPress returns richer user objects; T3 has no user records behind a
+	 * post's author string, so the same list getAuthors() derives is returned
+	 * in the same struct shape — honest, and it keeps a client's author picker
+	 * populated. `filter`/`fields` are accepted and ignored, same
+	 * simplification wp.getOptions/wp.getPosts already make for their own
+	 * filter params.
+	 *
+	 * @param array<int,mixed> $params
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function getUsers(array $params, ?string $collection): array
+	{
+		return $this->getAuthors($params, $collection);
+	}
+
+	/**
+	 * Distinct author names, with the caller's own resolved name folded in
+	 * (see getAuthors() above for why).
+	 *
+	 * @return array<int,string>
+	 */
+	private function authorNames(string $collection, string $selfName): array
+	{
+		$names = $this->distinctValues($collection, 'author');
+
+		if (!in_array($selfName, $names, true)) {
+			$names[] = $selfName;
+			sort($names);
+		}
+
+		return $names;
 	}
 
 	/** @param array<int,string> $names */

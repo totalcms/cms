@@ -45,6 +45,7 @@ readonly class PostReadHandler implements MethodHandler
 			'wp.getPost'                => $this->wpGetPost(...),
 			'wp.getPostTypes'           => $this->wpGetPostTypes(...),
 			'wp.getPostStatusList'      => $this->wpGetPostStatusList(...),
+			'wp.getPostFormats'         => $this->wpGetPostFormats(...),
 		];
 	}
 
@@ -256,6 +257,26 @@ readonly class PostReadHandler implements MethodHandler
 		$this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 
 		return ['draft' => 'Draft', 'publish' => 'Published'];
+	}
+
+	/**
+	 * wp.getPostFormats(blog_id, username, password)
+	 *
+	 * T3 has no post formats at all. Advertising only `standard` — never
+	 * `aside`, `gallery`, `video`, etc. — keeps a client from offering a
+	 * format picker whose selection would silently do nothing.
+	 *
+	 * @param array<int,mixed> $params
+	 *
+	 * @return array<string,string>
+	 */
+	public function wpGetPostFormats(array $params, ?string $collection): array
+	{
+		$identity = $this->auth->authenticate($params, 1, 2);
+		$this->auth->assertOperation($identity, 'GET');
+		$this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
+
+		return ['standard' => 'Standard'];
 	}
 
 	/**

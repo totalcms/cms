@@ -31,6 +31,7 @@ readonly class BlogHandler implements MethodHandler
 			'wp.getUsersBlogs'      => $this->wpGetUsersBlogs(...),
 			'blogger.getUserInfo'   => $this->getUserInfo(...),
 			'wp.getOptions'         => $this->getOptions(...),
+			'wp.getProfile'         => $this->getProfile(...),
 		];
 	}
 
@@ -106,6 +107,40 @@ readonly class BlogHandler implements MethodHandler
 			'email'     => '',
 			'lastname'  => $parts[1] ?? '',
 			'firstname' => $parts[0],
+		];
+	}
+
+	/**
+	 * wp.getProfile(blog_id, username, password)
+	 *
+	 * A single struct describing the authenticated caller. T3 has no user
+	 * records behind a post's author string — the same gap getUserInfo()
+	 * above already accepts — so `bio`/`email` are honestly left blank rather
+	 * than invented, and `roles` is the one fixed role every XML-RPC caller
+	 * effectively has: they can publish.
+	 *
+	 * @param array<int,mixed> $params
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function getProfile(array $params, ?string $collection): array
+	{
+		$identity = $this->auth->authenticate($params, 1, 2);
+		$this->auth->assertOperation($identity, 'GET');
+
+		$name  = $identity->authorName;
+		$parts = explode(' ', $name, 2);
+
+		return [
+			'user_id'      => $name,
+			'username'     => $name,
+			'display_name' => $name,
+			'nickname'     => $name,
+			'first_name'   => $parts[0],
+			'last_name'    => $parts[1] ?? '',
+			'bio'          => '',
+			'email'        => '',
+			'roles'        => ['author'],
 		];
 	}
 
