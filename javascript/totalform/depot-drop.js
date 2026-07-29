@@ -1,6 +1,7 @@
 import TotalField from "./totalfield";
 import DropletTestSet from "./droplet-testset";
 import Dropzone from "@deltablot/dropzone";
+import { csrfHeaders } from "../csrf";
 
 //-----------------------------------------------
 // Total CMS Depot Drop Field (write-only upload)
@@ -24,7 +25,8 @@ export default class DepotDropField extends TotalField {
         this.dropzone = new Dropzone(this.container, {
             url               : this.apiUploadUrl(),
             method            : "post",
-            headers           : this.form.api.headers,
+            // See Droplet::newDropzone() — Dropzone's XHR needs the CSRF header.
+            headers           : Object.assign({}, csrfHeaders(), this.form.api.headers),
             parallelUploads   : 3,
             paramName         : this.property,
             autoProcessQueue  : true,

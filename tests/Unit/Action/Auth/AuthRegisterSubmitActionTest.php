@@ -76,10 +76,14 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		);
 		$schemaFetcher = $this->createMock(SchemaFetcher::class);
 		$schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+		$policyLoggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$policyLoggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
 		$authFieldPolicy = new AuthFieldPolicy(
 			$schemaFetcher,
 			$this->createMock(UserValidationService::class),
 			$this->createMock(ObjectFetcher::class),
+			$this->config,
+			$policyLoggerFactory,
 		);
 
 		$this->action = new AuthRegisterSubmitAction(

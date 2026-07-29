@@ -1,6 +1,7 @@
 import DropletTestSet from "./droplet-testset";
 import Dropzone from "@deltablot/dropzone";
 import Droplet from "./droplet";
+import { csrfHeaders } from "../csrf";
 globalThis.Dropzone = Dropzone;
 
 //-----------------------------------------------
@@ -56,7 +57,8 @@ export default class DepotDroplet
         return new Dropzone(this.container, {
 			url               : this.settings.apiUrl,
 			method            : "post",
-			headers           : this.settings.requestHeaders,
+			// See Droplet::newDropzone() — Dropzone's XHR needs the CSRF header.
+			headers           : Object.assign({}, csrfHeaders(), this.settings.requestHeaders),
 			parallelUploads   : 3,
 			paramName         : this.settings.paramName,
 			autoProcessQueue  : this.settings.autoProcessQueue,
