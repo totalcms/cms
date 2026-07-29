@@ -230,21 +230,32 @@ readonly class PostMapper
 	 * from a writing app must never invent a value for one of them.
 	 *
 	 * @param array<string,mixed> $struct
-	 * @param bool|null           $publish Same meaning as toObject()'s
-	 *                                     $publish: an explicit switch, or
-	 *                                     null when the caller has none to
-	 *                                     offer. The wp.* dialect carries no
-	 *                                     separate publish parameter at all —
-	 *                                     `post_status` inside the struct is
-	 *                                     the only signal — so callers pass
-	 *                                     null on edit (never invent a status)
-	 *                                     and true on create (WordPress's
-	 *                                     newPost default), mirroring
-	 *                                     PostWriteHandler's metaWeblog calls.
+	 * @param bool|null           $publish          Same meaning as toObject()'s
+	 *                                               $publish: an explicit switch,
+	 *                                               or null when the caller has
+	 *                                               none to offer. The wp.*
+	 *                                               dialect carries no separate
+	 *                                               publish parameter at all —
+	 *                                               `post_status` inside the
+	 *                                               struct is the only signal —
+	 *                                               so callers pass null on edit
+	 *                                               (never invent a status) and
+	 *                                               true on create (WordPress's
+	 *                                               newPost default), mirroring
+	 *                                               PostWriteHandler's
+	 *                                               metaWeblog calls.
+	 * @param bool                $hasExtendedEntry Whether the post ALREADY on
+	 *                                               disk has a non-empty `extra`
+	 *                                               field. Always `false` when
+	 *                                               `$isNew` — a create has no
+	 *                                               existing post to consult.
+	 *                                               See splitExtendedEntry()'s
+	 *                                               call below for why this
+	 *                                               gates the split.
 	 *
 	 * @return array<string,mixed>
 	 */
-	public function fromWpStruct(array $struct, ?bool $publish, bool $isNew): array
+	public function fromWpStruct(array $struct, ?bool $publish, bool $isNew, bool $hasExtendedEntry): array
 	{
 		$fields = [];
 
@@ -253,14 +264,34 @@ readonly class PostMapper
 		}
 
 		if (array_key_exists('post_content', $struct)) {
-			[$content, $extra] = $this->splitExtendedEntry((string)$struct['post_content']);
-			$fields['content'] = $this->relativizeUrls($content);
+			$postContent = (string)$struct['post_content'];
 
-			// No marker found means $extra is null: leave the key OUT of the
-			// result entirely (not even set to ''), so an existing extended
-			// entry survives an edit whose post_content never mentioned it.
-			if ($extra !== null) {
-				$fields['extra'] = $this->relativizeUrls($extra);
+			// Only split when the post we are writing already carries its own
+			// extended entry. A `<!--more-->` marker WordPress itself put inline
+			// in `post_content` — an imported post, whose `content` field holds
+			// WXR `content:encoded` verbatim with `extra` empty (see
+			// WordpressImporter) — is not ours to interpret. Splitting on it
+			// unconditionally was the bug: a title-only edit through this
+			// dialect echoes the post's full, pre-existing `post_content` back
+			// (that's how the wire protocol works), so an unconditional split
+			// would truncate `content` to the teaser and move the rest into
+			// `extra` on every such edit, silently disappearing the body below
+			// the marker from any template that only renders `content`. On
+			// create there is no existing post to check at all, so the whole
+			// body is stored as `content` and `extra` is left unset — matching
+			// both WordPress's own inline storage and what our importer does.
+			if ($hasExtendedEntry) {
+				[$content, $extra] = $this->splitExtendedEntry($postContent);
+				$fields['content'] = $this->relativizeUrls($content);
+
+				// No marker found means $extra is null: leave the key OUT of the
+				// result entirely (not even set to ''), so an existing extended
+				// entry survives an edit whose post_content never mentioned it.
+				if ($extra !== null) {
+					$fields['extra'] = $this->relativizeUrls($extra);
+				}
+			} else {
+				$fields['content'] = $this->relativizeUrls($postContent);
 			}
 		}
 
@@ -501,7 +532,11 @@ readonly class PostMapper
 
 	/**
 	 * Split a wp.* `post_content` on its first extended-entry marker (see
-	 * MORE_MARKER_PATTERN above).
+	 * MORE_MARKER_PATTERN above). Only called from fromWpStruct() when the post
+	 * being written already has its own extended entry — this method itself
+	 * has no way to know whether a marker it finds is genuinely ours to split
+	 * on or just inline WordPress markup carried over from an import, which is
+	 * why that decision is made by the caller before reaching here.
 	 *
 	 * The marker's own text (e.g. a custom teaser like "Read on", or the
 	 * exact whitespace the author used) is deliberately NOT preserved here —

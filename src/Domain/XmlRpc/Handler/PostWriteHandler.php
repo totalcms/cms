@@ -159,7 +159,10 @@ readonly class PostWriteHandler implements MethodHandler
 
 		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$struct = is_array($params[3] ?? null) ? $params[3] : [];
-		$fields = $this->mapper->fromWpStruct($struct, true, true);
+		// A create has no existing post to consult, so `hasExtendedEntry` is
+		// always false here — see fromWpStruct()'s docblock for why that means
+		// the whole body lands in `content` with no split.
+		$fields = $this->mapper->fromWpStruct($struct, true, true, false);
 		$fields = $this->finalizeNewPost($fields, $blog->id, $identity);
 
 		return $this->objectSaver->saveObject($blog->id, $fields)->id;
@@ -190,7 +193,11 @@ readonly class PostWriteHandler implements MethodHandler
 		}
 
 		$struct = is_array($params[4] ?? null) ? $params[4] : [];
-		$fields = $this->mapper->fromWpStruct($struct, null, false);
+		// Only a post that already has its own extended entry is eligible for
+		// the content/extra split below — an inline `<!--more-->` marker in an
+		// imported post's `content` (empty `extra`) is not ours to interpret.
+		// See PostMapper::fromWpStruct() for the full reasoning.
+		$fields = $this->mapper->fromWpStruct($struct, null, false, $this->hasExtendedEntry($blog->id, $postId));
 
 		$this->applyEdit($blog->id, $postId, $fields);
 
@@ -204,6 +211,19 @@ readonly class PostWriteHandler implements MethodHandler
 		}
 
 		return $this->objectRemover->deleteObject($blog->id, $postId);
+	}
+
+	/**
+	 * Whether the post already stored under $postId carries a non-empty
+	 * `extra` field. Callers already verified the post exists before calling
+	 * this (wp.editPost's not-found check runs first), so a plain fetch is
+	 * safe here.
+	 */
+	private function hasExtendedEntry(string $collection, string $postId): bool
+	{
+		$extra = (string)($this->objectFetcher->fetchObject($collection, $postId)->toArray()['extra'] ?? '');
+
+		return trim($extra) !== '';
 	}
 
 	/**

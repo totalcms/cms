@@ -272,11 +272,16 @@ it('round-trips an extended entry through the <!--more--> marker', function (): 
 	expect($object['extra'])->toBe('<p>The rest.</p>');
 });
 
-it('splits post_content on every marker variant WordPress supports', function (): void {
+it('splits post_content on every marker variant WordPress supports, on an edit to a post that already has an extended entry', function (): void {
 	// WordPress recognizes more than the bare literal: whitespace inside the
 	// comment (`<!-- more -->`) and a teaser variant with text after the
-	// keyword (`<!--more Read on-->`) both count.
+	// keyword (`<!--more Read on-->`) both count. The split only fires on
+	// wp.editPost when the post being edited already has a non-empty `extra`
+	// — see PostMapper::fromWpStruct() — so these posts are pre-seeded with a
+	// placeholder extended entry before the edit that actually exercises the
+	// marker-variant parsing.
 	$container = $this->app->getContainer();
+	$saver     = $container->get(ObjectSaver::class);
 	$fetcher   = $container->get(ObjectFetcher::class);
 	$key       = xmlRpcKey();
 
@@ -287,9 +292,11 @@ it('splits post_content on every marker variant WordPress supports', function ()
 	];
 
 	foreach ($cases as $id => $postContent) {
-		$body = (string)postXmlRpc(xmlRpcBody('wp.newPost',
-			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-			. xmlRpcStructParam(['post_title' => $id, 'post_name' => $id, 'post_content' => $postContent])))->getBody();
+		$saver->saveObject('blog', ['id' => $id, 'title' => $id, 'content' => 'placeholder', 'extra' => 'placeholder']);
+
+		$body = (string)postXmlRpc(xmlRpcBody('wp.editPost',
+			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam($id)
+			. xmlRpcStructParam(['post_content' => $postContent])))->getBody();
 		expect($body)->not->toContain('<fault>');
 	}
 
@@ -313,14 +320,22 @@ it('round-trips a teaser marker\'s content/extra split, but normalizes the marke
 	// Entry editor, and there is no field to stash "Read on" (or the original
 	// whitespace) in without a schema change — so every read normalizes back
 	// to the bare `<!--more-->` form. This is a deliberate tradeoff, not a bug.
+	//
+	// The edit's split only fires because this post already has an extended
+	// entry (a placeholder, seeded below) — see PostMapper::fromWpStruct().
 	$container = $this->app->getContainer();
 	$key       = xmlRpcKey();
 
-	postXmlRpc(xmlRpcBody('wp.newPost',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	$container->get(ObjectSaver::class)->saveObject('blog', [
+		'id'      => 'wp-teaser-round-trip',
+		'title'   => 'Teaser round trip',
+		'content' => 'placeholder',
+		'extra'   => 'placeholder',
+	]);
+
+	postXmlRpc(xmlRpcBody('wp.editPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-teaser-round-trip')
 		. xmlRpcStructParam([
-			'post_title'   => 'Teaser round trip',
-			'post_name'    => 'wp-teaser-round-trip',
 			'post_content' => '<p>Main body.</p><!--more Read on--><p>Teaser body.</p>',
 		])));
 
@@ -336,17 +351,26 @@ it('round-trips a teaser marker\'s content/extra split, but normalizes the marke
 });
 
 it('splits post_content on the first marker only when it contains two', function (): void {
-	$key = xmlRpcKey();
+	$container = $this->app->getContainer();
+	$key       = xmlRpcKey();
 
-	postXmlRpc(xmlRpcBody('wp.newPost',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	// The split only fires on an edit to a post that already has an extended
+	// entry (see PostMapper::fromWpStruct()), so this post is seeded with a
+	// placeholder one before the edit that exercises the first-marker-only rule.
+	$container->get(ObjectSaver::class)->saveObject('blog', [
+		'id'      => 'wp-two-markers',
+		'title'   => 'Two markers',
+		'content' => 'placeholder',
+		'extra'   => 'placeholder',
+	]);
+
+	postXmlRpc(xmlRpcBody('wp.editPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-two-markers')
 		. xmlRpcStructParam([
-			'post_title'   => 'Two markers',
-			'post_name'    => 'wp-two-markers',
 			'post_content' => '<p>First.</p><!--more--><p>Middle.</p><!--more--><p>Last.</p>',
 		])));
 
-	$object = $this->app->getContainer()->get(ObjectFetcher::class)->fetchObject('blog', 'wp-two-markers')->toArray();
+	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'wp-two-markers')->toArray();
 	expect($object['content'])->toBe('<p>First.</p>');
 	// The second marker's literal text is NOT re-split on — it survives
 	// untouched as part of the teaser body.
@@ -370,6 +394,60 @@ it('leaves an existing extra untouched when wp.editPost sends post_content with 
 	$object = $this->app->getContainer()->get(ObjectFetcher::class)->fetchObject('blog', 'wp-no-marker')->toArray();
 	expect($object['content'])->toBe('<p>New body, no marker.</p>');
 	expect($object['extra'])->toBe('<p>Untouched extra.</p>');
+});
+
+it('stores the whole body in content and sets no extra when wp.newPost sends post_content with a marker', function (): void {
+	// A create has no existing post to consult for "does this one already have
+	// an extended entry", so the split never fires here — the whole body is
+	// stored as `content`, matching both how WordPress itself stores an inline
+	// marker and what WordpressImporter does for an imported post.
+	$key = xmlRpcKey();
+
+	$body = (string)postXmlRpc(xmlRpcBody('wp.newPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+		. xmlRpcStructParam([
+			'post_title'   => 'New with marker',
+			'post_name'    => 'wp-new-with-marker',
+			'post_content' => '<p>Teaser.</p><!--more--><p>Rest of body.</p>',
+		])))->getBody();
+	expect($body)->not->toContain('<fault>');
+
+	$object = $this->app->getContainer()->get(ObjectFetcher::class)->fetchObject('blog', 'wp-new-with-marker')->toArray();
+	expect($object['content'])->toBe('<p>Teaser.</p><!--more--><p>Rest of body.</p>');
+	expect($object['extra'] ?? '')->toBe('');
+});
+
+it('leaves an imported post\'s inline <!--more--> marker alone when wp.editPost only changes the title', function (): void {
+	// This is the regression this whole fix exists for: WordpressImporter
+	// stores WXR content:encoded verbatim into `content` and never populates
+	// `extra`, so an imported post can carry an inline <!--more--> with `extra`
+	// empty. A WordPress-API client (e.g. MarsEdit) echoes the post's full,
+	// unchanged post_content back on every edit, even a title-only one. Before
+	// this fix, that inline marker was split unconditionally, truncating
+	// `content` to the teaser and silently disappearing everything after the
+	// marker from any template that renders only `content`.
+	$container    = $this->app->getContainer();
+	$importedBody = '<p>Teaser from WordPress.</p><!--more--><p>The rest of the imported body.</p>';
+
+	$container->get(ObjectSaver::class)->saveObject('blog', [
+		'id'      => 'wp-imported-post',
+		'title'   => 'Imported post',
+		'content' => $importedBody,
+		// No `extra` at all — exactly what WordpressImporter leaves behind.
+	]);
+
+	$key = xmlRpcKey();
+	$fault = (string)postXmlRpc(xmlRpcBody('wp.editPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-imported-post')
+		// A real client sends the full struct back, including the unchanged
+		// post_content, on a title-only edit — this is not a contrived input.
+		. xmlRpcStructParam(['post_title' => 'Imported post, retitled', 'post_content' => $importedBody])))->getBody();
+	expect($fault)->not->toContain('<fault>');
+
+	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'wp-imported-post')->toArray();
+	expect($object['title'])->toBe('Imported post, retitled');
+	expect($object['content'])->toBe($importedBody);
+	expect($object['extra'] ?? '')->toBe('');
 });
 
 it('lists distinct categories from wp.getTerms and faults on an unknown taxonomy', function (): void {
