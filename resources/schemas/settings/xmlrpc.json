@@ -1,0 +1,25 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "WordPress Publishing (XML-RPC)",
+	"description" : "Publish to this site from writing apps that already support WordPress — MarsEdit, Byword, Ulysses, Open Live Writer. Requires an API key scoped to <code>XML-RPC publishing</code> plus the blog collections you want to publish into. Available on Pro and higher editions.",
+	"type"        : "object",
+	"properties"  : {
+		"enable": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Enable XML-RPC Publishing",
+			"help"    : "Master switch. When off, <code>/xmlrpc.php</code> and <code>/xmlrpc/{collection}</code> return 404 — indistinguishable from a site without the feature. Off by default because an exposed <code>xmlrpc.php</code> is a standard security-scanner finding.",
+			"default" : false
+		},
+		"ratePerIp": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Rate Limit (per minute per IP)",
+			"help"        : "Maximum XML-RPC requests per minute from one IP address. The XML parser runs before credentials are checked, so this bounds how much work an anonymous caller can force. Set to <code>0</code> to disable.",
+			"placeholder" : "60",
+			"default"     : 60,
+			"min"         : 0,
+			"max"         : 6000
+		}
+	}
+}

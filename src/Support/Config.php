@@ -69,6 +69,8 @@ class Config
 	public array $search = [];
 	/** @var array<string,mixed> */
 	public array $automations = [];
+	/** @var array<string,mixed> */
+	public array $xmlrpc = [];
 
 	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
@@ -130,6 +132,7 @@ class Config
 		$this->oauth              = is_array($settings['oauth'] ?? null) ? $settings['oauth'] : [];
 		$this->search             = is_array($settings['search'] ?? null) ? $settings['search'] : [];
 		$this->automations        = is_array($settings['automations'] ?? null) ? $settings['automations'] : [];
+		$this->xmlrpc             = is_array($settings['xmlrpc'] ?? null) ? $settings['xmlrpc'] : [];
 
 		$presets               = $settings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];

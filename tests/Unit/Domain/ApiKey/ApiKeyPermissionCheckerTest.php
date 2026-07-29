@@ -230,4 +230,118 @@ final class ApiKeyPermissionCheckerTest extends TestCase
 		// Neither allowed
 		$this->assertFalse($this->checker->allows($apiKey, 'DELETE', '/collections/news'));
 	}
+
+	/**
+	 * A prefix grant only matches on a segment boundary.
+	 *
+	 * A key scoped to "/collections/blog" must not also reach
+	 * "/collections/blog-archive" or "/collections/blogroll" merely
+	 * because the string happens to start with the granted path.
+	 * See task-3b-brief.md "Must now deny".
+	 */
+	public function testAllowsPathDeniesSiblingCollectionsWithSharedPrefix(): void
+	{
+		$apiKey = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/collections/blog'],
+			],
+		]);
+
+		$this->assertFalse($this->checker->allowsPath($apiKey, '/collections/blog-archive'));
+		$this->assertFalse($this->checker->allowsPath($apiKey, '/collections/blogroll'));
+	}
+
+	public function testAllowsPathDeniesSiblingResourceWithSharedPrefix(): void
+	{
+		$apiKey = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/upload'],
+			],
+		]);
+
+		$this->assertFalse($this->checker->allowsPath($apiKey, '/uploads'));
+	}
+
+	/**
+	 * A parent segment still grants its whole subtree, and an exact
+	 * grant still matches itself and its own children. See task-3b-brief.md
+	 * "Must continue to grant".
+	 */
+	public function testAllowsPathStillGrantsParentSegmentSubtree(): void
+	{
+		$apiKey = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/collections'],
+			],
+		]);
+
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/collections/blog'));
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/collections/blog/123'));
+	}
+
+	public function testAllowsPathStillGrantsExactMatchAndItsSubtree(): void
+	{
+		$apiKey = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/collections/blog'],
+			],
+		]);
+
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/collections/blog'));
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/collections/blog/123'));
+	}
+
+	public function testAllowsPathBoundaryCheckIsCaseInsensitive(): void
+	{
+		$apiKey = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/COLLECTIONS/Blog'],
+			],
+		]);
+
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/collections/blog'));
+	}
+
+	public function testAllowsPathTreatsTrailingSlashOnGrantedPathAsSubtreeGrant(): void
+	{
+		$apiKey = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/collections/blog/'],
+			],
+		]);
+
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/collections/blog'));
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/collections/blog/123'));
+		$this->assertFalse($this->checker->allowsPath($apiKey, '/collections/blog-archive'));
+	}
 }

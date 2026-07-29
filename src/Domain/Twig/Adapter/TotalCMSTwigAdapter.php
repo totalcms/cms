@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Twig\Adapter;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
 use TotalCMS\Domain\Twig\Service\AssetRenderer;
 use TotalCMS\Factory\LogChannel;
@@ -299,7 +300,42 @@ class TotalCMSTwigAdapter
 	 */
 	public function assetsHead(): string
 	{
-		return AssetRenderer::head($this->frontendAssetsList);
+		return AssetRenderer::head($this->frontendAssetsList) . $this->xmlrpcDiscoveryTag();
+	}
+
+	/**
+	 * Emit the WordPress-standard `<link rel="EditURI">` RSD discovery tag when
+	 * the XML-RPC endpoint is enabled, so writing clients (MarsEdit, etc.) given
+	 * only the site's home page URL can find the endpoint — including on
+	 * subfolder installs where guessing `{home}/xmlrpc.php` fails.
+	 *
+	 * The href is built from `$this->base` (== `$config->api`), the same source
+	 * {@see \TotalCMS\Action\XmlRpc\XmlRpcDiscoveryAction} uses to construct the
+	 * endpoint it actually serves, so the two can never disagree.
+	 *
+	 * `assetsHead()` runs on every customer front-end page, so this is
+	 * deliberately conservative: any missing/malformed config, or an adapter
+	 * that skipped its constructor, yields an empty string rather than a
+	 * fatal error or notice.
+	 */
+	private function xmlrpcDiscoveryTag(): string
+	{
+		try {
+			if (($this->config->xmlrpc['enable'] ?? false) !== true) {
+				return '';
+			}
+
+			$href = rtrim($this->base, '/') . '/xmlrpc.php?rsd';
+
+			return HTMLUtils::inlineElement('link', [
+				'rel'   => 'EditURI',
+				'type'  => 'application/rsd+xml',
+				'title' => 'RSD',
+				'href'  => $href,
+			]) . "\n";
+		} catch (\Throwable) {
+			return '';
+		}
 	}
 
 	/**

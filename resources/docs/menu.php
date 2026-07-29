@@ -202,12 +202,13 @@ return [
 	[
 		'title' => 'APIs',
 		'sub'   => [
-			['title' => 'REST API',     'path' => 'apis/rest-api'],
-			['title' => 'PHP API',      'path' => 'apis/php-api'],
-			['title' => 'API Keys',     'path' => 'apis/api-keys'],
-			['title' => 'OAuth Server', 'path' => 'apis/oauth'],
-			['title' => 'Index Filter', 'path' => 'apis/index-filter'],
-			['title' => 'OpenAPI Docs', 'path' => 'apis/openapi'],
+			['title' => 'REST API',              'path' => 'apis/rest-api'],
+			['title' => 'PHP API',               'path' => 'apis/php-api'],
+			['title' => 'API Keys',              'path' => 'apis/api-keys'],
+			['title' => 'OAuth Server',          'path' => 'apis/oauth'],
+			['title' => 'Index Filter',          'path' => 'apis/index-filter'],
+			['title' => 'OpenAPI Docs',          'path' => 'apis/openapi'],
+			['title' => 'WordPress Publishing',  'path' => 'apis/wordpress-publishing'],
 		],
 	],
 	[
