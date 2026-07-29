@@ -50,7 +50,7 @@ readonly class PostReadHandler implements MethodHandler
 	}
 
 	/**
-	 * metaWeblog.getPost(postid, username, password)
+	 * metaWeblog.getPost(postid, username, password).
 	 *
 	 * @param array<int,mixed> $params
 	 *
@@ -79,7 +79,7 @@ readonly class PostReadHandler implements MethodHandler
 	}
 
 	/**
-	 * metaWeblog.getRecentPosts(blogid, username, password, numberOfPosts)
+	 * metaWeblog.getRecentPosts(blogid, username, password, numberOfPosts).
 	 *
 	 * @param array<int,mixed> $params
 	 *
@@ -109,7 +109,7 @@ readonly class PostReadHandler implements MethodHandler
 	}
 
 	/**
-	 * mt.getRecentPostTitles(blogid, username, password, numberOfPosts)
+	 * mt.getRecentPostTitles(blogid, username, password, numberOfPosts).
 	 *
 	 * Index-only: titles and dates are indexed, so no object reads are needed.
 	 *
@@ -140,7 +140,7 @@ readonly class PostReadHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getPosts(blog_id, username, password, filter?, fields?)
+	 * wp.getPosts(blog_id, username, password, filter?, fields?).
 	 *
 	 * MarsEdit's "Download all posts" setting pages this with `number` +
 	 * `offset` — 50 at a time by default — so getting the clamp and the
@@ -189,7 +189,7 @@ readonly class PostReadHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getPost(blog_id, username, password, post_id, fields?)
+	 * wp.getPost(blog_id, username, password, post_id, fields?).
 	 *
 	 * Unlike metaWeblog.getPost, this dialect DOES carry a blog_id, so it
 	 * resolves via resolveFor() rather than searching for the post.
@@ -214,7 +214,7 @@ readonly class PostReadHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getPostTypes(blog_id, username, password, filter?, fields?)
+	 * wp.getPostTypes(blog_id, username, password, filter?, fields?).
 	 *
 	 * T3 has exactly one post type. `filter`/`fields` are accepted and
 	 * ignored — there is nothing to filter down to.
@@ -240,7 +240,7 @@ readonly class PostReadHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getPostStatusList(blog_id, username, password)
+	 * wp.getPostStatusList(blog_id, username, password).
 	 *
 	 * Only the two states T3 actually has. `pending`/`private`/`future` are
 	 * deliberately NOT advertised — a client offering one of those in its UI
@@ -260,7 +260,7 @@ readonly class PostReadHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getPostFormats(blog_id, username, password)
+	 * wp.getPostFormats(blog_id, username, password).
 	 *
 	 * T3 has no post formats at all. Advertising only `standard` — never
 	 * `aside`, `gallery`, `video`, etc. — keeps a client from offering a

@@ -49,7 +49,7 @@ readonly class PostWriteHandler implements MethodHandler
 	}
 
 	/**
-	 * metaWeblog.newPost(blogid, username, password, struct, publish)
+	 * metaWeblog.newPost(blogid, username, password, struct, publish).
 	 *
 	 * @param array<int,mixed> $params
 	 */
@@ -70,7 +70,7 @@ readonly class PostWriteHandler implements MethodHandler
 	}
 
 	/**
-	 * metaWeblog.editPost(postid, username, password, struct, publish)
+	 * metaWeblog.editPost(postid, username, password, struct, publish).
 	 *
 	 * @param array<int,mixed> $params
 	 */
@@ -104,7 +104,7 @@ readonly class PostWriteHandler implements MethodHandler
 	}
 
 	/**
-	 * blogger.deletePost(appkey, postid, username, password, publish)
+	 * blogger.deletePost(appkey, postid, username, password, publish).
 	 *
 	 * Carries no blogid at all, so the blog is resolved by finding the post —
 	 * guessing here is exactly what let this call delete the wrong post out of
@@ -142,7 +142,7 @@ readonly class PostWriteHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.newPost(blog_id, username, password, content_struct)
+	 * wp.newPost(blog_id, username, password, content_struct).
 	 *
 	 * Unlike metaWeblog.newPost, this dialect carries no separate publish
 	 * parameter — `post_status` inside the struct is the only signal — so
@@ -169,7 +169,7 @@ readonly class PostWriteHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.editPost(blog_id, username, password, post_id, content_struct)
+	 * wp.editPost(blog_id, username, password, post_id, content_struct).
 	 *
 	 * Unlike metaWeblog.editPost, this dialect DOES carry a blog_id, so it
 	 * resolves via resolveFor() rather than searching for the post. `null` is
@@ -265,7 +265,7 @@ readonly class PostWriteHandler implements MethodHandler
 			: $this->mapper->titleSlug((string)($fields['title'] ?? ''));
 
 		$fields['id']     = $this->uniqueId($collection, $id);
-		$fields['author'] = $fields['author'] ?? $identity->authorName;
+		$fields['author'] ??= $identity->authorName;
 
 		return $fields;
 	}

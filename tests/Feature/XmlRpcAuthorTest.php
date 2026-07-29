@@ -41,8 +41,10 @@ it('registers every author/profile method', function (): void {
 
 it('derives distinct authors from existing posts', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getAuthors',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getAuthors',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('Ada Lovelace');
@@ -53,8 +55,10 @@ it('derives distinct authors from existing posts', function (): void {
 
 it('wp.getUsers returns the same authors in the same struct shape', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getUsers',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getUsers',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('Ada Lovelace');
@@ -64,8 +68,10 @@ it('wp.getUsers returns the same authors in the same struct shape', function ():
 
 it('returns a profile struct for the authenticated caller', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getProfile',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getProfile',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>user_id</name>');
@@ -81,8 +87,10 @@ it('returns a profile struct for the authenticated caller', function (): void {
 
 it('returns only the standard post format', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getPostFormats',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPostFormats',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>standard</name><value><string>Standard</string></value>');
@@ -94,8 +102,10 @@ it('lets a GET-only key call all four author/profile methods', function (): void
 	$key = xmlRpcKey(['blog'], ['GET']);
 
 	foreach (['wp.getAuthors', 'wp.getUsers', 'wp.getProfile', 'wp.getPostFormats'] as $method) {
-		$body = (string)postXmlRpc(xmlRpcBody($method,
-			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+		$body = (string)postXmlRpc(xmlRpcBody(
+			$method,
+			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+		))->getBody();
 
 		expect($body)->not->toContain('<fault>');
 	}
@@ -105,8 +115,10 @@ it('refuses all four author/profile methods for a key that cannot GET', function
 	$key = xmlRpcKey(['blog'], ['POST']);
 
 	foreach (['wp.getAuthors', 'wp.getUsers', 'wp.getProfile', 'wp.getPostFormats'] as $method) {
-		$body = (string)postXmlRpc(xmlRpcBody($method,
-			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+		$body = (string)postXmlRpc(xmlRpcBody(
+			$method,
+			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+		))->getBody();
 
 		// The key authenticates fine (it is granted the path) and is refused at
 		// assertOperation()'s RPC-level check — the operation gate, not the

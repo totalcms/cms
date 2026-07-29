@@ -74,12 +74,12 @@ readonly class XmlRpcRequestParser
 		}
 
 		$params = [];
-		if (isset($doc->params)) {
+		if (property_exists($doc, 'params') && $doc->params !== null) {
 			foreach ($doc->params->param as $param) {
 				if (count($params) >= self::MAX_PARAMS) {
 					throw XmlRpcFault::malformed('Too many parameters.');
 				}
-				if (!isset($param->value)) {
+				if (!property_exists($param, 'value') || $param->value === null) {
 					throw XmlRpcFault::malformed('A param is missing its value.');
 				}
 				$params[] = $this->parseValue($param->value, 1);
@@ -163,7 +163,7 @@ readonly class XmlRpcRequestParser
 	 */
 	private function parseDate(string $raw): \DateTimeImmutable
 	{
-		$raw = trim($raw);
+		$raw        = trim($raw);
 		$normalized = preg_replace(
 			'/^(\d{4})(\d{2})(\d{2})T/',
 			'$1-$2-$3T',
@@ -192,7 +192,7 @@ readonly class XmlRpcRequestParser
 				continue;
 			}
 
-			$result[$name] = isset($member->value)
+			$result[$name] = property_exists($member, 'value') && $member->value !== null
 				? $this->parseValue($member->value, $depth + 1)
 				: '';
 		}
@@ -205,7 +205,7 @@ readonly class XmlRpcRequestParser
 	{
 		$result = [];
 
-		if (!isset($array->data)) {
+		if (!property_exists($array, 'data') || $array->data === null) {
 			return $result;
 		}
 

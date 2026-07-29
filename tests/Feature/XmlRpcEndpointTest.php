@@ -26,7 +26,7 @@ it('returns 404 for every route when xmlrpc is disabled', function (): void {
 
 describe('with xmlrpc enabled', function (): void {
 	beforeEach(function (): void {
-		$config = $this->app->getContainer()->get(TotalCMS\Support\Config::class);
+		$config         = $this->app->getContainer()->get(TotalCMS\Support\Config::class);
 		$config->xmlrpc = ['enable' => true, 'ratePerIp' => 0];
 	});
 

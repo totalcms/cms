@@ -23,7 +23,8 @@ beforeEach(function (): void {
 it('publishes a post and stores every mapped field', function (): void {
 	$key = xmlRpcKey();
 
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.newPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.newPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam([
 			'title'        => 'Writing from a client',
@@ -34,7 +35,8 @@ it('publishes a post and stores every mapped field', function (): void {
 			'categories'   => ['Tech'],
 			'wp_slug'      => 'writing-from-a-client',
 		])
-		. xmlRpcBoolParam(true)))->getBody();
+		. xmlRpcBoolParam(true)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('writing-from-a-client');
@@ -56,10 +58,12 @@ it('publishes a post and stores every mapped field', function (): void {
 it('publishes an unpublished post as a draft', function (): void {
 	$key = xmlRpcKey();
 
-	postXmlRpc(xmlRpcBody('metaWeblog.newPost',
+	postXmlRpc(xmlRpcBody(
+		'metaWeblog.newPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam(['title' => 'Not ready', 'wp_slug' => 'not-ready'])
-		. xmlRpcBoolParam(false)));
+		. xmlRpcBoolParam(false)
+	));
 
 	$object = $this->app->getContainer()->get(ObjectFetcher::class)
 		->fetchObject('blog', 'not-ready')->toArray();
@@ -72,9 +76,11 @@ it('creates as published when no publish flag is sent at all', function (): void
 	// WordPress's behavior for creates and must not change.
 	$key = xmlRpcKey();
 
-	postXmlRpc(xmlRpcBody('metaWeblog.newPost',
+	postXmlRpc(xmlRpcBody(
+		'metaWeblog.newPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcStructParam(['title' => 'No flag at all', 'wp_slug' => 'no-flag-at-all'])));
+		. xmlRpcStructParam(['title' => 'No flag at all', 'wp_slug' => 'no-flag-at-all'])
+	));
 
 	$object = $this->app->getContainer()->get(ObjectFetcher::class)
 		->fetchObject('blog', 'no-flag-at-all')->toArray();
@@ -83,10 +89,12 @@ it('creates as published when no publish flag is sent at all', function (): void
 });
 
 it('refuses to write without a valid key', function (): void {
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.newPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.newPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam('tcms_not_real')
 		. xmlRpcStructParam(['title' => 'Should not exist', 'description' => '<p>x</p>'])
-		. xmlRpcBoolParam(true)))->getBody();
+		. xmlRpcBoolParam(true)
+	))->getBody();
 
 	expect($body)->toContain('<int>403</int>');
 	expect($this->app->getContainer()->get(ObjectFetcher::class)->existsObject('blog', 'should-not-exist'))
@@ -101,10 +109,12 @@ it('refuses to write with a read-only key', function (): void {
 	// assertOperation()'s RPC-level check instead: 401, not a credential fault.
 	$key = xmlRpcKey(['blog'], ['GET']);
 
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.newPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.newPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam(['title' => 'Read only', 'wp_slug' => 'read-only'])
-		. xmlRpcBoolParam(true)))->getBody();
+		. xmlRpcBoolParam(true)
+	))->getBody();
 
 	expect($body)->toContain('<int>401</int>');
 	expect($this->app->getContainer()->get(ObjectFetcher::class)->existsObject('blog', 'read-only'))
@@ -127,10 +137,12 @@ it('preserves an admin-set image when an edit only changes text', function (): v
 
 	$key = xmlRpcKey();
 
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('has-image') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam(['title' => 'New title'])
-		. xmlRpcBoolParam(true)))->getBody();
+		. xmlRpcBoolParam(true)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 
@@ -162,9 +174,11 @@ it('leaves a draft alone when an edit sends only a title and no publish flag', f
 
 	// Deliberately only 4 params: postid, username, password, struct — no
 	// fifth (publish) param at all.
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('stays-draft') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcStructParam(['title' => 'New title, still a draft'])))->getBody();
+		. xmlRpcStructParam(['title' => 'New title, still a draft'])
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 
@@ -190,10 +204,12 @@ it('leaves a draft alone when an edit sends an empty-string publish value', func
 
 	$key = xmlRpcKey();
 
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('empty-publish-stays-draft') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam(['title' => 'New title'])
-		. xmlRpcParam('')))->getBody();
+		. xmlRpcParam('')
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 
@@ -214,10 +230,12 @@ it('turns a published post into a draft when an edit explicitly sends publish=fa
 
 	$key = xmlRpcKey();
 
-	postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('goes-to-draft') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam(['title' => 'Pulled back to draft'])
-		. xmlRpcBoolParam(false)));
+		. xmlRpcBoolParam(false)
+	));
 
 	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'goes-to-draft')->toArray();
 
@@ -237,10 +255,12 @@ it('publishes a draft when an edit explicitly sends publish=true', function (): 
 
 	$key = xmlRpcKey();
 
-	postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('goes-live') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam(['title' => 'Now published'])
-		. xmlRpcBoolParam(true)));
+		. xmlRpcBoolParam(true)
+	));
 
 	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'goes-live')->toArray();
 
@@ -264,9 +284,11 @@ it('changes nothing at all when an edit sends an empty struct and no publish fla
 
 	$key = xmlRpcKey();
 
-	postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('untouched') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcStructParam([])));
+		. xmlRpcStructParam([])
+	));
 
 	$after = $container->get(ObjectFetcher::class)->fetchObject('blog', 'untouched')->toArray();
 
@@ -279,10 +301,12 @@ it('never renames a post when a client sends a different wp_slug', function (): 
 
 	$key = xmlRpcKey();
 
-	postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('keep-this-id') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam(['title' => 'Renamed', 'wp_slug' => 'brand-new-id'])
-		. xmlRpcBoolParam(true)));
+		. xmlRpcBoolParam(true)
+	));
 
 	$fetcher = $container->get(ObjectFetcher::class);
 	expect($fetcher->existsObject('blog', 'keep-this-id'))->toBeTrue();
@@ -294,10 +318,12 @@ it('generates a unique id when two posts share a title', function (): void {
 	$key = xmlRpcKey();
 
 	foreach (['first', 'second'] as $pass) {
-		postXmlRpc(xmlRpcBody('metaWeblog.newPost',
+		postXmlRpc(xmlRpcBody(
+			'metaWeblog.newPost',
 			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
 			. xmlRpcStructParam(['title' => 'Duplicate title'])
-			. xmlRpcBoolParam(true)));
+			. xmlRpcBoolParam(true)
+		));
 	}
 
 	$fetcher = $this->app->getContainer()->get(ObjectFetcher::class);
@@ -315,14 +341,18 @@ it('deletes a post through both dialects', function (): void {
 	$fetcher = $container->get(ObjectFetcher::class);
 
 	// blogger.deletePost(appkey, postid, username, password, publish)
-	postXmlRpc(xmlRpcBody('blogger.deletePost',
+	postXmlRpc(xmlRpcBody(
+		'blogger.deletePost',
 		xmlRpcParam('0000') . xmlRpcParam('delete-blogger') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcBoolParam(true)));
+		. xmlRpcBoolParam(true)
+	));
 	expect($fetcher->existsObject('blog', 'delete-blogger'))->toBeFalse();
 
 	// wp.deletePost(blogid, username, password, postid) — different order.
-	postXmlRpc(xmlRpcBody('wp.deletePost',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('delete-wp')));
+	postXmlRpc(xmlRpcBody(
+		'wp.deletePost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('delete-wp')
+	));
 	expect($fetcher->existsObject('blog', 'delete-wp'))->toBeFalse();
 });
 
@@ -335,9 +365,11 @@ it('refuses to delete with a key that cannot DELETE', function (): void {
 	// The key authenticates fine (it is granted the path) and is refused at
 	// assertOperation()'s RPC-level check — the operation gate, not the
 	// credential gate.
-	$body = (string)postXmlRpc(xmlRpcBody('blogger.deletePost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'blogger.deletePost',
 		xmlRpcParam('0000') . xmlRpcParam('survives') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcBoolParam(true)))->getBody();
+		. xmlRpcBoolParam(true)
+	))->getBody();
 
 	expect($body)->toContain('<int>401</int>');
 	expect($container->get(ObjectFetcher::class)->existsObject('blog', 'survives'))->toBeTrue();
@@ -347,10 +379,12 @@ it('publishes into the URL-pinned collection while ignoring blogid', function ()
 	// Immunity to clients that hardcode blogid=1: the URL wins outright.
 	$key = xmlRpcKey();
 
-	postXmlRpc(xmlRpcBody('metaWeblog.newPost',
+	postXmlRpc(xmlRpcBody(
+		'metaWeblog.newPost',
 		xmlRpcParam('1') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam(['title' => 'Pinned by URL', 'wp_slug' => 'pinned-by-url'])
-		. xmlRpcBoolParam(true)), '/xmlrpc/blog');
+		. xmlRpcBoolParam(true)
+	), '/xmlrpc/blog');
 
 	expect($this->app->getContainer()->get(ObjectFetcher::class)->existsObject('blog', 'pinned-by-url'))
 		->toBeTrue();

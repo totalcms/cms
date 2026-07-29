@@ -76,6 +76,7 @@ final class AuthFieldPolicyTest extends TestCase
 
 			/**
 			 * @param array<string,mixed> $context
+			 * @param mixed $level
 			 */
 			public function log($level, string|\Stringable $message, array $context = []): void
 			{

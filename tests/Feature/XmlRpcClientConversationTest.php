@@ -20,8 +20,10 @@ beforeEach(function (): void {
 });
 
 it('faults on media upload with a message pointing at the admin', function (): void {
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.newMediaObject',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam(xmlRpcKey())))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.newMediaObject',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam(xmlRpcKey())
+	))->getBody();
 
 	expect($body)->toContain('<fault>');
 	// The fault string is what the user actually reads in MarsEdit's dialog, so
@@ -32,8 +34,10 @@ it('faults on media upload with a message pointing at the admin', function (): v
 
 it('faults on page methods with an explanation', function (): void {
 	foreach (['wp.getPages', 'wp.newPage', 'wp.getPageList'] as $method) {
-		$body = (string)postXmlRpc(xmlRpcBody($method,
-			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam(xmlRpcKey())))->getBody();
+		$body = (string)postXmlRpc(xmlRpcBody(
+			$method,
+			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam(xmlRpcKey())
+		))->getBody();
 
 		expect($body)->toContain('does not expose pages');
 		expect($body)->not->toContain('-32601');
@@ -50,7 +54,8 @@ it('runs the full client conversation end to end', function (): void {
 	$blogs = (string)postXmlRpc(xmlRpcBody('blogger.getUsersBlogs', xmlRpcParam('0000') . $creds))->getBody();
 	expect($blogs)->toContain('<string>blog</string>');
 
-	$published = (string)postXmlRpc(xmlRpcBody('metaWeblog.newPost',
+	$published = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.newPost',
 		xmlRpcParam('blog') . $creds
 		. xmlRpcStructParam([
 			'title'       => 'Round trip',
@@ -58,23 +63,30 @@ it('runs the full client conversation end to end', function (): void {
 			'categories'  => ['Tech'],
 			'wp_slug'     => 'round-trip',
 		])
-		. xmlRpcBoolParam(true)))->getBody();
+		. xmlRpcBoolParam(true)
+	))->getBody();
 	expect($published)->toContain('round-trip');
 
-	$read = (string)postXmlRpc(xmlRpcBody('metaWeblog.getPost',
-		xmlRpcParam('round-trip') . $creds))->getBody();
+	$read = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getPost',
+		xmlRpcParam('round-trip') . $creds
+	))->getBody();
 	expect($read)->toContain('Written in a client.');
 
-	postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('round-trip') . $creds
 		. xmlRpcStructParam(['title' => 'Round trip, edited'])
-		. xmlRpcBoolParam(true)));
+		. xmlRpcBoolParam(true)
+	));
 	expect($fetcher->fetchObject('blog', 'round-trip')->toArray()['title'])->toBe('Round trip, edited');
 	// The edit sent no description, so the body must be untouched.
 	expect($fetcher->fetchObject('blog', 'round-trip')->toArray()['content'])->toContain('Written in a client.');
 
-	postXmlRpc(xmlRpcBody('blogger.deletePost',
-		xmlRpcParam('0000') . xmlRpcParam('round-trip') . $creds . xmlRpcBoolParam(true)));
+	postXmlRpc(xmlRpcBody(
+		'blogger.deletePost',
+		xmlRpcParam('0000') . xmlRpcParam('round-trip') . $creds . xmlRpcBoolParam(true)
+	));
 	expect($fetcher->existsObject('blog', 'round-trip'))->toBeFalse();
 });
 

@@ -41,10 +41,12 @@ it('edits a post that exists only in the second granted collection', function ()
 
 	$key = xmlRpcKey(['blog', 'news']);
 
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('news-only') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam(['title' => 'Edited news title'])
-		. xmlRpcBoolParam(true)))->getBody();
+		. xmlRpcBoolParam(true)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 
@@ -65,10 +67,12 @@ it('faults rather than editing either collection when the post id exists in both
 
 	$key = xmlRpcKey(['blog', 'news']);
 
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('shared-id') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam(['title' => 'Should not land anywhere'])
-		. xmlRpcBoolParam(true)))->getBody();
+		. xmlRpcBoolParam(true)
+	))->getBody();
 
 	expect($body)->toContain('<fault>');
 
@@ -79,9 +83,11 @@ it('faults rather than editing either collection when the post id exists in both
 
 it('faults 404 when the post exists in neither granted collection', function (): void {
 	$key  = xmlRpcKey(['blog', 'news']);
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('nowhere-to-be-found') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcStructParam(['title' => 'x'])))->getBody();
+		. xmlRpcStructParam(['title' => 'x'])
+	))->getBody();
 
 	expect($body)->toContain('<int>404</int>');
 });
@@ -97,10 +103,12 @@ it('still resolves the single visible blog unchanged when only one collection is
 
 	$key = xmlRpcKey(['blog']);
 
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.editPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.editPost',
 		xmlRpcParam('single-blog-post') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam(['title' => 'Edited'])
-		. xmlRpcBoolParam(true)))->getBody();
+		. xmlRpcBoolParam(true)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($container->get(ObjectFetcher::class)->fetchObject('blog', 'single-blog-post')->toArray()['title'])
@@ -114,8 +122,10 @@ it('reads a post that exists only in the second granted collection via metaWeblo
 	]);
 
 	$key  = xmlRpcKey(['blog', 'news']);
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getPost',
-		xmlRpcParam('news-read-only') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getPost',
+		xmlRpcParam('news-read-only') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('News-only post');
@@ -127,8 +137,10 @@ it('faults metaWeblog.getPost when the id is ambiguous across granted collection
 	$container->get(ObjectSaver::class)->saveObject('news', ['id' => 'dupe', 'title' => 'News dupe']);
 
 	$key  = xmlRpcKey(['blog', 'news']);
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getPost',
-		xmlRpcParam('dupe') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getPost',
+		xmlRpcParam('dupe') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->toContain('<fault>');
 	expect($body)->not->toContain('<name>postid</name>');
@@ -140,9 +152,11 @@ it('deletes via blogger.deletePost only the collection that actually holds the p
 
 	$key = xmlRpcKey(['blog', 'news']);
 
-	postXmlRpc(xmlRpcBody('blogger.deletePost',
+	postXmlRpc(xmlRpcBody(
+		'blogger.deletePost',
 		xmlRpcParam('0000') . xmlRpcParam('news-delete-only') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcBoolParam(true)));
+		. xmlRpcBoolParam(true)
+	));
 
 	expect($container->get(ObjectFetcher::class)->existsObject('news', 'news-delete-only'))->toBeFalse();
 });
@@ -154,9 +168,11 @@ it('refuses blogger.deletePost rather than deleting either copy when the id exis
 
 	$key = xmlRpcKey(['blog', 'news']);
 
-	$body = (string)postXmlRpc(xmlRpcBody('blogger.deletePost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'blogger.deletePost',
 		xmlRpcParam('0000') . xmlRpcParam('dupe-delete') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcBoolParam(true)))->getBody();
+		. xmlRpcBoolParam(true)
+	))->getBody();
 
 	expect($body)->toContain('<fault>');
 
@@ -173,11 +189,13 @@ it('sets categories via mt.setPostCategories only on the collection that actuall
 
 	$key = xmlRpcKey(['blog', 'news']);
 
-	$body = (string)postXmlRpc(xmlRpcBody('mt.setPostCategories',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'mt.setPostCategories',
 		xmlRpcParam('news-categories') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. '<param><value><array><data>'
 		. '<value><struct><member><name>categoryName</name><value><string>New</string></value></member></struct></value>'
-		. '</data></array></value></param>'))->getBody();
+		. '</data></array></value></param>'
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($container->get(ObjectFetcher::class)->fetchObject('news', 'news-categories')->toArray()['categories'])
@@ -190,8 +208,10 @@ it('faults mt.getPostCategories when the id is ambiguous across granted collecti
 	$container->get(ObjectSaver::class)->saveObject('news', ['id' => 'dupe-cat', 'title' => 'News', 'categories' => ['B']]);
 
 	$key  = xmlRpcKey(['blog', 'news']);
-	$body = (string)postXmlRpc(xmlRpcBody('mt.getPostCategories',
-		xmlRpcParam('dupe-cat') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'mt.getPostCategories',
+		xmlRpcParam('dupe-cat') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->toContain('<fault>');
 });

@@ -37,7 +37,7 @@ readonly class BlogHandler implements MethodHandler
 	}
 
 	/**
-	 * blogger.getUsersBlogs(appkey, username, password)
+	 * blogger.getUsersBlogs(appkey, username, password).
 	 *
 	 * @param array<int,mixed> $params
 	 *
@@ -98,7 +98,7 @@ readonly class BlogHandler implements MethodHandler
 	}
 
 	/**
-	 * blogger.getUserInfo(appkey, username, password)
+	 * blogger.getUserInfo(appkey, username, password).
 	 *
 	 * @param array<int,mixed> $params
 	 *
@@ -123,7 +123,7 @@ readonly class BlogHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getProfile(blog_id, username, password)
+	 * wp.getProfile(blog_id, username, password).
 	 *
 	 * A single struct describing the authenticated caller. T3 has no user
 	 * records behind a post's author string — the same gap getUserInfo()
@@ -157,7 +157,7 @@ readonly class BlogHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getOptions(blogid, username, password, options[])
+	 * wp.getOptions(blogid, username, password, options[]).
 	 *
 	 * `post_thumbnail: false` is the standard signal telling a client not to
 	 * offer featured-image UI — which suppresses attempts at the media upload

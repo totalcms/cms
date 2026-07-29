@@ -42,7 +42,7 @@ function xmlRpcTestConfig(): TotalCMS\Support\Config
  */
 function makeXmlRpcAuth(?ApiKeyData $validatedKey, bool $proEdition, ?array $user = null): XmlRpcAuth
 {
-	$fetcher = new readonly class ($validatedKey) extends TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher {
+	$fetcher = new readonly class($validatedKey) extends TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher {
 		public function __construct(private ?ApiKeyData $key)
 		{
 		}
@@ -53,7 +53,7 @@ function makeXmlRpcAuth(?ApiKeyData $validatedKey, bool $proEdition, ?array $use
 		}
 	};
 
-	$editions = new class ($proEdition) extends TotalCMS\Domain\License\Service\EditionFeatureService {
+	$editions = new class($proEdition) extends TotalCMS\Domain\License\Service\EditionFeatureService {
 		public function __construct(private bool $allowed)
 		{
 		}
@@ -64,7 +64,7 @@ function makeXmlRpcAuth(?ApiKeyData $validatedKey, bool $proEdition, ?array $use
 		}
 	};
 
-	$users = new readonly class ($user) extends TotalCMS\Domain\Auth\Service\UserValidationService {
+	$users = new readonly class($user) extends TotalCMS\Domain\Auth\Service\UserValidationService {
 		public function __construct(private ?array $user)
 		{
 		}

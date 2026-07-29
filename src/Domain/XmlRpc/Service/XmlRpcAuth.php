@@ -61,7 +61,7 @@ readonly class XmlRpcAuth
 		// caller may actually do.
 		$apiKey = $this->apiKeyFetcher->validateKeyForPath($password, self::SCOPE_PATH);
 
-		if ($apiKey === null) {
+		if (!$apiKey instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
 			throw XmlRpcFault::badCredentials();
 		}
 
@@ -80,7 +80,7 @@ readonly class XmlRpcAuth
 	{
 		$allowed = $identity->apiKey->scopes['methods'] ?? [];
 
-		if (!is_array($allowed) || !in_array(strtoupper($httpMethod), array_map('strtoupper', $allowed), true)) {
+		if (!is_array($allowed) || !in_array(strtoupper($httpMethod), array_map(strtoupper(...), $allowed), true)) {
 			throw XmlRpcFault::forbidden(sprintf(
 				'This API key is not permitted to perform %s operations.',
 				strtoupper($httpMethod)

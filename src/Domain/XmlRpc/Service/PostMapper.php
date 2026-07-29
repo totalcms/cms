@@ -453,7 +453,7 @@ readonly class PostMapper
 	 * @param array<string,mixed> $struct
 	 *
 	 * @return bool|null `null` means "leave `draft` unset": no `post_status`
-	 *                    in the struct and no explicit publish flag supplied.
+	 *                    in the struct and no explicit publish flag supplied
 	 */
 	private function isDraft(array $struct, ?bool $publish): ?bool
 	{
@@ -583,7 +583,7 @@ readonly class PostMapper
 			return $this->stringList($keywords);
 		}
 
-		$parts = array_map('trim', explode(',', (string)$keywords));
+		$parts = array_map(trim(...), explode(',', (string)$keywords));
 
 		return array_values(array_filter($parts, static fn (string $part): bool => $part !== ''));
 	}

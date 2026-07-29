@@ -34,8 +34,10 @@ it('reports no text filters', function (): void {
 });
 
 it('faults on getUsersBlogs without a valid key', function (): void {
-	$response = postXmlRpc(xmlRpcBody('blogger.getUsersBlogs',
-		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam('tcms_not_real')));
+	$response = postXmlRpc(xmlRpcBody(
+		'blogger.getUsersBlogs',
+		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam('tcms_not_real')
+	));
 
 	$body = (string)$response->getBody();
 	expect($body)->toContain('<fault>');
@@ -53,8 +55,10 @@ it('lists the blogs a key is scoped to, and only those', function (): void {
 		->saveCollection(['id' => 'news', 'name' => 'News', 'schema' => 'blog']);
 
 	$key  = xmlRpcKey(['blog']);
-	$body = (string)postXmlRpc(xmlRpcBody('blogger.getUsersBlogs',
-		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'blogger.getUsersBlogs',
+		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>blogid</name><value><string>blog</string></value>');
@@ -65,8 +69,10 @@ it('handles wp.getUsersBlogs shifted param positions', function (): void {
 	// wp.* puts username at 0 and password at 1; blogger.* shifts both by one for
 	// the legacy appkey. Getting this wrong reads to the user as an auth failure.
 	$key  = xmlRpcKey(['blog']);
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getUsersBlogs',
-		xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getUsersBlogs',
+		xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>blogName</name>');
@@ -74,8 +80,10 @@ it('handles wp.getUsersBlogs shifted param positions', function (): void {
 
 it('advertises Total CMS and no thumbnail support in wp.getOptions', function (): void {
 	$key  = xmlRpcKey(['blog']);
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getOptions',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getOptions',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->toContain('<value><string>Total CMS</string></value>');
 	// post_thumbnail: false is how a client learns not to offer featured-image UI.
@@ -92,8 +100,10 @@ it('refuses a key that lacks the collection grant', function (): void {
 		->createApiKey('endpoint only', ['methods' => ['GET'], 'paths' => ['/xmlrpc.php']])
 		->key;
 
-	$body = (string)postXmlRpc(xmlRpcBody('blogger.getUsersBlogs',
-		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'blogger.getUsersBlogs',
+		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->toContain('<fault>');
 	expect($body)->toMatch('/<int>401<\/int>/');
@@ -108,10 +118,14 @@ it('faults both getUsersBlogs methods for a key scoped to no blog collection, na
 		->createApiKey('endpoint only', ['methods' => ['GET'], 'paths' => ['/xmlrpc.php']])
 		->key;
 
-	$bloggerBody = (string)postXmlRpc(xmlRpcBody('blogger.getUsersBlogs',
-		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
-	$wpBody = (string)postXmlRpc(xmlRpcBody('wp.getUsersBlogs',
-		xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$bloggerBody = (string)postXmlRpc(xmlRpcBody(
+		'blogger.getUsersBlogs',
+		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
+	$wpBody = (string)postXmlRpc(xmlRpcBody(
+		'wp.getUsersBlogs',
+		xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	foreach ([$bloggerBody, $wpBody] as $body) {
 		expect($body)->toContain('<fault>');
@@ -132,8 +146,10 @@ it('lists exactly one blog for a key granted a single /collections/{id} path', f
 		->saveCollection(['id' => 'news', 'name' => 'News', 'schema' => 'blog']);
 
 	$key  = xmlRpcKey(['blog']);
-	$body = (string)postXmlRpc(xmlRpcBody('blogger.getUsersBlogs',
-		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'blogger.getUsersBlogs',
+		xmlRpcParam('0000') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>blogid</name><value><string>blog</string></value>');
@@ -153,8 +169,10 @@ it('lists every blog collection for a key granted /collections', function (): vo
 		])
 		->key;
 
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getUsersBlogs',
-		xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getUsersBlogs',
+		xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>blogid</name><value><string>blog</string></value>');

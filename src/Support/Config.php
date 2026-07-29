@@ -291,7 +291,7 @@ class Config
 	 *
 	 * @var array<string,mixed>|null
 	 */
-	private static ?array $settings = null;
+	private static ?array $settings    = null;
 	private static string $settingsKey = '';
 
 	/**

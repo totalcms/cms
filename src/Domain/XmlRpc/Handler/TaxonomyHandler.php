@@ -56,7 +56,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	}
 
 	/**
-	 * metaWeblog.getCategories(blogid, username, password)
+	 * metaWeblog.getCategories(blogid, username, password).
 	 *
 	 * @param array<int,mixed> $params
 	 *
@@ -112,7 +112,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getTags(blogid, username, password)
+	 * wp.getTags(blogid, username, password).
 	 *
 	 * @param array<int,mixed> $params
 	 *
@@ -142,7 +142,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	}
 
 	/**
-	 * mt.getPostCategories(postid, username, password)
+	 * mt.getPostCategories(postid, username, password).
 	 *
 	 * @param array<int,mixed> $params
 	 *
@@ -178,7 +178,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	}
 
 	/**
-	 * mt.setPostCategories(postid, username, password, categories[])
+	 * mt.setPostCategories(postid, username, password, categories[]).
 	 *
 	 * @param array<int,mixed> $params
 	 */
@@ -217,7 +217,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.newCategory(blogid, username, password, struct)
+	 * wp.newCategory(blogid, username, password, struct).
 	 *
 	 * Returns the name rather than persisting anything: there is no taxonomy
 	 * store, so the category comes into existence the moment a post uses it.
@@ -243,7 +243,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getTaxonomies(blog_id, username, password)
+	 * wp.getTaxonomies(blog_id, username, password).
 	 *
 	 * T3 has exactly two flat taxonomies — no hierarchy, so `hierarchical` is
 	 * `false` for both.
@@ -265,7 +265,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getTerms(blog_id, username, password, taxonomy, filter?)
+	 * wp.getTerms(blog_id, username, password, taxonomy, filter?).
 	 *
 	 * Derives distinct values from the index exactly as getCategories()/
 	 * getTags() already do above, only wrapped in the fuller wp.* term struct
@@ -304,7 +304,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getAuthors(blog_id, username, password)
+	 * wp.getAuthors(blog_id, username, password).
 	 *
 	 * Distinct author names across the collection index, sourced exactly the
 	 * way getCategories()/getTags() above source their lists — via
@@ -332,7 +332,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	}
 
 	/**
-	 * wp.getUsers(blog_id, username, password, filter?, fields?)
+	 * wp.getUsers(blog_id, username, password, filter?, fields?).
 	 *
 	 * WordPress returns richer user objects; T3 has no user records behind a
 	 * post's author string, so the same list getAuthors() derives is returned

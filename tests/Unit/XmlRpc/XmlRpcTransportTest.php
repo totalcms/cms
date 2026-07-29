@@ -14,7 +14,8 @@ function xmlRpcCall(string $methodName, string $paramsXml = ''): string
 
 describe('XmlRpcRequestParser', function (): void {
 	it('parses the method name and typed params', function (): void {
-		$xml = xmlRpcCall('metaWeblog.newPost',
+		$xml = xmlRpcCall(
+			'metaWeblog.newPost',
 			'<param><value><string>blog</string></value></param>'
 			. '<param><value><int>42</int></value></param>'
 			. '<param><value><boolean>1</boolean></value></param>'
@@ -47,7 +48,8 @@ describe('XmlRpcRequestParser', function (): void {
 	});
 
 	it('decodes base64 and dateTime.iso8601', function (): void {
-		$xml = xmlRpcCall('demo',
+		$xml = xmlRpcCall(
+			'demo',
 			'<param><value><base64>' . base64_encode('bytes') . '</base64></value></param>'
 			. '<param><value><dateTime.iso8601>20260728T14:30:00Z</dateTime.iso8601></value></param>'
 		);
@@ -151,7 +153,7 @@ describe('XmlRpcRequestParser', function (): void {
 
 	it('rejects an array with more elements than the cap', function (): void {
 		$values = str_repeat('<value><string>x</string></value>', XmlRpcRequestParser::MAX_MEMBERS + 1);
-		$xml = xmlRpcCall('demo', '<param><value><array><data>' . $values . '</data></array></value></param>');
+		$xml    = xmlRpcCall('demo', '<param><value><array><data>' . $values . '</data></array></value></param>');
 
 		expect(fn (): array => (new XmlRpcRequestParser())->parse($xml))
 			->toThrow(XmlRpcFault::class, 'too many elements');

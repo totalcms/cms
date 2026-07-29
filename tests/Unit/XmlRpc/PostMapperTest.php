@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Domain\XmlRpc\Service\PostMapper;
-
 require_once __DIR__ . '/XmlRpcUnitHelpers.php';
 
 describe('toObject', function (): void {

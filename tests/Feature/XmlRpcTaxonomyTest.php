@@ -47,8 +47,10 @@ it('registers every taxonomy method', function (): void {
 
 it('derives distinct categories from existing posts, deduplicated', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getCategories',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getCategories',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>categoryName</name><value><string>Tech</string></value>');
@@ -63,8 +65,10 @@ it('derives distinct categories from existing posts, deduplicated', function ():
 
 it('derives distinct tags from existing posts', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getTags',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getTags',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->toContain('flat-file');
 	expect($body)->toContain('cms');
@@ -73,8 +77,10 @@ it('derives distinct tags from existing posts', function (): void {
 
 it('reports a post categories with the first marked primary', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('mt.getPostCategories',
-		xmlRpcParam('taxonomy-one') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'mt.getPostCategories',
+		xmlRpcParam('taxonomy-one') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->toContain('<name>isPrimary</name><value><boolean>1</boolean></value>');
 	expect($body)->toContain('<name>isPrimary</name><value><boolean>0</boolean></value>');
@@ -83,11 +89,13 @@ it('reports a post categories with the first marked primary', function (): void 
 it('replaces post categories without disturbing other fields', function (): void {
 	$key = xmlRpcKey();
 
-	$body = (string)postXmlRpc(xmlRpcBody('mt.setPostCategories',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'mt.setPostCategories',
 		xmlRpcParam('taxonomy-two') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. '<param><value><array><data>'
 		. '<value><struct><member><name>categoryName</name><value><string>Rewritten</string></value></member></struct></value>'
-		. '</data></array></value></param>'))->getBody();
+		. '</data></array></value></param>'
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 
@@ -104,21 +112,27 @@ it('echoes a new category without persisting it', function (): void {
 	// There is no taxonomy store — categories are derived from posts — so the
 	// name comes back and materializes once a post uses it.
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.newCategory',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.newCategory',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcStructParam(['name' => 'Brand New'])))->getBody();
+		. xmlRpcStructParam(['name' => 'Brand New'])
+	))->getBody();
 
 	expect($body)->toContain('<value><string>Brand New</string></value>');
 
-	$listed = (string)postXmlRpc(xmlRpcBody('metaWeblog.getCategories',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$listed = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getCategories',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($listed)->not->toContain('Brand New');
 });
 
 it('faults on unauthenticated category reads', function (): void {
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getCategories',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam('tcms_not_real')))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getCategories',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam('tcms_not_real')
+	))->getBody();
 
 	expect($body)->toContain('<int>403</int>');
 	expect($body)->not->toContain('categoryName');
@@ -127,10 +141,14 @@ it('faults on unauthenticated category reads', function (): void {
 it('lets a GET-only key list categories and tags', function (): void {
 	$key = xmlRpcKey(['blog'], ['GET']);
 
-	$categories = (string)postXmlRpc(xmlRpcBody('metaWeblog.getCategories',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
-	$tags = (string)postXmlRpc(xmlRpcBody('wp.getTags',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$categories = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getCategories',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
+	$tags = (string)postXmlRpc(xmlRpcBody(
+		'wp.getTags',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($categories)->not->toContain('<fault>');
 	expect($categories)->toContain('Tech');
@@ -141,11 +159,13 @@ it('lets a GET-only key list categories and tags', function (): void {
 it('refuses mt.setPostCategories with a key that cannot PUT, leaving the post unchanged', function (): void {
 	$key = xmlRpcKey(['blog'], ['GET']);
 
-	$body = (string)postXmlRpc(xmlRpcBody('mt.setPostCategories',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'mt.setPostCategories',
 		xmlRpcParam('taxonomy-two') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. '<param><value><array><data>'
 		. '<value><struct><member><name>categoryName</name><value><string>Rewritten</string></value></member></struct></value>'
-		. '</data></array></value></param>'))->getBody();
+		. '</data></array></value></param>'
+	))->getBody();
 
 	// The key authenticates fine (it is granted the path) and is refused at
 	// assertOperation()'s RPC-level check — the operation gate, not the
@@ -161,14 +181,18 @@ it('refuses mt.setPostCategories with a key that cannot PUT, leaving the post un
 it('refuses wp.newCategory with a key that cannot POST', function (): void {
 	$key = xmlRpcKey(['blog'], ['GET']);
 
-	$body = (string)postXmlRpc(xmlRpcBody('wp.newCategory',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.newCategory',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcStructParam(['name' => 'Should Not Land'])))->getBody();
+		. xmlRpcStructParam(['name' => 'Should Not Land'])
+	))->getBody();
 
 	expect($body)->toContain('<int>401</int>');
 
-	$listed = (string)postXmlRpc(xmlRpcBody('metaWeblog.getCategories',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$listed = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getCategories',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($listed)->not->toContain('Should Not Land');
 });

@@ -76,9 +76,11 @@ it('returns posts newest first from wp.getPosts and honours number/offset paging
 
 	$key = xmlRpcKey();
 
-	$firstPage = (string)postXmlRpc(xmlRpcBody('wp.getPosts',
+	$firstPage = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPosts',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcStructParam(['number' => '2', 'offset' => '0'])))->getBody();
+		. xmlRpcStructParam(['number' => '2', 'offset' => '0'])
+	))->getBody();
 
 	expect($firstPage)->not->toContain('<fault>');
 	expect($firstPage)->toContain('wp-post-a');
@@ -87,9 +89,11 @@ it('returns posts newest first from wp.getPosts and honours number/offset paging
 	expect($firstPage)->not->toContain('wp-post-d');
 	expect(strpos($firstPage, 'wp-post-a'))->toBeLessThan((int)strpos($firstPage, 'wp-post-b'));
 
-	$secondPage = (string)postXmlRpc(xmlRpcBody('wp.getPosts',
+	$secondPage = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPosts',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcStructParam(['number' => '2', 'offset' => '2'])))->getBody();
+		. xmlRpcStructParam(['number' => '2', 'offset' => '2'])
+	))->getBody();
 
 	expect($secondPage)->not->toContain('<fault>');
 	// The second page must be genuinely different from the first.
@@ -107,22 +111,28 @@ it('filters wp.getPosts by post_status', function (): void {
 
 	$key = xmlRpcKey();
 
-	$publishedOnly = (string)postXmlRpc(xmlRpcBody('wp.getPosts',
+	$publishedOnly = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPosts',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcStructParam(['post_status' => 'publish'])))->getBody();
+		. xmlRpcStructParam(['post_status' => 'publish'])
+	))->getBody();
 
 	expect($publishedOnly)->toContain('wp-published');
 	expect($publishedOnly)->not->toContain('wp-drafted');
 
-	$draftsOnly = (string)postXmlRpc(xmlRpcBody('wp.getPosts',
+	$draftsOnly = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPosts',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcStructParam(['post_status' => 'draft'])))->getBody();
+		. xmlRpcStructParam(['post_status' => 'draft'])
+	))->getBody();
 
 	expect($draftsOnly)->toContain('wp-drafted');
 	expect($draftsOnly)->not->toContain('wp-published');
 
-	$both = (string)postXmlRpc(xmlRpcBody('wp.getPosts',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$both = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPosts',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($both)->toContain('wp-published');
 	expect($both)->toContain('wp-drafted');
@@ -141,8 +151,10 @@ it('returns a full wp.getPost struct including terms', function (): void {
 	]);
 
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getPost',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-full-post')))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-full-post')
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>post_id</name><value><string>wp-full-post</string></value>');
@@ -160,8 +172,10 @@ it('returns a full wp.getPost struct including terms', function (): void {
 
 it('faults wp.getPost with 404 for a post that does not exist', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getPost',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('no-such-post')))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('no-such-post')
+	))->getBody();
 
 	expect($body)->toContain('<int>404</int>');
 });
@@ -180,8 +194,10 @@ it('creates a post via wp.newPost with title, content, excerpt, status and terms
 		. '</struct></value></member>'
 		. '</struct></value></param>';
 
-	$body = (string)postXmlRpc(xmlRpcBody('wp.newPost',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . $struct))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.newPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . $struct
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	// Slugified from post_title, same convention metaWeblog.newPost uses.
@@ -213,9 +229,11 @@ it('preserves an admin-set image when wp.editPost only changes the title', funct
 	]);
 
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.editPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.editPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-has-image')
-		. xmlRpcStructParam(['post_title' => 'New title'])))->getBody();
+		. xmlRpcStructParam(['post_title' => 'New title'])
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 
@@ -235,9 +253,11 @@ it('never renames a post when wp.editPost sends a different post_name', function
 
 	$key = xmlRpcKey();
 
-	postXmlRpc(xmlRpcBody('wp.editPost',
+	postXmlRpc(xmlRpcBody(
+		'wp.editPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-keep-id')
-		. xmlRpcStructParam(['post_title' => 'Renamed', 'post_name' => 'brand-new-id'])));
+		. xmlRpcStructParam(['post_title' => 'Renamed', 'post_name' => 'brand-new-id'])
+	));
 
 	$fetcher = $container->get(ObjectFetcher::class);
 	expect($fetcher->existsObject('blog', 'wp-keep-id'))->toBeTrue();
@@ -255,17 +275,21 @@ it('round-trips an extended entry through the <!--more--> marker', function (): 
 	]);
 
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getPost',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-extended')))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-extended')
+	))->getBody();
 
 	// The response body is XML-escaped, so the marker itself is rendered as
 	// &lt;!--more--&gt; — assert the pieces are present, in order, joined by it.
 	expect($body)->toContain('Main body.&lt;/p&gt;&lt;!--more--&gt;&lt;p&gt;The rest.');
 
 	// Writing that same combined post_content back must preserve both halves.
-	postXmlRpc(xmlRpcBody('wp.editPost',
+	postXmlRpc(xmlRpcBody(
+		'wp.editPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-extended')
-		. xmlRpcStructParam(['post_content' => '<p>Main body.</p><!--more--><p>The rest.</p>'])));
+		. xmlRpcStructParam(['post_content' => '<p>Main body.</p><!--more--><p>The rest.</p>'])
+	));
 
 	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'wp-extended')->toArray();
 	expect($object['content'])->toBe('<p>Main body.</p>');
@@ -294,9 +318,11 @@ it('splits post_content on every marker variant WordPress supports, on an edit t
 	foreach ($cases as $id => $postContent) {
 		$saver->saveObject('blog', ['id' => $id, 'title' => $id, 'content' => 'placeholder', 'extra' => 'placeholder']);
 
-		$body = (string)postXmlRpc(xmlRpcBody('wp.editPost',
+		$body = (string)postXmlRpc(xmlRpcBody(
+			'wp.editPost',
 			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam($id)
-			. xmlRpcStructParam(['post_content' => $postContent])))->getBody();
+			. xmlRpcStructParam(['post_content' => $postContent])
+		))->getBody();
 		expect($body)->not->toContain('<fault>');
 	}
 
@@ -333,18 +359,22 @@ it('round-trips a teaser marker\'s content/extra split, but normalizes the marke
 		'extra'   => 'placeholder',
 	]);
 
-	postXmlRpc(xmlRpcBody('wp.editPost',
+	postXmlRpc(xmlRpcBody(
+		'wp.editPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-teaser-round-trip')
 		. xmlRpcStructParam([
 			'post_content' => '<p>Main body.</p><!--more Read on--><p>Teaser body.</p>',
-		])));
+		])
+	));
 
 	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'wp-teaser-round-trip')->toArray();
 	expect($object['content'])->toBe('<p>Main body.</p>');
 	expect($object['extra'])->toBe('<p>Teaser body.</p>');
 
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getPost',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-teaser-round-trip')))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-teaser-round-trip')
+	))->getBody();
 
 	expect($body)->not->toContain('Read on');
 	expect($body)->toContain('Main body.&lt;/p&gt;&lt;!--more--&gt;&lt;p&gt;Teaser body.');
@@ -364,11 +394,13 @@ it('splits post_content on the first marker only when it contains two', function
 		'extra'   => 'placeholder',
 	]);
 
-	postXmlRpc(xmlRpcBody('wp.editPost',
+	postXmlRpc(xmlRpcBody(
+		'wp.editPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-two-markers')
 		. xmlRpcStructParam([
 			'post_content' => '<p>First.</p><!--more--><p>Middle.</p><!--more--><p>Last.</p>',
-		])));
+		])
+	));
 
 	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'wp-two-markers')->toArray();
 	expect($object['content'])->toBe('<p>First.</p>');
@@ -387,9 +419,11 @@ it('leaves an existing extra untouched when wp.editPost sends post_content with 
 	]);
 
 	$key = xmlRpcKey();
-	postXmlRpc(xmlRpcBody('wp.editPost',
+	postXmlRpc(xmlRpcBody(
+		'wp.editPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-no-marker')
-		. xmlRpcStructParam(['post_content' => '<p>New body, no marker.</p>'])));
+		. xmlRpcStructParam(['post_content' => '<p>New body, no marker.</p>'])
+	));
 
 	$object = $this->app->getContainer()->get(ObjectFetcher::class)->fetchObject('blog', 'wp-no-marker')->toArray();
 	expect($object['content'])->toBe('<p>New body, no marker.</p>');
@@ -403,13 +437,15 @@ it('stores the whole body in content and sets no extra when wp.newPost sends pos
 	// marker and what WordpressImporter does for an imported post.
 	$key = xmlRpcKey();
 
-	$body = (string)postXmlRpc(xmlRpcBody('wp.newPost',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.newPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
 		. xmlRpcStructParam([
 			'post_title'   => 'New with marker',
 			'post_name'    => 'wp-new-with-marker',
 			'post_content' => '<p>Teaser.</p><!--more--><p>Rest of body.</p>',
-		])))->getBody();
+		])
+	))->getBody();
 	expect($body)->not->toContain('<fault>');
 
 	$object = $this->app->getContainer()->get(ObjectFetcher::class)->fetchObject('blog', 'wp-new-with-marker')->toArray();
@@ -436,12 +472,14 @@ it('leaves an imported post\'s inline <!--more--> marker alone when wp.editPost 
 		// No `extra` at all — exactly what WordpressImporter leaves behind.
 	]);
 
-	$key = xmlRpcKey();
-	$fault = (string)postXmlRpc(xmlRpcBody('wp.editPost',
+	$key   = xmlRpcKey();
+	$fault = (string)postXmlRpc(xmlRpcBody(
+		'wp.editPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-imported-post')
 		// A real client sends the full struct back, including the unchanged
 		// post_content, on a title-only edit — this is not a contrived input.
-		. xmlRpcStructParam(['post_title' => 'Imported post, retitled', 'post_content' => $importedBody])))->getBody();
+		. xmlRpcStructParam(['post_title' => 'Imported post, retitled', 'post_content' => $importedBody])
+	))->getBody();
 	expect($fault)->not->toContain('<fault>');
 
 	$object = $container->get(ObjectFetcher::class)->fetchObject('blog', 'wp-imported-post')->toArray();
@@ -456,24 +494,30 @@ it('lists distinct categories from wp.getTerms and faults on an unknown taxonomy
 	$container->get(ObjectSaver::class)->saveObject('blog', ['id' => 'wp-terms-two', 'title' => 'Two', 'categories' => ['Tech']]);
 
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getTerms',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('category')))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getTerms',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('category')
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>term_id</name><value><string>Tech</string></value>');
 	expect($body)->toContain('<name>term_id</name><value><string>PHP</string></value>');
 	expect(substr_count($body, '<name>taxonomy</name><value><string>category</string></value>'))->toBe(2);
 
-	$unknown = (string)postXmlRpc(xmlRpcBody('wp.getTerms',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('unknown-taxonomy')))->getBody();
+	$unknown = (string)postXmlRpc(xmlRpcBody(
+		'wp.getTerms',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('unknown-taxonomy')
+	))->getBody();
 
 	expect($unknown)->toContain('<fault>');
 });
 
 it('reports the two taxonomies wp.getTaxonomies advertises', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getTaxonomies',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getTaxonomies',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>name</name><value><string>category</string></value>');
@@ -482,8 +526,10 @@ it('reports the two taxonomies wp.getTaxonomies advertises', function (): void {
 
 it('reports only draft and publish from wp.getPostStatusList', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getPostStatusList',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPostStatusList',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('Draft');
@@ -495,8 +541,10 @@ it('reports only draft and publish from wp.getPostStatusList', function (): void
 
 it('reports the single post type from wp.getPostTypes', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('wp.getPostTypes',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPostTypes',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>name</name><value><string>post</string></value>');
@@ -509,24 +557,32 @@ it('lets a GET-only key read via wp.getPosts and wp.getPost but refuses wp.newPo
 
 	$key = xmlRpcKey(['blog'], ['GET']);
 
-	$listBody = (string)postXmlRpc(xmlRpcBody('wp.getPosts',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$listBody = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPosts',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 	expect($listBody)->not->toContain('<fault>');
 	expect($listBody)->toContain('wp-scope-post');
 
-	$getBody = (string)postXmlRpc(xmlRpcBody('wp.getPost',
-		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-scope-post')))->getBody();
+	$getBody = (string)postXmlRpc(xmlRpcBody(
+		'wp.getPost',
+		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-scope-post')
+	))->getBody();
 	expect($getBody)->not->toContain('<fault>');
 
-	$newBody = (string)postXmlRpc(xmlRpcBody('wp.newPost',
+	$newBody = (string)postXmlRpc(xmlRpcBody(
+		'wp.newPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. xmlRpcStructParam(['post_title' => 'Should not land'])))->getBody();
+		. xmlRpcStructParam(['post_title' => 'Should not land'])
+	))->getBody();
 	expect($newBody)->toContain('<int>401</int>');
 	expect($container->get(ObjectFetcher::class)->existsObject('blog', 'should-not-land'))->toBeFalse();
 
-	$editBody = (string)postXmlRpc(xmlRpcBody('wp.editPost',
+	$editBody = (string)postXmlRpc(xmlRpcBody(
+		'wp.editPost',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key) . xmlRpcParam('wp-scope-post')
-		. xmlRpcStructParam(['post_title' => 'Should not change'])))->getBody();
+		. xmlRpcStructParam(['post_title' => 'Should not change'])
+	))->getBody();
 	expect($editBody)->toContain('<int>401</int>');
 	expect($container->get(ObjectFetcher::class)->fetchObject('blog', 'wp-scope-post')->toArray()['title'])
 		->toBe('Scope test');
@@ -536,8 +592,10 @@ it('registers wp.getMediaLibrary and wp.getMediaItem on the unsupported handler'
 	$key = xmlRpcKey();
 
 	foreach (['wp.getMediaLibrary', 'wp.getMediaItem'] as $method) {
-		$body = (string)postXmlRpc(xmlRpcBody($method,
-			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+		$body = (string)postXmlRpc(xmlRpcBody(
+			$method,
+			xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
+		))->getBody();
 
 		expect($body)->toContain('<fault>');
 		expect($body)->toContain('<int>401</int>');

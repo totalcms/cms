@@ -44,7 +44,7 @@ function xmlRpcIdentity(array $scopes): XmlRpcIdentity
  */
 function makeBlogRegistry(array $collections): BlogRegistry
 {
-	$lister = new readonly class ($collections) extends CollectionLister {
+	$lister = new readonly class($collections) extends CollectionLister {
 		/** @param array<CollectionData> $collections */
 		public function __construct(private array $collections)
 		{

@@ -47,8 +47,10 @@ beforeEach(function (): void {
 
 it('returns a full post struct for getPost', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getPost',
-		xmlRpcParam('read-post-a') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getPost',
+		xmlRpcParam('read-post-a') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>postid</name><value><string>read-post-a</string></value>');
@@ -62,8 +64,10 @@ it('returns a full post struct for getPost', function (): void {
 
 it('faults with 404 for a post that does not exist', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getPost',
-		xmlRpcParam('no-such-post') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getPost',
+		xmlRpcParam('no-such-post') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->toContain('<int>404</int>');
 	expect($body)->not->toContain('<name>postid</name>');
@@ -71,9 +75,11 @@ it('faults with 404 for a post that does not exist', function (): void {
 
 it('returns recent posts newest first and honours the requested count', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getRecentPosts',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getRecentPosts',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. '<param><value><int>2</int></value></param>'))->getBody();
+		. '<param><value><int>2</int></value></param>'
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect(substr_count($body, '<name>postid</name>'))->toBe(2);
@@ -90,9 +96,11 @@ it('clamps a request for every post to the maximum', function (): void {
 	expect(TotalCMS\Domain\XmlRpc\Handler\PostReadHandler::MAX_POSTS)->toBe(100);
 
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getRecentPosts',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getRecentPosts',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. '<param><value><int>-1</int></value></param>'))->getBody();
+		. '<param><value><int>-1</int></value></param>'
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	// Only three posts exist, so the clamp shows up as "all of them, no error".
@@ -104,9 +112,11 @@ it('clamps a request for every post to the maximum', function (): void {
 
 it('returns titles only from mt.getRecentPostTitles', function (): void {
 	$key  = xmlRpcKey();
-	$body = (string)postXmlRpc(xmlRpcBody('mt.getRecentPostTitles',
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'mt.getRecentPostTitles',
 		xmlRpcParam('blog') . xmlRpcParam('joe') . xmlRpcParam($key)
-		. '<param><value><int>3</int></value></param>'))->getBody();
+		. '<param><value><int>3</int></value></param>'
+	))->getBody();
 
 	expect($body)->toContain('<name>title</name>');
 	// Index-only method: no body text should be serialized.
@@ -126,8 +136,10 @@ it('lets a GET-only key read a post', function (): void {
 	// GET-only key failed authentication outright (it lacked the hardcoded
 	// 'POST' scope check) and could not even read.
 	$key  = xmlRpcKey(['blog'], ['GET']);
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getPost',
-		xmlRpcParam('read-post-a') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getPost',
+		xmlRpcParam('read-post-a') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->not->toContain('<fault>');
 	expect($body)->toContain('<name>postid</name><value><string>read-post-a</string></value>');
@@ -137,8 +149,10 @@ it('lets a GET-only key read a post', function (): void {
 it('refuses reads from a key without the collection grant', function (): void {
 	$key = xmlRpcKey(['news']);   // scoped to a collection that does not exist here
 
-	$body = (string)postXmlRpc(xmlRpcBody('metaWeblog.getPost',
-		xmlRpcParam('read-post-a') . xmlRpcParam('joe') . xmlRpcParam($key)))->getBody();
+	$body = (string)postXmlRpc(xmlRpcBody(
+		'metaWeblog.getPost',
+		xmlRpcParam('read-post-a') . xmlRpcParam('joe') . xmlRpcParam($key)
+	))->getBody();
 
 	expect($body)->toContain('<fault>');
 	expect($body)->not->toContain('Read post A');

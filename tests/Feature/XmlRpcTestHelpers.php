@@ -83,7 +83,7 @@ function xmlRpcBoolParam(bool $value): string
  */
 function enableXmlRpc(): void
 {
-	$container = xmlRpcTestApp()->getContainer();
+	$container                                              = xmlRpcTestApp()->getContainer();
 	$container->get(TotalCMS\Support\Config::class)->xmlrpc = ['enable' => true, 'ratePerIp' => 0];
 
 	$container->set(

@@ -37,8 +37,8 @@ final class ObjectUpdatePropertyActionTest extends TestCase
 		// empty for these non-auth collections, so guardProperty() never blocks.
 		$schemaFetcher = $this->createMock(SchemaFetcher::class);
 		$schemaFetcher->method('fetchSchemaForCollection')->willReturn(new SchemaData());
-		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$config->auth = ['enable' => true, 'collection' => 'auth'];
+		$config              = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->auth        = ['enable' => true, 'collection' => 'auth'];
 		$policyLoggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
 		$policyLoggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
 		$policy = new AuthFieldPolicy(
