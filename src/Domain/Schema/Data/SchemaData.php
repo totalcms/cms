@@ -59,6 +59,53 @@ class SchemaData
 	];
 
 	/**
+	 * Reserved schemas that "Setup Default Collections" provisions a collection
+	 * for. An explicit list, NOT every reserved schema.
+	 *
+	 * Many reserved schemas exist only to be embedded in another schema via
+	 * `schemaref` — automation triggers, the MCP sub-objects, sitemap meta — and
+	 * provisioning a top-level collection for those produces junk collections
+	 * the operator never asked for. An embedded schema is structurally identical
+	 * to a standalone one (both declare id/type/properties/index), so there is
+	 * nothing to detect; membership has to be declared.
+	 *
+	 * `builder-page` is absent on purpose: BuilderInstaller provisions it as
+	 * `builder-pages`, under a collection id that differs from the schema id.
+	 *
+	 * Excluding a schema here does NOT stop anyone creating that collection by
+	 * hand — this governs only what the setup action provisions up front.
+	 *
+	 * tests/Unit/Schema/DefaultCollectionsTest.php fails if a newly added
+	 * reserved schema is left unclassified.
+	 *
+	 * @var list<string>
+	 */
+	public const DEFAULT_COLLECTIONS = [
+		'auth',
+		'automations',
+		'blog',
+		'code',
+		'color',
+		'date',
+		'dataviews',
+		'depot',
+		'email',
+		'feed',
+		'file',
+		'gallery',
+		'image',
+		'mailer',
+		'mcp-prompt',
+		'number',
+		'playground',
+		'styledtext',
+		'svg',
+		'text',
+		'toggle',
+		'url',
+	];
+
+	/**
 	 * Reserved schemas that exist purely as reference/example definitions.
 	 * They are registered and URL-resolvable (so schema tooling, the schema
 	 * editor, and `schemaref` can see them) but can NEVER back a collection —

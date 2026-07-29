@@ -422,16 +422,16 @@ readonly class AdminUtilsAction
 	}
 
 	/**
-	 * Create all default/reserved collections.
-	 * Skips blog-legacy (deprecated), builder-page (different collection ID), and reference-only schemas.
+	 * Create the default collections.
+	 *
+	 * Driven by an explicit list rather than every reserved schema: schemas that
+	 * exist only to be embedded via `schemaref` (automation triggers, the MCP
+	 * sub-objects, sitemap meta) would otherwise each get a junk top-level
+	 * collection. See SchemaData::DEFAULT_COLLECTIONS.
 	 */
 	private function createDefaultCollections(): void
 	{
-		foreach (SchemaData::RESERVED_SCHEMAS as $schemaId) {
-			// Skip schemas that don't map 1:1 to a collection
-			if ($schemaId === 'blog-legacy' || $schemaId === 'builder-page' || SchemaData::isReferenceSchema($schemaId)) {
-				continue;
-			}
+		foreach (SchemaData::DEFAULT_COLLECTIONS as $schemaId) {
 			$this->collectionFetcher->fetchOrCreateReserved($schemaId);
 		}
 
