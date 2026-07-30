@@ -112,7 +112,13 @@ readonly class AuthLoginSubmitAction
 		$postData    = (array)$request->getParsedBody();
 		$queryParams = $request->getQueryParams();
 		$redirectUrl = $postData['redirect'] ?? $queryParams['redirect'] ?? $this->session->get(SessionKeys::REQUEST_ORIGIN_URL, $router->urlFor('admin-index'));
-		$url         = $redirectUrl;
+
+		// Open-redirect guard: the redirect target can arrive via a crafted
+		// link (?redirect=https://evil.example), and a login page that
+		// forwards wherever it's told is a phishing primitive. Only local
+		// paths and same-host absolute URLs survive; anything else falls
+		// back to the dashboard.
+		$url = $this->sameOriginRedirect((string)$redirectUrl, $request->getUri()->getHost(), $router->urlFor('admin-index'));
 
 		$this->session->destroy();
 		$this->session->start();
@@ -132,5 +138,32 @@ readonly class AuthLoginSubmitAction
 		$flash->add('success', $this->translator->trans('flash.login_success'));
 
 		return $response->withStatus(302)->withHeader('Location', $url);
+	}
+
+	/**
+	 * Allow a post-login redirect only to this site: a relative path
+	 * (single leading slash — `//host` is scheme-relative and external) or
+	 * an absolute http(s) URL whose host matches the request host. Anything
+	 * else returns the fallback.
+	 */
+	private function sameOriginRedirect(string $candidate, string $requestHost, string $fallback): string
+	{
+		if ($candidate === '') {
+			return $fallback;
+		}
+
+		if (str_starts_with($candidate, '/') && !str_starts_with($candidate, '//')) {
+			return $candidate;
+		}
+
+		$parts = parse_url($candidate);
+		if (is_array($parts)
+			&& in_array($parts['scheme'] ?? '', ['http', 'https'], true)
+			&& strcasecmp((string)($parts['host'] ?? ''), $requestHost) === 0
+		) {
+			return $candidate;
+		}
+
+		return $fallback;
 	}
 }
