@@ -278,6 +278,15 @@
 	gap: 1rem;
 }
 
+/* In-flight state for push/pull — same pulse the quick-action buttons
+   use (`pulse-glow` keyframes ship in the forms bundle), so a running
+   sync is unmistakable after the preview closes. */
+.sync-actions .dash-button.processing {
+	opacity   : 0.5;
+	cursor    : progress;
+	animation : pulse-glow 1.2s ease-in-out infinite;
+}
+
 #sync-results:not(:empty) {
 	margin-top: 1rem;
 	padding: 1rem 1.5rem;
@@ -537,6 +546,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			if (sel.mode === 'specific') sel.ids.forEach(s => body.append(`collections[${cid}][items][]`, s));
 		});
 
+		const activeBtn = action === 'push' ? pushBtn : pullBtn;
+		activeBtn.classList.add('processing');
 		spinner.style.display = 'inline';
 		pushBtn.disabled = true;
 		pullBtn.disabled = true;
@@ -562,6 +573,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		} catch (err) {
 			results.innerHTML = `<p style="color:oklch(var(--totalform-error))">Request failed: ${err.message}</p>`;
 		} finally {
+			activeBtn.classList.remove('processing');
 			spinner.style.display = 'none';
 			pushBtn.disabled = false;
 			pullBtn.disabled = false;
