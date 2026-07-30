@@ -49,6 +49,15 @@ class JumpStartImporter
 	 */
 	private bool $allowSystemCollections = false;
 
+	/**
+	 * Whether this import runs in sync/upsert mode. Mirrors the
+	 * $allowSystemCollections pattern: set per-call from importFromDefinition().
+	 * Upsert mode is what turns an import into a blind overwrite, so it is
+	 * also what gates the pre-overwrite backups (SyncBackupService) — a
+	 * starter-kit import never overwrites and needs no snapshots.
+	 */
+	private bool $upsert = false;
+
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly CollectionSaver $collectionSaver,
@@ -59,6 +68,7 @@ class JumpStartImporter
 		private readonly TemplateSaver $templateSaver,
 		private readonly FactoryImporter $factoryImporter,
 		private readonly \TotalCMS\Domain\Event\Service\EventDispatcher $eventDispatcher,
+		private readonly \TotalCMS\Domain\Sync\Service\SyncBackupService $syncBackup,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::JumpStartImporter);
@@ -76,7 +86,10 @@ class JumpStartImporter
 	{
 		$this->eventDispatcher->suspendForImport($collection);
 		try {
-			$object = $this->objectSaver->saveObject($collection, $objectData);
+			// preserveDates: imported data is the authoritative history of its
+			// source object — authored created/updated values travel verbatim,
+			// empty ones still stamp normally.
+			$object = $this->objectSaver->saveObject($collection, $objectData, preserveDates: true);
 			$this->eventDispatcher->dispatch(
 				CoreEvent::IMPORT_CREATED,
 				new \TotalCMS\Domain\Event\Payload\ObjectEventPayload($collection, $object->id, $object),
@@ -103,7 +116,11 @@ class JumpStartImporter
 		$this->eventDispatcher->suspendForImport($collection);
 		try {
 			$objectData['id'] = $id;
-			$object           = $this->objectUpdater->updateObject($collection, $id, $objectData);
+			// preserveDates: without it every sync overwrite restamps onUpdate
+			// fields to import time, making the synced copy read as "newer"
+			// than the source it mirrors — which would poison any freshness
+			// comparison between the two sides forever after.
+			$object = $this->objectUpdater->updateObject($collection, $id, $objectData, preserveDates: true);
 			$this->eventDispatcher->dispatch(
 				CoreEvent::IMPORT_UPDATED,
 				new \TotalCMS\Domain\Event\Payload\ObjectEventPayload($collection, $object->id, $object),
@@ -206,6 +223,7 @@ class JumpStartImporter
 		$this->results                = [];
 		$this->errors                 = [];
 		$this->allowSystemCollections = $allowSystemCollections;
+		$this->upsert                 = $upsert;
 
 		// Increase execution time for image generation
 		set_time_limit(300); // 5 minutes
@@ -256,7 +274,15 @@ class JumpStartImporter
 				continue;
 			}
 			try {
-				$this->schemaSaver->saveSchema($schema);
+				// saveSchema overwrites unconditionally; in sync mode, snapshot
+				// the existing version first so the overwrite has an undo.
+				if ($this->upsert) {
+					$this->syncBackup->backupSchema((string)($schema['id'] ?? ''));
+				}
+				// preserveDates: an imported schema keeps its source's updated
+				// timestamp — restamping would make the copy read newer than
+				// the original (see the same rule on object imports below).
+				$this->schemaSaver->saveSchema($schema, preserveDates: true);
 				$this->addResult(sprintf('Schema %s: created', $schema['id'] ?? 'unknown'));
 			} catch (\Exception $e) {
 				$this->addError(sprintf('Schema %s: %s', $schema['id'] ?? 'unknown', $e->getMessage()));
@@ -431,6 +457,7 @@ class JumpStartImporter
 
 				return 'skipped';
 			}
+			$this->syncBackup->backupObject($collectionId, $objectId);
 			$this->updateImportedObject($collectionId, $objectId, $objectData);
 			$this->addResult(sprintf('Object %s/%s: updated', $collectionId, $objectId));
 

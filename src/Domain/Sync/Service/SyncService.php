@@ -32,11 +32,15 @@ readonly class SyncService
 	 * ([]) so push/pull carry page records and content but never templates —
 	 * each artifact keeps a single delivery channel.
 	 *
+	 * Public so the CLI dry-runs can apply the same rule to their LOCAL
+	 * export: without it, a git-managed site's preview lists templates that
+	 * a real push or pull would never move.
+	 *
 	 * @param list<string>|null $templateFilter
 	 *
 	 * @return list<string>|null
 	 */
-	private function syncableTemplateFilter(?array $templateFilter): ?array
+	public function syncableTemplateFilter(?array $templateFilter): ?array
 	{
 		return $this->paths->isProjectManaged() ? [] : $templateFilter;
 	}
@@ -140,14 +144,27 @@ readonly class SyncService
 		?array $templateFilter = null,
 		?array $collectionsFilter = null,
 	): array {
-		$httpResponse = $this->httpClient->request('GET', rtrim($url, '/') . '/api/export/jumpstart?mode=sync', [
+		// `/api/sync/export` is the canonical pull source: it lives under
+		// /sync so the "Sync Manager" API-key endpoint option covers both
+		// directions with one path grant. Fall back to the legacy
+		// `/api/export/jumpstart?mode=sync` on any 4xx — that keeps two real
+		// cases working: a remote on an older release that doesn't have the
+		// route yet (404), and an API key created before the Sync Manager
+		// option existed whose grant covers /export but not /sync (403).
+		$requestOptions = [
 			'headers' => [
 				// See push() for why X-API-Key rather than Authorization: Bearer.
 				'X-API-Key: ' . $key,
 				'Accept: application/json',
 			],
 			'timeout' => 60,
-		]);
+		];
+
+		$httpResponse = $this->httpClient->request('GET', rtrim($url, '/') . '/api/sync/export', $requestOptions);
+
+		if ($httpResponse->statusCode >= 400 && $httpResponse->statusCode < 500) {
+			$httpResponse = $this->httpClient->request('GET', rtrim($url, '/') . '/api/export/jumpstart?mode=sync', $requestOptions);
+		}
 
 		if ($httpResponse->statusCode >= 400) {
 			throw new \RuntimeException(sprintf(

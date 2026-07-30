@@ -462,35 +462,43 @@ tcms push
 tcms push --dry-run
 tcms push --schemas=blog,products
 tcms push --templates=blog-post,sidebar
+tcms push --collections=builder-pages
 tcms push --schemas=blog --templates=blog-post --dry-run
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--schemas` | Comma-separated schema IDs to push (default: all custom) |
-| `--templates` | Comma-separated template IDs to push (default: all custom) |
-| `--dry-run` | Preview what would be pushed without sending |
+| `--schemas` | Comma-separated schema IDs to push |
+| `--templates` | Comma-separated template IDs to push |
+| `--collections` | Comma-separated allowlisted collection IDs whose objects to push |
+| `--dry-run` | Compare both sides: per-item unchanged/differs/new status with newer-side hints |
 
 ### `pull`
 
-Pull schemas and templates from the production server.
+Pull schemas, templates, and allowlisted collection objects from the production server.
 
 ```bash
 tcms pull
 tcms pull --dry-run
 tcms pull --schemas=blog
 tcms pull --templates=blog-post,sidebar
+tcms pull --collections=builder-pages
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--schemas` | Comma-separated schema IDs to pull (default: all) |
-| `--templates` | Comma-separated template IDs to pull (default: all) |
-| `--dry-run` | Preview what would be pulled without applying |
+| `--schemas` | Comma-separated schema IDs to pull |
+| `--templates` | Comma-separated template IDs to pull |
+| `--collections` | Comma-separated allowlisted collection IDs whose objects to pull |
+| `--dry-run` | Compare both sides: per-item unchanged/differs/new status with newer-side hints |
 
-**What gets synced:** Custom schemas and custom templates only.
+**What gets synced:** Custom schemas, custom templates, and objects from five reserved collections — `builder-pages`, `mailer`, `mcp-prompt`, `dataviews`, `automations`. The collection list is hardcoded and cannot be extended.
 
-**What never gets synced:** Content/objects, media/images, system settings, API keys, reserved schemas.
+**What never gets synced:** Objects in your own custom collections, media/images, system settings, API keys, reserved schemas. A custom collection's *schema* syncs; the objects inside it do not.
+
+**Filter semantics:** a bare `tcms push` or `tcms pull` is a full mirror — every category travels. The moment any of `--schemas`, `--templates`, or `--collections` is given, the categories you did not mention are excluded entirely, so `tcms push --schemas=blog` moves the blog schema and nothing else.
+
+**Backups:** before an overwrite lands, the receiving instance snapshots the current version to `tcms-data/.system/backups/{schemas,objects}/...` (ten most recent per item). See the [Sync guide](operations/sync) for details.
 
 ---
 
@@ -498,12 +506,31 @@ tcms pull --templates=blog-post,sidebar
 
 ### `cache:clear`
 
-Clear all caches. When run from CLI, a signal file is written so the web process clears its APCu cache on the next request.
+Clear all caches.
 
 ```bash
 tcms cache:clear
 tcms cache:clear --json
 ```
+
+**How this reaches the web server.** APCu is per-process, so a CLI run cannot clear the cache the web server is holding — the two never share memory. Instead, `cache:clear` clears what it can reach directly (filesystem, Redis, Memcached) and writes a signal file to `tcms-data/.system/.cache_invalidate`. The next request to hit the site replays that signal and clears APCu in the web process.
+
+That means **the clear does not take effect until someone loads a page.** If you clear from a deploy script and immediately check the site, the very request you make is the one that applies it — so a single reload can still look stale. Load the page twice.
+
+If a clear appears not to have worked, check whether the signal file is still sitting there:
+
+```bash
+ls tcms-data/.system/.cache_invalidate
+```
+
+Present means no request has replayed it yet. Gone means it was applied.
+
+**Alternatives when you are iterating.** Two options avoid the round trip entirely:
+
+- **Turn on Developer Mode** in the admin. Cache reads are bypassed outright while it is active, so you see fresh output on every request without clearing anything. This is the right choice while you are actively editing templates or content.
+- **Hit the HTTP endpoint** at `/api/emergency/cache/clear`, which clears in the web process directly rather than by signal. It needs no login, and it is rate-limited to one call per IP every 15 minutes.
+
+> Note the `/api` prefix — `/emergency/cache/clear` without it returns a 404.
 
 ### `jobs:process`
 

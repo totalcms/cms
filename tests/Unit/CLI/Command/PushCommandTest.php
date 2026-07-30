@@ -114,10 +114,18 @@ it('passes schema filter to exporter on dry-run', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
 	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
 
+	// syncableTemplateFilter must pass through (narrowing-only in production;
+	// the auto-stub would return null and widen [] back to "all"), and the
+	// remote fetch throwing keeps the dry-run on the plain manifest path.
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('fetchRemoteSyncData')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
 	$exporter = $this->createMock(JumpStartExporter::class);
 	$exporter->expects($this->once())
 		->method('exportSyncData')
-		->with(['products'], null)
+		->with(['products'], [], [])
 		->willReturn($this->jumpstart);
 	$exporter->method('setMetadata');
 	$totalcms->method('jumpStartExporter')->willReturn($exporter);
@@ -134,10 +142,16 @@ it('passes template filter to exporter on dry-run', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
 	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
 
+	// See the schema-filter test above for why syncService is stubbed.
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('fetchRemoteSyncData')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
 	$exporter = $this->createMock(JumpStartExporter::class);
 	$exporter->expects($this->once())
 		->method('exportSyncData')
-		->with(null, ['blog-post', 'sidebar'])
+		->with([], ['blog-post', 'sidebar'], [])
 		->willReturn($this->jumpstart);
 	$exporter->method('setMetadata');
 	$totalcms->method('jumpStartExporter')->willReturn($exporter);

@@ -6,21 +6,20 @@ namespace TotalCMS\CLI\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Config\SyncConfig;
 
 class PullCommand extends BaseCommand
 {
+	use SyncFilterOptions;
+
 	protected function configure(): void
 	{
 		parent::configure();
 		$this
 			->setName('pull')
-			->setDescription('Pull schemas and templates from the production server')
-			->addOption('schemas', null, InputOption::VALUE_REQUIRED, 'Comma-separated schema IDs to pull (default: all)')
-			->addOption('templates', null, InputOption::VALUE_REQUIRED, 'Comma-separated template IDs to pull (default: all)')
-			->addOption('dry-run', null, InputOption::VALUE_NONE, 'Preview what would be pulled without applying');
+			->setDescription('Pull schemas, templates, and allowlisted collection objects from the production server');
+		$this->addSyncFilterOptions('pull');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
@@ -35,8 +34,11 @@ class PullCommand extends BaseCommand
 			return $this->outputError($input, $output, 'Sync not configured.');
 		}
 
-		$schemaFilter   = $this->parseFilter($input->getOption('schemas'));
-		$templateFilter = $this->parseFilter($input->getOption('templates'));
+		try {
+			[$schemaFilter, $templateFilter, $collectionsFilter] = $this->resolveSyncFilters($input);
+		} catch (\InvalidArgumentException $e) {
+			return $this->outputError($input, $output, $e->getMessage());
+		}
 
 		// Dry run — fetch and preview only, don't import
 		if ($input->getOption('dry-run')) {
@@ -49,13 +51,37 @@ class PullCommand extends BaseCommand
 					$remote['url'],
 					$remote['key'],
 					$schemaFilter,
-					$templateFilter
+					$templateFilter,
+					$collectionsFilter
 				);
 			} catch (\RuntimeException $e) {
 				return $this->outputError($input, $output, $e->getMessage());
 			}
 
-			return $this->dryRun($input, $output, $payload, $remote['url']);
+			// Export the same selection locally so the preview can say what
+			// would actually change. Comparison failing shouldn't kill the
+			// preview — degrade to the plain payload manifest.
+			$diff = null;
+			try {
+				$exporter = $this->totalcms->jumpStartExporter();
+				$exporter->setMetadata('CLI Pull', 'Dry run comparison');
+				// Same template rule the fetch already applied remotely:
+				// git-managed sites never sync templates, so the local side
+				// of the comparison must exclude them too.
+				$local = $exporter->exportSyncData(
+					$schemaFilter,
+					$this->totalcms->syncService()->syncableTemplateFilter($templateFilter),
+					$collectionsFilter
+				)->toArray();
+				$diff  = $this->totalcms->syncDiffService()->diff($local, $payload);
+			} catch (\Throwable $e) {
+				if (!$this->isJson($input)) {
+					$output->writeln("<comment>Could not build local comparison ({$e->getMessage()}) — listing the payload without it.</comment>");
+					$output->writeln('');
+				}
+			}
+
+			return $this->renderSyncDryRun($input, $output, $payload, $remote['url'], 'pull', $diff);
 		}
 
 		// Actual pull via shared service
@@ -64,7 +90,7 @@ class PullCommand extends BaseCommand
 		}
 
 		try {
-			$result = $this->totalcms->syncService()->pull($remote['url'], $remote['key'], $schemaFilter, $templateFilter);
+			$result = $this->totalcms->syncService()->pull($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter);
 		} catch (\RuntimeException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
 		}
@@ -75,66 +101,8 @@ class PullCommand extends BaseCommand
 			return Command::SUCCESS;
 		}
 
-		$output->writeln('');
-		$output->writeln("<info>{$result->message}</info>");
-		$output->writeln("  Schemas: {$result->data['schemas']}, Templates: {$result->data['templates']}");
+		$this->renderSyncResult($output, $result->message, $result->data);
 
 		return Command::SUCCESS;
-	}
-
-	/**
-	 * @param array<string,mixed> $payload
-	 */
-	private function dryRun(InputInterface $input, OutputInterface $output, array $payload, string $url): int
-	{
-		$schemas   = $payload['schemas'] ?? [];
-		$templates = $payload['templates'] ?? [];
-
-		if ($schemas === [] && $templates === []) {
-			$output->writeln('Nothing to pull — no matching schemas or templates found.');
-
-			return Command::SUCCESS;
-		}
-
-		if ($this->isJson($input)) {
-			$data = [
-				'dry_run'   => true,
-				'remote'    => $url,
-				'schemas'   => is_array($schemas) ? array_map(fn (array $s): string => (string)($s['id'] ?? ''), $schemas) : [],
-				'templates' => is_array($templates) ? array_map(fn (array $t): string => (string)($t['id'] ?? ''), $templates) : [],
-			];
-			$output->writeln((string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-
-			return Command::SUCCESS;
-		}
-
-		$output->writeln("Dry run — would pull from <info>{$url}</info>:");
-		$output->writeln('');
-
-		if (is_array($schemas) && $schemas !== []) {
-			$output->writeln('Schemas:');
-			foreach ($schemas as $schema) {
-				$output->writeln('  - ' . ($schema['id'] ?? 'unknown'));
-			}
-		}
-
-		if (is_array($templates) && $templates !== []) {
-			$output->writeln('Templates:');
-			foreach ($templates as $template) {
-				$output->writeln('  - ' . ($template['id'] ?? 'unknown'));
-			}
-		}
-
-		return Command::SUCCESS;
-	}
-
-	/** @return list<string>|null */
-	private function parseFilter(mixed $value): ?array
-	{
-		if (!is_string($value) || $value === '') {
-			return null;
-		}
-
-		return array_map(trim(...), explode(',', $value));
 	}
 }

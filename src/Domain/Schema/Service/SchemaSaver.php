@@ -9,6 +9,7 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Property\Data\DateData;
 
 readonly class SchemaSaver
 {
@@ -43,11 +44,20 @@ readonly class SchemaSaver
 	 * Save a schema.
 	 *
 	 * @param array<string,mixed> $schemaData
+	 * @param bool                $preserveDates Keep an authored `updated` timestamp
+	 *                                           instead of restamping. Used by imports:
+	 *                                           the incoming schema's timestamp is the
+	 *                                           history of its source, and restamping
+	 *                                           would make a synced copy read as newer
+	 *                                           than the original. A schema arriving
+	 *                                           without a timestamp still stamps normally.
 	 *
 	 * @throws \InvalidArgumentException
 	 * @throws \UnexpectedValueException
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function saveSchema(array $schemaData): SchemaData
+	public function saveSchema(array $schemaData, bool $preserveDates = false): SchemaData
 	{
 		// Validate required input structure
 		if (!isset($schemaData['properties'])) {
@@ -80,6 +90,13 @@ readonly class SchemaSaver
 		}
 		if (!in_array('id', $schema->index)) {
 			$schema->index[] = 'id';
+		}
+
+		// Stamp the save time so schema freshness can be compared across
+		// environments (sync dry-run). An import preserves the incoming
+		// timestamp — it is the source's history, not a new edit.
+		if (!$preserveDates || $schema->updated === '') {
+			$schema->updated = DateData::cleanDate();
 		}
 
 		// This is not in Repository in order to prevent circular dependency
