@@ -962,7 +962,7 @@ return [
 	'oauth_clients.redirect_uris_help'        => 'Één URL per regel. Moet HTTPS of http://localhost zijn.',
 	'oauth_clients.scopes_label'              => 'Rechten',
 	'oauth_clients.created_label'             => 'Aangemaakt',
-	'oauth_clients.active_grants'             => '%count% actieve sessies',
+	'oauth_clients.active_grants'             => '{count} actieve sessies',
 	'oauth_clients.confirm_delete'            => 'Deze OAuth-client verwijderen? Actieve sessies worden ingetrokken.',
 	'oauth_clients.secret_shown_once_warning' => 'Sla dit geheim NU op. Het wordt nooit meer getoond.',
 	'oauth_clients.secret_copy_desc'          => 'Kopieer het clientgeheim en bewaar het veilig. Dit is de enige keer dat het wordt weergegeven.',
@@ -984,8 +984,8 @@ return [
 	'oauth_grants.issued_label'       => 'Uitgegeven',
 	'oauth_grants.expires_label'      => 'Vervalt',
 	'oauth_grants.never_expires'      => 'Nooit',
-	'oauth_grants.expired_n_days_ago' => '%days% dagen geleden verlopen',
-	'oauth_grants.expires_in_n_days'  => 'Vervalt over %days% dagen',
+	'oauth_grants.expired_n_days_ago' => '{days} dagen geleden verlopen',
+	'oauth_grants.expires_in_n_days'  => 'Vervalt over {days} dagen',
 	'oauth_grants.revoke_btn'         => 'Intrekken',
 	'oauth_grants.confirm_revoke'     => 'Deze machtiging intrekken? De client verliest onmiddellijk toegang.',
 
@@ -1391,10 +1391,10 @@ return [
 
 	// ── OAuth Consent ───────────────────────────────────────────────────────
 	'oauth.consent.title'                 => 'Applicatie autoriseren',
-	'oauth.consent.signed_in_as'          => 'U bent aangemeld als: %user%',
+	'oauth.consent.signed_in_as'          => 'U bent aangemeld als: {user}',
 	'oauth.consent.requested_permissions' => 'Gevraagde machtigingen',
 	'oauth.consent.allow'                 => 'Toestaan',
 	'oauth.consent.deny'                  => 'Annuleren',
 	'oauth.error.title'                   => 'Autorisatiefout',
-	'oauth.error.return'                  => 'Terug naar %site%',
+	'oauth.error.return'                  => 'Terug naar {site}',
 ];

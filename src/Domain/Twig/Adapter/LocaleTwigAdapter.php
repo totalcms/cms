@@ -100,9 +100,10 @@ readonly class LocaleTwigAdapter
 	 */
 	public function t(string $key, array $params = []): string
 	{
-		// Templates pass params by bare name ({user: id}), but translation
-		// strings delimit their placeholders (%user% or {user}) and the
-		// translator substitutes keys VERBATIM — so a bare key replaced the
+		// Templates pass params by bare name ({user: id}); translation
+		// strings delimit their placeholders — {user} is the house style,
+		// with %user% still mapped for third-party/extension strings — and
+		// the translator substitutes keys VERBATIM — so a bare key replaced the
 		// letters inside the delimiters ('%user%' → '%admin%' on the OAuth
 		// consent screen) AND any literal occurrence of the word in the
 		// string ('{entries} entries' → '100 100'). Bare keys are therefore

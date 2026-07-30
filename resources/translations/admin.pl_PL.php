@@ -962,7 +962,7 @@ return [
 	'oauth_clients.redirect_uris_help'        => 'Jeden adres URL na wiersz. Musi być HTTPS lub http://localhost.',
 	'oauth_clients.scopes_label'              => 'Zakresy',
 	'oauth_clients.created_label'             => 'Utworzono',
-	'oauth_clients.active_grants'             => 'Aktywne autoryzacje: %count%',
+	'oauth_clients.active_grants'             => 'Aktywne autoryzacje: {count}',
 	'oauth_clients.confirm_delete'            => 'Usunąć tego klienta OAuth? Aktywne sesje zostaną unieważnione.',
 	'oauth_clients.secret_shown_once_warning' => 'Zapisz ten sekret TERAZ. Nie zostanie już nigdy wyświetlony.',
 	'oauth_clients.secret_copy_desc'          => 'Skopiuj sekret klienta i przechowuj go w bezpiecznym miejscu. To jedyny moment, w którym jest wyświetlany.',
@@ -984,8 +984,8 @@ return [
 	'oauth_grants.issued_label'       => 'Wystawiono',
 	'oauth_grants.expires_label'      => 'Wygasa',
 	'oauth_grants.never_expires'      => 'Nigdy',
-	'oauth_grants.expired_n_days_ago' => 'Wygasła %days% dni temu',
-	'oauth_grants.expires_in_n_days'  => 'Wygasa za %days% dni',
+	'oauth_grants.expired_n_days_ago' => 'Wygasła {days} dni temu',
+	'oauth_grants.expires_in_n_days'  => 'Wygasa za {days} dni',
 	'oauth_grants.revoke_btn'         => 'Unieważnij',
 	'oauth_grants.confirm_revoke'     => 'Unieważnić tę autoryzację? Klient natychmiast utraci dostęp.',
 
@@ -1391,10 +1391,10 @@ return [
 
 	// ── OAuth Consent ───────────────────────────────────────────────────────
 	'oauth.consent.title'                 => 'Autoryzuj aplikację',
-	'oauth.consent.signed_in_as'          => 'Zalogowano jako: %user%',
+	'oauth.consent.signed_in_as'          => 'Zalogowano jako: {user}',
 	'oauth.consent.requested_permissions' => 'Żądane uprawnienia',
 	'oauth.consent.allow'                 => 'Zezwól',
 	'oauth.consent.deny'                  => 'Anuluj',
 	'oauth.error.title'                   => 'Błąd autoryzacji',
-	'oauth.error.return'                  => 'Wróć do %site%',
+	'oauth.error.return'                  => 'Wróć do {site}',
 ];

@@ -44,7 +44,7 @@
 
 		<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
 			<strong>{{ t('label.status') }}</strong>
-			<span>{{ t('oauth_clients.active_grants')|replace({'%count%': row.grantCount}) }}</span>
+			<span>{{ t('oauth_clients.active_grants')|replace({'{count}': row.grantCount}) }}</span>
 		</div>
 	</div>
 </article>

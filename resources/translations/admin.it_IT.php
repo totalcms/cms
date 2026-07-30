@@ -962,7 +962,7 @@ return [
 	'oauth_clients.redirect_uris_help'        => 'Un URL per riga. Deve essere HTTPS o http://localhost.',
 	'oauth_clients.scopes_label'              => 'Permessi',
 	'oauth_clients.created_label'             => 'Creato',
-	'oauth_clients.active_grants'             => '%count% sessioni attive',
+	'oauth_clients.active_grants'             => '{count} sessioni attive',
 	'oauth_clients.confirm_delete'            => 'Eliminare questo client OAuth? Le sessioni attive verranno revocate.',
 	'oauth_clients.secret_shown_once_warning' => 'Salva questo segreto ORA. Non verrà mai più mostrato.',
 	'oauth_clients.secret_copy_desc'          => 'Copia il segreto del client e conservalo in modo sicuro. Verrà mostrato solo questa volta.',
@@ -984,8 +984,8 @@ return [
 	'oauth_grants.issued_label'       => 'Emesso',
 	'oauth_grants.expires_label'      => 'Scade',
 	'oauth_grants.never_expires'      => 'Mai',
-	'oauth_grants.expired_n_days_ago' => 'Scaduto %days% giorni fa',
-	'oauth_grants.expires_in_n_days'  => 'Scade tra %days% giorni',
+	'oauth_grants.expired_n_days_ago' => 'Scaduto {days} giorni fa',
+	'oauth_grants.expires_in_n_days'  => 'Scade tra {days} giorni',
 	'oauth_grants.revoke_btn'         => 'Revoca',
 	'oauth_grants.confirm_revoke'     => 'Revocare questa autorizzazione? Il client perderà immediatamente l\'accesso.',
 
@@ -1391,10 +1391,10 @@ return [
 
 	// ── OAuth Consent ───────────────────────────────────────────────────────
 	'oauth.consent.title'                 => 'Autorizza applicazione',
-	'oauth.consent.signed_in_as'          => 'Sei connesso come: %user%',
+	'oauth.consent.signed_in_as'          => 'Sei connesso come: {user}',
 	'oauth.consent.requested_permissions' => 'Autorizzazioni richieste',
 	'oauth.consent.allow'                 => 'Consenti',
 	'oauth.consent.deny'                  => 'Annulla',
 	'oauth.error.title'                   => 'Errore di autorizzazione',
-	'oauth.error.return'                  => 'Torna a %site%',
+	'oauth.error.return'                  => 'Torna a {site}',
 ];

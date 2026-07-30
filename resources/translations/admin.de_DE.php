@@ -962,7 +962,7 @@ return [
 	'oauth_clients.redirect_uris_help'        => 'Eine URL pro Zeile. Muss HTTPS oder http://localhost sein.',
 	'oauth_clients.scopes_label'              => 'Berechtigungen',
 	'oauth_clients.created_label'             => 'Erstellt',
-	'oauth_clients.active_grants'             => '%count% aktive Sitzungen',
+	'oauth_clients.active_grants'             => '{count} aktive Sitzungen',
 	'oauth_clients.confirm_delete'            => 'Diesen OAuth-Client löschen? Aktive Sitzungen werden widerrufen.',
 	'oauth_clients.secret_shown_once_warning' => 'Speichern Sie dieses Secret JETZT. Es wird nie wieder angezeigt.',
 	'oauth_clients.secret_copy_desc'          => 'Kopieren Sie das Client-Secret und bewahren Sie es sicher auf. Es wird nur dieses eine Mal angezeigt.',
@@ -984,8 +984,8 @@ return [
 	'oauth_grants.issued_label'       => 'Ausgestellt',
 	'oauth_grants.expires_label'      => 'Läuft ab',
 	'oauth_grants.never_expires'      => 'Nie',
-	'oauth_grants.expired_n_days_ago' => 'Vor %days% Tagen abgelaufen',
-	'oauth_grants.expires_in_n_days'  => 'Läuft in %days% Tagen ab',
+	'oauth_grants.expired_n_days_ago' => 'Vor {days} Tagen abgelaufen',
+	'oauth_grants.expires_in_n_days'  => 'Läuft in {days} Tagen ab',
 	'oauth_grants.revoke_btn'         => 'Widerrufen',
 	'oauth_grants.confirm_revoke'     => 'Diese Berechtigung widerrufen? Der Client verliert sofort den Zugriff.',
 
@@ -1391,10 +1391,10 @@ return [
 
 	// ── OAuth Consent ───────────────────────────────────────────────────────
 	'oauth.consent.title'                 => 'Anwendung autorisieren',
-	'oauth.consent.signed_in_as'          => 'Sie sind angemeldet als: %user%',
+	'oauth.consent.signed_in_as'          => 'Sie sind angemeldet als: {user}',
 	'oauth.consent.requested_permissions' => 'Angeforderte Berechtigungen',
 	'oauth.consent.allow'                 => 'Erlauben',
 	'oauth.consent.deny'                  => 'Abbrechen',
 	'oauth.error.title'                   => 'Autorisierungsfehler',
-	'oauth.error.return'                  => 'Zurück zu %site%',
+	'oauth.error.return'                  => 'Zurück zu {site}',
 ];

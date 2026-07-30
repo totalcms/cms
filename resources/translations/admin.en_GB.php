@@ -962,7 +962,7 @@ return [
 	'oauth_clients.redirect_uris_help'        => 'One URL per line. Must be HTTPS or http://localhost.',
 	'oauth_clients.scopes_label'              => 'Scopes',
 	'oauth_clients.created_label'             => 'Created',
-	'oauth_clients.active_grants'             => '%count% active grants',
+	'oauth_clients.active_grants'             => '{count} active grants',
 	'oauth_clients.confirm_delete'            => 'Delete this OAuth client? Active sessions will be revoked.',
 	'oauth_clients.secret_shown_once_warning' => 'Save this secret NOW. It will never be shown again.',
 	'oauth_clients.secret_copy_desc'          => 'Copy the client secret and store it securely. This is the only time it will be displayed.',
@@ -984,8 +984,8 @@ return [
 	'oauth_grants.issued_label'       => 'Issued',
 	'oauth_grants.expires_label'      => 'Expires',
 	'oauth_grants.never_expires'      => 'Never',
-	'oauth_grants.expired_n_days_ago' => 'Expired %days% days ago',
-	'oauth_grants.expires_in_n_days'  => 'Expires in %days% days',
+	'oauth_grants.expired_n_days_ago' => 'Expired {days} days ago',
+	'oauth_grants.expires_in_n_days'  => 'Expires in {days} days',
 	'oauth_grants.revoke_btn'         => 'Revoke',
 	'oauth_grants.confirm_revoke'     => 'Revoke this grant? The client will lose access immediately.',
 
@@ -1391,10 +1391,10 @@ return [
 
 	// ── OAuth Consent ───────────────────────────────────────────────────────
 	'oauth.consent.title'                 => 'Authorise application',
-	'oauth.consent.signed_in_as'          => 'You are signed in as: %user%',
+	'oauth.consent.signed_in_as'          => 'You are signed in as: {user}',
 	'oauth.consent.requested_permissions' => 'Requested permissions',
 	'oauth.consent.allow'                 => 'Allow',
 	'oauth.consent.deny'                  => 'Cancel',
 	'oauth.error.title'                   => 'Authorisation error',
-	'oauth.error.return'                  => 'Return to %site%',
+	'oauth.error.return'                  => 'Return to {site}',
 ];
