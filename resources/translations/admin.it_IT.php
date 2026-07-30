@@ -1191,6 +1191,7 @@ return [
 	'sync.compare_failed' => 'Impossibile confrontare con la produzione',
 	'sync.compared'       => 'Confrontato con la produzione',
 	'sync.refresh_diff'   => 'Aggiorna',
+	'sync.templates_git_managed' => 'I template di questo sito sono gestiti tramite git e sono esclusi dalla sincronizzazione.',
 
 	// Update Manager
 	'update.title'           => 'Gestore aggiornamenti',

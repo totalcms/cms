@@ -1191,6 +1191,7 @@ return [
 	'sync.compare_failed' => 'Vergleich mit Produktion fehlgeschlagen',
 	'sync.compared'       => 'Mit Produktion verglichen',
 	'sync.refresh_diff'   => 'Aktualisieren',
+	'sync.templates_git_managed' => 'Templates werden auf dieser Website über Git verwaltet und sind von der Synchronisierung ausgeschlossen.',
 
 	// Update Manager
 	'update.title'           => 'Update-Manager',

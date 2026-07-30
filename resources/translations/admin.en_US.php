@@ -1191,6 +1191,7 @@ return [
 	'sync.compare_failed' => 'Could not compare with production',
 	'sync.compared'       => 'Compared with production',
 	'sync.refresh_diff'   => 'Refresh',
+	'sync.templates_git_managed' => 'Templates are managed by git on this site and are excluded from sync.',
 
 	// Update Manager
 	'update.title'           => 'Update Manager',

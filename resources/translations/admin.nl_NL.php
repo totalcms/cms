@@ -1191,6 +1191,7 @@ return [
 	'sync.compare_failed' => 'Vergelijken met productie mislukt',
 	'sync.compared'       => 'Vergeleken met productie',
 	'sync.refresh_diff'   => 'Vernieuwen',
+	'sync.templates_git_managed' => 'Templates worden op deze site via git beheerd en zijn uitgesloten van synchronisatie.',
 
 	// Update Manager
 	'update.title'           => 'Update Manager',

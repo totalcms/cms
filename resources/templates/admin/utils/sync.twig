@@ -59,7 +59,12 @@
 		</div>
 		{% endif %}
 
-		{% if templates|length > 0 %}
+		{% if syncData.templatesGitManaged|default(false) %}
+		<div class="sync-section">
+			<h3>{{ t('sync.templates_title') }}</h3>
+			<p class="sync-empty">{{ t('sync.templates_git_managed') }}</p>
+		</div>
+		{% elseif templates|length > 0 %}
 		<div class="sync-section">
 			<h3>{{ t('sync.templates_title') }}</h3>
 

@@ -1191,6 +1191,7 @@ return [
 	'sync.compare_failed' => 'Nie udało się porównać z produkcją',
 	'sync.compared'       => 'Porównano z produkcją',
 	'sync.refresh_diff'   => 'Odśwież',
+	'sync.templates_git_managed' => 'Szablony w tej witrynie są zarządzane przez git i są wyłączone z synchronizacji.',
 
 	// Update Manager
 	'update.title'           => 'Menedżer aktualizacji',

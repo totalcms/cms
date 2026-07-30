@@ -61,7 +61,7 @@ When the page opens it compares this site against the remote (the same compariso
 - **+ new** — exists here but not on the remote
 - A per-section note counts items that exist only on the remote (a pull with **All** brings them down; a push leaves them untouched)
 
-Selection works per section: **Select All**, individual checkboxes, or **Select Changed** — which checks exactly the items that differ or are missing on the remote, the usual "push my changes up" set.
+Selection works per section: **Select All**, individual checkboxes, or **Select Changed** — which checks exactly the items that differ or are missing on the remote, the usual "push my changes up" set. On a git-managed site the Templates section offers no checkboxes at all — it simply notes that templates travel by git and are excluded from sync.
 
 **Push to Production** and **Pull from Production** open a preview before anything happens: what will be overwritten (with an explicit warning when the copy being replaced is the newer one), what will be created, and what's identical. If the remote can't be reached, the comparison is skipped and the page behaves as a plain picker with a standard confirmation.
 
