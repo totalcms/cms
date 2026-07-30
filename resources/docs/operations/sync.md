@@ -123,11 +123,11 @@ Dry run — would push to https://example.com/tcms:
 Schemas:
   ~ products      differs — local newer (local 29 Jul 2026 14:02, remote 24 Jul 2026 15:04)
   + invoice       new on remote
-  = 6 unchanged
+  = 6 unchanged: blog, events, faq, review, team, testimonial
 
-Objects:
-  ~ builder-pages/home    differs — remote newer (…) ← would overwrite the newer copy
-  = 10 unchanged
+Objects — builder-pages:
+  ~ home          differs — remote newer (…) ← would overwrite the newer copy
+  = 10 unchanged: about, blog, contact, …
   · 2 only on remote — untouched (push never deletes)
 ```
 

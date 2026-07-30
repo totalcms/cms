@@ -135,8 +135,22 @@ trait SyncFilterOptions
 
 		if ($diff !== null) {
 			$this->renderDiffCategory($output, 'Schemas', $diff['schemas'], $verb);
-			$this->renderDiffCategory($output, 'Templates', $diff['templates'], $verb);
-			$this->renderDiffCategory($output, 'Objects', $diff['objects'], $verb);
+
+			// A git-managed site excludes templates from sync by design —
+			// say so rather than leaving the section silently absent.
+			if ($diff['templates'] === [] && $this->totalcms->syncService()->syncableTemplateFilter(null) === []) {
+				$output->writeln('Templates:');
+				$output->writeln('  managed by git on this site — excluded from sync');
+				$output->writeln('');
+			} else {
+				$this->renderDiffCategory($output, 'Templates', $diff['templates'], $verb);
+			}
+
+			// Objects grouped per collection under the collection's display
+			// name — the same label the operator sees in the admin sidebar.
+			foreach ($this->groupObjectDiffByCollection($diff['objects']) as $collectionId => $items) {
+				$this->renderDiffCategory($output, $this->collectionDisplayName((string)$collectionId), $items, $verb);
+			}
 
 			if ($diff['schemas'] === [] && $diff['templates'] === [] && $diff['objects'] === []) {
 				$output->writeln('Nothing matches — no schemas, templates, or objects selected.');
@@ -192,14 +206,14 @@ trait SyncFilterOptions
 		$newLabel    = $verb === 'push' ? 'new on remote' : 'new locally';
 		$untouchedIn = $verb === 'push' ? 'remote' : 'local';
 
-		$lines     = [];
-		$unchanged = 0;
-		$untouched = 0;
+		$lines        = [];
+		$unchangedIds = [];
+		$untouchedIds = [];
 
 		foreach ($items as $id => $item) {
 			switch ($item['status']) {
 				case \TotalCMS\Domain\Sync\Service\SyncDiffService::SAME:
-					$unchanged++;
+					$unchangedIds[] = (string)$id;
 					break;
 				case $newStatus:
 					$lines[] = sprintf('  <info>+</info> %-28s %s', $id, $newLabel);
@@ -212,11 +226,11 @@ trait SyncFilterOptions
 					$lines[] = sprintf('  <comment>~</comment> %-28s differs — %s%s', $id, $hint, $clobber);
 					break;
 				default: // exists only on the receiving side
-					$untouched++;
+					$untouchedIds[] = (string)$id;
 			}
 		}
 
-		if ($lines === [] && $unchanged === 0 && $untouched === 0) {
+		if ($lines === [] && $unchangedIds === [] && $untouchedIds === []) {
 			return;
 		}
 
@@ -224,13 +238,75 @@ trait SyncFilterOptions
 		foreach ($lines as $line) {
 			$output->writeln($line);
 		}
-		if ($unchanged > 0) {
-			$output->writeln("  = {$unchanged} unchanged");
+		if ($unchangedIds !== []) {
+			$output->writeln(sprintf('  = %d unchanged: %s', count($unchangedIds), $this->idList($unchangedIds)));
 		}
-		if ($untouched > 0) {
-			$output->writeln("  · {$untouched} only on {$untouchedIn} — untouched ({$verb} never deletes)");
+		// Untouched items get a count only: the sync does nothing to them, so
+		// they're context rather than a decision. The full id list is in the
+		// --json diff for anything scripted.
+		if ($untouchedIds !== []) {
+			$output->writeln(sprintf(
+				'  · %d only on %s — untouched (%s never deletes)',
+				count($untouchedIds),
+				$untouchedIn,
+				$verb,
+			));
 		}
 		$output->writeln('');
+	}
+
+	/**
+	 * Regroup the flat "collection/id"-keyed object diff back into
+	 * per-collection maps keyed by bare object id, for display.
+	 *
+	 * @param array<string,array{status:string,localUpdated:?string,remoteUpdated:?string,newer:?string}> $objects
+	 *
+	 * @return array<string,array<string,array{status:string,localUpdated:?string,remoteUpdated:?string,newer:?string}>>
+	 */
+	private function groupObjectDiffByCollection(array $objects): array
+	{
+		$grouped = [];
+		foreach ($objects as $key => $item) {
+			[$collectionId, $objectId] = str_contains((string)$key, '/')
+				? explode('/', (string)$key, 2)
+				: ['unknown', (string)$key];
+			$grouped[$collectionId][$objectId] = $item;
+		}
+
+		return $grouped;
+	}
+
+	/**
+	 * The collection's admin display name, falling back to a humanized id
+	 * for collections that don't exist locally (e.g. remote-only on a pull).
+	 */
+	private function collectionDisplayName(string $collectionId): string
+	{
+		try {
+			$collection = $this->totalcms->collectionFetcher()->fetchCollection($collectionId);
+			if ($collection !== null && $collection->name !== '') {
+				return $collection->name;
+			}
+		} catch (\Throwable) {
+			// Fall through to the humanized id.
+		}
+
+		return ucwords(str_replace(['-', '_'], ' ', $collectionId));
+	}
+
+	/**
+	 * Comma list of ids, capped so a large collection can't flood the
+	 * terminal — the count on the same line is always the full truth.
+	 *
+	 * @param list<string> $ids
+	 */
+	private function idList(array $ids, int $max = 20): string
+	{
+		if (count($ids) <= $max) {
+			return implode(', ', $ids);
+		}
+
+		return implode(', ', array_slice($ids, 0, $max)) . sprintf(', … and %d more', count($ids) - $max);
 	}
 
 	/**
