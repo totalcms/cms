@@ -422,7 +422,9 @@ For `localizedstyledtext` (locale-keyed objects), each locale's HTML is converte
 ## CLI reference
 
 ```bash
-# Show enabled state, edition gate, tool count by persona
+# Show enabled state, edition gate, and the tool list per persona.
+# Saved-query tools from collection MCP cards are included and
+# annotated "(saved query)"; --json lists them in `schema_tools`.
 tcms mcp:status
 
 # Invoke a tool locally without going through the HTTP endpoint

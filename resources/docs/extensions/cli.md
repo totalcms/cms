@@ -573,6 +573,30 @@ Webhook and event triggers do not depend on this command — webhooks fire on HT
 
 ---
 
+## MCP Commands
+
+See the [MCP Server guide](docs/mcp/server) for the full server documentation.
+
+### `mcp:status`
+
+Show the MCP server's operator-facing health: enabled state, public-access switch, edition gate, tool prefix, and the tool list each persona sees. Saved-query tools defined in collection MCP cards are included and annotated `(saved query)`.
+
+```bash
+tcms mcp:status
+tcms mcp:status --json    # persona tool lists plus a schema_tools array
+```
+
+### `mcp:test`
+
+Invoke a tool locally without going through the HTTP endpoint — useful for verifying a tool's output and persona visibility before an agent connects.
+
+```bash
+tcms mcp:test query_collection --params='{"collection":"blog","limit":3}'
+tcms mcp:test query_collection --params='{"collection":"blog"}' --persona=public
+```
+
+---
+
 ## Maintenance Commands
 
 ### `repair:index`

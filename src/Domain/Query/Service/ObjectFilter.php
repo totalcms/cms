@@ -23,10 +23,10 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
  * Supported operators (field:op:value syntax):
  * - eq      - equal (case-insensitive for strings; default when no op given)
  * - ne      - not equal
- * - lt      - numeric less-than
- * - lte     - numeric less-than-or-equal
- * - gt      - numeric greater-than
- * - gte     - numeric greater-than-or-equal
+ * - lt      - numeric or date less-than
+ * - lte     - numeric or date less-than-or-equal
+ * - gt      - numeric or date greater-than
+ * - gte     - numeric or date greater-than-or-equal
  * - contains - case-insensitive substring match
  * - starts  - case-insensitive prefix match
  * - ends    - case-insensitive suffix match
@@ -358,17 +358,27 @@ readonly class ObjectFilter
 	}
 
 	/**
-	 * Apply a numeric comparison operator (lt, lte, gt, gte).
-	 * Both sides must be numeric; if either is not, returns false.
+	 * Apply an ordered comparison operator (lt, lte, gt, gte).
+	 *
+	 * Numbers compare numerically. When either side is non-numeric, both
+	 * sides are tried as dates (strtotime), so `reviewed:lte:2026-07-26`
+	 * works against date fields — this also handles mixed precision, e.g.
+	 * a bare `2026-07-26` cutoff against a full ISO-8601 stored value.
+	 * If the values are neither both numbers nor both dates, no order is
+	 * defined and the filter matches nothing (previous behavior).
 	 */
 	private function applyNumericOp(string $op, mixed $fieldValue, mixed $filterValue): bool
 	{
-		if (!is_numeric($fieldValue) || !is_numeric($filterValue)) {
-			return false;
+		if (is_numeric($fieldValue) && is_numeric($filterValue)) {
+			$fv = (float)$fieldValue;
+			$cv = (float)$filterValue;
+		} else {
+			$fv = is_string($fieldValue) && $fieldValue !== '' ? strtotime($fieldValue) : false;
+			$cv = is_string($filterValue) && $filterValue !== '' ? strtotime($filterValue) : false;
+			if ($fv === false || $cv === false) {
+				return false;
+			}
 		}
-
-		$fv = (float)$fieldValue;
-		$cv = (float)$filterValue;
 
 		return match ($op) {
 			'lt'    => $fv < $cv,

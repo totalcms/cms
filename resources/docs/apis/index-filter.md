@@ -43,6 +43,31 @@ exclude=property                          # Shorthand for property:true
 
 **Logic:** If ANY condition matches, the object is excluded.
 
+### Operators
+
+Both include and exclude accept a three-part `property:operator:value` form for comparisons beyond equality:
+
+```
+include=price:lte:500000                  # price at or below 500000
+include=reviewed:lte:2026-07-26           # reviewed on or before a date
+include=category:in:tech|travel|food      # category is one of a list
+exclude=status:in:draft|archived          # status is none of a list
+```
+
+| Operator | Meaning |
+|---|---|
+| `eq` | Equal (default when no operator is given) |
+| `ne` | Not equal |
+| `lt` / `lte` | Less than / less than or equal |
+| `gt` / `gte` | Greater than / greater than or equal |
+| `contains` | Case-insensitive substring match |
+| `starts` / `ends` | Case-insensitive prefix / suffix match |
+| `in` / `notin` | Value is in / not in a pipe-separated list (`a\|b\|c`) |
+
+The ordered operators (`lt`, `lte`, `gt`, `gte`) compare numbers numerically and dates chronologically — a bare `2026-07-26` cutoff works against full ISO-8601 stored values. Values that are neither both numbers nor both dates have no defined order and match nothing.
+
+List values for `in`/`notin` use `|` as the item separator, so `,` remains unambiguously a clause boundary.
+
 ### Search
 
 Full-text search across all fields of each object:

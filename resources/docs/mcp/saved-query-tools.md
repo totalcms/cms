@@ -155,6 +155,15 @@ Specify an `operator` alongside `value` in any filter entry. The default is `eq`
 }
 ```
 
+The ordered operators (`lt`, `lte`, `gt`, `gte`) compare numbers numerically and **dates chronologically** — so a tool can take an ISO date param and filter a date field against it:
+
+```json
+"params":  { "before": { "type": "string", "format": "date", "description": "Cutoff date." } },
+"filters": { "reviewed": { "operator": "lte", "value": "{{params.before}}" } }
+```
+
+A bare `2026-07-26` cutoff works against full ISO-8601 stored values. Values that are neither both numbers nor both dates have no defined order and match nothing.
+
 ## Persona inheritance and safety
 
 A saved-query tool inherits its access level from the parent collection's **MCP Access** setting (`admin` or `public`). There is no per-tool override.

@@ -734,6 +734,55 @@ final class ObjectFilterTest extends TestCase
 		$this->assertSame('3', $result[1]['id']);
 	}
 
+	public function testOrderedOperatorsCompareDateStrings(): void
+	{
+		// lt/lte/gt/gte required both sides to be numeric, so date fields
+		// never matched — `reviewed:lte:2026-07-26` silently returned nothing
+		// from REST, sitemap filters, and MCP saved-query tools alike. Dates
+		// now compare via strtotime when either side is non-numeric.
+		$objects = [
+			['id' => 'old', 'reviewed' => '2026-07-25'],
+			['id' => 'mid', 'reviewed' => '2026-07-26'],
+			['id' => 'new', 'reviewed' => '2026-07-29'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'reviewed:lte:2026-07-26']);
+		$this->assertSame(['old', 'mid'], array_column($result, 'id'));
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'reviewed:gt:2026-07-26']);
+		$this->assertSame(['new'], array_column($result, 'id'));
+	}
+
+	public function testOrderedOperatorsCompareMixedPrecisionDates(): void
+	{
+		// A bare date cutoff against full ISO-8601 stored values — the common
+		// real shape (stored timestamps, human-entered cutoff).
+		$objects = [
+			['id' => 'early', 'updated' => '2026-07-25T08:00:00+00:00'],
+			['id' => 'late',  'updated' => '2026-07-29T22:15:00+00:00'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'updated:gte:2026-07-27']);
+		$this->assertSame(['late'], array_column($result, 'id'));
+	}
+
+	public function testOrderedOperatorsStillRejectUnorderableValues(): void
+	{
+		// Neither numeric nor date on both sides → no defined order → no match.
+		$objects = [
+			['id' => '1', 'title' => 'Alpha'],
+			['id' => '2', 'title' => 'Beta'],
+		];
+
+		$result = $this->filter->filterObjects($objects, ['include' => 'title:lte:Beta']);
+		$this->assertSame([], array_column($result, 'id'));
+
+		// And numeric comparison is unchanged.
+		$objects = [['id' => 'cheap', 'price' => '10'], ['id' => 'dear', 'price' => '99']];
+		$result  = $this->filter->filterObjects($objects, ['include' => 'price:lte:50']);
+		$this->assertSame(['cheap'], array_column($result, 'id'));
+	}
+
 	public function testWildcardNotShadowedByOperatorPath(): void
 	{
 		// Confirm that a two-part filter value containing a wildcard (no explicit
