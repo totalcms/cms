@@ -125,7 +125,7 @@ composer run test:all
 - **Extensions**: Third-party extensions in `tcms-data/extensions/{vendor}/{name}/` with auto-detected capability permissions
 - **Enhanced Libraries**: Custom couleur fork with OKLCH improvements ([joeworkman-forks/couleur](https://github.com/joeworkman-forks/couleur))
 - **Memory Management**: Streaming patterns for large datasets (see `JumpStartData::streamJsonToFile()` for examples)
-- **Emergency Cache**: `/emergency/cache/clear` endpoint for customer self-service cache clearing
+- **Emergency Cache**: `/api/emergency/cache/clear` endpoint for customer self-service cache clearing (note the `/api` prefix — it is registered inside the `/api` group)
 - **Logging**: Zip installs log to `tcms-data/.system/logs` (survives updates); Composer installs log to `projectRoot/logs`. Nine-file LogFile/LogChannel taxonomy.
 - **Releases**: `bin/prepare-release.sh` builds the dist zip, registers the version with the license API, and uploads to S3 (`totalcms-archive/releases/`). Licensed downloads via `license.totalcms.co/version/download/{version|latest}`; public latest-zip via `license.totalcms.co/download/latest`.
 

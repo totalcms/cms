@@ -367,7 +367,7 @@ If you suspect a security breach:
    - Change all passwords
    - Review access logs
    - Check for unauthorized file changes
-   - Clear the cache: `/emergency/cache/clear`
+   - Clear the cache: `/api/emergency/cache/clear`
 
 2. **Investigation**:
    - Review user accounts for unauthorized access

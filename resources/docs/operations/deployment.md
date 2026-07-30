@@ -134,7 +134,7 @@ deploy:
 For shared-hosting environments where you can't run shell commands, Total CMS exposes an HTTP fallback that clears application caches (but not the compiled DI container or PHP-FPM OPcache):
 
 ```bash
-curl -s https://example.com/tcms/emergency/cache/clear
+curl -s https://example.com/tcms/api/emergency/cache/clear
 ```
 
 This is a last resort — it can't wipe `cache/container/` or reload FPM workers, so any deploy that changes class signatures or constructor wiring needs proper shell access to `tcms deploy`.

@@ -334,4 +334,4 @@ max_execution_time = 30
 - Slow disk I/O on HDD (consider upgrading to SSD)
 
 ### Emergency Cache Clearing
-If your server becomes unresponsive due to cache issues, Total CMS provides an emergency endpoint at `/emergency/cache/clear` that can be accessed without logging into the admin.
+If your server becomes unresponsive due to cache issues, Total CMS provides an emergency endpoint at `/api/emergency/cache/clear` that can be accessed without logging into the admin.
