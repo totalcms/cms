@@ -55,6 +55,8 @@ The private key is the root of trust for every token your site issues. The key l
 
 ---
 
+> **Behind a firewall?** User-agent-filtering WAF rules (7G/8G and similar) block OAuth discovery and token requests from non-browser clients. If a client reports the server as incompatible or a connector asks for manual credentials despite dynamic registration being enabled, check the firewall before the OAuth config — see [MCP Server](docs/mcp/server) for the symptom guide.
+
 ## Setting up a static client
 
 Use static clients for ActivePieces, Zapier, n8n, or any integration where you control the configuration on both sides. You create the client once in the admin and paste the credentials into the third-party app.

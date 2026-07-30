@@ -67,6 +67,8 @@ Public access is **default-deny**. Anonymous requests get a 401 unless the opera
 
 For Claude Desktop / Claude Code: add your site under MCP servers in the client's settings — point at the `/mcp` URL and provide the API key as the Bearer token if the host supports it, otherwise as a header config.
 
+> **Server firewalls block MCP clients.** WAF rulesets that filter by user-agent (7G/8G firewall, some security plugins and host-level rules) 403 non-browser clients — which is every MCP client: claude.ai connectors, Claude Desktop, Claude Code, and `curl` alike. The symptom is an endpoint that works in a browser but fails from clients — a connector that errors or falls back to asking for manual credentials, or `curl` returning 403 with the default user-agent. Exempt `/mcp`, `/oauth/*`, and `/.well-known/*` from user-agent filtering (or drop the UA rules) before debugging anything else.
+
 ---
 
 ## Connecting an AI client via OAuth
@@ -99,7 +101,7 @@ A typical "read-only AI browser" connection requests `cms:read mcp:tools mcp:res
 
 ### Configuring a static client for Claude Desktop
 
-Dynamic registration is on by default and handles the zero-touch Claude Desktop flow automatically. If you've disabled it — or if you want a named client you can track and revoke independently — create a static client first:
+Dynamic registration is **off by default** (an unauthenticated endpoint that writes server state — see the toggle's help text for the trade-off). Turn it on in **Admin → Settings → OAuth Server → Allow Dynamic Registration** for the zero-touch Claude flow: until it's on, the discovery document doesn't advertise `registration_endpoint`, and clients either report the server as incompatible (Claude Code) or ask for a manual Client ID and secret (claude.ai connectors). If you'd rather not enable it — or want a named client you can track and revoke independently — create a static client instead:
 
 1. **Admin → Utilities → OAuth Clients → Create Client.**
 2. Name it something traceable: "Claude Desktop – Joe", "Cursor – Content Team".
