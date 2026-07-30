@@ -269,7 +269,10 @@ class LicenseValidator
 	}
 
 	/**
-	 * Get API base URL based on environment.
+	 * The license API URL is deliberately a hardcoded constant, not config:
+	 * a configurable value would let an install point itself at a spoof
+	 * license server. Dev/staging license-server work is tested against the
+	 * license repo directly, not through a T3 client override.
 	 */
 	private function getApiBaseUrl(): string
 	{

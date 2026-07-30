@@ -30,7 +30,7 @@ readonly class UpdateDownloader
 			throw new \RuntimeException('This installation is managed by Composer. Run `composer update totalcms/cms` to update.');
 		}
 
-		$licenseUrl = $this->getLicenseApiUrl();
+		$licenseUrl = Config::LICENSE_API_URL;
 		$fullUrl    = $licenseUrl . $downloadUrl;
 		$tempPath   = $this->config->cachedir . "/update-{$version}.zip";
 
@@ -71,8 +71,4 @@ readonly class UpdateDownloader
 		return $tempPath;
 	}
 
-	private function getLicenseApiUrl(): string
-	{
-		return Config::LICENSE_API_URL;
-	}
 }
