@@ -100,26 +100,10 @@ readonly class LocaleTwigAdapter
 	 */
 	public function t(string $key, array $params = []): string
 	{
-		// Templates pass params by bare name ({user: id}); translation
-		// strings delimit their placeholders — {user} is the house style,
-		// with %user% still mapped for third-party/extension strings — and
-		// the translator substitutes keys VERBATIM — so a bare key replaced the
-		// letters inside the delimiters ('%user%' → '%admin%' on the OAuth
-		// consent screen) AND any literal occurrence of the word in the
-		// string ('{entries} entries' → '100 100'). Bare keys are therefore
-		// swapped for both delimited forms and never passed through raw;
-		// explicit-delimiter call sites (e.g. {'{label}': …}) are untouched.
-		$normalized = [];
-		foreach ($params as $name => $value) {
-			if (!str_contains((string)$name, '{') && !str_contains((string)$name, '%')) {
-				$normalized['{' . $name . '}'] = $value;
-				$normalized['%' . $name . '%'] = $value;
-			} else {
-				$normalized[$name] = $value;
-			}
-		}
-
-		return $this->translator->trans($key, $normalized, 'admin');
+		// Bare-name parameter normalization ({user: id} → {user}/%user%)
+		// happens in TranslationService::trans() — the choke point every
+		// t() entry route shares.
+		return $this->translator->trans($key, $params, 'admin');
 	}
 
 	/**

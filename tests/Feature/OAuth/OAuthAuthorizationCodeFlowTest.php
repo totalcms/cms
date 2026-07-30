@@ -201,7 +201,18 @@ describe('OAuthAuthorizationCodeFlow', function (): void {
 		);
 
 		expect($consentResponse->getStatusCode())->toBe(200);
-		expect((string)$consentResponse->getBody())->toContain('Test Client');
+		$consentBody = (string)$consentResponse->getBody();
+		expect($consentBody)->toContain('Test Client');
+
+		// Full-stack placeholder regression: the consent screen once rendered
+		// 'You are signed in as: %admin%' (and later '{admin}') because the
+		// template's global t() bypassed the normalization that had been
+		// added to a different t() entry point. Asserting the substituted
+		// output HERE — through routing, the Twig extension, and the real
+		// translator — pins every layer at once.
+		expect($consentBody)->toContain('You are signed in as: admin@example.test');
+		expect($consentBody)->not->toContain('{admin@example.test}');
+		expect($consentBody)->not->toContain('%admin@example.test%');
 
 		// SessionStartMiddleware called session_write_close() at end of request.
 		// Re-open the session so the oauth_authorize_request stash is accessible
