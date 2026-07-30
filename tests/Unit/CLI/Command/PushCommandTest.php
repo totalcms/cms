@@ -34,6 +34,13 @@ beforeEach(function (): void {
 	$exporter->method('exportSyncData')->willReturn($this->jumpstart);
 	$exporter->method('setMetadata');
 	$this->totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	// No remote in unit tests: diff() throws so dry-runs exercise the
+	// manifest fallback, and the template filter passes through unchanged.
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('remote unreachable in test'));
+	$this->totalcms->method('syncService')->willReturn($syncService);
 });
 
 afterEach(function (): void {
@@ -119,7 +126,7 @@ it('passes schema filter to exporter on dry-run', function (): void {
 	// remote fetch throwing keeps the dry-run on the plain manifest path.
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
-	$syncService->method('fetchRemoteSyncData')->willThrowException(new \RuntimeException('unreachable in test'));
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
 	$totalcms->method('syncService')->willReturn($syncService);
 
 	$exporter = $this->createMock(JumpStartExporter::class);
@@ -145,7 +152,7 @@ it('passes template filter to exporter on dry-run', function (): void {
 	// See the schema-filter test above for why syncService is stubbed.
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
-	$syncService->method('fetchRemoteSyncData')->willThrowException(new \RuntimeException('unreachable in test'));
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
 	$totalcms->method('syncService')->willReturn($syncService);
 
 	$exporter = $this->createMock(JumpStartExporter::class);

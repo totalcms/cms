@@ -1186,6 +1186,11 @@ return [
 	'sync.specific_templates' => 'Seleccionar Plantillas',
 	'sync.specific_objects'   => 'Seleccionar Objetos',
 	'sync.no_objects'         => 'Aún no hay objetos en esta colección.',
+	'sync.select_changed' => 'Seleccionar cambios',
+	'sync.comparing'      => 'Comparando con producción…',
+	'sync.compare_failed' => 'No se pudo comparar con producción',
+	'sync.compared'       => 'Comparado con producción',
+	'sync.refresh_diff'   => 'Actualizar',
 
 	// Update Manager
 	'update.title'           => 'Gestor de Actualizaciones',

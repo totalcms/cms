@@ -1186,6 +1186,11 @@ return [
 	'sync.specific_templates' => 'Templates auswählen',
 	'sync.specific_objects'   => 'Objekte auswählen',
 	'sync.no_objects'         => 'Noch keine Objekte in dieser Collection.',
+	'sync.select_changed' => 'Geänderte auswählen',
+	'sync.comparing'      => 'Vergleich mit Produktion…',
+	'sync.compare_failed' => 'Vergleich mit Produktion fehlgeschlagen',
+	'sync.compared'       => 'Mit Produktion verglichen',
+	'sync.refresh_diff'   => 'Aktualisieren',
 
 	// Update Manager
 	'update.title'           => 'Update-Manager',

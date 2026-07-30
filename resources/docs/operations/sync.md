@@ -54,11 +54,16 @@ On your **local** Total CMS instance:
 
 Go to **Utilities > Sync Manager** to push or pull using the admin interface.
 
-- **Select All** syncs every custom schema and template
-- Uncheck **Select All** to pick individual schemas and templates
-- Click **Push to Production** to send your local changes to the remote server
-- Click **Pull from Production** to download remote schemas and templates to your local instance
-- Both actions show a confirmation dialog before proceeding
+When the page opens it compares this site against the remote (the same comparison `--dry-run` shows in the CLI) and annotates every item:
+
+- Unchanged items are dimmed — syncing them rewrites identical content
+- **~ local newer / ~ remote newer** — the two copies differ, with a hint from their `updated` timestamps about which side holds the later edit
+- **+ new** — exists here but not on the remote
+- A per-section note counts items that exist only on the remote (a pull with **All** brings them down; a push leaves them untouched)
+
+Selection works per section: **Select All**, individual checkboxes, or **Select Changed** — which checks exactly the items that differ or are missing on the remote, the usual "push my changes up" set.
+
+**Push to Production** and **Pull from Production** open a preview before anything happens: what will be overwritten (with an explicit warning when the copy being replaced is the newer one), what will be created, and what's identical. If the remote can't be reached, the comparison is skipped and the page behaves as a plain picker with a standard confirmation.
 
 ## Using the CLI
 

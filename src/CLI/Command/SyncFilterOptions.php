@@ -115,11 +115,36 @@ trait SyncFilterOptions
 		}
 
 		if ($this->isJson($input)) {
+			$schemaIds   = array_map(fn (array $s): string => (string)($s['id'] ?? ''), $schemas);
+			$templateIds = array_map(fn (array $t): string => (string)($t['id'] ?? ''), $templates);
+
+			// With a diff, the manifest lists are derived from it — the
+			// payload isn't separately exported. The sending side's items are
+			// everything that isn't exclusive to the receiving side.
+			if ($diff !== null) {
+				$receivingOnly = $verb === 'push'
+					? \TotalCMS\Domain\Sync\Service\SyncDiffService::REMOTE_ONLY
+					: \TotalCMS\Domain\Sync\Service\SyncDiffService::LOCAL_ONLY;
+				$sourceKeys = fn (array $items): array => array_keys(
+					array_filter($items, fn (array $i): bool => $i['status'] !== $receivingOnly)
+				);
+
+				$schemaIds           = $sourceKeys($diff['schemas']);
+				$templateIds         = $sourceKeys($diff['templates']);
+				$objectsByCollection = [];
+				foreach ($this->groupObjectDiffByCollection($diff['objects']) as $collectionId => $items) {
+					$ids = $sourceKeys($items);
+					if ($ids !== []) {
+						$objectsByCollection[$collectionId] = $ids;
+					}
+				}
+			}
+
 			$data = [
 				'dry_run'   => true,
 				'remote'    => $url,
-				'schemas'   => array_map(fn (array $s): string => (string)($s['id'] ?? ''), $schemas),
-				'templates' => array_map(fn (array $t): string => (string)($t['id'] ?? ''), $templates),
+				'schemas'   => $schemaIds,
+				'templates' => $templateIds,
 				'objects'   => $objectsByCollection,
 			];
 			if ($diff !== null) {

@@ -1186,6 +1186,11 @@ return [
 	'sync.specific_templates' => 'Templates selecteren',
 	'sync.specific_objects'   => 'Objecten selecteren',
 	'sync.no_objects'         => 'Nog geen objecten in deze collectie.',
+	'sync.select_changed' => 'Gewijzigde selecteren',
+	'sync.comparing'      => 'Vergelijken met productie…',
+	'sync.compare_failed' => 'Vergelijken met productie mislukt',
+	'sync.compared'       => 'Vergeleken met productie',
+	'sync.refresh_diff'   => 'Vernieuwen',
 
 	// Update Manager
 	'update.title'           => 'Update Manager',

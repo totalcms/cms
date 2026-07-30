@@ -432,11 +432,6 @@ class TotalCMS
 		return $this->container->get(SyncService::class);
 	}
 
-	public function syncDiffService(): \TotalCMS\Domain\Sync\Service\SyncDiffService
-	{
-		return $this->container->get(\TotalCMS\Domain\Sync\Service\SyncDiffService::class);
-	}
-
 	public function updateChecker(): UpdateChecker
 	{
 		return $this->container->get(UpdateChecker::class);

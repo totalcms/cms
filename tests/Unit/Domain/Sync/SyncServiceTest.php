@@ -36,7 +36,35 @@ final class SyncServiceTest extends TestCase
 			$this->importer,
 			$this->httpClient,
 			$this->paths,
+			new \TotalCMS\Domain\Sync\Service\SyncDiffService(),
 		);
+	}
+
+	// ==================== Diff Tests ====================
+
+	public function testDiffComparesLocalExportAgainstRemotePayload(): void
+	{
+		// The single orchestration shared by CLI dry-runs and the admin
+		// Sync Manager: export local, fetch remote, hand both to
+		// SyncDiffService.
+		$local = new JumpStartData('Local', '');
+		$local->addSchema(['id' => 'products', 'properties' => ['name' => []]]);
+		$this->exporter->method('exportSyncData')->willReturn($local);
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
+			'schemas' => [[
+				'id'         => 'products',
+				'properties' => ['name' => [], 'price' => []],
+				'updated'    => '2026-07-29T10:00:00+00:00',
+			]],
+		])));
+
+		$diff = $this->service->diff('https://example.com', 'key');
+
+		expect($diff['schemas']['products']['status'])->toBe(\TotalCMS\Domain\Sync\Service\SyncDiffService::DIFFERS);
+		expect($diff['schemas']['products']['newer'])->toBe('remote');
+		expect($diff['templates'])->toBe([]);
+		expect($diff['objects'])->toBe([]);
 	}
 
 	// ==================== Push Tests ====================
@@ -70,7 +98,7 @@ final class SyncServiceTest extends TestCase
 			->with(null, [], null)
 			->willReturn(new JumpStartData());
 
-		$service = new SyncService($exporter, $this->importer, $this->httpClient, $paths);
+		$service = new SyncService($exporter, $this->importer, $this->httpClient, $paths, new \TotalCMS\Domain\Sync\Service\SyncDiffService());
 
 		// Caller asked for "all templates" (null) — git-management overrides it.
 		$service->push('https://example.com', 'key');

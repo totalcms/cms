@@ -32,8 +32,10 @@ final class SyncSelectionSelectorTest extends TestCase
 		// matches multicheckbox's bare option name.
 		$this->assertStringNotContainsString('[]"]:checked', $js);
 
-		// The items + per-collection reads use the bare field name.
+		// Every selection read goes through readSelection(), whose checked-item
+		// query uses the bare field name; the per-collection sections pass
+		// their bare names into it.
 		$this->assertStringContainsString('input[name="${itemsFieldName}"]:checked', $js);
-		$this->assertStringContainsString('input[name="collection-${cid}"]:checked', $js);
+		$this->assertStringContainsString('readSelection(`collection-${cid}-all`, `collection-${cid}`)', $js);
 	}
 }

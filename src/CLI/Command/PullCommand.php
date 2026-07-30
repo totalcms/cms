@@ -40,48 +40,21 @@ class PullCommand extends BaseCommand
 			return $this->outputError($input, $output, $e->getMessage());
 		}
 
-		// Dry run — fetch and preview only, don't import
+		// Dry run — compare and preview only, don't import. SyncService::diff()
+		// is the same comparison the admin Sync Manager renders, so CLI and
+		// UI can never disagree about what would change.
 		if ($input->getOption('dry-run')) {
 			if (!$this->isJson($input)) {
 				$output->writeln("Fetching from <info>{$remote['url']}</info>...");
 			}
 
 			try {
-				$payload = $this->totalcms->syncService()->fetchRemoteSyncData(
-					$remote['url'],
-					$remote['key'],
-					$schemaFilter,
-					$templateFilter,
-					$collectionsFilter
-				);
+				$diff = $this->totalcms->syncService()->diff($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter);
 			} catch (\RuntimeException $e) {
 				return $this->outputError($input, $output, $e->getMessage());
 			}
 
-			// Export the same selection locally so the preview can say what
-			// would actually change. Comparison failing shouldn't kill the
-			// preview — degrade to the plain payload manifest.
-			$diff = null;
-			try {
-				$exporter = $this->totalcms->jumpStartExporter();
-				$exporter->setMetadata('CLI Pull', 'Dry run comparison');
-				// Same template rule the fetch already applied remotely:
-				// git-managed sites never sync templates, so the local side
-				// of the comparison must exclude them too.
-				$local = $exporter->exportSyncData(
-					$schemaFilter,
-					$this->totalcms->syncService()->syncableTemplateFilter($templateFilter),
-					$collectionsFilter
-				)->toArray();
-				$diff  = $this->totalcms->syncDiffService()->diff($local, $payload);
-			} catch (\Throwable $e) {
-				if (!$this->isJson($input)) {
-					$output->writeln("<comment>Could not build local comparison ({$e->getMessage()}) — listing the payload without it.</comment>");
-					$output->writeln('');
-				}
-			}
-
-			return $this->renderSyncDryRun($input, $output, $payload, $remote['url'], 'pull', $diff);
+			return $this->renderSyncDryRun($input, $output, [], $remote['url'], 'pull', $diff);
 		}
 
 		// Actual pull via shared service

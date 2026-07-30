@@ -40,30 +40,13 @@ class PushCommand extends BaseCommand
 			return $this->outputError($input, $output, $e->getMessage());
 		}
 
-		// Dry run — preview only, don't push
+		// Dry run — preview only, don't push. SyncService::diff() is the same
+		// comparison the admin Sync Manager renders, so CLI and UI can never
+		// disagree about what would change.
 		if ($input->getOption('dry-run')) {
-			// Same template rule a real push applies: git-managed sites never
-			// sync templates, so the preview must not list them either.
-			$templateFilter = $this->totalcms->syncService()->syncableTemplateFilter($templateFilter);
-
-			$exporter = $this->totalcms->jumpStartExporter();
-			$exporter->setMetadata('CLI Push', 'Dry run preview');
-			$local = $exporter->exportSyncData($schemaFilter, $templateFilter, $collectionsFilter)->toArray();
-
-			// Fetch the remote's current state so the preview can say what
-			// would actually change, not just what would travel. The remote
-			// being unreachable shouldn't kill a preview — degrade to the
-			// plain payload manifest.
 			$diff = null;
 			try {
-				$remotePayload = $this->totalcms->syncService()->fetchRemoteSyncData(
-					$remote['url'],
-					$remote['key'],
-					$schemaFilter,
-					$templateFilter,
-					$collectionsFilter
-				);
-				$diff = $this->totalcms->syncDiffService()->diff($local, $remotePayload);
+				$diff = $this->totalcms->syncService()->diff($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter);
 			} catch (\Throwable $e) {
 				if (!$this->isJson($input)) {
 					$output->writeln("<comment>Could not fetch remote state ({$e->getMessage()}) — listing the payload without comparison.</comment>");
@@ -71,7 +54,21 @@ class PushCommand extends BaseCommand
 				}
 			}
 
-			return $this->renderSyncDryRun($input, $output, $local, $remote['url'], 'push', $diff);
+			if ($diff !== null) {
+				return $this->renderSyncDryRun($input, $output, [], $remote['url'], 'push', $diff);
+			}
+
+			// Remote unreachable — fall back to a plain manifest of what
+			// would travel, built from the local export alone.
+			$exporter = $this->totalcms->jumpStartExporter();
+			$exporter->setMetadata('CLI Push', 'Dry run preview');
+			$local = $exporter->exportSyncData(
+				$schemaFilter,
+				$this->totalcms->syncService()->syncableTemplateFilter($templateFilter),
+				$collectionsFilter
+			)->toArray();
+
+			return $this->renderSyncDryRun($input, $output, $local, $remote['url'], 'push', null);
 		}
 
 		// Actual push via shared service

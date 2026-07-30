@@ -1186,6 +1186,11 @@ return [
 	'sync.specific_templates' => 'Select Templates',
 	'sync.specific_objects'   => 'Select Objects',
 	'sync.no_objects'         => 'No objects in this collection yet.',
+	'sync.select_changed' => 'Select Changed',
+	'sync.comparing'      => 'Comparing with production…',
+	'sync.compare_failed' => 'Could not compare with production',
+	'sync.compared'       => 'Compared with production',
+	'sync.refresh_diff'   => 'Refresh',
 
 	// Update Manager
 	'update.title'           => 'Update Manager',

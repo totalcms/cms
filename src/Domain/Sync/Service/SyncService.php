@@ -23,7 +23,40 @@ readonly class SyncService
 		private JumpStartImporter $jumpStartImporter,
 		private HttpClientInterface $httpClient,
 		private BuilderTemplatePaths $paths,
+		private SyncDiffService $diffService,
 	) {
+	}
+
+	/**
+	 * Compare local sync state against the remote's, item by item.
+	 *
+	 * One orchestration — export local, fetch remote, diff — shared by the
+	 * CLI dry-runs and the admin Sync Manager, so every surface always
+	 * reports the same statuses. See SyncDiffService for the semantics
+	 * (content decides differs/same, timestamps only hint direction).
+	 *
+	 * @param list<string>|null                       $schemaFilter
+	 * @param list<string>|null                       $templateFilter
+	 * @param array<string,list<string>|null>|null    $collectionsFilter
+	 *
+	 * @return array{schemas:array<string,mixed>,templates:array<string,mixed>,objects:array<string,mixed>}
+	 *
+	 * @throws \RuntimeException When the remote cannot be reached or answers with an error
+	 */
+	public function diff(
+		string $url,
+		string $key,
+		?array $schemaFilter = null,
+		?array $templateFilter = null,
+		?array $collectionsFilter = null,
+	): array {
+		$templateFilter = $this->syncableTemplateFilter($templateFilter);
+
+		$this->jumpStartExporter->setMetadata('Sync Diff', 'Local state for sync comparison');
+		$local  = $this->jumpStartExporter->exportSyncData($schemaFilter, $templateFilter, $collectionsFilter)->toArray();
+		$remote = $this->fetchRemoteSyncData($url, $key, $schemaFilter, $templateFilter, $collectionsFilter);
+
+		return $this->diffService->diff($local, $remote);
 	}
 
 	/**
