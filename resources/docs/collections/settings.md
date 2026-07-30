@@ -578,11 +578,26 @@ Current number of active objects in the collection.
 **Type:** `string` (ISO 8601 datetime)
 **Read-only:** Yes
 
-Timestamp of the most recent object modification in the collection.
+The **content** timestamp: when an object in this collection was last created, updated, or deleted. Says nothing about the collection's settings — see `updated` for that.
 
 ```json
 {
     "lastUpdated": "2024-01-15T14:30:00+00:00"
+}
+```
+
+---
+
+### updated
+
+**Type:** `string` (ISO 8601 datetime)
+**Read-only:** Yes
+
+The **settings** timestamp: when this collection's configuration last changed (URL, MCP card, sitemap, access, schema overrides…). It is delta-stamped — the save compares the configuration before writing, so content activity and counter bumps never move it. Sync uses it to tell which side has the newer configuration, and preserves it verbatim when settings arrive via sync.
+
+```json
+{
+    "updated": "2026-07-30T09:12:00+00:00"
 }
 ```
 

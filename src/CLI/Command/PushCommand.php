@@ -35,7 +35,7 @@ class PushCommand extends BaseCommand
 		}
 
 		try {
-			[$schemaFilter, $templateFilter, $collectionsFilter] = $this->resolveSyncFilters($input);
+			[$schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter] = $this->resolveSyncFilters($input);
 		} catch (\InvalidArgumentException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
 		}
@@ -46,7 +46,7 @@ class PushCommand extends BaseCommand
 		if ($input->getOption('dry-run')) {
 			$diff = null;
 			try {
-				$diff = $this->totalcms->syncService()->diff($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter);
+				$diff = $this->totalcms->syncService()->diff($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter);
 			} catch (\Throwable $e) {
 				if (!$this->isJson($input)) {
 					$output->writeln("<comment>Could not fetch remote state ({$e->getMessage()}) — listing the payload without comparison.</comment>");
@@ -65,7 +65,8 @@ class PushCommand extends BaseCommand
 			$local = $exporter->exportSyncData(
 				$schemaFilter,
 				$this->totalcms->syncService()->syncableTemplateFilter($templateFilter),
-				$collectionsFilter
+				$collectionsFilter,
+				$collectionMetaFilter
 			)->toArray();
 
 			return $this->renderSyncDryRun($input, $output, $local, $remote['url'], 'push', null);
@@ -77,7 +78,7 @@ class PushCommand extends BaseCommand
 		}
 
 		try {
-			$result = $this->totalcms->syncService()->push($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter);
+			$result = $this->totalcms->syncService()->push($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter);
 		} catch (\RuntimeException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
 		}

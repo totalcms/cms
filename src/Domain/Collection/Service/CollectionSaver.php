@@ -37,7 +37,17 @@ readonly class CollectionSaver
 	 * @throws \UnexpectedValueException
 	 * @throws \TotalCMS\Domain\License\Exception\EditionFeatureException
 	 */
-	public function saveCollection(array $data): CollectionData
+	/**
+	 * @param array<string,mixed> $data
+	 * @param bool                $preserveDates Keep an authored `updated` (settings)
+	 *                                           timestamp instead of stamping now.
+	 *                                           Used by imports — the incoming value
+	 *                                           is the source's history. Same contract
+	 *                                           as SchemaSaver::saveSchema().
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
+	 */
+	public function saveCollection(array $data, bool $preserveDates = false): CollectionData
 	{
 		// Reference schemas (totalcms, totalcms-item) are examples only and can
 		// never back a collection.
@@ -70,6 +80,12 @@ readonly class CollectionSaver
 		}
 		// Clean the provided lastUpdated to ensure proper ISO 8601 format
 		$data['lastUpdated'] = DateData::cleanDate($data['lastUpdated']);
+
+		// Settings timestamp: creation counts as a settings change. An import
+		// carrying an authored value keeps it (the source's history).
+		if (!$preserveDates || !isset($data['updated']) || $data['updated'] === '') {
+			$data['updated'] = DateData::cleanDate();
+		}
 
 		// Ensure formSettings is an array (handle empty strings from form)
 		if (isset($data['formSettings']) && $data['formSettings'] === '') {
@@ -112,18 +128,33 @@ readonly class CollectionSaver
 	 *
 	 * @param array<string,mixed> $data The collection data to save
 	 * @param CollectionData|null $existingCollection Optional existing collection to avoid double-fetching
+	 * @param bool                $preserveDates Keep an authored `updated` (settings)
+	 *                                           timestamp instead of delta-stamping.
+	 *                                           Used by sync imports so a synced copy
+	 *                                           never reads newer than its source.
 	 *
 	 * @throws \UnexpectedValueException
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function updateCollection(string $collectionId, array $data, ?CollectionData $existingCollection = null): CollectionData
+	public function updateCollection(string $collectionId, array $data, ?CollectionData $existingCollection = null, bool $preserveDates = false): CollectionData
 	{
 		// Normalize URL to path only (strip domain if present)
 		if (isset($data['url']) && $data['url'] !== '') {
 			$data['url'] = CollectionData::normalizeUrlToPath($data['url']);
 		}
 
-		$data['count']       = $this->initializeCount($collectionId, $data);
-		$data['lastUpdated'] = DateData::cleanDate();
+		$data['count'] = $this->initializeCount($collectionId, $data);
+
+		// lastUpdated (the CONTENT timestamp) restamps on every update — the
+		// object-write cascade depends on that. The one exception is a sync
+		// import (preserveDates): a settings push must not make the collection
+		// look content-fresh, so the local value the importer overlaid is kept.
+		if (!$preserveDates || !isset($data['lastUpdated']) || $data['lastUpdated'] === '') {
+			$data['lastUpdated'] = DateData::cleanDate();
+		} else {
+			$data['lastUpdated'] = DateData::cleanDate((string)$data['lastUpdated']);
+		}
 
 		// Fetch existing collection to preserve system-managed fields if not provided
 		if (!$existingCollection instanceof CollectionData) {
@@ -171,6 +202,21 @@ readonly class CollectionSaver
 			throw new \UnexpectedValueException('Invalid Collection data provided. Does not match collection ID.', 1);
 		}
 
+		// Settings timestamp (`updated`), delta-stamped: every object write
+		// routes through this method via the metadata cascade (count /
+		// lastUpdated / totalObjects bumps), so stamping unconditionally
+		// would make it as unreliable as lastUpdated. Comparing the config
+		// subset means it moves ONLY when settings actually changed — which
+		// is what sync freshness hints rely on. Imports preserve an authored
+		// value: it is the source's history, not a new edit here.
+		if ($preserveDates && $collection->updated !== '') {
+			// keep the authored value verbatim
+		} elseif ($this->configSubset($collection) !== $this->configSubset($existingCollection)) {
+			$collection->updated = DateData::cleanDate();
+		} else {
+			$collection->updated = $existingCollection->updated;
+		}
+
 		$this->storage->saveCollection($collection);
 
 		// Clear request-level cache so subsequent fetches get fresh data
@@ -179,6 +225,22 @@ readonly class CollectionSaver
 		$this->eventDispatcher->dispatch(CoreEvent::COLLECTION_UPDATED, new CollectionEventPayload($collectionId));
 
 		return $collection;
+	}
+
+	/**
+	 * The configuration portion of a collection — everything except the
+	 * environment-local computed fields and the timestamps themselves.
+	 * Two collections with equal config subsets differ only in content
+	 * activity, which must not move the settings timestamp.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function configSubset(CollectionData $collection): array
+	{
+		$config = $collection->toArray();
+		unset($config['count'], $config['totalObjects'], $config['lastUpdated'], $config['updated']);
+
+		return $config;
 	}
 
 	/**

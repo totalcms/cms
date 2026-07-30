@@ -352,29 +352,89 @@ class JumpStartImporter
 			throw new \Exception('Reserved collection entry missing id');
 		}
 
+		$existed    = $this->collectionFetcher->fetchCollection($id) instanceof CollectionData;
 		$collection = $this->collectionFetcher->fetchOrCreateReserved($id);
 		if (!$collection instanceof CollectionData) {
 			throw new \Exception("Error creating Reserved Collection: {$id}");
 		}
 
-		// Apply optional overrides (url, prettyUrl, sortBy, etc.) without
-		// touching the underlying schema binding.
 		if (is_array($entry)) {
 			$overrides = $entry;
 			unset($overrides['id']);
+			if ($overrides !== [] && $this->upsert && $existed) {
+				// Sync mode against an existing collection: the entry is the
+				// source's full settings — mirror them (including clearing
+				// keys the source emptied), never the local counters.
+				$this->upsertCollectionMeta($id, $entry, $collection);
+
+				return;
+			}
 			if ($overrides !== []) {
+				// Starter-kit semantics: shallow patch of the overrides on
+				// top of defaults, without touching the schema binding.
 				$this->collectionSaver->patchCollection($id, $overrides);
 			}
 		}
 
-		$this->addResult(sprintf('Collection %s: created', $collection->id));
+		$this->addResult(sprintf('Collection %s: %s', $collection->id, $existed ? 'exists' : 'created'));
 	}
 
 	/** @param array<string, mixed> $collectionDef */
 	private function createCustomCollection(array $collectionDef): void
 	{
-		$collection = $this->collectionSaver->saveCollection($collectionDef);
+		$id       = (string)($collectionDef['id'] ?? '');
+		$existing = $id !== '' ? $this->collectionFetcher->fetchCollection($id) : null;
+
+		if ($this->upsert && $existing instanceof CollectionData) {
+			$this->upsertCollectionMeta($id, $collectionDef, $existing);
+
+			return;
+		}
+
+		// preserveDates: an imported collection keeps its source's `updated`
+		// (settings) timestamp — restamping would make the copy read newer
+		// than the original (same rule as schemas and objects).
+		$collection = $this->collectionSaver->saveCollection($this->stripComputedCollectionFields($collectionDef), preserveDates: true);
 		$this->addResult(sprintf('Collection %s: created', $collection->id));
+	}
+
+	/**
+	 * Mirror synced collection settings onto an existing local collection.
+	 *
+	 * The incoming payload carries the source's full configuration (with
+	 * explicit empties, so an emptied card clears here too); merging it over
+	 * the local array keeps everything it doesn't carry — crucially the
+	 * environment-local counters, which are also stripped from the incoming
+	 * side outright so no payload can ever move them. `count` feeds oid
+	 * generation, and lowering it would collide new object ids.
+	 *
+	 * @param array<string,mixed> $incoming
+	 */
+	private function upsertCollectionMeta(string $collectionId, array $incoming, CollectionData $existing): void
+	{
+		$this->syncBackup->backupCollectionMeta($collectionId);
+
+		$data = array_merge($existing->toArray(), $this->stripComputedCollectionFields($incoming));
+
+		$this->collectionSaver->updateCollection($collectionId, $data, $existing, preserveDates: true);
+		$this->addResult(sprintf('Collection %s: updated', $collectionId));
+	}
+
+	/**
+	 * The environment-local computed fields sync must never carry into a
+	 * write: `count` (lifetime oid counter), `totalObjects`, `lastUpdated`
+	 * (content timestamp). The exporter already strips them; stripping again
+	 * here enforces the rule against any hand-built payload.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function stripComputedCollectionFields(array $data): array
+	{
+		unset($data['count'], $data['totalObjects'], $data['lastUpdated']);
+
+		return $data;
 	}
 
 	/** @param array<int,array<string,mixed>> $objects */

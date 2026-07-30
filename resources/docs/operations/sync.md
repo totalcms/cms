@@ -12,6 +12,7 @@ Sync lets you push schemas and templates from a local development instance to a 
 
 - Custom schemas (`.schemas/` directory)
 - Custom templates
+- **Collection settings** — every collection's configuration (`.meta.json`): URL, MCP card, sitemap settings, access groups, schema overrides, form settings. A collection that exists on the source but not the target is created there (settings only — its objects don't travel). The environment-local counters (`count`, `totalObjects`) and the content timestamp (`lastUpdated`) **never** move: the receiving side always keeps its own, no matter what a payload carries.
 - Objects from five reserved collections: `builder-pages`, `mailer`, `mcp-prompt`, `dataviews`, `automations`
 
 > **Git-managed templates are excluded.** If you keep a `builder/` folder at your project root, templates travel by git, not Sync — so Sync skips them and carries schemas and allowlisted collection objects only. See [Git-First Templates](operations/git-first-templates).
@@ -20,7 +21,7 @@ Sync lets you push schemas and templates from a local development instance to a 
 
 Sync moves objects for exactly those five collections and no others. The list is hardcoded, not a config option, and that is deliberate: the moment it becomes configurable, operators add collections holding images, files, galleries or depots and reasonably assume the binaries travel with them. Sync does not move binaries, and appearing to would be worse than refusing.
 
-The practical consequence is that **your own custom collections never sync.** A `products` or `comparisons` collection you defined is content — it belongs to whichever server owns it. Sync carries the *schema* that defines it, not the objects inside it.
+The practical consequence is that **your own custom collections' objects never sync.** A `products` or `comparisons` collection you defined holds content — it belongs to whichever server owns it. Sync carries the *schema* that defines it and the collection's *settings*, never the objects inside it.
 
 ## What Never Gets Synced
 
@@ -84,6 +85,9 @@ tcms push --templates=blog-post,sidebar
 # Push the objects of specific allowlisted collections only
 tcms push --collections=builder-pages,automations
 
+# Push the SETTINGS of specific collections only (any collection)
+tcms push --collection-meta=comparisons,builder-pages
+
 # Combine filters
 tcms push --schemas=blog --templates=blog-post
 
@@ -94,7 +98,7 @@ tcms push --dry-run
 tcms push --json
 ```
 
-Filters are exclusive: as soon as any of `--schemas`, `--templates`, or `--collections` is given, the categories you did not mention are left out entirely.
+Filters are exclusive: as soon as any of `--schemas`, `--templates`, `--collections`, or `--collection-meta` is given, the categories you did not mention are left out entirely.
 
 ### Pull
 
@@ -106,6 +110,7 @@ tcms pull
 tcms pull --schemas=products
 tcms pull --templates=blog-post,sidebar
 tcms pull --collections=builder-pages
+tcms pull --collection-meta=comparisons
 
 # Preview without applying
 tcms pull --dry-run
@@ -172,6 +177,7 @@ Before a sync overwrite replaces an existing schema or object, the instance bein
 ```
 tcms-data/.system/backups/schemas/{id}/{id}-{YYYYMMDD-HHMMSS}.json
 tcms-data/.system/backups/objects/{collection}/{id}/{id}-{YYYYMMDD-HHMMSS}.json
+tcms-data/.system/backups/collections/{id}/{id}-{YYYYMMDD-HHMMSS}.json
 ```
 
 This happens on whichever side is receiving: production backs up on a push, your local instance backs up on a pull. Each schema and object keeps its ten most recent snapshots; re-syncing unchanged content does not stack duplicates. Restoring is a manual copy — find the snapshot you want and copy it back over the live file, then clear the cache.
@@ -181,6 +187,12 @@ Backups only cover what sync overwrites. They are not a substitute for real back
 ## Timestamps
 
 Schemas carry a top-level `updated` value stamped on every save, and each of the five syncable collections has an auto-maintained `updated` field. These exist so dry-run can tell you which side of a difference holds the newer edit.
+
+Collections carry **two** timestamps with deliberately different meanings:
+
+- `lastUpdated` — the **content** timestamp. Bumped by every object create, update, and delete. Says nothing about settings.
+- `updated` — the **settings** timestamp. Stamped only when the collection's configuration actually changes (the save compares the config before writing, so content activity and counter bumps never move it). This is the value sync freshness hints compare.
+
 
 The rule that makes them trustworthy: **a sync import preserves incoming timestamps instead of restamping them.** A synced copy keeps the save date of the original it mirrors — a timestamp only moves when a person (or the API) actually edits the item on that machine. Without this rule every sync would make the receiving side look newer than the sender, and the comparison would be permanently wrong in one direction.
 

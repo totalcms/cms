@@ -1192,6 +1192,9 @@ return [
 	'sync.compared'       => 'Compared with production',
 	'sync.refresh_diff'   => 'Refresh',
 	'sync.templates_git_managed' => 'Templates are managed by git on this site and are excluded from sync.',
+	'sync.collection_settings_title'    => 'Collection Settings',
+	'sync.collection_settings_help'     => 'Sync each collection\'s configuration — URL, MCP card, sitemap, access, schema overrides. Objects and counters never travel with settings.',
+	'sync.specific_collection_settings' => 'Select Collections',
 
 	// Update Manager
 	'update.title'           => 'Update Manager',

@@ -1192,6 +1192,9 @@ return [
 	'sync.compared'       => 'Porównano z produkcją',
 	'sync.refresh_diff'   => 'Odśwież',
 	'sync.templates_git_managed' => 'Szablony w tej witrynie są zarządzane przez git i są wyłączone z synchronizacji.',
+	'sync.collection_settings_title'    => 'Ustawienia kolekcji',
+	'sync.collection_settings_help'     => 'Synchronizuje konfigurację każdej kolekcji — URL, kartę MCP, sitemap, dostęp, nadpisania schematu. Obiekty i liczniki nigdy nie podróżują z ustawieniami.',
+	'sync.specific_collection_settings' => 'Wybierz kolekcje',
 
 	// Update Manager
 	'update.title'           => 'Menedżer aktualizacji',

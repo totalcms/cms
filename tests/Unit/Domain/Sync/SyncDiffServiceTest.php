@@ -100,5 +100,44 @@ describe('SyncDiffService', function (): void {
 		expect($diff['schemas'])->toBe([]);
 		expect($diff['templates'])->toBe([]);
 		expect($diff['objects'])->toBe([]);
+		expect($diff['collections'])->toBe([]);
+	});
+
+	test('collection settings diff spans custom and reserved entries by id', function (): void {
+		$diff = $this->service->diff(
+			['collections' => [
+				'custom'   => [['id' => 'products', 'schema' => 'product', 'mcp' => ['access' => 'public'], 'updated' => '2026-07-30T10:00:00+00:00']],
+				'reserved'  => [['id' => 'builder-pages', 'schema' => 'builder-page', 'mcp' => []]],
+			]],
+			['collections' => [
+				'custom'   => [['id' => 'products', 'schema' => 'product', 'mcp' => ['access' => 'admin'], 'updated' => '2026-07-01T10:00:00+00:00']],
+				'reserved'  => [['id' => 'builder-pages', 'schema' => 'builder-page', 'mcp' => []]],
+			]],
+		);
+
+		expect($diff['collections']['products']['status'])->toBe(SyncDiffService::DIFFERS);
+		expect($diff['collections']['products']['newer'])->toBe('local');
+		expect($diff['collections']['builder-pages']['status'])->toBe(SyncDiffService::SAME);
+	});
+
+	test('identical collection settings with different updated stamps are SAME', function (): void {
+		$diff = $this->service->diff(
+			['collections' => ['custom' => [['id' => 'a', 'url' => '/a', 'updated' => '2026-07-30T10:00:00+00:00']]]],
+			['collections' => ['custom' => [['id' => 'a', 'url' => '/a', 'updated' => '2026-07-01T10:00:00+00:00']]]],
+		);
+
+		expect($diff['collections']['a']['status'])->toBe(SyncDiffService::SAME);
+	});
+
+	test('a bare-string reserved entry participates in existence comparison', function (): void {
+		// Starter payloads (and older remotes) carry reserved collections as
+		// bare schema ids — they index as minimal entries so local-only /
+		// remote-only still reads correctly.
+		$diff = $this->service->diff(
+			['collections' => ['reserved' => ['mailer']]],
+			['collections' => []],
+		);
+
+		expect($diff['collections']['mailer']['status'])->toBe(SyncDiffService::LOCAL_ONLY);
 	});
 });

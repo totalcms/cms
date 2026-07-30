@@ -471,6 +471,7 @@ tcms push --schemas=blog --templates=blog-post --dry-run
 | `--schemas` | Comma-separated schema IDs to push |
 | `--templates` | Comma-separated template IDs to push |
 | `--collections` | Comma-separated allowlisted collection IDs whose objects to push |
+| `--collection-meta` | Comma-separated collection IDs whose settings to push (any collection; counters never travel) |
 | `--dry-run` | Compare both sides: per-item unchanged/differs/new status with newer-side hints |
 
 ### `pull`
@@ -490,9 +491,10 @@ tcms pull --collections=builder-pages
 | `--schemas` | Comma-separated schema IDs to pull |
 | `--templates` | Comma-separated template IDs to pull |
 | `--collections` | Comma-separated allowlisted collection IDs whose objects to pull |
+| `--collection-meta` | Comma-separated collection IDs whose settings to pull (any collection; counters never travel) |
 | `--dry-run` | Compare both sides: per-item unchanged/differs/new status with newer-side hints |
 
-**What gets synced:** Custom schemas, custom templates, and objects from five reserved collections — `builder-pages`, `mailer`, `mcp-prompt`, `dataviews`, `automations`. The collection list is hardcoded and cannot be extended.
+**What gets synced:** Custom schemas, custom templates, collection settings (any collection — never its counters), and objects from five reserved collections — `builder-pages`, `mailer`, `mcp-prompt`, `dataviews`, `automations`. The collection list is hardcoded and cannot be extended.
 
 **What never gets synced:** Objects in your own custom collections, media/images, system settings, API keys, reserved schemas. A custom collection's *schema* syncs; the objects inside it do not.
 

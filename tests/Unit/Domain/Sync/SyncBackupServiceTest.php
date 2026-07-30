@@ -46,6 +46,16 @@ describe('SyncBackupService', function (): void {
 		expect(basename($backups[0]))->toMatch('/^products-\d{8}-\d{6}\.json$/');
 	});
 
+	test('snapshots collection settings under collections/{id}', function (): void {
+		file_put_contents($this->tmpRoot . '/builder-pages/.meta.json', '{"id":"builder-pages","mcp":{"access":"public"}}');
+
+		$this->service->backupCollectionMeta('builder-pages');
+
+		$backups = glob($this->tmpRoot . '/.system/backups/collections/builder-pages/builder-pages-*.json');
+		expect($backups)->toHaveCount(1);
+		expect(file_get_contents($backups[0]))->toBe('{"id":"builder-pages","mcp":{"access":"public"}}');
+	});
+
 	test('snapshots an existing object under objects/{collection}/{id}', function (): void {
 		file_put_contents($this->tmpRoot . '/builder-pages/home.json', '{"id":"home","title":"Home"}');
 

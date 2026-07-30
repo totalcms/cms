@@ -1192,6 +1192,9 @@ return [
 	'sync.compared'       => 'Confrontato con la produzione',
 	'sync.refresh_diff'   => 'Aggiorna',
 	'sync.templates_git_managed' => 'I template di questo sito sono gestiti tramite git e sono esclusi dalla sincronizzazione.',
+	'sync.collection_settings_title'    => 'Impostazioni collezioni',
+	'sync.collection_settings_help'     => 'Sincronizza la configurazione di ogni collezione: URL, scheda MCP, sitemap, accesso, override dello schema. Oggetti e contatori non viaggiano mai con le impostazioni.',
+	'sync.specific_collection_settings' => 'Seleziona collezioni',
 
 	// Update Manager
 	'update.title'           => 'Gestore aggiornamenti',

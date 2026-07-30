@@ -29,6 +29,7 @@ trait SyncFilterOptions
 				$verb,
 				implode(', ', SyncableCollections::IDS),
 			))
+			->addOption('collection-meta', null, InputOption::VALUE_REQUIRED, "Comma-separated collection IDs whose SETTINGS to {$verb} (any collection; counters never travel)")
 			->addOption('dry-run', null, InputOption::VALUE_NONE, "Preview what would be {$verb}ed without applying");
 	}
 
@@ -44,13 +45,14 @@ trait SyncFilterOptions
 	 * "all", turned a one-schema deploy into an unintended content overwrite
 	 * on the target.
 	 *
-	 * @return array{list<string>|null, list<string>|null, array<string,null>|null}
+	 * @return array{list<string>|null, list<string>|null, array<string,null>|null, list<string>|null}
 	 */
 	private function resolveSyncFilters(InputInterface $input): array
 	{
 		$schemas     = $this->parseListOption($input->getOption('schemas'));
 		$templates   = $this->parseListOption($input->getOption('templates'));
 		$collections = $this->parseListOption($input->getOption('collections'));
+		$meta        = $this->parseListOption($input->getOption('collection-meta'));
 
 		if ($collections !== null) {
 			$unknown = array_diff($collections, SyncableCollections::IDS);
@@ -63,7 +65,7 @@ trait SyncFilterOptions
 			}
 		}
 
-		$anyFilter = $schemas !== null || $templates !== null || $collections !== null;
+		$anyFilter = $schemas !== null || $templates !== null || $collections !== null || $meta !== null;
 
 		return [
 			$schemas ?? ($anyFilter ? [] : null),
@@ -71,6 +73,7 @@ trait SyncFilterOptions
 			$collections !== null
 				? array_fill_keys($collections, null)
 				: ($anyFilter ? [] : null),
+			$meta ?? ($anyFilter ? [] : null),
 		];
 	}
 
@@ -97,7 +100,7 @@ trait SyncFilterOptions
 	 *
 	 * @param array<string,mixed>                                                                              $payload
 	 * @param string                                                                                           $verb    'push' or 'pull', for the human headline
-	 * @param array{schemas:array<string,mixed>,templates:array<string,mixed>,objects:array<string,mixed>}|null $diff
+	 * @param array{schemas:array<string,mixed>,templates:array<string,mixed>,objects:array<string,mixed>,collections:array<string,mixed>}|null $diff
 	 */
 	private function renderSyncDryRun(InputInterface $input, OutputInterface $output, array $payload, string $url, string $verb, ?array $diff = null): int
 	{
@@ -115,8 +118,9 @@ trait SyncFilterOptions
 		}
 
 		if ($this->isJson($input)) {
-			$schemaIds   = array_map(fn (array $s): string => (string)($s['id'] ?? ''), $schemas);
-			$templateIds = array_map(fn (array $t): string => (string)($t['id'] ?? ''), $templates);
+			$schemaIds         = array_map(fn (array $s): string => (string)($s['id'] ?? ''), $schemas);
+			$templateIds       = array_map(fn (array $t): string => (string)($t['id'] ?? ''), $templates);
+			$collectionMetaIds = [];
 
 			// With a diff, the manifest lists are derived from it — the
 			// payload isn't separately exported. The sending side's items are
@@ -131,6 +135,7 @@ trait SyncFilterOptions
 
 				$schemaIds           = $sourceKeys($diff['schemas']);
 				$templateIds         = $sourceKeys($diff['templates']);
+				$collectionMetaIds   = $sourceKeys($diff['collections']);
 				$objectsByCollection = [];
 				foreach ($this->groupObjectDiffByCollection($diff['objects']) as $collectionId => $items) {
 					$ids = $sourceKeys($items);
@@ -141,11 +146,12 @@ trait SyncFilterOptions
 			}
 
 			$data = [
-				'dry_run'   => true,
-				'remote'    => $url,
-				'schemas'   => $schemaIds,
-				'templates' => $templateIds,
-				'objects'   => $objectsByCollection,
+				'dry_run'         => true,
+				'remote'          => $url,
+				'schemas'         => $schemaIds,
+				'templates'       => $templateIds,
+				'objects'         => $objectsByCollection,
+				'collection_meta' => $collectionMetaIds,
 			];
 			if ($diff !== null) {
 				$data['diff'] = $diff;
@@ -160,6 +166,7 @@ trait SyncFilterOptions
 
 		if ($diff !== null) {
 			$this->renderDiffCategory($output, 'Schemas', $diff['schemas'], $verb);
+			$this->renderDiffCategory($output, 'Collection Settings', $diff['collections'], $verb);
 
 			// A git-managed site excludes templates from sync by design —
 			// say so rather than leaving the section silently absent.
@@ -177,7 +184,7 @@ trait SyncFilterOptions
 				$this->renderDiffCategory($output, $this->collectionDisplayName((string)$collectionId), $items, $verb);
 			}
 
-			if ($diff['schemas'] === [] && $diff['templates'] === [] && $diff['objects'] === []) {
+			if ($diff['schemas'] === [] && $diff['templates'] === [] && $diff['objects'] === [] && $diff['collections'] === []) {
 				$output->writeln('Nothing matches — no schemas, templates, or objects selected.');
 			}
 

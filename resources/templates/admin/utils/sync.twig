@@ -59,6 +59,43 @@
 		</div>
 		{% endif %}
 
+		{% if syncData.collectionMeta|default([])|length > 0 %}
+		<div class="sync-section">
+			<h3>{{ t('sync.collection_settings_title') }}</h3>
+			<p class="sync-empty">{{ t('sync.collection_settings_help') }}</p>
+
+			{{ cms.form.field("checklist", "collection-meta-all", {
+				value   : [],
+				options : [
+					{value: "all", label: t('sync.select_all')}
+				],
+				settings : { toggleAll : false }
+			}) }}
+
+			{% set metaOptions = [] %}
+			{% for col in syncData.collectionMeta %}
+				{% set metaOptions = metaOptions|merge([{
+					value: col.id,
+					label: col.name
+				}]) %}
+			{% endfor %}
+
+			{{ cms.form.field("checklist", "collection-meta", {
+				label    : t('sync.specific_collection_settings'),
+				value    : [],
+				options  : metaOptions,
+				settings : {
+					fieldGrid: "200px",
+					visibility : {
+						watch    : "collection-meta-all",
+						value    : "all",
+						operator : "not_in"
+					}
+				}
+			}) }}
+		</div>
+		{% endif %}
+
 		{% if syncData.templatesGitManaged|default(false) %}
 		<div class="sync-section">
 			<h3>{{ t('sync.templates_title') }}</h3>
@@ -317,6 +354,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	if (!form || !pushBtn || !pullBtn) return;
 
 	const syncableCollections = {{ collections|map(c => c.id)|json_encode|raw }};
+	// Display names for the Collection Settings section (id -> admin name).
+	const metaNames = {{ syncData.collectionMeta|default([])|reduce((m, c) => m|merge({(c.id): c.name}), {})|json_encode|raw }};
 
 	// Populated by loadDiff(); null means "no comparison available" and every
 	// diff-driven feature degrades to the pre-diff behavior.
@@ -364,6 +403,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 		for (const [id, item] of Object.entries(syncDiff.templates)) {
 			cb('templates', form.querySelector(`input[name="templates"][value="${CSS.escape(id)}"]`), id, item, 'templates-all');
+		}
+		for (const [id, item] of Object.entries(syncDiff.collections || {})) {
+			cb('collection-meta', form.querySelector(`input[name="collection-meta"][value="${CSS.escape(id)}"]`), id, item, 'collection-meta-all');
 		}
 		for (const [key, item] of Object.entries(syncDiff.objects)) {
 			const slash = key.indexOf('/');
@@ -423,8 +465,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	function updateStatus() {
 		let differs = 0, localOnly = 0, remoteOnly = 0;
-		for (const category of ['schemas', 'templates', 'objects']) {
-			for (const item of Object.values(syncDiff[category])) {
+		for (const category of ['schemas', 'templates', 'objects', 'collections']) {
+			for (const item of Object.values(syncDiff[category] || {})) {
 				if (item.status === 'differs')     differs++;
 				if (item.status === 'local-only')  localOnly++;
 				if (item.status === 'remote-only') remoteOnly++;
@@ -482,8 +524,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			body.append(`${key}_mode`, sel.mode);
 			if (sel.mode === 'specific') sel.ids.forEach(s => body.append(`${key}[]`, s));
 		};
-		enc('schemas',   readSelection('schemas-all', 'schemas'));
-		enc('templates', readSelection('templates-all', 'templates'));
+		enc('schemas',         readSelection('schemas-all', 'schemas'));
+		enc('templates',       readSelection('templates-all', 'templates'));
+		enc('collection_meta', readSelection('collection-meta-all', 'collection-meta'));
 
 		// Per-collection nested payload: collections[<id>][mode] plus
 		// collections[<id>][items][] — parsed server-side into the
@@ -531,6 +574,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	   risk. Falls back to the plain confirm() when no diff is loaded.
 	   ------------------------------------------------------------------ */
 	function labelFor(category, key) {
+		if (category === 'collections') return `Settings: ${metaNames[key] || key}`;
 		if (category !== 'objects') return key;
 		const slash = key.indexOf('/');
 		const cid   = key.slice(0, slash);
@@ -566,6 +610,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		const keys = [
 			...selectedKeys('schemas',   readSelection('schemas-all', 'schemas'), receivingOnly).map(k => ['schemas', k]),
+			...selectedKeys('collections', readSelection('collection-meta-all', 'collection-meta'), receivingOnly).map(k => ['collections', k]),
 			...selectedKeys('templates', readSelection('templates-all', 'templates'), receivingOnly).map(k => ['templates', k]),
 			...syncableCollections.flatMap(cid =>
 				selectedKeys('objects', readSelection(`collection-${cid}-all`, `collection-${cid}`), receivingOnly, cid)
@@ -589,8 +634,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 
 		let untouched = 0;
-		for (const category of ['schemas', 'templates', 'objects']) {
-			untouched += Object.values(syncDiff[category]).filter(i => i.status === receivingOnly).length;
+		for (const category of ['schemas', 'templates', 'objects', 'collections']) {
+			untouched += Object.values(syncDiff[category] || {}).filter(i => i.status === receivingOnly).length;
 		}
 
 		const list = (items, render) => {

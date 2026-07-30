@@ -35,7 +35,7 @@ class PullCommand extends BaseCommand
 		}
 
 		try {
-			[$schemaFilter, $templateFilter, $collectionsFilter] = $this->resolveSyncFilters($input);
+			[$schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter] = $this->resolveSyncFilters($input);
 		} catch (\InvalidArgumentException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
 		}
@@ -49,7 +49,7 @@ class PullCommand extends BaseCommand
 			}
 
 			try {
-				$diff = $this->totalcms->syncService()->diff($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter);
+				$diff = $this->totalcms->syncService()->diff($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter);
 			} catch (\RuntimeException $e) {
 				return $this->outputError($input, $output, $e->getMessage());
 			}
@@ -63,7 +63,7 @@ class PullCommand extends BaseCommand
 		}
 
 		try {
-			$result = $this->totalcms->syncService()->pull($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter);
+			$result = $this->totalcms->syncService()->pull($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter);
 		} catch (\RuntimeException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
 		}

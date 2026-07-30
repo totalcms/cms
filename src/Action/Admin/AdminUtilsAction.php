@@ -189,12 +189,24 @@ readonly class AdminUtilsAction
 			// nothing. Hide the section and let the template say why.
 			$templatesGitManaged = $this->builderTemplatePaths->isProjectManaged();
 
+			// Every local collection is offered for SETTINGS sync (the meta —
+			// url, MCP card, sitemap, overrides — never objects or counters).
+			$collectionMeta = [];
+			foreach ($this->collectionLister->listAllCollections() as $collection) {
+				$collectionMeta[] = [
+					'id'   => $collection->id,
+					'name' => $collection->name !== '' ? $collection->name : ucfirst($collection->id),
+				];
+			}
+			usort($collectionMeta, static fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
+
 			$syncData = [
 				'settings'            => $this->settingsFetcher->loadSection('sync'),
 				'schemas'             => $this->schemaLister->listCustomSchemas(),
 				'templates'           => $templatesGitManaged ? [] : $this->templateLister->listBuilderTemplates(null, true),
 				'templatesGitManaged' => $templatesGitManaged,
 				'collections'         => $this->resolveSyncableCollections(),
+				'collectionMeta'      => $collectionMeta,
 			];
 		}
 

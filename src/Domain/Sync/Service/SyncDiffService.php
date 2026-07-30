@@ -40,7 +40,8 @@ final class SyncDiffService
 	 * @return array{
 	 *   schemas: array<string,array{status:string,localUpdated:?string,remoteUpdated:?string,newer:?string}>,
 	 *   templates: array<string,array{status:string,localUpdated:?string,remoteUpdated:?string,newer:?string}>,
-	 *   objects: array<string,array{status:string,localUpdated:?string,remoteUpdated:?string,newer:?string}>
+	 *   objects: array<string,array{status:string,localUpdated:?string,remoteUpdated:?string,newer:?string}>,
+	 *   collections: array<string,array{status:string,localUpdated:?string,remoteUpdated:?string,newer:?string}>
 	 * }
 	 */
 	public function diff(array $local, array $remote): array
@@ -49,6 +50,12 @@ final class SyncDiffService
 			'schemas' => $this->diffCategory(
 				$this->indexById($local['schemas'] ?? []),
 				$this->indexById($remote['schemas'] ?? []),
+				fn (array $item): ?string => is_string($item['updated'] ?? null) && $item['updated'] !== '' ? $item['updated'] : null,
+				['updated'],
+			),
+			'collections' => $this->diffCategory(
+				$this->indexCollections($local['collections'] ?? []),
+				$this->indexCollections($remote['collections'] ?? []),
 				fn (array $item): ?string => is_string($item['updated'] ?? null) && $item['updated'] !== '' ? $item['updated'] : null,
 				['updated'],
 			),
@@ -118,6 +125,37 @@ final class SyncDiffService
 		foreach ($items as $item) {
 			if (is_array($item) && isset($item['id'])) {
 				$indexed[(string)$item['id']] = $item;
+			}
+		}
+
+		return $indexed;
+	}
+
+	/**
+	 * Flatten the JumpStart collections block ({reserved: [...], custom:
+	 * [...]}) into one id-keyed map of settings. Sync exporters emit the
+	 * object form for both kinds; a bare-string reserved entry (starter-kit
+	 * form, or an older remote) means "defaults" and indexes as a minimal
+	 * `{id}` so it still participates in existence comparison.
+	 *
+	 * @param array<string,mixed> $collections
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	private function indexCollections(array $collections): array
+	{
+		$indexed = [];
+		foreach (['custom', 'reserved'] as $kind) {
+			$entries = $collections[$kind] ?? [];
+			if (!is_array($entries)) {
+				continue;
+			}
+			foreach ($entries as $entry) {
+				if (is_string($entry) && $entry !== '') {
+					$indexed[$entry] ??= ['id' => $entry];
+				} elseif (is_array($entry) && isset($entry['id'])) {
+					$indexed[(string)$entry['id']] = $entry;
+				}
 			}
 		}
 

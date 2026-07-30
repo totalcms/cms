@@ -176,10 +176,19 @@
         },
 		"lastUpdated": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
-			"label"    : "Last Updated Date",
-			"help"     : "The date and time when an object in this collection was last updated.",
+			"label"    : "Content Updated",
+			"help"     : "When content in this collection last changed — bumped by every object create, update, and delete. Says nothing about the collection's settings; see Settings Updated for that.",
 			"field"    : "datetime",
 			"factory"  : "iso8601",
+			"settings" : {
+				"readonly": true
+			}
+		},
+		"updated": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Settings Updated",
+			"help"     : "When this collection's settings last changed (URL, MCP card, sitemap, access, schema overrides). Content changes never move it — sync uses it to tell which side has the newer configuration, and preserves it verbatim when settings arrive via sync.",
+			"field"    : "datetime",
 			"settings" : {
 				"readonly": true
 			}

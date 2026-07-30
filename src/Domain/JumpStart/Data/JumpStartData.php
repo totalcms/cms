@@ -45,11 +45,35 @@ class JumpStartData
 		$this->schemas[] = $schema;
 	}
 
-	public function addReservedCollection(string $collectionType): void
+	/**
+	 * A reserved collection entry is either a bare schema id (create with
+	 * defaults — the starter-kit form) or an object `{id, ...config}` whose
+	 * overrides the importer applies on top (the sync form, which carries
+	 * the collection's settings). Dedupe keys on the id either way, and an
+	 * object form replaces a previously added bare string for the same id —
+	 * the richer entry wins.
+	 *
+	 * @param string|array<string,mixed> $entry
+	 */
+	public function addReservedCollection(string|array $entry): void
 	{
-		if (!in_array($collectionType, $this->collections['reserved'])) {
-			$this->collections['reserved'][] = $collectionType;
+		$id = is_string($entry) ? $entry : (string)($entry['id'] ?? '');
+		if ($id === '') {
+			return;
 		}
+
+		foreach ($this->collections['reserved'] as $i => $existing) {
+			$existingId = is_string($existing) ? $existing : (string)($existing['id'] ?? '');
+			if ($existingId === $id) {
+				if (is_array($entry) && is_string($existing)) {
+					$this->collections['reserved'][$i] = $entry;
+				}
+
+				return;
+			}
+		}
+
+		$this->collections['reserved'][] = $entry;
 	}
 
 	/** @param array<string,mixed> $collection */

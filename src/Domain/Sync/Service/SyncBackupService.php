@@ -71,6 +71,23 @@ class SyncBackupService
 	}
 
 	/**
+	 * Snapshot a collection's settings (.meta.json) before a sync overwrite
+	 * replaces them. No-op when the collection doesn't exist yet.
+	 */
+	public function backupCollectionMeta(string $id): void
+	{
+		if (!$this->isSafeSegment($id)) {
+			return;
+		}
+
+		$this->backup(
+			PathUtils::buildPath(collection: $id, filename: '.meta.json'),
+			sprintf('%s/collections/%s', self::BACKUP_ROOT, $id),
+			$id,
+		);
+	}
+
+	/**
 	 * Snapshot an object file before it is overwritten.
 	 * No-op when the object doesn't exist yet.
 	 */

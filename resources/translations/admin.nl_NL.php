@@ -1192,6 +1192,9 @@ return [
 	'sync.compared'       => 'Vergeleken met productie',
 	'sync.refresh_diff'   => 'Vernieuwen',
 	'sync.templates_git_managed' => 'Templates worden op deze site via git beheerd en zijn uitgesloten van synchronisatie.',
+	'sync.collection_settings_title'    => 'Collectie-instellingen',
+	'sync.collection_settings_help'     => 'Synchroniseert de configuratie van elke collectie — URL, MCP-kaart, sitemap, toegang, schema-overrides. Objecten en tellers reizen nooit mee met instellingen.',
+	'sync.specific_collection_settings' => 'Selecteer collecties',
 
 	// Update Manager
 	'update.title'           => 'Update Manager',

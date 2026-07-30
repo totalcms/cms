@@ -43,10 +43,11 @@ readonly class SyncAction
 			])->withStatus(400);
 		}
 
-		$post        = (array)$request->getParsedBody();
-		$schemas     = $this->parseSelection($post, 'schemas');
-		$templates   = $this->parseSelection($post, 'templates');
-		$collections = $this->parseCollectionsSelection($post);
+		$post           = (array)$request->getParsedBody();
+		$schemas        = $this->parseSelection($post, 'schemas');
+		$templates      = $this->parseSelection($post, 'templates');
+		$collections    = $this->parseCollectionsSelection($post);
+		$collectionMeta = $this->parseSelection($post, 'collection_meta');
 
 		// The diff action compares without writing anything, so it answers
 		// with its own shape (statuses per item) rather than an
@@ -54,7 +55,7 @@ readonly class SyncAction
 		// the UI and the terminal can never disagree about what would change.
 		if ($action === 'diff') {
 			try {
-				$diff = $this->syncService->diff($url, $key, $schemas, $templates, $collections);
+				$diff = $this->syncService->diff($url, $key, $schemas, $templates, $collections, $collectionMeta);
 			} catch (\Throwable $e) {
 				return $this->renderer->json($response, [
 					'success' => false,
@@ -71,8 +72,8 @@ readonly class SyncAction
 
 		try {
 			$result = match ($action) {
-				'push'  => $this->syncService->push($url, $key, $schemas, $templates, $collections),
-				'pull'  => $this->syncService->pull($url, $key, $schemas, $templates, $collections),
+				'push'  => $this->syncService->push($url, $key, $schemas, $templates, $collections, $collectionMeta),
+				'pull'  => $this->syncService->pull($url, $key, $schemas, $templates, $collections, $collectionMeta),
 				default => throw new \InvalidArgumentException("Unknown sync action: {$action}"),
 			};
 		} catch (\InvalidArgumentException $e) {
