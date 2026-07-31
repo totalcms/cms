@@ -2,7 +2,7 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.5.0-rc.15] - Unreleased
+## [3.5.0-rc.15] - 07/30/2026
 
 ### Added
 
