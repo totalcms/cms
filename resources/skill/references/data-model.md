@@ -31,26 +31,35 @@ Author a schema JSON file, then import it:
 vendor/bin/tcms schema:import my-schema.json
 ```
 
+If you edit a schema JSON file **in place** instead, nothing re-validates it —
+run `vendor/bin/tcms schema:lint <id>` afterwards to catch structural breakage
+and missing help text before it bites at runtime.
+
 Field types and their options are documented at
 `vendor/totalcms/cms/resources/docs/fields/` (20+ field types). Look up exact
 `type` + `field` keys there rather than guessing — or use MCP `docs_field_type`.
 
 ## Create / import content
 
-There is **no `object:create` command.** Create objects via:
-- the **admin UI**, or
-- **`collection:import`** from JSON/CSV:
+One object — `object:create` (file path, or `-` for stdin):
 
-  ```bash
-  vendor/bin/tcms collection:import blog posts.json
-  ```
+```bash
+echo '{"id":"hello","title":"Hello","body":"..."}' | vendor/bin/tcms object:create blog -
+```
 
-  JSON is an array of objects conforming to the collection's schema:
+Many objects — **`collection:import`** from JSON/CSV (JSON is an array of
+objects conforming to the collection's schema):
 
-  ```json
-  [ { "id": "hello", "title": "Hello", "body": "..." } ]
-  ```
-- **`jumpstart:import`** for full-site bulk seeding.
+```bash
+vendor/bin/tcms collection:import blog posts.json
+```
+
+```json
+[ { "id": "hello", "title": "Hello", "body": "..." } ]
+```
+
+Full-site bulk seeding — **`jumpstart:import`**. The **admin UI** works for
+all of it, of course.
 
 ## Export / query
 

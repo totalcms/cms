@@ -44,6 +44,18 @@ class McpStatusCommand extends BaseCommand
 
 		$mcpConfig = (array)$config->mcp;
 
+		// The live server registers schema-defined saved-query tools per
+		// request (McpServerFactory::build()); without mirroring that here,
+		// status under-reports the tool surface and an operator who just
+		// saved a tool in a collection's MCP card sees it "missing". The
+		// before/after diff identifies which names are schema-defined.
+		$coreNames = array_map(static fn ($t): string => $t->name, $registry->all());
+		$container->get(\TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar::class)->register($registry);
+		$schemaTools = array_values(array_diff(
+			array_map(static fn ($t): string => $t->name, $registry->all()),
+			$coreNames,
+		));
+
 		$admin  = array_map(static fn ($t): string => $t->name, $registry->forPersona(McpPersona::ADMIN));
 		$public = array_map(static fn ($t): string => $t->name, $registry->forPersona(McpPersona::PUBLIC_));
 
@@ -57,6 +69,7 @@ class McpStatusCommand extends BaseCommand
 				'admin'  => $admin,
 				'public' => $public,
 			],
+			'schema_tools'  => $schemaTools,
 		];
 
 		return $this->outputData($input, $output, $data);
@@ -77,13 +90,18 @@ class McpStatusCommand extends BaseCommand
 		$output->writeln(sprintf('  tool prefix:   %s', $data['tool_prefix'] === '' ? '<comment>(none)</comment>' : (string)$data['tool_prefix']));
 		$output->writeln('');
 
-		$tools = (array)$data['tools'];
-		$admin = is_array($tools['admin']) ? $tools['admin'] : [];
-		$pub   = is_array($tools['public']) ? $tools['public'] : [];
+		$tools       = (array)$data['tools'];
+		$admin       = is_array($tools['admin']) ? $tools['admin'] : [];
+		$pub         = is_array($tools['public']) ? $tools['public'] : [];
+		$schemaTools = is_array($data['schema_tools'] ?? null) ? $data['schema_tools'] : [];
+
+		$annotate = static fn (string $name): string => in_array($name, $schemaTools, true)
+			? $name . ' <comment>(saved query)</comment>'
+			: $name;
 
 		$output->writeln(sprintf('<info>Admin persona</info> (%d tools)', count($admin)));
 		foreach ($admin as $name) {
-			$output->writeln('  - ' . $name);
+			$output->writeln('  - ' . $annotate((string)$name));
 		}
 		$output->writeln('');
 
@@ -92,7 +110,7 @@ class McpStatusCommand extends BaseCommand
 			$output->writeln('  <comment>(none — flip mcp.publicAccess on and mark collections mcp.access=public)</comment>');
 		}
 		foreach ($pub as $name) {
-			$output->writeln('  - ' . $name);
+			$output->writeln('  - ' . $annotate((string)$name));
 		}
 		$output->writeln('');
 	}

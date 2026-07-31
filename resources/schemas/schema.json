@@ -41,6 +41,16 @@
 			"field"    : "text",
 			"settings" : { "propertyOptions": "schemas" }
 		},
+		"updated": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Updated Date",
+			"help"     : "Last saved date. Maintained automatically; preserved verbatim when a schema arrives via sync.",
+			"field"    : "datetime",
+			"settings" : {
+				"onUpdate": true,
+				"readonly": true
+			}
+		},
 		"formgrid": {
 			"type"        : "string",
 			"label"       : "Form Grid Layout",

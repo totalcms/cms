@@ -33,11 +33,36 @@ class TranslationService
 	/**
 	 * Translate a key from a given domain.
 	 *
+	 * Callers pass parameters by bare name ({user: id}); translation strings
+	 * delimit their placeholders — {user} is the house style, %user% is
+	 * still honored for extension strings — and the underlying translator
+	 * substitutes keys VERBATIM. A raw bare key would replace the letters
+	 * inside the delimiters ('{user}' → '{admin}') and any literal
+	 * occurrence of the word in the string ('{entries} entries' →
+	 * '100 100'). So bare keys are swapped for both delimited forms and
+	 * never passed through raw; call sites that already pass explicit
+	 * delimiters (e.g. {'{label}': …}) are forwarded untouched.
+	 *
+	 * This normalization lives HERE — the one choke point — because `t()`
+	 * reaches the translator through several doors (TotalCMSTwigExtension's
+	 * global `t()`, LocaleTwigAdapter::t(), direct PHP callers), and fixing
+	 * only one of them left the others substituting verbatim.
+	 *
 	 * @param array<string,string> $parameters
 	 */
 	public function trans(string $key, array $parameters = [], string $domain = 'admin'): string
 	{
-		return $this->translator->trans($key, $parameters, $domain);
+		$normalized = [];
+		foreach ($parameters as $name => $value) {
+			if (!str_contains((string)$name, '{') && !str_contains((string)$name, '%')) {
+				$normalized['{' . $name . '}'] = $value;
+				$normalized['%' . $name . '%'] = $value;
+			} else {
+				$normalized[$name] = $value;
+			}
+		}
+
+		return $this->translator->trans($key, $normalized, $domain);
 	}
 
 	/**

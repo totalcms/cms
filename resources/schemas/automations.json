@@ -72,6 +72,16 @@
 			"field"       : "code",
 			"placeholder" : "<?php\n\nreturn function (AutomationContext $ctx) {\n\t// Services:\n\t//   $ctx->indexReader, $ctx->objectFetcher, $ctx->objectSaver\n\t//   $ctx->objectUpdater, $ctx->objectRemover, $ctx->mailer\n\t//   $ctx->config\n\t// Inputs:\n\t//   $ctx->args   - webhook query + body, or manual run\n\t//   $ctx->event  - event payload (event triggers)\n\t// Logging:\n\t//   $ctx->logger->info('...')\n\n\t$ctx->logger->info('Automation ran');\n\n\t// The return value is saved to the run history.\n\treturn ['ok' => true];\n};",
 			"settings"    : { "mode" : "php", "rows" : 24, "external" : true }
+		},
+		"updated": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Updated Date",
+			"help"     : "Last modified date",
+			"field"    : "datetime",
+			"settings" : {
+				"onUpdate": true,
+				"readonly": true
+			}
 		}
 	}
 }

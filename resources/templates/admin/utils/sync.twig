@@ -59,7 +59,49 @@
 		</div>
 		{% endif %}
 
-		{% if templates|length > 0 %}
+		{% if syncData.collectionMeta|default([])|length > 0 %}
+		<div class="sync-section">
+			<h3>{{ t('sync.collection_settings_title') }}</h3>
+			<p class="sync-empty">{{ t('sync.collection_settings_help') }}</p>
+
+			{{ cms.form.field("checklist", "collection-meta-all", {
+				value   : [],
+				options : [
+					{value: "all", label: t('sync.select_all')}
+				],
+				settings : { toggleAll : false }
+			}) }}
+
+			{% set metaOptions = [] %}
+			{% for col in syncData.collectionMeta %}
+				{% set metaOptions = metaOptions|merge([{
+					value: col.id,
+					label: col.name
+				}]) %}
+			{% endfor %}
+
+			{{ cms.form.field("checklist", "collection-meta", {
+				label    : t('sync.specific_collection_settings'),
+				value    : [],
+				options  : metaOptions,
+				settings : {
+					fieldGrid: "200px",
+					visibility : {
+						watch    : "collection-meta-all",
+						value    : "all",
+						operator : "not_in"
+					}
+				}
+			}) }}
+		</div>
+		{% endif %}
+
+		{% if syncData.templatesGitManaged|default(false) %}
+		<div class="sync-section">
+			<h3>{{ t('sync.templates_title') }}</h3>
+			<p class="sync-empty">{{ t('sync.templates_git_managed') }}</p>
+		</div>
+		{% elseif templates|length > 0 %}
 		<div class="sync-section">
 			<h3>{{ t('sync.templates_title') }}</h3>
 
@@ -145,6 +187,8 @@
 		save   : false,
 	}) }}
 
+	<p class="sync-status" id="sync-status">{{ t('sync.comparing') }}</p>
+
 	<div class="sync-actions">
 		<button type="button" class="dash-button" id="sync-push-btn">
 			{{ t('sync.push_btn') }}
@@ -152,10 +196,25 @@
 		<button type="button" class="dash-button transparent" id="sync-pull-btn">
 			{{ t('sync.pull_btn') }}
 		</button>
+		<button type="button" class="dash-button transparent" id="sync-select-changed" style="display:none">
+			{{ t('sync.select_changed') }}
+		</button>
 		<span id="sync-spinner" style="display:none">{{ t('sync.syncing') }}</span>
 	</div>
 
 	<div id="sync-results"></div>
+
+	{# Consequence preview: replaces the blind confirm() once the diff has
+	   loaded. Populated by JS from the diff intersected with the current
+	   selection — overwrites (with newer-side warnings), creates, no-ops. #}
+	<dialog id="sync-preview" class="cms-modal small">
+		<h2 id="sync-preview-title"></h2>
+		<div id="sync-preview-body"></div>
+		<div class="form-inline-fields" style="text-align: right; margin-top: 1.5rem;">
+			<button type="button" class="dash-button transparent" id="sync-preview-cancel">{{ t('btn.cancel') }}</button>
+			<button type="button" class="dash-button" id="sync-preview-confirm"></button>
+		</div>
+	</dialog>
 
 	{% endif %}
 {% endif %}
@@ -219,6 +278,15 @@
 	gap: 1rem;
 }
 
+/* In-flight state for push/pull — same pulse the quick-action buttons
+   use (`pulse-glow` keyframes ship in the forms bundle), so a running
+   sync is unmistakable after the preview closes. */
+.sync-actions .dash-button.processing {
+	opacity   : 0.5;
+	cursor    : progress;
+	animation : pulse-glow 1.2s ease-in-out infinite;
+}
+
 #sync-results:not(:empty) {
 	margin-top: 1rem;
 	padding: 1rem 1.5rem;
@@ -226,128 +294,410 @@
 	background: oklch(var(--totalform-nearwhite));
 	border: 1px solid oklch(var(--totalform-border-color));
 }
+
+.sync-status {
+	margin-block: 0;
+	color: oklch(var(--totalform-darkgray));
+	font-size: 0.9rem;
+}
+.sync-status a {
+	margin-inline-start: 0.5rem;
+}
+
+/* Diff decorations on the checklists */
+.sync-badge {
+	margin-inline-start: 0.5rem;
+	padding: 0.05em 0.55em;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	white-space: nowrap;
+}
+.sync-badge.differs {
+	background: oklch(var(--totalform-accent) / 0.15);
+	color: oklch(var(--totalform-accent));
+}
+.sync-badge.new {
+	background: oklch(var(--totalform-success) / 0.15);
+	color: oklch(var(--totalform-success));
+}
+.checkbox.sync-unchanged .checkbox-label {
+	opacity: 0.45;
+}
+.sync-note {
+	margin-block: 0.75rem 0;
+	color: oklch(var(--totalform-darkgray));
+	font-size: 0.85rem;
+	font-style: italic;
+}
+
+#sync-preview {
+	max-width: 34rem;
+}
+#sync-preview-body p {
+	margin-block: 0.75rem 0.25rem;
+}
+#sync-preview-body ul {
+	margin-block: 0.25rem;
+	padding-inline-start: 1.25rem;
+}
+#sync-preview-body .sync-clobber {
+	color: oklch(var(--totalform-error));
+	font-weight: 600;
+}
+#sync-preview-body .sync-muted {
+	color: oklch(var(--totalform-darkgray));
+}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-	const form     = document.querySelector('.sync-form');
-	const results  = document.getElementById('sync-results');
-	const spinner  = document.getElementById('sync-spinner');
-	const pushBtn  = document.getElementById('sync-push-btn');
-	const pullBtn  = document.getElementById('sync-pull-btn');
+	const form       = document.querySelector('.sync-form');
+	const results    = document.getElementById('sync-results');
+	const spinner    = document.getElementById('sync-spinner');
+	const pushBtn    = document.getElementById('sync-push-btn');
+	const pullBtn    = document.getElementById('sync-pull-btn');
+	const statusEl   = document.getElementById('sync-status');
+	const changedBtn = document.getElementById('sync-select-changed');
+	const previewEl  = document.getElementById('sync-preview');
 
 	if (!form || !pushBtn || !pullBtn) return;
 
-	// Encode a section's selection into the form body. Three modes:
-	//   - all:      the "All …" checkbox is checked → send mode=all
-	//   - specific: individual items are checked    → send mode=specific + ids
-	//   - none:     nothing is checked              → send mode=none
-	// The mode is explicit because the previous encoding ("missing keys = all")
-	// couldn't tell "user picked nothing" from "user picked everything" — both
-	// arrived as null at the exporter, which then exported everything.
-	function appendSelection(body, key, allFieldName, itemsFieldName) {
+	const syncableCollections = {{ collections|map(c => c.id)|json_encode|raw }};
+	// Display names for the Collection Settings section (id -> admin name).
+	const metaNames = {{ syncData.collectionMeta|default([])|reduce((m, c) => m|merge({(c.id): c.name}), {})|json_encode|raw }};
+
+	// Populated by loadDiff(); null means "no comparison available" and every
+	// diff-driven feature degrades to the pre-diff behavior.
+	let syncDiff = null;
+	let collectionNames = {};
+
+	function csrfBody() {
+		const body = new FormData();
+		// The field is named `csrf_token` per CSRFTokenManager — not
+		// `_csrf_token`. CSRFProtectionMiddleware looks for that exact name.
+		const csrf = form.querySelector('input[name="csrf_token"]');
+		if (csrf) body.append('csrf_token', csrf.value);
+		return body;
+	}
+
+	/* ------------------------------------------------------------------
+	   Diff loading + checklist decoration
+	   Same SyncService::diff() the CLI dry-runs render, fetched async so
+	   the page is usable immediately and works unchanged when the remote
+	   is unreachable.
+	   ------------------------------------------------------------------ */
+	async function loadDiff() {
+		statusEl.textContent = {{ t('sync.comparing')|json_encode|raw }};
+		try {
+			const resp = await fetch(`{{ cms.base }}/admin/sync/diff`, { method: 'POST', body: csrfBody() });
+			const data = await resp.json();
+			if (!data.success) throw new Error(data.error || 'diff failed');
+			syncDiff        = data.diff;
+			collectionNames = data.collections || {};
+			decorate();
+			updateStatus();
+			changedBtn.style.display = '';
+		} catch (err) {
+			syncDiff = null;
+			changedBtn.style.display = 'none';
+			statusEl.textContent = `{{ t('sync.compare_failed') }} — ${err.message}`;
+		}
+	}
+
+	// Map a diff entry onto its checkbox input, if the item exists locally.
+	// Receiving-side-only items have no input; they surface as section notes.
+	function forEachDiffEntry(cb) {
+		for (const [id, item] of Object.entries(syncDiff.schemas)) {
+			cb('schemas', form.querySelector(`input[name="schemas"][value="${CSS.escape(id)}"]`), id, item, 'schemas-all');
+		}
+		for (const [id, item] of Object.entries(syncDiff.templates)) {
+			cb('templates', form.querySelector(`input[name="templates"][value="${CSS.escape(id)}"]`), id, item, 'templates-all');
+		}
+		for (const [id, item] of Object.entries(syncDiff.collections || {})) {
+			cb('collection-meta', form.querySelector(`input[name="collection-meta"][value="${CSS.escape(id)}"]`), id, item, 'collection-meta-all');
+		}
+		for (const [key, item] of Object.entries(syncDiff.objects)) {
+			const slash = key.indexOf('/');
+			const cid   = key.slice(0, slash);
+			const oid   = key.slice(slash + 1);
+			cb(`collection-${cid}`, form.querySelector(`input[name="collection-${CSS.escape(cid)}"][value="${CSS.escape(oid)}"]`), oid, item, `collection-${cid}-all`);
+		}
+	}
+
+	// Kept terse — labels cap at 200px and the preview dialog carries the
+	// full story. title attributes hold the long form for hover.
+	function badgeText(item) {
+		if (item.status === 'local-only') return '+ new';
+		if (item.newer === 'local')  return '~ local newer';
+		if (item.newer === 'remote') return '~ remote newer';
+		return '~ differs';
+	}
+
+	function decorate() {
+		form.querySelectorAll('.sync-badge, .sync-note').forEach(el => el.remove());
+		form.querySelectorAll('.checkbox.sync-unchanged').forEach(el => el.classList.remove('sync-unchanged'));
+
+		const remoteOnly = {}; // allSectionName -> count
+		forEachDiffEntry((section, input, id, item, allName) => {
+			if (item.status === 'remote-only') {
+				remoteOnly[allName] = (remoteOnly[allName] || 0) + 1;
+				return;
+			}
+			if (!input) return;
+			// div.checkbox specifically — the input itself also has class "checkbox"
+			const wrapper = input.closest('div.checkbox');
+			const label   = wrapper ? wrapper.querySelector('.checkbox-label') : null;
+			if (!label) return;
+			if (item.status === 'same') {
+				wrapper.classList.add('sync-unchanged');
+				return;
+			}
+			const badge = document.createElement('span');
+			badge.className   = 'sync-badge ' + (item.status === 'local-only' ? 'new' : 'differs');
+			badge.textContent = badgeText(item);
+			badge.title       = item.status === 'local-only'
+				? 'Exists here but not on the remote'
+				: `Content differs${item.newer ? ` — the ${item.newer} copy is newer` : ''}`;
+			label.appendChild(badge);
+		});
+
+		for (const [allName, count] of Object.entries(remoteOnly)) {
+			const allInput = form.querySelector(`input[name="${allName}"][value="all"]`);
+			const section  = allInput ? allInput.closest('.sync-section') : null;
+			if (!section) continue;
+			const note = document.createElement('p');
+			note.className   = 'sync-note';
+			note.textContent = `${count} only on production — pulled with “All”, untouched by push`;
+			section.appendChild(note);
+		}
+	}
+
+	function updateStatus() {
+		let differs = 0, localOnly = 0, remoteOnly = 0;
+		for (const category of ['schemas', 'templates', 'objects', 'collections']) {
+			for (const item of Object.values(syncDiff[category] || {})) {
+				if (item.status === 'differs')     differs++;
+				if (item.status === 'local-only')  localOnly++;
+				if (item.status === 'remote-only') remoteOnly++;
+			}
+		}
+		const parts = [];
+		if (differs)    parts.push(`${differs} differ`);
+		if (localOnly)  parts.push(`${localOnly} only local`);
+		if (remoteOnly) parts.push(`${remoteOnly} only on production`);
+		statusEl.textContent = `{{ t('sync.compared') }} — ` + (parts.length ? parts.join(', ') : 'everything in sync');
+
+		const refresh = document.createElement('a');
+		refresh.href        = '#';
+		refresh.textContent = {{ t('sync.refresh_diff')|json_encode|raw }};
+		refresh.addEventListener('click', (e) => { e.preventDefault(); loadDiff(); });
+		statusEl.appendChild(refresh);
+	}
+
+	/* ------------------------------------------------------------------
+	   Select changed — check exactly the items a push would need to send:
+	   everything that differs or is missing on the remote.
+	   ------------------------------------------------------------------ */
+	changedBtn.addEventListener('click', () => {
+		if (!syncDiff) return;
+		const wanted = new Set();
+		forEachDiffEntry((section, input, id, item) => {
+			if (input && (item.status === 'differs' || item.status === 'local-only')) wanted.add(input);
+		});
+		// Uncheck every "All …" toggle first so the specific lists show.
+		form.querySelectorAll('input[value="all"]').forEach(all => {
+			if (all.checked) { all.checked = false; all.dispatchEvent(new Event('change', { bubbles: true })); }
+		});
+		form.querySelectorAll('input[type="checkbox"]:not([value="all"])').forEach(cb => {
+			const want = wanted.has(cb);
+			if (cb.checked !== want) { cb.checked = want; cb.dispatchEvent(new Event('change', { bubbles: true })); }
+		});
+	});
+
+	/* ------------------------------------------------------------------
+	   Selection encoding (shared by the sync POST and the preview).
+	   Three modes per section — the mode is explicit because "missing keys
+	   = all" couldn't tell "picked nothing" from "picked everything".
+	   ------------------------------------------------------------------ */
+	function readSelection(allFieldName, itemsFieldName) {
 		const allCheckbox = form.querySelector(`input[name="${allFieldName}"][value="all"]`);
-		if (allCheckbox && allCheckbox.checked) {
-			body.append(`${key}_mode`, 'all');
-			return;
-		}
-		// checklist renders each option with a bare `name` (no `[]`), so the
-		// selector must match that — `${itemsFieldName}`, not `${itemsFieldName}[]`.
-		// The body.append below still uses `[]` so PHP parses it as an array.
-		const selected = Array.from(form.querySelectorAll(`input[name="${itemsFieldName}"]:checked`))
-			.map(cb => cb.value);
-		if (selected.length === 0) {
-			body.append(`${key}_mode`, 'none');
-			return;
-		}
-		body.append(`${key}_mode`, 'specific');
-		selected.forEach(s => body.append(`${key}[]`, s));
+		if (allCheckbox && allCheckbox.checked) return { mode: 'all', ids: [] };
+		const ids = Array.from(form.querySelectorAll(`input[name="${itemsFieldName}"]:checked`)).map(cb => cb.value);
+		return ids.length === 0 ? { mode: 'none', ids: [] } : { mode: 'specific', ids };
 	}
 
 	async function doSync(action) {
-		const body = new FormData();
+		const body = csrfBody();
 
-		// Get CSRF token from the form. The field is named `csrf_token` per
-		// CSRFTokenManager — not `_csrf_token`. CSRFProtectionMiddleware
-		// looks for that exact name (also accepts an X-CSRF-Token header).
-		const csrf = form.querySelector('input[name="csrf_token"]');
-		if (csrf) body.append('csrf_token', csrf.value);
+		const enc = (key, sel) => {
+			body.append(`${key}_mode`, sel.mode);
+			if (sel.mode === 'specific') sel.ids.forEach(s => body.append(`${key}[]`, s));
+		};
+		enc('schemas',         readSelection('schemas-all', 'schemas'));
+		enc('templates',       readSelection('templates-all', 'templates'));
+		enc('collection_meta', readSelection('collection-meta-all', 'collection-meta'));
 
-		appendSelection(body, 'schemas',   'schemas-all',   'schemas');
-		appendSelection(body, 'templates', 'templates-all', 'templates');
-
-		// Per-collection nested payload:
-		//   collections[<id>][mode]    = all | specific | none
-		//   collections[<id>][items][] = <objectId>
-		// Server parses this into a map of {collectionId: list<ids>|null}
-		// and threads it through to JumpStartExporter, which filters both
-		// which collections to walk AND which object ids inside each.
-		const syncableCollections = {{ collections|map(c => c.id)|json_encode|raw }};
+		// Per-collection nested payload: collections[<id>][mode] plus
+		// collections[<id>][items][] — parsed server-side into the
+		// {collectionId: list<ids>|null} map JumpStartExporter filters on.
 		syncableCollections.forEach(cid => {
-			const allCheckbox = form.querySelector(`input[name="collection-${cid}-all"][value="all"]`);
-			if (allCheckbox && allCheckbox.checked) {
-				body.append(`collections[${cid}][mode]`, 'all');
-				return;
-			}
-			const selected = Array.from(form.querySelectorAll(`input[name="collection-${cid}"]:checked`))
-				.map(cb => cb.value);
-			if (selected.length === 0) {
-				body.append(`collections[${cid}][mode]`, 'none');
-				return;
-			}
-			body.append(`collections[${cid}][mode]`, 'specific');
-			selected.forEach(s => body.append(`collections[${cid}][items][]`, s));
+			const sel = readSelection(`collection-${cid}-all`, `collection-${cid}`);
+			body.append(`collections[${cid}][mode]`, sel.mode);
+			if (sel.mode === 'specific') sel.ids.forEach(s => body.append(`collections[${cid}][items][]`, s));
 		});
 
+		const activeBtn = action === 'push' ? pushBtn : pullBtn;
+		activeBtn.classList.add('processing');
 		spinner.style.display = 'inline';
 		pushBtn.disabled = true;
 		pullBtn.disabled = true;
 		results.innerHTML = '';
 
 		try {
-			// The sync route lives at `/admin/sync/{action}` (admin group, not
-			// the API group). `cms.api` is the subpath prefix T3 is mounted at
-			// — typically empty, `/cms` for subpath installs — so prefixing
-			// with it keeps both layouts working.
-			const resp = await fetch(`{{ cms.base }}/admin/sync/${action}`, {
-				method: 'POST',
-				body: body,
-			});
+			// The sync route lives at `/admin/sync/{action}` (admin group).
+			const resp = await fetch(`{{ cms.base }}/admin/sync/${action}`, { method: 'POST', body: body });
 			const data = await resp.json();
 
 			if (data.success) {
-				// SyncService returns an OperationResult whose `data` array
-				// is flattened into the JSON root, so the counts are
-				// `data.schemas` / `data.templates` / `data.collections` —
-				// not nested under `data.pushed` / `data.pulled`.
-				// `collections` is the total object count across every
-				// allowlisted collection that participated.
-				const schemas   = data.schemas   ?? 0;
-				const templates = data.templates ?? 0;
+				// OperationResult data is flattened into the JSON root;
+				// `collections` is the total object count.
+				const schemas   = data.schemas     ?? 0;
+				const templates = data.templates   ?? 0;
 				const objects   = data.collections ?? 0;
 				results.innerHTML = `<p style="color:oklch(var(--totalform-success))"><strong>${data.message}</strong></p>` +
 					`<p>Schemas: ${schemas}, Templates: ${templates}, Objects: ${objects}</p>`;
+				loadDiff(); // the sync just changed one side — recompare
 			} else {
 				results.innerHTML = `<p style="color:oklch(var(--totalform-error))"><strong>Error:</strong> ${data.error}</p>`;
 			}
 		} catch (err) {
 			results.innerHTML = `<p style="color:oklch(var(--totalform-error))">Request failed: ${err.message}</p>`;
 		} finally {
+			activeBtn.classList.remove('processing');
 			spinner.style.display = 'none';
 			pushBtn.disabled = false;
 			pullBtn.disabled = false;
 		}
 	}
 
-	pushBtn.addEventListener('click', () => {
-		if (confirm('Are you sure you want to push to production? This will overwrite the selected schemas, templates, and collection objects on the remote server.')) {
-			doSync('push');
+	/* ------------------------------------------------------------------
+	   Consequence preview. Computed from the diff intersected with the
+	   current selection; direction decides which side's newer copy is at
+	   risk. Falls back to the plain confirm() when no diff is loaded.
+	   ------------------------------------------------------------------ */
+	function labelFor(category, key) {
+		if (category === 'collections') return `Settings: ${metaNames[key] || key}`;
+		if (category !== 'objects') return key;
+		const slash = key.indexOf('/');
+		const cid   = key.slice(0, slash);
+		return `${collectionNames[cid] || cid} / ${key.slice(slash + 1)}`;
+	}
+
+	// Selected diff keys for one category given the read selection.
+	function selectedKeys(category, sel, receivingOnly, collectionId = null) {
+		const entries = Object.entries(syncDiff[category]).filter(([key]) =>
+			collectionId === null || key.startsWith(collectionId + '/'));
+		if (sel.mode === 'none') return [];
+		if (sel.mode === 'all') return entries.filter(([, i]) => i.status !== receivingOnly).map(([k]) => k);
+		return entries.filter(([key]) => {
+			const bare = collectionId === null ? key : key.slice(collectionId.length + 1);
+			return sel.ids.includes(bare);
+		}).map(([k]) => k);
+	}
+
+	function openPreview(action) {
+		if (!syncDiff) {
+			// No comparison available — the original blunt gate.
+			const msg = action === 'push'
+				? 'Are you sure you want to push to production? This will overwrite the selected schemas, templates, and collection objects on the remote server.'
+				: 'Are you sure you want to pull from production? This will overwrite the selected schemas, templates, and collection objects locally.';
+			if (confirm(msg)) doSync(action);
+			return;
 		}
-	});
-	pullBtn.addEventListener('click', () => {
-		if (confirm('Are you sure you want to pull from production? This will overwrite the selected schemas, templates, and collection objects locally.')) {
-			doSync('pull');
+
+		const sourceSide    = action === 'push' ? 'local' : 'remote';
+		const receivingOnly = action === 'push' ? 'remote-only' : 'local-only';
+		const sourceOnly    = action === 'push' ? 'local-only' : 'remote-only';
+		const destLabel     = action === 'push' ? 'production' : 'this site';
+
+		const keys = [
+			...selectedKeys('schemas',   readSelection('schemas-all', 'schemas'), receivingOnly).map(k => ['schemas', k]),
+			...selectedKeys('collections', readSelection('collection-meta-all', 'collection-meta'), receivingOnly).map(k => ['collections', k]),
+			...selectedKeys('templates', readSelection('templates-all', 'templates'), receivingOnly).map(k => ['templates', k]),
+			...syncableCollections.flatMap(cid =>
+				selectedKeys('objects', readSelection(`collection-${cid}-all`, `collection-${cid}`), receivingOnly, cid)
+					.map(k => ['objects', k])),
+		];
+
+		const overwrite = [];
+		const create    = [];
+		let unchanged   = 0;
+		for (const [category, key] of keys) {
+			const item = syncDiff[category][key];
+			if (!item) continue;
+			if (item.status === 'same') { unchanged++; continue; }
+			if (item.status === sourceOnly) { create.push(labelFor(category, key)); continue; }
+			if (item.status === 'differs') {
+				overwrite.push({
+					label:   labelFor(category, key),
+					clobber: item.newer !== null && item.newer !== sourceSide,
+				});
+			}
 		}
+
+		let untouched = 0;
+		for (const category of ['schemas', 'templates', 'objects', 'collections']) {
+			untouched += Object.values(syncDiff[category] || {}).filter(i => i.status === receivingOnly).length;
+		}
+
+		const list = (items, render) => {
+			const shown = items.slice(0, 10).map(render).join('');
+			const more  = items.length > 10 ? `<li class="sync-muted">… and ${items.length - 10} more</li>` : '';
+			return `<ul>${shown}${more}</ul>`;
+		};
+
+		let html = '';
+		if (overwrite.length) {
+			html += `<p><strong>${overwrite.length}</strong> will be overwritten on ${destLabel}:</p>`;
+			html += list(overwrite, o => `<li>${o.label}${o.clobber ? ` <span class="sync-clobber">— the copy being replaced is newer</span>` : ''}</li>`);
+		}
+		if (create.length) {
+			html += `<p><strong>${create.length}</strong> will be created on ${destLabel}:</p>`;
+			html += list(create, c => `<li>${c}</li>`);
+		}
+		if (unchanged) {
+			html += `<p class="sync-muted">${unchanged} identical on both sides — rewritten with no effect.</p>`;
+		}
+		if (untouched) {
+			html += `<p class="sync-muted">${untouched} exist only on ${action === 'push' ? 'production' : 'this site'} — untouched (sync never deletes).</p>`;
+		}
+		if (!overwrite.length && !create.length && !unchanged) {
+			html = '<p>Nothing is selected — this sync would do nothing.</p>';
+		}
+
+		document.getElementById('sync-preview-title').textContent = action === 'push' ? 'Push to production?' : 'Pull from production?';
+		document.getElementById('sync-preview-body').innerHTML    = html;
+		const confirmBtn = document.getElementById('sync-preview-confirm');
+		confirmBtn.textContent = (action === 'push' ? pushBtn : pullBtn).textContent.trim();
+		confirmBtn.disabled    = !overwrite.length && !create.length && !unchanged;
+		confirmBtn.dataset.action = action;
+
+		previewEl.dialog ? previewEl.dialog.open() : previewEl.showModal();
+	}
+
+	function closePreview() {
+		previewEl.dialog ? previewEl.dialog.close() : previewEl.close();
+	}
+
+	document.getElementById('sync-preview-cancel').addEventListener('click', closePreview);
+	document.getElementById('sync-preview-confirm').addEventListener('click', (e) => {
+		closePreview();
+		doSync(e.currentTarget.dataset.action);
 	});
+
+	pushBtn.addEventListener('click', () => openPreview('push'));
+	pullBtn.addEventListener('click', () => openPreview('pull'));
+
+	loadDiff();
 });
 </script>

@@ -75,6 +75,7 @@ final class JumpStartExportSyncDataTest extends TestCase
 
 		$this->templateLister->method('listBuilderTemplates')->willReturn(['blog-post']);
 		$this->templateFetcher->method('fetchTemplate')->with('blog-post')->willReturn($template1);
+		$this->collectionLister->method('listAllCollections')->willReturn([]);
 
 		$result = $this->exporter->exportSyncData();
 
@@ -143,13 +144,14 @@ final class JumpStartExportSyncDataTest extends TestCase
 	{
 		// An empty map (every section set to "none" in the UI) means
 		// "no collections at all" — distinct from null (which means
-		// "all of them" for back-compat). fetchIndex must never run.
+		// "all of them" for back-compat). With collection META also excluded,
+		// nothing collection-shaped is touched: no listing, no index reads.
 		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
 		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
 		$this->collectionLister->expects($this->never())->method('listAllCollections');
 		$this->indexReader->expects($this->never())->method('fetchIndex');
 
-		$result = $this->exporter->exportSyncData(null, null, []);
+		$result = $this->exporter->exportSyncData(null, null, [], []);
 
 		expect($result->objects)->toHaveCount(0);
 	}

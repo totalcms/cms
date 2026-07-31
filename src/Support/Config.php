@@ -18,7 +18,6 @@ class Config
 	public string $siteName   = '';
 	public string $url        = '';
 	public string $api        = '';
-	public string $licenseUrl = self::LICENSE_API_URL;
 	public string $locale     = '';
 	/**
 	 * Internationalization config bucket.
@@ -107,7 +106,6 @@ class Config
 		$this->siteName           = (string)($settings['siteName'] ?? '');
 		$this->url                = $settings['url'];
 		$this->api                = $settings['api'];
-		$this->licenseUrl         = (string)($settings['licenseUrl'] ?? self::LICENSE_API_URL);
 		$this->i18n               = $this->normalizeI18nSettings($settings);
 		// System locale always mirrors the i18n default (Settings →
 		// Internationalization → Default Locale), falling back to `en_US`.

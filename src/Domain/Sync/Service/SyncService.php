@@ -23,7 +23,42 @@ readonly class SyncService
 		private JumpStartImporter $jumpStartImporter,
 		private HttpClientInterface $httpClient,
 		private BuilderTemplatePaths $paths,
+		private SyncDiffService $diffService,
 	) {
+	}
+
+	/**
+	 * Compare local sync state against the remote's, item by item.
+	 *
+	 * One orchestration — export local, fetch remote, diff — shared by the
+	 * CLI dry-runs and the admin Sync Manager, so every surface always
+	 * reports the same statuses. See SyncDiffService for the semantics
+	 * (content decides differs/same, timestamps only hint direction).
+	 *
+	 * @param list<string>|null                       $schemaFilter
+	 * @param list<string>|null                       $templateFilter
+	 * @param array<string,list<string>|null>|null    $collectionsFilter
+	 * @param list<string>|null                       $collectionMetaFilter Collection SETTINGS to include (tristate)
+	 *
+	 * @throws \RuntimeException When the remote cannot be reached or answers with an error
+	 *
+	 * @return array{schemas:array<string,mixed>,templates:array<string,mixed>,objects:array<string,mixed>,collections:array<string,mixed>}
+	 */
+	public function diff(
+		string $url,
+		string $key,
+		?array $schemaFilter = null,
+		?array $templateFilter = null,
+		?array $collectionsFilter = null,
+		?array $collectionMetaFilter = null,
+	): array {
+		$templateFilter = $this->syncableTemplateFilter($templateFilter);
+
+		$this->jumpStartExporter->setMetadata('Sync Diff', 'Local state for sync comparison');
+		$local  = $this->jumpStartExporter->exportSyncData($schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter)->toArray();
+		$remote = $this->fetchRemoteSyncData($url, $key, $schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter);
+
+		return $this->diffService->diff($local, $remote);
 	}
 
 	/**
@@ -32,11 +67,15 @@ readonly class SyncService
 	 * ([]) so push/pull carry page records and content but never templates —
 	 * each artifact keeps a single delivery channel.
 	 *
+	 * Public so the CLI dry-runs can apply the same rule to their LOCAL
+	 * export: without it, a git-managed site's preview lists templates that
+	 * a real push or pull would never move.
+	 *
 	 * @param list<string>|null $templateFilter
 	 *
 	 * @return list<string>|null
 	 */
-	private function syncableTemplateFilter(?array $templateFilter): ?array
+	public function syncableTemplateFilter(?array $templateFilter): ?array
 	{
 		return $this->paths->isProjectManaged() ? [] : $templateFilter;
 	}
@@ -58,6 +97,7 @@ readonly class SyncService
 	 * @param list<string>|null                       $schemaFilter
 	 * @param list<string>|null                       $templateFilter
 	 * @param array<string,list<string>|null>|null    $collectionsFilter
+	 * @param list<string>|null                       $collectionMetaFilter Collection SETTINGS to include (tristate)
 	 */
 	public function push(
 		string $url,
@@ -65,11 +105,12 @@ readonly class SyncService
 		?array $schemaFilter = null,
 		?array $templateFilter = null,
 		?array $collectionsFilter = null,
+		?array $collectionMetaFilter = null,
 	): OperationResult {
 		$templateFilter = $this->syncableTemplateFilter($templateFilter);
 
 		$this->jumpStartExporter->setMetadata('Sync Push', 'Pushed via Total CMS sync');
-		$jumpstart = $this->jumpStartExporter->exportSyncData($schemaFilter, $templateFilter, $collectionsFilter);
+		$jumpstart = $this->jumpStartExporter->exportSyncData($schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter);
 
 		if ($jumpstart->isEmpty()) {
 			return OperationResult::success('Nothing to push — no matching schemas, templates, or collections found.', [
@@ -130,6 +171,7 @@ readonly class SyncService
 	 * @param list<string>|null                       $schemaFilter
 	 * @param list<string>|null                       $templateFilter
 	 * @param array<string,list<string>|null>|null    $collectionsFilter
+	 * @param list<string>|null                       $collectionMetaFilter Collection SETTINGS to include (tristate)
 	 *
 	 * @return array<string,mixed> Filtered JumpStart payload
 	 */
@@ -139,15 +181,29 @@ readonly class SyncService
 		?array $schemaFilter = null,
 		?array $templateFilter = null,
 		?array $collectionsFilter = null,
+		?array $collectionMetaFilter = null,
 	): array {
-		$httpResponse = $this->httpClient->request('GET', rtrim($url, '/') . '/api/export/jumpstart?mode=sync', [
+		// `/api/sync/export` is the canonical pull source: it lives under
+		// /sync so the "Sync Manager" API-key endpoint option covers both
+		// directions with one path grant. Fall back to the legacy
+		// `/api/export/jumpstart?mode=sync` on any 4xx — that keeps two real
+		// cases working: a remote on an older release that doesn't have the
+		// route yet (404), and an API key created before the Sync Manager
+		// option existed whose grant covers /export but not /sync (403).
+		$requestOptions = [
 			'headers' => [
 				// See push() for why X-API-Key rather than Authorization: Bearer.
 				'X-API-Key: ' . $key,
 				'Accept: application/json',
 			],
 			'timeout' => 60,
-		]);
+		];
+
+		$httpResponse = $this->httpClient->request('GET', rtrim($url, '/') . '/api/sync/export', $requestOptions);
+
+		if ($httpResponse->statusCode >= 400 && $httpResponse->statusCode < 500) {
+			$httpResponse = $this->httpClient->request('GET', rtrim($url, '/') . '/api/export/jumpstart?mode=sync', $requestOptions);
+		}
 
 		if ($httpResponse->statusCode >= 400) {
 			throw new \RuntimeException(sprintf(
@@ -162,7 +218,7 @@ readonly class SyncService
 			throw new \RuntimeException('Pull failed: invalid response from remote.');
 		}
 
-		return $this->applyFilters($payload, $schemaFilter, $this->syncableTemplateFilter($templateFilter), $collectionsFilter);
+		return $this->applyFilters($payload, $schemaFilter, $this->syncableTemplateFilter($templateFilter), $collectionsFilter, $collectionMetaFilter);
 	}
 
 	/**
@@ -172,6 +228,7 @@ readonly class SyncService
 	 * @param list<string>|null                       $schemaFilter
 	 * @param list<string>|null                       $templateFilter
 	 * @param array<string,list<string>|null>|null    $collectionsFilter
+	 * @param list<string>|null                       $collectionMetaFilter Collection SETTINGS to include (tristate)
 	 */
 	public function pull(
 		string $url,
@@ -179,8 +236,9 @@ readonly class SyncService
 		?array $schemaFilter = null,
 		?array $templateFilter = null,
 		?array $collectionsFilter = null,
+		?array $collectionMetaFilter = null,
 	): OperationResult {
-		$payload = $this->fetchRemoteSyncData($url, $key, $schemaFilter, $templateFilter, $collectionsFilter);
+		$payload = $this->fetchRemoteSyncData($url, $key, $schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter);
 
 		$schemaCount     = count($payload['schemas'] ?? []);
 		$templateCount   = count($payload['templates'] ?? []);
@@ -220,6 +278,7 @@ readonly class SyncService
 	 * @param list<string>|null                       $schemaFilter
 	 * @param list<string>|null                       $templateFilter
 	 * @param array<string,list<string>|null>|null    $collectionsFilter
+	 * @param list<string>|null                       $collectionMetaFilter Collection SETTINGS to include (tristate)
 	 *
 	 * @return array<string,mixed>
 	 */
@@ -228,6 +287,7 @@ readonly class SyncService
 		?array $schemaFilter,
 		?array $templateFilter,
 		?array $collectionsFilter = null,
+		?array $collectionMetaFilter = null,
 	): array {
 		if ($schemaFilter !== null && isset($payload['schemas']) && is_array($payload['schemas'])) {
 			$payload['schemas'] = array_values(array_filter(
@@ -255,6 +315,22 @@ readonly class SyncService
 					return $ids === null || in_array($oid, $ids, true);
 				}
 			));
+		}
+
+		if ($collectionMetaFilter !== null && isset($payload['collections']) && is_array($payload['collections'])) {
+			foreach (['custom', 'reserved'] as $kind) {
+				if (!isset($payload['collections'][$kind]) || !is_array($payload['collections'][$kind])) {
+					continue;
+				}
+				$payload['collections'][$kind] = array_values(array_filter(
+					$payload['collections'][$kind],
+					function (mixed $entry) use ($collectionMetaFilter): bool {
+						$id = is_string($entry) ? $entry : (string)(is_array($entry) ? ($entry['id'] ?? '') : '');
+
+						return in_array($id, $collectionMetaFilter, true);
+					}
+				));
+			}
 		}
 
 		return $payload;

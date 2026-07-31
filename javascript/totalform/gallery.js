@@ -124,14 +124,7 @@ export default class GalleryField extends ImageField {
 				}
 			},
 			onClose : () => {
-				if (this.activePreview) {
-					// Read data back from dialog fields into the data store
-					const updatedData = this.readSharedDialog();
-					const name = this.activePreview.getImageName();
-					this.imageDataStore.set(name, updatedData);
-					// Update featured CSS class on the preview
-					this.activePreview.container.classList.toggle('featured', !!updatedData.featured);
-				}
+				this.commitSharedDialog();
 				this.autosave();
 			}
 		});
@@ -146,6 +139,27 @@ export default class GalleryField extends ImageField {
 		}
 
 		return this.sharedDialog;
+	}
+
+	commitSharedDialog() {
+		if (!this.activePreview) return;
+		// Only commit when a dialog field was actually edited — populate marks
+		// them all saved() on open, so this mirrors how the image field gates
+		// its close-time autosave on dirty dialog subfields.
+		const edited = Array.from(this.sharedDialogFields)
+			.some(field => field.totalfield.isUnsaved());
+		if (!edited) return;
+		// Read data back from dialog fields into the data store
+		const updatedData = this.readSharedDialog();
+		const name = this.activePreview.getImageName();
+		this.imageDataStore.set(name, updatedData);
+		// Update featured CSS class on the preview
+		this.activePreview.container.classList.toggle('featured', !!updatedData.featured);
+		// The shared dialog lives outside previewContainer, so dirty dialog
+		// subfields are invisible to isUnsaved(). The gallery's own value (the
+		// data store) just changed — flag the gallery itself so autosave's
+		// dirty guard passes and Save/Cmd+S see the form as unsaved.
+		this.changed();
 	}
 
 	setupSharedEditAccordion(dialogEl) {

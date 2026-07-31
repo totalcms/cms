@@ -74,11 +74,15 @@ readonly class JumpStartExporter
 	 * @param list<string>|null                       $schemaFilter
 	 * @param list<string>|null                       $templateFilter
 	 * @param array<string,list<string>|null>|null    $collectionsFilter
+	 * @param list<string>|null                       $collectionMetaFilter Tristate: null = every
+	 *                                                                      local collection's settings,
+	 *                                                                      [] = none, list = those ids
 	 */
 	public function exportSyncData(
 		?array $schemaFilter = null,
 		?array $templateFilter = null,
 		?array $collectionsFilter = null,
+		?array $collectionMetaFilter = null,
 	): JumpStartData {
 		$this->logger->info('Starting sync data export');
 
@@ -87,14 +91,61 @@ readonly class JumpStartExporter
 		$this->exportCustomSchemas($schemaFilter);
 		$this->exportTemplates($templateFilter);
 		$this->exportSyncCollectionObjects($collectionsFilter);
+		$this->exportSyncCollectionMeta($collectionMetaFilter);
 
 		$this->logger->info('Completed sync data export', [
-			'schemas'   => count($this->jumpstart->schemas),
-			'templates' => count($this->jumpstart->templates),
-			'objects'   => count($this->jumpstart->objects),
+			'schemas'     => count($this->jumpstart->schemas),
+			'templates'   => count($this->jumpstart->templates),
+			'objects'     => count($this->jumpstart->objects),
+			'collections' => count($this->jumpstart->collections['custom']) + count($this->jumpstart->collections['reserved']),
 		]);
 
 		return $this->jumpstart;
+	}
+
+	/**
+	 * Export collection SETTINGS (the .meta.json config) for sync — never
+	 * objects, and never the environment-local computed fields (`count`,
+	 * `totalObjects`, `lastUpdated`), which the receiving side must keep.
+	 *
+	 * Unlike the starter-kit export, the six conditional config keys are
+	 * emitted explicitly even when empty: sync is a mirror, so an emptied
+	 * MCP card on the source must be able to clear the target's. `updated`
+	 * (the settings timestamp) travels — it's the freshness signal the
+	 * diff hints on.
+	 *
+	 * Custom collections use the `collections.custom` shape; reserved-schema
+	 * collections use the object form of `collections.reserved` so their
+	 * settings survive (the bare-string form seeds defaults only).
+	 *
+	 * @param list<string>|null $filter Tristate: null = all, [] = none, list = ids
+	 */
+	private function exportSyncCollectionMeta(?array $filter): void
+	{
+		if ($filter === []) {
+			return;
+		}
+
+		foreach ($this->collectionLister->listAllCollections() as $collection) {
+			if ($filter !== null && !in_array($collection->id, $filter, true)) {
+				continue;
+			}
+
+			$config = $collection->toArray();
+			unset($config['count'], $config['totalObjects'], $config['lastUpdated']);
+
+			// Mirror semantics: absent-when-empty keys must be explicit so
+			// the importer can clear them on the receiving side.
+			foreach (['properties', 'customProperties', 'formSettings', 'manualSort', 'sitemap', 'mcp'] as $key) {
+				$config[$key] ??= [];
+			}
+
+			if (in_array($collection->schema, SchemaData::RESERVED_SCHEMAS)) {
+				$this->jumpstart->addReservedCollection($config);
+			} else {
+				$this->jumpstart->addCustomCollection($config);
+			}
+		}
 	}
 
 	/**

@@ -29,7 +29,6 @@ use TotalCMS\TotalCMS;
 return function (App $app): void {
 	$app->addBodyParsingMiddleware();
 	$app->add(DevModeMiddleware::class);
-	$app->add(CacheInvalidationMiddleware::class);
 	$app->add(BundleMiddleware::class);
 	$app->add(MaintenanceModeMiddleware::class);
 	// One-shot data/layout migrations (e.g. legacy `tcms-data/templates/` →
@@ -61,6 +60,18 @@ return function (App $app): void {
 
 	// Page router wraps everything — catches 404s from Slim and tries builder pages.
 	$app->add(PageRouterMiddleware::class);
+
+	// Replays cache-invalidation signals left by CLI runs (`tcms cache:clear`,
+	// job processing) that cannot reach the web process's APCu.
+	//
+	// This MUST wrap PageRouterMiddleware. It used to sit inside the routing
+	// layer, which meant it only ever ran for requests Slim could route — admin
+	// and API. A Site Builder page has no Slim route, so RoutingMiddleware threw
+	// a 404 that unwound outward before this middleware was reached, and
+	// PageRouter then rendered the page from the stale cache it was supposed to
+	// have dropped. The signal file survived, so `tcms cache:clear` appeared to
+	// do nothing on the front end until someone happened to load /admin.
+	$app->add(CacheInvalidationMiddleware::class);
 
 	// Impersonation banner: inject a "Return to your account" bar into HTML
 	// responses while a super-admin is impersonating another user. Placed

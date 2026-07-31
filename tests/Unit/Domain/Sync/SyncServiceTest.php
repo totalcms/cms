@@ -36,7 +36,35 @@ final class SyncServiceTest extends TestCase
 			$this->importer,
 			$this->httpClient,
 			$this->paths,
+			new \TotalCMS\Domain\Sync\Service\SyncDiffService(),
 		);
+	}
+
+	// ==================== Diff Tests ====================
+
+	public function testDiffComparesLocalExportAgainstRemotePayload(): void
+	{
+		// The single orchestration shared by CLI dry-runs and the admin
+		// Sync Manager: export local, fetch remote, hand both to
+		// SyncDiffService.
+		$local = new JumpStartData('Local', '');
+		$local->addSchema(['id' => 'products', 'properties' => ['name' => []]]);
+		$this->exporter->method('exportSyncData')->willReturn($local);
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
+			'schemas' => [[
+				'id'         => 'products',
+				'properties' => ['name' => [], 'price' => []],
+				'updated'    => '2026-07-29T10:00:00+00:00',
+			]],
+		])));
+
+		$diff = $this->service->diff('https://example.com', 'key');
+
+		expect($diff['schemas']['products']['status'])->toBe(\TotalCMS\Domain\Sync\Service\SyncDiffService::DIFFERS);
+		expect($diff['schemas']['products']['newer'])->toBe('remote');
+		expect($diff['templates'])->toBe([]);
+		expect($diff['objects'])->toBe([]);
 	}
 
 	// ==================== Push Tests ====================
@@ -70,7 +98,7 @@ final class SyncServiceTest extends TestCase
 			->with(null, [], null)
 			->willReturn(new JumpStartData());
 
-		$service = new SyncService($exporter, $this->importer, $this->httpClient, $paths);
+		$service = new SyncService($exporter, $this->importer, $this->httpClient, $paths, new \TotalCMS\Domain\Sync\Service\SyncDiffService());
 
 		// Caller asked for "all templates" (null) — git-management overrides it.
 		$service->push('https://example.com', 'key');
@@ -170,9 +198,11 @@ final class SyncServiceTest extends TestCase
 			'templates' => [['id' => 'blog-post', 'template' => '<h1>Blog</h1>']],
 		]);
 
+		// Pull fetches from the dedicated /sync/export route (one "Sync
+		// Manager" API-key grant covers both directions).
 		$this->httpClient->expects($this->once())
 			->method('request')
-			->with('GET', 'https://example.com/api/export/jumpstart?mode=sync', $this->anything())
+			->with('GET', 'https://example.com/api/sync/export', $this->anything())
 			->willReturn(new HttpResponse(200, (string)$remotePayload));
 
 		// Pull is server-authoritative for the local copy: pass through to
@@ -194,6 +224,30 @@ final class SyncServiceTest extends TestCase
 		expect($result->message)->toBe('Pull complete.');
 		expect($result->data['schemas'])->toBe(1);
 		expect($result->data['templates'])->toBe(1);
+	}
+
+	public function testPullFallsBackToLegacyExportRouteOnFourOhFour(): void
+	{
+		// A remote on an older release has no /sync/export route (404), and a
+		// key created before the "Sync Manager" endpoint option may grant
+		// /export but not /sync (403). Either way pull retries the legacy
+		// jumpstart export route before giving up.
+		$remotePayload = (string)json_encode([
+			'schemas'   => [['id' => 'products', 'properties' => []]],
+			'templates' => [],
+		]);
+
+		$this->httpClient->expects($this->exactly(2))
+			->method('request')
+			->willReturnCallback(function (string $method, string $url) use ($remotePayload): HttpResponse {
+				return str_ends_with($url, '/api/sync/export')
+					? new HttpResponse(404, '{"error":{"message":"Not found"}}')
+					: new HttpResponse(200, $remotePayload);
+			});
+
+		$payload = $this->service->fetchRemoteSyncData('https://example.com', 'key');
+
+		expect($payload['schemas'])->toHaveCount(1);
 	}
 
 	public function testPullReturnsNothingWhenRemoteEmpty(): void

@@ -57,6 +57,37 @@ final class TranslationServiceTest extends TestCase
 		$this->assertSame('Welcome back, Joe!', $result);
 	}
 
+	public function testBareParameterNamesResolveDelimitedPlaceholders(): void
+	{
+		// The regression that shipped: callers pass bare names ({user: id}),
+		// strings delimit placeholders ({user}), and the underlying
+		// translator substitutes keys verbatim — so the OAuth consent screen
+		// rendered 'You are signed in as: %admin%' (and, post-standardization,
+		// '{admin}'). trans() must normalize bare keys onto the delimiters.
+		$service = $this->createService('en_US');
+
+		$this->assertSame(
+			'You are signed in as: admin',
+			$service->trans('oauth.consent.signed_in_as', ['user' => 'admin']),
+		);
+		$this->assertSame(
+			'Welcome back, Joe!',
+			$service->trans('dashboard.welcome_back', ['name' => 'Joe']),
+		);
+	}
+
+	public function testBareParameterNeverEatsLiteralWordsInTheString(): void
+	{
+		// 'Page {page} of {total} ({entries} entries)' — a raw bare key would
+		// also replace the literal word 'entries', yielding '(100 100)'.
+		$service = $this->createService('en_US');
+
+		$this->assertSame(
+			'Page 2 of 5 (100 entries)',
+			$service->trans('orphan.page_of', ['page' => 2, 'total' => 5, 'entries' => 100]),
+		);
+	}
+
 	// ── Other Locales ───────────────────────────────────────────────────────
 
 	public function testGermanLocale(): void

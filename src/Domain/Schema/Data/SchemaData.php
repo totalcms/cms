@@ -245,6 +245,8 @@ class SchemaData
 	public string $formgrid    = '';
 	public string $description = '';
 	public string $category    = '';
+	/** ISO-8601 timestamp of the last save, maintained by SchemaSaver. */
+	public string $updated = '';
 	/** @var array<string,mixed> */
 	public array $properties = [];
 	/** @var array<string> */
@@ -282,6 +284,12 @@ class SchemaData
 		// Only include formgrid if it's not empty
 		if ($this->formgrid !== '') {
 			$array['formgrid'] = $this->formgrid;
+		}
+
+		// Only include updated if it has been stamped — pre-existing schema
+		// files without one round-trip unchanged.
+		if ($this->updated !== '') {
+			$array['updated'] = $this->updated;
 		}
 
 		// Only include category if it's not empty

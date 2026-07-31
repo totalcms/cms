@@ -6,6 +6,8 @@ namespace TotalCMS\Action\Admin;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Sync\Data\SyncableCollections;
 use TotalCMS\Domain\Sync\Service\SyncService;
@@ -17,6 +19,7 @@ readonly class SyncAction
 		private JsonRenderer $renderer,
 		private SettingsFetcher $settingsFetcher,
 		private SyncService $syncService,
+		private CollectionFetcher $collectionFetcher,
 	) {
 	}
 
@@ -40,15 +43,37 @@ readonly class SyncAction
 			])->withStatus(400);
 		}
 
-		$post        = (array)$request->getParsedBody();
-		$schemas     = $this->parseSelection($post, 'schemas');
-		$templates   = $this->parseSelection($post, 'templates');
-		$collections = $this->parseCollectionsSelection($post);
+		$post           = (array)$request->getParsedBody();
+		$schemas        = $this->parseSelection($post, 'schemas');
+		$templates      = $this->parseSelection($post, 'templates');
+		$collections    = $this->parseCollectionsSelection($post);
+		$collectionMeta = $this->parseSelection($post, 'collection_meta');
+
+		// The diff action compares without writing anything, so it answers
+		// with its own shape (statuses per item) rather than an
+		// OperationResult. Same SyncService::diff() the CLI dry-runs use —
+		// the UI and the terminal can never disagree about what would change.
+		if ($action === 'diff') {
+			try {
+				$diff = $this->syncService->diff($url, $key, $schemas, $templates, $collections, $collectionMeta);
+			} catch (\Throwable $e) {
+				return $this->renderer->json($response, [
+					'success' => false,
+					'error'   => $e->getMessage(),
+				])->withStatus(502);
+			}
+
+			return $this->renderer->json($response, [
+				'success'     => true,
+				'diff'        => $diff,
+				'collections' => $this->collectionDisplayNames($diff['objects']),
+			]);
+		}
 
 		try {
 			$result = match ($action) {
-				'push'  => $this->syncService->push($url, $key, $schemas, $templates, $collections),
-				'pull'  => $this->syncService->pull($url, $key, $schemas, $templates, $collections),
+				'push'  => $this->syncService->push($url, $key, $schemas, $templates, $collections, $collectionMeta),
+				'pull'  => $this->syncService->pull($url, $key, $schemas, $templates, $collections, $collectionMeta),
 				default => throw new \InvalidArgumentException("Unknown sync action: {$action}"),
 			};
 		} catch (\InvalidArgumentException $e) {
@@ -64,6 +89,34 @@ readonly class SyncAction
 		}
 
 		return $this->renderer->json($response, $result->toArray());
+	}
+
+	/**
+	 * Admin display name per collection appearing in the object diff, so the
+	 * UI can group under the same labels the sidebar uses.
+	 *
+	 * @param array<string,mixed> $objectDiff keyed "collection/id"
+	 *
+	 * @return array<string,string>
+	 */
+	private function collectionDisplayNames(array $objectDiff): array
+	{
+		$names = [];
+		foreach (array_keys($objectDiff) as $key) {
+			$collectionId = str_contains((string)$key, '/') ? explode('/', (string)$key, 2)[0] : (string)$key;
+			if (isset($names[$collectionId])) {
+				continue;
+			}
+			$fallback = ucwords(str_replace(['-', '_'], ' ', $collectionId));
+			try {
+				$collection           = $this->collectionFetcher->fetchCollection($collectionId);
+				$names[$collectionId] = $collection instanceof CollectionData && $collection->name !== '' ? $collection->name : $fallback;
+			} catch (\Throwable) {
+				$names[$collectionId] = $fallback;
+			}
+		}
+
+		return $names;
 	}
 
 	/**

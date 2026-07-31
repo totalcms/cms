@@ -15,6 +15,20 @@ class DateData extends PropertyData implements \Stringable
 	public const CREATION_DATE = 'onCreate';
 	public const UPDATE_DATE   = 'onUpdate';
 
+	/**
+	 * Whether this field carries a real authored date. Imports use this to
+	 * decide preservation: an authored date is source history and travels
+	 * verbatim; an empty one goes through normal stamping.
+	 *
+	 * A simple empty check is sufficient because the constructor normalizes
+	 * every value through cleanDate(), which returns '' for anything that
+	 * doesn't parse as a date — so a non-empty $date is always a real one.
+	 */
+	public function hasAuthoredDate(): bool
+	{
+		return $this->date !== '';
+	}
+
 	public function __construct(string $date = '', public array $settings = [])
 	{
 		$this->date = $date === '' ? '' : self::cleanDate($date);

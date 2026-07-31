@@ -7,6 +7,7 @@ use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Service\DepotPropertyManager;
@@ -25,10 +26,18 @@ readonly class ObjectUpdater
 
 	/**
 	 * @param ObjectData|array<string,mixed> $object
+	 * @param bool                           $preserveDates Keep authored values in
+	 *                                                      onUpdate/onCreate date fields
+	 *                                                      instead of restamping. See
+	 *                                                      ObjectSaver::saveObject() —
+	 *                                                      same contract, used by the
+	 *                                                      sync/upsert import so a synced
+	 *                                                      copy never reads as newer than
+	 *                                                      its source.
 	 *
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function updateObject(string $collection, string $id, ObjectData|array $object, bool $silent = false): ObjectData
+	public function updateObject(string $collection, string $id, ObjectData|array $object, bool $silent = false, bool $preserveDates = false): ObjectData
 	{
 		if (!$object instanceof ObjectData) {
 			$object = $this->factory->generateObject($collection, $object);
@@ -50,8 +59,16 @@ readonly class ObjectUpdater
 			}
 		}
 
-		// Run property actions before saving (ex: update date)
-		$object->properties = $object->properties->map(fn (PropertyData $property): PropertyData => $this->propertyProcessor->processBeforeSave($property));
+		// Run property actions before saving (ex: update date). In preserve
+		// mode, a date field that already carries an authored value is left
+		// untouched; everything else still runs through the processor.
+		$object->properties = $object->properties->map(function (PropertyData $property) use ($preserveDates): PropertyData {
+			if ($preserveDates && $property instanceof DateData && $property->hasAuthoredDate()) {
+				return $property;
+			}
+
+			return $this->propertyProcessor->processBeforeSave($property);
+		});
 
 		$this->storage->saveObject($collection, $object);
 

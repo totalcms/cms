@@ -164,6 +164,16 @@
 			"field"       : "text",
 			"placeholder" : "unsubscribed:true",
 			"help"        : "Exclude objects matching this filter (e.g., unsubscribed:true)."
+		},
+		"updated": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Updated Date",
+			"help"     : "Last modified date",
+			"field"    : "datetime",
+			"settings" : {
+				"onUpdate": true,
+				"readonly": true
+			}
 		}
 	},
 	"required": [

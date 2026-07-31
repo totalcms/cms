@@ -100,6 +100,9 @@ readonly class LocaleTwigAdapter
 	 */
 	public function t(string $key, array $params = []): string
 	{
+		// Bare-name parameter normalization ({user: id} → {user}/%user%)
+		// happens in TranslationService::trans() — the choke point every
+		// t() entry route shares.
 		return $this->translator->trans($key, $params, 'admin');
 	}
 

@@ -9,6 +9,7 @@ use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -17,13 +18,20 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 /**
  * Admin tool family for collection object CRUD.
  *
- * Ships `create_object` and `update_object` as the operator's MCP-side
- * surface for writing content. The handlers are thin wrappers around the
- * same `ObjectSaver` / `ObjectUpdater` services the admin form save and
- * REST API call into, so schema validation, slug generation, event
- * dispatch (object.created / object.updated → index rebuild, cache
- * invalidation, dataview refresh), and `processBeforeSave` property
- * actions all fire for free.
+ * Ships `create_object`, `update_object`, and `patch_object` as the
+ * operator's MCP-side surface for writing content. The handlers are thin
+ * wrappers around the same `ObjectSaver` / `ObjectUpdater` /
+ * `ObjectPatcher` services the admin form save and REST API call into, so
+ * schema validation, slug generation, event dispatch (object.created /
+ * object.updated → index rebuild, cache invalidation, dataview refresh),
+ * and `processBeforeSave` property actions all fire for free.
+ *
+ * `patch_object` exists because full-replace semantics are a data-loss
+ * hazard for agents: update_object requires round-tripping the complete
+ * object, and any field the agent fails to carry forward silently reverts
+ * to its schema default. The patch tool merges the provided top-level
+ * fields over the stored object (REST PATCH semantics via ObjectPatcher),
+ * so agents can change one field without having fetched the rest.
  *
  * Binary fields are checked at the PAYLOAD level, not the schema level: a
  * collection that merely *contains* an image / file / gallery / depot field
@@ -61,6 +69,7 @@ readonly class ObjectTools
 	public function __construct(
 		private ObjectSaver $saver,
 		private ObjectUpdater $updater,
+		private ObjectPatcher $patcher,
 		private SchemaFetcher $schemaFetcher,
 		private ObjectFetcher $objectFetcher,
 	) {
@@ -113,7 +122,7 @@ readonly class ObjectTools
 
 		$registry->register(new McpToolDefinition(
 			name: 'update_object',
-			description: 'Update an existing object. Required: collection + id + data. The data shape is the complete object body — fields not present in the payload revert to the schema default. Fetch the current object first via get_object if you want to patch a subset. Same binary-field restriction as create_object.',
+			description: 'Replace an existing object. Required: collection + id + data. The data shape is the complete object body — fields not present in the payload revert to the schema default. To change a subset of fields, prefer patch_object (merge semantics, no round-trip needed); if you do use this tool, fetch the current object first via get_object with format "html". Same binary-field restriction as create_object.',
 			access: 'admin',
 			handler: $this->updateHandler(...),
 			inputSchema: [
@@ -141,6 +150,43 @@ readonly class ObjectTools
 			],
 			annotations: new ToolAnnotations(
 				title: 'Update Object',
+				readOnlyHint: false,
+				destructiveHint: false,
+				idempotentHint: true,
+				openWorldHint: false,
+			),
+		));
+
+		$registry->register(new McpToolDefinition(
+			name: 'patch_object',
+			description: 'Update a SUBSET of an object\'s fields. Required: collection + id + data. This is a merge, not a replace: fields present in data are written, omitted fields keep their current values — no need to fetch the object first. Container fields (card, deck, list) are replaced whole when present, never deep-merged — send the complete container to change any part of it. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Binary fields (image, file, gallery, depot) cannot be written and always keep their current values. Prefer this over update_object for targeted edits.',
+			access: 'admin',
+			handler: $this->patchHandler(...),
+			inputSchema: [
+				'type'                 => 'object',
+				'required'             => ['collection', 'id', 'data'],
+				'additionalProperties' => false,
+				'properties'           => [
+					'collection' => [
+						'type'        => 'string',
+						'description' => 'Collection id containing the object.',
+						'examples'    => ['blog', 'team', 'reviews'],
+					],
+					'id' => [
+						'type'        => 'string',
+						'description' => 'Existing object id to patch. Use query_collection or search_collection to discover.',
+						'examples'    => ['my-first-post'],
+					],
+					'data' => [
+						// See create_object's `data` for why plain type:object
+						// rather than the oneOf empty-{} workaround.
+						'type'        => 'object',
+						'description' => 'Only the fields to change, keyed by schema property name. Omitted fields are untouched. Containers (card/deck/list) replace whole.',
+					],
+				],
+			],
+			annotations: new ToolAnnotations(
+				title: 'Patch Object',
 				readOnlyHint: false,
 				destructiveHint: false,
 				idempotentHint: true,
@@ -213,6 +259,50 @@ readonly class ObjectTools
 		} catch (\DomainException|\UnexpectedValueException $e) {
 			throw new ToolCallException(sprintf(
 				'Could not update object "%s/%s": %s',
+				$collection,
+				$id,
+				$e->getMessage(),
+			), $e->getCode(), $e);
+		}
+
+		return $object->toArray();
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function patchHandler(string $collection, string $id, array $data): array
+	{
+		$schema = $this->fetchSchemaOrFail($collection, 'patch_object');
+		$binary = $this->binaryFieldsIn($schema);
+
+		$this->refuseIfPayloadWritesBinary($collection, 'patch_object', $data, $binary);
+
+		// A patch never touches binary fields: non-empty values were refused
+		// above, and empty echoes are stripped here so the merge can't clear
+		// an existing image/file value.
+		$data = $this->stripBinaryFields($data, $binary);
+
+		// The merged object must keep the route id — drop any divergent id the
+		// agent slipped into the payload rather than failing the equality
+		// assertion downstream.
+		$data['id'] = $id;
+
+		if (!$this->objectFetcher->existsObject($collection, $id)) {
+			throw new ToolCallException(sprintf(
+				'patch_object: object "%s/%s" not found. Use query_collection to discover ids, or create_object to create it.',
+				$collection,
+				$id,
+			));
+		}
+
+		try {
+			$object = $this->patcher->patchObject($collection, $id, $data);
+		} catch (\DomainException|\UnexpectedValueException $e) {
+			throw new ToolCallException(sprintf(
+				'Could not patch object "%s/%s": %s',
 				$collection,
 				$id,
 				$e->getMessage(),

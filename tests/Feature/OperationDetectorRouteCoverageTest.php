@@ -165,6 +165,7 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'stream-file',
 		'stream-file-depot',
 		'stream-upload',
+		'sync-export',
 		'sync-import',
 		'upload-delete',
 		'upload-get',

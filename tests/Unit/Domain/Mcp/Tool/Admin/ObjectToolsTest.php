@@ -11,6 +11,7 @@ use TotalCMS\Domain\Mcp\Tool\Admin\ObjectTools;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -20,6 +21,7 @@ final class ObjectToolsTest extends TestCase
 {
 	private \PHPUnit\Framework\MockObject\MockObject $saver;
 	private \PHPUnit\Framework\MockObject\MockObject $updater;
+	private \PHPUnit\Framework\MockObject\MockObject $patcher;
 	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
 	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
 	private ObjectTools $tool;
@@ -28,9 +30,10 @@ final class ObjectToolsTest extends TestCase
 	{
 		$this->saver         = $this->createMock(ObjectSaver::class);
 		$this->updater       = $this->createMock(ObjectUpdater::class);
+		$this->patcher       = $this->createMock(ObjectPatcher::class);
 		$this->schemaFetcher = $this->createMock(SchemaFetcher::class);
 		$this->objectFetcher = $this->createMock(ObjectFetcher::class);
-		$this->tool          = new ObjectTools($this->saver, $this->updater, $this->schemaFetcher, $this->objectFetcher);
+		$this->tool          = new ObjectTools($this->saver, $this->updater, $this->patcher, $this->schemaFetcher, $this->objectFetcher);
 	}
 
 	/**
@@ -87,18 +90,21 @@ final class ObjectToolsTest extends TestCase
 
 	// ─── Registration ────────────────────────────────────────────────────────
 
-	public function testRegisterAddsBothToolsWithAdminAccess(): void
+	public function testRegisterAddsAllThreeToolsWithAdminAccess(): void
 	{
 		$registry = new ToolRegistry();
 		$this->tool->register($registry);
 
 		$create = $registry->get('create_object');
 		$update = $registry->get('update_object');
+		$patch  = $registry->get('patch_object');
 
 		$this->assertNotNull($create);
 		$this->assertNotNull($update);
+		$this->assertNotNull($patch);
 		$this->assertSame('admin', $create->access);
 		$this->assertSame('admin', $update->access);
+		$this->assertSame('admin', $patch->access);
 	}
 
 	public function testUpdateIsAnnotatedIdempotent(): void
@@ -371,5 +377,143 @@ final class ObjectToolsTest extends TestCase
 			$this->assertStringContainsString('blog', $e->getMessage());
 			$this->assertStringContainsString('missing-post', $e->getMessage());
 		}
+	}
+
+	// ─── patch_object ────────────────────────────────────────────────────────
+
+	public function testPatchDispatchesOnlyProvidedFieldsWithIdStamped(): void
+	{
+		// The whole point of patch: the handler passes ONLY the provided
+		// fields (plus the stamped id) to ObjectPatcher, which merges them
+		// over the stored object. No round-trip through the full body.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->textOnlySchema());
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+
+		$this->patcher->expects($this->once())
+			->method('patchObject')
+			->with(
+				'blog',
+				'my-post',
+				$this->callback(static fn (array $data): bool => ($data['id'] ?? '') === 'my-post'
+						&& ($data['title'] ?? '') === 'Patched'
+						&& !array_key_exists('body', $data)),
+			)
+			->willReturn($this->blogObject('my-post'));
+
+		$result = $this->tool->patchHandler(
+			collection: 'blog',
+			id: 'my-post',
+			data: ['title' => 'Patched'],
+		);
+
+		$this->assertSame(['id' => 'my-post'], $result);
+	}
+
+	public function testPatchOverridesDivergentIdInPayload(): void
+	{
+		// An agent that slips a different id into the payload must not rename
+		// the object (or trip the updater's equality assertion) — the route id
+		// wins.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->textOnlySchema());
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+
+		$this->patcher->expects($this->once())
+			->method('patchObject')
+			->with('blog', 'my-post', $this->callback(static fn (array $data): bool => $data['id'] === 'my-post'))
+			->willReturn($this->blogObject('my-post'));
+
+		$this->tool->patchHandler(collection: 'blog', id: 'my-post', data: ['id' => 'other-post', 'title' => 'X']);
+	}
+
+	public function testPatchRefusesWhenPayloadSetsBinaryField(): void
+	{
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'        => ['field' => 'id'],
+				'thumbnail' => ['field' => 'image'],
+			]));
+
+		$this->patcher->expects($this->never())->method('patchObject');
+
+		try {
+			$this->tool->patchHandler(collection: 'blog', id: 'home', data: ['thumbnail' => 'new.jpg']);
+			$this->fail('Expected ToolCallException for binary write.');
+		} catch (ToolCallException $e) {
+			$this->assertStringContainsString('thumbnail', $e->getMessage());
+		}
+	}
+
+	public function testPatchStripsEmptyBinaryEchoSoMergeCannotClearIt(): void
+	{
+		// A blank binary echo (thumbnail: "") merged over the stored object
+		// would CLEAR the existing image — update semantics preserve it, so
+		// patch must strip the key before the merge.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'        => ['field' => 'id'],
+				'title'     => ['field' => 'text'],
+				'thumbnail' => ['field' => 'image'],
+			]));
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+
+		$this->patcher->expects($this->once())
+			->method('patchObject')
+			->with('blog', 'home', $this->callback(static fn (array $data): bool => !array_key_exists('thumbnail', $data)))
+			->willReturn($this->blogObject('home'));
+
+		$this->tool->patchHandler(collection: 'blog', id: 'home', data: ['title' => 'New', 'thumbnail' => '']);
+	}
+
+	public function testPatchMissingObjectSurfacesCreateHint(): void
+	{
+		// Patch on a nonexistent object should not fall through to the merge
+		// (array_merge over a fetch failure) — refuse with pointers at the
+		// discovery and creation tools.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->textOnlySchema());
+		$this->objectFetcher->method('existsObject')->willReturn(false);
+
+		$this->patcher->expects($this->never())->method('patchObject');
+
+		try {
+			$this->tool->patchHandler(collection: 'blog', id: 'ghost', data: ['title' => 'X']);
+			$this->fail('Expected ToolCallException for missing object.');
+		} catch (ToolCallException $e) {
+			$this->assertStringContainsString('ghost', $e->getMessage());
+			$this->assertStringContainsString('create_object', $e->getMessage());
+		}
+	}
+
+	public function testPatchConvertsDomainErrorsToToolErrors(): void
+	{
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->textOnlySchema());
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+
+		$this->patcher->method('patchObject')
+			->willThrowException(new \DomainException('Schema Validation Failed. (/title) too long'));
+
+		try {
+			$this->tool->patchHandler(collection: 'blog', id: 'my-post', data: ['title' => 'X']);
+			$this->fail('Expected ToolCallException.');
+		} catch (ToolCallException $e) {
+			$this->assertStringContainsString('blog/my-post', $e->getMessage());
+			$this->assertStringContainsString('Schema Validation Failed', $e->getMessage());
+		}
+	}
+
+	public function testPatchIsAnnotatedIdempotentAndNonDestructive(): void
+	{
+		$registry = new ToolRegistry();
+		$this->tool->register($registry);
+
+		$ann = $registry->get('patch_object')->annotations;
+
+		$this->assertNotNull($ann);
+		$this->assertTrue($ann->idempotentHint);
+		$this->assertFalse($ann->destructiveHint);
+		$this->assertFalse($ann->readOnlyHint);
 	}
 }

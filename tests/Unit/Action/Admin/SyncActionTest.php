@@ -34,6 +34,7 @@ final class SyncActionTest extends TestCase
 			$this->renderer,
 			$this->settingsFetcher,
 			$this->syncService,
+			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
 		);
 
 		// Default: renderer returns response for chaining

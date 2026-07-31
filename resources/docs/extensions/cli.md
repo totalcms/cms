@@ -118,6 +118,27 @@ tcms schema:import my-schema.json --json
 |----------|----------|-------------|
 | `file` | Yes | Path to schema JSON file |
 
+### `schema:lint`
+
+Lint stored schemas without saving anything. `schema:import` validates on the way in, but schemas edited in place (by hand or by an AI agent) are never re-validated — the linter closes that gap. Errors are structural problems that break at runtime: no `id` property defined, `required`/`index` entries naming undefined properties, `inheritFrom` pointing at a missing schema, deck/card `schemaref` targets that don't exist or contain deck-incompatible types, and meta-schema violations. Warnings flag agent-legibility gaps — properties without help text (help feeds the MCP tool catalog) and schemas without a description.
+
+```bash
+tcms schema:lint                 # all custom schemas
+tcms schema:lint blog            # one schema (reserved schemas allowed by ID)
+tcms schema:lint --strict        # warnings also fail the run
+tcms schema:lint --json          # machine-readable report
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `id` | No | Schema ID (default: lint all custom schemas) |
+
+| Option | Description |
+|--------|-------------|
+| `--strict` | Treat warnings as failures |
+
+Exit code is `0` when no errors were found (warnings allowed), `1` when errors were found — or warnings under `--strict` — so it slots into CI.
+
 ---
 
 ## Collection Commands
@@ -264,6 +285,21 @@ tcms object:get blog my-post --json
 |----------|----------|-------------|
 | `collection` | Yes | Collection ID |
 | `id` | Yes | Object ID |
+
+### `object:create`
+
+Create one object from a JSON file (or stdin with `-`). The object goes through the full save pipeline — schema defaults fill in, validation runs, the index updates, and the `object.created` event fires — exactly as if it were saved from the admin. Refuses to overwrite an existing object, and refuses a JSON array (use `collection:import` for bulk data).
+
+```bash
+tcms object:create blog my-post.json
+echo '{"id":"hello","title":"Hello"}' | tcms object:create blog -
+tcms object:create blog my-post.json --json    # echoes the saved object
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `collection` | Yes | Collection ID |
+| `file` | Yes | Path to a JSON file holding one object, or `-` for stdin |
 
 ### `object:export`
 
@@ -462,35 +498,45 @@ tcms push
 tcms push --dry-run
 tcms push --schemas=blog,products
 tcms push --templates=blog-post,sidebar
+tcms push --collections=builder-pages
 tcms push --schemas=blog --templates=blog-post --dry-run
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--schemas` | Comma-separated schema IDs to push (default: all custom) |
-| `--templates` | Comma-separated template IDs to push (default: all custom) |
-| `--dry-run` | Preview what would be pushed without sending |
+| `--schemas` | Comma-separated schema IDs to push |
+| `--templates` | Comma-separated template IDs to push |
+| `--collections` | Comma-separated allowlisted collection IDs whose objects to push |
+| `--collection-meta` | Comma-separated collection IDs whose settings to push (any collection; counters never travel) |
+| `--dry-run` | Compare both sides: per-item unchanged/differs/new status with newer-side hints |
 
 ### `pull`
 
-Pull schemas and templates from the production server.
+Pull schemas, templates, and allowlisted collection objects from the production server.
 
 ```bash
 tcms pull
 tcms pull --dry-run
 tcms pull --schemas=blog
 tcms pull --templates=blog-post,sidebar
+tcms pull --collections=builder-pages
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--schemas` | Comma-separated schema IDs to pull (default: all) |
-| `--templates` | Comma-separated template IDs to pull (default: all) |
-| `--dry-run` | Preview what would be pulled without applying |
+| `--schemas` | Comma-separated schema IDs to pull |
+| `--templates` | Comma-separated template IDs to pull |
+| `--collections` | Comma-separated allowlisted collection IDs whose objects to pull |
+| `--collection-meta` | Comma-separated collection IDs whose settings to pull (any collection; counters never travel) |
+| `--dry-run` | Compare both sides: per-item unchanged/differs/new status with newer-side hints |
 
-**What gets synced:** Custom schemas and custom templates only.
+**What gets synced:** Custom schemas, custom templates, collection settings (any collection — never its counters), and objects from five reserved collections — `builder-pages`, `mailer`, `mcp-prompt`, `dataviews`, `automations`. The collection list is hardcoded and cannot be extended.
 
-**What never gets synced:** Content/objects, media/images, system settings, API keys, reserved schemas.
+**What never gets synced:** Objects in your own custom collections, media/images, system settings, API keys, reserved schemas. A custom collection's *schema* syncs; the objects inside it do not.
+
+**Filter semantics:** a bare `tcms push` or `tcms pull` is a full mirror — every category travels. The moment any of `--schemas`, `--templates`, or `--collections` is given, the categories you did not mention are excluded entirely, so `tcms push --schemas=blog` moves the blog schema and nothing else.
+
+**Backups:** before an overwrite lands, the receiving instance snapshots the current version to `tcms-data/.system/backups/{schemas,objects}/...` (ten most recent per item). See the [Sync guide](operations/sync) for details.
 
 ---
 
@@ -498,12 +544,31 @@ tcms pull --templates=blog-post,sidebar
 
 ### `cache:clear`
 
-Clear all caches. When run from CLI, a signal file is written so the web process clears its APCu cache on the next request.
+Clear all caches.
 
 ```bash
 tcms cache:clear
 tcms cache:clear --json
 ```
+
+**How this reaches the web server.** APCu is per-process, so a CLI run cannot clear the cache the web server is holding — the two never share memory. Instead, `cache:clear` clears what it can reach directly (filesystem, Redis, Memcached) and writes a signal file to `tcms-data/.system/.cache_invalidate`. The next request to hit the site replays that signal and clears APCu in the web process.
+
+That means **the clear does not take effect until someone loads a page.** If you clear from a deploy script and immediately check the site, the very request you make is the one that applies it — so a single reload can still look stale. Load the page twice.
+
+If a clear appears not to have worked, check whether the signal file is still sitting there:
+
+```bash
+ls tcms-data/.system/.cache_invalidate
+```
+
+Present means no request has replayed it yet. Gone means it was applied.
+
+**Alternatives when you are iterating.** Two options avoid the round trip entirely:
+
+- **Turn on Developer Mode** in the admin. Cache reads are bypassed outright while it is active, so you see fresh output on every request without clearing anything. This is the right choice while you are actively editing templates or content.
+- **Hit the HTTP endpoint** at `/api/emergency/cache/clear`, which clears in the web process directly rather than by signal. It needs no login, and it is rate-limited to one call per IP every 15 minutes.
+
+> Note the `/api` prefix — `/emergency/cache/clear` without it returns a 404.
 
 ### `jobs:process`
 
@@ -542,6 +607,30 @@ Webhook and event triggers do not depend on this command — webhooks fire on HT
 **Cron setup** (add this as a second line, alongside `jobs:process`):
 ```bash
 * * * * * php /path/to/resources/bin/tcms automations:process
+```
+
+---
+
+## MCP Commands
+
+See the [MCP Server guide](docs/mcp/server) for the full server documentation.
+
+### `mcp:status`
+
+Show the MCP server's operator-facing health: enabled state, public-access switch, edition gate, tool prefix, and the tool list each persona sees. Saved-query tools defined in collection MCP cards are included and annotated `(saved query)`.
+
+```bash
+tcms mcp:status
+tcms mcp:status --json    # persona tool lists plus a schema_tools array
+```
+
+### `mcp:test`
+
+Invoke a tool locally without going through the HTTP endpoint — useful for verifying a tool's output and persona visibility before an agent connects.
+
+```bash
+tcms mcp:test query_collection --params='{"collection":"blog","limit":3}'
+tcms mcp:test query_collection --params='{"collection":"blog"}' --persona=public
 ```
 
 ---

@@ -64,6 +64,16 @@
 			"help"        : "The prompt text. Full Twig: <code>{{ args.x }}</code>, <code>{% for ... %}</code>, <code>cms.object(...)</code>, all <code>cms.*</code> functions.",
 			"field"       : "code",
 			"settings"    : { "mode" : "twig", "rows" : 20 }
+		},
+		"updated": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"    : "Updated Date",
+			"help"     : "Last modified date",
+			"field"    : "datetime",
+			"settings" : {
+				"onUpdate": true,
+				"readonly": true
+			}
 		}
 	}
 }

@@ -39,16 +39,19 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 ### Objects
 - `object:list <collection>` — list object IDs
 - `object:get <collection> <id>` — fetch one object
+- `object:create <collection> <file>` — create ONE object from JSON (`-` for stdin);
+  refuses arrays (use `collection:import`) and existing ids
 - `object:export <collection> <id>` — export one object as JSON or ZIP (with assets)
 - `object:delete <collection> <id>` — delete one object (updates the index)
-- **No `object:create`/`object:set`.** Create content via admin UI,
-  `collection:import`, or `jumpstart:import`.
 
 ### Schemas
 - `schema:list` — list all schemas
 - `schema:get <id>` — schema details
 - `schema:export <id> <file>` — export a schema to JSON
 - `schema:import <file>` — import a schema from JSON
+- `schema:lint [id]` — validate stored schemas WITHOUT saving; run after editing
+  schema JSON in place. Errors = structural breakage, warnings = missing
+  help text (which feeds the MCP tool catalog). `--strict` fails on warnings.
 
 ### Site Builder
 - `builder:init [starter]` — scaffold from a starter (`business`/`blog`/`portfolio`/`minimal`); `--frontend`, `--force`, `--list`

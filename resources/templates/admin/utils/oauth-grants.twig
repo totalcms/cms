@@ -52,10 +52,10 @@
 								<span>{{ t('oauth_grants.never_expires') }}</span>
 							{% elseif row.isExpired %}
 								<span style="color:oklch(var(--totalform-danger));">
-									{{ t('oauth_grants.expired_n_days_ago')|replace({'%days%': row.daysUntilExpiry|abs}) }}
+									{{ t('oauth_grants.expired_n_days_ago')|replace({'{days}': row.daysUntilExpiry|abs}) }}
 								</span>
 							{% else %}
-								<span>{{ t('oauth_grants.expires_in_n_days')|replace({'%days%': row.daysUntilExpiry}) }}</span>
+								<span>{{ t('oauth_grants.expires_in_n_days')|replace({'{days}': row.daysUntilExpiry}) }}</span>
 							{% endif %}
 						</div>
 					</div>

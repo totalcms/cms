@@ -44,7 +44,8 @@ class CollectionData
 	public bool $requireEmailVerification = false;     // when true, public registration creates inactive users + sends a verification email
 	public int $count                     = 0;                    // total number of objects created in this collection
 	public int $totalObjects              = -1;                // current number of objects (-1 = not calculated yet)
-	public string $lastUpdated            = '';                // ISO 8601 datetime of last object modification
+	public string $lastUpdated            = '';                // ISO 8601 datetime of last object modification (CONTENT timestamp — bumps on every object write)
+	public string $updated                = '';                // ISO 8601 datetime of last SETTINGS change (config timestamp — delta-stamped by CollectionSaver, never moved by content writes; sync diffs on it)
 
 	/** @var array<string> */
 	public array $groups = [];        // access groups that can access this collection
@@ -112,6 +113,12 @@ class CollectionData
 			'totalObjects'             => max($this->totalObjects, 0),
 			'lastUpdated'              => $this->lastUpdated,
 		];
+
+		// Only include updated once stamped — pre-existing meta files without
+		// one round-trip unchanged (same contract as SchemaData::updated).
+		if ($this->updated !== '') {
+			$collection['updated'] = $this->updated;
+		}
 
 		if ($this->properties !== []) {
 			$collection['properties'] = $this->properties;

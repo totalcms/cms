@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use Tests\Unit\XmlRpc\Stubs\BlogRegistryStubCollectionLister;
+use Tests\Unit\XmlRpc\Stubs\BlogRegistryStubObjectFetcher;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyPermissionChecker;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\XmlRpc\Data\XmlRpcIdentity;
 use TotalCMS\Domain\XmlRpc\Service\BlogRegistry;
 use TotalCMS\Domain\XmlRpc\Transport\XmlRpcFault;
@@ -28,49 +28,21 @@ function xmlRpcIdentity(array $scopes): XmlRpcIdentity
 }
 
 /**
- * `CollectionLister` is a `readonly class`, so the anonymous subclass below
- * must itself be declared `readonly` (a non-readonly class cannot extend a
- * readonly one) — same rule applied in XmlRpcAuthTest's ApiKeyFetcher/
- * UserValidationService doubles. `ApiKeyPermissionChecker` has no
- * dependencies, so the real service is used directly rather than doubled.
- *
- * `ObjectFetcher` is only exercised by `resolveForPost()`, which this suite
- * does not test (that behavior is pinned at the feature level in
- * XmlRpcPostResolutionTest.php, where real posts and real collections exist).
- * A double that reports every id absent keeps the constructor honest without
- * needing real storage here.
+ * The lister and object-fetcher doubles live in Stubs/ as autoloaded classes
+ * (readonly parents force readonly subclasses, and the anonymous readonly
+ * form is PHP 8.3+ while CI runs the 8.2 floor). `ApiKeyPermissionChecker`
+ * has no dependencies, so the real service is used directly rather than
+ * doubled.
  *
  * @param array<CollectionData> $collections
  */
 function makeBlogRegistry(array $collections): BlogRegistry
 {
-	$lister = new readonly class($collections) extends CollectionLister {
-		/** @param array<CollectionData> $collections */
-		public function __construct(private array $collections)
-		{
-		}
-
-		public function listCollectionsWithSchema(string $schemaId): array
-		{
-			return array_values(array_filter(
-				$this->collections,
-				fn (CollectionData $collection): bool => $collection->schema === $schemaId
-			));
-		}
-	};
-
-	$objectFetcher = new readonly class extends ObjectFetcher {
-		public function __construct()
-		{
-		}
-
-		public function existsObject(string $collection, string $id): bool
-		{
-			return false;
-		}
-	};
-
-	return new BlogRegistry($lister, new ApiKeyPermissionChecker(), $objectFetcher);
+	return new BlogRegistry(
+		new BlogRegistryStubCollectionLister($collections),
+		new ApiKeyPermissionChecker(),
+		new BlogRegistryStubObjectFetcher(),
+	);
 }
 
 it('returns only blog collections the key scopes permit', function (): void {

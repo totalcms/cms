@@ -25,6 +25,16 @@ export default class Dialog  {
 		this.openListener();
 		this.closeListener();
 
+		// Escape closes a native <dialog> through the browser's cancel behavior,
+		// bypassing close() — run the same cleanup so onClose still fires and
+		// body scrolling is restored.
+		this.dialog.addEventListener('cancel', () => {
+			this.allowBodyScrolling();
+			if (this.options.onClose && typeof this.options.onClose === "function") {
+				this.options.onClose();
+			}
+		});
+
 		if (this.options.openOnLoad) {
 			this.open();
 		}

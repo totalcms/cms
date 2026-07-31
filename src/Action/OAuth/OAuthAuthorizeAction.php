@@ -46,12 +46,18 @@ readonly class OAuthAuthorizeAction
 
 		$userId = $this->session->get(SessionKeys::AUTH_USER);
 		if ($userId === null) {
-			$next     = (string)$request->getUri();
+			// Return-to via the session, the same mechanism DualAuthMiddleware
+			// uses for admin pages: AuthLoginSubmitAction reads
+			// REQUEST_ORIGIN_URL after authentication and sends the operator
+			// back here — full authorize query string intact — so the consent
+			// screen appears instead of the dashboard. (A `next` query param
+			// was passed previously, but nothing ever consumed it.)
+			$this->session->set(SessionKeys::REQUEST_ORIGIN_URL, (string)$request->getUri());
 			$loginUrl = RouteContext::fromRequest($request)->getRouteParser()->urlFor('login');
 
 			return $response
 				->withStatus(302)
-				->withHeader('Location', $loginUrl . '?next=' . urlencode($next));
+				->withHeader('Location', $loginUrl);
 		}
 
 		// Persist the parsed AuthorizationRequest for the POST handler.

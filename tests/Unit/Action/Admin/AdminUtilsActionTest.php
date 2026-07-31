@@ -108,6 +108,7 @@ final class AdminUtilsActionTest extends TestCase
 			$this->extensionManager,
 			$this->visualizerService,
 			$this->session,
+			$this->createMock(\TotalCMS\Domain\Builder\Service\BuilderTemplatePaths::class),
 		);
 	}
 

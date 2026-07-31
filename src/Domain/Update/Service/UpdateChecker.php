@@ -45,7 +45,7 @@ readonly class UpdateChecker
 			}
 		}
 
-		$licenseUrl     = $this->getLicenseApiUrl();
+		$licenseUrl     = Config::LICENSE_API_URL;
 		$currentVersion = Version::number();
 
 		$response = $this->httpClient->request('GET', $licenseUrl . '/version?current=' . urlencode($currentVersion), [
@@ -139,10 +139,5 @@ readonly class UpdateChecker
 			updatesValid: $licenseInfo['valid'],
 			updatesExpireDate: $licenseInfo['expireDate'],
 		);
-	}
-
-	private function getLicenseApiUrl(): string
-	{
-		return Config::LICENSE_API_URL;
 	}
 }
