@@ -112,15 +112,19 @@ class CsvImporter
 					$this->updateObject($offset, $record) :
 					$this->importNewObject($offset, $record);
 
-				if ($imported && isset($record['id'])) {
-					$id = (string)$record['id'];
-					if ($updateObject) {
-						$updatedIds[] = $id;
-					} else {
-						$createdIds[] = $id;
-					}
+				if ($imported) {
+					// Rows without an id column still count — the schema autogen
+					// assigns one during save, so only the id lists skip them.
 					$importCount++;
-				} elseif (!$imported) {
+					if (isset($record['id'])) {
+						$id = (string)$record['id'];
+						if ($updateObject) {
+							$updatedIds[] = $id;
+						} else {
+							$createdIds[] = $id;
+						}
+					}
+				} else {
 					$this->recordSkip($offset, $record, $this->lastSkipReason ?? 'skipped');
 				}
 			} catch (\Exception $exception) {
@@ -170,12 +174,14 @@ class CsvImporter
 	 */
 	public function importNewObject(int $offset, array $record): bool
 	{
-		// Slugify ID to ensure consistent format
+		// Slugify ID to ensure consistent format. Rows may omit the id column —
+		// ObjectSaver autogenerates one when the schema allows it (and rejects
+		// the row when it doesn't), so only use the id when it's present.
 		if (isset($record['id'])) {
 			$record['id'] = SlugData::slugify((string)$record['id']);
 		}
 
-		if ($this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
+		if (isset($record['id']) && $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$error = sprintf('Object with id %s already exists in %s', $record['id'], $this->collection);
 			$this->logger->warning($error);
 			$this->lastSkipReason = $error;
@@ -183,14 +189,15 @@ class CsvImporter
 			return false;
 		}
 
+		$label = isset($record['id']) ? (string)$record['id'] : '(autogen id)';
 		if ($this->queueJobs) {
 			// Add job to queue
 			$this->jobQueuer->queueImport($this->collection, $record);
-			$this->logger->info(sprintf('Queued record for import: %s', $record['id']));
+			$this->logger->info(sprintf('Queued record for import: %s', $label));
 		} else {
 			// Save the object but do not rebuild the index, we do that at the end
 			$this->objectImporter->importObject($this->collection, $record);
-			$this->logger->info(sprintf('Imported record: %s', $record['id']));
+			$this->logger->info(sprintf('Imported record: %s', $label));
 		}
 		$this->logger->debug('Imported record', $record);
 

@@ -239,4 +239,23 @@ describe('CsvImporter extra coverage', function (): void {
 		expect($count)->toBe(1);
 		expect($calls)->toBe(2);
 	});
+
+	test('imports rows without an id column cleanly', function (): void {
+		// Regression (Sentry TOTAL-CMS-N9 family): a CSV with no id column must
+		// import without undefined-key warnings — ids come from schema autogen —
+		// and the rows must be counted as imported.
+		$this->objectFetcher->expects($this->never())->method('existsObject');
+		$this->objectImporter->expects($this->exactly(2))->method('importObject');
+
+		set_error_handler(static function (int $errno, string $errstr): bool {
+			throw new ErrorException($errstr, 0, $errno);
+		});
+		try {
+			$count = $this->importer->import('blog', ($this->uploadedFileFrom)("name,session\nalice,intro\nbob,keynote"));
+		} finally {
+			restore_error_handler();
+		}
+
+		expect($count)->toBe(2);
+	});
 });

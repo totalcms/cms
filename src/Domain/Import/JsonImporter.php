@@ -78,15 +78,19 @@ class JsonImporter
 					$this->updateObject($record) :
 					$this->importNewObject($record);
 
-				if ($imported && isset($record['id'])) {
-					$id = (string)$record['id'];
-					if ($updateObject) {
-						$updatedIds[] = $id;
-					} else {
-						$createdIds[] = $id;
-					}
+				if ($imported) {
+					// Records without an id still count — the schema autogen
+					// assigns one during save, so only the id lists skip them.
 					$importCount++;
-				} elseif (!$imported) {
+					if (isset($record['id'])) {
+						$id = (string)$record['id'];
+						if ($updateObject) {
+							$updatedIds[] = $id;
+						} else {
+							$createdIds[] = $id;
+						}
+					}
+				} else {
 					$this->recordSkip($offset, $record, $this->lastSkipReason ?? 'skipped');
 				}
 			} catch (\Exception $exception) {
@@ -134,12 +138,10 @@ class JsonImporter
 	 */
 	public function importNewObject(array $record): bool
 	{
-		// if (!isset($record['id'])) {
-		// 	$this->logger->warning('Skipping import of record without ID');
-
-		// 	return false;
-		// }
-		if ($this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
+		// Records may omit `id` — ObjectSaver autogenerates one when the schema
+		// allows it (and rejects the record when it doesn't), so the exists
+		// check and log lines only use the id when the record carries one.
+		if (isset($record['id']) && $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$error = sprintf('Object with id %s already exists in %s', $record['id'], $this->collection);
 			$this->logger->warning($error);
 			$this->lastSkipReason = $error;
@@ -147,14 +149,15 @@ class JsonImporter
 			return false;
 		}
 
+		$label = isset($record['id']) ? (string)$record['id'] : '(autogen id)';
 		if ($this->queueJobs) {
 			// Add job to queue
 			$this->jobQueuer->queueImport($this->collection, $record);
-			$this->logger->info(sprintf('Queued record for import: %s', $record['id']));
+			$this->logger->info(sprintf('Queued record for import: %s', $label));
 		} else {
 			// Save the object but do not rebuild the index, we do that at the end
 			$this->objectImporter->importObject($this->collection, $record);
-			$this->logger->info(sprintf('Imported record: %s', $record['id']));
+			$this->logger->info(sprintf('Imported record: %s', $label));
 		}
 		$this->logger->debug('Imported record', $record);
 
