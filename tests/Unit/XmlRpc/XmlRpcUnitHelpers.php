@@ -41,20 +41,24 @@ function makePostMapper(string $timezone = 'UTC', string $api = 'https://demo.te
 		$prop->setValue($config, $value);
 	}
 
-	// `ObjectUrlBuilder` is a `readonly class`, so the anonymous subclass must
-	// itself be declared `readonly` — a non-readonly class cannot extend a
-	// readonly one (same rule already applied to CollectionLister's double in
-	// BlogRegistryTest.php).
-	$urlBuilder = new readonly class extends ObjectUrlBuilder {
-		public function __construct()
-		{
-		}
+	return new PostMapper($config, new XmlRpcStubObjectUrlBuilder());
+}
 
-		public function buildUrl(CollectionData $collectionData, array $object): string
-		{
-			return 'https://demo.test/blog/' . ($object['id'] ?? '');
-		}
-	};
+/**
+ * `ObjectUrlBuilder` is a `readonly class`, so this subclass must itself be
+ * declared `readonly` — a non-readonly class cannot extend a readonly one.
+ * It is a NAMED class (not anonymous) because `new readonly class` syntax is
+ * PHP 8.3+ and the project floor (and CI) is 8.2; named readonly classes work
+ * on 8.2. Same rule for the doubles in BlogRegistryTest / XmlRpcAuthTest.
+ */
+readonly class XmlRpcStubObjectUrlBuilder extends ObjectUrlBuilder
+{
+	public function __construct()
+	{
+	}
 
-	return new PostMapper($config, $urlBuilder);
+	public function buildUrl(CollectionData $collectionData, array $object): string
+	{
+		return 'https://demo.test/blog/' . ($object['id'] ?? '');
+	}
 }

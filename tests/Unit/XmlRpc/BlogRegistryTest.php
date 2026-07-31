@@ -28,49 +28,56 @@ function xmlRpcIdentity(array $scopes): XmlRpcIdentity
 }
 
 /**
- * `CollectionLister` is a `readonly class`, so the anonymous subclass below
- * must itself be declared `readonly` (a non-readonly class cannot extend a
- * readonly one) — same rule applied in XmlRpcAuthTest's ApiKeyFetcher/
- * UserValidationService doubles. `ApiKeyPermissionChecker` has no
- * dependencies, so the real service is used directly rather than doubled.
+ * `CollectionLister` is a `readonly class`, so the subclass below must itself
+ * be declared `readonly` (a non-readonly class cannot extend a readonly one)
+ * — same rule applied in XmlRpcAuthTest's ApiKeyFetcher/UserValidationService
+ * doubles. The doubles are NAMED classes rather than anonymous ones because
+ * `new readonly class` syntax is PHP 8.3+ and the project floor (and CI) is
+ * 8.2. `ApiKeyPermissionChecker` has no dependencies, so the real service is
+ * used directly rather than doubled.
  *
  * `ObjectFetcher` is only exercised by `resolveForPost()`, which this suite
  * does not test (that behavior is pinned at the feature level in
  * XmlRpcPostResolutionTest.php, where real posts and real collections exist).
  * A double that reports every id absent keeps the constructor honest without
  * needing real storage here.
- *
- * @param array<CollectionData> $collections
  */
+readonly class BlogRegistryStubCollectionLister extends CollectionLister
+{
+	/** @param array<CollectionData> $collections */
+	public function __construct(private array $collections)
+	{
+	}
+
+	public function listCollectionsWithSchema(string $schemaId): array
+	{
+		return array_values(array_filter(
+			$this->collections,
+			fn (CollectionData $collection): bool => $collection->schema === $schemaId
+		));
+	}
+}
+
+readonly class BlogRegistryStubObjectFetcher extends ObjectFetcher
+{
+	public function __construct()
+	{
+	}
+
+	public function existsObject(string $collection, string $id): bool
+	{
+		return false;
+	}
+}
+
+/** @param array<CollectionData> $collections */
 function makeBlogRegistry(array $collections): BlogRegistry
 {
-	$lister = new readonly class($collections) extends CollectionLister {
-		/** @param array<CollectionData> $collections */
-		public function __construct(private array $collections)
-		{
-		}
-
-		public function listCollectionsWithSchema(string $schemaId): array
-		{
-			return array_values(array_filter(
-				$this->collections,
-				fn (CollectionData $collection): bool => $collection->schema === $schemaId
-			));
-		}
-	};
-
-	$objectFetcher = new readonly class extends ObjectFetcher {
-		public function __construct()
-		{
-		}
-
-		public function existsObject(string $collection, string $id): bool
-		{
-			return false;
-		}
-	};
-
-	return new BlogRegistry($lister, new ApiKeyPermissionChecker(), $objectFetcher);
+	return new BlogRegistry(
+		new BlogRegistryStubCollectionLister($collections),
+		new ApiKeyPermissionChecker(),
+		new BlogRegistryStubObjectFetcher(),
+	);
 }
 
 it('returns only blog collections the key scopes permit', function (): void {

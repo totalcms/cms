@@ -33,26 +33,45 @@ function xmlRpcTestConfig(): TotalCMS\Support\Config
 
 /**
  * `ApiKeyFetcher` and `UserValidationService` are declared `readonly class`, so
- * an anonymous subclass with its own constructor must itself be declared
- * `readonly` — PHP rejects a non-readonly class extending a readonly one
- * ("Non-readonly class ... cannot extend readonly class ..."). Verified against
- * PHP 8.2+ semantics directly before writing this. `EditionFeatureService` is a
- * plain class (its properties are individually readonly, the class isn't), so
- * its double needs no such modifier.
+ * a subclass with its own constructor must itself be declared `readonly` — PHP
+ * rejects a non-readonly class extending a readonly one ("Non-readonly class
+ * ... cannot extend readonly class ..."). The readonly doubles are NAMED
+ * classes because the anonymous form (`new readonly class`) is PHP 8.3+ syntax
+ * and the project floor (and CI) is 8.2 — named readonly classes work on 8.2.
+ * `EditionFeatureService` is a plain class (its properties are individually
+ * readonly, the class isn't), so its double stays anonymous and unmodified.
  */
+readonly class XmlRpcAuthStubApiKeyFetcher extends TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher
+{
+	public function __construct(private ?ApiKeyData $key)
+	{
+	}
+
+	public function validateKeyForPath(string $keyString, string $path): ?ApiKeyData
+	{
+		return $this->key;
+	}
+}
+
+readonly class XmlRpcAuthStubUserValidationService extends TotalCMS\Domain\Auth\Service\UserValidationService
+{
+	/** @param array<string,mixed>|null $user */
+	public function __construct(private ?array $user)
+	{
+	}
+
+	public function validateUser(string $idOrEmail, string $collection = ''): array
+	{
+		if ($this->user === null) {
+			throw new Exception('User not found');
+		}
+
+		return $this->user;
+	}
+}
+
 function makeXmlRpcAuth(?ApiKeyData $validatedKey, bool $proEdition, ?array $user = null): XmlRpcAuth
 {
-	$fetcher = new readonly class($validatedKey) extends TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher {
-		public function __construct(private ?ApiKeyData $key)
-		{
-		}
-
-		public function validateKeyForPath(string $keyString, string $path): ?ApiKeyData
-		{
-			return $this->key;
-		}
-	};
-
 	$editions = new class($proEdition) extends TotalCMS\Domain\License\Service\EditionFeatureService {
 		public function __construct(private bool $allowed)
 		{
@@ -64,22 +83,12 @@ function makeXmlRpcAuth(?ApiKeyData $validatedKey, bool $proEdition, ?array $use
 		}
 	};
 
-	$users = new readonly class($user) extends TotalCMS\Domain\Auth\Service\UserValidationService {
-		public function __construct(private ?array $user)
-		{
-		}
-
-		public function validateUser(string $idOrEmail, string $collection = ''): array
-		{
-			if ($this->user === null) {
-				throw new Exception('User not found');
-			}
-
-			return $this->user;
-		}
-	};
-
-	return new XmlRpcAuth($fetcher, $editions, $users, xmlRpcTestConfig());
+	return new XmlRpcAuth(
+		new XmlRpcAuthStubApiKeyFetcher($validatedKey),
+		$editions,
+		new XmlRpcAuthStubUserValidationService($user),
+		xmlRpcTestConfig(),
+	);
 }
 
 it('faults with 403 when the key is invalid', function (): void {
