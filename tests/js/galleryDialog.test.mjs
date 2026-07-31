@@ -98,6 +98,101 @@ describe('GalleryField populate -> read round-trip', () => {
 });
 
 //-----------------------------------------------
+// Closing the shared dialog must mark the gallery field itself dirty. The
+// shared dialog lives OUTSIDE previewContainer, so dirty dialog subfields are
+// invisible to isUnsaved() — commitSharedDialog() therefore flags the gallery
+// via changed() once the data store is updated. Without this, editing the
+// focal point via the drag target (which fires no native change event that
+// could bubble to the gallery container) never enables autosave or Save/Cmd+S.
+//-----------------------------------------------
+describe('GalleryField.commitSharedDialog', () => {
+	function galleryForCommit(storeImage, dialogValues, dirtyKeys = []) {
+		const g = Object.create(GalleryField.prototype);
+		g.container = document.createElement('div');
+		g.input = document.createElement('input');
+		g.dispatcher = { dispatchEvent: vi.fn() };
+		g.form = { isEditMode: () => true };
+		g.previewContainer = document.createElement('div');
+		const child = document.createElement('div');
+		child.preview = {};
+		child.dataset.imageName = storeImage.name;
+		g.previewContainer.appendChild(child);
+		g.imageDataStore = new Map([[storeImage.name, storeImage]]);
+		g.storedValue = g.getValue();
+		g.sharedDialogFields = Object.entries(dialogValues).map(([property, value]) => ({
+			totalfield: {
+				property,
+				getValue  : () => value,
+				isUnsaved : () => dirtyKeys.includes(property),
+			},
+		}));
+		g.activePreview = {
+			getImageName: () => storeImage.name,
+			container: document.createElement('div'),
+		};
+		return g;
+	}
+
+	test('marks the gallery unsaved when dialog fields were edited (focal point drag target)', () => {
+		const g = galleryForCommit(
+			{ name: 'pic.jpg', focalpoint: { x: 50, y: 50 }, exif: { nodata: '' } },
+			{ 'name': 'pic.jpg', 'focalpoint-x': 30, 'focalpoint-y': 70 },
+			['focalpoint-x', 'focalpoint-y'],
+		);
+
+		g.commitSharedDialog();
+
+		expect(g.imageDataStore.get('pic.jpg').focalpoint).toEqual({ x: 30, y: 70 });
+		expect(g.container.classList.contains('unsaved')).toBe(true);
+		expect(g.isUnsaved()).toBe(true);
+	});
+
+	test('leaves the store and dirty state untouched when no dialog field was edited', () => {
+		const original = { name: 'pic.jpg', focalpoint: { x: 50, y: 50 }, exif: { nodata: '' } };
+		const g = galleryForCommit(
+			original,
+			// Dialog rebuild would differ in shape from the server-loaded object —
+			// without the dirty-field gate this would false-positive as a change.
+			{ 'name': 'pic.jpg', 'focalpoint-x': 50, 'focalpoint-y': 50 },
+		);
+
+		g.commitSharedDialog();
+
+		expect(g.imageDataStore.get('pic.jpg')).toBe(original);
+		expect(g.container.classList.contains('unsaved')).toBe(false);
+	});
+
+	test('stays clean when edits net out to the same value', () => {
+		const g = galleryForCommit(
+			{ name: 'pic.jpg', focalpoint: { x: 50, y: 50 }, exif: { nodata: '' } },
+			{ 'name': 'pic.jpg', 'focalpoint-x': 50, 'focalpoint-y': 50 },
+			['focalpoint-x'], // e.g. dragged 50 -> 30 -> back to 50
+		);
+		// Baseline matches what the dialog rebuild produces
+		g.imageDataStore.set('pic.jpg', g.readSharedDialog());
+		g.storedValue = g.getValue();
+
+		g.commitSharedDialog();
+
+		expect(g.container.classList.contains('unsaved')).toBe(false);
+	});
+
+	test('does nothing without an active preview', () => {
+		const g = galleryForCommit(
+			{ name: 'pic.jpg', focalpoint: { x: 50, y: 50 }, exif: { nodata: '' } },
+			{ 'name': 'other.jpg', 'focalpoint-x': 1, 'focalpoint-y': 2 },
+			['focalpoint-x'],
+		);
+		g.activePreview = null;
+
+		g.commitSharedDialog();
+
+		expect(g.imageDataStore.get('pic.jpg').focalpoint).toEqual({ x: 50, y: 50 });
+		expect(g.container.classList.contains('unsaved')).toBe(false);
+	});
+});
+
+//-----------------------------------------------
 // isUnsaved() must report queued droplet files as unsaved. A new-form gallery's
 // getValue() is [] until edit mode, so changed() never adds the dirty class —
 // without the pending-files check, afterSave() filters the gallery out and the
