@@ -140,5 +140,4 @@ readonly class UpdateChecker
 			updatesExpireDate: $licenseInfo['expireDate'],
 		);
 	}
-
 }

@@ -162,7 +162,7 @@ class SyncBackupService
 	 */
 	private function isSafeSegment(string $segment): bool
 	{
-		return $segment !== '' && $segment !== '.' && $segment !== '..'
+		return !in_array($segment, ['', '.', '..'], true)
 			&& !str_contains($segment, '/') && !str_contains($segment, '\\');
 	}
 }

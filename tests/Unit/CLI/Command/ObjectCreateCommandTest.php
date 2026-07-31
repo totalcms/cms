@@ -100,7 +100,7 @@ describe('object:create', function (): void {
 		$this->tester->execute(['collection' => 'blog', 'file' => $this->tmpFile]);
 
 		expect($this->tester->getStatusCode())->toBe(1);
-		expect($this->tester->getDisplay())->toContain("already exists");
+		expect($this->tester->getDisplay())->toContain('already exists');
 	});
 
 	it('surfaces saver failures as command errors', function (): void {

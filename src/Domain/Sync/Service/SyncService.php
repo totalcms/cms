@@ -40,9 +40,9 @@ readonly class SyncService
 	 * @param array<string,list<string>|null>|null    $collectionsFilter
 	 * @param list<string>|null                       $collectionMetaFilter Collection SETTINGS to include (tristate)
 	 *
-	 * @return array{schemas:array<string,mixed>,templates:array<string,mixed>,objects:array<string,mixed>,collections:array<string,mixed>}
-	 *
 	 * @throws \RuntimeException When the remote cannot be reached or answers with an error
+	 *
+	 * @return array{schemas:array<string,mixed>,templates:array<string,mixed>,objects:array<string,mixed>,collections:array<string,mixed>}
 	 */
 	public function diff(
 		string $url,

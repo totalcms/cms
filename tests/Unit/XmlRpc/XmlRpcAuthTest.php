@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Tests\Unit\XmlRpc\Stubs\XmlRpcAuthStubApiKeyFetcher;
+use Tests\Unit\XmlRpc\Stubs\XmlRpcAuthStubUserValidationService;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth;
 use TotalCMS\Domain\XmlRpc\Transport\XmlRpcFault;
@@ -32,44 +34,13 @@ function xmlRpcTestConfig(): TotalCMS\Support\Config
 }
 
 /**
- * `ApiKeyFetcher` and `UserValidationService` are declared `readonly class`, so
- * a subclass with its own constructor must itself be declared `readonly` — PHP
- * rejects a non-readonly class extending a readonly one ("Non-readonly class
- * ... cannot extend readonly class ..."). The readonly doubles are NAMED
- * classes because the anonymous form (`new readonly class`) is PHP 8.3+ syntax
- * and the project floor (and CI) is 8.2 — named readonly classes work on 8.2.
- * `EditionFeatureService` is a plain class (its properties are individually
- * readonly, the class isn't), so its double stays anonymous and unmodified.
+ * The ApiKeyFetcher and UserValidationService doubles live in Stubs/ as
+ * autoloaded classes — their parents are `readonly class`es, which forces
+ * readonly subclasses, and the anonymous readonly form is PHP 8.3+ while CI
+ * runs the 8.2 floor. `EditionFeatureService` is a plain class (its
+ * properties are individually readonly, the class isn't), so its double
+ * stays anonymous and unmodified.
  */
-readonly class XmlRpcAuthStubApiKeyFetcher extends TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher
-{
-	public function __construct(private ?ApiKeyData $key)
-	{
-	}
-
-	public function validateKeyForPath(string $keyString, string $path): ?ApiKeyData
-	{
-		return $this->key;
-	}
-}
-
-readonly class XmlRpcAuthStubUserValidationService extends TotalCMS\Domain\Auth\Service\UserValidationService
-{
-	/** @param array<string,mixed>|null $user */
-	public function __construct(private ?array $user)
-	{
-	}
-
-	public function validateUser(string $idOrEmail, string $collection = ''): array
-	{
-		if ($this->user === null) {
-			throw new Exception('User not found');
-		}
-
-		return $this->user;
-	}
-}
-
 function makeXmlRpcAuth(?ApiKeyData $validatedKey, bool $proEdition, ?array $user = null): XmlRpcAuth
 {
 	$editions = new class($proEdition) extends TotalCMS\Domain\License\Service\EditionFeatureService {

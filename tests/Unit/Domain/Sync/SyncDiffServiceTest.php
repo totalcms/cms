@@ -106,11 +106,11 @@ describe('SyncDiffService', function (): void {
 	test('collection settings diff spans custom and reserved entries by id', function (): void {
 		$diff = $this->service->diff(
 			['collections' => [
-				'custom'   => [['id' => 'products', 'schema' => 'product', 'mcp' => ['access' => 'public'], 'updated' => '2026-07-30T10:00:00+00:00']],
+				'custom'    => [['id' => 'products', 'schema' => 'product', 'mcp' => ['access' => 'public'], 'updated' => '2026-07-30T10:00:00+00:00']],
 				'reserved'  => [['id' => 'builder-pages', 'schema' => 'builder-page', 'mcp' => []]],
 			]],
 			['collections' => [
-				'custom'   => [['id' => 'products', 'schema' => 'product', 'mcp' => ['access' => 'admin'], 'updated' => '2026-07-01T10:00:00+00:00']],
+				'custom'    => [['id' => 'products', 'schema' => 'product', 'mcp' => ['access' => 'admin'], 'updated' => '2026-07-01T10:00:00+00:00']],
 				'reserved'  => [['id' => 'builder-pages', 'schema' => 'builder-page', 'mcp' => []]],
 			]],
 		);

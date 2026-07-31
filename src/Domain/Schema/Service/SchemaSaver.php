@@ -6,10 +6,10 @@ use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\SchemaEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
+use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
-use TotalCMS\Domain\Property\Data\DateData;
 
 readonly class SchemaSaver
 {

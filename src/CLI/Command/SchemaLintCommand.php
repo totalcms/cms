@@ -33,7 +33,7 @@ class SchemaLintCommand extends BaseCommand
 			$schemaIds = [(string)$id];
 		} else {
 			$schemaIds = array_map(
-				fn ($schema): string => $schema->id,
+				fn (\TotalCMS\Domain\Schema\Data\SchemaData $schema): string => $schema->id,
 				$this->totalcms->schemaLister()->listCustomSchemas()
 			);
 			if ($schemaIds === []) {

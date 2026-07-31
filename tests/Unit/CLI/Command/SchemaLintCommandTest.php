@@ -16,8 +16,8 @@ use TotalCMS\TotalCMS;
 beforeEach(function (): void {
 	$this->totalcms = $this->createMock(TotalCMS::class);
 
-	$clean     = new SchemaData();
-	$clean->id = 'clean';
+	$clean      = new SchemaData();
+	$clean->id  = 'clean';
 	$broken     = new SchemaData();
 	$broken->id = 'broken';
 

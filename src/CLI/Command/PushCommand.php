@@ -69,7 +69,7 @@ class PushCommand extends BaseCommand
 				$collectionMetaFilter
 			)->toArray();
 
-			return $this->renderSyncDryRun($input, $output, $local, $remote['url'], 'push', null);
+			return $this->renderSyncDryRun($input, $output, $local, $remote['url'], 'push');
 		}
 
 		// Actual push via shared service

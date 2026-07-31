@@ -114,7 +114,7 @@ readonly class SchemaLinter
 
 		$schemaRef = (string)($property['schemaref'] ?? '');
 		if ($schemaRef === '') {
-			return ["Property '{$name}' is a " . basename($ref, '.json') . " but has no schemaref."];
+			return ["Property '{$name}' is a " . basename($ref, '.json') . ' but has no schemaref.'];
 		}
 
 		$childId = SchemaFetcher::extractSchemaId($schemaRef);

@@ -70,5 +70,4 @@ readonly class UpdateDownloader
 
 		return $tempPath;
 	}
-
 }

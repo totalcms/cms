@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use Tests\Unit\XmlRpc\Stubs\XmlRpcStubObjectUrlBuilder;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\XmlRpc\Service\PostMapper;
 use TotalCMS\Support\Config;
 
@@ -13,7 +13,9 @@ use TotalCMS\Support\Config;
  * tests/Feature/XmlRpcTestHelpers.php) rather than being duplicated as
  * top-level functions per file — Pest/PHPUnit loads every *Test.php file
  * into the same process, so a duplicated global function would fatal with
- * "Cannot redeclare".
+ * "Cannot redeclare". Service doubles live as autoloaded classes under
+ * Stubs/ — named and namespaced because `new readonly class` is PHP 8.3+
+ * syntax and CI runs the 8.2 floor.
  */
 function blogCollection(string $id, string $schema = 'blog'): CollectionData
 {
@@ -42,23 +44,4 @@ function makePostMapper(string $timezone = 'UTC', string $api = 'https://demo.te
 	}
 
 	return new PostMapper($config, new XmlRpcStubObjectUrlBuilder());
-}
-
-/**
- * `ObjectUrlBuilder` is a `readonly class`, so this subclass must itself be
- * declared `readonly` — a non-readonly class cannot extend a readonly one.
- * It is a NAMED class (not anonymous) because `new readonly class` syntax is
- * PHP 8.3+ and the project floor (and CI) is 8.2; named readonly classes work
- * on 8.2. Same rule for the doubles in BlogRegistryTest / XmlRpcAuthTest.
- */
-readonly class XmlRpcStubObjectUrlBuilder extends ObjectUrlBuilder
-{
-	public function __construct()
-	{
-	}
-
-	public function buildUrl(CollectionData $collectionData, array $object): string
-	{
-		return 'https://demo.test/blog/' . ($object['id'] ?? '');
-	}
 }
