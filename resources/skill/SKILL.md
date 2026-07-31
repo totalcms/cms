@@ -42,9 +42,10 @@ Prefer looking things up over guessing; training data is often stale on exact si
    builder helpers are `cms.builder.nav()`, `cms.builder.url(id, params)`,
    `cms.builder.css/js/asset()`. See `references/site-builder.md`.
 4. **Add a page record.** A page is an object in the `builder-pages` collection.
-   **There is no `object:create` CLI command** — create content one of three ways:
+   Create it one of these ways:
+   - `echo '{"id":"about","title":"About","route":"/about","template":"pages/page.twig"}' | vendor/bin/tcms object:create builder-pages -` (one object, file or stdin), or
    - the **admin UI** (Site Builder → Pages), or
-   - `vendor/bin/tcms collection:import builder-pages <file.json>` (see `references/cli.md`), or
+   - `vendor/bin/tcms collection:import builder-pages <file.json>` for arrays (see `references/cli.md`), or
    - `vendor/bin/tcms jumpstart:import <file>` for bulk seeding.
    Key `builder-pages` fields: `route`, `template`, `title`, `draft`, `data` (free-form
    JSON exposed as `page.data.*`). Full list in `references/site-builder.md`.
@@ -72,6 +73,23 @@ JumpStart files, imports, the API — which is exactly what an agent tends to do
 
 See `vendor/totalcms/cms/resources/docs/fields/deck.md` for the full shape.
 
+**After editing any schema JSON in place, run `vendor/bin/tcms schema:lint <id>`**
+— imports validate on the way in, but in-place edits are never re-checked, and
+the linter also flags properties missing the help text AI agents rely on.
+
+## Working against a live site
+
+Two rules prevent the two worst mistakes:
+
+- **Patch, don't replace.** When editing a live site through its MCP server,
+  prefer `patch_object` (merges only the fields you send). `update_object` is a
+  FULL replace — if you must use it, fetch the complete record with
+  `get_object` + `format: "html"` first, edit, strip the decorated `url` key,
+  and write the whole body back. Details: `references/mcp-content.md`.
+- **After launch, the server owns content.** Local seed files go stale by
+  design — never re-import them over live data. Use `pull`/`push` (dry-run
+  first; filters are exclusive). Details: `references/going-live.md`.
+
 ## Reference files (read on demand)
 
 | When you are… | Read |
@@ -80,4 +98,6 @@ See `vendor/totalcms/cms/resources/docs/fields/deck.md` for the full shape.
 | editing builder templates, routes, or page records | `references/site-builder.md` |
 | setting up or building frontend assets | `references/frontend.md` |
 | modeling data — collections, schemas, objects | `references/data-model.md` |
+| reading/writing content via the site's MCP server | `references/mcp-content.md` |
+| launching, syncing with production (`push`/`pull`) | `references/going-live.md` |
 | needing an exact field option / Twig signature | `vendor/totalcms/cms/resources/docs/<section>/` (or MCP) |

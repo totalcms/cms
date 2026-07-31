@@ -45,6 +45,7 @@ use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaLinter;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
@@ -367,6 +368,17 @@ class TotalCMS
 	public function schemaLister(): SchemaLister
 	{
 		return $this->container->get(SchemaLister::class);
+	}
+
+	/**
+	 * Get the schema linter for validating stored schemas without saving.
+	 *
+	 * Usage:
+	 *   $result = $totalcms->schemaLinter()->lint('blog');
+	 */
+	public function schemaLinter(): SchemaLinter
+	{
+		return $this->container->get(SchemaLinter::class);
 	}
 
 	/**

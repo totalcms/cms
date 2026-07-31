@@ -31,6 +31,34 @@ The practical consequence is that **your own custom collections' objects never s
 - API keys
 - Reserved (built-in) schemas
 
+## The Source-of-Truth Rule
+
+Sync is a mirror, and mirrors need a direction. The rule that keeps the two
+sides sane: **before launch, your local project is the source of truth. After
+launch, the production server is.**
+
+Before launch, everything — content, schemas, templates, settings — is authored
+locally and deployed together. Seed files and imports are fine; you can wipe and
+re-seed at will.
+
+The day the site goes live, content ownership flips. Editors, forms, and AI
+agents write to production, and any local copy of *content* is stale the moment
+they do. From then on:
+
+- **Content** is production's. Work with it by pulling it down, or by editing
+  production directly (admin, REST, MCP). Never re-import old local seed files
+  over live data — delete them once the site is live so they can't be reached
+  for by accident.
+- **Schemas and collection settings** remain yours to develop locally — that is
+  what `push --schemas` / `--collection-meta` are for. A dry run showing the
+  remote side "likely newer" means someone changed it in production: pull it
+  before you push over it.
+- **Templates** follow whichever mode you chose: git-managed (a project-root
+  `builder/` folder) deploys through git; otherwise they sync like schemas.
+
+The dry run is how you check the direction assumption before every sync — it
+costs one command and has caught every would-be overwrite so far.
+
 ## Setup
 
 ### 1. Create an API Key on the Production Server

@@ -144,6 +144,20 @@ Navigate to **Admin → Utilities → OAuth Grants**. Every active grant is list
 
 Deleting the client in **Admin → Utilities → OAuth Clients** cascades — all grants for that client are revoked at once. Useful when you retire a shared client that multiple users connected through.
 
+### Troubleshooting the first connection
+
+Every one of these has bitten a real setup. Match the symptom, apply the fix:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Claude Code: "Incompatible auth server: does not support dynamic client registration" | Dynamic registration is off (the default) | Enable **Allow Dynamic Registration**, or create a static client and connect with its Client ID |
+| claude.ai connector asks for a manual Client ID and secret | Same — DCR not advertised in discovery | Same as above |
+| OAuth errors about keys / empty `jwks.json` | Signing keys never generated | Run `tcms oauth:setup` once |
+| Works in a browser, but connectors/`curl` get 403 | A firewall (7G/8G, security plugin) filters non-browser user agents | Exempt `/mcp`, `/oauth/*`, `/.well-known/*` from UA rules |
+| Every request returns 401 | Wrong or revoked API key / token | Check the key; `WWW-Authenticate` on the 401 names the scheme it expects |
+| Agent connects but write tools are missing | Connected as the public or OAuth persona, not admin | Send the API key as `X-API-Key`; confirm with `tcms mcp:status` which persona sees which tools |
+| Login succeeds but token lacks access | Token missing `mcp:*` scopes | Re-authorize requesting `mcp:tools` (+ `mcp:resources`, `mcp:prompts` as needed) |
+
 ---
 
 ## Tool catalog
@@ -184,19 +198,20 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | `create_collection` | admin | Create a new collection bound to a schema. Errors on duplicate id. |
 | `create_object` | admin | Create a content object in a collection. Runs the same `ObjectSaver` path as the admin form — schema validation, slug generation, events. See *Binary fields* below. |
 | `update_object` | admin | Replace a content object by id. Idempotent. Full replace, not a partial merge — send the whole object. See *Binary fields* below. |
+| `patch_object` | admin | Merge a subset of fields into an existing object — omitted fields keep their current values, so no get/round-trip is needed. Containers (card/deck/list) replace whole. The safer default for targeted agent edits. See *Binary fields* below. |
 | `list_extensions` | admin | Every installed extension with id, name, enabled flag, capabilities. |
 | `clear_cache` | admin | **Destructive.** Flush every available cache backend. Returns per-backend status. |
 
-#### Binary fields on `create_object` / `update_object`
+#### Binary fields on the object write tools
 
-Image, file, gallery, and depot fields can't be written through MCP — they need an upload pipeline (multipart bodies, storage handles) that a JSON tool call doesn't carry. The tools handle this at the **payload level**, not the schema level:
+Image, file, gallery, and depot fields can't be written through MCP — they need an upload pipeline (multipart bodies, storage handles) that a JSON tool call doesn't carry. `create_object`, `update_object`, and `patch_object` all handle this at the **payload level**, not the schema level:
 
-- A collection that merely *contains* a binary field is fully writable — just **omit** those fields from your payload. On `create_object` they're left unset; on `update_object` they keep their current value (the update never wipes an image you didn't touch).
+- A collection that merely *contains* a binary field is fully writable — just **omit** those fields from your payload. On `create_object` they're left unset; on `update_object` and `patch_object` they keep their current value (a write never wipes an image you didn't touch).
 - If the payload actually sets a non-empty value on a binary field, the call is refused with an error naming the offending fields. Drop them and retry, or edit those fields in the admin UI.
 
 This means content-rich collections (blog posts with an optional hero image, etc.) work end-to-end from an agent. Set binary fields afterward in the admin UI, or via the admin clone feature.
 
-> Reading objects with `get_object` / `query_collection` returns binary fields too. If you fetch an object, edit a text field, and send it back to `update_object`, strip the binary fields first (or blank them) — otherwise the call is refused.
+> Reading objects with `get_object` / `query_collection` returns binary fields too. If you fetch an object, edit a text field, and send it back to `update_object`, strip the binary fields first (or blank them) — otherwise the call is refused. (`patch_object` sidesteps the whole issue: send only the fields you changed.)
 
 ---
 

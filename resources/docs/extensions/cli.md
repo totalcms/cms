@@ -118,6 +118,27 @@ tcms schema:import my-schema.json --json
 |----------|----------|-------------|
 | `file` | Yes | Path to schema JSON file |
 
+### `schema:lint`
+
+Lint stored schemas without saving anything. `schema:import` validates on the way in, but schemas edited in place (by hand or by an AI agent) are never re-validated — the linter closes that gap. Errors are structural problems that break at runtime: no `id` property defined, `required`/`index` entries naming undefined properties, `inheritFrom` pointing at a missing schema, deck/card `schemaref` targets that don't exist or contain deck-incompatible types, and meta-schema violations. Warnings flag agent-legibility gaps — properties without help text (help feeds the MCP tool catalog) and schemas without a description.
+
+```bash
+tcms schema:lint                 # all custom schemas
+tcms schema:lint blog            # one schema (reserved schemas allowed by ID)
+tcms schema:lint --strict        # warnings also fail the run
+tcms schema:lint --json          # machine-readable report
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `id` | No | Schema ID (default: lint all custom schemas) |
+
+| Option | Description |
+|--------|-------------|
+| `--strict` | Treat warnings as failures |
+
+Exit code is `0` when no errors were found (warnings allowed), `1` when errors were found — or warnings under `--strict` — so it slots into CI.
+
 ---
 
 ## Collection Commands
@@ -264,6 +285,21 @@ tcms object:get blog my-post --json
 |----------|----------|-------------|
 | `collection` | Yes | Collection ID |
 | `id` | Yes | Object ID |
+
+### `object:create`
+
+Create one object from a JSON file (or stdin with `-`). The object goes through the full save pipeline — schema defaults fill in, validation runs, the index updates, and the `object.created` event fires — exactly as if it were saved from the admin. Refuses to overwrite an existing object, and refuses a JSON array (use `collection:import` for bulk data).
+
+```bash
+tcms object:create blog my-post.json
+echo '{"id":"hello","title":"Hello"}' | tcms object:create blog -
+tcms object:create blog my-post.json --json    # echoes the saved object
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `collection` | Yes | Collection ID |
+| `file` | Yes | Path to a JSON file holding one object, or `-` for stdin |
 
 ### `object:export`
 

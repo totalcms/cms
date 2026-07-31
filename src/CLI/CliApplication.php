@@ -78,6 +78,7 @@ class CliApplication
 		$app->addCommand(new Command\SchemaGetCommand($totalcms));
 		$app->addCommand(new Command\SchemaExportCommand($totalcms));
 		$app->addCommand(new Command\SchemaImportCommand($totalcms));
+		$app->addCommand(new Command\SchemaLintCommand($totalcms));
 
 		// Collection commands
 		$app->addCommand(new Command\CollectionListCommand($totalcms));
@@ -89,6 +90,7 @@ class CliApplication
 		// Object commands
 		$app->addCommand(new Command\ObjectListCommand($totalcms));
 		$app->addCommand(new Command\ObjectGetCommand($totalcms));
+		$app->addCommand(new Command\ObjectCreateCommand($totalcms));
 		$app->addCommand(new Command\ObjectExportCommand($totalcms));
 		$app->addCommand(new Command\ObjectDeleteCommand($totalcms));
 
