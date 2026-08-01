@@ -21,7 +21,9 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Data\JobQueueHealthData;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
+use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Data\LicenseStatusData;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -676,12 +678,53 @@ readonly class AdminTwigAdapter
 			'memoryLimit'      => ini_get('memory_limit'),
 			'maxExecutionTime' => ini_get('max_execution_time'),
 			'environment'      => $this->config->env,
-			'license'          => [
-				'severity'      => $licenseStatus->severity,
-				'message'       => $licenseStatus->tooltip,
-				'daysRemaining' => $licenseStatus->daysRemaining,
-			],
+			'license'          => $this->dashboardLicenseStatus($licenseStatus),
 			'update'           => $updateInfo,
+		];
+	}
+
+	/**
+	 * License row for the system-status panel.
+	 *
+	 * getSidebarStatus() answers "is anything wrong?", and correctly says nothing
+	 * when the answer is no — a sidebar warning icon should be absent on a healthy
+	 * site. The panel asks a different question, "what licence is this?", and a
+	 * status row that renders empty looks broken rather than reassuring. So a
+	 * healthy licence gets a description here while the sidebar stays quiet.
+	 *
+	 * The severity is remapped for the same reason: LicenseStatusData defaults to
+	 * `info`, and there is no `status-info` badge style, so a valid licence would
+	 * otherwise render an unstyled chip.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function dashboardLicenseStatus(LicenseStatusData $status): array
+	{
+		// A non-empty tooltip means something needs attention — pass it through
+		// untouched, including its severity and any trial countdown.
+		if ($status->tooltip !== '') {
+			return [
+				'severity'      => $status->severity,
+				'message'       => $status->tooltip,
+				'daysRemaining' => $status->daysRemaining,
+			];
+		}
+
+		$edition = $this->editionFeatures->getEdition();
+		$message = $edition === Edition::UNKNOWN
+			? 'Licensed'
+			: 'Licensed — ' . ucfirst($edition->value);
+
+		// Simulation changes what the site can do, so a panel reporting the
+		// simulated edition without saying so would misrepresent the install.
+		if ($this->editionFeatures->isSimulating()) {
+			$message .= ' (simulated)';
+		}
+
+		return [
+			'severity'      => 'success',
+			'message'       => $message,
+			'daysRemaining' => null,
 		];
 	}
 
