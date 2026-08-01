@@ -581,6 +581,8 @@ return [
 	'jobqueue.title'                => 'Gestor de cola de trabajos',
 	'jobqueue.clear_desc'           => 'Esto eliminará todos los trabajos de importación pendientes de <em><u>todas las Collections</u></em>. No eliminará ningún elemento que ya haya sido importado.',
 	'jobqueue.clear_btn'            => 'Limpiar cola de importación',
+	'jobqueue.clear_failed_desc'    => 'Los trabajos fallidos se conservan para que pueda ver qué salió mal. Al limpiarlos solo se elimina la lista de errores — <em><u>los trabajos pendientes no se ven afectados</u></em>.',
+	'jobqueue.clear_failed_btn'     => 'Limpiar trabajos fallidos',
 	'jobqueue.scheduled_title'      => 'Tarea programada de procesamiento de trabajos',
 	'jobqueue.command_desc'         => 'El siguiente comando debe ser el comando exacto que debe copiar en su tarea cron.',
 	'jobqueue.php_path_note'        => 'Si no aparece la ruta al comando PHP, necesitará encontrar la ruta al comando PHP en su servidor.',

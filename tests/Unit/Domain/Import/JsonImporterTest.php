@@ -361,6 +361,54 @@ final class JsonImporterTest extends TestCase
 		$this->assertEquals(0, $count);
 	}
 
+	public function testImportsRecordWithoutIdCleanly(): void
+	{
+		// Regression (Sentry TOTAL-CMS-N9): records may omit `id` when the
+		// schema autogenerates one — the importer must not warn on the missing
+		// key, must not consult existsObject with it, and must count the record.
+		$jsonData = json_encode([['name' => 'No ID', 'session' => 'telling-our-story']]);
+		$file     = $this->createUploadedFile($jsonData);
+
+		$this->collectionFetcher->method('collectionExists')->willReturn(true);
+		$this->objectFetcher->expects($this->never())->method('existsObject');
+		$this->objectImporter->expects($this->once())->method('importObject');
+
+		set_error_handler(static function (int $errno, string $errstr): bool {
+			throw new \ErrorException($errstr, 0, $errno);
+		});
+		try {
+			$count = $this->importer->import('products', $file);
+		} finally {
+			restore_error_handler();
+		}
+
+		$this->assertEquals(1, $count);
+	}
+
+	public function testQueuesRecordWithoutIdCleanly(): void
+	{
+		$jsonData = json_encode([['name' => 'No ID']]);
+		$file     = $this->createUploadedFile($jsonData);
+
+		$this->collectionFetcher->method('collectionExists')->willReturn(true);
+
+		$this->importer->queueJobs();
+		$this->jobQueuer->expects($this->once())
+			->method('queueImport')
+			->with('products', ['name' => 'No ID']);
+
+		set_error_handler(static function (int $errno, string $errstr): bool {
+			throw new \ErrorException($errstr, 0, $errno);
+		});
+		try {
+			$count = $this->importer->import('products', $file);
+		} finally {
+			restore_error_handler();
+		}
+
+		$this->assertEquals(1, $count);
+	}
+
 	private function createUploadedFile(string $content): UploadedFileInterface
 	{
 		$stream = $this->createMock(StreamInterface::class);

@@ -334,6 +334,36 @@ it('can save schema via direct service call with malformed data', function (): v
 		->toThrow(\InvalidArgumentException::class);
 });
 
+// Regression: a schema import with a wrong-typed field (e.g. formgrid as an
+// array instead of a newline-delimited string) crashed denormalization with
+// an uncaught TypeError (500 + Sentry). The factory now turns any unmappable
+// field into an InvalidArgumentException, which importers surface as a 400.
+it('rejects formgrid authored as an array', function (): void {
+	$app         = bootstrap();
+	$container   = $app->getContainer();
+	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+
+	$schemaData             = validSchemaData();
+	$schemaData['id']       = 'formgrid-array-test';
+	$schemaData['formgrid'] = ['title title', 'content published'];
+
+	expect(fn () => $schemaSaver->saveSchema($schemaData))
+		->toThrow(\InvalidArgumentException::class);
+});
+
+it('rejects unmappable field types as invalid input instead of crashing', function (): void {
+	$app         = bootstrap();
+	$container   = $app->getContainer();
+	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+
+	$schemaData                = validSchemaData();
+	$schemaData['id']          = 'bad-type-test';
+	$schemaData['description'] = ['not', 'a', 'string'];
+
+	expect(fn () => $schemaSaver->saveSchema($schemaData))
+		->toThrow(\InvalidArgumentException::class);
+});
+
 it('validates schema properties correctly', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();

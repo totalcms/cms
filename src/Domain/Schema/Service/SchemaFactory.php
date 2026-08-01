@@ -24,12 +24,18 @@ readonly class SchemaFactory
 	 *
 	 * @param array<string,mixed> $schemaData
 	 *
-	 * @throws \UnexpectedValueException
+	 * @throws \InvalidArgumentException When the data cannot be mapped onto SchemaData
 	 */
 	public function generateSchema(array $schemaData): SchemaData
 	{
-		/** @var SchemaData $schema */
-		$schema = $this->serializer->denormalize($schemaData, SchemaData::class);
+		try {
+			/** @var SchemaData $schema */
+			$schema = $this->serializer->denormalize($schemaData, SchemaData::class);
+		} catch (\Throwable $e) {
+			// A shape the serializer cannot map (wrong-typed field, etc.) is bad
+			// input, not a server fault — importers turn this into a 400.
+			throw new \InvalidArgumentException('Invalid schema data: ' . $e->getMessage(), 0, $e);
+		}
 
 		return $schema;
 	}
@@ -37,10 +43,15 @@ readonly class SchemaFactory
 	/**
 	 * create a schema object.
 	 *
-	 * @throws \UnexpectedValueException
+	 * @throws \InvalidArgumentException When the JSON is invalid or cannot be mapped onto SchemaData
 	 */
 	public function generateSchemaFromJson(string $schemaJson): SchemaData
 	{
-		return $this->serializer->deserialize($schemaJson, SchemaData::class, 'json');
+		$schemaData = json_decode($schemaJson, true);
+		if (!is_array($schemaData)) {
+			throw new \InvalidArgumentException('Invalid schema JSON');
+		}
+
+		return $this->generateSchema($schemaData);
 	}
 }

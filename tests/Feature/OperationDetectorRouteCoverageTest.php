@@ -88,6 +88,7 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'cache-devmode-status',
 		'clear-queue',
 		'clear-queue-collection',
+		'clear-queue-failed',
 		'collection-image-cache-delete',
 		'denied',
 		'designer-template-update',

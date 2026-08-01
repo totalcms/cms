@@ -581,6 +581,8 @@ return [
 	'jobqueue.title'                => 'Gestore coda lavori',
 	'jobqueue.clear_desc'           => 'Questo cancellerà tutti i lavori di importazione in sospeso per <em><u>ogni raccolta</u></em>. Non eliminerà gli elementi già importati.',
 	'jobqueue.clear_btn'            => 'Cancella coda di importazione',
+	'jobqueue.clear_failed_desc'    => 'I lavori falliti vengono conservati per permetterti di vedere cosa è andato storto. Cancellandoli si rimuove solo l\'elenco degli errori — <em><u>i lavori in sospeso non sono interessati</u></em>.',
+	'jobqueue.clear_failed_btn'     => 'Cancella lavori falliti',
 	'jobqueue.scheduled_title'      => 'Lavoro pianificato Process Jobs',
 	'jobqueue.command_desc'         => 'Il comando seguente è quello esatto da copiare nel tuo cron job.',
 	'jobqueue.php_path_note'        => 'Se non è presente un percorso al comando PHP, dovrai trovare il percorso al comando PHP sul tuo server.',
