@@ -581,6 +581,8 @@ return [
 	'jobqueue.title'                => 'Menedżer Job Queue',
 	'jobqueue.clear_desc'           => 'To wyczyści wszystkie oczekujące zadania importu dla <em><u>każdej collection</u></em>. Nie usunie żadnych elementów, które zostały już zaimportowane.',
 	'jobqueue.clear_btn'            => 'Wyczyść kolejkę importu',
+	'jobqueue.clear_failed_desc'    => 'Nieudane zadania są zachowywane, aby można było zobaczyć, co poszło nie tak. Wyczyszczenie usuwa tylko listę błędów — <em><u>zadania oczekujące nie są naruszane</u></em>.',
+	'jobqueue.clear_failed_btn'     => 'Wyczyść nieudane zadania',
 	'jobqueue.scheduled_title'      => 'Zadanie cykliczne przetwarzania kolejki',
 	'jobqueue.command_desc'         => 'Poniższe polecenie należy skopiować dokładnie w tej postaci do zadania cron.',
 	'jobqueue.php_path_note'        => 'Jeśli polecenie PHP nie ma ścieżki, musisz znaleźć ścieżkę do polecenia PHP na swoim serwerze.',

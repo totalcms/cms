@@ -19,6 +19,15 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
  */
 class JobsProcessCommand extends BaseCommand
 {
+	/**
+	 * How long a failed job is kept before being pruned automatically.
+	 *
+	 * A failed job is diagnostic output rather than data — long enough to be
+	 * noticed and investigated, short enough that the queue does not become a
+	 * permanent error log.
+	 */
+	private const FAILED_JOB_RETENTION_DAYS = 15;
+
 	protected function configure(): void
 	{
 		parent::configure();
@@ -72,6 +81,13 @@ class JobsProcessCommand extends BaseCommand
 		// Reset stuck jobs
 		$stuckCount = $jobRunner->resetStuckJobs();
 
+		// Maintenance runs before the queue is inspected, and so before the
+		// empty-queue early returns below — a queue holding nothing but old
+		// failures is exactly the case that needs pruning, and it used to exit
+		// before ever reaching it. Reporting the status afterwards also means
+		// the counts describe what is actually left.
+		$maintenance = $jobRunner->maintenance(self::FAILED_JOB_RETENTION_DAYS);
+
 		// Initial queue status
 		$initialStatus = $jobRunner->getQueueStatus();
 		$initialByType = $jobRunner->getQueueByType();
@@ -88,6 +104,19 @@ class JobsProcessCommand extends BaseCommand
 			if ($stuckCount > 0) {
 				$output->writeln('');
 				$output->writeln("Recovered {$stuckCount} stuck job(s) from previous crash.");
+			}
+
+			if ($maintenance['pruned'] > 0) {
+				$output->writeln('');
+				$output->writeln(sprintf(
+					'Pruned %d failed job(s) older than %d days.',
+					$maintenance['pruned'],
+					self::FAILED_JOB_RETENTION_DAYS
+				));
+			}
+
+			if ($verbose) {
+				$output->writeln('Jobqueue vacuumed to reclaim disk space.');
 			}
 
 			$output->writeln('');
@@ -116,6 +145,7 @@ class JobsProcessCommand extends BaseCommand
 				'processed'        => 0,
 				'succeeded'        => 0,
 				'failed'           => 0,
+				'maintenance'      => $maintenance,
 				'duration_seconds' => 0,
 			], JSON_PRETTY_PRINT));
 
@@ -200,9 +230,6 @@ class JobsProcessCommand extends BaseCommand
 			$jobRunner->finalizeImportOptimization($optimizedCollections);
 		}
 
-		// Maintenance
-		$maintenance = $jobRunner->maintenance(30);
-
 		$endTime       = microtime(true);
 		$executionTime = round($endTime - $startTime, 2);
 		$peakMemory    = memory_get_peak_usage(true);
@@ -257,14 +284,6 @@ class JobsProcessCommand extends BaseCommand
 		$output->writeln('');
 		$output->writeln('Final Queue Status:');
 		$this->printTableRow($output, $finalStatus);
-
-		$output->writeln('');
-		$this->printSeparator($output);
-		$output->writeln('Running jobqueue maintenance...');
-		if ($maintenance['pruned'] > 0) {
-			$output->writeln("  Pruned {$maintenance['pruned']} failed job(s) older than 30 days");
-		}
-		$output->writeln('  Jobqueue vacuumed to reclaim disk space');
 
 		$output->writeln('');
 		$this->printSeparator($output);

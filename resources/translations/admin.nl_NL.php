@@ -581,6 +581,8 @@ return [
 	'jobqueue.title'                => 'Taakwachtrijbeheerder',
 	'jobqueue.clear_desc'           => 'Dit wist alle wachtende importtaken voor <em><u>elke Collection</u></em>. Reeds geïmporteerde items worden niet verwijderd.',
 	'jobqueue.clear_btn'            => 'Importwachtrij wissen',
+	'jobqueue.clear_failed_desc'    => 'Mislukte taken blijven bewaard zodat u kunt zien wat er misging. Wissen verwijdert alleen de foutenlijst — <em><u>wachtende taken worden niet beïnvloed</u></em>.',
+	'jobqueue.clear_failed_btn'     => 'Mislukte taken wissen',
 	'jobqueue.scheduled_title'      => 'Geplande taak voor taakverwerking',
 	'jobqueue.command_desc'         => 'De volgende opdracht is de exacte opdracht die u naar uw cron-taak moet kopiëren.',
 	'jobqueue.php_path_note'        => 'Als er geen pad naar de PHP-opdracht is, moet u het pad naar de PHP-opdracht op uw server zoeken.',

@@ -581,6 +581,8 @@ return [
 	'jobqueue.title'                => 'Job-Queue-Manager',
 	'jobqueue.clear_desc'           => 'Dies löscht alle ausstehenden Import-Aufträge für <em><u>alle Collections</u></em>. Bereits importierte Einträge werden nicht gelöscht.',
 	'jobqueue.clear_btn'            => 'Import-Warteschlange leeren',
+	'jobqueue.clear_failed_desc'    => 'Fehlgeschlagene Aufträge bleiben erhalten, damit Sie sehen können, was schiefgelaufen ist. Beim Leeren wird nur die Fehlerliste entfernt — <em><u>ausstehende Aufträge sind nicht betroffen</u></em>.',
+	'jobqueue.clear_failed_btn'     => 'Fehlgeschlagene Aufträge leeren',
 	'jobqueue.scheduled_title'      => 'Geplanter Job zur Auftragsverarbeitung',
 	'jobqueue.command_desc'         => 'Der folgende Befehl sollte genau so in Ihren Cron-Job kopiert werden.',
 	'jobqueue.php_path_note'        => 'Wenn kein Pfad zum PHP-Befehl angegeben ist, müssen Sie den Pfad zum PHP-Befehl auf Ihrem Server ermitteln.',

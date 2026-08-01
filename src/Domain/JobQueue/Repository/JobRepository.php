@@ -529,6 +529,30 @@ class JobRepository
 	}
 
 	/**
+	 * Remove every failed job, whatever its age.
+	 *
+	 * The operator-facing counterpart to pruneFailedJobs(): that one runs on a
+	 * timer from `jobs:process` and needs cron to be scheduled at all, while
+	 * this clears the list on demand. Deliberately narrower than clearQueue(),
+	 * which also deletes pending jobs and so cannot be offered as a way to tidy
+	 * up errors without discarding a half-drained import.
+	 *
+	 * @return int Number of jobs removed
+	 */
+	public function clearFailedJobs(): int
+	{
+		if (!$this->dbExists()) {
+			return 0;
+		}
+
+		$stmt = $this->getDb()->prepare('DELETE FROM jobqueue WHERE status = :status');
+		$stmt->bindValue(':status', JobData::STATUS_FAILED);
+		$stmt->execute();
+
+		return $stmt->rowCount();
+	}
+
+	/**
 	 * Fetch all pending jobs.
 	 *
 	 * @return array<JobData>

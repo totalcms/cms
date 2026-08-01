@@ -67,6 +67,16 @@ readonly class JobManager
 	}
 
 	/**
+	 * Clear failed jobs only, leaving pending work in place.
+	 *
+	 * @return int Number of jobs removed
+	 */
+	public function clearFailedJobs(): int
+	{
+		return $this->jobRepository->clearFailedJobs();
+	}
+
+	/**
 	 * @return array<JobData>
 	 */
 	public function getPendingJobs(?int $limit = null): array

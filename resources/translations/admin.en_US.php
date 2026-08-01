@@ -581,6 +581,8 @@ return [
 	'jobqueue.title'                => 'Job Queue Manager',
 	'jobqueue.clear_desc'           => 'This will clear the all the pending import jobs for <em><u>every collection</u></em>. This will not delete any items that have already been imported.',
 	'jobqueue.clear_btn'            => 'Clear Import Queue',
+	'jobqueue.clear_failed_desc'    => 'Failed jobs are kept so you can see what went wrong. Clearing them removes the error list only — <em><u>pending jobs are not affected</u></em>.',
+	'jobqueue.clear_failed_btn'     => 'Clear Failed Jobs',
 	'jobqueue.scheduled_title'      => 'Process Jobs Scheduled Job',
 	'jobqueue.command_desc'         => 'The following command should be the exact command that you should copy to your cron job.',
 	'jobqueue.php_path_note'        => 'If there is no path to the PHP command, you will need to find the path to the PHP command on your server.',

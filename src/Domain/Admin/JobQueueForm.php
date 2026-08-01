@@ -13,14 +13,17 @@ readonly class JobQueueForm implements \Stringable
 		private string $collection = '',
 		private string $label = 'Clear Job Queue',
 		private ?CSRFTokenManager $csrfManager = null,
+		private bool $failedOnly = false,
 	) {
 	}
 
 	private function clearQueueForm(): string
 	{
-		$route = $this->collection === ''
-			? '/jobqueue'
-			: "/jobqueue/{$this->collection}";
+		$route = match (true) {
+			$this->failedOnly        => '/jobqueue/status/failed',
+			$this->collection !== '' => "/jobqueue/{$this->collection}",
+			default                  => '/jobqueue',
+		};
 
 		$clearQueueForm = new SimpleForm(
 			api         : $this->api,

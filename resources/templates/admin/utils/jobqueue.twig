@@ -15,6 +15,13 @@
 		label      : t('jobqueue.clear_btn'),
 	}) }}
 
+	<p>{{ t('jobqueue.clear_failed_desc')|raw }}</p>
+
+	{{ cms.form.clearqueue({
+		failedOnly : true,
+		label      : t('jobqueue.clear_failed_btn'),
+	}) }}
+
 	<section style="margin-top:3rem;padding-left:0;overflow:hidden" class="doc-content">
 		<h4 style="">{{ t('jobqueue.scheduled_title') }}</h4>
 
