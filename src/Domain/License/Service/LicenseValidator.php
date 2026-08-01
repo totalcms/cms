@@ -261,6 +261,17 @@ class LicenseValidator
 	}
 
 	/**
+	 * Public store URL for this install's domain, used by the license manager.
+	 *
+	 * Built from the same constant as the API calls so there is one place a
+	 * license host is named — see getApiBaseUrl() for why it is not config.
+	 */
+	public function getStoreUrl(): string
+	{
+		return $this->getApiBaseUrl() . '/store/' . $this->config->domain;
+	}
+
+	/**
 	 * Check if running in preview environment.
 	 */
 	private function isPreviewEnvironment(): bool

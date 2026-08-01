@@ -351,3 +351,26 @@ describe('LicenseValidator HTTP calls', function (): void {
 		$validator->validateLicense();
 	});
 });
+
+describe('LicenseValidator store URL', function (): void {
+	test('store URL points at the production license host for the current domain', function (): void {
+		$validator = new LicenseValidator(
+			createMockConfig(domain: 'example.com'),
+			createMockCacheManager(),
+			createMockHttpClient(new HttpResponse(200, '{}')),
+		);
+
+		expect($validator->getStoreUrl())->toBe(Config::LICENSE_API_URL . '/store/example.com');
+	});
+
+	test('store URL is absolute so the license manager iframe resolves off-site', function (): void {
+		$validator = new LicenseValidator(
+			createMockConfig(domain: 'client.co.uk'),
+			createMockCacheManager(),
+			createMockHttpClient(new HttpResponse(200, '{}')),
+		);
+
+		expect($validator->getStoreUrl())->toStartWith('https://')
+			->and($validator->getStoreUrl())->toEndWith('/store/client.co.uk');
+	});
+});

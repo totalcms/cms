@@ -268,4 +268,13 @@ readonly class LicenseStatus
 	{
 		return $this->licenseValidator->getOfflineLicenseDirectory();
 	}
+
+	/**
+	 * Store URL for this install's domain, for the license manager iframe.
+	 * e.g., "https://license.totalcms.co/store/example.com".
+	 */
+	public function getStoreUrl(): string
+	{
+		return $this->licenseValidator->getStoreUrl();
+	}
 }
