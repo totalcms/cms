@@ -8,6 +8,7 @@ use Laminas\Feed\Reader\Reader;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\HttpClientInterface;
@@ -19,6 +20,7 @@ class RssImporter
 
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
+		private readonly ObjectFetcher $objectFetcher,
 		private readonly JobQueuer $jobQueuer,
 		private readonly HttpClientInterface $httpClient,
 		LoggerFactory $loggerFactory,
@@ -202,6 +204,10 @@ class RssImporter
 			}
 			$id = $this->slugify($title);
 
+			if ($this->alreadyImported($collection, $id)) {
+				return;
+			}
+
 			$rssData = $this->extractXmlEntryData($entry);
 
 			$data          = $this->mapFields($rssData, $fieldMap);
@@ -354,6 +360,10 @@ class RssImporter
 				$title = 'Untitled';
 			}
 			$id = $this->slugify($title);
+
+			if ($this->alreadyImported($collection, $id)) {
+				return;
+			}
 
 			$rssData = $this->extractJsonEntryData($item, $feedData);
 
@@ -536,6 +546,28 @@ class RssImporter
 	}
 
 	// ─── Shared Utilities ───────────────────────────────────────
+
+	/**
+	 * Has this entry been imported by an earlier poll of the feed?
+	 *
+	 * Ids are slugified titles, so re-polling a feed regenerates the id of
+	 * every entry already imported. Queueing those anyway costs a failed job
+	 * apiece — ObjectSaver rejects a duplicate id rather than overwriting —
+	 * so the caller skips before doing any further work on the entry.
+	 *
+	 * Logged at info, not warning: for a feed that is polled repeatedly, an
+	 * entry that already exists is the steady state rather than a fault.
+	 */
+	private function alreadyImported(string $collection, string $id): bool
+	{
+		if (!$this->objectFetcher->existsObject($collection, $id)) {
+			return false;
+		}
+
+		$this->logger->info(sprintf('Skipping feed entry, object already exists: %s/%s', $collection, $id));
+
+		return true;
+	}
 
 	/**
 	 * Map feed fields to collection fields using provided mapping or defaults.
