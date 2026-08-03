@@ -392,7 +392,21 @@ tcms rss:import https://example.com/feed.xml blog && tcms jobs:process
 |--------|-------------|
 | `--draft` / `--no-draft` | Queue items as drafts (default) or publish immediately |
 | `--map, -m` | Field mapping in the form `feedField=collectionField`. Repeat the option or comma-separate within one value. See below. |
+| `--user-agent` | User-Agent for the feed request. See below. |
 | `--json` | Output JSON (success status + count) |
+
+#### When a feed returns 403
+
+Feed requests identify themselves as `TotalCMS/{version} (+https://totalcms.co)`. Some hosts — Cloudflare-fronted sites in particular — block requests from unrecognized or generic clients outright, and a feed that opens fine in a browser can still return `403` to a server.
+
+If a host rejects the default, `--user-agent` sets your own:
+
+```bash
+tcms rss:import https://example.com/feed.xml blog \
+  --user-agent "AcmeNews/1.0 (+https://acme.example)"
+```
+
+Identify yourself honestly — a contactable URL is what gets a well-run site to allowlist you. Impersonating a browser tends to be treated as evasion and blocked harder.
 
 #### Field mapping
 

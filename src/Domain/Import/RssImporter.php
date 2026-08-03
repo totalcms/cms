@@ -12,11 +12,23 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\Version;
 
 class RssImporter
 {
+	/**
+	 * Feed hosts — Cloudflare-fronted ones especially — routinely 403 an HTTP
+	 * library's default user-agent. Identifying the CMS honestly gets through
+	 * without pretending to be a browser, which is both more truthful and less
+	 * likely to be read as evasion by the host being fetched.
+	 */
+	private const USER_AGENT_TEMPLATE = 'TotalCMS/%s (+https://totalcms.co)';
+
 	private readonly LoggerInterface $logger;
 	private int $importCount = 0;
+
+	/** Set for the duration of one analyze()/import() call, like $importCount. */
+	private ?string $userAgent = null;
 
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
@@ -33,8 +45,9 @@ class RssImporter
 	 *
 	 * @return array{feed: array<string,mixed>, entries: array<int,array<string,mixed>>}
 	 */
-	public function analyze(string $feedUrl): array
+	public function analyze(string $feedUrl, ?string $userAgent = null): array
 	{
+		$this->userAgent = $userAgent === '' ? null : $userAgent;
 		$this->logger->info(sprintf('Starting feed analysis: %s', $feedUrl));
 
 		$raw = $this->fetchRawFeed($feedUrl);
@@ -49,12 +62,14 @@ class RssImporter
 	/**
 	 * Import feed entries into a collection via the job queue.
 	 *
-	 * @param array{draft?: bool, fieldMap?: array<string,string>} $options
+	 * @param array{draft?: bool, fieldMap?: array<string,string>, userAgent?: string} $options
 	 */
 	public function import(string $feedUrl, string $collection, array $options = []): int
 	{
 		$this->importCount = 0;
 		$isDraft           = $options['draft'] ?? true;
+		$userAgent         = $options['userAgent'] ?? '';
+		$this->userAgent   = $userAgent === '' ? null : $userAgent;
 		/** @var array<string,string> $fieldMap */
 		$fieldMap = $options['fieldMap'] ?? [];
 
@@ -85,11 +100,7 @@ class RssImporter
 	private function fetchRawFeed(string $feedUrl): string
 	{
 		try {
-			$response = $this->httpClient->request('GET', $feedUrl, [
-				'timeout'          => 30,
-				'verify_ssl'       => false,
-				'follow_redirects' => true,
-			]);
+			$response = $this->httpClient->request('GET', $feedUrl, $this->requestOptions(30));
 		} catch (\RuntimeException $e) {
 			throw new \RuntimeException(sprintf('Failed to fetch feed from %s: %s', $feedUrl, $e->getMessage()), 0, $e);
 		}
@@ -548,6 +559,21 @@ class RssImporter
 	// ─── Shared Utilities ───────────────────────────────────────
 
 	/**
+	 * Outbound request options shared by the feed fetch and image downloads.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function requestOptions(int $timeout): array
+	{
+		return [
+			'timeout'          => $timeout,
+			'verify_ssl'       => false,
+			'follow_redirects' => true,
+			'user_agent'       => $this->userAgent ?? sprintf(self::USER_AGENT_TEMPLATE, Version::number()),
+		];
+	}
+
+	/**
 	 * Has this entry been imported by an earlier poll of the feed?
 	 *
 	 * Ids are slugified titles, so re-polling a feed regenerates the id of
@@ -608,11 +634,7 @@ class RssImporter
 	private function downloadImage(string $url): ?string
 	{
 		try {
-			$response = $this->httpClient->request('GET', $url, [
-				'timeout'          => 15,
-				'verify_ssl'       => false,
-				'follow_redirects' => true,
-			]);
+			$response = $this->httpClient->request('GET', $url, $this->requestOptions(15));
 
 			if ($response->statusCode !== 200) {
 				$this->logger->warning(sprintf('Failed to download image: %s (status %d)', $url, $response->statusCode));
