@@ -2,6 +2,22 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-rc.17] - 2026-08-03
+
+### Added
+
+- **`--user-agent` on `tcms rss:import`**: Feed requests now identify themselves as `TotalCMS/{version} (+https://totalcms.co)`, and `--user-agent` overrides that when a host wants something specific. Deliberately not a browser disguise — an honest, contactable identity is what gets a well-run site to allowlist you, while impersonating a browser tends to be treated as evasion
+
+### Fixed
+
+- **Import RSS silently ignored its Field Mapping**: The mapping panel's inputs are named `fieldMap[title]`, `fieldMap[summary]` and so on — PHP form syntax that the admin never expanded, because it posts JSON rather than an encoded form body. The keys arrived at the server with their brackets intact, so the import action's `fieldMap` check was never satisfied and every import quietly fell back to the default mapping. Nothing reported the mapping had been dropped; the failure surfaced as a validation error naming a *required field* in the destination collection, which sent operators looking at their schema instead of the form. Importing into any collection whose property names differ from the defaults failed 100% of the time. The CLI's `--map` was never affected, which is why the same mapping worked there first try. Grouped field names like these are now expanded before the payload is sent
+- **OAuth clients created in the admin had no scopes**: The scopes checklist was named `scopes[]` — PHP's convention for collecting repeated inputs into an array, which does nothing in a form that posts JSON. The payload carried the literal key `"scopes[]"`, so the create action read `scopes`, found nothing, and stored an empty list; scope filtering then stripped every scope from any token that client requested, leaving it able to authenticate and do nothing. It failed closed, so nothing was ever over-permitted. The field is now named plainly, matching every other multi-value field in the admin — a checklist already returns its own array, so the brackets never carried any meaning. **Self-registered clients were never affected**: MCP clients that connect through dynamic registration (RFC 7591) take a different path entirely and always carried their scopes correctly, so working MCP connections were exactly that. This only ever bit clients registered by hand through the admin form
+- **RSS feeds returning 403 from hosts that block unnamed clients**: Feed and image requests went out under the HTTP library's default user-agent, which Cloudflare-fronted sites reject outright — BleepingComputer's feed returns `403` to `GuzzleHttp/7` and `200` to anything that names itself, so the feed opened fine in a browser and failed from the server with no way to tell why. Both outbound requests now identify the CMS. The underlying transport had supported a custom user-agent all along; it was simply never passed
+
+### Enhanced
+
+- **The RSS field-mapping panel explains its two columns**: Each row is a feed-side field name and its value is the collection property to write into. Most rows echo the same word, so the one that doesn't — `link` writes to `media`, the blog schema's url property — reads as a typo and cost a customer time hunting a bug that wasn't there. The default is correct and unchanged; the panel now says which side is which
+
 ## [3.5.0-rc.16] - 2026-08-01
 
 ### Added
