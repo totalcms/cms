@@ -707,6 +707,7 @@ return [
 	'import_rss.drafts_desc'             => 'Zaimportowane wpisy zostaną oznaczone jako szkice.',
 	'import_rss.field_mapping'           => 'Mapowanie pól (opcjonalne)',
 	'import_rss.field_mapping_desc'      => 'Dostosuj sposób mapowania pól RSS na właściwości collection.',
+	'import_rss.field_mapping_columns'   => 'Każdy wiersz to pole w kanale. Wartość to właściwość w Twojej collection, do której następuje zapis — często mają tę samą nazwę, ale nie muszą.',
 	'import_rss.leave_empty'             => 'Pozostaw puste, aby pominąć pole.',
 	'import_rss.collection_field'        => 'nazwa pola collection',
 	'import_rss.entries'                 => 'Wpisy',

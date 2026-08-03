@@ -707,6 +707,7 @@ return [
 	'import_rss.drafts_desc'             => 'Las entradas importadas se marcarán como borradores.',
 	'import_rss.field_mapping'           => 'Asignación de campos (opcional)',
 	'import_rss.field_mapping_desc'      => 'Personalice cómo los campos RSS se asignan a las propiedades de la Collection.',
+	'import_rss.field_mapping_columns'   => 'Cada fila es un campo del feed. El valor es la propiedad de tu colección en la que se escribe — a menudo coinciden, pero no es obligatorio.',
 	'import_rss.leave_empty'             => 'Deje vacío para omitir un campo.',
 	'import_rss.collection_field'        => 'nombre del campo de la Collection',
 	'import_rss.entries'                 => 'Entradas',

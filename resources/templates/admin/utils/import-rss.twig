@@ -65,6 +65,7 @@
 					<summary><strong>{{ t('import_rss.field_mapping') }}</strong></summary>
 					<div style="margin-top: 0.5rem;">
 						<p class="help" style="margin-bottom: 0.5rem;">{{ t('import_rss.field_mapping_desc') }} {{ t('import_rss.leave_empty') }}</p>
+						<p class="help" style="margin-bottom: 0.5rem;">{{ t('import_rss.field_mapping_columns') }}</p>
 
 						{% set fieldDefaults = { title: 'title', content: 'content', summary: 'summary', date: 'date', author: 'author', categories: 'categories', link: 'media', image: 'image' } %}
 						{% for rssField, defaultValue in fieldDefaults %}

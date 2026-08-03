@@ -707,6 +707,7 @@ return [
 	'import_rss.drafts_desc'             => 'Imported entries will be marked as drafts.',
 	'import_rss.field_mapping'           => 'Field Mapping (optional)',
 	'import_rss.field_mapping_desc'      => 'Customize how RSS fields map to collection properties.',
+	'import_rss.field_mapping_columns'   => 'Each row is a field in the feed. The value is the property it writes to in your collection — they often share a name, but they do not have to.',
 	'import_rss.leave_empty'             => 'Leave empty to skip a field.',
 	'import_rss.collection_field'        => 'collection field name',
 	'import_rss.entries'                 => 'Entries',

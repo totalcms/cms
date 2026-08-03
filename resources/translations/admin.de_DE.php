@@ -707,6 +707,7 @@ return [
 	'import_rss.drafts_desc'             => 'Importierte Einträge werden als Entwürfe markiert.',
 	'import_rss.field_mapping'           => 'Feldzuordnung (optional)',
 	'import_rss.field_mapping_desc'      => 'Passen Sie an, wie RSS-Felder auf Collection-Eigenschaften abgebildet werden.',
+	'import_rss.field_mapping_columns'   => 'Jede Zeile ist ein Feld im Feed. Der Wert ist die Eigenschaft, in die geschrieben wird — die Namen stimmen oft überein, müssen es aber nicht.',
 	'import_rss.leave_empty'             => 'Leer lassen, um ein Feld zu überspringen.',
 	'import_rss.collection_field'        => 'Collection-Feldname',
 	'import_rss.entries'                 => 'Einträge',

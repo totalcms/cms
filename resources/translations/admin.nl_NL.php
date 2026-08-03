@@ -707,6 +707,7 @@ return [
 	'import_rss.drafts_desc'             => 'Geïmporteerde vermeldingen worden gemarkeerd als concepten.',
 	'import_rss.field_mapping'           => 'Veldtoewijzing (optioneel)',
 	'import_rss.field_mapping_desc'      => 'Pas aan hoe RSS-velden worden toegewezen aan Collection-eigenschappen.',
+	'import_rss.field_mapping_columns'   => 'Elke rij is een veld in de feed. De waarde is de eigenschap in je collection waarnaar wordt geschreven — vaak dezelfde naam, maar dat hoeft niet.',
 	'import_rss.leave_empty'             => 'Laat leeg om een veld over te slaan.',
 	'import_rss.collection_field'        => 'Collection-veldnaam',
 	'import_rss.entries'                 => 'Vermeldingen',

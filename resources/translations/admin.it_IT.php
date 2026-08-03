@@ -707,6 +707,7 @@ return [
 	'import_rss.drafts_desc'             => 'Le voci importate saranno contrassegnate come bozze.',
 	'import_rss.field_mapping'           => 'Mappatura campi (opzionale)',
 	'import_rss.field_mapping_desc'      => 'Personalizza come i campi RSS si mappano alle proprietà della raccolta.',
+	'import_rss.field_mapping_columns'   => 'Ogni riga è un campo del feed. Il valore è la proprietà della tua collection in cui viene scritto — spesso coincidono, ma non è obbligatorio.',
 	'import_rss.leave_empty'             => 'Lascia vuoto per saltare un campo.',
 	'import_rss.collection_field'        => 'nome campo raccolta',
 	'import_rss.entries'                 => 'Voci',
