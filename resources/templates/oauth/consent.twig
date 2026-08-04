@@ -14,7 +14,7 @@
 	</section>
 
 	<p class="oauth-consent__signed-in">
-		{{ t('oauth.consent.signed_in_as', {user: userId}) }}
+		{{ t('oauth.consent.signed_in_as', {user: userName|default(userId)}) }}
 	</p>
 
 	<section class="oauth-consent__scopes">

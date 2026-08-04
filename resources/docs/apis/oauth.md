@@ -155,6 +155,8 @@ Scopes define what an authorized connection can do. When you create a static cli
 
 `cms:admin` implies `cms:read` and `cms:write` — you don't need all three for a full-access connection.
 
+`cms:admin` is additionally **privilege-gated**: it only lands in a token when the user who approves the consent screen is in the **admin group**. For anyone else the requested scope is silently narrowed away — the consent screen doesn't display it, and the issued token doesn't carry it — because REST treats token scopes as authority, and a non-admin must not be able to mint an admin-capable token by approving a connector.
+
 ### Picking the right scopes
 
 - **Read-only content delivery** (AI agent querying blog posts): `cms:read mcp:tools`

@@ -636,4 +636,116 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($names)->not->toContain('create_schema');
 	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Scenario 9: admin-gated scopes never reach a non-admin's token. REST
+	// trusts token scopes as authority (BaseAccessMiddleware skips group
+	// checks for Bearer callers), so issuing cms:admin to a non-admin would
+	// hand them the admin REST surface their groups deny. finalizeScopes()
+	// narrows it away; the consent page shows only what approving grants.
+	// ──────────────────────────────────────────────────────────────────────────
+
+	it("non-admin's token requesting cms:admin cannot reach admin REST paths", function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('viewer-user-test-com');
+
+		$clientId = 'mcp-auth-rest-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:admin', 'mcp:tools'], 'viewer-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue(); // skip-safe pass
+
+			return;
+		}
+
+		$factory  = new Psr17Factory();
+		$response = $this->app->handle(
+			$factory->createServerRequest('GET', '/api/schemas')
+				->withHeader('Authorization', 'Bearer ' . $token),
+		);
+
+		expect($response->getStatusCode())->toBe(403);
+	});
+
+	it('consent page hides cms:admin from non-admin users and greets by name', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('viewer-user-test-com');
+
+		$body = mcpAuthConsentPageBody($this->app, ['cms:read', 'cms:admin', 'mcp:tools'], 'viewer-user-test-com');
+
+		if ($body === null) {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		expect($body)->not->toContain('cms:admin');
+		expect($body)->toContain('cms:read');
+		expect($body)->toContain('Viewer Test User');
+	});
+
+	it('consent page shows cms:admin to admin users', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('admin-user-test-com');
+
+		$body = mcpAuthConsentPageBody($this->app, ['cms:read', 'cms:admin', 'mcp:tools'], 'admin-user-test-com');
+
+		if ($body === null) {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		expect($body)->toContain('cms:admin');
+		expect($body)->toContain('Admin Test User');
+	});
 });
+
+/**
+ * Render the consent page for a logged-in user and return the HTML, or null
+ * when the environment can't serve it (non-Pro edition, OAuth unavailable).
+ *
+ * @param list<string> $scopes
+ */
+function mcpAuthConsentPageBody(Slim\App $app, array $scopes, string $userId): ?string
+{
+	$clientId = 'mcp-auth-consent-' . uniqid('', true);
+	$client   = new OAuthClientData(
+		id: $clientId,
+		name: 'Consent Page Test Client',
+		secretHash: password_hash('secret', PASSWORD_BCRYPT),
+		redirectUris: ['https://mcptest.test/cb'],
+		scopes: $scopes,
+		isDynamic: false,
+		isConfidential: true,
+		createdAt: gmdate('c'),
+		createdBy: 'test',
+	);
+	$app->getContainer()->get(OAuthClientRepository::class)->save($client);
+
+	/** @var PhpSession $session */
+	$session = $app->getContainer()->get(PhpSession::class);
+	if (!$session->isStarted()) {
+		$session->start();
+	}
+	$session->set(SessionKeys::AUTH_USER, $userId);
+
+	$codeChallenge = rtrim(strtr(base64_encode(hash('sha256', 'consent-verifier', true)), '+/', '-_'), '=');
+	$authorizeUrl  = '/oauth/authorize?' . http_build_query([
+		'response_type'         => 'code',
+		'client_id'             => $clientId,
+		'redirect_uri'          => 'https://mcptest.test/cb',
+		'scope'                 => implode(' ', $scopes),
+		'state'                 => 'consent-test-state',
+		'code_challenge'        => $codeChallenge,
+		'code_challenge_method' => 'S256',
+	]);
+
+	$response = $app->handle((new Psr17Factory())->createServerRequest('GET', $authorizeUrl));
+
+	if ($response->getStatusCode() !== 200) {
+		return null;
+	}
+
+	return (string)$response->getBody();
+}

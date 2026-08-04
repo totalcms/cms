@@ -16,6 +16,17 @@ use TotalCMS\Domain\OAuth\Data\OAuthScopeData;
  */
 final class OAuthScopeRegistry
 {
+	/**
+	 * Scopes only an admin-group user can convey into a token. Requested by a
+	 * non-admin, they are narrowed away at consent display and finalizeScopes()
+	 * alike — REST trusts token scopes as authority (BaseAccessMiddleware skips
+	 * group checks for Bearer callers), so issuing cms:admin to a non-admin
+	 * would hand them the admin REST surface their groups deny.
+	 *
+	 * @var list<string>
+	 */
+	public const ADMIN_GATED = ['cms:admin'];
+
 	/** @var array<string,OAuthScopeData>|null */
 	private ?array $scopes = null;
 

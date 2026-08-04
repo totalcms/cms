@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\OAuth\Adapter;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 
@@ -15,15 +16,20 @@ use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
  *
  * finalizeScopes() performs a strict downscope intersection: the resolved
  * set is the intersection of (a) the scopes requested in the authorization
- * request and (b) the scopes the client is allowed to request. Scopes not
- * in the T3 registry are silently removed by getScopeEntityByIdentifier()
- * before finalizeScopes() is called by league's grant code.
+ * request, (b) the scopes the client is allowed to request, and (c) the
+ * scopes the approving user can convey — admin-gated scopes (cms:admin)
+ * require the user to be in the admin group, failing closed when the user
+ * is unknown. Scopes not in the T3 registry are silently removed by
+ * getScopeEntityByIdentifier() before finalizeScopes() is called by
+ * league's grant code. Refresh grants reuse the already-narrowed set, so
+ * this filter runs once per authorization.
  */
 final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 {
 	public function __construct(
 		private OAuthScopeRegistry $registry,
 		private OAuthClientRepository $clients,
+		private AccessControlService $accessControl,
 	) {
 	}
 
@@ -55,9 +61,23 @@ final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 
 		$allowed = $client->scopes;
 
+		$userCanConveyAdmin = is_string($userIdentifier)
+			&& $userIdentifier !== ''
+			&& $this->accessControl->isAdmin($userIdentifier);
+
 		return array_values(array_filter(
 			$scopes,
-			static fn (ScopeEntityInterface $scope): bool => in_array($scope->getIdentifier(), $allowed, true),
+			static function (ScopeEntityInterface $scope) use ($allowed, $userCanConveyAdmin): bool {
+				$id = $scope->getIdentifier();
+				if (!in_array($id, $allowed, true)) {
+					return false;
+				}
+				if (in_array($id, OAuthScopeRegistry::ADMIN_GATED, true) && !$userCanConveyAdmin) {
+					return false;
+				}
+
+				return true;
+			},
 		));
 	}
 }

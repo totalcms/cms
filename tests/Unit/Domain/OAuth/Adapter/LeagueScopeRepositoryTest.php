@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\OAuth\Adapter;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\OAuth\Adapter\LeagueClientEntity;
 use TotalCMS\Domain\OAuth\Adapter\LeagueScopeEntity;
 use TotalCMS\Domain\OAuth\Adapter\LeagueScopeRepository;
@@ -17,14 +18,16 @@ final class LeagueScopeRepositoryTest extends TestCase
 	private string $tmpFile;
 	private OAuthClientRepository $clientRepo;
 	private OAuthScopeRegistry $registry;
+	private \PHPUnit\Framework\MockObject\MockObject $accessControl;
 	private LeagueScopeRepository $adapter;
 
 	protected function setUp(): void
 	{
-		$this->tmpFile    = sys_get_temp_dir() . '/oauth-clients-' . uniqid() . '.json';
-		$this->clientRepo = new OAuthClientRepository($this->tmpFile);
-		$this->registry   = new OAuthScopeRegistry();
-		$this->adapter    = new LeagueScopeRepository($this->registry, $this->clientRepo);
+		$this->tmpFile       = sys_get_temp_dir() . '/oauth-clients-' . uniqid() . '.json';
+		$this->clientRepo    = new OAuthClientRepository($this->tmpFile);
+		$this->registry      = new OAuthScopeRegistry();
+		$this->accessControl = $this->createMock(AccessControlService::class);
+		$this->adapter       = new LeagueScopeRepository($this->registry, $this->clientRepo, $this->accessControl);
 	}
 
 	protected function tearDown(): void
@@ -96,6 +99,59 @@ final class LeagueScopeRepositoryTest extends TestCase
 		);
 
 		$this->assertSame([], $result);
+	}
+
+	// ── user-privilege narrowing ───────────────────────────────────────────
+
+	public function testFinalizeScopesStripsCmsAdminForNonAdminUser(): void
+	{
+		$client = $this->makeClient('c-3', ['cms:read', 'cms:admin', 'mcp:tools']);
+		$this->clientRepo->save($client);
+		$this->accessControl->method('isAdmin')->with('member-user')->willReturn(false);
+
+		$result = $this->adapter->finalizeScopes(
+			[new LeagueScopeEntity('cms:read'), new LeagueScopeEntity('cms:admin'), new LeagueScopeEntity('mcp:tools')],
+			'authorization_code',
+			new LeagueClientEntity($client),
+			'member-user',
+		);
+
+		$ids = array_map(static fn (LeagueScopeEntity|\League\OAuth2\Server\Entities\ScopeEntityInterface $s): string => $s->getIdentifier(), $result);
+		sort($ids);
+		$this->assertSame(['cms:read', 'mcp:tools'], $ids);
+	}
+
+	public function testFinalizeScopesKeepsCmsAdminForAdminUser(): void
+	{
+		$client = $this->makeClient('c-4', ['cms:admin', 'mcp:tools']);
+		$this->clientRepo->save($client);
+		$this->accessControl->method('isAdmin')->with('joe')->willReturn(true);
+
+		$result = $this->adapter->finalizeScopes(
+			[new LeagueScopeEntity('cms:admin'), new LeagueScopeEntity('mcp:tools')],
+			'authorization_code',
+			new LeagueClientEntity($client),
+			'joe',
+		);
+
+		$this->assertCount(2, $result);
+	}
+
+	public function testFinalizeScopesStripsCmsAdminWhenUserUnknown(): void
+	{
+		// No user identifier at all — fail closed on the privileged scope.
+		$client = $this->makeClient('c-5', ['cms:admin', 'cms:read']);
+		$this->clientRepo->save($client);
+
+		$result = $this->adapter->finalizeScopes(
+			[new LeagueScopeEntity('cms:admin'), new LeagueScopeEntity('cms:read')],
+			'authorization_code',
+			new LeagueClientEntity($client),
+			null,
+		);
+
+		$this->assertCount(1, $result);
+		$this->assertSame('cms:read', $result[0]->getIdentifier());
 	}
 
 	private function makeClient(string $id, array $scopes): OAuthClientData
