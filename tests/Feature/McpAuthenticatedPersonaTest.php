@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
@@ -89,6 +90,29 @@ function mcpAuthSeedUser(string $fixtureId): void
 	copy(
 		dirname(__DIR__) . '/tcms-data-fixtures/auth/' . $fixtureId . '.json',
 		$authDir . '/' . $fixtureId . '.json',
+	);
+}
+
+/**
+ * Copy the access-groups fixture into the test data dir so
+ * AccessControlService::authorityFor() can resolve REAL group grants
+ * (findById('blogger'), findById('viewer'), etc.) instead of an empty/
+ * unresolved group list. mcpAuthSeedUser() only copies the auth user record
+ * (which references group ids by name); this copies the group DEFINITIONS
+ * those ids point to. Distinct name from OAuthRestGroupAccessTest's
+ * groupRestSeedUser() (which bundles both in one call) since this file's
+ * mcpAuthSeedUser() already exists and is used by tests that intentionally
+ * DON'T want real group resolution (elevation-only scenarios).
+ */
+function mcpAuthSeedAccessGroups(): void
+{
+	$systemDir = cmsDataDir() . '/.system';
+	if (!is_dir($systemDir)) {
+		mkdir($systemDir, 0777, true);
+	}
+	copy(
+		dirname(__DIR__) . '/tcms-data-fixtures/.system/access-groups.json',
+		$systemDir . '/access-groups.json',
 	);
 }
 
@@ -605,7 +629,20 @@ describe('McpAuthenticatedPersona', function (): void {
 		}
 
 		expect($names)->toContain('list_collections');
-		expect($names)->not->toContain('create_schema');
+		// NOT create_schema: as of Task 8, create_schema carries a
+		// ToolRequirement, so — unlike before Task 8, when it was purely
+		// access:'admin'-gated — its VISIBILITY is no longer persona-only. An
+		// admin-GROUP user's UserAuthority::isAdmin is TRUE regardless of the
+		// token's scope (PersonaContext resolves authority independently of
+		// persona/scope — see McpEndpointAction), so create_schema is now
+		// visible to this exact user even without cms:admin scope (it would
+		// still be REJECTED at call time by the scope-layer guard). The
+		// correct proxy for "did NOT reach the ADMIN persona" is a tool with
+		// NO ToolRequirement that stays strictly access:'admin' — get_site_info
+		// (SiteInfoTool) and list_extensions (ExtensionTools) are the two
+		// tools Task 8 deliberately left without one.
+		expect($names)->not->toContain('get_site_info');
+		expect($names)->not->toContain('list_extensions');
 	});
 
 	it('non-admin user with cms:admin scope stays AUTHENTICATED', function (): void {
@@ -651,14 +688,26 @@ describe('McpAuthenticatedPersona', function (): void {
 	});
 
 	// ──────────────────────────────────────────────────────────────────────────
-	// Scenario 9: admin-gated scopes never reach a non-admin's token. REST
-	// trusts token scopes as authority (BaseAccessMiddleware skips group
-	// checks for Bearer callers), so issuing cms:admin to a non-admin would
-	// hand them the admin REST surface their groups deny. finalizeScopes()
-	// narrows it away; the consent page shows only what approving grants.
+	// Scenario 9 (updated Task 8): admin-gated SCOPE ISSUANCE. Before Task 8,
+	// cms:admin required the SUPER-ADMIN group specifically (isAdmin alone).
+	// Task 8 widens the issuance gate to isAdmin() OR
+	// UserAuthority::hasAdminDomainGrants() (LeagueScopeRepository::
+	// finalizeScopes(), OAuthAuthorizeAction's consent filter) — a non-admin
+	// whose access-group grants SOME admin-domain permission (schemas,
+	// collectionsMeta, or a utils allow) can now convey the scope too. Per
+	// Joe's decision (progress.md, 2026-08-05): this breadth is ACCEPTED, not
+	// a bug — no narrowing predicate, no new scope. In THIS fixture (and even
+	// the framework's built-in default group templates —
+	// AccessGroupRepository::VIEWER_GROUP_TEMPLATE / DEFAULT_GROUP_TEMPLATE —
+	// auto-created on first access when no access-groups.json exists yet) the
+	// 'viewer' group grants schemas {all:true, operations:[read]}, which is
+	// enough for hasAdminDomainGrants() to return true. The access-group
+	// layer still caps what the resulting token can actually DO (see the
+	// blogger denial tests above) — this only widens who may REQUEST/consent
+	// to the scope.
 	// ──────────────────────────────────────────────────────────────────────────
 
-	it("non-admin's token requesting cms:admin cannot reach admin REST paths", function (): void {
+	it("a viewer's token requesting cms:admin CAN reach admin REST paths (widened issuance gate)", function (): void {
 		mcpAuthSetupOAuthKeys($this->app);
 		mcpAuthSeedUser('viewer-user-test-com');
 
@@ -677,10 +726,10 @@ describe('McpAuthenticatedPersona', function (): void {
 				->withHeader('Authorization', 'Bearer ' . $token),
 		);
 
-		expect($response->getStatusCode())->toBe(403);
+		expect($response->getStatusCode())->toBe(200);
 	});
 
-	it('consent page hides cms:admin from non-admin users and greets by name', function (): void {
+	it('consent page shows cms:admin to a non-admin user whose groups grant admin-domain access, and greets by name', function (): void {
 		mcpAuthSetupOAuthKeys($this->app);
 		mcpAuthSeedUser('viewer-user-test-com');
 
@@ -692,9 +741,28 @@ describe('McpAuthenticatedPersona', function (): void {
 			return;
 		}
 
-		expect($body)->not->toContain('cms:admin');
+		expect($body)->toContain('cms:admin');
 		expect($body)->toContain('cms:read');
 		expect($body)->toContain('Viewer Test User');
+	});
+
+	it('consent page still hides cms:admin from a caller whose identity cannot be resolved at all', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		// Deliberately NOT seeded — no auth-collection object exists for this
+		// id, so AccessControlService::authorityFor() falls through to
+		// UserAuthority::denied() (isAdmin:false, groups:[]):
+		// hasAdminDomainGrants() is false with no groups to iterate. This is
+		// the one remaining case the widened gate still denies.
+		$body = mcpAuthConsentPageBody($this->app, ['cms:read', 'cms:admin', 'mcp:tools'], 'ghost@nowhere.test');
+
+		if ($body === null) {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		expect($body)->not->toContain('cms:admin');
+		expect($body)->toContain('cms:read');
 	});
 
 	it('consent page shows cms:admin to admin users', function (): void {
@@ -711,6 +779,202 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($body)->toContain('cms:admin');
 		expect($body)->toContain('Admin Test User');
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Scenario 10 (Task 8, Phase 4): shipped write tools now carry a
+	// ToolRequirement — group-based access starts affecting REAL tool
+	// visibility + call-time enforcement, not just the synthetic tools
+	// McpToolGuardTest used to prove the guard mechanism itself. These tests
+	// seed the real access-groups fixture via mcpAuthSeedAccessGroups() so
+	// AccessControlService::authorityFor() resolves actual group grants.
+	//
+	// Fixture grants used (tests/tcms-data-fixtures/.system/access-groups.json):
+	//   - blogger: collections {all:false, allowed:['blog'], ops: create/read/update/delete}
+	//   - viewer:  collections {all:true, ops:[read]} — no create/update
+	// ──────────────────────────────────────────────────────────────────────────
+
+	it('blogger sees create_object in tools/list and can create into their allowed collection', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		$this->app->getContainer()->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
+
+		$clientId = 'mcp-auth-write-ok-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'cms:write', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue(); // skip-safe pass
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$list     = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/list',
+		], $sessionId);
+		$listBody = json_decode((string)$list->getBody(), true);
+		expect(array_column($listBody['result']['tools'] ?? [], 'name'))->toContain('create_object');
+
+		$call = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'create_object',
+				'arguments' => [
+					'collection' => 'blog',
+					'data'       => ['id' => 'blogger-post-1', 'title' => 'Hello From Blogger'],
+				],
+			],
+		], $sessionId);
+
+		expect($call->getStatusCode())->toBe(200);
+		$callBody = json_decode((string)$call->getBody(), true);
+		expect($callBody['result']['isError'] ?? false)->toBeFalse();
+	});
+
+	it('blogger is denied with a group-layer error when creating into a collection their group does not allow', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+
+		$clientId = 'mcp-auth-write-groupdenied-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'cms:write', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		// 'news' is not in blogger's allowed collection list — the guard must
+		// deny BEFORE the handler runs, so 'news' need not actually exist.
+		$call = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'create_object',
+				'arguments' => [
+					'collection' => 'news',
+					'data'       => ['title' => 'Should Not Save'],
+				],
+			],
+		], $sessionId);
+
+		expect($call->getStatusCode())->toBe(200);
+		$body = json_decode((string)$call->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeTrue();
+		$text = $body['result']['content'][0]['text'] ?? '';
+		expect($text)->toContain('groups');
+	});
+
+	it('blogger without cms:write scope gets a scope-layer denial for create_object', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+
+		$clientId = 'mcp-auth-write-scopedenied-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$call = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'create_object',
+				'arguments' => [
+					'collection' => 'blog',
+					'data'       => ['title' => 'Should Not Save'],
+				],
+			],
+		], $sessionId);
+
+		expect($call->getStatusCode())->toBe(200);
+		$body = json_decode((string)$call->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeTrue();
+		$text = $body['result']['content'][0]['text'] ?? '';
+		expect($text)->toContain('permission');
+	});
+
+	it('viewer does not see create_object in tools/list', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('viewer-user-test-com');
+		mcpAuthSeedAccessGroups();
+
+		$names = mcpAuthListToolsFor($this->app, 'viewer-user-test-com', ['cms:read', 'cms:write', 'mcp:tools']);
+
+		if ($names === null) {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		expect($names)->not->toContain('create_object');
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Scenario 12 (Task 8): elevation regression. The widened cms:admin
+	// ISSUANCE gate (Scenario 9 above) must NOT leak into McpAuth's ADMIN
+	// persona ELEVATION check, which stays admin-GROUP-only (isAdmin,
+	// unchanged). viewer-user-test-com's group genuinely satisfies
+	// hasAdminDomainGrants() (proven by the "consent page shows cms:admin"
+	// test above, same fixture) yet must still be denied create_schema —
+	// proving the two gates are independent.
+	// ──────────────────────────────────────────────────────────────────────────
+
+	it('a non-admin with cms:admin scope AND hasAdminDomainGrants() true still does not reach the ADMIN persona', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('viewer-user-test-com');
+		mcpAuthSeedAccessGroups();
+
+		$names = mcpAuthListToolsFor($this->app, 'viewer-user-test-com', ['cms:admin', 'mcp:tools']);
+
+		if ($names === null) {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		// AUTHENTICATED, not ADMIN: create_schema requires schemas 'create',
+		// which viewer's group does not grant (read only) — even though the
+		// SAME group grants enough for hasAdminDomainGrants() (see the
+		// consent-page test above). get_site_info/list_extensions have no
+		// ToolRequirement at all, so they stay strictly persona-gated —
+		// the cleanest proof this caller never reached the ADMIN persona.
+		expect($names)->not->toContain('create_schema');
+		expect($names)->not->toContain('clear_cache');
+		expect($names)->not->toContain('get_site_info');
+		expect($names)->not->toContain('list_extensions');
 	});
 });
 

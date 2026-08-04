@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\OAuth\Adapter;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\OAuth\Adapter\LeagueClientEntity;
 use TotalCMS\Domain\OAuth\Adapter\LeagueScopeEntity;
@@ -112,6 +114,9 @@ final class LeagueScopeRepositoryTest extends TestCase
 		$client = $this->makeClient('c-3', ['cms:read', 'cms:admin', 'mcp:tools']);
 		$this->clientRepo->save($client);
 		$this->accessControl->method('isAdmin')->with('member-user')->willReturn(false);
+		// Widened gate (Task 8): isAdmin() alone no longer decides — a non-admin
+		// with no admin-domain access-group grants must still be stripped.
+		$this->accessControl->method('authorityFor')->willReturn(UserAuthority::denied());
 
 		$result = $this->adapter->finalizeScopes(
 			[new LeagueScopeEntity('cms:read'), new LeagueScopeEntity('cms:admin'), new LeagueScopeEntity('mcp:tools')],
@@ -123,6 +128,38 @@ final class LeagueScopeRepositoryTest extends TestCase
 		$ids = array_map(static fn (LeagueScopeEntity|\League\OAuth2\Server\Entities\ScopeEntityInterface $s): string => $s->getIdentifier(), $result);
 		sort($ids);
 		$this->assertSame(['cms:read', 'mcp:tools'], $ids);
+	}
+
+	/**
+	 * Widened issuance gate (Task 8, spec refinement): a non-admin user whose
+	 * access groups grant SOME admin-domain permission (schemas,
+	 * collectionsMeta, or a non-empty utils allow) can also convey cms:admin —
+	 * UserAuthority::hasAdminDomainGrants() is the same check the MCP
+	 * admin-domain tools' ToolRequirement guard uses. The group layer still
+	 * caps what the resulting token can do; this only widens who may request
+	 * the scope at all.
+	 */
+	public function testFinalizeScopesKeepsCmsAdminForNonAdminWithAdminDomainGrants(): void
+	{
+		$client = $this->makeClient('c-6', ['cms:read', 'cms:admin', 'mcp:tools']);
+		$this->clientRepo->save($client);
+		$this->accessControl->method('isAdmin')->with('schema-editor')->willReturn(false);
+
+		// Default AccessGroupData permissions grant schemas {operations:[read],
+		// all:true} — enough for hasAdminDomainGrants() to return true.
+		$authority = new UserAuthority(isAdmin: false, groups: [new AccessGroupData(['id' => 'schema-editors'])]);
+		$this->accessControl->method('authorityFor')->willReturn($authority);
+
+		$result = $this->adapter->finalizeScopes(
+			[new LeagueScopeEntity('cms:read'), new LeagueScopeEntity('cms:admin'), new LeagueScopeEntity('mcp:tools')],
+			'authorization_code',
+			new LeagueClientEntity($client),
+			'schema-editor',
+		);
+
+		$ids = array_map(static fn (LeagueScopeEntity|\League\OAuth2\Server\Entities\ScopeEntityInterface $s): string => $s->getIdentifier(), $result);
+		sort($ids);
+		$this->assertSame(['cms:admin', 'cms:read', 'mcp:tools'], $ids);
 	}
 
 	public function testFinalizeScopesKeepsCmsAdminForAdminUser(): void

@@ -10,6 +10,7 @@ use Mcp\Server\RequestContext;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -27,9 +28,18 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
  * `delete_schema` carries the appropriate annotation so MCP hosts can surface
  * it with extra confirmation.
  *
- * All five tools require admin persona — even the reads are operator work
- * (inspecting schema definitions, not content) and shouldn't surface to
- * anonymous AI callers. Domain-layer exceptions are converted to
+ * `list_schemas` and `get_schema` require admin persona — even reads are
+ * operator work (inspecting schema definitions, not content) and shouldn't
+ * surface to anonymous AI callers. `create_schema`, `update_schema`, and
+ * `delete_schema` keep `access: 'admin'` but ALSO carry a `ToolRequirement`
+ * (Phase 4): the requirement doesn't loosen the base persona gate (an
+ * ADMIN-only tool stays hidden from AUTHENTICATED unless requires is
+ * satisfied — access: 'authenticated' would short-circuit tools/list
+ * visibility BEFORE requires is ever consulted, see
+ * McpToolDefinition::isVisibleTo()), it EXTENDS it: an AUTHENTICATED caller
+ * whose access-group grants schema create/update/delete on the target schema
+ * id also sees and can call the matching tool — mirrors the REST
+ * `/api/schemas` group gate. Domain-layer exceptions are converted to
  * `ToolCallException` with recovery hints so the SDK returns proper
  * `isError: true` MCP tool errors instead of letting raw exceptions escape.
  */
@@ -97,6 +107,7 @@ readonly class SchemaTools
 			name: 'create_schema',
 			description: 'Create a new schema. Requires id + properties. Errors if the id collides with an existing or reserved schema. Use update_schema to modify an existing schema. Pass seedObjects to populate the new collection with initial content — the call emits SSE progress notifications while seeding so callers can track multi-step progress.',
 			access: 'admin',
+			requires: new ToolRequirement(domain: 'schemas', operation: 'create', collectionArg: 'id'),
 			handler: $this->createHandler(...),
 			inputSchema: $this->createInputSchema(),
 			annotations: new ToolAnnotations(
@@ -113,6 +124,7 @@ readonly class SchemaTools
 			name: 'update_schema',
 			description: 'Replace an existing schema definition. Pass the full new shape (properties, required, index, etc.). The id in the schema must match the id parameter. Use create_schema for new schemas; use get_schema first if you want to edit an existing schema rather than replace it wholesale.',
 			access: 'admin',
+			requires: new ToolRequirement(domain: 'schemas', operation: 'update', collectionArg: 'id'),
 			handler: $this->updateHandler(...),
 			inputSchema: $this->mutationInputSchema(),
 			annotations: new ToolAnnotations(
@@ -129,6 +141,7 @@ readonly class SchemaTools
 			name: 'delete_schema',
 			description: 'Delete a schema permanently. Rejects reserved schemas, schemas inherited by others, and schemas still used by a collection. There is no undo — the operator must restore from backup if needed.',
 			access: 'admin',
+			requires: new ToolRequirement(domain: 'schemas', operation: 'delete', collectionArg: 'id'),
 			handler: $this->deleteHandler(...),
 			inputSchema: [
 				'type'                 => 'object',

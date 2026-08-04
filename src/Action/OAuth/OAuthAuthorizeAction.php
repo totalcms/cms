@@ -12,6 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
@@ -71,10 +72,17 @@ readonly class OAuthAuthorizeAction
 		$client = $this->clients->find($authRequest->getClient()->getIdentifier());
 
 		// The list must show what approving will actually grant. finalizeScopes()
-		// narrows admin-gated scopes away for non-admin users, so displaying
-		// them here would ask the user to consent to a permission the token
-		// will never carry.
-		$isAdmin   = $this->accessControl->isAdmin((string)$userId);
+		// narrows admin-gated scopes away for users who can't convey them, so
+		// displaying them here would ask the user to consent to a permission the
+		// token will never carry. Mirrors LeagueScopeRepository::finalizeScopes()'s
+		// widened gate: super admin OR SOME admin-domain access-group grant
+		// (schemas, collectionsMeta, or a utils allow) — see
+		// UserAuthority::hasAdminDomainGrants(). isAdmin() short-circuits first so
+		// the common case never pays for authorityFor()'s group lookup.
+		$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?: '');
+		$ref        = OAuthUserRef::parse((string)$userId, $collection);
+		$isAdmin    = $this->accessControl->isAdmin((string)$userId)
+			|| $this->accessControl->authorityFor($ref)->hasAdminDomainGrants();
 		$scopeRows = [];
 		foreach ($authRequest->getScopes() as $scope) {
 			$id = $scope->getIdentifier();
