@@ -38,6 +38,26 @@ return function (RouteCollectorProxyInterface $app): void {
 	$app->options('/mcp', McpEndpointAction::class)
 		->add(McpCorsMiddleware::class);
 
+	// Anonymous-only alias. Same action, persona pinned to PUBLIC_ via the
+	// route argument. Deliberately NO OAuthBearerMiddleware: credentials are
+	// ignored, not validated, and no response from these routes ever carries
+	// an OAuth challenge — to any client this is a plain no-auth MCP server.
+	// Exists because Claude's consumer apps demand a login whenever a server's
+	// OAuth is discoverable, walling site visitors off from the public tier
+	// on /mcp. Give visitors this URL; keep /mcp for connectors that log in.
+	$app->post('/mcp/public', McpEndpointAction::class)
+		->setArgument('publicOnly', '1')
+		->add(McpRateLimitMiddleware::class)
+		->add(McpCorsMiddleware::class)
+		->setName('mcp-public');
+	$app->get('/mcp/public', McpEndpointAction::class)
+		->setArgument('publicOnly', '1')
+		->add(McpRateLimitMiddleware::class)
+		->add(McpCorsMiddleware::class);
+	$app->options('/mcp/public', McpEndpointAction::class)
+		->setArgument('publicOnly', '1')
+		->add(McpCorsMiddleware::class);
+
 	// AI-agent discovery. Always 200; carries `disabled: true` when the endpoint
 	// is unavailable so agents can show informative UX instead of guessing.
 	$app->get('/.well-known/mcp.json', McpDiscoveryAction::class)

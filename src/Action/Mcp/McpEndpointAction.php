@@ -51,7 +51,8 @@ readonly class McpEndpointAction
 	) {
 	}
 
-	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+	/** @param array<string,mixed> $args */
+	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
 	{
 		if (!($this->config->mcp['enabled'] ?? true)) {
 			return $this->renderer->json($response, [
@@ -69,25 +70,45 @@ readonly class McpEndpointAction
 			], 403);
 		}
 
-		try {
-			$persona = $this->mcpAuth->resolvePersona($request);
-		} catch (McpAuthException $e) {
-			// WWW-Authenticate triggers lazy-auth UX in MCP clients — the host
-			// knows whether to prompt for credentials (login_required) vs surface
-			// a "your token didn't work" message (invalid_token). Required for
-			// Anthropic Directory submission.
-			$response = $this->renderer->json($response, [
-				'error' => ['message' => $e->getMessage()],
-			], 401);
+		// /mcp/public — the anonymous-only alias. The persona is pinned to
+		// PUBLIC_ and credentials are ignored rather than validated: the route
+		// carries no OAuthBearerMiddleware, and no response from it may ever
+		// hold an OAuth challenge, because its purpose is to be indistinguishable
+		// from a no-auth MCP server. Claude's consumer apps demand a login
+		// whenever OAuth is discoverable, so /mcp gates site visitors off from
+		// the public tier; this alias hands them exactly that tier and nothing
+		// else, while /mcp keeps serving all three personas.
+		if (($args['publicOnly'] ?? '') === '1') {
+			if (!($this->config->mcp['publicAccess'] ?? true)) {
+				// No public tier → the alias appears not to exist. A 401 here
+				// would need a challenge, which is the one thing this route
+				// must never emit.
+				return $this->renderer->json($response, [
+					'error' => ['message' => 'MCP server is disabled on this site.'],
+				], 404);
+			}
+			$persona = McpPersona::PUBLIC_;
+		} else {
+			try {
+				$persona = $this->mcpAuth->resolvePersona($request);
+			} catch (McpAuthException $e) {
+				// WWW-Authenticate triggers lazy-auth UX in MCP clients — the host
+				// knows whether to prompt for credentials (login_required) vs surface
+				// a "your token didn't work" message (invalid_token). Required for
+				// Anthropic Directory submission.
+				$response = $this->renderer->json($response, [
+					'error' => ['message' => $e->getMessage()],
+				], 401);
 
-			return $response->withHeader(
-				'WWW-Authenticate',
-				sprintf(
-					'Bearer realm="MCP", error="%s", resource_metadata="%s"',
-					$e->reason,
-					$this->urlBuilder->protectedResourceMetadataUrl($request),
-				),
-			);
+				return $response->withHeader(
+					'WWW-Authenticate',
+					sprintf(
+						'Bearer realm="MCP", error="%s", resource_metadata="%s"',
+						$e->reason,
+						$this->urlBuilder->protectedResourceMetadataUrl($request),
+					),
+				);
+			}
 		}
 
 		// Stash the persona so individual tool handlers can read it during
