@@ -90,9 +90,9 @@
 					<p>{{ t('cron_url.instructions') }}</p>
 
 					<pre class="automations-command"><code id="cron-url-automations-text">{{ cms.admin.cronUrl('automations') }}</code></pre>
-					<button type="button" class="cms-clip-button dash-button transparent" data-clip="#cron-url-automations-text">{{ t('btn.copy_url') }}</button>
-
 					<p class="help">{{ t('cron_url.credential_warning') }}</p>
+
+					<button type="button" class="cms-clip-button dash-button transparent" data-clip="#cron-url-automations-text">{{ t('btn.copy_url') }}</button>
 				</div>
 			</details>
 		</section>
@@ -424,6 +424,14 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 .cron-url-panel {
 	margin-top: 1.5rem;
+}
+
+.cron-url-panel .help {
+	margin-top: 0.75rem;
+}
+
+.cron-url-panel .cms-clip-button {
+	margin-top: 1rem;
 }
 
 .cron-url-panel summary {
