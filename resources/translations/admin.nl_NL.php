@@ -974,6 +974,8 @@ return [
 	'oauth_clients.created_label'             => 'Aangemaakt',
 	'oauth_clients.active_grants'             => '{count} actieve sessies',
 	'oauth_clients.confirm_delete'            => 'Deze OAuth-client verwijderen? Actieve sessies worden ingetrokken.',
+	'oauth_clients.prune_btn'                 => 'Verwijder inactieve clients',
+	'oauth_clients.confirm_prune'             => 'Alle zelf geregistreerde clients zonder actieve verbinding verwijderen? Clients met een actieve sessie blijven behouden.',
 	'oauth_clients.secret_shown_once_warning' => 'Sla dit geheim NU op. Het wordt nooit meer getoond.',
 	'oauth_clients.secret_copy_desc'          => 'Kopieer het clientgeheim en bewaar het veilig. Dit is de enige keer dat het wordt weergegeven.',
 	'oauth_clients.create_success'            => 'OAuth-client succesvol aangemaakt',

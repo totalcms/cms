@@ -128,6 +128,7 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'mcp-discovery',
 		'oauth-client-create',
 		'oauth-client-delete',
+		'oauth-client-prune',
 		'oauth-grant-revoke',
 		'oauth.approve',
 		'oauth.authorize',

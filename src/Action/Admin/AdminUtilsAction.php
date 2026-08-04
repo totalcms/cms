@@ -367,10 +367,22 @@ readonly class AdminUtilsAction
 
 		$static  = [];
 		$dynamic = [];
+		$now     = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
 
 		foreach ($allClients as $client) {
-			$grantCount = count($this->oauthGrantRepository->findByClientId($client->id));
-			$row        = ['client' => $client, 'grantCount' => $grantCount];
+			// The card advertises "active grants" — expired grants (lapsed
+			// refresh windows) don't count, they only await oauth:gc.
+			$grantCount = count(array_filter(
+				$this->oauthGrantRepository->findByClientId($client->id),
+				static function (\TotalCMS\Domain\OAuth\Data\OAuthGrantData $grant) use ($now): bool {
+					try {
+						return new \DateTimeImmutable($grant->expiresAt, new \DateTimeZone('UTC')) > $now;
+					} catch (\Exception) {
+						return false;
+					}
+				},
+			));
+			$row = ['client' => $client, 'grantCount' => $grantCount];
 
 			if ($client->isDynamic) {
 				$dynamic[] = $row;

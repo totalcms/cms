@@ -108,6 +108,7 @@ use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
@@ -798,6 +799,12 @@ return [
 
 	OAuthGrantRepository::class => fn (ContainerInterface $container): OAuthGrantRepository => new OAuthGrantRepository(
 		$container->get(Config::class)->datadir . '/.system/oauth-grants.json',
+	),
+
+	OAuthClientPruner::class => fn (ContainerInterface $container): OAuthClientPruner => new OAuthClientPruner(
+		$container->get(OAuthClientRepository::class),
+		$container->get(OAuthGrantRepository::class),
+		$container->get(Config::class)->datadir . '/.system/.oauth-gc',
 	),
 
 	OAuthRevocationList::class => fn (ContainerInterface $container): OAuthRevocationList => new OAuthRevocationList(

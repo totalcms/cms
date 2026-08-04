@@ -35,7 +35,14 @@
 
 	{# ── Dynamic clients (RFC 7591 self-registered) ───────────────────────── #}
 	{% if oauthClients.dynamic|length > 0 %}
-		<h2 style="margin-block: 1.5rem 1rem;">{{ t('oauth_clients.dynamic_heading') }}</h2>
+		<div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-block: 1.5rem 1rem;">
+			<h2 style="margin:0;">{{ t('oauth_clients.dynamic_heading') }}</h2>
+			{{ cms.admin.quickActionButton(t('oauth_clients.prune_btn'), '/api/oauth-clients/prune', {
+				confirm: t('oauth_clients.confirm_prune'),
+				reload: true,
+				class: 'dash-button transparent',
+			}) }}
+		</div>
 		<div class="dash-card-grid">
 			{% for row in oauthClients.dynamic %}
 				{% include 'admin/utils/oauth-clients/_card.twig' with {row: row} %}

@@ -974,6 +974,8 @@ return [
 	'oauth_clients.created_label'             => 'Created',
 	'oauth_clients.active_grants'             => '{count} active grants',
 	'oauth_clients.confirm_delete'            => 'Delete this OAuth client? Active sessions will be revoked.',
+	'oauth_clients.prune_btn'                 => 'Remove stale clients',
+	'oauth_clients.confirm_prune'             => 'Remove all self-registered clients with no active connection? Clients with a live grant are kept.',
 	'oauth_clients.secret_shown_once_warning' => 'Save this secret NOW. It will never be shown again.',
 	'oauth_clients.secret_copy_desc'          => 'Copy the client secret and store it securely. This is the only time it will be displayed.',
 	'oauth_clients.create_success'            => 'OAuth client created successfully',

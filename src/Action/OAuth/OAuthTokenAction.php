@@ -9,12 +9,14 @@ use League\OAuth2\Server\Exception\OAuthServerException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
 
 readonly class OAuthTokenAction
 {
 	public function __construct(
 		private AuthorizationServer $authServer,
 		private OAuthActivityLogger $activityLogger,
+		private OAuthClientPruner $clientPruner,
 	) {
 	}
 
@@ -47,6 +49,11 @@ readonly class OAuthTokenAction
 				}
 			}
 		}
+
+		// Active connectors refresh hourly, so this touchpoint gives every
+		// OAuth-using site a daily sweep of expired grants and stale
+		// self-registered clients. Throttled + failure-proof inside.
+		$this->clientPruner->maybeRunDaily();
 
 		return $response;
 	}

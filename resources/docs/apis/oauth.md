@@ -236,9 +236,9 @@ The JWT access tokens are RS256-signed. Resource servers (or auditing tools) can
 
 ---
 
-## Pruning expired grants with `oauth:gc`
+## Pruning expired grants and stale clients with `oauth:gc`
 
-OAuth grants accumulate over time. Expired access tokens are rejected at the endpoint, but the underlying grant records remain on disk in `tcms-data/.system/oauth/` until explicitly pruned. The `oauth:gc` command removes them:
+OAuth records accumulate over time. Expired access tokens are rejected at the endpoint, but the underlying grant records remain on disk until explicitly pruned. Self-registered clients pile up even faster: MCP clients (claude.ai, Claude Desktop, Cursor) register a fresh client every time a connector is added, so failed or abandoned connection attempts each leave a client record behind. The `oauth:gc` command removes both:
 
 ```bash
 tcms oauth:gc
@@ -248,19 +248,31 @@ Output:
 
 ```
 Pruned 14 expired OAuth grants.
+Pruned 6 stale dynamic clients.
+  - Anthropic/ClaudeAI (f9920001-…)
+  ...
 ```
 
-The command is safe to run at any time. It touches only grants whose refresh token has passed its configured lifetime (`oauth.refreshTokenTtl`) — active grants are untouched.
+The command is safe to run at any time:
+
+- **Grants** are removed only after their refresh token has passed its configured lifetime (`oauth.refreshTokenTtl`) — active grants are untouched.
+- **Clients** are removed only when they are self-registered (RFC 7591), at least 24 hours old, and hold no active grant. Every completed connection creates a grant at the consent screen, so a grantless dynamic client is a dead registration by definition; the 24-hour floor protects registrations whose user is still mid-consent. Manually configured clients are never touched.
+
+The same client cleanup is available in the admin: the **Remove stale clients** button on the OAuth Applications page (Utilities → OAuth Applications) prunes the self-registered list on demand.
+
+### Automatic daily cleanup
+
+You normally don't need to schedule anything: the same sweep runs opportunistically once per day, triggered by ordinary OAuth traffic (token refreshes and client registrations). Any site with an active connector — or one still receiving connection attempts — cleans itself. Sites that never use OAuth never pay the cost.
 
 ### Running on a schedule
 
-Prune once a day via cron. Add a line to the crontab of the web server user (typically `www-data` or the PHP-FPM pool user):
+If you prefer an explicit schedule (or want cleanup on a site with no OAuth traffic at all), run the command via cron. Add a line to the crontab of the web server user (typically `www-data` or the PHP-FPM pool user):
 
 ```
 0 3 * * * cd /var/www/your-site && php resources/bin/tcms oauth:gc >> tcms-data/.system/logs/oauth-gc.log 2>&1
 ```
 
-Adjust the path to match your install location. The `>> ... 2>&1` redirect appends output to a log file so you can confirm it ran. On low-traffic sites a weekly schedule is sufficient; on sites with many OAuth connections (public AI client deployments) daily is recommended.
+Adjust the path to match your install location. The `>> ... 2>&1` redirect appends output to a log file so you can confirm it ran.
 
 ---
 

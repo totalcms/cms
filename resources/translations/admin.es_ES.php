@@ -974,6 +974,8 @@ return [
 	'oauth_clients.created_label'             => 'Creado',
 	'oauth_clients.active_grants'             => '{count} sesiones activas',
 	'oauth_clients.confirm_delete'            => '¿Eliminar este cliente OAuth? Las sesiones activas serán revocadas.',
+	'oauth_clients.prune_btn'                 => 'Eliminar clientes inactivos',
+	'oauth_clients.confirm_prune'             => '¿Eliminar todos los clientes registrados automáticamente sin conexión activa? Los clientes con una sesión activa se conservan.',
 	'oauth_clients.secret_shown_once_warning' => 'Guarde este secreto AHORA. Nunca se volverá a mostrar.',
 	'oauth_clients.secret_copy_desc'          => 'Copie el secreto del cliente y guárdelo de forma segura. Esta es la única vez que se mostrará.',
 	'oauth_clients.create_success'            => 'Cliente OAuth creado correctamente',

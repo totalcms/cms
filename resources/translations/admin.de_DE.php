@@ -974,6 +974,8 @@ return [
 	'oauth_clients.created_label'             => 'Erstellt',
 	'oauth_clients.active_grants'             => '{count} aktive Sitzungen',
 	'oauth_clients.confirm_delete'            => 'Diesen OAuth-Client löschen? Aktive Sitzungen werden widerrufen.',
+	'oauth_clients.prune_btn'                 => 'Inaktive Clients entfernen',
+	'oauth_clients.confirm_prune'             => 'Alle selbst registrierten Clients ohne aktive Verbindung entfernen? Clients mit einer aktiven Sitzung bleiben erhalten.',
 	'oauth_clients.secret_shown_once_warning' => 'Speichern Sie dieses Secret JETZT. Es wird nie wieder angezeigt.',
 	'oauth_clients.secret_copy_desc'          => 'Kopieren Sie das Client-Secret und bewahren Sie es sicher auf. Es wird nur dieses eine Mal angezeigt.',
 	'oauth_clients.create_success'            => 'OAuth-Client erfolgreich erstellt',
