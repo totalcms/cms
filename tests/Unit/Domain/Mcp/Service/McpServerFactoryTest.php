@@ -20,6 +20,8 @@ use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\Config;
 
@@ -92,6 +94,8 @@ final class McpServerFactoryTest extends TestCase
 			$promptRegistrar,
 			$extensionManager,
 			new PersonaContext(),
+			new OAuthScopeRegistry(),
+			new OAuthActivityLogger(new NullLogger()),
 		);
 	}
 

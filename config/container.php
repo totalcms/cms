@@ -110,6 +110,7 @@ use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
+use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
@@ -741,6 +742,8 @@ return [
 		$container->get(PromptRegistrar::class),
 		$container->get(ExtensionManager::class),
 		$container->get(PersonaContext::class),
+		$container->get(OAuthScopeRegistry::class),
+		$container->get(OAuthActivityLogger::class),
 	),
 
 	// Subscription storage: reverse URI→sessionIds index at

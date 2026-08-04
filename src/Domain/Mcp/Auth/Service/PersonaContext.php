@@ -38,6 +38,10 @@ class PersonaContext
 
 	private ?UserAuthority $authority = null;
 
+	private string $clientId = '';
+
+	private string $userId = '';
+
 	public function set(McpPersona $persona): void
 	{
 		$this->persona = $persona;
@@ -96,5 +100,46 @@ class PersonaContext
 	public function getAuthority(): ?UserAuthority
 	{
 		return $this->authority;
+	}
+
+	/**
+	 * Store the OAuth client id for this request. Called by McpEndpointAction
+	 * alongside setScopes()/setAuthority() so Task 7's call-time guard can
+	 * attribute oauth-activity log denials (scopeRejected/groupRejected) to
+	 * the calling client, mirroring BaseAccessMiddleware's REST equivalent.
+	 * Empty for non-Bearer requests.
+	 */
+	public function setClientId(string $clientId): void
+	{
+		$this->clientId = $clientId;
+	}
+
+	/**
+	 * Return the OAuth client id for this request, or '' when none was set.
+	 */
+	public function getClientId(): string
+	{
+		return $this->clientId;
+	}
+
+	/**
+	 * Store the resolved OAuth subject (user id) for this request. Called by
+	 * McpEndpointAction alongside setAuthority(); used only for oauth-activity
+	 * log attribution in Task 7's call-time guard, not for authorization
+	 * decisions (UserAuthority already carries the resolved group grants).
+	 * Empty for non-Bearer requests.
+	 */
+	public function setUserId(string $userId): void
+	{
+		$this->userId = $userId;
+	}
+
+	/**
+	 * Return the resolved OAuth subject (user id) for this request, or ''
+	 * when none was set.
+	 */
+	public function getUserId(): string
+	{
+		return $this->userId;
 	}
 }

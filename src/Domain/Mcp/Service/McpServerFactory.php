@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Service;
 
+use Mcp\Capability\Registry\ElementReference;
+use Mcp\Capability\Registry\ReferenceHandler;
+use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server;
 use Mcp\Server\Resource\SubscriptionManagerInterface;
@@ -19,6 +22,8 @@ use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
 
@@ -52,6 +57,8 @@ readonly class McpServerFactory
 		private PromptRegistrar $promptRegistrar,
 		private ExtensionManager $extensions,
 		private PersonaContext $personaContext,
+		private OAuthScopeRegistry $scopeRegistry,
+		private OAuthActivityLogger $activityLogger,
 	) {
 	}
 
@@ -129,7 +136,7 @@ readonly class McpServerFactory
 			$annotations = $tool->annotations ?? $readOnlyDefault;
 
 			$builder->addTool(
-				handler: $tool->handler,
+				handler: $this->guardHandler($tool),
 				name: $this->resolveToolName($tool),
 				description: $description,
 				annotations: $annotations,
@@ -219,6 +226,141 @@ readonly class McpServerFactory
 		}
 
 		return $builder->build();
+	}
+
+	/**
+	 * Wraps $tool->handler with the call-time access-group + scope guard for
+	 * requirement-bearing tools (McpToolDefinition::$requires, Task 6).
+	 *
+	 * Task 6 only gated tools/list VISIBILITY — an AUTHENTICATED caller whose
+	 * groups satisfy the requirement for AT LEAST ONE target sees the tool
+	 * (isSatisfiedForAny()). This is the enforcement half: re-check the
+	 * requirement against the SPECIFIC target the caller is invoking with,
+	 * on every call, using isSatisfiedFor() — being visible for "some
+	 * collection" never implies authorized for "this collection". When
+	 * $tool->requires is null this is a no-op — returns $tool->handler
+	 * completely unchanged, so tools without a requirement (all of them
+	 * until Task 8) pay zero overhead and behave exactly as before this
+	 * task landed.
+	 *
+	 * ADMIN and PUBLIC_ personas skip the guard body: ADMIN's UserAuthority
+	 * short-circuits every can*() check anyway, and PUBLIC_ callers never
+	 * see a requirement-bearing tool in tools/list in the first place
+	 * (McpToolDefinition::isVisibleTo() only offers the $requires branch to
+	 * AUTHENTICATED) — there's no reachable path that calls a
+	 * requirement-bearing tool as PUBLIC_ to defend against.
+	 *
+	 * --- Argument-binding note (see task-7-report.md for the full write-up) ---
+	 * A naive wrapper — e.g. `fn (...$args) => ...` or `fn (array $args) =>
+	 * ...` registered directly as the tool's handler — silently breaks the
+	 * SDK's named-argument binding. Mcp\Capability\Registry\ReferenceHandler
+	 * ::prepareArguments() builds the call by reflecting on the HANDLER
+	 * closure's OWN parameter list and looking each name up in the JSON-RPC
+	 * argument bag; reflecting on a generic wrapper finds parameters named
+	 * `args`/`arguments`, which never match real tool argument names like
+	 * `collection`, so the inner call would receive defaults/nulls instead
+	 * of the caller's actual input.
+	 *
+	 * The fix reuses an escape hatch the SDK itself relies on: when a
+	 * registered handler Closure's *closure scope class* is
+	 * ReferenceHandler::class, `ReferenceHandler::handle()` skips reflection
+	 * entirely and invokes it with the raw argument array (see
+	 * vendor/mcp/sdk/src/Capability/Registry/ReferenceHandler.php:39-43).
+	 * The SDK's own ExplicitElementLoader uses exactly this trick
+	 * (`Closure::bind($closure, null, ReferenceHandler::class)`) to hand
+	 * ToolHandlerInterface-based tools the raw bag. We do the same here: the
+	 * returned closure is bound to that scope, so it receives $arguments
+	 * untouched (including `_session`/`_request`). On the allowed path we
+	 * then dispatch to the REAL $tool->handler via a fresh ReferenceHandler
+	 * + ElementReference — i.e. we replay the exact reflection-based,
+	 * type-casting dispatch the SDK would have used with no guard installed
+	 * at all, so per-tool argument binding (including inputSchema-declared
+	 * types) is byte-for-byte unchanged. Proven in
+	 * tests/Feature/McpToolGuardTest.php, which asserts a wrapped handler
+	 * receives its arguments intact.
+	 */
+	private function guardHandler(McpToolDefinition $tool): \Closure
+	{
+		$requires = $tool->requires;
+		if ($requires === null) {
+			return $tool->handler;
+		}
+
+		$innerHandler   = $tool->handler;
+		$toolName       = $tool->name;
+		$personaContext = $this->personaContext;
+		$scopeRegistry  = $this->scopeRegistry;
+		$activityLogger = $this->activityLogger;
+
+		$wrapped = static function (array $arguments) use ($requires, $innerHandler, $toolName, $personaContext, $scopeRegistry, $activityLogger): mixed {
+			$persona = $personaContext->current();
+
+			if ($persona === McpPersona::AUTHENTICATED) {
+				$clientId = $personaContext->getClientId();
+
+				// Layer 1 — scope (consent). expand() lets a broader granted
+				// scope (cms:admin) satisfy a narrower requirement
+				// (cms:read/cms:write) via the implies graph, mirroring the
+				// REST Bearer scope mapping.
+				$requiredScope = $requires->requiredScope();
+				if (!in_array($requiredScope, $scopeRegistry->expand($personaContext->getScopes()), true)) {
+					$activityLogger->scopeRejected($clientId, 'tools/call:' . $toolName, $personaContext->getScopes());
+
+					throw new ToolCallException(sprintf(
+						'This connection was not granted the %s permission.',
+						$requiredScope,
+					));
+				}
+
+				// Layer 2 — access-group authority for the SPECIFIC target.
+				// Fail closed when PersonaContext never resolved an
+				// authority for this Bearer request.
+				$authority = $personaContext->getAuthority();
+				if ($authority === null) {
+					$activityLogger->groupRejected($clientId, $toolName, $personaContext->getUserId());
+
+					throw new ToolCallException(sprintf(
+						"Your account's groups do not grant %s.",
+						$requires->operation,
+					));
+				}
+
+				if ($requires->collectionArg !== null) {
+					$target = $arguments[$requires->collectionArg] ?? null;
+					if (!is_string($target) || $target === '') {
+						$activityLogger->groupRejected($clientId, $toolName, $personaContext->getUserId());
+
+						throw new ToolCallException(sprintf(
+							"Your account's groups do not grant %s: no target was specified.",
+							$requires->operation,
+						));
+					}
+					$satisfied = $requires->isSatisfiedFor($authority, $target);
+				} else {
+					$target    = '';
+					$satisfied = $requires->isSatisfiedForAny($authority);
+				}
+
+				if (!$satisfied) {
+					$activityLogger->groupRejected($clientId, $toolName, $personaContext->getUserId());
+
+					throw new ToolCallException(sprintf(
+						"Your account's groups do not grant %s on '%s'.",
+						$requires->operation,
+						$target,
+					));
+				}
+			}
+
+			// Replay the SDK's normal reflection-based dispatch for the real
+			// handler — see the argument-binding note above.
+			return (new ReferenceHandler())->handle(new ElementReference($innerHandler), $arguments);
+		};
+
+		// ReferenceHandler::class always exists, so Closure::bind() cannot
+		// fail here — PHPStan's stubs agree the result is always Closure,
+		// never null.
+		return \Closure::bind($wrapped, null, ReferenceHandler::class);
 	}
 
 	/**

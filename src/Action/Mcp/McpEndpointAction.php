@@ -114,6 +114,11 @@ readonly class McpEndpointAction
 			));
 			$this->personaContext->setScopes($scopes);
 
+			// Client id, for oauth-activity log attribution when Task 7's
+			// call-time guard denies a tools/call — same request attribute
+			// BaseAccessMiddleware reads for the REST equivalent.
+			$this->personaContext->setClientId((string)$request->getAttribute('oauth_client_id', ''));
+
 			// Resolve the caller's UserAuthority for this Bearer request so
 			// ToolRegistry::forPersona() (via McpServerFactory) can show
 			// requirement-gated tools (McpToolDefinition::$requires,
@@ -124,6 +129,7 @@ readonly class McpEndpointAction
 			// leave PersonaContext's authority at its default null.
 			$userId = $request->getAttribute('oauth_user_id');
 			if (is_string($userId) && $userId !== '') {
+				$this->personaContext->setUserId($userId);
 				$ref = OAuthUserRef::parse($userId, (string)$this->config->auth['collection']);
 				$this->personaContext->setAuthority($this->accessControl->authorityFor($ref));
 			}
