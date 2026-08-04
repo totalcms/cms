@@ -589,7 +589,7 @@ return [
 	'cron_url.why_not'              => 'A real cron job running the command above is faster, has no time limit, and can process everything in one pass. Use a cron URL only if your host cannot run scheduled shell commands at all.',
 	'cron_url.limits'               => 'A URL run stops before your server\'s request time limit and leaves the rest for the next run, so large backlogs drain slowly. A single job bigger than that limit will never finish.',
 	'cron_url.instructions'         => 'Schedule this URL to be fetched every few minutes using your host\'s cron tool or an external cron service.',
-	'cron_url.credential_warning'   => 'This URL contains a password. It will appear in your server\'s access logs. Do not share it, and only ever fetch it over HTTPS.',
+	'cron_url.credential_warning'   => 'This URL contains a token. It will appear in your server\'s access logs. Do not share it, and only ever fetch it over HTTPS.',
 	'jobqueue.scheduled_title'      => 'Process Jobs Scheduled Job',
 	'jobqueue.command_desc'         => 'The following command should be the exact command that you should copy to your cron job.',
 	'jobqueue.php_path_note'        => 'If there is no path to the PHP command, you will need to find the path to the PHP command on your server.',

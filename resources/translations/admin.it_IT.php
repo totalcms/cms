@@ -589,7 +589,7 @@ return [
 	'cron_url.why_not'              => 'Un vero cron che esegue il comando qui sopra è più veloce, non ha limiti di tempo e può elaborare tutto in un solo passaggio. Usa un URL cron solo se il tuo host non può eseguire comandi pianificati.',
 	'cron_url.limits'               => 'Un\'esecuzione via URL si ferma prima del limite di tempo del server e lascia il resto alla volta successiva, quindi gli arretrati grandi si smaltiscono lentamente. Un singolo lavoro più grande di quel limite non finirà mai.',
 	'cron_url.instructions'         => 'Pianifica il recupero di questo URL ogni pochi minuti con lo strumento cron del tuo host o un servizio cron esterno.',
-	'cron_url.credential_warning'   => 'Questo URL contiene una password. Comparirà nei log di accesso del server. Non condividerlo e recuperalo sempre via HTTPS.',
+	'cron_url.credential_warning'   => 'Questo URL contiene un token. Comparirà nei log di accesso del server. Non condividerlo e recuperalo sempre via HTTPS.',
 	'jobqueue.scheduled_title'      => 'Lavoro pianificato Process Jobs',
 	'jobqueue.command_desc'         => 'Il comando seguente è quello esatto da copiare nel tuo cron job.',
 	'jobqueue.php_path_note'        => 'Se non è presente un percorso al comando PHP, dovrai trovare il percorso al comando PHP sul tuo server.',

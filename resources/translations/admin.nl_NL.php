@@ -589,7 +589,7 @@ return [
 	'cron_url.why_not'              => 'Een echte cron die het bovenstaande commando uitvoert is sneller, heeft geen tijdslimiet en kan alles in één keer verwerken. Gebruik een cron-URL alleen als uw host helemaal geen geplande shell-opdrachten kan uitvoeren.',
 	'cron_url.limits'               => 'Een URL-run stopt vóór de tijdslimiet van uw server en laat de rest voor de volgende keer, dus grote achterstanden worden langzaam weggewerkt. Een enkele taak die groter is dan die limiet zal nooit klaar zijn.',
 	'cron_url.instructions'         => 'Plan deze URL om elke paar minuten opgehaald te worden met het cron-hulpmiddel van uw host of een externe cron-dienst.',
-	'cron_url.credential_warning'   => 'Deze URL bevat een wachtwoord. Hij verschijnt in de toegangslogboeken van uw server. Deel hem niet en haal hem uitsluitend via HTTPS op.',
+	'cron_url.credential_warning'   => 'Deze URL bevat een token. Hij verschijnt in de toegangslogboeken van uw server. Deel hem niet en haal hem uitsluitend via HTTPS op.',
 	'jobqueue.scheduled_title'      => 'Geplande taak voor taakverwerking',
 	'jobqueue.command_desc'         => 'De volgende opdracht is de exacte opdracht die u naar uw cron-taak moet kopiëren.',
 	'jobqueue.php_path_note'        => 'Als er geen pad naar de PHP-opdracht is, moet u het pad naar de PHP-opdracht op uw server zoeken.',

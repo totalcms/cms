@@ -589,7 +589,7 @@ return [
 	'cron_url.why_not'              => 'Ein echter Cron-Job mit dem obigen Befehl ist schneller, hat kein Zeitlimit und kann alles in einem Durchgang verarbeiten. Nutzen Sie eine Cron-URL nur, wenn Ihr Host überhaupt keine geplanten Shell-Befehle ausführen kann.',
 	'cron_url.limits'               => 'Ein URL-Durchlauf stoppt vor dem Zeitlimit Ihres Servers und lässt den Rest für den nächsten Lauf übrig — große Rückstände werden also langsam abgearbeitet. Ein einzelner Auftrag, der größer als dieses Limit ist, wird nie fertig.',
 	'cron_url.instructions'         => 'Planen Sie den Abruf dieser URL alle paar Minuten über das Cron-Werkzeug Ihres Hosts oder einen externen Cron-Dienst.',
-	'cron_url.credential_warning'   => 'Diese URL enthält ein Passwort. Sie erscheint in den Zugriffsprotokollen Ihres Servers. Geben Sie sie nicht weiter und rufen Sie sie ausschließlich über HTTPS ab.',
+	'cron_url.credential_warning'   => 'Diese URL enthält ein Token. Sie erscheint in den Zugriffsprotokollen Ihres Servers. Geben Sie sie nicht weiter und rufen Sie sie ausschließlich über HTTPS ab.',
 	'jobqueue.scheduled_title'      => 'Geplanter Job zur Auftragsverarbeitung',
 	'jobqueue.command_desc'         => 'Der folgende Befehl sollte genau so in Ihren Cron-Job kopiert werden.',
 	'jobqueue.php_path_note'        => 'Wenn kein Pfad zum PHP-Befehl angegeben ist, müssen Sie den Pfad zum PHP-Befehl auf Ihrem Server ermitteln.',

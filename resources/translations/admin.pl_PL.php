@@ -589,7 +589,7 @@ return [
 	'cron_url.why_not'              => 'Prawdziwy cron uruchamiający powyższe polecenie jest szybszy, nie ma limitu czasu i może przetworzyć wszystko za jednym razem. Użyj adresu URL cron tylko wtedy, gdy Twój host w ogóle nie może uruchamiać zaplanowanych poleceń powłoki.',
 	'cron_url.limits'               => 'Uruchomienie przez URL zatrzymuje się przed limitem czasu żądania serwera i zostawia resztę na następny raz, więc duże zaległości są przetwarzane powoli. Pojedyncze zadanie większe niż ten limit nigdy się nie zakończy.',
 	'cron_url.instructions'         => 'Zaplanuj pobieranie tego adresu URL co kilka minut za pomocą narzędzia cron Twojego hosta lub zewnętrznej usługi cron.',
-	'cron_url.credential_warning'   => 'Ten adres URL zawiera hasło. Pojawi się w logach dostępu serwera. Nie udostępniaj go i pobieraj wyłącznie przez HTTPS.',
+	'cron_url.credential_warning'   => 'Ten adres URL zawiera token. Pojawi się w logach dostępu serwera. Nie udostępniaj go i pobieraj wyłącznie przez HTTPS.',
 	'jobqueue.scheduled_title'      => 'Zadanie cykliczne przetwarzania kolejki',
 	'jobqueue.command_desc'         => 'Poniższe polecenie należy skopiować dokładnie w tej postaci do zadania cron.',
 	'jobqueue.php_path_note'        => 'Jeśli polecenie PHP nie ma ścieżki, musisz znaleźć ścieżkę do polecenia PHP na swoim serwerze.',

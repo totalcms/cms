@@ -589,7 +589,7 @@ return [
 	'cron_url.why_not'              => 'Un cron real ejecutando el comando anterior es más rápido, no tiene límite de tiempo y puede procesarlo todo en una sola pasada. Use una URL de cron solo si su alojamiento no puede ejecutar comandos programados.',
 	'cron_url.limits'               => 'Una ejecución por URL se detiene antes del límite de tiempo de su servidor y deja el resto para la siguiente, por lo que los acumulados grandes se procesan lentamente. Un trabajo más grande que ese límite nunca terminará.',
 	'cron_url.instructions'         => 'Programe la obtención de esta URL cada pocos minutos con la herramienta de cron de su alojamiento o un servicio de cron externo.',
-	'cron_url.credential_warning'   => 'Esta URL contiene una contraseña. Aparecerá en los registros de acceso de su servidor. No la comparta y obténgala siempre por HTTPS.',
+	'cron_url.credential_warning'   => 'Esta URL contiene un token. Aparecerá en los registros de acceso de su servidor. No la comparta y obténgala siempre por HTTPS.',
 	'jobqueue.scheduled_title'      => 'Tarea programada de procesamiento de trabajos',
 	'jobqueue.command_desc'         => 'El siguiente comando debe ser el comando exacto que debe copiar en su tarea cron.',
 	'jobqueue.php_path_note'        => 'Si no aparece la ruta al comando PHP, necesitará encontrar la ruta al comando PHP en su servidor.',
