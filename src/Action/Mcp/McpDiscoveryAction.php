@@ -78,9 +78,13 @@ readonly class McpDiscoveryAction
 
 		// RFC 9728: advertise the protected-resource-metadata URL so OAuth-aware
 		// clients can discover the authorization server without a 401 round-trip.
-		// Only present when the OAuth server feature is enabled — it points at
-		// /.well-known/oauth-protected-resource, which returns 404 on non-Pro.
-		if ($this->editionFeatures->can(EditionFeature::OAUTH_SERVER)) {
+		// Only present when the OAuth server is actually reachable — it points at
+		// /.well-known/oauth-protected-resource, which returns 404 both on
+		// non-Pro editions and when oauth.enabled is off. Sites disable OAuth to
+		// run public-only MCP; advertising it anyway would make Claude's consumer
+		// apps demand a login no visitor can complete.
+		$oauthEnabled = ($this->config->oauth['enabled'] ?? true) === true;
+		if ($oauthEnabled && $this->editionFeatures->can(EditionFeature::OAUTH_SERVER)) {
 			$body['resourceMetadata'] = $this->urlBuilder->protectedResourceMetadataUrl($request);
 		}
 

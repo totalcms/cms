@@ -214,6 +214,24 @@ Dynamic registration is rate-limited by default (10 registrations/hour per IP) t
 
 ---
 
+## Running public-only MCP
+
+**Admin → Settings → OAuth Server → Enable OAuth Server** (default: on) is the master switch for the whole authorization server. Turn it **off** to run a public-only MCP site.
+
+Why you'd want that: some MCP clients — notably claude.ai and the Claude desktop app — demand a login at connector setup whenever they can discover an OAuth server, even though your anonymous public tier would have served them. T3's consent screen requires an operator login, so a site visitor who adds your connector hits a wall they can never pass. With OAuth disabled, those clients see a plain no-auth MCP server and connect anonymously, getting exactly the collections and tools you marked public.
+
+With the switch off:
+
+- All OAuth discovery documents (`/.well-known/oauth-authorization-server`, `/.well-known/oauth-protected-resource`, `/.well-known/jwks.json`) and endpoints (`/oauth/authorize`, `/oauth/token`, `/oauth/register`, `/oauth/revoke`) return 404 — clients read "no OAuth here" through standard discovery failure.
+- The MCP discovery document (`/.well-known/mcp.json`) stops advertising `resourceMetadata`.
+- Access is anonymous (public persona) or API key (admin persona). The authenticated OAuth tier is unavailable, including for your own connectors.
+- Already-issued access tokens expire naturally (default 1 hour) and cannot be refreshed; no new tokens can be issued.
+- The per-collection MCP access levels keep working as before — collections marked `authenticated` are simply unreachable until you either re-enable OAuth or query with an API key.
+
+The OAuth Applications admin page stays available so client records survive a temporary switch-off intact. Note that leaving OAuth **enabled** does not block public access at the server — anonymous callers are always served when *Allow Public Access* is on. The switch exists purely because some clients refuse to take the anonymous path while OAuth is discoverable.
+
+---
+
 ## Security model
 
 ### What OAuth protects
@@ -327,6 +345,7 @@ Settings live in **Admin → Settings → OAuth Server**.
 
 | Key | Default | Effect |
 |---|---|---|
+| `oauth.enabled` | `true` | Master switch. Off = every OAuth endpoint and discovery document returns 404 — see [Running public-only MCP](#running-public-only-mcp) |
 | `oauth.dynamicRegistration` | `false` | Enable RFC 7591 self-registration at `/oauth/register` (off by default — unauthenticated endpoint) |
 | `oauth.accessTokenTtl` | `PT1H` | PHP DateInterval — access token lifetime |
 | `oauth.refreshTokenTtl` | `P30D` | PHP DateInterval — refresh token lifetime |

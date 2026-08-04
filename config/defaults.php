@@ -453,6 +453,7 @@ $settings['search'] = [
 // Generate with: tcms oauth:setup (creates keys at the paths below).
 // accessTokenTtl / refreshTokenTtl / authCodeTtl are PHP DateInterval specs.
 $settings['oauth'] = [
+	'enabled'             => true,     // off = public-only MCP: OAuth well-knowns and endpoints 404, so MCP clients connect anonymously instead of demanding a login
 	'signingKeyPath'      => $settings['datadir'] . '/.system/oauth-keys/private.key',
 	'publicKeyPath'       => $settings['datadir'] . '/.system/oauth-keys/public.key',
 	'accessTokenTtl'      => 'PT1H',   // 1 hour

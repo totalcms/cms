@@ -44,6 +44,8 @@ The same `/mcp` URL serves three personas; the tool surface scales per caller:
 
 Public access is **default-deny**. Anonymous requests get a 401 unless the operator explicitly flips `mcp.publicAccess` on in settings AND marks at least one collection's `mcp.access` as `public` in the schema editor.
 
+> **Public access with Claude requires disabling OAuth.** claude.ai and the Claude desktop app demand a login at connector setup whenever they can discover an OAuth server on your site — they never fall back to the anonymous tier, and your consent screen requires an operator login no site visitor has. If you want visitors to connect their Claude to your public collections, turn off **Admin → Settings → OAuth Server → Enable OAuth Server**. Access is then anonymous (public) or API key (admin) — see [Running public-only MCP](docs/apis/oauth#running-public-only-mcp). Clients that try anonymously first (ChatGPT connectors, Claude Code, MCP Inspector) reach the public tier either way.
+
 ---
 
 ## Enabling the MCP server
