@@ -10,18 +10,30 @@ use Symfony\Component\Console\Tester\CommandTester;
 use TotalCMS\CLI\Command\OAuth\OAuthGcCommand;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
+use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
 use TotalCMS\TotalCMS;
 
 beforeEach(function (): void {
 	$this->totalcms        = $this->createMock(TotalCMS::class);
-	$this->grantsTmpFile   = sys_get_temp_dir() . '/oauth-gc-test-' . uniqid() . '.json';
+	$prefix                = sys_get_temp_dir() . '/oauth-gc-test-' . uniqid();
+	$this->grantsTmpFile   = $prefix . '-grants.json';
+	$this->clientsTmpFile  = $prefix . '-clients.json';
+	$this->gcMarkerFile    = $prefix . '-marker';
 	$this->grantRepository = new OAuthGrantRepository($this->grantsTmpFile);
+	$this->clientPruner    = new OAuthClientPruner(
+		new OAuthClientRepository($this->clientsTmpFile),
+		$this->grantRepository,
+		$this->gcMarkerFile,
+	);
 });
 
 afterEach(function (): void {
-	if (is_file($this->grantsTmpFile)) {
-		unlink($this->grantsTmpFile);
+	foreach ([$this->grantsTmpFile, $this->clientsTmpFile, $this->gcMarkerFile] as $file) {
+		if (is_file($file)) {
+			unlink($file);
+		}
 	}
 });
 
@@ -73,6 +85,7 @@ it('reports zero when no grants are expired', function (): void {
 		fn (string $class): mixed => match ($class) {
 			EditionFeatureService::class => $allowed,
 			OAuthGrantRepository::class  => $this->grantRepository,
+			OAuthClientPruner::class     => $this->clientPruner,
 			default                      => null,
 		}
 	);
@@ -83,6 +96,7 @@ it('reports zero when no grants are expired', function (): void {
 
 	expect($tester->getStatusCode())->toBe(0);
 	expect($tester->getDisplay())->toContain('Pruned 0 expired OAuth grants');
+	expect($tester->getDisplay())->toContain('Pruned 0 stale dynamic clients');
 });
 
 it('prunes expired grants and reports the count', function (): void {
@@ -128,6 +142,7 @@ it('prunes expired grants and reports the count', function (): void {
 		fn (string $class): mixed => match ($class) {
 			EditionFeatureService::class => $allowed,
 			OAuthGrantRepository::class  => $this->grantRepository,
+			OAuthClientPruner::class     => $this->clientPruner,
 			default                      => null,
 		}
 	);
