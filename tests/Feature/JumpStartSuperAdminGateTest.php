@@ -29,9 +29,11 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
@@ -49,6 +51,9 @@ describe('JumpStart AdminOnlyMiddleware gate (export + import routes)', function
 		$this->responseFactory   = $this->createMock(ResponseFactoryInterface::class);
 		$this->operationDetector = $this->createMock(OperationDetector::class);
 		$this->loggerFactory     = $this->createMock(LoggerFactory::class);
+		// OAuthActivityLogger is final readonly — construct a real instance
+		// backed by a NullLogger instead of createMock().
+		$this->oauthActivityLogger = new OAuthActivityLogger(new NullLogger());
 
 		$this->config        = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$this->config->auth  = ['enable' => true];
@@ -92,6 +97,7 @@ describe('JumpStart AdminOnlyMiddleware gate (export + import routes)', function
 				$this->config,
 				$this->operationDetector,
 				$this->loggerFactory,
+				$this->oauthActivityLogger,
 			);
 		};
 	});

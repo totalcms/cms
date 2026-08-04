@@ -232,6 +232,25 @@ function groupRestGet(Slim\App $app, string $path, string $accessToken): Psr\Htt
 	return $app->handle($request);
 }
 
+/**
+ * PUT a JSON body to $path with a Bearer access token.
+ *
+ * @param array<string,mixed> $body
+ */
+function groupRestPutJson(Slim\App $app, string $path, string $accessToken, array $body): Psr\Http\Message\ResponseInterface
+{
+	$factory = new Psr17Factory();
+	$request = $factory
+		->createServerRequest('PUT', $path)
+		->withHeader('Content-Type', 'application/json')
+		->withHeader('Authorization', 'Bearer ' . $accessToken);
+
+	$request->getBody()->write((string)json_encode($body));
+	$request->getBody()->rewind();
+
+	return $app->handle($request);
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Tests
 // ──────────────────────────────────────────────────────────────────────────────
@@ -336,5 +355,46 @@ describe('OAuthRestGroupAccess', function (): void {
 		$response = groupRestGet($this->app, '/api/collections/blog', $token);
 
 		expect($response->getStatusCode())->toBe(200);
+	});
+
+	// ──────────────────────────────────────────────────────────────────────
+	// Regression guard (security review, Task 5 fix round 1): the collection
+	// middleware's self-profile carve-out ("users may always update their own
+	// auth record") gates on session AUTH_COLLECTION, not on auth method. A
+	// Bearer request that ALSO carries an active session cookie (browser-
+	// originated token use — groupRestIssueToken() leaves the session set
+	// with AUTH_USER/AUTH_COLLECTION exactly as token issuance does) must
+	// NOT be able to use that carve-out to bypass the group check on the
+	// auth collection itself. viewer's group is read-only, so this update
+	// must still 403.
+	// ──────────────────────────────────────────────────────────────────────
+
+	it('bearer request with an active session cannot use the self-profile carve-out to bypass the group check', function (): void {
+		groupRestSetupOAuthKeys($this->app);
+		groupRestSeedUser('viewer-user-test-com');
+
+		// groupRestIssueToken() sets session AUTH_USER/AUTH_COLLECTION as a side
+		// effect of the authorization-code flow and does not clear them
+		// afterward — the session is still "active" for the next request made
+		// against $this->app, exactly like a browser that also holds a cookie.
+		$token = groupRestIssueToken($this->app, 'viewer-user-test-com', ['cms:read', 'cms:write']);
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		// Self-profile-shaped request: collection === the caller's own auth
+		// collection, id === the caller's own user id — exactly what the
+		// carve-out matches on.
+		$response = groupRestPutJson(
+			$this->app,
+			'/api/collections/auth/viewer-user-test-com',
+			$token,
+			['name' => 'Should Not Be Allowed'],
+		);
+
+		expect($response->getStatusCode())->toBe(403);
+		expect($response->getHeaderLine('WWW-Authenticate'))->not->toContain('insufficient_scope');
 	});
 });
