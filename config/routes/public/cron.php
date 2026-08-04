@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Slim\Interfaces\RouteCollectorProxyInterface;
 use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Action\Cron\CronAutomationsAction;
 use TotalCMS\Action\Cron\CronJobsAction;
 use TotalCMS\Middleware\Cron\CronTokenMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
@@ -23,6 +24,7 @@ use TotalCMS\Middleware\Response\NoCacheMiddleware;
 return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/cron', function (RouteCollectorProxy $group): void {
 		$group->get('/jobs', CronJobsAction::class)->setName('cron-jobs');
+		$group->get('/automations', CronAutomationsAction::class)->setName('cron-automations');
 	})
 		->add(CronTokenMiddleware::class)
 		->add(NoCacheMiddleware::class);
