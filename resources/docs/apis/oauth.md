@@ -335,6 +335,15 @@ Tokens issued through the OAuth flow authenticate requests to `/mcp` — but onl
 
 The token's scopes determine which tools and resources appear in `tools/list` and `resources/list`. An agent whose token lacks `mcp:resources` cannot subscribe to change notifications; one without `mcp:prompts` cannot invoke prompts. T3 filters the surface at session initialization so agents only see what their token can actually call.
 
+### Super-admin elevation
+
+A token is elevated to the full **admin** persona — every tool, including the schema/collection write tools, same surface as an API key — when **both** of these hold:
+
+1. The user who approved the consent screen is in the **admin** group (the same check that guards the admin UI), and
+2. the token carries the `cms:admin` scope.
+
+Either alone stays at the authenticated tier: an admin who granted a read-only token gets exactly the read-only assistant they chose, and a non-admin requesting `cms:admin` gets the scope but not the elevation. This is the recommended way for operators to manage their site from Claude — compared to pasting an API key it's per-connection revocable, activity-logged, and the access token expires hourly.
+
 For a complete breakdown of which scopes unlock which MCP capabilities, and a worked example of configuring Claude Desktop with a static OAuth client, see [Connecting an AI client via OAuth](docs/mcp/server#connecting-an-ai-client-via-oauth).
 
 ---

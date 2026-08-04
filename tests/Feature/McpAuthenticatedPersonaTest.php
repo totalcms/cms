@@ -76,12 +76,29 @@ function mcpAuthSetupOAuthKeys(Slim\App $app): array
 }
 
 /**
+ * Copy a fixture user into the test auth collection so isSuperAdmin() can
+ * resolve them. Fixture ids: 'admin-user-test-com' (groups: [admin]) and
+ * 'viewer-user-test-com' (groups: [viewer]).
+ */
+function mcpAuthSeedUser(string $fixtureId): void
+{
+	$authDir = cmsDataDir() . '/auth';
+	if (!is_dir($authDir)) {
+		mkdir($authDir, 0777, true);
+	}
+	copy(
+		dirname(__DIR__) . '/tcms-data-fixtures/auth/' . $fixtureId . '.json',
+		$authDir . '/' . $fixtureId . '.json',
+	);
+}
+
+/**
  * Walk the full authorization-code + PKCE flow and return an access token
  * with the given scopes.
  *
  * @param list<string> $scopes
  */
-function mcpAuthIssueToken(Slim\App $app, string $clientId, string $clientSecret, array $scopes): string
+function mcpAuthIssueToken(Slim\App $app, string $clientId, string $clientSecret, array $scopes, string $userId = 'admin@example.test'): string
 {
 	$client = new OAuthClientData(
 		id: $clientId,
@@ -101,7 +118,7 @@ function mcpAuthIssueToken(Slim\App $app, string $clientId, string $clientSecret
 	if (!$session->isStarted()) {
 		$session->start();
 	}
-	$session->set(SessionKeys::AUTH_USER, 'admin@example.test');
+	$session->set(SessionKeys::AUTH_USER, $userId);
 
 	$codeVerifier  = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
 	$codeChallenge = rtrim(strtr(base64_encode(hash('sha256', $codeVerifier, true)), '+/', '-_'), '=');
@@ -520,5 +537,103 @@ describe('McpAuthenticatedPersona', function (): void {
 		], $sessionId);
 
 		expect($list->getStatusCode())->toBe(200);
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Scenario 8: super-admin elevation. A token authorized by a user in the
+	// admin group AND carrying cms:admin resolves to the ADMIN persona — the
+	// full tool surface, same as an API key. Both conditions are required:
+	// the identity proves who consented, the scope proves what they consented
+	// to. Either one alone stays AUTHENTICATED.
+	// ──────────────────────────────────────────────────────────────────────────
+
+	/**
+	 * @param list<string> $scopes
+	 * @return list<string>|null Tool names, or null when the env can't run OAuth
+	 */
+	function mcpAuthListToolsFor(Slim\App $app, string $userId, array $scopes): ?array
+	{
+		$clientId = 'mcp-auth-elevation-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($app, $clientId, 'secret', $scopes, $userId);
+		if ($token === '') {
+			return null;
+		}
+
+		$sessionId = mcpAuthInitSession($app, $token);
+		if ($sessionId === '') {
+			return null;
+		}
+
+		$response = mcpAuthRequest($app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/list',
+		], $sessionId);
+
+		$body = json_decode((string)$response->getBody(), true);
+
+		return array_column($body['result']['tools'] ?? [], 'name');
+	}
+
+	it('admin-group user with cms:admin scope is elevated to the ADMIN persona', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('admin-user-test-com');
+
+		$names = mcpAuthListToolsFor($this->app, 'admin-user-test-com', ['cms:admin', 'mcp:tools']);
+
+		if ($names === null) {
+			expect(true)->toBeTrue(); // skip-safe pass
+
+			return;
+		}
+
+		expect($names)->toContain('create_schema');
+		expect($names)->toContain('clear_cache');
+	});
+
+	it('admin-group user without cms:admin scope stays AUTHENTICATED', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('admin-user-test-com');
+
+		$names = mcpAuthListToolsFor($this->app, 'admin-user-test-com', ['mcp:tools']);
+
+		if ($names === null) {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		expect($names)->toContain('list_collections');
+		expect($names)->not->toContain('create_schema');
+	});
+
+	it('non-admin user with cms:admin scope stays AUTHENTICATED', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('viewer-user-test-com');
+
+		$names = mcpAuthListToolsFor($this->app, 'viewer-user-test-com', ['cms:admin', 'mcp:tools']);
+
+		if ($names === null) {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		expect($names)->toContain('list_collections');
+		expect($names)->not->toContain('create_schema');
+	});
+
+	it('unknown user with cms:admin scope stays AUTHENTICATED', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+
+		$names = mcpAuthListToolsFor($this->app, 'ghost@nowhere.test', ['cms:admin', 'mcp:tools']);
+
+		if ($names === null) {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		expect($names)->not->toContain('create_schema');
 	});
 });

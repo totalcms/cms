@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
@@ -16,11 +17,13 @@ use TotalCMS\Support\Config;
 final class McpAuthTest extends TestCase
 {
 	private \PHPUnit\Framework\MockObject\MockObject $authenticator;
+	private \PHPUnit\Framework\MockObject\MockObject $accessControl;
 	private Config $config;
 
 	protected function setUp(): void
 	{
 		$this->authenticator = $this->createMock(ApiKeyAuthenticator::class);
+		$this->accessControl = $this->createMock(AccessControlService::class);
 
 		// Config can't be createMock'd reliably because its constructor expects
 		// a fully-populated settings array; bypass it.
@@ -30,7 +33,26 @@ final class McpAuthTest extends TestCase
 
 	private function auth(): McpAuth
 	{
-		return new McpAuth($this->authenticator, $this->config);
+		return new McpAuth($this->authenticator, $this->accessControl, $this->config);
+	}
+
+	/**
+	 * Request mock carrying the attributes OAuthBearerMiddleware would set.
+	 *
+	 * @param list<string> $scopes
+	 */
+	private function bearerRequest(array $scopes, ?string $userId = null): ServerRequestInterface
+	{
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getAttribute')->willReturnCallback(
+			static fn (string $name, mixed $default = null): mixed => match ($name) {
+				'oauth_scopes'  => $scopes,
+				'oauth_user_id' => $userId,
+				default         => $default,
+			},
+		);
+
+		return $request;
 	}
 
 	private function makeApiKey(): ApiKeyData
@@ -174,24 +196,14 @@ final class McpAuthTest extends TestCase
 	{
 		// OAuthBearerMiddleware upstream has already validated the JWT and set
 		// oauth_scopes on the request. McpAuth reads the attribute directly.
-		$request = $this->createMock(ServerRequestInterface::class);
-		$request->method('getAttribute')
-			->with('oauth_scopes')
-			->willReturn(['mcp:tools']);
-
-		$persona = $this->auth()->resolvePersona($request);
+		$persona = $this->auth()->resolvePersona($this->bearerRequest(['mcp:tools']));
 
 		$this->assertSame(McpPersona::AUTHENTICATED, $persona);
 	}
 
 	public function testBearerWithMcpResourcesScopeResolvesToAuthenticated(): void
 	{
-		$request = $this->createMock(ServerRequestInterface::class);
-		$request->method('getAttribute')
-			->with('oauth_scopes')
-			->willReturn(['mcp:resources']);
-
-		$persona = $this->auth()->resolvePersona($request);
+		$persona = $this->auth()->resolvePersona($this->bearerRequest(['mcp:resources']));
 
 		$this->assertSame(McpPersona::AUTHENTICATED, $persona);
 	}
@@ -200,12 +212,40 @@ final class McpAuthTest extends TestCase
 	{
 		// A token that includes both non-MCP and MCP scopes is still valid for
 		// MCP access — the presence of at least one mcp:* scope is sufficient.
-		$request = $this->createMock(ServerRequestInterface::class);
-		$request->method('getAttribute')
-			->with('oauth_scopes')
-			->willReturn(['cms:admin', 'mcp:tools']);
+		// No oauth_user_id on the request (and the access-control mock denies
+		// by default), so cms:admin alone cannot elevate.
+		$persona = $this->auth()->resolvePersona($this->bearerRequest(['cms:admin', 'mcp:tools']));
 
-		$persona = $this->auth()->resolvePersona($request);
+		$this->assertSame(McpPersona::AUTHENTICATED, $persona);
+	}
+
+	// ── super-admin elevation ──────────────────────────────────────────────
+
+	public function testBearerElevatesToAdminForAdminGroupUserWithCmsAdminScope(): void
+	{
+		$this->accessControl->method('isAdmin')->with('joe')->willReturn(true);
+
+		$persona = $this->auth()->resolvePersona($this->bearerRequest(['cms:admin', 'mcp:tools'], 'joe'));
+
+		$this->assertSame(McpPersona::ADMIN, $persona);
+	}
+
+	public function testBearerStaysAuthenticatedForAdminUserWithoutCmsAdminScope(): void
+	{
+		// The consent screen never showed "Administer your site" — the admin
+		// deliberately connected a read-only assistant.
+		$this->accessControl->method('isAdmin')->willReturn(true);
+
+		$persona = $this->auth()->resolvePersona($this->bearerRequest(['cms:read', 'mcp:tools'], 'joe'));
+
+		$this->assertSame(McpPersona::AUTHENTICATED, $persona);
+	}
+
+	public function testBearerStaysAuthenticatedForNonAdminUserWithCmsAdminScope(): void
+	{
+		$this->accessControl->method('isAdmin')->with('member')->willReturn(false);
+
+		$persona = $this->auth()->resolvePersona($this->bearerRequest(['cms:admin', 'mcp:tools'], 'member'));
 
 		$this->assertSame(McpPersona::AUTHENTICATED, $persona);
 	}

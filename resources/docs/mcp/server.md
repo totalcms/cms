@@ -39,7 +39,7 @@ The same `/mcp` URL serves three personas; the tool surface scales per caller:
 | Persona | How they authenticate | What they see |
 |---|---|---|
 | **Developer / operator** (`admin`) | `X-API-Key: <admin-key>` header on every request | Every tool — including the admin write tools. Same surface as the admin UI. |
-| **Authenticated consumer** (`authenticated`) | `Authorization: Bearer <oauth-token>` header with at least one `mcp:*` scope | Tools marked `access: public` plus collections with `mcp.access: 'authenticated'` or `'public'`. Used by "Connect Claude" / "Connect Cursor" style flows where an end-user grants a third-party AI client scoped access to their content. See [OAuth Server](docs/apis/oauth) for setup. |
+| **Authenticated consumer** (`authenticated`) | `Authorization: Bearer <oauth-token>` header with at least one `mcp:*` scope | Tools marked `access: public` plus collections with `mcp.access: 'authenticated'` or `'public'`. Used by "Connect Claude" / "Connect Cursor" style flows where an end-user grants a third-party AI client scoped access to their content. See [OAuth Server](docs/apis/oauth) for setup. A token approved by an **admin-group** user and carrying the `cms:admin` scope elevates to the admin persona — see [Required scopes for MCP](#required-scopes-for-mcp). |
 | **Public AI agent** (`public`) | No credentials (anonymous) | Only tools marked `access: public` AND only collections with `mcp.access: 'public'`. Drafts are auto-hidden. |
 
 Public access is **default-deny**. Anonymous requests get a 401 unless the operator explicitly flips `mcp.publicAccess` on in settings AND marks at least one collection's `mcp.access` as `public` in the schema editor.
@@ -81,6 +81,8 @@ API keys and OAuth both authenticate `/mcp` requests, but they serve different t
 
 **Use OAuth** when you ship a "connect to Claude" experience to end-users — your customers, your clients, team members who do not have T3 admin credentials. OAuth issues each person a scoped token through a consent screen; you can revoke individual connections without changing any shared secret; and every token action is logged to the OAuth activity log so you have a record.
 
+**OAuth also covers full site management** for users in the admin group: a connection they approve with the `cms:admin` scope is elevated to the admin persona — the complete tool surface, no API key to paste. In clients whose connector UI has no header field (claude.ai, the Claude desktop app), this is the only way to reach the admin tools, and it beats a shared API key on posture anyway: per-connection revocation, hourly token expiry, full audit trail.
+
 ### Prerequisites
 
 - **Pro edition** — OAuth is a Pro+ feature. Trials count.
@@ -98,8 +100,9 @@ A Bearer token must carry at least one `mcp:*` scope to do anything useful at `/
 | `mcp:resources` | Authorize `resources/read`, `resources/list`, `resources/templates/list`, and `resources/subscribe`. Without this scope, resource methods return 403. |
 | `mcp:search` | Currently inherits from `mcp:tools` — a token with `mcp:tools` can call `search_collection` and `search_collections`. The scope is reserved separately so it can be gated independently in a future release. |
 | `mcp:prompts` | Authorize `prompts/list` and `prompts/get`. Prompts are visible in `prompts/list` but the content is withheld until the token carries this scope. |
+| `cms:admin` | When the user who approved the consent screen is in the **admin group**, the session is elevated to the admin persona — every tool including schema/collection writes, same surface as an API key. For non-admin users the scope grants its REST paths but no MCP elevation. |
 
-A typical "read-only AI browser" connection requests `cms:read mcp:tools mcp:resources`. A connection that also needs prompts adds `mcp:prompts`. Grant the minimum scopes for the use case.
+A typical "read-only AI browser" connection requests `cms:read mcp:tools mcp:resources`. A connection that also needs prompts adds `mcp:prompts`. An operator managing their own site from Claude requests `cms:admin mcp:tools mcp:resources`. Grant the minimum scopes for the use case.
 
 ### Configuring a static client for Claude Desktop
 
