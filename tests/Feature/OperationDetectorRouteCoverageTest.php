@@ -90,6 +90,8 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'clear-queue-collection',
 		'clear-queue-failed',
 		'collection-image-cache-delete',
+		// Cron endpoints authenticate with their own token, not access groups.
+		'cron-jobs',
 		'denied',
 		'designer-template-update',
 		'download-file',
