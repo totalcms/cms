@@ -117,7 +117,9 @@ class JobsProcessCommand extends BaseCommand
 				));
 			}
 
-			if ($verbose) {
+			// `vacuumed` now reports whether one actually ran — it is throttled to
+			// once a day — so this line must not claim work that was skipped.
+			if ($verbose && $maintenance['vacuumed']) {
 				$output->writeln('Jobqueue vacuumed to reclaim disk space.');
 			}
 
