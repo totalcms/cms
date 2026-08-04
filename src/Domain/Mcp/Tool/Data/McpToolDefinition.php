@@ -74,12 +74,23 @@ readonly class McpToolDefinition
 	 *     OR (when $requires is set and $authority is known) the caller's
 	 *     access-group authority satisfies the requirement for at least one
 	 *     target — see ToolRequirement::isSatisfiedForAny().
-	 *   - public: public only
+	 *   - public: public only, AND ONLY when $requires is null.
 	 *
 	 * $authority is null for non-Bearer requests (API key / no-auth) and for
 	 * any caller PersonaContext couldn't resolve one for; the $requires OR
 	 * branch simply never fires in that case, leaving existing behavior
 	 * unchanged.
+	 *
+	 * The $requires === null condition on the PUBLIC_ branch is load-bearing,
+	 * not defensive decoration: a requirement is an access-group/OAuth-scope
+	 * check, and a PUBLIC_ caller has neither an authority nor scopes to
+	 * check against — McpServerFactory::guardHandler()'s enforcement only
+	 * runs for AUTHENTICATED. Without this, a tool that mistakenly combined
+	 * access:'public' with a $requires would be registered for anonymous
+	 * callers and dispatched completely unguarded (fail-open). Task 7's
+	 * guard also denies PUBLIC_ outright as defense in depth, but visibility
+	 * is the first and cheapest place to close this off — an invisible tool
+	 * is never dispatched at all.
 	 */
 	public function isVisibleTo(McpPersona $persona, ?UserAuthority $authority = null): bool
 	{
@@ -87,7 +98,7 @@ readonly class McpToolDefinition
 			McpPersona::ADMIN         => true,
 			McpPersona::AUTHENTICATED => $this->access === 'public' || $this->access === 'authenticated'
 				|| ($this->requires !== null && $authority !== null && $this->requires->isSatisfiedForAny($authority)),
-			McpPersona::PUBLIC_       => $this->access === 'public',
+			McpPersona::PUBLIC_       => $this->access === 'public' && $this->requires === null,
 		};
 	}
 }

@@ -389,11 +389,35 @@ final class ToolRequirementVisibilityTest extends TestCase
 		$this->assertTrue($tool->isVisibleTo(McpPersona::AUTHENTICATED, null));
 	}
 
-	public function testPublicToolVisibleToPublicPersonaRegardlessOfRequirement(): void
+	public function testPublicAccessToolWithRequirementIsInvisibleToPublicPersona(): void
 	{
+		// Task 7 fix round 1, finding #4: access:'public' + $requires used to
+		// be fail-open — a PUBLIC_ caller has neither scopes nor a resolved
+		// UserAuthority to check a requirement against, so a tool that
+		// mistakenly combined the two would be registered for anonymous
+		// callers and dispatched with zero enforcement (McpServerFactory::
+		// guardHandler()'s enforcement body only runs for AUTHENTICATED).
+		// $requires === null is now a hard second condition on the PUBLIC_
+		// branch — a requirement-bearing tool is never visible to PUBLIC_
+		// regardless of $access or how permissive $authority would be.
 		$tool      = $this->toolWithRequirement(new ToolRequirement('objects', 'update', 'collection'), access: 'public');
 		$authority = new UserAuthority(isAdmin: false, groups: [$this->viewerGroup()]);
 
-		$this->assertTrue($tool->isVisibleTo(McpPersona::PUBLIC_, $authority));
+		$this->assertFalse($tool->isVisibleTo(McpPersona::PUBLIC_, $authority));
+		$this->assertFalse($tool->isVisibleTo(McpPersona::PUBLIC_, null));
+	}
+
+	public function testPublicAccessToolWithoutRequirementStillVisibleToPublicPersona(): void
+	{
+		// Regression guard for the fix above: a plain access:'public' tool
+		// with no $requires must be unaffected.
+		$tool = new McpToolDefinition(
+			name: 'plain_public',
+			description: 'desc',
+			access: 'public',
+			handler: static fn (): array => [],
+		);
+
+		$this->assertTrue($tool->isVisibleTo(McpPersona::PUBLIC_));
 	}
 }

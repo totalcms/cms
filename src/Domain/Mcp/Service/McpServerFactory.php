@@ -295,6 +295,27 @@ readonly class McpServerFactory
 		$wrapped = static function (array $arguments) use ($requires, $innerHandler, $toolName, $personaContext, $scopeRegistry, $activityLogger): mixed {
 			$persona = $personaContext->current();
 
+			// Defense in depth. McpToolDefinition::isVisibleTo() already
+			// keeps a $requires-bearing tool off the registered SDK surface
+			// entirely for PUBLIC_ callers (access:'public' alone is no
+			// longer sufficient once $requires is set — see its docblock),
+			// so this branch should be unreachable in practice. It stays
+			// here anyway: PUBLIC_ has neither an OAuth token (no scopes)
+			// nor a resolved UserAuthority, so if a misconfigured tool or a
+			// future registration path ever slipped one through, falling
+			// into the AUTHENTICATED branch below would either throw on a
+			// null authority (fine) or — if that branch is ever loosened —
+			// silently dispatch unguarded (not fine). Fail closed explicitly
+			// instead of relying on that branch's incidental behavior.
+			if ($persona === McpPersona::PUBLIC_) {
+				$activityLogger->scopeRejected($personaContext->getClientId(), 'tools/call:' . $toolName, $personaContext->getScopes());
+
+				throw new ToolCallException(sprintf(
+					'%s requires an authenticated caller.',
+					$toolName,
+				));
+			}
+
 			if ($persona === McpPersona::AUTHENTICATED) {
 				$clientId = $personaContext->getClientId();
 

@@ -575,4 +575,52 @@ describe('McpToolGuard — call-time enforcement', function (): void {
 		expect($threw)->toBeTrue();
 		expect($invoked)->toBeFalse();
 	});
+
+	// Fix round 1, finding #4: defense-in-depth PUBLIC_ deny inside the
+	// guard itself. McpToolDefinition::isVisibleTo() now keeps a
+	// $requires-bearing tool off the registered SDK surface for PUBLIC_
+	// callers entirely (see McpToolDefinitionTest / ToolRequirementVisibilityTest
+	// for that layer), so this branch is unreachable through the real /mcp
+	// HTTP surface — there is no way to get a PUBLIC_ persona to even see
+	// the tool in order to call it. Exercised directly via reflection, same
+	// fallback as the null-authority scenario above, to prove the guard
+	// body ALSO fails closed rather than relying solely on the visibility
+	// layer to keep this safe.
+	it('denies the PUBLIC_ persona outright even if a requirement-bearing tool were somehow dispatched (defense in depth)', function (): void {
+		/** @var McpServerFactory $factory */
+		$factory = $this->app->getContainer()->get(McpServerFactory::class);
+		/** @var PersonaContext $personaContext */
+		$personaContext = $this->app->getContainer()->get(PersonaContext::class);
+
+		$personaContext->set(McpPersona::PUBLIC_);
+
+		$invoked = false;
+		$tool    = new McpToolDefinition(
+			name: 'guard_test_public_persona',
+			description: 'Reflection-only synthetic tool.',
+			access: 'public', // the very misconfiguration finding #4 closes off
+			handler: static function () use (&$invoked): array {
+				$invoked = true;
+
+				return ['ran' => true];
+			},
+			requires: new ToolRequirement(domain: 'objects', operation: 'create', collectionArg: 'collection'),
+		);
+
+		$method = new ReflectionMethod(McpServerFactory::class, 'guardHandler');
+		$method->setAccessible(true);
+		/** @var Closure $guarded */
+		$guarded = $method->invoke($factory, $tool);
+
+		$threw = false;
+		try {
+			$guarded(['collection' => 'blog']);
+		} catch (ToolCallException $e) {
+			$threw = true;
+			expect($e->getMessage())->toContain('authenticated');
+		}
+
+		expect($threw)->toBeTrue();
+		expect($invoked)->toBeFalse();
+	});
 });
