@@ -76,13 +76,6 @@ readonly class McpDiscoveryAction
 			'publicTools' => $publicTools,
 		];
 
-		// The anonymous-only alias: same server, persona pinned to public,
-		// no OAuth discoverable on it. The URL to hand to visitors whose MCP
-		// client would otherwise demand a login it can't complete.
-		if ($publicAccess) {
-			$body['publicEndpoint'] = $endpoint . '/public';
-		}
-
 		// RFC 9728: advertise the protected-resource-metadata URL so OAuth-aware
 		// clients can discover the authorization server without a 401 round-trip.
 		// Only present when the OAuth server is actually reachable — it points at

@@ -230,8 +230,6 @@ With the switch off:
 
 The OAuth Applications admin page stays available so client records survive a temporary switch-off intact. Note that leaving OAuth **enabled** does not block public access at the server — anonymous callers are always served when *Allow Public Access* is on. The switch exists purely because some clients refuse to take the anonymous path while OAuth is discoverable.
 
-If you want the public tier open to those clients **without** giving up OAuth for your own connectors, hand visitors the anonymous-only `/mcp/public` alias instead of flipping this switch — see [the MCP server guide](docs/mcp/server) for details.
-
 ---
 
 ## Security model

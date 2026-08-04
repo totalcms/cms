@@ -44,16 +44,7 @@ The same `/mcp` URL serves three personas; the tool surface scales per caller:
 
 Public access is **default-deny**. Anonymous requests get a 401 unless the operator explicitly flips `mcp.publicAccess` on in settings AND marks at least one collection's `mcp.access` as `public` in the schema editor.
 
-> **Public access with Claude needs one extra step.** claude.ai and the Claude desktop app demand a login at connector setup whenever they can discover an OAuth server on your site — they never fall back to the anonymous tier, and your consent screen requires an operator login no site visitor has. Two ways to open the public tier to them:
->
-> 1. **Hand visitors `/mcp/public`** — an anonymous-only alias of the endpoint. It ignores credentials, never issues an OAuth challenge, and looks like a plain no-auth MCP server, so Claude connects without a login while `/mcp` keeps serving your own OAuth and API-key connections. This is the option when you want both audiences on one site.
-> 2. **Disable OAuth entirely** — turn off **Admin → Settings → OAuth Server → Enable OAuth Server** and `/mcp` itself stops advertising OAuth. See [Running public-only MCP](docs/apis/oauth#running-public-only-mcp). This is the option when nothing on the site needs the authenticated tier.
->
-> Clients that try anonymously first (ChatGPT connectors, Claude Code, MCP Inspector) reach the public tier on plain `/mcp` either way.
-
-### The `/mcp/public` alias
-
-`/mcp/public` serves the same MCP server with the persona pinned to `public`: only tools marked `access: public`, only collections with `mcp.access: 'public'`, drafts hidden. Any `Authorization` or `X-API-Key` header is ignored rather than validated — there is no way to elevate on this URL, so sharing it never risks more than your public surface. It 404s when *Allow Public Access* is off. The MCP discovery document advertises it as `publicEndpoint`.
+> **Public access with Claude requires disabling OAuth.** claude.ai and the Claude desktop app demand a login at connector setup whenever they can discover an OAuth server on your site — they never fall back to the anonymous tier, and your consent screen requires an operator login no site visitor has. If you want visitors to connect their Claude to your public collections, turn off **Admin → Settings → OAuth Server → Enable OAuth Server**. Access is then anonymous (public) or API key (admin) — see [Running public-only MCP](docs/apis/oauth#running-public-only-mcp). Clients that try anonymously first (ChatGPT connectors, Claude Code, MCP Inspector) reach the public tier either way.
 
 ---
 
