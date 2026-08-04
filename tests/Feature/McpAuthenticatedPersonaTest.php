@@ -474,4 +474,51 @@ describe('McpAuthenticatedPersona', function (): void {
 			expect($header)->toContain('invalid_token');
 		}
 	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Scenario 7: lifecycle notifications are not scope-gated. No scope lists
+	// notifications/initialized in its mcpOperations, so a scope-gated check
+	// can never pass — yet the spec requires clients to send it right after
+	// initialize. claude.ai treats the 403 as a dead server and reports
+	// "no tools available", regardless of how many scopes the token carries.
+	// ──────────────────────────────────────────────────────────────────────────
+
+	it('Bearer token may send notifications/initialized without a scope granting it', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+
+		$clientId = 'mcp-auth-lifecycle-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['mcp:tools']);
+
+		if ($token === '') {
+			expect(true)->toBeTrue(); // skip-safe pass
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'method'  => 'notifications/initialized',
+		], $sessionId);
+
+		// The SDK transport acks notifications with 202; anything but the
+		// scope gate's 403 completes the handshake.
+		expect($response->getStatusCode())->toBeIn([200, 202]);
+
+		// The handshake done, tools/list must now succeed.
+		$list = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/list',
+		], $sessionId);
+
+		expect($list->getStatusCode())->toBe(200);
+	});
 });

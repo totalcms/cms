@@ -149,7 +149,14 @@ readonly class McpEndpointAction
 				$operation = $method;
 			}
 
-			if ($method !== '' && !$this->scopeEvaluator->isAllowed($this->personaContext->getScopes(), $operation)) {
+			// Protocol lifecycle messages are exempt: ping keep-alives and the
+			// notifications the spec obliges clients to send (initialized,
+			// cancelled, progress) are plumbing, not capability access — no
+			// scope lists them, so gating them 403s every OAuth client at the
+			// handshake no matter what the token was granted.
+			$isLifecycle = $method === 'ping' || str_starts_with($method, 'notifications/');
+
+			if ($method !== '' && !$isLifecycle && !$this->scopeEvaluator->isAllowed($this->personaContext->getScopes(), $operation)) {
 				$clientId = (string)$request->getAttribute('oauth_client_id', '');
 				$this->activityLogger->scopeRejected($clientId, $operation, $this->personaContext->getScopes());
 
