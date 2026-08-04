@@ -10,6 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\NullLogger;
 use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
@@ -19,6 +20,7 @@ use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Middleware\Access\ExtensionAdminAccessMiddleware;
@@ -46,6 +48,9 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 		$this->config            = Config::init();
 		$this->operationDetector = $this->createMock(OperationDetector::class);
 		$this->loggerFactory     = $this->createMock(LoggerFactory::class);
+		// OAuthActivityLogger is final readonly — construct a real instance
+		// backed by a NullLogger instead of createMock().
+		$this->oauthActivityLogger = new OAuthActivityLogger(new NullLogger());
 		$this->extensionManager  = $this->createMock(ExtensionManager::class);
 
 		$this->handler             = $this->createMock(RequestHandlerInterface::class);
@@ -72,6 +77,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 			$this->config,
 			$this->operationDetector,
 			$this->loggerFactory,
+			$this->oauthActivityLogger,
 			$this->extensionManager,
 		);
 

@@ -11,6 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
@@ -18,6 +19,7 @@ use Slim\Routing\RoutingResults;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
@@ -33,8 +35,11 @@ describe('BaseAccessMiddleware', function (): void {
 		$this->twigRenderer      = $this->createMock(TwigRenderer::class);
 		$this->responseFactory   = $this->createMock(ResponseFactoryInterface::class);
 		$this->config            = Config::init();
-		$this->operationDetector = $this->createMock(OperationDetector::class);
-		$this->loggerFactory     = $this->createMock(LoggerFactory::class);
+		$this->operationDetector  = $this->createMock(OperationDetector::class);
+		$this->loggerFactory      = $this->createMock(LoggerFactory::class);
+		// OAuthActivityLogger is final readonly — construct a real instance
+		// backed by a NullLogger instead of createMock().
+		$this->oauthActivityLogger = new OAuthActivityLogger(new NullLogger());
 
 		$this->handler = $this->createMock(RequestHandlerInterface::class);
 
@@ -56,6 +61,7 @@ describe('BaseAccessMiddleware', function (): void {
 			$this->config,
 			$this->operationDetector,
 			$this->loggerFactory,
+			$this->oauthActivityLogger,
 			$checkPermission ?? (fn (): bool => true),
 		));
 

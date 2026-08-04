@@ -6,6 +6,7 @@ namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Session\SessionKeys;
 
 /**
@@ -33,13 +34,25 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 		$collection = $route->getArgument('collection');
 		$objectId   = $route->getArgument('id');
 
-		// Allow users to update their own profile (self-profile update)
-		// Users should always be able to update their own record in their auth collection
+		// Allow users to update their own profile (self-profile update).
+		// Users should always be able to update their own record in their auth
+		// collection. Bearer requests have no session; OAuthUserRef::parse()
+		// resolved the token's own auth collection into $userId's identity,
+		// so this self-profile carve-out only applies to session callers.
 		if ($operation === 'update' && $collection && $objectId) {
 			$authCollection = $this->session->get(SessionKeys::AUTH_COLLECTION);
 			if ($collection === $authCollection && $objectId === $userId) {
 				return true;
 			}
+		}
+
+		// OAuth Bearer callers: there is no PHP session to derive groups from,
+		// so use the UserAuthority resolved from the token by BaseAccessMiddleware.
+		$authority = $request->getAttribute('accessAuthority');
+		if ($authority instanceof UserAuthority) {
+			return $collection
+				? $authority->canCollection($operation, $collection)
+				: $authority->canCollectionsOperation($operation);
 		}
 
 		// Check access permissions

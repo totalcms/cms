@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 
 /**
  * Builder Access Middleware.
@@ -21,6 +22,13 @@ readonly class BuilderAccessMiddleware extends BaseAccessMiddleware
 	 */
 	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
 	{
+		// OAuth Bearer callers: no PHP session to derive groups from — use the
+		// UserAuthority resolved from the token by BaseAccessMiddleware.
+		$authority = $request->getAttribute('accessAuthority');
+		if ($authority instanceof UserAuthority) {
+			return $authority->canBuilder();
+		}
+
 		return $this->accessControl->canAccessBuilder($userId);
 	}
 }

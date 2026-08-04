@@ -6,6 +6,7 @@ namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 
 /**
  * Collection Metadata Access Middleware.
@@ -31,6 +32,15 @@ readonly class CollectionMetaAccessMiddleware extends BaseAccessMiddleware
 		}
 
 		$collection = $route->getArgument('collection');
+
+		// OAuth Bearer callers: no PHP session to derive groups from — use the
+		// UserAuthority resolved from the token by BaseAccessMiddleware.
+		$authority = $request->getAttribute('accessAuthority');
+		if ($authority instanceof UserAuthority) {
+			return $collection
+				? $authority->canCollectionMeta($operation, $collection)
+				: $authority->canCollectionsMetaOperation($operation);
+		}
 
 		// Check access permissions
 		if ($collection) {

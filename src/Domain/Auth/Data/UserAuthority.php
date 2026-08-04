@@ -106,6 +106,122 @@ final class UserAuthority
 	}
 
 	/**
+	 * Bulk variant of canCollection() for routes without a specific
+	 * collection target (e.g. `GET /collections`, `POST /collections`).
+	 * Mirrors AccessControlService::canAccessCollectionsOperation().
+	 */
+	public function canCollectionsOperation(string $op): bool
+	{
+		return $this->remember("collectionsOperation:$op", fn (): bool => $this->groupGrantsBulkOperation('collections', $op));
+	}
+
+	/**
+	 * Bulk variant of canCollectionMeta() for routes without a specific
+	 * collection target. Mirrors AccessControlService::canAccessCollectionsMetaOperation().
+	 */
+	public function canCollectionsMetaOperation(string $op): bool
+	{
+		return $this->remember("collectionsMetaOperation:$op", fn (): bool => $this->groupGrantsBulkOperation('collectionsMeta', $op));
+	}
+
+	/**
+	 * Bulk variant of canSchema() for routes without a specific schema
+	 * target. Mirrors AccessControlService::canAccessSchemasOperation().
+	 */
+	public function canSchemasOperation(string $op): bool
+	{
+		return $this->remember("schemasOperation:$op", fn (): bool => $this->groupGrantsBulkOperation('schemas', $op));
+	}
+
+	/**
+	 * Boolean access to the Site Builder. Mirrors
+	 * AccessControlService::canAccessBuilder() (including the `templates`
+	 * fallback for groups saved before the dedicated `builder` permission
+	 * existed).
+	 */
+	public function canBuilder(): bool
+	{
+		return $this->remember('builder', function (): bool {
+			if ($this->isAdmin) {
+				return true;
+			}
+
+			foreach ($this->groups as $group) {
+				if (($group->permissions['builder'] ?? ($group->permissions['templates'] ?? false)) === true) {
+					return true;
+				}
+			}
+
+			return false;
+		});
+	}
+
+	/**
+	 * Boolean access to data views. Mirrors AccessControlService::canAccessDataViews().
+	 */
+	public function canDataViews(): bool
+	{
+		return $this->remember('dataviews', fn (): bool => $this->groupGrantsBooleanPermission('dataviews'));
+	}
+
+	/**
+	 * Boolean access to the Twig playground. Mirrors AccessControlService::canAccessPlayground().
+	 */
+	public function canPlayground(): bool
+	{
+		return $this->remember('playground', fn (): bool => $this->groupGrantsBooleanPermission('playground'));
+	}
+
+	/**
+	 * Shared logic for the "no specific target" bulk permission blocks
+	 * (collections / collectionsMeta / schemas), each shaped as
+	 * {all, allowed, operations}. Grants when any group has SOME access
+	 * (all=true or a non-empty allowed list) AND lists $op in operations.
+	 */
+	private function groupGrantsBulkOperation(string $permissionKey, string $op): bool
+	{
+		if ($this->isAdmin) {
+			return true;
+		}
+
+		foreach ($this->groups as $group) {
+			$permissions = $group->permissions[$permissionKey] ?? [];
+			$all         = $permissions['all'] ?? false;
+			$allowed     = $permissions['allowed'] ?? [];
+
+			if (!$all && $allowed === []) {
+				continue;
+			}
+
+			$operations = $permissions['operations'] ?? [];
+			if (in_array($op, $operations, true)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Shared logic for simple boolean feature-toggle permissions
+	 * (dataviews, playground, mailer, docs, ...).
+	 */
+	private function groupGrantsBooleanPermission(string $permissionKey): bool
+	{
+		if ($this->isAdmin) {
+			return true;
+		}
+
+		foreach ($this->groups as $group) {
+			if (($group->permissions[$permissionKey] ?? false) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * True when this authority has any grant at all under the "admin
 	 * domain" — schemas, collectionsMeta, or a non-empty utils allow.
 	 * Used to gate surfaces (e.g. MCP admin tools) that expose structural

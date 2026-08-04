@@ -14,6 +14,7 @@ use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -47,6 +48,7 @@ readonly class ExtensionAdminAccessMiddleware extends BaseAccessMiddleware
 		Config $config,
 		OperationDetector $operationDetector,
 		LoggerFactory $loggerFactory,
+		OAuthActivityLogger $oauthActivityLogger,
 		private ExtensionManager $extensionManager,
 	) {
 		parent::__construct(
@@ -59,6 +61,7 @@ readonly class ExtensionAdminAccessMiddleware extends BaseAccessMiddleware
 			$config,
 			$operationDetector,
 			$loggerFactory,
+			$oauthActivityLogger,
 		);
 	}
 
