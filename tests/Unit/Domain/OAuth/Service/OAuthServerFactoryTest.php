@@ -103,6 +103,7 @@ final class OAuthServerFactoryTest extends TestCase
 			$scopeReg,
 			$clientRepo,
 			$this->createMock(\TotalCMS\Domain\Auth\Service\AccessControlService::class),
+			$this->makeConfig(),
 		);
 
 		return new OAuthServerFactory(

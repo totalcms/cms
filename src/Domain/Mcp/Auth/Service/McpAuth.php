@@ -9,6 +9,7 @@ use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Support\Config;
 
 /**
@@ -86,9 +87,11 @@ readonly class McpAuth
 			if (
 				in_array('cms:admin', $scopes, true)
 				&& is_string($userId) && $userId !== ''
-				&& $this->accessControl->isAdmin($userId)
 			) {
-				return McpPersona::ADMIN;
+				$ref = OAuthUserRef::parse($userId, (string)$this->config->auth['collection']);
+				if ($this->accessControl->isAdmin($ref->userId)) {
+					return McpPersona::ADMIN;
+				}
 			}
 
 			return McpPersona::AUTHENTICATED;

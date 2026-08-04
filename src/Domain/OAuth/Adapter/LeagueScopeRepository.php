@@ -8,8 +8,10 @@ use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
+use TotalCMS\Support\Config;
 
 /**
  * Bridges league's ScopeRepositoryInterface to T3's OAuthScopeRegistry.
@@ -30,6 +32,7 @@ final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 		private OAuthScopeRegistry $registry,
 		private OAuthClientRepository $clients,
 		private AccessControlService $accessControl,
+		private Config $config,
 	) {
 	}
 
@@ -61,9 +64,11 @@ final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 
 		$allowed = $client->scopes;
 
-		$userCanConveyAdmin = is_string($userIdentifier)
-			&& $userIdentifier !== ''
-			&& $this->accessControl->isAdmin($userIdentifier);
+		$userCanConveyAdmin = false;
+		if (is_string($userIdentifier) && $userIdentifier !== '') {
+			$ref                = OAuthUserRef::parse($userIdentifier, (string)$this->config->auth['collection']);
+			$userCanConveyAdmin = $this->accessControl->isAdmin($ref->userId);
+		}
 
 		return array_values(array_filter(
 			$scopes,

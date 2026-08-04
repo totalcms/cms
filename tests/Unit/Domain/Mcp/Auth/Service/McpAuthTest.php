@@ -27,8 +27,9 @@ final class McpAuthTest extends TestCase
 
 		// Config can't be createMock'd reliably because its constructor expects
 		// a fully-populated settings array; bypass it.
-		$this->config      = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$this->config->mcp = ['publicAccess' => true];
+		$this->config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$this->config->mcp  = ['publicAccess' => true];
+		$this->config->auth = ['collection' => 'auth'];
 	}
 
 	private function auth(): McpAuth

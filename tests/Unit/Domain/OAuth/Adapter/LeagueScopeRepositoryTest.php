@@ -12,6 +12,7 @@ use TotalCMS\Domain\OAuth\Adapter\LeagueScopeRepository;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
+use TotalCMS\Support\Config;
 
 final class LeagueScopeRepositoryTest extends TestCase
 {
@@ -19,6 +20,7 @@ final class LeagueScopeRepositoryTest extends TestCase
 	private OAuthClientRepository $clientRepo;
 	private OAuthScopeRegistry $registry;
 	private \PHPUnit\Framework\MockObject\MockObject $accessControl;
+	private Config $config;
 	private LeagueScopeRepository $adapter;
 
 	protected function setUp(): void
@@ -27,7 +29,9 @@ final class LeagueScopeRepositoryTest extends TestCase
 		$this->clientRepo    = new OAuthClientRepository($this->tmpFile);
 		$this->registry      = new OAuthScopeRegistry();
 		$this->accessControl = $this->createMock(AccessControlService::class);
-		$this->adapter       = new LeagueScopeRepository($this->registry, $this->clientRepo, $this->accessControl);
+		$this->config        = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$this->config->auth  = ['collection' => 'auth'];
+		$this->adapter       = new LeagueScopeRepository($this->registry, $this->clientRepo, $this->accessControl, $this->config);
 	}
 
 	protected function tearDown(): void

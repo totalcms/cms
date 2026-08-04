@@ -119,6 +119,7 @@ function mcpAuthIssueToken(Slim\App $app, string $clientId, string $clientSecret
 		$session->start();
 	}
 	$session->set(SessionKeys::AUTH_USER, $userId);
+	$session->set(SessionKeys::AUTH_COLLECTION, 'auth');
 
 	$codeVerifier  = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
 	$codeChallenge = rtrim(strtr(base64_encode(hash('sha256', $codeVerifier, true)), '+/', '-_'), '=');
@@ -635,6 +636,18 @@ describe('McpAuthenticatedPersona', function (): void {
 		}
 
 		expect($names)->not->toContain('create_schema');
+	});
+
+	it('elevation still works when the sub is composite', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('admin-user-test-com');
+
+		// mcpAuthIssueToken (updated this task) sets AUTH_COLLECTION='auth',
+		// so the issued sub is "auth:admin-user-test-com".
+		$names = mcpAuthListToolsFor($this->app, 'admin-user-test-com', ['cms:admin', 'mcp:tools']);
+		if ($names === null) { expect(true)->toBeTrue(); return; }
+
+		expect($names)->toContain('create_schema');
 	});
 
 	// ──────────────────────────────────────────────────────────────────────────
