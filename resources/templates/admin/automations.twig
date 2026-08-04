@@ -80,9 +80,11 @@
 				<summary><strong>{{ t('cron_url.summary') }}</strong></summary>
 				<div style="margin-top: 0.5rem;">
 					<div class="warning-box">
-						<p><strong>{{ t('cron_url.not_recommended') }}</strong></p>
-						<p>{{ t('cron_url.why_not') }}</p>
-						<p>{{ t('cron_url.limits') }}</p>
+						<div>
+							<p><strong>{{ t('cron_url.not_recommended') }}</strong></p>
+							<p>{{ t('cron_url.why_not') }}</p>
+							<p>{{ t('cron_url.limits') }}</p>
+						</div>
 					</div>
 
 					<p>{{ t('cron_url.instructions') }}</p>
@@ -428,10 +430,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	cursor: pointer;
 	color: oklch(var(--totalform-darkgray));
 	font-size: 0.9em;
-}
-
-.cron-url-panel .warning-box p:last-child {
-	margin-bottom: 0;
 }
 
 .automations-command + .cms-clip-button {
