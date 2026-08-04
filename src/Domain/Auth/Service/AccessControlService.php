@@ -412,7 +412,8 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Get all AccessGroupData objects for the user.
+	 * Get all AccessGroupData objects for the user, resolving the auth
+	 * collection from the current session.
 	 *
 	 * @return array<AccessGroupData>
 	 */
@@ -422,6 +423,18 @@ readonly class AccessControlService
 		// This ensures we fetch the user from the correct auth collection (e.g., 'staff', 'auth')
 		$collection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?: '';
 
+		return $this->getUserAccessGroupsIn($userId, $collection);
+	}
+
+	/**
+	 * Get all AccessGroupData objects for the user within an explicit auth
+	 * collection. Session-free — callers that already know the collection
+	 * (e.g. OAuth requests, which have no PHP session) use this directly.
+	 *
+	 * @return array<AccessGroupData>
+	 */
+	private function getUserAccessGroupsIn(string $userId, string $collection): array
+	{
 		// Fetch user data from their actual auth collection
 		$user = $this->userValidation->validateUserById($userId, $collection);
 		if ($user === []) {
