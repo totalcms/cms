@@ -64,6 +64,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRenderer;
@@ -739,6 +740,7 @@ return [
 		$container->get(PromptDiscoveryService::class),
 		$container->get(PromptRegistrar::class),
 		$container->get(ExtensionManager::class),
+		$container->get(PersonaContext::class),
 	),
 
 	// Subscription storage: reverse URI→sessionIds index at

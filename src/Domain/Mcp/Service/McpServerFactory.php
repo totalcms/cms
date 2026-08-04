@@ -11,6 +11,7 @@ use Mcp\Server\Session\SessionStoreInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
@@ -50,6 +51,7 @@ readonly class McpServerFactory
 		private PromptDiscoveryService $promptDiscoveryService,
 		private PromptRegistrar $promptRegistrar,
 		private ExtensionManager $extensions,
+		private PersonaContext $personaContext,
 	) {
 	}
 
@@ -111,7 +113,7 @@ readonly class McpServerFactory
 		// see the first pass's tools as collisions and skip them — don't do that.
 		$this->schemaToolRegistrar->register($this->toolRegistry);
 
-		foreach ($this->toolRegistry->forPersona($persona) as $tool) {
+		foreach ($this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority()) as $tool) {
 			// Persona-aware tools (Phase 1 content tools) expose a builder that
 			// renders a per-persona description — e.g., the field catalog must
 			// only list collections the caller can actually see. Static-string

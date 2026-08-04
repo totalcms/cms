@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Data;
 
 use Closure;
 use Mcp\Schema\ToolAnnotations;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
 /**
@@ -43,6 +44,12 @@ readonly class McpToolDefinition
 	 * @param bool                      $exemptFromPrefix   When true, McpServerFactory does NOT prepend mcp.toolPrefix
 	 *                                                      to this tool's name. Used by the ChatGPT-compat search/fetch
 	 *                                                      tools, which must keep their exact literal names.
+	 * @param ToolRequirement|null      $requires           Optional access-group requirement (Phase 4). When set, an
+	 *                                                      AUTHENTICATED caller who doesn't otherwise qualify under
+	 *                                                      $access can still see this tool in tools/list provided their
+	 *                                                      UserAuthority satisfies the requirement for at least one
+	 *                                                      target (see isVisibleTo()). Task 7 adds the corresponding
+	 *                                                      call-time enforcement; Task 8 sets this on the shipped tools.
 	 */
 	public function __construct(
 		public string $name,
@@ -54,6 +61,7 @@ readonly class McpToolDefinition
 		public ?ToolAnnotations $annotations = null,
 		public ?array $outputSchema = null,
 		public bool $exemptFromPrefix = false,
+		public ?ToolRequirement $requires = null,
 	) {
 	}
 
@@ -62,14 +70,23 @@ readonly class McpToolDefinition
 	 *
 	 * Persona policy:
 	 *   - admin: sees everything
-	 *   - authenticated: public + authenticated (OAuth Bearer with mcp:* scope)
+	 *   - authenticated: public + authenticated (OAuth Bearer with mcp:* scope),
+	 *     OR (when $requires is set and $authority is known) the caller's
+	 *     access-group authority satisfies the requirement for at least one
+	 *     target — see ToolRequirement::isSatisfiedForAny().
 	 *   - public: public only
+	 *
+	 * $authority is null for non-Bearer requests (API key / no-auth) and for
+	 * any caller PersonaContext couldn't resolve one for; the $requires OR
+	 * branch simply never fires in that case, leaving existing behavior
+	 * unchanged.
 	 */
-	public function isVisibleTo(McpPersona $persona): bool
+	public function isVisibleTo(McpPersona $persona, ?UserAuthority $authority = null): bool
 	{
 		return match ($persona) {
 			McpPersona::ADMIN         => true,
-			McpPersona::AUTHENTICATED => $this->access === 'public' || $this->access === 'authenticated',
+			McpPersona::AUTHENTICATED => $this->access === 'public' || $this->access === 'authenticated'
+				|| ($this->requires !== null && $authority !== null && $this->requires->isSatisfiedForAny($authority)),
 			McpPersona::PUBLIC_       => $this->access === 'public',
 		};
 	}

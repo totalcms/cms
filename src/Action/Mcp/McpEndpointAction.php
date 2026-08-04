@@ -9,6 +9,7 @@ use Mcp\Server\Transport\Http\Middleware\ProtocolVersionMiddleware;
 use Mcp\Server\Transport\StreamableHttpTransport;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
@@ -19,6 +20,7 @@ use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Service\McpTransportSecurity;
 use TotalCMS\Domain\Mcp\Service\McpUrlBuilder;
 use TotalCMS\Domain\Mcp\Service\ToolsOnlyClients;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeEvaluator;
 use TotalCMS\Renderer\JsonRenderer;
@@ -48,6 +50,7 @@ readonly class McpEndpointAction
 		private OAuthScopeEvaluator $scopeEvaluator,
 		private OAuthActivityLogger $activityLogger,
 		private McpUrlBuilder $urlBuilder,
+		private AccessControlService $accessControl,
 	) {
 	}
 
@@ -110,6 +113,20 @@ readonly class McpEndpointAction
 				$oauthScopes,
 			));
 			$this->personaContext->setScopes($scopes);
+
+			// Resolve the caller's UserAuthority for this Bearer request so
+			// ToolRegistry::forPersona() (via McpServerFactory) can show
+			// requirement-gated tools (McpToolDefinition::$requires,
+			// introduced Phase 4 Task 6) to callers whose access-group grants
+			// satisfy them, and so Task 7's call-time guard can re-check
+			// per invocation. Session-free — mirrors BaseAccessMiddleware's
+			// OAuth Bearer branch. Non-Bearer paths (API key / anonymous)
+			// leave PersonaContext's authority at its default null.
+			$userId = $request->getAttribute('oauth_user_id');
+			if (is_string($userId) && $userId !== '') {
+				$ref = OAuthUserRef::parse($userId, (string)$this->config->auth['collection']);
+				$this->personaContext->setAuthority($this->accessControl->authorityFor($ref));
+			}
 		}
 
 		// Scope-based gate for AUTHENTICATED persona. The persona filter has

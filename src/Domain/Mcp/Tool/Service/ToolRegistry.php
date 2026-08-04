@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\Service;
 
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 
@@ -52,13 +53,19 @@ class ToolRegistry
 	/**
 	 * Tools visible to the given persona, ordered by name for stable output.
 	 *
+	 * $authority is threaded through to McpToolDefinition::isVisibleTo() so
+	 * requirement-gated tools (McpToolDefinition::$requires) can be shown to
+	 * an AUTHENTICATED caller whose access-group grants satisfy the
+	 * requirement, even when the tool's static $access wouldn't otherwise
+	 * qualify. Null for non-Bearer callers, matching isVisibleTo()'s default.
+	 *
 	 * @return list<McpToolDefinition>
 	 */
-	public function forPersona(McpPersona $persona): array
+	public function forPersona(McpPersona $persona, ?UserAuthority $authority = null): array
 	{
 		$visible = array_values(array_filter(
 			$this->tools,
-			static fn (McpToolDefinition $tool): bool => $tool->isVisibleTo($persona),
+			static fn (McpToolDefinition $tool): bool => $tool->isVisibleTo($persona, $authority),
 		));
 
 		usort($visible, static fn (McpToolDefinition $a, McpToolDefinition $b): int => strcmp($a->name, $b->name));

@@ -12,6 +12,7 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRenderer;
@@ -90,6 +91,7 @@ final class McpServerFactoryTest extends TestCase
 			$promptDiscovery,
 			$promptRegistrar,
 			$extensionManager,
+			new PersonaContext(),
 		);
 	}
 

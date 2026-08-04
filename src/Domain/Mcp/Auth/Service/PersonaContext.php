@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Auth\Service;
 
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
 /**
@@ -21,6 +22,12 @@ use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
  * For OAuth Bearer requests McpEndpointAction also stores the resolved scopes
  * via setScopes() so OAuthScopeEvaluator can read them during tool dispatch
  * without needing access to the PSR-7 request directly.
+ *
+ * For OAuth Bearer requests McpEndpointAction also resolves and stores the
+ * caller's UserAuthority via setAuthority() so ToolRegistry::forPersona()
+ * (via McpServerFactory) can filter requirement-gated tools by the caller's
+ * actual access-group grants, and so Task 7's call-time guard can re-check
+ * them per invocation. Null for non-Bearer requests (API key / no-auth).
  */
 class PersonaContext
 {
@@ -28,6 +35,8 @@ class PersonaContext
 
 	/** @var list<string> */
 	private array $scopes = [];
+
+	private ?UserAuthority $authority = null;
 
 	public function set(McpPersona $persona): void
 	{
@@ -67,5 +76,25 @@ class PersonaContext
 	public function getScopes(): array
 	{
 		return $this->scopes;
+	}
+
+	/**
+	 * Store the resolved UserAuthority for this request. Called by
+	 * McpEndpointAction after Bearer authentication resolves an
+	 * AUTHENTICATED persona; left null for non-Bearer requests.
+	 */
+	public function setAuthority(?UserAuthority $authority): void
+	{
+		$this->authority = $authority;
+	}
+
+	/**
+	 * Return the UserAuthority for this request, or null when none was
+	 * resolved (non-Bearer requests, or a Bearer request whose persona
+	 * resolution never reached the authority lookup).
+	 */
+	public function getAuthority(): ?UserAuthority
+	{
+		return $this->authority;
 	}
 }
