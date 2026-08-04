@@ -370,6 +370,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 			(new \ReflectionClass(\TotalCMS\Domain\Automation\Service\AutomationLoader::class))->newInstanceWithoutConstructor(),
 			(new \ReflectionClass(\TotalCMS\Domain\Automation\Service\AutomationRunReader::class))->newInstanceWithoutConstructor(),
 			(new \ReflectionClass(\TotalCMS\Domain\Extension\Repository\ExtensionStateRepository::class))->newInstanceWithoutConstructor(),
+			// final readonly, so it cannot be doubled — this adapter only needs it
+			// for cronUrl(), which these tests do not exercise.
+			(new \ReflectionClass(\TotalCMS\Domain\Cron\Service\CronTokenProvider::class))->newInstanceWithoutConstructor(),
 		);
 
 		// Mock $_SERVER for test

@@ -2,6 +2,18 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-rc.18] - 2026-08-03
+
+### Added
+
+- **Cron URLs, for hosts that cannot run scheduled shell commands**: Some hosts offer a control panel that fetches a URL on a schedule rather than running a command, and every external cron service (cron-job.org, EasyCron) works the same way. On those installs neither `jobs:process` nor `automations:process` could run at all, so queues never drained and scheduled automations never fired. `GET /cron/jobs` and `GET /cron/automations` now do the same work, guarded by a token generated on first use and shown pre-assembled in the Job Queue Manager and Automations pages — collapsed behind a panel, because this is a fallback rather than a recommendation. Each run stops *before* the server's request time limit rather than being killed by it: a job interrupted mid-flight is retried with its attempt count intact, so three timeouts would permanently fail a job whose only problem is being slower than the window, and stopping cleanly between jobs means work either completes or waits. Two limits are worth knowing before adopting it — a single job larger than the window will never finish no matter how often the URL is fetched, and throughput is capped at roughly one window's worth of work per request. Real cron remains the recommendation and is unchanged
+- **`tcms jobs:process --max-seconds`**: The same time budget from the command line, for shared hosts that kill long CLI runs. Leftover jobs stay queued for the next run
+
+### Fixed
+
+- **The job queue vacuumed itself on every single run**: `VACUUM` rewrites the entire database file, and it ran on every `jobs:process` invocation — around 288 times a day on a five-minute cron, and it would have been ~1440 with a URL cron firing every minute. The space it reclaims is already on SQLite's free list and being reused, so doing it sooner bought nothing. It now runs at most once every 24 hours. Pruning old failed jobs is a single `DELETE` and still runs every pass, so nothing accumulates
+- **The job queue had no database indexes at all**: `id` was the only key, which made `fetchNextJob()` a full table scan — and it runs once per job processed, so draining a queue was quadratic in its size. Invisible on a handful of jobs, dominant on a large import backlog. Indexes on `(status, scheduledAt)` and `(collection)` are added on connection, including to databases that already exist, since the table-creation path only runs for a brand-new install
+
 ## [3.5.0-rc.17] - 2026-08-03
 
 ### Added

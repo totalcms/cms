@@ -261,6 +261,7 @@ return [
 			['title' => 'Filesystem',        'path' => 'operations/filesystem'],
 			['title' => 'Sync',              'path' => 'operations/sync'],
 			['title' => 'Git-First Templates', 'path' => 'operations/git-first-templates'],
+			['title' => 'Cron URLs',         'path' => 'operations/cron-urls'],
 			['title' => 'Updates',           'path' => 'operations/updates'],
 			['title' => 'JumpStart',         'path' => 'operations/jumpstart'],
 			['title' => 'Search Backends',   'path' => 'operations/search'],

@@ -72,6 +72,27 @@
 		<section>
 			<pre class="automations-command"><code id="automations-command-text">{{ cms.admin.processAutomationsCommand() }}</code></pre>
 			<button type="button" class="cms-clip-button dash-button transparent" data-clip="#automations-command-text">{{ t('btn.copy_command') }}</button>
+
+			{# Collapsed by default: this is a fallback, not a recommendation, so
+			   revealing it should take a deliberate act. The warning sits above the
+			   URL so it cannot be copied without scrolling past why not to. #}
+			<details class="cron-url-panel">
+				<summary><strong>{{ t('cron_url.summary') }}</strong></summary>
+				<div style="margin-top: 0.5rem;">
+					<div class="warning-box">
+						<p><strong>{{ t('cron_url.not_recommended') }}</strong></p>
+						<p>{{ t('cron_url.why_not') }}</p>
+						<p>{{ t('cron_url.limits') }}</p>
+					</div>
+
+					<p>{{ t('cron_url.instructions') }}</p>
+
+					<pre class="automations-command"><code id="cron-url-automations-text">{{ cms.admin.cronUrl('automations') }}</code></pre>
+					<button type="button" class="cms-clip-button dash-button transparent" data-clip="#cron-url-automations-text">{{ t('btn.copy_url') }}</button>
+
+					<p class="help">{{ t('cron_url.credential_warning') }}</p>
+				</div>
+			</details>
 		</section>
 	</section>
 
@@ -399,6 +420,20 @@ document.addEventListener('DOMContentLoaded', () => {
 	white-space : nowrap;
 	display     : block;
 }
+.cron-url-panel {
+	margin-top: 1.5rem;
+}
+
+.cron-url-panel summary {
+	cursor: pointer;
+	color: oklch(var(--totalform-darkgray));
+	font-size: 0.9em;
+}
+
+.cron-url-panel .warning-box p:last-child {
+	margin-bottom: 0;
+}
+
 .automations-command + .cms-clip-button {
 	margin-top : 0.5rem;
 }
