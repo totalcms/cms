@@ -103,11 +103,16 @@ final readonly class AuthFieldPolicy
 	 * Super-admins pass through. For everyone else, privileged fields are
 	 * reverted to their stored values (update) or stripped (create).
 	 *
+	 * $actorCollection is the auth collection the ACTOR actually belongs to
+	 * (from their session) — distinct from $collection, which is the
+	 * collection being WRITTEN to and may be a different auth collection
+	 * entirely (e.g. an operator editing a `members` record).
+	 *
 	 * @param array<string,mixed> $incoming
 	 *
 	 * @return array<string,mixed>
 	 */
-	public function enforce(string $actorId, string $collection, string $objectId, array $incoming): array
+	public function enforce(string $actorId, string $collection, string $objectId, array $incoming, string $actorCollection = ''): array
 	{
 		if ($this->authDisabled()) {
 			return $incoming;
@@ -117,7 +122,7 @@ final readonly class AuthFieldPolicy
 		if ($protected === []) {
 			return $incoming;
 		}
-		if ($actorId !== '' && $this->userValidation->isSuperAdmin($actorId)) {
+		if ($actorId !== '' && $this->userValidation->isSuperAdmin($actorId, $actorCollection)) {
 			return $incoming;
 		}
 
@@ -198,8 +203,11 @@ final readonly class AuthFieldPolicy
 	 * Whether the actor may write the given single property (for the
 	 * property-update routes). Super-admins always may; others may not touch a
 	 * privileged property.
+	 *
+	 * $actorCollection is the auth collection the ACTOR actually belongs to
+	 * — see {@see enforce()}.
 	 */
-	public function canWriteProperty(string $actorId, string $collection, string $property): bool
+	public function canWriteProperty(string $actorId, string $collection, string $property, string $actorCollection = ''): bool
 	{
 		if ($this->authDisabled()) {
 			return true;
@@ -208,6 +216,6 @@ final readonly class AuthFieldPolicy
 			return true;
 		}
 
-		return $actorId !== '' && $this->userValidation->isSuperAdmin($actorId);
+		return $actorId !== '' && $this->userValidation->isSuperAdmin($actorId, $actorCollection);
 	}
 }

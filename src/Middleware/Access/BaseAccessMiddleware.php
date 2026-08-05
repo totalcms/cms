@@ -98,10 +98,11 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 			if (!$sessionUserId) {
 				return $this->forbiddenResponse($request, 'Authentication required');
 			}
-			$userId = (string)$sessionUserId;
+			$userId         = (string)$sessionUserId;
+			$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
 
 			// Super admins bypass all access checks
-			if ($this->userValidation->isSuperAdmin($userId)) {
+			if ($this->userValidation->isSuperAdmin($userId, $userCollection)) {
 				return $handler->handle($request);
 			}
 		}

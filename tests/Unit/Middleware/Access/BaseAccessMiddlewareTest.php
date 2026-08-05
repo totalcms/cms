@@ -220,7 +220,9 @@ describe('BaseAccessMiddleware', function (): void {
 	});
 
 	test('super admin bypasses checkPermission entirely', function (): void {
-		$this->session->method('get')->with(SessionKeys::AUTH_USER)->willReturn('admin-id');
+		$this->session->method('get')->willReturnCallback(
+			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'admin-id' : null,
+		);
 		$this->userValidation->method('isSuperAdmin')->with('admin-id')->willReturn(true);
 
 		$wasCalled = false;

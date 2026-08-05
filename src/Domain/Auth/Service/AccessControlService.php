@@ -25,10 +25,16 @@ readonly class AccessControlService
 
 	/**
 	 * Check if user is a super admin.
+	 *
+	 * $collection is the auth collection the caller actually belongs to
+	 * (e.g. an OAuthUserRef's collection, which has no PHP session to fall
+	 * back on). When omitted, falls back to the current session's auth
+	 * collection so session-based callers in this class keep working
+	 * unchanged.
 	 */
-	public function isAdmin(string $userId): bool
+	public function isAdmin(string $userId, string $collection = ''): bool
 	{
-		return $this->userValidation->isSuperAdmin($userId);
+		return $this->userValidation->isSuperAdmin($userId, $collection !== '' ? $collection : $this->sessionCollection());
 	}
 
 	/**
@@ -37,7 +43,7 @@ readonly class AccessControlService
 	public function canAccessCollectionMeta(string $userId, string $collection, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -63,7 +69,7 @@ readonly class AccessControlService
 	public function canAccessCollection(string $userId, string $collection, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -90,7 +96,7 @@ readonly class AccessControlService
 	public function canAccessCollectionsMetaOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -129,7 +135,7 @@ readonly class AccessControlService
 	public function canAccessCollectionsOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -167,7 +173,7 @@ readonly class AccessControlService
 	public function canAccessSchema(string $userId, string $schema, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -194,7 +200,7 @@ readonly class AccessControlService
 	public function canAccessSchemasOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -245,7 +251,7 @@ readonly class AccessControlService
 	public function canAccessUtils(string $userId, string $util): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -276,7 +282,7 @@ readonly class AccessControlService
 	public function canAccessMailer(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -302,7 +308,7 @@ readonly class AccessControlService
 	public function canAccessPlayground(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -328,7 +334,7 @@ readonly class AccessControlService
 	public function canAccessDocs(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -354,7 +360,7 @@ readonly class AccessControlService
 	public function canAccessAnyUtils(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -380,7 +386,7 @@ readonly class AccessControlService
 	public function canAccessUtilsOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -423,9 +429,17 @@ readonly class AccessControlService
 	{
 		// Get the collection the user is authenticated from (stored in session)
 		// This ensures we fetch the user from the correct auth collection (e.g., 'staff', 'auth')
-		$collection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?: '';
+		return $this->getUserAccessGroupsIn($userId, $this->sessionCollection());
+	}
 
-		return $this->getUserAccessGroupsIn($userId, $collection);
+	/**
+	 * The auth collection the current session's user is authenticated
+	 * against. '' when there is no session user (e.g. OAuth Bearer requests,
+	 * which resolve identity via {@see authorityFor()} instead).
+	 */
+	private function sessionCollection(): string
+	{
+		return (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
 	}
 
 	/**
@@ -436,7 +450,7 @@ readonly class AccessControlService
 	 */
 	public function authorityFor(OAuthUserRef $ref): UserAuthority
 	{
-		if ($this->userValidation->isSuperAdmin($ref->userId)) {
+		if ($this->userValidation->isSuperAdmin($ref->userId, $ref->collection)) {
 			return new UserAuthority(isAdmin: true, groups: []);
 		}
 
@@ -558,7 +572,7 @@ readonly class AccessControlService
 	public function canAccessDataViews(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -600,7 +614,7 @@ readonly class AccessControlService
 	public function canAccessBuilder(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -643,7 +657,7 @@ readonly class AccessControlService
 	public function canAccessExtension(string $userId, string $extensionId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 

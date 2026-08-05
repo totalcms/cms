@@ -81,7 +81,7 @@ readonly class OAuthAuthorizeAction
 		// the common case never pays for authorityFor()'s group lookup.
 		$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?: '');
 		$ref        = OAuthUserRef::parse((string)$userId, $collection);
-		$isAdmin    = $this->accessControl->isAdmin((string)$userId)
+		$isAdmin    = $this->accessControl->isAdmin((string)$userId, $collection)
 			|| $this->accessControl->authorityFor($ref)->hasAdminDomainGrants();
 		$scopeRows = [];
 		foreach ($authRequest->getScopes() as $scope) {

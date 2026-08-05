@@ -80,7 +80,7 @@ final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 			// is allowed to REQUEST the scope in the first place. isAdmin() short-
 			// circuits first so the common case never pays for authorityFor()'s
 			// group lookup.
-			$userCanConveyAdmin = $this->accessControl->isAdmin($ref->userId)
+			$userCanConveyAdmin = $this->accessControl->isAdmin($ref->userId, $ref->collection)
 				|| $this->accessControl->authorityFor($ref)->hasAdminDomainGrants();
 		}
 

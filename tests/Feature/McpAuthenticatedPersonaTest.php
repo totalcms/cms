@@ -127,7 +127,7 @@ function mcpAuthSeedAccessGroups(): void
  *
  * @param list<string> $scopes
  */
-function mcpAuthIssueToken(Slim\App $app, string $clientId, string $clientSecret, array $scopes, string $userId = 'admin@example.test'): string
+function mcpAuthIssueToken(Slim\App $app, string $clientId, string $clientSecret, array $scopes, string $userId = 'admin@example.test', string $collection = 'auth'): string
 {
 	$client = new OAuthClientData(
 		id: $clientId,
@@ -148,7 +148,7 @@ function mcpAuthIssueToken(Slim\App $app, string $clientId, string $clientSecret
 		$session->start();
 	}
 	$session->set(SessionKeys::AUTH_USER, $userId);
-	$session->set(SessionKeys::AUTH_COLLECTION, 'auth');
+	$session->set(SessionKeys::AUTH_COLLECTION, $collection);
 
 	$codeVerifier  = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
 	$codeChallenge = rtrim(strtr(base64_encode(hash('sha256', $codeVerifier, true)), '+/', '-_'), '=');
@@ -796,6 +796,75 @@ describe('McpAuthenticatedPersona', function (): void {
 		if ($names === null) { expect(true)->toBeTrue(); return; }
 
 		expect($names)->toContain('create_schema');
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Security regression: a user in a SECONDARY auth collection ('members')
+	// whose id COLLIDES with the default collection's admin id must NOT be
+	// elevated to ADMIN, even though the same id genuinely is an admin in the
+	// default 'auth' collection. This is the real OAuth consent + token-mint
+	// + MCP-persona pipeline this task's fix closes — UserValidationService::
+	// isSuperAdmin() now only recognizes admins whose CALLER collection
+	// matches the default one.
+	// ──────────────────────────────────────────────────────────────────────────
+
+	it('a colliding id in a secondary auth collection is NOT elevated to ADMIN over MCP', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+
+		// Genuine admin in the default 'auth' collection.
+		mcpAuthSeedUser('admin-user-test-com');
+
+		// Same id, but as a NON-admin member of a secondary 'members'
+		// collection — the collision this fix must not fall for.
+		$membersDir = cmsDataDir() . 'members';
+		if (!is_dir($membersDir)) {
+			mkdir($membersDir, 0777, true);
+		}
+		file_put_contents($membersDir . '/admin-user-test-com.json', (string)json_encode([
+			'id'       => 'admin-user-test-com',
+			'active'   => true,
+			'name'     => 'Colliding Member',
+			'email'    => 'colliding-member@test.com',
+			'password' => password_hash('irrelevant', PASSWORD_BCRYPT),
+			'groups'   => ['member'],
+		]));
+
+		$clientId = 'mcp-auth-cross-collection-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:admin', 'mcp:tools'], 'admin-user-test-com', 'members');
+
+		if ($token === '') {
+			expect(true)->toBeTrue(); // skip-safe pass
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/list',
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body  = json_decode((string)$response->getBody(), true);
+		$names = array_column($body['result']['tools'] ?? [], 'name');
+
+		// AUTHENTICATED, not ADMIN: the caller's real collection ('members')
+		// does not match the default, so the id collision must not confer
+		// super-admin authority.
+		expect($names)->toContain('list_collections');
+		expect($names)->not->toContain('create_schema');
+		expect($names)->not->toContain('clear_cache');
+		expect($names)->not->toContain('get_site_info');
+		expect($names)->not->toContain('list_extensions');
+
+		@unlink($membersDir . '/admin-user-test-com.json');
 	});
 
 	// ──────────────────────────────────────────────────────────────────────────

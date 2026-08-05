@@ -89,7 +89,7 @@ readonly class McpAuth
 				&& is_string($userId) && $userId !== ''
 			) {
 				$ref = OAuthUserRef::parse($userId, (string)$this->config->auth['collection']);
-				if ($this->accessControl->isAdmin($ref->userId)) {
+				if ($this->accessControl->isAdmin($ref->userId, $ref->collection)) {
 					return McpPersona::ADMIN;
 				}
 			}

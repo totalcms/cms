@@ -56,12 +56,15 @@ describe('AuthTwigAdapter impersonation helpers', function (): void {
 		test('returns true when current session user is super-admin', function (): void {
 			$this->session
 				->method('get')
-				->with(SessionKeys::AUTH_USER)
-				->willReturn('admin-joe');
+				->willReturnCallback(static fn (string $key): mixed => match ($key) {
+					SessionKeys::AUTH_USER       => 'admin-joe',
+					SessionKeys::AUTH_COLLECTION => 'auth',
+					default                      => null,
+				});
 
 			$this->userValidation
 				->method('isSuperAdmin')
-				->with('admin-joe')
+				->with('admin-joe', 'auth')
 				->willReturn(true);
 
 			expect($this->adapter->isSuperAdmin())->toBeTrue();
@@ -70,12 +73,36 @@ describe('AuthTwigAdapter impersonation helpers', function (): void {
 		test('returns false when current session user is not super-admin', function (): void {
 			$this->session
 				->method('get')
-				->with(SessionKeys::AUTH_USER)
-				->willReturn('regular-user');
+				->willReturnCallback(static fn (string $key): mixed => match ($key) {
+					SessionKeys::AUTH_USER       => 'regular-user',
+					SessionKeys::AUTH_COLLECTION => 'auth',
+					default                      => null,
+				});
 
 			$this->userValidation
 				->method('isSuperAdmin')
-				->with('regular-user')
+				->with('regular-user', 'auth')
+				->willReturn(false);
+
+			expect($this->adapter->isSuperAdmin())->toBeFalse();
+		});
+
+		test('passes the session auth collection so a colliding id cannot pass the gate', function (): void {
+			// A `members` user whose id collides with an admin in the default
+			// auth collection must not clear cms.auth.isSuperAdmin(). The adapter
+			// has to forward the caller's real collection for that to hold.
+			$this->session
+				->method('get')
+				->willReturnCallback(static fn (string $key): mixed => match ($key) {
+					SessionKeys::AUTH_USER       => 'admin',
+					SessionKeys::AUTH_COLLECTION => 'members',
+					default                      => null,
+				});
+
+			$this->userValidation
+				->expects($this->once())
+				->method('isSuperAdmin')
+				->with('admin', 'members')
 				->willReturn(false);
 
 			expect($this->adapter->isSuperAdmin())->toBeFalse();
@@ -84,7 +111,6 @@ describe('AuthTwigAdapter impersonation helpers', function (): void {
 		test('returns false when session has no user', function (): void {
 			$this->session
 				->method('get')
-				->with(SessionKeys::AUTH_USER)
 				->willReturn(null);
 
 			// userValidation must NOT be called when there is no user id
@@ -100,9 +126,11 @@ describe('AuthTwigAdapter impersonation helpers', function (): void {
 				->expects($this->never())
 				->method('get');
 
+			// An explicitly supplied id carries no collection, so the adapter
+			// passes '' — the historical assume-the-default behavior.
 			$this->userValidation
 				->method('isSuperAdmin')
-				->with('target-user')
+				->with('target-user', '')
 				->willReturn(false);
 
 			expect($this->adapter->isSuperAdmin('target-user'))->toBeFalse();
@@ -115,7 +143,7 @@ describe('AuthTwigAdapter impersonation helpers', function (): void {
 
 			$this->userValidation
 				->method('isSuperAdmin')
-				->with('other-admin')
+				->with('other-admin', '')
 				->willReturn(true);
 
 			expect($this->adapter->isSuperAdmin('other-admin'))->toBeTrue();

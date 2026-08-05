@@ -70,8 +70,9 @@ readonly class SystemCollectionGuardMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$userId = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
-		if ($userId !== '' && $this->userValidation->isSuperAdmin($userId)) {
+		$userId         = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+		$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
+		if ($userId !== '' && $this->userValidation->isSuperAdmin($userId, $userCollection)) {
 			return $handler->handle($request);
 		}
 

@@ -51,9 +51,10 @@ readonly class SyncImportAction
 	 */
 	private function callerIsSuperAdmin(): bool
 	{
-		$userId = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+		$userId         = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+		$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
 
-		return $userId !== '' && $this->userValidation->isSuperAdmin($userId);
+		return $userId !== '' && $this->userValidation->isSuperAdmin($userId, $userCollection);
 	}
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface

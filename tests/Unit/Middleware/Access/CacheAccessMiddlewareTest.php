@@ -155,7 +155,9 @@ describe('CacheAccessMiddleware', function (): void {
 	// ── Session (admin UI) ──────────────────────────────────────────────────
 
 	test('session non-admin without a cache grant is denied', function (): void {
-		$this->session->method('get')->with(SessionKeys::AUTH_USER)->willReturn('regular-user');
+		$this->session->method('get')->willReturnCallback(
+			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'regular-user' : null,
+		);
 		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->accessControl->method('canAccessUtils')->with('regular-user', 'cache')->willReturn(false);
 
@@ -168,7 +170,9 @@ describe('CacheAccessMiddleware', function (): void {
 	});
 
 	test('session non-admin WITH a cache grant is allowed', function (): void {
-		$this->session->method('get')->with(SessionKeys::AUTH_USER)->willReturn('regular-user');
+		$this->session->method('get')->willReturnCallback(
+			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'regular-user' : null,
+		);
 		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->accessControl->method('canAccessUtils')->with('regular-user', 'cache')->willReturn(true);
 
@@ -180,7 +184,9 @@ describe('CacheAccessMiddleware', function (): void {
 	});
 
 	test('session super admin bypasses the check entirely', function (): void {
-		$this->session->method('get')->with(SessionKeys::AUTH_USER)->willReturn('admin-id');
+		$this->session->method('get')->willReturnCallback(
+			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'admin-id' : null,
+		);
 		$this->userValidation->method('isSuperAdmin')->with('admin-id')->willReturn(true);
 		$this->accessControl->expects($this->never())->method('canAccessUtils');
 
@@ -194,7 +200,9 @@ describe('CacheAccessMiddleware', function (): void {
 	// ── operation-detection bypass ──────────────────────────────────────────
 
 	test('operation detection is never consulted — these routes are not CRUD-shaped', function (): void {
-		$this->session->method('get')->with(SessionKeys::AUTH_USER)->willReturn('regular-user');
+		$this->session->method('get')->willReturnCallback(
+			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'regular-user' : null,
+		);
 		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->accessControl->method('canAccessUtils')->willReturn(true);
 		$this->operationDetector->expects($this->never())->method('detectOperation');

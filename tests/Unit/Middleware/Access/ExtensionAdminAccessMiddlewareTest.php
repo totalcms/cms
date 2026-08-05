@@ -109,7 +109,9 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 		};
 
 		// Logged-in non-admin user by default
-		$this->session->method('get')->with(SessionKeys::AUTH_USER)->willReturn('regular-user');
+		$this->session->method('get')->willReturnCallback(
+			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'regular-user' : null,
+		);
 		$this->extensionManager->method('isEnabled')->willReturn(true);
 	});
 

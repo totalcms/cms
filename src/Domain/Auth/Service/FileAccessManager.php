@@ -150,8 +150,9 @@ class FileAccessManager
 
 	private function isSuperAdmin(): bool
 	{
-		$userID = $this->session->get(SessionKeys::AUTH_USER) ?? '';
+		$userID         = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+		$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
 
-		return !empty($userID) && $this->userValidator->isSuperAdmin($userID);
+		return $userID !== '' && $this->userValidator->isSuperAdmin($userID, $userCollection);
 	}
 }

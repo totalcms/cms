@@ -35,7 +35,7 @@ final readonly class PrivilegedFieldGuard
 			return $data;
 		}
 
-		return $this->policy->enforce($this->actor(), $collection, $objectId, $data);
+		return $this->policy->enforce($this->actor(), $collection, $objectId, $data, $this->actorCollection());
 	}
 
 	public function guardProperty(ServerRequestInterface $request, string $collection, string $property): void
@@ -43,7 +43,7 @@ final readonly class PrivilegedFieldGuard
 		if ($this->isTrusted($request)) {
 			return;
 		}
-		if (!$this->policy->canWriteProperty($this->actor(), $collection, $property)) {
+		if (!$this->policy->canWriteProperty($this->actor(), $collection, $property, $this->actorCollection())) {
 			throw new HttpForbiddenException($request, 'You do not have permission to modify this field.');
 		}
 	}
@@ -58,5 +58,11 @@ final readonly class PrivilegedFieldGuard
 	private function actor(): string
 	{
 		return (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+	}
+
+	/** The auth collection the acting session user actually belongs to. */
+	private function actorCollection(): string
+	{
+		return (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
 	}
 }

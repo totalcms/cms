@@ -54,7 +54,7 @@ final readonly class ImpersonationService implements ImpersonationServiceInterfa
 		$defaultCollection = (string)($this->config->auth['collection'] ?? 'auth');
 		$realCollection    = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? $defaultCollection);
 
-		if (!$this->userValidation->isSuperAdmin($realUser)) {
+		if (!$this->userValidation->isSuperAdmin($realUser, $realCollection)) {
 			throw new ImpersonationException('Only super-admins may impersonate.');
 		}
 		if ($this->isImpersonating()) {
@@ -77,7 +77,7 @@ final readonly class ImpersonationService implements ImpersonationServiceInterfa
 		if (!$this->objectFetcher->existsObject($collection, $userId)) {
 			throw new ImpersonationException('That user does not exist.');
 		}
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $collection)) {
 			throw new ImpersonationException('You cannot impersonate another super-admin.');
 		}
 
