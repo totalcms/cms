@@ -2124,19 +2124,10 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		$clientId = 'mcp-t10b-qc-' . uniqid('', true);
 		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
-
-		if ($token === '') {
-			expect(true)->toBeTrue(); // skip-safe pass
-
-			return;
-		}
+		expect($token)->not->toBe('');
 
 		$sessionId = mcpAuthInitSession($this->app, $token);
-		if ($sessionId === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($sessionId)->not->toBe('');
 
 		// `blog` accumulates objects across earlier scenarios in this file
 		// (beforeAll only wipes cmsDataDir() once) — filter with `include` to
@@ -2188,19 +2179,10 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		$clientId = 'mcp-t10b-go-' . uniqid('', true);
 		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
-
-		if ($token === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($token)->not->toBe('');
 
 		$sessionId = mcpAuthInitSession($this->app, $token);
-		if ($sessionId === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($sessionId)->not->toBe('');
 
 		$allow = mcpAuthRequest($this->app, $token, [
 			'jsonrpc' => '2.0',
@@ -2241,19 +2223,10 @@ describe('McpAuthenticatedPersona', function (): void {
 		$clientId = 'mcp-t10b-scope-' . uniqid('', true);
 		// mcp:tools only — no cms:read at all.
 		$token = mcpAuthIssueToken($this->app, $clientId, 'secret', ['mcp:tools'], 'blogger-user-test-com');
-
-		if ($token === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($token)->not->toBe('');
 
 		$sessionId = mcpAuthInitSession($this->app, $token);
-		if ($sessionId === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($sessionId)->not->toBe('');
 
 		$response = mcpAuthRequest($this->app, $token, [
 			'jsonrpc' => '2.0',
@@ -2272,6 +2245,64 @@ describe('McpAuthenticatedPersona', function (): void {
 		expect($text)->toContain('permission');
 	});
 
+	// Fix round 1 (review finding #2): the public-collection carve-out must
+	// also skip the SCOPE layer, not just the group layer — a token with
+	// mcp:tools but NO cms:read must still read a mcp.access:'public'
+	// collection (an anonymous caller already reads it with zero consent),
+	// while the SAME token stays denied at the scope layer on a
+	// non-public collection. Isolates the scope-tier fix from the
+	// group-tier one above (which uses an 'authenticated' collection).
+	it('a token WITHOUT cms:read scope still reads an mcp.access:public collection, but stays denied at the scope layer on an authenticated-exposed collection', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'public');
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'authenticated');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-t10b-noscope-pub-allow', 'title' => 'No-Scope Public Post', 'draft' => false]);
+
+		$clientId = 'mcp-t10b-noscope-' . uniqid('', true);
+		// mcp:tools only — no cms:read at all.
+		$token = mcpAuthIssueToken($this->app, $clientId, 'secret', ['mcp:tools'], 'blogger-user-test-com');
+		expect($token)->not->toBe('');
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		expect($sessionId)->not->toBe('');
+
+		$onPublic = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'query_collection',
+				'arguments' => ['collection' => 'blog', 'include' => 'id:mcp-t10b-noscope-pub-allow'],
+			],
+		], $sessionId);
+
+		expect($onPublic->getStatusCode())->toBe(200);
+		$onPublicBody = json_decode((string)$onPublic->getBody(), true);
+		expect($onPublicBody['result']['isError'] ?? false)->toBeFalse();
+		$ids = array_column(mcpAuthStructuredItems($onPublic), 'id');
+		expect($ids)->toContain('mcp-t10b-noscope-pub-allow');
+
+		$onAuthenticated = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'query_collection',
+				'arguments' => ['collection' => 'blog-legacy'],
+			],
+		], $sessionId);
+
+		expect($onAuthenticated->getStatusCode())->toBe(200);
+		$onAuthenticatedBody = json_decode((string)$onAuthenticated->getBody(), true);
+		expect($onAuthenticatedBody['result']['isError'] ?? false)->toBeTrue();
+		$text = $onAuthenticatedBody['result']['content'][0]['text'] ?? '';
+		expect($text)->toContain('permission');
+	});
+
 	it('search_collections and the compat search tool include only readable collections, silently omitting a group-denied one (not an error)', function (): void {
 		mcpAuthSetupOAuthKeys($this->app);
 		mcpAuthSeedUser('blogger-user-test-com');
@@ -2285,19 +2316,10 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		$clientId = 'mcp-t10b-scs-' . uniqid('', true);
 		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
-
-		if ($token === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($token)->not->toBe('');
 
 		$sessionId = mcpAuthInitSession($this->app, $token);
-		if ($sessionId === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($sessionId)->not->toBe('');
 
 		$response = mcpAuthRequest($this->app, $token, [
 			'jsonrpc' => '2.0',
@@ -2350,19 +2372,10 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		$clientId = 'mcp-t10b-pub-' . uniqid('', true);
 		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
-
-		if ($token === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($token)->not->toBe('');
 
 		$sessionId = mcpAuthInitSession($this->app, $token);
-		if ($sessionId === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($sessionId)->not->toBe('');
 
 		$response = mcpAuthRequest($this->app, $token, [
 			'jsonrpc' => '2.0',
@@ -2424,19 +2437,10 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		$clientId = 'mcp-t10b-viewer-' . uniqid('', true);
 		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'cms:write', 'mcp:tools'], 'viewer-user-test-com');
-
-		if ($token === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($token)->not->toBe('');
 
 		$sessionId = mcpAuthInitSession($this->app, $token);
-		if ($sessionId === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($sessionId)->not->toBe('');
 
 		// `blog` accumulates objects across earlier scenarios in this file —
 		// filter to this test's own id (see the query_collection test above
@@ -2505,19 +2509,10 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		$clientId = 'mcp-t10b-admin-' . uniqid('', true);
 		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:admin', 'mcp:tools'], 'admin-user-test-com');
-
-		if ($token === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($token)->not->toBe('');
 
 		$sessionId = mcpAuthInitSession($this->app, $token);
-		if ($sessionId === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($sessionId)->not->toBe('');
 
 		$response = mcpAuthRequest($this->app, $token, [
 			'jsonrpc' => '2.0',
@@ -2545,11 +2540,7 @@ describe('McpAuthenticatedPersona', function (): void {
 		$saver->saveObject('blog', ['id' => 'mcp-t10b-pub-anon-post', 'title' => 'Public Anon Post', 'draft' => false]);
 
 		$sessionId = mcpAuthPublicInitSession($this->app);
-		if ($sessionId === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($sessionId)->not->toBe('');
 
 		$response = mcpAuthPublicRequest($this->app, [
 			'jsonrpc' => '2.0',
@@ -2578,19 +2569,10 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		$clientId = 'mcp-t10b-obj-res-' . uniqid('', true);
 		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['mcp:resources'], 'blogger-user-test-com');
-
-		if ($token === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($token)->not->toBe('');
 
 		$sessionId = mcpAuthInitSession($this->app, $token);
-		if ($sessionId === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($sessionId)->not->toBe('');
 
 		$response = mcpAuthRequest($this->app, $token, [
 			'jsonrpc' => '2.0',
@@ -2619,19 +2601,10 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		$clientId = 'mcp-t10b-obj-res-allow-' . uniqid('', true);
 		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['mcp:resources'], 'blogger-user-test-com');
-
-		if ($token === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($token)->not->toBe('');
 
 		$sessionId = mcpAuthInitSession($this->app, $token);
-		if ($sessionId === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($sessionId)->not->toBe('');
 
 		$response = mcpAuthRequest($this->app, $token, [
 			'jsonrpc' => '2.0',
@@ -2655,19 +2628,10 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		$clientId = 'mcp-t10b-tmpl-' . uniqid('', true);
 		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['mcp:resources'], 'blogger-user-test-com');
-
-		if ($token === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($token)->not->toBe('');
 
 		$sessionId = mcpAuthInitSession($this->app, $token);
-		if ($sessionId === '') {
-			expect(true)->toBeTrue();
-
-			return;
-		}
+		expect($sessionId)->not->toBe('');
 
 		$response = mcpAuthRequest($this->app, $token, [
 			'jsonrpc' => '2.0',

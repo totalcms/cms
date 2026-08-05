@@ -97,9 +97,15 @@ readonly class CollectionResource
 		// Drafts are hidden from anyone whose authority doesn't grant read on
 		// this collection — PersonaContext::canReadDrafts() is the single home
 		// for this rule (ADMIN always; an OAuth caller when their access
-		// groups grant read; false for public/anonymous). By the time we get
-		// here an AUTHENTICATED caller without that grant has already been
-		// denied above, so this only ever strips drafts for PUBLIC_.
+		// groups grant read; false for public/anonymous). Deliberately NOT
+		// canReadCollection(): drafts always require the real grant, never
+		// mere public exposure — an AUTHENTICATED caller with no group grant
+		// reaches this line (not denied above) when $collection is
+		// mcp.access:'public' (Task 10b's carve-out), and this filter still
+		// strips their drafts even though the gate above admitted them. So
+		// this line strips drafts for PUBLIC_ AND for that ungranted-but-
+		// public-collection AUTHENTICATED case; ADMIN and a genuinely
+		// grant-holding AUTHENTICATED caller are the only ones who keep them.
 		if (!$this->personaContext->canReadDrafts($collection)) {
 			$items = array_values(array_filter(
 				$items,

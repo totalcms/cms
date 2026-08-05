@@ -225,12 +225,33 @@ readonly class McpSchemaResolver
 	 *
 	 * Capped at $cap visible collections; overflow rolls into a closing pointer
 	 * at `list_collections` so the agent has a known fallback.
+	 *
+	 * $isReadable (Task 10b fix round 1, finding #1): optional additional
+	 * filter applied alongside the $access exposure check. Without it, an
+	 * AUTHENTICATED caller's tool description would advertise every
+	 * `mcp.access: authenticated` collection's id AND filterable property
+	 * names — including ones query_collection/get_object/search_collection
+	 * will now refuse per their group-read gate — the exact
+	 * advertise-then-deny inconsistency that was the reason to filter
+	 * list_collections in the first place, just on a bigger, harder-to-spot
+	 * surface (every read tool's description, not one discovery tool's
+	 * output). Deliberately a caller-supplied closure rather than injecting
+	 * PersonaContext directly into this class: PersonaContext already
+	 * depends on McpSchemaResolver (for its own canReadCollection() public-
+	 * collection carve-out) — the reverse dependency would invert that and
+	 * risk a container cycle. The three content tools (which already inject
+	 * PersonaContext for their own handler-level checks) pass `fn
+	 * (CollectionData $c): bool => $this->personaContext->
+	 * canReadCollection($c->id, $c)` — see their buildDescription().
+	 * Metadata-only concern either way (ids + field names, never object
+	 * values), but the inconsistency itself is worth closing.
 	 */
-	public function renderCatalog(McpPersona $persona, int $cap = self::DEFAULT_CATALOG_CAP): string
+	public function renderCatalog(McpPersona $persona, int $cap = self::DEFAULT_CATALOG_CAP, ?\Closure $isReadable = null): string
 	{
 		$visible = array_filter(
 			$this->collections->listAllCollections(),
-			fn (CollectionData $collection): bool => $this->isAccessibleTo($collection, $persona->value),
+			fn (CollectionData $collection): bool => $this->isAccessibleTo($collection, $persona->value)
+				&& ($isReadable === null || $isReadable($collection)),
 		);
 
 		if ($visible === []) {

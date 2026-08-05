@@ -270,4 +270,53 @@ final class PersonaContextTest extends TestCase
 		$this->assertTrue($context->canReadDrafts('blog'));
 		$this->assertTrue($context->canReadCollection('blog'));
 	}
+
+	// ── isCollectionExposedPublic (Task 10b fix round 1, finding #2) ────────────
+
+	public function testIsCollectionExposedPublicTrueForPublicCollectionIndependentOfPersonaOrAuthority(): void
+	{
+		// Exposure alone — no persona set at all, no authority resolved.
+		// McpServerFactory::guardHandler() calls this BEFORE the scope check
+		// even runs, so it must never depend on either.
+		$this->registerCollection('blog', 'public');
+		$context = $this->context();
+
+		$this->assertTrue($context->isCollectionExposedPublic('blog'));
+	}
+
+	public function testIsCollectionExposedPublicFalseForNonPublicCollectionEvenWithAGrant(): void
+	{
+		// The critical distinction from canReadCollection(): a real
+		// access-group grant must NOT make this true — only genuine public
+		// exposure may skip the scope layer. A grant without consent still
+		// needs the consent (scope) check.
+		$this->registerCollection('blog', 'authenticated');
+		$context = $this->context();
+		$context->set(McpPersona::AUTHENTICATED);
+		$context->setAuthority($this->authorityGranting(['blog']));
+
+		$this->assertFalse($context->isCollectionExposedPublic('blog'));
+		// canReadCollection() (the group-layer question) is still true —
+		// proving these two methods answer genuinely different questions.
+		$this->assertTrue($context->canReadCollection('blog'));
+	}
+
+	public function testIsCollectionExposedPublicFalseForUnknownCollection(): void
+	{
+		$context = $this->context();
+
+		$this->assertFalse($context->isCollectionExposedPublic('does-not-exist'));
+	}
+
+	public function testIsCollectionExposedPublicAcceptsAPreFetchedCollectionDataWithoutCallingTheFetcher(): void
+	{
+		$context = $this->context();
+
+		$adHoc         = new CollectionData();
+		$adHoc->id     = 'not-in-fixture-map';
+		$adHoc->schema = 'not-in-fixture-map';
+		$adHoc->mcp    = ['access' => 'public'];
+
+		$this->assertTrue($context->isCollectionExposedPublic('not-in-fixture-map', $adHoc));
+	}
 }

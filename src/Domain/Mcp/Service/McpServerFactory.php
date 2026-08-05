@@ -293,12 +293,13 @@ readonly class McpServerFactory
 
 		$innerHandler     = $tool->handler;
 		$toolName         = $tool->name;
-		$isPublicReadTool = $tool->access === 'public' && $requires->domain === 'objects' && $requires->operation === 'read';
+		$isObjectsRead    = $requires->domain === 'objects' && $requires->operation === 'read';
+		$isPublicReadTool = $tool->access === 'public' && $isObjectsRead;
 		$personaContext   = $this->personaContext;
 		$scopeRegistry    = $this->scopeRegistry;
 		$activityLogger   = $this->activityLogger;
 
-		$wrapped = static function (array $arguments) use ($requires, $innerHandler, $toolName, $isPublicReadTool, $personaContext, $scopeRegistry, $activityLogger): mixed {
+		$wrapped = static function (array $arguments) use ($requires, $innerHandler, $toolName, $isObjectsRead, $isPublicReadTool, $personaContext, $scopeRegistry, $activityLogger): mixed {
 			$persona = $personaContext->current();
 
 			// The objects+read + access:'public' combination (Task 10b —
@@ -337,6 +338,28 @@ readonly class McpServerFactory
 
 			if ($persona === McpPersona::AUTHENTICATED) {
 				$clientId = $personaContext->getClientId();
+
+				// Public-collection carve-out at the SCOPE tier too (Task 10b
+				// fix round 1, finding #2). Without this, a token missing
+				// cms:read was still denied below on an mcp.access:'public'
+				// collection that an ANONYMOUS caller reads with zero
+				// consent — authenticating subtracted reach, the identical
+				// bug class the group-layer carve-out fixes, just one layer
+				// up. Coherent rule: consent (scope) gates access to
+				// non-public content; public content needs no consent
+				// because anonymous callers already have it unconditionally.
+				//
+				// Uses PersonaContext::isCollectionExposedPublic() — EXPOSURE
+				// ALONE — not canReadCollection(), which also returns true
+				// for a real access-group grant. A real grant without
+				// consent must still clear the scope check below; only
+				// genuine public exposure skips straight to dispatch.
+				if ($isObjectsRead && $requires->collectionArg !== null) {
+					$target = $arguments[$requires->collectionArg] ?? null;
+					if (is_string($target) && $target !== '' && $personaContext->isCollectionExposedPublic($target)) {
+						return (new ReferenceHandler())->handle(new ElementReference($innerHandler), $arguments);
+					}
+				}
 
 				// Layer 1 — scope (consent). expand() lets a broader granted
 				// scope (cms:admin) satisfy a narrower requirement
@@ -384,7 +407,10 @@ readonly class McpServerFactory
 					// caller succeeds). Every other domain/operation keeps the plain
 					// group-grant check — that carve-out is read-only content
 					// exposure, not a general "public" concept for writes/schemas/etc.
-					$satisfied = ($requires->domain === 'objects' && $requires->operation === 'read')
+					// (The pure-exposure case already returned above, before the
+					// scope check, so by this point canReadCollection() only ever
+					// resolves true here via a real authority grant.)
+					$satisfied = $isObjectsRead
 						? $personaContext->canReadCollection($target)
 						: $requires->isSatisfiedFor($authority, $target);
 				} else {

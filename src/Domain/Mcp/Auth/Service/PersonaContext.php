@@ -213,24 +213,44 @@ class PersonaContext
 			return true;
 		}
 
-		if ($this->isCollectionPublic($collection, $collectionData)) {
+		if ($this->isCollectionExposedPublic($collection, $collectionData)) {
 			return true;
 		}
 
 		return $this->hasReadGrant($collection);
 	}
 
-	private function hasReadGrant(string $collection): bool
-	{
-		return $this->authority instanceof UserAuthority
-			&& $this->authority->canCollection('read', $collection);
-	}
-
-	private function isCollectionPublic(string $collection, ?CollectionData $collectionData): bool
+	/**
+	 * Whether $collection's `mcp.access` is `'public'` — exposure ALONE,
+	 * independent of any authority/grant. Public, not just an internal
+	 * helper of canReadCollection(): McpServerFactory::guardHandler() (Task
+	 * 10b fix round 1, finding #2) needs this exact question answered BEFORE
+	 * it decides whether to even run the scope/consent check for an
+	 * AUTHENTICATED objects+read call — a token missing `cms:read` must
+	 * still be admitted on a public collection (an anonymous caller already
+	 * reads it with zero consent), the same "authenticating must never
+	 * subtract reach" principle canReadCollection() already applies one
+	 * layer down. Deliberately distinct from calling canReadCollection()
+	 * itself for that purpose: canReadCollection() ALSO returns true when
+	 * the caller's authority grants read, which must NOT bypass the scope
+	 * layer — a real group grant without consent (scope) still needs the
+	 * consent check; only genuine public exposure skips it.
+	 *
+	 * $collectionData mirrors canReadCollection()'s optional pre-fetched
+	 * argument — same rationale (avoid a redundant CollectionFetcher call
+	 * for callers that already have one in hand).
+	 */
+	public function isCollectionExposedPublic(string $collection, ?CollectionData $collectionData = null): bool
 	{
 		$data = $collectionData ?? $this->collectionFetcher->fetchCollection($collection);
 
 		return $data instanceof CollectionData
 			&& $this->schemaResolver->forCollection($data)['access'] === 'public';
+	}
+
+	private function hasReadGrant(string $collection): bool
+	{
+		return $this->authority instanceof UserAuthority
+			&& $this->authority->canCollection('read', $collection);
 	}
 }

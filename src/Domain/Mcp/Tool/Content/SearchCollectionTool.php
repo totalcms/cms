@@ -210,7 +210,14 @@ readonly class SearchCollectionTool
 
 	public function buildDescription(McpPersona $persona): string
 	{
-		$catalog = $this->schemaResolver->renderCatalog($persona, McpSchemaResolver::DEFAULT_CATALOG_CAP);
+		// Task 10b fix round 1 (finding #1): the catalog must not advertise
+		// collections the caller's groups don't grant read on — same rule
+		// this tool's own handler() enforces via canReadCollection().
+		$catalog = $this->schemaResolver->renderCatalog(
+			$persona,
+			McpSchemaResolver::DEFAULT_CATALOG_CAP,
+			fn (\TotalCMS\Domain\Collection\Data\CollectionData $c): bool => $this->personaContext->canReadCollection($c->id, $c),
+		);
 
 		return $catalog === ''
 			? $this->baseDescription()

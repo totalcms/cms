@@ -533,6 +533,53 @@ final class McpSchemaResolverTest extends TestCase
 		$this->assertStringContainsString('auth', $adminCatalog);
 	}
 
+	public function testRenderCatalogAppliesOptionalIsReadableFilterOnTopOfPersonaAccess(): void
+	{
+		// Task 10b fix round 1 (finding #1): an AUTHENTICATED caller's tool
+		// description must not advertise a collection their access groups
+		// don't grant read on, even when it passes the $access exposure
+		// check. $isReadable is the caller-supplied hook for that — proven
+		// here independent of any real PersonaContext/group wiring.
+		$granted     = $this->collection(['access' => 'authenticated']);
+		$granted->id = 'blog';
+
+		$denied     = $this->collection(['access' => 'authenticated']);
+		$denied->id = 'news';
+
+		$this->collectionRepository->method('listAllCollections')->willReturn([$granted, $denied]);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn(
+			$this->schemaWithProperties(['title' => ['field' => 'text']]),
+		);
+
+		$catalog = $this->resolver->renderCatalog(
+			McpPersona::AUTHENTICATED,
+			McpSchemaResolver::DEFAULT_CATALOG_CAP,
+			static fn (CollectionData $c): bool => $c->id === 'blog',
+		);
+
+		$this->assertStringContainsString('blog', $catalog);
+		$this->assertStringNotContainsString('news', $catalog);
+	}
+
+	public function testRenderCatalogWithNullIsReadableMatchesPreExistingBehavior(): void
+	{
+		// Backward-compatibility guard: omitting $isReadable (every call
+		// site before this task, and QueryViewTool-style callers that never
+		// pass it) must behave byte-for-byte as before — access-only
+		// filtering, no group awareness.
+		$blog     = $this->collection(['access' => 'authenticated']);
+		$blog->id = 'blog';
+
+		$this->collectionRepository->method('listAllCollections')->willReturn([$blog]);
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn(
+			$this->schemaWithProperties(['title' => ['field' => 'text']]),
+		);
+
+		$catalog = $this->resolver->renderCatalog(McpPersona::AUTHENTICATED);
+
+		$this->assertStringContainsString('blog', $catalog);
+	}
+
 	public function testRenderCatalogLineFormatIncludesFieldsWithTypes(): void
 	{
 		// Each collection line follows: `- <id> — <field> (<type>[, sortable])`
