@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
@@ -920,7 +923,11 @@ describe('McpAuthenticatedPersona', function (): void {
 		mcpAuthSetupOAuthKeys($this->app);
 		mcpAuthSeedUser('blogger-user-test-com');
 		mcpAuthSeedAccessGroups();
-		$this->app->getContainer()->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
+		// Exposed (Scenario 18/final review fix: writes now ALSO require
+		// mcp.access exposure, not just scope + group) — this test is about
+		// the group layer succeeding, exposure is covered on its own by
+		// Scenario 18's dedicated tests below.
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
 
 		$clientId = 'mcp-auth-write-ok-' . uniqid('', true);
 		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'cms:write', 'mcp:tools'], 'blogger-user-test-com');
@@ -961,6 +968,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($call->getStatusCode())->toBe(200);
 		$callBody = json_decode((string)$call->getBody(), true);
+		expect($callBody)->toHaveKey('result');
 		expect($callBody['result']['isError'] ?? false)->toBeFalse();
 	});
 
@@ -1492,6 +1500,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 		$body = json_decode((string)$response->getBody(), true);
+		expect($body)->toHaveKey('result');
 		expect($body['result']['isError'] ?? false)->toBeFalse();
 		expect($body['result']['structuredContent']['id'] ?? null)->toBe('mcp-draft-blog-post-go-allow');
 	});
@@ -2145,6 +2154,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($allow->getStatusCode())->toBe(200);
 		$allowBody = json_decode((string)$allow->getBody(), true);
+		expect($allowBody)->toHaveKey('result');
 		expect($allowBody['result']['isError'] ?? false)->toBeFalse();
 		$ids = array_column(mcpAuthStructuredItems($allow), 'id');
 		expect($ids)->toContain('mcp-t10b-qc-allow');
@@ -2196,6 +2206,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($allow->getStatusCode())->toBe(200);
 		$allowBody = json_decode((string)$allow->getBody(), true);
+		expect($allowBody)->toHaveKey('result');
 		expect($allowBody['result']['isError'] ?? false)->toBeFalse();
 		expect($allowBody['result']['structuredContent']['id'] ?? null)->toBe('mcp-t10b-go-allow');
 
@@ -2282,6 +2293,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($onPublic->getStatusCode())->toBe(200);
 		$onPublicBody = json_decode((string)$onPublic->getBody(), true);
+		expect($onPublicBody)->toHaveKey('result');
 		expect($onPublicBody['result']['isError'] ?? false)->toBeFalse();
 		$ids = array_column(mcpAuthStructuredItems($onPublic), 'id');
 		expect($ids)->toContain('mcp-t10b-noscope-pub-allow');
@@ -2333,6 +2345,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 		$body = json_decode((string)$response->getBody(), true);
+		expect($body)->toHaveKey('result');
 		expect($body['result']['isError'] ?? false)->toBeFalse();
 		$ids = array_column(mcpAuthStructuredItems($response), 'id');
 		expect($ids)->toContain('mcp-t10b-scs-allow');
@@ -2350,6 +2363,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($compat->getStatusCode())->toBe(200);
 		$compatBody = json_decode((string)$compat->getBody(), true);
+		expect($compatBody)->toHaveKey('result');
 		expect($compatBody['result']['isError'] ?? false)->toBeFalse();
 		$results        = $compatBody['result']['structuredContent']['results'] ?? [];
 		$compatIds      = array_column(is_array($results) ? $results : [], 'id');
@@ -2389,6 +2403,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 		$body = json_decode((string)$response->getBody(), true);
+		expect($body)->toHaveKey('result');
 		expect($body['result']['isError'] ?? false)->toBeFalse();
 		$ids = array_column(mcpAuthStructuredItems($response), 'id');
 		expect($ids)->toContain('mcp-t10b-pub-published');
@@ -2423,6 +2438,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($getPublished->getStatusCode())->toBe(200);
 		$getPublishedBody = json_decode((string)$getPublished->getBody(), true);
+		expect($getPublishedBody)->toHaveKey('result');
 		expect($getPublishedBody['result']['isError'] ?? false)->toBeFalse();
 	});
 
@@ -2457,6 +2473,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($query->getStatusCode())->toBe(200);
 		$queryBody = json_decode((string)$query->getBody(), true);
+		expect($queryBody)->toHaveKey('result');
 		expect($queryBody['result']['isError'] ?? false)->toBeFalse();
 		$ids = array_column(mcpAuthStructuredItems($query), 'id');
 		expect($ids)->toContain('mcp-t10b-viewer-post');
@@ -2473,6 +2490,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($get->getStatusCode())->toBe(200);
 		$getBody = json_decode((string)$get->getBody(), true);
+		expect($getBody)->toHaveKey('result');
 		expect($getBody['result']['isError'] ?? false)->toBeFalse();
 
 		// Regression: viewer's group grants read only — create_object stays
@@ -2526,6 +2544,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 		$body = json_decode((string)$response->getBody(), true);
+		expect($body)->toHaveKey('result');
 		expect($body['result']['isError'] ?? false)->toBeFalse();
 	});
 
@@ -2554,6 +2573,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 		$body = json_decode((string)$response->getBody(), true);
+		expect($body)->toHaveKey('result');
 		expect($body['result']['isError'] ?? false)->toBeFalse();
 	});
 
@@ -2644,6 +2664,367 @@ describe('McpAuthenticatedPersona', function (): void {
 		$templates = array_column($body['result']['resourceTemplates'] ?? [], 'uriTemplate');
 		expect($templates)->toContain('tcms://blog/{id}');
 		expect($templates)->not->toContain('tcms://blog-legacy/{id}');
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Scenario 18 (final review fix, Critical #1/#1b): object-write tools were
+	// missing the EXPOSURE layer entirely. McpServerFactory::guardHandler()
+	// only ever checked scope + access-group grant for objects/create and
+	// objects/update — unlike objects/read, it had no exposure carve-out to
+	// apply — so a caller with a real group grant on a collection could write
+	// into it even while the collection stayed at the default (unexposed)
+	// `mcp.access: 'admin'`. ObjectTools now calls requireExposed() in each
+	// handler (see its class docblock). These tests hold group + scope
+	// constant and flip ONLY the collection's exposure, proving exposure is
+	// now an independent, necessary gate for writes — same as it already was
+	// for reads.
+	//
+	// Each test explicitly resets 'blog' access via mcpAuthSetCollectionAccess()
+	// rather than assuming a starting state — 'blog' accumulates state across
+	// earlier scenarios in this file (same caveat other scenarios note).
+	// ──────────────────────────────────────────────────────────────────────────
+
+	it('blogger create_object is denied at the exposure layer while their group-granted collection stays at the default (unexposed) mcp.access, but succeeds once exposed', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'admin');
+
+		$clientId = 'mcp-final-create-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'cms:write', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$denied = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'create_object',
+				'arguments' => [
+					'collection' => 'blog',
+					'data'       => ['id' => 'mcp-final-create-denied', 'title' => 'Should Not Save'],
+				],
+			],
+		], $sessionId);
+
+		expect($denied->getStatusCode())->toBe(200);
+		$deniedBody = json_decode((string)$denied->getBody(), true);
+		expect($deniedBody)->toHaveKey('result');
+		expect($deniedBody['result']['isError'] ?? false)->toBeTrue();
+		$text = $deniedBody['result']['content'][0]['text'] ?? '';
+		expect($text)->toContain('not available');
+
+		// Same caller, same scope, same group grant — only the collection's
+		// exposure changed. The write must now succeed.
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+
+		$allowed = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'create_object',
+				'arguments' => [
+					'collection' => 'blog',
+					'data'       => ['id' => 'mcp-final-create-allowed', 'title' => 'Should Save'],
+				],
+			],
+		], $sessionId);
+
+		expect($allowed->getStatusCode())->toBe(200);
+		$allowedBody = json_decode((string)$allowed->getBody(), true);
+		expect($allowedBody)->toHaveKey('result');
+		expect($allowedBody['result']['isError'] ?? false)->toBeFalse();
+	});
+
+	it('blogger update_object is denied at the exposure layer while their group-granted collection stays at the default (unexposed) mcp.access, but succeeds once exposed', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-final-update-target', 'title' => 'Original Title', 'draft' => false]);
+
+		$clientId = 'mcp-final-update-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'cms:write', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		// Un-expose AFTER the target object exists and AFTER the session is
+		// live — the group grant is real, only exposure is missing.
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'admin');
+
+		$denied = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'update_object',
+				'arguments' => [
+					'collection' => 'blog',
+					'id'         => 'mcp-final-update-target',
+					'data'       => ['id' => 'mcp-final-update-target', 'title' => 'Should Not Update', 'draft' => false],
+				],
+			],
+		], $sessionId);
+
+		expect($denied->getStatusCode())->toBe(200);
+		$deniedBody = json_decode((string)$denied->getBody(), true);
+		expect($deniedBody)->toHaveKey('result');
+		expect($deniedBody['result']['isError'] ?? false)->toBeTrue();
+
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+
+		$allowed = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'update_object',
+				'arguments' => [
+					'collection' => 'blog',
+					'id'         => 'mcp-final-update-target',
+					'data'       => ['id' => 'mcp-final-update-target', 'title' => 'Updated Title', 'draft' => false],
+				],
+			],
+		], $sessionId);
+
+		expect($allowed->getStatusCode())->toBe(200);
+		$allowedBody = json_decode((string)$allowed->getBody(), true);
+		expect($allowedBody)->toHaveKey('result');
+		expect($allowedBody['result']['isError'] ?? false)->toBeFalse();
+	});
+
+	it('blogger patch_object is denied at the exposure layer while their group-granted collection stays at the default (unexposed) mcp.access, but succeeds once exposed', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-final-patch-target', 'title' => 'Original Title', 'draft' => false]);
+
+		$clientId = 'mcp-final-patch-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'cms:write', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'admin');
+
+		$denied = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'patch_object',
+				'arguments' => [
+					'collection' => 'blog',
+					'id'         => 'mcp-final-patch-target',
+					'data'       => ['title' => 'Should Not Patch'],
+				],
+			],
+		], $sessionId);
+
+		expect($denied->getStatusCode())->toBe(200);
+		$deniedBody = json_decode((string)$denied->getBody(), true);
+		expect($deniedBody)->toHaveKey('result');
+		expect($deniedBody['result']['isError'] ?? false)->toBeTrue();
+
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+
+		$allowed = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'patch_object',
+				'arguments' => [
+					'collection' => 'blog',
+					'id'         => 'mcp-final-patch-target',
+					'data'       => ['title' => 'Patched Title'],
+				],
+			],
+		], $sessionId);
+
+		expect($allowed->getStatusCode())->toBe(200);
+		$allowedBody = json_decode((string)$allowed->getBody(), true);
+		expect($allowedBody)->toHaveKey('result');
+		expect($allowedBody['result']['isError'] ?? false)->toBeFalse();
+	});
+
+	it('ADMIN persona create_object/update_object are unaffected by the new write exposure gate (regression)', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('admin-user-test-com');
+		// Deliberately left at the default (unexposed) mcp.access — ADMIN must
+		// still be able to write regardless of exposure, same as it always
+		// bypasses the group-grant check.
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'admin');
+
+		$clientId = 'mcp-final-admin-write-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:admin', 'mcp:tools'], 'admin-user-test-com');
+		expect($token)->not->toBe('');
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		expect($sessionId)->not->toBe('');
+
+		$create = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'create_object',
+				'arguments' => [
+					'collection' => 'blog',
+					'data'       => ['id' => 'mcp-final-admin-write', 'title' => 'Admin Can Always Write'],
+				],
+			],
+		], $sessionId);
+
+		expect($create->getStatusCode())->toBe(200);
+		$createBody = json_decode((string)$create->getBody(), true);
+		expect($createBody)->toHaveKey('result');
+		expect($createBody['result']['isError'] ?? false)->toBeFalse();
+
+		$update = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'update_object',
+				'arguments' => [
+					'collection' => 'blog',
+					'id'         => 'mcp-final-admin-write',
+					'data'       => ['id' => 'mcp-final-admin-write', 'title' => 'Admin Updated It'],
+				],
+			],
+		], $sessionId);
+
+		expect($update->getStatusCode())->toBe(200);
+		$updateBody = json_decode((string)$update->getBody(), true);
+		expect($updateBody)->toHaveKey('result');
+		expect($updateBody['result']['isError'] ?? false)->toBeFalse();
+	});
+
+	it('create_object and patch_object strip properties marked mcp.expose:false from the returned object (Critical #1b)', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('editor-user-test-com');
+		mcpAuthSeedAccessGroups();
+
+		$container = $this->app->getContainer();
+		$container->get(SchemaSaver::class)->saveSchema([
+			'id'         => 'mcp-final-hidden',
+			'name'       => 'MCP Final Hidden',
+			'type'       => 'object',
+			'properties' => [
+				'id'     => ['type' => 'string', 'field' => 'id'],
+				'title'  => ['type' => 'string', 'field' => 'text'],
+				// Operator-hidden field: never returned to MCP callers, on
+				// reads OR writes.
+				'secret' => ['type' => 'string', 'field' => 'text', 'mcp' => ['expose' => false]],
+			],
+		]);
+
+		$collection         = new CollectionData();
+		$collection->id     = 'mcp-final-hidden';
+		$collection->name   = 'MCP Final Hidden';
+		$collection->schema = 'mcp-final-hidden';
+		$collection->mcp    = ['access' => 'authenticated'];
+		$container->get(CollectionSaver::class)->saveCollection($collection->toArray());
+
+		$clientId = 'mcp-final-hidden-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'cms:write', 'mcp:tools'], 'editor-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$create = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'create_object',
+				'arguments' => [
+					'collection' => 'mcp-final-hidden',
+					'data'       => ['id' => 'mcp-final-hidden-obj', 'title' => 'Visible', 'secret' => 'do-not-leak'],
+				],
+			],
+		], $sessionId);
+
+		expect($create->getStatusCode())->toBe(200);
+		$createBody = json_decode((string)$create->getBody(), true);
+		expect($createBody)->toHaveKey('result');
+		expect($createBody['result']['isError'] ?? false)->toBeFalse();
+		expect($createBody['result']['structuredContent'] ?? [])->toHaveKey('title');
+		expect($createBody['result']['structuredContent'] ?? [])->not->toHaveKey('secret');
+		$createText = $createBody['result']['content'][0]['text'] ?? '';
+		expect($createText)->not->toContain('do-not-leak');
+
+		$patch = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'patch_object',
+				'arguments' => [
+					'collection' => 'mcp-final-hidden',
+					'id'         => 'mcp-final-hidden-obj',
+					'data'       => ['title' => 'Still Visible'],
+				],
+			],
+		], $sessionId);
+
+		expect($patch->getStatusCode())->toBe(200);
+		$patchBody = json_decode((string)$patch->getBody(), true);
+		expect($patchBody)->toHaveKey('result');
+		expect($patchBody['result']['isError'] ?? false)->toBeFalse();
+		expect($patchBody['result']['structuredContent'] ?? [])->not->toHaveKey('secret');
+		$patchText = $patchBody['result']['content'][0]['text'] ?? '';
+		expect($patchText)->not->toContain('do-not-leak');
 	});
 });
 
