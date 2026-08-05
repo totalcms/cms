@@ -59,6 +59,21 @@ function bootstrap()
 		apcu_clear_cache();
 	}
 
+	// Session state leaks the same way: after a request the middleware
+	// write-closes the session, so session_status() is NONE and the
+	// "session_destroy() if active" idiom in test files never fires — the
+	// session FILE survives, and because the process keeps the same session id,
+	// the next request's session_start() resumes it and resurrects auth keys
+	// written by an earlier test file (e.g. the OAuth feature tests logging in
+	// as admin) into the next file's "unauthenticated" requests. Destroy any
+	// active session, clear the superglobal, and reset the session id so a
+	// stale file can never be resumed.
+	if (session_status() === PHP_SESSION_ACTIVE) {
+		session_destroy();
+	}
+	$_SESSION = [];
+	session_id('');
+
 	return require __DIR__ . '/../config/bootstrap.php';
 }
 
