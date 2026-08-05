@@ -7,6 +7,8 @@ class EmbedBuilder
 	/** @param array<string,mixed> $options */
 	public static function embed(string $url, array $options = []): string
 	{
+		$url = htmlspecialchars_decode($url);
+
 		if (str_contains($url, 'vimeo')) {
 			return self::vimeo($url, $options);
 		}
@@ -46,6 +48,7 @@ class EmbedBuilder
 	/** @param array<string,mixed> $options */
 	public static function vimeo(string $url, array $options = []): string
 	{
+		$url     = htmlspecialchars_decode($url);
 		$options = array_merge([
 			'autoplay' => 0,
 			'loop'     => 0,
@@ -74,7 +77,7 @@ class EmbedBuilder
 				'portrait' => 0,
 				'title'    => 0,
 			]);
-			$query = http_build_query($params, '', '&amp;');
+			$query = http_build_query($params);
 
 			return HTMLUtils::iframe("//player.vimeo.com/video/$videoId?$query", 'cms-video-embed');
 		}
@@ -89,6 +92,7 @@ class EmbedBuilder
 	 * */
 	public static function youtube(string $url, array $options = []): string
 	{
+		$url     = htmlspecialchars_decode($url);
 		$options = array_merge([
 			'autoplay' => 0,
 			'loop'     => 0,
@@ -123,7 +127,7 @@ class EmbedBuilder
 				$query['list']     = $videoId;
 				$videoId           = '';
 			}
-			$httpQuery = http_build_query($query, '', '&amp;');
+			$httpQuery = http_build_query($query);
 
 			$domain = $options['private'] === true ? 'www.youtube-nocookie.com' : 'www.youtube.com';
 
