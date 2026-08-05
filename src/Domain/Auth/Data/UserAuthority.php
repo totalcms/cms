@@ -106,6 +106,32 @@ final class UserAuthority
 	}
 
 	/**
+	 * Boolean "has ANY utils access at all" (no specific util), for routes
+	 * without a page argument (e.g. `GET /admin/utils`). Mirrors
+	 * AccessControlService::canAccessAnyUtils() / groupCanAccessAnyUtils().
+	 */
+	public function canAnyUtil(): bool
+	{
+		return $this->remember('anyUtil', function (): bool {
+			if ($this->isAdmin) {
+				return true;
+			}
+
+			foreach ($this->groups as $group) {
+				$permissions = $group->permissions['utils'] ?? [];
+				$all         = $permissions['all'] ?? false;
+				$allowed     = $permissions['allowed'] ?? [];
+
+				if ($all || $allowed !== []) {
+					return true;
+				}
+			}
+
+			return false;
+		});
+	}
+
+	/**
 	 * Bulk variant of canCollection() for routes without a specific
 	 * collection target (e.g. `GET /collections`, `POST /collections`).
 	 * Mirrors AccessControlService::canAccessCollectionsOperation().

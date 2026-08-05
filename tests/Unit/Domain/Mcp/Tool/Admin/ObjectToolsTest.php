@@ -107,6 +107,33 @@ final class ObjectToolsTest extends TestCase
 		$this->assertSame('admin', $patch->access);
 	}
 
+	/**
+	 * Task 8 fix round, Important #4: pin the exact ToolRequirement triple
+	 * each write tool declares — nothing previously asserted these, so a
+	 * wrong domain string or flipped operation would silently deny-all and
+	 * every other test would still pass.
+	 */
+	public function testWriteToolsDeclareTheExpectedRequirementTriple(): void
+	{
+		$registry = new ToolRegistry();
+		$this->tool->register($registry);
+
+		$expected = [
+			'create_object' => ['objects', 'create', 'collection'],
+			'update_object' => ['objects', 'update', 'collection'],
+			// patch is update semantics (existing object, subset write).
+			'patch_object'  => ['objects', 'update', 'collection'],
+		];
+
+		foreach ($expected as $name => [$domain, $operation, $collectionArg]) {
+			$requires = $registry->get($name)->requires;
+			$this->assertNotNull($requires, "Tool $name should declare a ToolRequirement");
+			$this->assertSame($domain, $requires->domain, "Tool $name requirement domain");
+			$this->assertSame($operation, $requires->operation, "Tool $name requirement operation");
+			$this->assertSame($collectionArg, $requires->collectionArg, "Tool $name requirement collectionArg");
+		}
+	}
+
 	public function testUpdateIsAnnotatedIdempotent(): void
 	{
 		// update_object: same payload twice produces the same end state.

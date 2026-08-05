@@ -30,6 +30,24 @@ final class CacheToolsTest extends TestCase
 		$this->assertSame('admin', $definition->access);
 	}
 
+	/**
+	 * Task 8 fix round, Important #4: pin the exact ToolRequirement triple —
+	 * nothing previously asserted this, so a wrong domain string or flipped
+	 * operation would silently deny-all and every other test would still pass.
+	 */
+	public function testClearCacheDeclaresTheExpectedRequirementTriple(): void
+	{
+		$registry = new ToolRegistry();
+		$this->tool->register($registry);
+
+		$requires = $registry->get('clear_cache')->requires;
+		$this->assertNotNull($requires);
+		$this->assertSame('cache', $requires->domain);
+		$this->assertSame('update', $requires->operation);
+		// 'cache' is not a target-bearing domain — no collectionArg.
+		$this->assertNull($requires->collectionArg);
+	}
+
 	public function testCacheClearAnnotatedAsDestructive(): void
 	{
 		// Even though "clear" isn't deleting customer content, it IS a

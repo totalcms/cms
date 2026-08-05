@@ -282,6 +282,58 @@
                     "allowed": []
                 }
             }
+        },
+        {
+            "id": "schema-editor",
+            "description": "Manages schemas, collections metadata, and cache (test fixture: exercises the schemas/collections-meta/cache domains' allow-path with real MCP tools, distinct from viewer/default's read-only schemas grant)",
+            "permissions": {
+                "collectionsMeta": {
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "collections": {
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "schemas": {
+                    "operations": [
+                        "create",
+                        "read",
+                        "update",
+                        "delete"
+                    ],
+                    "all": true,
+                    "allowed": []
+                },
+                "templates": false,
+                "mailer": false,
+                "playground": false,
+                "docs": true,
+                "utils": {
+                    "all": false,
+                    "allowed": ["cache"]
+                },
+                "settings": {
+                    "all": false,
+                    "allowed": []
+                },
+                "extensions": {
+                    "all": false,
+                    "allowed": []
+                }
+            }
         }
     ]
 }

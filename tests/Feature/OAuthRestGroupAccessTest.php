@@ -251,6 +251,19 @@ function groupRestPutJson(Slim\App $app, string $path, string $accessToken, arra
 	return $app->handle($request);
 }
 
+/**
+ * DELETE $path with a Bearer access token.
+ */
+function groupRestDelete(Slim\App $app, string $path, string $accessToken): Psr\Http\Message\ResponseInterface
+{
+	$factory = new Psr17Factory();
+	$request = $factory
+		->createServerRequest('DELETE', $path)
+		->withHeader('Authorization', 'Bearer ' . $accessToken);
+
+	return $app->handle($request);
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Tests
 // ──────────────────────────────────────────────────────────────────────────────
@@ -393,6 +406,96 @@ describe('OAuthRestGroupAccess', function (): void {
 			$token,
 			['name' => 'Should Not Be Allowed'],
 		);
+
+		expect($response->getStatusCode())->toBe(403);
+		expect($response->getHeaderLine('WWW-Authenticate'))->not->toContain('insufficient_scope');
+	});
+
+	// ──────────────────────────────────────────────────────────────────────
+	// Task 8 fix round — Critical: /api/cache had NO access-group middleware
+	// at all (only AuthMiddleware), so any authenticated Bearer token could
+	// flush caches and toggle devmode regardless of group. A security review
+	// (2026-08) proved this live with exactly this shape of request: a
+	// viewer-fixture token carrying cms:admin (issued under Task 8's widened
+	// cms:admin gate, since viewer's group satisfies hasAdminDomainGrants())
+	// got DELETE /api/cache -> 200, POST /api/cache/devmode -> 200, DELETE
+	// /api/cache/watermarks -> 200. This re-runs that EXACT exploit and
+	// pins the fix: CacheAccessMiddleware now gates the route on the utils
+	// 'cache' grant, which viewer's group does not have.
+	// ──────────────────────────────────────────────────────────────────────
+
+	it("viewer's widened cms:admin token can no longer flush the cache (reviewer's exploit, now fixed)", function (): void {
+		groupRestSetupOAuthKeys($this->app);
+		groupRestSeedUser('viewer-user-test-com');
+
+		$token = groupRestIssueToken($this->app, 'viewer-user-test-com', ['cms:admin', 'cms:read', 'cms:write']);
+		if ($token === '') {
+			expect(true)->toBeTrue(); // skip-safe pass
+
+			return;
+		}
+
+		$deleteCache = groupRestDelete($this->app, '/api/cache', $token);
+		expect($deleteCache->getStatusCode())->toBe(403);
+
+		$enableDevMode = groupRestPostJson($this->app, '/api/cache/devmode', $token, []);
+		expect($enableDevMode->getStatusCode())->toBe(403);
+
+		$deleteWatermarks = groupRestDelete($this->app, '/api/cache/watermarks', $token);
+		expect($deleteWatermarks->getStatusCode())->toBe(403);
+	});
+
+	// ──────────────────────────────────────────────────────────────────────
+	// Complement to the exploit-fixed test above: a caller whose group DOES
+	// grant the `cache` util (schema-editor fixture) must still be able to
+	// use these routes — the fix must not become deny-everything.
+	// ──────────────────────────────────────────────────────────────────────
+
+	it('a token whose group grants the cache util can flush the cache', function (): void {
+		groupRestSetupOAuthKeys($this->app);
+		groupRestSeedUser('schema-editor-user-test-com');
+
+		$token = groupRestIssueToken($this->app, 'schema-editor-user-test-com', ['cms:admin']);
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = groupRestDelete($this->app, '/api/cache', $token);
+
+		expect($response->getStatusCode())->toBe(200);
+	});
+
+	// ──────────────────────────────────────────────────────────────────────
+	// Task 8 fix round — Important #5: proves the group layer still caps a
+	// token whose cms:admin scope was granted under the WIDENED issuance
+	// gate (LeagueScopeRepository::finalizeScopes() / OAuthAuthorizeAction —
+	// isAdmin OR hasAdminDomainGrants()). viewer's group satisfies
+	// hasAdminDomainGrants() (schemas {all:true, operations:[read]}), so its
+	// token now legitimately carries cms:admin and clears the SCOPE layer —
+	// but viewer's schemas grant is READ-ONLY, so the GROUP layer must still
+	// reject a schema CREATE. This is the group-layer counterpart the
+	// McpAuthenticatedPersonaTest "widened issuance gate" test cannot prove
+	// on its own, since that file runs with auth.enable=false (making
+	// SchemaAccessMiddleware inert) and only demonstrates the scope layer.
+	// ──────────────────────────────────────────────────────────────────────
+
+	it('a viewer token with widened cms:admin scope still cannot create a schema (group layer caps the widened issuance gate)', function (): void {
+		groupRestSetupOAuthKeys($this->app);
+		groupRestSeedUser('viewer-user-test-com');
+
+		$token = groupRestIssueToken($this->app, 'viewer-user-test-com', ['cms:admin']);
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = groupRestPostJson($this->app, '/api/schemas', $token, [
+			'id'         => 'widened-gate-test-schema',
+			'properties' => ['name' => ['field' => 'text', 'label' => 'Name']],
+		]);
 
 		expect($response->getStatusCode())->toBe(403);
 		expect($response->getHeaderLine('WWW-Authenticate'))->not->toContain('insufficient_scope');

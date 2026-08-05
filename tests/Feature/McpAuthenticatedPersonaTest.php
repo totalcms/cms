@@ -707,7 +707,21 @@ describe('McpAuthenticatedPersona', function (): void {
 	// to the scope.
 	// ──────────────────────────────────────────────────────────────────────────
 
-	it("a viewer's token requesting cms:admin CAN reach admin REST paths (widened issuance gate)", function (): void {
+	// Important #5 (Task 8 fix round, security review): this file runs with
+	// auth.enable=false (see file header discussion / config/local.test.php),
+	// which makes SchemaAccessMiddleware inert — BaseAccessMiddleware returns
+	// immediately, so this test does NOT exercise the group layer at all.
+	// What IS exercised here, independent of auth.enable, is
+	// OAuthRestScopeMiddleware (mounted globally on /api, config/routes.php) —
+	// this proves the widened issuance gate actually produces a token that
+	// clears the SCOPE gate (before Task 8, finalizeScopes() would have
+	// stripped cms:admin from viewer's token entirely, and this same request
+	// would 403 with insufficient_scope). The GROUP-layer counterpart — that
+	// viewer's token still cannot use cms:admin to bypass their group's
+	// read-only schemas grant — is proven with auth ACTUALLY enabled in
+	// tests/Feature/OAuthRestGroupAccessTest.php ("a viewer token with
+	// widened cms:admin scope still cannot create a schema").
+	it("a viewer's token requesting cms:admin clears the SCOPE layer on admin REST paths (widened issuance gate; group layer is NOT exercised here — see OAuthRestGroupAccessTest)", function (): void {
 		mcpAuthSetupOAuthKeys($this->app);
 		mcpAuthSeedUser('viewer-user-test-com');
 
@@ -973,6 +987,154 @@ describe('McpAuthenticatedPersona', function (): void {
 		// the cleanest proof this caller never reached the ADMIN persona.
 		expect($names)->not->toContain('create_schema');
 		expect($names)->not->toContain('clear_cache');
+		expect($names)->not->toContain('get_site_info');
+		expect($names)->not->toContain('list_extensions');
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Scenario 13 (Task 8 fix round, Important #2): positive coverage for the
+	// three domains ('schemas', 'collections-meta', 'cache') that had NO
+	// fixture group granting create/write, so only the 'objects' domain's
+	// allow-path was exercised with real (non-synthetic) tools before this
+	// fix round — a wrong `domain` string on create_schema, create_collection,
+	// or clear_cache would have silently denied-all with every test still
+	// green. 'schema-editor' fixture (tests/tcms-data-fixtures/.system/
+	// access-groups.json): schemas/collectionsMeta/collections all:true CRUD,
+	// utils.allowed:['cache']. Fixture user: schema-editor-user-test-com.
+	// ──────────────────────────────────────────────────────────────────────────
+
+	it('schema-editor can call create_schema (schemas domain allow-path)', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('schema-editor-user-test-com');
+		mcpAuthSeedAccessGroups();
+
+		$clientId = 'mcp-auth-schema-editor-schema-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:admin', 'mcp:tools'], 'schema-editor-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue(); // skip-safe pass
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'create_schema',
+				'arguments' => [
+					'id'         => 'mcp-schema-editor-allow-test',
+					'properties' => ['name' => ['field' => 'text', 'label' => 'Name']],
+				],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeFalse();
+	});
+
+	it('schema-editor can call create_collection (collections-meta domain allow-path)', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('schema-editor-user-test-com');
+		mcpAuthSeedAccessGroups();
+
+		$clientId = 'mcp-auth-schema-editor-collection-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:admin', 'mcp:tools'], 'schema-editor-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'create_collection',
+				'arguments' => [
+					'id'     => 'mcp-schema-editor-collection-test',
+					'schema' => 'blog',
+				],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeFalse();
+	});
+
+	it('schema-editor can call clear_cache (cache domain allow-path)', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('schema-editor-user-test-com');
+		mcpAuthSeedAccessGroups();
+
+		$clientId = 'mcp-auth-schema-editor-cache-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:admin', 'mcp:tools'], 'schema-editor-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'clear_cache',
+				'arguments' => new stdClass(),
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeFalse();
+	});
+
+	it('schema-editor sees create_schema, create_collection, and clear_cache in tools/list', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('schema-editor-user-test-com');
+		mcpAuthSeedAccessGroups();
+
+		$names = mcpAuthListToolsFor($this->app, 'schema-editor-user-test-com', ['cms:admin', 'mcp:tools']);
+
+		if ($names === null) {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		expect($names)->toContain('create_schema');
+		expect($names)->toContain('create_collection');
+		expect($names)->toContain('clear_cache');
+		// schema-editor's group has no admin bypass — this is a real,
+		// requirement-satisfied AUTHENTICATED caller, not an elevated ADMIN.
 		expect($names)->not->toContain('get_site_info');
 		expect($names)->not->toContain('list_extensions');
 	});
