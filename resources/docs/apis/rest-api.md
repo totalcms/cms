@@ -84,6 +84,8 @@ of a session cookie.
 - Headless CMS implementations
 - Automated scripts and workflows
 
+**API keys vs. OAuth Bearer tokens — different trust models.** Both authenticate via the `Authorization: Bearer` header (or `X-API-Key` for API keys), but they resolve authority differently. An **API key bypasses access-group checks entirely** — it's a trust-model exception, same reach as its configured scope regardless of who created it. An **OAuth Bearer token is checked against the approving user's access groups** on every request, the same group permissions that gate that user in the admin dashboard — a `cms:write`-scoped token can only write to the collections its approving user's groups actually allow, not every collection the scope's REST paths cover. See [OAuth Server → Scopes](docs/apis/oauth#scopes) for the full rule.
+
 ## Collections API
 
 ### Get All Collections

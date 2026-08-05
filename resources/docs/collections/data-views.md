@@ -164,3 +164,5 @@ Common errors include:
 ## Access Control
 
 Data Views require the **Pro** edition or higher. Access is controlled through [Access Groups](/admin/docs/auth/access-groups) using the `dataviews` permission. Users without this permission cannot view or manage data views.
+
+**MCP exposure is a separate, narrower gate.** A view surfaced to AI agents via the `mcp` card (`get_view`, `query_view`, and the `tcms://view/{id}` resource) is controlled only by that view's own `mcp.access` field (`public` / `authenticated` / `admin`) — it does **not** consult access groups the way collection reads do. A view built over a group-restricted collection is still fully readable by anyone the view's `mcp.access` admits, even a caller whose groups deny that collection directly. Keep a view's `mcp.access` at `admin` (the default) unless you're sure its output is safe for every caller at that tier — see [MCP Server → Data views are the exception](docs/mcp/server#data-views-are-the-exception-to-the-group-rule).
