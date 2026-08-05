@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Cache\Service;
 
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
@@ -12,11 +13,26 @@ readonly class FilesystemService implements CacheInterface
 	private bool $enabled;
 	private string $cacheDir;
 
+	/**
+	 * The project cache directory. Same as `cacheDir` in normal operation; in
+	 * shared mode `cacheDir` moves into tcms-data and this still points at the
+	 * project directory, which Twig uses for compiled templates.
+	 */
+	private string $localDir;
+
 	public function __construct(
 		Config $config,
 	) {
 		$this->enabled  = $config->cache['filesystem'] ?? true;
-		$this->cacheDir = $config->cachedir;
+		$this->localDir = $config->cachedir;
+
+		// Installs sharing one tcms-data share the disk layer too. Without this
+		// a shared key namespace still lets each install answer from its own
+		// stale file, because reads fall through to the filesystem last.
+		$domainScoped   = ($config->cache['domainScoped'] ?? true) === true;
+		$this->cacheDir = $domainScoped
+			? $config->cachedir
+			: PathUtils::absolutePath($config->systemDir(), 'cache');
 
 		$this->createCacheDir();
 	}
@@ -82,6 +98,20 @@ readonly class FilesystemService implements CacheInterface
 	public function getCachDir(): string
 	{
 		return $this->cacheDir;
+	}
+
+	/**
+	 * The project cache directory, which never moves into tcms-data.
+	 *
+	 * Callers storing state that describes THIS INSTALL rather than the shared
+	 * content — the running T3 version, compiled artifacts — must anchor to this
+	 * instead of {@see getCachDir()}. In shared mode the entry directory is
+	 * common to every install on the data folder, so install-specific state
+	 * written there would be fought over.
+	 */
+	public function getLocalDir(): string
+	{
+		return $this->localDir;
 	}
 
 	public function get(string $key): mixed
@@ -229,7 +259,18 @@ readonly class FilesystemService implements CacheInterface
 			return false;
 		}
 
-		return $this->deleteDirectory($this->cacheDir, true);
+		$cleared = $this->deleteDirectory($this->cacheDir, true);
+
+		// In shared mode the entry directory lives in tcms-data, but Twig still
+		// compiles templates into the project cache directory with auto_reload
+		// off in production. Clearing only the entry directory would leave
+		// compiled templates stale and edits to shared builder templates would
+		// never go live.
+		if ($this->localDir !== '' && $this->localDir !== $this->cacheDir) {
+			$cleared = $this->deleteDirectory($this->localDir, true) && $cleared;
+		}
+
+		return $cleared;
 	}
 
 	/**

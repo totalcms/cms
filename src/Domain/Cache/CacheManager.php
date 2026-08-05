@@ -58,7 +58,15 @@ class CacheManager
 	public const TTL_API_RESPONSE        = 7200;          // 2 hours - invalidated explicitly on collection changes
 	public const TTL_SESSION_DATA        = 1440;         // 24 minutes - session timeout buffer (unchanged)
 	public const TTL_PASSWORD_RESET      = 1800;        // 30 minutes - password reset tokens (unchanged)
-	private readonly string $domainPrefix;
+	/** Namespace for cached content that mirrors tcms-data. Follows `cache.domainScoped`. */
+	private readonly string $contentPrefix;
+
+	/**
+	 * Namespace for cached data that belongs to one domain and must never be
+	 * shared: the license verdict, sessions, and password reset tokens. Always
+	 * derived from the domain, whatever `cache.domainScoped` says.
+	 */
+	private readonly string $identityPrefix;
 	private readonly LoggerInterface $logger;
 
 	/** @var array<string,CacheInterface> Available cache services */
@@ -104,9 +112,21 @@ class CacheManager
 			'apcu'       => $this->apcuService,
 		];
 
-		// Create domain-specific prefix to prevent cache collisions between installations
-		$this->domainPrefix = md5($this->config->domain);
-		$this->isCli        = php_sapi_name() === 'cli';
+		// Identity data (license, sessions, reset tokens) is always namespaced by
+		// domain — each domain carries its own license, so sharing a cached verdict
+		// across domains would be a licensing hole, not an optimization.
+		$this->identityPrefix = md5($this->config->domain);
+
+		// Content mirrors tcms-data. When several installs share one data folder
+		// the operator turns `domainScoped` off so they share one namespace and a
+		// save in any install invalidates all of them. The data path (not an empty
+		// prefix) keeps unrelated site-groups on a shared Redis isolated.
+		$domainScoped        = ($this->config->cache['domainScoped'] ?? true) === true;
+		$this->contentPrefix = $domainScoped
+			? $this->identityPrefix
+			: md5(realpath($this->config->datadir) ?: $this->config->datadir);
+
+		$this->isCli = php_sapi_name() === 'cli';
 	}
 
 	/**
@@ -148,30 +168,51 @@ class CacheManager
 	}
 
 	/**
-	 * Create a domain-specific cache key to prevent collisions between installations.
+	 * Namespace a key for cached content. Shared between installs on one
+	 * tcms-data when `cache.domainScoped` is off.
 	 */
-	private function createDomainKey(string $key): string
+	private function createKey(string $key): string
 	{
-		return $this->domainPrefix . ':' . $key;
+		return $this->contentPrefix . ':' . $key;
 	}
 
 	/**
-	 * Apply this process's domain prefix to an unprefixed cache key.
-	 * Used by CacheInvalidationMiddleware to re-prefix keys from CLI signals.
+	 * Namespace a key that must never be shared between domains, regardless of
+	 * the `cache.domainScoped` setting.
+	 */
+	private function createIdentityKey(string $key): string
+	{
+		return $this->identityPrefix . ':' . $key;
+	}
+
+	/**
+	 * Apply this process's content prefix to an unprefixed cache key.
+	 * Used by CacheInvalidationMiddleware to re-prefix keys from CLI signals,
+	 * and by FragmentCache to namespace fragment bodies.
+	 *
+	 * Identity keys reach the signal file still fully qualified, because
+	 * stripDomainPrefix() only strips the content prefix. Returning those
+	 * unchanged keeps replay from double-prefixing them into a key that
+	 * matches nothing.
 	 */
 	public function applyDomainPrefix(string $key): string
 	{
-		return $this->createDomainKey($key);
+		if (str_starts_with($key, $this->contentPrefix . ':')
+			|| str_starts_with($key, $this->identityPrefix . ':')) {
+			return $key;
+		}
+
+		return $this->createKey($key);
 	}
 
 	/**
-	 * Strip the domain prefix from a fully-qualified cache key.
-	 * Used when signaling keys for cross-process invalidation so the
-	 * receiving process can re-apply its own correct domain prefix.
+	 * Strip the content prefix from a fully-qualified cache key so a receiving
+	 * process can re-apply its own. Keys that do not carry the content prefix
+	 * (identity keys) pass through untouched.
 	 */
 	private function stripDomainPrefix(string $key): string
 	{
-		$prefix = $this->domainPrefix . ':';
+		$prefix = $this->contentPrefix . ':';
 		if (str_starts_with($key, $prefix)) {
 			return substr($key, strlen($prefix));
 		}
@@ -187,7 +228,7 @@ class CacheManager
 	 */
 	public function storeCollectionIndex(string $collectionName, array $index, int $ttl = self::TTL_INDEX_DATA): bool
 	{
-		$key = $this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}");
+		$key = $this->createKey(self::PREFIX_COLLECTION . ":{$collectionName}");
 
 		return $this->storeData($key, $index, $ttl);
 	}
@@ -204,7 +245,7 @@ class CacheManager
 	 */
 	public function getCollectionIndex(string $collectionName): ?array
 	{
-		return $this->getData($this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}"));
+		return $this->getData($this->createKey(self::PREFIX_COLLECTION . ":{$collectionName}"));
 	}
 
 	/**
@@ -215,7 +256,7 @@ class CacheManager
 	 */
 	public function storeApiResponse(string $endpoint, array $params, mixed $response, int $ttl = self::TTL_API_RESPONSE): bool
 	{
-		$key = $this->createDomainKey(self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params)));
+		$key = $this->createKey(self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params)));
 
 		return $this->storeData($key, $response, $ttl);
 	}
@@ -227,7 +268,7 @@ class CacheManager
 	 */
 	public function getApiResponse(string $endpoint, array $params): mixed
 	{
-		$key = $this->createDomainKey(self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params)));
+		$key = $this->createKey(self::PREFIX_API_RESPONSE . ':' . md5($endpoint . serialize($params)));
 
 		return $this->getData($key);
 	}
@@ -235,7 +276,7 @@ class CacheManager
 	/** Store computed/expensive operations (can be large, longer TTL). */
 	public function storeComputedData(string $key, mixed $data, int $ttl = self::TTL_CUSTOM_SCHEMA): bool
 	{
-		$cacheKey = $this->createDomainKey(self::PREFIX_COMPUTED . ":{$key}");
+		$cacheKey = $this->createKey(self::PREFIX_COMPUTED . ":{$key}");
 
 		return $this->storeData($cacheKey, $data, $ttl);
 	}
@@ -390,7 +431,7 @@ class CacheManager
 	 */
 	public function getComputedData(string $key): mixed
 	{
-		return $this->getData($this->createDomainKey(self::PREFIX_COMPUTED . ":{$key}"));
+		return $this->getData($this->createKey(self::PREFIX_COMPUTED . ":{$key}"));
 	}
 
 	/**
@@ -398,7 +439,7 @@ class CacheManager
 	 */
 	public function clearComputedData(string $key): bool
 	{
-		return $this->clearData($this->createDomainKey(self::PREFIX_COMPUTED . ":{$key}"));
+		return $this->clearData($this->createKey(self::PREFIX_COMPUTED . ":{$key}"));
 	}
 
 	/**
@@ -417,7 +458,7 @@ class CacheManager
 	{
 		// Clear the collection index stored by storeCollectionIndex()
 		$collectionCleared = $this->clearData(
-			$this->createDomainKey(self::PREFIX_COLLECTION . ":{$collectionName}")
+			$this->createKey(self::PREFIX_COLLECTION . ":{$collectionName}")
 		);
 
 		// Clear related computed caches
@@ -438,7 +479,7 @@ class CacheManager
 	 */
 	public function storeSessionData(string $sessionId, array $data, int $ttl = self::TTL_SESSION_DATA): bool
 	{
-		$key = $this->createDomainKey(self::PREFIX_SESSION . ":{$sessionId}");
+		$key = $this->createIdentityKey(self::PREFIX_SESSION . ":{$sessionId}");
 
 		return $this->storeData($key, $data, $ttl);
 	}
@@ -450,7 +491,7 @@ class CacheManager
 	 */
 	public function getSessionData(string $sessionId): ?array
 	{
-		return $this->getData($this->createDomainKey(self::PREFIX_SESSION . ":{$sessionId}"));
+		return $this->getData($this->createIdentityKey(self::PREFIX_SESSION . ":{$sessionId}"));
 	}
 
 	/**
@@ -465,7 +506,7 @@ class CacheManager
 		}
 
 		if ($this->filesystemService->isAvailable()) {
-			$key = $this->createDomainKey(self::PREFIX_TEMPLATE . ":{$templateName}");
+			$key = $this->createKey(self::PREFIX_TEMPLATE . ":{$templateName}");
 
 			return $this->filesystemService->set($key, $compiledCode, 0); // No TTL for templates
 		}
@@ -487,7 +528,10 @@ class CacheManager
 			return false;
 		}
 
-		$pattern = $this->domainPrefix . ':' . $type . ':*';
+		// Sessions are identity data and keep the domain prefix in both modes;
+		// every other type is content and follows the toggle.
+		$prefix  = $type === self::PREFIX_SESSION ? $this->identityPrefix : $this->contentPrefix;
+		$pattern = $prefix . ':' . $type . ':*';
 		$success = $this->clearByPatternAllBackends($pattern);
 
 		// Signal for cross-process invalidation (CLI → web)
@@ -550,7 +594,12 @@ class CacheManager
 			return false;
 		}
 
-		$appVersionFile = $this->filesystemService->getCachDir() . '/.app_version';
+		// Anchored to the LOCAL cache directory, not the entry directory. The
+		// running T3 version describes this install's code, not the shared
+		// content — in shared mode the entry directory is common to every
+		// install, so two installs on different versions would each see the
+		// other's stamp, clear all caches, and thrash on every request.
+		$appVersionFile = $this->filesystemService->getLocalDir() . '/.app_version';
 		$currentVersion = Version::get();
 		$storedVersion  = is_file($appVersionFile) ? trim((string)file_get_contents($appVersionFile)) : '';
 
@@ -582,7 +631,7 @@ class CacheManager
 	{
 		// License caching is MANDATORY - bypasses all cache disabled settings
 		// Use domain-specific key to prevent license data sharing between sites
-		$domainKey    = $this->createDomainKey($key);
+		$domainKey    = $this->createIdentityKey($key);
 		$memoryStored = false;
 
 		// Store as plain array to avoid unserialize(allowed_classes:false) issues
@@ -622,7 +671,7 @@ class CacheManager
 	{
 		// License caching is MANDATORY - bypasses all cache disabled settings
 		// Use domain-specific key to prevent license data sharing between sites
-		$domainKey = $this->createDomainKey($key);
+		$domainKey = $this->createIdentityKey($key);
 		$result    = null;
 
 		// Check memory caches first (fastest)
@@ -665,7 +714,7 @@ class CacheManager
 	public function clearLicenseData(string $key): bool
 	{
 		// Use domain-specific key to prevent license data sharing between sites
-		$domainKey = $this->createDomainKey($key);
+		$domainKey = $this->createIdentityKey($key);
 		$success   = true;
 
 		// Delete from all installed cache backends (bypasses config disabled checks)
@@ -699,7 +748,7 @@ class CacheManager
 	{
 		// Always cache password reset data regardless of dev mode
 		// Use domain-specific key to prevent data sharing between sites
-		$domainKey = $this->createDomainKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
+		$domainKey = $this->createIdentityKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
 
 		// Priority: APCu > Redis > Memcached > Filesystem (single cache layer only)
 		if ($this->apcuService->isAvailable()) {
@@ -730,7 +779,7 @@ class CacheManager
 	public function getPasswordResetData(string $key): ?array
 	{
 		// Use domain-specific key to prevent data sharing between sites
-		$domainKey = $this->createDomainKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
+		$domainKey = $this->createIdentityKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
 
 		// Check memory caches first (fastest)
 		if ($this->apcuService->isAvailable()) {
@@ -771,7 +820,7 @@ class CacheManager
 	public function clearPasswordResetData(string $key): bool
 	{
 		// Use domain-specific key to prevent data sharing between sites
-		$domainKey = $this->createDomainKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
+		$domainKey = $this->createIdentityKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
 		$success   = true;
 
 		// Delete from all available cache backends

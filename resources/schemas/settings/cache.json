@@ -41,6 +41,13 @@
 			"label"       : "Memcached Configuration",
 			"help"        : "Memcached cache backend configuration. Options: <code>host</code> (string), <code>port</code> (int).",
 			"placeholder" : "{\"host\": \"127.0.0.1\", \"port\": 11211}"
+		},
+		"domainScoped": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Scope Cache by Domain",
+			"help"    : "On by default. Turn this off only when several Total CMS installs share one <code>tcms-data</code> folder — it lets them share one cache namespace so a save in any install invalidates all of them. License, session, and password reset data always stay separate per domain.",
+			"default" : true
 		}
 	}
 }

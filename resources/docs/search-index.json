@@ -1738,6 +1738,21 @@
         "keywords": "server sizing guide quick reference cpu: when more cores help ram: when more memory helps disk space running multiple sites on one server cache configuration server configuration checklist monitoring and troubleshooting"
     },
     {
+        "path": "operations/shared-data-cache",
+        "title": "Sharing One Data Folder",
+        "group": "Operations",
+        "sections": [
+            "The problem",
+            "The setting",
+            "What stays separate",
+            "Where the cache is stored",
+            "Turning it back on"
+        ],
+        "excerpt": "--- title: \"Sharing One Data Folder\" description: \"Run several Total CMS installs against one tcms-data folder without serving stale content.\" audience: advanced updated: 2026-08-05 related: - operati...",
+        "content": "--- title: \"sharing one data folder\" description: \"run several total cms installs against one tcms-data folder without serving stale content.\" audience: advanced updated: 2026-08-05 related: - operations/filesystem - operations/deployment --- sharing one data folder several total cms installs can point at a single tcms-data folder \u2014 a staging domain beside a live one, or a set of regional domains serving identical content. every install then reads the same collections, objects, and schemas. caching needs one setting changed for this to work. the problem by default each install namespaces its cache entries by domain. that keeps unrelated sites on one server from colliding in a shared apcu pool or redis instance. when installs share a data folder, though, it means they cache the same content twice under different names \u2014 and a save through one install clears only its own entries. the other installs keep serving what they cached until the entry expires, which can be hours. the setting in settings \u2192 cache , turn scope cache by domain off. the setting lives in tcms-data/.system/settings.json , which is itself shared, so changing it in one install applies it to every install on that data folder. with it off, cache entries are namespaced by the data folder instead of the domain. installs sharing a folder share one namespace, and a save in any of them invalidates all of them. unrelated installs with their own data folders stay isolated, so a shared redis instance is still safe. what stays separate three kinds of cached data remain per-domain whatever this setting says: - license validation. each domain is licensed separately. - sessions. - password reset tokens. where the cache is stored with domain scoping on, cache entries live in each install's cache/ directory. with it off, they move to tcms-data/.system/cache so the disk layer is shared too. nothing else moves \u2014 each install keeps compiling its own templates into its own cache/ directory, because those belong to the install's code rather than to the shared content. clearing the cache from one install's admin clears the shared entries for every install, plus that install's own compiled templates. if you edit a site builder template stored in tcms-data through one install's admin, clear the cache on the other installs as well so they recompile it. turning it back on switching the setting either way clears the cache first, so nothing stale is left behind under the old namespace. expect the first few requests afterwards to be slower while the cache refills.",
+        "keywords": "sharing one data folder the problem the setting what stays separate where the cache is stored turning it back on"
+    },
+    {
         "path": "site-builder/overview",
         "title": "Site Builder",
         "group": "Site Builder",

@@ -171,7 +171,7 @@ readonly class SettingsValidator
 	private function processCache(array $data): array
 	{
 		// Convert cache backend toggles to booleans
-		foreach (['apcu', 'redis', 'memcached', 'filesystem'] as $backend) {
+		foreach (['apcu', 'redis', 'memcached', 'filesystem', 'domainScoped'] as $backend) {
 			if (isset($data[$backend])) {
 				$data[$backend] = in_array($data[$backend], ['on', '1', true], true);
 			}
