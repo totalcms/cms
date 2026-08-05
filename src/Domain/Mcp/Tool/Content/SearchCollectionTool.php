@@ -139,12 +139,25 @@ readonly class SearchCollectionTool
 			);
 		}
 
+		// TextSearchProvider's pre-filter only excludes drafts for the PUBLIC
+		// persona; an AUTHENTICATED caller's per-collection authority still
+		// has to be checked — see PersonaContext::canReadDrafts(). Computed
+		// BEFORE the search call (not just as a post-filter below) so a
+		// caller without read authority never has drafts occupying slots in
+		// the pre-filter's limit window in the first place — otherwise
+		// drafts could crowd out published matches the caller SHOULD see,
+		// and the resulting under-filled/empty response would leak a weak
+		// "drafts outrank you here" signal. The post-filter stays as an
+		// authoritative backstop: an extension-registered SearchProvider may
+		// ignore `persona` entirely.
+		$canReadDrafts = $this->personaContext->canReadDrafts($collection);
+
 		$cappedLimit = max(1, min(self::LIMIT_CAP, $limit));
 		$results     = $this->searchService->search(new SearchQuery(
 			text: $query,
 			collection: $collection,
 			limit: $cappedLimit,
-			persona: $persona->value,
+			persona: $canReadDrafts ? $persona->value : 'public',
 			// Rank by term coverage (best partial match first) rather than the
 			// all-or-nothing AND filter, so descriptive multi-word queries from
 			// an agent return useful results instead of nothing.
@@ -159,13 +172,6 @@ readonly class SearchCollectionTool
 			}
 			$matches[] = $this->objectFetcher->fetchObject($collection, $result->id)->toArray();
 		}
-
-		// TextSearchProvider's own pre-filter only ever excludes drafts for the
-		// PUBLIC persona (it has no notion of per-collection access-group
-		// grants). An AUTHENTICATED caller's items still need this authority
-		// check so drafts don't leak into collections their groups don't grant
-		// `read` on — see PersonaContext::canReadDrafts().
-		$canReadDrafts = $this->personaContext->canReadDrafts($collection);
 
 		$nonExposed = $this->schemaResolver->nonExposedProperties($collectionData);
 		$renderable = $this->schemaResolver->renderableProperties($collectionData);

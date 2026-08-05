@@ -1537,6 +1537,188 @@ describe('McpAuthenticatedPersona', function (): void {
 		$text = $body['result']['content'][0]['text'] ?? '';
 		expect($text)->toContain('not found');
 	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Scenario 15 (Task 9, fix round 1): coverage for the search family.
+	// Review mutation-proved SearchCollectionTool/SearchCollectionsTool/
+	// SearchTool(Compat)'s post-filters had ZERO coverage — deleting the
+	// three `continue` guards left the whole McpAuthenticatedPersona +
+	// Search + McpChatGptCompat suite green. These tests close that gap
+	// with the same allow/deny pairing as Scenario 14 (blogger group grants
+	// read on 'blog' only, not 'blog-legacy'). Each pair searches for a
+	// distinctive nonsense term unique to that test's fixture objects so a
+	// match can only come from THIS test's data, not another test's shared
+	// 'blog'/'blog-legacy' fixtures accumulated earlier in the same file run
+	// (beforeAll only wipes cmsDataDir() once for the whole file).
+	// ──────────────────────────────────────────────────────────────────────────
+
+	it('blogger sees a draft object via search_collection in a collection their group grants read on', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'public');
+
+		$this->app->getContainer()->get(ObjectSaver::class)
+			->saveObject('blog', ['id' => 'mcp-draft-blog-post-sc-allow', 'title' => 'Zyxwquark Draft Post', 'draft' => true]);
+
+		$clientId = 'mcp-auth-search-allow-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue(); // skip-safe pass
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'search_collection',
+				'arguments' => ['collection' => 'blog', 'query' => 'Zyxwquark'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$ids = array_column(mcpAuthStructuredItems($response), 'id');
+		expect($ids)->toContain('mcp-draft-blog-post-sc-allow');
+	});
+
+	it('blogger does NOT see a draft object via search_collection in a collection their group does not grant read on', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'public');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-draft-legacy-post-sc-deny', 'title' => 'Blorptastic Draft Post', 'draft' => true]);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-published-legacy-post-sc-deny', 'title' => 'Blorptastic Published Post', 'draft' => false]);
+
+		$clientId = 'mcp-auth-search-deny-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'search_collection',
+				'arguments' => ['collection' => 'blog-legacy', 'query' => 'Blorptastic'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$ids = array_column(mcpAuthStructuredItems($response), 'id');
+		expect($ids)->toContain('mcp-published-legacy-post-sc-deny');
+		expect($ids)->not->toContain('mcp-draft-legacy-post-sc-deny');
+	});
+
+	it('blogger does NOT see a draft object via search_collections in a collection their group does not grant read on', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'public');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-draft-legacy-post-scs-deny', 'title' => 'Quaggleflux Draft Post', 'draft' => true]);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-published-legacy-post-scs-deny', 'title' => 'Quaggleflux Published Post', 'draft' => false]);
+
+		$clientId = 'mcp-auth-searchcols-deny-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'search_collections',
+				'arguments' => ['query' => 'Quaggleflux'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$ids = array_column(mcpAuthStructuredItems($response), 'id');
+		expect($ids)->toContain('mcp-published-legacy-post-scs-deny');
+		expect($ids)->not->toContain('mcp-draft-legacy-post-scs-deny');
+	});
+
+	it('blogger does NOT see a draft object via the ChatGPT-compat search tool in a collection their group does not grant read on', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'public');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-draft-legacy-post-search-deny', 'title' => 'Wobbleknack Draft Post', 'draft' => true]);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-published-legacy-post-search-deny', 'title' => 'Wobbleknack Published Post', 'draft' => false]);
+
+		$clientId = 'mcp-auth-compat-search-deny-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'search',
+				'arguments' => ['query' => 'Wobbleknack'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body    = json_decode((string)$response->getBody(), true);
+		$results = $body['result']['structuredContent']['results'] ?? [];
+		$ids     = array_column(is_array($results) ? $results : [], 'id');
+		expect($ids)->toContain('blog-legacy:mcp-published-legacy-post-search-deny');
+		expect($ids)->not->toContain('blog-legacy:mcp-draft-legacy-post-search-deny');
+	});
 });
 
 /**

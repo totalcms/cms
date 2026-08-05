@@ -131,15 +131,29 @@ readonly class SearchCollectionsTool
 		$aggregate   = [];
 
 		foreach ($visible as $collection) {
+			// TextSearchProvider's pre-filter only excludes drafts for the
+			// PUBLIC persona; an AUTHENTICATED caller's per-collection
+			// authority still has to be checked — see
+			// PersonaContext::canReadDrafts(). Computed BEFORE the search call
+			// (not just as a post-filter below) so a caller without read
+			// authority never has drafts occupying slots in the pre-filter's
+			// limit window in the first place — otherwise drafts could crowd
+			// out published matches the caller SHOULD see, and the resulting
+			// under-filled/empty response would leak a weak "drafts outrank
+			// you here" signal. The post-filter stays as an authoritative
+			// backstop: an extension-registered SearchProvider may ignore
+			// `persona` entirely.
+			$canReadDrafts = $this->personaContext->canReadDrafts($collection->id);
+
 			// SearchService routes to TextSearchProvider which applies the
 			// persona-based safety filter PER COLLECTION before ObjectSearcher
 			// runs — same architectural guarantee as before. Drafts never make
-			// it into the results for public callers.
+			// it into the results for a caller without draft read authority.
 			$results = $this->searchService->search(new SearchQuery(
 				text: $query,
 				collection: $collection->id,
 				limit: $cappedLimit,
-				persona: $persona->value,
+				persona: $canReadDrafts ? $persona->value : 'public',
 				// Rank by term coverage (best partial match first) rather than
 				// the all-or-nothing AND filter, so descriptive multi-word
 				// queries from an agent return useful results instead of nothing.
@@ -152,12 +166,6 @@ readonly class SearchCollectionsTool
 
 			$nonExposed = $this->schemaResolver->nonExposedProperties($collection);
 			$renderable = $this->schemaResolver->renderableProperties($collection);
-
-			// TextSearchProvider's pre-filter only excludes drafts for the
-			// PUBLIC persona; an AUTHENTICATED caller's per-collection
-			// authority still has to be checked here — see
-			// PersonaContext::canReadDrafts().
-			$canReadDrafts = $this->personaContext->canReadDrafts($collection->id);
 
 			foreach ($results as $result) {
 				if (!$this->objectFetcher->existsObject($collection->id, $result->id)) {
