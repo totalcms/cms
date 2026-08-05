@@ -14,6 +14,7 @@ use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 /**
@@ -40,6 +41,15 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  *   3. **`limit` caps at 50.** REST permits 100, but MCP hosts have tighter
  *      response budgets (Claude.ai ~150k chars, Claude Code ~25k tokens). We
  *      clamp rather than reject — softer UX for the model.
+ *
+ *   4. **Group-gated (Task 10b).** Declares `requires: objects/read/collection`.
+ *      An AUTHENTICATED caller must hold `read` on the target collection per
+ *      their resolved access-group authority — UNLESS the collection's
+ *      `mcp.access` is `'public'`, which stays readable by every caller
+ *      regardless of group grants (McpServerFactory::guardHandler() special-
+ *      cases this domain/operation to PersonaContext::canReadCollection()
+ *      rather than the plain group-only check, so authenticating never
+ *      subtracts reach an anonymous caller already has).
  */
 readonly class QueryCollectionTool
 {
@@ -70,6 +80,7 @@ readonly class QueryCollectionTool
 				openWorldHint: false,
 			),
 			outputSchema: $this->outputSchema(),
+			requires: new ToolRequirement(domain: 'objects', operation: 'read', collectionArg: 'collection'),
 		));
 	}
 

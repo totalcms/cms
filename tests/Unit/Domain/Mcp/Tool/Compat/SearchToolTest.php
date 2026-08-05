@@ -100,6 +100,11 @@ final class SearchToolTest extends TestCase
 
 		$persona = $this->createMock(PersonaContext::class);
 		$persona->method('current')->willReturn(McpPersona::PUBLIC_);
+		// Task 10b: SearchTool's per-collection visibility filter also
+		// requires canReadCollection() now — stub true so the pre-existing
+		// aggregate-cap behavior under test isn't masked by an unconfigured
+		// mock defaulting to false (which would zero out every result).
+		$persona->method('canReadCollection')->willReturn(true);
 
 		$schemaResolver = $this->createMock(McpSchemaResolver::class);
 		$schemaResolver->method('isAccessibleTo')->willReturn(true);
@@ -148,6 +153,8 @@ final class SearchToolTest extends TestCase
 
 		$persona = $this->createMock(PersonaContext::class);
 		$persona->method('current')->willReturn(McpPersona::PUBLIC_);
+		// Task 10b: see the aggregate-cap test's identical comment.
+		$persona->method('canReadCollection')->willReturn(true);
 
 		$schemaResolver = $this->createMock(McpSchemaResolver::class);
 		$schemaResolver->method('isAccessibleTo')->willReturn(true);

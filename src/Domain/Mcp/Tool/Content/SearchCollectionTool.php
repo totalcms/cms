@@ -13,6 +13,7 @@ use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Search\Data\SearchQuery;
@@ -38,6 +39,12 @@ use TotalCMS\Domain\Search\Service\SearchServiceInterface;
  *
  * Drafts are never visible to a caller without draft read authority for this
  * collection.
+ *
+ * **Group-gated (Task 10b).** Declares `requires: objects/read/collection` —
+ * same call-time guard as query_collection/get_object. `mcp.access: 'public'`
+ * collections stay searchable by every caller regardless of group grants
+ * (McpServerFactory::guardHandler()'s carve-out via PersonaContext::
+ * canReadCollection()).
  */
 readonly class SearchCollectionTool
 {
@@ -71,6 +78,7 @@ readonly class SearchCollectionTool
 				openWorldHint: false,
 			),
 			outputSchema: $this->outputSchema(),
+			requires: new ToolRequirement(domain: 'objects', operation: 'read', collectionArg: 'collection'),
 		));
 	}
 

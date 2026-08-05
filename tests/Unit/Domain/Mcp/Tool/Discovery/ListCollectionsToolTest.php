@@ -24,7 +24,25 @@ final class ListCollectionsToolTest extends TestCase
 	{
 		$this->collections = $this->createMock(CollectionRepository::class);
 		$this->resolver    = $this->createMock(McpSchemaResolver::class);
-		$this->persona     = new PersonaContext();
+		// PersonaContext (Task 10b) needs its OWN McpSchemaResolver for
+		// canReadCollection()'s mcp.access:'public' carve-out — deliberately NOT
+		// $this->resolver, whose forCollection() this file's existing tests
+		// hardcode to a blanket 'access' => 'public' for OUTPUT-shaping
+		// convenience (the result item's `access` field), independent of each
+		// fixture's real mcp.access. Reusing that mock would make every
+		// collection look "public" to the authorization check too, silently
+		// short-circuiting canReadCollection() instead of exercising the real
+		// per-collection rule this tool's handler() filter now applies.
+		$personaSchemaResolver = $this->createStub(McpSchemaResolver::class);
+		$personaSchemaResolver->method('forCollection')->willReturnCallback(
+			static fn (CollectionData $c): array => [
+				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'description'   => null,
+				'resource'      => true,
+				'titleProperty' => '',
+			],
+		);
+		$this->persona = new PersonaContext($this->createStub(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class), $personaSchemaResolver);
 
 		$this->tool = new ListCollectionsTool(
 			$this->collections,

@@ -34,7 +34,12 @@ final class QueryCollectionToolTest extends TestCase
 		$this->collections = $this->createMock(CollectionFetcher::class);
 		$this->urls        = $this->createMock(ObjectUrlBuilder::class);
 		$this->resolver    = $this->createMock(McpSchemaResolver::class);
-		$this->persona     = new PersonaContext();
+		// PersonaContext's constructor deps (Task 10b) are unused by this
+		// file's tests: QueryCollectionTool::handler() has no inline
+		// canReadCollection() call — the objects+read group gate is enforced
+		// entirely by McpServerFactory::guardHandler(), which this unit test
+		// (calling ->handler() directly) never exercises.
+		$this->persona = new PersonaContext($this->collections, $this->resolver);
 
 		$this->tool = new QueryCollectionTool(
 			$this->indexQuery,

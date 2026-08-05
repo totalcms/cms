@@ -21,15 +21,24 @@ use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
  * stripping mirror QueryCollectionTool so the resource surface and tool
  * surface stay consistent.
  *
- * **Group-authority read gate (Task 10).** Unlike QueryCollectionTool/
- * GetObjectTool — which have no ToolRequirement and let any AUTHENTICATED
- * caller browse a `mcp.access: authenticated|public` collection, filtering
- * only drafts by group grant — a resource read is a bulk-browse surface, so
- * it is gated more strictly: an AUTHENTICATED caller must hold `read` on
- * $collection (PersonaContext::canReadDrafts() is reused as the "does this
- * caller's authority grant read" oracle) or the whole read is denied, not
- * just its drafts. ADMIN is unaffected (canReadDrafts() always true for
- * ADMIN); PUBLIC_ is unaffected (the check only runs for AUTHENTICATED).
+ * **Group-authority read gate (Task 10, corrected Task 10b).** A resource
+ * read is a bulk-browse surface: an AUTHENTICATED caller must pass
+ * PersonaContext::canReadCollection($collection) — their access groups grant
+ * `read` on $collection, OR $collection's `mcp.access` is `'public'` — or the
+ * whole read is denied, not just its drafts. ADMIN is unaffected
+ * (canReadCollection() always true for ADMIN); PUBLIC_ is unaffected (the
+ * check only runs for AUTHENTICATED; PUBLIC_ never reaches an
+ * `'authenticated'`-exposed collection at all via the isAccessibleTo() check
+ * above it).
+ *
+ * Task 10 originally gated this with PersonaContext::canReadDrafts(), which
+ * has NO public-collection carve-out — an AUTHENTICATED caller without a
+ * group grant was denied even on a `mcp.access: 'public'` collection that an
+ * ANONYMOUS caller could read freely (a privilege inversion: authenticating
+ * reduced reach). Task 10b's canReadCollection() is the fix, and is now the
+ * single home for this exact rule — also used by query_collection/get_object/
+ * search_collection's call-time guard and by McpResourceDefinition::
+ * authorizedFor() below.
  *
  * Mounted into ResourceRegistry by CollectionResourceRegistrar (Task A6); this
  * class never registers itself.
@@ -69,11 +78,13 @@ readonly class CollectionResource
 		}
 
 		// AUTHENTICATED callers must additionally hold `read` on this specific
-		// collection per their resolved access-group authority — same message
-		// as the mcp.access denial above (existing idiom: opaque "not
-		// accessible", no separate error shape for "access-group denied" vs
-		// "mcp.access denied"). ADMIN and PUBLIC_ never reach this branch.
-		if ($persona === McpPersona::AUTHENTICATED && !$this->personaContext->canReadDrafts($collection)) {
+		// collection per their resolved access-group authority — UNLESS the
+		// collection is `mcp.access: 'public'` (canReadCollection()'s carve-out;
+		// see class docblock) — same message as the mcp.access denial above
+		// (existing idiom: opaque "not accessible", no separate error shape for
+		// "access-group denied" vs "mcp.access denied"). ADMIN and PUBLIC_
+		// never reach this branch.
+		if ($persona === McpPersona::AUTHENTICATED && !$this->personaContext->canReadCollection($collection, $collectionData)) {
 			throw new ToolCallException(\sprintf(
 				'Resource tcms://%s/ is not accessible to this caller. Use list_collections to see available collections.',
 				$collection,

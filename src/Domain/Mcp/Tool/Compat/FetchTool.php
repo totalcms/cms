@@ -18,8 +18,15 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  * `fetch(id)` — ChatGPT-compatibility tool. ChatGPT requires a tool named
  * exactly `fetch` returning {id,title,text,url,metadata}. Decodes the composite
  * "{collection}:{objectId}" id from `search`, delegates to GetObjectTool (reusing
- * its persona/draft/strip/render pipeline), and reshapes the flat object into a
- * document. Exempt from mcp.toolPrefix so the literal name survives.
+ * its persona/draft/group-read/strip/render pipeline), and reshapes the flat
+ * object into a document. Exempt from mcp.toolPrefix so the literal name survives.
+ *
+ * **Group-gated (Task 10b), no wiring needed here.** Declares no ToolRequirement
+ * of its own — it calls `GetObjectTool::handler()` directly (bypassing the
+ * `get_object` tool's call-time guard entirely), so it inherits the group-read
+ * gate from GetObjectTool's OWN inline PersonaContext::canReadCollection()
+ * check, not from anything declared in this file. See GetObjectTool's
+ * docblock.
  */
 readonly class FetchTool
 {

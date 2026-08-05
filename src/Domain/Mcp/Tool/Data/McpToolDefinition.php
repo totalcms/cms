@@ -74,23 +74,42 @@ readonly class McpToolDefinition
 	 *     OR (when $requires is set and $authority is known) the caller's
 	 *     access-group authority satisfies the requirement for at least one
 	 *     target — see ToolRequirement::isSatisfiedForAny().
-	 *   - public: public only, AND ONLY when $requires is null.
+	 *   - public: visible whenever $access is 'public', PROVIDED $requires is
+	 *     either null OR the specific "objects+read" shape (see below).
+	 *     Any OTHER requirement (write/schema/collections-meta/cache/site)
+	 *     still hides the tool from PUBLIC_, requirement or not.
 	 *
 	 * $authority is null for non-Bearer requests (API key / no-auth) and for
 	 * any caller PersonaContext couldn't resolve one for; the $requires OR
 	 * branch simply never fires in that case, leaving existing behavior
 	 * unchanged.
 	 *
-	 * The $requires === null condition on the PUBLIC_ branch is load-bearing,
-	 * not defensive decoration: a requirement is an access-group/OAuth-scope
-	 * check, and a PUBLIC_ caller has neither an authority nor scopes to
-	 * check against — McpServerFactory::guardHandler()'s enforcement only
-	 * runs for AUTHENTICATED. Without this, a tool that mistakenly combined
-	 * access:'public' with a $requires would be registered for anonymous
-	 * callers and dispatched completely unguarded (fail-open). Task 7's
-	 * guard also denies PUBLIC_ outright as defense in depth, but visibility
-	 * is the first and cheapest place to close this off — an invisible tool
-	 * is never dispatched at all.
+	 * **Task 10b revision — narrow, not "public bypasses everything".**
+	 * Through Task 9 every requirement-bearing tool had $access 'admin'
+	 * (write/schema/cache tools) — PUBLIC_ could never reach one anyway, so
+	 * this method used to hide ANY requirement-bearing tool from PUBLIC_
+	 * outright as defense in depth against a hypothetical misconfiguration
+	 * (access:'public' + $requires on the same tool, fully unguarded for
+	 * anonymous callers — see McpServerFactory::guardHandler()'s matching old
+	 * unconditional PUBLIC_ denial). Task 10b's read tools
+	 * (query_collection/get_object/search_collection) are the first
+	 * DELIBERATE instance of $access:'public' + $requires together: an
+	 * unauthenticated caller must keep reading public collections exactly as
+	 * before, and the requirement exists solely to bound AUTHENTICATED
+	 * callers beyond what public exposure already grants. For a PUBLIC_
+	 * caller of an objects+read tool, $access:'public' IS the entire grant —
+	 * there is no authority for the requirement to further restrict, so it's
+	 * simply irrelevant to this persona, not a hole.
+	 *
+	 * This carve-out is deliberately scoped to `domain === 'objects' &&
+	 * operation === 'read'` — NOT "any $requires on an access:'public' tool"
+	 * — because "public" has only ever meant "readable by everyone"; a
+	 * hypothetical future tool that mistakenly combined access:'public' with
+	 * a write/schema/cache/site requirement must NOT fail open for
+	 * anonymous callers. McpServerFactory::guardHandler() mirrors this exact
+	 * condition (see its docblock) — the real handler behind an
+	 * objects+read+public tool still applies its own mcp.access exposure
+	 * check exactly as it always has.
 	 */
 	public function isVisibleTo(McpPersona $persona, ?UserAuthority $authority = null): bool
 	{
@@ -98,7 +117,18 @@ readonly class McpToolDefinition
 			McpPersona::ADMIN         => true,
 			McpPersona::AUTHENTICATED => $this->access === 'public' || $this->access === 'authenticated'
 				|| ($this->requires !== null && $authority !== null && $this->requires->isSatisfiedForAny($authority)),
-			McpPersona::PUBLIC_       => $this->access === 'public' && $this->requires === null,
+			McpPersona::PUBLIC_       => $this->access === 'public' && $this->isPublicReadRequirement(),
 		};
+	}
+
+	/**
+	 * True when $requires is null, or is the "objects+read" shape the
+	 * PUBLIC_ carve-out above (and McpServerFactory::guardHandler()) is
+	 * scoped to. See isVisibleTo()'s docblock.
+	 */
+	private function isPublicReadRequirement(): bool
+	{
+		return $this->requires === null
+			|| ($this->requires->domain === 'objects' && $this->requires->operation === 'read');
 	}
 }

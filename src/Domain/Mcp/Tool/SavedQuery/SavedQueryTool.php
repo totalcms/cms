@@ -20,12 +20,22 @@ use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
  *
  * Handler flow:
  *   1. Persona check (collection.mcp.access vs current persona).
- *   2. Resolve {{params.X}} placeholders in filters via FilterValueResolver.
- *   3. Build REST-style include/exclude strings + persona-aware safety filters.
- *   4. Query via IndexQueryService.
- *   5. Strip non-exposed fields, render content via ContentRenderer,
+ *   2. Group-read check (Task 10b) — PersonaContext::canReadCollection().
+ *   3. Resolve {{params.X}} placeholders in filters via FilterValueResolver.
+ *   4. Build REST-style include/exclude strings + persona-aware safety filters.
+ *   5. Query via IndexQueryService.
+ *   6. Strip non-exposed fields, render content via ContentRenderer,
  *      decorate items with URLs.
- *   6. Return MCP tool result envelope.
+ *   7. Return MCP tool result envelope.
+ *
+ * **Group-gated (Task 10b).** These tools are schema-defined per collection —
+ * `$this->definition->collectionName` is fixed at registration, never a
+ * caller-supplied argument — so there is no inputSchema property a
+ * ToolRequirement's collectionArg could name (SchemaToolRegistrar registers
+ * these with no `requires`; see its call site). Enforced inline instead, via
+ * PersonaContext::canReadCollection() right after the collection is fetched
+ * — same public-collection carve-out as the core content tools, and the same
+ * `errorResult()` shape every other failure in this handler already uses.
  *
  * Errors return `isError: true` with a recovery hint — never throws past
  * the SDK transport.
@@ -64,6 +74,13 @@ final readonly class SavedQueryTool
 			if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
 				return $this->errorResult(sprintf(
 					'Collection "%s" not found. Use list_collections to see available collections.',
+					$this->definition->collectionName,
+				));
+			}
+
+			if (!$this->personaContext->canReadCollection($this->definition->collectionName, $collection)) {
+				return $this->errorResult(sprintf(
+					"Your account's groups do not grant read on '%s'.",
 					$this->definition->collectionName,
 				));
 			}

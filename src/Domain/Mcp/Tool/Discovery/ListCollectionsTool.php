@@ -28,6 +28,17 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  * one consumed by the content-tool description builders, so the agent gets
  * a consistent answer to "what can I query on?" whether it reads the tool
  * description or calls `list_collections`.
+ *
+ * **Group-gated, filter not deny (Task 10b).** This is metadata-only (no
+ * object content) and enumerates every collection at once — the same
+ * "no single target" shape as SearchCollectionsTool — so it declares no
+ * ToolRequirement. The persona-exposure filter additionally requires
+ * PersonaContext::canReadCollection(), so a collection the caller's groups
+ * don't grant read on (and that isn't `mcp.access: 'public'`) is silently
+ * omitted rather than causing an error. Advertising a collection here that
+ * query_collection/get_object would then deny would be confusing UX for the
+ * agent, independent of any security concern (list_collections has never
+ * itself returned object content).
  */
 readonly class ListCollectionsTool
 {
@@ -99,7 +110,8 @@ readonly class ListCollectionsTool
 
 		$visible = array_values(array_filter(
 			$this->collections->listAllCollections(),
-			fn (CollectionData $c): bool => $this->schemaResolver->isAccessibleTo($c, $persona),
+			fn (CollectionData $c): bool => $this->schemaResolver->isAccessibleTo($c, $persona)
+				&& $this->personaContext->canReadCollection($c->id, $c),
 		));
 
 		// Stable alphabetical order — identical sites generate identical

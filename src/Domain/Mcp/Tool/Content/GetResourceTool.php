@@ -22,7 +22,11 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  * scoped to `tcms://` so it can construct precise error messages.
  *
  * Persona enforcement lives in GetObjectTool; get_resource is a thin routing
- * layer, not a policy point.
+ * layer, not a policy point. This includes the Task 10b group-read gate:
+ * `get_resource` declares no ToolRequirement of its own — `handler()` calls
+ * `GetObjectTool::handler()` directly (bypassing get_object's call-time
+ * guard), so it inherits the gate from GetObjectTool's inline
+ * PersonaContext::canReadCollection() check.
  */
 readonly class GetResourceTool
 {

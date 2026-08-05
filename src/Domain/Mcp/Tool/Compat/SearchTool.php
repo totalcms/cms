@@ -25,6 +25,13 @@ use TotalCMS\Domain\Search\Service\SearchServiceInterface;
  * path (persona filter inside the provider → drafts never leak to anonymous
  * callers). The `id` is a composite "{collection}:{objectId}" the `fetch` tool
  * decodes. Exempt from mcp.toolPrefix so the literal name survives.
+ *
+ * **Group-gated, filter not deny (Task 10b).** Same shape as
+ * SearchCollectionsTool: no single collection argument, so no ToolRequirement
+ * — the per-collection `$visible` filter additionally requires
+ * PersonaContext::canReadCollection() (group grant, with the mcp.access:
+ * 'public' carve-out), silently omitting collections the caller's groups
+ * don't grant read on rather than erroring the whole call.
  */
 readonly class SearchTool
 {
@@ -74,7 +81,8 @@ readonly class SearchTool
 
 		$visible = array_filter(
 			$this->collections->listAllCollections(),
-			fn (CollectionData $c): bool => $this->schemaResolver->isAccessibleTo($c, $persona->value),
+			fn (CollectionData $c): bool => $this->schemaResolver->isAccessibleTo($c, $persona->value)
+				&& $this->personaContext->canReadCollection($c->id, $c),
 		);
 
 		$results = [];

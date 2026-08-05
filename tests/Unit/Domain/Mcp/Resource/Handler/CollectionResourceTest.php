@@ -33,7 +33,28 @@ final class CollectionResourceTest extends TestCase
 		$this->indexReader       = $this->createMock(IndexReader::class);
 		$this->schemaResolver    = $this->createMock(McpSchemaResolver::class);
 		$this->urlBuilder        = $this->createMock(ObjectUrlBuilder::class);
-		$this->personaContext    = new PersonaContext();
+		// PersonaContext (Task 10b) needs its own CollectionFetcher +
+		// McpSchemaResolver to resolve the mcp.access:'public' carve-out via
+		// canReadCollection(). Reuses this test's existing mocks rather than
+		// creating separate ones — CollectionResource always passes the
+		// already-fetched CollectionData into canReadCollection() (see
+		// CollectionResource::read()), so PersonaContext's own
+		// $collectionFetcher is never actually invoked from this call path;
+		// it's supplied only to satisfy the constructor. schemaResolver's
+		// forCollection() IS invoked (see below) to resolve the collection's
+		// mcp.access.
+		$this->personaContext = new PersonaContext($this->collectionFetcher, $this->schemaResolver);
+		// Derives 'access' from whatever mcp.access the test's CollectionData
+		// carries, so canReadCollection()'s public-collection carve-out
+		// reflects each test's actual fixture instead of a hardcoded default.
+		$this->schemaResolver->method('forCollection')->willReturnCallback(
+			static fn (CollectionData $c): array => [
+				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'description'   => null,
+				'resource'      => true,
+				'titleProperty' => '',
+			],
+		);
 
 		$this->resource = new CollectionResource(
 			$this->collectionFetcher,
@@ -44,12 +65,12 @@ final class CollectionResourceTest extends TestCase
 		);
 	}
 
-	private function collection(string $id = 'blog'): CollectionData
+	private function collection(string $id = 'blog', string $access = 'public'): CollectionData
 	{
 		$collection         = new CollectionData();
 		$collection->id     = $id;
 		$collection->schema = $id;
-		$collection->mcp    = ['access' => 'public'];
+		$collection->mcp    = ['access' => $access];
 
 		return $collection;
 	}
@@ -287,7 +308,7 @@ final class CollectionResourceTest extends TestCase
 		$this->assertContains('is-draft', $ids);
 	}
 
-	// ─── Task 10: group-authority read gate ─────────────────────────────────
+	// ─── Task 10 / 10b: group-authority read gate ───────────────────────────
 
 	public function testAuthenticatedPersonaWithoutReadGrantIsDeniedEntirely(): void
 	{
@@ -295,10 +316,12 @@ final class CollectionResourceTest extends TestCase
 		// group requirement and only filter drafts), a resource read is a
 		// bulk-browse surface: an AUTHENTICATED caller whose authority does not
 		// grant `read` on this collection is denied the whole read, not just
-		// its drafts.
+		// its drafts. Uses an 'authenticated'-access collection (NOT the
+		// 'public' default) so this deny case is isolated from the Task 10b
+		// public-collection carve-out proven below.
 		$this->personaContext->set(McpPersona::AUTHENTICATED);
 		$this->personaContext->setAuthority($this->authorityGranting(['other-collection']));
-		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection());
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection('blog', 'authenticated'));
 		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
 
 		$this->expectException(ToolCallException::class);
@@ -311,14 +334,40 @@ final class CollectionResourceTest extends TestCase
 	{
 		// AUTHENTICATED persona but no resolved UserAuthority at all (e.g. a
 		// Bearer request whose identity never resolved) fails closed, same as
-		// an explicit deny.
+		// an explicit deny. Non-public collection — see comment above.
 		$this->personaContext->set(McpPersona::AUTHENTICATED);
-		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection());
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection('blog', 'authenticated'));
 		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
 
 		$this->expectException(ToolCallException::class);
 
 		$this->resource->read('blog');
+	}
+
+	public function testAuthenticatedPersonaWithoutReadGrantOnPublicCollectionIsNotDenied(): void
+	{
+		// Task 10b fix: an AUTHENTICATED caller with NO group grant on this
+		// collection is still admitted when the collection's mcp.access is
+		// 'public' — closes the privilege inversion the Task 10 review found,
+		// where authenticating could SUBTRACT reach an anonymous caller
+		// already had (the two tests above prove the opposite case: a
+		// non-public collection still denies without a grant).
+		$this->personaContext->set(McpPersona::AUTHENTICATED);
+		$this->personaContext->setAuthority($this->authorityGranting(['other-collection']));
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection('blog', 'public'));
+		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
+		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
+
+		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([
+			['id' => 'published', 'draft' => false],
+		]));
+		$this->urlBuilder->method('buildUrl')->willReturn('/blog/published');
+
+		$result  = $this->resource->read('blog');
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
+
+		$this->assertSame(1, $payload['total']);
+		$this->assertSame('published', $payload['items'][0]['id']);
 	}
 
 	public function testAuthenticatedPersonaWithReadGrantSeesPublishedItems(): void

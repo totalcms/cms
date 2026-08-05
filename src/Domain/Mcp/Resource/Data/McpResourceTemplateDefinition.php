@@ -28,11 +28,16 @@ readonly class McpResourceTemplateDefinition
 	 * @param string      $access      'admin', 'public', or 'authenticated' (OAuth Bearer with mcp:* scope)
 	 * @param \Closure     $handler     Invoked with named args matching template variables
 	 * @param string|null $collectionId Collection id this template enumerates objects for, when
-	 *                                  it's a collection-scoped template (Task 10). See
-	 *                                  McpResourceDefinition::$collectionId for the full rationale
-	 *                                  — kept in sync here so resources/templates/list agrees with
-	 *                                  resources/list on which collections an AUTHENTICATED caller
-	 *                                  can see. Left null for non-collection templates (data views).
+	 *                                  it's a collection-scoped template. See McpResourceDefinition::
+	 *                                  $collectionId for the full rationale — kept in sync here so
+	 *                                  resources/templates/list agrees with resources/list on which
+	 *                                  collections an AUTHENTICATED caller can see. Left null for
+	 *                                  non-collection templates (data views). As of Task 10b this is
+	 *                                  ALSO set on the per-object `tcms://{collection}/{id}` template
+	 *                                  (previously left null — see CollectionResourceRegistrar), now
+	 *                                  that GetObjectTool (which CollectionObjectResource delegates
+	 *                                  to) actually enforces the same read rule at call time, so this
+	 *                                  visibility check is no longer stricter than the handler.
 	 */
 	public function __construct(
 		public string $uriTemplate,
@@ -55,9 +60,13 @@ readonly class McpResourceTemplateDefinition
 		};
 	}
 
+	/**
+	 * Same rule as McpResourceDefinition::authorizedFor() — see its docblock
+	 * for the Task 10b public-collection-carve-out rationale.
+	 */
 	private function authorizedFor(?UserAuthority $authority): bool
 	{
-		if ($this->collectionId === null) {
+		if ($this->collectionId === null || $this->access === 'public') {
 			return true;
 		}
 

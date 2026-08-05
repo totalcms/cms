@@ -30,6 +30,16 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  * filterable ones) — non-indexed properties appear with `filterable: false`
  * and `sortable: false` so the agent learns they exist on objects but knows
  * to fetch them via `get_object` rather than try to filter on them.
+ *
+ * **Group-gated, reuses the existing deny path (Task 10b).** Metadata-only
+ * (schema/property shape, never object content), so — like list_collections —
+ * this declares no ToolRequirement (no separate OAuth scope wall, no
+ * call-time-guard logging). Unlike list_collections it targets a single
+ * named collection, so "filter" here means extending the accessibility
+ * check it already has (isAccessibleTo, below) with the same
+ * PersonaContext::canReadCollection() group-grant rule (public-collection
+ * carve-out included), reusing the SAME existing "not available" error —
+ * no new error shape.
  */
 readonly class DescribeCollectionTool
 {
@@ -109,7 +119,8 @@ readonly class DescribeCollectionTool
 		}
 
 		$persona = $this->personaContext->current();
-		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value)) {
+		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value)
+			|| !$this->personaContext->canReadCollection($collection, $collectionData)) {
 			throw new ToolCallException(sprintf(
 				'Collection "%s" is not available to the current caller. Use list_collections to see what you can describe.',
 				$collection,

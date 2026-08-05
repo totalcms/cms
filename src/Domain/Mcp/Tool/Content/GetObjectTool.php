@@ -13,6 +13,7 @@ use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 
@@ -30,6 +31,23 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
  * collection (see PersonaContext::canReadDrafts()) a draft is treated as if
  * it didn't exist (same error wording as a genuinely missing id), so guessing
  * a slug can't tell you whether the post exists in draft form.
+ *
+ * **Group-gated (Task 10b).** Declares `requires: objects/read/collection` —
+ * enforced two ways:
+ *   1. Via the registered `get_object` tool's call-time guard
+ *      (McpServerFactory::guardHandler()), same as query_collection/
+ *      search_collection.
+ *   2. Inline in handler() itself via PersonaContext::canReadCollection(),
+ *      because this method has real delegate callers that bypass the guard
+ *      entirely by invoking handler() directly rather than going through
+ *      `tools/call` dispatch: GetResourceTool (`get_resource`), Compat\FetchTool
+ *      (`fetch`), and CollectionObjectResource (`resources/read
+ *      tcms://{collection}/{id}`). The inline check is what actually closes
+ *      the group-read gap for those three surfaces — the ToolRequirement's
+ *      main job for THIS tool is scope enforcement + tools/list visibility
+ *      for the direct `get_object` call path. Both checks agree (same rule,
+ *      same PersonaContext), so the direct path is simply checked twice —
+ *      harmless.
  */
 readonly class GetObjectTool
 {
@@ -60,6 +78,7 @@ readonly class GetObjectTool
 				openWorldHint: false,
 			),
 			outputSchema: $this->outputSchema(),
+			requires: new ToolRequirement(domain: 'objects', operation: 'read', collectionArg: 'collection'),
 		));
 	}
 
@@ -109,6 +128,17 @@ readonly class GetObjectTool
 				'Collection "%s" is not available to the current caller. Use list_collections to see what you can query.',
 				$collection,
 			));
+		}
+
+		// Group-read gate (Task 10b) — see class docblock. Reused verbatim by
+		// GetResourceTool/FetchTool/CollectionObjectResource, all of which call
+		// this method directly rather than going through the guarded
+		// `get_object` tool dispatch. Opaque "not found" (not a distinct
+		// "forbidden" message) so a denied caller can't distinguish "no such
+		// object" from "object exists, you can't read this collection" —
+		// same opacity principle the draft check below already uses.
+		if (!$this->personaContext->canReadCollection($collection, $collectionData)) {
+			throw $this->notFound($collection, $id);
 		}
 
 		if (!$this->objectFetcher->existsObject($collection, $id)) {

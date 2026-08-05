@@ -1842,7 +1842,12 @@ describe('McpAuthenticatedPersona', function (): void {
 		mcpAuthSetupOAuthKeys($this->app);
 		mcpAuthSeedUser('blogger-user-test-com');
 		mcpAuthSeedAccessGroups();
-		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'public');
+		// 'authenticated', NOT 'public' — Task 10b added the same
+		// public-collection carve-out to this resource gate that
+		// query_collection/get_object already have (work item 2a), so a
+		// 'public' collection would no longer isolate the group-deny case;
+		// 'authenticated' still requires the real group grant.
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'authenticated');
 		mcpAuthEnsureDataviewsCollection($this->app);
 
 		$this->app->getContainer()->get(ObjectSaver::class)
@@ -1922,7 +1927,8 @@ describe('McpAuthenticatedPersona', function (): void {
 		mcpAuthSetupOAuthKeys($this->app);
 		mcpAuthSeedUser('blogger-user-test-com');
 		mcpAuthSeedAccessGroups();
-		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'public');
+		// 'authenticated', NOT 'public' — see comment on the previous test.
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'authenticated');
 		mcpAuthEnsureDataviewsCollection($this->app);
 
 		$saver = $this->app->getContainer()->get(ObjectSaver::class);
@@ -1966,7 +1972,9 @@ describe('McpAuthenticatedPersona', function (): void {
 		mcpAuthSeedUser('blogger-user-test-com');
 		mcpAuthSeedAccessGroups();
 		mcpAuthSetCollectionAccess($this->app, 'blog', 'public');
-		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'public');
+		// 'authenticated', NOT 'public' — see the deny-side comment above;
+		// a 'public' collection would no longer be omitted from the list.
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'authenticated');
 		mcpAuthEnsureDataviewsCollection($this->app);
 
 		$clientId = 'mcp-auth-res-list-' . uniqid('', true);
@@ -2079,6 +2087,599 @@ describe('McpAuthenticatedPersona', function (): void {
 		$listBody = json_decode((string)$listResponse->getBody(), true);
 		$uris     = array_column($listBody['result']['resources'] ?? [], 'uri');
 		expect($uris)->toContain('tcms://blog/');
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Scenario 17 (Task 10b): completes the group-access feature for READS.
+	// Before this task, NO read tool declared a ToolRequirement — published-
+	// content reads were governed only by each collection's mcp.access, not by
+	// access groups. A viewer/blogger-group user's Claude could read every
+	// mcp.access:'authenticated' collection regardless of their grants.
+	//
+	// query_collection / get_object / search_collection now declare
+	// `requires: objects/read/collection`; the call-time guard's rule for this
+	// domain/operation is PersonaContext::canReadCollection() — group grant OR
+	// mcp.access:'public' (the public-collection carve-out that fixes the
+	// Task 10 privilege-inversion finding: an AUTHENTICATED caller without a
+	// grant must not be denied where an ANONYMOUS caller succeeds).
+	//
+	// search_collections / compat search have no single collection argument,
+	// so they filter their per-collection loop instead of declaring a
+	// requirement — a denied collection is silently absent from results, never
+	// an error.
+	//
+	// Same blogger/blog/blog-legacy/viewer fixture shapes as earlier scenarios.
+	// ──────────────────────────────────────────────────────────────────────────
+
+	it('blogger query_collection succeeds on their allowed collection and is denied with a group error on an authenticated-exposed collection their group does not allow', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'authenticated');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-t10b-qc-allow', 'title' => 'Allowed Post', 'draft' => false]);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-t10b-qc-deny', 'title' => 'Denied Post', 'draft' => false]);
+
+		$clientId = 'mcp-t10b-qc-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue(); // skip-safe pass
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		// `blog` accumulates objects across earlier scenarios in this file
+		// (beforeAll only wipes cmsDataDir() once) — filter with `include` to
+		// this test's own id rather than relying on default pagination
+		// happening to keep it in the first page.
+		$allow = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'query_collection',
+				'arguments' => ['collection' => 'blog', 'include' => 'id:mcp-t10b-qc-allow'],
+			],
+		], $sessionId);
+
+		expect($allow->getStatusCode())->toBe(200);
+		$allowBody = json_decode((string)$allow->getBody(), true);
+		expect($allowBody['result']['isError'] ?? false)->toBeFalse();
+		$ids = array_column(mcpAuthStructuredItems($allow), 'id');
+		expect($ids)->toContain('mcp-t10b-qc-allow');
+
+		$deny = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'query_collection',
+				'arguments' => ['collection' => 'blog-legacy'],
+			],
+		], $sessionId);
+
+		expect($deny->getStatusCode())->toBe(200);
+		$denyBody = json_decode((string)$deny->getBody(), true);
+		expect($denyBody['result']['isError'] ?? false)->toBeTrue();
+		$text = $denyBody['result']['content'][0]['text'] ?? '';
+		expect($text)->toContain('groups');
+	});
+
+	it('blogger get_object succeeds on their allowed collection and is denied with a group error on an authenticated-exposed collection their group does not allow', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'authenticated');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-t10b-go-allow', 'title' => 'Allowed Post', 'draft' => false]);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-t10b-go-deny', 'title' => 'Denied Post', 'draft' => false]);
+
+		$clientId = 'mcp-t10b-go-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$allow = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'get_object',
+				'arguments' => ['collection' => 'blog', 'id' => 'mcp-t10b-go-allow'],
+			],
+		], $sessionId);
+
+		expect($allow->getStatusCode())->toBe(200);
+		$allowBody = json_decode((string)$allow->getBody(), true);
+		expect($allowBody['result']['isError'] ?? false)->toBeFalse();
+		expect($allowBody['result']['structuredContent']['id'] ?? null)->toBe('mcp-t10b-go-allow');
+
+		$deny = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'get_object',
+				'arguments' => ['collection' => 'blog-legacy', 'id' => 'mcp-t10b-go-deny'],
+			],
+		], $sessionId);
+
+		expect($deny->getStatusCode())->toBe(200);
+		$denyBody = json_decode((string)$deny->getBody(), true);
+		expect($denyBody['result']['isError'] ?? false)->toBeTrue();
+	});
+
+	it('blogger without cms:read scope gets a scope-layer denial for query_collection', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+
+		$clientId = 'mcp-t10b-scope-' . uniqid('', true);
+		// mcp:tools only — no cms:read at all.
+		$token = mcpAuthIssueToken($this->app, $clientId, 'secret', ['mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'query_collection',
+				'arguments' => ['collection' => 'blog'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeTrue();
+		$text = $body['result']['content'][0]['text'] ?? '';
+		expect($text)->toContain('permission');
+	});
+
+	it('search_collections and the compat search tool include only readable collections, silently omitting a group-denied one (not an error)', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'authenticated');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-t10b-scs-allow', 'title' => 'Fizzbin Allowed Post', 'draft' => false]);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-t10b-scs-deny', 'title' => 'Fizzbin Denied Post', 'draft' => false]);
+
+		$clientId = 'mcp-t10b-scs-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'search_collections',
+				'arguments' => ['query' => 'Fizzbin'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeFalse();
+		$ids = array_column(mcpAuthStructuredItems($response), 'id');
+		expect($ids)->toContain('mcp-t10b-scs-allow');
+		expect($ids)->not->toContain('mcp-t10b-scs-deny');
+
+		$compat = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'search',
+				'arguments' => ['query' => 'Fizzbin'],
+			],
+		], $sessionId);
+
+		expect($compat->getStatusCode())->toBe(200);
+		$compatBody = json_decode((string)$compat->getBody(), true);
+		expect($compatBody['result']['isError'] ?? false)->toBeFalse();
+		$results        = $compatBody['result']['structuredContent']['results'] ?? [];
+		$compatIds      = array_column(is_array($results) ? $results : [], 'id');
+		expect($compatIds)->toContain('blog:mcp-t10b-scs-allow');
+		expect($compatIds)->not->toContain('blog-legacy:mcp-t10b-scs-deny');
+	});
+
+	it('an mcp.access:public collection is readable by an authenticated caller WITHOUT any group grant (regression guard for the Task 10 privilege inversion), but still hides drafts from them', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		// 'blog-legacy' is NOT in blogger's allowed collection list — this is
+		// the whole point of the test: mcp.access:'public' must let them
+		// through anyway.
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'public');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-t10b-pub-published', 'title' => 'Public No Grant', 'draft' => false]);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-t10b-pub-draft', 'title' => 'Public No Grant Draft', 'draft' => true]);
+
+		$clientId = 'mcp-t10b-pub-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'query_collection',
+				'arguments' => ['collection' => 'blog-legacy'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeFalse();
+		$ids = array_column(mcpAuthStructuredItems($response), 'id');
+		expect($ids)->toContain('mcp-t10b-pub-published');
+		expect($ids)->not->toContain('mcp-t10b-pub-draft');
+
+		// get_object on the draft — opaque not-found, not readable via the
+		// public carve-out (public exposure never implies draft access).
+		$getDraft = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'get_object',
+				'arguments' => ['collection' => 'blog-legacy', 'id' => 'mcp-t10b-pub-draft'],
+			],
+		], $sessionId);
+
+		$getDraftBody = json_decode((string)$getDraft->getBody(), true);
+		expect($getDraftBody['result']['isError'] ?? false)->toBeTrue();
+
+		// get_object on the published object — succeeds via the same
+		// public-collection carve-out.
+		$getPublished = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 3,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'get_object',
+				'arguments' => ['collection' => 'blog-legacy', 'id' => 'mcp-t10b-pub-published'],
+			],
+		], $sessionId);
+
+		expect($getPublished->getStatusCode())->toBe(200);
+		$getPublishedBody = json_decode((string)$getPublished->getBody(), true);
+		expect($getPublishedBody['result']['isError'] ?? false)->toBeFalse();
+	});
+
+	it('viewer (unrestricted read, no write) can read everything readable via query_collection and get_object, and cannot write (regression)', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('viewer-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-t10b-viewer-post', 'title' => 'Viewer Readable Post', 'draft' => false]);
+
+		$clientId = 'mcp-t10b-viewer-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'cms:write', 'mcp:tools'], 'viewer-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		// `blog` accumulates objects across earlier scenarios in this file —
+		// filter to this test's own id (see the query_collection test above
+		// for the same reasoning).
+		$query = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'query_collection',
+				'arguments' => ['collection' => 'blog', 'include' => 'id:mcp-t10b-viewer-post'],
+			],
+		], $sessionId);
+
+		expect($query->getStatusCode())->toBe(200);
+		$queryBody = json_decode((string)$query->getBody(), true);
+		expect($queryBody['result']['isError'] ?? false)->toBeFalse();
+		$ids = array_column(mcpAuthStructuredItems($query), 'id');
+		expect($ids)->toContain('mcp-t10b-viewer-post');
+
+		$get = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 2,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'get_object',
+				'arguments' => ['collection' => 'blog', 'id' => 'mcp-t10b-viewer-post'],
+			],
+		], $sessionId);
+
+		expect($get->getStatusCode())->toBe(200);
+		$getBody = json_decode((string)$get->getBody(), true);
+		expect($getBody['result']['isError'] ?? false)->toBeFalse();
+
+		// Regression: viewer's group grants read only — create_object stays
+		// denied. Their authority never satisfies isSatisfiedForAny('create')
+		// (Task 6/8), so the tool isn't even REGISTERED with the SDK for this
+		// session (matches "viewer does not see create_object in tools/list"
+		// above) — the call surfaces as a top-level JSON-RPC 'error' ("Tool
+		// not found"), never a 'result' key at all. Asserting 'error' is
+		// present (not the ['result']['isError'] ?? false shape) proves this
+		// is a real denial rather than a vacuously-true null-coalesce — see
+		// the Task 8 fix-round history for why that anti-pattern was banned.
+		$create = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 3,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'create_object',
+				'arguments' => ['collection' => 'blog', 'data' => ['title' => 'Should Not Save']],
+			],
+		], $sessionId);
+
+		$createBody = json_decode((string)$create->getBody(), true);
+		expect($createBody)->toHaveKey('error');
+		expect($createBody)->not->toHaveKey('result');
+	});
+
+	it('ADMIN persona query_collection/get_object are unaffected by the new read gate (regression)', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('admin-user-test-com');
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-t10b-admin-post', 'title' => 'Admin Post', 'draft' => false]);
+
+		$clientId = 'mcp-t10b-admin-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:admin', 'mcp:tools'], 'admin-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'get_object',
+				'arguments' => ['collection' => 'blog', 'id' => 'mcp-t10b-admin-post'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeFalse();
+	});
+
+	it('PUBLIC_ (anonymous) persona query_collection/get_object are unaffected by the new read gate (regression)', function (): void {
+		/** @var Config $config */
+		$config      = $this->app->getContainer()->get(Config::class);
+		$config->mcp = array_merge($config->mcp, ['publicAccess' => true]);
+
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'public');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-t10b-pub-anon-post', 'title' => 'Public Anon Post', 'draft' => false]);
+
+		$sessionId = mcpAuthPublicInitSession($this->app);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthPublicRequest($this->app, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'get_object',
+				'arguments' => ['collection' => 'blog', 'id' => 'mcp-t10b-pub-anon-post'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeFalse();
+	});
+
+	it('resources/read tcms://{collection}/{id} follows the same read rule: blogger denied on an authenticated-exposed collection their group does not allow', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'authenticated');
+		mcpAuthEnsureDataviewsCollection($this->app);
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-t10b-obj-res-deny', 'title' => 'Object Resource Deny', 'draft' => false]);
+
+		$clientId = 'mcp-t10b-obj-res-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['mcp:resources'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'resources/read',
+			'params'  => ['uri' => 'tcms://blog-legacy/mcp-t10b-obj-res-deny'],
+		], $sessionId);
+
+		$body = json_decode((string)$response->getBody(), true);
+		// GetObjectTool's opaque not-found surfaces as a ToolCallException from
+		// the resource handler — same top-level JSON-RPC 'error' shape
+		// Scenario 16 established for the collection-level resource.
+		expect($body)->toHaveKey('error');
+		expect($body)->not->toHaveKey('result');
+	});
+
+	it('resources/read tcms://{collection}/{id} follows the same read rule: blogger allowed on their own collection', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+		mcpAuthEnsureDataviewsCollection($this->app);
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-t10b-obj-res-allow', 'title' => 'Object Resource Allow', 'draft' => false]);
+
+		$clientId = 'mcp-t10b-obj-res-allow-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['mcp:resources'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'resources/read',
+			'params'  => ['uri' => 'tcms://blog/mcp-t10b-obj-res-allow'],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body)->toHaveKey('result');
+	});
+
+	it('resources/templates/list for a blogger now omits the object template for a group-denied collection', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'authenticated');
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'authenticated');
+		mcpAuthEnsureDataviewsCollection($this->app);
+
+		$clientId = 'mcp-t10b-tmpl-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['mcp:resources'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'resources/templates/list',
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body      = json_decode((string)$response->getBody(), true);
+		$templates = array_column($body['result']['resourceTemplates'] ?? [], 'uriTemplate');
+		expect($templates)->toContain('tcms://blog/{id}');
+		expect($templates)->not->toContain('tcms://blog-legacy/{id}');
 	});
 });
 

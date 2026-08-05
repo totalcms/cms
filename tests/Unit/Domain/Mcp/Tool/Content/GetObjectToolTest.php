@@ -35,7 +35,22 @@ final class GetObjectToolTest extends TestCase
 		$this->collections = $this->createMock(CollectionFetcher::class);
 		$this->urls        = $this->createMock(ObjectUrlBuilder::class);
 		$this->resolver    = $this->createMock(McpSchemaResolver::class);
-		$this->persona     = new PersonaContext();
+		// PersonaContext (Task 10b) needs CollectionFetcher + McpSchemaResolver
+		// to resolve canReadCollection()'s mcp.access:'public' carve-out. Every
+		// call site in GetObjectTool passes the already-fetched CollectionData,
+		// so $this->collections (PersonaContext's collectionFetcher) is never
+		// actually invoked from that path — reused only to satisfy the
+		// constructor. $this->resolver IS invoked (via forCollection(), stubbed
+		// below) since it's the one PersonaContext actually consults.
+		$this->persona = new PersonaContext($this->collections, $this->resolver);
+		$this->resolver->method('forCollection')->willReturnCallback(
+			static fn (CollectionData $c): array => [
+				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'description'   => null,
+				'resource'      => true,
+				'titleProperty' => '',
+			],
+		);
 
 		$this->tool = new GetObjectTool(
 			$this->objects,

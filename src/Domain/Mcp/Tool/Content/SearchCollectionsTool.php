@@ -38,6 +38,21 @@ use TotalCMS\Domain\Search\Service\SearchServiceInterface;
  *
  * **Not** a full-content search. Iterates collection indexes only — fields
  * not in `list_collections`'s `filterable_fields` aren't searched here.
+ *
+ * **Group-gated, filter not deny (Task 10b).** This tool has no single
+ * collection argument — it fans out across every collection the caller can
+ * see — so unlike query_collection/get_object/search_collection it declares
+ * NO ToolRequirement (a null collectionArg would degrade the call-time guard
+ * to isSatisfiedForAny(), a blanket "has read on ANYTHING" check, which is
+ * the wrong question here and would either deny the whole call for a caller
+ * with narrow grants or admit collections outside those grants). Instead the
+ * existing per-collection `$visible` filter (which already applies
+ * McpSchemaResolver::isAccessibleTo() for the exposure layer) additionally
+ * requires PersonaContext::canReadCollection() — group grant, with the same
+ * public-collection carve-out query_collection gets. A collection the
+ * caller's groups don't grant read on is silently absent from the results,
+ * never a hard error — consistent with this tool's aggregate/best-effort
+ * shape (it already silently skips collections with zero hits).
  */
 readonly class SearchCollectionsTool
 {
@@ -124,7 +139,8 @@ readonly class SearchCollectionsTool
 
 		$visible = array_filter(
 			$this->collections->listAllCollections(),
-			fn (CollectionData $c): bool => $this->schemaResolver->isAccessibleTo($c, $persona->value),
+			fn (CollectionData $c): bool => $this->schemaResolver->isAccessibleTo($c, $persona->value)
+				&& $this->personaContext->canReadCollection($c->id, $c),
 		);
 
 		$cappedLimit = max(1, min(self::LIMIT_CAP, $limit));

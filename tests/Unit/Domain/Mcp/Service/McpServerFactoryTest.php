@@ -10,6 +10,7 @@ use Mcp\Server\Session\InMemorySessionStore;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -17,6 +18,7 @@ use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRenderer;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -93,7 +95,11 @@ final class McpServerFactoryTest extends TestCase
 			$promptDiscovery,
 			$promptRegistrar,
 			$extensionManager,
-			new PersonaContext(),
+			// No test in this file registers a requirement-bearing tool
+			// (`requires:` unset throughout), so guardHandler()'s objects+read
+			// canReadCollection() branch is unreachable here — plain stubs
+			// satisfy PersonaContext's Task 10b constructor deps only.
+			new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
 			new OAuthScopeRegistry(),
 			new OAuthActivityLogger(new NullLogger()),
 		);

@@ -291,28 +291,42 @@ readonly class McpServerFactory
 			return $tool->handler;
 		}
 
-		$innerHandler   = $tool->handler;
-		$toolName       = $tool->name;
-		$personaContext = $this->personaContext;
-		$scopeRegistry  = $this->scopeRegistry;
-		$activityLogger = $this->activityLogger;
+		$innerHandler     = $tool->handler;
+		$toolName         = $tool->name;
+		$isPublicReadTool = $tool->access === 'public' && $requires->domain === 'objects' && $requires->operation === 'read';
+		$personaContext   = $this->personaContext;
+		$scopeRegistry    = $this->scopeRegistry;
+		$activityLogger   = $this->activityLogger;
 
-		$wrapped = static function (array $arguments) use ($requires, $innerHandler, $toolName, $personaContext, $scopeRegistry, $activityLogger): mixed {
+		$wrapped = static function (array $arguments) use ($requires, $innerHandler, $toolName, $isPublicReadTool, $personaContext, $scopeRegistry, $activityLogger): mixed {
 			$persona = $personaContext->current();
 
-			// Defense in depth. McpToolDefinition::isVisibleTo() already
-			// keeps a $requires-bearing tool off the registered SDK surface
-			// entirely for PUBLIC_ callers (access:'public' alone is no
-			// longer sufficient once $requires is set — see its docblock),
-			// so this branch should be unreachable in practice. It stays
-			// here anyway: PUBLIC_ has neither an OAuth token (no scopes)
-			// nor a resolved UserAuthority, so if a misconfigured tool or a
-			// future registration path ever slipped one through, falling
-			// into the AUTHENTICATED branch below would either throw on a
-			// null authority (fine) or — if that branch is ever loosened —
+			// The objects+read + access:'public' combination (Task 10b —
+			// query_collection/get_object/search_collection) stays FULLY open
+			// to PUBLIC_, unguarded by $requires — mirrors
+			// McpToolDefinition::isVisibleTo()'s PUBLIC_ carve-out (see its
+			// docblock for the full rationale: $access:'public' IS the entire
+			// grant for an anonymous caller on a READ tool; "public" has never
+			// meant "writable/administrable by everyone", so this does NOT
+			// extend to $access:'public' tools with any OTHER requirement
+			// shape). Falls through to the real handler dispatch at the
+			// bottom, completely unguarded by $requires — exactly as an
+			// access:'public' tool with no $requires at all would behave; the
+			// real handler still applies its own mcp.access exposure check.
+			//
+			// For every other tool (any requirement shape that ISN'T
+			// objects+read+public), PUBLIC_ is denied outright. Defense in
+			// depth: McpToolDefinition::isVisibleTo() already keeps such a
+			// tool off the registered SDK surface for PUBLIC_ callers, so
+			// this branch should be unreachable in practice. It stays here
+			// anyway: PUBLIC_ has neither an OAuth token (no scopes) nor a
+			// resolved UserAuthority, so if a misconfigured tool or a future
+			// registration path ever slipped one through, falling into the
+			// AUTHENTICATED branch below would either throw on a null
+			// authority (fine) or — if that branch is ever loosened —
 			// silently dispatch unguarded (not fine). Fail closed explicitly
 			// instead of relying on that branch's incidental behavior.
-			if ($persona === McpPersona::PUBLIC_) {
+			if ($persona === McpPersona::PUBLIC_ && !$isPublicReadTool) {
 				$activityLogger->scopeRejected($personaContext->getClientId(), 'tools/call:' . $toolName, $personaContext->getScopes());
 
 				throw new ToolCallException(sprintf(
@@ -361,7 +375,18 @@ readonly class McpServerFactory
 							$requires->operation,
 						));
 					}
-					$satisfied = $requires->isSatisfiedFor($authority, $target);
+					// objects+read (Task 10b) routes through PersonaContext::
+					// canReadCollection() instead of ToolRequirement::isSatisfiedFor()
+					// — the single home for the "mcp.access:'public' collections stay
+					// readable by everyone" carve-out that closes the privilege
+					// inversion the Task 10 review found (an AUTHENTICATED caller
+					// without a group grant must not be denied where an anonymous
+					// caller succeeds). Every other domain/operation keeps the plain
+					// group-grant check — that carve-out is read-only content
+					// exposure, not a general "public" concept for writes/schemas/etc.
+					$satisfied = ($requires->domain === 'objects' && $requires->operation === 'read')
+						? $personaContext->canReadCollection($target)
+						: $requires->isSatisfiedFor($authority, $target);
 				} else {
 					$target    = '';
 					$satisfied = $requires->isSatisfiedForAny($authority);
