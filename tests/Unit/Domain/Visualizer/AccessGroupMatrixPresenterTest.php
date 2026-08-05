@@ -122,9 +122,9 @@ final class AccessGroupMatrixPresenterTest extends TestCase
 		$dimensions   = array_column($result['columnGroups'], 'dimension');
 
 		$this->assertSame(
-			['schemas', 'collectionsMeta', 'collections', 'utils', 'extensions'],
+			['schemas', 'collectionsMeta', 'collections', 'mcp', 'utils', 'extensions'],
 			$dimensions,
-			'Dimension order must be: collections, utils, schemas, extensions, collectionsMeta',
+			'Dimension order must be: schemas, collectionsMeta, collections, mcp, utils, extensions',
 		);
 	}
 
@@ -138,6 +138,7 @@ final class AccessGroupMatrixPresenterTest extends TestCase
 		$this->assertSame('Schemas', $labelsByDim['schemas']);
 		$this->assertSame('Extensions', $labelsByDim['extensions']);
 		$this->assertSame('Collection Meta', $labelsByDim['collectionsMeta']);
+		$this->assertSame('AI / MCP', $labelsByDim['mcp']);
 	}
 
 	public function testColumnsWithinEachDimensionAreAlphabeticByResourceId(): void
@@ -353,9 +354,102 @@ final class AccessGroupMatrixPresenterTest extends TestCase
 	{
 		$result = $this->makePresenter()->present([]);
 		$this->assertSame([], $result['rows']);
-		// columnGroups still has the 5 dimension groups, but with no columns
+		// columnGroups still has the 6 dimension groups, but with no columns
 		foreach ($result['columnGroups'] as $cg) {
 			$this->assertSame([], $cg['columns']);
 		}
+	}
+
+	// -----------------------------------------------------------------------
+	// mcp dimension formatting (the presenter is generic — it just applies the
+	// same CRUD-letter encoding to whatever ops the analyzer hands it; these
+	// tests confirm the 'mcp' key is wired through the same CRUD_DIMENSIONS path)
+	// -----------------------------------------------------------------------
+
+	public function testMcpDimensionIsAbsentWhenNoGroupHasAnyMcpColumns(): void
+	{
+		// makeModel() groups carry no 'mcp' key at all in their dimensions.
+		$result   = $this->makePresenter()->present($this->makeModel());
+		$mcpGroup = null;
+		foreach ($result['columnGroups'] as $cg) {
+			if ($cg['dimension'] === 'mcp') {
+				$mcpGroup = $cg;
+			}
+		}
+		$this->assertNotNull($mcpGroup);
+		$this->assertSame([], $mcpGroup['columns'], 'A site with no mcp data must produce zero mcp columns');
+	}
+
+	public function testMcpCellWithReadCreateUpdateNeverShowsDeleteLetter(): void
+	{
+		$model = [
+			[
+				'id'           => 'writer',
+				'name'         => 'Writer',
+				'isSuperAdmin' => false,
+				'dimensions'   => [
+					'collections'     => [],
+					'collectionsMeta' => [],
+					'schemas'         => [],
+					'mcp'             => [
+						'blog' => ['ops' => ['read', 'create', 'update'], 'all' => false],
+					],
+					'extensions' => [],
+					'utils'      => [],
+				],
+			],
+		];
+
+		$result = $this->makePresenter()->present($model);
+		// Fixed C/R/U/D order: create=C read=R update=U delete=· → "CRU·"
+		$this->assertSame('CRU·', $result['rows'][0]['cells']['mcp:blog']);
+	}
+
+	public function testMcpCellWithReadOnlyPads(): void
+	{
+		$model = [
+			[
+				'id'           => 'reader',
+				'name'         => 'Reader',
+				'isSuperAdmin' => false,
+				'dimensions'   => [
+					'collections'     => [],
+					'collectionsMeta' => [],
+					'schemas'         => [],
+					'mcp'             => [
+						'blog' => ['ops' => ['read'], 'all' => false],
+					],
+					'extensions' => [],
+					'utils'      => [],
+				],
+			],
+		];
+
+		$result = $this->makePresenter()->present($model);
+		$this->assertSame('·R··', $result['rows'][0]['cells']['mcp:blog']);
+	}
+
+	public function testMcpSuperAdminAllFlagProducesALL(): void
+	{
+		$model = [
+			[
+				'id'           => 'admin',
+				'name'         => 'Administrators',
+				'isSuperAdmin' => true,
+				'dimensions'   => [
+					'collections'     => [],
+					'collectionsMeta' => [],
+					'schemas'         => [],
+					'mcp'             => [
+						'blog' => ['ops' => ['read', 'create', 'update', 'delete'], 'all' => true],
+					],
+					'extensions' => [],
+					'utils'      => [],
+				],
+			],
+		];
+
+		$result = $this->makePresenter()->present($model);
+		$this->assertSame('ALL', $result['rows'][0]['cells']['mcp:blog']);
 	}
 }

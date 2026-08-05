@@ -30,11 +30,16 @@ namespace TotalCMS\Domain\Visualizer\Service;
  *
  * Cells are keyed `"<dimension>:<resourceId>"`.
  *
- * ### CRUD dimensions (collections, collectionsMeta, schemas)
+ * ### CRUD dimensions (collections, collectionsMeta, schemas, mcp)
  *   - `all = true`                  → `"ALL"`
  *   - All four ops present, all=false → `"CRUD"`
  *   - Partial ops               → fixed C/R/U/D order; present letter, `·` for absent (e.g. read+update → `"·R·U"`)
  *   - No ops                    → `""` (empty string)
+ *
+ * `mcp` is a CRUD dimension too, but its producer ({@see AccessGroupAnalyzer::resolveMcpDimension()})
+ * never emits a `delete` op for a non-super-admin row (MCP has no delete tool), so the
+ * `D` position is always `·` there — this presenter has no MCP-specific knowledge, it just
+ * formats whatever ops the analyzer hands it.
  *
  * ### Access dimensions (utils, extensions) — single-op (`access`)
  *   - `all = true`      → `"ALL"`
@@ -42,7 +47,7 @@ namespace TotalCMS\Domain\Visualizer\Service;
  *   - no access         → `"·"`
  *
  * ## Dimension order
- *   Schemas → Collection Meta → Collection Objects → Utils → Extensions
+ *   Schemas → Collection Meta → Collection Objects → AI / MCP → Utils → Extensions
  *
  * ## Row ordering
  *   Non-super-admin rows alphabetically by name, super-admin rows last (also alphabetical among themselves).
@@ -54,12 +59,13 @@ readonly class AccessGroupMatrixPresenter
 		'schemas'         => 'Schemas',
 		'collectionsMeta' => 'Collection Meta',
 		'collections'     => 'Collection Objects',
+		'mcp'             => 'AI / MCP',
 		'utils'           => 'Utils',
 		'extensions'      => 'Extensions',
 	];
 
 	/** CRUD dimensions use C/R/U/D letter encoding; all others use access (✓/·) encoding. */
-	private const CRUD_DIMENSIONS = ['collections', 'collectionsMeta', 'schemas'];
+	private const CRUD_DIMENSIONS = ['collections', 'collectionsMeta', 'schemas', 'mcp'];
 
 	/** Fixed CRUD letter map: op-name → display letter. */
 	private const OP_LETTERS = [

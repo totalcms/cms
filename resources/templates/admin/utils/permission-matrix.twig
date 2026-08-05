@@ -33,6 +33,9 @@
 		{% if colGroup.columns|length > 0 %}
 		<details class="pm-dimension" open>
 			<summary class="pm-dimension-label">{{ colGroup.label }}</summary>
+			{% if colGroup.dimension == 'mcp' %}
+				<p class="pm-dimension-note">Shows what a connected AI assistant (e.g. Claude via MCP) can reach for each group. Group-side reach only — a real connection is also limited by the OAuth scopes the user approved (<code>cms:read</code> / <code>cms:write</code>), so a group showing <strong>C</strong>/<strong>U</strong> still can't write over a read-only connection. MCP has no delete tool, so <strong>D</strong> never appears.</p>
+			{% endif %}
 			<div class="pm-table-wrap">
 				<table class="pm-matrix" aria-label="{{ colGroup.label }} permissions">
 					<thead>
@@ -121,6 +124,12 @@
 	cursor: pointer;
 	padding: 0.35rem 0;
 	color: oklch(var(--totalform-darkgray));
+}
+.pm-dimension-note {
+	font-size: 0.8rem;
+	color: oklch(var(--totalform-darkgray));
+	margin: 0 0 0.5rem;
+	max-width: 60rem;
 }
 .pm-table-wrap {
 	overflow-x: auto;
