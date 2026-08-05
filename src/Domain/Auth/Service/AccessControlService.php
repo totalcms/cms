@@ -443,6 +443,30 @@ readonly class AccessControlService
 	}
 
 	/**
+	 * Whether the OAuth-identified user still exists. Distinguishes a
+	 * deleted (or renamed) user from one that simply has no reachable
+	 * permissions — {@see authorityFor()} resolves both cases to an
+	 * equally "empty" authority, so callers that need to tell a genuinely
+	 * missing user apart from an existing-but-groupless one (e.g. the
+	 * OAuth Grants admin page, which shows a distinct "this grant is
+	 * inert" note for a deleted user) check this first.
+	 */
+	public function userExists(OAuthUserRef $ref): bool
+	{
+		if ($this->userValidation->isSuperAdmin($ref->userId, $ref->collection)) {
+			return true;
+		}
+
+		try {
+			$this->userValidation->validateUserById($ref->userId, $ref->collection);
+
+			return true;
+		} catch (\Throwable) {
+			return false;
+		}
+	}
+
+	/**
 	 * Resolve a session-free UserAuthority for an OAuth-identified user.
 	 * Super admins short-circuit to an unrestricted authority; any lookup
 	 * failure (unknown user, missing collection, etc.) resolves to

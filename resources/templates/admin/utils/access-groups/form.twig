@@ -3,6 +3,7 @@
 
 <section class="dash-content-section">
 	<p>{{ t('access_groups.form_desc') }} {{ t('access_groups.perm_merge') }}</p>
+	<p class="permissions-scope-note">{{ t('access_groups.permissions_scope_note') }}</p>
 
 	{% set formFields %}
 		{{ cms.form.field("id", "id", {
@@ -300,6 +301,15 @@
 	font-size     : 0.9rem;
 	margin-top    : -0.5rem;
 	margin-bottom : 1rem;
+}
+.permissions-scope-note {
+	color         : oklch(var(--totalform-darkgray));
+	font-size     : 0.9rem;
+	background    : oklch(var(--totalform-icon-bg));
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+	padding       : 0.75rem 1rem;
+	margin-block  : 1rem;
 }
 h3 {
 	margin-block : 2rem 1rem;

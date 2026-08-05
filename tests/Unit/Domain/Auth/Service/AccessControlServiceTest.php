@@ -322,6 +322,26 @@ describe('AccessControlService - Cross-Collection Super Admin Hardening', functi
 	});
 });
 
+describe('AccessControlService - userExists', function (): void {
+	it('returns true for a user that exists', function (): void {
+		$ref = OAuthUserRef::parse('auth:blogger-user-test-com', 'auth');
+
+		expect($this->accessControl->userExists($ref))->toBeTrue();
+	});
+
+	it('returns true for the super admin', function (): void {
+		$ref = OAuthUserRef::parse('auth:admin', 'auth');
+
+		expect($this->accessControl->userExists($ref))->toBeTrue();
+	});
+
+	it('returns false for a user that no longer exists', function (): void {
+		$ref = OAuthUserRef::parse('auth:deleted-user-does-not-exist', 'auth');
+
+		expect($this->accessControl->userExists($ref))->toBeFalse();
+	});
+});
+
 describe('AccessControlService - Collection Metadata Operations', function (): void {
 	it('allows admin all collection metadata operations', function (): void {
 		expect($this->accessControl->canAccessCollectionsMetaOperation('admin', 'create'))->toBeTrue();

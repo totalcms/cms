@@ -9,12 +9,14 @@ use Psr\Http\Message\UriInterface;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
@@ -25,6 +27,7 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Domain\Visualizer\Service\VisualizerService;
 use TotalCMS\Renderer\TwigRenderer;
+use TotalCMS\Support\Config;
 
 final class AdminUtilsActionTest extends TestCase
 {
@@ -54,6 +57,9 @@ final class AdminUtilsActionTest extends TestCase
 	private \PHPUnit\Framework\MockObject\MockObject $response;
 	private \PHPUnit\Framework\MockObject\MockObject $visualizerService;
 	private \Odan\Session\SessionInterface&\PHPUnit\Framework\MockObject\MockObject $session;
+	private \PHPUnit\Framework\MockObject\MockObject $accessControlService;
+	private \PHPUnit\Framework\MockObject\MockObject $mcpSchemaResolver;
+	private Config $config;
 
 	protected function setUp(): void
 	{
@@ -85,6 +91,10 @@ final class AdminUtilsActionTest extends TestCase
 		$this->response              = $this->createMock(ResponseInterface::class);
 		$this->visualizerService     = $this->createMock(VisualizerService::class);
 		$this->session               = $this->createMock(\Odan\Session\SessionInterface::class);
+		$this->accessControlService  = $this->createMock(AccessControlService::class);
+		$this->mcpSchemaResolver     = $this->createMock(McpSchemaResolver::class);
+		$this->config                = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$this->config->auth          = ['collection' => 'auth'];
 
 		$this->action = new AdminUtilsAction(
 			$this->renderer,
@@ -109,6 +119,9 @@ final class AdminUtilsActionTest extends TestCase
 			$this->visualizerService,
 			$this->session,
 			$this->createMock(\TotalCMS\Domain\Builder\Service\BuilderTemplatePaths::class),
+			$this->accessControlService,
+			$this->mcpSchemaResolver,
+			$this->config,
 		);
 	}
 
@@ -589,6 +602,151 @@ final class AdminUtilsActionTest extends TestCase
 		$result = ($this->action)($this->request, $this->response, ['page' => 'oauth-grants']);
 
 		$this->assertSame($expectedResponse, $result);
+	}
+
+	/**
+	 * Seeds one client + one grant for the oauth-grants page and runs the
+	 * action, returning the single computed row's 'effectiveReach' array.
+	 * Shared setup for the Effective Reach test scenarios below.
+	 *
+	 * @param list<string> $scopes
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function effectiveReachForSingleGrant(array $scopes): array
+	{
+		$this->setupRoutingContext();
+		$uri = $this->createMock(UriInterface::class);
+		$uri->method('getPath')->willReturn('/admin/utils/oauth-grants');
+		$uri->method('getQuery')->willReturn('');
+
+		$this->request->method('getUri')->willReturn($uri);
+		$this->request->method('getMethod')->willReturn('GET');
+		$this->request->method('getQueryParams')->willReturn([]);
+
+		$client = new \TotalCMS\Domain\OAuth\Data\OAuthClientData(
+			id: 'client-reach',
+			name: 'Reach Test App',
+			secretHash: '$2y$12$hash',
+			redirectUris: ['https://example.com/cb'],
+			scopes: ['cms:read'],
+			isDynamic: false,
+			isConfidential: true,
+			createdAt: '2026-01-01T00:00:00Z',
+			createdBy: 'admin',
+		);
+		$grant = new \TotalCMS\Domain\OAuth\Data\OAuthGrantData(
+			id: 'grant-reach',
+			clientId: 'client-reach',
+			userId: 'some-user',
+			scopes: $scopes,
+			refreshTokenHash: 'hash-reach',
+			issuedAt: '2026-01-01T00:00:00Z',
+			expiresAt: '2027-01-01T00:00:00Z',
+		);
+		$this->oauthClientRepository->save($client);
+		$this->oauthGrantRepository->save($grant);
+
+		$blog          = new \TotalCMS\Domain\Collection\Data\CollectionData();
+		$blog->id      = 'blog';
+		$blog->schema  = 'blog';
+		$blog->name    = 'Blog';
+		$pages         = new \TotalCMS\Domain\Collection\Data\CollectionData();
+		$pages->id     = 'pages';
+		$pages->schema = 'builder-page';
+		$pages->name   = 'Pages';
+
+		$this->collectionLister->method('listAllCollections')->willReturn([$blog, $pages]);
+		$this->mcpSchemaResolver->method('isAccessibleTo')->willReturn(false);
+
+		$captured         = null;
+		$expectedResponse = $this->createMock(ResponseInterface::class);
+		$this->renderer->method('template')
+			->willReturnCallback(function ($response, $template, $data) use (&$captured, $expectedResponse) {
+				$captured = $data;
+
+				return $expectedResponse;
+			});
+
+		($this->action)($this->request, $this->response, ['page' => 'oauth-grants']);
+
+		$this->assertIsArray($captured);
+		$grants = $captured['oauthGrants'];
+		$this->assertCount(1, $grants);
+
+		return $grants[0]['effectiveReach'];
+	}
+
+	public function testEffectiveReachListsOnlyTheirCollectionsForABloggerGrant(): void
+	{
+		$bloggerGroup = new \TotalCMS\Domain\AccessGroup\Data\AccessGroupData([
+			'id'          => 'blogger',
+			'permissions' => [
+				'collections' => [
+					'operations' => ['create', 'read', 'update', 'delete'],
+					'all'        => false,
+					'allowed'    => ['blog'],
+				],
+			],
+		]);
+		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
+
+		$this->accessControlService->method('userExists')->willReturn(true);
+		$this->accessControlService->method('authorityFor')->willReturn($authority);
+
+		$reach = $this->effectiveReachForSingleGrant(['cms:read', 'cms:write']);
+
+		$this->assertFalse($reach['fullAdmin']);
+		$this->assertFalse($reach['userMissing']);
+		$this->assertFalse($reach['noAccess']);
+		$this->assertSame(['blog'], $reach['readable']);
+		$this->assertSame(['blog'], $reach['writable']);
+	}
+
+	public function testEffectiveReachShowsNoAccessWhenUserHasNoGroups(): void
+	{
+		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: false, groups: []);
+
+		$this->accessControlService->method('userExists')->willReturn(true);
+		$this->accessControlService->method('authorityFor')->willReturn($authority);
+
+		$reach = $this->effectiveReachForSingleGrant(['cms:read', 'cms:write']);
+
+		$this->assertFalse($reach['fullAdmin']);
+		$this->assertFalse($reach['userMissing']);
+		$this->assertTrue($reach['noAccess']);
+		$this->assertSame([], $reach['readable']);
+		$this->assertSame([], $reach['writable']);
+	}
+
+	public function testEffectiveReachShowsFullAdministrativeAccessForAnAdminGrant(): void
+	{
+		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: true, groups: []);
+
+		$this->accessControlService->method('userExists')->willReturn(true);
+		$this->accessControlService->method('authorityFor')->willReturn($authority);
+
+		$reach = $this->effectiveReachForSingleGrant(['cms:admin']);
+
+		$this->assertTrue($reach['fullAdmin']);
+		$this->assertFalse($reach['userMissing']);
+		$this->assertFalse($reach['noAccess']);
+		$this->assertSame([], $reach['readable']);
+		$this->assertSame([], $reach['writable']);
+	}
+
+	public function testEffectiveReachShowsUserMissingForADeletedUser(): void
+	{
+		$this->accessControlService->method('userExists')->willReturn(false);
+		$this->accessControlService->expects($this->never())->method('authorityFor');
+
+		$reach = $this->effectiveReachForSingleGrant(['cms:read', 'cms:write']);
+
+		$this->assertFalse($reach['fullAdmin']);
+		$this->assertTrue($reach['userMissing']);
+		$this->assertFalse($reach['noAccess']);
+		$this->assertSame([], $reach['readable']);
+		$this->assertSame([], $reach['writable']);
 	}
 
 	public function testIncludesUrlData(): void

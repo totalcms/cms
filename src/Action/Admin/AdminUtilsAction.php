@@ -10,13 +10,19 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
@@ -31,6 +37,7 @@ use TotalCMS\Domain\Twig\Service\TwigLintService;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Domain\Visualizer\Service\VisualizerService;
 use TotalCMS\Renderer\TwigRenderer;
+use TotalCMS\Support\Config;
 
 readonly class AdminUtilsAction
 {
@@ -57,6 +64,9 @@ readonly class AdminUtilsAction
 		private VisualizerService $visualizerService,
 		private SessionInterface $session,
 		private \TotalCMS\Domain\Builder\Service\BuilderTemplatePaths $builderTemplatePaths,
+		private AccessControlService $accessControlService,
+		private McpSchemaResolver $mcpSchemaResolver,
+		private Config $config,
 	) {
 	}
 
@@ -374,7 +384,7 @@ readonly class AdminUtilsAction
 			// refresh windows) don't count, they only await oauth:gc.
 			$grantCount = count(array_filter(
 				$this->oauthGrantRepository->findByClientId($client->id),
-				static function (\TotalCMS\Domain\OAuth\Data\OAuthGrantData $grant) use ($now): bool {
+				static function (OAuthGrantData $grant) use ($now): bool {
 					try {
 						return new \DateTimeImmutable($grant->expiresAt, new \DateTimeZone('UTC')) > $now;
 					} catch (\Exception) {
@@ -398,8 +408,15 @@ readonly class AdminUtilsAction
 	}
 
 	/**
+	 * Maximum number of collection ids shown per read/write list on the
+	 * OAuth Grants "Effective reach" row before the remainder collapses
+	 * into a "+N more" note.
+	 */
+	private const EFFECTIVE_REACH_BADGE_CAP = 6;
+
+	/**
 	 * Build the OAuth grants view data: every grant joined with its client
-	 * name and expiry metadata, sorted most-recent first.
+	 * name, expiry metadata, and effective reach — sorted most-recent first.
 	 *
 	 * @return list<array<string,mixed>>
 	 */
@@ -407,6 +424,12 @@ readonly class AdminUtilsAction
 	{
 		$now    = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
 		$grants = $this->oauthGrantRepository->all();
+
+		$authCollection = (string)$this->config->auth['collection'];
+		$allCollections = $this->collectionLister->listAllCollections();
+
+		/** @var array<string,array{exists: bool, authority: UserAuthority}> $authorityCache */
+		$authorityCache = [];
 
 		$rows = [];
 
@@ -437,20 +460,134 @@ readonly class AdminUtilsAction
 				'isExpired'       => $isExpired,
 				'expiresAt'       => $expiresAt,
 				'daysUntilExpiry' => $daysUntilExpiry,
+				'effectiveReach'  => $this->effectiveReachForGrant($grant, $authCollection, $allCollections, $authorityCache),
 			];
 		}
 
 		// Sort by issuedAt descending (most recent first)
 		usort($rows, static function (array $a, array $b): int {
-			/** @var \TotalCMS\Domain\OAuth\Data\OAuthGrantData $ga */
+			/** @var OAuthGrantData $ga */
 			$ga = $a['grant'];
-			/** @var \TotalCMS\Domain\OAuth\Data\OAuthGrantData $gb */
+			/** @var OAuthGrantData $gb */
 			$gb = $b['grant'];
 
 			return strcmp($gb->issuedAt, $ga->issuedAt);
 		});
 
 		return $rows;
+	}
+
+	/**
+	 * Compute what a grant can actually touch once its user's access groups
+	 * apply — the "Effective reach" row on the OAuth Grants admin page. A
+	 * raw scope badge like cms:admin can overstate reach: the real ceiling
+	 * is consented scopes ∩ access-group permissions ∩ collection mcp.access
+	 * exposure — the same rule McpAuth::resolvePersona() and
+	 * PersonaContext::canReadCollection() apply at request time, mirrored
+	 * here rather than reimplemented.
+	 *
+	 * $authorityCache is keyed by the composite OAuthUserRef string
+	 * ("collection:id") and shared across every grant in the request — most
+	 * sites have far fewer distinct users than grants, so a user's authority
+	 * is resolved at most once per page render.
+	 *
+	 * @param  array<CollectionData>                                      $allCollections
+	 * @param  array<string,array{exists: bool, authority: UserAuthority}> $authorityCache
+	 *
+	 * @return array{fullAdmin: bool, userMissing: bool, noAccess: bool, readable: list<string>, readableOverflow: int, writable: list<string>, writableOverflow: int}
+	 */
+	private function effectiveReachForGrant(
+		OAuthGrantData $grant,
+		string $authCollection,
+		array $allCollections,
+		array &$authorityCache,
+	): array {
+		$empty = [
+			'fullAdmin'        => false,
+			'userMissing'      => false,
+			'noAccess'         => false,
+			'readable'         => [],
+			'readableOverflow' => 0,
+			'writable'         => [],
+			'writableOverflow' => 0,
+		];
+
+		$ref    = OAuthUserRef::parse($grant->userId, $authCollection);
+		$refKey = (string)$ref;
+
+		if (!isset($authorityCache[$refKey])) {
+			$exists                  = $this->accessControlService->userExists($ref);
+			$authorityCache[$refKey] = [
+				'exists'    => $exists,
+				'authority' => $exists ? $this->accessControlService->authorityFor($ref) : UserAuthority::denied(),
+			];
+		}
+
+		$cached = $authorityCache[$refKey];
+
+		if (!$cached['exists']) {
+			return ['userMissing' => true] + $empty;
+		}
+
+		$authority      = $cached['authority'];
+		$expandedScopes = $this->oauthScopeRegistry->expand($grant->scopes);
+
+		// ADMIN-persona elevation mirrors McpAuth::resolvePersona(): identity
+		// (admin-group membership) AND scope (cms:admin) — never either alone.
+		if ($authority->isAdmin && in_array('cms:admin', $expandedScopes, true)) {
+			return ['fullAdmin' => true] + $empty;
+		}
+
+		$hasReadScope  = in_array('cms:read', $expandedScopes, true);
+		$hasWriteScope = in_array('cms:write', $expandedScopes, true);
+
+		$readable = [];
+		$writable = [];
+
+		foreach ($allCollections as $collection) {
+			if (
+				$hasReadScope
+				&& ($this->mcpSchemaResolver->isAccessibleTo($collection, 'public') || $authority->canCollection('read', $collection->id))
+			) {
+				$readable[] = $collection->id;
+			}
+
+			if ($hasWriteScope && $this->authorityGrantsWrite($authority, $collection->id)) {
+				$writable[] = $collection->id;
+			}
+		}
+
+		sort($readable);
+		sort($writable);
+
+		return [
+			'fullAdmin'        => false,
+			'userMissing'      => false,
+			'noAccess'         => $readable === [] && $writable === [],
+			'readable'         => array_slice($readable, 0, self::EFFECTIVE_REACH_BADGE_CAP),
+			'readableOverflow' => max(0, count($readable) - self::EFFECTIVE_REACH_BADGE_CAP),
+			'writable'         => array_slice($writable, 0, self::EFFECTIVE_REACH_BADGE_CAP),
+			'writableOverflow' => max(0, count($writable) - self::EFFECTIVE_REACH_BADGE_CAP),
+		];
+	}
+
+	/**
+	 * Whether $authority's access groups grant ANY write-shaped CRUD
+	 * operation on $collectionId. Access groups speak CRUD (create, read,
+	 * update, delete) — there is no single "write" operation — while the
+	 * cms:write OAuth scope covers POST/PUT/PATCH/DELETE collectively (see
+	 * OAuthScopeRegistry::impliedPaths for cms:write). This is the bridge
+	 * between the two vocabularies for the Effective Reach computation.
+	 */
+	private function authorityGrantsWrite(UserAuthority $authority, string $collectionId): bool
+	{
+		foreach (['create', 'update', 'delete'] as $operation) {
+			if ($authority->canCollection($operation, $collectionId)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -534,7 +671,7 @@ readonly class AdminUtilsAction
 		$out = [];
 		foreach (SyncableCollections::IDS as $id) {
 			$collection = $this->collectionFetcher->fetchCollection($id);
-			if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
+			if (!$collection instanceof CollectionData) {
 				continue;
 			}
 
