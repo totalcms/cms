@@ -78,6 +78,19 @@
 											</div>
 										</div>
 									{% endif %}
+									{% if reach.deleteOnly|length > 0 %}
+										<div class="oauth-reach-row">
+											<span class="oauth-reach-row-label">{{ t('oauth_grants.reach_delete_only_label') }} <span class="oauth-reach-row-hint">{{ t('oauth_grants.reach_delete_only_hint') }}</span></span>
+											<div class="dash-badge-group">
+												{% for id in reach.deleteOnly %}
+													<span class="dash-badge muted sm">{{ id }}</span>
+												{% endfor %}
+												{% if reach.deleteOnlyOverflow > 0 %}
+													<span class="dash-badge muted sm">{{ t('oauth_grants.reach_more')|replace({'{n}': reach.deleteOnlyOverflow}) }}</span>
+												{% endif %}
+											</div>
+										</div>
+									{% endif %}
 								{% endif %}
 							</div>
 						</div>
@@ -127,5 +140,9 @@
 	font-size   : 0.85rem;
 	color       : oklch(var(--totalform-darkgray));
 	white-space : nowrap;
+}
+.oauth-reach-row-hint {
+	font-size : 0.75rem;
+	color     : oklch(var(--totalform-darkgray) / 0.75);
 }
 </style>

@@ -1,6 +1,7 @@
 <?php
 
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
@@ -9,6 +10,7 @@ use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\Session\SessionKeys;
 
 use function TotalCMS\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\putJson;
 
 /**
  * End-to-end coverage for the OAuth Grants admin page's "Effective reach"
@@ -65,12 +67,16 @@ function seedOauthGrantForReachTest(Slim\App $app, string $userId, array $scopes
 	));
 }
 
-it('renders the read/write collection badges for a blogger-group grant', function (): void {
+it('renders the read badge but hides the write badge for a blogger grant when blog is still at the default mcp.access', function (): void {
 	// The blogger access group (tests/tcms-data-fixtures/.system/access-groups.json)
 	// grants full CRUD on the 'blog' collection specifically — that collection
 	// has to actually exist for the Effective Reach computation to find it.
 	// 'blog' is a reserved schema, so it's provisioned via fetchOrCreateReserved()
-	// rather than SchemaSaver (which rejects reserved schema ids).
+	// rather than SchemaSaver (which rejects reserved schema ids). Left at the
+	// DEFAULT mcp.access ('admin') here — the exact "Joe hit this in
+	// production" case: every MCP write tool refuses it via
+	// ObjectTools::requireExposed(), so the page must not claim it's writable
+	// even though the group grants create/update/delete.
 	$this->app->getContainer()->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
 
 	seedOauthGrantForReachTest($this->app, 'blogger-user-test-com', ['cms:read', 'cms:write']);
@@ -80,8 +86,27 @@ it('renders the read/write collection badges for a blogger-group grant', functio
 	expect($response->getStatusCode())->toBeIn([200, 401, 403]);
 	if ($response->getStatusCode() === 200) {
 		$response->assertSee('dash-badge accent sm">blog<');
+		$response->assertDontSee('dash-badge warning sm">blog<');
 		$response->assertDontSee('Full administrative access');
 		$response->assertDontSee('No collection access');
+	}
+});
+
+it('renders the write badge for a blogger grant once blog is opted into MCP for authenticated callers', function (): void {
+	$blog = $this->app->getContainer()->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
+	expect($blog)->toBeInstanceOf(CollectionData::class);
+
+	$payload        = $blog->toArray();
+	$payload['mcp'] = ['access' => 'authenticated'];
+	putJson('/api/collections/blog', $payload)->assertOk();
+
+	seedOauthGrantForReachTest($this->app, 'blogger-user-test-com', ['cms:read', 'cms:write']);
+
+	$response = get('/admin/utils/oauth-grants');
+
+	expect($response->getStatusCode())->toBeIn([200, 401, 403]);
+	if ($response->getStatusCode() === 200) {
+		$response->assertSee('dash-badge warning sm">blog<');
 	}
 });
 

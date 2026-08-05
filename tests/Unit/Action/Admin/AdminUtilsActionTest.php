@@ -609,11 +609,19 @@ final class AdminUtilsActionTest extends TestCase
 	 * action, returning the single computed row's 'effectiveReach' array.
 	 * Shared setup for the Effective Reach test scenarios below.
 	 *
-	 * @param list<string> $scopes
+	 * $mcpAccessible controls McpSchemaResolver::isAccessibleTo($collection,
+	 * $persona) for the two collections seeded below ('blog', 'pages').
+	 * Defaults to "nothing is exposed at any persona level" (the real default
+	 * for a collection whose operator never touched mcp.access — it reads
+	 * 'admin', so isAccessibleTo() is false for both 'public' and
+	 * 'authenticated'). Tests that need a collection exposed pass their own
+	 * callback: fn(CollectionData $c, string $persona): bool.
+	 *
+	 * @param  list<string> $scopes
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function effectiveReachForSingleGrant(array $scopes): array
+	private function effectiveReachForSingleGrant(array $scopes, ?\Closure $mcpAccessible = null): array
 	{
 		$this->setupRoutingContext();
 		$uri = $this->createMock(UriInterface::class);
@@ -657,7 +665,8 @@ final class AdminUtilsActionTest extends TestCase
 		$pages->name   = 'Pages';
 
 		$this->collectionLister->method('listAllCollections')->willReturn([$blog, $pages]);
-		$this->mcpSchemaResolver->method('isAccessibleTo')->willReturn(false);
+		$this->mcpSchemaResolver->method('isAccessibleTo')
+			->willReturnCallback($mcpAccessible ?? static fn (\TotalCMS\Domain\Collection\Data\CollectionData $collection, string $persona): bool => false);
 
 		$captured         = null;
 		$expectedResponse = $this->createMock(ResponseInterface::class);
@@ -694,13 +703,102 @@ final class AdminUtilsActionTest extends TestCase
 		$this->accessControlService->method('userExists')->willReturn(true);
 		$this->accessControlService->method('authorityFor')->willReturn($authority);
 
-		$reach = $this->effectiveReachForSingleGrant(['cms:read', 'cms:write']);
+		// 'blog' has been opted into MCP for authenticated callers (e.g. the
+		// operator set mcp.access: 'authenticated') — see the DEFAULT-exposure
+		// counterpart test below, where the same group grant is NOT writable.
+		$reach = $this->effectiveReachForSingleGrant(
+			['cms:read', 'cms:write'],
+			static fn (\TotalCMS\Domain\Collection\Data\CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'authenticated',
+		);
 
 		$this->assertFalse($reach['fullAdmin']);
 		$this->assertFalse($reach['userMissing']);
 		$this->assertFalse($reach['noAccess']);
 		$this->assertSame(['blog'], $reach['readable']);
 		$this->assertSame(['blog'], $reach['writable']);
+		$this->assertSame([], $reach['deleteOnly']);
+	}
+
+	public function testEffectiveReachHidesWriteWhenCollectionIsAtTheDefaultMcpAccess(): void
+	{
+		// Same blogger group grant as above, but 'blog' is left at the
+		// DEFAULT mcp.access ('admin' — not exposed to any OAuth caller).
+		// Every MCP write tool refuses this collection via
+		// ObjectTools::requireExposed(), so the page must not claim it's
+		// writable even though the access group grants create/update/delete.
+		$bloggerGroup = new \TotalCMS\Domain\AccessGroup\Data\AccessGroupData([
+			'id'          => 'blogger',
+			'permissions' => [
+				'collections' => [
+					'operations' => ['create', 'read', 'update', 'delete'],
+					'all'        => false,
+					'allowed'    => ['blog'],
+				],
+			],
+		]);
+		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
+
+		$this->accessControlService->method('userExists')->willReturn(true);
+		$this->accessControlService->method('authorityFor')->willReturn($authority);
+
+		// No callback override — helper defaults to "not exposed at any
+		// persona level", matching mcp.access's real default.
+		$reach = $this->effectiveReachForSingleGrant(['cms:read', 'cms:write']);
+
+		$this->assertSame(['blog'], $reach['readable']);
+		$this->assertSame([], $reach['writable']);
+		$this->assertSame([], $reach['deleteOnly']);
+	}
+
+	public function testEffectiveReachHidesWriteWhenTheGrantLacksTheWriteScope(): void
+	{
+		// Group grants full CRUD and the collection IS exposed to
+		// authenticated callers, but the grant itself only carries cms:read —
+		// the consent layer, not the group layer, is what's missing here.
+		$bloggerGroup = new \TotalCMS\Domain\AccessGroup\Data\AccessGroupData([
+			'id'          => 'blogger',
+			'permissions' => [
+				'collections' => [
+					'operations' => ['create', 'read', 'update', 'delete'],
+					'all'        => false,
+					'allowed'    => ['blog'],
+				],
+			],
+		]);
+		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
+
+		$this->accessControlService->method('userExists')->willReturn(true);
+		$this->accessControlService->method('authorityFor')->willReturn($authority);
+
+		$reach = $this->effectiveReachForSingleGrant(
+			['cms:read'],
+			static fn (\TotalCMS\Domain\Collection\Data\CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'authenticated',
+		);
+
+		$this->assertSame(['blog'], $reach['readable']);
+		$this->assertSame([], $reach['writable']);
+		$this->assertSame([], $reach['deleteOnly']);
+	}
+
+	public function testEffectiveReachListsAPublicCollectionAsReadableEvenWithoutTheReadScope(): void
+	{
+		// Grant carries only mcp:tools (no cms:read at all) — but 'blog' is
+		// exposed mcp.access: 'public', so an authenticated caller must read
+		// it exactly like an anonymous one would (PersonaContext::
+		// canReadCollection()'s "authenticating must never subtract reach").
+		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: false, groups: []);
+
+		$this->accessControlService->method('userExists')->willReturn(true);
+		$this->accessControlService->method('authorityFor')->willReturn($authority);
+
+		$reach = $this->effectiveReachForSingleGrant(
+			['mcp:tools'],
+			static fn (\TotalCMS\Domain\Collection\Data\CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'public',
+		);
+
+		$this->assertFalse($reach['noAccess']);
+		$this->assertSame(['blog'], $reach['readable']);
+		$this->assertSame([], $reach['writable']);
 	}
 
 	public function testEffectiveReachShowsNoAccessWhenUserHasNoGroups(): void

@@ -482,9 +482,9 @@ readonly class AdminUtilsAction
 	 * apply — the "Effective reach" row on the OAuth Grants admin page. A
 	 * raw scope badge like cms:admin can overstate reach: the real ceiling
 	 * is consented scopes ∩ access-group permissions ∩ collection mcp.access
-	 * exposure — the same rule McpAuth::resolvePersona() and
-	 * PersonaContext::canReadCollection() apply at request time, mirrored
-	 * here rather than reimplemented.
+	 * exposure — the same rule McpAuth::resolvePersona(),
+	 * PersonaContext::canReadCollection(), and ObjectTools::requireExposed()
+	 * apply at request time, mirrored here rather than reimplemented.
 	 *
 	 * $authorityCache is keyed by the composite OAuthUserRef string
 	 * ("collection:id") and shared across every grant in the request — most
@@ -494,7 +494,7 @@ readonly class AdminUtilsAction
 	 * @param  array<CollectionData>                                      $allCollections
 	 * @param  array<string,array{exists: bool, authority: UserAuthority}> $authorityCache
 	 *
-	 * @return array{fullAdmin: bool, userMissing: bool, noAccess: bool, readable: list<string>, readableOverflow: int, writable: list<string>, writableOverflow: int}
+	 * @return array{fullAdmin: bool, userMissing: bool, noAccess: bool, readable: list<string>, readableOverflow: int, writable: list<string>, writableOverflow: int, deleteOnly: list<string>, deleteOnlyOverflow: int}
 	 */
 	private function effectiveReachForGrant(
 		OAuthGrantData $grant,
@@ -503,13 +503,15 @@ readonly class AdminUtilsAction
 		array &$authorityCache,
 	): array {
 		$empty = [
-			'fullAdmin'        => false,
-			'userMissing'      => false,
-			'noAccess'         => false,
-			'readable'         => [],
-			'readableOverflow' => 0,
-			'writable'         => [],
-			'writableOverflow' => 0,
+			'fullAdmin'          => false,
+			'userMissing'        => false,
+			'noAccess'           => false,
+			'readable'           => [],
+			'readableOverflow'   => 0,
+			'writable'           => [],
+			'writableOverflow'   => 0,
+			'deleteOnly'         => [],
+			'deleteOnlyOverflow' => 0,
 		];
 
 		$ref    = OAuthUserRef::parse($grant->userId, $authCollection);
@@ -541,53 +543,57 @@ readonly class AdminUtilsAction
 		$hasReadScope  = in_array('cms:read', $expandedScopes, true);
 		$hasWriteScope = in_array('cms:write', $expandedScopes, true);
 
-		$readable = [];
-		$writable = [];
+		$readable   = [];
+		$writable   = [];
+		$deleteOnly = [];
 
 		foreach ($allCollections as $collection) {
-			if (
-				$hasReadScope
-				&& ($this->mcpSchemaResolver->isAccessibleTo($collection, 'public') || $authority->canCollection('read', $collection->id))
-			) {
+			// Read mirrors PersonaContext::canReadCollection(): public
+			// exposure is reachable with NO scope at all (an AUTHENTICATED
+			// caller must never read LESS than an anonymous one would), while
+			// a group read grant additionally requires the cms:read scope.
+			$publiclyReadable = $this->mcpSchemaResolver->isAccessibleTo($collection, 'public');
+			$groupReadable    = $hasReadScope && $authority->canCollection('read', $collection->id);
+
+			if ($publiclyReadable || $groupReadable) {
 				$readable[] = $collection->id;
 			}
 
-			if ($hasWriteScope && $this->authorityGrantsWrite($authority, $collection->id)) {
-				$writable[] = $collection->id;
+			// Write mirrors ObjectTools::requireExposed(): every MCP write
+			// tool demands mcp.access expose the collection to at least an
+			// AUTHENTICATED persona BEFORE the group grant is even checked.
+			// mcp.access defaults to 'admin' (not exposed) when the operator
+			// never set it — practically every collection on a fresh site —
+			// so a group write grant alone overstates reach without this gate.
+			if ($hasWriteScope && $this->mcpSchemaResolver->isAccessibleTo($collection, 'authenticated')) {
+				// create_object/update_object need create/update; MCP has no
+				// delete tool. A group that only grants delete (no create or
+				// update) can still delete over REST but can't be handed
+				// anything an AI assistant would call "write" — list it
+				// separately rather than folding it into the write badge.
+				if ($authority->canCollection('create', $collection->id) || $authority->canCollection('update', $collection->id)) {
+					$writable[] = $collection->id;
+				} elseif ($authority->canCollection('delete', $collection->id)) {
+					$deleteOnly[] = $collection->id;
+				}
 			}
 		}
 
 		sort($readable);
 		sort($writable);
+		sort($deleteOnly);
 
 		return [
-			'fullAdmin'        => false,
-			'userMissing'      => false,
-			'noAccess'         => $readable === [] && $writable === [],
-			'readable'         => array_slice($readable, 0, self::EFFECTIVE_REACH_BADGE_CAP),
-			'readableOverflow' => max(0, count($readable) - self::EFFECTIVE_REACH_BADGE_CAP),
-			'writable'         => array_slice($writable, 0, self::EFFECTIVE_REACH_BADGE_CAP),
-			'writableOverflow' => max(0, count($writable) - self::EFFECTIVE_REACH_BADGE_CAP),
+			'fullAdmin'          => false,
+			'userMissing'        => false,
+			'noAccess'           => $readable === [] && $writable === [] && $deleteOnly === [],
+			'readable'           => array_slice($readable, 0, self::EFFECTIVE_REACH_BADGE_CAP),
+			'readableOverflow'   => max(0, count($readable) - self::EFFECTIVE_REACH_BADGE_CAP),
+			'writable'           => array_slice($writable, 0, self::EFFECTIVE_REACH_BADGE_CAP),
+			'writableOverflow'   => max(0, count($writable) - self::EFFECTIVE_REACH_BADGE_CAP),
+			'deleteOnly'         => array_slice($deleteOnly, 0, self::EFFECTIVE_REACH_BADGE_CAP),
+			'deleteOnlyOverflow' => max(0, count($deleteOnly) - self::EFFECTIVE_REACH_BADGE_CAP),
 		];
-	}
-
-	/**
-	 * Whether $authority's access groups grant ANY write-shaped CRUD
-	 * operation on $collectionId. Access groups speak CRUD (create, read,
-	 * update, delete) — there is no single "write" operation — while the
-	 * cms:write OAuth scope covers POST/PUT/PATCH/DELETE collectively (see
-	 * OAuthScopeRegistry::impliedPaths for cms:write). This is the bridge
-	 * between the two vocabularies for the Effective Reach computation.
-	 */
-	private function authorityGrantsWrite(UserAuthority $authority, string $collectionId): bool
-	{
-		foreach (['create', 'update', 'delete'] as $operation) {
-			if ($authority->canCollection($operation, $collectionId)) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	/**
