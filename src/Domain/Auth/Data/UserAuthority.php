@@ -280,37 +280,6 @@ final class UserAuthority
 	}
 
 	/**
-	 * @return list<string>|null null = unrestricted (admin, or a group with
-	 *                            collections.all=true and 'read' granted)
-	 */
-	public function readableCollections(): ?array
-	{
-		if ($this->isAdmin) {
-			return null;
-		}
-
-		$collections = [];
-		foreach ($this->groups as $group) {
-			$permissions = $group->permissions['collections'] ?? [];
-			$operations  = $permissions['operations'] ?? [];
-
-			if (!in_array('read', $operations, true)) {
-				continue;
-			}
-
-			if (($permissions['all'] ?? false) === true) {
-				return null;
-			}
-
-			foreach ((array)($permissions['allowed'] ?? []) as $collection) {
-				$collections[(string)$collection] = true;
-			}
-		}
-
-		return array_keys($collections);
-	}
-
-	/**
 	 * A permissions block ('schemas' / 'collectionsMeta' shaped: all, allowed,
 	 * operations) grants something only when it has at least one operation
 	 * AND a target to apply it to (all=true or a non-empty allowed list).

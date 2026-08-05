@@ -340,7 +340,7 @@ Total CMS exposes three URI shapes:
 
 Agents address these via three SDK transport methods:
 
-- **`resources/list`** — flat list of concrete resources (collection summaries + per-view resources). Persona-filtered — for AUTHENTICATED callers, collection resources are filtered by the same three-layer rule as the tools (see below).
+- **`resources/list`** — flat list of concrete resources (collection summaries + per-view resources). Persona-filtered — for AUTHENTICATED callers, collection resources are filtered by the same group + exposure layers as the tools (see below), except layer 1 (scope): resource methods are gated by the `mcp:resources` scope, never `cms:read`.
 - **`resources/templates/list`** — list of URI templates (`tcms://{collection}/{id}`, `tcms://view/{id}`). Agents use templates to construct concrete URIs from known ids; persona-filtered the same way as `resources/list`.
 - **`resources/read`** — fetch the content at a URI. Returns the same data the equivalent tool would (`get_object` / `get_view`); `tcms://{collection}/` returns recent-item summaries.
 

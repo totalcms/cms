@@ -53,7 +53,7 @@ beforeEach(function (): void {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe('UserAuthority - admin fixture', function (): void {
-	it('grants everything and reports unrestricted readable collections', function (): void {
+	it('grants everything', function (): void {
 		$ref       = OAuthUserRef::parse('admin-user-test-com', 'auth');
 		$authority = $this->accessControl->authorityFor($ref);
 
@@ -65,7 +65,6 @@ describe('UserAuthority - admin fixture', function (): void {
 		expect($authority->canSchema('delete', 'blog'))->toBeTrue();
 		expect($authority->canUtil('jumpstart'))->toBeTrue();
 		expect($authority->hasAdminDomainGrants())->toBeTrue();
-		expect($authority->readableCollections())->toBeNull();
 	});
 });
 
@@ -111,13 +110,6 @@ describe('UserAuthority - blogger fixture', function (): void {
 
 		expect($authority->hasAdminDomainGrants())->toBeTrue();
 	});
-
-	it('reports readable collections as just blog', function (): void {
-		$ref       = OAuthUserRef::parse('blogger-user-test-com', 'auth');
-		$authority = $this->accessControl->authorityFor($ref);
-
-		expect($authority->readableCollections())->toBe(['blog']);
-	});
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -143,13 +135,6 @@ describe('UserAuthority - viewer fixture', function (): void {
 
 		expect($authority->canUtil('jumpstart'))->toBeFalse();
 	});
-
-	it('reports unrestricted readable collections (collections.all=true with read)', function (): void {
-		$ref       = OAuthUserRef::parse('viewer-user-test-com', 'auth');
-		$authority = $this->accessControl->authorityFor($ref);
-
-		expect($authority->readableCollections())->toBeNull();
-	});
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -167,7 +152,6 @@ describe('UserAuthority - unknown user', function (): void {
 		expect($authority->canSchema('read', 'blog'))->toBeFalse();
 		expect($authority->canUtil('jumpstart'))->toBeFalse();
 		expect($authority->hasAdminDomainGrants())->toBeFalse();
-		expect($authority->readableCollections())->toBe([]);
 	});
 
 	it('denied() constructs the same denial state directly', function (): void {
@@ -177,7 +161,6 @@ describe('UserAuthority - unknown user', function (): void {
 		expect($authority->canCollection('read', 'blog'))->toBeFalse();
 		expect($authority->canSchema('read', 'blog'))->toBeFalse();
 		expect($authority->hasAdminDomainGrants())->toBeFalse();
-		expect($authority->readableCollections())->toBe([]);
 	});
 });
 
@@ -194,6 +177,5 @@ describe('UserAuthority - groupless user', function (): void {
 		// default group: collections.all=true, operations=['read'].
 		expect($authority->canCollection('read', 'blog'))->toBeTrue();
 		expect($authority->canCollection('create', 'blog'))->toBeFalse();
-		expect($authority->readableCollections())->toBeNull();
 	});
 });

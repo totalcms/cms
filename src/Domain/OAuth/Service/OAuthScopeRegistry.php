@@ -19,9 +19,13 @@ final class OAuthScopeRegistry
 	/**
 	 * Scopes only an admin-group user can convey into a token. Requested by a
 	 * non-admin, they are narrowed away at consent display and finalizeScopes()
-	 * alike — REST trusts token scopes as authority (BaseAccessMiddleware skips
-	 * group checks for Bearer callers), so issuing cms:admin to a non-admin
-	 * would hand them the admin REST surface their groups deny.
+	 * alike — REST resolves a Bearer caller's real authority as scope ∩ the
+	 * approving user's access-group permissions (BaseAccessMiddleware resolves
+	 * a UserAuthority from the token and the per-resource middleware checks it,
+	 * same as a session caller), so issuing cms:admin to a non-admin would hand
+	 * them the admin REST surface only where their groups already allow it —
+	 * but the scope is still worth gating at issuance so a non-admin can never
+	 * even present the token as carrying it.
 	 *
 	 * @var list<string>
 	 */
