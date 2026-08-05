@@ -21,6 +21,16 @@ use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
  * stripping mirror QueryCollectionTool so the resource surface and tool
  * surface stay consistent.
  *
+ * **Group-authority read gate (Task 10).** Unlike QueryCollectionTool/
+ * GetObjectTool — which have no ToolRequirement and let any AUTHENTICATED
+ * caller browse a `mcp.access: authenticated|public` collection, filtering
+ * only drafts by group grant — a resource read is a bulk-browse surface, so
+ * it is gated more strictly: an AUTHENTICATED caller must hold `read` on
+ * $collection (PersonaContext::canReadDrafts() is reused as the "does this
+ * caller's authority grant read" oracle) or the whole read is denied, not
+ * just its drafts. ADMIN is unaffected (canReadDrafts() always true for
+ * ADMIN); PUBLIC_ is unaffected (the check only runs for AUTHENTICATED).
+ *
  * Mounted into ResourceRegistry by CollectionResourceRegistrar (Task A6); this
  * class never registers itself.
  */
@@ -58,11 +68,28 @@ readonly class CollectionResource
 			));
 		}
 
+		// AUTHENTICATED callers must additionally hold `read` on this specific
+		// collection per their resolved access-group authority — same message
+		// as the mcp.access denial above (existing idiom: opaque "not
+		// accessible", no separate error shape for "access-group denied" vs
+		// "mcp.access denied"). ADMIN and PUBLIC_ never reach this branch.
+		if ($persona === McpPersona::AUTHENTICATED && !$this->personaContext->canReadDrafts($collection)) {
+			throw new ToolCallException(\sprintf(
+				'Resource tcms://%s/ is not accessible to this caller. Use list_collections to see available collections.',
+				$collection,
+			));
+		}
+
 		$index = $this->indexReader->fetchIndex($collection);
 		$items = $index->objects->all();
 
-		// Public callers never see drafts (matches QueryCollectionTool's safety merge)
-		if ($persona === McpPersona::PUBLIC_) {
+		// Drafts are hidden from anyone whose authority doesn't grant read on
+		// this collection — PersonaContext::canReadDrafts() is the single home
+		// for this rule (ADMIN always; an OAuth caller when their access
+		// groups grant read; false for public/anonymous). By the time we get
+		// here an AUTHENTICATED caller without that grant has already been
+		// denied above, so this only ever strips drafts for PUBLIC_.
+		if (!$this->personaContext->canReadDrafts($collection)) {
 			$items = array_values(array_filter(
 				$items,
 				static fn (array $i): bool => empty($i['draft']),

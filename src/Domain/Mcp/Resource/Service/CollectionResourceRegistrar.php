@@ -73,8 +73,18 @@ readonly class CollectionResourceRegistrar
 			mimeType: 'application/json',
 			access: $access,
 			handler: static fn (): array => $collectionResource->read($collectionId),
+			collectionId: $collectionId,
 		));
 
+		// Deliberately NOT collectionId-gated (unlike the collection-level
+		// resource above): CollectionObjectResource delegates entirely to
+		// GetObjectTool, which has no per-collection group-read requirement
+		// (Task 9's design — only draft visibility is authority-aware for
+		// single-object fetch). McpServerFactory only registers templates
+		// that pass isVisibleTo() with the SDK for this request, so gating
+		// the template here would silently block resources/read on this
+		// template's URIs at the SDK routing layer — a stricter behavior
+		// than GetObjectTool itself enforces, and out of scope for Task 10.
 		$registry->registerTemplate(new McpResourceTemplateDefinition(
 			uriTemplate: \sprintf('tcms://%s/{id}', $collectionId),
 			name: $sdkName . '-item',

@@ -151,7 +151,12 @@ readonly class McpServerFactory
 			return $builder->build();
 		}
 
-		foreach ($this->resourceRegistry->forPersona($persona) as $resource) {
+		// $this->personaContext->getAuthority() mirrors the ToolRegistry call
+		// above (Task 10): an AUTHENTICATED caller's resolved UserAuthority
+		// additionally narrows collection-scoped resources to what their
+		// access groups grant `read` on, so resources/list matches the
+		// call-time gate CollectionResource::read() enforces.
+		foreach ($this->resourceRegistry->forPersona($persona, $this->personaContext->getAuthority()) as $resource) {
 			$builder->addResource(
 				handler: $resource->handler,
 				uri: $resource->uri,
@@ -161,7 +166,7 @@ readonly class McpServerFactory
 			);
 		}
 
-		foreach ($this->resourceRegistry->templatesForPersona($persona) as $template) {
+		foreach ($this->resourceRegistry->templatesForPersona($persona, $this->personaContext->getAuthority()) as $template) {
 			$builder->addResourceTemplate(
 				handler: $template->handler,
 				uriTemplate: $template->uriTemplate,

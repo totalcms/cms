@@ -6,6 +6,8 @@ namespace Tests\Unit\Domain\Mcp\Resource\Handler;
 
 use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
@@ -50,6 +52,24 @@ final class CollectionResourceTest extends TestCase
 		$collection->mcp    = ['access' => 'public'];
 
 		return $collection;
+	}
+
+	/**
+	 * UserAuthority whose sole group grants `read` on $allowed collections.
+	 *
+	 * @param list<string> $allowed
+	 */
+	private function authorityGranting(array $allowed): UserAuthority
+	{
+		$group = new AccessGroupData([
+			'id'          => 'blogger',
+			'description' => 'test fixture',
+			'permissions' => [
+				'collections' => ['operations' => ['read'], 'all' => false, 'allowed' => $allowed],
+			],
+		]);
+
+		return new UserAuthority(isAdmin: false, groups: [$group]);
 	}
 
 	// ─── Response shape ───────────────────────────────────────────────────────
@@ -240,12 +260,13 @@ final class CollectionResourceTest extends TestCase
 		$this->assertContains('is-draft', $ids);
 	}
 
-	public function testAuthenticatedPersonaRetainsDraftItems(): void
+	public function testAuthenticatedPersonaWithReadGrantRetainsDraftItems(): void
 	{
-		// Forward-compat: AUTHENTICATED is reserved for Phase 4 OAuth. For draft
-		// visibility it should behave like ADMIN, NOT like PUBLIC_ — drafts are
-		// kept unless explicitly excluded by the caller.
+		// An AUTHENTICATED caller whose resolved UserAuthority grants `read`
+		// on this collection behaves like ADMIN for draft visibility — drafts
+		// are kept unless explicitly excluded by the caller.
 		$this->personaContext->set(McpPersona::AUTHENTICATED);
+		$this->personaContext->setAuthority($this->authorityGranting(['blog']));
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection());
 		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
 		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
@@ -264,6 +285,61 @@ final class CollectionResourceTest extends TestCase
 		$this->assertSame(2, $payload['total']);
 		$ids = array_column($payload['items'], 'id');
 		$this->assertContains('is-draft', $ids);
+	}
+
+	// ─── Task 10: group-authority read gate ─────────────────────────────────
+
+	public function testAuthenticatedPersonaWithoutReadGrantIsDeniedEntirely(): void
+	{
+		// Unlike QueryCollectionTool/GetObjectTool (which have no per-collection
+		// group requirement and only filter drafts), a resource read is a
+		// bulk-browse surface: an AUTHENTICATED caller whose authority does not
+		// grant `read` on this collection is denied the whole read, not just
+		// its drafts.
+		$this->personaContext->set(McpPersona::AUTHENTICATED);
+		$this->personaContext->setAuthority($this->authorityGranting(['other-collection']));
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection());
+		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
+
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessageMatches('/not accessible/');
+
+		$this->resource->read('blog');
+	}
+
+	public function testAuthenticatedPersonaWithNullAuthorityIsDeniedEntirely(): void
+	{
+		// AUTHENTICATED persona but no resolved UserAuthority at all (e.g. a
+		// Bearer request whose identity never resolved) fails closed, same as
+		// an explicit deny.
+		$this->personaContext->set(McpPersona::AUTHENTICATED);
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection());
+		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
+
+		$this->expectException(ToolCallException::class);
+
+		$this->resource->read('blog');
+	}
+
+	public function testAuthenticatedPersonaWithReadGrantSeesPublishedItems(): void
+	{
+		// Baseline allow-path: authority grants read on the exact collection.
+		$this->personaContext->set(McpPersona::AUTHENTICATED);
+		$this->personaContext->setAuthority($this->authorityGranting(['blog']));
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection());
+		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
+		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
+
+		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([
+			['id' => 'published', 'draft' => false],
+		]));
+		$this->urlBuilder->method('buildUrl')->willReturn('/blog/published');
+
+		$result  = $this->resource->read('blog');
+		$payload = json_decode((string)$result['contents'][0]['text'], true);
+
+		$this->assertSame(1, $payload['total']);
+		$this->assertSame('published', $payload['items'][0]['id']);
 	}
 
 	public function testPublicPersonaTotalReflectsPostFilterCount(): void
