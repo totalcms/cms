@@ -39,11 +39,11 @@ describe('Dashboard Data Methods', function (): void {
 		// Get dashboard stats
 		$stats = $adapter->dashboardStats();
 
-		// Verify totalObjects is sum of all collections (including reserved auth collection with 6 objects)
+		// Verify totalObjects is sum of all collections (including reserved auth collection with 7 objects)
 		expect($stats)->toHaveKey('collections');
 		expect($stats)->toHaveKey('totalObjects');
 		expect($stats['collections'])->toBeGreaterThanOrEqual(2); // At least our 2 collections
-		expect($stats['totalObjects'])->toBe(9);
+		expect($stats['totalObjects'])->toBe(10);
 	});
 
 	it('dashboard collections returns all collections sorted by lastUpdated', function (): void {

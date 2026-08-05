@@ -1039,6 +1039,12 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 		$body = json_decode((string)$response->getBody(), true);
+		// A denied/unregistered tool returns a JSON-RPC 'error' object with NO
+		// 'result' key at all — the null-coalesce below would silently read
+		// that as isError:false. Assert 'result' is actually present first so
+		// a denial (or a name/domain typo) fails this test instead of a
+		// bare tools/call error passing it by accident.
+		expect($body)->toHaveKey('result');
 		expect($body['result']['isError'] ?? false)->toBeFalse();
 	});
 
@@ -1078,6 +1084,9 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 		$body = json_decode((string)$response->getBody(), true);
+		// See the comment on the create_schema test above — 'result' must be
+		// present, not inferred from the isError null-coalesce.
+		expect($body)->toHaveKey('result');
 		expect($body['result']['isError'] ?? false)->toBeFalse();
 	});
 
@@ -1114,6 +1123,9 @@ describe('McpAuthenticatedPersona', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 		$body = json_decode((string)$response->getBody(), true);
+		// See the comment on the create_schema test above — 'result' must be
+		// present, not inferred from the isError null-coalesce.
+		expect($body)->toHaveKey('result');
 		expect($body['result']['isError'] ?? false)->toBeFalse();
 	});
 
