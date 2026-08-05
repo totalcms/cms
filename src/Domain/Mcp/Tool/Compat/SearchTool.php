@@ -95,11 +95,22 @@ readonly class SearchTool
 			$titleProperty = $this->schemaResolver->forCollection($collection)['titleProperty'];
 			$nonExposed    = $this->schemaResolver->nonExposedProperties($collection);
 
+			// TextSearchProvider's pre-filter only excludes drafts for the
+			// PUBLIC persona; an AUTHENTICATED caller's per-collection
+			// authority still has to be checked here — see
+			// PersonaContext::canReadDrafts().
+			$canReadDrafts = $this->personaContext->canReadDrafts($collection->id);
+
 			foreach ($hits as $hit) {
 				if (!$this->objectFetcher->existsObject($collection->id, $hit->id)) {
 					continue;
 				}
 				$object = $this->objectFetcher->fetchObject($collection->id, $hit->id)->toArray();
+
+				if (!$canReadDrafts && ($object['draft'] ?? false) === true) {
+					continue;
+				}
+
 				foreach ($nonExposed as $field) {
 					unset($object[$field]);
 				}

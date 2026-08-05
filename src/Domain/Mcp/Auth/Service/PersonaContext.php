@@ -142,4 +142,31 @@ class PersonaContext
 	{
 		return $this->userId;
 	}
+
+	/**
+	 * Whether the current caller may see draft objects in $collection.
+	 *
+	 * Single home for the draft-visibility rule so every content tool
+	 * (query_collection, get_object, search_collection(s), fetch, and
+	 * schema-defined saved-query tools) agrees on it:
+	 *
+	 *   - ADMIN always can — unrestricted, same as every other admin check.
+	 *   - An OAuth caller with a resolved UserAuthority can when their access
+	 *     groups grant `read` on $collection — draft visibility rides along
+	 *     with the same grant that lets them read the collection's published
+	 *     content at all, rather than being a separate permission a group
+	 *     author has to remember to set.
+	 *   - Everyone else — public/anonymous callers, or a Bearer request whose
+	 *     authority never resolved — can never see drafts. Unchanged from the
+	 *     legacy "persona !== ADMIN hides drafts" behavior for those callers.
+	 */
+	public function canReadDrafts(string $collection): bool
+	{
+		if ($this->isResolved() && $this->current() === McpPersona::ADMIN) {
+			return true;
+		}
+
+		return $this->authority instanceof UserAuthority
+			&& $this->authority->canCollection('read', $collection);
+	}
 }

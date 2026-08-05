@@ -69,7 +69,7 @@ final readonly class SavedQueryTool
 			}
 
 			$resolved = $this->resolveFilters($args);
-			$params   = $this->buildQueryParams($resolved, $persona);
+			$params   = $this->buildQueryParams($resolved);
 			$result   = $this->indexQueryService->query($this->definition->collectionName, $params);
 
 			$nonExposed = $this->schemaResolver->nonExposedProperties($collection);
@@ -155,7 +155,7 @@ final readonly class SavedQueryTool
 	 *
 	 * @return array<string,string>
 	 */
-	private function buildQueryParams(array $resolved, McpPersona $persona): array
+	private function buildQueryParams(array $resolved): array
 	{
 		// Build REST-style include string from the resolved filter map.
 		$includeParts = [];
@@ -172,9 +172,11 @@ final readonly class SavedQueryTool
 			$include = trim($include . ',' . implode(',', $includeParts), ',');
 		}
 
-		// Persona safety filter applied last: public persona excludes drafts.
+		// Draft-authority safety filter applied last: only ADMIN or a caller
+		// whose access groups grant `read` on this collection sees drafts —
+		// see PersonaContext::canReadDrafts().
 		$exclude = $this->definition->exclude;
-		if ($persona === McpPersona::PUBLIC_) {
+		if (!$this->personaContext->canReadDrafts($this->definition->collectionName)) {
 			$exclude = trim($exclude . ',draft:true', ',');
 		}
 

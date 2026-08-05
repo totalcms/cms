@@ -26,9 +26,10 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
  * `get_object` rather than `get_collection`. `list_collections` is the tool
  * that returns collection-level metadata.
  *
- * **Draft visibility for public callers:** a draft is treated as if it didn't
- * exist (same error wording as a genuinely missing id), so guessing a slug
- * can't tell you whether the post exists in draft form.
+ * **Draft visibility:** for a caller without draft read authority for this
+ * collection (see PersonaContext::canReadDrafts()) a draft is treated as if
+ * it didn't exist (same error wording as a genuinely missing id), so guessing
+ * a slug can't tell you whether the post exists in draft form.
  */
 readonly class GetObjectTool
 {
@@ -116,10 +117,11 @@ readonly class GetObjectTool
 
 		$object = $this->objectFetcher->fetchObject($collection, $id)->toArray();
 
-		// Public callers can never see drafts. Returning the same error a missing
-		// object produces keeps draft existence opaque — guessing a slug can't
-		// distinguish "no post here" from "draft post here".
-		if ($persona === McpPersona::PUBLIC_ && ($object['draft'] ?? false) === true) {
+		// Callers without draft read authority can never see drafts. Returning
+		// the same error a missing object produces keeps draft existence
+		// opaque — guessing a slug can't distinguish "no post here" from
+		// "draft post here".
+		if (!$this->personaContext->canReadDrafts($collection) && ($object['draft'] ?? false) === true) {
 			throw $this->notFound($collection, $id);
 		}
 

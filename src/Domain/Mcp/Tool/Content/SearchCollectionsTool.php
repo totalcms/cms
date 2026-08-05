@@ -25,7 +25,10 @@ use TotalCMS\Domain\Search\Service\SearchServiceInterface;
  * per-collection (TextSearchProvider does not support cross-collection queries)
  * so the safety filter is applied inside the provider before ObjectSearcher
  * runs — drafts can never leak to public callers even when crossing collection
- * boundaries.
+ * boundaries. A caller-side post-filter (PersonaContext::canReadDrafts())
+ * additionally hides drafts an AUTHENTICATED caller's access groups don't
+ * grant `read` on — TextSearchProvider's own pre-filter only ever excludes
+ * drafts for the PUBLIC persona.
  *
  * Each result carries a `collection` field so the agent can chain into
  * `get_object` for the full record. The collision risk (a collection with a
@@ -150,11 +153,21 @@ readonly class SearchCollectionsTool
 			$nonExposed = $this->schemaResolver->nonExposedProperties($collection);
 			$renderable = $this->schemaResolver->renderableProperties($collection);
 
+			// TextSearchProvider's pre-filter only excludes drafts for the
+			// PUBLIC persona; an AUTHENTICATED caller's per-collection
+			// authority still has to be checked here — see
+			// PersonaContext::canReadDrafts().
+			$canReadDrafts = $this->personaContext->canReadDrafts($collection->id);
+
 			foreach ($results as $result) {
 				if (!$this->objectFetcher->existsObject($collection->id, $result->id)) {
 					continue;
 				}
 				$item = $this->objectFetcher->fetchObject($collection->id, $result->id)->toArray();
+
+				if (!$canReadDrafts && ($item['draft'] ?? false) === true) {
+					continue;
+				}
 
 				foreach ($nonExposed as $field) {
 					unset($item[$field]);

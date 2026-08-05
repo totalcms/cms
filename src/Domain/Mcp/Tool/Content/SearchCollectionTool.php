@@ -27,11 +27,17 @@ use TotalCMS\Domain\Search\Service\SearchServiceInterface;
  * filter+search pipeline as the previous inline implementation:
  *
  *   1. IndexFilter::fetchFilteredIndex with persona-based options (public
- *      callers get `exclude: draft:true` applied before any search).
+ *      callers get `exclude: draft:true` applied before any search — a
+ *      cheap pre-filter TextSearchProvider can make with only the persona
+ *      string it's handed).
  *   2. ObjectSearcher::search on the pre-filtered items.
+ *   3. A post-filter here using PersonaContext::canReadDrafts($collection) —
+ *      TextSearchProvider has no notion of per-collection access-group
+ *      grants, so an AUTHENTICATED caller's matches still need this
+ *      authority check before drafts reach the response.
  *
- * Drafts are never visible to public callers — the persona is forwarded to
- * SearchQuery so TextSearchProvider enforces the filter inside the provider.
+ * Drafts are never visible to a caller without draft read authority for this
+ * collection.
  */
 readonly class SearchCollectionTool
 {
@@ -154,10 +160,20 @@ readonly class SearchCollectionTool
 			$matches[] = $this->objectFetcher->fetchObject($collection, $result->id)->toArray();
 		}
 
+		// TextSearchProvider's own pre-filter only ever excludes drafts for the
+		// PUBLIC persona (it has no notion of per-collection access-group
+		// grants). An AUTHENTICATED caller's items still need this authority
+		// check so drafts don't leak into collections their groups don't grant
+		// `read` on — see PersonaContext::canReadDrafts().
+		$canReadDrafts = $this->personaContext->canReadDrafts($collection);
+
 		$nonExposed = $this->schemaResolver->nonExposedProperties($collectionData);
 		$renderable = $this->schemaResolver->renderableProperties($collectionData);
 		$shaped     = [];
 		foreach ($matches as $item) {
+			if (!$canReadDrafts && ($item['draft'] ?? false) === true) {
+				continue;
+			}
 			foreach ($nonExposed as $field) {
 				unset($item[$field]);
 			}

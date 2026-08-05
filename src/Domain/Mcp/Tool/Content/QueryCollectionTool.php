@@ -23,10 +23,13 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  *
  * Three design notes worth knowing before editing this file:
  *
- *   1. **Public-persona safety filter is server-merged.** A public caller can
- *      never see drafts, regardless of what `exclude` they send. We append
- *      `draft:true` to whatever the caller supplied — not replace it. Admin
- *      callers can include drafts intentionally by leaving exclude empty.
+ *   1. **Draft-authority safety filter is server-merged.** A caller without
+ *      draft read authority for this collection — see
+ *      PersonaContext::canReadDrafts() — can never see drafts, regardless of
+ *      what `exclude` they send. We append `draft:true` to whatever the
+ *      caller supplied — not replace it. ADMIN, and an OAuth caller whose
+ *      access groups grant `read` on the collection, can include drafts
+ *      intentionally by leaving exclude empty.
  *
  *   2. **Tool description is built per persona.** The dynamic description
  *      builder (B7) renders a field catalog scoped to what the caller can see,
@@ -135,7 +138,7 @@ readonly class QueryCollectionTool
 			));
 		}
 
-		if ($persona === McpPersona::PUBLIC_) {
+		if (!$this->personaContext->canReadDrafts($collection)) {
 			$exclude = $this->mergeExcludeRule($exclude, 'draft:true');
 		}
 
@@ -232,7 +235,7 @@ readonly class QueryCollectionTool
 				'exclude' => [
 					'type'        => 'string',
 					'default'     => '',
-					'description' => 'Comma-separated field:value pairs that exclude items (OR). Public callers always get "draft:true" merged in server-side regardless of caller input.',
+					'description' => 'Comma-separated field:value pairs that exclude items (OR). Callers without draft read authority for this collection always get "draft:true" merged in server-side regardless of caller input.',
 					'examples'    => ['draft:true', 'status:archived,featured:false'],
 				],
 				'sort' => [

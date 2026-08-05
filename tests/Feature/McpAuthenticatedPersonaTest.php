@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
@@ -285,6 +287,112 @@ function mcpAuthRawBearerRequest(Slim\App $app, string $rawToken, string $method
 	$request->getBody()->rewind();
 
 	return $app->handle($request);
+}
+
+/**
+ * Set a collection's mcp.access, creating the reserved collection first if
+ * needed. Reserved collections created via CollectionFetcher::
+ * fetchOrCreateReserved() never set `mcp` (CollectionFactory::
+ * generateReservedCollection only sets id/schema/lastUpdated/name), so
+ * access defaults to 'admin' — inaccessible to anything but ADMIN — until a
+ * test explicitly widens it here. 'public' is used (rather than
+ * 'authenticated') so the same collection can exercise both the PUBLIC and
+ * AUTHENTICATED regression cases in Task 9's draft-authority tests below.
+ */
+function mcpAuthSetCollectionAccess(Slim\App $app, string $collectionId, string $access): void
+{
+	$container  = $app->getContainer();
+	$collection = $container->get(CollectionFetcher::class)->fetchOrCreateReserved($collectionId);
+	if ($collection === null) {
+		throw new RuntimeException(sprintf('Could not create collection "%s" for test.', $collectionId));
+	}
+	$collection->mcp = ['access' => $access];
+	$container->get(CollectionRepository::class)->saveCollection($collection);
+}
+
+/**
+ * Build a /mcp POST request with no Authorization/X-API-Key headers at all —
+ * resolves to the PUBLIC persona. Same technique as McpChatGptCompatTest's
+ * chatgptCompatMcp(), kept file-local under a distinct name per this file's
+ * existing convention (see mcpAuthSeedUser's docblock) of not sharing
+ * helpers across test files.
+ *
+ * @param array<string,mixed> $payload
+ */
+function mcpAuthPublicRequest(Slim\App $app, array $payload, string $sessionId = ''): Psr\Http\Message\ResponseInterface
+{
+	$factory = new Psr17Factory();
+	$request = $factory
+		->createServerRequest('POST', '/mcp')
+		->withHeader('Content-Type', 'application/json')
+		->withHeader('Accept', 'application/json, text/event-stream')
+		// Dedicated client IP so the anonymous per-IP rate limiter doesn't
+		// share a bucket with other public-persona tests in the same run.
+		->withHeader('X-Forwarded-For', '203.0.113.201');
+
+	if ($sessionId !== '') {
+		$request = $request->withHeader('Mcp-Session-Id', $sessionId);
+	}
+
+	$request->getBody()->write((string)json_encode($payload));
+	$request->getBody()->rewind();
+
+	return $app->handle($request);
+}
+
+/**
+ * Perform the MCP handshake as the anonymous PUBLIC persona (no auth headers
+ * at all) and return the negotiated Mcp-Session-Id, or '' when the endpoint
+ * is unavailable (edition/config gate) — same skip-safe contract as
+ * mcpAuthInitSession().
+ */
+function mcpAuthPublicInitSession(Slim\App $app): string
+{
+	$init = mcpAuthPublicRequest($app, [
+		'jsonrpc' => '2.0',
+		'id'      => 1,
+		'method'  => 'initialize',
+		'params'  => [
+			'protocolVersion' => '2025-06-18',
+			'capabilities'    => new stdClass(),
+			'clientInfo'      => ['name' => 'pest-mcp-draft-public', 'version' => '0.1'],
+		],
+	]);
+
+	if ($init->getStatusCode() !== 200) {
+		return '';
+	}
+
+	$sessionId = $init->getHeaderLine('Mcp-Session-Id');
+	if ($sessionId === '') {
+		return '';
+	}
+
+	// Complete the lifecycle so the SDK marks the session initialized.
+	mcpAuthPublicRequest($app, [
+		'jsonrpc' => '2.0',
+		'method'  => 'notifications/initialized',
+	], $sessionId);
+
+	return $sessionId;
+}
+
+/**
+ * Extract the `items` array from a tools/call response for a core content
+ * tool (query_collection/search_collection) that declares an outputSchema.
+ * Those responses carry a `result.structuredContent` payload alongside the
+ * JSON-encoded `result.content[0].text` mirror — reading structuredContent
+ * avoids the double-wrap unwrapping SavedQueryTool-style custom envelopes
+ * need (see McpSchemaToolsIntegrationTest for that pattern).
+ *
+ * @return list<array<string,mixed>>
+ */
+function mcpAuthStructuredItems(Psr\Http\Message\ResponseInterface $response): array
+{
+	$body  = json_decode((string)$response->getBody(), true);
+	$items = $body['result']['structuredContent']['items'] ?? null;
+
+	return is_array($items) ? $items : [];
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -1149,6 +1257,285 @@ describe('McpAuthenticatedPersona', function (): void {
 		// requirement-satisfied AUTHENTICATED caller, not an elevated ADMIN.
 		expect($names)->not->toContain('get_site_info');
 		expect($names)->not->toContain('list_extensions');
+	});
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Scenario 14 (Task 9): authority-aware drafts. Before this task, content
+	// tools hid drafts from every non-ADMIN persona (a blanket
+	// `persona !== ADMIN` check) — an AUTHENTICATED OAuth caller saw ALL
+	// drafts in every collection they could reach, regardless of what their
+	// access groups actually granted. PersonaContext::canReadDrafts()
+	// narrows this: ADMIN always sees drafts; an OAuth caller sees drafts
+	// only in collections their groups grant `read` on; public/anonymous
+	// callers never see drafts (unchanged).
+	//
+	// Collection/user pairing to isolate the draft rule from any group-deny
+	// rule: query_collection/get_object have NO ToolRequirement (confirmed —
+	// `grep -rn "requires:" src/Domain/Mcp/Tool/Content/` is empty), so
+	// access-groups never gate WHICH collections these tools can query at
+	// all — only draft VISIBILITY within an already-reachable collection is
+	// authority-aware as of this task. So for the "denied" case (b) below we
+	// deliberately pick a collection blogger's group does NOT grant read on
+	// ('blog-legacy' — blogger's fixture group only allows 'blog') but that
+	// IS otherwise queryable (mcp.access:'public'): the query itself
+	// succeeds and returns the collection's published object, proving it's
+	// specifically the draft that's hidden — not a blanket collection
+	// denial the group layer would otherwise produce (as it does for
+	// create_object, tested above).
+	//
+	// Both fixture collections use mcp.access:'public' (rather than
+	// 'authenticated') so the SAME collection can carry every persona case:
+	// PUBLIC, AUTHENTICATED, and ADMIN all resolve as accessible.
+	// ──────────────────────────────────────────────────────────────────────────
+
+	it('blogger sees a draft object via query_collection in a collection their group grants read on', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'public');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-draft-blog-post-qc-allow', 'title' => 'Draft Blog Post', 'draft' => true]);
+		$saver->saveObject('blog', ['id' => 'mcp-published-blog-post-qc-allow', 'title' => 'Published Blog Post', 'draft' => false]);
+
+		$clientId = 'mcp-auth-draft-allow-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue(); // skip-safe pass
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'query_collection',
+				'arguments' => ['collection' => 'blog'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$ids = array_column(mcpAuthStructuredItems($response), 'id');
+		expect($ids)->toContain('mcp-draft-blog-post-qc-allow');
+		expect($ids)->toContain('mcp-published-blog-post-qc-allow');
+	});
+
+	it('blogger does NOT see a draft object via query_collection in a collection their group does not grant read on', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'public');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-draft-legacy-post-qc-deny', 'title' => 'Draft Legacy Post', 'draft' => true]);
+		$saver->saveObject('blog-legacy', ['id' => 'mcp-published-legacy-post-qc-deny', 'title' => 'Published Legacy Post', 'draft' => false]);
+
+		$clientId = 'mcp-auth-draft-deny-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'query_collection',
+				'arguments' => ['collection' => 'blog-legacy'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$ids = array_column(mcpAuthStructuredItems($response), 'id');
+		// The collection itself is NOT denied — blogger's group grants no
+		// `read` on 'blog-legacy', but query_collection has no group gate at
+		// all, so the published object still comes back. Only the draft is
+		// hidden, isolating the draft rule from the (nonexistent, for this
+		// tool) group-deny rule.
+		expect($ids)->toContain('mcp-published-legacy-post-qc-deny');
+		expect($ids)->not->toContain('mcp-draft-legacy-post-qc-deny');
+	});
+
+	it('anonymous/public persona does NOT see drafts via query_collection (regression guard)', function (): void {
+		/** @var Config $config */
+		$config      = $this->app->getContainer()->get(Config::class);
+		$config->mcp = array_merge($config->mcp, ['publicAccess' => true]);
+
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'public');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-draft-blog-post-pub', 'title' => 'Draft Blog Post', 'draft' => true]);
+		$saver->saveObject('blog', ['id' => 'mcp-published-blog-post-pub', 'title' => 'Published Blog Post', 'draft' => false]);
+
+		$sessionId = mcpAuthPublicInitSession($this->app);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue(); // skip-safe pass
+
+			return;
+		}
+
+		$response = mcpAuthPublicRequest($this->app, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'query_collection',
+				'arguments' => ['collection' => 'blog'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$ids = array_column(mcpAuthStructuredItems($response), 'id');
+		expect($ids)->toContain('mcp-published-blog-post-pub');
+		expect($ids)->not->toContain('mcp-draft-blog-post-pub');
+	});
+
+	it('admin persona sees drafts via query_collection (regression guard)', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('admin-user-test-com');
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'public');
+
+		$saver = $this->app->getContainer()->get(ObjectSaver::class);
+		$saver->saveObject('blog', ['id' => 'mcp-draft-blog-post-admin', 'title' => 'Draft Blog Post', 'draft' => true]);
+		$saver->saveObject('blog', ['id' => 'mcp-published-blog-post-admin', 'title' => 'Published Blog Post', 'draft' => false]);
+
+		$clientId = 'mcp-auth-draft-admin-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:admin', 'mcp:tools'], 'admin-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'query_collection',
+				'arguments' => ['collection' => 'blog'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$ids = array_column(mcpAuthStructuredItems($response), 'id');
+		expect($ids)->toContain('mcp-draft-blog-post-admin');
+	});
+
+	// Same allow/deny pair as above, for get_object — a single-object fetch
+	// filters differently (opaque "not found" on a hidden draft, rather than
+	// omitting a row from a list) so it needs its own coverage.
+
+	it('blogger can get_object a draft in a collection their group grants read on', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog', 'public');
+
+		$this->app->getContainer()->get(ObjectSaver::class)
+			->saveObject('blog', ['id' => 'mcp-draft-blog-post-go-allow', 'title' => 'Draft Blog Post', 'draft' => true]);
+
+		$clientId = 'mcp-auth-getobj-allow-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'get_object',
+				'arguments' => ['collection' => 'blog', 'id' => 'mcp-draft-blog-post-go-allow'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeFalse();
+		expect($body['result']['structuredContent']['id'] ?? null)->toBe('mcp-draft-blog-post-go-allow');
+	});
+
+	it('blogger gets an opaque not-found fetching a draft in a collection their group does not grant read on', function (): void {
+		mcpAuthSetupOAuthKeys($this->app);
+		mcpAuthSeedUser('blogger-user-test-com');
+		mcpAuthSeedAccessGroups();
+		mcpAuthSetCollectionAccess($this->app, 'blog-legacy', 'public');
+
+		$this->app->getContainer()->get(ObjectSaver::class)
+			->saveObject('blog-legacy', ['id' => 'mcp-draft-legacy-post-go-deny', 'title' => 'Draft Legacy Post', 'draft' => true]);
+
+		$clientId = 'mcp-auth-getobj-deny-' . uniqid('', true);
+		$token    = mcpAuthIssueToken($this->app, $clientId, 'secret', ['cms:read', 'mcp:tools'], 'blogger-user-test-com');
+
+		if ($token === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$sessionId = mcpAuthInitSession($this->app, $token);
+		if ($sessionId === '') {
+			expect(true)->toBeTrue();
+
+			return;
+		}
+
+		$response = mcpAuthRequest($this->app, $token, [
+			'jsonrpc' => '2.0',
+			'id'      => 1,
+			'method'  => 'tools/call',
+			'params'  => [
+				'name'      => 'get_object',
+				'arguments' => ['collection' => 'blog-legacy', 'id' => 'mcp-draft-legacy-post-go-deny'],
+			],
+		], $sessionId);
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['result']['isError'] ?? false)->toBeTrue();
+		$text = $body['result']['content'][0]['text'] ?? '';
+		expect($text)->toContain('not found');
 	});
 });
 
