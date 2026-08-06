@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Domain\OAuth\Data;
 
-use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use Tests\TestCase;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 
 final class OAuthUserRefTest extends TestCase
 {

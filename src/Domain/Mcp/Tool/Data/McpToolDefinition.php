@@ -116,7 +116,7 @@ readonly class McpToolDefinition
 		return match ($persona) {
 			McpPersona::ADMIN         => true,
 			McpPersona::AUTHENTICATED => $this->access === 'public' || $this->access === 'authenticated'
-				|| ($this->requires !== null && $authority !== null && $this->requires->isSatisfiedForAny($authority)),
+				|| ($this->requires instanceof ToolRequirement && $authority instanceof UserAuthority && $this->requires->isSatisfiedForAny($authority)),
 			McpPersona::PUBLIC_       => $this->access === 'public' && $this->isPublicReadRequirement(),
 		};
 	}
@@ -128,7 +128,7 @@ readonly class McpToolDefinition
 	 */
 	private function isPublicReadRequirement(): bool
 	{
-		return $this->requires === null
+		return !$this->requires instanceof ToolRequirement
 			|| ($this->requires->domain === 'objects' && $this->requires->operation === 'read');
 	}
 }

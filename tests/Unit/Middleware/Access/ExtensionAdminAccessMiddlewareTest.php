@@ -51,7 +51,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 		// OAuthActivityLogger is final readonly — construct a real instance
 		// backed by a NullLogger instead of createMock().
 		$this->oauthActivityLogger = new OAuthActivityLogger(new NullLogger());
-		$this->extensionManager  = $this->createMock(ExtensionManager::class);
+		$this->extensionManager    = $this->createMock(ExtensionManager::class);
 
 		$this->handler             = $this->createMock(RequestHandlerInterface::class);
 		$this->passthroughResponse = $this->createMock(ResponseInterface::class);

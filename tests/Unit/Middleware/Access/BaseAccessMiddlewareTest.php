@@ -30,13 +30,13 @@ use TotalCMS\Support\Config;
 
 describe('BaseAccessMiddleware', function (): void {
 	beforeEach(function (): void {
-		$this->userValidation    = $this->createMock(UserValidationService::class);
-		$this->accessControl     = $this->createMock(AccessControlService::class);
-		$this->session           = $this->createMock(SessionInterface::class);
-		$this->jsonRenderer      = $this->createMock(JsonRenderer::class);
-		$this->twigRenderer      = $this->createMock(TwigRenderer::class);
-		$this->responseFactory   = $this->createMock(ResponseFactoryInterface::class);
-		$this->config            = Config::init();
+		$this->userValidation     = $this->createMock(UserValidationService::class);
+		$this->accessControl      = $this->createMock(AccessControlService::class);
+		$this->session            = $this->createMock(SessionInterface::class);
+		$this->jsonRenderer       = $this->createMock(JsonRenderer::class);
+		$this->twigRenderer       = $this->createMock(TwigRenderer::class);
+		$this->responseFactory    = $this->createMock(ResponseFactoryInterface::class);
+		$this->config             = Config::init();
 		$this->operationDetector  = $this->createMock(OperationDetector::class);
 		$this->loggerFactory      = $this->createMock(LoggerFactory::class);
 		// OAuthActivityLogger is final readonly — construct a real instance

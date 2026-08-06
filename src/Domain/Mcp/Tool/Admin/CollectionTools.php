@@ -47,7 +47,6 @@ readonly class CollectionTools
 			name: 'create_collection',
 			description: 'Create a new collection. Required: id (slug) + schema (existing schema id). Optional extra: name, url, description, category, prettyUrl, sortBy, reverseSort, groups, publicOperations, mcp settings. Errors if the id already exists.',
 			access: 'admin',
-			requires: new ToolRequirement(domain: 'collections-meta', operation: 'create', collectionArg: 'id'),
 			handler: $this->createHandler(...),
 			inputSchema: [
 				'type'                 => 'object',
@@ -87,6 +86,7 @@ readonly class CollectionTools
 				idempotentHint: false,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'collections-meta', operation: 'create', collectionArg: 'id'),
 		));
 	}
 

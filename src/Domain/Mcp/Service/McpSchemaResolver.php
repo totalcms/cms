@@ -251,7 +251,7 @@ readonly class McpSchemaResolver
 		$visible = array_filter(
 			$this->collections->listAllCollections(),
 			fn (CollectionData $collection): bool => $this->isAccessibleTo($collection, $persona->value)
-				&& ($isReadable === null || $isReadable($collection)),
+				&& (!$isReadable instanceof \Closure || $isReadable($collection)),
 		);
 
 		if ($visible === []) {

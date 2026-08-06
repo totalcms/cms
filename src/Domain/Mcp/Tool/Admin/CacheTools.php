@@ -44,11 +44,6 @@ readonly class CacheTools
 			name: 'clear_cache',
 			description: 'Flush every available cache backend (APCu, Redis, Memcached, filesystem, OPcache). Returns a per-backend status map plus an `all_cleared` boolean. Use after schema changes, template edits, or other operations that may leave stale data cached.',
 			access: 'admin',
-			// 'cache' is not a target-bearing domain — no collectionArg. The
-			// operation value doesn't affect the check itself (ToolRequirement
-			// maps every 'cache' operation to canUtil('cache')); 'update' is
-			// the closest semantic fit for a mutating flush.
-			requires: new ToolRequirement(domain: 'cache', operation: 'update'),
 			handler: $this->handler(...),
 			inputSchema: [
 				'type'                 => 'object',
@@ -62,6 +57,11 @@ readonly class CacheTools
 				idempotentHint: false,
 				openWorldHint: false,
 			),
+			// 'cache' is not a target-bearing domain — no collectionArg. The
+			// operation value doesn't affect the check itself (ToolRequirement
+			// maps every 'cache' operation to canUtil('cache')); 'update' is
+			// the closest semantic fit for a mutating flush.
+			requires: new ToolRequirement(domain: 'cache', operation: 'update'),
 		));
 	}
 

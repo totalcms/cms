@@ -36,8 +36,8 @@ use TotalCMS\Support\Config;
 
 describe('CacheAccessMiddleware', function (): void {
 	beforeEach(function (): void {
-		$this->userValidation    = $this->createMock(UserValidationService::class);
-		$this->accessControl     = $this->createMock(AccessControlService::class);
+		$this->userValidation     = $this->createMock(UserValidationService::class);
+		$this->accessControl      = $this->createMock(AccessControlService::class);
 		$this->session            = $this->createMock(SessionInterface::class);
 		$this->jsonRenderer       = $this->createMock(JsonRenderer::class);
 		$this->twigRenderer       = $this->createMock(TwigRenderer::class);
@@ -53,7 +53,7 @@ describe('CacheAccessMiddleware', function (): void {
 		$this->passthroughResponse = $this->createMock(ResponseInterface::class);
 		$this->handler->method('handle')->willReturn($this->passthroughResponse);
 
-		$this->config->auth             = ['enable' => true, 'collection' => 'auth'];
+		$this->config->auth              = ['enable' => true, 'collection' => 'auth'];
 		$this->config->env               = 'prod';
 		$this->config->debug             = false;
 
@@ -112,8 +112,8 @@ describe('CacheAccessMiddleware', function (): void {
 			return $request;
 		};
 
-		$cacheGroup   = new AccessGroupData(['id' => 'cache-group', 'permissions' => ['utils' => ['all' => false, 'allowed' => ['cache']]]]);
-		$otherGroup   = new AccessGroupData(['id' => 'other-group', 'permissions' => ['utils' => ['all' => false, 'allowed' => ['jumpstart']]]]);
+		$cacheGroup                  = new AccessGroupData(['id' => 'cache-group', 'permissions' => ['utils' => ['all' => false, 'allowed' => ['cache']]]]);
+		$otherGroup                  = new AccessGroupData(['id' => 'other-group', 'permissions' => ['utils' => ['all' => false, 'allowed' => ['jumpstart']]]]);
 		$this->cacheGrantedAuthority = new UserAuthority(isAdmin: false, groups: [$cacheGroup]);
 		$this->cacheDeniedAuthority  = new UserAuthority(isAdmin: false, groups: [$otherGroup]);
 	});

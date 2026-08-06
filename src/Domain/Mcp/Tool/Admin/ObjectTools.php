@@ -120,7 +120,6 @@ readonly class ObjectTools
 			name: 'create_object',
 			description: 'Create a new object inside a collection. Required: collection (existing collection id) + data (field values matching the collection schema). Optional: id (otherwise derived from the schema slug/autogen rules). Errors if an object with the resolved id already exists in the collection, or if the collection schema contains an image/file/gallery/depot field — binary fields cannot be written via MCP yet.',
 			access: 'admin',
-			requires: new ToolRequirement(domain: 'objects', operation: 'create', collectionArg: 'collection'),
 			handler: $this->createHandler(...),
 			inputSchema: [
 				'type'                 => 'object',
@@ -158,13 +157,13 @@ readonly class ObjectTools
 				idempotentHint: false,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'objects', operation: 'create', collectionArg: 'collection'),
 		));
 
 		$registry->register(new McpToolDefinition(
 			name: 'update_object',
 			description: 'Replace an existing object. Required: collection + id + data. The data shape is the complete object body — fields not present in the payload revert to the schema default. To change a subset of fields, prefer patch_object (merge semantics, no round-trip needed); if you do use this tool, fetch the current object first via get_object with format "html". Same binary-field restriction as create_object.',
 			access: 'admin',
-			requires: new ToolRequirement(domain: 'objects', operation: 'update', collectionArg: 'collection'),
 			handler: $this->updateHandler(...),
 			inputSchema: [
 				'type'                 => 'object',
@@ -196,16 +195,13 @@ readonly class ObjectTools
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'objects', operation: 'update', collectionArg: 'collection'),
 		));
 
 		$registry->register(new McpToolDefinition(
 			name: 'patch_object',
 			description: 'Update a SUBSET of an object\'s fields. Required: collection + id + data. This is a merge, not a replace: fields present in data are written, omitted fields keep their current values — no need to fetch the object first. Container fields (card, deck, list) are replaced whole when present, never deep-merged — send the complete container to change any part of it. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Binary fields (image, file, gallery, depot) cannot be written and always keep their current values. Prefer this over update_object for targeted edits.',
 			access: 'admin',
-			// patch is update semantics (existing object, subset write) —
-			// treated as 'update' for group-permission purposes, same as
-			// update_object.
-			requires: new ToolRequirement(domain: 'objects', operation: 'update', collectionArg: 'collection'),
 			handler: $this->patchHandler(...),
 			inputSchema: [
 				'type'                 => 'object',
@@ -237,6 +233,10 @@ readonly class ObjectTools
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			// patch is update semantics (existing object, subset write) —
+			// treated as 'update' for group-permission purposes, same as
+			// update_object.
+			requires: new ToolRequirement(domain: 'objects', operation: 'update', collectionArg: 'collection'),
 		));
 	}
 

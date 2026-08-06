@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\OAuth\Data;
 
-final readonly class OAuthUserRef
+final readonly class OAuthUserRef implements \Stringable
 {
 	private function __construct(
 		public string $collection,

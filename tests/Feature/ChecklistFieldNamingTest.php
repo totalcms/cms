@@ -48,6 +48,6 @@ test('no form field name uses the bare list suffix', function (): void {
 
 	expect($offenders)->toBe([], "Form field name(s) ending in '[]': "
 		. implode(', ', $offenders)
-		. ". Admin forms post JSON, so the brackets are never expanded and the value "
-		. "is dropped. Use a plain name — the field returns its own array.");
+		. '. Admin forms post JSON, so the brackets are never expanded and the value '
+		. 'is dropped. Use a plain name — the field returns its own array.');
 });

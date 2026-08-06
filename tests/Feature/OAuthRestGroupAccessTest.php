@@ -36,8 +36,8 @@ beforeEach(function (): void {
 	// default — see the comment on JumpStartSuperAdminGateTest. This file's
 	// entire point is exercising BaseAccessMiddleware's oauth_bearer branch
 	// through a real app dispatch, so auth must be turned on here.
-	$container = $this->app->getContainer();
-	$config    = $container->get(Config::class);
+	$container    = $this->app->getContainer();
+	$config       = $container->get(Config::class);
 	$config->auth = array_merge($config->auth, ['enable' => true]);
 
 	// Reserved collections no longer auto-create; the "allowed write" scenario
@@ -91,7 +91,7 @@ function groupRestSetupOAuthKeys(Slim\App $app): void
  * 'viewer-user-test-com' (groups: [viewer]). Group grants (see
  * tests/tcms-data-fixtures/.system/access-groups.json):
  *   - blogger: collections {all:false, allowed:[blog], ops: create/read/update/delete}
- *   - viewer:  collections {all:true, ops:[read]}
+ *   - viewer:  collections {all:true, ops:[read]}.
  */
 function groupRestSeedUser(string $fixtureId): void
 {
@@ -302,7 +302,7 @@ describe('OAuthRestGroupAccess', function (): void {
 	// from the scope layer's 403 (OAuthRestScopeMiddleware).
 	// ──────────────────────────────────────────────────────────────────────
 
-	it("blogger token writing to a collection their group denies is blocked with a group-layer 403", function (): void {
+	it('blogger token writing to a collection their group denies is blocked with a group-layer 403', function (): void {
 		groupRestSetupOAuthKeys($this->app);
 		groupRestSeedUser('blogger-user-test-com');
 

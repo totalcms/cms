@@ -287,7 +287,7 @@ readonly class McpServerFactory
 	private function guardHandler(McpToolDefinition $tool): \Closure
 	{
 		$requires = $tool->requires;
-		if ($requires === null) {
+		if (!$requires instanceof \TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement) {
 			return $tool->handler;
 		}
 
@@ -379,7 +379,7 @@ readonly class McpServerFactory
 				// Fail closed when PersonaContext never resolved an
 				// authority for this Bearer request.
 				$authority = $personaContext->getAuthority();
-				if ($authority === null) {
+				if (!$authority instanceof \TotalCMS\Domain\Auth\Data\UserAuthority) {
 					$activityLogger->groupRejected($clientId, $toolName, $personaContext->getUserId());
 
 					throw new ToolCallException(sprintf(

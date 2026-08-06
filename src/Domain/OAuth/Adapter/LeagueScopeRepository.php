@@ -91,11 +91,8 @@ final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 				if (!in_array($id, $allowed, true)) {
 					return false;
 				}
-				if (in_array($id, OAuthScopeRegistry::ADMIN_GATED, true) && !$userCanConveyAdmin) {
-					return false;
-				}
 
-				return true;
+				return !in_array($id, OAuthScopeRegistry::ADMIN_GATED, true) || $userCanConveyAdmin;
 			},
 		));
 	}

@@ -81,7 +81,7 @@ class ToolRegistry
 	private function assertRequirementWellFormed(McpToolDefinition $tool): void
 	{
 		$requires = $tool->requires;
-		if ($requires === null) {
+		if (!$requires instanceof \TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement) {
 			return;
 		}
 

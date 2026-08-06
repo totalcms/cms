@@ -110,7 +110,6 @@ readonly class SchemaTools
 			name: 'create_schema',
 			description: 'Create a new schema. Requires id + properties. Errors if the id collides with an existing or reserved schema. Use update_schema to modify an existing schema. Pass seedObjects to populate the new collection with initial content — the call emits SSE progress notifications while seeding so callers can track multi-step progress.',
 			access: 'admin',
-			requires: new ToolRequirement(domain: 'schemas', operation: 'create', collectionArg: 'id'),
 			handler: $this->createHandler(...),
 			inputSchema: $this->createInputSchema(),
 			annotations: new ToolAnnotations(
@@ -121,13 +120,13 @@ readonly class SchemaTools
 				idempotentHint: false,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'schemas', operation: 'create', collectionArg: 'id'),
 		));
 
 		$registry->register(new McpToolDefinition(
 			name: 'update_schema',
 			description: 'Replace an existing schema definition. Pass the full new shape (properties, required, index, etc.). The id in the schema must match the id parameter. Use create_schema for new schemas; use get_schema first if you want to edit an existing schema rather than replace it wholesale.',
 			access: 'admin',
-			requires: new ToolRequirement(domain: 'schemas', operation: 'update', collectionArg: 'id'),
 			handler: $this->updateHandler(...),
 			inputSchema: $this->mutationInputSchema(),
 			annotations: new ToolAnnotations(
@@ -138,13 +137,13 @@ readonly class SchemaTools
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'schemas', operation: 'update', collectionArg: 'id'),
 		));
 
 		$registry->register(new McpToolDefinition(
 			name: 'delete_schema',
 			description: 'Delete a schema permanently. Rejects reserved schemas, schemas inherited by others, and schemas still used by a collection. There is no undo — the operator must restore from backup if needed.',
 			access: 'admin',
-			requires: new ToolRequirement(domain: 'schemas', operation: 'delete', collectionArg: 'id'),
 			handler: $this->deleteHandler(...),
 			inputSchema: [
 				'type'                 => 'object',
@@ -165,6 +164,7 @@ readonly class SchemaTools
 				idempotentHint: false,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'schemas', operation: 'delete', collectionArg: 'id'),
 		));
 	}
 
@@ -331,12 +331,12 @@ readonly class SchemaTools
 		}
 
 		$authority = $this->personaContext->getAuthority();
-		if ($authority !== null && $authority->isAdmin) {
+		if ($authority instanceof \TotalCMS\Domain\Auth\Data\UserAuthority && $authority->isAdmin) {
 			return;
 		}
 
 		if (
-			$authority === null
+			!$authority instanceof \TotalCMS\Domain\Auth\Data\UserAuthority
 			|| !$authority->canCollectionMeta('create', $collectionId)
 			|| !$authority->canCollection('create', $collectionId)
 		) {

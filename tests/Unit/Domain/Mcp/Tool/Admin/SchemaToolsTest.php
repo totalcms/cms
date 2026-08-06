@@ -287,7 +287,7 @@ final class SchemaToolsTest extends TestCase
 		$group = new AccessGroupData([
 			'id'          => 'seed-test-group',
 			'permissions' => [
-				'schemas' => ['operations' => ['create'], 'all' => true, 'allowed' => []],
+				'schemas'         => ['operations' => ['create'], 'all' => true, 'allowed' => []],
 				'collectionsMeta' => [
 					'operations' => $collectionsMetaCreate ? ['create'] : ['read'],
 					'all'        => true,

@@ -303,7 +303,7 @@ final class SettingsValidatorTest extends TestCase
 			$this->assertEquals(
 				$testCase['expected'],
 				$result['domainScoped'],
-				"domainScoped value should convert to " . ($testCase['expected'] ? 'true' : 'false')
+				'domainScoped value should convert to ' . ($testCase['expected'] ? 'true' : 'false')
 			);
 		}
 	}

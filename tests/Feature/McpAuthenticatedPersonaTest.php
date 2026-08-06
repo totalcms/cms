@@ -685,6 +685,7 @@ describe('McpAuthenticatedPersona', function (): void {
 
 	/**
 	 * @param list<string> $scopes
+	 *
 	 * @return list<string>|null Tool names, or null when the env can't run OAuth
 	 */
 	function mcpAuthListToolsFor(Slim\App $app, string $userId, array $scopes): ?array
@@ -793,7 +794,11 @@ describe('McpAuthenticatedPersona', function (): void {
 		// mcpAuthIssueToken (updated this task) sets AUTH_COLLECTION='auth',
 		// so the issued sub is "auth:admin-user-test-com".
 		$names = mcpAuthListToolsFor($this->app, 'admin-user-test-com', ['cms:admin', 'mcp:tools']);
-		if ($names === null) { expect(true)->toBeTrue(); return; }
+		if ($names === null) {
+			expect(true)->toBeTrue();
+
+			return;
+		}
 
 		expect($names)->toContain('create_schema');
 	});

@@ -19,7 +19,6 @@ use function TotalCMS\Slim\Pest\postJson;
  * leaving /oauth/token alive would let previously-issued refresh tokens keep
  * minting access tokens forever.
  */
-
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());
 });
