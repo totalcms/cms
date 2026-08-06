@@ -2,6 +2,12 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.0-rc.18] - Unreleased
+
+### Fixed
+
+- **Video embeds failed on sites with a strict referrer policy (YouTube error 153, part two)**: rc.17 fixed the mangled player parameters, but YouTube has a second trigger for the same error: receiving no Referer header at all. That's exactly what happens on a site whose host, security plugin, or `<meta name="referrer">` tag sets a site-wide `no-referrer` policy — the embed works everywhere else and fails there, with nothing visible to explain why. Embed iframes now carry `referrerpolicy="strict-origin-when-cross-origin"`, the same attribute YouTube's own embed snippet ships. It restates the browser default on just the player frame, so strict-policy sites embed correctly and nothing changes anywhere else
+
 ## [3.5.0-rc.17] - 2026-08-05
 
 ### Added

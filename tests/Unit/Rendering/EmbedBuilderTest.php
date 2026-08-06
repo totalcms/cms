@@ -35,3 +35,17 @@ test('generic iframe embed does not double escape a pre-escaped url', function (
 	expect($html)->toContain('a=1&amp;b=2');
 	expect($html)->not->toContain('&amp;amp;');
 });
+
+test('embed iframes carry an explicit referrer policy', function (): void {
+	// YouTube refuses embeds that arrive with no Referer (error 153), and a
+	// site-wide no-referrer policy silently produces exactly that. The
+	// attribute restates the browser default so a strict page-level policy
+	// can't break the player — same attribute YouTube's own snippet ships.
+	$youtube = EmbedBuilder::embed('https://www.youtube.com/watch?v=zzd4fqqPsCs', []);
+	$vimeo   = EmbedBuilder::embed('https://vimeo.com/123456789', []);
+	$generic = EmbedBuilder::embed('https://example.com/page', []);
+
+	expect($youtube)->toContain('referrerpolicy="strict-origin-when-cross-origin"');
+	expect($vimeo)->toContain('referrerpolicy="strict-origin-when-cross-origin"');
+	expect($generic)->toContain('referrerpolicy="strict-origin-when-cross-origin"');
+});
