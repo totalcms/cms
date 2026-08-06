@@ -6,6 +6,7 @@ namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Session\SessionKeys;
 
 /**
@@ -33,8 +34,26 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 		$collection = $route->getArgument('collection');
 		$objectId   = $route->getArgument('id');
 
-		// Allow users to update their own profile (self-profile update)
-		// Users should always be able to update their own record in their auth collection
+		// OAuth Bearer callers: there is no PHP session to derive groups from,
+		// so use the UserAuthority resolved from the token by BaseAccessMiddleware.
+		// This MUST run before the self-profile carve-out below: the carve-out
+		// gates on session AUTH_COLLECTION, not on auth method, so a Bearer
+		// request that ALSO carries an active session cookie (browser-originated
+		// token use) could otherwise hit the carve-out and update the auth
+		// record — bypassing the group check on exactly the record that holds
+		// `groups`. Returning here unconditionally for any accessAuthority-
+		// bearing (i.e. Bearer) request closes that off.
+		$authority = $request->getAttribute('accessAuthority');
+		if ($authority instanceof UserAuthority) {
+			return $collection
+				? $authority->canCollection($operation, $collection)
+				: $authority->canCollectionsOperation($operation);
+		}
+
+		// Allow users to update their own profile (self-profile update).
+		// Users should always be able to update their own record in their auth
+		// collection. Only reachable for session callers — Bearer requests
+		// always return above via the accessAuthority branch.
 		if ($operation === 'update' && $collection && $objectId) {
 			$authCollection = $this->session->get(SessionKeys::AUTH_COLLECTION);
 			if ($collection === $authCollection && $objectId === $userId) {

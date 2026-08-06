@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Resource\Service;
 
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceTemplateDefinition;
@@ -89,13 +90,21 @@ class ResourceRegistry
 	 * Resources visible to the given persona, ordered by URI for stable
 	 * resources/list output.
 	 *
+	 * $authority (Task 10) lets an AUTHENTICATED caller's resolved
+	 * UserAuthority additionally narrow collection-scoped resources down to
+	 * what their access groups grant `read` on — see
+	 * McpResourceDefinition::$collectionId. Null for non-Bearer callers
+	 * (API key / anonymous), matching PersonaContext::getAuthority()'s
+	 * contract; McpResourceDefinition::isVisibleTo() only consults it for
+	 * resources that opted into collection-scoped gating.
+	 *
 	 * @return list<McpResourceDefinition>
 	 */
-	public function forPersona(McpPersona $persona): array
+	public function forPersona(McpPersona $persona, ?UserAuthority $authority = null): array
 	{
 		$visible = array_values(array_filter(
 			$this->resources,
-			static fn (McpResourceDefinition $r): bool => $r->isVisibleTo($persona),
+			static fn (McpResourceDefinition $r): bool => $r->isVisibleTo($persona, $authority),
 		));
 
 		usort($visible, static fn (McpResourceDefinition $a, McpResourceDefinition $b): int => strcmp($a->uri, $b->uri));
@@ -105,15 +114,15 @@ class ResourceRegistry
 
 	/**
 	 * Templates visible to the given persona, ordered by uriTemplate for stable
-	 * resources/templates/list output.
+	 * resources/templates/list output. See forPersona() for $authority.
 	 *
 	 * @return list<McpResourceTemplateDefinition>
 	 */
-	public function templatesForPersona(McpPersona $persona): array
+	public function templatesForPersona(McpPersona $persona, ?UserAuthority $authority = null): array
 	{
 		$visible = array_values(array_filter(
 			$this->templates,
-			static fn (McpResourceTemplateDefinition $t): bool => $t->isVisibleTo($persona),
+			static fn (McpResourceTemplateDefinition $t): bool => $t->isVisibleTo($persona, $authority),
 		));
 
 		usort($visible, static fn (McpResourceTemplateDefinition $a, McpResourceTemplateDefinition $b): int => strcmp($a->uriTemplate, $b->uriTemplate));

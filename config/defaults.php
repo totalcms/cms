@@ -164,6 +164,10 @@ $settings['cache'] = [
 	'filesystem'  => true,
 	'redis'       => true,
 	'memcached'   => true,
+	// When false, cache keys are namespaced by the data directory instead of the
+	// domain, so several installs sharing one tcms-data share one cache. Leave
+	// true for a normal single-site install.
+	'domainScoped' => true,
 	// Output (fragment) caching via the {% cache %} Twig tag.
 	'fragments'   => true, // master on/off switch for {% cache %}
 	'fragmentTtl' => 3600, // default fragment lifetime (seconds) when ttl= is omitted
@@ -453,6 +457,7 @@ $settings['search'] = [
 // Generate with: tcms oauth:setup (creates keys at the paths below).
 // accessTokenTtl / refreshTokenTtl / authCodeTtl are PHP DateInterval specs.
 $settings['oauth'] = [
+	'enabled'             => true,     // off = public-only MCP: OAuth well-knowns and endpoints 404, so MCP clients connect anonymously instead of demanding a login
 	'signingKeyPath'      => $settings['datadir'] . '/.system/oauth-keys/private.key',
 	'publicKeyPath'       => $settings['datadir'] . '/.system/oauth-keys/public.key',
 	'accessTokenTtl'      => 'PT1H',   // 1 hour

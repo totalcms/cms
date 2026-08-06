@@ -76,6 +76,93 @@ readonly class AccessGroupData
 	}
 
 	/**
+	 * Check if this group grants a CRUD operation on a specific collection.
+	 * Single home for this logic — AccessControlService and UserAuthority
+	 * both delegate here rather than re-implementing the check.
+	 */
+	public function allowsCollection(string $operation, string $collection): bool
+	{
+		$permissions = $this->permissions['collections'] ?? [];
+		$all         = $permissions['all'] ?? false;
+		$allowed     = $permissions['allowed'] ?? [];
+
+		if (!$all && !in_array($collection, $allowed)) {
+			return false;
+		}
+
+		$operations = $permissions['operations'] ?? [];
+
+		return in_array($operation, $operations);
+	}
+
+	/**
+	 * Check if this group grants a CRUD operation on a specific collection's metadata.
+	 */
+	public function allowsCollectionMeta(string $operation, string $collection): bool
+	{
+		$permissions = $this->permissions['collectionsMeta'] ?? [];
+		$all         = $permissions['all'] ?? false;
+		$allowed     = $permissions['allowed'] ?? [];
+
+		if (!$all && !in_array($collection, $allowed)) {
+			return false;
+		}
+
+		$operations = $permissions['operations'] ?? [];
+
+		return in_array($operation, $operations);
+	}
+
+	/**
+	 * Check if this group grants a CRUD operation on a specific schema.
+	 */
+	public function allowsSchema(string $operation, string $schema): bool
+	{
+		$permissions = $this->permissions['schemas'] ?? [];
+		$all         = $permissions['all'] ?? false;
+		$allowed     = $permissions['allowed'] ?? [];
+
+		if (!$all && !in_array($schema, $allowed)) {
+			return false;
+		}
+
+		$operations = $permissions['operations'] ?? [];
+
+		return in_array($operation, $operations);
+	}
+
+	/**
+	 * Check if this group grants access to a util. Utils use simple
+	 * page-based access (no operation-specific permissions).
+	 */
+	public function allowsUtil(string $util): bool
+	{
+		$permissions = $this->permissions['utils'] ?? [];
+		$all         = $permissions['all'] ?? false;
+		$allowed     = $permissions['allowed'] ?? [];
+
+		// Map route paths to their access group permission keys.
+		// This allows multiple routes to share a single permission toggle
+		// and fixes mismatches between route paths and stored permission values.
+		$routeToPermission = [
+			'cache-manager'       => 'cache',
+			'cache-sizing'        => 'cache',
+			'image-cache'         => 'cache',
+			'license-manager'     => 'license',
+			'logs'                => 'log-analyzer',
+			'pretty-url-builder'  => 'pretty-url',
+			'import-alloy'        => 'import',
+			'import-rss'          => 'import',
+			'import-totalcms-one' => 'import',
+			'import-wordpress'    => 'import',
+		];
+
+		$permissionKey = $routeToPermission[$util] ?? $util;
+
+		return $all || in_array($permissionKey, $allowed);
+	}
+
+	/**
 	 * Convert to array for JSON storage.
 	 *
 	 * @return array<string,mixed>

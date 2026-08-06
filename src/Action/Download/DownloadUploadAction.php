@@ -77,7 +77,7 @@ readonly class DownloadUploadAction
 		$userID         = $this->session->get(SessionKeys::AUTH_USER) ?? '';
 		$userCollection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?? '';
 
-		if (!empty($userID) && $this->userValidator->isSuperAdmin($userID)) {
+		if (!empty($userID) && $this->userValidator->isSuperAdmin((string)$userID, (string)$userCollection)) {
 			return;
 		}
 

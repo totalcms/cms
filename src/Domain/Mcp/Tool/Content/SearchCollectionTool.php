@@ -13,6 +13,7 @@ use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Search\Data\SearchQuery;
@@ -27,11 +28,23 @@ use TotalCMS\Domain\Search\Service\SearchServiceInterface;
  * filter+search pipeline as the previous inline implementation:
  *
  *   1. IndexFilter::fetchFilteredIndex with persona-based options (public
- *      callers get `exclude: draft:true` applied before any search).
+ *      callers get `exclude: draft:true` applied before any search — a
+ *      cheap pre-filter TextSearchProvider can make with only the persona
+ *      string it's handed).
  *   2. ObjectSearcher::search on the pre-filtered items.
+ *   3. A post-filter here using PersonaContext::canReadDrafts($collection) —
+ *      TextSearchProvider has no notion of per-collection access-group
+ *      grants, so an AUTHENTICATED caller's matches still need this
+ *      authority check before drafts reach the response.
  *
- * Drafts are never visible to public callers — the persona is forwarded to
- * SearchQuery so TextSearchProvider enforces the filter inside the provider.
+ * Drafts are never visible to a caller without draft read authority for this
+ * collection.
+ *
+ * **Group-gated (Task 10b).** Declares `requires: objects/read/collection` —
+ * same call-time guard as query_collection/get_object. `mcp.access: 'public'`
+ * collections stay searchable by every caller regardless of group grants
+ * (McpServerFactory::guardHandler()'s carve-out via PersonaContext::
+ * canReadCollection()).
  */
 readonly class SearchCollectionTool
 {
@@ -65,6 +78,7 @@ readonly class SearchCollectionTool
 				openWorldHint: false,
 			),
 			outputSchema: $this->outputSchema(),
+			requires: new ToolRequirement(domain: 'objects', operation: 'read', collectionArg: 'collection'),
 		));
 	}
 
@@ -133,12 +147,25 @@ readonly class SearchCollectionTool
 			);
 		}
 
+		// TextSearchProvider's pre-filter only excludes drafts for the PUBLIC
+		// persona; an AUTHENTICATED caller's per-collection authority still
+		// has to be checked — see PersonaContext::canReadDrafts(). Computed
+		// BEFORE the search call (not just as a post-filter below) so a
+		// caller without read authority never has drafts occupying slots in
+		// the pre-filter's limit window in the first place — otherwise
+		// drafts could crowd out published matches the caller SHOULD see,
+		// and the resulting under-filled/empty response would leak a weak
+		// "drafts outrank you here" signal. The post-filter stays as an
+		// authoritative backstop: an extension-registered SearchProvider may
+		// ignore `persona` entirely.
+		$canReadDrafts = $this->personaContext->canReadDrafts($collection);
+
 		$cappedLimit = max(1, min(self::LIMIT_CAP, $limit));
 		$results     = $this->searchService->search(new SearchQuery(
 			text: $query,
 			collection: $collection,
 			limit: $cappedLimit,
-			persona: $persona->value,
+			persona: $canReadDrafts ? $persona->value : 'public',
 			// Rank by term coverage (best partial match first) rather than the
 			// all-or-nothing AND filter, so descriptive multi-word queries from
 			// an agent return useful results instead of nothing.
@@ -158,6 +185,9 @@ readonly class SearchCollectionTool
 		$renderable = $this->schemaResolver->renderableProperties($collectionData);
 		$shaped     = [];
 		foreach ($matches as $item) {
+			if (!$canReadDrafts && ($item['draft'] ?? false) === true) {
+				continue;
+			}
 			foreach ($nonExposed as $field) {
 				unset($item[$field]);
 			}
@@ -180,7 +210,14 @@ readonly class SearchCollectionTool
 
 	public function buildDescription(McpPersona $persona): string
 	{
-		$catalog = $this->schemaResolver->renderCatalog($persona, McpSchemaResolver::DEFAULT_CATALOG_CAP);
+		// Task 10b fix round 1 (finding #1): the catalog must not advertise
+		// collections the caller's groups don't grant read on — same rule
+		// this tool's own handler() enforces via canReadCollection().
+		$catalog = $this->schemaResolver->renderCatalog(
+			$persona,
+			McpSchemaResolver::DEFAULT_CATALOG_CAP,
+			fn (\TotalCMS\Domain\Collection\Data\CollectionData $c): bool => $this->personaContext->canReadCollection($c->id, $c),
+		);
 
 		return $catalog === ''
 			? $this->baseDescription()

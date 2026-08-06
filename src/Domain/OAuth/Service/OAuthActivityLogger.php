@@ -120,6 +120,24 @@ final readonly class OAuthActivityLogger
 		]);
 	}
 
+	/**
+	 * Logged when a Bearer-authenticated REST request passes the scope
+	 * layer (OAuthRestScopeMiddleware) but is denied by the access-group
+	 * layer (BaseAccessMiddleware) — the caller's identity resolves to a
+	 * user whose access groups don't grant $operation. Distinct from
+	 * scopeRejected(), which fires earlier for tokens whose scopes don't
+	 * cover the operation at all.
+	 */
+	public function groupRejected(string $clientId, string $operation, string $userId): void
+	{
+		$this->logger->info('OAuth group-rejected request', [
+			'type'      => 'group.rejected',
+			'client_id' => $clientId,
+			'operation' => $operation,
+			'user_id'   => $userId,
+		]);
+	}
+
 	public function dynamicRegistration(string $clientId, string $clientName, string $remoteAddr): void
 	{
 		$this->logger->info('OAuth dynamic client registered', [

@@ -114,7 +114,9 @@ final class ImportJumpStartActionTest extends TestCase
 
 		// Super-admin session: get(AUTH_USER) returns an id, isSuperAdmin true.
 		$session = $this->createMock(SessionInterface::class);
-		$session->method('get')->with(SessionKeys::AUTH_USER)->willReturn('admin');
+		$session->method('get')->willReturnCallback(
+			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'admin' : null,
+		);
 		$userValidation = $this->createMock(UserValidationService::class);
 		$userValidation->method('isSuperAdmin')->with('admin')->willReturn(true);
 
@@ -150,7 +152,9 @@ final class ImportJumpStartActionTest extends TestCase
 		// A real, logged-in user who is NOT a super-admin — the likeliest
 		// real-world bypass attempt. Must resolve to allowSystemCollections=false.
 		$session = $this->createMock(SessionInterface::class);
-		$session->method('get')->with(SessionKeys::AUTH_USER)->willReturn('bob');
+		$session->method('get')->willReturnCallback(
+			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'bob' : null,
+		);
 		$userValidation = $this->createMock(UserValidationService::class);
 		$userValidation->method('isSuperAdmin')->with('bob')->willReturn(false);
 

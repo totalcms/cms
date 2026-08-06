@@ -11,7 +11,7 @@ updated: 2026-05-25
 
 # OAuth Server
 
-T3's OAuth server lets external services — AI clients like Claude Desktop and Cursor, automation platforms like ActivePieces and Zapier, and your own custom integrations — connect to your site without sharing your admin API key. Each connection gets its own set of scoped tokens with explicit consent from an admin, and you can revoke individual connections without touching the others.
+T3's OAuth server lets external services — AI clients like Claude Desktop and Cursor, automation platforms like ActivePieces and Zapier, and your own custom integrations — connect to your site without sharing your admin API key. Each connection gets its own set of scoped tokens with explicit consent from the logged-in user, and you can revoke individual connections without touching the others. The consent screen isn't admin-only: any T3 user can approve a connection for themselves, and the resulting token reaches only what their **access groups** already let them do — see [Scopes](#scopes) below.
 
 **OAuth requires Pro edition.** Trials count as Pro for testing.
 
@@ -148,12 +148,16 @@ Scopes define what an authorized connection can do. When you create a static cli
 | Scope | Description | REST paths | MCP surface |
 |---|---|---|---|
 | `cms:read` | Read your content | `GET /api/collections/*`, `GET /api/objects/*` | `query_collection`, `get_object`, `search_collection`, `list_collections`, `search_collections` |
-| `cms:write` | Create, update, and delete your content | `POST`, `PUT`, `PATCH`, `DELETE` on `/api/collections/*` and `/api/objects/*` | (no content-write MCP tools in v1) |
-| `cms:admin` | Administer your site | `/api/schemas/*`, `/api/cache/*`, `/api/extensions/*` | `create_schema`, `update_schema`, `delete_schema`, `clear_cache`, `list_extensions` |
+| `cms:write` | Create, update, and delete your content | `POST`, `PUT`, `PATCH`, `DELETE` on `/api/collections/*` and `/api/objects/*` | `create_object`, `update_object`, `patch_object` |
+| `cms:admin` | Administer your site | `/api/schemas/*`, `/api/cache/*`, `/api/extensions/*` | `create_schema`, `update_schema`, `delete_schema`, `create_collection`, `clear_cache`, `list_extensions` |
 | `mcp:tools` | Call AI tools on your site | (MCP only) | Authorizes all `tools/call` requests |
 | `mcp:resources` | Read addressable AI resources | (MCP only) | Authorizes `resources/read`, `resources/subscribe`, `resources/list` |
 
 `cms:admin` implies `cms:read` and `cms:write` — you don't need all three for a full-access connection.
+
+**Scope is not the whole story — your access groups cap what a token can actually reach.** REST and MCP both resolve a token's real authority as *scope ∩ the approving user's access-group permissions*, the same groups you manage under **Admin → Access Groups**. A `cms:write` token approved by a blogger-group user can write only to the collections that group can create/update in the dashboard — not every collection `cms:write` mentions in the table above. A `cms:read` token similarly only reads what the user's groups (or, for MCP calls only, a collection's own public MCP exposure) allow — REST has no such exposure carve-out; `CollectionAccessMiddleware`'s Bearer branch is a plain group check regardless of the collection's `mcp.access` setting. **Admin (API keys, or a token elevated to the admin persona — see below) bypasses the group check**, same as it always has.
+
+`cms:admin` is additionally **privilege-gated at issuance**: it lands in a token when the approving user is in the **admin group**, OR when their access groups grant at least one `schemas` / `collectionsMeta` / `utils` permission (the same permissions that unlock schema editing, collection settings, or utilities like cache-clearing in the dashboard). For anyone else the requested scope is silently narrowed away — the consent screen doesn't display it, and the issued token doesn't carry it. Holding the scope only grants what those groups actually allow: a non-admin schema editor's `cms:admin` token can create/update/delete the schemas their groups permit, and nothing else — it does not become a full-access admin token. See [Super-admin elevation](#super-admin-elevation) for the separate, stricter bar on becoming the unrestricted admin persona.
 
 ### Picking the right scopes
 
@@ -214,6 +218,24 @@ Dynamic registration is rate-limited by default (10 registrations/hour per IP) t
 
 ---
 
+## Running public-only MCP
+
+**Admin → Settings → OAuth Server → Enable OAuth Server** (default: on) is the master switch for the whole authorization server. Turn it **off** to run a public-only MCP site.
+
+Why you'd want that: some MCP clients — notably claude.ai and the Claude desktop app — demand a login at connector setup whenever they can discover an OAuth server, even though your anonymous public tier would have served them. T3's consent screen requires an operator login, so a site visitor who adds your connector hits a wall they can never pass. With OAuth disabled, those clients see a plain no-auth MCP server and connect anonymously, getting exactly the collections and tools you marked public.
+
+With the switch off:
+
+- All OAuth discovery documents (`/.well-known/oauth-authorization-server`, `/.well-known/oauth-protected-resource`, `/.well-known/jwks.json`) and endpoints (`/oauth/authorize`, `/oauth/token`, `/oauth/register`, `/oauth/revoke`) return 404 — clients read "no OAuth here" through standard discovery failure.
+- The MCP discovery document (`/.well-known/mcp.json`) stops advertising `resourceMetadata`.
+- Access is anonymous (public persona) or API key (admin persona). The authenticated OAuth tier is unavailable, including for your own connectors.
+- Already-issued access tokens expire naturally (default 1 hour) and cannot be refreshed; no new tokens can be issued.
+- The per-collection MCP access levels keep working as before — collections marked `authenticated` are simply unreachable until you either re-enable OAuth or query with an API key.
+
+The OAuth Applications admin page stays available so client records survive a temporary switch-off intact. Note that leaving OAuth **enabled** does not block public access at the server — anonymous callers are always served when *Allow Public Access* is on. The switch exists purely because some clients refuse to take the anonymous path while OAuth is discoverable.
+
+---
+
 ## Security model
 
 ### What OAuth protects
@@ -236,9 +258,9 @@ The JWT access tokens are RS256-signed. Resource servers (or auditing tools) can
 
 ---
 
-## Pruning expired grants with `oauth:gc`
+## Pruning expired grants and stale clients with `oauth:gc`
 
-OAuth grants accumulate over time. Expired access tokens are rejected at the endpoint, but the underlying grant records remain on disk in `tcms-data/.system/oauth/` until explicitly pruned. The `oauth:gc` command removes them:
+OAuth records accumulate over time. Expired access tokens are rejected at the endpoint, but the underlying grant records remain on disk until explicitly pruned. Self-registered clients pile up even faster: MCP clients (claude.ai, Claude Desktop, Cursor) register a fresh client every time a connector is added, so failed or abandoned connection attempts each leave a client record behind. The `oauth:gc` command removes both:
 
 ```bash
 tcms oauth:gc
@@ -248,19 +270,31 @@ Output:
 
 ```
 Pruned 14 expired OAuth grants.
+Pruned 6 stale dynamic clients.
+  - Anthropic/ClaudeAI (f9920001-…)
+  ...
 ```
 
-The command is safe to run at any time. It touches only grants whose refresh token has passed its configured lifetime (`oauth.refreshTokenTtl`) — active grants are untouched.
+The command is safe to run at any time:
+
+- **Grants** are removed only after their refresh token has passed its configured lifetime (`oauth.refreshTokenTtl`) — active grants are untouched.
+- **Clients** are removed only when they are self-registered (RFC 7591), at least 24 hours old, and hold no active grant. Every completed connection creates a grant at the consent screen, so a grantless dynamic client is a dead registration by definition; the 24-hour floor protects registrations whose user is still mid-consent. Manually configured clients are never touched.
+
+The same client cleanup is available in the admin: the **Remove stale clients** button on the OAuth Applications page (Utilities → OAuth Applications) prunes the self-registered list on demand.
+
+### Automatic daily cleanup
+
+You normally don't need to schedule anything: the same sweep runs opportunistically once per day, triggered by ordinary OAuth traffic (token refreshes and client registrations). Any site with an active connector — or one still receiving connection attempts — cleans itself. Sites that never use OAuth never pay the cost.
 
 ### Running on a schedule
 
-Prune once a day via cron. Add a line to the crontab of the web server user (typically `www-data` or the PHP-FPM pool user):
+If you prefer an explicit schedule (or want cleanup on a site with no OAuth traffic at all), run the command via cron. Add a line to the crontab of the web server user (typically `www-data` or the PHP-FPM pool user):
 
 ```
 0 3 * * * cd /var/www/your-site && php resources/bin/tcms oauth:gc >> tcms-data/.system/logs/oauth-gc.log 2>&1
 ```
 
-Adjust the path to match your install location. The `>> ... 2>&1` redirect appends output to a log file so you can confirm it ran. On low-traffic sites a weekly schedule is sufficient; on sites with many OAuth connections (public AI client deployments) daily is recommended.
+Adjust the path to match your install location. The `>> ... 2>&1` redirect appends output to a log file so you can confirm it ran.
 
 ---
 
@@ -305,6 +339,17 @@ Tokens issued through the OAuth flow authenticate requests to `/mcp` — but onl
 
 The token's scopes determine which tools and resources appear in `tools/list` and `resources/list`. An agent whose token lacks `mcp:resources` cannot subscribe to change notifications; one without `mcp:prompts` cannot invoke prompts. T3 filters the surface at session initialization so agents only see what their token can actually call.
 
+### Super-admin elevation
+
+A token is elevated to the full **admin** persona — every tool and REST path, unrestricted, same surface as an API key — when **both** of these hold:
+
+1. The user who approved the consent screen is in the **admin** group (the same check that guards the admin UI), and
+2. the token carries the `cms:admin` scope.
+
+Either alone stays at the authenticated tier: an admin who granted a read-only token gets exactly the read-only assistant they chose, and a non-admin requesting `cms:admin` gets the scope but not the elevation. This is the recommended way for operators to manage their site from Claude — compared to pasting an API key it's per-connection revocable, activity-logged, and the access token expires hourly.
+
+This is a **stricter** bar than simply holding `cms:admin` — see the widened issuance rule above. A non-admin user whose groups grant, say, `schemas` permission can request and receive `cms:admin`, and that token really does authorize schema writes over REST and MCP — but it never elevates to the unrestricted admin persona, because admin-group membership is the one requirement group grants can't substitute for. Elevation is all-or-nothing by design; a token that reaches everything is meant to mean the approving human can reach everything too.
+
 For a complete breakdown of which scopes unlock which MCP capabilities, and a worked example of configuring Claude Desktop with a static OAuth client, see [Connecting an AI client via OAuth](docs/mcp/server#connecting-an-ai-client-via-oauth).
 
 ---
@@ -315,6 +360,7 @@ Settings live in **Admin → Settings → OAuth Server**.
 
 | Key | Default | Effect |
 |---|---|---|
+| `oauth.enabled` | `true` | Master switch. Off = every OAuth endpoint and discovery document returns 404 — see [Running public-only MCP](#running-public-only-mcp) |
 | `oauth.dynamicRegistration` | `false` | Enable RFC 7591 self-registration at `/oauth/register` (off by default — unauthenticated endpoint) |
 | `oauth.accessTokenTtl` | `PT1H` | PHP DateInterval — access token lifetime |
 | `oauth.refreshTokenTtl` | `P30D` | PHP DateInterval — refresh token lifetime |

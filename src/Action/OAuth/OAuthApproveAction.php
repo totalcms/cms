@@ -13,9 +13,11 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\OAuth\Adapter\LeagueClientEntity;
 use TotalCMS\Domain\OAuth\Adapter\LeagueScopeEntity;
 use TotalCMS\Domain\OAuth\Adapter\LeagueUserEntity;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\TwigRenderer;
+use TotalCMS\Support\Config;
 
 readonly class OAuthApproveAction
 {
@@ -24,6 +26,7 @@ readonly class OAuthApproveAction
 		private PhpSession $session,
 		private TwigRenderer $twig,
 		private OAuthActivityLogger $activityLogger,
+		private Config $config,
 	) {
 	}
 
@@ -67,7 +70,8 @@ readonly class OAuthApproveAction
 		$clientId  = $authRequest->getClient()->getIdentifier();
 		$userIdStr = (string)$userId;
 
-		$authRequest->setUser(new LeagueUserEntity($userIdStr));
+		$authCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?: $this->config->auth['collection']);
+		$authRequest->setUser(new LeagueUserEntity(OAuthUserRef::compose($authCollection, $userIdStr)));
 		$authRequest->setAuthorizationApproved($decision === 'approve');
 
 		// Clear the stashed request before delegating — avoid replay on server error.

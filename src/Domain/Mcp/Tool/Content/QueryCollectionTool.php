@@ -14,6 +14,7 @@ use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 /**
@@ -23,10 +24,13 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  *
  * Three design notes worth knowing before editing this file:
  *
- *   1. **Public-persona safety filter is server-merged.** A public caller can
- *      never see drafts, regardless of what `exclude` they send. We append
- *      `draft:true` to whatever the caller supplied — not replace it. Admin
- *      callers can include drafts intentionally by leaving exclude empty.
+ *   1. **Draft-authority safety filter is server-merged.** A caller without
+ *      draft read authority for this collection — see
+ *      PersonaContext::canReadDrafts() — can never see drafts, regardless of
+ *      what `exclude` they send. We append `draft:true` to whatever the
+ *      caller supplied — not replace it. ADMIN, and an OAuth caller whose
+ *      access groups grant `read` on the collection, can include drafts
+ *      intentionally by leaving exclude empty.
  *
  *   2. **Tool description is built per persona.** The dynamic description
  *      builder (B7) renders a field catalog scoped to what the caller can see,
@@ -37,6 +41,15 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  *   3. **`limit` caps at 50.** REST permits 100, but MCP hosts have tighter
  *      response budgets (Claude.ai ~150k chars, Claude Code ~25k tokens). We
  *      clamp rather than reject — softer UX for the model.
+ *
+ *   4. **Group-gated (Task 10b).** Declares `requires: objects/read/collection`.
+ *      An AUTHENTICATED caller must hold `read` on the target collection per
+ *      their resolved access-group authority — UNLESS the collection's
+ *      `mcp.access` is `'public'`, which stays readable by every caller
+ *      regardless of group grants (McpServerFactory::guardHandler() special-
+ *      cases this domain/operation to PersonaContext::canReadCollection()
+ *      rather than the plain group-only check, so authenticating never
+ *      subtracts reach an anonymous caller already has).
  */
 readonly class QueryCollectionTool
 {
@@ -67,6 +80,7 @@ readonly class QueryCollectionTool
 				openWorldHint: false,
 			),
 			outputSchema: $this->outputSchema(),
+			requires: new ToolRequirement(domain: 'objects', operation: 'read', collectionArg: 'collection'),
 		));
 	}
 
@@ -135,7 +149,7 @@ readonly class QueryCollectionTool
 			));
 		}
 
-		if ($persona === McpPersona::PUBLIC_) {
+		if (!$this->personaContext->canReadDrafts($collection)) {
 			$exclude = $this->mergeExcludeRule($exclude, 'draft:true');
 		}
 
@@ -186,7 +200,14 @@ readonly class QueryCollectionTool
 
 	public function buildDescription(McpPersona $persona): string
 	{
-		$catalog = $this->schemaResolver->renderCatalog($persona, McpSchemaResolver::DEFAULT_CATALOG_CAP);
+		// Task 10b fix round 1 (finding #1): the catalog must not advertise
+		// collections the caller's groups don't grant read on — same rule
+		// query_collection's own handler() enforces via canReadCollection().
+		$catalog = $this->schemaResolver->renderCatalog(
+			$persona,
+			McpSchemaResolver::DEFAULT_CATALOG_CAP,
+			fn (\TotalCMS\Domain\Collection\Data\CollectionData $c): bool => $this->personaContext->canReadCollection($c->id, $c),
+		);
 
 		return $catalog === ''
 			? $this->baseDescription()
@@ -232,7 +253,7 @@ readonly class QueryCollectionTool
 				'exclude' => [
 					'type'        => 'string',
 					'default'     => '',
-					'description' => 'Comma-separated field:value pairs that exclude items (OR). Public callers always get "draft:true" merged in server-side regardless of caller input.',
+					'description' => 'Comma-separated field:value pairs that exclude items (OR). Callers without draft read authority for this collection always get "draft:true" merged in server-side regardless of caller input.',
 					'examples'    => ['draft:true', 'status:archived,featured:false'],
 				],
 				'sort' => [

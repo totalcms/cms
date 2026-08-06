@@ -7,9 +7,11 @@ namespace Tests\Unit\Domain\Mcp\Tool\Content;
 use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Content\QueryViewTool;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -29,8 +31,11 @@ final class QueryViewToolTest extends TestCase
 	{
 		$this->queryService = $this->createMock(DataViewQueryService::class);
 		$this->objects      = $this->createMock(ObjectFetcher::class);
-		$this->persona      = new PersonaContext();
-		$this->tool         = new QueryViewTool($this->queryService, $this->objects, $this->persona);
+		// QueryViewTool never touches canReadCollection()/canReadDrafts() —
+		// PersonaContext's Task 10b constructor deps are unused here; plain
+		// stubs satisfy the type only.
+		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
+		$this->tool    = new QueryViewTool($this->queryService, $this->objects, $this->persona);
 	}
 
 	/** @param array<string,mixed> $props */

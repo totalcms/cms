@@ -3,6 +3,40 @@ import FieldVisibility from './field-visibility';
 import tcmsConfirm from '../confirm-dialog';
 
 //-----------------------------------------------
+// A SimpleForm serializes raw DOM input names, so a group of related inputs has
+// only their names to say they belong together — the Import RSS mapping panel
+// posts eight of them as `fieldMap[title]`, `fieldMap[summary]`, and so on. The
+// admin posts JSON rather than an encoded form body, so nothing expands those
+// brackets on the way in: the keys would arrive at the server intact and be
+// ignored by code reading `fieldMap`. Expanding here keeps the payload shaped
+// the way PHP would have parsed the equivalent form POST.
+//
+// Only named subscripts are handled. The bare `name[]` list form is not used
+// anywhere — a TotalForm field returns its own array (see any checklist), and
+// ChecklistFieldNamingTest keeps it that way.
+//
+// Writes into `data` and returns nothing: callers accumulate many keys into one
+// object, so mutation is the whole point and a return value would only raise the
+// question of which one to trust.
+//-----------------------------------------------
+function assignBracketKey(data, key, value) {
+	const match = /^(.+?)\[([^\]]+)\]$/.exec(key);
+
+	if (match === null) {
+		data[key] = value;
+		return;
+	}
+
+	const base = match[1];
+	const subscript = match[2];
+
+	if (data[base] === null || typeof data[base] !== 'object' || Array.isArray(data[base])) {
+		data[base] = {};
+	}
+	data[base][subscript] = value;
+}
+
+//-----------------------------------------------
 // Total CMS Simple Form constructor
 //-----------------------------------------------
 export default class SimpleForm {
@@ -238,7 +272,9 @@ export default class SimpleForm {
 	generateData() {
 		const data = {};
 		new FormData(this.form).forEach((value, key) => {
-			data[key] = value;
+			// Names may use bracket notation (the Import RSS mapping panel posts
+			// `fieldMap[title]`). Posting JSON means nothing expands them later.
+			assignBracketKey(data, key, value);
 		});
 
 		// FormData doesn't include unchecked checkboxes/toggles, so we need to explicitly add them
@@ -257,7 +293,7 @@ export default class SimpleForm {
 		// avoid dropping their values on save (checkboxes are already handled above).
 		this.form.querySelectorAll('[name][disabled]').forEach(el => {
 			if (!data.hasOwnProperty(el.name)) {
-				data[el.name] = el.value;
+				assignBracketKey(data, el.name, el.value);
 			}
 		});
 

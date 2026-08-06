@@ -13,6 +13,8 @@ use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -45,6 +47,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 		protected Config $config,
 		protected OperationDetector $operationDetector,
 		protected LoggerFactory $loggerFactory,
+		protected OAuthActivityLogger $oauthActivityLogger,
 	) {
 	}
 
@@ -60,24 +63,48 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		// API keys and OAuth Bearer tokens bypass group checks (trust model).
-		// OAuth Bearer requests were already scope-checked by OAuthRestScopeMiddleware
-		// before reaching here; no additional per-collection access group evaluation
-		// is needed (and there is no session user to check against anyway).
 		$authMethod = $request->getAttribute('authMethod');
-		if ($authMethod === 'apikey' || $authMethod === 'oauth_bearer') {
+
+		// API keys bypass group checks entirely (trust model).
+		if ($authMethod === 'apikey') {
 			return $handler->handle($request);
 		}
 
-		// Get user ID from session
-		$userId = $this->session->get(SessionKeys::AUTH_USER);
-		if (!$userId) {
-			return $this->forbiddenResponse($request, 'Authentication required');
-		}
+		$isOAuthBearer = $authMethod === 'oauth_bearer';
 
-		// Super admins bypass all access checks
-		if ($this->userValidation->isSuperAdmin($userId)) {
-			return $handler->handle($request);
+		if ($isOAuthBearer) {
+			// OAuth Bearer requests were already scope-checked by OAuthRestScopeMiddleware
+			// before reaching here. There is no PHP session for Bearer requests, so the
+			// caller's identity + access groups are resolved from the token's `sub` claim
+			// via AccessControlService::authorityFor() (session-free) instead of the
+			// session-coupled lookups the rest of this class uses. Admins get the same
+			// unrestricted bypass session-authenticated admins get; everyone else falls
+			// through to the SAME per-operation checkPermission() session users go
+			// through, with $userId resolved from the token and the resolved
+			// UserAuthority threaded through via the `accessAuthority` request
+			// attribute so checkPermission() implementations can use it instead of
+			// re-deriving groups from the (absent) session.
+			$ref       = OAuthUserRef::parse((string)$request->getAttribute('oauth_user_id', ''), (string)$this->config->auth['collection']);
+			$authority = $this->accessControl->authorityFor($ref);
+			if ($authority->isAdmin) {
+				return $handler->handle($request);
+			}
+
+			$userId  = $ref->userId;
+			$request = $request->withAttribute('accessAuthority', $authority);
+		} else {
+			// Get user ID from session
+			$sessionUserId = $this->session->get(SessionKeys::AUTH_USER);
+			if (!$sessionUserId) {
+				return $this->forbiddenResponse($request, 'Authentication required');
+			}
+			$userId         = (string)$sessionUserId;
+			$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
+
+			// Super admins bypass all access checks
+			if ($this->userValidation->isSuperAdmin($userId, $userCollection)) {
+				return $handler->handle($request);
+			}
 		}
 
 		// Detect CRUD operation for permission checking
@@ -99,6 +126,10 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 				]);
 			}
 
+			if ($isOAuthBearer) {
+				$this->logGroupRejection($request, $userId, 'unknown');
+			}
+
 			return $this->forbiddenResponse($request, $this->getErrorMessage());
 		}
 
@@ -106,6 +137,10 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 		$hasAccess = $this->checkPermission($userId, $operation, $request);
 
 		if ($hasAccess === false) {
+			if ($isOAuthBearer) {
+				$this->logGroupRejection($request, $userId, $operation);
+			}
+
 			return $this->forbiddenResponse($request, $this->getErrorMessage());
 		}
 
@@ -113,10 +148,29 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	}
 
 	/**
+	 * Record a group-layer denial to the oauth-activity log, distinct from
+	 * OAuthRestScopeMiddleware's scopeRejected() which fires earlier for
+	 * tokens whose scopes don't cover the operation at all.
+	 */
+	private function logGroupRejection(ServerRequestInterface $request, string $userId, string $operation): void
+	{
+		$clientId = (string)$request->getAttribute('oauth_client_id', '');
+		$this->oauthActivityLogger->groupRejected($clientId, $operation, $userId);
+	}
+
+	/**
 	 * Check if the user has permission to access the requested resource.
 	 * Implemented by concrete middleware classes.
 	 *
-	 * @param string $userId User ID from session
+	 * For OAuth Bearer callers, $userId is the token's subject (not a
+	 * session user) and $request carries a resolved `accessAuthority`
+	 * (TotalCMS\Domain\Auth\Data\UserAuthority) attribute — implementations
+	 * that need per-collection/schema group data should prefer that
+	 * attribute over AccessControlService's session-coupled canAccessX()
+	 * methods when present, since there is no PHP session to read from on
+	 * a Bearer request.
+	 *
+	 * @param string $userId User ID from session (or OAuth token subject)
 	 * @param string $operation CRUD operation (create, read, update, delete)
 	 * @param ServerRequestInterface $request HTTP request
 	 *

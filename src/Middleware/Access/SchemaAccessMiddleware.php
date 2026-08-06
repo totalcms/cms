@@ -6,6 +6,7 @@ namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 
 /**
  * Schema Access Middleware.
@@ -30,6 +31,15 @@ readonly class SchemaAccessMiddleware extends BaseAccessMiddleware
 		}
 
 		$schema = $route->getArgument('schema');
+
+		// OAuth Bearer callers: no PHP session to derive groups from — use the
+		// UserAuthority resolved from the token by BaseAccessMiddleware.
+		$authority = $request->getAttribute('accessAuthority');
+		if ($authority instanceof UserAuthority) {
+			return $schema
+				? $authority->canSchema($operation, $schema)
+				: $authority->canSchemasOperation($operation);
+		}
 
 		// Check access permissions
 		if ($schema) {

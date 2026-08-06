@@ -64,6 +64,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRenderer;
@@ -108,6 +109,8 @@ use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
+use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
@@ -738,6 +741,9 @@ return [
 		$container->get(PromptDiscoveryService::class),
 		$container->get(PromptRegistrar::class),
 		$container->get(ExtensionManager::class),
+		$container->get(PersonaContext::class),
+		$container->get(OAuthScopeRegistry::class),
+		$container->get(OAuthActivityLogger::class),
 	),
 
 	// Subscription storage: reverse URI→sessionIds index at
@@ -798,6 +804,12 @@ return [
 
 	OAuthGrantRepository::class => fn (ContainerInterface $container): OAuthGrantRepository => new OAuthGrantRepository(
 		$container->get(Config::class)->datadir . '/.system/oauth-grants.json',
+	),
+
+	OAuthClientPruner::class => fn (ContainerInterface $container): OAuthClientPruner => new OAuthClientPruner(
+		$container->get(OAuthClientRepository::class),
+		$container->get(OAuthGrantRepository::class),
+		$container->get(Config::class)->datadir . '/.system/.oauth-gc',
 	),
 
 	OAuthRevocationList::class => fn (ContainerInterface $container): OAuthRevocationList => new OAuthRevocationList(

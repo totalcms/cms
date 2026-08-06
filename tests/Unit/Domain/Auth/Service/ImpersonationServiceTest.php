@@ -38,7 +38,7 @@ test('start stashes the real identity and swaps to the target', function (): voi
 	[$svc, $sess, $login] = makeImpersonationService(
 		['totalcms.auth.user' => 'joe', 'totalcms.auth.collection' => 'auth'],
 		function ($users, $fetch, $login): void {
-			$users->method('isSuperAdmin')->willReturnMap([['joe', true], ['jane', false]]);
+			$users->method('isSuperAdmin')->willReturnMap([['joe', 'auth', true], ['jane', 'members', false]]);
 			$fetch->method('existsObject')->willReturn(true);
 			$login->expects(test()->once())->method('establish')->with('jane', 'members', false);
 		},
@@ -59,7 +59,7 @@ test('start rejects a super-admin target', function (): void {
 	[$svc] = makeImpersonationService(
 		['totalcms.auth.user' => 'joe', 'totalcms.auth.collection' => 'auth'],
 		function ($users, $fetch): void {
-			$users->method('isSuperAdmin')->willReturnMap([['joe', true], ['admin2', true]]);
+			$users->method('isSuperAdmin')->willReturnMap([['joe', 'auth', true], ['admin2', 'auth', true]]);
 			$fetch->method('existsObject')->willReturn(true);
 		},
 	);
@@ -83,7 +83,7 @@ test('start rejects a target in a collection that is not auth-enabled', function
 	[$svc] = makeImpersonationService(
 		['totalcms.auth.user' => 'joe', 'totalcms.auth.collection' => 'auth'],
 		function ($users, $fetch): void {
-			$users->method('isSuperAdmin')->willReturnMap([['joe', true]]);
+			$users->method('isSuperAdmin')->willReturnMap([['joe', 'auth', true]]);
 			$fetch->method('existsObject')->willReturn(true);
 		},
 	);

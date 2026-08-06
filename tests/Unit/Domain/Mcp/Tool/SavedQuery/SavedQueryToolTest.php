@@ -22,7 +22,24 @@ final class SavedQueryToolTest extends TestCase
 {
 	private function makePersonaContext(McpPersona $persona): PersonaContext
 	{
-		$ctx = new PersonaContext();
+		// PersonaContext (Task 10b) needs CollectionFetcher + McpSchemaResolver
+		// to resolve canReadCollection()'s mcp.access:'public' carve-out.
+		// SavedQueryTool always passes the already-fetched CollectionData (see
+		// its handle()), so the CollectionFetcher stub is never invoked. The
+		// McpSchemaResolver stub returns a fixed 'public' access unconditionally
+		// (rather than reading $collection->mcp, which a plain
+		// createMock(CollectionData::class) — used by some tests in this file
+		// — leaves uninitialized) — every test in this file uses a
+		// SavedQueryToolDefinition with access:'public' or a case where this
+		// check is never reached (access:'admin' denies earlier; collection-
+		// missing denies earlier), so a fixed 'public' is consistent with every
+		// reachable scenario here.
+		$schemaResolver = $this->createStub(McpSchemaResolver::class);
+		$schemaResolver->method('forCollection')->willReturn([
+			'access' => 'public', 'description' => null, 'resource' => true, 'titleProperty' => '',
+		]);
+
+		$ctx = new PersonaContext($this->createStub(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class), $schemaResolver);
 		$ctx->set($persona);
 
 		return $ctx;

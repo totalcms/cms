@@ -25,7 +25,23 @@ final class DescribeCollectionToolTest extends TestCase
 	{
 		$this->collections = $this->createMock(CollectionFetcher::class);
 		$this->resolver    = $this->createMock(McpSchemaResolver::class);
-		$this->persona     = new PersonaContext();
+		// PersonaContext (Task 10b) needs its OWN McpSchemaResolver for
+		// canReadCollection()'s mcp.access:'public' carve-out — deliberately NOT
+		// $this->resolver, whose forCollection() this file's existing tests
+		// stub per-test with hardcoded output-shaping values (e.g. 'access' =>
+		// 'admin' in testReturnsEmptyPropertiesArrayForCollectionWithNoExposedProperties)
+		// unrelated to each fixture's real mcp.access. A dedicated stub derives
+		// the real value from the CollectionData instead.
+		$personaSchemaResolver = $this->createStub(McpSchemaResolver::class);
+		$personaSchemaResolver->method('forCollection')->willReturnCallback(
+			static fn (CollectionData $c): array => [
+				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'description'   => null,
+				'resource'      => true,
+				'titleProperty' => '',
+			],
+		);
+		$this->persona = new PersonaContext($this->collections, $personaSchemaResolver);
 
 		$this->tool = new DescribeCollectionTool(
 			$this->collections,

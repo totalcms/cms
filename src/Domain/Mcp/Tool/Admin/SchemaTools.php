@@ -9,7 +9,10 @@ use Mcp\Schema\ToolAnnotations;
 use Mcp\Server\RequestContext;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -27,9 +30,18 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
  * `delete_schema` carries the appropriate annotation so MCP hosts can surface
  * it with extra confirmation.
  *
- * All five tools require admin persona — even the reads are operator work
- * (inspecting schema definitions, not content) and shouldn't surface to
- * anonymous AI callers. Domain-layer exceptions are converted to
+ * `list_schemas` and `get_schema` require admin persona — even reads are
+ * operator work (inspecting schema definitions, not content) and shouldn't
+ * surface to anonymous AI callers. `create_schema`, `update_schema`, and
+ * `delete_schema` keep `access: 'admin'` but ALSO carry a `ToolRequirement`
+ * (Phase 4): the requirement doesn't loosen the base persona gate (an
+ * ADMIN-only tool stays hidden from AUTHENTICATED unless requires is
+ * satisfied — access: 'authenticated' would short-circuit tools/list
+ * visibility BEFORE requires is ever consulted, see
+ * McpToolDefinition::isVisibleTo()), it EXTENDS it: an AUTHENTICATED caller
+ * whose access-group grants schema create/update/delete on the target schema
+ * id also sees and can call the matching tool — mirrors the REST
+ * `/api/schemas` group gate. Domain-layer exceptions are converted to
  * `ToolCallException` with recovery hints so the SDK returns proper
  * `isError: true` MCP tool errors instead of letting raw exceptions escape.
  */
@@ -43,6 +55,7 @@ readonly class SchemaTools
 		private ObjectSaver $objectSaver,
 		private CollectionFetcher $collectionFetcher,
 		private CollectionSaver $collectionSaver,
+		private PersonaContext $personaContext,
 	) {
 	}
 
@@ -107,6 +120,7 @@ readonly class SchemaTools
 				idempotentHint: false,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'schemas', operation: 'create', collectionArg: 'id'),
 		));
 
 		$registry->register(new McpToolDefinition(
@@ -123,6 +137,7 @@ readonly class SchemaTools
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'schemas', operation: 'update', collectionArg: 'id'),
 		));
 
 		$registry->register(new McpToolDefinition(
@@ -149,6 +164,7 @@ readonly class SchemaTools
 				idempotentHint: false,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'schemas', operation: 'delete', collectionArg: 'id'),
 		));
 	}
 
@@ -233,6 +249,16 @@ readonly class SchemaTools
 		// (no progressToken) pass through the progress() calls silently.
 		$seededCount = 0;
 		if ($seedObjects !== null && $seedObjects !== []) {
+			// The schema-domain requirement checked at call time (guardHandler)
+			// only proves the caller can create SCHEMAS. Seeding also creates a
+			// COLLECTION (collections-meta 'create') and writes OBJECTS into it
+			// (objects 'create') — a caller with schemas.create but no
+			// collections/collectionsMeta grants must not get those for free
+			// just because they asked for seedObjects. The schema itself is
+			// already persisted above (that write WAS authorized) — only the
+			// seed step is refused here.
+			$this->assertCanSeed($id);
+
 			// Checkpoint 1: schema is on disk, about to seed objects.
 			$ctx?->getClientGateway()->progress(50.0, 100.0, 'schema persisted');
 
@@ -276,6 +302,53 @@ readonly class SchemaTools
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Guards the seedObjects path: creating a collection + writing objects
+	 * into it needs collections-meta 'create' and objects 'create' on
+	 * $collectionId, which schemas.create alone does not imply. Mirrors
+	 * McpServerFactory::guardHandler()'s own persona/authority handling so
+	 * the same caller shape (ADMIN bypasses, AUTHENTICATED is checked
+	 * against their resolved UserAuthority) applies here — but this is a
+	 * second, INDEPENDENT check inside the handler itself, not a substitute
+	 * for the outer schemas-domain guard.
+	 *
+	 * No-op when PersonaContext was never resolved (e.g. a direct unit-test
+	 * call to createHandler(), bypassing the MCP dispatch/guard entirely) —
+	 * there is nothing to check a caller identity against in that shape, and
+	 * unit tests calling the handler directly are implicitly trusted callers,
+	 * same as every other handler method in this class.
+	 */
+	private function assertCanSeed(string $collectionId): void
+	{
+		if (!$this->personaContext->isResolved()) {
+			return;
+		}
+
+		if ($this->personaContext->current() === McpPersona::ADMIN) {
+			return;
+		}
+
+		$authority = $this->personaContext->getAuthority();
+		if ($authority instanceof \TotalCMS\Domain\Auth\Data\UserAuthority && $authority->isAdmin) {
+			return;
+		}
+
+		if (
+			!$authority instanceof \TotalCMS\Domain\Auth\Data\UserAuthority
+			|| !$authority->canCollectionMeta('create', $collectionId)
+			|| !$authority->canCollection('create', $collectionId)
+		) {
+			throw new ToolCallException(sprintf(
+				'create_schema: schema "%s" was created, but seedObjects was skipped — seeding also requires '
+				. 'collectionsMeta \'create\' and objects \'create\' grants on "%s", which your account\'s groups '
+				. 'do not provide. Create the collection and objects separately (create_collection + '
+				. 'create_object), or ask an operator to widen your access group.',
+				$collectionId,
+				$collectionId,
+			));
+		}
 	}
 
 	/**

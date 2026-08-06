@@ -21,6 +21,25 @@ use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
  * stripping mirror QueryCollectionTool so the resource surface and tool
  * surface stay consistent.
  *
+ * **Group-authority read gate (Task 10, corrected Task 10b).** A resource
+ * read is a bulk-browse surface: an AUTHENTICATED caller must pass
+ * PersonaContext::canReadCollection($collection) — their access groups grant
+ * `read` on $collection, OR $collection's `mcp.access` is `'public'` — or the
+ * whole read is denied, not just its drafts. ADMIN is unaffected
+ * (canReadCollection() always true for ADMIN); PUBLIC_ is unaffected (the
+ * check only runs for AUTHENTICATED; PUBLIC_ never reaches an
+ * `'authenticated'`-exposed collection at all via the isAccessibleTo() check
+ * above it).
+ *
+ * Task 10 originally gated this with PersonaContext::canReadDrafts(), which
+ * has NO public-collection carve-out — an AUTHENTICATED caller without a
+ * group grant was denied even on a `mcp.access: 'public'` collection that an
+ * ANONYMOUS caller could read freely (a privilege inversion: authenticating
+ * reduced reach). Task 10b's canReadCollection() is the fix, and is now the
+ * single home for this exact rule — also used by query_collection/get_object/
+ * search_collection's call-time guard and by McpResourceDefinition::
+ * authorizedFor() below.
+ *
  * Mounted into ResourceRegistry by CollectionResourceRegistrar (Task A6); this
  * class never registers itself.
  */
@@ -58,11 +77,36 @@ readonly class CollectionResource
 			));
 		}
 
+		// AUTHENTICATED callers must additionally hold `read` on this specific
+		// collection per their resolved access-group authority — UNLESS the
+		// collection is `mcp.access: 'public'` (canReadCollection()'s carve-out;
+		// see class docblock) — same message as the mcp.access denial above
+		// (existing idiom: opaque "not accessible", no separate error shape for
+		// "access-group denied" vs "mcp.access denied"). ADMIN and PUBLIC_
+		// never reach this branch.
+		if ($persona === McpPersona::AUTHENTICATED && !$this->personaContext->canReadCollection($collection, $collectionData)) {
+			throw new ToolCallException(\sprintf(
+				'Resource tcms://%s/ is not accessible to this caller. Use list_collections to see available collections.',
+				$collection,
+			));
+		}
+
 		$index = $this->indexReader->fetchIndex($collection);
 		$items = $index->objects->all();
 
-		// Public callers never see drafts (matches QueryCollectionTool's safety merge)
-		if ($persona === McpPersona::PUBLIC_) {
+		// Drafts are hidden from anyone whose authority doesn't grant read on
+		// this collection — PersonaContext::canReadDrafts() is the single home
+		// for this rule (ADMIN always; an OAuth caller when their access
+		// groups grant read; false for public/anonymous). Deliberately NOT
+		// canReadCollection(): drafts always require the real grant, never
+		// mere public exposure — an AUTHENTICATED caller with no group grant
+		// reaches this line (not denied above) when $collection is
+		// mcp.access:'public' (Task 10b's carve-out), and this filter still
+		// strips their drafts even though the gate above admitted them. So
+		// this line strips drafts for PUBLIC_ AND for that ungranted-but-
+		// public-collection AUTHENTICATED case; ADMIN and a genuinely
+		// grant-holding AUTHENTICATED caller are the only ones who keep them.
+		if (!$this->personaContext->canReadDrafts($collection)) {
 			$items = array_values(array_filter(
 				$items,
 				static fn (array $i): bool => empty($i['draft']),

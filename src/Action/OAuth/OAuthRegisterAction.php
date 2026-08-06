@@ -7,6 +7,7 @@ namespace TotalCMS\Action\OAuth;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
 use TotalCMS\Domain\OAuth\Service\OAuthDynamicRegistrar;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -18,6 +19,7 @@ readonly class OAuthRegisterAction
 		private JsonRenderer $renderer,
 		private Config $config,
 		private OAuthActivityLogger $activityLogger,
+		private OAuthClientPruner $clientPruner,
 	) {
 	}
 
@@ -60,6 +62,14 @@ readonly class OAuthRegisterAction
 			(string)$result['client_name'],
 			$remoteAddr,
 		);
+
+		// The act that creates the litter also sweeps it: MCP clients register
+		// a fresh client per connector add, so registration is the reliable
+		// touchpoint on sites where connections are attempted but never
+		// completed. The just-created client is safe — the pruner's retention
+		// floor keeps anything younger than a day. Throttled + failure-proof
+		// inside.
+		$this->clientPruner->maybeRunDaily();
 
 		return $this->renderer->json($response, $result, 201);
 	}

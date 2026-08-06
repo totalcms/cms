@@ -13,6 +13,7 @@ use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 
@@ -26,9 +27,27 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
  * `get_object` rather than `get_collection`. `list_collections` is the tool
  * that returns collection-level metadata.
  *
- * **Draft visibility for public callers:** a draft is treated as if it didn't
- * exist (same error wording as a genuinely missing id), so guessing a slug
- * can't tell you whether the post exists in draft form.
+ * **Draft visibility:** for a caller without draft read authority for this
+ * collection (see PersonaContext::canReadDrafts()) a draft is treated as if
+ * it didn't exist (same error wording as a genuinely missing id), so guessing
+ * a slug can't tell you whether the post exists in draft form.
+ *
+ * **Group-gated (Task 10b).** Declares `requires: objects/read/collection` —
+ * enforced two ways:
+ *   1. Via the registered `get_object` tool's call-time guard
+ *      (McpServerFactory::guardHandler()), same as query_collection/
+ *      search_collection.
+ *   2. Inline in handler() itself via PersonaContext::canReadCollection(),
+ *      because this method has real delegate callers that bypass the guard
+ *      entirely by invoking handler() directly rather than going through
+ *      `tools/call` dispatch: GetResourceTool (`get_resource`), Compat\FetchTool
+ *      (`fetch`), and CollectionObjectResource (`resources/read
+ *      tcms://{collection}/{id}`). The inline check is what actually closes
+ *      the group-read gap for those three surfaces — the ToolRequirement's
+ *      main job for THIS tool is scope enforcement + tools/list visibility
+ *      for the direct `get_object` call path. Both checks agree (same rule,
+ *      same PersonaContext), so the direct path is simply checked twice —
+ *      harmless.
  */
 readonly class GetObjectTool
 {
@@ -59,6 +78,7 @@ readonly class GetObjectTool
 				openWorldHint: false,
 			),
 			outputSchema: $this->outputSchema(),
+			requires: new ToolRequirement(domain: 'objects', operation: 'read', collectionArg: 'collection'),
 		));
 	}
 
@@ -110,16 +130,28 @@ readonly class GetObjectTool
 			));
 		}
 
+		// Group-read gate (Task 10b) — see class docblock. Reused verbatim by
+		// GetResourceTool/FetchTool/CollectionObjectResource, all of which call
+		// this method directly rather than going through the guarded
+		// `get_object` tool dispatch. Opaque "not found" (not a distinct
+		// "forbidden" message) so a denied caller can't distinguish "no such
+		// object" from "object exists, you can't read this collection" —
+		// same opacity principle the draft check below already uses.
+		if (!$this->personaContext->canReadCollection($collection, $collectionData)) {
+			throw $this->notFound($collection, $id);
+		}
+
 		if (!$this->objectFetcher->existsObject($collection, $id)) {
 			throw $this->notFound($collection, $id);
 		}
 
 		$object = $this->objectFetcher->fetchObject($collection, $id)->toArray();
 
-		// Public callers can never see drafts. Returning the same error a missing
-		// object produces keeps draft existence opaque — guessing a slug can't
-		// distinguish "no post here" from "draft post here".
-		if ($persona === McpPersona::PUBLIC_ && ($object['draft'] ?? false) === true) {
+		// Callers without draft read authority can never see drafts. Returning
+		// the same error a missing object produces keeps draft existence
+		// opaque — guessing a slug can't distinguish "no post here" from
+		// "draft post here".
+		if (!$this->personaContext->canReadDrafts($collection) && ($object['draft'] ?? false) === true) {
 			throw $this->notFound($collection, $id);
 		}
 
@@ -142,7 +174,14 @@ readonly class GetObjectTool
 
 	public function buildDescription(McpPersona $persona): string
 	{
-		$catalog = $this->schemaResolver->renderCatalog($persona, McpSchemaResolver::DEFAULT_CATALOG_CAP);
+		// Task 10b fix round 1 (finding #1): the catalog must not advertise
+		// collections the caller's groups don't grant read on — same rule
+		// this tool's own handler() enforces via canReadCollection().
+		$catalog = $this->schemaResolver->renderCatalog(
+			$persona,
+			McpSchemaResolver::DEFAULT_CATALOG_CAP,
+			fn (\TotalCMS\Domain\Collection\Data\CollectionData $c): bool => $this->personaContext->canReadCollection($c->id, $c),
+		);
 
 		return $catalog === ''
 			? $this->baseDescription()

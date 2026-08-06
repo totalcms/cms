@@ -11,13 +11,17 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
@@ -26,15 +30,18 @@ use TotalCMS\Support\Config;
 
 describe('BaseAccessMiddleware', function (): void {
 	beforeEach(function (): void {
-		$this->userValidation    = $this->createMock(UserValidationService::class);
-		$this->accessControl     = $this->createMock(AccessControlService::class);
-		$this->session           = $this->createMock(SessionInterface::class);
-		$this->jsonRenderer      = $this->createMock(JsonRenderer::class);
-		$this->twigRenderer      = $this->createMock(TwigRenderer::class);
-		$this->responseFactory   = $this->createMock(ResponseFactoryInterface::class);
-		$this->config            = Config::init();
-		$this->operationDetector = $this->createMock(OperationDetector::class);
-		$this->loggerFactory     = $this->createMock(LoggerFactory::class);
+		$this->userValidation     = $this->createMock(UserValidationService::class);
+		$this->accessControl      = $this->createMock(AccessControlService::class);
+		$this->session            = $this->createMock(SessionInterface::class);
+		$this->jsonRenderer       = $this->createMock(JsonRenderer::class);
+		$this->twigRenderer       = $this->createMock(TwigRenderer::class);
+		$this->responseFactory    = $this->createMock(ResponseFactoryInterface::class);
+		$this->config             = Config::init();
+		$this->operationDetector  = $this->createMock(OperationDetector::class);
+		$this->loggerFactory      = $this->createMock(LoggerFactory::class);
+		// OAuthActivityLogger is final readonly — construct a real instance
+		// backed by a NullLogger instead of createMock().
+		$this->oauthActivityLogger = new OAuthActivityLogger(new NullLogger());
 
 		$this->handler = $this->createMock(RequestHandlerInterface::class);
 
@@ -56,6 +63,7 @@ describe('BaseAccessMiddleware', function (): void {
 			$this->config,
 			$this->operationDetector,
 			$this->loggerFactory,
+			$this->oauthActivityLogger,
 			$checkPermission ?? (fn (): bool => true),
 		));
 
@@ -121,6 +129,82 @@ describe('BaseAccessMiddleware', function (): void {
 		($this->make)()->process($request, $this->handler);
 	});
 
+	// ────────────────────────────────────────────────────────────────────
+	// oauth_bearer branch — security review fix round 1, findings 3a/3b.
+	// ────────────────────────────────────────────────────────────────────
+
+	test('bearer request resolving to an admin authority bypasses the group check entirely', function (): void {
+		// OAuthUserRef::parse() evaluates the default-collection fallback
+		// argument regardless of whether the composite sub supplies its own
+		// prefix — restore the key beforeEach's wholesale auth overwrite drops.
+		$this->config->auth['collection'] = 'auth';
+
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getUri')->willReturn($this->createMock(UriInterface::class));
+		$request->method('getAttribute')->willReturnMap([
+			['publicSubmission', null, null],
+			['authMethod', null, 'oauth_bearer'],
+			['oauth_user_id', '', 'auth:admin-user-id'],
+		]);
+
+		$this->accessControl
+			->expects($this->once())
+			->method('authorityFor')
+			->with($this->callback(fn (OAuthUserRef $ref): bool => $ref->userId === 'admin-user-id' && $ref->collection === 'auth'))
+			->willReturn(new UserAuthority(isAdmin: true, groups: []));
+
+		$wasCalled = false;
+		$check     = function () use (&$wasCalled): bool {
+			$wasCalled = true;
+
+			return false;
+		};
+
+		// Admin bypass short-circuits before operation detection or checkPermission.
+		$this->operationDetector->expects($this->never())->method('detectOperation');
+		$this->handler->expects($this->once())->method('handle');
+
+		$response = ($this->make)($check)->process($request, $this->handler);
+
+		expect($wasCalled)->toBeFalse();
+		expect($response)->toBe($this->passthroughResponse);
+	});
+
+	test('bearer request with missing/empty oauth_user_id resolves to a denied authority and fails closed', function (): void {
+		// beforeEach overwrites $this->config->auth wholesale (['enable' => true]),
+		// dropping the 'collection' key OAuthUserRef::parse() falls back to —
+		// restore it so both the code under test and this assertion agree on
+		// the default auth collection.
+		$this->config->auth['collection'] = 'auth';
+
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getUri')->willReturn($this->createMock(UriInterface::class));
+		$request->method('getAttribute')->willReturnMap([
+			['publicSubmission', null, null],
+			['authMethod', null, 'oauth_bearer'],
+			// getAttribute('oauth_user_id', '') — attribute genuinely absent,
+			// so the mock falls back to the default: empty string.
+			['oauth_user_id', '', ''],
+		]);
+		$request->method('withAttribute')->willReturnSelf();
+
+		// Pin OAuthUserRef::parse('', defaultCollection) → collection defaults,
+		// userId stays empty — and that authorityFor() resolves it to a
+		// non-admin (denied) authority rather than throwing or bypassing.
+		$this->accessControl
+			->expects($this->once())
+			->method('authorityFor')
+			->with($this->callback(fn (OAuthUserRef $ref): bool => $ref->userId === '' && $ref->collection === $this->config->auth['collection']))
+			->willReturn(UserAuthority::denied());
+
+		$this->operationDetector->method('detectOperation')->willReturn('read');
+
+		$this->handler->expects($this->never())->method('handle');
+		$this->jsonRenderer->expects($this->once())->method('json');
+
+		($this->make)(fn (): bool => false)->process($request, $this->handler);
+	});
+
 	test('missing session user returns 403 with "Authentication required"', function (): void {
 		$this->session->method('get')->with(SessionKeys::AUTH_USER)->willReturn(null);
 
@@ -136,7 +220,9 @@ describe('BaseAccessMiddleware', function (): void {
 	});
 
 	test('super admin bypasses checkPermission entirely', function (): void {
-		$this->session->method('get')->with(SessionKeys::AUTH_USER)->willReturn('admin-id');
+		$this->session->method('get')->willReturnCallback(
+			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'admin-id' : null,
+		);
 		$this->userValidation->method('isSuperAdmin')->with('admin-id')->willReturn(true);
 
 		$wasCalled = false;

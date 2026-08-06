@@ -40,7 +40,23 @@ final class SearchCollectionsToolTest extends TestCase
 		$this->collectionsRepo = $this->createMock(CollectionRepository::class);
 		$this->urls            = $this->createMock(ObjectUrlBuilder::class);
 		$this->resolver        = $this->createMock(McpSchemaResolver::class);
-		$this->persona         = new PersonaContext();
+		// PersonaContext (Task 10b) needs CollectionFetcher + McpSchemaResolver
+		// to resolve canReadCollection()'s mcp.access:'public' carve-out for the
+		// handler's per-collection filter. Every call site passes the
+		// already-fetched CollectionData, so a throwaway CollectionRepository
+		// stub in place of CollectionFetcher would do, but a stub of the right
+		// type is required regardless — reuses none here since this file has no
+		// CollectionFetcher mock; a plain stub suffices, it's never invoked.
+		// $this->resolver IS invoked (via forCollection(), stubbed below).
+		$this->persona = new PersonaContext($this->createStub(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class), $this->resolver);
+		$this->resolver->method('forCollection')->willReturnCallback(
+			static fn (CollectionData $c): array => [
+				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'description'   => null,
+				'resource'      => true,
+				'titleProperty' => '',
+			],
+		);
 
 		$this->tool = new SearchCollectionsTool(
 			$this->searchService,

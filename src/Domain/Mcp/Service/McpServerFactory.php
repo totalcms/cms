@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Service;
 
+use Mcp\Capability\Registry\ElementReference;
+use Mcp\Capability\Registry\ReferenceHandler;
+use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server;
 use Mcp\Server\Resource\SubscriptionManagerInterface;
@@ -11,6 +14,7 @@ use Mcp\Server\Session\SessionStoreInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
@@ -18,6 +22,8 @@ use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
 
@@ -50,6 +56,9 @@ readonly class McpServerFactory
 		private PromptDiscoveryService $promptDiscoveryService,
 		private PromptRegistrar $promptRegistrar,
 		private ExtensionManager $extensions,
+		private PersonaContext $personaContext,
+		private OAuthScopeRegistry $scopeRegistry,
+		private OAuthActivityLogger $activityLogger,
 	) {
 	}
 
@@ -111,7 +120,7 @@ readonly class McpServerFactory
 		// see the first pass's tools as collisions and skip them — don't do that.
 		$this->schemaToolRegistrar->register($this->toolRegistry);
 
-		foreach ($this->toolRegistry->forPersona($persona) as $tool) {
+		foreach ($this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority()) as $tool) {
 			// Persona-aware tools (Phase 1 content tools) expose a builder that
 			// renders a per-persona description — e.g., the field catalog must
 			// only list collections the caller can actually see. Static-string
@@ -127,7 +136,7 @@ readonly class McpServerFactory
 			$annotations = $tool->annotations ?? $readOnlyDefault;
 
 			$builder->addTool(
-				handler: $tool->handler,
+				handler: $this->guardHandler($tool),
 				name: $this->resolveToolName($tool),
 				description: $description,
 				annotations: $annotations,
@@ -142,7 +151,12 @@ readonly class McpServerFactory
 			return $builder->build();
 		}
 
-		foreach ($this->resourceRegistry->forPersona($persona) as $resource) {
+		// $this->personaContext->getAuthority() mirrors the ToolRegistry call
+		// above (Task 10): an AUTHENTICATED caller's resolved UserAuthority
+		// additionally narrows collection-scoped resources to what their
+		// access groups grant `read` on, so resources/list matches the
+		// call-time gate CollectionResource::read() enforces.
+		foreach ($this->resourceRegistry->forPersona($persona, $this->personaContext->getAuthority()) as $resource) {
 			$builder->addResource(
 				handler: $resource->handler,
 				uri: $resource->uri,
@@ -152,7 +166,7 @@ readonly class McpServerFactory
 			);
 		}
 
-		foreach ($this->resourceRegistry->templatesForPersona($persona) as $template) {
+		foreach ($this->resourceRegistry->templatesForPersona($persona, $this->personaContext->getAuthority()) as $template) {
 			$builder->addResourceTemplate(
 				handler: $template->handler,
 				uriTemplate: $template->uriTemplate,
@@ -217,6 +231,213 @@ readonly class McpServerFactory
 		}
 
 		return $builder->build();
+	}
+
+	/**
+	 * Wraps $tool->handler with the call-time access-group + scope guard for
+	 * requirement-bearing tools (McpToolDefinition::$requires, Task 6).
+	 *
+	 * Task 6 only gated tools/list VISIBILITY — an AUTHENTICATED caller whose
+	 * groups satisfy the requirement for AT LEAST ONE target sees the tool
+	 * (isSatisfiedForAny()). This is the enforcement half: re-check the
+	 * requirement against the SPECIFIC target the caller is invoking with,
+	 * on every call, using isSatisfiedFor() — being visible for "some
+	 * collection" never implies authorized for "this collection". When
+	 * $tool->requires is null this is a no-op — returns $tool->handler
+	 * completely unchanged, so tools without a requirement (all of them
+	 * until Task 8) pay zero overhead and behave exactly as before this
+	 * task landed.
+	 *
+	 * ADMIN and PUBLIC_ personas skip the guard body: ADMIN's UserAuthority
+	 * short-circuits every can*() check anyway, and PUBLIC_ callers never
+	 * see a requirement-bearing tool in tools/list in the first place
+	 * (McpToolDefinition::isVisibleTo() only offers the $requires branch to
+	 * AUTHENTICATED) — there's no reachable path that calls a
+	 * requirement-bearing tool as PUBLIC_ to defend against.
+	 *
+	 * --- Argument-binding note (see task-7-report.md for the full write-up) ---
+	 * A naive wrapper — e.g. `fn (...$args) => ...` or `fn (array $args) =>
+	 * ...` registered directly as the tool's handler — silently breaks the
+	 * SDK's named-argument binding. Mcp\Capability\Registry\ReferenceHandler
+	 * ::prepareArguments() builds the call by reflecting on the HANDLER
+	 * closure's OWN parameter list and looking each name up in the JSON-RPC
+	 * argument bag; reflecting on a generic wrapper finds parameters named
+	 * `args`/`arguments`, which never match real tool argument names like
+	 * `collection`, so the inner call would receive defaults/nulls instead
+	 * of the caller's actual input.
+	 *
+	 * The fix reuses an escape hatch the SDK itself relies on: when a
+	 * registered handler Closure's *closure scope class* is
+	 * ReferenceHandler::class, `ReferenceHandler::handle()` skips reflection
+	 * entirely and invokes it with the raw argument array (see
+	 * vendor/mcp/sdk/src/Capability/Registry/ReferenceHandler.php:39-43).
+	 * The SDK's own ExplicitElementLoader uses exactly this trick
+	 * (`Closure::bind($closure, null, ReferenceHandler::class)`) to hand
+	 * ToolHandlerInterface-based tools the raw bag. We do the same here: the
+	 * returned closure is bound to that scope, so it receives $arguments
+	 * untouched (including `_session`/`_request`). On the allowed path we
+	 * then dispatch to the REAL $tool->handler via a fresh ReferenceHandler
+	 * + ElementReference — i.e. we replay the exact reflection-based,
+	 * type-casting dispatch the SDK would have used with no guard installed
+	 * at all, so per-tool argument binding (including inputSchema-declared
+	 * types) is byte-for-byte unchanged. Proven in
+	 * tests/Feature/McpToolGuardTest.php, which asserts a wrapped handler
+	 * receives its arguments intact.
+	 */
+	private function guardHandler(McpToolDefinition $tool): \Closure
+	{
+		$requires = $tool->requires;
+		if (!$requires instanceof \TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement) {
+			return $tool->handler;
+		}
+
+		$innerHandler     = $tool->handler;
+		$toolName         = $tool->name;
+		$isObjectsRead    = $requires->domain === 'objects' && $requires->operation === 'read';
+		$isPublicReadTool = $tool->access === 'public' && $isObjectsRead;
+		$personaContext   = $this->personaContext;
+		$scopeRegistry    = $this->scopeRegistry;
+		$activityLogger   = $this->activityLogger;
+
+		$wrapped = static function (array $arguments) use ($requires, $innerHandler, $toolName, $isObjectsRead, $isPublicReadTool, $personaContext, $scopeRegistry, $activityLogger): mixed {
+			$persona = $personaContext->current();
+
+			// The objects+read + access:'public' combination (Task 10b —
+			// query_collection/get_object/search_collection) stays FULLY open
+			// to PUBLIC_, unguarded by $requires — mirrors
+			// McpToolDefinition::isVisibleTo()'s PUBLIC_ carve-out (see its
+			// docblock for the full rationale: $access:'public' IS the entire
+			// grant for an anonymous caller on a READ tool; "public" has never
+			// meant "writable/administrable by everyone", so this does NOT
+			// extend to $access:'public' tools with any OTHER requirement
+			// shape). Falls through to the real handler dispatch at the
+			// bottom, completely unguarded by $requires — exactly as an
+			// access:'public' tool with no $requires at all would behave; the
+			// real handler still applies its own mcp.access exposure check.
+			//
+			// For every other tool (any requirement shape that ISN'T
+			// objects+read+public), PUBLIC_ is denied outright. Defense in
+			// depth: McpToolDefinition::isVisibleTo() already keeps such a
+			// tool off the registered SDK surface for PUBLIC_ callers, so
+			// this branch should be unreachable in practice. It stays here
+			// anyway: PUBLIC_ has neither an OAuth token (no scopes) nor a
+			// resolved UserAuthority, so if a misconfigured tool or a future
+			// registration path ever slipped one through, falling into the
+			// AUTHENTICATED branch below would either throw on a null
+			// authority (fine) or — if that branch is ever loosened —
+			// silently dispatch unguarded (not fine). Fail closed explicitly
+			// instead of relying on that branch's incidental behavior.
+			if ($persona === McpPersona::PUBLIC_ && !$isPublicReadTool) {
+				$activityLogger->scopeRejected($personaContext->getClientId(), 'tools/call:' . $toolName, $personaContext->getScopes());
+
+				throw new ToolCallException(sprintf(
+					'%s requires an authenticated caller.',
+					$toolName,
+				));
+			}
+
+			if ($persona === McpPersona::AUTHENTICATED) {
+				$clientId = $personaContext->getClientId();
+
+				// Public-collection carve-out at the SCOPE tier too (Task 10b
+				// fix round 1, finding #2). Without this, a token missing
+				// cms:read was still denied below on an mcp.access:'public'
+				// collection that an ANONYMOUS caller reads with zero
+				// consent — authenticating subtracted reach, the identical
+				// bug class the group-layer carve-out fixes, just one layer
+				// up. Coherent rule: consent (scope) gates access to
+				// non-public content; public content needs no consent
+				// because anonymous callers already have it unconditionally.
+				//
+				// Uses PersonaContext::isCollectionExposedPublic() — EXPOSURE
+				// ALONE — not canReadCollection(), which also returns true
+				// for a real access-group grant. A real grant without
+				// consent must still clear the scope check below; only
+				// genuine public exposure skips straight to dispatch.
+				if ($isObjectsRead && $requires->collectionArg !== null) {
+					$target = $arguments[$requires->collectionArg] ?? null;
+					if (is_string($target) && $target !== '' && $personaContext->isCollectionExposedPublic($target)) {
+						return (new ReferenceHandler())->handle(new ElementReference($innerHandler), $arguments);
+					}
+				}
+
+				// Layer 1 — scope (consent). expand() lets a broader granted
+				// scope (cms:admin) satisfy a narrower requirement
+				// (cms:read/cms:write) via the implies graph, mirroring the
+				// REST Bearer scope mapping.
+				$requiredScope = $requires->requiredScope();
+				if (!in_array($requiredScope, $scopeRegistry->expand($personaContext->getScopes()), true)) {
+					$activityLogger->scopeRejected($clientId, 'tools/call:' . $toolName, $personaContext->getScopes());
+
+					throw new ToolCallException(sprintf(
+						'This connection was not granted the %s permission.',
+						$requiredScope,
+					));
+				}
+
+				// Layer 2 — access-group authority for the SPECIFIC target.
+				// Fail closed when PersonaContext never resolved an
+				// authority for this Bearer request.
+				$authority = $personaContext->getAuthority();
+				if (!$authority instanceof \TotalCMS\Domain\Auth\Data\UserAuthority) {
+					$activityLogger->groupRejected($clientId, $toolName, $personaContext->getUserId());
+
+					throw new ToolCallException(sprintf(
+						"Your account's groups do not grant %s.",
+						$requires->operation,
+					));
+				}
+
+				if ($requires->collectionArg !== null) {
+					$target = $arguments[$requires->collectionArg] ?? null;
+					if (!is_string($target) || $target === '') {
+						$activityLogger->groupRejected($clientId, $toolName, $personaContext->getUserId());
+
+						throw new ToolCallException(sprintf(
+							"Your account's groups do not grant %s: no target was specified.",
+							$requires->operation,
+						));
+					}
+					// objects+read (Task 10b) routes through PersonaContext::
+					// canReadCollection() instead of ToolRequirement::isSatisfiedFor()
+					// — the single home for the "mcp.access:'public' collections stay
+					// readable by everyone" carve-out that closes the privilege
+					// inversion the Task 10 review found (an AUTHENTICATED caller
+					// without a group grant must not be denied where an anonymous
+					// caller succeeds). Every other domain/operation keeps the plain
+					// group-grant check — that carve-out is read-only content
+					// exposure, not a general "public" concept for writes/schemas/etc.
+					// (The pure-exposure case already returned above, before the
+					// scope check, so by this point canReadCollection() only ever
+					// resolves true here via a real authority grant.)
+					$satisfied = $isObjectsRead
+						? $personaContext->canReadCollection($target)
+						: $requires->isSatisfiedFor($authority, $target);
+				} else {
+					$target    = '';
+					$satisfied = $requires->isSatisfiedForAny($authority);
+				}
+
+				if (!$satisfied) {
+					$activityLogger->groupRejected($clientId, $toolName, $personaContext->getUserId());
+
+					throw new ToolCallException(sprintf(
+						"Your account's groups do not grant %s on '%s'.",
+						$requires->operation,
+						$target,
+					));
+				}
+			}
+
+			// Replay the SDK's normal reflection-based dispatch for the real
+			// handler — see the argument-binding note above.
+			return (new ReferenceHandler())->handle(new ElementReference($innerHandler), $arguments);
+		};
+
+		// ReferenceHandler::class always exists, so Closure::bind() cannot
+		// fail here — PHPStan's stubs agree the result is always Closure,
+		// never null.
+		return \Closure::bind($wrapped, null, ReferenceHandler::class);
 	}
 
 	/**

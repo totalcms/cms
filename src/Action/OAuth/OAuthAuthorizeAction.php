@@ -10,6 +10,9 @@ use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
@@ -25,6 +28,8 @@ readonly class OAuthAuthorizeAction
 		private OAuthClientRepository $clients,
 		private OAuthScopeRegistry $scopes,
 		private CSRFTokenManager $csrf,
+		private AccessControlService $accessControl,
+		private UserValidationService $userValidation,
 	) {
 	}
 
@@ -64,10 +69,26 @@ readonly class OAuthAuthorizeAction
 		// league/oauth2-server's AuthorizationRequest is serialize-safe.
 		$this->session->set('oauth_authorize_request', serialize($authRequest));
 
-		$client    = $this->clients->find($authRequest->getClient()->getIdentifier());
+		$client = $this->clients->find($authRequest->getClient()->getIdentifier());
+
+		// The list must show what approving will actually grant. finalizeScopes()
+		// narrows admin-gated scopes away for users who can't convey them, so
+		// displaying them here would ask the user to consent to a permission the
+		// token will never carry. Mirrors LeagueScopeRepository::finalizeScopes()'s
+		// widened gate: super admin OR SOME admin-domain access-group grant
+		// (schemas, collectionsMeta, or a utils allow) — see
+		// UserAuthority::hasAdminDomainGrants(). isAdmin() short-circuits first so
+		// the common case never pays for authorityFor()'s group lookup.
+		$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?: '');
+		$ref        = OAuthUserRef::parse((string)$userId, $collection);
+		$isAdmin    = $this->accessControl->isAdmin((string)$userId, $collection)
+			|| $this->accessControl->authorityFor($ref)->hasAdminDomainGrants();
 		$scopeRows = [];
 		foreach ($authRequest->getScopes() as $scope) {
-			$id          = $scope->getIdentifier();
+			$id = $scope->getIdentifier();
+			if (!$isAdmin && in_array($id, OAuthScopeRegistry::ADMIN_GATED, true)) {
+				continue;
+			}
 			$desc        = $this->scopes->has($id) ? $this->scopes->get($id)->description : $id;
 			$scopeRows[] = ['identifier' => $id, 'description' => $desc];
 		}
@@ -77,8 +98,30 @@ readonly class OAuthAuthorizeAction
 			'clientIcon' => $client?->iconPath,
 			'scopes'     => $scopeRows,
 			'userId'     => (string)$userId,
+			'userName'   => $this->displayName((string)$userId),
 			'csrfField'  => $this->csrf->getTokenField(),
 			'state'      => $authRequest->getState(),
 		]);
+	}
+
+	/**
+	 * Human-facing identity for the "signed in as" line. The session stores
+	 * the user's object id, which can be as opaque as "3"; prefer their name,
+	 * then email, before falling back to the raw id.
+	 */
+	private function displayName(string $userId): string
+	{
+		$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?: '');
+
+		try {
+			$user = $this->userValidation->validateUserById($userId, $collection);
+		} catch (\Throwable) {
+			return $userId;
+		}
+
+		$name  = trim((string)($user['name'] ?? ''));
+		$email = trim((string)($user['email'] ?? ''));
+
+		return $name !== '' ? $name : ($email !== '' ? $email : $userId);
 	}
 }

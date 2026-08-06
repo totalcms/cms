@@ -344,4 +344,89 @@ final class ApiKeyPermissionCheckerTest extends TestCase
 		$this->assertTrue($this->checker->allowsPath($apiKey, '/collections/blog/123'));
 		$this->assertFalse($this->checker->allowsPath($apiKey, '/collections/blog-archive'));
 	}
+
+	// The /api route-group prefix is a routing artifact, not part of the grant
+	// vocabulary: the endpoint picker stores grants without it ("/sync",
+	// "/collections/blog") while request paths carry it, and keys created
+	// directly via POST /apikeys may carry it in the grant instead. Matching
+	// must succeed regardless of which side has the prefix.
+
+	public function testPickerShapeGrantMatchesApiPrefixedRequestPath(): void
+	{
+		$apiKey = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/sync'],
+			],
+		]);
+
+		// The customer bug: "Sync Manager" grant vs the real route path
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/api/sync/export'));
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/api/sync/import'));
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/api/sync'));
+
+		// Prefix stripping must not blur segment boundaries or lookalikes
+		$this->assertFalse($this->checker->allowsPath($apiKey, '/api/synchronize'));
+		$this->assertFalse($this->checker->allowsPath($apiKey, '/apikeys/sync'));
+		$this->assertFalse($this->checker->allowsPath($apiKey, '/api/collections/blog'));
+	}
+
+	public function testPickerShapeCollectionGrantMatchesApiPrefixedRequestPath(): void
+	{
+		$apiKey = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/collections/blog'],
+			],
+		]);
+
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/api/collections/blog'));
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/api/collections/blog/123'));
+		$this->assertFalse($this->checker->allowsPath($apiKey, '/api/collections/blog-archive'));
+		$this->assertFalse($this->checker->allowsPath($apiKey, '/api/collections/news'));
+	}
+
+	public function testApiPrefixedGrantMatchesEitherRequestPathShape(): void
+	{
+		$apiKey = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/api/sync'],
+			],
+		]);
+
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/api/sync/export'));
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/sync/export'));
+	}
+
+	public function testPublicRouteGrantsAreUnaffectedByApiPrefixNormalization(): void
+	{
+		$apiKey = new ApiKeyData([
+			'id'      => 'test-id',
+			'name'    => 'Test',
+			'key'     => 'tcms_test',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => [
+				'methods' => ['GET'],
+				'paths'   => ['/mcp', '/automations', '/xmlrpc.php'],
+			],
+		]);
+
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/mcp'));
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/automations/daily'));
+		$this->assertTrue($this->checker->allowsPath($apiKey, '/xmlrpc.php'));
+		$this->assertFalse($this->checker->allowsPath($apiKey, '/collections/blog'));
+	}
 }

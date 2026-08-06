@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Resource\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceTemplateDefinition;
@@ -43,6 +45,31 @@ final class ResourceRegistryTest extends TestCase
 			access: $access,
 			handler: static fn (): array => [],
 		);
+	}
+
+	private function collectionScopedResource(string $uri, string $collectionId, string $access = 'authenticated'): McpResourceDefinition
+	{
+		return new McpResourceDefinition(
+			uri: $uri,
+			name: 'Name-' . $uri,
+			description: 'desc',
+			mimeType: 'application/json',
+			access: $access,
+			handler: static fn (): array => [],
+			collectionId: $collectionId,
+		);
+	}
+
+	private function authorityGranting(array $allowed): UserAuthority
+	{
+		$group = new AccessGroupData([
+			'id'          => 'test-group',
+			'permissions' => [
+				'collections' => ['operations' => ['read'], 'all' => false, 'allowed' => $allowed],
+			],
+		]);
+
+		return new UserAuthority(isAdmin: false, groups: [$group]);
 	}
 
 	// ── Concrete resource tests ───────────────────────────────────────────────
@@ -140,6 +167,74 @@ final class ResourceRegistryTest extends TestCase
 		$this->registry->register($this->resource('tcms://admin-only/', 'admin'));
 
 		$this->assertSame([], $this->registry->forPersona(McpPersona::PUBLIC_));
+	}
+
+	// ── Task 10: authority-aware collection-scoped resources ────────────────
+
+	public function testForPersonaAuthenticatedWithNoCollectionIdIgnoresAuthority(): void
+	{
+		// Non-collection-scoped resources (collectionId null — e.g. data views)
+		// are unaffected by authority, matching pre-Task-10 behavior.
+		$this->registry->register($this->resource('tcms://view/recent/', 'authenticated'));
+
+		$visible = $this->registry->forPersona(McpPersona::AUTHENTICATED, null);
+
+		$this->assertCount(1, $visible);
+	}
+
+	public function testForPersonaAuthenticatedWithoutAuthorityHidesCollectionScopedResource(): void
+	{
+		$this->registry->register($this->collectionScopedResource('tcms://blog/', 'blog'));
+
+		$visible = $this->registry->forPersona(McpPersona::AUTHENTICATED, null);
+
+		$this->assertSame([], $visible);
+	}
+
+	public function testForPersonaAuthenticatedWithReadGrantShowsCollectionScopedResource(): void
+	{
+		$this->registry->register($this->collectionScopedResource('tcms://blog/', 'blog'));
+
+		$visible = $this->registry->forPersona(McpPersona::AUTHENTICATED, $this->authorityGranting(['blog']));
+
+		$this->assertCount(1, $visible);
+		$this->assertSame('tcms://blog/', $visible[0]->uri);
+	}
+
+	public function testForPersonaAuthenticatedWithoutReadGrantHidesCollectionScopedResource(): void
+	{
+		$this->registry->register($this->collectionScopedResource('tcms://blog-legacy/', 'blog-legacy'));
+
+		$visible = $this->registry->forPersona(McpPersona::AUTHENTICATED, $this->authorityGranting(['blog']));
+
+		$this->assertSame([], $visible);
+	}
+
+	public function testForPersonaAdminSeesCollectionScopedResourceRegardlessOfAuthority(): void
+	{
+		$this->registry->register($this->collectionScopedResource('tcms://blog-legacy/', 'blog-legacy'));
+
+		$visible = $this->registry->forPersona(McpPersona::ADMIN, null);
+
+		$this->assertCount(1, $visible);
+	}
+
+	public function testForPersonaPublicUnaffectedByCollectionIdOrAuthority(): void
+	{
+		$resource = new McpResourceDefinition(
+			uri: 'tcms://blog/',
+			name: 'blog',
+			description: 'desc',
+			mimeType: 'application/json',
+			access: 'public',
+			handler: static fn (): array => [],
+			collectionId: 'blog',
+		);
+		$this->registry->register($resource);
+
+		$visible = $this->registry->forPersona(McpPersona::PUBLIC_, $this->authorityGranting([]));
+
+		$this->assertCount(1, $visible);
 	}
 
 	// ── Resource template tests ───────────────────────────────────────────────

@@ -287,6 +287,36 @@ final class SettingsValidatorTest extends TestCase
 		$this->assertTrue($result['filesystem']);
 	}
 
+	public function testProcessCacheConvertsDomainScopedToggleToBoolean(): void
+	{
+		$testCases = [
+			['domainScoped' => 'on', 'expected' => true],
+			['domainScoped' => '1', 'expected' => true],
+			['domainScoped' => true, 'expected' => true],
+			['domainScoped' => 'off', 'expected' => false],
+			['domainScoped' => '0', 'expected' => false],
+			['domainScoped' => false, 'expected' => false],
+		];
+
+		foreach ($testCases as $testCase) {
+			$result = $this->validator->processSection('cache', ['domainScoped' => $testCase['domainScoped']]);
+			$this->assertEquals(
+				$testCase['expected'],
+				$result['domainScoped'],
+				'domainScoped value should convert to ' . ($testCase['expected'] ? 'true' : 'false')
+			);
+		}
+	}
+
+	public function testProcessCacheLeavesAnAbsentDomainScopedToggleAbsent(): void
+	{
+		// HTML checkboxes POST nothing when unchecked, and the validator only
+		// rewrites keys that are present — same as every other cache toggle.
+		$result = $this->validator->processSection('cache', ['apcu' => 'on']);
+
+		$this->assertArrayNotHasKey('domainScoped', $result);
+	}
+
 	public function testProcessCacheHandlesInvalidJSON(): void
 	{
 		$data = [

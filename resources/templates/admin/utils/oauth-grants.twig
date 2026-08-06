@@ -33,11 +33,65 @@
 						</div>
 
 						<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
-							<strong>{{ t('oauth_grants.scopes_label') }}</strong>
+							<strong>{{ t('oauth_grants.scopes_label') }}<span class="oauth-reach-hint">{{ t('oauth_grants.scopes_consented_hint') }}</span></strong>
 							<div class="dash-badge-group">
 								{% for scope in grant.scopes %}
 									<span class="dash-badge accent">{{ scope }}</span>
 								{% endfor %}
+							</div>
+						</div>
+
+						<div class="dash-card-detail" style="grid-template-columns:140px 1fr;">
+							<strong>{{ t('oauth_grants.reach_label') }}<span class="oauth-reach-hint">{{ t('oauth_grants.reach_hint') }}</span></strong>
+							{% set reach = row.effectiveReach %}
+							<div>
+								{% if reach.userMissing %}
+									<span class="dash-badge muted">{{ t('oauth_grants.reach_user_missing') }}</span>
+								{% elseif reach.fullAdmin %}
+									<span class="dash-badge danger">{{ t('oauth_grants.reach_full_admin') }}</span>
+								{% elseif reach.noAccess %}
+									<span class="dash-badge muted">{{ t('oauth_grants.reach_none') }}</span>
+								{% else %}
+									{% if reach.readable|length > 0 %}
+										<div class="oauth-reach-row">
+											<span class="oauth-reach-row-label">{{ t('oauth_grants.reach_read_label') }}</span>
+											<div class="dash-badge-group">
+												{% for id in reach.readable %}
+													<span class="dash-badge accent sm">{{ id }}</span>
+												{% endfor %}
+												{% if reach.readableOverflow > 0 %}
+													<span class="dash-badge muted sm">{{ t('oauth_grants.reach_more')|replace({'{n}': reach.readableOverflow}) }}</span>
+												{% endif %}
+											</div>
+										</div>
+									{% endif %}
+									{% if reach.writable|length > 0 %}
+										<div class="oauth-reach-row">
+											<span class="oauth-reach-row-label">{{ t('oauth_grants.reach_write_label') }}</span>
+											<div class="dash-badge-group">
+												{% for id in reach.writable %}
+													<span class="dash-badge warning sm">{{ id }}</span>
+												{% endfor %}
+												{% if reach.writableOverflow > 0 %}
+													<span class="dash-badge muted sm">{{ t('oauth_grants.reach_more')|replace({'{n}': reach.writableOverflow}) }}</span>
+												{% endif %}
+											</div>
+										</div>
+									{% endif %}
+									{% if reach.deleteOnly|length > 0 %}
+										<div class="oauth-reach-row">
+											<span class="oauth-reach-row-label">{{ t('oauth_grants.reach_delete_only_label') }} <span class="oauth-reach-row-hint">{{ t('oauth_grants.reach_delete_only_hint') }}</span></span>
+											<div class="dash-badge-group">
+												{% for id in reach.deleteOnly %}
+													<span class="dash-badge muted sm">{{ id }}</span>
+												{% endfor %}
+												{% if reach.deleteOnlyOverflow > 0 %}
+													<span class="dash-badge muted sm">{{ t('oauth_grants.reach_more')|replace({'{n}': reach.deleteOnlyOverflow}) }}</span>
+												{% endif %}
+											</div>
+										</div>
+									{% endif %}
+								{% endif %}
 							</div>
 						</div>
 
@@ -65,3 +119,30 @@
 	{% endif %}
 
 </section>
+
+<style>
+.oauth-reach-hint {
+	display     : block;
+	font-size   : 0.75rem;
+	font-weight : 400;
+	color       : oklch(var(--totalform-darkgray));
+}
+.oauth-reach-row {
+	display : flex;
+	gap     : 0.5rem;
+	align-items : baseline;
+	flex-wrap : wrap;
+}
+.oauth-reach-row + .oauth-reach-row {
+	margin-top : 0.35rem;
+}
+.oauth-reach-row-label {
+	font-size   : 0.85rem;
+	color       : oklch(var(--totalform-darkgray));
+	white-space : nowrap;
+}
+.oauth-reach-row-hint {
+	font-size : 0.75rem;
+	color     : oklch(var(--totalform-darkgray) / 0.75);
+}
+</style>

@@ -11,6 +11,7 @@ use TotalCMS\Action\Cache\DevModeDisableAction;
 use TotalCMS\Action\Cache\DevModeEnableAction;
 use TotalCMS\Action\Cache\DevModeStatusAction;
 use TotalCMS\Action\Cache\WatermarkCacheDeleteAction;
+use TotalCMS\Middleware\Access\CacheAccessMiddleware;
 use TotalCMS\Middleware\Auth\AuthMiddleware;
 
 return function (RouteCollectorProxyInterface $app): void {
@@ -23,5 +24,6 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->get('/devmode', DevModeStatusAction::class)->setName('cache-devmode-status');
 		$group->post('/devmode', DevModeEnableAction::class)->setName('cache-devmode-enable');
 		$group->delete('/devmode', DevModeDisableAction::class)->setName('cache-devmode-disable');
-	})->add(AuthMiddleware::class);
+	})->add(CacheAccessMiddleware::class)
+		->add(AuthMiddleware::class);
 };

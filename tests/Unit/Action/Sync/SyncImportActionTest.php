@@ -72,7 +72,9 @@ final class SyncImportActionTest extends TestCase
 		// A real, logged-in user who is NOT a super-admin — the likeliest
 		// real-world bypass attempt.
 		$session = $this->createMock(SessionInterface::class);
-		$session->method('get')->with(SessionKeys::AUTH_USER)->willReturn('bob');
+		$session->method('get')->willReturnCallback(
+			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'bob' : null,
+		);
 		$userValidation = $this->createMock(UserValidationService::class);
 		$userValidation->method('isSuperAdmin')->with('bob')->willReturn(false);
 
@@ -92,7 +94,9 @@ final class SyncImportActionTest extends TestCase
 		$this->stubBody((string)json_encode($definition));
 
 		$session = $this->createMock(SessionInterface::class);
-		$session->method('get')->with(SessionKeys::AUTH_USER)->willReturn('admin');
+		$session->method('get')->willReturnCallback(
+			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'admin' : null,
+		);
 		$userValidation = $this->createMock(UserValidationService::class);
 		$userValidation->method('isSuperAdmin')->with('admin')->willReturn(true);
 

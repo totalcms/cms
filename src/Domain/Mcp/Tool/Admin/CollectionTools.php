@@ -8,6 +8,7 @@ use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 /**
@@ -22,6 +23,16 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  * objects (high blast radius). Adding it would require extra safety nets
  * (explicit confirmation, dry-run mode) that aren't worth the cost yet.
  * Operators delete via the admin UI for now.
+ *
+ * `create_collection` carries a `ToolRequirement` (Phase 4) alongside
+ * `access: 'admin'`: the requirement doesn't loosen the base persona gate (an
+ * ADMIN-only tool stays hidden from AUTHENTICATED unless requires is
+ * satisfied — access: 'authenticated' would short-circuit tools/list
+ * visibility BEFORE requires is ever consulted, see
+ * McpToolDefinition::isVisibleTo()), it EXTENDS it: an AUTHENTICATED caller
+ * whose access-group grants collectionsMeta 'create' for the target id also
+ * sees and can call this tool — mirrors the REST `/api/collections` group
+ * gate.
  */
 readonly class CollectionTools
 {
@@ -75,6 +86,7 @@ readonly class CollectionTools
 				idempotentHint: false,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'collections-meta', operation: 'create', collectionArg: 'id'),
 		));
 	}
 

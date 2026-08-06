@@ -419,15 +419,23 @@ readonly class AuthTwigAdapter
 	 */
 	public function isSuperAdmin(string $userId = ''): bool
 	{
+		// Only the session branch can know which auth collection the id belongs
+		// to. Passing it matters: super admins exist only in the default auth
+		// collection, so without it a secondary-collection user whose id
+		// collides with an admin's would pass this gate. An explicitly supplied
+		// $userId carries no collection, so it keeps the historical
+		// assume-the-default behavior.
+		$collection = '';
 		if ($userId === '') {
-			$userId = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+			$userId     = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+			$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
 		}
 
 		if ($userId === '') {
 			return false;
 		}
 
-		return $this->userValidation->isSuperAdmin($userId);
+		return $this->userValidation->isSuperAdmin($userId, $collection);
 	}
 
 	/**

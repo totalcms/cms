@@ -10,9 +10,19 @@ use TotalCMS\Domain\Mcp\Tool\Content\GetObjectTool;
  * Handler for `resources/read tcms://{collection}/{id}`.
  *
  * Delegates to GetObjectTool::handler() so the persona check, draft-hiding,
- * non-exposed-field stripping, and content-renderer pipeline live in exactly
- * one place. This class is the URI rewrap: it takes the flat-map object the
- * tool returns and packages it as the SDK's resources/read content envelope.
+ * group-read gate (Task 10b — GetObjectTool::handler()'s inline
+ * PersonaContext::canReadCollection() check), non-exposed-field stripping,
+ * and content-renderer pipeline live in exactly one place. This class is the
+ * URI rewrap: it takes the flat-map object the tool returns and packages it
+ * as the SDK's resources/read content envelope.
+ *
+ * Correction to task-10-report.md (lines ~29-34): that report claimed this
+ * class "inherits" group gating from GetObjectTool as of Task 10. That was
+ * inaccurate — Task 9 gave GetObjectTool only a DRAFT-visibility rule
+ * (PersonaContext::canReadDrafts()); no group-read check existed anywhere in
+ * GetObjectTool until Task 10b added one. Before Task 10b, this class
+ * inherited draft-hiding only, same as any AUTHENTICATED caller reaching a
+ * `mcp.access: authenticated|public` collection via get_object.
  *
  * Mounted into ResourceRegistry by CollectionResourceRegistrar (Task A6); this
  * class never registers itself.

@@ -12,6 +12,7 @@ use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Visualizer\Service\AccessGroupAnalyzer;
@@ -22,6 +23,7 @@ final class AccessGroupAnalyzerTest extends TestCase
 	private SchemaLister&MockObject $schemaLister;
 	private ExtensionManager&MockObject $extensionManager;
 	private AccessGroupLister&MockObject $accessGroupLister;
+	private McpSchemaResolver&MockObject $mcpSchemaResolver;
 
 	protected function setUp(): void
 	{
@@ -29,6 +31,18 @@ final class AccessGroupAnalyzerTest extends TestCase
 		$this->schemaLister      = $this->createMock(SchemaLister::class);
 		$this->extensionManager  = $this->createMock(ExtensionManager::class);
 		$this->accessGroupLister = $this->createMock(AccessGroupLister::class);
+		$this->mcpSchemaResolver = $this->createMock(McpSchemaResolver::class);
+
+		// Mirror McpSchemaResolver::forCollection()'s real default: mcp.access
+		// defaults to 'admin' (not exposed) when the collection carries none.
+		$this->mcpSchemaResolver->method('forCollection')->willReturnCallback(
+			static fn (CollectionData $c): array => [
+				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'description'   => null,
+				'resource'      => true,
+				'titleProperty' => '',
+			],
+		);
 	}
 
 	private function makeAnalyzer(): AccessGroupAnalyzer
@@ -38,14 +52,18 @@ final class AccessGroupAnalyzerTest extends TestCase
 			$this->schemaLister,
 			$this->extensionManager,
 			$this->accessGroupLister,
+			$this->mcpSchemaResolver,
 		);
 	}
 
 	/** @return CollectionData */
-	private function makeCollection(string $id): CollectionData
+	private function makeCollection(string $id, ?string $mcpAccess = null): CollectionData
 	{
 		$c     = new CollectionData();
 		$c->id = $id;
+		if ($mcpAccess !== null) {
+			$c->mcp = ['access' => $mcpAccess];
+		}
 
 		return $c;
 	}
@@ -416,5 +434,208 @@ final class AccessGroupAnalyzerTest extends TestCase
 		// Both collections appear, even though only 'blog' is granted
 		$this->assertArrayHasKey('blog', $collections);
 		$this->assertArrayHasKey('products', $collections);
+	}
+
+	// -----------------------------------------------------------------------
+	// mcp (AI / MCP reach) dimension tests
+	// -----------------------------------------------------------------------
+
+	/**
+	 * A group with a read-only grant on an MCP-exposed ('authenticated') collection
+	 * shows 'read' and NOT 'create'/'update'.
+	 */
+	public function testReadOnlyGrantOnExposedCollectionShowsReadOnly(): void
+	{
+		$this->collectionLister->method('listAllCollections')->willReturn([
+			$this->makeCollection('blog', 'authenticated'),
+		]);
+		$this->schemaLister->method('listAllSchemas')->willReturn([]);
+		$this->extensionManager->method('listExtensionsWithAdminSurface')->willReturn([]);
+
+		$group = $this->makeGroup([
+			'id'          => 'readers',
+			'description' => 'Readers',
+			'permissions' => [
+				'collections'     => ['all' => false, 'allowed' => ['blog'], 'operations' => ['read']],
+				'collectionsMeta' => ['all' => false, 'allowed' => [], 'operations' => []],
+				'schemas'         => ['all' => false, 'allowed' => [], 'operations' => []],
+				'utils'           => ['all' => false, 'allowed' => []],
+				'extensions'      => ['all' => false, 'allowed' => []],
+			],
+		]);
+		$this->accessGroupLister->method('listAll')->willReturn([$group]);
+
+		$mcp = $this->makeAnalyzer()->analyze()[0]['dimensions']['mcp'];
+
+		$this->assertArrayHasKey('blog', $mcp);
+		$this->assertSame(['read'], $mcp['blog']['ops']);
+		$this->assertFalse($mcp['blog']['all']);
+	}
+
+	/**
+	 * A group with create+update grants on a collection left at the DEFAULT
+	 * mcp.access ('admin', i.e. not exposed) never sees that collection in
+	 * the mcp dimension at all — it's absent from the column set entirely,
+	 * not merely blank.
+	 */
+	public function testCollectionAtDefaultMcpAccessIsAbsentFromMcpDimension(): void
+	{
+		$this->collectionLister->method('listAllCollections')->willReturn([
+			$this->makeCollection('secrets'), // no mcp access set → defaults to 'admin'
+		]);
+		$this->schemaLister->method('listAllSchemas')->willReturn([]);
+		$this->extensionManager->method('listExtensionsWithAdminSurface')->willReturn([]);
+
+		$group = $this->makeGroup([
+			'id'          => 'editors',
+			'description' => 'Editors',
+			'permissions' => [
+				'collections'     => ['all' => true, 'allowed' => [], 'operations' => ['read', 'create', 'update', 'delete']],
+				'collectionsMeta' => ['all' => false, 'allowed' => [], 'operations' => []],
+				'schemas'         => ['all' => false, 'allowed' => [], 'operations' => []],
+				'utils'           => ['all' => false, 'allowed' => []],
+				'extensions'      => ['all' => false, 'allowed' => []],
+			],
+		]);
+		$this->accessGroupLister->method('listAll')->willReturn([$group]);
+
+		$mcp = $this->makeAnalyzer()->analyze()[0]['dimensions']['mcp'];
+
+		$this->assertArrayNotHasKey('secrets', $mcp);
+		$this->assertSame([], $mcp);
+	}
+
+	/**
+	 * A public-exposed collection shows 'read' for a group with NO explicit
+	 * grant on it — public exposure alone is enough for the read op.
+	 */
+	public function testPublicExposedCollectionShowsReadWithNoExplicitGrant(): void
+	{
+		$this->collectionLister->method('listAllCollections')->willReturn([
+			$this->makeCollection('news', 'public'),
+		]);
+		$this->schemaLister->method('listAllSchemas')->willReturn([]);
+		$this->extensionManager->method('listExtensionsWithAdminSurface')->willReturn([]);
+
+		$group = $this->makeGroup([
+			'id'          => 'no-grants',
+			'description' => 'No Grants',
+			'permissions' => [
+				'collections'     => ['all' => false, 'allowed' => [], 'operations' => []],
+				'collectionsMeta' => ['all' => false, 'allowed' => [], 'operations' => []],
+				'schemas'         => ['all' => false, 'allowed' => [], 'operations' => []],
+				'utils'           => ['all' => false, 'allowed' => []],
+				'extensions'      => ['all' => false, 'allowed' => []],
+			],
+		]);
+		$this->accessGroupLister->method('listAll')->willReturn([$group]);
+
+		$mcp = $this->makeAnalyzer()->analyze()[0]['dimensions']['mcp'];
+
+		$this->assertArrayHasKey('news', $mcp);
+		$this->assertSame(['read'], $mcp['news']['ops']);
+		$this->assertFalse($mcp['news']['all']);
+	}
+
+	/**
+	 * 'delete' must never appear in a non-super-admin group's mcp ops, even
+	 * with a full collections.all grant across all four operations — MCP
+	 * ships no delete tool.
+	 */
+	public function testDeleteNeverAppearsInMcpOpsForNonSuperAdmin(): void
+	{
+		$this->collectionLister->method('listAllCollections')->willReturn([
+			$this->makeCollection('blog', 'public'),
+			$this->makeCollection('team', 'authenticated'),
+		]);
+		$this->schemaLister->method('listAllSchemas')->willReturn([]);
+		$this->extensionManager->method('listExtensionsWithAdminSurface')->willReturn([]);
+
+		$group = $this->makeGroup([
+			'id'          => 'power',
+			'description' => 'Power Users',
+			'permissions' => [
+				'collections'     => ['all' => true, 'allowed' => [], 'operations' => ['read', 'create', 'update', 'delete']],
+				'collectionsMeta' => ['all' => false, 'allowed' => [], 'operations' => []],
+				'schemas'         => ['all' => false, 'allowed' => [], 'operations' => []],
+				'utils'           => ['all' => false, 'allowed' => []],
+				'extensions'      => ['all' => false, 'allowed' => []],
+			],
+		]);
+		$this->accessGroupLister->method('listAll')->willReturn([$group]);
+
+		$mcp = $this->makeAnalyzer()->analyze()[0]['dimensions']['mcp'];
+
+		foreach ($mcp as $id => $entry) {
+			$this->assertNotContains('delete', $entry['ops'], "'delete' must never appear for mcp:{$id}");
+			$this->assertFalse($entry['all'], "mcp:{$id} 'all' must never be true for a non-super-admin group");
+		}
+		$this->assertSame(['read', 'create', 'update'], $mcp['blog']['ops']);
+		$this->assertSame(['read', 'create', 'update'], $mcp['team']['ops']);
+	}
+
+	/**
+	 * A site with no MCP-exposed collections produces an empty mcp dimension
+	 * for every group — this is what lets the presenter's empty-column-group
+	 * skip hide the whole dimension from the template.
+	 */
+	public function testNoMcpExposedCollectionsProducesEmptyMcpDimensionForEveryGroup(): void
+	{
+		$this->setupResources(); // blog + products, neither has mcp access set
+
+		$group = $this->makeGroup([
+			'id'          => 'editors',
+			'description' => 'Editors',
+			'permissions' => [
+				'collections'     => ['all' => true, 'allowed' => [], 'operations' => ['read', 'create', 'update', 'delete']],
+				'collectionsMeta' => ['all' => false, 'allowed' => [], 'operations' => []],
+				'schemas'         => ['all' => false, 'allowed' => [], 'operations' => []],
+				'utils'           => ['all' => false, 'allowed' => []],
+				'extensions'      => ['all' => false, 'allowed' => []],
+			],
+		]);
+		$this->accessGroupLister->method('listAll')->willReturn([$group]);
+
+		$mcp = $this->makeAnalyzer()->analyze()[0]['dimensions']['mcp'];
+
+		$this->assertSame([], $mcp);
+	}
+
+	/**
+	 * The super-admin row gets full access ('ALL' sentinel via all=true) on
+	 * every MCP-exposed collection, consistent with every other dimension's
+	 * super-admin treatment.
+	 */
+	public function testSuperAdminGetsFullAccessOnMcpExposedCollections(): void
+	{
+		$this->collectionLister->method('listAllCollections')->willReturn([
+			$this->makeCollection('blog', 'public'),
+			$this->makeCollection('team', 'authenticated'),
+			$this->makeCollection('secrets'), // not exposed — must not appear at all
+		]);
+		$this->schemaLister->method('listAllSchemas')->willReturn([]);
+		$this->extensionManager->method('listExtensionsWithAdminSurface')->willReturn([]);
+
+		$group = $this->makeGroup([
+			'id'          => 'admin',
+			'description' => 'Administrators',
+			'permissions' => [
+				'collections'     => ['all' => false, 'allowed' => [], 'operations' => []],
+				'collectionsMeta' => ['all' => false, 'allowed' => [], 'operations' => []],
+				'schemas'         => ['all' => false, 'allowed' => [], 'operations' => []],
+				'utils'           => ['all' => false, 'allowed' => []],
+				'extensions'      => ['all' => false, 'allowed' => []],
+			],
+		]);
+		$this->accessGroupLister->method('listAll')->willReturn([$group]);
+
+		$entry = $this->makeAnalyzer()->analyze()[0];
+		$this->assertTrue($entry['isSuperAdmin']);
+		$mcp = $entry['dimensions']['mcp'];
+
+		$this->assertArrayNotHasKey('secrets', $mcp);
+		$this->assertTrue($mcp['blog']['all']);
+		$this->assertTrue($mcp['team']['all']);
+		$this->assertEqualsCanonicalizing(['read', 'create', 'update', 'delete'], $mcp['blog']['ops']);
 	}
 }

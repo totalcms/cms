@@ -6,8 +6,10 @@ namespace TotalCMS\Domain\Mcp\Auth\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Support\Config;
 
 /**
@@ -20,7 +22,8 @@ use TotalCMS\Support\Config;
  *      precedence over all other checks because the middleware already paid the
  *      validation cost. A token with at least one `mcp:*` scope resolves to
  *      AUTHENTICATED; a valid token with no `mcp:*` scopes throws
- *      insufficient_scope.
+ *      insufficient_scope. A token whose authorizing user is in the admin
+ *      group AND that carries cms:admin elevates to ADMIN (see below).
  *   2. API key — ApiKeyAuthenticator validates the X-API-Key / Authorization
  *      header against stored keys and path/method scopes. A valid key resolves
  *      to ADMIN.
@@ -35,6 +38,7 @@ readonly class McpAuth
 {
 	public function __construct(
 		private ApiKeyAuthenticator $apiKeyAuthenticator,
+		private AccessControlService $accessControl,
 		private Config $config,
 	) {
 	}
@@ -69,6 +73,25 @@ readonly class McpAuth
 					'OAuth token lacks an mcp:* scope required for MCP access.',
 					reason: 'insufficient_scope',
 				);
+			}
+
+			// Super-admin elevation: identity AND scope, never either alone.
+			// The sub claim proves who approved the grant (the consent screen
+			// requires their login); cms:admin proves what they approved — the
+			// consent screen showed "Administer your site". An admin who granted
+			// a read-only token gets exactly the read-only assistant they chose,
+			// and a non-admin requesting cms:admin fails the identity check and
+			// stays AUTHENTICATED. Elevated tokens beat API keys on posture:
+			// per-grant revocation, activity log, 1-hour expiry.
+			$userId = $request->getAttribute('oauth_user_id');
+			if (
+				in_array('cms:admin', $scopes, true)
+				&& is_string($userId) && $userId !== ''
+			) {
+				$ref = OAuthUserRef::parse($userId, (string)$this->config->auth['collection']);
+				if ($this->accessControl->isAdmin($ref->userId, $ref->collection)) {
+					return McpPersona::ADMIN;
+				}
 			}
 
 			return McpPersona::AUTHENTICATED;

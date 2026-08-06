@@ -54,7 +54,11 @@ final class CacheManagerVersionCheckTest extends TestCase
 
 		$this->config->domain = 'test.example.com';
 
+		// In scoped mode (the default) the entry directory and the local
+		// directory are the same path. The version stamp is written to the
+		// local one — see CacheManager::clearIfVersionChanged().
 		$this->filesystemService->method('getCachDir')->willReturn($this->testCacheDir);
+		$this->filesystemService->method('getLocalDir')->willReturn($this->testCacheDir);
 		$this->filesystemService->method('isAvailable')->willReturn(true);
 		$this->filesystemService->method('isInstalled')->willReturn(true);
 
@@ -143,6 +147,7 @@ final class CacheManagerVersionCheckTest extends TestCase
 	{
 		$this->filesystemService = $this->createMock(FilesystemService::class);
 		$this->filesystemService->method('getCachDir')->willReturn($this->testCacheDir);
+		$this->filesystemService->method('getLocalDir')->willReturn($this->testCacheDir);
 		$this->filesystemService->method('isAvailable')->willReturn(false);
 		$this->filesystemService->method('isInstalled')->willReturn(false);
 

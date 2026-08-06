@@ -99,7 +99,12 @@ final class OAuthServerFactoryTest extends TestCase
 		$leagueAccessTokens  = new LeagueAccessTokenRepository($revocation);
 		$leagueRefreshTokens = new LeagueRefreshTokenRepository($grantRepo, $replayDetector, $activityLogger);
 		$leagueAuthCodes     = new LeagueAuthCodeRepository($cache);
-		$leagueScopes        = new LeagueScopeRepository($scopeReg, $clientRepo);
+		$leagueScopes        = new LeagueScopeRepository(
+			$scopeReg,
+			$clientRepo,
+			$this->createMock(\TotalCMS\Domain\Auth\Service\AccessControlService::class),
+			$this->makeConfig(),
+		);
 
 		return new OAuthServerFactory(
 			$leagueClients,

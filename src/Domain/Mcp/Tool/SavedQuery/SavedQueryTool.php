@@ -20,12 +20,22 @@ use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
  *
  * Handler flow:
  *   1. Persona check (collection.mcp.access vs current persona).
- *   2. Resolve {{params.X}} placeholders in filters via FilterValueResolver.
- *   3. Build REST-style include/exclude strings + persona-aware safety filters.
- *   4. Query via IndexQueryService.
- *   5. Strip non-exposed fields, render content via ContentRenderer,
+ *   2. Group-read check (Task 10b) — PersonaContext::canReadCollection().
+ *   3. Resolve {{params.X}} placeholders in filters via FilterValueResolver.
+ *   4. Build REST-style include/exclude strings + persona-aware safety filters.
+ *   5. Query via IndexQueryService.
+ *   6. Strip non-exposed fields, render content via ContentRenderer,
  *      decorate items with URLs.
- *   6. Return MCP tool result envelope.
+ *   7. Return MCP tool result envelope.
+ *
+ * **Group-gated (Task 10b).** These tools are schema-defined per collection —
+ * `$this->definition->collectionName` is fixed at registration, never a
+ * caller-supplied argument — so there is no inputSchema property a
+ * ToolRequirement's collectionArg could name (SchemaToolRegistrar registers
+ * these with no `requires`; see its call site). Enforced inline instead, via
+ * PersonaContext::canReadCollection() right after the collection is fetched
+ * — same public-collection carve-out as the core content tools, and the same
+ * `errorResult()` shape every other failure in this handler already uses.
  *
  * Errors return `isError: true` with a recovery hint — never throws past
  * the SDK transport.
@@ -68,8 +78,15 @@ final readonly class SavedQueryTool
 				));
 			}
 
+			if (!$this->personaContext->canReadCollection($this->definition->collectionName, $collection)) {
+				return $this->errorResult(sprintf(
+					"Your account's groups do not grant read on '%s'.",
+					$this->definition->collectionName,
+				));
+			}
+
 			$resolved = $this->resolveFilters($args);
-			$params   = $this->buildQueryParams($resolved, $persona);
+			$params   = $this->buildQueryParams($resolved);
 			$result   = $this->indexQueryService->query($this->definition->collectionName, $params);
 
 			$nonExposed = $this->schemaResolver->nonExposedProperties($collection);
@@ -155,7 +172,7 @@ final readonly class SavedQueryTool
 	 *
 	 * @return array<string,string>
 	 */
-	private function buildQueryParams(array $resolved, McpPersona $persona): array
+	private function buildQueryParams(array $resolved): array
 	{
 		// Build REST-style include string from the resolved filter map.
 		$includeParts = [];
@@ -172,9 +189,11 @@ final readonly class SavedQueryTool
 			$include = trim($include . ',' . implode(',', $includeParts), ',');
 		}
 
-		// Persona safety filter applied last: public persona excludes drafts.
+		// Draft-authority safety filter applied last: only ADMIN or a caller
+		// whose access groups grant `read` on this collection sees drafts —
+		// see PersonaContext::canReadDrafts().
 		$exclude = $this->definition->exclude;
-		if ($persona === McpPersona::PUBLIC_) {
+		if (!$this->personaContext->canReadDrafts($this->definition->collectionName)) {
 			$exclude = trim($exclude . ',draft:true', ',');
 		}
 

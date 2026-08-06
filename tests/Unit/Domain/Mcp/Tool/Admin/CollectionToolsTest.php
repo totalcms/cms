@@ -46,6 +46,23 @@ final class CollectionToolsTest extends TestCase
 		$this->assertSame('admin', $definition->access);
 	}
 
+	/**
+	 * Task 8 fix round, Important #4: pin the exact ToolRequirement triple —
+	 * nothing previously asserted this, so a wrong domain string or flipped
+	 * operation would silently deny-all and every other test would still pass.
+	 */
+	public function testCreateCollectionDeclaresTheExpectedRequirementTriple(): void
+	{
+		$registry = new ToolRegistry();
+		$this->tool->register($registry);
+
+		$requires = $registry->get('create_collection')->requires;
+		$this->assertNotNull($requires);
+		$this->assertSame('collections-meta', $requires->domain);
+		$this->assertSame('create', $requires->operation);
+		$this->assertSame('id', $requires->collectionArg);
+	}
+
 	public function testCreateCollectionAnnotatedAsWriteNonDestructive(): void
 	{
 		$registry = new ToolRegistry();

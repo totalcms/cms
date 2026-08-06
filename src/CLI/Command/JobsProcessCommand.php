@@ -8,6 +8,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use TotalCMS\Domain\JobQueue\Service\JobQueueDrainer;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
@@ -34,7 +35,8 @@ class JobsProcessCommand extends BaseCommand
 		$this
 			->setName('jobs:process')
 			->setDescription('Process pending job queue')
-			->addOption('memory', 'm', InputOption::VALUE_REQUIRED, 'Memory limit', '512M');
+			->addOption('memory', 'm', InputOption::VALUE_REQUIRED, 'Memory limit', '512M')
+			->addOption('max-seconds', null, InputOption::VALUE_REQUIRED, 'Stop starting new jobs after this many seconds. Leftovers stay queued for the next run.');
 	}
 
 	/**
@@ -115,7 +117,9 @@ class JobsProcessCommand extends BaseCommand
 				));
 			}
 
-			if ($verbose) {
+			// `vacuumed` now reports whether one actually ran — it is throttled to
+			// once a day — so this line must not claim work that was skipped.
+			if ($verbose && $maintenance['vacuumed']) {
 				$output->writeln('Jobqueue vacuumed to reclaim disk space.');
 			}
 
@@ -181,45 +185,18 @@ class JobsProcessCommand extends BaseCommand
 			$output->writeln('  Optimizing ' . count($optimizedCollections) . ' collection(s) for bulk import');
 		}
 
-		// Process jobs
-		$processed        = 0;
-		$succeeded        = 0;
-		$failed           = 0;
-		$jobsByCollection = [];
-		$jobsByType       = [];
+		// Process jobs. The loop lives in JobQueueDrainer so the HTTP cron
+		// endpoint runs exactly the same code — including the deadline handling,
+		// which is the part that must not drift between the two.
+		$maxSeconds = $input->getOption('max-seconds');
+		$deadline   = is_numeric($maxSeconds) ? max(0, (int)$maxSeconds) : null;
 
-		while ($jobRunner->hasPendingJobs()) {
-			$result = $jobRunner->processNextJobWithDetails();
-			if ($result === null) {
-				break;
-			}
-
-			$processed++;
-			$job        = $result['job'];
-			$collection = $job['collection'] ?? 'unknown';
-			$type       = $job['type'] ?? 'unknown';
-
-			$jobsByCollection[$collection] = ($jobsByCollection[$collection] ?? 0) + 1;
-			$jobsByType[$type]             = ($jobsByType[$type] ?? 0) + 1;
-
-			if ($result['success']) {
-				$succeeded++;
-				if ($verbose && !$isJson) {
-					$output->writeln(sprintf('  [OK]   #%-5d %-10s %s', $job['id'], $type, $collection));
-				}
-			} else {
-				$failed++;
-				if ($verbose && !$isJson) {
-					$error = $result['error'] ?? 'Unknown error';
-					$output->writeln(sprintf('  [FAIL] #%-5d %-10s %s', $job['id'], $type, $collection));
-					$output->writeln('         Error: ' . mb_strimwidth($error, 0, 60, '...'));
-				}
-			}
-
-			if (!$verbose && !$isJson && $processed % 100 === 0) {
-				$output->writeln("  Processed {$processed} jobs...");
-			}
-		}
+		$drain            = $this->totalcms->container()->get(JobQueueDrainer::class)->drain($deadline);
+		$processed        = $drain->processed;
+		$succeeded        = $drain->succeeded;
+		$failed           = $drain->failed;
+		$jobsByCollection = $drain->byCollection;
+		$jobsByType       = $drain->byType;
 
 		// Finalize import optimization
 		if (count($optimizedCollections) > 0) {
@@ -242,6 +219,7 @@ class JobsProcessCommand extends BaseCommand
 				'processed'        => $processed,
 				'succeeded'        => $succeeded,
 				'failed'           => $failed,
+				'deadline_hit'     => $drain->deadlineHit,
 				'by_type'          => $jobsByType,
 				'by_collection'    => $jobsByCollection,
 				'maintenance'      => $maintenance,
@@ -265,6 +243,14 @@ class JobsProcessCommand extends BaseCommand
 			'Succeeded'       => $succeeded,
 			'Failed'          => $failed,
 		]);
+
+		if ($drain->deadlineHit) {
+			$output->writeln('');
+			$output->writeln(sprintf(
+				'Stopped after %d seconds with jobs still queued. They will be picked up on the next run.',
+				(int)$deadline
+			));
+		}
 
 		if ($verbose && count($jobsByType) > 0) {
 			ksort($jobsByType);

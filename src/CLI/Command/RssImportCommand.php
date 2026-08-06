@@ -47,6 +47,10 @@ class RssImportCommand extends BaseCommand
 				    --map content=body \
 				    --map image=featured
 
+				  # Some hosts block unknown clients — say who you are
+				  tcms rss:import https://example.com/feed.xml blog \
+				    --user-agent "AcmeNews/1.0 (+https://acme.example)"
+
 				  # Drain the queue in the same cron run
 				  tcms rss:import https://example.com/feed.xml blog && tcms jobs:process
 
@@ -57,7 +61,8 @@ class RssImportCommand extends BaseCommand
 			->addArgument('url', InputArgument::REQUIRED, 'RSS/Atom/JSON feed URL')
 			->addArgument('collection', InputArgument::REQUIRED, 'Target collection ID')
 			->addOption('draft', null, InputOption::VALUE_NEGATABLE, 'Queue items as drafts (use --no-draft to publish immediately)', true)
-			->addOption('map', 'm', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Field mapping in form feedField=collectionField. Repeat for multiple, or comma-separate within one value.');
+			->addOption('map', 'm', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Field mapping in form feedField=collectionField. Repeat for multiple, or comma-separate within one value.')
+			->addOption('user-agent', null, InputOption::VALUE_REQUIRED, 'User-Agent for the feed request. Defaults to identifying Total CMS; set this when a host blocks the default.');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
@@ -80,11 +85,18 @@ class RssImportCommand extends BaseCommand
 			return $this->outputError($input, $output, $e->getMessage());
 		}
 
+		$options = [
+			'draft'    => $isDraft,
+			'fieldMap' => $fieldMap,
+		];
+
+		$userAgent = $input->getOption('user-agent');
+		if (is_string($userAgent) && trim($userAgent) !== '') {
+			$options['userAgent'] = trim($userAgent);
+		}
+
 		try {
-			$importCount = $this->totalcms->rssImporter()->import($url, $collection, [
-				'draft'    => $isDraft,
-				'fieldMap' => $fieldMap,
-			]);
+			$importCount = $this->totalcms->rssImporter()->import($url, $collection, $options);
 		} catch (\Throwable $e) {
 			return $this->outputError($input, $output, "Import failed: {$e->getMessage()}");
 		}
@@ -96,6 +108,7 @@ class RssImportCommand extends BaseCommand
 			'collection' => $collection,
 			'draft'      => $isDraft,
 			'fieldMap'   => $fieldMap,
+			'userAgent'  => $options['userAgent'] ?? null,
 		]);
 	}
 

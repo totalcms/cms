@@ -441,6 +441,105 @@ final class UserValidationServiceTest extends TestCase
 		expect($result['id'])->toBe('test-user');
 	}
 
+	// -----------------------------------------------------------------------
+	// Cross-collection isSuperAdmin() hardening: super admins can only exist
+	// in the default auth collection. A caller authenticated against any
+	// OTHER auth collection must never be treated as a super admin, even when
+	// its object id collides with an admin's id in the default collection.
+	// -----------------------------------------------------------------------
+
+	public function testIsSuperAdminIsFalseWhenIdCollidesWithDefaultCollectionAdminButCallerIsInAnotherCollection(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'auth'];
+
+		// The default collection lookup would say yes (same id IS an admin
+		// there) — but existsObject/fetchObject must never even be consulted
+		// once the collection mismatch is detected.
+		$objectFetcher->expects($this->never())->method('existsObject');
+		$objectFetcher->expects($this->never())->method('fetchObject');
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		// Same id, but the CALLER belongs to 'members', not the default 'auth'.
+		$result = $service->isSuperAdmin('shared-id', 'members');
+
+		expect($result)->toBeFalse();
+	}
+
+	public function testIsSuperAdminIsTrueWhenCallerCollectionMatchesDefault(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'auth'];
+
+		$mockUser = $this->createMock(ObjectData::class);
+		$mockUser->method('toArray')->willReturn([
+			'id'     => 'shared-id',
+			'groups' => ['admin'],
+		]);
+
+		$objectFetcher->method('existsObject')->with('auth', 'shared-id')->willReturn(true);
+		$objectFetcher->method('fetchObject')->with('auth', 'shared-id')->willReturn($mockUser);
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		expect($service->isSuperAdmin('shared-id', 'auth'))->toBeTrue();
+	}
+
+	public function testIsSuperAdminIsFalseForNonAdminInDefaultCollectionWithExplicitCollection(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'auth'];
+
+		$mockUser = $this->createMock(ObjectData::class);
+		$mockUser->method('toArray')->willReturn([
+			'id'     => 'regular-user',
+			'groups' => ['editor'],
+		]);
+
+		$objectFetcher->method('existsObject')->with('auth', 'regular-user')->willReturn(true);
+		$objectFetcher->method('fetchObject')->with('auth', 'regular-user')->willReturn($mockUser);
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		expect($service->isSuperAdmin('regular-user', 'auth'))->toBeFalse();
+	}
+
+	public function testIsSuperAdminWithEmptyCollectionAssumesDefaultCollection(): void
+	{
+		$searcher      = $this->createMock(IndexSearcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$config        = $this->createMock(Config::class);
+
+		$config->auth = ['collection' => 'auth'];
+
+		$mockUser = $this->createMock(ObjectData::class);
+		$mockUser->method('toArray')->willReturn([
+			'id'     => 'shared-id',
+			'groups' => ['admin'],
+		]);
+
+		$objectFetcher->method('existsObject')->with('auth', 'shared-id')->willReturn(true);
+		$objectFetcher->method('fetchObject')->with('auth', 'shared-id')->willReturn($mockUser);
+
+		$service = new UserValidationService($searcher, $objectFetcher, $config);
+
+		// '' is the historical single-argument meaning: caller didn't specify
+		// a collection, so assume the default one — same result as before
+		// this parameter existed.
+		expect($service->isSuperAdmin('shared-id'))->toBeTrue();
+		expect($service->isSuperAdmin('shared-id', ''))->toBeTrue();
+	}
+
 	public function testValidateFileAccessWithDefaultGroupAllowsUserInAnotherGroup(): void
 	{
 		$searcher      = $this->createMock(IndexSearcher::class);

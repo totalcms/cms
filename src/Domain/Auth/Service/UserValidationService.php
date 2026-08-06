@@ -167,12 +167,29 @@ readonly class UserValidationService
 		return $this->validateUserInGroups($userId, $groups, $collection);
 	}
 
-	public function isSuperAdmin(string $userId): bool
+	/**
+	 * Whether $userId is a super admin. Super admins can only exist in the
+	 * default auth collection ({@see Config::$auth}'s `collection` key), so a
+	 * caller authenticated against any OTHER auth collection is never a super
+	 * admin — even if its object id happens to collide with an admin's id in
+	 * the default collection.
+	 *
+	 * $collection is the auth collection the CALLER actually belongs to (e.g.
+	 * from the session, or an OAuthUserRef). Pass '' when the caller didn't
+	 * specify one — this preserves the historical behavior of assuming the
+	 * default collection, for backwards compatibility with callers (including
+	 * extensions) written against the old single-argument signature.
+	 */
+	public function isSuperAdmin(string $userId, string $collection = ''): bool
 	{
-		$collection = $this->config->auth['collection'];
+		$defaultCollection = (string)$this->config->auth['collection'];
 
-		if ($this->objectFetcher->existsObject($collection, $userId)) {
-			$user = $this->objectFetcher->fetchObject($collection, $userId)->toArray();
+		if ($collection !== '' && $collection !== $defaultCollection) {
+			return false;
+		}
+
+		if ($this->objectFetcher->existsObject($defaultCollection, $userId)) {
+			$user = $this->objectFetcher->fetchObject($defaultCollection, $userId)->toArray();
 			if (in_array(self::ADMINGROUP, $user['groups'])) {
 				return true;
 			}

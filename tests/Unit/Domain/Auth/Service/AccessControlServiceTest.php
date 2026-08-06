@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 
 beforeEach(function (): void {
 	// Use container to get properly configured service
@@ -270,6 +271,74 @@ describe('AccessControlService - Collection Metadata Access', function (): void 
 	it('allows viewer read-only metadata for all collections', function (): void {
 		expect($this->accessControl->canAccessCollectionMeta('viewer-user-test-com', 'blog', 'read'))->toBeTrue();
 		expect($this->accessControl->canAccessCollectionMeta('viewer-user-test-com', 'products', 'read'))->toBeTrue();
+	});
+});
+
+describe('AccessControlService - Cross-Collection Super Admin Hardening', function (): void {
+	// Seed a SECONDARY auth collection ('members') with a user whose id
+	// COLLIDES with the default collection's 'admin' fixture id, but who is
+	// NOT an admin there. A direct filesystem write mirrors how
+	// ObjectFetcher/UserValidationService resolve objects — file existence,
+	// no collection registration required.
+	beforeEach(function (): void {
+		$dir = cmsDataDir() . 'members';
+		if (!is_dir($dir)) {
+			mkdir($dir, 0777, true);
+		}
+		file_put_contents($dir . '/admin.json', (string)json_encode([
+			'id'       => 'admin',
+			'active'   => true,
+			'name'     => 'Colliding Member',
+			'email'    => 'colliding-member@test.com',
+			'password' => password_hash('irrelevant', PASSWORD_BCRYPT),
+			'groups'   => ['viewer'],
+		]));
+	});
+
+	afterEach(function (): void {
+		@unlink(cmsDataDir() . 'members/admin.json');
+	});
+
+	it('does not treat a colliding id in a secondary collection as super admin', function (): void {
+		expect($this->accessControl->isAdmin('admin', 'members'))->toBeFalse();
+	});
+
+	it('still recognizes the genuine admin when the collection matches the default', function (): void {
+		expect($this->accessControl->isAdmin('admin', 'auth'))->toBeTrue();
+	});
+
+	it('authorityFor() denies admin authority for a colliding id in a secondary collection', function (): void {
+		$ref       = OAuthUserRef::parse('members:admin', 'auth');
+		$authority = $this->accessControl->authorityFor($ref);
+
+		expect($authority->isAdmin)->toBeFalse();
+	});
+
+	it('authorityFor() grants admin authority for the genuine default-collection admin', function (): void {
+		$ref       = OAuthUserRef::parse('auth:admin', 'auth');
+		$authority = $this->accessControl->authorityFor($ref);
+
+		expect($authority->isAdmin)->toBeTrue();
+	});
+});
+
+describe('AccessControlService - userExists', function (): void {
+	it('returns true for a user that exists', function (): void {
+		$ref = OAuthUserRef::parse('auth:blogger-user-test-com', 'auth');
+
+		expect($this->accessControl->userExists($ref))->toBeTrue();
+	});
+
+	it('returns true for the super admin', function (): void {
+		$ref = OAuthUserRef::parse('auth:admin', 'auth');
+
+		expect($this->accessControl->userExists($ref))->toBeTrue();
+	});
+
+	it('returns false for a user that no longer exists', function (): void {
+		$ref = OAuthUserRef::parse('auth:deleted-user-does-not-exist', 'auth');
+
+		expect($this->accessControl->userExists($ref))->toBeFalse();
 	});
 });
 

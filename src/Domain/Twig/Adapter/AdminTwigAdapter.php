@@ -15,6 +15,7 @@ use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Cron\Service\CronTokenProvider;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -75,6 +76,7 @@ readonly class AdminTwigAdapter
 		private AutomationLoader $automationLoader,
 		private AutomationRunReader $automationRunReader,
 		private ExtensionStateRepository $extensionStateRepository,
+		private CronTokenProvider $cronTokens,
 	) {
 	}
 
@@ -179,6 +181,33 @@ readonly class AdminTwigAdapter
 	public function processAutomationsCommand(): string
 	{
 		return $this->tcmsCommandPrefix() . ' automations:process';
+	}
+
+	/**
+	 * URL for an HTTP cron endpoint, with the token embedded.
+	 *
+	 * Absolute, because the whole point is pasting it into a host's cron box or
+	 * an external cron service — a relative path is useless there. `url` carries
+	 * the scheme and domain, `api` the base path, so a subdirectory install gets
+	 * a working URL too. Not under the `/api` prefix: these routes are public.
+	 *
+	 * Calls tokenOrCreate(): the token comes into existence the first time an
+	 * operator views the panel that needs it, which is why no setup command
+	 * exists. Rendering the page is therefore what mints it — a deliberate trade
+	 * against adding a route and a button purely to defer a file write that costs
+	 * nothing and grants nothing on its own.
+	 *
+	 * @param string $task `jobs` or `automations`
+	 */
+	public function cronUrl(string $task): string
+	{
+		return sprintf(
+			'%s%s/cron/%s?token=%s',
+			rtrim($this->config->url, '/'),
+			$this->config->api,
+			$task,
+			$this->cronTokens->tokenOrCreate()
+		);
 	}
 
 	/**

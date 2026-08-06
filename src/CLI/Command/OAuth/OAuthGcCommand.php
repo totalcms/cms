@@ -10,6 +10,7 @@ use TotalCMS\CLI\Command\BaseCommand;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
 
 class OAuthGcCommand extends BaseCommand
 {
@@ -18,7 +19,7 @@ class OAuthGcCommand extends BaseCommand
 		parent::configure();
 		$this
 			->setName('oauth:gc')
-			->setDescription('Prune expired OAuth grants from storage');
+			->setDescription('Prune expired OAuth grants and stale self-registered clients');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
@@ -42,6 +43,18 @@ class OAuthGcCommand extends BaseCommand
 			$removed,
 			$removed === 1 ? '' : 's',
 		));
+
+		$pruner        = $this->totalcms->container()->get(OAuthClientPruner::class);
+		$prunedClients = $pruner->pruneStaleDynamicClients();
+
+		$output->writeln(sprintf(
+			'<info>Pruned %d stale dynamic client%s.</info>',
+			count($prunedClients),
+			count($prunedClients) === 1 ? '' : 's',
+		));
+		foreach ($prunedClients as $client) {
+			$output->writeln(sprintf('  - %s (%s)', $client->name, $client->id));
+		}
 
 		return 0;
 	}

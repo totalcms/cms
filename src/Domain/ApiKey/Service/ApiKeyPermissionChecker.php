@@ -37,11 +37,11 @@ readonly class ApiKeyPermissionChecker
 	 */
 	public function allowsPath(ApiKeyData $apiKey, string $path): bool
 	{
-		$path         = strtolower(ltrim($path, '/'));
+		$path         = $this->normalize($path);
 		$allowedPaths = $apiKey->scopes['paths'] ?? [];
 
 		foreach ($allowedPaths as $allowedPath) {
-			$allowedPath = strtolower(trim((string)$allowedPath, '/'));
+			$allowedPath = $this->normalize((string)$allowedPath);
 
 			if ($allowedPath === '*' || $path === $allowedPath || str_starts_with($path, $allowedPath . '/')) {
 				return true;
@@ -49,6 +49,24 @@ readonly class ApiKeyPermissionChecker
 		}
 
 		return false;
+	}
+
+	/**
+	 * The /api route-group prefix is a routing artifact, not part of the
+	 * grant vocabulary: the endpoint picker stores grants without it
+	 * ("/sync", "/collections/blog") while request paths carry it, and
+	 * keys created directly via POST /apikeys may carry it in the grant
+	 * instead. Strip it from both sides so they match regardless of shape.
+	 */
+	private function normalize(string $path): string
+	{
+		$path = strtolower(trim($path, '/'));
+
+		if ($path === 'api' || str_starts_with($path, 'api/')) {
+			$path = substr($path, 4);
+		}
+
+		return $path;
 	}
 
 	/**

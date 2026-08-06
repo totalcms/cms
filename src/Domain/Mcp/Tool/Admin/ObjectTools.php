@@ -6,7 +6,12 @@ namespace TotalCMS\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
@@ -54,6 +59,37 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * existing admin UI / REST DELETE already covers it. Adding it through
  * MCP needs explicit dry-run + confirmation patterns that aren't worth
  * the cost yet.
+ *
+ * All three tools keep `access: 'admin'` but ALSO carry a `ToolRequirement`
+ * (Phase 4): the requirement doesn't loosen the base persona gate (an
+ * ADMIN-only tool stays hidden from AUTHENTICATED unless requires is
+ * satisfied — access: 'authenticated' would short-circuit tools/list
+ * visibility BEFORE requires is ever consulted, see
+ * McpToolDefinition::isVisibleTo()), it EXTENDS it: an AUTHENTICATED caller
+ * whose access-group grants create/update on the target collection also sees
+ * and can call the matching tool — mirrors the REST `/api/objects` group
+ * gate. `patch_object` maps to the 'update' operation, same as
+ * `update_object`.
+ *
+ * **Exposure-gated (final review fix).** `McpServerFactory::guardHandler()`
+ * only checks scope + access-group grant for objects/create and
+ * objects/update — unlike objects/read, it has no exposure carve-out to
+ * apply, so an ungated write tool would let a caller with a broad group
+ * grant (e.g. `collections.all: true`) write into a collection the operator
+ * never turned on for MCP at all (`mcp.access` defaults to `'admin'`). Each
+ * handler below calls `requireExposed()` first — same
+ * `McpSchemaResolver::isAccessibleTo()` check the read tools run — before
+ * doing anything else. ADMIN is unaffected (`isAccessibleTo()` always
+ * returns true for it), same as every other exposure check in this codebase.
+ *
+ * **Non-exposed properties are stripped from every write response.** Each
+ * handler returns the saved/patched object, which previously came back as a
+ * raw `toArray()` — schema fields deliberately hidden from AI via
+ * `mcp.expose: false` (and sensitive-field defaults like password/secret)
+ * were leaking straight through the write path even though the read tools
+ * already strip them. `stripNonExposed()` reuses
+ * `McpSchemaResolver::nonExposedProperties()`, the same source of truth the
+ * read tools consume.
  */
 readonly class ObjectTools
 {
@@ -72,6 +108,9 @@ readonly class ObjectTools
 		private ObjectPatcher $patcher,
 		private SchemaFetcher $schemaFetcher,
 		private ObjectFetcher $objectFetcher,
+		private CollectionFetcher $collectionFetcher,
+		private PersonaContext $personaContext,
+		private McpSchemaResolver $schemaResolver,
 	) {
 	}
 
@@ -118,6 +157,7 @@ readonly class ObjectTools
 				idempotentHint: false,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'objects', operation: 'create', collectionArg: 'collection'),
 		));
 
 		$registry->register(new McpToolDefinition(
@@ -155,6 +195,7 @@ readonly class ObjectTools
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'objects', operation: 'update', collectionArg: 'collection'),
 		));
 
 		$registry->register(new McpToolDefinition(
@@ -192,6 +233,10 @@ readonly class ObjectTools
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			// patch is update semantics (existing object, subset write) —
+			// treated as 'update' for group-permission purposes, same as
+			// update_object.
+			requires: new ToolRequirement(domain: 'objects', operation: 'update', collectionArg: 'collection'),
 		));
 	}
 
@@ -202,8 +247,9 @@ readonly class ObjectTools
 	 */
 	public function createHandler(string $collection, array $data, ?string $id = null): array
 	{
-		$schema = $this->fetchSchemaOrFail($collection, 'create_object');
-		$binary = $this->binaryFieldsIn($schema);
+		$schema         = $this->fetchSchemaOrFail($collection, 'create_object');
+		$collectionData = $this->requireExposed($collection, 'create_object');
+		$binary         = $this->binaryFieldsIn($schema);
 
 		// Refuse only if the payload actually tries to write a binary field;
 		// omitted binary fields are fine and left unset.
@@ -227,7 +273,7 @@ readonly class ObjectTools
 			), $e->getCode(), $e);
 		}
 
-		return $object->toArray();
+		return $this->stripNonExposed($object->toArray(), $collectionData);
 	}
 
 	/**
@@ -237,8 +283,9 @@ readonly class ObjectTools
 	 */
 	public function updateHandler(string $collection, string $id, array $data): array
 	{
-		$schema = $this->fetchSchemaOrFail($collection, 'update_object');
-		$binary = $this->binaryFieldsIn($schema);
+		$schema         = $this->fetchSchemaOrFail($collection, 'update_object');
+		$collectionData = $this->requireExposed($collection, 'update_object');
+		$binary         = $this->binaryFieldsIn($schema);
 
 		$this->refuseIfPayloadWritesBinary($collection, 'update_object', $data, $binary);
 
@@ -265,7 +312,7 @@ readonly class ObjectTools
 			), $e->getCode(), $e);
 		}
 
-		return $object->toArray();
+		return $this->stripNonExposed($object->toArray(), $collectionData);
 	}
 
 	/**
@@ -275,8 +322,9 @@ readonly class ObjectTools
 	 */
 	public function patchHandler(string $collection, string $id, array $data): array
 	{
-		$schema = $this->fetchSchemaOrFail($collection, 'patch_object');
-		$binary = $this->binaryFieldsIn($schema);
+		$schema         = $this->fetchSchemaOrFail($collection, 'patch_object');
+		$collectionData = $this->requireExposed($collection, 'patch_object');
+		$binary         = $this->binaryFieldsIn($schema);
 
 		$this->refuseIfPayloadWritesBinary($collection, 'patch_object', $data, $binary);
 
@@ -309,7 +357,7 @@ readonly class ObjectTools
 			), $e->getCode(), $e);
 		}
 
-		return $object->toArray();
+		return $this->stripNonExposed($object->toArray(), $collectionData);
 	}
 
 	/**
@@ -328,6 +376,66 @@ readonly class ObjectTools
 				$collection,
 			), $e->getCode(), $e);
 		}
+	}
+
+	/**
+	 * Require that $collection is exposed to MCP for the current caller
+	 * before a write proceeds — the guard the review found missing (Task
+	 * 6/8's call-time guard only checks scope + access-group grant for
+	 * objects/create and objects/update; it has no exposure carve-out to
+	 * apply the way objects/read does). Mirrors the exposure check every
+	 * content-read tool runs (see e.g. GetObjectTool::handler()):
+	 * `McpSchemaResolver::isAccessibleTo()` against the resolved persona.
+	 * ADMIN always passes — isAccessibleTo() returns true unconditionally
+	 * for it, same as it does for the read tools.
+	 *
+	 * Returns the resolved CollectionData so callers can reuse it for
+	 * stripNonExposed() without a second lookup.
+	 */
+	private function requireExposed(string $collection, string $toolName): CollectionData
+	{
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
+		if (!$collectionData instanceof CollectionData) {
+			throw new ToolCallException(sprintf(
+				'%s: collection "%s" not found. Use list_collections to discover available collections.',
+				$toolName,
+				$collection,
+			));
+		}
+
+		$persona = $this->personaContext->current();
+		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value)) {
+			throw new ToolCallException(sprintf(
+				'%s: collection "%s" is not available to the current caller. Use list_collections to see what you can access.',
+				$toolName,
+				$collection,
+			));
+		}
+
+		return $collectionData;
+	}
+
+	/**
+	 * Strip schema properties marked `mcp.expose: false` (and sensitive-field
+	 * defaults) from a write result before it reaches the caller. The saved
+	 * object's `toArray()` carries every stored field regardless of MCP
+	 * exposure settings — read tools already strip these via
+	 * `McpSchemaResolver::nonExposedProperties()`; the write handlers need
+	 * the identical treatment on their own return value so a create/update/
+	 * patch response can't leak a field the operator deliberately hid from
+	 * AI (or an `auth` collection's password/secret fields).
+	 *
+	 * @param array<string,mixed> $object
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function stripNonExposed(array $object, CollectionData $collectionData): array
+	{
+		foreach ($this->schemaResolver->nonExposedProperties($collectionData) as $field) {
+			unset($object[$field]);
+		}
+
+		return $object;
 	}
 
 	/**

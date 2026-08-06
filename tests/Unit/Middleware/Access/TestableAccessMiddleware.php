@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Middleware\Access\BaseAccessMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
@@ -38,9 +39,10 @@ readonly class TestableAccessMiddleware extends BaseAccessMiddleware
 		Config $config,
 		OperationDetector $operationDetector,
 		LoggerFactory $loggerFactory,
+		OAuthActivityLogger $oauthActivityLogger,
 		private \Closure $checkPermissionCallback,
 	) {
-		parent::__construct($userValidation, $accessControl, $session, $jsonRenderer, $twigRenderer, $responseFactory, $config, $operationDetector, $loggerFactory);
+		parent::__construct($userValidation, $accessControl, $session, $jsonRenderer, $twigRenderer, $responseFactory, $config, $operationDetector, $loggerFactory, $oauthActivityLogger);
 	}
 
 	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool

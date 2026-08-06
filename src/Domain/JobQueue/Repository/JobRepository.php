@@ -9,6 +9,11 @@ use TotalCMS\Support\Config;
 /** @SuppressWarnings("PHPMD.TooManyPublicMethods") */
 class JobRepository
 {
+	/** How long between VACUUMs. See maintenance() for why this is throttled at all. */
+	private const VACUUM_MIN_INTERVAL = 86400;
+
+	private const VACUUM_MARKER = '.system/.jobqueue-vacuum';
+
 	private ?\PDO $db = null;
 
 	public function __construct(private readonly Config $config)
@@ -118,6 +123,17 @@ class JobRepository
 		} else {
 			$this->migrateScheduledAt();
 		}
+
+		// Created unconditionally, not just for a new database: the CREATE TABLE
+		// above only runs when the file is absent, so an existing install would
+		// otherwise never get them. IF NOT EXISTS makes this a cheap no-op on
+		// every connection after the first.
+		//
+		// (status, scheduledAt) covers fetchNextJob(), which runs once per job
+		// processed and was a full table scan — making a drain quadratic in queue
+		// size. (collection) covers the per-collection stats and clear operations.
+		$db->exec('CREATE INDEX IF NOT EXISTS idx_jobqueue_status_scheduled ON jobqueue (status, scheduledAt)');
+		$db->exec('CREATE INDEX IF NOT EXISTS idx_jobqueue_collection ON jobqueue (collection)');
 
 		return $db;
 	}
@@ -710,18 +726,47 @@ class JobRepository
 	}
 
 	/**
-	 * Perform database maintenance: prune old failed jobs and vacuum.
+	 * Perform database maintenance: prune old failed jobs, and vacuum at most
+	 * once a day.
+	 *
+	 * The two are throttled differently because they cost differently. Pruning
+	 * is a single DELETE and runs every pass — it is what stops the failed list
+	 * growing without bound. VACUUM rewrites the whole database file, and the
+	 * space it reclaims is already on SQLite's free list being reused, so doing
+	 * it sooner buys nothing. The HTTP cron endpoint can be called every minute,
+	 * which would otherwise mean ~1440 full rewrites a day.
 	 *
 	 * @return array{pruned: int, vacuumed: bool}
 	 */
 	public function maintenance(int $daysOld = 30): array
 	{
 		$pruned = $this->pruneFailedJobs($daysOld);
-		$this->vacuum();
 
 		return [
 			'pruned'   => $pruned,
-			'vacuumed' => true,
+			'vacuumed' => $this->vacuumIfDue(),
 		];
+	}
+
+	/**
+	 * @return bool whether a vacuum actually ran
+	 */
+	private function vacuumIfDue(): bool
+	{
+		if (!$this->dbExists()) {
+			return false;
+		}
+
+		$marker = PathUtils::absolutePath($this->config->datadir, self::VACUUM_MARKER);
+		$last   = file_exists($marker) ? (int)filemtime($marker) : 0;
+
+		if ($last > 0 && (time() - $last) < self::VACUUM_MIN_INTERVAL) {
+			return false;
+		}
+
+		$this->vacuum();
+		touch($marker);
+
+		return true;
 	}
 }

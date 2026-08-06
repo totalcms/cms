@@ -142,7 +142,7 @@ class AccessManager
 	{
 		$this->getSessionData();
 
-		return $this->userValidator->isSuperAdmin($this->userID);
+		return $this->userValidator->isSuperAdmin($this->userID, $this->userCollection);
 	}
 
 	private function getSessionData(): void

@@ -25,7 +25,10 @@ use TotalCMS\Domain\Search\Service\SearchServiceInterface;
  * per-collection (TextSearchProvider does not support cross-collection queries)
  * so the safety filter is applied inside the provider before ObjectSearcher
  * runs — drafts can never leak to public callers even when crossing collection
- * boundaries.
+ * boundaries. A caller-side post-filter (PersonaContext::canReadDrafts())
+ * additionally hides drafts an AUTHENTICATED caller's access groups don't
+ * grant `read` on — TextSearchProvider's own pre-filter only ever excludes
+ * drafts for the PUBLIC persona.
  *
  * Each result carries a `collection` field so the agent can chain into
  * `get_object` for the full record. The collision risk (a collection with a
@@ -35,6 +38,21 @@ use TotalCMS\Domain\Search\Service\SearchServiceInterface;
  *
  * **Not** a full-content search. Iterates collection indexes only — fields
  * not in `list_collections`'s `filterable_fields` aren't searched here.
+ *
+ * **Group-gated, filter not deny (Task 10b).** This tool has no single
+ * collection argument — it fans out across every collection the caller can
+ * see — so unlike query_collection/get_object/search_collection it declares
+ * NO ToolRequirement (a null collectionArg would degrade the call-time guard
+ * to isSatisfiedForAny(), a blanket "has read on ANYTHING" check, which is
+ * the wrong question here and would either deny the whole call for a caller
+ * with narrow grants or admit collections outside those grants). Instead the
+ * existing per-collection `$visible` filter (which already applies
+ * McpSchemaResolver::isAccessibleTo() for the exposure layer) additionally
+ * requires PersonaContext::canReadCollection() — group grant, with the same
+ * public-collection carve-out query_collection gets. A collection the
+ * caller's groups don't grant read on is silently absent from the results,
+ * never a hard error — consistent with this tool's aggregate/best-effort
+ * shape (it already silently skips collections with zero hits).
  */
 readonly class SearchCollectionsTool
 {
@@ -121,22 +139,37 @@ readonly class SearchCollectionsTool
 
 		$visible = array_filter(
 			$this->collections->listAllCollections(),
-			fn (CollectionData $c): bool => $this->schemaResolver->isAccessibleTo($c, $persona->value),
+			fn (CollectionData $c): bool => $this->schemaResolver->isAccessibleTo($c, $persona->value)
+				&& $this->personaContext->canReadCollection($c->id, $c),
 		);
 
 		$cappedLimit = max(1, min(self::LIMIT_CAP, $limit));
 		$aggregate   = [];
 
 		foreach ($visible as $collection) {
+			// TextSearchProvider's pre-filter only excludes drafts for the
+			// PUBLIC persona; an AUTHENTICATED caller's per-collection
+			// authority still has to be checked — see
+			// PersonaContext::canReadDrafts(). Computed BEFORE the search call
+			// (not just as a post-filter below) so a caller without read
+			// authority never has drafts occupying slots in the pre-filter's
+			// limit window in the first place — otherwise drafts could crowd
+			// out published matches the caller SHOULD see, and the resulting
+			// under-filled/empty response would leak a weak "drafts outrank
+			// you here" signal. The post-filter stays as an authoritative
+			// backstop: an extension-registered SearchProvider may ignore
+			// `persona` entirely.
+			$canReadDrafts = $this->personaContext->canReadDrafts($collection->id);
+
 			// SearchService routes to TextSearchProvider which applies the
 			// persona-based safety filter PER COLLECTION before ObjectSearcher
 			// runs — same architectural guarantee as before. Drafts never make
-			// it into the results for public callers.
+			// it into the results for a caller without draft read authority.
 			$results = $this->searchService->search(new SearchQuery(
 				text: $query,
 				collection: $collection->id,
 				limit: $cappedLimit,
-				persona: $persona->value,
+				persona: $canReadDrafts ? $persona->value : 'public',
 				// Rank by term coverage (best partial match first) rather than
 				// the all-or-nothing AND filter, so descriptive multi-word
 				// queries from an agent return useful results instead of nothing.
@@ -155,6 +188,10 @@ readonly class SearchCollectionsTool
 					continue;
 				}
 				$item = $this->objectFetcher->fetchObject($collection->id, $result->id)->toArray();
+
+				if (!$canReadDrafts && ($item['draft'] ?? false) === true) {
+					continue;
+				}
 
 				foreach ($nonExposed as $field) {
 					unset($item[$field]);

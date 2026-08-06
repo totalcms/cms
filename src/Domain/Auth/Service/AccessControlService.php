@@ -7,6 +7,8 @@ namespace TotalCMS\Domain\Auth\Service;
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\Session\SessionKeys;
 
 /**
@@ -23,10 +25,16 @@ readonly class AccessControlService
 
 	/**
 	 * Check if user is a super admin.
+	 *
+	 * $collection is the auth collection the caller actually belongs to
+	 * (e.g. an OAuthUserRef's collection, which has no PHP session to fall
+	 * back on). When omitted, falls back to the current session's auth
+	 * collection so session-based callers in this class keep working
+	 * unchanged.
 	 */
-	public function isAdmin(string $userId): bool
+	public function isAdmin(string $userId, string $collection = ''): bool
 	{
-		return $this->userValidation->isSuperAdmin($userId);
+		return $this->userValidation->isSuperAdmin($userId, $collection !== '' ? $collection : $this->sessionCollection());
 	}
 
 	/**
@@ -35,7 +43,7 @@ readonly class AccessControlService
 	public function canAccessCollectionMeta(string $userId, string $collection, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -61,7 +69,7 @@ readonly class AccessControlService
 	public function canAccessCollection(string $userId, string $collection, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -88,7 +96,7 @@ readonly class AccessControlService
 	public function canAccessCollectionsMetaOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -127,7 +135,7 @@ readonly class AccessControlService
 	public function canAccessCollectionsOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -165,7 +173,7 @@ readonly class AccessControlService
 	public function canAccessSchema(string $userId, string $schema, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -192,7 +200,7 @@ readonly class AccessControlService
 	public function canAccessSchemasOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -243,7 +251,7 @@ readonly class AccessControlService
 	public function canAccessUtils(string $userId, string $util): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -274,7 +282,7 @@ readonly class AccessControlService
 	public function canAccessMailer(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -300,7 +308,7 @@ readonly class AccessControlService
 	public function canAccessPlayground(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -326,7 +334,7 @@ readonly class AccessControlService
 	public function canAccessDocs(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -352,7 +360,7 @@ readonly class AccessControlService
 	public function canAccessAnyUtils(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -378,7 +386,7 @@ readonly class AccessControlService
 	public function canAccessUtilsOperation(string $userId, string $operation): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -412,7 +420,8 @@ readonly class AccessControlService
 	}
 
 	/**
-	 * Get all AccessGroupData objects for the user.
+	 * Get all AccessGroupData objects for the user, resolving the auth
+	 * collection from the current session.
 	 *
 	 * @return array<AccessGroupData>
 	 */
@@ -420,8 +429,73 @@ readonly class AccessControlService
 	{
 		// Get the collection the user is authenticated from (stored in session)
 		// This ensures we fetch the user from the correct auth collection (e.g., 'staff', 'auth')
-		$collection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?: '';
+		return $this->getUserAccessGroupsIn($userId, $this->sessionCollection());
+	}
 
+	/**
+	 * The auth collection the current session's user is authenticated
+	 * against. '' when there is no session user (e.g. OAuth Bearer requests,
+	 * which resolve identity via {@see authorityFor()} instead).
+	 */
+	private function sessionCollection(): string
+	{
+		return (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
+	}
+
+	/**
+	 * Whether the OAuth-identified user still exists. Distinguishes a
+	 * deleted (or renamed) user from one that simply has no reachable
+	 * permissions — {@see authorityFor()} resolves both cases to an
+	 * equally "empty" authority, so callers that need to tell a genuinely
+	 * missing user apart from an existing-but-groupless one (e.g. the
+	 * OAuth Grants admin page, which shows a distinct "this grant is
+	 * inert" note for a deleted user) check this first.
+	 */
+	public function userExists(OAuthUserRef $ref): bool
+	{
+		if ($this->userValidation->isSuperAdmin($ref->userId, $ref->collection)) {
+			return true;
+		}
+
+		try {
+			$this->userValidation->validateUserById($ref->userId, $ref->collection);
+
+			return true;
+		} catch (\Throwable) {
+			return false;
+		}
+	}
+
+	/**
+	 * Resolve a session-free UserAuthority for an OAuth-identified user.
+	 * Super admins short-circuit to an unrestricted authority; any lookup
+	 * failure (unknown user, missing collection, etc.) resolves to
+	 * UserAuthority::denied() rather than throwing.
+	 */
+	public function authorityFor(OAuthUserRef $ref): UserAuthority
+	{
+		if ($this->userValidation->isSuperAdmin($ref->userId, $ref->collection)) {
+			return new UserAuthority(isAdmin: true, groups: []);
+		}
+
+		try {
+			$groups = $this->getUserAccessGroupsIn($ref->userId, $ref->collection);
+		} catch (\Throwable) {
+			return UserAuthority::denied();
+		}
+
+		return new UserAuthority(isAdmin: false, groups: $groups);
+	}
+
+	/**
+	 * Get all AccessGroupData objects for the user within an explicit auth
+	 * collection. Session-free — callers that already know the collection
+	 * (e.g. OAuth requests, which have no PHP session) use this directly.
+	 *
+	 * @return list<AccessGroupData>
+	 */
+	private function getUserAccessGroupsIn(string $userId, string $collection): array
+	{
 		// Fetch user data from their actual auth collection
 		$user = $this->userValidation->validateUserById($userId, $collection);
 		if ($user === []) {
@@ -459,20 +533,7 @@ readonly class AccessControlService
 	 */
 	private function groupCanAccessCollectionMeta(AccessGroupData $group, string $collection, string $operation): bool
 	{
-		$permissions = $group->permissions['collectionsMeta'] ?? [];
-
-		// Check if collection metadata access is allowed
-		$all     = $permissions['all'] ?? false;
-		$allowed = $permissions['allowed'] ?? [];
-
-		if (!$all && !in_array($collection, $allowed)) {
-			return false;
-		}
-
-		// Check if operation is allowed
-		$operations = $permissions['operations'] ?? [];
-
-		return in_array($operation, $operations);
+		return $group->allowsCollectionMeta($operation, $collection);
 	}
 
 	/**
@@ -480,20 +541,7 @@ readonly class AccessControlService
 	 */
 	private function groupCanAccessCollection(AccessGroupData $group, string $collection, string $operation): bool
 	{
-		$permissions = $group->permissions['collections'] ?? [];
-
-		// Check if collection access is allowed
-		$all     = $permissions['all'] ?? false;
-		$allowed = $permissions['allowed'] ?? [];
-
-		if (!$all && !in_array($collection, $allowed)) {
-			return false;
-		}
-
-		// Check if operation is allowed
-		$operations = $permissions['operations'] ?? [];
-
-		return in_array($operation, $operations);
+		return $group->allowsCollection($operation, $collection);
 	}
 
 	/**
@@ -501,20 +549,7 @@ readonly class AccessControlService
 	 */
 	private function groupCanAccessSchema(AccessGroupData $group, string $schema, string $operation): bool
 	{
-		$permissions = $group->permissions['schemas'] ?? [];
-
-		// Check if schema access is allowed
-		$all     = $permissions['all'] ?? false;
-		$allowed = $permissions['allowed'] ?? [];
-
-		if (!$all && !in_array($schema, $allowed)) {
-			return false;
-		}
-
-		// Check if operation is allowed
-		$operations = $permissions['operations'] ?? [];
-
-		return in_array($operation, $operations);
+		return $group->allowsSchema($operation, $schema);
 	}
 
 	/**
@@ -523,32 +558,7 @@ readonly class AccessControlService
 	 */
 	private function groupCanAccessUtils(AccessGroupData $group, string $util): bool
 	{
-		$permissions = $group->permissions['utils'] ?? [];
-
-		// Check if util access is allowed (all or specific util)
-		$all     = $permissions['all'] ?? false;
-		$allowed = $permissions['allowed'] ?? [];
-
-		// Map route paths to their access group permission keys.
-		// This allows multiple routes to share a single permission toggle
-		// and fixes mismatches between route paths and stored permission values.
-		$routeToPermission = [
-			'cache-manager'       => 'cache',
-			'cache-sizing'        => 'cache',
-			'image-cache'         => 'cache',
-			'license-manager'     => 'license',
-			'logs'                => 'log-analyzer',
-			'pretty-url-builder'  => 'pretty-url',
-			'import-alloy'        => 'import',
-			'import-rss'          => 'import',
-			'import-totalcms-one' => 'import',
-			'import-wordpress'    => 'import',
-		];
-
-		$permissionKey = $routeToPermission[$util] ?? $util;
-
-		// If they have access to this util (all or specific), grant access
-		return $all || in_array($permissionKey, $allowed);
+		return $group->allowsUtil($util);
 	}
 
 	/**
@@ -586,7 +596,7 @@ readonly class AccessControlService
 	public function canAccessDataViews(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -628,7 +638,7 @@ readonly class AccessControlService
 	public function canAccessBuilder(string $userId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 
@@ -671,7 +681,7 @@ readonly class AccessControlService
 	public function canAccessExtension(string $userId, string $extensionId): bool
 	{
 		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId)) {
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
 			return true;
 		}
 

@@ -28,7 +28,8 @@ For Total CMS specifically, MCP gives agents:
 - **Discovery** — `list_collections`, `describe_collection`, `list_views`, `describe_view` map the site's content shape and pre-computed views.
 - **Read** — `query_collection`, `search_collection`, `get_object`, `query_view`, `get_view` fetch content with the same filter/sort syntax as the REST API.
 - **Resources** — `tcms://{collection}/`, `tcms://{collection}/{id}`, and `tcms://view/{id}` URIs the agent can address by URI, subscribe to, and re-fetch across sessions.
-- **Write (admin)** — `create_schema`, `update_schema`, `delete_schema`, `create_collection`, `clear_cache`, `list_extensions`, `get_site_info` for operator-driven workflows from inside the agent.
+- **Content writes (group-gated)** — `create_object`, `update_object`, `patch_object` let an agent write content on behalf of whoever connected it — an OAuth caller can create/update objects in any collection their access groups grant `create`/`update` on, no admin API key required. See [The three-layer rule](#the-three-layer-rule-scope-group-exposure).
+- **Structural admin (admin-group or group-granted)** — `create_schema`, `update_schema`, `delete_schema`, `create_collection`, `clear_cache`, `list_extensions`, `get_site_info` for operator-driven workflows from inside the agent. Schema, collection, and cache tools are reachable by a non-admin caller whose groups grant the matching `schemas` / `collectionsMeta` / `utils` permission; `get_site_info` stays admin-only.
 
 ---
 
@@ -39,10 +40,29 @@ The same `/mcp` URL serves three personas; the tool surface scales per caller:
 | Persona | How they authenticate | What they see |
 |---|---|---|
 | **Developer / operator** (`admin`) | `X-API-Key: <admin-key>` header on every request | Every tool — including the admin write tools. Same surface as the admin UI. |
-| **Authenticated consumer** (`authenticated`) | `Authorization: Bearer <oauth-token>` header with at least one `mcp:*` scope | Tools marked `access: public` plus collections with `mcp.access: 'authenticated'` or `'public'`. Used by "Connect Claude" / "Connect Cursor" style flows where an end-user grants a third-party AI client scoped access to their content. See [OAuth Server](docs/apis/oauth) for setup. |
+| **Authenticated consumer** (`authenticated`) | `Authorization: Bearer <oauth-token>` header with at least one `mcp:*` scope | The **intersection** of what the token's scopes consent to and what the approving user's access groups grant — not every `mcp.access: 'authenticated'` collection. A blogger-group user's token can read/write the collections their groups say `blogger` can touch, plus anything marked `mcp.access: 'public'`; nothing else. Used by "Connect Claude" / "Connect Cursor" style flows where an end-user grants a third-party AI client scoped access to their content. See [The three-layer rule](#the-three-layer-rule-scope-group-exposure) and [OAuth Server](docs/apis/oauth) for setup. A token approved by an **admin-group** user and carrying the `cms:admin` scope elevates to the admin persona — see [Required scopes for MCP](#required-scopes-for-mcp). |
 | **Public AI agent** (`public`) | No credentials (anonymous) | Only tools marked `access: public` AND only collections with `mcp.access: 'public'`. Drafts are auto-hidden. |
 
 Public access is **default-deny**. Anonymous requests get a 401 unless the operator explicitly flips `mcp.publicAccess` on in settings AND marks at least one collection's `mcp.access` as `public` in the schema editor.
+
+### The three-layer rule (scope, group, exposure)
+
+Every authenticated (OAuth) call to a collection or object has to clear three independent gates — think of them as three separate locks that all have to be open:
+
+1. **Scope** — did the person who approved the connection consent to this class of action? Reading needs `cms:read`, writing needs `cms:write`, schema/collection/cache work needs `cms:admin`.
+2. **Group** — do that person's **access groups** actually grant this operation on this collection? The same groups you already manage under **Admin → Access Groups** for the dashboard.
+3. **Exposure** — is the collection turned on for MCP at all (`mcp.access: 'authenticated'` or `'public'`)? A collection left at the default `mcp.access: 'admin'` is invisible to every OAuth caller regardless of scope or group.
+
+All three have to pass. Concretely:
+
+- **A blogger** whose access group can create/update the `blog` collection, connecting with a `cms:write mcp:tools` token, can ask Claude to draft and save a blog post — `create_object`/`update_object` succeed on `blog`. The same token gets refused on `products` or `team`, because the blogger's groups don't grant anything there, even though the token's scope would otherwise allow a write.
+- **A viewer** whose access group only grants `read` never gets a working `create_object`/`update_object` call, no matter what scopes their token carries — group is the gate that matters once scope has cleared.
+- **A collection marked `mcp.access: 'public'`** stays readable to every authenticated caller even if their groups say nothing about it — authenticating never *subtracts* reach versus what an anonymous caller already gets. Public exposure alone is enough for reads; it never grants writes.
+- **Drafts are the one place group exposure isn't enough.** Seeing draft objects in a collection requires an actual access-group `read` grant on that collection — public `mcp.access` exposure by itself does **not** unlock drafts, even though it unlocks published content. An authenticated caller with no group grant on a public-exposed collection sees only its published items, same as an anonymous caller.
+
+This is launch semantics for the AUTHENTICATED tier, not a migration: MCP had not shipped to production when the group rule landed, so there's no prior behavior to preserve. A legacy OAuth token approved before this shipped (grants created by the earlier super-admin elevation feature, for example) is unaffected for admin-group users; a non-admin user's existing token loses reach it arguably should never have had — it now sees only what their groups actually grant.
+
+> **Public access with Claude requires disabling OAuth.** claude.ai and the Claude desktop app demand a login at connector setup whenever they can discover an OAuth server on your site — they never fall back to the anonymous tier, and your consent screen requires an operator login no site visitor has. If you want visitors to connect their Claude to your public collections, turn off **Admin → Settings → OAuth Server → Enable OAuth Server**. Access is then anonymous (public) or API key (admin) — see [Running public-only MCP](docs/apis/oauth#running-public-only-mcp). Clients that try anonymously first (ChatGPT connectors, Claude Code, MCP Inspector) reach the public tier either way.
 
 ---
 
@@ -79,6 +99,8 @@ API keys and OAuth both authenticate `/mcp` requests, but they serve different t
 
 **Use OAuth** when you ship a "connect to Claude" experience to end-users — your customers, your clients, team members who do not have T3 admin credentials. OAuth issues each person a scoped token through a consent screen; you can revoke individual connections without changing any shared secret; and every token action is logged to the OAuth activity log so you have a record.
 
+**OAuth also covers full site management** for users in the admin group: a connection they approve with the `cms:admin` scope is elevated to the admin persona — the complete tool surface, no API key to paste. In clients whose connector UI has no header field (claude.ai, the Claude desktop app), this is the only way to reach the admin tools, and it beats a shared API key on posture anyway: per-connection revocation, hourly token expiry, full audit trail.
+
 ### Prerequisites
 
 - **Pro edition** — OAuth is a Pro+ feature. Trials count.
@@ -96,8 +118,9 @@ A Bearer token must carry at least one `mcp:*` scope to do anything useful at `/
 | `mcp:resources` | Authorize `resources/read`, `resources/list`, `resources/templates/list`, and `resources/subscribe`. Without this scope, resource methods return 403. |
 | `mcp:search` | Currently inherits from `mcp:tools` — a token with `mcp:tools` can call `search_collection` and `search_collections`. The scope is reserved separately so it can be gated independently in a future release. |
 | `mcp:prompts` | Authorize `prompts/list` and `prompts/get`. Prompts are visible in `prompts/list` but the content is withheld until the token carries this scope. |
+| `cms:admin` | Issuable when the approving user is in the **admin group** OR their access groups grant at least one `schemas` / `collectionsMeta` / `utils` permission — otherwise the consent screen doesn't offer it and the issued token never carries it. Holding the scope only grants what those groups actually allow: a schema-editor's `cms:admin` token can create/update/delete the schemas their groups permit and nothing else. Full elevation to the admin persona (every tool, unrestricted) additionally requires **admin-group** membership — a non-admin schema editor keeps `cms:admin`'s REST/MCP reach but never elevates. |
 
-A typical "read-only AI browser" connection requests `cms:read mcp:tools mcp:resources`. A connection that also needs prompts adds `mcp:prompts`. Grant the minimum scopes for the use case.
+A typical "read-only AI browser" connection requests `cms:read mcp:tools mcp:resources`. A connection that also needs prompts adds `mcp:prompts`. An operator managing their own site from Claude requests `cms:admin mcp:tools mcp:resources`. A schema editor who is not in the admin group can also request `cms:admin` — their groups cap what the resulting token reaches. Grant the minimum scopes for the use case.
 
 ### Configuring a static client for Claude Desktop
 
@@ -177,30 +200,35 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 
 | Tool | Access | What it does |
 |---|---|---|
-| `query_collection` | public | Paginated query against a collection's index. REST-style `include` / `exclude` / `sort` syntax. Limit caps at 50. |
-| `search_collection` | public | Free-text search within a single collection. Drafts auto-hidden from anonymous callers. |
-| `search_collections` | public | Cross-collection full-text search. Each result carries its `collection` for chaining into `get_object`. |
-| `get_object` | public | Fetch one object by id. Drafts return "not found" to anonymous callers (doesn't leak existence). |
-| `query_view` | public | Paginated query against a data view's cached result. Same REST-style filter/sort vocabulary as `query_collection`. Limit caps at 50. |
-| `get_view` | public | Fetch a data view's full cached result, capped at 50 items. Larger views emit a hint pointing at `query_view`. |
-| `get_resource` | public | Resolve a `tcms://{collection}/{id}` URI to its underlying object. Sibling to the SDK's `resources/read` transport method — same data, different access path. |
+| `query_collection` | public\* | Paginated query against a collection's index. REST-style `include` / `exclude` / `sort` syntax. Limit caps at 50. |
+| `search_collection` | public\* | Free-text search within a single collection. Drafts auto-hidden from callers without a group read grant. |
+| `search_collections` | public\* | Cross-collection full-text search. Silently filters out collections the caller can't read; each result carries its `collection` for chaining into `get_object`. |
+| `get_object` | public\* | Fetch one object by id. Drafts return "not found" to callers without a group read grant (doesn't leak existence). |
+| `query_view` | public† | Paginated query against a data view's cached result. Same REST-style filter/sort vocabulary as `query_collection`. Limit caps at 50. |
+| `get_view` | public† | Fetch a data view's full cached result, capped at 50 items. Larger views emit a hint pointing at `query_view`. |
+| `get_resource` | public\* | Resolve a `tcms://{collection}/{id}` URI to its underlying object. Sibling to the SDK's `resources/read` transport method — same data, different access path. |
+
+\* For an AUTHENTICATED (OAuth) caller, reachable collections are the intersection of scope, access group, and `mcp.access` exposure described in [The three-layer rule](#the-three-layer-rule-scope-group-exposure) — this is narrower than every `mcp.access: 'authenticated'` collection. Anonymous callers are unaffected: `access: public` still means "readable by everyone" for `mcp.access: 'public'` collections.
+† `query_view` / `get_view` do **not** follow access groups at all — see [Data views are the exception](#data-views-are-the-exception-to-the-group-rule) below.
 
 ### Admin
 
 | Tool | Access | What it does |
 |---|---|---|
-| `get_site_info` | admin | Site name, version, edition, PHP version, installed extensions. Smoke test for "am I connected to the right site?" |
+| `get_site_info` | admin | Site name, version, edition, PHP version, installed extensions. Smoke test for "am I connected to the right site?" No group-permission analogue — stays admin-only. |
 | `list_schemas` | admin | List every schema (id + description + category). |
 | `get_schema` | admin | Fetch one schema as JSON — the same shape an operator writes into a schema file. |
-| `create_schema` | admin | Save a new schema. Errors on reserved ids and id collisions. |
-| `update_schema` | admin | Replace an existing schema definition. Idempotent (same input → same final state). |
-| `delete_schema` | admin | **Destructive.** Refuses to delete reserved schemas, inherited schemas, or schemas still used by a collection. |
-| `create_collection` | admin | Create a new collection bound to a schema. Errors on duplicate id. |
-| `create_object` | admin | Create a content object in a collection. Runs the same `ObjectSaver` path as the admin form — schema validation, slug generation, events. See *Binary fields* below. |
-| `update_object` | admin | Replace a content object by id. Idempotent. Full replace, not a partial merge — send the whole object. See *Binary fields* below. |
-| `patch_object` | admin | Merge a subset of fields into an existing object — omitted fields keep their current values, so no get/round-trip is needed. Containers (card/deck/list) replace whole. The safer default for targeted agent edits. See *Binary fields* below. |
+| `create_schema` | admin‡ | Save a new schema. Errors on reserved ids and id collisions. |
+| `update_schema` | admin‡ | Replace an existing schema definition. Idempotent (same input → same final state). |
+| `delete_schema` | admin‡ | **Destructive.** Refuses to delete reserved schemas, inherited schemas, or schemas still used by a collection. |
+| `create_collection` | admin‡ | Create a new collection bound to a schema. Errors on duplicate id. |
+| `create_object` | admin‡ | Create a content object in a collection. Runs the same `ObjectSaver` path as the admin form — schema validation, slug generation, events. See *Binary fields* below. |
+| `update_object` | admin‡ | Replace a content object by id. Idempotent. Full replace, not a partial merge — send the whole object. See *Binary fields* below. |
+| `patch_object` | admin‡ | Merge a subset of fields into an existing object — omitted fields keep their current values, so no get/round-trip is needed. Containers (card/deck/list) replace whole. The safer default for targeted agent edits. See *Binary fields* below. |
 | `list_extensions` | admin | Every installed extension with id, name, enabled flag, capabilities. |
-| `clear_cache` | admin | **Destructive.** Flush every available cache backend. Returns per-backend status. |
+| `clear_cache` | admin‡ | **Destructive.** Flush every available cache backend. Returns per-backend status. |
+
+‡ Not admin-only in practice: each of these carries a group requirement that **extends** the base admin gate — an AUTHENTICATED caller whose access groups grant the matching operation (`objects` create/update for the object-write tools, `schemas` for the schema tools, `collectionsMeta` for `create_collection`, the `cache` util for `clear_cache`) sees and can call the tool too, scoped to the collections/schemas their groups actually cover. The call-time guard re-checks the specific target on every call — `tools/list` visibility is a convenience, not the enforcement. `list_schemas`, `get_schema`, and `list_extensions` stay plain admin-only (no requirement declared).
 
 #### Binary fields on the object write tools
 
@@ -312,17 +340,23 @@ Total CMS exposes three URI shapes:
 
 Agents address these via three SDK transport methods:
 
-- **`resources/list`** — flat list of concrete resources (collection summaries + per-view resources). Persona-filtered.
-- **`resources/templates/list`** — list of URI templates (`tcms://{collection}/{id}`, `tcms://view/{id}`). Agents use templates to construct concrete URIs from known ids.
+- **`resources/list`** — flat list of concrete resources (collection summaries + per-view resources). Persona-filtered — for AUTHENTICATED callers, collection resources are filtered by the same group + exposure layers as the tools (see below), except layer 1 (scope): resource methods are gated by the `mcp:resources` scope, never `cms:read`.
+- **`resources/templates/list`** — list of URI templates (`tcms://{collection}/{id}`, `tcms://view/{id}`). Agents use templates to construct concrete URIs from known ids; persona-filtered the same way as `resources/list`.
 - **`resources/read`** — fetch the content at a URI. Returns the same data the equivalent tool would (`get_object` / `get_view`); `tcms://{collection}/` returns recent-item summaries.
 
 The `get_resource` tool is an in-tool-flow alias for `resources/read` — handy when a URI lives in another tool's output (a recommendation, a search result) and the agent wants to dereference it inline.
 
 ### Resource enumeration is sparse on purpose
 
-A site with 50k blog posts does NOT register 50k resource entries. `resources/list` returns one entry per collection (`tcms://blog/`); the template (`tcms://blog/{id}`) tells agents "this URI shape exists, plug in any blog post id." Concrete per-object URIs are dereferenced on demand via `resources/read`, which delegates to the same persona-aware code path as `get_object`.
+A site with 50k blog posts does NOT register 50k resource entries. `resources/list` returns one entry per collection (`tcms://blog/`); the template (`tcms://blog/{id}`) tells agents "this URI shape exists, plug in any blog post id." Concrete per-object URIs are dereferenced on demand via `resources/read`, which delegates to the same persona-aware code path as `get_object` — `tcms://{collection}/` and `tcms://{collection}/{id}` both follow the [three-layer rule](#the-three-layer-rule-scope-group-exposure): readable when `mcp.access` is `'public'`, or when the caller's groups grant `read` on that collection.
 
 Data views are different — each view IS independently named, so each gets its own concrete `tcms://view/{id}` entry in `resources/list`. The shared template still appears in `resources/templates/list` for admin agents.
+
+### Data views are the exception to the group rule
+
+`tcms://view/{id}` — and the `get_view` / `query_view` tools behind it — check only the view's own `mcp.access` field (`public` / `authenticated` / `admin`, set on the dataviews editor's MCP card), the same three-level persona check every tool used before the group rule shipped. They do **not** consult access groups at all, even though the view's underlying Twig definition may read from a collection the caller's groups can't touch directly.
+
+This matters operationally: an `authenticated`-exposed view built over a group-denied collection is a legitimate, working read path around the group rule — not a bug, but a gap operators need to know about. If a view surfaces data from a collection you don't want a given caller reading, don't mark that view `mcp.access: 'authenticated'` (or `'public'`) — group-gating views is out of scope for this release; the view's own `access` field is the only lever.
 
 ---
 
@@ -529,7 +563,7 @@ Before submitting your site to Anthropic's Connector Directory, walk through:
 ## Security considerations
 
 - **Anonymous access is default-deny.** `mcp.publicAccess: false` and `mcp.access: 'admin'` on every reserved schema mean a fresh install never leaks content until the operator opts a collection in.
-- **Drafts are server-filtered.** Public callers can never see `draft:true` items regardless of caller intent — `query_collection`, `search_collection`, and `get_object` enforce this server-side.
+- **Drafts are server-filtered.** Public/anonymous callers can never see `draft:true` items regardless of caller intent — `query_collection`, `search_collection`, and `get_object` enforce this server-side. AUTHENTICATED (OAuth) callers see drafts only in collections where their access groups grant `read` — public `mcp.access` exposure by itself does not unlock drafts, even though it unlocks published content. `get_view` / `query_view` are the one exception: they follow the view's own `mcp.access` field, not group grants — see [Data views are the exception](#data-views-are-the-exception-to-the-group-rule).
 - **Public registration carries automatic login.** Forms that use the public registration endpoint auto-log the new user in; gate them with CAPTCHA / rate limit / email verification when the access group new users land in reaches sensitive content. (Unrelated to MCP directly, but worth flagging — the same operator who exposes a collection to MCP might also be running public registration.)
 - **API keys are scoped.** A key scoped only to `/collections/blog` does NOT unlock MCP; the operator must explicitly include `/mcp` (or `*`) in the scope.
 - **No prompt-injection mitigation at the tool layer.** Content stored in `styledtext` fields is returned to the agent verbatim (after format conversion). Operators with untrusted user-generated content should sanitize at write time, not rely on MCP-side filtering.

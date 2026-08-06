@@ -4,6 +4,13 @@
 	"description" : "Configure the OAuth 2.1 authorization server. Used by AI clients (Claude, Cursor) via dynamic registration and by third-party integrations (ActivePieces, Zapier) via admin-created static clients. Run <code>tcms oauth:setup</code> once to generate the RSA signing key pair before enabling.",
 	"type"        : "object",
 	"properties"  : {
+		"enabled": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Enable OAuth Server",
+			"help"    : "Master switch for the OAuth 2.1 authorization server. When off, the OAuth discovery documents and endpoints return 404, so MCP clients that see a discoverable OAuth server (Claude, Claude Desktop) connect anonymously to the public tier instead of demanding a login. Turn off to run a public-only MCP site — access is then anonymous (public collections) or API key (admin). Existing access tokens expire naturally (default 1 hour) and cannot be refreshed.",
+			"default" : true
+		},
 		"dynamicRegistration": {
 			"type"    : "boolean",
 			"field"   : "toggle",

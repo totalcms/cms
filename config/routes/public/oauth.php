@@ -14,28 +14,40 @@ use TotalCMS\Action\OAuth\OAuthTokenAction;
 use TotalCMS\Middleware\License\OAuthEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
+use TotalCMS\Middleware\Security\OAuthEnabledMiddleware;
 use TotalCMS\Middleware\Security\OAuthTokenRateLimitMiddleware;
 
 return function (RouteCollectorProxyInterface $app): void {
 	// OAuth 2.1 authorization server. Phase 4 ships authorization-code +
 	// refresh-token grants; PKCE required on every flow. /oauth/revoke
 	// and /oauth/register land in Chunk B.
+	//
+	// EVERY route below — well-knowns included — carries OAuthEnabledMiddleware
+	// as its outermost wrapper: oauth.enabled=false must kill discovery AND
+	// issuance together (hidden metadata with a live /oauth/token would let
+	// existing refresh tokens keep minting access tokens forever). Sites turn
+	// OAuth off to run public-only MCP — Claude's consumer apps demand login
+	// whenever OAuth is discoverable, and their consent screen needs an
+	// operator account no site visitor has.
 
 	// RFC 8414 — discovery metadata. Clients (Claude, Cursor, ActivePieces)
 	// hit this first to find endpoints + supported scopes + grant types.
 	$app->get('/.well-known/oauth-authorization-server', OAuthDiscoveryAction::class)
+		->add(OAuthEnabledMiddleware::class)
 		->setName('oauth.discovery');
 
 	// RFC 7517 — JWK Set publishing the access-token signing public key.
 	// Resource servers verifying JWTs fetch this to get the RSA public key
 	// for signature validation.
 	$app->get('/.well-known/jwks.json', OAuthJwksAction::class)
+		->add(OAuthEnabledMiddleware::class)
 		->setName('oauth.jwks');
 
 	// RFC 9728 — protected resource metadata. The MCP endpoint's 401
 	// WWW-Authenticate header points clients here (resource_metadata=...) so
 	// they can discover the authorization server protecting the MCP resource.
 	$app->get('/.well-known/oauth-protected-resource', OAuthProtectedResourceAction::class)
+		->add(OAuthEnabledMiddleware::class)
 		->setName('oauth.protected-resource');
 
 	// Authorization endpoint. GET renders the consent screen for a logged-in
@@ -62,11 +74,13 @@ return function (RouteCollectorProxyInterface $app): void {
 	$app->get('/oauth/authorize', OAuthAuthorizeAction::class)
 		->add(NoCacheMiddleware::class)
 		->add(OAuthEditionMiddleware::class)
+		->add(OAuthEnabledMiddleware::class)
 		->setName('oauth.authorize');
 	$app->post('/oauth/authorize', OAuthApproveAction::class)
 		->add(CSRFProtectionMiddleware::class)
 		->add(NoCacheMiddleware::class)
 		->add(OAuthEditionMiddleware::class)
+		->add(OAuthEnabledMiddleware::class)
 		->setName('oauth.approve');
 
 	// Token endpoint. Exchanges authorization codes (with PKCE verifier)
@@ -78,6 +92,7 @@ return function (RouteCollectorProxyInterface $app): void {
 		->add(OAuthTokenRateLimitMiddleware::class)
 		->add(NoCacheMiddleware::class)
 		->add(OAuthEditionMiddleware::class)
+		->add(OAuthEnabledMiddleware::class)
 		->setName('oauth.token');
 
 	// RFC 7591 — dynamic client registration. Lets MCP clients (Claude,
@@ -90,6 +105,7 @@ return function (RouteCollectorProxyInterface $app): void {
 		->add(OAuthTokenRateLimitMiddleware::class)
 		->add(NoCacheMiddleware::class)
 		->add(OAuthEditionMiddleware::class)
+		->add(OAuthEnabledMiddleware::class)
 		->setName('oauth.register');
 
 	// RFC 7009 — token revocation. Clients can call this to revoke their
@@ -99,5 +115,6 @@ return function (RouteCollectorProxyInterface $app): void {
 	$app->post('/oauth/revoke', OAuthRevokeAction::class)
 		->add(NoCacheMiddleware::class)
 		->add(OAuthEditionMiddleware::class)
+		->add(OAuthEnabledMiddleware::class)
 		->setName('oauth.revoke');
 };

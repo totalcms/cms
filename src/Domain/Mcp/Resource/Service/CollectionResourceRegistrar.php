@@ -73,8 +73,20 @@ readonly class CollectionResourceRegistrar
 			mimeType: 'application/json',
 			access: $access,
 			handler: static fn (): array => $collectionResource->read($collectionId),
+			collectionId: $collectionId,
 		));
 
+		// Task 10b: NOW collectionId-gated, matching the collection-level
+		// resource above. Task 10 deliberately left this ungated because
+		// GetObjectTool had no per-collection group-read requirement at the
+		// time (only draft visibility was authority-aware) — gating the
+		// template's VISIBILITY then would have been stricter than what
+		// GetObjectTool itself enforced at call time. Task 10b closes that
+		// gap: GetObjectTool::handler() now enforces PersonaContext::
+		// canReadCollection() inline (see its docblock), so this template's
+		// visibility can finally match its handler without becoming
+		// artificially stricter — resources/templates/list now agrees with
+		// what resources/read on this template's URIs will actually allow.
 		$registry->registerTemplate(new McpResourceTemplateDefinition(
 			uriTemplate: \sprintf('tcms://%s/{id}', $collectionId),
 			name: $sdkName . '-item',
@@ -82,6 +94,7 @@ readonly class CollectionResourceRegistrar
 			mimeType: 'application/json',
 			access: $access,
 			handler: static fn (string $id): array => $objectResource->read($collectionId, $id),
+			collectionId: $collectionId,
 		));
 	}
 

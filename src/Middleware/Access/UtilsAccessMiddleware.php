@@ -6,6 +6,7 @@ namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 
 /**
  * Utils Access Middleware.
@@ -30,6 +31,19 @@ readonly class UtilsAccessMiddleware extends BaseAccessMiddleware
 		}
 
 		$page = $route->getArgument('page');
+
+		// OAuth Bearer callers: no PHP session to derive groups from — use the
+		// UserAuthority resolved from the token by BaseAccessMiddleware. Added
+		// as part of the Task 8 fix round (cache access review) — this class
+		// previously had no Bearer branch at all, meaning a Bearer request
+		// would fall through to the session-coupled accessControl calls below
+		// and read from an absent session.
+		$authority = $request->getAttribute('accessAuthority');
+		if ($authority instanceof UserAuthority) {
+			return $page
+				? $authority->canUtil($page)
+				: $authority->canAnyUtil();
+		}
 
 		// Check access permissions
 		if ($page) {
