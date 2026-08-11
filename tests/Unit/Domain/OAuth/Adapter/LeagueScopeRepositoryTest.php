@@ -50,10 +50,34 @@ final class LeagueScopeRepositoryTest extends TestCase
 		$this->assertSame('cms:read', $entity->getIdentifier());
 	}
 
-	public function testGetScopeEntityByIdentifierReturnsNullForUnknownScope(): void
+	/**
+	 * Unknown identifiers return an entity instead of null: league throws
+	 * invalid_scope on null (AbstractGrant::validateScopes), which hard-fails
+	 * the whole authorize request when an MCP client sends a label like
+	 * `claudeai`. Tolerance here; filtering happens in the authorize action's
+	 * normalization and in finalizeScopes()' allowed-set intersection.
+	 */
+	public function testGetScopeEntityByIdentifierIsTolerantOfUnknownScope(): void
 	{
 		$entity = $this->adapter->getScopeEntityByIdentifier('not-a-scope');
-		$this->assertNull($entity);
+		$this->assertNotNull($entity);
+		$this->assertSame('not-a-scope', $entity->getIdentifier());
+	}
+
+	public function testFinalizeScopesDropsUnregisteredScopeEntities(): void
+	{
+		// Client allows cms:read; the request carries an unknown label too.
+		$client = $this->makeClient('c-tolerant', ['cms:read']);
+		$this->clientRepo->save($client);
+
+		$result = $this->adapter->finalizeScopes(
+			[new LeagueScopeEntity('claudeai'), new LeagueScopeEntity('cms:read')],
+			'authorization_code',
+			new LeagueClientEntity($client),
+		);
+
+		$ids = array_map(static fn ($s) => $s->getIdentifier(), $result);
+		$this->assertSame(['cms:read'], $ids);
 	}
 
 	public function testFinalizeScopesReturnsIntersectionOfRequestedAndAllowed(): void

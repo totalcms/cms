@@ -110,6 +110,19 @@
 				color: oklch(var(--totalform-purewhite));
 			}
 			.mcp-conn .mcp-auth { font-size: 0.9rem; }
+			.mcp-conn-results { display: grid; gap: 0.6rem; margin-top: 0.6rem; }
+			.mcp-conn-results .mcp-check {
+				display: grid;
+				gap: 0.3rem;
+				padding: 0.6rem 0.75rem;
+				background: oklch(var(--totalform-nearwhite));
+				border: 1px solid oklch(var(--totalform-border-color));
+				border-radius: var(--totalform-radius);
+			}
+			.mcp-conn-results .mcp-check p { margin: 0; font-size: 0.9rem; }
+			.mcp-conn-results .mcp-check-fix { color: oklch(var(--totalform-darkgray)); }
+			.htmx-indicator { opacity: 0; transition: opacity 200ms ease-in; }
+			.htmx-request.htmx-indicator, .htmx-request .htmx-indicator { opacity: 1; }
 		</style>
 		<div class="cms-info mcp-conn">
 			<div class="mcp-badges">
@@ -144,6 +157,15 @@
 			</div>
 
 			<p class="mcp-auth"><strong>Auth header:</strong> <code>{{ mcpConnection.apiKeyHeader }}</code>{% if not mcpConnection.publicAccess %} &mdash; required (this server is not public){% endif %}</p>
+
+			<div class="mcp-field">
+				<button type="button" class="dash-button small"
+					hx-post="{{ cms.dashboard }}/settings/mcp/connection-test"
+					hx-target="#mcp-connection-results"
+					hx-indicator="#mcp-test-spinner">Test connection</button>
+				<span id="mcp-test-spinner" class="htmx-indicator">Running probes&hellip;</span>
+				<div id="mcp-connection-results"></div>
+			</div>
 
 			{% if not mcpConnection.enabled %}
 			<p>The MCP server is currently <strong>disabled</strong>. Enable it below to accept connections.</p>

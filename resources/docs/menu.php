@@ -219,6 +219,7 @@ return [
 			['title' => 'Saved-Query Tools', 'path' => 'mcp/saved-query-tools'],
 			['title' => 'Prompts',           'path' => 'mcp/prompts'],
 			['title' => 'Extending MCP',     'path' => 'mcp/extensions'],
+			['title' => 'Troubleshooting',   'path' => 'mcp/troubleshooting'],
 		],
 	],
 	[

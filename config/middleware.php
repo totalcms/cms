@@ -23,11 +23,13 @@ use TotalCMS\Middleware\PostMaxSizeMiddleware;
 use TotalCMS\Middleware\Response\NoCacheErrorMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Middleware\Response\RobotsTagMiddleware;
+use TotalCMS\Middleware\Security\AuthorizationHeaderMiddleware;
 use TotalCMS\Middleware\SetupCheckMiddleware;
 use TotalCMS\TotalCMS;
 
 return function (App $app): void {
 	$app->addBodyParsingMiddleware();
+	$app->add(AuthorizationHeaderMiddleware::class);
 	$app->add(DevModeMiddleware::class);
 	$app->add(BundleMiddleware::class);
 	$app->add(MaintenanceModeMiddleware::class);

@@ -427,4 +427,41 @@ describe('OAuthAuthorizationCodeFlow', function (): void {
 		expect($payload)->toHaveKey('keys');
 		expect($payload['keys'])->toBeArray();
 	});
+
+	// claude.ai sends `scope=claudeai` — a label T3 doesn't define. The
+	// authorize request must not hard-fail with invalid_scope; unknown labels
+	// are dropped and, when nothing known remains, the oauth.defaultScope
+	// baseline is substituted so the consent screen shows real permissions.
+	it('substitutes the default baseline when only unknown scopes are requested', function (): void {
+		setupOAuthKeys($this->app);
+
+		$clientId    = 'test-client-' . uniqid('', true);
+		$redirectUri = 'https://app.test/callback';
+		createTestClient($this->app, $clientId, 'secret-value', [$redirectUri], ['cms:read', 'cms:write', 'mcp:tools', 'mcp:resources', 'mcp:prompts']);
+
+		seedSessionUser($this->app, 'admin@example.test');
+
+		$codeVerifier  = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+		$codeChallenge = rtrim(strtr(base64_encode(hash('sha256', $codeVerifier, true)), '+/', '-_'), '=');
+
+		$authorizeUrl = '/oauth/authorize?' . http_build_query([
+			'response_type'         => 'code',
+			'client_id'             => $clientId,
+			'redirect_uri'          => $redirectUri,
+			'scope'                 => 'claudeai',
+			'state'                 => 'state-claudeai',
+			'code_challenge'        => $codeChallenge,
+			'code_challenge_method' => 'S256',
+		]);
+
+		$factory  = new Psr17Factory();
+		$response = $this->app->handle($factory->createServerRequest('GET', $authorizeUrl));
+
+		// Consent screen renders (not league's invalid_scope error page) and
+		// shows the baseline read scope's description.
+		expect($response->getStatusCode())->toBe(200);
+		$body = (string)$response->getBody();
+		expect($body)->toContain('cms:read');
+		expect($body)->not->toContain('claudeai');
+	});
 });

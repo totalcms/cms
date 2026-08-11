@@ -464,6 +464,9 @@ $settings['oauth'] = [
 	'refreshTokenTtl'     => 'P30D',   // 30 days
 	'authCodeTtl'         => 'PT10M',  // 10 minutes
 	'dynamicRegistration' => false,    // RFC 7591 self-registration — off by default (unauthenticated endpoint); set true to let MCP clients self-register
+	// Scopes granted when a client requests none. Without this, scope-less tokens
+	// authenticate but fail every MCP call with insufficient_scope. '' disables.
+	'defaultScope'        => 'cms:read mcp:tools mcp:resources mcp:prompts',
 ];
 
 // https://www.php.net/manual/en/timezones.php

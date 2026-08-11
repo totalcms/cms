@@ -92,25 +92,52 @@ final class OAuthDynamicRegistrarTest extends TestCase
 		]);
 	}
 
-	/**
-	 * Test 4: Unknown scope throws InvalidArgumentException.
-	 */
-	public function testUnknownScopeThrows(): void
+	/** Space-joined identifiers of every scope in the registry. */
+	private function fullRegistryScopeString(): string
 	{
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessageMatches('/cms:bogus/');
-
-		$this->registrar->register([
-			'redirect_uris' => ['https://app.test/cb'],
-			'client_name'   => 'Bad Scope Client',
-			'scope'         => 'cms:bogus',
-		]);
+		return implode(' ', array_map(
+			static fn (\TotalCMS\Domain\OAuth\Data\OAuthScopeData $s): string => $s->identifier,
+			$this->scopes->all(),
+		));
 	}
 
 	/**
-	 * Test 5: Empty scope is allowed — should NOT throw; returns with empty scope.
+	 * Test 4: Unknown scope labels are filtered, not rejected (RFC 7591 §2
+	 * lets the server replace requested metadata; claude.ai registers with
+	 * `scope=claudeai`). An unknown-only request falls back to the full
+	 * registry as the client's allowed set.
 	 */
-	public function testEmptyScopeIsAllowed(): void
+	public function testUnknownScopeIsFilteredNotRejected(): void
+	{
+		$result = $this->registrar->register([
+			'redirect_uris' => ['https://app.test/cb'],
+			'client_name'   => 'Claude-style Client',
+			'scope'         => 'claudeai',
+		]);
+
+		$this->assertSame($this->fullRegistryScopeString(), $result['scope']);
+	}
+
+	/**
+	 * Test 4b: Mixed known + unknown keeps only the known scopes.
+	 */
+	public function testMixedScopesKeepOnlyKnown(): void
+	{
+		$result = $this->registrar->register([
+			'redirect_uris' => ['https://app.test/cb'],
+			'client_name'   => 'Mixed Scope Client',
+			'scope'         => 'claudeai cms:read mcp:tools',
+		]);
+
+		$this->assertSame('cms:read mcp:tools', $result['scope']);
+	}
+
+	/**
+	 * Test 5: Empty scope is allowed — defaults the allowed set to the full
+	 * registry (an empty allowed set would make finalizeScopes() strip every
+	 * token this client ever gets down to nothing).
+	 */
+	public function testEmptyScopeDefaultsToFullRegistry(): void
 	{
 		$result = $this->registrar->register([
 			'redirect_uris' => ['https://app.test/cb'],
@@ -118,20 +145,20 @@ final class OAuthDynamicRegistrarTest extends TestCase
 			'scope'         => '',
 		]);
 
-		$this->assertSame('', $result['scope']);
+		$this->assertSame($this->fullRegistryScopeString(), $result['scope']);
 	}
 
 	/**
-	 * Test 5b: Absent scope key is also allowed.
+	 * Test 5b: Absent scope key behaves like empty.
 	 */
-	public function testAbsentScopeIsAllowed(): void
+	public function testAbsentScopeDefaultsToFullRegistry(): void
 	{
 		$result = $this->registrar->register([
 			'redirect_uris' => ['https://app.test/cb'],
 			'client_name'   => 'No Scope Client',
 		]);
 
-		$this->assertSame('', $result['scope']);
+		$this->assertSame($this->fullRegistryScopeString(), $result['scope']);
 	}
 
 	/**

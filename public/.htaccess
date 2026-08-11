@@ -7,6 +7,12 @@
 # Redirect to front controller
 RewriteEngine On
 
+# Apache CGI/FastCGI strips the Authorization header before PHP sees it,
+# which silently turns Bearer-authenticated API/MCP requests anonymous.
+# Export it so PHP can restore it (AuthorizationHeaderMiddleware).
+RewriteCond %{HTTP:Authorization} .
+RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
 # Compute this directory's URL prefix dynamically (equivalent to RewriteBase,
 # but with no hardcoded path). Some hosts cannot reverse-map relative rewrite
 # substitutions in per-directory context (e.g. IONOS symlinked docroots), so

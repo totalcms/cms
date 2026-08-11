@@ -64,23 +64,25 @@ final class OAuthServerFactoryTest extends TestCase
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	private function makeConfig(): Config
+	/** @param array<string,mixed> $oauthOverrides */
+	private function makeConfig(array $oauthOverrides = []): Config
 	{
 		$config     = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$reflection = new \ReflectionClass($config);
 		$prop       = $reflection->getProperty('oauth');
-		$prop->setValue($config, [
+		$prop->setValue($config, array_merge([
 			'signingKeyPath'  => $this->privateKeyPath,
 			'publicKeyPath'   => $this->publicKeyPath,
 			'accessTokenTtl'  => 'PT1H',
 			'refreshTokenTtl' => 'P30D',
 			'authCodeTtl'     => 'PT10M',
-		]);
+		], $oauthOverrides));
 
 		return $config;
 	}
 
-	private function makeFactory(): OAuthServerFactory
+	/** @param array<string,mixed> $oauthOverrides */
+	private function makeFactory(array $oauthOverrides = []): OAuthServerFactory
 	{
 		$cache = $this->createMock(CacheManager::class);
 
@@ -112,13 +114,70 @@ final class OAuthServerFactoryTest extends TestCase
 			$leagueRefreshTokens,
 			$leagueAuthCodes,
 			$leagueScopes,
-			$this->makeConfig(),
+			$this->makeConfig($oauthOverrides),
 		);
+	}
+
+	/**
+	 * Reflects the enabled authorization_code grant out of the server and
+	 * returns its protected defaultScope value (AbstractGrant::$defaultScope).
+	 */
+	private function authCodeGrantDefaultScope(AuthorizationServer $server): string
+	{
+		$grantsProp = (new \ReflectionClass(AuthorizationServer::class))->getProperty('enabledGrantTypes');
+		/** @var array<string,object> $grants */
+		$grants = $grantsProp->getValue($server);
+		$this->assertArrayHasKey('authorization_code', $grants);
+
+		$grant      = $grants['authorization_code'];
+		$scopeProp  = (new \ReflectionClass($grant))->getParentClass()
+			? $this->findProperty($grant, 'defaultScope')
+			: null;
+		$this->assertNotNull($scopeProp);
+
+		return (string)$scopeProp->getValue($grant);
+	}
+
+	private function findProperty(object $object, string $name): ?\ReflectionProperty
+	{
+		$class = new \ReflectionClass($object);
+		while ($class instanceof \ReflectionClass) {
+			if ($class->hasProperty($name)) {
+				return $class->getProperty($name);
+			}
+			$class = $class->getParentClass() ?: null;
+		}
+
+		return null;
 	}
 
 	// -------------------------------------------------------------------------
 	// Tests
 	// -------------------------------------------------------------------------
+
+	public function testAuthCodeGrantGetsBaselineDefaultScopeWhenUnconfigured(): void
+	{
+		$server = $this->makeFactory()->buildAuthorizationServer();
+
+		$this->assertSame(
+			'cms:read mcp:tools mcp:resources mcp:prompts',
+			$this->authCodeGrantDefaultScope($server),
+		);
+	}
+
+	public function testAuthCodeGrantDefaultScopeIsConfigurable(): void
+	{
+		$server = $this->makeFactory(['defaultScope' => 'cms:read'])->buildAuthorizationServer();
+
+		$this->assertSame('cms:read', $this->authCodeGrantDefaultScope($server));
+	}
+
+	public function testEmptyDefaultScopeDisablesTheFallback(): void
+	{
+		$server = $this->makeFactory(['defaultScope' => ''])->buildAuthorizationServer();
+
+		$this->assertSame('', $this->authCodeGrantDefaultScope($server));
+	}
 
 	public function testBuildAuthorizationServerReturnsCorrectType(): void
 	{

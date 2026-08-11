@@ -16,6 +16,7 @@ use TotalCMS\Action\Admin\AdminFileLinksAction;
 use TotalCMS\Action\Admin\AdminImageworksAction;
 use TotalCMS\Action\Admin\AdminIndexAction;
 use TotalCMS\Action\Admin\AdminMailerAction;
+use TotalCMS\Action\Admin\AdminMcpConnectionTestAction;
 use TotalCMS\Action\Admin\AdminPlaygroundAction;
 use TotalCMS\Action\Admin\AdminSchemaAction;
 use TotalCMS\Action\Admin\AdminSettingsAction;
@@ -122,6 +123,10 @@ return function (App $app): void {
 		$group->post('/automations/{id:.+}/enable', AutomationReenableAction::class)->setName('admin-automations-enable')->add(AutomationsEditionMiddleware::class)->add(AdminOnlyMiddleware::class);
 
 		$group->get('/settings[/{section}]', AdminSettingsAction::class)->setName('admin-settings')->add(AdminOnlyMiddleware::class);
+		// Registered ABOVE the /settings/{section} route below: Slim matches
+		// static segments in registration order, so this static path must be
+		// registered first or it would be swallowed by the {section} placeholder.
+		$group->post('/settings/mcp/connection-test', AdminMcpConnectionTestAction::class)->setName('admin-settings-mcp-test')->add(AdminOnlyMiddleware::class);
 		$group->post('/settings/{section}', AdminSettingsSaveSectionAction::class)->setName('admin-settings-save-section')->add(AdminOnlyMiddleware::class);
 
 		$group->get('/imageworks', AdminImageworksAction::class)->setName('imageworks');

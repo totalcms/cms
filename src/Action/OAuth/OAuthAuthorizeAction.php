@@ -12,12 +12,14 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\OAuth\Adapter\LeagueScopeEntity;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\TwigRenderer;
+use TotalCMS\Support\Config;
 
 readonly class OAuthAuthorizeAction
 {
@@ -30,6 +32,7 @@ readonly class OAuthAuthorizeAction
 		private CSRFTokenManager $csrf,
 		private AccessControlService $accessControl,
 		private UserValidationService $userValidation,
+		private Config $config,
 	) {
 	}
 
@@ -37,6 +40,7 @@ readonly class OAuthAuthorizeAction
 	{
 		try {
 			$authRequest = $this->authServer->validateAuthorizationRequest($request);
+			$this->normalizeRequestedScopes($authRequest);
 		} catch (OAuthServerException $e) {
 			// Do NOT redirect on validation errors — the redirect_uri may be attacker-controlled.
 			return $this->twig->template(
@@ -109,6 +113,37 @@ readonly class OAuthAuthorizeAction
 	 * the user's object id, which can be as opaque as "3"; prefer their name,
 	 * then email, before falling back to the raw id.
 	 */
+	/**
+	 * Drop scope labels T3 doesn't define from the parsed request, and when
+	 * nothing known remains substitute the oauth.defaultScope baseline.
+	 *
+	 * MCP clients request labels from their own vocabulary (claude.ai sends
+	 * `scope=claudeai`). getScopeEntityByIdentifier() is tolerant so league
+	 * doesn't reject the request outright; this is where the unknowns are
+	 * actually removed — BEFORE the consent screen renders and BEFORE the
+	 * request is serialized for the approve handler, so the user consents to
+	 * exactly what the token will carry. Without the default substitution an
+	 * unknown-only request would yield a scope-less token that MCP rejects
+	 * with insufficient_scope on every call.
+	 */
+	private function normalizeRequestedScopes(\League\OAuth2\Server\RequestTypes\AuthorizationRequestInterface $authRequest): void
+	{
+		$known = array_values(array_filter(
+			$authRequest->getScopes(),
+			fn (\League\OAuth2\Server\Entities\ScopeEntityInterface $s): bool => $this->scopes->has($s->getIdentifier()),
+		));
+
+		if ($known === []) {
+			$default = (string)($this->config->oauth['defaultScope'] ?? 'cms:read mcp:tools mcp:resources mcp:prompts');
+			$known   = array_map(
+				static fn (string $id): LeagueScopeEntity => new LeagueScopeEntity($id),
+				array_values(array_filter(explode(' ', $default), $this->scopes->has(...))),
+			);
+		}
+
+		$authRequest->setScopes($known);
+	}
+
 	private function displayName(string $userId): string
 	{
 		$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?: '');
