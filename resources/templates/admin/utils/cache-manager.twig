@@ -52,7 +52,11 @@
 						{% elseif status == 'available' %}
 							<span class="warning">⚠️ {{ t('cache.available_not_enabled') }}</span>
 						{% else %}
-							<span class="error">❌ {{ t('label.not_installed') }}</span>
+							{# Absence is not an error: with another cache tier active
+							   (or none wanted), an uninstalled backend is simply not
+							   part of this server's setup. The recommendations block
+							   below still advises installing one when it matters. #}
+							<span class="dash-badge muted">{{ t('label.not_installed') }}</span>
 						{% endif %}
 					</td>
 					<td>

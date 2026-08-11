@@ -61,7 +61,8 @@ final class APCuIntegrationTest extends TestCase
 			$redisService,
 			$memcachedService,
 			$this->apcuService,
-			$devModeManager
+			$devModeManager,
+			$this->config
 		);
 	}
 
