@@ -154,7 +154,9 @@ test('probes root shape and dual authority on subpath installs', function (): vo
 
 test('persists results and reads them back via lastRun', function (): void {
 	$config = checkerConfig();
-	@mkdir($config->systemDir(), 0777, true);
+	if (!is_dir($config->systemDir())) {
+		mkdir($config->systemDir(), 0777, true);
+	}
 	$init = json_encode(['jsonrpc' => '2.0', 'id' => 1, 'result' => []]);
 	$http = fakeHttp([
 		'* https://example.com/.well-known/mcp.json'  => ['status' => 200, 'body' => '{"endpoint":"https://example.com/mcp"}'],
