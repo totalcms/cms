@@ -300,10 +300,19 @@ final class ExtensionContext
 	/**
 	 * Register an MCP resource — a concrete `tcms://...` or extension-scheme URI
 	 * (e.g. `acme://invoices/all`) that the agent can fetch via `resources/read`
-	 * or the `get_resource` tool. The handler is invoked with no arguments and
-	 * must return a SDK ResourceContent envelope:
+	 * or the `get_resource` tool. The handler is invoked with no arguments; its
+	 * return value goes through the SDK's ResourceResultFormatter. Return one of:
 	 *
-	 *   ['contents' => [['uri' => '...', 'mimeType' => '...', 'text' => '...']]]
+	 *   - a string                                → text content (declared mimeType)
+	 *   - ['text' => '...', 'mimeType' => '...']  → text content
+	 *   - ['blob' => $binary, 'mimeType' => ...]  → binary content
+	 *   - any other array                         → JSON-encoded; for JSON
+	 *     resources simply return the data array and keep the default
+	 *     'application/json' mimeType
+	 *
+	 * Do NOT return a `['contents' => [...]]` envelope — the formatter treats it
+	 * as plain data and JSON-encodes it wholesale, so clients receive your
+	 * payload double-wrapped as JSON-in-text instead of the declared mimeType.
 	 *
 	 * Collision policy: strict deny. An extension URI that collides with a core
 	 * resource OR another extension's resource is logged and skipped by
@@ -312,7 +321,7 @@ final class ExtensionContext
 	 *
 	 * @param string   $uri         Concrete URI
 	 * @param string   $description Description AI agents read
-	 * @param \Closure $handler     Invoked with no args; returns ResourceContent
+	 * @param \Closure $handler     Invoked with no args; return shapes documented above
 	 * @param string   $access      'admin', 'public', or 'authenticated' (default 'public')
 	 * @param string   $name        Slug-form identifier shown in resources/list — must match `[A-Za-z0-9_-]+`
 	 *                              per MCP SDK validation (no spaces). Defaults to the URI when empty.
@@ -346,11 +355,16 @@ final class ExtensionContext
 	 * objects into `resources/list` is impractical, but a single template tells
 	 * AI agents the URI shape exists.
 	 *
-	 * Same collision policy as registerMcpResource(): strict deny.
+	 * Same collision policy and handler return shapes as registerMcpResource():
+	 * strict deny; return a string / ['text' => ...] / data array — never a
+	 * ['contents' => [...]] envelope. Note the SDK binds template variables by
+	 * REFLECTING the handler's named parameters, and each `{var}` matches a
+	 * single path segment (`[^/]+`) — multi-segment values need one placeholder
+	 * per segment.
 	 *
 	 * @param string   $uriTemplate URI template with `{name}` placeholders
 	 * @param string   $description Description AI agents read
-	 * @param \Closure $handler     Invoked with named args matching template variables; returns ResourceContent
+	 * @param \Closure $handler     Invoked with named args matching template variables; return shapes as registerMcpResource()
 	 * @param string   $access      'admin', 'public', or 'authenticated' (default 'public')
 	 * @param string   $name        Slug-form identifier — must match `[A-Za-z0-9_-]+` per MCP SDK validation
 	 *                              (no spaces). Defaults to the template when empty.
