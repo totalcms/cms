@@ -5,7 +5,7 @@ description: "Connect AI coding agents to Total CMS documentation via the MCP se
 
 # Using Total CMS with AI
 
-Total CMS provides an MCP (Model Context Protocol) server that gives AI coding agents real-time access to the complete Total CMS documentation. Instead of relying on training data that may be outdated or incomplete, your AI agent can look up exact function signatures, filter syntax, field configuration options, and API endpoints on demand.
+Total CMS ships a built-in MCP (Model Context Protocol) server — and the official docs connector is just that server, running on [totalcms.co](https://totalcms.co) itself. Point your AI coding agent at it for real-time access to the complete Total CMS documentation. Instead of relying on training data that may be outdated or incomplete, your AI agent can look up exact function signatures, filter syntax, field configuration options, and API endpoints on demand.
 
 ## What is MCP?
 
@@ -23,7 +23,7 @@ Add to `~/.claude/mcp.json`:
 {
   "mcpServers": {
     "totalcms-docs": {
-      "url": "https://mcp.totalcms.co/"
+      "url": "https://totalcms.co/mcp"
     }
   }
 }
@@ -37,7 +37,7 @@ Add to your Cursor MCP settings (Settings > MCP Servers):
 {
   "mcpServers": {
     "totalcms-docs": {
-      "url": "https://mcp.totalcms.co/"
+      "url": "https://totalcms.co/mcp"
     }
   }
 }
@@ -51,7 +51,7 @@ Add to your VS Code settings (`.vscode/mcp.json` in your project, or user settin
 {
   "servers": {
     "totalcms-docs": {
-      "url": "https://mcp.totalcms.co/"
+      "url": "https://totalcms.co/mcp"
     }
   }
 }
@@ -65,7 +65,7 @@ Add to your Windsurf MCP configuration:
 {
   "mcpServers": {
     "totalcms-docs": {
-      "url": "https://mcp.totalcms.co/"
+      "url": "https://totalcms.co/mcp"
     }
   }
 }
@@ -75,7 +75,13 @@ No API key or authentication is required. The server is publicly accessible.
 
 ## Available Tools
 
-Once configured, your AI agent has access to these documentation lookup tools:
+Once configured, your AI agent has access to these documentation tools:
+
+| Tool | What it does |
+|---|---|
+| `docs_search(query, limit)` | Full-text search across all Total CMS documentation |
+| `docs_get(path)` | Full page markdown for a known documentation path |
+| `docs_lookup(kind, name)` | Reference lookup for Twig functions/filters, field types, API endpoints, schema config, CLI commands, extension API, and builder API |
 
 ### docs_search
 
@@ -86,55 +92,33 @@ docs_search("image watermark configuration")
 docs_search("how to filter collections by date")
 ```
 
-### docs_twig_function
+### docs_get
 
-Look up a specific Twig function by name. Returns the exact signature, parameters, return type, and usage examples.
-
-```
-docs_twig_function("cms.collection.objects")
-docs_twig_function("cms.render.image")
-docs_twig_function("selectOptions")
-```
-
-### docs_twig_filter
-
-Look up a Twig filter. Returns the signature, description, and examples.
+Fetch the full markdown for a documentation page by its path. Use it once `docs_search` has pointed you at a page and you need the complete content, not just an excerpt.
 
 ```
-docs_twig_filter("humanize")
-docs_twig_filter("truncateWords")
-docs_twig_filter("dateFormat")
+docs_get("site-builder/overview")
+docs_get("twig/functions")
 ```
 
-### docs_field_type
+### docs_lookup
 
-Look up field type configuration options and schema settings.
-
-```
-docs_field_type("image-gallery")
-docs_field_type("styled-text")
-docs_field_type("deck")
-```
-
-### docs_api_endpoint
-
-Look up a REST API endpoint. Returns the HTTP method, path, parameters, and response shape.
+Look up a specific reference entry by `kind`: Twig functions, Twig filters, field types, REST API endpoints, schema configuration keys, CLI commands, extension API, or builder API. Returns the exact signature, description, and usage examples. Omit `name` to list every entry of that kind.
 
 ```
-docs_api_endpoint("GET", "/collections")
-docs_api_endpoint("POST", "/collections/{collection}")
-docs_api_endpoint("GET", "/collections/{collection}/{id}")
+docs_lookup("twig_function", "cms.collection.objects")
+docs_lookup("twig_filter", "humanize")
+docs_lookup("field_type", "image-gallery")
+docs_lookup("api_endpoint", "GET /api/collections")
+docs_lookup("schema_config", "prettyUrl")
+docs_lookup("cli_command", "schema:list")
 ```
 
-### docs_schema_config
+Valid `kind` values: `twig_function`, `twig_filter`, `field_type`, `api_endpoint`, `schema_config`, `cli_command`, `extension_api`, `builder_api`.
 
-Look up schema and collection configuration options.
+### Resources
 
-```
-docs_schema_config("labelPlural")
-docs_schema_config("urlPattern")
-docs_schema_config("manualSort")
-```
+Resource-aware clients can also read documentation pages directly as MCP resources, addressed as `totalcms-docs://{group}/{page}` — for example `totalcms-docs://twig/functions`.
 
 ## How It Works
 
@@ -144,7 +128,8 @@ This complements the `llms.txt` file at `docs.totalcms.co/llms.txt`, which provi
 
 ## Tips for Best Results
 
-- **Be specific with function names.** `docs_twig_function("cms.collection.objects")` gives better results than searching for "objects".
+- **Be specific with function names.** `docs_lookup("twig_function", "cms.collection.objects")` gives better results than searching for "objects".
 - **Use search for broad questions.** `docs_search("pagination")` will find relevant pages across all documentation.
-- **Partial matches work.** If you search for `docs_field_type("image")`, it will suggest `image-gallery` as a match.
+- **Partial matches work.** If you look up `docs_lookup("field_type", "image")`, it will suggest `image-gallery` as a candidate match.
 - **Include the namespace.** Twig functions in the `cms.*` namespace should include the full path: `cms.collection.objects`, not just `objects`.
+- **List first, then look up.** Call `docs_lookup("cli_command")` with no `name` to see every command, then look up the one you need.

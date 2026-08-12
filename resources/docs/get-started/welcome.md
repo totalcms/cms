@@ -61,9 +61,9 @@ If you'd rather skip the tutorial and go straight to setup:
 
 ## Using AI coding assistants
 
-If you use Claude Code, Cursor, Windsurf, or GitHub Copilot, point them at the Total CMS MCP server at `https://mcp.totalcms.co/`. Your assistant can then look up exact Twig signatures, field configurations, REST endpoints, and CLI commands on demand — no more guessing at function names from stale training data.
+If you use Claude Code, Cursor, Windsurf, or GitHub Copilot, point them at the Total CMS docs MCP server at `https://totalcms.co/mcp` — our own docs site, dogfooding Total CMS's built-in MCP server. Your assistant can then look up exact Twig signatures, field configurations, REST endpoints, and CLI commands on demand — no more guessing at function names from stale training data.
 
-One JSON snippet in your editor's config gets it working across every Total CMS project. See [Using Total CMS with AI](docs/extensions/ai-integration) for the per-tool setup and the full list of MCP tools (`docs_search`, `docs_twig_function`, `docs_field_type`, and more).
+One JSON snippet in your editor's config gets it working across every Total CMS project. See [Using Total CMS with AI](docs/extensions/ai-integration) for the per-tool setup and the full list of MCP tools (`docs_search`, `docs_get`, `docs_lookup`, and more).
 
 ## Community & support
 
