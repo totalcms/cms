@@ -119,6 +119,35 @@ final class SchemaToolRegistrarTest extends TestCase
 		$this->assertSame('find_featured', $tools[0]->name);
 	}
 
+	/**
+	 * Directory requirement: every tool needs a title annotation. Saved-query
+	 * tools are dynamic, so the registrar derives a humanized title from the
+	 * tool name and marks them read-only (they are index queries by construction).
+	 */
+	public function testSavedQueryToolsCarryTitledReadOnlyAnnotations(): void
+	{
+		$collection = $this->makeCollection('blog', [
+			'access' => 'public',
+			'tools'  => [
+				[
+					'id'          => 'find_featured_posts',
+					'description' => 'Featured posts.',
+					'filters'     => ['featured' => ['value' => true]],
+				],
+			],
+		]);
+
+		$registry  = new ToolRegistry();
+		$registrar = new SchemaToolRegistrar($this->makeRepo([$collection]), $this->makeFactory(), new RecordingLogger());
+
+		$registrar->register($registry);
+
+		$tool = $registry->forPersona(McpPersona::PUBLIC_)[0];
+		$this->assertNotNull($tool->annotations);
+		$this->assertSame('Find Featured Posts', $tool->annotations->title);
+		$this->assertTrue($tool->annotations->readOnlyHint);
+	}
+
 	public function testSkipsCollisionWithCoreToolNameAndLogs(): void
 	{
 		$collection = $this->makeCollection('blog', [
