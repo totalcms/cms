@@ -295,8 +295,17 @@ describe('McpResources — resources/read', function (): void {
 		expect($first['mimeType'])->toBe('application/json');
 		expect($first)->toHaveKey('text');
 
-		// The text payload must be valid JSON.
+		// The text payload must be valid JSON — and must BE the payload.
 		$decoded = json_decode((string)$first['text'], true);
 		expect($decoded)->toBeArray();
+
+		// Regression: `toBeArray()` alone passed for years while this was
+		// double-wrapped, because a nested {contents: [...]} envelope is also an
+		// array. The handler must return flat content and let the SDK build the
+		// one and only ReadResourceResult; returning a pre-built envelope makes
+		// it the *text* of the SDK's own, burying the payload a level deeper
+		// than every client expects.
+		expect($decoded)->not->toHaveKey('contents');
+		expect($decoded)->toHaveKey('items');
 	});
 });

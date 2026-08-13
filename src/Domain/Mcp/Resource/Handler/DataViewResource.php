@@ -25,7 +25,7 @@ readonly class DataViewResource
 	}
 
 	/**
-	 * @return array<string,mixed> Resource-read shape: {contents: [{uri, mimeType, text}]}
+	 * @return array<string,mixed> Flat resource content: {text, mimeType} — the SDK wraps it
 	 */
 	public function read(string $id): array
 	{
@@ -38,14 +38,13 @@ readonly class DataViewResource
 			throw new \RuntimeException('Failed to encode view resource payload.');
 		}
 
+		// Flat {text, mimeType} — NOT a {contents: [...]} envelope. The SDK
+		// builds the ReadResourceResult itself; returning a pre-built one made
+		// it the *text* of the SDK's own envelope, burying the payload two
+		// levels deep. See ResourceResultFormatter::format().
 		return [
-			'contents' => [
-				[
-					'uri'      => \sprintf('tcms://view/%s', $id),
-					'mimeType' => 'application/json',
-					'text'     => $json,
-				],
-			],
+			'text'     => $json,
+			'mimeType' => 'application/json',
 		];
 	}
 }
