@@ -1,0 +1,18 @@
+{
+	"id"              : "totalcms/docs",
+	"name"            : "Total CMS Docs",
+	"description"     : "Serves the Total CMS documentation through this site's MCP server: docs_search, docs_get, and docs_lookup tools for AI agents.",
+	"version"         : "1.0.0",
+	"default_enabled" : true,
+	"requires"        : {
+		"totalcms" : ">=3.5.0-beta",
+		"php"      : ">=8.2"
+	},
+	"entrypoint"       : "Extension.php",
+	"settings_schema"  : "settings-schema.json",
+	"author"     : {
+		"name" : "Total CMS",
+		"url"  : "https://totalcms.co"
+	},
+	"license" : "proprietary"
+}

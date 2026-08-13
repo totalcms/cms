@@ -219,6 +219,17 @@ function stubArgsFor(array $inputSchema): stdClass
 
 		$propSchema = is_array($properties) ? ($properties[$name] ?? []) : [];
 		$type       = is_array($propSchema) ? ($propSchema['type'] ?? 'string') : 'string';
+		$enum       = is_array($propSchema) ? ($propSchema['enum'] ?? null) : null;
+
+		// Respect an `enum` constraint first — a generic type-appropriate
+		// sentinel (e.g. 'sample') isn't a valid happy-path stub when the
+		// schema restricts the value to a fixed set (docs_lookup's `kind`,
+		// for instance).
+		if (is_array($enum) && $enum !== []) {
+			$obj->{$name} = $enum[0];
+
+			continue;
+		}
 
 		$obj->{$name} = match ($type) {
 			'integer'        => 42,
