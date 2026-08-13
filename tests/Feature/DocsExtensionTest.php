@@ -132,15 +132,21 @@ function docsExtensionFindTool(array $tools, string $name): McpToolDefinition
 // Manifest sanity
 // ──────────────────────────────────────────────────────────────────────────────
 
-it('ships a bundled manifest with id totalcms/docs, default_enabled, and a settings schema', function (): void {
+it('ships a bundled manifest with id totalcms/docs, default_enabled, an icon and a settings schema', function (): void {
 	$manifestPath = dirname(__DIR__, 2) . '/resources/extensions/totalcms/docs/extension.json';
 	$data         = json_decode((string)file_get_contents($manifestPath), true);
 
 	expect($data)->toBeArray();
 	expect($data['id'])->toBe('totalcms/docs');
 	expect($data['default_enabled'])->toBeTrue();
-	expect($data['settings_schema'])->toBe('settings-schema.json');
+
+	// Filenames match the house convention used by the other bundled
+	// extensions (settings.json, icon.png) so the admin renders this one the
+	// same way — and both files must actually exist, not just be declared.
+	expect($data['settings_schema'])->toBe('settings.json');
 	expect(is_file(dirname($manifestPath) . '/' . $data['settings_schema']))->toBeTrue();
+	expect($data['icon'])->toBe('icon.png');
+	expect(is_file(dirname($manifestPath) . '/' . $data['icon']))->toBeTrue();
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
