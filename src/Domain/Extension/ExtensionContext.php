@@ -274,7 +274,12 @@ final class ExtensionContext
 	 *
 	 * @param string                   $name        Tool name (snake_case)
 	 * @param string                   $description Description AI agents read
-	 * @param string                   $access      'admin' or 'public'
+	 * @param string                   $access      'admin' (visible only to the ADMIN persona), 'public' (visible to
+	 *                                              everyone, including unauthenticated MCP callers), or 'authenticated'
+	 *                                              (visible to any OAuth-authenticated caller plus admin, but not
+	 *                                              unauthenticated/PUBLIC_ callers). An unrecognised value matches none
+	 *                                              of these and fails closed to admin-only visibility — see
+	 *                                              McpToolDefinition::isVisibleTo().
 	 * @param \Closure                 $handler     Invoked with named params from MCP call
 	 * @param array<string,mixed>|null $inputSchema JSON Schema for the handler's inputs
 	 * @param ToolAnnotations|null     $annotations Read/write/destructive hints — mandatory before Anthropic Directory submission

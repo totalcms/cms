@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Extension\Service;
 
+use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Extension\Data\ExtensionManifest;
+use TotalCMS\Domain\Extension\ExtensionContext;
+use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\McpExtensionRegistrar;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 
 final class McpExtensionRegistrarTest extends TestCase
 {
@@ -49,6 +55,29 @@ final class McpExtensionRegistrarTest extends TestCase
 			access: $access,
 			handler: static fn (): array => [],
 		);
+	}
+
+	/**
+	 * Real ExtensionContext, wired the same way as
+	 * ExtensionContextTest::createTestContext() — used so the access-value
+	 * tests below exercise the actual extension-facing
+	 * ExtensionContext::registerMcpTool() entry point, not a hand-built
+	 * McpToolDefinition.
+	 */
+	private function makeExtensionContext(): ExtensionContext
+	{
+		$manifest = ExtensionManifest::fromArray([
+			'id'      => 'acme/feature',
+			'name'    => 'Acme Feature',
+			'version' => '1.0.0',
+		]);
+
+		$container = $this->createMock(ContainerInterface::class);
+		$storage   = $this->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+		$settings = new ExtensionSettingsManager($storage);
+
+		return new ExtensionContext($manifest, '/path/to/extension', $container, $settings, new NullLogger());
 	}
 
 	// ─── Happy path ──────────────────────────────────────────────────────────
@@ -154,5 +183,72 @@ final class McpExtensionRegistrarTest extends TestCase
 
 		$this->assertNotNull($this->registry->get('ok_tool'));
 		$this->assertSame(1, $result['registered']);
+	}
+
+	// ─── access: 'authenticated' (Task 2) ─────────────────────────────────────
+
+	public function testAuthenticatedAccessToolIsVisibleToAuthenticatedAndAdminNotPublic(): void
+	{
+		// Drives the real extension-facing path: ExtensionContext::registerMcpTool()
+		// -> McpExtensionRegistrar::register() -> ToolRegistry::forPersona().
+		// registerMcpTool()'s docblock (pre-fix) only documented 'admin' or
+		// 'public', but McpToolDefinition::isVisibleTo() has always matched
+		// 'authenticated' explicitly — this pins that the capability already
+		// works end-to-end for extension-registered tools.
+		$context = $this->makeExtensionContext();
+		$context->registerMcpTool(
+			name: 'acme_authenticated_only',
+			description: 'desc',
+			access: 'authenticated',
+			handler: static fn (): array => [],
+		);
+
+		$this->registrar->register($this->registry, [
+			$context->extensionId() => $context->getRegisteredMcpTools(),
+		]);
+
+		$adminNames         = array_map(static fn (McpToolDefinition $t): string => $t->name, $this->registry->forPersona(McpPersona::ADMIN));
+		$authenticatedNames = array_map(static fn (McpToolDefinition $t): string => $t->name, $this->registry->forPersona(McpPersona::AUTHENTICATED));
+		$publicNames        = array_map(static fn (McpToolDefinition $t): string => $t->name, $this->registry->forPersona(McpPersona::PUBLIC_));
+
+		$this->assertContains('acme_authenticated_only', $adminNames);
+		$this->assertContains('acme_authenticated_only', $authenticatedNames);
+		$this->assertNotContains('acme_authenticated_only', $publicNames);
+	}
+
+	public function testInvalidAccessValueFailsClosedToAdminOnly(): void
+	{
+		// Pins current (correct) behavior: McpToolDefinition::isVisibleTo()
+		// only grants AUTHENTICATED/PUBLIC_ visibility on an exact match
+		// against 'public'/'authenticated'. An unrecognised value (typo or
+		// made-up string) matches neither, so the tool is visible to ADMIN
+		// only — the most restrictive outcome, never "secretly public".
+		$context = $this->makeExtensionContext();
+		$context->registerMcpTool(
+			name: 'acme_typo_access',
+			description: 'desc',
+			access: 'authenticaded', // typo of 'authenticated'
+			handler: static fn (): array => [],
+		);
+		$context->registerMcpTool(
+			name: 'acme_made_up_access',
+			description: 'desc',
+			access: 'everyone',
+			handler: static fn (): array => [],
+		);
+
+		$this->registrar->register($this->registry, [
+			$context->extensionId() => $context->getRegisteredMcpTools(),
+		]);
+
+		$adminNames         = array_map(static fn (McpToolDefinition $t): string => $t->name, $this->registry->forPersona(McpPersona::ADMIN));
+		$authenticatedNames = array_map(static fn (McpToolDefinition $t): string => $t->name, $this->registry->forPersona(McpPersona::AUTHENTICATED));
+		$publicNames        = array_map(static fn (McpToolDefinition $t): string => $t->name, $this->registry->forPersona(McpPersona::PUBLIC_));
+
+		foreach (['acme_typo_access', 'acme_made_up_access'] as $name) {
+			$this->assertContains($name, $adminNames);
+			$this->assertNotContains($name, $authenticatedNames);
+			$this->assertNotContains($name, $publicNames);
+		}
 	}
 }
