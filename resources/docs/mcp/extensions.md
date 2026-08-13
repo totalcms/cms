@@ -315,6 +315,8 @@ $context->registerMcpPrompt(
 
 The `\Mcp\Schema\Prompt` object carries the prompt's name, description, and argument definitions. The handler receives the resolved `array $arguments` and returns a `list<\Mcp\Schema\Content\PromptMessage>`. The SDK wraps the list in a `GetPromptResult` automatically — do not pre-wrap.
 
+Your handler is passed the caller's arguments as a single associative array keyed by the argument names you declared on the `Prompt` object — write it as `fn (array $arguments = [])`, not with one parameter per argument. Transport internals are stripped before the handler sees them, so the array contains only what the caller sent. Arguments you declared but the caller omitted are simply absent: read them with `??` and decide whether to substitute a default or tell the agent to ask the user for the missing value.
+
 The `$access` parameter controls which callers can see and invoke the prompt:
 
 | Value | Who can call the prompt |

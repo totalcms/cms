@@ -469,7 +469,7 @@ readonly class McpServerFactory
 	 */
 	private function buildExtensionPromptHandler(callable $handler, McpPersona $persona, string $name, string $access): \Closure
 	{
-		return static function (array $arguments = []) use ($handler, $persona, $name, $access): mixed {
+		$wrapper = static function (array $arguments = []) use ($handler, $persona, $name, $access): mixed {
 			if (!PromptRegistrar::personaCanAccess($persona, $access)) {
 				throw new \Mcp\Exception\PromptGetException(sprintf(
 					'Prompt "%s" requires %s access.',
@@ -478,8 +478,29 @@ readonly class McpServerFactory
 				));
 			}
 
+			// Strip the SDK's internal injections so extension authors see only
+			// the caller's own arguments.
+			unset($arguments['_session'], $arguments['_request']);
+
 			return $handler($arguments);
 		};
+
+		// Rebinding the closure's SCOPE to ReferenceHandler is load-bearing, not
+		// cosmetic. ReferenceHandler::handle() has two dispatch paths: a closure
+		// whose getClosureScopeClass() is ReferenceHandler itself receives the raw
+		// argument bag, and everything else goes through prepareArguments(), which
+		// fills parameters BY NAME. Unbound, this wrapper's single `array $arguments`
+		// parameter matches no incoming argument key, so it silently fell back to
+		// its `[]` default — every extension prompt received zero arguments, with
+		// no error to notice. PromptRegistrar solves the same SDK behaviour for
+		// collection-stored prompts by eval'ing named parameters; we can take the
+		// cleaner route here because ExtensionContext::registerMcpPrompt() already
+		// documents the handler contract as `fn (array $arguments = [])` — the raw
+		// bag is exactly what extension authors are told they get, and no code
+		// generation (or validation of extension-supplied argument names) is needed.
+		//
+		// ReferenceHandler::class always exists, so the bind cannot fail.
+		return \Closure::bind($wrapper, null, ReferenceHandler::class);
 	}
 
 	/**
