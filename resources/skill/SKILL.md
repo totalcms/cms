@@ -21,12 +21,13 @@ You do **not** need to memorize field options or Twig signatures — they ship o
   (`menu.php` is the table of contents, `search-index.json` a prebuilt index).
   Sections include `site-builder/`, `collections/`, `schemas/`, `fields/`, `twig/`,
   `forms/`, `apis/`, `extensions/`, `operations/`. Grep or read these for the long tail.
-- **MCP docs server (optional accelerator):** if the official docs connector
-  (`https://totalcms.co/mcp`) is connected, use `docs_search` to find pages,
-  `docs_get` to read one, and `docs_lookup(kind, name)` for exact reference
-  entries (Twig functions/filters, field types, API endpoints, schema config,
-  CLI commands, extension/builder API).
-  It is faster but not required — the on-disk docs are authoritative.
+- **MCP docs server (fastest lookup):** when the official docs connector
+  (`https://totalcms.co/mcp`) is connected — it ships alongside this skill in
+  the Total CMS plugin — use `docs_search` to find pages, `docs_get` to read
+  one, and `docs_lookup(kind, name)` for exact reference entries (Twig
+  functions/filters, field types, API endpoints, schema config, CLI commands,
+  extension/builder API).
+  The on-disk docs remain authoritative and work with no connection.
 
 Prefer looking things up over guessing; training data is often stale on exact signatures.
 
