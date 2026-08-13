@@ -40,7 +40,7 @@ class GalleryField extends ImageField
 		];
 		$inputAttrs = array_filter($inputAttrs, fn (?string $x): bool => !is_null($x));
 
-		$input   = HTMLUtils::inlineElement('input', $inputAttrs);
+		$input   = $this->proxyInput($inputAttrs);
 		$overlay = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);
 
 		// Template with full dialogs for the shared edit dialog (cloned once on first edit click)

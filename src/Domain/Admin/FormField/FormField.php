@@ -130,6 +130,26 @@ class FormField
 		return HTMLUtils::element('div', $content, ['class' => 'form-group']);
 	}
 
+	/**
+	 * Build a proxy input for a field whose real UI is something other than a text
+	 * box — a dropzone, a deck of items, a card's sub-fields. The input still
+	 * carries the value and/or the constraint validation, but the user never types
+	 * into it: CSS collapses it to zero size (kept rendered, not `display:none`, so
+	 * it can still hold validity and anchor a native error bubble).
+	 *
+	 * `data-proxy` marks it so focus routines skip it — without that, opening a
+	 * form whose first field is a deck or an image drops the cursor into a 0x0
+	 * transparent box. See TotalForm.focusFirstInput().
+	 *
+	 * @param array<string,string|bool|null> $attributes
+	 */
+	protected function proxyInput(array $attributes): string
+	{
+		$attributes['data-proxy'] = 'true';
+
+		return HTMLUtils::inlineElement('input', $attributes);
+	}
+
 	public function createFormField(string $content): string
 	{
 		return HTMLUtils::element('div', $this->createFieldLabel() . $content . $this->createHelpText(), $this->buildFieldAttributes());

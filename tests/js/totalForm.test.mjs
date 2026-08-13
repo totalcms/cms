@@ -91,6 +91,68 @@ describe('TotalForm.getId', () => {
 	});
 });
 
+//-----------------------------------------------
+// Fields whose real UI isn't a text box (deck, card, image, gallery, file,
+// depot) render a proxy input carrying the value and/or validity, collapsed to
+// zero size by CSS but still rendered — see FormField::proxyInput. The user
+// never types into one, so focusFirstInput() must skip it, or opening a form
+// that leads with such a field drops the cursor in an invisible box.
+//-----------------------------------------------
+
+function formWithHtml(html) {
+	document.body.innerHTML = `<form>${html}</form>`;
+	const form = Object.create(TotalForm.prototype);
+	form.form = document.querySelector('form');
+	return form;
+}
+
+// Mirrors FormField::proxyInput output.
+const proxyField = (field, name, value = '') =>
+	`<div class="form-field ${field}-field" data-type="${field}">
+		<div class="form-group"><input type="text" name="${name}" value="${value}" data-proxy="true"></div>
+	</div>`;
+
+const textField = name =>
+	`<div class="form-field text-field" data-type="text">
+		<div class="form-group"><input name="${name}"></div>
+	</div>`;
+
+describe('TotalForm.focusFirstInput', () => {
+	test('focuses a real field when it comes first', () => {
+		const form = formWithHtml(textField('title') + textField('body'));
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
+	});
+
+	test('skips a deck proxy to reach the first real input', () => {
+		const form = formWithHtml(proxyField('deck', 'items', 'items') + textField('title'));
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
+	});
+
+	test('skips image and gallery proxies too', () => {
+		const form = formWithHtml(proxyField('image', 'photo') + proxyField('gallery', 'shots') + textField('title'));
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
+	});
+
+	test('still ignores inputs inside dialogs', () => {
+		const form = formWithHtml(
+			`<div class="form-field" data-type="deck"><dialog><input name="inmodal"></dialog></div>` + textField('title'),
+		);
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
+	});
+
+	test('a proxy is still a valid target for error reporting', () => {
+		// Skipping proxies on form open must NOT make them unreportable — a deck
+		// anchors its native error bubble on exactly this input, which is why it is
+		// collapsed rather than display:none.
+		const form = formWithHtml(proxyField('deck', 'items', 'items'));
+		expect(form.isFocusable(document.querySelector('[name="items"]'))).toBe(true);
+	});
+});
+
 describe('TotalForm.afterSave', () => {
 	test('adopts the saved id before flushing deferred uploads', () => {
 		const form = Object.create(TotalForm.prototype);

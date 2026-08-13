@@ -21,7 +21,7 @@ class DepotField extends FormField
 	{
 		$depot = is_array($this->value) ? $this->value : []; // Depot data is stored in the value field
 
-		$input            = HTMLUtils::inlineElement('input', ['id' => 'field-' . $this->uuid, 'type' => 'text', 'name' => $this->name]);
+		$input            = $this->proxyInput(['id' => 'field-' . $this->uuid, 'type' => 'text', 'name' => $this->name]);
 		$browser          = $this->buildLayout($depot['files'] ?? []);
 		$folderDialog     = $this->folderDialog();
 		$addFolder        = $this->addFolderDialog();

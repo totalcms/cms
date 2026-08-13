@@ -53,7 +53,7 @@ class ImageField extends FormField
 		];
 		$inputAttrs = array_filter($inputAttrs, fn (?string $x): bool => !is_null($x));
 
-		$input    = HTMLUtils::inlineElement('input', $inputAttrs);
+		$input    = $this->proxyInput($inputAttrs);
 		$overlay  = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);
 		$preview  = HTMLUtils::element('div', $previewTemplate, ['class' => 'total-preview']);
 		$template = HTMLUtils::element('template', $previewTemplate, ['id' => 'template-' . $this->uuid]);

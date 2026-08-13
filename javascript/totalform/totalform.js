@@ -618,7 +618,11 @@ export default class TotalForm {
 	}
 
 	focusFirstInput() {
-		const selector   = 'input:not([type="hidden"]):not([readonly]):not([disabled]), textarea:not([readonly]):not([disabled]), select:not([disabled])';
+		// [data-proxy] skips the value/validity carriers behind deck, card, image,
+		// gallery, file and depot fields (FormField::proxyInput). They're real
+		// inputs the user never types into, collapsed to zero size by CSS — landing
+		// the cursor there puts it in an invisible box.
+		const selector   = 'input:not([type="hidden"]):not([readonly]):not([disabled]):not([data-proxy]), textarea:not([readonly]):not([disabled]), select:not([disabled])';
 		const candidates = Array.from(this.form.querySelectorAll(selector));
 		// Skip inputs nested in <dialog> elements — those belong to image/file/deck-item edit modals
 		const first = candidates.find(input => !input.closest('dialog'));

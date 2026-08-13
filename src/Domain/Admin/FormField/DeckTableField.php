@@ -38,7 +38,7 @@ class DeckTableField extends FormField
 	public function buildFormField(): string
 	{
 		// Hidden validation input - must be first child of form-group, outside deck-table
-		$input = HTMLUtils::inlineElement('input', [
+		$input = $this->proxyInput([
 			'id'       => 'field-' . $this->uuid,
 			'type'     => 'text',
 			'name'     => $this->name,

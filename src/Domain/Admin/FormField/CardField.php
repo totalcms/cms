@@ -45,7 +45,7 @@ class CardField extends FormField
 	{
 		// Hidden marker input — the card's value is collected from its sub-fields
 		// at save time, so this just holds the property name for routing.
-		$content = HTMLUtils::inlineElement('input', [
+		$content = $this->proxyInput([
 			'id'    => 'field-' . $this->uuid,
 			'type'  => 'hidden',
 			'name'  => $this->name,
