@@ -30,6 +30,24 @@ The intended flow is `docs_search` → `docs_get`: search returns paths, `docs_g
 
 No MCP resource template ships for the docs corpus — only tools. `docs_search` + `docs_get` cover the same ground in one round trip, without adding an enumerable resource surface for a corpus nobody would browse by URI.
 
+## The five workflow prompts
+
+Tools give an agent the ability to read the docs; they don't tell it when to bother. The same extension registers five MCP prompts that do:
+
+| Prompt | Arguments | What it does |
+|---|---|---|
+| `tcms_research` | `question` | Answer a Total CMS question from this install's docs rather than from the model's memory. Sets the retrieval order — `docs_lookup` for named symbols, `docs_search` → `docs_get` for everything else — and hands over Total CMS vocabulary so a missed search can be retried usefully. |
+| `tcms_build_page` | `purpose` | Plan and build a Site Builder page: route, template, data, navigation. Leads with the fact that there is no build step. |
+| `tcms_explain_field` | `field_type` | Explain a schema field type from the reference index, with a copy-pasteable declaration and how to read the value in Twig. |
+| `tcms_twig_recipe` | `goal` | Find the right Twig function or filter and write a complete template, with signatures verified rather than guessed. |
+| `tcms_troubleshoot_mcp` | `symptom`, `site_url` (optional) | Diagnose an MCP connection failure, walking the known causes in the order they actually occur. |
+
+They're named `tcms_*` rather than `docs_*` deliberately. The tools are documentation operations; these are product workflows that *use* the documentation, and `tcms` is already this server's namespace (the `tcms://` resource URIs). The distinctive prefix also matters mechanically: a prompt in your `mcp-prompt` collection always wins over an extension-registered one of the same name, so a generic name like `explain_field` would let an operator's own prompt silently replace this one.
+
+Prompt access follows the tools. A prompt instructing an agent to call `docs_lookup` is useless to a caller who can't see `docs_lookup`, so both move together when you change the setting below.
+
+The prompt text lives in `prompts.json` inside the extension, not in its PHP. It ships as part of the package, so local edits are overwritten on update — to customise the wording for your site, create a prompt in the `mcp-prompt` collection with the same name and yours takes precedence.
+
 ## Enabled by default, invisible to anonymous callers
 
 Unlike most bundled extensions (disabled until an operator opts in — see [Bundled Extensions](docs/extensions/bundled)), `totalcms/docs` ships `default_enabled: true`. A fresh install has all three tools live immediately, no admin action required.

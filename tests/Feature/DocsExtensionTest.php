@@ -254,3 +254,97 @@ it('docs_get returns real markdown for a known path, confirming resolution again
 	expect($result['markdown'])->not->toBe('');
 	expect($result['path'])->toBe('twig/filters');
 });
+
+// ──────────────────────────────────────────────────────────────────────────────
+// MCP prompts (tcms_*) — content lives in prompts.json
+// ──────────────────────────────────────────────────────────────────────────────
+
+it('registers the five tcms_ workflow prompts, following the tools access level', function (): void {
+	['context' => $context] = docsExtensionRegister(publicTools: false);
+
+	$prompts = $context->getRegisteredMcpPrompts();
+	$names   = array_map(static fn (array $p): string => $p['prompt']->name, $prompts);
+
+	expect($names)->toEqualCanonicalizing([
+		'tcms_research',
+		'tcms_build_page',
+		'tcms_explain_field',
+		'tcms_twig_recipe',
+		'tcms_troubleshoot_mcp',
+	]);
+
+	// A prompt that tells an agent to call docs_lookup is useless to a caller
+	// who cannot see docs_lookup, so access must track the tools'.
+	foreach ($prompts as $registration) {
+		expect($registration['access'])->toBe('authenticated');
+	}
+
+	// Every prompt declares its arguments — without them the SDK advertises no
+	// argument schema and clients cannot prompt the user for input.
+	foreach ($prompts as $registration) {
+		expect($registration['prompt']->arguments)->not->toBeEmpty();
+	}
+});
+
+it('exposes the prompts publicly when publicTools is enabled', function (): void {
+	['context' => $context] = docsExtensionRegister(publicTools: true);
+
+	foreach ($context->getRegisteredMcpPrompts() as $registration) {
+		expect($registration['access'])->toBe('public');
+	}
+});
+
+it('substitutes declared arguments into the prompt body', function (): void {
+	['context' => $context] = docsExtensionRegister(publicTools: false);
+
+	$prompt = null;
+	foreach ($context->getRegisteredMcpPrompts() as $registration) {
+		if ($registration['prompt']->name === 'tcms_research') {
+			$prompt = $registration;
+			break;
+		}
+	}
+
+	expect($prompt)->not->toBeNull();
+
+	$messages = ($prompt['handler'])(['question' => 'How do I resize an image?']);
+	$text     = $messages[0]->content->text;
+
+	expect($text)->toContain('How do I resize an image?');
+	expect($text)->not->toContain('{question}');
+});
+
+it('leaves literal braces that are not declared arguments untouched', function (): void {
+	['context' => $context] = docsExtensionRegister(publicTools: false);
+
+	$prompt = null;
+	foreach ($context->getRegisteredMcpPrompts() as $registration) {
+		if ($registration['prompt']->name === 'tcms_build_page') {
+			$prompt = $registration;
+			break;
+		}
+	}
+
+	$text = (($prompt['handler'])(['purpose' => 'a pricing page']))[0]->content->text;
+
+	// `/case-studies/{id}` is guidance about route templates, not a placeholder.
+	// A naive regex substitution would eat it.
+	expect($text)->toContain('a pricing page');
+	expect($text)->toContain('/case-studies/{id}');
+});
+
+it('tells the agent to ask for a missing required argument instead of rendering a blank', function (): void {
+	['context' => $context] = docsExtensionRegister(publicTools: false);
+
+	$prompt = null;
+	foreach ($context->getRegisteredMcpPrompts() as $registration) {
+		if ($registration['prompt']->name === 'tcms_explain_field') {
+			$prompt = $registration;
+			break;
+		}
+	}
+
+	$text = (($prompt['handler'])([]))[0]->content->text;
+
+	expect($text)->toContain('not supplied');
+});

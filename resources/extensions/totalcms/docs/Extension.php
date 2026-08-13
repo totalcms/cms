@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace TotalCMS\Bundled\Docs;
 
+use Mcp\Schema\Content\PromptMessage;
+use Mcp\Schema\Content\TextContent;
+use Mcp\Schema\Enum\Role;
+use Mcp\Schema\Prompt;
+use Mcp\Schema\PromptArgument;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
@@ -62,6 +67,9 @@ class Extension implements ExtensionInterface
 
 	/** @var array<string,mixed>|null */
 	private ?array $reference = null;
+
+	/** @var array<string,array{description:string,args:list<array{name:string,description:string,required:bool}>,body:string}>|null */
+	private ?array $prompts = null;
 
 	private bool $referenceLoaded = false;
 
@@ -132,10 +140,158 @@ class Extension implements ExtensionInterface
 			annotations: $readOnly('Look Up Reference Entry'),
 			outputSchema: $this->lookupOutputSchema(),
 		);
+
+		$this->registerPrompts($context, $access);
 	}
 
 	public function boot(ExtensionContext $context): void
 	{
+	}
+
+	// ── MCP prompts ─────────────────────────────────────────────────────────
+
+	/**
+	 * Workflow prompts that drive the three tools above.
+	 *
+	 * Named `tcms_*` rather than `docs_*` on purpose. The tools are genuinely
+	 * documentation operations; these are product workflows that USE the docs,
+	 * and `tcms` is already the product's namespace on this MCP surface (the
+	 * `tcms://` resource URIs). The distinctive prefix also keeps us off
+	 * McpServerFactory's soft-deny path: a collection-stored prompt of the same
+	 * name always wins, so a customer who authored their own `explain_field`
+	 * would silently suppress ours.
+	 *
+	 * Access tracks the tools' — a prompt telling an agent to call docs_lookup
+	 * is useless to a caller who cannot see docs_lookup.
+	 */
+	private function registerPrompts(ExtensionContext $context, string $access): void
+	{
+		foreach ($this->promptDefinitions() as $name => $definition) {
+			/** @var list<array{name:string,description:string,required:bool}> $argSpecs */
+			$argSpecs  = $definition['args'];
+			$arguments = array_map(
+				static fn (array $arg): PromptArgument => new PromptArgument(
+					name: $arg['name'],
+					description: $arg['description'],
+					required: $arg['required'],
+				),
+				$argSpecs,
+			);
+
+			$body = (string)$definition['body'];
+
+			$context->registerMcpPrompt(
+				new Prompt(
+					name: $name,
+					description: (string)$definition['description'],
+					arguments: $arguments,
+				),
+				handler: fn (array $callArgs = []): array => [
+					new PromptMessage(
+						Role::User,
+						new TextContent($this->renderPrompt($body, $argSpecs, $callArgs)),
+					),
+				],
+				access: $access,
+			);
+		}
+	}
+
+	/**
+	 * Substitutes `{arg_name}` placeholders for DECLARED arguments only.
+	 *
+	 * Restricting the substitution map to declared names is deliberate: several
+	 * bodies contain literal braces that are part of the guidance rather than
+	 * placeholders (route templates like `/case-studies/{id}`), and those must
+	 * survive verbatim. A missing optional argument collapses to an empty
+	 * string; a missing required one is reported inline so the agent asks for
+	 * it instead of proceeding on a blank.
+	 *
+	 * @param list<array{name:string,description:string,required:bool}> $argSpecs
+	 * @param array<string,mixed>                                      $callArgs
+	 */
+	private function renderPrompt(string $body, array $argSpecs, array $callArgs): string
+	{
+		$map = [];
+		foreach ($argSpecs as $spec) {
+			$name  = $spec['name'];
+			$value = isset($callArgs[$name]) ? trim((string)$callArgs[$name]) : '';
+
+			if ($value === '' && $spec['required']) {
+				$value = "(not supplied — ask the user for this before continuing)";
+			}
+
+			$map['{' . $name . '}'] = $value;
+		}
+
+		return strtr($body, $map);
+	}
+
+	/**
+	 * Prompt content lives in prompts.json, not in this file.
+	 *
+	 * The bodies are prose an operator or writer may want to tune, and this
+	 * extension already treats on-disk JSON as its content source for
+	 * search-index.json and reference-index.json — prompts.json is the same
+	 * idiom. Keeping ~7KB of instructional text out of the class also keeps
+	 * this file about registration.
+	 *
+	 * Degrades the way loadReference() does: a missing or malformed file means
+	 * no prompts register, and the three tools carry on unaffected. Entries
+	 * missing a name or body are skipped individually rather than discarding
+	 * the whole file.
+	 *
+	 * @return array<string,array{description:string,args:list<array{name:string,description:string,required:bool}>,body:string}>
+	 */
+	private function promptDefinitions(): array
+	{
+		if ($this->prompts !== null) {
+			return $this->prompts;
+		}
+
+		$file = __DIR__ . '/prompts.json';
+		if (!is_file($file)) {
+			return $this->prompts = [];
+		}
+
+		$decoded = json_decode((string)file_get_contents($file), true);
+		if (!is_array($decoded)) {
+			return $this->prompts = [];
+		}
+
+		$definitions = [];
+		foreach ($decoded as $entry) {
+			if (!is_array($entry)) {
+				continue;
+			}
+
+			$name = is_string($entry['name'] ?? null) ? $entry['name'] : '';
+			$body = is_string($entry['body'] ?? null) ? $entry['body'] : '';
+			if ($name === '' || $body === '') {
+				continue;
+			}
+
+			$args = [];
+			foreach (is_array($entry['args'] ?? null) ? $entry['args'] : [] as $arg) {
+				if (!is_array($arg) || !is_string($arg['name'] ?? null) || $arg['name'] === '') {
+					continue;
+				}
+
+				$args[] = [
+					'name'        => $arg['name'],
+					'description' => is_string($arg['description'] ?? null) ? $arg['description'] : '',
+					'required'    => (bool)($arg['required'] ?? false),
+				];
+			}
+
+			$definitions[$name] = [
+				'description' => is_string($entry['description'] ?? null) ? $entry['description'] : '',
+				'args'        => $args,
+				'body'        => $body,
+			];
+		}
+
+		return $this->prompts = $definitions;
 	}
 
 	// ── docs corpus access ──────────────────────────────────────────────────
