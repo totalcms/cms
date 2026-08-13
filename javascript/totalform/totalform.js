@@ -453,6 +453,14 @@ export default class TotalForm {
 		const invalidFields = this.getInvalidFields();
 		this.showErrorSummary(invalidFields);
 
+		// Land the user on the first offending field. The per-field validate()
+		// loop above calls reportValidity() on each invalid input, so without
+		// this the *last* one keeps focus and the only durable feedback is the
+		// summary — which is appended to the bottom of the form and easily
+		// offscreen. scrollToField() also fires `tcms:error-navigate` so stepped
+		// forms can jump to the right step first.
+		if (invalidFields.length) this.scrollToField(invalidFields[0]);
+
 		return false;
 	}
 
