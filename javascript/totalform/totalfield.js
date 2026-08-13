@@ -169,17 +169,47 @@ export default class TotalField {
 		if (placeholder) container.insertBefore(placeholder, container.firstChild);
 	}
 
+	// The .form-field element this field is nested inside, or null when it is
+	// top-level. Need to look at parentNode since closest also looks at self.
+	// parentNode is null if the container was detached from the DOM (e.g. a
+	// caller mutated DOM and hasn't called refreshFields() yet); a detached
+	// node can't be nested in anything.
+	parentFieldElement() {
+		const parent = this.container.parentNode;
+		if (!parent) return null;
+		return parent.closest(".form-field");
+	}
+
 	isSubField() {
-		// Filter for determining if a field is a subproperty of another field
-		// Need to look at parentNode since closest also looks at self
+		// Filter for determining if a field is a subproperty of another field.
+		// Deliberately element-based rather than delegating to getParent(): the
+		// enclosing .form-field may exist without a TotalField instance (
+		// generateFieldObject() can return null or throw). Nesting is a DOM fact
+		// either way, and if this reported false the child would be promoted
+		// into TotalForm.fields and leak its value into the root object on save.
 		// Need to also look for cms-modal since droplets modify the DOM
 		// and looking for .form-field is not enough.
-		// parentNode is null if the container was detached from the DOM
-		// (e.g. a caller mutated DOM and hasn't called refreshFields() yet);
-		// a detached node can't be a subfield of anything.
+		if (this.parentFieldElement()) return true;
 		const parent = this.container.parentNode;
 		if (!parent) return false;
-		return parent.closest(".form-field") || parent.closest(".cms-modal") ? true : false;
+		return parent.closest(".cms-modal") ? true : false;
+	}
+
+	// The TotalField instance this field is nested inside, or null when it is
+	// top-level (or the enclosing element has no instance yet).
+	getParent() {
+		return this.parentFieldElement()?.totalfield ?? null;
+	}
+
+	// Walk up to the field that TotalForm actually tracks in `fields` — the
+	// ancestor a user can see and click. A sub-field (a card's street, an
+	// image's alt) is never in that list, so anything reporting on a sub-field
+	// has to resolve it to its root first. Falls back to the field itself when
+	// the chain breaks.
+	rootField() {
+		let field = this, parent;
+		while ((parent = field.getParent())) field = parent;
+		return field;
 	}
 
 	isDroplet() {
@@ -361,6 +391,21 @@ export default class TotalField {
 		this.input.reportValidity();
 		this.error(this.input.validationMessage);
 		return false;
+	}
+
+	// The input that carries this field's error — its own, or the first invalid
+	// descendant. A composite field can't report on itself: a card's own input
+	// is a hidden marker (CardField::buildFormField) holding the property name
+	// for routing, and hidden inputs are barred from constraint validation, so
+	// checkValidity() on it is unconditionally true and validationMessage is
+	// always empty. Callers that want to show or focus the real problem ask for
+	// this rather than reaching for `input` directly.
+	reportableInput() {
+		if (!this.input.checkValidity()) return this.input;
+		for (const el of this.container.querySelectorAll("input,textarea,select")) {
+			if (!el.checkValidity()) return el;
+		}
+		return this.input;
 	}
 
 	saved() {
