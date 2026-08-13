@@ -183,6 +183,11 @@ readonly class AdminTwigAdapter
 		return $this->tcmsCommandPrefix() . ' automations:process';
 	}
 
+	public function oauthSetupCommand(): string
+	{
+		return $this->tcmsCommandPrefix() . ' oauth:setup';
+	}
+
 	/**
 	 * URL for an HTTP cron endpoint, with the token embedded.
 	 *

@@ -48,6 +48,33 @@
 			.oauth-key-paths dt { font-weight: 600; }
 			.oauth-key-paths dd { margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 			.oauth-key-paths code { word-break: break-all; }
+			.oauth-setup { margin-top: 0.75rem; }
+			.oauth-codebox {
+				position: relative;
+				padding: 0.6rem 5.5rem 0.6rem 0.75rem;
+				background: oklch(var(--totalform-nearwhite));
+				border: 1px solid oklch(var(--totalform-border-color));
+				border-radius: var(--totalform-radius);
+				font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+				font-size: 0.85rem;
+				word-break: break-all;
+				line-height: 1.5;
+			}
+			.oauth-codebox .cms-clip-button {
+				position: absolute; top: 0.4rem; right: 0.4rem;
+				padding: 0.2rem 0.6rem; font-size: 0.75rem; line-height: 1.4;
+				border: 1px solid oklch(var(--totalform-border-color));
+				border-radius: var(--totalform-radius);
+				background: oklch(var(--totalform-purewhite));
+				color: oklch(var(--totalform-text-color));
+				cursor: pointer;
+			}
+			.oauth-codebox .cms-clip-button:hover,
+			.oauth-codebox .cms-clip-button.copied {
+				background: oklch(var(--totalform-accent));
+				border-color: oklch(var(--totalform-accent));
+				color: oklch(var(--totalform-purewhite));
+			}
 		</style>
 		<div class="cms-info oauth-key-status">
 			<p><strong>Signing key paths</strong> &mdash; Override in <code>config/tcms.php</code>.</p>
@@ -72,7 +99,13 @@
 				</dd>
 			</dl>
 			{% if not oauthKeys.signingExists or not oauthKeys.publicExists %}
-			<p>Run <code>tcms oauth:setup</code> to generate the key pair.</p>
+			<div class="oauth-setup">
+				<p>Run this command over SSH from your site's root directory to generate the key pair.</p>
+				<div class="oauth-codebox">
+					<span id="oauth-setup-command">{{ cms.admin.oauthSetupCommand() }}</span>
+					<button type="button" class="cms-clip-button" data-clip="#oauth-setup-command" title="{{ t('btn.copy_clipboard') }}">Copy</button>
+				</div>
+			</div>
 			{% endif %}
 		</div>
 		{% endif %}
