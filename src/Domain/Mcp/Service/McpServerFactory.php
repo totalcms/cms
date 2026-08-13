@@ -216,7 +216,13 @@ readonly class McpServerFactory
 				}
 				try {
 					$builder->addPrompt(
-						handler: $this->buildExtensionPromptHandler($reg['handler'], $persona, $name, $access),
+						handler: $this->buildExtensionPromptHandler(
+							$reg['handler'],
+							$persona,
+							$name,
+							$access,
+							array_values($reg['prompt']->arguments ?? []),
+						),
 						name: $name,
 						description: $reg['prompt']->description ?? '',
 					);
@@ -457,50 +463,90 @@ readonly class McpServerFactory
 	}
 
 	/**
-	 * Wraps an extension prompt handler with a runtime access re-check.
+	 * Builds the closure the SDK registers for an extension-defined prompt.
 	 *
-	 * Mirrors the pattern used by PromptRegistrar::buildHandler() for
-	 * collection-stored prompts: the handler closure returned here re-checks
-	 * personaCanAccess() at invocation time so a caller who guesses an admin-only
-	 * prompt name via prompts/get receives a clean MCP error rather than content.
-	 * The outer persona filter in build() already prevents the prompt from
-	 * appearing in prompts/list, but the call-time guard defends against
-	 * name-guessing independently.
+	 * The parameter names are generated, and that is the whole point. The SDK
+	 * derives a prompt's ADVERTISED arguments by reflecting its handler —
+	 * Builder::addPrompt() takes no $arguments parameter, so there is no other
+	 * channel for them — and ReferenceHandler::handle() then fills those
+	 * parameters BY NAME from the caller's argument bag. A handler declared as
+	 * `fn (array $arguments = [])` therefore fails twice over: prompts/list
+	 * advertises a single optional argument literally named "arguments", and
+	 * the caller's real arguments match no parameter and are dropped. Clients
+	 * render that as one unlabelled text box whose contents go nowhere.
+	 *
+	 * Generating `function (mixed $goal = null)` from the PromptArgument list
+	 * fixes both halves at once: reflection now sees the real argument names,
+	 * so prompts/list is correct, and name-based dispatch delivers them. This
+	 * is the same technique PromptRegistrar::buildHandler() uses for
+	 * collection-stored prompts, for the same two reasons.
+	 *
+	 * Extensions still receive the documented `fn (array $arguments = [])`
+	 * contract — the generated closure collects its named parameters back into
+	 * an array before calling through, so nothing changes for extension
+	 * authors.
+	 *
+	 * SAFETY: argument names reach eval(), and unlike the collection path
+	 * (whose names are schema-validated by mcp-prompt-arg.json) these come from
+	 * third-party extension code. Names are therefore filtered against
+	 * ^[a-z][a-z0-9_]*$ and anything else is dropped with a warning, so the
+	 * eval input is bounded to safe PHP identifiers.
+	 *
+	 * The access re-check runs at call time so a caller who guesses an
+	 * admin-only prompt name via prompts/get gets a clean MCP error rather than
+	 * content. The persona filter in build() already hides it from
+	 * prompts/list; this defends against name-guessing independently.
+	 *
+	 * @param list<\Mcp\Schema\PromptArgument> $arguments
+	 *
+	 * @SuppressWarnings("PHPMD.EvalExpression")
 	 */
-	private function buildExtensionPromptHandler(callable $handler, McpPersona $persona, string $name, string $access): \Closure
-	{
-		$wrapper = static function (array $arguments = []) use ($handler, $persona, $name, $access): mixed {
-			if (!PromptRegistrar::personaCanAccess($persona, $access)) {
-				throw new \Mcp\Exception\PromptGetException(sprintf(
-					'Prompt "%s" requires %s access.',
-					$name,
-					$access,
-				));
+	private function buildExtensionPromptHandler(
+		callable $handler,
+		McpPersona $persona,
+		string $name,
+		string $access,
+		array $arguments,
+	): \Closure {
+		$paramSrc = [];
+		$argMap   = [];
+		foreach ($arguments as $argument) {
+			$argName = $argument->name;
+			if (preg_match('/^[a-z][a-z0-9_]*$/', $argName) !== 1) {
+				$this->logger->warning('Extension MCP prompt argument skipped: unsafe name', [
+					'prompt'   => $name,
+					'argument' => $argName,
+				]);
+
+				continue;
 			}
 
-			// Strip the SDK's internal injections so extension authors see only
-			// the caller's own arguments.
-			unset($arguments['_session'], $arguments['_request']);
+			$paramSrc[] = "mixed \${$argName} = null";
+			$argMap[]   = "'{$argName}' => \${$argName}";
+		}
 
-			return $handler($arguments);
-		};
+		$src = sprintf(
+			'return function (%s) use ($handler, $persona, $name, $access): mixed {
+				if (!\\TotalCMS\\Domain\\Mcp\\Prompt\\Service\\PromptRegistrar::personaCanAccess($persona, $access)) {
+					throw new \\Mcp\\Exception\\PromptGetException(sprintf(
+						\'Prompt "%%s" requires %%s access.\',
+						$name,
+						$access,
+					));
+				}
 
-		// Rebinding the closure's SCOPE to ReferenceHandler is load-bearing, not
-		// cosmetic. ReferenceHandler::handle() has two dispatch paths: a closure
-		// whose getClosureScopeClass() is ReferenceHandler itself receives the raw
-		// argument bag, and everything else goes through prepareArguments(), which
-		// fills parameters BY NAME. Unbound, this wrapper's single `array $arguments`
-		// parameter matches no incoming argument key, so it silently fell back to
-		// its `[]` default — every extension prompt received zero arguments, with
-		// no error to notice. PromptRegistrar solves the same SDK behaviour for
-		// collection-stored prompts by eval'ing named parameters; we can take the
-		// cleaner route here because ExtensionContext::registerMcpPrompt() already
-		// documents the handler contract as `fn (array $arguments = [])` — the raw
-		// bag is exactly what extension authors are told they get, and no code
-		// generation (or validation of extension-supplied argument names) is needed.
-		//
-		// ReferenceHandler::class always exists, so the bind cannot fail.
-		return \Closure::bind($wrapper, null, ReferenceHandler::class);
+				// Omitted arguments are dropped rather than passed as null, so an
+				// extension can distinguish "not supplied" with a plain isset().
+				$args = array_filter([%s], static fn ($v) => $v !== null);
+
+				return $handler($args);
+			};',
+			implode(', ', $paramSrc),
+			implode(', ', $argMap),
+		);
+
+		/** @var \Closure */
+		return eval($src);
 	}
 
 	/**

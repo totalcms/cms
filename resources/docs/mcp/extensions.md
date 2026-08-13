@@ -315,7 +315,25 @@ $context->registerMcpPrompt(
 
 The `\Mcp\Schema\Prompt` object carries the prompt's name, description, and argument definitions. The handler receives the resolved `array $arguments` and returns a `list<\Mcp\Schema\Content\PromptMessage>`. The SDK wraps the list in a `GetPromptResult` automatically — do not pre-wrap.
 
-Your handler is passed the caller's arguments as a single associative array keyed by the argument names you declared on the `Prompt` object — write it as `fn (array $arguments = [])`, not with one parameter per argument. Transport internals are stripped before the handler sees them, so the array contains only what the caller sent. Arguments you declared but the caller omitted are simply absent: read them with `??` and decide whether to substitute a default or tell the agent to ask the user for the missing value.
+Your handler is passed the caller's arguments as a single associative array keyed by the argument names you declared on the `Prompt` object — write it as `fn (array $arguments = [])`, not with one parameter per argument. Arguments you declared but the caller omitted are simply absent, so read them with `??` or `isset()` and decide whether to substitute a default or tell the agent to ask the user for the missing value.
+
+**Declare every argument on the `Prompt` object.** The `arguments` you pass to `new \Mcp\Schema\Prompt(...)` are what `prompts/list` advertises, and clients build their input form from that list — an argument you don't declare is one the caller has no way to send, and it will never reach your handler no matter what the user types. Declare each one with a `PromptArgument` carrying a name, a description (clients show it), and whether it's required:
+
+```php
+new \Mcp\Schema\Prompt(
+    name: 'audit_links',
+    description: 'Audit broken links on a page.',
+    arguments: [
+        new \Mcp\Schema\PromptArgument(
+            name: 'url',
+            description: 'The page to audit.',
+            required: true,
+        ),
+    ],
+)
+```
+
+Argument names must match `^[a-z][a-z0-9_]*$`. Anything else is dropped from the prompt with a warning in the log rather than being advertised.
 
 The `$access` parameter controls which callers can see and invoke the prompt:
 
