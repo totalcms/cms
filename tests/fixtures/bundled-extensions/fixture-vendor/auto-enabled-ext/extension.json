@@ -1,0 +1,13 @@
+{
+    "id": "fixture-vendor/auto-enabled-ext",
+    "name": "Auto Enabled Fixture",
+    "description": "Test fixture: a bundled extension declaring default_enabled.",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT",
+    "default_enabled": true
+}

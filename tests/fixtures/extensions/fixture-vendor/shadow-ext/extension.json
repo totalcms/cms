@@ -1,0 +1,12 @@
+{
+    "id": "fixture-vendor/shadow-ext",
+    "name": "Shadow Ext (user-installed copy)",
+    "description": "Test fixture: the non-bundled half of an id-shadowing pair, dropped into a user-installed extensions directory with the same id as the bundled copy. See tests/fixtures/bundled-extensions/fixture-vendor/shadow-ext for the bundled half.",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT"
+}

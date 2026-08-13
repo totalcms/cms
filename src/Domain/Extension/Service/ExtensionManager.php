@@ -94,30 +94,73 @@ class ExtensionManager
 
 		// Auto-register state for newly discovered extensions
 		foreach ($this->discoveredManifests as $id => $manifest) {
-			if (!isset($states[$id])) {
-				// DIAGNOSTIC: a discovered extension with no stored state is
-				// registered fresh as DISABLED. For a genuinely new extension
-				// this is correct; for one that was previously enabled it means
-				// its entry in extensions.json was lost (state-file reset /
-				// relocated on update) — which presents as "had to re-enable".
-				$this->logger->warning(sprintf(
-					"Extension '%s' has no stored state — registering fresh as DISABLED (version '%s'). "
-					. 'If it was previously enabled, its extensions.json state was lost.',
-					$id,
-					$manifest->version,
-				));
+			$existingState = $states[$id] ?? null;
+
+			if (!$existingState instanceof ExtensionState) {
+				// Bundled extensions that declare default_enabled ship pre-approved
+				// (reviewed in the package, versioned with core) - register them
+				// fresh as ENABLED. Everything else, including a sideloaded/
+				// third-party extension that declares default_enabled, is untrusted
+				// code an operator hasn't consented to yet, so it stays DISABLED.
+				$initiallyEnabled = $manifest->bundled && $manifest->defaultEnabled;
+
+				if ($initiallyEnabled) {
+					$this->logger->info(sprintf(
+						"Extension '%s' has no stored state, registering fresh as ENABLED (bundled, default_enabled, version '%s').",
+						$id,
+						$manifest->version,
+					));
+				} else {
+					// DIAGNOSTIC: a discovered extension with no stored state is
+					// registered fresh as DISABLED. For a genuinely new extension
+					// this is correct; for one that was previously enabled it means
+					// its entry in extensions.json was lost (state-file reset /
+					// relocated on update) — which presents as "had to re-enable".
+					$this->logger->warning(sprintf(
+						"Extension '%s' has no stored state — registering fresh as DISABLED (version '%s'). "
+						. 'If it was previously enabled, its extensions.json state was lost.',
+						$id,
+						$manifest->version,
+					));
+				}
 				$this->stateRepository->saveState($id, new ExtensionState(
-					enabled: false,
+					enabled: $initiallyEnabled,
 					installedAt: date('c'),
 					version: $manifest->version,
+					autoEnrolledBundled: $initiallyEnabled,
 				));
+
+				continue;
+			}
+
+			// Shadow-consent gap: a saved 'enabled' record was auto-written for a
+			// BUNDLED default_enabled manifest of this id (autoEnrolledBundled),
+			// but THIS discovery resolves the id to a NON-bundled manifest instead
+			// (a copy dropped into tcms-data/extensions/ or the project extensions
+			// dir shadows the bundled one - later roots win, see discover()). That
+			// auto-written consent belongs to the bundled code that was reviewed
+			// and shipped in the package; it must not silently transfer to whatever
+			// non-bundled code now resolves to the same id. Force it back to
+			// disabled and clear the marker so this only fires once per occurrence
+			// - from here it behaves like any other never-consented extension until
+			// an operator explicitly enables it (which is either the deliberate
+			// local override the docs describe, or an id-squat they now know about).
+			if ($existingState->autoEnrolledBundled && !$manifest->bundled) {
+				$this->logger->warning(sprintf(
+					"Extension '%s' resolved to a non-bundled manifest, but its saved 'enabled' state was auto-written for the bundled default_enabled extension of the same id. Not transferring that consent: disabling until an operator explicitly re-enables it. Verify this is an override you intended and not another extension using the same id.",
+					$id,
+				));
+
+				$existingState->enabled             = false;
+				$existingState->autoEnrolledBundled = false;
+				$this->stateRepository->saveState($id, $existingState);
 			}
 		}
 
 		// Sort enabled extensions by dependencies
 		$enabledManifests = array_filter(
 			$this->discoveredManifests,
-			fn (ExtensionManifest $m): bool => $this->stateRepository->isEnabled($m->id),
+			fn (ExtensionManifest $m): bool => $this->stateRepository->isEnabled($m->id, $m),
 		);
 
 		// DIAGNOSTIC: snapshot the enabled/disabled split at boot. Comparing
@@ -534,6 +577,12 @@ class ExtensionManager
 			$state->enabled = true;
 			$state->error   = null;
 
+			// A human just explicitly consented — this is no longer an unreviewed
+			// auto-enrolled record, regardless of how it started. Clears the
+			// provenance marker discoverAndRegister() uses to stop auto-written
+			// consent from transferring to a later-resolved non-bundled manifest.
+			$state->autoEnrolledBundled = false;
+
 			// Re-enabling clears any auto-quarantine and resets the rolling failure
 			// counter so the extension starts from a clean slate. Without the reset a
 			// counter still sitting at (or near) the threshold would let one fresh
@@ -574,7 +623,9 @@ class ExtensionManager
 
 	public function isEnabled(string $extensionId): bool
 	{
-		return $this->stateRepository->isEnabled($extensionId);
+		$manifest = $this->discoveredManifests[$extensionId] ?? null;
+
+		return $this->stateRepository->isEnabled($extensionId, $manifest);
 	}
 
 	/**

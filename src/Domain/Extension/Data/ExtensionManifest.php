@@ -39,6 +39,13 @@ final readonly class ExtensionManifest
 	 *                                                                and boots normally — it's just invisible to operators. Useful for
 	 *                                                                bundled page-middleware that's enabled/disabled per page, not
 	 *                                                                globally via the Extension Manager.
+	 * @param bool                                    $defaultEnabled Declared in the manifest JSON as `default_enabled`.
+	 *                                                                Only honoured for bundled extensions with no saved
+	 *                                                                state — see ExtensionStateRepository::isEnabled().
+	 *                                                                A third-party extension declaring this has no
+	 *                                                                effect: bundled status is derived from discovery
+	 *                                                                path, never from manifest JSON, so it cannot be
+	 *                                                                self-declared.
 	 */
 	public function __construct(
 		public string $id,
@@ -57,6 +64,7 @@ final readonly class ExtensionManifest
 		public bool $hidden = false,
 		public string $reviewNote = '',
 		public bool $project = false,
+		public bool $defaultEnabled = false,
 	) {
 	}
 
@@ -80,6 +88,7 @@ final readonly class ExtensionManifest
 			icon: (string)($data['icon'] ?? ''),
 			hidden: (bool)($data['hidden'] ?? false),
 			reviewNote: (string)($data['reviewNote'] ?? ''),
+			defaultEnabled: (bool)($data['default_enabled'] ?? false),
 		);
 	}
 
@@ -156,6 +165,7 @@ final readonly class ExtensionManifest
 			hidden: $this->hidden,
 			reviewNote: $this->reviewNote,
 			project: $this->project,
+			defaultEnabled: $this->defaultEnabled,
 		);
 	}
 
@@ -184,6 +194,7 @@ final readonly class ExtensionManifest
 			hidden: $this->hidden,
 			reviewNote: $this->reviewNote,
 			project: $project,
+			defaultEnabled: $this->defaultEnabled,
 		);
 	}
 
@@ -212,6 +223,7 @@ final readonly class ExtensionManifest
 			hidden: $this->hidden,
 			reviewNote: $this->reviewNote,
 			project: $this->project,
+			defaultEnabled: $this->defaultEnabled,
 		);
 	}
 

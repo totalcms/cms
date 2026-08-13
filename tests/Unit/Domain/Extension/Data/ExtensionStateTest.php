@@ -73,25 +73,27 @@ describe('ExtensionState', function (): void {
 		$array = $state->toArray();
 
 		expect($array)->toBe([
-			'enabled'        => true,
-			'installed_at'   => '2026-04-15T10:00:00Z',
-			'version'        => '1.0.0',
-			'error'          => null,
-			'permissions'    => ['twig:functions' => true, 'cli:commands' => false],
-			'quarantine'     => null,
-			'updateDisabled' => null,
+			'enabled'             => true,
+			'installed_at'        => '2026-04-15T10:00:00Z',
+			'version'             => '1.0.0',
+			'error'               => null,
+			'permissions'         => ['twig:functions' => true, 'cli:commands' => false],
+			'quarantine'          => null,
+			'updateDisabled'      => null,
+			'autoEnrolledBundled' => false,
 		]);
 	});
 
 	test('roundtrips through fromArray and toArray', function (): void {
 		$original = [
-			'enabled'        => true,
-			'installed_at'   => '2026-04-15T10:00:00Z',
-			'version'        => '2.0.0',
-			'error'          => 'test error',
-			'permissions'    => ['routes:admin' => true, 'events:listen' => false],
-			'quarantine'     => null,
-			'updateDisabled' => null,
+			'enabled'             => true,
+			'installed_at'        => '2026-04-15T10:00:00Z',
+			'version'             => '2.0.0',
+			'error'               => 'test error',
+			'permissions'         => ['routes:admin' => true, 'events:listen' => false],
+			'quarantine'          => null,
+			'updateDisabled'      => null,
+			'autoEnrolledBundled' => false,
 		];
 
 		$state  = ExtensionState::fromArray($original);

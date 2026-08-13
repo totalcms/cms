@@ -1,0 +1,13 @@
+{
+    "id": "test-vendor/default-enabled-off",
+    "name": "Default Enabled Off Fixture",
+    "description": "Test fixture: a NON-bundled extension declaring default_enabled, which must have no effect.",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT",
+    "default_enabled": true
+}

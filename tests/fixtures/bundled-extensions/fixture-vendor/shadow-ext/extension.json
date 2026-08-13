@@ -1,0 +1,13 @@
+{
+    "id": "fixture-vendor/shadow-ext",
+    "name": "Shadow Ext (bundled copy)",
+    "description": "Test fixture: the bundled, default_enabled half of an id-shadowing pair. See tests/fixtures/extensions/fixture-vendor/shadow-ext for the shadowing (non-bundled) half.",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0",
+        "php": ">=8.2"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT",
+    "default_enabled": true
+}
