@@ -77,3 +77,4 @@ graphify-out/
 /public/assets/wardleyDiagram-*
 /public/assets/xychartDiagram-*
 /docs/releases
+/.superpowers
