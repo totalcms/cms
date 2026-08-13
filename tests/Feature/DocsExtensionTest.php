@@ -348,3 +348,84 @@ it('tells the agent to ask for a missing required argument instead of rendering 
 
 	expect($text)->toContain('not supplied');
 });
+
+// ──────────────────────────────────────────────────────────────────────────────
+// prompts.json integrity
+//
+// The loader is deliberately forgiving — a malformed entry is skipped so one
+// bad prompt cannot take the extension down. That forgiveness is why the file
+// itself needs asserting: a typo'd argument name doesn't throw, it renders the
+// literal placeholder into the instructions we hand an agent, and every other
+// test still passes. These checks exist so ADDING a prompt is safe.
+// ──────────────────────────────────────────────────────────────────────────────
+
+/** @return list<array<string,mixed>> */
+function docsExtensionPromptsJson(): array
+{
+	$file = dirname(__DIR__, 2) . '/resources/extensions/totalcms/docs/prompts.json';
+	expect(is_file($file))->toBeTrue();
+
+	$decoded = json_decode((string)file_get_contents($file), true);
+	expect($decoded)->toBeArray();
+
+	/** @var list<array<string,mixed>> $decoded */
+	return $decoded;
+}
+
+it('ships prompts.json with unique, well-formed, tcms_-prefixed names', function (): void {
+	$prompts = docsExtensionPromptsJson();
+	expect($prompts)->not->toBeEmpty();
+
+	$names = array_map(static fn (array $p): string => (string)($p['name'] ?? ''), $prompts);
+
+	expect($names)->toBe(array_values(array_unique($names)));
+
+	foreach ($names as $name) {
+		expect($name)->toMatch('/^[a-z][a-z0-9_]*$/');
+		expect(mb_strlen($name))->toBeLessThanOrEqual(64);
+
+		// The prefix is load-bearing, not cosmetic: a collection-stored prompt of
+		// the same name wins outright (McpServerFactory soft-deny), so a generic
+		// name lets an operator's own prompt silently replace a shipped one.
+		expect($name)->toStartWith('tcms_');
+	}
+});
+
+it('declares every prompt argument that its body actually uses', function (): void {
+	foreach (docsExtensionPromptsJson() as $prompt) {
+		$name = (string)$prompt['name'];
+		$body = (string)$prompt['body'];
+
+		expect($body)->not->toBe('');
+		expect((string)($prompt['description'] ?? ''))->not->toBe('');
+
+		foreach ($prompt['args'] ?? [] as $arg) {
+			$argName = (string)($arg['name'] ?? '');
+			expect($argName)->toMatch('/^[a-z][a-z0-9_]*$/');
+
+			// Clients show this when prompting the user for input.
+			expect((string)($arg['description'] ?? ''))->not->toBe('');
+
+			// The check that earns its keep. Substitution only replaces DECLARED
+			// names, so a body saying {fieldtype} while the arg is declared as
+			// field_type renders the raw placeholder into the agent's
+			// instructions and silently drops the caller's value. Nothing else
+			// in the suite would notice.
+			expect($body)->toContain('{' . $argName . '}');
+		}
+	}
+});
+
+it('skips malformed prompt entries without discarding the whole file', function (): void {
+	['extension' => $extension] = docsExtensionRegister(publicTools: false);
+
+	$method = new ReflectionMethod($extension, 'promptDefinitions');
+	/** @var array<string,mixed> $definitions */
+	$definitions = $method->invoke($extension);
+
+	// Every shipped entry survives the loader — proof the file and the loader's
+	// validation agree, not just that the loader returns something.
+	expect(array_keys($definitions))->toEqualCanonicalizing(
+		array_map(static fn (array $p): string => (string)$p['name'], docsExtensionPromptsJson()),
+	);
+});
