@@ -424,7 +424,7 @@ $settings['builder'] = [
 // running multiple T3 sites in the same AI agent (e.g. 'bistro' → bistro_list_collections).
 $settings['mcp'] = [
 	'enabled'              => true,
-	'publicAccess'         => false,
+	'publicAccess'         => true,
 	'allowedOrigins'       => [],
 	'publicIpPerMinute'    => 60,
 	'toolPrefix'           => '',
