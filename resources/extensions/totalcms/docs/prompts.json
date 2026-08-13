@@ -1,67 +1,67 @@
 [
-    {
-        "name": "tcms_research",
-        "description": "Answer a question about Total CMS accurately using this site's own documentation tools. Use this before answering any Total CMS question from memory — the docs served here match the exact version of Total CMS you are talking to.",
-        "args": [
-            {
-                "name": "question",
-                "description": "The Total CMS question to answer, in the user's own words.",
-                "required": true
-            }
-        ],
-        "body": "The user wants to know: {question}\n\nAnswer from this site's documentation, not from memory. Total CMS changes between releases and the docs exposed here are the ones that shipped with this exact install, so they outrank anything you recall.\n\nWork in this order:\n\n1. If the question names a specific Twig function or filter, field type, API endpoint, CLI command, schema option, or extension API, call `docs_lookup` first with the matching `kind`. It returns the structured entry directly — signatures, options, defaults — with no prose to wade through. A near-miss name returns close candidates, so a typo still gets you somewhere.\n2. Otherwise call `docs_search` with the key nouns from the question. It returns page `path`s plus the section headings that matched.\n3. Call `docs_get` on the most promising `path` to read the full page. Prefer reading one page properly over skimming three.\n4. If the first search misses, search again with different terms rather than guessing — Total CMS has its own vocabulary (\"collection\" not \"table\", \"object\" not \"row\", \"schema\" not \"model\", \"Site Builder page\" not \"template\").\n\nWhen you answer, cite the doc path you used so the user can read further. If the documentation genuinely does not cover it, say so plainly instead of filling the gap with a plausible guess — a wrong field name or Twig signature costs the user more time than an honest \"the docs don't say.\""
-    },
-    {
-        "name": "tcms_build_page",
-        "description": "Plan and build a new Site Builder page in Total CMS — route, template, layout, and data — with field names and Twig signatures verified against this install's documentation. Uses this site's built-in documentation tools.",
-        "args": [
-            {
-                "name": "purpose",
-                "description": "What the page is for, e.g. 'a case study detail page' or 'a pricing page'.",
-                "required": true
-            }
-        ],
-        "body": "Help the user build a Total CMS Site Builder page for: {purpose}\n\nBefore proposing anything, ground yourself in how Site Builder works on this version. Read `site-builder/overview` with `docs_get`, and use `docs_lookup` with kind `builder_api` for the exact helper signatures — do not guess at `cms.builder.*` names.\n\nThe key thing to understand and to explain: there is no build or generate step. A Site Builder page is an object in the `builder-pages` collection, routed at request time. Add the page, it is live.\n\nWork through these decisions with the user:\n\n1. **Route.** A literal path like `/pricing`, or a templated one like `/case-studies/{id}` that resolves against a collection. Templated routes containing placeholders are implicitly pretty — the `prettyUrl` flag only applies to non-templated prefixes. Get this right up front; it is the piece people most often have to redo.\n2. **Template.** Which Twig template under `tcms-data/builder/pages/` renders it, and which layout it extends.\n3. **Data.** Whether it reads a collection, uses the page's own free-form `data` field (exposed as `page.data.*`), or both.\n4. **Navigation and visibility.** Whether it belongs in `cms.builder.nav()`, whether it starts as a draft, and whether it should appear in the sitemap.\n\nThen write the template. Verify every Twig function you use with `docs_lookup` (kind `twig_function` or `twig_filter`) rather than assuming — signatures differ from other CMSs in small ways that fail silently. Use `cms.builder.url(pageId, params)` for internal links so routes stay changeable, and `cms.builder.css/js/asset()` for assets so cache-busting works.\n\nFinish by telling the user exactly where to put each file and how to see it live."
-    },
-    {
-        "name": "tcms_explain_field",
-        "description": "Explain a Total CMS schema field type — its options, defaults, and how to declare it — from this install's own field reference. Uses this site's built-in documentation tools.",
-        "args": [
-            {
-                "name": "field_type",
-                "description": "The field type to explain, e.g. 'image', 'deck', 'card', 'select', 'code'.",
-                "required": true
-            }
-        ],
-        "body": "Explain the Total CMS field type: {field_type}\n\nStart with `docs_lookup` using kind `field_type` and that name. The reference index carries the field's real options and defaults; that is the source of truth, not your recollection of similar fields in other systems. If the name is not an exact match, the lookup returns near-misses — offer those rather than inventing a field type that does not exist.\n\nThen use `docs_search` for the prose page covering this field and read it with `docs_get`, so you can explain not just the options but when to reach for it.\n\nCover, in this order:\n\n1. What the field stores and what it renders as in the admin form builder.\n2. Every option it accepts, with defaults and which are required.\n3. A complete, copy-pasteable JSON snippet declaring it inside a schema — real option values, not placeholders.\n4. How to read the value back out in Twig, since that is the next thing the user will need.\n5. Any gotchas the docs call out, especially around nesting (some fields behave differently inside `card` and `deck`).\n\nIf the field has close relatives, say briefly when to choose each — most \"which field do I use\" questions are really that question."
-    },
-    {
-        "name": "tcms_twig_recipe",
-        "description": "Find the right Total CMS Twig function or filter for a task and write working template code, with signatures verified against this install's Twig reference. Uses this site's built-in documentation tools.",
-        "args": [
-            {
-                "name": "goal",
-                "description": "What the template needs to do, e.g. 'list the 5 newest blog posts with thumbnails'.",
-                "required": true
-            }
-        ],
-        "body": "Write Total CMS Twig for this goal: {goal}\n\nDo not write the template from memory. Total CMS ships a large set of custom Twig functions and filters, and their signatures are specific — a plausible-looking guess usually renders empty rather than erroring, which is the worst kind of wrong.\n\nFirst, use `docs_lookup` with kind `twig_function` and no `name` to list what exists, and the same with kind `twig_filter`. Scan for the ones that fit the goal, then look each one up by name for its exact signature and arguments. Fill in surrounding concepts with `docs_search` plus `docs_get`.\n\nTwo specifics worth checking every time, because they are the most common sources of silently wrong output:\n\n- Use `cms.collection.objects()` to read collection content. The bare `cms.objects()` is a deprecated proxy.\n- Image helpers take the object, the image options, and the collection context as separate arguments. Do not merge them into one array.\n\nThen write the complete template — not a fragment. Include the loop, the empty state, and the markup around it, so the user can paste it in and see it work. Comment any line where the Total CMS way differs from stock Twig.\n\nFinally, name the doc paths you used, so the user can go deeper on the pieces they want to change."
-    },
-    {
-        "name": "tcms_troubleshoot_mcp",
-        "description": "Diagnose why an AI client (Claude, ChatGPT, or another MCP agent) cannot connect to a Total CMS MCP endpoint. Walks the known failure modes in the order they actually occur. Uses this site's built-in documentation tools.",
-        "args": [
-            {
-                "name": "symptom",
-                "description": "What the client reports, e.g. 'connection failed', 'connects but no tools', 'works then 401s'.",
-                "required": true
-            },
-            {
-                "name": "site_url",
-                "description": "The MCP endpoint URL being connected to, if known.",
-                "required": false
-            }
-        ],
-        "body": "Diagnose a Total CMS MCP connection failure.\n\nSymptom: {symptom}\nEndpoint: {site_url}\n\nThese failures stack — a site often has two at once, and fixing one reveals the next. Work the list in order rather than jumping to the most interesting hypothesis. Read `mcp/server` with `docs_get` for how the endpoint is meant to behave, and search the docs for anything the symptom names specifically.\n\n1. **Is a bot filter blocking the client before it reaches PHP?** Cloudflare's AI-bot rules block the `Claude-User` agent by default, which returns a 403 or error 1010 that looks exactly like a broken server. Test with `curl -A \"Claude-User\" <endpoint>` and compare against a normal user agent. If they differ, the fix is in the CDN, not in Total CMS.\n\n2. **Is the `Authorization` header reaching PHP?** Under Apache with PHP-FPM/CGI the header is commonly stripped, so OAuth completes and then every call 401s — the signature symptom being \"it authorizes, then nothing works.\" Total CMS ships an `.htaccess` rule that re-exposes it as `HTTP_AUTHORIZATION`. Confirm the rule is present and that the site is actually using the shipped `.htaccess`.\n\n3. **Is the endpoint URL right for the install layout?** A site in a subfolder serves MCP under that prefix, and discovery lives at `<prefix>/.well-known/mcp.json` rather than the domain root. A URL that is correct for a root install 404s here.\n\n4. **Connects but shows no tools, or fewer than expected?** That is authorization, not connectivity. Tool visibility is scoped by persona: anonymous callers see only what is exposed publicly, and listing versus calling are gated separately — a token with the wrong scope can list a tool and be refused when it calls it. Check whether public MCP access is on and what each collection's own MCP access is set to.\n\n5. **Registration itself rejected?** Some clients request scopes the server does not know. Confirm dynamic client registration succeeded before assuming the transport is at fault.\n\nFor each step tell the user what to run, what a healthy result looks like, and what the failure means. Do not recommend disabling security to make a symptom disappear — narrow the cause first, then fix that."
-    }
+	{
+		"name": "tcms_research",
+		"description": "Answer a question about Total CMS accurately using this site's own documentation tools. Use this before answering any Total CMS question from memory — the docs served here match the exact version of Total CMS you are talking to.",
+		"args": [
+			{
+				"name": "question",
+				"description": "What do you want to know about Total CMS? Ask it the way you'd ask a colleague.",
+				"required": true
+			}
+		],
+		"body": "The user wants to know: {question}\n\nAnswer from this site's documentation, not from memory. Total CMS changes between releases and the docs exposed here are the ones that shipped with this exact install, so they outrank anything you recall.\n\nWork in this order:\n\n1. If the question names a specific Twig function or filter, field type, API endpoint, CLI command, schema option, or extension API, call `docs_lookup` first with the matching `kind`. It returns the structured entry directly — signatures, options, defaults — with no prose to wade through. A near-miss name returns close candidates, so a typo still gets you somewhere.\n2. Otherwise call `docs_search` with the key nouns from the question. It returns page `path`s plus the section headings that matched.\n3. Call `docs_get` on the most promising `path` to read the full page. Prefer reading one page properly over skimming three.\n4. If the first search misses, search again with different terms rather than guessing — Total CMS has its own vocabulary (\"collection\" not \"table\", \"object\" not \"row\", \"schema\" not \"model\", \"Site Builder page\" not \"template\").\n\nWhen you answer, cite the doc path you used so the user can read further. If the documentation genuinely does not cover it, say so plainly instead of filling the gap with a plausible guess — a wrong field name or Twig signature costs the user more time than an honest \"the docs don't say.\""
+	},
+	{
+		"name": "tcms_build_page",
+		"description": "Plan and build a new Site Builder page in Total CMS — route, template, layout, and data — with field names and Twig signatures verified against this install's documentation. Uses this site's built-in documentation tools.",
+		"args": [
+			{
+				"name": "purpose",
+				"description": "What is the page for? e.g. 'a case study detail page' or 'a pricing page'.",
+				"required": true
+			}
+		],
+		"body": "Help the user build a Total CMS Site Builder page for: {purpose}\n\nBefore proposing anything, ground yourself in how Site Builder works on this version. Read `site-builder/overview` with `docs_get`, and use `docs_lookup` with kind `builder_api` for the exact helper signatures — do not guess at `cms.builder.*` names.\n\nThe key thing to understand and to explain: there is no build or generate step. A Site Builder page is an object in the `builder-pages` collection, routed at request time. Add the page, it is live.\n\nWork through these decisions with the user:\n\n1. **Route.** A literal path like `/pricing`, or a templated one like `/case-studies/{id}` that resolves against a collection. Templated routes containing placeholders are implicitly pretty — the `prettyUrl` flag only applies to non-templated prefixes. Get this right up front; it is the piece people most often have to redo.\n2. **Template.** Which Twig template under `tcms-data/builder/pages/` renders it, and which layout it extends.\n3. **Data.** Whether it reads a collection, uses the page's own free-form `data` field (exposed as `page.data.*`), or both.\n4. **Navigation and visibility.** Whether it belongs in `cms.builder.nav()`, whether it starts as a draft, and whether it should appear in the sitemap.\n\nThen write the template. Verify every Twig function you use with `docs_lookup` (kind `twig_function` or `twig_filter`) rather than assuming — signatures differ from other CMSs in small ways that fail silently. Use `cms.builder.url(pageId, params)` for internal links so routes stay changeable, and `cms.builder.css/js/asset()` for assets so cache-busting works.\n\nFinish by telling the user exactly where to put each file and how to see it live."
+	},
+	{
+		"name": "tcms_explain_field",
+		"description": "Explain a Total CMS schema field type — its options, defaults, and how to declare it — from this install's own field reference. Uses this site's built-in documentation tools.",
+		"args": [
+			{
+				"name": "field_type",
+				"description": "Which field type? e.g. image, deck, card, select, code.",
+				"required": true
+			}
+		],
+		"body": "Explain the Total CMS field type: {field_type}\n\nStart with `docs_lookup` using kind `field_type` and that name. The reference index carries the field's real options and defaults; that is the source of truth, not your recollection of similar fields in other systems. If the name is not an exact match, the lookup returns near-misses — offer those rather than inventing a field type that does not exist.\n\nThen use `docs_search` for the prose page covering this field and read it with `docs_get`, so you can explain not just the options but when to reach for it.\n\nCover, in this order:\n\n1. What the field stores and what it renders as in the admin form builder.\n2. Every option it accepts, with defaults and which are required.\n3. A complete, copy-pasteable JSON snippet declaring it inside a schema — real option values, not placeholders.\n4. How to read the value back out in Twig, since that is the next thing the user will need.\n5. Any gotchas the docs call out, especially around nesting (some fields behave differently inside `card` and `deck`).\n\nIf the field has close relatives, say briefly when to choose each — most \"which field do I use\" questions are really that question."
+	},
+	{
+		"name": "tcms_twig_recipe",
+		"description": "Find the right Total CMS Twig function or filter for a task and write working template code, with signatures verified against this install's Twig reference. Uses this site's built-in documentation tools.",
+		"args": [
+			{
+				"name": "goal",
+				"description": "What are you trying to do with Twig? e.g. 'list the 5 newest blog posts with thumbnails'.",
+				"required": true
+			}
+		],
+		"body": "Write Total CMS Twig for this goal: {goal}\n\nDo not write the template from memory. Total CMS ships a large set of custom Twig functions and filters, and their signatures are specific — a plausible-looking guess usually renders empty rather than erroring, which is the worst kind of wrong.\n\nFirst, use `docs_lookup` with kind `twig_function` and no `name` to list what exists, and the same with kind `twig_filter`. Scan for the ones that fit the goal, then look each one up by name for its exact signature and arguments. Fill in surrounding concepts with `docs_search` plus `docs_get`.\n\nTwo specifics worth checking every time, because they are the most common sources of silently wrong output:\n\n- Use `cms.collection.objects()` to read collection content. The bare `cms.objects()` is a deprecated proxy.\n- Image helpers take the object, the image options, and the collection context as separate arguments. Do not merge them into one array.\n\nThen write the complete template — not a fragment. Include the loop, the empty state, and the markup around it, so the user can paste it in and see it work. Comment any line where the Total CMS way differs from stock Twig.\n\nFinally, name the doc paths you used, so the user can go deeper on the pieces they want to change."
+	},
+	{
+		"name": "tcms_troubleshoot_mcp",
+		"description": "Diagnose why an AI client (Claude, ChatGPT, or another MCP agent) cannot connect to a Total CMS MCP endpoint. Walks the known failure modes in the order they actually occur. Uses this site's built-in documentation tools.",
+		"args": [
+			{
+				"name": "symptom",
+				"description": "What does the AI client report? e.g. 'connection failed', 'connects but no tools', 'works then 401s'.",
+				"required": true
+			},
+			{
+				"name": "site_url",
+				"description": "Optional. The MCP endpoint URL being connected to, if you know it.",
+				"required": false
+			}
+		],
+		"body": "Diagnose a Total CMS MCP connection failure.\n\nSymptom: {symptom}\nEndpoint: {site_url}\n\nThese failures stack — a site often has two at once, and fixing one reveals the next. Work the list in order rather than jumping to the most interesting hypothesis. Read `mcp/server` with `docs_get` for how the endpoint is meant to behave, and search the docs for anything the symptom names specifically.\n\n1. **Is a bot filter blocking the client before it reaches PHP?** Cloudflare's AI-bot rules block the `Claude-User` agent by default, which returns a 403 or error 1010 that looks exactly like a broken server. Test with `curl -A \"Claude-User\" <endpoint>` and compare against a normal user agent. If they differ, the fix is in the CDN, not in Total CMS.\n\n2. **Is the `Authorization` header reaching PHP?** Under Apache with PHP-FPM/CGI the header is commonly stripped, so OAuth completes and then every call 401s — the signature symptom being \"it authorizes, then nothing works.\" Total CMS ships an `.htaccess` rule that re-exposes it as `HTTP_AUTHORIZATION`. Confirm the rule is present and that the site is actually using the shipped `.htaccess`.\n\n3. **Is the endpoint URL right for the install layout?** A site in a subfolder serves MCP under that prefix, and discovery lives at `<prefix>/.well-known/mcp.json` rather than the domain root. A URL that is correct for a root install 404s here.\n\n4. **Connects but shows no tools, or fewer than expected?** That is authorization, not connectivity. Tool visibility is scoped by persona: anonymous callers see only what is exposed publicly, and listing versus calling are gated separately — a token with the wrong scope can list a tool and be refused when it calls it. Check whether public MCP access is on and what each collection's own MCP access is set to.\n\n5. **Registration itself rejected?** Some clients request scopes the server does not know. Confirm dynamic client registration succeeded before assuming the transport is at fault.\n\nFor each step tell the user what to run, what a healthy result looks like, and what the failure means. Do not recommend disabling security to make a symptom disappear — narrow the cause first, then fix that."
+	}
 ]

@@ -429,3 +429,21 @@ it('skips malformed prompt entries without discarding the whole file', function 
 		array_map(static fn (array $p): string => (string)$p['name'], docsExtensionPromptsJson()),
 	);
 });
+
+it('declares a description and required flag on every prompt argument', function (): void {
+	// These now reach the wire. Registration goes through Builder::add(), which
+	// publishes the declared Prompt object verbatim, so a missing description is
+	// an unlabelled field in every client rather than a cosmetic omission.
+	['context' => $context] = docsExtensionRegister(publicTools: false);
+
+	foreach ($context->getRegisteredMcpPrompts() as $registration) {
+		$arguments = $registration['prompt']->arguments ?? [];
+		expect($arguments)->not->toBeEmpty();
+
+		foreach ($arguments as $argument) {
+			expect($argument->description)->not->toBeNull();
+			expect(trim((string)$argument->description))->not->toBe('');
+			expect($argument->required)->toBeBool();
+		}
+	}
+});

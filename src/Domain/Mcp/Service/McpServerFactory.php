@@ -16,6 +16,7 @@ use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
+use TotalCMS\Domain\Mcp\Prompt\Handler\ExtensionPromptHandler;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
@@ -215,16 +216,14 @@ readonly class McpServerFactory
 					continue;
 				}
 				try {
-					$builder->addPrompt(
-						handler: $this->buildExtensionPromptHandler(
-							$reg['handler'],
-							$persona,
-							$name,
-							$access,
-							array_values($reg['prompt']->arguments ?? []),
-						),
-						name: $name,
-						description: $reg['prompt']->description ?? '',
+					// Builder::add() (not addPrompt()) so the declared Prompt object
+					// IS the advertised schema. addPrompt() reflects the handler,
+					// which recovers parameter names only — argument descriptions
+					// and required flags are lost, and clients render an unlabelled
+					// optional box for a described, required argument.
+					$builder->add(
+						$reg['prompt'],
+						new ExtensionPromptHandler($reg['handler'], $persona, $name, $access),
 					);
 				} catch (\LogicException $e) {
 					$this->logger->warning('Extension MCP prompt registration failed', [
@@ -460,93 +459,6 @@ readonly class McpServerFactory
 			$prompts,
 			static fn (PromptData $p): bool => PromptRegistrar::personaCanAccess($persona, $p->access),
 		));
-	}
-
-	/**
-	 * Builds the closure the SDK registers for an extension-defined prompt.
-	 *
-	 * The parameter names are generated, and that is the whole point. The SDK
-	 * derives a prompt's ADVERTISED arguments by reflecting its handler —
-	 * Builder::addPrompt() takes no $arguments parameter, so there is no other
-	 * channel for them — and ReferenceHandler::handle() then fills those
-	 * parameters BY NAME from the caller's argument bag. A handler declared as
-	 * `fn (array $arguments = [])` therefore fails twice over: prompts/list
-	 * advertises a single optional argument literally named "arguments", and
-	 * the caller's real arguments match no parameter and are dropped. Clients
-	 * render that as one unlabelled text box whose contents go nowhere.
-	 *
-	 * Generating `function (mixed $goal = null)` from the PromptArgument list
-	 * fixes both halves at once: reflection now sees the real argument names,
-	 * so prompts/list is correct, and name-based dispatch delivers them. This
-	 * is the same technique PromptRegistrar::buildHandler() uses for
-	 * collection-stored prompts, for the same two reasons.
-	 *
-	 * Extensions still receive the documented `fn (array $arguments = [])`
-	 * contract — the generated closure collects its named parameters back into
-	 * an array before calling through, so nothing changes for extension
-	 * authors.
-	 *
-	 * SAFETY: argument names reach eval(), and unlike the collection path
-	 * (whose names are schema-validated by mcp-prompt-arg.json) these come from
-	 * third-party extension code. Names are therefore filtered against
-	 * ^[a-z][a-z0-9_]*$ and anything else is dropped with a warning, so the
-	 * eval input is bounded to safe PHP identifiers.
-	 *
-	 * The access re-check runs at call time so a caller who guesses an
-	 * admin-only prompt name via prompts/get gets a clean MCP error rather than
-	 * content. The persona filter in build() already hides it from
-	 * prompts/list; this defends against name-guessing independently.
-	 *
-	 * @param list<\Mcp\Schema\PromptArgument> $arguments
-	 *
-	 * @SuppressWarnings("PHPMD.EvalExpression")
-	 */
-	private function buildExtensionPromptHandler(
-		callable $handler,
-		McpPersona $persona,
-		string $name,
-		string $access,
-		array $arguments,
-	): \Closure {
-		$paramSrc = [];
-		$argMap   = [];
-		foreach ($arguments as $argument) {
-			$argName = $argument->name;
-			if (preg_match('/^[a-z][a-z0-9_]*$/', $argName) !== 1) {
-				$this->logger->warning('Extension MCP prompt argument skipped: unsafe name', [
-					'prompt'   => $name,
-					'argument' => $argName,
-				]);
-
-				continue;
-			}
-
-			$paramSrc[] = "mixed \${$argName} = null";
-			$argMap[]   = "'{$argName}' => \${$argName}";
-		}
-
-		$src = sprintf(
-			'return function (%s) use ($handler, $persona, $name, $access): mixed {
-				if (!\\TotalCMS\\Domain\\Mcp\\Prompt\\Service\\PromptRegistrar::personaCanAccess($persona, $access)) {
-					throw new \\Mcp\\Exception\\PromptGetException(sprintf(
-						\'Prompt "%%s" requires %%s access.\',
-						$name,
-						$access,
-					));
-				}
-
-				// Omitted arguments are dropped rather than passed as null, so an
-				// extension can distinguish "not supplied" with a plain isset().
-				$args = array_filter([%s], static fn ($v) => $v !== null);
-
-				return $handler($args);
-			};',
-			implode(', ', $paramSrc),
-			implode(', ', $argMap),
-		);
-
-		/** @var \Closure */
-		return eval($src);
 	}
 
 	/**
