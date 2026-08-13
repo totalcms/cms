@@ -71,6 +71,30 @@
 			"label"   : "Enable Resource Subscriptions",
 			"help"    : "When on, AI agents can call <code>resources/subscribe</code> on URIs like <code>tcms://blog/</code> and T3 will push <code>notifications/resources/updated</code> when matching content changes. When off, the SDK still accepts subscribe calls but T3 won't push notifications — the kill switch for production troubleshooting.",
 			"default" : true
+		},
+		"listeningStream": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Answer SSE Probes with a Listening Stream",
+			"help"    : "Some MCP clients (e.g. OpenAI's plugin submission scanner) probe <code>/mcp</code> with a GET that asks for an SSE upgrade (<code>Accept: text/event-stream</code>) and treat the protocol-legal 405 response as a failure. When on, T3 answers those requests with a short keepalive-only SSE stream instead, auth- and Origin-checked identically to POST. A plain GET without the SSE Accept header always gets the normal 405, whatever this is set to. Each open stream holds one PHP-FPM worker for the duration below — turn this off under worker pressure and let the SDK return its normal 405.",
+			"default" : true
+		},
+		"listeningStreamSeconds": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Listening Stream Duration (seconds)",
+			"help"        : "How long the listening stream (above) stays open before closing on its own. Clamped to 1-30 seconds no matter what's entered here. Behind a buffering reverse proxy (Cloudflare, nginx with <code>proxy_buffering on</code>) the worker is held for the full duration even after the real client disconnects, so keep this as short as your scanning clients need — a couple of seconds is enough to deliver the first bytes.",
+			"placeholder" : "5",
+			"default"     : 5,
+			"min"         : 1,
+			"max"         : 30,
+			"settings" : {
+				"visibility": {
+					"watch": "listeningStream",
+					"value": true,
+					"operator": "=="
+				}
+			}
 		}
 	}
 }

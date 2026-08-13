@@ -432,6 +432,31 @@ $settings['mcp'] = [
 	// back to its per-session-only default — resources/subscribe still works
 	// but T3 won't push notifications/resources/updated when content changes.
 	'subscriptionsEnabled' => true,
+	// Bounded SSE "listening stream" for GET /mcp. The mcp/sdk transport only
+	// dispatches OPTIONS/POST/DELETE — a bare GET falls through to a spec-legal
+	// 405 (no server-initiated stream to offer). That's compliant, but some
+	// strict clients (e.g. OpenAI's plugin submission scanner) probe with an
+	// SSE GET (Accept: text/event-stream) and treat 405 as a failure. When
+	// true, T3 answers those probes with a real SSE stream carrying nothing
+	// but keepalive comments, auth-gated identically to POST and only for
+	// requests that actually ask for an SSE upgrade — a plain GET (browser,
+	// crawler, uptime monitor) still gets the SDK's normal 405.
+	//
+	// Worker-occupancy math: each open stream holds one PHP-FPM worker for
+	// the full `listeningStreamSeconds` window. At the default rate limit
+	// (`publicIpPerMinute: 60`) and a 5s window, one IP can hold ~5 workers
+	// concurrently — within policy on a typical shared-hosting pool
+	// (`pm.max_children` often 5-20). Behind a buffering reverse proxy
+	// (Cloudflare, nginx with proxy_buffering on) the proxy holds the origin
+	// connection independently of the real client, so `connection_aborted()`
+	// never fires there — assume every stream holds its worker for the FULL
+	// window regardless of whether the real client is still listening.
+	// `listeningStreamSeconds` is therefore the only real bound; it is
+	// clamped to 1-30 in code no matter what's configured here. Set
+	// `listeningStream` false to skip the stream entirely under worker
+	// pressure and let the SDK return its normal 405.
+	'listeningStream'        => true,
+	'listeningStreamSeconds' => 5,
 ];
 
 // WordPress-compatible XML-RPC publishing endpoint. Off by default: the path is

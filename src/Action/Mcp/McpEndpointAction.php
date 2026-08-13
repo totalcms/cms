@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Mcp;
 
+use Mcp\Server\Transport\CallbackStream;
 use Mcp\Server\Transport\Http\Middleware\DnsRebindingProtectionMiddleware;
 use Mcp\Server\Transport\Http\Middleware\ProtocolVersionMiddleware;
 use Mcp\Server\Transport\StreamableHttpTransport;
@@ -37,6 +38,15 @@ use TotalCMS\Support\Config;
  *   - mcp.enabled false   → 404 (the endpoint should appear not to exist)
  *   - edition gate failed → 403 with a structured error body
  *   - invalid API key     → 401
+ *
+ * A fourth branch, after persona resolution but before the SDK transport is
+ * built, answers a GET that asks for an SSE upgrade (Accept: text/event-stream)
+ * with a bounded SSE "listening stream" of keepalive comments (see
+ * listeningStreamResponse()) when mcp.listeningStream is on — auth-gated and
+ * Origin-checked identically to POST. Any other GET (no SSE Accept header, the
+ * config switch off, or a disallowed Origin in restricted mode) falls through
+ * to the SDK, which returns its spec-legal 405 (no server-initiated stream) —
+ * or, for the Origin case, we 403 directly since the SDK is never reached.
  */
 readonly class McpEndpointAction
 {
@@ -231,6 +241,47 @@ readonly class McpEndpointAction
 		// from the beginning of the stream.
 		$request->getBody()->rewind();
 
+		// Computed early (before build()) because both the listening-stream
+		// Origin check below and the transport's DnsRebindingProtectionMiddleware
+		// further down need it.
+		$allowedOrigins = (array)($this->config->mcp['allowedOrigins'] ?? []);
+
+		// Bounded SSE "listening stream": some strict MCP clients (OpenAI's
+		// plugin submission scanner among them) probe a bare GET with
+		// `Accept: text/event-stream` and treat the SDK's spec-legal 405 (no
+		// server-initiated stream) as a failure. Auth has already run above —
+		// same persona resolution as POST, same 401/403 outcomes — so we only
+		// reach here for a caller who was already allowed to talk to the
+		// server. That's what keeps this from being an anonymous
+		// worker-exhaustion vector. Placed above build() (which does a full
+		// collection-meta disk scan the stream never needs) but still below
+		// every auth/persona check above, and gated three ways:
+		//   - the config switch (default on; off = let the SDK 405 as normal)
+		//   - the client actually asking for an SSE upgrade (Accept header) —
+		//     without this, any plain GET (browser, crawler, uptime monitor)
+		//     would hang for the full window for nothing
+		//   - Origin/Host validation in restricted-origin mode, since this
+		//     branch returns before StreamableHttpTransport (and its
+		//     DnsRebindingProtectionMiddleware, built below) is ever reached
+		if (
+			$request->getMethod() === 'GET'
+			&& str_contains($request->getHeaderLine('Accept'), 'text/event-stream')
+			&& (bool)($this->config->mcp['listeningStream'] ?? true)
+		) {
+			if (!McpTransportSecurity::originAllowed($request, $allowedOrigins)) {
+				$message = $request->getHeaderLine('Origin') !== ''
+					? 'Forbidden: Invalid Origin header.'
+					: 'Forbidden: Invalid Host header.';
+				$response->getBody()->write($message);
+
+				return $response
+					->withStatus(403)
+					->withHeader('Content-Type', 'text/plain');
+			}
+
+			return $this->listeningStreamResponse($response);
+		}
+
 		$server = $this->serverFactory->build($persona, $toolsOnly);
 
 		// Compose the transport's HTTP middleware ourselves. The SDK's default
@@ -242,8 +293,7 @@ readonly class McpEndpointAction
 		// 403-on-invalid-Origin without breaking the open-by-default policy.
 		// ProtocolVersionMiddleware is always on (validates the MCP-Protocol-Version
 		// header; tolerant of its absence during initialize and for legacy clients).
-		$allowedOrigins = (array)($this->config->mcp['allowedOrigins'] ?? []);
-		$middleware     = [];
+		$middleware = [];
 		if (!McpTransportSecurity::isOpen($allowedOrigins)) {
 			$middleware[] = new DnsRebindingProtectionMiddleware(
 				McpTransportSecurity::allowedHosts($allowedOrigins, $request->getUri()->getHost()),
@@ -254,5 +304,118 @@ readonly class McpEndpointAction
 		$transport = new StreamableHttpTransport($request, middleware: $middleware);
 
 		return $server->run($transport);
+	}
+
+	/**
+	 * Emits a bounded SSE stream of keepalive comments and nothing else.
+	 *
+	 * T3 never has a server-initiated JSON-RPC message to push on this path
+	 * (all real MCP traffic is POST request/response or POST-triggered SSE
+	 * handled by the SDK transport above), so a keepalive-only stream is the
+	 * whole contract here — it exists to give strict clients 200 + bytes
+	 * instead of a 405.
+	 *
+	 * Streaming mechanism: `Mcp\Server\Transport\CallbackStream` is the same
+	 * echo/flush-on-read PSR-7 stream the SDK itself uses for its
+	 * progress-notification SSE (StreamableHttpTransport::flushOutgoingMessages()) —
+	 * already a dependency, already the established pattern in this codebase.
+	 * Slim's ResponseEmitter (driven by `$app->run()`) reads the body via
+	 * `StreamInterface::read()`, which invokes our callback once; the callback
+	 * does its own echo + @ob_flush() + flush() calls exactly like the SDK
+	 * does, so bytes leave the process incrementally rather than being
+	 * buffered until the callback returns.
+	 *
+	 * IMPORTANT (production, behind Cloudflare/nginx): a buffering reverse
+	 * proxy holds the origin connection independently of the real client, so
+	 * `connection_aborted()` never fires there even after the real client is
+	 * long gone — the checks below only help on a direct, non-proxied
+	 * connection (e.g. PHP's built-in dev server). Assume every stream holds
+	 * its worker for the FULL configured window; the window length (clamped
+	 * below) is the only real bound in production.
+	 */
+	private function listeningStreamResponse(ResponseInterface $response): ResponseInterface
+	{
+		// Clamp regardless of what's configured — a fat-fingered (or
+		// maliciously large) `mcp.listeningStreamSeconds` in tcms.php must not
+		// be able to pin a worker for minutes/hours.
+		$configured = (float)($this->config->mcp['listeningStreamSeconds'] ?? 5);
+		$seconds    = max(1.0, min(30.0, $configured));
+
+		$stream = new CallbackStream(static function () use ($seconds): void {
+			// Defeat zlib output buffering — common on shared hosting, T3's
+			// core audience. Without this, `flush()` below silently no-ops:
+			// PHP buffers everything for compression and the client sees
+			// nothing until the whole window elapses, at which point the
+			// feature has failed at its one job while still paying the full
+			// worker cost. Same guard this codebase's other production SSE
+			// action already applies — see
+			// BuilderEventsAction::prepareForStreaming().
+			@ini_set('zlib.output_compression', '0');
+			@ini_set('implicit_flush', '1');
+			ignore_user_abort(false);
+
+			// PHP 8.1+ built with zend-max-execution-timers (the default in
+			// the official PHP Docker images) counts usleep() against
+			// max_execution_time. Without this, a host with a short
+			// max_execution_time (15/20/30s) can fatal mid-stream, and
+			// because output has already started, the fatal's error text
+			// lands inside the SSE body instead of a clean close. We restore
+			// the original limit in `finally` below: under PHP-FPM/mod_php
+			// each request gets a fresh process/timer anyway, but a
+			// persistent CLI worker (this codebase's own test suite runs many
+			// requests in one process) would otherwise carry our bumped timer
+			// into whatever runs next and arm an unrelated fatal later.
+			$originalTimeLimit = (int)ini_get('max_execution_time');
+			@set_time_limit((int)ceil($seconds) + 5);
+
+			try {
+				if (connection_aborted() !== 0) {
+					return;
+				}
+
+				// `retry:` tells the client (EventSource's auto-reconnect) how
+				// long to wait before reconnecting once this window closes.
+				// Without it a browser tab reconnects immediately in a tight
+				// loop — effectively a permanently held worker. Sent once, on
+				// the first record; the SSE spec updates the client's
+				// reconnection timer whenever it sees the field, so one is enough.
+				echo ": keepalive\n";
+				echo "retry: 2000\n\n";
+				@ob_flush();
+				flush();
+
+				$start = microtime(true);
+				while ((microtime(true) - $start) < $seconds) {
+					$remaining = $seconds - (microtime(true) - $start);
+					$sleep     = min(5.0, max(0.0, $remaining));
+					if ($sleep <= 0.0) {
+						break;
+					}
+
+					usleep((int)round($sleep * 1_000_000));
+
+					if (connection_aborted() !== 0) {
+						return;
+					}
+
+					echo ": keepalive\n\n";
+					@ob_flush();
+					flush();
+				}
+			} finally {
+				@set_time_limit($originalTimeLimit);
+			}
+		});
+
+		return $response
+			->withStatus(200)
+			->withHeader('Content-Type', 'text/event-stream')
+			// no-transform is the portable anti-buffering signal — unlike
+			// X-Accel-Buffering (nginx-only), Cloudflare and other
+			// intermediaries respect it.
+			->withHeader('Cache-Control', 'no-cache, no-transform')
+			->withHeader('X-Accel-Buffering', 'no')
+			->withHeader('Connection', 'keep-alive')
+			->withBody($stream);
 	}
 }
