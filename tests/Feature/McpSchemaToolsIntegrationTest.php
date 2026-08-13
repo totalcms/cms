@@ -394,18 +394,24 @@ it('find_listings tools/call filters by city and excludes drafts (public persona
 	expect($result)->toHaveKey('content');
 	expect($result['content'])->toBeArray()->not()->toBeEmpty();
 
-	// SavedQueryTool::handle() returns bare {items, count} — no hand-built
-	// `content` envelope — so structuredContent carries that shape directly
-	// (not nested under a `content` key), and content[0].text is the SDK's
-	// single JSON-encoded mirror of the same data.
+	// SavedQueryTool::handle() returns the shared collection-query envelope
+	// {items, total, limit, offset, has_more} — built by
+	// CollectionQueryResultFormatter::envelope() from the same QueryResult
+	// query_collection uses — no hand-built `content` envelope, so
+	// structuredContent carries that shape directly (not nested under a
+	// `content` key), and content[0].text is the SDK's single JSON-encoded
+	// mirror of the same data.
 	expect($result)->toHaveKey('structuredContent');
-	expect(array_keys($result['structuredContent']))->toBe(['items', 'count']);
+	expect(array_keys($result['structuredContent']))->toBe(['items', 'total', 'limit', 'offset', 'has_more']);
 
 	$payload = json_decode((string)$result['content'][0]['text'], true);
 
 	expect($payload)->toBeArray();
 	expect($payload)->toHaveKey('items');
-	expect($payload)->toHaveKey('count');
+	expect($payload)->toHaveKey('total');
+	expect($payload)->toHaveKey('limit');
+	expect($payload)->toHaveKey('offset');
+	expect($payload)->toHaveKey('has_more');
 
 	$items = $payload['items'];
 	$ids   = array_column($items, 'id');
@@ -422,8 +428,10 @@ it('find_listings tools/call filters by city and excludes drafts (public persona
 	// austin-draft must NOT appear (draft:true excluded by public persona).
 	expect($ids)->not()->toContain('austin-draft');
 
-	// Count must match the returned items array length.
-	expect($payload['count'])->toBe(count($items));
+	// total/has_more honestly report the full result, not just this page —
+	// the thing {items, count} could never express.
+	expect($payload['total'])->toBe(count($items));
+	expect($payload['has_more'])->toBeFalse();
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -460,11 +468,13 @@ it('find_listings advertises an outputSchema matching its real structuredContent
 
 	expect($found)->not()->toBeNull();
 	expect($found)->toHaveKey('outputSchema');
-	expect($found['outputSchema']['required'])->toBe(['items', 'count']);
+	expect($found['outputSchema']['required'])->toBe(['items', 'total', 'limit', 'offset', 'has_more']);
 
 	// tools/call — the real structuredContent must match the declared schema:
-	// bare {items, count} — SavedQueryTool::handle() returns raw data, the
-	// SDK builds the envelope (see SavedQueryToolFactory::outputSchemaFor()'s
+	// the shared {items, total, limit, offset, has_more} envelope —
+	// SavedQueryTool::handle() returns raw data built by
+	// CollectionQueryResultFormatter::envelope(), the SDK builds the outer
+	// content[0].text mirror (see SavedQueryToolFactory::outputSchemaFor()'s
 	// docblock).
 	$callResponse = schemaTestPublicRequest(
 		$this->app,
@@ -485,13 +495,17 @@ it('find_listings advertises an outputSchema matching its real structuredContent
 	}
 
 	expect($structured['items'])->toBeArray()->not()->toBeEmpty();
-	expect($structured['count'])->toBeInt();
+	expect($structured['total'])->toBeInt();
+	expect($structured['limit'])->toBeInt();
+	expect($structured['offset'])->toBeInt();
+	expect($structured['has_more'])->toBeBool();
 
 	// content[0].text is the SDK's JSON-encoded mirror of the same
-	// {items, count} payload — not a nested envelope.
+	// {items, total, limit, offset, has_more} payload — not a nested envelope.
 	$decoded = json_decode((string)$result['content'][0]['text'], true);
 	expect($decoded)->toHaveKey('items');
-	expect($decoded)->toHaveKey('count');
+	expect($decoded)->toHaveKey('total');
+	expect($decoded)->toHaveKey('has_more');
 });
 
 // ──────────────────────────────────────────────────────────────────────────────

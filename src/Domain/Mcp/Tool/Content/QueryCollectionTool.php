@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -60,6 +61,7 @@ readonly class QueryCollectionTool
 		private PersonaContext $personaContext,
 		private McpSchemaResolver $schemaResolver,
 		private ContentRenderer $contentRenderer,
+		private CollectionQueryResultFormatter $resultFormatter,
 	) {
 	}
 
@@ -85,34 +87,17 @@ readonly class QueryCollectionTool
 	}
 
 	/**
+	 * Delegates to the shared CollectionQueryResultFormatter so this schema
+	 * and SavedQueryToolFactory::outputSchemaFor() can never drift — see
+	 * CollectionQueryResultFormatter's class docblock.
+	 *
 	 * @return array<string,mixed>
 	 */
 	private function outputSchema(): array
 	{
-		return [
-			'type'                 => 'object',
-			'required'             => ['items', 'total', 'limit', 'offset', 'has_more'],
-			'additionalProperties' => false,
-			'properties'           => [
-				'items' => [
-					'type'        => 'array',
-					'description' => 'Matching objects in sort order. Field set varies by collection — call describe_collection for the schema.',
-					'items'       => [
-						'type'                 => 'object',
-						'additionalProperties' => true,
-						'required'             => ['id'],
-						'properties'           => [
-							'id'  => ['type' => 'string'],
-							'url' => ['type' => 'string', 'description' => 'Public URL for this object when the collection has a URL pattern configured.'],
-						],
-					],
-				],
-				'total'    => ['type' => 'integer', 'description' => 'Total matching items (post-persona-filter).'],
-				'limit'    => ['type' => 'integer', 'description' => 'Cap applied to this response — server may have lowered the requested limit.'],
-				'offset'   => ['type' => 'integer'],
-				'has_more' => ['type' => 'boolean', 'description' => 'True when total > offset + count(items); call again with offset += limit to paginate.'],
-			],
-		];
+		return $this->resultFormatter->outputSchema(
+			'Matching objects in sort order. Field set varies by collection — call describe_collection for the schema.',
+		);
 	}
 
 	/**
@@ -189,13 +174,7 @@ readonly class QueryCollectionTool
 			$items[]     = $item;
 		}
 
-		return [
-			'items'    => $items,
-			'total'    => $result->total,
-			'limit'    => $result->limit,
-			'offset'   => $result->offset,
-			'has_more' => $result->hasMore(),
-		];
+		return $this->resultFormatter->envelope($result, $items);
 	}
 
 	public function buildDescription(McpPersona $persona): string

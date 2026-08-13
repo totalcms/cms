@@ -22,6 +22,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
@@ -75,6 +76,7 @@ final class SavedQueryToolTest extends TestCase
 			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
 			schemaResolver: $this->createMock(McpSchemaResolver::class),
 			collectionRepository: $this->createMock(CollectionRepository::class),
+			resultFormatter: new CollectionQueryResultFormatter(),
 		);
 
 		try {
@@ -128,16 +130,20 @@ final class SavedQueryToolTest extends TestCase
 			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
 			schemaResolver: $schemaResolver,
 			collectionRepository: $collectionRepo,
+			resultFormatter: new CollectionQueryResultFormatter(),
 		);
 
 		$result = $tool->handle(['city' => 'Austin']);
 
-		// Bare {items, count} — no hand-built `content` envelope. The SDK
-		// builds content[0].text / structuredContent from this raw return
-		// value (see SavedQueryTool's class docblock).
-		$this->assertArrayHasKey('items', $result);
-		$this->assertArrayHasKey('count', $result);
-		$this->assertSame(0, $result['count']);
+		// Shared envelope {items, total, limit, offset, has_more} — no
+		// hand-built `content` wrapper. The SDK builds content[0].text /
+		// structuredContent from this raw return value (see SavedQueryTool's
+		// class docblock and CollectionQueryResultFormatter).
+		$this->assertSame(['items', 'total', 'limit', 'offset', 'has_more'], array_keys($result));
+		$this->assertSame(0, $result['total']);
+		$this->assertSame(20, $result['limit']);
+		$this->assertSame(0, $result['offset']);
+		$this->assertFalse($result['has_more']);
 		// The include param should contain the resolved city filter.
 		$this->assertStringContainsString('Austin', $capturedParams['include'] ?? '');
 	}
@@ -160,6 +166,7 @@ final class SavedQueryToolTest extends TestCase
 			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
 			schemaResolver: $this->createMock(McpSchemaResolver::class),
 			collectionRepository: $this->createMock(CollectionRepository::class),
+			resultFormatter: new CollectionQueryResultFormatter(),
 		);
 
 		try {
@@ -238,6 +245,7 @@ final class SavedQueryToolTest extends TestCase
 			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
 			schemaResolver: $schemaResolver,
 			collectionRepository: $collectionRepo,
+			resultFormatter: new CollectionQueryResultFormatter(),
 		);
 
 		$response = $this->dispatchToolCall('find_listings', fn (): array => $tool->handle([]));
@@ -247,12 +255,19 @@ final class SavedQueryToolTest extends TestCase
 		$this->assertInstanceOf(CallToolResult::class, $result);
 		$this->assertFalse($result->isError);
 
-		// Bug 1: structuredContent must be the bare {items, count} payload —
-		// NOT {content: [{type, text}]}.
-		$this->assertSame(['items', 'count'], array_keys($result->structuredContent ?? []));
+		// Shared envelope: structuredContent must be the bare
+		// {items, total, limit, offset, has_more} payload — NOT
+		// {content: [{type, text}]}, and NOT the old {items, count} shape.
+		$this->assertSame(
+			['items', 'total', 'limit', 'offset', 'has_more'],
+			array_keys($result->structuredContent ?? []),
+		);
 		$this->assertCount(1, $result->structuredContent['items']);
 		$this->assertSame('austin-1', $result->structuredContent['items'][0]['id']);
-		$this->assertSame(1, $result->structuredContent['count']);
+		$this->assertSame(1, $result->structuredContent['total']);
+		$this->assertSame(20, $result->structuredContent['limit']);
+		$this->assertSame(0, $result->structuredContent['offset']);
+		$this->assertFalse($result->structuredContent['has_more']);
 
 		// content[0].text must still carry the JSON for clients that read it
 		// instead of structuredContent.
@@ -260,9 +275,80 @@ final class SavedQueryToolTest extends TestCase
 		$textContent = $result->content[0];
 		$this->assertInstanceOf(\Mcp\Schema\Content\TextContent::class, $textContent);
 		$decoded = json_decode($textContent->text, true);
-		$this->assertSame(['items', 'count'], array_keys($decoded));
+		$this->assertSame(['items', 'total', 'limit', 'offset', 'has_more'], array_keys($decoded));
 		$this->assertSame('austin-1', $decoded['items'][0]['id']);
-		$this->assertSame(1, $decoded['count']);
+		$this->assertSame(1, $decoded['total']);
+	}
+
+	public function testSdkDispatchReportsHasMoreTrueWhenResultIsTruncated(): void
+	{
+		// This is the case that actually proves the fix's value: the old
+		// {items, count} shape could never distinguish "here are all 2
+		// matching items" from "here are 2 of 5 — call again for the rest".
+		// The tool definition's own limit (2) is lower than the total number
+		// of matching records (5), so the QueryResult the SDK gets back is
+		// genuinely truncated.
+		$def = SavedQueryToolDefinition::fromArray('listings', 'public', [
+			'name'        => 'find_listings',
+			'description' => 'Find listings.',
+			'limit'       => 2,
+		]);
+
+		$collection = $this->createMock(CollectionData::class);
+
+		$indexQuery = $this->createMock(IndexQueryService::class);
+		$indexQuery->method('query')->willReturn(
+			new QueryResult(
+				items: [
+					['id' => 'listing-1', 'city' => 'Austin'],
+					['id' => 'listing-2', 'city' => 'Austin'],
+				],
+				total: 5,
+				limit: 2,
+				offset: 0,
+			),
+		);
+
+		$collectionRepo = $this->createMock(CollectionRepository::class);
+		$collectionRepo->method('fetchCollection')->willReturn($collection);
+
+		$schemaResolver = $this->createMock(McpSchemaResolver::class);
+		$schemaResolver->method('nonExposedProperties')->willReturn([]);
+		$schemaResolver->method('renderableProperties')->willReturn([]);
+
+		$personaCtx = $this->makePersonaContext(McpPersona::PUBLIC_);
+
+		$tool = new SavedQueryTool(
+			definition: $def,
+			indexQueryService: $indexQuery,
+			filterValueResolver: new FilterValueResolver(),
+			contentRenderer: $this->createMock(ContentRenderer::class),
+			personaContext: $personaCtx,
+			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
+			schemaResolver: $schemaResolver,
+			collectionRepository: $collectionRepo,
+			resultFormatter: new CollectionQueryResultFormatter(),
+		);
+
+		$response = $this->dispatchToolCall('find_listings', fn (): array => $tool->handle([]));
+
+		$this->assertInstanceOf(Response::class, $response);
+		$result = $response->result;
+		$this->assertInstanceOf(CallToolResult::class, $result);
+		$this->assertFalse($result->isError);
+
+		$structured = $result->structuredContent ?? [];
+		$this->assertCount(2, $structured['items']);
+		$this->assertSame(5, $structured['total']);
+		$this->assertSame(2, $structured['limit']);
+		$this->assertSame(0, $structured['offset']);
+		// The value that {items, count} could never express: this response
+		// is 2 of 5, not "all of them".
+		$this->assertTrue($structured['has_more']);
+
+		$decoded = json_decode((string)$result->content[0]->text, true);
+		$this->assertTrue($decoded['has_more']);
+		$this->assertSame(5, $decoded['total']);
 	}
 
 	public function testSdkDispatchSetsOuterIsErrorTrueOnFailure(): void
@@ -285,6 +371,7 @@ final class SavedQueryToolTest extends TestCase
 			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
 			schemaResolver: $this->createMock(McpSchemaResolver::class),
 			collectionRepository: $this->createMock(CollectionRepository::class),
+			resultFormatter: new CollectionQueryResultFormatter(),
 		);
 
 		$response = $this->dispatchToolCall('admin_query', fn (): array => $tool->handle([]));

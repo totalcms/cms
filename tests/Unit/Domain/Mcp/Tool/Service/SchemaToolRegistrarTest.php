@@ -14,6 +14,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -75,6 +76,7 @@ final class SchemaToolRegistrarTest extends TestCase
 			ObjectUrlBuilder::class     => $this->createMock(ObjectUrlBuilder::class),
 			McpSchemaResolver::class    => $this->createMock(McpSchemaResolver::class),
 			CollectionRepository::class => $this->createMock(CollectionRepository::class),
+			CollectionQueryResultFormatter::class => new CollectionQueryResultFormatter(),
 			default                     => null,
 		});
 

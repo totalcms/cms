@@ -53,6 +53,26 @@ Each tool entry is an object with the following fields. Only `id` and `descripti
 
 The `mcp-tool.json` JSON Schema enforces `maxLength: 64` on the base `id` field only — it cannot dynamically account for the site's configured `mcp.toolPrefix`. The save-time validator performs the full prefix-inclusive check: `strlen(toolPrefix + "_" + id) ≤ 64`. If a site has a 10-character prefix configured, base ids must be ≤ 54 characters. The error message will state both the prefix in use and the resulting length.
 
+## Result shape
+
+A saved-query tool returns the same paginated envelope as `query_collection` — both are built from the same `CollectionQueryResultFormatter`:
+
+```json
+{
+  "items": [ { "id": "post-1", "url": "/blog/post-1", "...": "..." } ],
+  "total": 37,
+  "limit": 10,
+  "offset": 0,
+  "has_more": true
+}
+```
+
+- `total` — total matching records, after persona filtering (drafts excluded for public callers).
+- `limit` / `offset` — the tool definition's own `limit` and `offset` values (see [Tool definition reference](#tool-definition-reference)). Saved-query tools have no caller-supplied pagination parameter — `limit` and `offset` are fixed by the definition so the tool stays a curated, bounded answer.
+- `has_more` — `true` when `total` exceeds `offset + limit`, i.e. the tool's fixed window doesn't cover every matching record.
+
+If an agent needs to page past a saved-query tool's fixed window, it should call `query_collection` directly — the general-purpose tool that accepts `limit`/`offset` — rather than expecting the saved-query tool to move its own window. `has_more: true` is a signal to reach for `query_collection`, not an invitation to re-call the saved-query tool with different arguments it doesn't accept.
+
 ## Fixed-filter tools
 
 Fixed-filter tools take no caller arguments. They are preset queries with a stable result shape — useful for "give me all draft posts" or "return the three most recent announcements":
@@ -188,6 +208,7 @@ If a tool is missing from `tools/list` despite being defined in the schema, chec
 | Agent selects by | Tool name | Tool name + inline args |
 | Best for | Stable, reused queries | Ad-hoc filter composition |
 | Caller can change filters | No (fixed + declared params only) | Yes |
+| Pagination | Fixed `limit`/`offset` from the definition; `has_more` signals to switch tools | Caller-supplied `limit`/`offset` |
 | Requires PHP | No | No |
 
 Use a saved-query tool when you want a predictable, named entry point. Use `query_collection` when the agent needs to compose filters freely.
