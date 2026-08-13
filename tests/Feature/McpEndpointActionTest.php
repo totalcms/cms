@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Mcp\Schema\JsonRpc\MessageInterface;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\postJson;
@@ -118,18 +119,47 @@ describe('McpEndpointAction', function (): void {
 			// Successful initialize carries result with protocolVersion + capabilities
 			expect($body)->toHaveKey('result');
 			expect($body['result'])->toHaveKeys(['protocolVersion', 'capabilities', 'serverInfo']);
-			expect($body['result']['protocolVersion'])->toBe('2025-06-18');
+
+			// The SDK's InitializeHandler does NOT echo the version the client
+			// requested (mcpInitializePayload() above pins '2025-06-18' as a fixed
+			// client stance) — it always answers with the version it itself
+			// advertises (Mcp\Schema\JsonRpc\InitializeHandler returns
+			// $configuration->protocolVersion, which we never set, so it falls
+			// back to MessageInterface::PROTOCOL_VERSION). That is spec-legal: a
+			// server may respond with a different protocol version than the one
+			// requested if it doesn't support it, and it's the CLIENT's job to
+			// decide whether to proceed or disconnect. So assert against the
+			// SDK's own constant instead of a hardcoded literal, which is exactly
+			// what drifted here (the SDK bumped its default from 2025-06-18 to
+			// 2025-11-25) — pinning to the source of truth means this test can
+			// never go stale on the next SDK bump.
+			expect($body['result']['protocolVersion'])->toBe(MessageInterface::PROTOCOL_VERSION->value);
 		}
 	});
 
-	it('GET /mcp resolves the same action', function (): void {
+	it('GET /mcp without the SSE Accept header returns 405', function (): void {
 		// SDK's StreamableHttpTransport dispatches on method+Accept; we route
-		// both POST and GET to the same Action. Verify the route resolves.
+		// both POST and GET to the same Action, so the route itself always
+		// resolves — that's no longer what this test proves.
+		//
+		// Pre-948a24cb2, this asserted the status was NOT 405, on the theory
+		// that 405 meant Slim couldn't find a GET handler for the route. That
+		// commit deliberately introduced a real 405 case: a bare GET without
+		// `Accept: text/event-stream` now falls through to the SDK's
+		// StreamableHttpTransport, which only dispatches OPTIONS/POST/DELETE
+		// and returns its spec-legal 405 for GET. The Accept-header gate
+		// exists specifically so a plain GET from a browser, crawler, or
+		// uptime monitor can't hold a PHP-FPM worker open on the SSE
+		// listening-stream path (see listeningStreamResponse()). So 405 here
+		// is intended behaviour, not a routing failure — assert that instead
+		// of the inverse. The SSE-upgrade success path (GET with
+		// `Accept: text/event-stream`) is already covered separately below,
+		// in the "listening stream (GET)" describe block.
 		$response = \TotalCMS\Slim\Pest\get('/mcp');
 
-		// GET without SSE Accept usually yields a non-200 from the SDK protocol
-		// layer, but the route must resolve (not 405 Method Not Allowed).
-		expect($response->getStatusCode())->not()->toBe(405);
+		// A blocked edition/enabled gate can still short-circuit before the
+		// SDK is ever reached, matching the pattern used elsewhere in this file.
+		expect($response->getStatusCode())->toBeIn([405, 403, 404]);
 	});
 });
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use TotalCMS\Support\Config;
 
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());
@@ -163,29 +164,75 @@ describe('McpResources — resources/list', function (): void {
 	});
 
 	it('returns empty resources list for public persona when no collections are public', function (): void {
-		// Hit the endpoint without an API key.  With publicAccess disabled (default)
-		// this returns 401 — safe assertion because there are no public collections
-		// in the test fixture anyway, so an empty list is also valid.
-		$factory = new Psr17Factory();
-		$request = $factory
+		// mcp.publicAccess now defaults to true (a2181aa44): an anonymous
+		// caller resolves to the PUBLIC_ persona and is let through
+		// McpEndpointAction's auth gate, same as an admin API-key caller.
+		//
+		// This test used to skip straight to a bare `resources/list` POST
+		// with no prior `initialize` call and no Mcp-Session-Id header, on
+		// the theory that an unauthenticated request would be rejected by
+		// OUR auth gate (401/403/404) before anything else mattered. That
+		// was only ever true because publicAccess used to default to false,
+		// so McpAuth::resolvePersona() threw before the request reached the
+		// SDK. Now that anonymous callers are allowed through, the request
+		// reaches Mcp\Server\Protocol::resolveSession(), which unconditionally
+		// requires a session for any non-`initialize` method — "A valid
+		// session id is REQUIRED for non-initialize requests." — and answers
+		// 400. That 400 is correct, spec-mandated SDK behaviour for a
+		// request that skips the handshake; it has nothing to do with
+		// publicAccess or persona and was never what this test intended to
+		// exercise. Perform the real anonymous handshake instead, so this
+		// test actually proves the PUBLIC_-persona claim in its name.
+		/** @var Config $config */
+		$config      = $this->app->getContainer()->get(Config::class);
+		$config->mcp = array_merge($config->mcp, ['publicAccess' => true]);
+
+		$factory     = new Psr17Factory();
+		$initRequest = $factory
 			->createServerRequest('POST', '/mcp')
 			->withHeader('Content-Type', 'application/json')
 			->withHeader('Accept', 'application/json, text/event-stream');
+		$initRequest->getBody()->write((string)json_encode([
+			'jsonrpc' => '2.0',
+			'id'      => 0,
+			'method'  => 'initialize',
+			'params'  => [
+				'protocolVersion' => '2025-06-18',
+				'capabilities'    => new stdClass(),
+				'clientInfo'      => ['name' => 'pest', 'version' => '0.1'],
+			],
+		]));
+		$initRequest->getBody()->rewind();
 
-		$request->getBody()->write((string)json_encode(mcpResourcePayload('resources/list')));
-		$request->getBody()->rewind();
+		$initResponse = $this->app->handle($initRequest);
+		$initStatus   = $initResponse->getStatusCode();
 
-		$response = $this->app->handle($request);
-		$status   = $response->getStatusCode();
+		if ($initStatus !== 200) {
+			// MCP unavailable in this environment (non-Pro edition, disabled) —
+			// same skip-safe pattern used elsewhere in this file.
+			expect($initStatus)->toBeIn([401, 403, 404]);
 
-		if ($status === 200) {
-			$parsed = json_decode((string)$response->getBody(), true);
-			// Public persona sees no admin-only collections.
-			expect($parsed['result']['resources'])->toBe([]);
-		} else {
-			// publicAccess disabled: anonymous requests are rejected — expected.
-			expect($status)->toBeIn([401, 403, 404]);
+			return;
 		}
+
+		$sessionId = $initResponse->getHeaderLine('Mcp-Session-Id');
+
+		$listRequest = $factory
+			->createServerRequest('POST', '/mcp')
+			->withHeader('Content-Type', 'application/json')
+			->withHeader('Accept', 'application/json, text/event-stream')
+			->withHeader('Mcp-Session-Id', $sessionId);
+		$listRequest->getBody()->write((string)json_encode(mcpResourcePayload('resources/list')));
+		$listRequest->getBody()->rewind();
+
+		$response = $this->app->handle($listRequest);
+
+		expect($response->getStatusCode())->toBe(200);
+
+		$parsed = json_decode((string)$response->getBody(), true);
+		// Public persona sees no admin-only collections — the blog collection
+		// seeded in beforeEach is not marked mcp.access:'public'.
+		expect($parsed['result']['resources'])->toBe([]);
 	});
 });
 
