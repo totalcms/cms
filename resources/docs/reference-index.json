@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "built_at": "2026-08-12T00:57:32+00:00",
+    "built_at": "2026-08-13T04:49:21+00:00",
     "twig_functions": [
         {
             "name": "selectOptions",
@@ -4771,7 +4771,7 @@
             },
             {
                 "name": "registerMcpTool",
-                "signature": "registerMcpTool(string $name, string $description, string $access, Closure $handler, ?array $inputSchema = null, ?ToolAnnotations $annotations = null): void",
+                "signature": "registerMcpTool(string $name, string $description, string $access, Closure $handler, ?array $inputSchema = null, ?ToolAnnotations $annotations = null, ?array $outputSchema = null): void",
                 "description": "Register an MCP tool exposed at /mcp. Strict-deny collision policy: a tool whose name conflicts with a core tool or another extension's tool is logged and skipped. Pick a vendor- prefixed name (`acme_search_invoices`) to avoid collisions.",
                 "phase": "register",
                 "permission": null
@@ -4779,7 +4779,7 @@
             {
                 "name": "registerMcpResource",
                 "signature": "registerMcpResource(string $uri, string $description, Closure $handler, string $access = 'public', string $name = '', string $mimeType = 'application/json'): void",
-                "description": "Register an MCP resource \u2014 a concrete `tcms://...` or extension-scheme URI (e.g. `acme://invoices/all`) that the agent can fetch via `resources/read` or the `get_resource` tool. The handler is invoked with no arguments and must return a SDK ResourceContent envelope:",
+                "description": "Register an MCP resource \u2014 a concrete `tcms://...` or extension-scheme URI (e.g. `acme://invoices/all`) that the agent can fetch via `resources/read` or the `get_resource` tool. The handler is invoked with no arguments; its return value goes through the SDK's ResourceResultFormatter. Return one of:",
                 "phase": "register",
                 "permission": null
             },

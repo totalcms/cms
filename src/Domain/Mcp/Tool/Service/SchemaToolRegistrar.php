@@ -141,6 +141,7 @@ final class SchemaToolRegistrar
 						access: $definition->access,
 						handler: $this->factory->closureFor($definition, $tool),
 						inputSchema: $this->factory->inputSchemaFor($definition),
+						outputSchema: $this->factory->outputSchemaFor($definition),
 						// Directory requirement: every tool carries a title.
 						// Saved queries are index reads by construction, so the
 						// read-only hints are safe to assert unconditionally.

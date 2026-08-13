@@ -394,20 +394,14 @@ it('find_listings tools/call filters by city and excludes drafts (public persona
 	expect($result)->toHaveKey('content');
 	expect($result['content'])->toBeArray()->not()->toBeEmpty();
 
-	// The SDK wraps the tool handler output in an outer content envelope.
-	// Navigate through: result.content[0].text → {content:[{type,text}]}
-	// → content[0].text → {items:[...], count:N}
-	$outerText  = $result['content'][0]['text'];
-	$toolOutput = json_decode((string)$outerText, true);
+	// SavedQueryTool::handle() returns bare {items, count} — no hand-built
+	// `content` envelope — so structuredContent carries that shape directly
+	// (not nested under a `content` key), and content[0].text is the SDK's
+	// single JSON-encoded mirror of the same data.
+	expect($result)->toHaveKey('structuredContent');
+	expect(array_keys($result['structuredContent']))->toBe(['items', 'count']);
 
-	// Handle both single-wrap and double-wrap SDK serialization patterns.
-	if (is_array($toolOutput) && isset($toolOutput['content'])) {
-		$innerText = $toolOutput['content'][0]['text'] ?? null;
-		$payload   = is_string($innerText) ? json_decode($innerText, true) : null;
-	} else {
-		// Single-wrap: text is directly the items JSON.
-		$payload = $toolOutput;
-	}
+	$payload = json_decode((string)$result['content'][0]['text'], true);
 
 	expect($payload)->toBeArray();
 	expect($payload)->toHaveKey('items');
@@ -430,6 +424,74 @@ it('find_listings tools/call filters by city and excludes drafts (public persona
 
 	// Count must match the returned items array length.
 	expect($payload['count'])->toBe(count($items));
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Test 2b — find_listings advertises an outputSchema that matches its real
+// structuredContent on the wire (Part B: saved-query tool outputSchema).
+// ──────────────────────────────────────────────────────────────────────────────
+
+it('find_listings advertises an outputSchema matching its real structuredContent', function (): void {
+	/** @var Config $config */
+	$config                      = $this->app->getContainer()->get(Config::class);
+	$config->mcp['publicAccess'] = true;
+
+	$sessionId = schemaTestPublicInit($this->app);
+
+	if ($sessionId === '') {
+		expect(true)->toBeTrue();
+
+		return;
+	}
+
+	// tools/list must carry an outputSchema for find_listings.
+	$listResponse = schemaTestPublicRequest($this->app, schemaTestToolsList(), $sessionId);
+	expect($listResponse->getStatusCode())->toBe(200);
+
+	$listBody = json_decode((string)$listResponse->getBody(), true);
+	$tools    = $listBody['result']['tools'] ?? [];
+	$found    = null;
+	foreach ($tools as $t) {
+		if (($t['name'] ?? '') === 'find_listings') {
+			$found = $t;
+			break;
+		}
+	}
+
+	expect($found)->not()->toBeNull();
+	expect($found)->toHaveKey('outputSchema');
+	expect($found['outputSchema']['required'])->toBe(['items', 'count']);
+
+	// tools/call — the real structuredContent must match the declared schema:
+	// bare {items, count} — SavedQueryTool::handle() returns raw data, the
+	// SDK builds the envelope (see SavedQueryToolFactory::outputSchemaFor()'s
+	// docblock).
+	$callResponse = schemaTestPublicRequest(
+		$this->app,
+		schemaTestToolsCall('find_listings', ['city' => 'Austin', 'max_price' => 500000]),
+		$sessionId,
+	);
+	expect($callResponse->getStatusCode())->toBe(200);
+
+	$callBody = json_decode((string)$callResponse->getBody(), true);
+	$result   = $callBody['result'];
+
+	expect($result)->toHaveKey('structuredContent');
+	$structured = $result['structuredContent'];
+
+	// Declared required keys are actually present.
+	foreach ($found['outputSchema']['required'] as $requiredKey) {
+		expect($structured)->toHaveKey($requiredKey);
+	}
+
+	expect($structured['items'])->toBeArray()->not()->toBeEmpty();
+	expect($structured['count'])->toBeInt();
+
+	// content[0].text is the SDK's JSON-encoded mirror of the same
+	// {items, count} payload — not a nested envelope.
+	$decoded = json_decode((string)$result['content'][0]['text'], true);
+	expect($decoded)->toHaveKey('items');
+	expect($decoded)->toHaveKey('count');
 });
 
 // ──────────────────────────────────────────────────────────────────────────────

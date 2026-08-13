@@ -97,6 +97,27 @@ final class SavedQueryToolFactoryTest extends TestCase
 		$this->assertSame([], $schema['required'] ?? []);
 	}
 
+	public function testGeneratesAnOutputSchemaDescribingTheCleanItemsCountShape(): void
+	{
+		$def = SavedQueryToolDefinition::fromArray('listings', 'public', [
+			'id'          => 'find_listings',
+			'description' => 'Find listings.',
+		]);
+
+		$schema = $this->factory->outputSchemaFor($def);
+
+		$this->assertSame('object', $schema['type']);
+		$this->assertSame(['items', 'count'], $schema['required']);
+		$this->assertFalse($schema['additionalProperties']);
+		$this->assertSame('array', $schema['properties']['items']['type']);
+		$this->assertStringContainsString('listings', $schema['properties']['items']['description']);
+		$this->assertSame('object', $schema['properties']['items']['items']['type']);
+		$this->assertSame(['id'], $schema['properties']['items']['items']['required']);
+		$this->assertSame('string', $schema['properties']['items']['items']['properties']['id']['type']);
+		$this->assertSame('string', $schema['properties']['items']['items']['properties']['url']['type']);
+		$this->assertSame('integer', $schema['properties']['count']['type']);
+	}
+
 	public function testComposesADescriptionBlockWithTheParamCatalog(): void
 	{
 		$def = SavedQueryToolDefinition::fromArray('listings', 'public', [

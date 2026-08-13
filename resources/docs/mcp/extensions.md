@@ -56,10 +56,19 @@ $context->registerMcpTool(
             'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50, 'default' => 10],
         ],
     ],
+    outputSchema: [
+        'type'     => 'object',
+        'required' => ['items'],
+        'properties' => [
+            'items' => ['type' => 'array', 'items' => ['type' => 'object']],
+        ],
+    ],
 );
 ```
 
 `access` controls which [persona](mcp/server#three-audiences-one-endpoint) sees the tool: `admin` (default), `public`, or `authenticated`.
+
+**`outputSchema` is optional but recommended.** Declare a JSON Schema describing your handler's return shape — its root must be `{type: 'object', ...}`, same as `inputSchema`. It costs nothing at call time (T3 doesn't validate your handler's actual return against it), but SDK-aware MCP clients use it to pre-validate results and, more importantly, models reason better about a tool's output when they know its shape up front instead of inferring it from one example response. OpenAI's plugin-directory scanner specifically flags tools that omit it. Match the shape your handler actually returns — if it varies (an error object vs. a success object, say), use `oneOf` rather than picking one shape and hoping; see [Saved-Query Tools](mcp/saved-query-tools) or `src/Domain/Mcp/Tool/Discovery/ListCollectionsTool.php` for worked examples.
 
 **Important — `authenticated` is a Phase 4 capability.** Registering `access: 'authenticated'` for a tool, resource, or template causes it to be silently invisible to all clients until Phase 4 ships OAuth and scoped-token support. No error is raised; the tool simply never appears in `tools/list`. Use `'admin'` or `'public'` for all current deployments.
 

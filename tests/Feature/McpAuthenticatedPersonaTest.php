@@ -385,8 +385,8 @@ function mcpAuthPublicInitSession(Slim\App $app): string
  * tool (query_collection/search_collection) that declares an outputSchema.
  * Those responses carry a `result.structuredContent` payload alongside the
  * JSON-encoded `result.content[0].text` mirror — reading structuredContent
- * avoids the double-wrap unwrapping SavedQueryTool-style custom envelopes
- * need (see McpSchemaToolsIntegrationTest for that pattern).
+ * is the direct route to the data (same shape saved-query tools now return
+ * too — see McpSchemaToolsIntegrationTest).
  *
  * @return list<array<string,mixed>>
  */

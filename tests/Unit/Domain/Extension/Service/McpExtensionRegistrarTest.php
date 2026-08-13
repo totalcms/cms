@@ -64,6 +64,23 @@ final class McpExtensionRegistrarTest extends TestCase
 		$this->assertSame(0, $result['blocked']);
 	}
 
+	public function testPreservesExtensionDeclaredOutputSchema(): void
+	{
+		$tool = new McpToolDefinition(
+			name: 'acme_search',
+			description: 'desc',
+			access: 'public',
+			handler: static fn (): array => [],
+			outputSchema: ['type' => 'object', 'properties' => ['items' => ['type' => 'array']]],
+		);
+
+		$this->registrar->register($this->registry, ['acme/feature' => [$tool]]);
+
+		$registered = $this->registry->get('acme_search');
+		$this->assertNotNull($registered);
+		$this->assertSame(['type' => 'object', 'properties' => ['items' => ['type' => 'array']]], $registered->outputSchema);
+	}
+
 	public function testRegistersToolsFromMultipleExtensions(): void
 	{
 		$this->registrar->register($this->registry, [

@@ -92,6 +92,53 @@ final readonly class SavedQueryToolFactory
 		return $schema;
 	}
 
+	/**
+	 * Describes the wire shape of a saved-query tool's result, verified
+	 * against a live tools/call response (see McpSchemaToolsIntegrationTest).
+	 *
+	 * SavedQueryTool::handle() returns bare `{items, count}` data — no
+	 * hand-built `content` envelope — so the SDK's
+	 * ToolReference::extractStructuredContent() copies it into
+	 * `structuredContent` verbatim, and `ToolResultFormatter::format()`
+	 * builds the outer `content[0].text` mirror from the same value. Same
+	 * pattern as `query_collection` / `list_collections`. `items`' own
+	 * properties vary per collection schema, so they aren't enumerated here.
+	 *
+	 * Failures throw `Mcp\Exception\ToolCallException`, which
+	 * `CallToolHandler` converts into a `CallToolResult` with `isError: true`
+	 * — that path never reaches `structuredContent`/this schema, so no error
+	 * shape is declared here (same as every other core tool's outputSchema).
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function outputSchemaFor(SavedQueryToolDefinition $definition): array
+	{
+		return [
+			'type'                 => 'object',
+			'required'             => ['items', 'count'],
+			'additionalProperties' => false,
+			'properties'           => [
+				'items' => [
+					'type'        => 'array',
+					'description' => sprintf(
+						'Matching %s objects, each decorated with a `url` field where the collection has a public URL pattern configured. Field set varies by collection — call describe_collection for the schema.',
+						$definition->collectionName,
+					),
+					'items' => [
+						'type'                 => 'object',
+						'additionalProperties' => true,
+						'required'             => ['id'],
+						'properties'           => [
+							'id'  => ['type' => 'string'],
+							'url' => ['type' => 'string', 'description' => 'Public URL for this object when the collection has a URL pattern configured.'],
+						],
+					],
+				],
+				'count' => ['type' => 'integer', 'description' => 'Number of items in this response.'],
+			],
+		];
+	}
+
 	public function descriptionFor(SavedQueryToolDefinition $definition): string
 	{
 		$lines = [$definition->description, ''];

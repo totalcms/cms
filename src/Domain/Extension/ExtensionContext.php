@@ -278,6 +278,10 @@ final class ExtensionContext
 	 * @param \Closure                 $handler     Invoked with named params from MCP call
 	 * @param array<string,mixed>|null $inputSchema JSON Schema for the handler's inputs
 	 * @param ToolAnnotations|null     $annotations Read/write/destructive hints — mandatory before Anthropic Directory submission
+	 * @param array<string,mixed>|null $outputSchema JSON Schema describing the handler's return shape. Optional but
+	 *                                                recommended — lets SDK-aware hosts pre-validate results. Appended
+	 *                                                as the last parameter (after $annotations) for backwards
+	 *                                                compatibility with existing positional callers.
 	 */
 	public function registerMcpTool(
 		string $name,
@@ -286,6 +290,7 @@ final class ExtensionContext
 		\Closure $handler,
 		?array $inputSchema = null,
 		?ToolAnnotations $annotations = null,
+		?array $outputSchema = null,
 	): void {
 		$this->mcpTools[] = new McpToolDefinition(
 			name: $name,
@@ -294,6 +299,7 @@ final class ExtensionContext
 			handler: $handler,
 			inputSchema: $inputSchema,
 			annotations: $annotations,
+			outputSchema: $outputSchema,
 		);
 	}
 
