@@ -188,6 +188,38 @@ Useful for bundled page-middleware extensions (like `protect`, `scheduled`, `mai
 
 Hidden extensions can still be targeted by `tcms extension:enable` and `tcms extension:disable` if you know the ID.
 
+### `default_enabled`
+
+**Bundled extensions only.** Setting this in an extension you install has no
+effect — user-installed extensions always wait for an operator to enable them
+in **Admin → Extensions**, and no manifest can declare itself bundled.
+
+```json
+"default_enabled": true
+```
+
+For the first-party extensions shipped inside the T3 package, `true` means the
+extension is active on first discovery instead of waiting for someone to find
+the toggle. Defaults to `false`, which is what every bundled extension but one
+uses.
+
+Being bundled is derived purely from where `ExtensionDiscovery` found the
+manifest — `resources/extensions/` inside the package, versus
+`tcms-data/extensions/` for anything installed afterwards. The manifest is
+never consulted for it, so an extension in `tcms-data/extensions/` declaring
+`"default_enabled": true` stays disabled until an operator says otherwise.
+
+A saved state record always wins over the default, in both directions:
+disabling a `default_enabled` extension sticks, and it will not quietly turn
+itself back on. The default is consulted only when no record exists yet — a
+first boot, or a site that has never seen this extension ID.
+
+Use it sparingly. It exists for bundled features that are pointless to ship
+disabled: the [Total CMS Docs](docs/mcp/docs-tools) extension is the only one
+that does, because documentation tools nobody switches on help nobody. It is
+gated by `authenticated` MCP access rather than an enable toggle. See
+[Bundled Extensions](bundled.md) for the rest.
+
 ### `license`
 
 License identifier (e.g. `MIT`, `proprietary`).

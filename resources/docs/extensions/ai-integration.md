@@ -1,6 +1,9 @@
 ---
 title: "Using Total CMS with AI"
 description: "Connect AI coding agents to Total CMS documentation via the MCP server for accurate Twig functions, filters, field types, and API endpoint lookups."
+related:
+  - mcp/docs-tools
+  - extensions/bundled
 ---
 
 # Using Total CMS with AI
@@ -119,6 +122,12 @@ Valid `kind` values: `twig_function`, `twig_filter`, `field_type`, `api_endpoint
 ### Resources
 
 Resource-aware clients can also read documentation pages directly as MCP resources, addressed as `totalcms-docs://{group}/{page}` — for example `totalcms-docs://twig/functions`.
+
+## Your own site ships these same tools, matched to its own version
+
+`https://totalcms.co/mcp` always serves whatever's newest — useful while you're learning Total CMS generally, but it can drift from the exact version a given site is running. Every Total CMS 3.5+ install also ships `docs_search`, `docs_get`, and `docs_lookup` locally via the bundled `totalcms/docs` extension, reading straight out of that install's own `resources/docs/` — so if you're developing against a specific site, pointing your agent at *that site's* `/mcp` endpoint gets you documentation guaranteed to match the version it's actually running.
+
+These tools are enabled out of the box but require authentication (an API key or an OAuth-authenticated connection) unless the operator has opted in to public exposure — they're not a drop-in replacement for the always-public `totalcms.co` connector on every site. See [Documentation Tools](docs/mcp/docs-tools) for how to connect, how an operator can expose them publicly, and how to turn them off.
 
 ## How It Works
 

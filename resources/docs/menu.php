@@ -217,6 +217,7 @@ return [
 			['title' => 'MCP Server',        'path' => 'mcp/server'],
 			['title' => 'Editing with AI Agents', 'path' => 'mcp/agent-editing'],
 			['title' => 'Saved-Query Tools', 'path' => 'mcp/saved-query-tools'],
+			['title' => 'Documentation Tools', 'path' => 'mcp/docs-tools'],
 			['title' => 'Prompts',           'path' => 'mcp/prompts'],
 			['title' => 'Extending MCP',     'path' => 'mcp/extensions'],
 			['title' => 'Troubleshooting',   'path' => 'mcp/troubleshooting'],

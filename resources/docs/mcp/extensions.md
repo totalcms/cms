@@ -7,7 +7,7 @@ related:
   - extensions/extension-points
   - extensions/algolia-search
 audience: advanced
-updated: 2026-05-22
+updated: 2026-08-13
 ---
 
 # Extending MCP
@@ -66,13 +66,15 @@ $context->registerMcpTool(
 );
 ```
 
-`access` controls which [persona](mcp/server#three-audiences-one-endpoint) sees the tool: `admin` (default), `public`, or `authenticated`.
+`access` controls which [persona](mcp/server#three-audiences-one-endpoint) sees the tool: `admin` (visible only to the admin persona), `public` (visible to everyone, including unauthenticated callers), or `authenticated` (visible to any OAuth-authenticated caller plus admin, but not anonymous callers). An unrecognised `access` value matches none of these and fails closed to admin-only visibility.
 
 **`outputSchema` is optional but recommended.** Declare a JSON Schema describing your handler's return shape — its root must be `{type: 'object', ...}`, same as `inputSchema`. It costs nothing at call time (T3 doesn't validate your handler's actual return against it), but SDK-aware MCP clients use it to pre-validate results and, more importantly, models reason better about a tool's output when they know its shape up front instead of inferring it from one example response. OpenAI's plugin-directory scanner specifically flags tools that omit it. Match the shape your handler actually returns — if it varies (an error object vs. a success object, say), use `oneOf` rather than picking one shape and hoping; see [Saved-Query Tools](mcp/saved-query-tools) or `src/Domain/Mcp/Tool/Discovery/ListCollectionsTool.php` for worked examples.
 
 **Important — `authenticated` is a Phase 4 capability.** Registering `access: 'authenticated'` for a tool, resource, or template causes it to be silently invisible to all clients until Phase 4 ships OAuth and scoped-token support. No error is raised; the tool simply never appears in `tools/list`. Use `'admin'` or `'public'` for all current deployments.
 
 The handler closure is invoked by the MCP SDK using PHP reflection on its named parameters — define typed `string` / `int` / `bool` / `array` params that map one-to-one with your `inputSchema` properties.
+
+The bundled [Documentation Tools](mcp/docs-tools) extension (`totalcms/docs`) is a real registration at `authenticated` access if you want a worked example beyond the snippet above.
 
 ## Registering a resource
 
@@ -114,7 +116,7 @@ $context->registerMcpResourceTemplate(
 
 Use a concrete resource when there's a fixed, enumerable URI (a dashboard view, an "all invoices" rollup). Use a template when the URI is parameterized by an id, slug, or other lookup key — templates avoid enumerating every possible URI in `resources/list` and are how core publishes `tcms://{collection}/{id}`.
 
-As with tools, `access: 'authenticated'` on a resource or template makes it invisible to all clients until Phase 4 ships. Use `'admin'` or `'public'` for current deployments.
+As with tools, `access: 'authenticated'` on a resource or template makes it visible to OAuth-authenticated callers and admin, but not to anonymous callers — same semantics as `registerMcpTool()`'s `access` parameter above.
 
 The template handler's named parameters map one-to-one with `{name}` placeholders in `uriTemplate`. `acme://invoices/{id}` → `fn (string $id)`. `acme://customers/{customerId}/orders/{orderId}` → `fn (string $customerId, string $orderId)`.
 

@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "built_at": "2026-08-13T05:37:06+00:00",
+    "built_at": "2026-08-13T17:43:44+00:00",
     "twig_functions": [
         {
             "name": "selectOptions",
@@ -544,6 +544,13 @@
             "examples": [
                 "{{ cms.admin.nginxRule(cms.currentUrl, 'Products') }}"
             ],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
+            "name": "cms.admin.oauthSetupCommand",
+            "signature": "oauthSetupCommand(): string",
+            "description": "",
+            "examples": [],
             "url": "https://docs.totalcms.co/admin/twig/"
         },
         {
@@ -5207,6 +5214,11 @@
                 "field": "project",
                 "required": false,
                 "description": "True when loaded from the project-level `extensions/` directory (next to tcms-data) rather than `tcms-data/extensions/`. Project extensions are site-owned source code \u2014 typically committed to the site's git repo \u2014 so they can be disabled but not removed through the CLI/admin. Set by ExtensionDiscovery \u2014 not declared in the manifest JSON."
+            },
+            {
+                "field": "default_enabled",
+                "required": false,
+                "description": "Declared in the manifest JSON as `default_enabled`. Only honoured for bundled extensions with no saved state \u2014 see ExtensionStateRepository::isEnabled(). A third-party extension declaring this has no effect: bundled status is derived from discovery path, never from manifest JSON, so it cannot be self-declared."
             }
         ],
         "editions": [
@@ -5294,6 +5306,13 @@
                     "url": "https://docs.totalcms.co/extensions/algolia-search/"
                 },
                 {
+                    "id": "totalcms/docs",
+                    "name": "Total CMS Docs",
+                    "description": "Serves the Total CMS documentation through this site's MCP server: docs_search, docs_get, and docs_lookup tools for AI agents.",
+                    "version": "1.0.0",
+                    "url": "https://docs.totalcms.co/extensions/docs/"
+                },
+                {
                     "id": "totalcms/geo-redirect",
                     "name": "Geo Redirect",
                     "description": "Redirect visitors based on their country. Reads the country from CDN-injected headers (Cloudflare, Vercel, etc.) and 302s to a configured URL. Useful for compliance redirects, regional landing pages, and locale routing.",
@@ -5368,6 +5387,10 @@
                 {
                     "label": "Algolia Search <em>(beta)</em>",
                     "url": "https://docs.totalcms.co/extensions/algolia-search/"
+                },
+                {
+                    "label": "Total CMS Docs",
+                    "url": "https://docs.totalcms.co/extensions/docs/"
                 },
                 {
                     "label": "Geo Redirect",
