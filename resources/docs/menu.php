@@ -215,6 +215,7 @@ return [
 		'title' => 'MCP',
 		'sub'   => [
 			['title' => 'MCP Server',        'path' => 'mcp/server'],
+			['title' => 'Connecting AI Clients', 'path' => 'mcp/connect'],
 			['title' => 'Editing with AI Agents', 'path' => 'mcp/agent-editing'],
 			['title' => 'Saved-Query Tools', 'path' => 'mcp/saved-query-tools'],
 			['title' => 'Documentation Tools', 'path' => 'mcp/docs-tools'],
