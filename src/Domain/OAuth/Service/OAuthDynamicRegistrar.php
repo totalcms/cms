@@ -12,8 +12,15 @@ namespace TotalCMS\Domain\OAuth\Service;
  *   - redirect_uris MUST be present and be a non-empty array
  *   - client_name SHOULD be present (we require it for the admin UI's
  *     dynamic-clients list to be useful)
- *   - scope MUST be a string of space-separated identifiers, all in the
- *     T3 registry
+ *   - scope MUST be a string of space-separated identifiers; labels not in
+ *     the T3 registry are FILTERED OUT rather than rejected (RFC 7591 §2
+ *     lets the server replace requested metadata — claude.ai registers with
+ *     `scope=claudeai`, and a 400 here kills the connector before login).
+ *     When nothing known remains (or scope is absent), the client's allowed
+ *     set defaults to the full registry: an empty allowed set would make
+ *     finalizeScopes() strip every future token to nothing, and per-request
+ *     scopes + the consent screen + the user-authority gate still decide
+ *     what tokens actually carry.
  *   - token_endpoint_auth_method, grant_types, response_types if present
  *     must match what we support; we silently default if absent
  */
@@ -42,10 +49,12 @@ final readonly class OAuthDynamicRegistrar
 
 		$scope  = isset($metadata['scope']) ? (string)$metadata['scope'] : '';
 		$scopes = $scope !== '' ? array_values(array_filter(explode(' ', $scope))) : [];
-		foreach ($scopes as $s) {
-			if (!$this->scopes->has($s)) {
-				throw new \InvalidArgumentException("Unknown scope in registration: {$s}");
-			}
+		$scopes = array_values(array_filter($scopes, $this->scopes->has(...)));
+		if ($scopes === []) {
+			$scopes = array_map(
+				static fn (\TotalCMS\Domain\OAuth\Data\OAuthScopeData $s): string => $s->identifier,
+				$this->scopes->all(),
+			);
 		}
 
 		$result = $this->creator->create(

@@ -185,15 +185,22 @@ describe('MCP tool outputSchemas — structural validation', function (): void {
 		expect($failures)->toBe([], "Invalid outputSchemas:\n" . implode("\n", $failures));
 	});
 
-	it('every registered outputSchema declares a top-level type', function (): void {
-		$missing = [];
+	it('every registered outputSchema declares root type "object"', function (): void {
+		// The MCP spec types Tool.outputSchema as {type: 'object', ...} and the
+		// PHP SDK enforces it (Mcp\Schema\Tool::fromArray() throws otherwise) —
+		// a root-level `oneOf`/`anyOf` with no root `type` (or a root type other
+		// than 'object') is spec-invalid even when every branch inside it is
+		// itself type:'object'. This is the exact bug class that let a bare
+		// root `oneOf` (no `type` key at all) slip past the old, weaker
+		// isset()-only check below — assert the value, not just its presence.
+		$invalid = [];
 		foreach (toolsWithOutputSchemaFromRegistry($this->app) as $tool) {
-			if (!isset($tool['schema']['type'])) {
-				$missing[] = $tool['name'];
+			if (($tool['schema']['type'] ?? null) !== 'object') {
+				$invalid[] = $tool['name'];
 			}
 		}
 
-		expect($missing)->toBe([], 'Tools missing top-level `type`: ' . implode(', ', $missing));
+		expect($invalid)->toBe([], 'Tools whose outputSchema root type is not exactly "object": ' . implode(', ', $invalid));
 	});
 
 	it('every registered outputSchema can JSON-round-trip without data loss', function (): void {

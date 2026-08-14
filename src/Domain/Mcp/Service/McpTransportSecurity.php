@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Service;
 
+use Psr\Http\Message\ServerRequestInterface;
+
 /**
  * Computes the DNS-rebinding / Origin allowlist for the MCP Streamable HTTP
  * transport from the operator's `mcp.allowedOrigins` config.
@@ -63,6 +65,42 @@ final class McpTransportSecurity
 		}
 
 		return array_values(array_unique($hosts));
+	}
+
+	/**
+	 * Origin/Host validation for callers that bypass the SDK's transport-level
+	 * DnsRebindingProtectionMiddleware — currently the GET "listening stream"
+	 * short-circuit in McpEndpointAction, which returns before
+	 * StreamableHttpTransport (and its middleware stack) is ever constructed.
+	 * Mirrors DnsRebindingProtectionMiddleware::process()'s own precedence:
+	 * Origin wins when present, else Host, else allow (no signal to check).
+	 *
+	 * @param array<mixed> $allowedOrigins
+	 */
+	public static function originAllowed(ServerRequestInterface $request, array $allowedOrigins): bool
+	{
+		if (self::isOpen($allowedOrigins)) {
+			return true;
+		}
+
+		$hosts  = self::allowedHosts($allowedOrigins, $request->getUri()->getHost());
+		$origin = $request->getHeaderLine('Origin');
+		if ($origin !== '') {
+			$host = parse_url($origin, PHP_URL_HOST);
+
+			return is_string($host) && $host !== '' && in_array(strtolower($host), $hosts, true);
+		}
+
+		$host = $request->getHeaderLine('Host');
+		if ($host === '') {
+			return true;
+		}
+
+		$name = str_starts_with($host, '[')
+			? substr($host, 0, (int)strpos($host, ']') + 1)
+			: explode(':', $host, 2)[0];
+
+		return in_array(strtolower($name), $hosts, true);
 	}
 
 	/**

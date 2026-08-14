@@ -62,8 +62,8 @@ Every other key under `auth` (`loginWith`, `collection`, `persistentLoginDays`, 
 
 return [
 	'datadir' => '/var/www/shared/tcms-data',
-	'dashboard' => [
-		'title' => "Joe's Bistro Admin",
+	'logger'  => [
+		'level' => Monolog\Level::Debug,
 	],
 	'cache' => [
 		'redis' => false,
@@ -72,6 +72,27 @@ return [
 ```
 
 The merge and type-safety handling lives in `TotalCMS\Support\Config`. Each settings block is validated with `is_array()` before it is applied, so a malformed override falls back to the default rather than breaking the app.
+
+### Precedence: the admin UI wins
+
+`config/tcms.php` is not the last word. Settings are merged in this order, each layer overriding the one above it:
+
+1. `config/defaults.php` — the shipped defaults
+2. **`config/tcms.php`** — your override file
+3. `DOCUMENT_ROOT/tcms.php` — installation-level overrides (mainly `datadir`)
+4. **`tcms-data/.system/settings.json`** — everything saved from the admin Settings pages
+
+Layer 4 is last, so **a setting saved in the admin beats the same key in `config/tcms.php`**. This is deliberate: a value an operator changed in the browser should not be silently reverted by a file they may not know exists.
+
+The practical rule: **if a setting has a control in the admin, change it there.** Setting it in `config/tcms.php` will appear to do nothing — the file still loads and its other keys still apply, so there is no error to notice, which makes this a genuinely confusing few minutes if you do not know the order.
+
+Precedence applies per key, not per block. `settings.json` contains only the fields the admin Settings pages actually expose and you have saved, so a nested key the UI doesn't manage still takes your file's value even when a sibling key does not. To find out whether a given setting is already UI-managed, look it up in your site's `tcms-data/.system/settings.json`:
+
+```bash
+grep -n publicIpPerMinute tcms-data/.system/settings.json
+```
+
+A hit means the admin owns that setting — go and change it there.
 
 ## What Lives in the Bootstrap File
 
@@ -130,4 +151,4 @@ Common scalar settings are also available directly on `cms`:
 
 ## Configuration Reference
 
-For the authoritative, fully-commented list of every setting and its default, read `config/defaults.php` in your installation. Anything you can set there can be overridden by returning the same key from `config/tcms.php`.
+For the authoritative, fully-commented list of every setting and its default, read `config/defaults.php` in your installation. Any key you find there can be overridden by returning the same key from `config/tcms.php` — with one exception worth remembering: if the admin UI exposes that setting and you have saved it there, the saved value wins. See [Precedence: the admin UI wins](#precedence-the-admin-ui-wins).

@@ -95,19 +95,24 @@ describe('OAuthDynamicRegistration', function (): void {
 		expect($body['error'])->toBe('invalid_client_metadata');
 	});
 
-	it('returns 400 invalid_client_metadata for unknown scope', function (): void {
+	// RFC 7591 §2: the server MAY replace requested metadata. Unknown scope
+	// labels are filtered rather than rejected — claude.ai registers with
+	// `scope=claudeai`, and a 400 here kills the connector before login.
+	// An unknown-only request falls back to the full registry (see
+	// OAuthDynamicRegistrar) so the client's tokens aren't scope-starved.
+	it('filters unknown scopes instead of rejecting the registration', function (): void {
 		$request  = buildRegisterRequest([
 			'redirect_uris' => ['https://app.test/cb'],
-			'client_name'   => 'Bad Scope Client',
+			'client_name'   => 'Claude-style Client',
 			'scope'         => 'cms:bogus',
 		]);
 		$response = $this->app->handle($request);
 
-		expect($response->getStatusCode())->toBe(400);
+		expect($response->getStatusCode())->toBe(201);
 
 		$body = json_decode((string)$response->getBody(), true);
-		expect($body['error'])->toBe('invalid_client_metadata');
-		expect($body['error_description'])->toContain('cms:bogus');
+		expect($body['scope'])->not->toContain('cms:bogus');
+		expect($body['scope'])->toContain('cms:read');
 	});
 
 	it('returns 400 invalid_client_metadata for a non-JSON body', function (): void {

@@ -59,10 +59,15 @@ final readonly class OAuthDiscoveryProvider
 	 * resource. T3 is its own authorization server, so `authorization_servers`
 	 * lists this issuer. Returned as the SDK value object so serialization
 	 * tracks the spec; `bearer_methods_supported` rides in `extra`.
+	 *
+	 * `$resource` lets callers override the advertised resource identifier —
+	 * used by the RFC 9728 §3 path-suffixed well-known route, whose clients
+	 * verify the returned `resource` matches the identifier they queried.
+	 * Defaults to T3's own API root when omitted.
 	 */
-	public function protectedResourceMetadata(): \Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata
+	public function protectedResourceMetadata(?string $resource = null): \Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata
 	{
-		$resource = rtrim($this->config->url, '/') . rtrim($this->config->api, '/');
+		$resource ??= rtrim($this->config->url, '/') . rtrim($this->config->api, '/');
 
 		return new \Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata(
 			authorizationServers: [$this->resolveIssuer()],

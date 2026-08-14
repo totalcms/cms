@@ -97,6 +97,76 @@ describe('TotalField.isSubField', () => {
 		const child = new TotalField(document.querySelector('.form-field .form-field'), {});
 		expect(child.isSubField()).toBe(true);
 	});
+
+	test('true inside a .cms-modal that is not itself a .form-field', () => {
+		// The depot browser dialog sits at form level, so its fields have no
+		// .form-field ancestor — but they are still not top-level fields.
+		document.body.innerHTML = `
+			<dialog class="cms-modal">
+				<div class="form-field" data-type="text"><input name="alt"></div>
+			</dialog>`;
+		const child = new TotalField(document.querySelector('.form-field'), {});
+		expect(child.isSubField()).toBe(true);
+	});
+
+	test('stays true when the parent .form-field has no TotalField instance', () => {
+		// generateFieldObject() can return null or throw, leaving a .form-field
+		// element with no .totalfield. Nesting is a DOM fact regardless — if this
+		// regressed to false the child would be promoted into this.fields and its
+		// value would leak into the root object on save.
+		document.body.innerHTML = `
+			<div class="form-field" data-type="card">
+				<div class="form-field" data-type="text"><input name="street"></div>
+			</div>`;
+		const child = new TotalField(document.querySelector('.form-field .form-field'), {});
+		expect(child.isSubField()).toBe(true);
+		expect(child.getParent()).toBeNull();
+	});
+});
+
+describe('TotalField.getParent / rootField', () => {
+	test('getParent returns the enclosing field instance', () => {
+		document.body.innerHTML = `
+			<div class="form-field" data-type="card"><input type="hidden" name="address">
+				<div class="card-fields">
+					<div class="form-field" data-type="text"><input name="street"></div>
+				</div>
+			</div>`;
+		const card = new TotalField(document.querySelector('.form-field'), {});
+		const child = new TotalField(document.querySelector('.card-fields .form-field'), {});
+
+		expect(child.getParent()).toBe(card);
+		expect(card.getParent()).toBeNull();
+	});
+
+	test('rootField walks all the way up a card-in-card nest', () => {
+		document.body.innerHTML = `
+			<div class="form-field" data-type="card"><input type="hidden" name="outer">
+				<div class="card-fields">
+					<div class="form-field" data-type="card"><input type="hidden" name="inner">
+						<div class="card-fields">
+							<div class="form-field" data-type="text"><input name="street"></div>
+						</div>
+					</div>
+				</div>
+			</div>`;
+		const outer = new TotalField(document.querySelector('.form-field'), {});
+		const inner = new TotalField(document.querySelector('.card-fields .form-field'), {});
+		const leaf = new TotalField(document.querySelector('.card-fields .card-fields .form-field'), {});
+
+		expect(leaf.getParent()).toBe(inner);
+		expect(leaf.rootField()).toBe(outer);
+		expect(outer.rootField()).toBe(outer);
+	});
+
+	test('rootField falls back to the field itself when the chain breaks', () => {
+		document.body.innerHTML = `
+			<div class="form-field" data-type="card">
+				<div class="form-field" data-type="text"><input name="street"></div>
+			</div>`;
+		const child = new TotalField(document.querySelector('.form-field .form-field'), {});
+		expect(child.rootField()).toBe(child);
+	});
 });
 
 describe('TotalField.validate', () => {

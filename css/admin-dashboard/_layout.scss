@@ -471,11 +471,11 @@ body {
 	:not(pre) > code {
 		background    : oklch(var(--totalform-nearwhite));
 		border        : 1px solid oklch(var(--totalform-border-color));
-		padding       : 0.05em 0.4em;
+		padding       : 0.0625em 0.4em;
 		border-radius : 4px;
 		font-size     : 0.875em;
 		font-family   : 'Fira Code', 'Source Code Pro', monospace;
-		color         : oklch(var(--totalform-accent));
+		// color         : oklch(var(--totalform-accent));
 	}
 
 	table {

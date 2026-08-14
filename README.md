@@ -5,6 +5,12 @@
 </p>
 
 <p align="center">
+  <a href="https://packagist.org/packages/totalcms/cms"><img src="https://img.shields.io/packagist/v/totalcms/cms?label=packagist" alt="Latest stable version on Packagist"></a>
+  <a href="https://packagist.org/packages/totalcms/cms"><img src="https://img.shields.io/packagist/dependency-v/totalcms/cms/php" alt="Required PHP version"></a>
+  <img src="https://img.shields.io/badge/license-commercial-blue" alt="Commercial license">
+</p>
+
+<p align="center">
   <a href="https://totalcms.co">Website</a> &bull;
   <a href="https://docs.totalcms.co">Documentation</a> &bull;
   <a href="https://totalcms.co/pricing/">Pricing</a> &bull;

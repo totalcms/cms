@@ -36,6 +36,13 @@ return function (RouteCollectorProxyInterface $app): void {
 		->add(OAuthEnabledMiddleware::class)
 		->setName('oauth.discovery');
 
+	// RFC 8414 §3.1: for an issuer with a path component, clients insert the
+	// well-known segment between host and path — the metadata URL arrives as
+	// /.well-known/oauth-authorization-server/<issuer-path>. Same document.
+	$app->get('/.well-known/oauth-authorization-server/{path:.*}', OAuthDiscoveryAction::class)
+		->add(OAuthEnabledMiddleware::class)
+		->setName('oauth.discovery.path');
+
 	// RFC 7517 — JWK Set publishing the access-token signing public key.
 	// Resource servers verifying JWTs fetch this to get the RSA public key
 	// for signature validation.
@@ -49,6 +56,13 @@ return function (RouteCollectorProxyInterface $app): void {
 	$app->get('/.well-known/oauth-protected-resource', OAuthProtectedResourceAction::class)
 		->add(OAuthEnabledMiddleware::class)
 		->setName('oauth.protected-resource');
+
+	// RFC 9728 §3: protected-resource metadata for a resource with a path
+	// lives at /.well-known/oauth-protected-resource/<resource-path>. The
+	// action echoes the requested resource identifier back for these.
+	$app->get('/.well-known/oauth-protected-resource/{path:.*}', OAuthProtectedResourceAction::class)
+		->add(OAuthEnabledMiddleware::class)
+		->setName('oauth.protected-resource.path');
 
 	// Authorization endpoint. GET renders the consent screen for a logged-in
 	// admin; POST captures the approve/deny decision and completes the flow

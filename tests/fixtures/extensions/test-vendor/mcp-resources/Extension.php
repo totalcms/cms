@@ -25,18 +25,13 @@ class Extension implements ExtensionInterface
 		$context->registerMcpResource(
 			uri: 'acme://widgets/all',
 			description: 'Acme widget inventory — full list of widgets, in inventory order.',
-			handler: fn (): array => [
-				'contents' => [
-					[
-						'uri'      => 'acme://widgets/all',
-						'mimeType' => 'application/json',
-						'text'     => json_encode(['widgets' => [
-							['id' => 'w-001', 'name' => 'Sprocket'],
-							['id' => 'w-002', 'name' => 'Cog'],
-						]]),
-					],
-				],
-			],
+			// JSON resources return the data array directly — the SDK's
+			// ResourceResultFormatter JSON-encodes it under the default
+			// 'application/json' mimeType. Never wrap in ['contents' => ...].
+			handler: fn (): array => ['widgets' => [
+				['id' => 'w-001', 'name' => 'Sprocket'],
+				['id' => 'w-002', 'name' => 'Cog'],
+			]],
 			access: 'public',
 			name: 'Acme Widgets',
 		);
@@ -45,15 +40,7 @@ class Extension implements ExtensionInterface
 		$context->registerMcpResourceTemplate(
 			uriTemplate: 'acme://widgets/{id}',
 			description: 'A single Acme widget by id. Use list_collections to discover available widget ids via the inventory resource.',
-			handler: fn (string $id): array => [
-				'contents' => [
-					[
-						'uri'      => "acme://widgets/{$id}",
-						'mimeType' => 'application/json',
-						'text'     => json_encode(['id' => $id, 'name' => "Widget {$id}"]),
-					],
-				],
-			],
+			handler: fn (string $id): array => ['id' => $id, 'name' => "Widget {$id}"],
 			access: 'public',
 			name: 'Acme Widget Detail',
 		);

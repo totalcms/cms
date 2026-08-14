@@ -360,9 +360,8 @@ abstract class Util
 			if (!\is_callable($verifyCallback)) {
 				if ($throw) {
 					return throw new CallbackDoesNotExist($verifyCallback);
-				} else {
-					continue;
 				}
+				continue;
 			}
 
 			if ($verifyCallback($value)) {
@@ -646,7 +645,7 @@ abstract class Util
 			function (float|int|string|\Stringable $v, int $i) use ($opacityFactor, $opacityIndex): string|\Stringable|float {
 				$sv = \is_scalar($v) ? (string)$v : '';
 				if (($i === $opacityIndex) && !\str_ends_with($sv, '%')) {
-					$v = $opacityFactor * ((float)$sv);
+					return $opacityFactor * ((float)$sv);
 				}
 
 				return $v;

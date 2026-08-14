@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Service;
 
 use Psr\Container\ContainerInterface;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
@@ -49,6 +50,7 @@ final readonly class SavedQueryToolFactory
 			objectUrlBuilder: $this->container->get(\TotalCMS\Domain\Collection\Service\ObjectUrlBuilder::class),
 			schemaResolver: $this->container->get(McpSchemaResolver::class),
 			collectionRepository: $this->container->get(\TotalCMS\Domain\Collection\Repository\CollectionRepository::class),
+			resultFormatter: $this->container->get(CollectionQueryResultFormatter::class),
 		);
 	}
 
@@ -90,6 +92,40 @@ final readonly class SavedQueryToolFactory
 		}
 
 		return $schema;
+	}
+
+	/**
+	 * Describes the wire shape of a saved-query tool's result, verified
+	 * against a live tools/call response (see McpSchemaToolsIntegrationTest).
+	 *
+	 * SavedQueryTool::handle() returns the shared collection-query envelope —
+	 * `{items, total, limit, offset, has_more}` — built by
+	 * CollectionQueryResultFormatter::envelope(), no hand-built `content`
+	 * wrapper — so the SDK's ToolReference::extractStructuredContent() copies
+	 * it into `structuredContent` verbatim, and `ToolResultFormatter::format()`
+	 * builds the outer `content[0].text` mirror from the same value. Same
+	 * pattern as `query_collection` / `list_collections`. This method
+	 * delegates the schema itself to CollectionQueryResultFormatter::
+	 * outputSchema() — the SAME builder QueryCollectionTool::outputSchema()
+	 * calls — so the two tools' declared schemas (including the per-item
+	 * element shape) cannot drift; only the `items` description is
+	 * parameterized here with the bound collection name. `items`' own
+	 * properties vary per collection schema, so they aren't enumerated
+	 * beyond `id`/`url`.
+	 *
+	 * Failures throw `Mcp\Exception\ToolCallException`, which
+	 * `CallToolHandler` converts into a `CallToolResult` with `isError: true`
+	 * — that path never reaches `structuredContent`/this schema, so no error
+	 * shape is declared here (same as every other core tool's outputSchema).
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function outputSchemaFor(SavedQueryToolDefinition $definition): array
+	{
+		return $this->container->get(CollectionQueryResultFormatter::class)->outputSchema(sprintf(
+			'Matching %s objects, each decorated with a `url` field where the collection has a public URL pattern configured. Field set varies by collection — call describe_collection for the schema.',
+			$definition->collectionName,
+		));
 	}
 
 	public function descriptionFor(SavedQueryToolDefinition $definition): string

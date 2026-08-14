@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use Slim\Routing\RouteContext;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\OAuth\Service\OAuthDiscoveryProvider;
@@ -42,8 +43,20 @@ readonly class OAuthProtectedResourceAction
 			return $response->withStatus(404);
 		}
 
+		// RFC 9728 §3 path-suffixed form: the {path} route argument is present
+		// only on /.well-known/oauth-protected-resource/{path:.*}. Clients that
+		// hit this form are asking about a specific resource identifier and
+		// verify the returned `resource` echoes what they queried — the bare
+		// route's default (T3's API root) would fail that check.
+		$path     = RouteContext::fromRequest($request)->getRoute()?->getArgument('path') ?? '';
+		$resource = null;
+		if ($path !== '') {
+			$uri      = $request->getUri();
+			$resource = rtrim($uri->getScheme() . '://' . $uri->getAuthority(), '/') . '/' . ltrim($path, '/');
+		}
+
 		$handler = new ProtectedResourceMetadataHandler(
-			$this->provider->protectedResourceMetadata(),
+			$this->provider->protectedResourceMetadata($resource),
 			$this->responseFactory,
 			$this->streamFactory,
 		);

@@ -1,0 +1,15 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Total CMS Docs",
+	"description": "Controls who can reach the documentation tools over this site's MCP server.",
+	"type": "object",
+	"properties": {
+		"publicTools": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Expose documentation tools to anonymous visitors",
+			"help": "Most sites should leave this off — docs_search, docs_get, and docs_lookup are only visible to authenticated MCP callers by default. Turn this on only if your site's anonymous audience is Total CMS builders (e.g. a docs/support site), since it's what makes the tools reachable on a public MCP surface with no login at all.",
+			"default": false
+		}
+	}
+}

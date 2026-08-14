@@ -16,6 +16,7 @@ use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
+use TotalCMS\Domain\Mcp\Prompt\Handler\ExtensionPromptHandler;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
@@ -215,10 +216,14 @@ readonly class McpServerFactory
 					continue;
 				}
 				try {
-					$builder->addPrompt(
-						handler: $this->buildExtensionPromptHandler($reg['handler'], $persona, $name, $access),
-						name: $name,
-						description: $reg['prompt']->description ?? '',
+					// Builder::add() (not addPrompt()) so the declared Prompt object
+					// IS the advertised schema. addPrompt() reflects the handler,
+					// which recovers parameter names only — argument descriptions
+					// and required flags are lost, and clients render an unlabelled
+					// optional box for a described, required argument.
+					$builder->add(
+						$reg['prompt'],
+						new ExtensionPromptHandler($reg['handler'], $persona, $name, $access),
 					);
 				} catch (\LogicException $e) {
 					$this->logger->warning('Extension MCP prompt registration failed', [
@@ -454,32 +459,6 @@ readonly class McpServerFactory
 			$prompts,
 			static fn (PromptData $p): bool => PromptRegistrar::personaCanAccess($persona, $p->access),
 		));
-	}
-
-	/**
-	 * Wraps an extension prompt handler with a runtime access re-check.
-	 *
-	 * Mirrors the pattern used by PromptRegistrar::buildHandler() for
-	 * collection-stored prompts: the handler closure returned here re-checks
-	 * personaCanAccess() at invocation time so a caller who guesses an admin-only
-	 * prompt name via prompts/get receives a clean MCP error rather than content.
-	 * The outer persona filter in build() already prevents the prompt from
-	 * appearing in prompts/list, but the call-time guard defends against
-	 * name-guessing independently.
-	 */
-	private function buildExtensionPromptHandler(callable $handler, McpPersona $persona, string $name, string $access): \Closure
-	{
-		return static function (array $arguments = []) use ($handler, $persona, $name, $access): mixed {
-			if (!PromptRegistrar::personaCanAccess($persona, $access)) {
-				throw new \Mcp\Exception\PromptGetException(sprintf(
-					'Prompt "%s" requires %s access.',
-					$name,
-					$access,
-				));
-			}
-
-			return $handler($arguments);
-		};
 	}
 
 	/**

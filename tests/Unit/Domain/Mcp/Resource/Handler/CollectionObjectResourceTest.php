@@ -25,7 +25,7 @@ final class CollectionObjectResourceTest extends TestCase
 
 	// ─── Response shape ───────────────────────────────────────────────────────
 
-	public function testReadReturnsContentsArrayWithCorrectShape(): void
+	public function testReadReturnsFlatResourceContent(): void
 	{
 		$object = ['id' => 'hello-world', 'title' => 'Hello World', 'body' => '...markdown...'];
 
@@ -35,14 +35,14 @@ final class CollectionObjectResourceTest extends TestCase
 
 		$result = $this->resource->read('blog', 'hello-world');
 
-		$this->assertArrayHasKey('contents', $result);
-		$this->assertIsArray($result['contents']);
-		$this->assertCount(1, $result['contents']);
-
-		$content = $result['contents'][0];
-		$this->assertSame('tcms://blog/hello-world', $content['uri']);
-		$this->assertSame('application/json', $content['mimeType']);
-		$this->assertArrayHasKey('text', $content);
+		// Flat {text, mimeType}. The absence of 'contents' is the assertion that
+		// matters: returning a pre-built ReadResourceResult made it the *text* of
+		// the SDK's own envelope, burying the payload two levels deep for every
+		// client. The old tests asserted the envelope and so locked the bug in.
+		$this->assertArrayNotHasKey('contents', $result);
+		$this->assertArrayHasKey('text', $result);
+		$this->assertArrayHasKey('mimeType', $result);
+		$this->assertSame('application/json', $result['mimeType']);
 	}
 
 	public function testReadTextDecodesBackToOriginalFlatMap(): void
@@ -59,37 +59,13 @@ final class CollectionObjectResourceTest extends TestCase
 			->willReturn($object);
 
 		$result  = $this->resource->read('blog', 'hello-world');
-		$decoded = json_decode((string)$result['contents'][0]['text'], true);
+		$decoded = json_decode((string)$result['text'], true);
 
 		$this->assertIsArray($decoded);
 		$this->assertSame($object, $decoded);
 	}
 
 	// ─── URI assembly ─────────────────────────────────────────────────────────
-
-	public function testReadBuildsUriFromCollectionAndId(): void
-	{
-		$this->getObjectTool
-			->method('handler')
-			->willReturn(['id' => 'my-product', 'title' => 'My Product']);
-
-		$result = $this->resource->read('products', 'my-product');
-
-		$this->assertSame('tcms://products/my-product', $result['contents'][0]['uri']);
-	}
-
-	public function testReadDifferentCollectionAndIdProduceDifferentUris(): void
-	{
-		$this->getObjectTool
-			->method('handler')
-			->willReturn(['id' => 'item-1', 'title' => 'Item 1']);
-
-		$resultA = $this->resource->read('blog', 'post-abc');
-		$resultB = $this->resource->read('gallery', 'photo-xyz');
-
-		$this->assertSame('tcms://blog/post-abc', $resultA['contents'][0]['uri']);
-		$this->assertSame('tcms://gallery/photo-xyz', $resultB['contents'][0]['uri']);
-	}
 
 	// ─── Error propagation ────────────────────────────────────────────────────
 

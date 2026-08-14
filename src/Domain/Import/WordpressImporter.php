@@ -394,7 +394,7 @@ class WordpressImporter
 		$text = mb_strtolower($text);
 
 		if ($text === '') {
-			$text = 'untitled-' . uniqid();
+			return 'untitled-' . uniqid();
 		}
 
 		return $text;

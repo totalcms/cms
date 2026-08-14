@@ -45,6 +45,21 @@ class OAuthServerFactory
 			$encryptionKey,
 		);
 
+		// Clients that send no `scope` parameter would otherwise be issued
+		// scope-less tokens, which McpAuth rejects with insufficient_scope on
+		// every MCP call — the caller authenticates fine and then hits a wall
+		// of 403s. Default such grants to the read-only baseline so a spec-lax
+		// client lands on a working least-privilege token. Operators override
+		// (or disable with '') via oauth.defaultScope. Must be set on the
+		// SERVER before enableGrantType(): league propagates the server value
+		// onto every grant there, clobbering any per-grant setDefaultScope().
+		// Refresh grants are unaffected either way — league defaults a refresh
+		// request's scopes to the original token's scopes, not defaultScope.
+		$defaultScope = (string)($this->config->oauth['defaultScope'] ?? 'cms:read mcp:tools mcp:resources mcp:prompts');
+		if ($defaultScope !== '') {
+			$server->setDefaultScope($defaultScope);
+		}
+
 		$authCodeGrant = new AuthCodeGrant(
 			$this->authCodes,
 			$this->refreshTokens,

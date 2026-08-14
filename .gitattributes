@@ -70,3 +70,4 @@ yarn.lock            export-ignore
 # avoids line-level merge conflicts (regenerate on conflict); `linguist-generated`
 # collapses it in GitHub PRs. It still ships (fresh installs need working search).
 /resources/docs/search-index.json  binary linguist-generated
+/resources/docs/reference-index.json  binary linguist-generated

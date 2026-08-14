@@ -20,7 +20,7 @@ class NoCacheErrorMiddleware implements MiddlewareInterface
 		// Add no-cache headers for error responses (4xx and 5xx status codes)
 		$statusCode = $response->getStatusCode();
 		if ($statusCode >= 400) {
-			$response = $response
+			return $response
 				->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
 				->withHeader('Pragma', 'no-cache')
 				->withHeader('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT')

@@ -52,7 +52,7 @@ class DeckField extends FormField
 
 	public function buildFormField(): string
 	{
-		$content = HTMLUtils::inlineElement('input', [
+		$content = $this->proxyInput([
 			'id'       => 'field-' . $this->uuid,
 			'type'     => 'text',
 			'name'     => $this->name,

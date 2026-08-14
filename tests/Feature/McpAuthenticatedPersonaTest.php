@@ -385,8 +385,8 @@ function mcpAuthPublicInitSession(Slim\App $app): string
  * tool (query_collection/search_collection) that declares an outputSchema.
  * Those responses carry a `result.structuredContent` payload alongside the
  * JSON-encoded `result.content[0].text` mirror — reading structuredContent
- * avoids the double-wrap unwrapping SavedQueryTool-style custom envelopes
- * need (see McpSchemaToolsIntegrationTest for that pattern).
+ * is the direct route to the data (same shape saved-query tools now return
+ * too — see McpSchemaToolsIntegrationTest).
  *
  * @return list<array<string,mixed>>
  */
@@ -1842,15 +1842,6 @@ describe('McpAuthenticatedPersona', function (): void {
 	// resource") rather than the tools/call-style `result.isError` envelope.
 	// This is the existing, pre-Task-10 idiom for this handler — reused as-is
 	// rather than inventing a new shape.
-	//
-	// Double-JSON-wrap note: CollectionResource::read() returns its own
-	// `{contents: [{uri, mimeType, text}]}` envelope as a plain array: the SDK's
-	// ResourceResultFormatter doesn't special-case that shape, so it falls to
-	// the generic "JSON-encode the whole array" branch and wraps it AGAIN —
-	// `result.contents[0].text` decodes to `{contents: [{uri, mimeType, text:
-	// <the real items JSON>}]}`, one level deeper than it looks. Pre-existing
-	// (unrelated to this task); mcpAuthResourceItems() below decodes both
-	// levels so assertions read the real `items` array.
 	// ──────────────────────────────────────────────────────────────────────────
 
 	/**
@@ -1865,18 +1856,23 @@ describe('McpAuthenticatedPersona', function (): void {
 	}
 
 	/**
-	 * Extract the `items` array from a `resources/read` JSON-RPC response,
-	 * accounting for CollectionResource's double-JSON-wrap (see the
-	 * Scenario 16 block comment above).
+	 * Extract the `items` array from a `resources/read` JSON-RPC response.
+	 *
+	 * One decode, not two. This used to unwrap a second envelope because the
+	 * resource handlers returned a pre-built `{contents: [...]}` result that the
+	 * SDK then wrapped again — the payload sat two levels deep and this helper
+	 * absorbed the difference, which is how the bug survived a suite that
+	 * exercised it. The handlers now return flat content, so a single decode is
+	 * both correct and the assertion that keeps it that way: reintroduce the
+	 * envelope and these tests fail.
 	 *
 	 * @return list<array<string,mixed>>
 	 */
 	function mcpAuthResourceReadItems(Psr\Http\Message\ResponseInterface $response): array
 	{
-		$body  = json_decode((string)$response->getBody(), true);
-		$outer = json_decode((string)($body['result']['contents'][0]['text'] ?? ''), true);
-		$inner = json_decode((string)($outer['contents'][0]['text'] ?? ''), true);
-		$items = $inner['items'] ?? null;
+		$body    = json_decode((string)$response->getBody(), true);
+		$payload = json_decode((string)($body['result']['contents'][0]['text'] ?? ''), true);
+		$items   = $payload['items'] ?? null;
 
 		return is_array($items) ? $items : [];
 	}

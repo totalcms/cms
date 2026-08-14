@@ -109,6 +109,7 @@ readonly class OperationDetector
 		'admin-playground',
 		'admin-mail',
 		'admin-settings',
+		'admin-settings-mcp-test',
 		'collections-list',
 		'collection-fetch',
 		'collection-exists',

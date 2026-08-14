@@ -155,7 +155,7 @@ final class MermaidErdRenderer
 	{
 		$token = (string)preg_replace('/[^A-Za-z0-9_]/', '_', $value);
 		if ($token === '' || preg_match('/^[A-Za-z_]/', $token) !== 1) {
-			$token = '_' . $token;
+			return '_' . $token;
 		}
 
 		return $token;

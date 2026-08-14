@@ -63,7 +63,7 @@ readonly class ApiKeyPermissionChecker
 		$path = strtolower(trim($path, '/'));
 
 		if ($path === 'api' || str_starts_with($path, 'api/')) {
-			$path = substr($path, 4);
+			return substr($path, 4);
 		}
 
 		return $path;

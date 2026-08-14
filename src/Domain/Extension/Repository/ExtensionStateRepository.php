@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Repository;
 
+use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 
@@ -57,11 +58,26 @@ final class ExtensionStateRepository
 		return $states[$extensionId] ?? null;
 	}
 
-	public function isEnabled(string $extensionId): bool
+	/**
+	 * A saved state record always wins, in both directions — an operator's
+	 * explicit choice overrides any manifest default. With no saved state,
+	 * an extension is enabled only when it both ships bundled with the T3
+	 * package AND declares `default_enabled` in its manifest. `$manifest`
+	 * is optional so existing call sites that only have an id keep working
+	 * (and safely default to "off" — the only way to be on is bundled +
+	 * default_enabled, which needs the manifest). Bundled status is derived
+	 * by ExtensionDiscovery from the discovery path, never from manifest
+	 * JSON, so a sideloaded/third-party extension cannot self-declare its
+	 * way into being enabled by default.
+	 */
+	public function isEnabled(string $extensionId, ?ExtensionManifest $manifest = null): bool
 	{
 		$state = $this->getState($extensionId);
+		if ($state instanceof ExtensionState) {
+			return $state->enabled;
+		}
 
-		return $state instanceof ExtensionState && $state->enabled;
+		return $manifest instanceof ExtensionManifest && $manifest->bundled && $manifest->defaultEnabled;
 	}
 
 	public function saveState(string $extensionId, ExtensionState $state): void

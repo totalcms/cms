@@ -267,7 +267,7 @@ readonly class FilesystemService implements CacheInterface
 		// compiled templates stale and edits to shared builder templates would
 		// never go live.
 		if ($this->localDir !== '' && $this->localDir !== $this->cacheDir) {
-			$cleared = $this->deleteDirectory($this->localDir, true) && $cleared;
+			return $this->deleteDirectory($this->localDir, true) && $cleared;
 		}
 
 		return $cleared;

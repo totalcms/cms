@@ -1,0 +1,16 @@
+<div class="mcp-conn-results">
+	{% for check in checks %}
+	<div class="mcp-check mcp-check-{{ check.status }}">
+		<span class="dash-badge {{ {
+			'pass': 'success',
+			'warn': 'warning',
+			'fail': 'danger',
+			'skip': 'muted',
+			'unreachable': 'muted',
+		}[check.status] }}">{{ check.status == 'unreachable' ? "couldn't test" : check.status }}</span>
+		<strong>{{ check.label }}</strong>
+		{% if check.detail %}<p>{{ check.detail }}</p>{% endif %}
+		{% if check.fix and check.status in ['warn', 'fail'] %}<p class="mcp-check-fix"><strong>Fix:</strong> {{ check.fix }}</p>{% endif %}
+	</div>
+	{% endfor %}
+</div>

@@ -12,6 +12,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Content\QueryCollectionTool;
@@ -51,6 +52,7 @@ final class QueryCollectionToolTest extends TestCase
 			// IO. Lets the rendering tests assert actual markdown output instead
 			// of mock contract.
 			new ContentRenderer(new TiptapToMarkdownConverter()),
+			new CollectionQueryResultFormatter(),
 		);
 	}
 

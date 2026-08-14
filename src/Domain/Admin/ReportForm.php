@@ -169,25 +169,21 @@ readonly class ReportForm implements \Stringable
 
 	private function buildFieldsContainer(): string
 	{
-		$content = '';
-
 		// If collection is pre-set, we can load fields server-side via HTMX on page load
 		if ($this->collection !== '') {
-			$content = HTMLUtils::element('div', '', [
+			return HTMLUtils::element('div', '', [
 				'id'          => 'report-fields',
 				'class'       => 'report-fields',
 				'hx-get'      => $this->api . '/report/collections/' . $this->collection . '/fields',
 				'hx-trigger'  => 'load',
 				'hx-swap'     => 'innerHTML',
 			]);
-		} else {
-			$content = HTMLUtils::element('div', '<p class="report-fields-placeholder">' . $this->t('report.fields_placeholder') . '</p>', [
-				'id'    => 'report-fields',
-				'class' => 'report-fields',
-			]);
 		}
 
-		return $content;
+		return HTMLUtils::element('div', '<p class="report-fields-placeholder">' . $this->t('report.fields_placeholder') . '</p>', [
+			'id'    => 'report-fields',
+			'class' => 'report-fields',
+		]);
 	}
 
 	private function buildActions(): string

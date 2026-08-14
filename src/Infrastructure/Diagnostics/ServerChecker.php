@@ -7,6 +7,7 @@ use Redis;
 use TotalCMS\Domain\Bundle\Service\BundleChecker;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\License\Service\LicenseValidator;
+use TotalCMS\Domain\Mcp\Service\McpConnectionChecker;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
 
@@ -41,6 +42,7 @@ class ServerChecker
 		private readonly Config $config,
 		private readonly LicenseValidator $licenseValidator,
 		private readonly OPcacheService $opcacheService,
+		private readonly McpConnectionChecker $mcpChecker,
 	) {
 	}
 
@@ -84,6 +86,23 @@ class ServerChecker
 
 		// Add license information
 		$info = array_merge($info, $this->getLicenseInfo());
+
+		// MCP connection check summary (last run of Settings → MCP → Test connection)
+		$last = $this->mcpChecker->lastRun();
+		if ($last !== null) {
+			$statuses = array_count_values(array_map(
+				static fn (array $r): string => (string)($r['status'] ?? ''),
+				$last['results'],
+			));
+			$bad                          = ($statuses['fail'] ?? 0);
+			$warn                         = ($statuses['warn'] ?? 0);
+			$info['MCP Connection Check'] = $bad > 0
+				? "$bad failing"
+				: ($warn > 0 ? "$warn warnings" : 'All checks passing');
+			$info['MCP Connection Check Age'] = $this->formatDuration(time() - $last['time']);
+		} else {
+			$info['MCP Connection Check'] = 'Never run — see Settings → MCP → Test connection';
+		}
 
 		return $info;
 	}

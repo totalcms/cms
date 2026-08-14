@@ -393,6 +393,39 @@ describe('ExtensionContext', function (): void {
 		expect($labels)->toHaveKey('container');
 	});
 
+	test('registers an MCP tool with an outputSchema', function (): void {
+		$ctx = createTestContext();
+
+		$ctx->registerMcpTool(
+			name: 'acme_search',
+			description: 'Search acme inventory.',
+			access: 'public',
+			handler: fn (string $query): array => ['items' => []],
+			inputSchema: ['type' => 'object', 'properties' => ['query' => ['type' => 'string']]],
+			outputSchema: ['type' => 'object', 'properties' => ['items' => ['type' => 'array']]],
+		);
+
+		$tools = $ctx->getRegisteredMcpTools();
+		expect($tools)->toHaveCount(1);
+		expect($tools[0]->name)->toBe('acme_search');
+		expect($tools[0]->outputSchema)->toBe(['type' => 'object', 'properties' => ['items' => ['type' => 'array']]]);
+	});
+
+	test('registers an MCP tool without an outputSchema as null', function (): void {
+		$ctx = createTestContext();
+
+		$ctx->registerMcpTool(
+			name: 'acme_ping',
+			description: 'Ping acme.',
+			access: 'public',
+			handler: fn (): array => ['ok' => true],
+		);
+
+		$tools = $ctx->getRegisteredMcpTools();
+		expect($tools)->toHaveCount(1);
+		expect($tools[0]->outputSchema)->toBeNull();
+	});
+
 	test('starts with empty registrations', function (): void {
 		$ctx = createTestContext();
 

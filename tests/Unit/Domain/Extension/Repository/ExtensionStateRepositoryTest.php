@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
@@ -193,5 +194,69 @@ describe('ExtensionStateRepository', function (): void {
 
 		$repo = new ExtensionStateRepository($storage);
 		$repo->clearError('vendor/ext');
+	});
+
+	test('bundled extension with default_enabled is on with no saved state', function (): void {
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+
+		$repo     = new ExtensionStateRepository($storage);
+		$manifest = ExtensionManifest::fromArray([
+			'id'              => 'totalcms/bundled-ext',
+			'name'            => 'Bundled Ext',
+			'version'         => '1.0.0',
+			'default_enabled' => true,
+		])->withBundled(true);
+
+		expect($repo->isEnabled('totalcms/bundled-ext', $manifest))->toBeTrue();
+	});
+
+	test('bundled default_enabled can be explicitly disabled and stays disabled', function (): void {
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(true);
+		$storage->method('read')->willReturn(json_encode([
+			'totalcms/bundled-ext' => ['enabled' => false, 'installed_at' => '', 'version' => '1.0.0', 'error' => null],
+		]));
+
+		$repo     = new ExtensionStateRepository($storage);
+		$manifest = ExtensionManifest::fromArray([
+			'id'              => 'totalcms/bundled-ext',
+			'name'            => 'Bundled Ext',
+			'version'         => '1.0.0',
+			'default_enabled' => true,
+		])->withBundled(true);
+
+		expect($repo->isEnabled('totalcms/bundled-ext', $manifest))->toBeFalse();
+	});
+
+	test('third party extension declaring default_enabled is still off', function (): void {
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+
+		$repo     = new ExtensionStateRepository($storage);
+		$manifest = ExtensionManifest::fromArray([
+			'id'              => 'vendor/sideloaded-ext',
+			'name'            => 'Sideloaded Ext',
+			'version'         => '1.0.0',
+			'default_enabled' => true,
+		]);
+		// Not bundled — as if a user dropped this into tcms-data/extensions/.
+		expect($manifest->bundled)->toBeFalse();
+
+		expect($repo->isEnabled('vendor/sideloaded-ext', $manifest))->toBeFalse();
+	});
+
+	test('bundled extension without default_enabled is off', function (): void {
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+
+		$repo     = new ExtensionStateRepository($storage);
+		$manifest = ExtensionManifest::fromArray([
+			'id'      => 'totalcms/plain-bundled-ext',
+			'name'    => 'Plain Bundled Ext',
+			'version' => '1.0.0',
+		])->withBundled(true);
+
+		expect($repo->isEnabled('totalcms/plain-bundled-ext', $manifest))->toBeFalse();
 	});
 });

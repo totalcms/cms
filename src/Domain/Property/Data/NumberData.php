@@ -28,7 +28,7 @@ class NumberData extends PropertyData implements \Stringable
 	{
 		if (isset($default) && $value === null) {
 			// Set the value from the schema default
-			$value = floatval($default);
+			return floatval($default);
 		}
 
 		return $value;

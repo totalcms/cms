@@ -257,7 +257,7 @@ class SentryMiddleware implements MiddlewareInterface
 		$ignore = self::DEFAULT_OPTIONS['ignore_exceptions'];
 
 		if (!$cli) {
-			$ignore = array_merge($ignore, self::WEB_ONLY_IGNORE);
+			return array_merge($ignore, self::WEB_ONLY_IGNORE);
 		}
 
 		return $ignore;

@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
@@ -32,11 +33,12 @@ final class SavedQueryToolFactoryTest extends TestCase
 			// This file never invokes a built tool's ->handle() — only tests
 			// SavedQueryToolFactory's shaping — so PersonaContext's Task 10b
 			// constructor deps never matter; plain stubs satisfy the type.
-			PersonaContext::class           => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
-			ObjectUrlBuilder::class         => $this->createMock(ObjectUrlBuilder::class),
-			McpSchemaResolver::class        => $this->createMock(McpSchemaResolver::class),
-			CollectionRepository::class     => $this->createMock(CollectionRepository::class),
-			default                         => null,
+			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
+			ObjectUrlBuilder::class               => $this->createMock(ObjectUrlBuilder::class),
+			McpSchemaResolver::class              => $this->createMock(McpSchemaResolver::class),
+			CollectionRepository::class           => $this->createMock(CollectionRepository::class),
+			CollectionQueryResultFormatter::class => new CollectionQueryResultFormatter(),
+			default                               => null,
 		});
 
 		$this->factory = new SavedQueryToolFactory($container);
@@ -95,6 +97,70 @@ final class SavedQueryToolFactoryTest extends TestCase
 		$this->assertInstanceOf(\stdClass::class, $schema['properties']);
 		$this->assertSame('{}', json_encode($schema['properties']));
 		$this->assertSame([], $schema['required'] ?? []);
+	}
+
+	public function testGeneratesAnOutputSchemaDescribingTheSharedPaginatedEnvelopeShape(): void
+	{
+		$def = SavedQueryToolDefinition::fromArray('listings', 'public', [
+			'id'          => 'find_listings',
+			'description' => 'Find listings.',
+		]);
+
+		$schema = $this->factory->outputSchemaFor($def);
+
+		$this->assertSame('object', $schema['type']);
+		$this->assertSame(['items', 'total', 'limit', 'offset', 'has_more'], $schema['required']);
+		$this->assertFalse($schema['additionalProperties']);
+		$this->assertSame('array', $schema['properties']['items']['type']);
+		$this->assertStringContainsString('listings', $schema['properties']['items']['description']);
+		$this->assertSame('object', $schema['properties']['items']['items']['type']);
+		$this->assertSame(['id'], $schema['properties']['items']['items']['required']);
+		$this->assertSame('string', $schema['properties']['items']['items']['properties']['id']['type']);
+		$this->assertSame('string', $schema['properties']['items']['items']['properties']['url']['type']);
+		$this->assertSame('integer', $schema['properties']['total']['type']);
+		$this->assertSame('integer', $schema['properties']['limit']['type']);
+		$this->assertSame('integer', $schema['properties']['offset']['type']);
+		$this->assertSame('boolean', $schema['properties']['has_more']['type']);
+	}
+
+	public function testOutputSchemaItemElementShapeMatchesQueryCollectionToolsExactly(): void
+	{
+		// Drift-proof: both tools' outputSchemas are built by the same
+		// CollectionQueryResultFormatter::outputSchema(), so the per-item
+		// element shape (the piece that used to be duplicated
+		// character-for-character) must be byte-identical. Only the
+		// top-level `items` description is allowed to differ.
+		$def = SavedQueryToolDefinition::fromArray('listings', 'public', [
+			'id'          => 'find_listings',
+			'description' => 'Find listings.',
+		]);
+
+		$savedQuerySchema = $this->factory->outputSchemaFor($def);
+
+		$formatter                = new CollectionQueryResultFormatter();
+		$queryCollectionItemsDesc = 'Matching objects in sort order. Field set varies by collection — call describe_collection for the schema.';
+		$queryCollectionSchema    = $formatter->outputSchema($queryCollectionItemsDesc);
+
+		$this->assertSame(
+			$queryCollectionSchema['properties']['items']['items'],
+			$savedQuerySchema['properties']['items']['items'],
+		);
+		$this->assertSame($queryCollectionSchema['required'], $savedQuerySchema['required']);
+		$this->assertSame(
+			$queryCollectionSchema['properties']['total'],
+			$savedQuerySchema['properties']['total'],
+		);
+		$this->assertSame(
+			$queryCollectionSchema['properties']['has_more'],
+			$savedQuerySchema['properties']['has_more'],
+		);
+		// The one deliberate difference: the items description carries the
+		// bound collection name for saved-query tools.
+		$this->assertNotSame(
+			$queryCollectionSchema['properties']['items']['description'],
+			$savedQuerySchema['properties']['items']['description'],
+		);
+		$this->assertStringContainsString('listings', $savedQuerySchema['properties']['items']['description']);
 	}
 
 	public function testComposesADescriptionBlockWithTheParamCatalog(): void

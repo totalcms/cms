@@ -139,6 +139,10 @@ class HTMLUtils
 			'data-src'        => $url,
 			'frameborder'     => '0',
 			'allowfullscreen' => '',
+			// Restates the browser default so a strict page-level policy
+			// (site-wide no-referrer) can't strip the Referer — YouTube
+			// refuses referrer-less embeds with error 153.
+			'referrerpolicy'  => 'strict-origin-when-cross-origin',
 			'class'           => "cms-iframe $class",
 		]);
 	}

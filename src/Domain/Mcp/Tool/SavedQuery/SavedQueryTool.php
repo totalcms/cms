@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\SavedQuery;
 
+use Mcp\Exception\ToolCallException;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
@@ -26,7 +28,9 @@ use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
  *   5. Query via IndexQueryService.
  *   6. Strip non-exposed fields, render content via ContentRenderer,
  *      decorate items with URLs.
- *   7. Return MCP tool result envelope.
+ *   7. Return the raw shared envelope built by
+ *      CollectionQueryResultFormatter::envelope() — `{items, total, limit,
+ *      offset, has_more}` (or throw ToolCallException).
  *
  * **Group-gated (Task 10b).** These tools are schema-defined per collection —
  * `$this->definition->collectionName` is fixed at registration, never a
@@ -34,11 +38,30 @@ use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
  * ToolRequirement's collectionArg could name (SchemaToolRegistrar registers
  * these with no `requires`; see its call site). Enforced inline instead, via
  * PersonaContext::canReadCollection() right after the collection is fetched
- * — same public-collection carve-out as the core content tools, and the same
- * `errorResult()` shape every other failure in this handler already uses.
+ * — same public-collection carve-out as the core content tools.
  *
- * Errors return `isError: true` with a recovery hint — never throws past
- * the SDK transport.
+ * **Result shape.** On success, returns the shared collection-query envelope
+ * — `{items, total, limit, offset, has_more}` — built by
+ * `CollectionQueryResultFormatter::envelope()` from the same `QueryResult`
+ * `IndexQueryService::query()` hands back. This is the identical wire shape
+ * `query_collection` returns (see QueryCollectionTool); a saved-query tool is
+ * just `query_collection` with filters/sort/limit baked in at definition
+ * time, so it reports the same pagination metadata rather than a bare
+ * `count` that can't distinguish a complete result from a truncated one. No
+ * hand-built `content` envelope — the SDK (`ToolReference::formatResult()` /
+ * `extractStructuredContent()`) builds both the outer `content[0].text`
+ * mirror and `structuredContent` from this raw return value, exactly like
+ * every other core tool (see ListCollectionsTool, QueryCollectionTool).
+ *
+ * **Errors throw `Mcp\Exception\ToolCallException`** with a recovery hint
+ * appended to the message. `CallToolHandler` catches it at the transport
+ * boundary and builds a `CallToolResult` with `isError: true` — the same
+ * convention every other core MCP tool uses (see GetObjectTool). A
+ * hand-built `['isError' => true, ...]` return array does NOT set the outer
+ * `CallToolResult.isError` — the SDK only inspects `isError` on a returned
+ * `CallToolResult`/thrown `ToolCallException`, never on a raw array (see
+ * `resources/docs/mcp/extensions.md`, "Returning data and reporting
+ * errors").
  */
 final readonly class SavedQueryTool
 {
@@ -51,13 +74,14 @@ final readonly class SavedQueryTool
 		private ObjectUrlBuilder $objectUrlBuilder,
 		private McpSchemaResolver $schemaResolver,
 		private CollectionRepository $collectionRepository,
+		private CollectionQueryResultFormatter $resultFormatter,
 	) {
 	}
 
 	/**
 	 * @param  array<string,mixed> $args
 	 *
-	 * @return array<string,mixed>
+	 * @return array{items: list<array<string,mixed>>, total: int, limit: int, offset: int, has_more: bool}
 	 */
 	public function handle(array $args): array
 	{
@@ -65,21 +89,21 @@ final readonly class SavedQueryTool
 			$persona = $this->personaContext->current();
 
 			if (!$this->personaCanAccess($persona)) {
-				return $this->errorResult(
+				throw new ToolCallException(
 					'This tool requires admin access. The current connection is anonymous.',
 				);
 			}
 
 			$collection = $this->collectionRepository->fetchCollection($this->definition->collectionName);
 			if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
-				return $this->errorResult(sprintf(
+				throw new ToolCallException(sprintf(
 					'Collection "%s" not found. Use list_collections to see available collections.',
 					$this->definition->collectionName,
 				));
 			}
 
 			if (!$this->personaContext->canReadCollection($this->definition->collectionName, $collection)) {
-				return $this->errorResult(sprintf(
+				throw new ToolCallException(sprintf(
 					"Your account's groups do not grant read on '%s'.",
 					$this->definition->collectionName,
 				));
@@ -112,25 +136,20 @@ final readonly class SavedQueryTool
 				$items[] = $object;
 			}
 
-			return [
-				'content' => [
-					[
-						'type' => 'text',
-						'text' => (string)json_encode(
-							['items' => $items, 'count' => count($items)],
-							JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES,
-						),
-					],
-				],
-			];
+			return $this->resultFormatter->envelope($result, $items);
 		} catch (SavedQueryToolException $e) {
-			return $this->errorResult($e->getMessage() . ' ' . $e->recoveryHint);
+			throw new ToolCallException($e->getMessage() . ' ' . $e->recoveryHint, $e->getCode(), $e);
+		} catch (ToolCallException $e) {
+			// Already the right shape (persona/collection/group-read checks
+			// above) — rethrow unchanged rather than let the generic
+			// \Throwable branch below re-wrap it with a less specific message.
+			throw $e;
 		} catch (\Throwable $e) {
-			return $this->errorResult(sprintf(
+			throw new ToolCallException(sprintf(
 				'Tool "%s" failed: %s. Try list_collections to verify the collection exists.',
 				$this->definition->name,
 				$e->getMessage(),
-			));
+			), $e->getCode(), $e);
 		}
 	}
 
@@ -233,18 +252,5 @@ final readonly class SavedQueryTool
 		}
 
 		return "{$field}:{$op}:{$encoded}";
-	}
-
-	/**
-	 * @return array<string,mixed>
-	 */
-	private function errorResult(string $message): array
-	{
-		return [
-			'isError' => true,
-			'content' => [
-				['type' => 'text', 'text' => $message],
-			],
-		];
 	}
 }

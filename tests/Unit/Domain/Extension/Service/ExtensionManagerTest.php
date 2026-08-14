@@ -14,6 +14,7 @@ use TotalCMS\Support\Config;
 function createExtensionManager(
 	string $extensionsDir,
 	?ExtensionStateRepository $stateRepo = null,
+	?string $bundledExtensionsDir = null,
 ): ExtensionManager {
 	$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->datadir = $extensionsDir;
@@ -31,8 +32,23 @@ function createExtensionManager(
 	$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
 	$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
-	$discovery         = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
-	$container         = test()->createMock(ContainerInterface::class);
+
+	// Default the "bundled" scan root to a directory that does not exist
+	// rather than letting ExtensionDiscovery fall through to the real
+	// resources/extensions/ shipped with the package. Without this, every
+	// test in this file would silently pick up whatever bundled extensions
+	// the package happens to ship (today: none default_enabled; after a
+	// future extension ships default_enabled, it would auto-register and
+	// break exact-count/exact-empty assertions below that assume nothing
+	// else is loaded). Tests that specifically exercise bundled/
+	// default_enabled behaviour pass $bundledExtensionsDir explicitly.
+	$discovery = new ExtensionDiscovery(
+		$config,
+		$manifestValidator,
+		new NullLogger(),
+		bundledExtensionsDir: $bundledExtensionsDir ?? ($extensionsDir . '/no-bundled-extensions-here'),
+	);
+	$container = test()->createMock(ContainerInterface::class);
 	$container->method('has')->willReturn(false);
 
 	return new ExtensionManager(
@@ -393,5 +409,130 @@ describe('ExtensionManager', function (): void {
 		expect(fn () => $manager->enable('test-vendor/incompatible-ext'))
 			->toThrow(RuntimeException::class, 'cannot be enabled');
 		expect($stateRepo->isEnabled('test-vendor/incompatible-ext'))->toBeFalse();
+	});
+
+	// -------------------------------------------------------------------------
+	// default_enabled: discoverAndRegister() is the path that actually decides
+	// production state (ExtensionStateRepository::isEnabled() alone only
+	// consults whatever manifest it's handed). These tests exercise the real
+	// auto-enrolment write path, using $bundledExtensionsDir to point the
+	// "bundled" scan root at fixtures instead of the real resources/extensions/.
+	// -------------------------------------------------------------------------
+
+	test('discoverAndRegister writes an enabled record for a first-seen bundled default_enabled extension', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+		$bundledDir  = dirname(__DIR__, 4) . '/fixtures/bundled-extensions';
+
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+		$storage->method('write')->willReturn(true);
+		$stateRepo = new ExtensionStateRepository($storage);
+
+		$manager = createExtensionManager($fixturesDir, $stateRepo, $bundledDir);
+		$manager->discoverAndRegister();
+
+		$state = $stateRepo->getState('fixture-vendor/auto-enabled-ext');
+		expect($state)->not->toBeNull();
+		expect($state->enabled)->toBeTrue();
+		expect($state->autoEnrolledBundled)->toBeTrue();
+	});
+
+	test('discoverAndRegister writes a disabled record for a first-seen non-bundled extension declaring default_enabled', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+		$storage->method('write')->willReturn(true);
+		$stateRepo = new ExtensionStateRepository($storage);
+
+		// No $bundledExtensionsDir passed: the fixture-vendor/default-enabled-off
+		// manifest is only discoverable via the user-installed root, so it can
+		// never resolve as bundled.
+		$manager = createExtensionManager($fixturesDir, $stateRepo);
+		$manager->discoverAndRegister();
+
+		$state = $stateRepo->getState('test-vendor/default-enabled-off');
+		expect($state)->not->toBeNull();
+		expect($state->enabled)->toBeFalse();
+		expect($state->autoEnrolledBundled)->toBeFalse();
+	});
+
+	test('discoverAndRegister does not overwrite a pre-existing disabled record for a bundled default_enabled extension', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+		$bundledDir  = dirname(__DIR__, 4) . '/fixtures/bundled-extensions';
+
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(true);
+		$storage->method('read')->willReturn(json_encode([
+			// An operator previously disabled this bundled default_enabled
+			// extension. Re-discovery must not silently flip it back on.
+			'fixture-vendor/auto-enabled-ext' => [
+				'enabled'      => false,
+				'installed_at' => '2020-01-01T00:00:00Z',
+				'version'      => '1.0.0',
+				'error'        => null,
+			],
+		]));
+		$storage->method('write')->willReturn(true);
+		$stateRepo = new ExtensionStateRepository($storage);
+
+		$manager = createExtensionManager($fixturesDir, $stateRepo, $bundledDir);
+		$manager->discoverAndRegister();
+
+		expect($stateRepo->getState('fixture-vendor/auto-enabled-ext')->enabled)->toBeFalse();
+	});
+
+	test('a saved auto-enrolled record does not transfer consent to a shadowing non-bundled manifest', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+		$bundledDir  = dirname(__DIR__, 4) . '/fixtures/bundled-extensions';
+
+		// Both the bundled fixture root (fixture-vendor/shadow-ext) and the
+		// user-installed fixture root (test fixturesDir/extensions/fixture-vendor/shadow-ext)
+		// declare the same id — later roots win, so discovery resolves this id
+		// to the NON-bundled manifest. Seed a pre-existing state as if it had
+		// been auto-enrolled on an earlier run when only the bundled copy existed.
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(true);
+		$storage->method('read')->willReturn(json_encode([
+			'fixture-vendor/shadow-ext' => [
+				'enabled'             => true,
+				'installed_at'        => '2020-01-01T00:00:00Z',
+				'version'             => '1.0.0',
+				'error'               => null,
+				'autoEnrolledBundled' => true,
+			],
+		]));
+		$storage->method('write')->willReturn(true);
+		$stateRepo = new ExtensionStateRepository($storage);
+
+		$manager = createExtensionManager($fixturesDir, $stateRepo, $bundledDir);
+		$manager->discoverAndRegister();
+
+		$manifests = $manager->getDiscoveredManifests();
+		expect($manifests['fixture-vendor/shadow-ext']->bundled)->toBeFalse();
+
+		$state = $stateRepo->getState('fixture-vendor/shadow-ext');
+		expect($state->enabled)->toBeFalse();
+		expect($state->autoEnrolledBundled)->toBeFalse();
+	});
+
+	test('enable clears the auto-enrolled marker so explicit consent is durable', function (): void {
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+		$bundledDir  = dirname(__DIR__, 4) . '/fixtures/bundled-extensions';
+
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(false);
+		$storage->method('write')->willReturn(true);
+		$stateRepo = new ExtensionStateRepository($storage);
+
+		$manager = createExtensionManager($fixturesDir, $stateRepo, $bundledDir);
+		$manager->discoverAndRegister();
+
+		expect($stateRepo->getState('fixture-vendor/auto-enabled-ext')->autoEnrolledBundled)->toBeTrue();
+
+		$manager->enable('fixture-vendor/auto-enabled-ext');
+
+		expect($stateRepo->getState('fixture-vendor/auto-enabled-ext')->autoEnrolledBundled)->toBeFalse();
+		expect($stateRepo->isEnabled('fixture-vendor/auto-enabled-ext'))->toBeTrue();
 	});
 });

@@ -453,15 +453,42 @@ export default class TotalForm {
 		const invalidFields = this.getInvalidFields();
 		this.showErrorSummary(invalidFields);
 
+		// Land the user on the first offending field. The per-field validate()
+		// loop above calls reportValidity() on each invalid input, so without
+		// this the *last* one keeps focus and the only durable feedback is the
+		// summary — which is appended to the bottom of the form and easily
+		// offscreen. scrollToField() also fires `tcms:error-navigate` so stepped
+		// forms can jump to the right step first.
+		if (invalidFields.length) this.scrollToField(invalidFields[0]);
+
 		return false;
 	}
 
+	// Scans the DOM rather than `this.fields`, because processFields() only ever
+	// pushes top-level fields into that list — an invalid input inside a card or
+	// deck item isn't there to be found, and the composite wrapping it reports
+	// valid (see TotalField.reportableInput). Each invalid input is folded up to
+	// the root field the user can actually see and click, de-duplicated so one
+	// card with three empty sub-fields is a single entry. Document order is
+	// visual order, so the first result is the topmost problem.
 	getInvalidFields() {
-		return this.fields.filter(field => {
-			if (!field.isVisible()) return false;
-			if (field.isSubField()) return false;
-			return !field.input.checkValidity();
+		const seen = new Set();
+		const invalid = [];
+
+		this.form.querySelectorAll(".form-field").forEach(element => {
+			const field = element.totalfield;
+			if (!field) return;
+			if (field.container.closest("template")) return; // deck item templates
+			if (!field.isVisible()) return;
+			if (field.input.checkValidity()) return;
+
+			const root = field.rootField();
+			if (!root.isVisible() || seen.has(root)) return;
+			seen.add(root);
+			invalid.push(root);
 		});
+
+		return invalid;
 	}
 
 	getErrorSummaryContainer() {
@@ -506,11 +533,20 @@ export default class TotalForm {
 			link.className = 'tcms-error-summary-link';
 			link.textContent = field.label || field.property;
 
+			// When the failure is inside a composite, name the sub-field too —
+			// "Address: Postal Code" rather than a bare "Address" the user has to
+			// go hunting through.
+			const input = field.reportableInput();
+			const source = input.closest('.form-field')?.totalfield;
+			if (source && source !== field) {
+				link.textContent += `: ${source.label || source.property}`;
+			}
+
 			// Add validation message if available
-			if (field.input.validationMessage) {
+			if (input.validationMessage) {
 				const message = document.createElement('span');
 				message.className = 'tcms-error-summary-message';
-				message.textContent = ` - ${field.input.validationMessage}`;
+				message.textContent = ` - ${input.validationMessage}`;
 				link.appendChild(message);
 			}
 
@@ -556,9 +592,22 @@ export default class TotalForm {
 
 		// Focus the input after scroll completes
 		setTimeout(() => {
-			field.input.focus();
-			field.input.reportValidity();
+			const input = field.reportableInput();
+			// A sub-field in a collapsed deck item or a closed dialog can't take
+			// focus, and reportValidity() on an unrenderable control shows nothing
+			// (Chrome logs "not focusable" and refuses). Scrolling to the parent
+			// plus the summary entry is the best we can do there.
+			if (!this.isFocusable(input)) return;
+			input.focus();
+			input.reportValidity();
 		}, 300);
+	}
+
+	isFocusable(input) {
+		if (!input || input.type === 'hidden' || input.disabled) return false;
+		if (input.closest('dialog:not([open])')) return false;
+		if (input.closest('.field-hidden')) return false;
+		return true;
 	}
 
 	closeDialog() {
@@ -569,7 +618,11 @@ export default class TotalForm {
 	}
 
 	focusFirstInput() {
-		const selector   = 'input:not([type="hidden"]):not([readonly]):not([disabled]), textarea:not([readonly]):not([disabled]), select:not([disabled])';
+		// [data-proxy] skips the value/validity carriers behind deck, card, image,
+		// gallery, file and depot fields (FormField::proxyInput). They're real
+		// inputs the user never types into, collapsed to zero size by CSS — landing
+		// the cursor there puts it in an invisible box.
+		const selector   = 'input:not([type="hidden"]):not([readonly]):not([disabled]):not([data-proxy]), textarea:not([readonly]):not([disabled]), select:not([disabled])';
 		const candidates = Array.from(this.form.querySelectorAll(selector));
 		// Skip inputs nested in <dialog> elements — those belong to image/file/deck-item edit modals
 		const first = candidates.find(input => !input.closest('dialog'));

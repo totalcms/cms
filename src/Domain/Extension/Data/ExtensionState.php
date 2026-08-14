@@ -13,6 +13,15 @@ final class ExtensionState
 	 * @param array<string,bool> $permissions Capability key => enabled
 	 * @param array{reason:string,failureCount:int,lastError:string,quarantinedAt:string}|null $quarantine
 	 * @param array{reason:string,findings:int,updatedAt:string}|null $updateDisabled
+	 * @param bool $autoEnrolledBundled Provenance marker: true when `enabled` was
+	 *             written automatically by `ExtensionManager::discoverAndRegister()`
+	 *             for a bundled `default_enabled` manifest, never by an operator
+	 *             action. Consulted only to stop that auto-written consent from
+	 *             silently transferring if a later discovery resolves this id to a
+	 *             NON-bundled manifest (e.g. a shadow copy dropped into
+	 *             `tcms-data/extensions/`) — see the shadow-consent-gap handling in
+	 *             `discoverAndRegister()`. Cleared the moment a human calls
+	 *             `ExtensionManager::enable()`, since that is real consent.
 	 */
 	public function __construct(
 		public bool $enabled = false,
@@ -24,6 +33,7 @@ final class ExtensionState
 		public ?array $quarantine = null,
 		/** @var array{reason:string,findings:int,updatedAt:string}|null */
 		public ?array $updateDisabled = null,
+		public bool $autoEnrolledBundled = false,
 	) {
 	}
 
@@ -68,6 +78,7 @@ final class ExtensionState
 			permissions: $permissions,
 			quarantine: $quarantine,
 			updateDisabled: $updateDisabled,
+			autoEnrolledBundled: (bool)($data['autoEnrolledBundled'] ?? false),
 		);
 	}
 
@@ -77,13 +88,14 @@ final class ExtensionState
 	public function toArray(): array
 	{
 		return [
-			'enabled'        => $this->enabled,
-			'installed_at'   => $this->installedAt,
-			'version'        => $this->version,
-			'error'          => $this->error,
-			'permissions'    => $this->permissions,
-			'quarantine'     => $this->quarantine,
-			'updateDisabled' => $this->updateDisabled,
+			'enabled'             => $this->enabled,
+			'installed_at'        => $this->installedAt,
+			'version'             => $this->version,
+			'error'               => $this->error,
+			'permissions'         => $this->permissions,
+			'quarantine'          => $this->quarantine,
+			'updateDisabled'      => $this->updateDisabled,
+			'autoEnrolledBundled' => $this->autoEnrolledBundled,
 		];
 	}
 

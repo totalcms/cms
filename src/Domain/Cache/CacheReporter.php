@@ -8,6 +8,7 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
+use TotalCMS\Support\Config;
 
 /**
  * Cache reporting and analysis service.
@@ -22,7 +23,24 @@ readonly class CacheReporter
 		private MemcachedService $memcachedService,
 		private APCuService $apcuService,
 		private DevModeManager $devModeManager,
+		private Config $config,
 	) {
+	}
+
+	/**
+	 * Whether a backend is enabled in cache settings. Backends the operator
+	 * explicitly switched off (cache.redis / memcached / apcu / filesystem =
+	 * false) are omitted from the Cache Manager entirely — a deliberately
+	 * disabled backend must not render as an error row. OPcache has no T3
+	 * config toggle (it's a PHP-level feature), so it is always shown.
+	 */
+	private function isBackendEnabled(string $backend): bool
+	{
+		if ($backend === 'opcache') {
+			return true;
+		}
+
+		return (bool)($this->config->cache[$backend] ?? true);
 	}
 
 	/**
@@ -84,20 +102,21 @@ readonly class CacheReporter
 			'services'           => [],
 		];
 
-		// Collect stats from each available service
-		if ($this->redisService->isAvailable()) {
+		// Collect stats from each available service (skipping backends the
+		// operator disabled — no point connecting to a cache T3 won't use)
+		if ($this->isBackendEnabled('redis') && $this->redisService->isAvailable()) {
 			$stats['services']['redis'] = $this->redisService->getStats();
 		}
 
-		if ($this->apcuService->isAvailable()) {
+		if ($this->isBackendEnabled('apcu') && $this->apcuService->isAvailable()) {
 			$stats['services']['apcu'] = $this->apcuService->getStats();
 		}
 
-		if ($this->memcachedService->isAvailable()) {
+		if ($this->isBackendEnabled('memcached') && $this->memcachedService->isAvailable()) {
 			$stats['services']['memcached'] = $this->memcachedService->getStats();
 		}
 
-		if ($this->filesystemService->isAvailable()) {
+		if ($this->isBackendEnabled('filesystem') && $this->filesystemService->isAvailable()) {
 			$stats['services']['filesystem'] = $this->filesystemService->getStats();
 		}
 
@@ -300,13 +319,19 @@ readonly class CacheReporter
 	 */
 	private function getAvailableBackends(): array
 	{
-		return [
+		$backends = [
 			'opcache'    => 'OPcache',
 			'apcu'       => 'APCu',
 			'redis'      => 'Redis',
 			'memcached'  => 'Memcached',
 			'filesystem' => 'Filesystem Cache',
 		];
+
+		return array_filter(
+			$backends,
+			$this->isBackendEnabled(...),
+			ARRAY_FILTER_USE_KEY,
+		);
 	}
 
 	/**
@@ -316,13 +341,19 @@ readonly class CacheReporter
 	 */
 	private function getBackendStatus(): array
 	{
-		return [
+		$status = [
 			'opcache'    => $this->getServiceStatus($this->opcacheService),
 			'apcu'       => $this->getServiceStatus($this->apcuService),
 			'redis'      => $this->getServiceStatus($this->redisService),
 			'memcached'  => $this->getServiceStatus($this->memcachedService),
 			'filesystem' => $this->getServiceStatus($this->filesystemService),
 		];
+
+		return array_filter(
+			$status,
+			$this->isBackendEnabled(...),
+			ARRAY_FILTER_USE_KEY,
+		);
 	}
 
 	/**

@@ -14,6 +14,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -71,11 +72,12 @@ final class SchemaToolRegistrarTest extends TestCase
 			// This file never invokes a built tool's handler — only registration
 			// behavior — so PersonaContext's Task 10b constructor deps never
 			// matter; plain stubs satisfy the type.
-			PersonaContext::class       => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
-			ObjectUrlBuilder::class     => $this->createMock(ObjectUrlBuilder::class),
-			McpSchemaResolver::class    => $this->createMock(McpSchemaResolver::class),
-			CollectionRepository::class => $this->createMock(CollectionRepository::class),
-			default                     => null,
+			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
+			ObjectUrlBuilder::class               => $this->createMock(ObjectUrlBuilder::class),
+			McpSchemaResolver::class              => $this->createMock(McpSchemaResolver::class),
+			CollectionRepository::class           => $this->createMock(CollectionRepository::class),
+			CollectionQueryResultFormatter::class => new CollectionQueryResultFormatter(),
+			default                               => null,
 		});
 
 		return new SavedQueryToolFactory($container);
@@ -117,6 +119,35 @@ final class SchemaToolRegistrarTest extends TestCase
 		$tools = $registry->forPersona(McpPersona::PUBLIC_);
 		$this->assertCount(1, $tools);
 		$this->assertSame('find_featured', $tools[0]->name);
+	}
+
+	/**
+	 * Directory requirement: every tool needs a title annotation. Saved-query
+	 * tools are dynamic, so the registrar derives a humanized title from the
+	 * tool name and marks them read-only (they are index queries by construction).
+	 */
+	public function testSavedQueryToolsCarryTitledReadOnlyAnnotations(): void
+	{
+		$collection = $this->makeCollection('blog', [
+			'access' => 'public',
+			'tools'  => [
+				[
+					'id'          => 'find_featured_posts',
+					'description' => 'Featured posts.',
+					'filters'     => ['featured' => ['value' => true]],
+				],
+			],
+		]);
+
+		$registry  = new ToolRegistry();
+		$registrar = new SchemaToolRegistrar($this->makeRepo([$collection]), $this->makeFactory(), new RecordingLogger());
+
+		$registrar->register($registry);
+
+		$tool = $registry->forPersona(McpPersona::PUBLIC_)[0];
+		$this->assertNotNull($tool->annotations);
+		$this->assertSame('Find Featured Posts', $tool->annotations->title);
+		$this->assertTrue($tool->annotations->readOnlyHint);
 	}
 
 	public function testSkipsCollisionWithCoreToolNameAndLogs(): void

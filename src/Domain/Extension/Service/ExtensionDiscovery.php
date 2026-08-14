@@ -43,12 +43,16 @@ final class ExtensionDiscovery
 	 * @param string|null $projectExtensionsDir override for the project-level
 	 *                                          extensions directory (tests);
 	 *                                          defaults to `<projectRoot>/extensions`
+	 * @param string|null $bundledExtensionsDir override for the bundled
+	 *                                          extensions directory (tests);
+	 *                                          defaults to `<packageRoot>/resources/extensions`
 	 */
 	public function __construct(
 		private readonly Config $config,
 		private readonly ManifestValidator $validator,
 		private readonly LoggerInterface $logger,
 		private readonly ?string $projectExtensionsDir = null,
+		private readonly ?string $bundledExtensionsDir = null,
 	) {
 	}
 
@@ -141,7 +145,7 @@ final class ExtensionDiscovery
 	 */
 	public function getBundledExtensionsDirectory(): string
 	{
-		return PathResolver::packageRoot() . '/resources/extensions';
+		return $this->bundledExtensionsDir ?? (PathResolver::packageRoot() . '/resources/extensions');
 	}
 
 	/**

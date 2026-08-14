@@ -141,6 +141,17 @@ final class SchemaToolRegistrar
 						access: $definition->access,
 						handler: $this->factory->closureFor($definition, $tool),
 						inputSchema: $this->factory->inputSchemaFor($definition),
+						// Directory requirement: every tool carries a title.
+						// Saved queries are index reads by construction, so the
+						// read-only hints are safe to assert unconditionally.
+						annotations: new \Mcp\Schema\ToolAnnotations(
+							title: ucwords(str_replace(['_', '-'], ' ', $definition->name)),
+							readOnlyHint: true,
+							destructiveHint: false,
+							idempotentHint: true,
+							openWorldHint: false,
+						),
+						outputSchema: $this->factory->outputSchemaFor($definition),
 					));
 				} catch (\LogicException $e) {
 					// Registry collision that slipped past our pre-check (race condition is

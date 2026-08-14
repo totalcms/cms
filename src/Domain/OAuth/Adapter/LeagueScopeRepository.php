@@ -25,10 +25,17 @@ use TotalCMS\Support\Config;
  * a utils allow), failing closed when the user is unknown. This is
  * deliberately a broad "can request at all" gate, not a fine-grained one —
  * the access-group layer still caps what the resulting token can actually do
- * (see the MCP admin-domain tools' ToolRequirement guard). Scopes not in the
- * T3 registry are silently removed by getScopeEntityByIdentifier() before
- * finalizeScopes() is called by league's grant code. Refresh grants reuse the
- * already-narrowed set, so this filter runs once per authorization.
+ * (see the MCP admin-domain tools' ToolRequirement guard).
+ *
+ * getScopeEntityByIdentifier() is deliberately TOLERANT of unknown
+ * identifiers: returning null makes league's AbstractGrant::validateScopes()
+ * throw invalid_scope, hard-failing the whole authorize request — and MCP
+ * clients send labels T3 doesn't define (claude.ai: `claudeai`). Unknown
+ * labels are instead dropped later: OAuthAuthorizeAction normalizes the
+ * parsed request (substituting oauth.defaultScope when nothing known
+ * remains), and finalizeScopes()' allowed-set intersection removes anything
+ * that survives to token issuance. Refresh grants reuse the already-narrowed
+ * set, so this filter runs once per authorization.
  */
 final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 {
@@ -40,12 +47,10 @@ final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 	) {
 	}
 
-	public function getScopeEntityByIdentifier(string $identifier): ?ScopeEntityInterface
+	public function getScopeEntityByIdentifier(string $identifier): ScopeEntityInterface
 	{
-		if (!$this->registry->has($identifier)) {
-			return null;
-		}
-
+		// Tolerant on purpose — see class docblock. Unknown identifiers are
+		// filtered downstream, never granted.
 		return new LeagueScopeEntity($identifier);
 	}
 
@@ -86,8 +91,15 @@ final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 
 		return array_values(array_filter(
 			$scopes,
-			static function (ScopeEntityInterface $scope) use ($allowed, $userCanConveyAdmin): bool {
+			function (ScopeEntityInterface $scope) use ($allowed, $userCanConveyAdmin): bool {
 				$id = $scope->getIdentifier();
+				// Registry guard: the tolerant getScopeEntityByIdentifier()
+				// lets unknown labels reach this point — nothing outside the
+				// registry may ever survive into a token, regardless of what
+				// a client record claims to allow.
+				if (!$this->registry->has($id)) {
+					return false;
+				}
 				if (!in_array($id, $allowed, true)) {
 					return false;
 				}

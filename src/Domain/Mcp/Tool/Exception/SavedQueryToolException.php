@@ -10,9 +10,11 @@ namespace TotalCMS\Domain\Mcp\Tool\Exception;
  * Three flavours via static factories — validation (a tool definition
  * failed JSON Schema or operator check), collision (a tool name conflicts
  * with another tool), and placeholder (a filter value referenced an
- * undeclared param). Each carries a `recoveryHint` string used by the
- * tool handler when returning `isError: true` to MCP clients, so dead
- * ends become next steps for the AI agent.
+ * undeclared param). Each carries a `recoveryHint` string appended to the
+ * message when the tool handler catches this and rethrows it as a
+ * `\Mcp\Exception\ToolCallException` (see SavedQueryTool::handle()) — the
+ * SDK sets `isError: true` on the MCP result for you, so dead ends become
+ * next steps for the AI agent.
  */
 final class SavedQueryToolException extends \RuntimeException
 {

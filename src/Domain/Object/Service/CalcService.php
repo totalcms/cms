@@ -269,7 +269,7 @@ class CalcService
 		}
 
 		if (is_numeric($max) && $value > (float)$max) {
-			$value = (float)$max;
+			return (float)$max;
 		}
 
 		return $value;
