@@ -200,7 +200,7 @@ class CollectionData
 		$url = rtrim($url, '/');
 
 		if (str_ends_with(strtolower($url), '.php')) {
-			$url = rtrim(dirname($url), '/');
+			return rtrim(dirname($url), '/');
 		}
 
 		return $url;
@@ -267,7 +267,7 @@ class CollectionData
 
 		// Ensure path starts with /
 		if ($path !== '' && $path[0] !== '/') {
-			$path = '/' . $path;
+			return '/' . $path;
 		}
 
 		return $path;

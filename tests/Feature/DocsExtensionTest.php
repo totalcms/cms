@@ -75,7 +75,7 @@ function docsExtensionRegister(bool $publicTools): array
 	$container = new class implements ContainerInterface {
 		public function get(string $id): never
 		{
-			throw new \RuntimeException("Unexpected container access for '{$id}' — docs extension should not need services from the DI container.");
+			throw new RuntimeException("Unexpected container access for '{$id}' — docs extension should not need services from the DI container.");
 		}
 
 		public function has(string $id): bool
@@ -125,7 +125,7 @@ function docsExtensionFindTool(array $tools, string $name): McpToolDefinition
 		}
 	}
 
-	throw new \RuntimeException("Tool '{$name}' not registered.");
+	throw new RuntimeException("Tool '{$name}' not registered.");
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -325,7 +325,7 @@ it('leaves literal braces that are not declared arguments untouched', function (
 		}
 	}
 
-	$text = (($prompt['handler'])(['purpose' => 'a pricing page']))[0]->content->text;
+	$text = ($prompt['handler'])(['purpose' => 'a pricing page'])[0]->content->text;
 
 	// `/case-studies/{id}` is guidance about route templates, not a placeholder.
 	// A naive regex substitution would eat it.
@@ -344,7 +344,7 @@ it('tells the agent to ask for a missing required argument instead of rendering 
 		}
 	}
 
-	$text = (($prompt['handler'])([]))[0]->content->text;
+	$text = ($prompt['handler'])([])[0]->content->text;
 
 	expect($text)->toContain('not supplied');
 });

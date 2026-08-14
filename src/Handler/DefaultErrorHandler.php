@@ -140,7 +140,7 @@ readonly class DefaultErrorHandler
 
 		$file = basename($exception->getFile());
 		if ($file === 'CallableResolver.php') {
-			$statusCode = StatusCodeInterface::STATUS_NOT_FOUND;
+			return StatusCodeInterface::STATUS_NOT_FOUND;
 		}
 
 		return $statusCode;
@@ -161,7 +161,7 @@ readonly class DefaultErrorHandler
 		$errorMessage = sprintf('%s %s', $statusCode, $reasonPhrase);
 
 		if ($displayErrorDetails) {
-			$errorMessage = sprintf(
+			return sprintf(
 				'%s - %s',
 				$errorMessage,
 				$this->getExceptionText($exception)
@@ -196,7 +196,7 @@ readonly class DefaultErrorHandler
 		}
 
 		if ($maxLength > 0) {
-			$error = substr($error, 0, $maxLength);
+			return substr($error, 0, $maxLength);
 		}
 
 		return $error;

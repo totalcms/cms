@@ -121,7 +121,7 @@ readonly class ObjectUrlBuilder
 
 				// Always slugify for URL safety (unless raw filter was used)
 				if (!$skipSlugify) {
-					$value = $this->slugify($value);
+					return $this->slugify($value);
 				}
 
 				return $value;

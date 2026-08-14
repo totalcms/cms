@@ -59,7 +59,7 @@ final readonly class McpCorsMiddleware implements MiddlewareInterface
 		$response = $handler->handle($request);
 
 		if ($echoed !== null) {
-			$response = $response
+			return $response
 				->withHeader('Access-Control-Allow-Origin', $echoed)
 				->withHeader('Vary', 'Origin');
 		}

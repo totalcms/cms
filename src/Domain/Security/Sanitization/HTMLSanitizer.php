@@ -144,7 +144,7 @@ class HTMLSanitizer
 		$html = (string)preg_replace('/\s*style\s*=\s*["\'][^"\']*expression\s*\([^"\']*["\']/i', '', $html);
 
 		if (empty($config['allowed_css_properties'] ?? [])) {
-			$html = (string)preg_replace('/\s*style\s*=\s*["\'][^"\']*["\']/i', '', $html);
+			return (string)preg_replace('/\s*style\s*=\s*["\'][^"\']*["\']/i', '', $html);
 		}
 
 		return $html;

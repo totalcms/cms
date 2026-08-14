@@ -29,7 +29,7 @@ function fakeHttp(array $responses): HttpClientInterface
 		/** @param array<string,mixed> $options */
 		public function request(string $method, string $url, array $options = []): HttpResponse
 		{
-			$headers    = is_array($options['headers'] ?? null) ? $options['headers'] : [];
+			$headers          = is_array($options['headers'] ?? null) ? $options['headers'] : [];
 			$hasInvalidBearer = false;
 			foreach ($headers as $header) {
 				if (is_string($header) && str_contains($header, 'Authorization: Bearer tcms-connection-check-invalid-token')) {
@@ -41,7 +41,7 @@ function fakeHttp(array $responses): HttpClientInterface
 			$ua  = $hasInvalidBearer ? 'invalid-bearer' : (string)($options['user_agent'] ?? 'default');
 			$hit = $this->responses["$ua $url"] ?? $this->responses["* $url"] ?? null;
 			if ($hit === null) {
-				throw new \RuntimeException('connection refused');
+				throw new RuntimeException('connection refused');
 			}
 
 			return new HttpResponse($hit['status'], $hit['body']);
@@ -67,14 +67,14 @@ function checkerConfig(string $api = ''): Config
 	return $config;
 }
 
-function resultById(array $results, string $id): \TotalCMS\Domain\Mcp\Data\McpCheckResult
+function resultById(array $results, string $id): TotalCMS\Domain\Mcp\Data\McpCheckResult
 {
 	foreach ($results as $result) {
 		if ($result->id === $id) {
 			return $result;
 		}
 	}
-	throw new \RuntimeException("no result: $id");
+	throw new RuntimeException("no result: $id");
 }
 
 test('all green when every probe answers correctly', function (): void {
@@ -140,9 +140,9 @@ test('probes root shape and dual authority on subpath installs', function (): vo
 	$http  = fakeHttp([
 		"* https://example.com$api/.well-known/mcp.json" => ['status' => 200, 'body' => json_encode(['endpoint' => "https://example.com$api/mcp"]) ?: ''],
 		// root shape NOT rewritten on this host:
-		'* https://example.com/.well-known/mcp.json'     => ['status' => 404, 'body' => 'not found'],
-		"* https://example.com$api/mcp"                  => ['status' => 200, 'body' => (string)$init],
-		"invalid-bearer https://example.com$api/mcp"     => ['status' => 401, 'body' => '{}'],
+		'* https://example.com/.well-known/mcp.json'      => ['status' => 404, 'body' => 'not found'],
+		"* https://example.com$api/mcp"                   => ['status' => 200, 'body' => (string)$init],
+		"invalid-bearer https://example.com$api/mcp"      => ['status' => 401, 'body' => '{}'],
 		"* https://example.com$api/.well-known/jwks.json" => ['status' => 200, 'body' => '{"keys":[]}'],
 	]);
 

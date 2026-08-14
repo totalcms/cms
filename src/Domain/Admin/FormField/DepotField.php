@@ -361,7 +361,8 @@ class DepotField extends FormField
 		usort($files, function (array $a, array $b): int {
 			if ($a['mime'] === 'folder' && $b['mime'] !== 'folder') {
 				return -1;
-			} elseif ($a['mime'] !== 'folder' && $b['mime'] === 'folder') {
+			}
+			if ($a['mime'] !== 'folder' && $b['mime'] === 'folder') {
 				return 1;
 			}
 

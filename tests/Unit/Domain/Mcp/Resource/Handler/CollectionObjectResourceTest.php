@@ -67,8 +67,6 @@ final class CollectionObjectResourceTest extends TestCase
 
 	// ─── URI assembly ─────────────────────────────────────────────────────────
 
-
-
 	// ─── Error propagation ────────────────────────────────────────────────────
 
 	public function testReadDoesNotCatchToolCallExceptionFromTool(): void

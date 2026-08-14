@@ -26,7 +26,7 @@ class TemplateData
 		];
 
 		if ($this->designer instanceof DesignerMetadata) {
-			$data = array_merge($data, $this->designer->toArray());
+			return array_merge($data, $this->designer->toArray());
 		}
 
 		return $data;

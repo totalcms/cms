@@ -26,7 +26,7 @@ class PropertyData implements PropertyDataInterface, \Stringable
 	{
 		if (isset($default) && $value === null) {
 			// Set the value from the schema default
-			$value = $default;
+			return $default;
 		}
 
 		return $value;

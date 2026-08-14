@@ -307,7 +307,7 @@ class CacheManager
 
 		// Fallback to filesystem cache only if no memory caches available
 		if (!$stored && $this->filesystemService->isAvailable()) {
-			$stored = $this->filesystemService->set($key, $data, $ttl);
+			return $this->filesystemService->set($key, $data, $ttl);
 		}
 
 		return $stored;

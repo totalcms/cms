@@ -33,7 +33,7 @@ function parseFrontmatter(string $content): array
 
 	try {
 		$parsed = Yaml::parse($match[1]);
-	} catch (\Throwable) {
+	} catch (Throwable) {
 		return [];
 	}
 
@@ -42,36 +42,37 @@ function parseFrontmatter(string $content): array
 
 function removeFrontmatter(string $content): string
 {
-	return (string) preg_replace('/^---\s*\n.*?\n---\s*\n/s', '', $content);
+	return (string)preg_replace('/^---\s*\n.*?\n---\s*\n/s', '', $content);
 }
 
 function cleanForSearch(string $body): string
 {
 	// Remove code blocks but keep content
-	$clean = (string) preg_replace('/```\w*\n?/', '', $body);
+	$clean = (string)preg_replace('/```\w*\n?/', '', $body);
 	// Remove HTML tags
 	$clean = strip_tags($clean);
 	// Remove markdown formatting (preserve dots for cms.method names)
-	$clean = (string) preg_replace('/[#*_`\[\]()]/', ' ', $clean);
+	$clean = (string)preg_replace('/[#*_`\[\]()]/', ' ', $clean);
 	// Remove URLs
-	$clean = (string) preg_replace('/https?:\/\/[^\s]+/', '', $clean);
+	$clean = (string)preg_replace('/https?:\/\/[^\s]+/', '', $clean);
 	// Remove Twig delimiters
-	$clean = (string) preg_replace('/\{\{|\}\}|\{%|%\}|\{#|#\}/', ' ', $clean);
+	$clean = (string)preg_replace('/\{\{|\}\}|\{%|%\}|\{#|#\}/', ' ', $clean);
 	// Normalize whitespace
-	$clean = (string) preg_replace('/\s+/', ' ', $clean);
+	$clean = (string)preg_replace('/\s+/', ' ', $clean);
+
 	return strtolower(trim($clean));
 }
 
 /**
  * Parse filter signatures from filters.md.
- * Pattern: #### `filterName(params): returnType`
+ * Pattern: #### `filterName(params): returnType`.
  *
  * @return array<int, array<string, mixed>>
  */
 function parseFilterSignatures(string $content): array
 {
 	$filters = [];
-	$body = removeFrontmatter($content);
+	$body    = removeFrontmatter($content);
 
 	// Split by H4 headings that contain backtick signatures
 	$parts = preg_split('/^####\s+/m', $body);
@@ -98,8 +99,8 @@ function parseFilterSignatures(string $content): array
 
 		// Get description (text after signature line, before first code block)
 		$descriptionLines = [];
-		$lines = explode("\n", $part);
-		$pastSignature = false;
+		$lines            = explode("\n", $part);
+		$pastSignature    = false;
 		foreach ($lines as $line) {
 			if (!$pastSignature) {
 				if (str_contains($line, '`' . $signature . '`') || str_starts_with($line, '`')) {
@@ -137,14 +138,14 @@ function parseFilterSignatures(string $content): array
 
 /**
  * Parse standalone function signatures from functions.md.
- * Pattern: ### `functionName(params): returnType`
+ * Pattern: ### `functionName(params): returnType`.
  *
  * @return array<int, array<string, mixed>>
  */
 function parseFunctionSignatures(string $content): array
 {
 	$functions = [];
-	$body = removeFrontmatter($content);
+	$body      = removeFrontmatter($content);
 
 	// Split by H3 headings that contain backtick signatures
 	$parts = preg_split('/^###\s+/m', $body);
@@ -168,7 +169,7 @@ function parseFunctionSignatures(string $content): array
 		}
 
 		$description = extractDescription($part);
-		$examples = extractCodeBlocks($part);
+		$examples    = extractCodeBlocks($part);
 
 		$functions[] = [
 			'name'        => $name,
@@ -184,14 +185,14 @@ function parseFunctionSignatures(string $content): array
 
 /**
  * Parse cms.* namespace functions from collection/data/media docs.
- * Pattern: ### methodName() or ## methodName()
+ * Pattern: ### methodName() or ## methodName().
  *
  * @return array<int, array<string, mixed>>
  */
 function parseNamespaceFunctions(string $content, string $sourceFile): array
 {
 	$functions = [];
-	$body = removeFrontmatter($content);
+	$body      = removeFrontmatter($content);
 
 	// Determine the namespace from the H1 heading (e.g., "# cms.collection")
 	$namespace = '';
@@ -201,7 +202,7 @@ function parseNamespaceFunctions(string $content, string $sourceFile): array
 
 	// Determine URL from source file
 	$urlPath = str_replace('.md', '/', $sourceFile);
-	$url = 'https://docs.totalcms.co/' . $urlPath;
+	$url     = 'https://docs.totalcms.co/' . $urlPath;
 
 	// Split by H3 headings (method names)
 	$parts = preg_split('/^###\s+/m', $body);
@@ -234,7 +235,7 @@ function parseNamespaceFunctions(string $content, string $sourceFile): array
 		$fullName = $namespace ? $namespace . '.' . $cleanName : $cleanName;
 
 		$description = extractDescription($part);
-		$examples = extractCodeBlocks($part);
+		$examples    = extractCodeBlocks($part);
 
 		if (!empty($description) || !empty($examples)) {
 			$functions[] = [
@@ -252,14 +253,14 @@ function parseNamespaceFunctions(string $content, string $sourceFile): array
 
 /**
  * Parse REST API endpoints from rest-api.md.
- * Pattern: ```http\nMETHOD /path\n```
+ * Pattern: ```http\nMETHOD /path\n```.
  *
  * @return array<int, array<string, mixed>>
  */
 function parseApiEndpoints(string $content): array
 {
 	$endpoints = [];
-	$body = removeFrontmatter($content);
+	$body      = removeFrontmatter($content);
 
 	// Split into sections by H3 headings
 	$sections = preg_split('/^###\s+/m', $body);
@@ -276,7 +277,7 @@ function parseApiEndpoints(string $content): array
 		if (preg_match_all('/```http\s*\n\s*(GET|POST|PUT|PATCH|DELETE)\s+(\S+)\s*\n```/i', $section, $matches, PREG_SET_ORDER)) {
 			foreach ($matches as $match) {
 				$method = strtoupper($match[1]);
-				$path = $match[2];
+				$path   = $match[2];
 
 				// Get description: text between heading and first code block
 				$descText = '';
@@ -284,10 +285,10 @@ function parseApiEndpoints(string $content): array
 					$candidate = trim($descMatch[1]);
 					// Only use if it doesn't start with a code fence
 					if (!str_starts_with($candidate, '```')) {
-						$descText = (string) preg_replace('/\s+/', ' ', $candidate);
+						$descText = (string)preg_replace('/\s+/', ' ', $candidate);
 					}
 				}
-				$description = $descText ?: (string) $sectionTitle;
+				$description = $descText ?: (string)$sectionTitle;
 
 				// Look for parameters table
 				$parameters = [];
@@ -327,14 +328,14 @@ function parseApiEndpoints(string $content): array
 
 /**
  * Parse schema/collection configuration options from settings.md.
- * Pattern: ### key\n\n**Type:** `type`
+ * Pattern: ### key\n\n**Type:** `type`.
  *
  * @return array<int, array<string, mixed>>
  */
 function parseSchemaConfig(string $content): array
 {
 	$configs = [];
-	$body = removeFrontmatter($content);
+	$body    = removeFrontmatter($content);
 
 	// Split by H3 headings
 	$sections = preg_split('/^###\s+/m', $body);
@@ -376,7 +377,7 @@ function parseSchemaConfig(string $content): array
 		}
 
 		$description = extractDescription($section);
-		$examples = extractCodeBlocks($section);
+		$examples    = extractCodeBlocks($section);
 
 		$configs[] = [
 			'key'         => $key,
@@ -401,9 +402,9 @@ function parseSchemaConfig(string $content): array
  */
 function extractDescription(string $section): string
 {
-	$lines = explode("\n", $section);
+	$lines     = explode("\n", $section);
 	$descLines = [];
-	$started = false;
+	$started   = false;
 
 	foreach ($lines as $i => $line) {
 		if ($i === 0) {
@@ -430,7 +431,7 @@ function extractDescription(string $section): string
 			continue;
 		}
 
-		$started = true;
+		$started     = true;
 		$descLines[] = $trimmed;
 	}
 
@@ -453,6 +454,7 @@ function extractCodeBlocks(string $section): array
 			}
 		}
 	}
+
 	// Limit to first 3 examples per entry
 	return array_slice($examples, 0, 3);
 }
@@ -502,7 +504,7 @@ function matchCliCommandName(string $headingLine): ?string
 function buildCliCommand(string $name, string $part, string $url, ?string $pageSince): array
 {
 	$description = extractDescription($part);
-	$examples = extractCodeBlocks($part);
+	$examples    = extractCodeBlocks($part);
 
 	// Extract options table (rows where first column starts with --)
 	$options = [];
@@ -572,10 +574,10 @@ function buildCliCommand(string $name, string $part, string $url, ?string $pageS
  */
 function parseCliCommands(string $content, string $url = 'https://docs.totalcms.co/extensions/cli/'): array
 {
-	$commands = [];
+	$commands    = [];
 	$frontmatter = parseFrontmatter($content);
-	$pageSince = $frontmatter['since'] ?? null;
-	$body = removeFrontmatter($content);
+	$pageSince   = $frontmatter['since'] ?? null;
+	$body        = removeFrontmatter($content);
 
 	$h2Parts = preg_split('/^##\s+/m', $body);
 
@@ -585,8 +587,8 @@ function parseCliCommands(string $content, string $url = 'https://docs.totalcms.
 			continue;
 		}
 
-		$h2HeadingLine = (string) strtok($h2Part, "\n");
-		$h2Name = matchCliCommandName($h2HeadingLine);
+		$h2HeadingLine = (string)strtok($h2Part, "\n");
+		$h2Name        = matchCliCommandName($h2HeadingLine);
 
 		if ($h2Name !== null) {
 			// Whole H2 block IS the command — nested H3s (Arguments, Options,
@@ -604,8 +606,8 @@ function parseCliCommands(string $content, string $url = 'https://docs.totalcms.
 				continue;
 			}
 
-			$h3HeadingLine = (string) strtok($h3Part, "\n");
-			$h3Name = matchCliCommandName($h3HeadingLine);
+			$h3HeadingLine = (string)strtok($h3Part, "\n");
+			$h3Name        = matchCliCommandName($h3HeadingLine);
 			if ($h3Name === null) {
 				continue;
 			}
@@ -697,21 +699,21 @@ function buildExtensionApiReference(): array
 	);
 
 	return [
-		'min_version' => '3.3.0',
-		'note' => 'The extension system requires Total CMS 3.3.0 or later. It is not available in earlier versions.',
-		'context_methods' => $contextMethods,
-		'events' => $events,
-		'permissions' => $permissions,
-		'manifest_fields' => $manifestFields,
-		'editions'        => $editions,
-		'starter_repo'    => 'https://github.com/totalcms/extension-starter',
+		'min_version'        => '3.3.0',
+		'note'               => 'The extension system requires Total CMS 3.3.0 or later. It is not available in earlier versions.',
+		'context_methods'    => $contextMethods,
+		'events'             => $events,
+		'permissions'        => $permissions,
+		'manifest_fields'    => $manifestFields,
+		'editions'           => $editions,
+		'starter_repo'       => 'https://github.com/totalcms/extension-starter',
 		'bundled_extensions' => [
 			'since'         => '3.5.0',
 			'note'          => 'Bundled extensions ship in the T3 package itself under resources/extensions/. They install automatically (no composer require, no upload), are disabled by default, and cannot be removed — only enabled/disabled. The manifest version field is ignored; they always report the running T3 version. A user-installed extension with the same ID under tcms-data/extensions/ shadows the bundled copy.',
 			'install_path'  => 'resources/extensions/{vendor}/{name}/',
 			'override_path' => 'tcms-data/extensions/{vendor}/{name}/ (user-installed copy wins on ID collision)',
 			'items'         => $bundledExtensions,
-			'cli' => [
+			'cli'           => [
 				'tcms extension:list',
 				'tcms extension:enable totalcms/<name>',
 				'tcms extension:disable totalcms/<name>',
@@ -738,14 +740,14 @@ function buildExtensionApiReference(): array
 function buildBuilderApiReference(): array
 {
 	return [
-		'min_version' => '3.3.0',
-		'note' => 'The Site Builder requires Total CMS 3.3.0 or later. Pages are routed dynamically from the builder-pages collection — there is no generation or deployment step.',
-		'overview' => 'The Site Builder lets you build a complete frontend website inside Total CMS. Pages are collection objects with URL routes and templates. A middleware-based router (PageRouterMiddleware) matches incoming URLs against page routes and renders templates dynamically. API routes (/api/*) and admin routes (/admin/*) take priority.',
+		'min_version'      => '3.3.0',
+		'note'             => 'The Site Builder requires Total CMS 3.3.0 or later. Pages are routed dynamically from the builder-pages collection — there is no generation or deployment step.',
+		'overview'         => 'The Site Builder lets you build a complete frontend website inside Total CMS. Pages are collection objects with URL routes and templates. A middleware-based router (PageRouterMiddleware) matches incoming URLs against page routes and renders templates dynamically. API routes (/api/*) and admin routes (/admin/*) take priority.',
 		'pages_collection' => 'builder-pages',
-		'page_schema' => [
+		'page_schema'      => [
 			'id'          => 'builder-page',
 			'description' => 'Schema used by every object in the builder-pages collection.',
-			'fields' => [
+			'fields'      => [
 				['name' => 'id',          'type' => 'slug',     'description' => 'Page identifier (auto-generated from title)'],
 				['name' => 'title',       'type' => 'text',     'description' => 'Page title'],
 				['name' => 'route',       'type' => 'text',     'description' => 'URL pattern. Static (e.g. "/about") or dynamic with {param} placeholders (e.g. "/products/{id}")'],
@@ -757,7 +759,7 @@ function buildBuilderApiReference(): array
 				['name' => 'sort',        'type' => 'number',   'description' => 'Navigation sort order (lower = first)'],
 				['name' => 'parent',      'type' => 'select',   'description' => 'Parent page ID for hierarchical menus and subnav()'],
 				['name' => 'middleware',  'type' => 'multicheckbox', 'description' => 'Page features (middleware) to run before render. Picked from a registry of installed middleware names — admin sees this field as "Features". Built-in: auth. Extensions register more via addPageMiddleware(). Since 3.5.0.'],
-				['name' => 'accessGroups','type' => 'multiselect',   'description' => 'When auth feature is enabled, restricts access to users in any of the listed groups (SuperAdmins always pass). Empty = any logged-in user passes.'],
+				['name' => 'accessGroups', 'type' => 'multiselect',   'description' => 'When auth feature is enabled, restricts access to users in any of the listed groups (SuperAdmins always pass). Empty = any logged-in user passes.'],
 				['name' => 'data',        'type' => 'json',     'description' => 'Free-form per-page configuration consumed by page features and templates (exposed as page.data.* in Twig).'],
 			],
 		],
@@ -815,7 +817,7 @@ function buildBuilderApiReference(): array
 			'description' => 'Named middleware that builder pages opt into via the page form\'s Features field (stored in the page\'s middleware field). Each runs before the template renders and can short-circuit the request with a response (auth redirect, 302, 429, etc.) or pass through. Features run in the order listed on the page; the first one to return a response wins.',
 			'admin_field' => 'Features (multicheckbox, stored as the page object\'s middleware field)',
 			'config_via'  => 'Per-page configuration goes in the page\'s data (JSON) field. Each feature reads its own keys from page.data.* — see individual feature docs.',
-			'built_in' => [
+			'built_in'    => [
 				[
 					'name'        => 'auth',
 					'description' => 'Requires a logged-in visitor. Logged-out browsers get 302 redirected to /admin/login (with ?redirect= back). JSON requests get 401 {"error": "Authentication required"}. Optionally scoped to specific access groups via the page\'s accessGroups field — non-members get 403 (no login redirect since they\'re already in). SuperAdmins always pass.',
@@ -878,12 +880,13 @@ const REFERENCE_INDEX_MINIMUM_COUNTS = [
  *
  * @param array<string, mixed>    $index
  * @param array<string, int>|null $minimums Override defaults — used by tests
+ *
  * @return string[]
  */
 function validateIndexCounts(array $index, ?array $minimums = null): array
 {
 	$thresholds = $minimums ?? REFERENCE_INDEX_MINIMUM_COUNTS;
-	$failures = [];
+	$failures   = [];
 
 	foreach ($thresholds as $key => $minimum) {
 		$actual = is_array($index[$key] ?? null) ? count($index[$key]) : 0;
@@ -917,19 +920,20 @@ const ALLOWED_DOCS_URL_PREFIXES = [
  * — so only the top-level-prefix check runs.)
  *
  * @param array<string, mixed> $index
+ *
  * @return string[]
  */
 function validateIndexUrls(array $index): array
 {
 	$failures = [];
-	$allowed = array_flip(ALLOWED_DOCS_URL_PREFIXES);
+	$allowed  = array_flip(ALLOWED_DOCS_URL_PREFIXES);
 
 	$walk = function ($node, string $path) use (&$walk, &$failures, $allowed): void {
 		if (!is_array($node)) {
 			return;
 		}
 		foreach ($node as $key => $value) {
-			$childPath = $path === '' ? (string) $key : "$path.$key";
+			$childPath = $path === '' ? (string)$key : "$path.$key";
 			if ($key === 'url' && is_string($value)) {
 				if (preg_match('#https?://docs\.totalcms\.co/([^/]+)/#', $value, $m)) {
 					if (!isset($allowed[$m[1]])) {
@@ -943,6 +947,7 @@ function validateIndexUrls(array $index): array
 	};
 
 	$walk($index, '');
+
 	return $failures;
 }
 
@@ -988,14 +993,14 @@ function assembleReferenceIndex(string $docsDir): array
 	$twigFilters = [];
 	$filtersFile = $docsDir . '/twig/filters.md';
 	if (is_file($filtersFile)) {
-		$twigFilters = parseFilterSignatures((string) file_get_contents($filtersFile));
+		$twigFilters = parseFilterSignatures((string)file_get_contents($filtersFile));
 	}
 
 	// Standalone (non-cms.*) Twig functions
 	$twigFunctions = [];
 	$functionsFile = $docsDir . '/twig/functions.md';
 	if (is_file($functionsFile)) {
-		$twigFunctions = parseFunctionSignatures((string) file_get_contents($functionsFile));
+		$twigFunctions = parseFunctionSignatures((string)file_get_contents($functionsFile));
 	}
 
 	// Documented cms.* namespace functions (caller merges with reflection)
@@ -1005,22 +1010,22 @@ function assembleReferenceIndex(string $docsDir): array
 		if (is_file($filePath)) {
 			$documentedNamespaceFns = array_merge(
 				$documentedNamespaceFns,
-				parseNamespaceFunctions((string) file_get_contents($filePath), $relPath),
+				parseNamespaceFunctions((string)file_get_contents($filePath), $relPath),
 			);
 		}
 	}
 
 	// Field types — fields/*.md excluding -options.md (those are Field Options)
 	$fieldTypes = [];
-	$fieldsDir = $docsDir . '/fields';
+	$fieldsDir  = $docsDir . '/fields';
 	if (is_dir($fieldsDir)) {
 		foreach (glob($fieldsDir . '/*.md') ?: [] as $propFile) {
 			$baseName = basename($propFile);
 			if (str_ends_with($baseName, '-options.md')) {
 				continue;
 			}
-			$content = (string) file_get_contents($propFile);
-			$frontmatter = parseFrontmatter($content);
+			$content      = (string)file_get_contents($propFile);
+			$frontmatter  = parseFrontmatter($content);
 			$fieldTypes[] = [
 				'name'        => str_replace('.md', '', $baseName),
 				'title'       => $frontmatter['title'] ?? basename($propFile, '.md'),
@@ -1035,8 +1040,8 @@ function assembleReferenceIndex(string $docsDir): array
 	$schemasDir = $docsDir . '/schemas';
 	if (is_dir($schemasDir)) {
 		foreach (glob($schemasDir . '/*.md') ?: [] as $schemaFile) {
-			$content = (string) file_get_contents($schemaFile);
-			$frontmatter = parseFrontmatter($content);
+			$content      = (string)file_get_contents($schemaFile);
+			$frontmatter  = parseFrontmatter($content);
 			$fieldTypes[] = [
 				'name'        => str_replace('.md', '', basename($schemaFile)),
 				'title'       => $frontmatter['title'] ?? basename($schemaFile, '.md'),
@@ -1049,24 +1054,24 @@ function assembleReferenceIndex(string $docsDir): array
 
 	// API endpoints
 	$apiEndpoints = [];
-	$apiFile = $docsDir . '/apis/rest-api.md';
+	$apiFile      = $docsDir . '/apis/rest-api.md';
 	if (is_file($apiFile)) {
-		$apiEndpoints = parseApiEndpoints((string) file_get_contents($apiFile));
+		$apiEndpoints = parseApiEndpoints((string)file_get_contents($apiFile));
 	}
 	$indexFilterFile = $docsDir . '/apis/index-filter.md';
 	if (is_file($indexFilterFile)) {
-		$apiEndpoints = array_merge($apiEndpoints, parseApiEndpoints((string) file_get_contents($indexFilterFile)));
+		$apiEndpoints = array_merge($apiEndpoints, parseApiEndpoints((string)file_get_contents($indexFilterFile)));
 	}
 
 	// Schema/collection config
 	$schemaConfig = [];
 	$settingsFile = $docsDir . '/collections/settings.md';
 	if (is_file($settingsFile)) {
-		$schemaConfig = parseSchemaConfig((string) file_get_contents($settingsFile));
+		$schemaConfig = parseSchemaConfig((string)file_get_contents($settingsFile));
 	}
 	$schemaRefFile = $docsDir . '/schemas/reference.md';
 	if (is_file($schemaRefFile)) {
-		$schemaRefConfigs = parseSchemaConfig((string) file_get_contents($schemaRefFile));
+		$schemaRefConfigs = parseSchemaConfig((string)file_get_contents($schemaRefFile));
 		foreach ($schemaRefConfigs as &$cfg) {
 			$cfg['url'] = 'https://docs.totalcms.co/schemas/reference/';
 		}
@@ -1081,10 +1086,10 @@ function assembleReferenceIndex(string $docsDir): array
 		if (!is_file($filePath)) {
 			continue;
 		}
-		$pageUrl = 'https://docs.totalcms.co/' . str_replace('.md', '/', $relPath);
+		$pageUrl     = 'https://docs.totalcms.co/' . str_replace('.md', '/', $relPath);
 		$cliCommands = array_merge(
 			$cliCommands,
-			parseCliCommands((string) file_get_contents($filePath), $pageUrl),
+			parseCliCommands((string)file_get_contents($filePath), $pageUrl),
 		);
 	}
 

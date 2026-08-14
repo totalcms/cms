@@ -265,7 +265,7 @@ class DeckItemForm extends TotalForm
 		$settings       = $this->metaResolver->resolvePreset($settings);
 
 		if ($settings === [] && !empty($propertySchema['field'])) {
-			$settings = $this->metaResolver->resolveTypePreset((string)$propertySchema['field']);
+			return $this->metaResolver->resolveTypePreset((string)$propertySchema['field']);
 		}
 
 		return $settings;

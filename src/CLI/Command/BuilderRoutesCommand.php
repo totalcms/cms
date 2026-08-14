@@ -153,7 +153,7 @@ class BuilderRoutesCommand extends BaseCommand
 		// If the pattern has no placeholder at all, the router appends `/{id}`
 		// implicitly when matching, so the effective route is `/<url>/{id}`.
 		if (!str_contains($normalized, '{')) {
-			$normalized = rtrim($normalized, '/') . '/{id}';
+			return rtrim($normalized, '/') . '/{id}';
 		}
 
 		return $normalized;

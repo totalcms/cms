@@ -165,12 +165,10 @@ abstract class StreamAction
 	{
 		$queryParams = $request->getQueryParams();
 
-		$password = null;
-
 		if (isset($queryParams['pwd'])) {
-			$password = Cipher::decrypt($queryParams['pwd']);
+			return Cipher::decrypt($queryParams['pwd']);
 		}
 
-		return $password;
+		return null;
 	}
 }

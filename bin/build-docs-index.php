@@ -140,7 +140,7 @@ echo "\nBuilding reference index...\n";
 
 $referenceDocs = assembleReferenceIndex($docsDir);
 
-$reflectedNamespaceFns = reflectCmsTwigFunctions();
+$reflectedNamespaceFns            = reflectCmsTwigFunctions();
 [$mergedNamespaceFns, $staleDocs] = mergeTwigFunctions(
 	$reflectedNamespaceFns,
 	$referenceDocs['documented_namespace_functions'],
@@ -213,6 +213,6 @@ if ($urlFailures !== []) {
 $referenceJson = json_encode($referenceIndex, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 file_put_contents($referenceIndexFile, $referenceJson);
 
-$referenceSizeKb = round(strlen((string) $referenceJson) / 1024);
+$referenceSizeKb = round(strlen((string)$referenceJson) / 1024);
 echo "\nReference index built successfully!\n";
 echo "Output: {$referenceIndexFile} ({$referenceSizeKb} KB)\n";

@@ -24,7 +24,7 @@ readonly class IndexReader
 
 		if (is_null($index)) {
 			// Build the index if it does not exist
-			$index = $this->builder->buildIndex($collection);
+			return $this->builder->buildIndex($collection);
 		}
 
 		return $index;

@@ -94,8 +94,8 @@ class ServerChecker
 				static fn (array $r): string => (string)($r['status'] ?? ''),
 				$last['results'],
 			));
-			$bad  = ($statuses['fail'] ?? 0);
-			$warn = ($statuses['warn'] ?? 0);
+			$bad                          = ($statuses['fail'] ?? 0);
+			$warn                         = ($statuses['warn'] ?? 0);
 			$info['MCP Connection Check'] = $bad > 0
 				? "$bad failing"
 				: ($warn > 0 ? "$warn warnings" : 'All checks passing');

@@ -208,7 +208,7 @@ readonly class PropertyMetaResolver
 
 		// If no settings exist at any level, check for a type-default preset
 		if ($settings === [] && $fieldType !== '') {
-			$settings = $this->resolveTypePreset($fieldType);
+			return $this->resolveTypePreset($fieldType);
 		}
 
 		return $settings;

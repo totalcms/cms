@@ -507,7 +507,7 @@ class RenderTwigAdapter
 		]);
 
 		if (!empty($image['link'])) {
-			$html = HTMLUtils::element('a', $html, ['href' => $image['link']]);
+			return HTMLUtils::element('a', $html, ['href' => $image['link']]);
 		}
 
 		return $html;
@@ -869,7 +869,7 @@ class RenderTwigAdapter
 		$html = HTMLUtils::inlineElement('img', $imgAttrs);
 
 		if (!empty($link)) {
-			$html = HTMLUtils::element('a', $html, ['href' => $link]);
+			return HTMLUtils::element('a', $html, ['href' => $link]);
 		}
 
 		return $html;

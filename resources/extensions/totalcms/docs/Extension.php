@@ -218,7 +218,7 @@ class Extension implements ExtensionInterface
 			$value = isset($callArgs[$name]) ? trim((string)$callArgs[$name]) : '';
 
 			if ($value === '' && $spec['required']) {
-				$value = "(not supplied — ask the user for this before continuing)";
+				$value = '(not supplied — ask the user for this before continuing)';
 			}
 
 			$map['{' . $name . '}'] = $value;
@@ -396,7 +396,7 @@ class Extension implements ExtensionInterface
 					$score += 2;
 				}
 				if (str_contains($excerpt, $token)) {
-					$score += 1;
+					$score++;
 				}
 			}
 
@@ -635,6 +635,7 @@ class Extension implements ExtensionInterface
 	 * field_type, api_endpoint, schema_config, cli_command.
 	 *
 	 * @param list<array<string,mixed>> $entries
+	 *
 	 * @return array<string,mixed>
 	 */
 	private function lookupListed(array $entries, string $kind, string $name): array
@@ -679,6 +680,7 @@ class Extension implements ExtensionInterface
 	 * named entries, so the identity field is the object key itself.
 	 *
 	 * @param array<string,mixed> $section
+	 *
 	 * @return array<string,mixed>
 	 */
 	private function lookupKeyed(array $section, string $kind, string $name): array

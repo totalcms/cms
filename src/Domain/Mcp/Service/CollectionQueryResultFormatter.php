@@ -36,7 +36,7 @@ use TotalCMS\Domain\Query\Data\QueryResult;
 readonly class CollectionQueryResultFormatter
 {
 	/**
-	 * @param  list<array<string,mixed>> $items Already-processed items — this method does not read $result->items.
+	 * @param  list<array<string,mixed>> $items already-processed items — this method does not read $result->items
 	 *
 	 * @return array{items: list<array<string,mixed>>, total: int, limit: int, offset: int, has_more: bool}
 	 */

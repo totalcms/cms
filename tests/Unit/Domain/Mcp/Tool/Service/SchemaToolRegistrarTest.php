@@ -72,12 +72,12 @@ final class SchemaToolRegistrarTest extends TestCase
 			// This file never invokes a built tool's handler — only registration
 			// behavior — so PersonaContext's Task 10b constructor deps never
 			// matter; plain stubs satisfy the type.
-			PersonaContext::class       => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
-			ObjectUrlBuilder::class     => $this->createMock(ObjectUrlBuilder::class),
-			McpSchemaResolver::class    => $this->createMock(McpSchemaResolver::class),
-			CollectionRepository::class => $this->createMock(CollectionRepository::class),
+			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
+			ObjectUrlBuilder::class               => $this->createMock(ObjectUrlBuilder::class),
+			McpSchemaResolver::class              => $this->createMock(McpSchemaResolver::class),
+			CollectionRepository::class           => $this->createMock(CollectionRepository::class),
 			CollectionQueryResultFormatter::class => new CollectionQueryResultFormatter(),
-			default                     => null,
+			default                               => null,
 		});
 
 		return new SavedQueryToolFactory($container);

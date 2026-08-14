@@ -20,11 +20,11 @@ declare(strict_types=1);
  * signature/description from reflection with examples from docs.
  */
 
+use phpDocumentor\Reflection\DocBlockFactory;
 use PhpParser\Modifiers;
 use PhpParser\Node;
 use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
-use phpDocumentor\Reflection\DocBlockFactory;
 
 /**
  * Repo root, resolved once relative to this file (bin/lib/ -> bin/ -> root).
@@ -91,7 +91,7 @@ const TWIG_NAMESPACE_DOCS = [
 function reflectCmsTwigFunctions(): array
 {
 	$totalcmsPath = referenceRepoRoot();
-	$rootFile = $totalcmsPath . '/src/Domain/Twig/Adapter/TotalCMSTwigAdapter.php';
+	$rootFile     = $totalcmsPath . '/src/Domain/Twig/Adapter/TotalCMSTwigAdapter.php';
 	if (!is_file($rootFile)) {
 		throw new RuntimeException("TotalCMSTwigAdapter source not found at {$rootFile}");
 	}
@@ -138,7 +138,7 @@ function reflectCmsTwigFunctions(): array
 		}
 
 		$adapterClassNode = parseClassFromFile($adapterFile, $adapterShort);
-		$url = TWIG_NAMESPACE_DOCS[$propName] ?? 'https://docs.totalcms.co/twig/';
+		$url              = TWIG_NAMESPACE_DOCS[$propName] ?? 'https://docs.totalcms.co/twig/';
 
 		foreach (publicMethodsOf($adapterClassNode, ['__construct', '__call']) as $method) {
 			$functions[] = formatTwigFunction(
@@ -157,6 +157,7 @@ function reflectCmsTwigFunctions(): array
 
 /**
  * @param list<string> $skip
+ *
  * @return list<Node\Stmt\ClassMethod>
  */
 function publicMethodsOf(Node\Stmt\Class_ $class, array $skip): array
@@ -171,6 +172,7 @@ function publicMethodsOf(Node\Stmt\Class_ $class, array $skip): array
 		}
 		$methods[] = $method;
 	}
+
 	return $methods;
 }
 
@@ -181,6 +183,7 @@ function constructorOf(Node\Stmt\Class_ $class): ?Node\Stmt\ClassMethod
 			return $method;
 		}
 	}
+
 	return null;
 }
 
@@ -190,6 +193,7 @@ function constructorOf(Node\Stmt\Class_ $class): ?Node\Stmt\ClassMethod
 function formatTwigFunction(string $namespace, Node\Stmt\ClassMethod $method, string $url): array
 {
 	$shortName = $method->name->toString();
+
 	return [
 		'name'        => $namespace . '.' . $shortName,
 		'signature'   => formatMethodSignature($method),
@@ -205,13 +209,14 @@ function formatTwigFunction(string $namespace, Node\Stmt\ClassMethod $method, st
  */
 function findClassFile(string $searchDir, string $shortName): ?string
 {
-	$target = $shortName . '.php';
+	$target   = $shortName . '.php';
 	$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($searchDir));
 	foreach ($iterator as $file) {
 		if ($file->isFile() && $file->getFilename() === $target) {
 			return $file->getPathname();
 		}
 	}
+
 	return null;
 }
 
@@ -226,6 +231,7 @@ function findClassFile(string $searchDir, string $shortName): ?string
  *
  * @param list<array{name:string,signature:string,description:string,url:string}> $reflected
  * @param list<array{name:string,signature:string,description:string,examples:string[],url:string}> $documented
+ *
  * @return array{0: list<array<string,mixed>>, 1: list<string>} [merged entries, names of stale doc-only entries]
  */
 function mergeTwigFunctions(array $reflected, array $documented): array
@@ -334,9 +340,9 @@ function reflectContextMethods(): array
 		throw new RuntimeException("ExtensionContext source not found at {$file}");
 	}
 
-	$classNode = parseClassFromFile($file, 'ExtensionContext');
+	$classNode       = parseClassFromFile($file, 'ExtensionContext');
 	$docBlockFactory = DocBlockFactory::createInstance();
-	$methods = [];
+	$methods         = [];
 
 	foreach ($classNode->getMethods() as $method) {
 		if (!$method->isPublic()) {
@@ -380,7 +386,7 @@ function reflectCapabilityLabels(): array
 		throw new RuntimeException("ExtensionContext source not found at {$file}");
 	}
 
-	$classNode = parseClassFromFile($file, 'ExtensionContext');
+	$classNode    = parseClassFromFile($file, 'ExtensionContext');
 	$labelsMethod = null;
 	foreach ($classNode->getMethods() as $method) {
 		if ($method->name->toString() === 'capabilityLabels') {
@@ -393,8 +399,8 @@ function reflectCapabilityLabels(): array
 	}
 
 	$arrayNode = null;
-	$finder = new NodeFinder();
-	$return = $finder->findFirstInstanceOf((array) $labelsMethod->stmts, Node\Stmt\Return_::class);
+	$finder    = new NodeFinder();
+	$return    = $finder->findFirstInstanceOf((array)$labelsMethod->stmts, Node\Stmt\Return_::class);
 	if ($return && $return->expr instanceof Node\Expr\Array_) {
 		$arrayNode = $return->expr;
 	}
@@ -424,12 +430,12 @@ function reflectCapabilityLabels(): array
  */
 function parseClassFromFile(string $file, string $shortName): Node\Stmt\Class_
 {
-	$source = (string) file_get_contents($file);
+	$source = (string)file_get_contents($file);
 	$parser = (new ParserFactory())->createForHostVersion();
-	$ast = $parser->parse($source) ?? [];
+	$ast    = $parser->parse($source) ?? [];
 
 	$finder = new NodeFinder();
-	$class = $finder->findFirst($ast, function (Node $node) use ($shortName) {
+	$class  = $finder->findFirst($ast, function (Node $node) use ($shortName) {
 		return $node instanceof Node\Stmt\Class_
 			&& $node->name !== null
 			&& $node->name->toString() === $shortName;
@@ -449,9 +455,9 @@ function formatMethodSignature(Node\Stmt\ClassMethod $method): string
 {
 	$params = [];
 	foreach ($method->params as $param) {
-		$type = $param->type ? renderType($param->type) . ' ' : '';
-		$prefix = $param->byRef ? '&' : ($param->variadic ? '...' : '');
-		$name = '$' . $param->var->name;
+		$type    = $param->type ? renderType($param->type) . ' ' : '';
+		$prefix  = $param->byRef ? '&' : ($param->variadic ? '...' : '');
+		$name    = '$' . $param->var->name;
 		$default = '';
 		if ($param->default !== null) {
 			$default = ' = ' . renderExpr($param->default);
@@ -460,6 +466,7 @@ function formatMethodSignature(Node\Stmt\ClassMethod $method): string
 	}
 
 	$return = $method->returnType ? ': ' . renderType($method->returnType) : '';
+
 	return $method->name->toString() . '(' . implode(', ', $params) . ')' . $return;
 }
 
@@ -480,6 +487,7 @@ function renderType(Node $type): string
 	if ($type instanceof Node\IntersectionType) {
 		return implode('&', array_map('renderType', $type->types));
 	}
+
 	return 'mixed';
 }
 
@@ -492,10 +500,10 @@ function renderExpr(Node\Expr $expr): string
 		return "'" . $expr->value . "'";
 	}
 	if ($expr instanceof Node\Scalar\Int_) {
-		return (string) $expr->value;
+		return (string)$expr->value;
 	}
 	if ($expr instanceof Node\Scalar\Float_) {
-		return (string) $expr->value;
+		return (string)$expr->value;
 	}
 	if ($expr instanceof Node\Expr\ConstFetch) {
 		return $expr->name->toString();
@@ -503,6 +511,7 @@ function renderExpr(Node\Expr $expr): string
 	if ($expr instanceof Node\Expr\Array_) {
 		return '[]';
 	}
+
 	return '...';
 }
 
@@ -518,9 +527,9 @@ function reflectEditions(): array
 		throw new RuntimeException("Edition enum not found at {$file}");
 	}
 
-	$source = (string) file_get_contents($file);
+	$source = (string)file_get_contents($file);
 	$parser = (new ParserFactory())->createForHostVersion();
-	$ast = $parser->parse($source) ?? [];
+	$ast    = $parser->parse($source) ?? [];
 	$finder = new NodeFinder();
 
 	/** @var Node\Stmt\Enum_|null $enum */
@@ -547,7 +556,7 @@ function reflectEditions(): array
 		if (!$stmt instanceof Node\Stmt\EnumCase) {
 			continue;
 		}
-		$value = $stmt->expr instanceof Node\Scalar\String_ ? $stmt->expr->value : strtolower($stmt->name->toString());
+		$value      = $stmt->expr instanceof Node\Scalar\String_ ? $stmt->expr->value : strtolower($stmt->name->toString());
 		$editions[] = [
 			'edition'     => $value,
 			'level'       => $levels[$stmt->name->toString()] ?? 0,
@@ -572,7 +581,7 @@ function extractEditionLevels(Node\Stmt\Enum_ $enum): array
 		}
 		$finder = new NodeFinder();
 		/** @var Node\Expr\Match_|null $match */
-		$match = $finder->findFirstInstanceOf((array) $method->stmts, Node\Expr\Match_::class);
+		$match = $finder->findFirstInstanceOf((array)$method->stmts, Node\Expr\Match_::class);
 		if ($match === null) {
 			continue;
 		}
@@ -581,13 +590,14 @@ function extractEditionLevels(Node\Stmt\Enum_ $enum): array
 				continue;
 			}
 			$level = $arm->body->value;
-			foreach ((array) $arm->conds as $cond) {
+			foreach ((array)$arm->conds as $cond) {
 				if ($cond instanceof Node\Expr\ClassConstFetch && $cond->name instanceof Node\Identifier) {
 					$levels[$cond->name->toString()] = $level;
 				}
 			}
 		}
 	}
+
 	return $levels;
 }
 
@@ -607,7 +617,7 @@ function reflectManifestFields(): array
 	}
 
 	$classNode = parseClassFromFile($file, 'ExtensionManifest');
-	$ctor = null;
+	$ctor      = null;
 	foreach ($classNode->getMethods() as $method) {
 		if ($method->name->toString() === '__construct') {
 			$ctor = $method;
@@ -619,17 +629,17 @@ function reflectManifestFields(): array
 	}
 
 	// Pull @param descriptions out of the constructor's docblock.
-	$paramDocs = [];
+	$paramDocs  = [];
 	$docComment = $ctor->getDocComment();
 	if ($docComment !== null) {
 		try {
 			$docBlock = DocBlockFactory::createInstance()->create($docComment->getText());
 			foreach ($docBlock->getTagsByName('param') as $tag) {
-				if ($tag instanceof \phpDocumentor\Reflection\DocBlock\Tags\Param) {
-					$paramDocs[$tag->getVariableName()] = cleanDocblockText((string) $tag->getDescription());
+				if ($tag instanceof phpDocumentor\Reflection\DocBlock\Tags\Param) {
+					$paramDocs[$tag->getVariableName()] = cleanDocblockText((string)$tag->getDescription());
 				}
 			}
-		} catch (\Throwable) {
+		} catch (Throwable) {
 			// Fall back to empty descriptions.
 		}
 	}
@@ -637,7 +647,7 @@ function reflectManifestFields(): array
 	// Required fields are those the system actually needs — id/name/version.
 	// Internal fields (set by discovery, not by the manifest author) are skipped.
 	$required = ['id' => true, 'name' => true, 'version' => true];
-	$skip = ['bundled' => true]; // ExtensionDiscovery sets this, not the JSON
+	$skip     = ['bundled' => true]; // ExtensionDiscovery sets this, not the JSON
 
 	$fields = [];
 	foreach ($ctor->params as $param) {
@@ -645,7 +655,7 @@ function reflectManifestFields(): array
 		if (isset($skip[$name])) {
 			continue;
 		}
-		$jsonKey = camelToSnake($name); // settingsSchema -> settings_schema
+		$jsonKey  = camelToSnake($name); // settingsSchema -> settings_schema
 		$fields[] = [
 			'field'       => $jsonKey,
 			'required'    => isset($required[$jsonKey]),
@@ -672,16 +682,16 @@ function reflectBundledExtensions(): array
 
 	$found = [];
 	foreach (glob($baseDir . '/*/*/extension.json') ?: [] as $manifestFile) {
-		$decoded = json_decode((string) file_get_contents($manifestFile), true);
+		$decoded = json_decode((string)file_get_contents($manifestFile), true);
 		if (!is_array($decoded) || empty($decoded['id'])) {
 			continue;
 		}
 		$shortName = basename(dirname($manifestFile));
-		$found[] = [
-			'id'          => (string) $decoded['id'],
-			'name'        => (string) ($decoded['name'] ?? $shortName),
-			'description' => (string) ($decoded['description'] ?? ''),
-			'version'     => (string) ($decoded['version'] ?? ''),
+		$found[]   = [
+			'id'          => (string)$decoded['id'],
+			'name'        => (string)($decoded['name'] ?? $shortName),
+			'description' => (string)($decoded['description'] ?? ''),
+			'version'     => (string)($decoded['version'] ?? ''),
 			'url'         => 'https://docs.totalcms.co/extensions/' . $shortName . '/',
 		];
 	}
@@ -706,9 +716,9 @@ function parseEventsFromDocs(): array
 		return [];
 	}
 
-	$source = (string) file_get_contents($file);
+	$source = (string)file_get_contents($file);
 	// Strip frontmatter.
-	$source = (string) preg_replace('/^---\s*\n.*?\n---\s*\n/s', '', $source);
+	$source = (string)preg_replace('/^---\s*\n.*?\n---\s*\n/s', '', $source);
 
 	$events = [];
 	// Each H3 starting with a backticked name introduces an event.
@@ -732,7 +742,7 @@ function parseEventsFromDocs(): array
 			if ($paragraph === '' || str_starts_with($paragraph, '|') || str_starts_with($paragraph, '```')) {
 				continue;
 			}
-			$description = (string) preg_replace('/\s+/', ' ', $paragraph);
+			$description = (string)preg_replace('/\s+/', ' ', $paragraph);
 			break;
 		}
 
@@ -760,7 +770,7 @@ function parseEventsFromDocs(): array
  */
 function camelToSnake(string $input): string
 {
-	return strtolower((string) preg_replace('/([a-z])([A-Z])/', '$1_$2', $input));
+	return strtolower((string)preg_replace('/([a-z])([A-Z])/', '$1_$2', $input));
 }
 
 /**
@@ -776,12 +786,12 @@ function extractMethodDescription(Node\Stmt\ClassMethod $method, DocBlockFactory
 
 	try {
 		$docBlock = $factory->create($docComment->getText());
-	} catch (\Throwable) {
+	} catch (Throwable) {
 		return '';
 	}
 
-	$summary = trim($docBlock->getSummary());
-	$description = trim((string) $docBlock->getDescription());
+	$summary     = trim($docBlock->getSummary());
+	$description = trim((string)$docBlock->getDescription());
 
 	// If summary is short, append the first paragraph of the long description
 	// for context. Caps at the first ~250 chars so AI tooltip blurbs stay scannable.
@@ -802,10 +812,11 @@ function extractMethodDescription(Node\Stmt\ClassMethod $method, DocBlockFactory
 function cleanDocblockText(string $text): string
 {
 	// {@see Foo\Bar::method()} -> Foo\Bar::method()
-	$text = (string) preg_replace('/\{@(?:see|link)\s+([^}]+)\}/', '$1', $text);
+	$text = (string)preg_replace('/\{@(?:see|link)\s+([^}]+)\}/', '$1', $text);
 	// Any other {@tag ...} -> drop entirely
-	$text = (string) preg_replace('/\{@\w+\s*[^}]*\}/', '', $text);
+	$text = (string)preg_replace('/\{@\w+\s*[^}]*\}/', '', $text);
 	// Collapse runs of whitespace (including newlines) to a single space
-	$text = (string) preg_replace('/\s+/', ' ', $text);
+	$text = (string)preg_replace('/\s+/', ' ', $text);
+
 	return trim($text);
 }

@@ -142,23 +142,22 @@ class LogAnalyzer
 		foreach ($lines as $line) {
 			if (str_contains($line, '.INFO:') || str_contains($line, '.DEBUG:')) {
 				continue;
-			} elseif (str_starts_with($line, '[')) {
+			}
+			if (str_starts_with($line, '[')) {
 				$error     = $this->parseError($line);
 				$lastError = $error;
-
 				if (isset($logs[$error]['count'])) {
 					$logs[$error]['count']++;
 					continue;
 				}
-
 				$logs[$error] = [
 					'count'     => 1,
 					'backtrace' => [],
 				];
-			} elseif (str_starts_with($line, 'Backtrace')) {
-				continue;
 			} elseif (str_starts_with($line, '#')) {
 				$logs[$lastError]['backtrace'][] = $line;
+			} elseif (str_starts_with($line, 'Backtrace')) {
+				continue;
 			}
 		}
 

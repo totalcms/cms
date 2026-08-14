@@ -82,7 +82,7 @@ class FakerPicsum extends Base
 		}
 
 		if (!empty($queryParams)) {
-			$queryString = '?' . http_build_query($queryParams);
+			return '?' . http_build_query($queryParams);
 		}
 
 		return $queryString;

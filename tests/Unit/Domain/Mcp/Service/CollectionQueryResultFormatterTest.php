@@ -56,7 +56,7 @@ final class CollectionQueryResultFormatterTest extends TestCase
 		// The caller (tool) has already stripped/rendered/decorated items —
 		// the formatter must use exactly what it's handed, not re-derive from
 		// $result->items.
-		$result = new QueryResult(items: [['id' => 'raw']], total: 1, limit: 10, offset: 0);
+		$result    = new QueryResult(items: [['id' => 'raw']], total: 1, limit: 10, offset: 0);
 		$processed = [['id' => 'raw', 'url' => '/blog/raw', 'title' => 'Rendered']];
 
 		$envelope = $this->formatter->envelope($result, $processed);

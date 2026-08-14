@@ -153,7 +153,7 @@ class ImageMetaReader
 
 		// Apply hemisphere (S and W are negative)
 		if (in_array($ref, ['S', 'W'])) {
-			$decimal = -$decimal;
+			return -$decimal;
 		}
 
 		return $decimal;

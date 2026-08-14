@@ -165,7 +165,7 @@ readonly class ObjectUpdater
 
 		$object->properties = $object->properties->map(function ($item) use ($property): PropertyData {
 			if ($item->id === $property->id) {
-				$item = $property;
+				return $property;
 			}
 
 			return $item;

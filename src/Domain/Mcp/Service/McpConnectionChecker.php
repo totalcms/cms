@@ -89,9 +89,13 @@ readonly class McpConnectionChecker
 		try {
 			$discovery = $this->http->request('GET', $discoveryUrl, self::TIMEOUT);
 			if ($discovery->statusCode !== 200 || $discovery->json() === null) {
-				return new McpCheckResult('endpoint', 'MCP endpoint', 'fail',
+				return new McpCheckResult(
+					'endpoint',
+					'MCP endpoint',
+					'fail',
 					"Discovery document at $discoveryUrl answered HTTP {$discovery->statusCode}.",
-					'Check the MCP server is enabled and the URL rewrites reach Total CMS.');
+					'Check the MCP server is enabled and the URL rewrites reach Total CMS.'
+				);
 			}
 
 			$init = $this->http->request('POST', $this->config->mcpEndpoint(), self::TIMEOUT + [
@@ -99,13 +103,21 @@ readonly class McpConnectionChecker
 				'body'    => self::INITIALIZE_BODY,
 			]);
 			if ($init->statusCode !== 200) {
-				return new McpCheckResult('endpoint', 'MCP endpoint', 'fail',
+				return new McpCheckResult(
+					'endpoint',
+					'MCP endpoint',
+					'fail',
 					"initialize at {$this->config->mcpEndpoint()} answered HTTP {$init->statusCode}.",
-					'Check the MCP server is enabled and nothing (maintenance mode, WAF) intercepts the endpoint.');
+					'Check the MCP server is enabled and nothing (maintenance mode, WAF) intercepts the endpoint.'
+				);
 			}
 
-			return new McpCheckResult('endpoint', 'MCP endpoint', 'pass',
-				'Discovery and initialize both answer correctly.');
+			return new McpCheckResult(
+				'endpoint',
+				'MCP endpoint',
+				'pass',
+				'Discovery and initialize both answer correctly.'
+			);
 		} catch (\Throwable $e) {
 			return $this->unreachable('endpoint', 'MCP endpoint', $e);
 		}
@@ -130,15 +142,23 @@ readonly class McpConnectionChecker
 		}
 
 		if ($blocked !== []) {
-			return new McpCheckResult('ai_agents', 'AI clients allowed', 'fail',
+			return new McpCheckResult(
+				'ai_agents',
+				'AI clients allowed',
+				'fail',
 				'Requests using AI-client user agents are blocked before reaching Total CMS: ' . implode(', ', $blocked) . '. '
 				. 'MCP clients like Claude will authenticate via OAuth and then fail to connect with a generic error.',
 				'Your CDN/WAF is blocking AI agents. On Cloudflare: Security → Bots → allow AI bots '
-				. '(or add a WAF skip rule for verified bots / these user agents), at least for the MCP, /oauth/*, and /.well-known/* paths.');
+				. '(or add a WAF skip rule for verified bots / these user agents), at least for the MCP, /oauth/*, and /.well-known/* paths.'
+			);
 		}
 
-		return new McpCheckResult('ai_agents', 'AI clients allowed', 'pass',
-			'No user-agent-based blocking detected. (An IP/ASN-based WAF rule would not be visible from this server.)');
+		return new McpCheckResult(
+			'ai_agents',
+			'AI clients allowed',
+			'pass',
+			'No user-agent-based blocking detected. (An IP/ASN-based WAF rule would not be visible from this server.)'
+		);
 	}
 
 	private function checkBearerHeader(): McpCheckResult
@@ -157,23 +177,35 @@ readonly class McpConnectionChecker
 		}
 
 		if ($response->statusCode === 401) {
-			return new McpCheckResult('bearer_header', 'Bearer auth reaches PHP', 'pass',
-				'An invalid Bearer token is correctly rejected with 401 — the Authorization header reaches Total CMS.');
+			return new McpCheckResult(
+				'bearer_header',
+				'Bearer auth reaches PHP',
+				'pass',
+				'An invalid Bearer token is correctly rejected with 401 — the Authorization header reaches Total CMS.'
+			);
 		}
 
-		return new McpCheckResult('bearer_header', 'Bearer auth reaches PHP', 'fail',
+		return new McpCheckResult(
+			'bearer_header',
+			'Bearer auth reaches PHP',
+			'fail',
 			"An invalid Bearer token was answered HTTP {$response->statusCode} instead of 401. "
 			. 'The Authorization header is being stripped before PHP (Apache CGI/FastCGI) or Bearer validation is not active — '
 			. 'OAuth-authenticated clients silently see only anonymous/public content.',
 			'Ensure the shipped public/.htaccess Authorization rewrite idiom is present (added in 3.5.x), '
-			. 'or set "CGIPassAuth On" in the vhost.');
+			. 'or set "CGIPassAuth On" in the vhost.'
+		);
 	}
 
 	private function checkRootRewrite(): McpCheckResult
 	{
 		if ($this->config->api === '') {
-			return new McpCheckResult('root_rewrite', 'Root URL rewrite', 'skip',
-				'Install already lives at the domain root.');
+			return new McpCheckResult(
+				'root_rewrite',
+				'Root URL rewrite',
+				'skip',
+				'Install already lives at the domain root.'
+			);
 		}
 
 		$rootDiscovery = rtrim($this->config->url, '/') . '/.well-known/mcp.json';
@@ -184,21 +216,33 @@ readonly class McpConnectionChecker
 		}
 
 		if ($response->statusCode === 200 && $response->json() !== null) {
-			return new McpCheckResult('root_rewrite', 'Root URL rewrite', 'pass',
-				'The domain root routes unmatched URLs into Total CMS — short URLs and RFC discovery locations work.');
+			return new McpCheckResult(
+				'root_rewrite',
+				'Root URL rewrite',
+				'pass',
+				'The domain root routes unmatched URLs into Total CMS — short URLs and RFC discovery locations work.'
+			);
 		}
 
-		return new McpCheckResult('root_rewrite', 'Root URL rewrite', 'warn',
+		return new McpCheckResult(
+			'root_rewrite',
+			'Root URL rewrite',
+			'warn',
 			"$rootDiscovery is not reachable ({$response->statusCode}). The MCP server still works at its full subpath URL, "
 			. 'but /.well-known/* discovery at the domain root (which some MCP clients try first) will 404.',
-			'Add the recommended catch-all rules from the setup wizard\'s Server Config step to the site root .htaccess.');
+			'Add the recommended catch-all rules from the setup wizard\'s Server Config step to the site root .htaccess.'
+		);
 	}
 
 	private function checkDualAuthority(): McpCheckResult
 	{
 		if ($this->config->api === '') {
-			return new McpCheckResult('dual_authority', 'Single discovery authority', 'skip',
-				'Install already lives at the domain root.');
+			return new McpCheckResult(
+				'dual_authority',
+				'Single discovery authority',
+				'skip',
+				'Install already lives at the domain root.'
+			);
 		}
 
 		$rootUrl    = rtrim($this->config->url, '/') . '/.well-known/mcp.json';
@@ -211,23 +255,35 @@ readonly class McpConnectionChecker
 		}
 
 		if ($root->statusCode !== 200 || $subpath->statusCode !== 200) {
-			return new McpCheckResult('dual_authority', 'Single discovery authority', 'skip',
-				'Only one URL shape answers; nothing to compare.');
+			return new McpCheckResult(
+				'dual_authority',
+				'Single discovery authority',
+				'skip',
+				'Only one URL shape answers; nothing to compare.'
+			);
 		}
 
 		$rootEp    = (string)(($root->json() ?? [])['endpoint'] ?? '');
 		$subpathEp = (string)(($subpath->json() ?? [])['endpoint'] ?? '');
 
 		if ($rootEp !== '' && $rootEp === $subpathEp) {
-			return new McpCheckResult('dual_authority', 'Single discovery authority', 'pass',
-				'Both URL shapes advertise the same endpoint.');
+			return new McpCheckResult(
+				'dual_authority',
+				'Single discovery authority',
+				'pass',
+				'Both URL shapes advertise the same endpoint.'
+			);
 		}
 
-		return new McpCheckResult('dual_authority', 'Single discovery authority', 'warn',
+		return new McpCheckResult(
+			'dual_authority',
+			'Single discovery authority',
+			'warn',
 			"This site answers on two base paths that advertise different endpoints ($rootEp vs $subpathEp). "
 			. 'A client that discovers through one shape and connects through the other can fail in confusing ways.',
 			"Pin the canonical base path: set 'api' explicitly in config/tcms.php "
-			. '(empty string for root-shape URLs, or the full install subpath).');
+			. '(empty string for root-shape URLs, or the full install subpath).'
+		);
 	}
 
 	private function checkOauthSurface(): McpCheckResult
@@ -247,17 +303,25 @@ readonly class McpConnectionChecker
 			return new McpCheckResult('oauth_surface', 'OAuth discovery', 'pass', 'JWKS endpoint answers.');
 		}
 
-		return new McpCheckResult('oauth_surface', 'OAuth discovery', 'fail',
+		return new McpCheckResult(
+			'oauth_surface',
+			'OAuth discovery',
+			'fail',
 			"$jwksUrl answered HTTP {$jwks->statusCode}.",
-			'Run `tcms oauth:setup` to generate keys, or check rewrites for /.well-known/*.');
+			'Run `tcms oauth:setup` to generate keys, or check rewrites for /.well-known/*.'
+		);
 	}
 
 	private function unreachable(string $id, string $label, \Throwable $e): McpCheckResult
 	{
-		return new McpCheckResult($id, $label, 'unreachable',
+		return new McpCheckResult(
+			$id,
+			$label,
+			'unreachable',
 			'Could not test: this server cannot reach its own public URL (' . $e->getMessage() . '). '
 			. 'This does NOT mean external clients are affected.',
-			'Some hosts block loopback requests to their own domain; test the URLs from another machine.');
+			'Some hosts block loopback requests to their own domain; test the URLs from another machine.'
+		);
 	}
 
 	/** @param array<int,McpCheckResult> $results */

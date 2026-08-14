@@ -206,7 +206,7 @@ class CardField extends FormField
 		$settings     = $metaResolver->resolvePreset($settings);
 
 		if ($settings === [] && !empty($propertySchema['field'])) {
-			$settings = $metaResolver->resolveTypePreset((string)$propertySchema['field']);
+			return $metaResolver->resolveTypePreset((string)$propertySchema['field']);
 		}
 
 		return $settings;

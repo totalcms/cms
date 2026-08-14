@@ -408,7 +408,7 @@ readonly class PageRouter
 		$path = rtrim($path, '/');
 
 		if ($path === '') {
-			$path = '/';
+			return '/';
 		}
 
 		return $path;

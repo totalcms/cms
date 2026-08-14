@@ -36,7 +36,7 @@ class PathUtils
 			$path = sprintf('%s/%s', $path, self::sanitizeSubpath($subpath));
 		}
 		if ($filename !== null && $filename !== '') {
-			$path = sprintf('%s/%s', $path, $filename);
+			return sprintf('%s/%s', $path, $filename);
 		}
 
 		return $path;

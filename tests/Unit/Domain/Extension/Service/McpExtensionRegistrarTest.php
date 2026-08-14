@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Extension\Service;
 
-use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\ExtensionContext;

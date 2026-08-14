@@ -33,12 +33,12 @@ final class SavedQueryToolFactoryTest extends TestCase
 			// This file never invokes a built tool's ->handle() — only tests
 			// SavedQueryToolFactory's shaping — so PersonaContext's Task 10b
 			// constructor deps never matter; plain stubs satisfy the type.
-			PersonaContext::class           => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
-			ObjectUrlBuilder::class         => $this->createMock(ObjectUrlBuilder::class),
-			McpSchemaResolver::class        => $this->createMock(McpSchemaResolver::class),
-			CollectionRepository::class     => $this->createMock(CollectionRepository::class),
+			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
+			ObjectUrlBuilder::class               => $this->createMock(ObjectUrlBuilder::class),
+			McpSchemaResolver::class              => $this->createMock(McpSchemaResolver::class),
+			CollectionRepository::class           => $this->createMock(CollectionRepository::class),
 			CollectionQueryResultFormatter::class => new CollectionQueryResultFormatter(),
-			default                         => null,
+			default                               => null,
 		});
 
 		$this->factory = new SavedQueryToolFactory($container);
@@ -137,7 +137,7 @@ final class SavedQueryToolFactoryTest extends TestCase
 
 		$savedQuerySchema = $this->factory->outputSchemaFor($def);
 
-		$formatter                = new \TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter();
+		$formatter                = new CollectionQueryResultFormatter();
 		$queryCollectionItemsDesc = 'Matching objects in sort order. Field set varies by collection — call describe_collection for the schema.';
 		$queryCollectionSchema    = $formatter->outputSchema($queryCollectionItemsDesc);
 

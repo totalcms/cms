@@ -100,7 +100,7 @@ it('refuses a caller whose persona cannot access the prompt', function (): void 
 	);
 
 	expect(fn () => $handler->get(['goal' => 'anything'], promptHandlerGateway()))
-		->toThrow(\Mcp\Exception\PromptGetException::class);
+		->toThrow(Mcp\Exception\PromptGetException::class);
 
 	// The guard must fire BEFORE the extension handler runs, not after.
 	expect($received->args)->toBeNull();

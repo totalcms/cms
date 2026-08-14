@@ -138,7 +138,7 @@ final readonly class SavedQueryTool
 
 			return $this->resultFormatter->envelope($result, $items);
 		} catch (SavedQueryToolException $e) {
-			throw new ToolCallException($e->getMessage() . ' ' . $e->recoveryHint);
+			throw new ToolCallException($e->getMessage() . ' ' . $e->recoveryHint, $e->getCode(), $e);
 		} catch (ToolCallException $e) {
 			// Already the right shape (persona/collection/group-read checks
 			// above) — rethrow unchanged rather than let the generic
@@ -149,7 +149,7 @@ final readonly class SavedQueryTool
 				'Tool "%s" failed: %s. Try list_collections to verify the collection exists.',
 				$this->definition->name,
 				$e->getMessage(),
-			));
+			), $e->getCode(), $e);
 		}
 	}
 
