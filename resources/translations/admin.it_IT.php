@@ -1057,7 +1057,7 @@ return [
 	'imageworks.pos_left_center'      => 'Al centro a sinistra',
 	'imageworks.pos_right_center'     => 'Al centro a destra',
 	'imageworks.pos_center'           => 'Centro',
-	'imageworks.text_watermark_title' => 'Filigrana testo (versione Pro)',
+	'imageworks.text_watermark_title' => 'Filigrana testo (versione Standard)',
 	'imageworks.text'                 => 'Testo filigrana',
 	'imageworks.font'                 => 'Font',
 	'imageworks.text_size'            => 'Dimensione testo',

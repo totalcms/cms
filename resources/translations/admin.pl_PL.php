@@ -1057,7 +1057,7 @@ return [
 	'imageworks.pos_left_center'      => 'Lewo, środek',
 	'imageworks.pos_right_center'     => 'Prawo, środek',
 	'imageworks.pos_center'           => 'Środek',
-	'imageworks.text_watermark_title' => 'Tekstowy znak wodny (edycja Pro)',
+	'imageworks.text_watermark_title' => 'Tekstowy znak wodny (edycja Standard)',
 	'imageworks.text'                 => 'Tekst znaku wodnego',
 	'imageworks.font'                 => 'Czcionka',
 	'imageworks.text_size'            => 'Rozmiar tekstu',

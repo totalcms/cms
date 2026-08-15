@@ -28,6 +28,9 @@ Basic collection schemas available to all editions:
 * toggle
 * url
 
+**Features:**
+* Templates
+
 ## Standard
 
 Everything in Lite including:
@@ -37,11 +40,16 @@ Everything in Lite including:
 * depot
 
 **Features:**
+* Access groups
+* Barcodes
 * Image watermarks
 * Mailer form actions
+* MCP server (anonymous, read-only — see below)
+* Passkeys
 * QR codes
-* Templates
-* Access groups
+* RSS import
+* Text watermarks
+* Whitelabel templates
 
 ## Pro
 
@@ -51,12 +59,21 @@ Everything in Standard including:
 * Custom schemas
 
 **Features:**
-* Text watermarks
-* Webhook form actions
-* External REST API
-* Barcodes
-* Whitelabel templates
+* Algolia search
 * API keys
+* Automations
+* Bulk mailer
+* Data views
+* External REST API
+* OAuth server
+* Webhook form actions
+* Whitelabel Pro templates
+
+### MCP and AI access
+
+The MCP server is included from **Standard** upwards, so a Standard site can expose collections for an AI agent to read. Lite does not include it.
+
+What Pro adds is the ability for an agent to act as somebody. Both credentials that grant a non-anonymous MCP persona are Pro features — **API keys** for admin access and the **OAuth server** for per-user access — so writing to your site from an agent, and any access scoped to a particular user's permissions, requires Pro.
 
 ## Free Trial
 

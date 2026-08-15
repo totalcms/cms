@@ -1057,7 +1057,7 @@ return [
 	'imageworks.pos_left_center'      => 'Midden links',
 	'imageworks.pos_right_center'     => 'Midden rechts',
 	'imageworks.pos_center'           => 'Midden',
-	'imageworks.text_watermark_title' => 'Tekstwatermerk (Pro-editie)',
+	'imageworks.text_watermark_title' => 'Tekstwatermerk (Standard-editie)',
 	'imageworks.text'                 => 'Watermerktekst',
 	'imageworks.font'                 => 'Lettertype',
 	'imageworks.text_size'            => 'Tekstgrootte',

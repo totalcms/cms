@@ -1057,7 +1057,7 @@ return [
 	'imageworks.pos_left_center'      => 'Izquierda centro',
 	'imageworks.pos_right_center'     => 'Derecha centro',
 	'imageworks.pos_center'           => 'Centro',
-	'imageworks.text_watermark_title' => 'Marca de agua de texto (edición Pro)',
+	'imageworks.text_watermark_title' => 'Marca de agua de texto (edición estándar)',
 	'imageworks.text'                 => 'Texto de marca de agua',
 	'imageworks.font'                 => 'Fuente',
 	'imageworks.text_size'            => 'Tamaño del texto',

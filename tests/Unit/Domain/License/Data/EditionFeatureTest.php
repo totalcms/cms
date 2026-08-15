@@ -99,17 +99,24 @@ final class EditionFeatureTest extends TestCase
 		$this->assertSame(Edition::STANDARD, EditionFeature::QR_CODES->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::WHITELABEL_STANDARD->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::ACCESS_GROUPS->requiredEdition());
+		$this->assertSame(Edition::STANDARD, EditionFeature::TEXT_WATERMARKS->requiredEdition());
+		$this->assertSame(Edition::STANDARD, EditionFeature::BARCODES->requiredEdition());
+		// Standard, not Lite: Lite is the free tier and does not include the AI
+		// surface. Standard grants the anonymous persona only — writing needs
+		// the Pro-gated credentials asserted below.
+		$this->assertSame(Edition::STANDARD, EditionFeature::MCP_SERVER->requiredEdition());
 	}
 
 	public function testProFeatureRequirements(): void
 	{
 		$this->assertSame(Edition::PRO, EditionFeature::CUSTOM_SCHEMAS->requiredEdition());
-		$this->assertSame(Edition::PRO, EditionFeature::TEXT_WATERMARKS->requiredEdition());
 		$this->assertSame(Edition::PRO, EditionFeature::WEBHOOK_ACTIONS->requiredEdition());
 		$this->assertSame(Edition::PRO, EditionFeature::EXTERNAL_REST_API->requiredEdition());
-		$this->assertSame(Edition::PRO, EditionFeature::BARCODES->requiredEdition());
 		$this->assertSame(Edition::PRO, EditionFeature::WHITELABEL_PRO->requiredEdition());
+		// The two credentials that unlock MCP's privileged personas stay Pro.
+		// If either ever moves, MCP write access moves with it.
 		$this->assertSame(Edition::PRO, EditionFeature::API_KEYS->requiredEdition());
+		$this->assertSame(Edition::PRO, EditionFeature::OAUTH_SERVER->requiredEdition());
 	}
 
 	public function testAllFeaturesHaveLabels(): void

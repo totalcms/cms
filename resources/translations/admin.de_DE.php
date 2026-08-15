@@ -1057,7 +1057,7 @@ return [
 	'imageworks.pos_left_center'      => 'Links Mitte',
 	'imageworks.pos_right_center'     => 'Rechts Mitte',
 	'imageworks.pos_center'           => 'Mitte',
-	'imageworks.text_watermark_title' => 'Text-Wasserzeichen (Pro-Edition)',
+	'imageworks.text_watermark_title' => 'Text-Wasserzeichen (Standard-Edition)',
 	'imageworks.text'                 => 'Wasserzeichentext',
 	'imageworks.font'                 => 'Schriftart',
 	'imageworks.text_size'            => 'Textgröße',

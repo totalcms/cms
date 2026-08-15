@@ -45,6 +45,16 @@ The same `/mcp` URL serves three personas; the tool surface scales per caller:
 
 Public access is **default-deny**. Anonymous requests get a 401 unless the operator explicitly flips `mcp.publicAccess` on in settings AND marks at least one collection's `mcp.access` as `public` in the schema editor.
 
+### Editions: reading everywhere, writing on Pro
+
+The MCP endpoint requires **Standard or Pro**. Lite does not include it. What differs between Standard and Pro is which personas are available to reach it.
+
+The public persona works everywhere, so any Total CMS site can expose collections for an AI agent to read. The other two personas depend on credentials that are Pro features — an API key for the admin persona, the OAuth server for the authenticated one — so **writing to your site from an agent requires Pro**, as does any access scoped to a particular user.
+
+That gate is enforced where the persona is decided, not only where credentials are issued. A key or token that outlives the licence which created it — after a trial lapses, a downgrade, or a restored backup — is treated as absent rather than honoured: the caller falls through to anonymous and still gets whatever is genuinely public.
+
+Two things degrade naturally below Pro rather than erroring: Data Views are a Pro feature, so `list_views` and `query_view` come back empty; and custom schemas are Pro, so only built-in schemas are exposed.
+
 ### The three-layer rule (scope, group, exposure)
 
 Every authenticated (OAuth) call to a collection or object has to clear three independent gates — think of them as three separate locks that all have to be open:
@@ -103,7 +113,7 @@ API keys and OAuth both authenticate `/mcp` requests, but they serve different t
 
 ### Prerequisites
 
-- **Pro edition** — OAuth is a Pro+ feature. Trials count.
+- **Pro edition** — the OAuth server is a Pro feature (trials count). The MCP endpoint itself is not gated; only this authenticated persona is.
 - **Keys generated.** Run `tcms oauth:setup` once if you haven't already.
 - **OAuth server enabled.** Toggle on in **Admin → Settings → OAuth Server**.
 - **Read the full OAuth setup guide** at [OAuth Server](docs/apis/oauth) before continuing — it covers key generation, client creation, scope definitions, and dynamic registration.

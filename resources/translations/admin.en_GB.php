@@ -1057,7 +1057,7 @@ return [
 	'imageworks.pos_left_center'      => 'Left Centre',
 	'imageworks.pos_right_center'     => 'Right Centre',
 	'imageworks.pos_center'           => 'Centre',
-	'imageworks.text_watermark_title' => 'Text Watermark (Pro Edition)',
+	'imageworks.text_watermark_title' => 'Text Watermark (Standard Edition)',
 	'imageworks.text'                 => 'Watermark Text',
 	'imageworks.font'                 => 'Font',
 	'imageworks.text_size'            => 'Text Size',
