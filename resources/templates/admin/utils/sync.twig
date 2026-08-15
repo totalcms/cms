@@ -121,12 +121,14 @@
 				}]) %}
 			{% endfor %}
 
+			{# fieldGrid is wider than the schema/settings lists: template paths and
+			   object labels are long, and each row also carries a diff badge. #}
 			{{ cms.form.field("checklist", "templates", {
 				label    : t('sync.specific_templates'),
 				value    : [],
 				options  : templateOptions,
 				settings : {
-					fieldGrid: "200px",
+					fieldGrid: "320px",
 					visibility : {
 						watch    : "templates-all",
 						value    : "all",
@@ -166,7 +168,7 @@
 					value    : [],
 					options  : objectOptions,
 					settings : {
-						fieldGrid: "200px",
+						fieldGrid: "320px",
 						visibility : {
 							watch    : "collection-" ~ collection.id ~ "-all",
 							value    : "all",
@@ -268,8 +270,21 @@
 	font-style: italic;
 }
 
-.sync-section .checklist-field label {
-	max-width : 200px;
+/* The option row fills its grid cell so a long label truncates into the
+   space that's left instead of overflowing. Without this the row is
+   `width: max-content` (choice-field.scss) and a long label pushes the
+   status badge out of the clipped box entirely.
+
+   Scoped to `div.checkbox` — the <input> carries the same "checkbox" class
+   and would stretch too, squeezing the label down to a few characters. */
+.sync-section .checklist-field div.checkbox {
+	width : 100%;
+}
+/* Shrink-only (never grow), so the badge stays beside the label rather than
+   floating off at the right edge of the cell. */
+.sync-section .checklist-field div.checkbox > .checkbox-label {
+	flex      : 0 1 auto;
+	min-width : 0;
 }
 
 .sync-actions {
@@ -304,9 +319,10 @@
 	margin-inline-start: 0.5rem;
 }
 
-/* Diff decorations on the checklists */
+/* Diff decorations on the checklists. The badge is a sibling of the label
+   (not a child) so the label's ellipsis truncation can never swallow it. */
 .sync-badge {
-	margin-inline-start: 0.5rem;
+	flex: 0 0 auto;
 	padding: 0.05em 0.55em;
 	border-radius: 999px;
 	font-size: 0.75rem;
@@ -361,6 +377,12 @@ document.addEventListener('DOMContentLoaded', function() {
 	const previewEl  = document.getElementById('sync-preview');
 
 	if (!form || !pushBtn || !pullBtn) return;
+
+	// Labels truncate with an ellipsis in narrow grid cells — hover recovers
+	// the full page/template name.
+	form.querySelectorAll('.sync-section .checkbox-label').forEach(label => {
+		label.title = label.textContent.trim();
+	});
 
 	const syncableCollections = {{ collections|map(c => c.id)|json_encode|raw }};
 	// Display names for the Collection Settings section (id -> admin name).
@@ -458,7 +480,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			badge.title       = item.status === 'local-only'
 				? 'Exists here but not on the remote'
 				: `Content differs${item.newer ? ` — the ${item.newer} copy is newer` : ''}`;
-			label.appendChild(badge);
+			// Appended to the row, not the label — the label truncates with an
+			// ellipsis and would clip the badge along with the overflowing text.
+			wrapper.appendChild(badge);
 		});
 
 		for (const [allName, count] of Object.entries(remoteOnly)) {
