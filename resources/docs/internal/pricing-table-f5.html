@@ -69,6 +69,18 @@
       font-weight: 500;
     }
 
+    /* Fixed-width price columns.
+       The table is width:100% with auto layout, so without this each price
+       column sizes to its own content — "$395" and "&mdash;" end up different
+       widths, and the three stacked tables land their columns at different
+       positions. A fixed width makes every price column identical and lines
+       them up down the page. Matches the grid variant, which already pins
+       these columns at a fixed size. */
+    .pricing-table-wrapper thead th:not(:first-child),
+    .pricing-table-wrapper tbody td:not(:first-child) {
+      width: 110px;
+    }
+
     .pricing-table-wrapper .price {
       font-weight: 600;
     }
@@ -80,6 +92,11 @@
 
     /* Foundation 5 responsive overrides */
     @media only screen and (max-width: 40em) {
+      .pricing-table-wrapper thead th:not(:first-child),
+      .pricing-table-wrapper tbody td:not(:first-child) {
+        width: 72px;
+      }
+
       .pricing-table-wrapper h2 {
         font-size: 1.25rem;
       }
@@ -106,11 +123,11 @@
 <div class="pricing-table-wrapper">
   <h2>Smart upgrades, built right in.</h2>
   <p>To keep upgrades simple and error-free, they are not purchased through this website. Instead, Total CMS 3 includes a built-in store in the admin dashboard that automatically recognizes your domain and license and shows only the upgrade paths available to you. The pricing below is provided as a reference — your dashboard will always present the correct options and pricing for your license.</p>
+  <p><em>Total CMS Lite is no longer sold. Existing Lite licenses remain fully supported — you can renew updates, rehome to a new domain, or upgrade to Standard or Pro at the prices shown.</em></p>
   <table>
     <thead>
       <tr>
         <th>From / To</th>
-        <th>T3 Lite</th>
         <th>T3 Standard</th>
         <th>T3 Pro</th>
       </tr>
@@ -118,31 +135,26 @@
     <tbody>
       <tr>
         <td>New Purchase</td>
-        <td><span class="price">$79</span></td>
-        <td><span class="price">$159</span></td>
-        <td><span class="price">$359</span></td>
+        <td><span class="price">$195</span></td>
+        <td><span class="price">$395</span></td>
       </tr>
       <tr>
         <td>Total CMS 1</td>
-        <td><span class="na">&mdash;</span></td>
-        <td><span class="price">$119</span></td>
-        <td><span class="price">$299</span></td>
+        <td><span class="price">$125</span></td>
+        <td><span class="price">$325</span></td>
       </tr>
       <tr>
         <td>T3 Lite</td>
-        <td><span class="na">&mdash;</span></td>
-        <td><span class="price">$99</span></td>
-        <td><span class="price">$319</span></td>
+        <td><span class="price">$115</span></td>
+        <td><span class="price">$325</span></td>
       </tr>
       <tr>
         <td>T3 Standard</td>
         <td><span class="na">&mdash;</span></td>
-        <td><span class="na">&mdash;</span></td>
-        <td><span class="price">$229</span></td>
+        <td><span class="price">$225</span></td>
       </tr>
       <tr>
         <td>T3 Pro</td>
-        <td><span class="na">&mdash;</span></td>
         <td><span class="na">&mdash;</span></td>
         <td><span class="na">&mdash;</span></td>
       </tr>
@@ -165,18 +177,18 @@
     <tbody>
       <tr>
         <td>Lite</td>
-        <td><span class="price">$19</span></td>
-        <td><span class="price">$79</span></td>
+        <td><span class="price">$25</span></td>
+        <td><span class="price">$85</span></td>
       </tr>
       <tr>
         <td>Standard</td>
-        <td><span class="price">$39</span></td>
-        <td><span class="price">$149</span></td>
+        <td><span class="price">$45</span></td>
+        <td><span class="price">$155</span></td>
       </tr>
       <tr>
         <td>Pro</td>
-        <td><span class="price">$79</span></td>
-        <td><span class="price">$299</span></td>
+        <td><span class="price">$85</span></td>
+        <td><span class="price">$295</span></td>
       </tr>
     </tbody>
   </table>
@@ -195,15 +207,15 @@
     <tbody>
       <tr>
         <td>Lite</td>
-        <td><span class="price">$39</span></td>
+        <td><span class="price">$35</span></td>
       </tr>
       <tr>
         <td>Standard</td>
-        <td><span class="price">$89</span></td>
+        <td><span class="price">$75</span></td>
       </tr>
       <tr>
         <td>Pro</td>
-        <td><span class="price">$199</span></td>
+        <td><span class="price">$125</span></td>
       </tr>
     </tbody>
   </table>
