@@ -717,9 +717,7 @@ class TotalForm implements \Stringable
 	 */
 	public function collectionAndViewOptions(): array
 	{
-		$byLabel = static function (array $a, array $b): int {
-			return strnatcasecmp($a['label'], $b['label']);
-		};
+		$byLabel = (static fn (array $a, array $b): int => strnatcasecmp($a['label'], $b['label']));
 
 		$groups      = [];
 		$collections = $this->collectionIdListWithLabels();
