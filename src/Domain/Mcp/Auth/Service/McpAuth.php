@@ -7,6 +7,8 @@ namespace TotalCMS\Domain\Mcp\Auth\Service;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
@@ -33,6 +35,28 @@ use TotalCMS\Support\Config;
  * When `mcp.publicAccess` is false in config, anonymous callers are rejected
  * with 401 rather than resolved to the public persona — that's the master
  * switch operators flip to lock the endpoint to API-key-only access.
+ *
+ * ## Editions
+ *
+ * The MCP endpoint itself is available on every edition, but only the PUBLIC_
+ * persona is. Both privileged paths are edition-gated here, at the point the
+ * persona is decided:
+ *
+ *   - API key  -> requires EditionFeature::API_KEYS  (Pro)
+ *   - OAuth    -> requires EditionFeature::OAUTH_SERVER (Pro)
+ *
+ * The gate lives here rather than only on the routes that manage keys and
+ * clients, because a credential can outlive the licence that created it — a
+ * lapsed Pro trial, a downgrade, a restored backup, a copied `tcms-data` all
+ * leave a valid key or token behind. Without this check such a credential would
+ * resolve ADMIN on a licence entitled to anonymous reads only, which is the one
+ * way "Lite and Standard are read-only" could quietly fail to be true.
+ *
+ * A credential presented on an edition that does not include it is treated as
+ * absent, not as an error: the caller falls through to the anonymous branch and
+ * gets PUBLIC_ (or login_required if public access is off). Failing closed to
+ * "you are anonymous" is both accurate and useful — the request still works for
+ * anything genuinely public.
  */
 readonly class McpAuth
 {
@@ -40,6 +64,7 @@ readonly class McpAuth
 		private ApiKeyAuthenticator $apiKeyAuthenticator,
 		private AccessControlService $accessControl,
 		private Config $config,
+		private EditionFeatureService $editionFeatures,
 	) {
 	}
 
@@ -50,7 +75,7 @@ readonly class McpAuth
 		// on the request when a Bearer header is present. We read the attribute
 		// rather than calling ResourceServer directly — single responsibility.
 		$oauthScopes = $request->getAttribute('oauth_scopes');
-		if (is_array($oauthScopes)) {
+		if (is_array($oauthScopes) && $this->editionFeatures->can(EditionFeature::OAUTH_SERVER)) {
 			// League may pass Scope entity objects or plain strings depending on
 			// the version; normalise to a list<string>.
 			$scopes = array_values(array_map(
@@ -98,7 +123,12 @@ readonly class McpAuth
 		}
 
 		// ── 2. API key path ─────────────────────────────────────────────────────
-		if (!$this->apiKeyAuthenticator->hasApiKeyHeader($request)) {
+		// Skipped entirely below Pro: a key that outlived its licence must not
+		// grant the ADMIN persona. Treated as absent rather than invalid, so the
+		// caller falls through to anonymous and still gets whatever is public.
+		$apiKeysAvailable = $this->editionFeatures->can(EditionFeature::API_KEYS);
+
+		if (!$apiKeysAvailable || !$this->apiKeyAuthenticator->hasApiKeyHeader($request)) {
 			if (!(bool)($this->config->mcp['publicAccess'] ?? false)) {
 				throw new McpAuthException(
 					'Anonymous access is disabled. Provide an API key in the X-API-Key header or Authorization: Bearer.',
