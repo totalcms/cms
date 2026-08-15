@@ -143,7 +143,10 @@ function chatgptCompatSeedPublicObject(Slim\App $app): string
 		'name' => 'Compat Articles',
 		// `text` schema indexes id + text — enough for a relevance hit.
 		'schema' => 'text',
-		'mcp'    => ['access' => 'public', 'titleProperty' => 'text'],
+		// `resource` is opt-in: unset means the collection registers no tcms://
+		// resource, and the server then has no resources capability to advertise.
+		// This suite asserts capability advertisement, so it must ask for one.
+		'mcp'    => ['access' => 'public', 'titleProperty' => 'text', 'resource' => true],
 	]);
 
 	// Tolerate "already exists" (400) across test ordering, but a hard auth/

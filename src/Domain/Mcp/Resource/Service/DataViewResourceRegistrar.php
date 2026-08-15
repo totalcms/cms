@@ -57,8 +57,10 @@ readonly class DataViewResourceRegistrar
 				continue;
 			}
 
-			$mcp        = is_array($entry['mcp'] ?? null) ? $entry['mcp'] : [];
-			$resourceOn = ($mcp['resource'] ?? true) !== false;
+			$mcp = is_array($entry['mcp'] ?? null) ? $entry['mcp'] : [];
+			// Unset means off, matching McpSchemaResolver and the schema default.
+			// An explicitly stored `true` still exposes the view.
+			$resourceOn = ($mcp['resource'] ?? false) === true;
 			if (!$resourceOn) {
 				continue;
 			}

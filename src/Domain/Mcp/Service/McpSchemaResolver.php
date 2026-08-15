@@ -63,7 +63,12 @@ readonly class McpSchemaResolver
 		return [
 			'access'        => $access,
 			'description'   => $this->descriptions->forCollection($collection),
-			'resource'      => (bool)($mcp['resource'] ?? true),
+			// Unset means off. A collection is exposed as an addressable
+			// `tcms://` resource only when someone said so — matching the schema
+			// default, and matching how `access` above already treats an unset
+			// value as the closed option rather than the open one. An explicitly
+			// stored `true` still wins, so collections that opted in stay in.
+			'resource'      => (bool)($mcp['resource'] ?? false),
 			'titleProperty' => is_string($mcp['titleProperty'] ?? null) ? $mcp['titleProperty'] : '',
 		];
 	}

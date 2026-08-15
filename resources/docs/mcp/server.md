@@ -261,7 +261,7 @@ Operators control AI exposure via two layers of MCP config — one per **collect
 |---|---|---|
 | `access` | `"admin"` | Who can call `query_collection` / `search_collection` / `get_object` against this collection. `"admin"` requires an API key; `"public"` allows anonymous AI agents. |
 | `description` | empty | AI-targeted description shown in `list_collections` and the dynamic tool-description catalog. Falls back to the collection's general description if blank. |
-| `resource` | `true` | When true, the collection is exposed as a `tcms://{collection}/` resource and its objects via the `tcms://{collection}/{id}` template. Set to `false` if you want the collection in tools but not in `resources/list`. |
+| `resource` | `false` | When true, the collection is exposed as a `tcms://{collection}/` resource and its objects via the `tcms://{collection}/{id}` template. Off unless you turn it on — resources are a second way to reach data the tools already serve, so a collection stays out of `resources/list` until you ask for it. |
 
 The same `mcp` card lives on each **data view** (in the dataviews editor) with identical fields. A view marked `mcp.access: 'public'` shows up in `list_views` for anonymous callers and is fetchable at `tcms://view/{id}`.
 
@@ -334,9 +334,9 @@ Total CMS exposes three URI shapes:
 
 | URI | What it is | Registered when |
 |---|---|---|
-| `tcms://{collection}/` | Collection summary — recent items, capped at 50 | Every collection with `mcp.resource: true` (default) |
+| `tcms://{collection}/` | Collection summary — recent items, capped at 50 | Collections with `mcp.resource: true` (off by default) |
 | `tcms://{collection}/{id}` | Single object | Same; registered as a *template*, not enumerated per-object |
-| `tcms://view/{id}` | A data view's cached result | Every data view with `mcp.resource: true` |
+| `tcms://view/{id}` | A data view's cached result | Data views with `mcp.resource: true` (off by default) |
 
 Agents address these via three SDK transport methods:
 
