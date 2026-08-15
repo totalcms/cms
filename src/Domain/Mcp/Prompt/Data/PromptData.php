@@ -14,7 +14,7 @@ final readonly class PromptData
 		public string $description,
 		public string $body,
 		public array $args = [],
-		public string $targetCollection = '',
+		public string $target = '',
 		public string $access = '',
 	) {
 	}
@@ -58,7 +58,11 @@ final readonly class PromptData
 			description: (string)($data['description'] ?? ''),
 			body: (string)($data['body'] ?? ''),
 			args: $args,
-			targetCollection: (string)($data['targetCollection'] ?? ''),
+			// `targetCollection` is the pre-rename field name. Objects saved
+			// before `target` existed still carry it, and Sync/JumpStart payloads
+			// from an older install will too, so it stays readable indefinitely —
+			// there is no migration and nothing to re-save.
+			target: (string)($data['target'] ?? $data['targetCollection'] ?? ''),
 			access: (string)($data['access'] ?? ''),
 		);
 	}

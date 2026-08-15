@@ -5,9 +5,9 @@
 	"type"        : "object",
 	"title"       : "MCP Prompt",
 	"description" : "A templated AI-agent workflow exposed via the MCP server's prompts/list and prompts/get endpoints.",
-	"formgrid"    : "id\ndescription\ntargetCollection\naccess\nargs\nbody",
+	"formgrid"    : "id\ndescription\ntarget\naccess\nargs\nbody",
 	"required"    : ["id", "description", "body"],
-	"index"       : ["id", "description", "targetCollection", "access"],
+	"index"       : ["id", "description", "target", "access"],
 	"properties"  : {
 		"id": {
 			"$ref"      : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -26,14 +26,14 @@
 			"field"       : "textarea",
 			"settings"    : { "rows" : 3 }
 		},
-		"targetCollection": {
+		"target": {
 			"type"        : "string",
-			"label"       : "Target Collection",
-			"help"        : "Which collection this prompt scopes to. Leave blank for site-wide.",
+			"label"       : "Target",
+			"help"        : "Which collection or Data View this prompt scopes to. Leave blank for site-wide. Access below inherits from whatever you pick — note that Data Views are not filtered by access group.",
 			"field"       : "select",
 			"placeholder" : "All Collections",
 			"settings"    : {
-				"propertyOptions" : "collectionIds"
+				"propertyOptions" : "collectionsAndViews"
 			}
 		},
 		"access": {

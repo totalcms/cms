@@ -18,14 +18,14 @@ final class PromptDataTest extends TestCase
 			description: 'Outline a new blog post',
 			body: 'Draft a post about: {{ args.topic }}',
 			args: [$arg],
-			targetCollection: 'blog',
+			target: 'blog',
 			access: 'authenticated',
 		);
 		$this->assertSame('draft_post', $prompt->name);
 		$this->assertSame('Outline a new blog post', $prompt->description);
 		$this->assertSame('Draft a post about: {{ args.topic }}', $prompt->body);
 		$this->assertCount(1, $prompt->args);
-		$this->assertSame('blog', $prompt->targetCollection);
+		$this->assertSame('blog', $prompt->target);
 		$this->assertSame('authenticated', $prompt->access);
 	}
 
@@ -38,8 +38,42 @@ final class PromptDataTest extends TestCase
 		]);
 		$this->assertSame('minimal', $prompt->name);
 		$this->assertSame([], $prompt->args);
-		$this->assertSame('', $prompt->targetCollection);
+		$this->assertSame('', $prompt->target);
 		$this->assertSame('', $prompt->access);
+	}
+
+	public function testFromArrayReadsTargetField(): void
+	{
+		$prompt = PromptData::fromArray([
+			'id'     => 'p',
+			'body'   => 'x',
+			'target' => 'recent-posts',
+		]);
+		$this->assertSame('recent-posts', $prompt->target);
+	}
+
+	public function testFromArrayFallsBackToLegacyTargetCollection(): void
+	{
+		// `targetCollection` is the pre-rename field name. Objects saved before
+		// the rename still carry it, as do Sync and JumpStart payloads from an
+		// older install, so it must keep resolving with no migration.
+		$prompt = PromptData::fromArray([
+			'id'               => 'p',
+			'body'             => 'x',
+			'targetCollection' => 'blog',
+		]);
+		$this->assertSame('blog', $prompt->target);
+	}
+
+	public function testFromArrayPrefersTargetOverLegacyField(): void
+	{
+		$prompt = PromptData::fromArray([
+			'id'               => 'p',
+			'body'             => 'x',
+			'target'           => 'new',
+			'targetCollection' => 'old',
+		]);
+		$this->assertSame('new', $prompt->target);
 	}
 
 	public function testFromArrayParsesArgsAsDeck(): void

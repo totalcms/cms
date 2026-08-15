@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Exception\PromptCollisionException;
@@ -103,5 +104,107 @@ final class PromptDiscoveryServiceTest extends TestCase
 
 		$svc = new PromptDiscoveryService($indexFilter, $collections, new NullLogger());
 		$this->assertSame([], $svc->discover());
+	}
+
+	/**
+	 * A prompt whose target names a Data View inherits that view's mcp.access.
+	 * fetchCollection() returns null for the id, so the resolver falls through
+	 * to the view branch.
+	 */
+	public function testInheritsAccessFromTargetView(): void
+	{
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
+			['id' => 'p', 'body' => 'b', 'target' => 'recent-posts'],
+		]);
+		$this->collections->method('fetchCollection')->willReturn(null);
+
+		$views = $this->createMock(DataViewLister::class);
+		$views->method('listViews')->willReturn([
+			['id' => 'recent-posts', 'mcp' => ['access' => 'public']],
+		]);
+
+		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger(), $views);
+		$this->assertSame('public', $svc->discover()[0]->access);
+	}
+
+	/**
+	 * The collision case, and the reason the order is fixed. Collections are
+	 * filtered by access group and views are not, so an id carried by both must
+	 * resolve to the collection — the stricter of the two models. Resolving to
+	 * the view would silently widen the prompt's reach.
+	 */
+	public function testCollectionWinsWhenAnIdIsBothCollectionAndView(): void
+	{
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
+			['id' => 'p', 'body' => 'b', 'target' => 'blog'],
+		]);
+		$this->collections->method('fetchCollection')->willReturn($this->makeCollection('authenticated'));
+
+		$views = $this->createMock(DataViewLister::class);
+		$views->method('listViews')->willReturn([
+			['id' => 'blog', 'mcp' => ['access' => 'public']],
+		]);
+
+		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger(), $views);
+		$this->assertSame('authenticated', $svc->discover()[0]->access);
+	}
+
+	/**
+	 * Existence decides the branch, not whether access happens to be configured.
+	 * A real collection with no mcp.access resolves to admin and stops; it must
+	 * not fall through and pick up a same-named view.
+	 */
+	public function testCollectionWithoutAccessDoesNotFallThroughToView(): void
+	{
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
+			['id' => 'p', 'body' => 'b', 'target' => 'blog'],
+		]);
+		$this->collections->method('fetchCollection')->willReturn($this->makeCollection(''));
+
+		$views = $this->createMock(DataViewLister::class);
+		$views->method('listViews')->willReturn([
+			['id' => 'blog', 'mcp' => ['access' => 'public']],
+		]);
+
+		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger(), $views);
+		$this->assertSame('admin', $svc->discover()[0]->access);
+	}
+
+	public function testTargetMatchingNeitherFallsBackToAdmin(): void
+	{
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
+			['id' => 'p', 'body' => 'b', 'target' => 'ghost'],
+		]);
+		$this->collections->method('fetchCollection')->willReturn(null);
+
+		$views = $this->createMock(DataViewLister::class);
+		$views->method('listViews')->willReturn([]);
+
+		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger(), $views);
+		$this->assertSame('admin', $svc->discover()[0]->access);
+	}
+
+	public function testExplicitAccessWinsOverTargetView(): void
+	{
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
+			['id' => 'p', 'body' => 'b', 'target' => 'recent-posts', 'access' => 'admin'],
+		]);
+		$views = $this->createMock(DataViewLister::class);
+		$views->expects($this->never())->method('listViews');
+
+		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger(), $views);
+		$this->assertSame('admin', $svc->discover()[0]->access);
+	}
+
+	/** A CollectionData carrying the given mcp.access ('' means none configured). */
+	private function makeCollection(string $access): CollectionData
+	{
+		$collection     = new CollectionData();
+		$collection->id = 'blog';
+		if ($access !== '') {
+			$collection->mcp = ['access' => $access];
+		}
+
+		return $collection;
 	}
 }

@@ -671,6 +671,72 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Data Views as {value, label} pairs, mirroring collectionIdListWithLabels().
+	 *
+	 * @return array<int,array{value: string, label: string}>
+	 */
+	public function viewIdListWithLabels(): array
+	{
+		if (!$this->dataViewLister instanceof DataViewLister) {
+			return [];
+		}
+
+		$views = [];
+		foreach ($this->dataViewLister->listViews() as $view) {
+			if (!is_array($view) || !isset($view['id']) || !is_string($view['id'])) {
+				continue;
+			}
+			$name    = isset($view['name']) && is_string($view['name']) && $view['name'] !== '' ? $view['name'] : $view['id'];
+			$views[] = ['value' => $view['id'], 'label' => $name];
+		}
+
+		return $views;
+	}
+
+	/**
+	 * Collections and Data Views as grouped options, for propertyOptions: "collectionsAndViews".
+	 *
+	 * Returns the grouped-options-with-values shape — a map of group label to
+	 * {value, label} pairs — so the picker shows plain names under "Collections"
+	 * and "Data Views" headings rather than repeating the kind in every label.
+	 * The two are separate namespaces and an id can exist in both, so the reader
+	 * needs to see which is which; a heading says it once instead of N times.
+	 *
+	 * Collections are listed first, matching the resolution order consumers use:
+	 * an id carried by both resolves as the collection.
+	 *
+	 * A group with no members is omitted entirely — a site with no Data Views
+	 * should not see an empty heading inviting it to look for one.
+	 *
+	 * Each group is sorted by label here rather than left to the framework:
+	 * FormField's automatic label sort deliberately skips grouped structures to
+	 * preserve optgroup ordering, so a grouped provider has to sort its own
+	 * members or they arrive in whatever order the listers happened to return.
+	 *
+	 * @return array<string,array<int,array{value: string, label: string}>>
+	 */
+	public function collectionAndViewOptions(): array
+	{
+		$byLabel = static function (array $a, array $b): int {
+			return strnatcasecmp($a['label'], $b['label']);
+		};
+
+		$groups      = [];
+		$collections = $this->collectionIdListWithLabels();
+		if ($collections !== []) {
+			usort($collections, $byLabel);
+			$groups['Collections'] = $collections;
+		}
+		$views = $this->viewIdListWithLabels();
+		if ($views !== []) {
+			usort($views, $byLabel);
+			$groups['Data Views'] = $views;
+		}
+
+		return $groups;
+	}
+
+	/**
 	 * Get a list of available layout templates from the builder/layouts/ directory.
 	 * Used for propertyOptions: "layouts" in schema settings.
 	 *
