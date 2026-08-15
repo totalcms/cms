@@ -68,6 +68,50 @@ The most important Twig variable in Total CMS is `cms`, which fetches content fr
 
 For more information, check out the [Total CMS Content with Twig](docs/twig/totalcms) docs.
 
+## Frontend Assets
+
+Total CMS ships stylesheets and scripts that its own Twig output depends on — grid layout, galleries, pagination, icons, and the JavaScript that turns [`mailto`](docs/twig/filters) addresses into real links. Two helpers emit them, and every layout you write should call both:
+
+```twig
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock %}</title>
+
+    {{ cms.assetsHead() }}
+    {# your own stylesheet goes after, so your rules win #}
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+    {% block content %}{% endblock %}
+
+    {{ cms.assetsBody() }}
+</body>
+</html>
+```
+
+`cms.assetsHead()` emits the core stylesheets and preload hints. `cms.assetsBody()` emits the core scripts, which belong at the end of the body. Both also render any assets registered by [extensions](docs/extensions/extension-points), so an extension that ships CSS or JS works without you changing your layout.
+
+Order matters in the head: put `cms.assetsHead()` **before** your own stylesheet so your rules override the defaults rather than the other way round.
+
+### What breaks without them
+
+Nothing errors. The page renders, the markup is correct, and things quietly look or behave wrong:
+
+| Missing asset | Symptom |
+|---|---|
+| `cms-grid.css` | `{% cmsgrid %}` renders as an unstyled stack |
+| `gallery.css` / `gallery.js` | galleries don't lay out, lightbox never opens |
+| `pagination.css` | [Load More](docs/twig/load-more) controls render unstyled |
+| `content.css` / `icons.css` | default content styles and icons are missing |
+| `content.js` | [`mailto`](docs/twig/filters) addresses stay inert text |
+| `htmx.min.js` | Load More and other interactive fragments never fetch |
+
+Because the symptom is "my grid looks wrong" rather than an error, this is worth checking first when a template misbehaves for no apparent reason.
+
+Don't hardcode these files yourself. The list changes between releases, and the helpers handle ordering, module type, preloading, and cache-busting for you.
+
 
 <!--
 

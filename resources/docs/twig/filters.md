@@ -525,7 +525,7 @@ Creates an obfuscated mailto link that protects email addresses from spam bots. 
 </span>
 ```
 
-**Note:** Requires `content.js` to be loaded on your pages for the JavaScript decoder to work.
+**Note:** the decoder lives in `content.js`, which is emitted by `{{ cms.assetsBody() }}`. If your layout doesn't call the [core asset helpers](docs/twig/overview), the address renders as plain text and never becomes a clickable link.
 
 ## Color Filters
 

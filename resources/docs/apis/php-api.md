@@ -26,7 +26,7 @@ $totalcms = new TotalCMS\TotalCMS();
 <head>
     <meta charset="utf-8">
     <title>{{ cms.text('sitetitle') }} - My Site</title>
-    <link rel="stylesheet" href="{{ cms.api }}/assets/content.css?v={{ cms.version }}"/>
+    {{ cms.assetsHead() }}
 </head>
 <body>
 
@@ -81,9 +81,9 @@ $totalcms = new TotalCMS\TotalCMS();
     <p>Toggle: {% if cms.toggle('active') %}Enabled{% else %}Disabled{% endif %}</p>
     <div>{{ cms.styledtext('about') }}</div>
 
-    <!-- Total CMS Scripts -->
-    <script type="module" src="{{ cms.api }}/assets/content.js?v={{ cms.version }}"></script>
-    <script type="module" src="{{ cms.api }}/assets/gallery.js?v={{ cms.version }}"></script>
+    <!-- Total CMS core scripts. The matching {{ cms.assetsHead() }} call belongs
+         in <head> for the core stylesheets. See docs/twig/overview. -->
+    {{ cms.assetsBody() }}
 </body>
 </html>
 
@@ -104,7 +104,7 @@ $totalcms = new TotalCMS\TotalCMS();
 <html lang="en">
 <head>
     <title>{{ cms.text('sitetitle') }}</title>
-    <link rel="stylesheet" href="{{ cms.api }}/assets/content.css?v={{ cms.version }}"/>
+    {{ cms.assetsHead() }}
 </head>
 
 <?php
@@ -115,6 +115,7 @@ $totalcms->startBuffer();
 
 <body>
     <!-- Rest of page content... -->
+    {{ cms.assetsBody() }}
 </body>
 </html>
 
