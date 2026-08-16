@@ -26,6 +26,7 @@ use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
+use TotalCMS\Domain\Playground\Data\PlaygroundData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Session\SessionKeys;
@@ -201,8 +202,16 @@ readonly class AdminUtilsAction
 
 			// Every local collection is offered for SETTINGS sync (the meta —
 			// url, MCP card, sitemap, overrides — never objects or counters).
+			// The Twig Playground is the exception: it is a per-install
+			// scratchpad that JumpStartExporter now drops from every sync, so
+			// listing it would be a checkbox whose selection does nothing —
+			// the same reason git-managed templates are hidden above.
 			$collectionMeta = [];
 			foreach ($this->collectionLister->listAllCollections() as $collection) {
+				if ($collection->id === PlaygroundData::COLLECTION_ID) {
+					continue;
+				}
+
 				$collectionMeta[] = [
 					'id'   => $collection->id,
 					'name' => $collection->name !== '' ? $collection->name : ucfirst($collection->id),
