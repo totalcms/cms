@@ -31,6 +31,19 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Generate the documentation indexes BEFORE the --no-dev install below.
+# build-docs-index.php parses src/ with nikic/php-parser, which is a dev
+# dependency — running this after `composer install --no-dev` fatals with
+# "Class PhpParser\ParserFactory not found" and, because the failure was
+# unchecked, silently shipped yesterday's reference-index.json into dist.
+echo "Building documentation search index..."
+php bin/build-docs-index.php
+
+if [ $? -ne 0 ]; then
+    echo "Failed to build documentation indexes. Exiting..."
+    exit 1
+fi
+
 echo "Building the application..."
 composer install --no-dev --optimize-autoloader --quiet
 
@@ -117,10 +130,6 @@ fi
 # Remove unused vendor packages
 echo "Removing unused vendor packages..."
 rm -rf vendor/ssnepenthe/color-utils
-
-# generate documentation search index
-echo "Building documentation search index..."
-php bin/build-docs-index.php
 
 # move required files to dist
 echo "Moving required files to dist..."
