@@ -31,11 +31,22 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Generate the documentation indexes BEFORE the --no-dev install below.
-# build-docs-index.php parses src/ with nikic/php-parser, which is a dev
-# dependency — running this after `composer install --no-dev` fatals with
-# "Class PhpParser\ParserFactory not found" and, because the failure was
-# unchecked, silently shipped yesterday's reference-index.json into dist.
+# The documentation indexes need BOTH vendor/autoload.php and a dev dependency
+# (nikic/php-parser, used to parse src/), so they can only be built between a
+# full install and the --no-dev install that produces the shipped tree.
+#
+# Running them after --no-dev fatals with "Class PhpParser\ParserFactory not
+# found"; running them before any install fatals on a missing autoload.php,
+# which is invisible on a dev machine with a populated vendor/ and fails
+# immediately on a fresh CI checkout. Hence the explicit dev install here.
+echo "Installing dependencies..."
+composer install --quiet
+
+if [ $? -ne 0 ]; then
+    echo "Failed to install dependencies. Exiting..."
+    exit 1
+fi
+
 echo "Building documentation search index..."
 php bin/build-docs-index.php
 

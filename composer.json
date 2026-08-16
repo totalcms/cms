@@ -171,6 +171,7 @@
     "test:updatesnaps": "pest --update-snapshots",
     "test:js": "yarn test:js",
     "bundle": "php bin/make-bundle.php",
+    "bundle:check": "php bin/make-bundle.php --check",
     "docs:validate": "php bin/validate-docs.php",
     "md": [
       "@md:src",

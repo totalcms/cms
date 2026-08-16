@@ -1,27 +1,28 @@
 {
-    "id"          : "totalcms/algolia-search",
-    "name"        : "Algolia Search <em>(beta)</em>",
-    "description" : "<em>Free during beta — will be a paid extension after launch.</em> Semantic + keyword search backed by Algolia. Pushes T3 content into Algolia on save and routes MCP search tools (plus any future REST or site-wide search) through Algolia's hybrid keyword+neural search. Requires an Algolia account + Pro edition.",
-    "icon"        : "icon.png",
-    "requires"    : {
-        "totalcms" : ">=3.5.0-beta",
-        "php"      : ">=8.2"
+    "id": "totalcms/algolia-search",
+    "name": "Algolia Search <em>(beta)</em>",
+    "description": "<em>Free during beta — will be a paid extension after launch.</em> Semantic + keyword search backed by Algolia. Pushes T3 content into Algolia on save and routes MCP search tools (plus any future REST or site-wide search) through Algolia's hybrid keyword+neural search. Requires an Algolia account + Pro edition.",
+    "icon": "icon.png",
+    "requires": {
+        "totalcms": ">=3.5.0-beta",
+        "php": ">=8.2"
     },
-    "entrypoint"       : "Extension.php",
-    "settings_schema"  : "settings.json",
-    "author"     : {
-        "name" : "Total CMS",
-        "url"  : "https://totalcms.co"
+    "min_edition": "pro",
+    "entrypoint": "Extension.php",
+    "settings_schema": "settings.json",
+    "author": {
+        "name": "Total CMS",
+        "url": "https://totalcms.co"
     },
-    "license" : "proprietary",
-    "links"   : [
+    "license": "proprietary",
+    "links": [
         {
-            "label" : "Documentation",
-            "url"   : "docs/extensions/algolia-search"
+            "label": "Documentation",
+            "url": "docs/extensions/algolia-search"
         },
         {
-            "label" : "Algolia",
-            "url"   : "https://www.algolia.com"
+            "label": "Algolia",
+            "url": "https://www.algolia.com"
         }
     ]
 }
