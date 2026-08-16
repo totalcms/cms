@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Sync\Service;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\Playground\Data\PlaygroundData;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\OperationResult;
 
@@ -397,6 +398,14 @@ readonly class SyncService
 			));
 		}
 
+		// Unconditional, and deliberately not part of the filter block below:
+		// a remote on an older release still exports the Twig Playground's
+		// collection (see JumpStartExporter::exportSyncCollectionMeta for why
+		// it no longer travels). Dropping it on arrival keeps a version-
+		// mismatched remote from reporting a phantom "only on production" in
+		// the diff, or creating the scratchpad collection here on pull.
+		$payload = $this->stripCollectionMeta($payload, PlaygroundData::COLLECTION_ID);
+
 		if ($collectionMetaFilter !== null && isset($payload['collections']) && is_array($payload['collections'])) {
 			foreach (['custom', 'reserved'] as $kind) {
 				if (!isset($payload['collections'][$kind]) || !is_array($payload['collections'][$kind])) {
@@ -404,16 +413,52 @@ readonly class SyncService
 				}
 				$payload['collections'][$kind] = array_values(array_filter(
 					$payload['collections'][$kind],
-					function (mixed $entry) use ($collectionMetaFilter): bool {
-						$id = is_string($entry) ? $entry : (string)(is_array($entry) ? ($entry['id'] ?? '') : '');
-
-						return in_array($id, $collectionMetaFilter, true);
-					}
+					static fn (mixed $entry): bool => in_array(self::collectionEntryId($entry), $collectionMetaFilter, true)
 				));
 			}
 		}
 
 		return $payload;
+	}
+
+	/**
+	 * Remove one collection id from both arms of a payload's `collections`
+	 * block, whatever entry shape it uses.
+	 *
+	 * @param array<string,mixed> $payload
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function stripCollectionMeta(array $payload, string $id): array
+	{
+		if (!isset($payload['collections']) || !is_array($payload['collections'])) {
+			return $payload;
+		}
+
+		foreach (['custom', 'reserved'] as $kind) {
+			if (!isset($payload['collections'][$kind]) || !is_array($payload['collections'][$kind])) {
+				continue;
+			}
+			$payload['collections'][$kind] = array_values(array_filter(
+				$payload['collections'][$kind],
+				static fn (mixed $entry): bool => self::collectionEntryId($entry) !== $id
+			));
+		}
+
+		return $payload;
+	}
+
+	/**
+	 * A collections-block entry is either a bare id string (reserved defaults)
+	 * or a settings array keyed by `id`.
+	 */
+	private static function collectionEntryId(mixed $entry): string
+	{
+		if (is_string($entry)) {
+			return $entry;
+		}
+
+		return is_array($entry) ? (string)($entry['id'] ?? '') : '';
 	}
 
 	/**

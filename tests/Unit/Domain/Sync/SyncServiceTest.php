@@ -67,6 +67,57 @@ final class SyncServiceTest extends TestCase
 		expect($diff['objects'])->toBe([]);
 	}
 
+	public function testDiffIgnoresPlaygroundCollectionFromAnOlderRemote(): void
+	{
+		// The local exporter no longer emits the Twig Playground's collection,
+		// but a remote on an older release still does. Left alone it reports a
+		// permanent "only on production" that the operator cannot select (the
+		// UI lists local collections) and would never want to resolve.
+		$this->exporter->method('exportSyncData')->willReturn(new JumpStartData('Local', ''));
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
+			'collections' => [
+				'reserved' => [
+					['id' => 'playground', 'schema' => 'playground'],
+					['id' => 'mailer', 'schema' => 'mailer'],
+				],
+				'custom' => [],
+			],
+		])));
+
+		$diff = $this->service->diff('https://example.com', 'key');
+
+		expect($diff['collections'])->not->toHaveKey('playground');
+		expect($diff['collections'])->toHaveKey('mailer');
+	}
+
+	public function testPullDoesNotImportPlaygroundCollectionFromAnOlderRemote(): void
+	{
+		// Same asymmetry on the write path: pulling from an older remote must
+		// not create the scratchpad collection on this install.
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
+			'collections' => [
+				'reserved' => [
+					['id' => 'playground', 'schema' => 'playground'],
+					['id' => 'mailer', 'schema' => 'mailer'],
+				],
+				'custom' => [],
+			],
+		])));
+
+		$imported = null;
+		$this->importer->method('importFromDefinition')
+			->willReturnCallback(function (array $payload) use (&$imported) {
+				$imported = $payload;
+
+				return OperationResult::success('ok', []);
+			});
+
+		$this->service->pull('https://example.com', 'key');
+
+		expect(array_column($imported['collections']['reserved'], 'id'))->toBe(['mailer']);
+	}
+
 	// ==================== Push Tests ====================
 
 	public function testPushReturnsNothingWhenEmpty(): void
