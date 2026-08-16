@@ -584,13 +584,15 @@ document.addEventListener('DOMContentLoaded', function() {
 			const data = await resp.json();
 
 			if (data.success) {
-				// OperationResult data is flattened into the JSON root;
-				// `collections` is the total object count.
-				const schemas   = data.schemas     ?? 0;
-				const templates = data.templates   ?? 0;
-				const objects   = data.collections ?? 0;
+				// OperationResult data is flattened into the JSON root. `collections`
+				// and `objects` are separate counts — reading the former and labelling
+				// it "Objects" reported a settings-only sync as objects it never moved.
+				const schemas     = data.schemas     ?? 0;
+				const templates   = data.templates   ?? 0;
+				const collections = data.collections ?? 0;
+				const objects     = data.objects     ?? 0;
 				results.innerHTML = `<p style="color:oklch(var(--totalform-success))"><strong>${data.message}</strong></p>` +
-					`<p>Schemas: ${schemas}, Templates: ${templates}, Objects: ${objects}</p>`;
+					`<p>Schemas: ${schemas}, Templates: ${templates}, Collection Settings: ${collections}, Objects: ${objects}</p>`;
 				loadDiff(); // the sync just changed one side — recompare
 			} else {
 				results.innerHTML = `<p style="color:oklch(var(--totalform-error))"><strong>Error:</strong> ${data.error}</p>`;

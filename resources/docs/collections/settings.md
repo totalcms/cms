@@ -20,7 +20,7 @@ You can edit these settings:
 2. **Direct File Edit** - Modify the `.meta.json` file directly
 3. **API** - Update via the collection management API
 
-### Accessing Collection Metadata in Twig
+### Accessing Collection Settings in Twig
 
 ```twig
 {# Get collection metadata #}
