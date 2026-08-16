@@ -172,7 +172,7 @@ readonly class SyncService
 		// Reporting "Push complete." here hid errors the remote had already
 		// diagnosed precisely — e.g. "Cannot save collection with a reserved
 		// name" — and made a wholly failed push read as a clean one.
-		$remoteErrors = self::stringList($remoteResult['errors'] ?? null);
+		$remoteErrors = $this->stringList($remoteResult['errors'] ?? null);
 		if (($remoteResult['success'] ?? true) === false || $remoteErrors !== []) {
 			return OperationResult::failure(
 				'Push rejected by the remote.',
@@ -207,7 +207,7 @@ readonly class SyncService
 	 *
 	 * @return list<string>
 	 */
-	private static function stringList(mixed $value): array
+	private function stringList(mixed $value): array
 	{
 		if (!is_array($value)) {
 			return [];
@@ -339,7 +339,7 @@ readonly class SyncService
 		// Same contract as push(): the importer reports per-item failures in its
 		// own result rather than throwing, so returning success unconditionally
 		// would report a clean pull over a refused import.
-		$importErrors = self::stringList($result->data['errors'] ?? null);
+		$importErrors = $this->stringList($result->data['errors'] ?? null);
 		if (!$result->success || $importErrors !== []) {
 			return OperationResult::failure(
 				'Pull completed with errors.',
