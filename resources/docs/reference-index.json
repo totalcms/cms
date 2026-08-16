@@ -1,6 +1,5 @@
 {
     "version": 1,
-    "built_at": "2026-08-16T16:12:13+00:00",
     "twig_functions": [
         {
             "name": "selectOptions",
