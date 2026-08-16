@@ -77,7 +77,7 @@ These operations replace the older HTTP method approach and provide clearer, mor
 
 Collections have two separate permission levels:
 
-#### Collection Metadata (`collectionsMeta`)
+#### Collection Settings (`collectionsMeta`)
 
 Controls access to managing collection definitions (creating/editing/deleting collections themselves):
 
@@ -601,7 +601,7 @@ Super admins bypass all access checks and have full access to everything.
    - `update` for modifying existing resources
    - `delete` for deleting resources
 
-3. **Distinguish Collections from Collection Metadata**:
+3. **Distinguish Collections from Collection Settings**:
    - Use `canAccessCollection()` for working with objects within a collection
    - Use `canAccessCollectionMeta()` for managing collection definitions
 

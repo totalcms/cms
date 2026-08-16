@@ -47,7 +47,7 @@ namespace TotalCMS\Domain\Visualizer\Service;
  *   - no access         → `"·"`
  *
  * ## Dimension order
- *   Schemas → Collection Meta → Collection Objects → AI / MCP → Utils → Extensions
+ *   Schemas → Collection Settings → Collection Objects → AI / MCP → Utils → Extensions
  *
  * ## Row ordering
  *   Non-super-admin rows alphabetically by name, super-admin rows last (also alphabetical among themselves).
@@ -57,7 +57,7 @@ readonly class AccessGroupMatrixPresenter
 	/** Canonical dimension order and their human-readable labels. */
 	private const DIMENSION_ORDER = [
 		'schemas'         => 'Schemas',
-		'collectionsMeta' => 'Collection Meta',
+		'collectionsMeta' => 'Collection Settings',
 		'collections'     => 'Collection Objects',
 		'mcp'             => 'AI / MCP',
 		'utils'           => 'Utils',

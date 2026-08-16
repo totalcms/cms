@@ -16,7 +16,8 @@ use TotalCMS\Domain\Migration\Contract\MigrationInterface;
  * installs would otherwise have no Prompts sidebar entry until the operator
  * manually clicks "Create default collections" in project-setup.
  *
- * Gated on EditionFeature::MCP_SERVER — Lite and Standard installs no-op
+ * Gated on EditionFeature::MCP_SERVER, which every edition now has — the gate
+ * remains so the collection follows the feature if that ever changes
  * (they can't use MCP anyway, so an empty Prompts collection would be
  * confusing clutter in the admin sidebar).
  *
@@ -42,7 +43,7 @@ readonly class EnsureMcpPromptCollectionMigration implements MigrationInterface
 
 	public function description(): string
 	{
-		return 'Create the reserved mcp-prompt collection for MCP prompts (Pro edition).';
+		return 'Create the reserved mcp-prompt collection for MCP prompts.';
 	}
 
 	public function run(): int

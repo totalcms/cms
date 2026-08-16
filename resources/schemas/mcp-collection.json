@@ -70,7 +70,7 @@
 			"label"   : "Expose as MCP Resource",
 			"help"    : "When enabled, objects in this collection are addressable via <code>tcms://{collection}/{id}</code> URIs that AI clients can subscribe to.",
 			"field"   : "toggle",
-			"default" : true
+			"default" : false
 		},
 		"tools": {
 			"field"             : "deck",

@@ -9,7 +9,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 
 /**
- * Collection Metadata Access Middleware.
+ * Collection Meta Access Middleware.
  *
  * Enforces access group permissions for collection metadata operations.
  * Handles routes for collection CRUD (not object CRUD).

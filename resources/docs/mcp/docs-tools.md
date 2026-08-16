@@ -30,6 +30,8 @@ The intended flow is `docs_search` → `docs_get`: search returns paths, `docs_g
 
 No MCP resource template ships for the docs corpus — only tools. `docs_search` + `docs_get` cover the same ground in one round trip, without adding an enumerable resource surface for a corpus nobody would browse by URI.
 
+These work on **Standard and Pro**. The extension ships with the package on every install, but its tools are served by the site's own MCP endpoint — which Lite does not include — so an agent can only reach them from Standard upwards.
+
 ## The five workflow prompts
 
 Tools give an agent the ability to read the docs; they don't tell it when to bother. The same extension registers five MCP prompts that do:

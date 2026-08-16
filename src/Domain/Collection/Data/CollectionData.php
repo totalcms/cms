@@ -69,7 +69,7 @@ class CollectionData
 	public array $sitemap = [];  // Sitemap card settings (enabled, date, frequency, priority, include, exclude)
 
 	/** @var array<string,mixed> */
-	public array $mcp = [];  // MCP card settings (access, description, resource). Pro+ only — see EditionFeature::MCP_SERVER.
+	public array $mcp = [];  // MCP card settings (access, description, resource). All editions; writes need Pro — see EditionFeature::MCP_SERVER.
 
 	public function __construct()
 	{

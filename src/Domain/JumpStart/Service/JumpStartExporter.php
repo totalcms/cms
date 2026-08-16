@@ -12,6 +12,7 @@ use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Data\JumpStartExportOptions;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Playground\Data\PlaygroundData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -118,6 +119,14 @@ readonly class JumpStartExporter
 	 * collections use the object form of `collections.reserved` so their
 	 * settings survive (the bare-string form seeds defaults only).
 	 *
+	 * The Twig Playground's collection is excluded unconditionally. It is a
+	 * per-install scratchpad, created on demand by whichever environment
+	 * someone happens to open the tool on, so mirroring the container reports
+	 * a difference the operator can neither act on (the UI's list is built
+	 * from LOCAL collections, so a remote-only one is never selectable) nor
+	 * would ever want to resolve. Its objects are already excluded from sync
+	 * via SyncableCollections; the settings now match.
+	 *
 	 * @param list<string>|null $filter Tristate: null = all, [] = none, list = ids
 	 */
 	private function exportSyncCollectionMeta(?array $filter): void
@@ -127,6 +136,9 @@ readonly class JumpStartExporter
 		}
 
 		foreach ($this->collectionLister->listAllCollections() as $collection) {
+			if ($collection->id === PlaygroundData::COLLECTION_ID) {
+				continue;
+			}
 			if ($filter !== null && !in_array($collection->id, $filter, true)) {
 				continue;
 			}

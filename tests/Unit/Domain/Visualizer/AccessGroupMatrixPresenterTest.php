@@ -137,7 +137,7 @@ final class AccessGroupMatrixPresenterTest extends TestCase
 		$this->assertSame('Utils', $labelsByDim['utils']);
 		$this->assertSame('Schemas', $labelsByDim['schemas']);
 		$this->assertSame('Extensions', $labelsByDim['extensions']);
-		$this->assertSame('Collection Meta', $labelsByDim['collectionsMeta']);
+		$this->assertSame('Collection Settings', $labelsByDim['collectionsMeta']);
 		$this->assertSame('AI / MCP', $labelsByDim['mcp']);
 	}
 

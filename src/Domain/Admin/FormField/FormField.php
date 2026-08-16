@@ -489,11 +489,20 @@ class FormField
 	 * - "schemas": fetch unique category values from all schemas
 	 * - "locales": fetch locale codes from LocaleRegistry as {value, label} dicts.
 	 *
-	 * Return shape varies by source: most return a flat list of strings, but
-	 * some (locales, relational sources) return `[{value, label}]` dicts that
-	 * `HTMLUtils::options()` accepts natively.
+	 * Return shape varies by source, and all three shapes `HTMLUtils::options()`
+	 * accepts are legal here: a flat list of strings, a list of `{value, label}`
+	 * dicts (locales, relational sources), or a **grouped** map of group label to
+	 * a list of those dicts, which renders as `<optgroup>` elements
+	 * (collectionsAndViews).
 	 *
-	 * @return array<int,string|array<string,string>>
+	 * The grouped shape is not new to the field system — `HTMLUtils::options()`
+	 * has always rendered it, and both `sortOptionsByLabel()` and
+	 * `deduplicateOptionsByValue()` carve it out explicitly to preserve optgroup
+	 * ordering. It simply had no propertyOptions source producing one until now,
+	 * so the annotation described the sources that existed rather than the
+	 * contract.
+	 *
+	 * @return array<int,string|array<string,string>>|array<string,array<int,array<string,string>>>
 	 */
 	protected function buildOptionsForProperty(): array
 	{
@@ -520,6 +529,10 @@ class FormField
 
 		if ($source === 'viewIds') {
 			return $this->form->viewIdList();
+		}
+
+		if ($source === 'collectionsAndViews') {
+			return $this->form->collectionAndViewOptions();
 		}
 
 		if ($source === 'layouts') {

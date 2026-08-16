@@ -18,6 +18,8 @@ https://yoursite.com/mcp
 
 That single URL is all most clients need. What a client can *see* through it depends on who it is: anonymous callers get whatever you've exposed publicly, and an API key unlocks admin-level access to schemas, templates, and content. See [MCP Server](mcp/server) for how those audiences differ.
 
+MCP requires **Standard or Pro** — Lite does not serve the endpoint at all. On Standard the anonymous read path below works: connect without a key and expose the collections you want readable. The API-key and OAuth options are Pro features.
+
 Everything below is copy-paste. Claude has no one-click install link, so the desktop extension is the closest equivalent; Cursor and VS Code do support install links, covered at the end.
 
 ## Claude Desktop

@@ -320,6 +320,11 @@ Templates don't change between development and production — the asset function
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{{ page.title }}{% endblock %}</title>
 
+    {# Total CMS core assets. These are not cms.builder.* functions -- they emit
+       T3's own CSS/JS (grid, galleries, pagination, htmx) plus any extension
+       assets. See docs/site-builder/frontend. #}
+    {{ cms.assetsHead() }}
+
     {{ cms.builder.preload('fonts/inter.woff2', 'font') }}
     {{ cms.builder.css('style.css') }}
 </head>
@@ -330,6 +335,7 @@ Templates don't change between development and production — the asset function
 
     {% include 'partials/footer.twig' %}
 
+    {{ cms.assetsBody() }}
     {{ cms.builder.js('app.js', {module: true}) }}
 </body>
 </html>

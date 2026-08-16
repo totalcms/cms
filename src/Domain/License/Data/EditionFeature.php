@@ -104,17 +104,22 @@ enum EditionFeature: string
 			self::WHITELABEL_STANDARD,
 			self::PASSKEYS,
 			self::ACCESS_GROUPS,
+			self::TEXT_WATERMARKS,
+			self::BARCODES,
+			// Standard and above. MCP is deliberately not a Lite feature: Lite
+			// exists as a free way in, and the AI surface is not what we give
+			// away. Standard grants the anonymous PUBLIC_ persona only — the
+			// API-key (ADMIN) and OAuth (AUTHENTICATED) personas need API_KEYS
+			// and OAUTH_SERVER, both Pro, and McpAuth gates on those directly.
+			self::MCP_SERVER,
 			self::RSS_IMPORT => Edition::STANDARD,
 
 			// Pro features
 			self::ALGOLIA_SEARCH,
 			self::CUSTOM_SCHEMAS,
-			self::TEXT_WATERMARKS,
 			self::WEBHOOK_ACTIONS,
 			self::EXTERNAL_REST_API,
-			self::MCP_SERVER,
 			self::OAUTH_SERVER,
-			self::BARCODES,
 			self::WHITELABEL_PRO,
 			self::DATA_VIEWS,
 			self::API_KEYS,

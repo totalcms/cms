@@ -38,9 +38,9 @@ readonly class McpDiscoveryAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$enabled = (bool)($this->config->mcp['enabled'] ?? true);
-		$isPro   = $this->editionFeatures->can(EditionFeature::MCP_SERVER);
+		$mcpOn   = $this->editionFeatures->can(EditionFeature::MCP_SERVER);
 
-		if (!$enabled || !$isPro) {
+		if (!$enabled || !$mcpOn) {
 			return $this->renderer->json($response, [
 				'mcpVersion' => $this->serverFactory->protocolVersion(),
 				'disabled'   => true,

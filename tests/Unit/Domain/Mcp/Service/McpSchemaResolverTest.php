@@ -85,9 +85,21 @@ final class McpSchemaResolverTest extends TestCase
 		$this->assertSame('admin', $result['access']);
 	}
 
-	public function testForCollectionDefaultsResourceToTrue(): void
+	public function testForCollectionDefaultsResourceToFalse(): void
 	{
+		// Unset means off: a collection is only addressable as a `tcms://`
+		// resource when someone turned it on. Resources are a second route to
+		// data the tools already serve, so they are opt-in.
 		$result = $this->resolver->forCollection($this->collection([]));
+
+		$this->assertFalse($result['resource']);
+	}
+
+	public function testForCollectionHonorsExplicitResourceTrue(): void
+	{
+		// A collection that opted in stays in — the flipped default only changes
+		// collections that never stored a value.
+		$result = $this->resolver->forCollection($this->collection(['resource' => true]));
 
 		$this->assertTrue($result['resource']);
 	}

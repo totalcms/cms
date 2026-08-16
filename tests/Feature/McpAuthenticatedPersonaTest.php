@@ -309,7 +309,10 @@ function mcpAuthSetCollectionAccess(Slim\App $app, string $collectionId, string 
 	if ($collection === null) {
 		throw new RuntimeException(sprintf('Could not create collection "%s" for test.', $collectionId));
 	}
-	$collection->mcp = ['access' => $access];
+	// `resource` must be opted into explicitly — an unset value means off, so a
+	// collection built for a resources/* test has to ask for the exposure the
+	// way a real one does.
+	$collection->mcp = ['access' => $access, 'resource' => true];
 	$container->get(CollectionRepository::class)->saveCollection($collection);
 }
 

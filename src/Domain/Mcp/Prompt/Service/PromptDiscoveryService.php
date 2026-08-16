@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Prompt\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Exception\PromptCollisionException;
@@ -21,6 +22,7 @@ final class PromptDiscoveryService
 		private readonly IndexFilter $indexFilter,
 		private readonly CollectionRepository $collections,
 		private readonly LoggerInterface $logger,
+		private readonly ?DataViewLister $views = null,
 	) {
 	}
 
@@ -72,7 +74,7 @@ final class PromptDiscoveryService
 				description: $prompt->description,
 				body: $prompt->body,
 				args: $prompt->args,
-				targetCollection: $prompt->targetCollection,
+				target: $prompt->target,
 				access: $resolvedAccess,
 			);
 		}
@@ -90,30 +92,90 @@ final class PromptDiscoveryService
 		$this->cache = null;
 	}
 
+	/**
+	 * Resolve a prompt's effective access: explicit wins, else inherit from the
+	 * target, else admin.
+	 *
+	 * A target names either a collection or a Data View, in one field. The two
+	 * namespaces are independent — nothing stops a view and a collection sharing
+	 * an id — so the order is fixed and deliberate: **collection first**.
+	 * Collections are filtered by access group; views are not (a view's own
+	 * `mcp.access` is its whole gate, by design). Resolving a colliding id to the
+	 * collection therefore lands on the stricter of the two models. The other
+	 * order would let a view named after a collection silently widen a prompt's
+	 * reach.
+	 *
+	 * Note which question decides the branch: whether the target *exists* as a
+	 * collection, not whether that collection happens to set `mcp.access`. A real
+	 * collection with no access configured resolves to admin and stops; it does
+	 * not fall through and start hunting for a view of the same name.
+	 */
 	private function resolveAccess(PromptData $prompt): string
 	{
 		if ($prompt->access !== '') {
 			return $prompt->access;
 		}
-		if ($prompt->targetCollection !== '') {
-			// CollectionData::$mcp is array<string,mixed>; MCP access is stored at $mcp['access'].
-			// If the collection doesn't exist or has no mcp.access set, fall through to 'admin'.
-			// Chunk B can refine when wiring access enforcement and the mcp-collection schema
-			// is confirmed to propagate access into CollectionData::$mcp['access'].
-			try {
-				$collection = $this->collections->fetchCollection($prompt->targetCollection);
-				if ($collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData && isset($collection->mcp['access']) && is_string($collection->mcp['access']) && $collection->mcp['access'] !== '') {
-					return $collection->mcp['access'];
-				}
-			} catch (\Throwable $e) {
-				$this->logger->warning('Failed to resolve target-collection access for prompt', [
-					'prompt'           => $prompt->name,
-					'targetCollection' => $prompt->targetCollection,
-					'error'            => $e->getMessage(),
-				]);
+
+		if ($prompt->target === '') {
+			return 'admin';
+		}
+
+		// CollectionData::$mcp is array<string,mixed>; MCP access is stored at $mcp['access'].
+		try {
+			$collection = $this->collections->fetchCollection($prompt->target);
+			if ($collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
+				return isset($collection->mcp['access']) && is_string($collection->mcp['access']) && $collection->mcp['access'] !== ''
+					? $collection->mcp['access']
+					: 'admin';
 			}
+		} catch (\Throwable $e) {
+			$this->logger->warning('Failed to resolve target-collection access for prompt', [
+				'prompt' => $prompt->name,
+				'target' => $prompt->target,
+				'error'  => $e->getMessage(),
+			]);
+		}
+
+		$viewAccess = $this->viewAccess($prompt->target, $prompt->name);
+		if ($viewAccess !== null) {
+			return $viewAccess;
 		}
 
 		return 'admin';
+	}
+
+	/**
+	 * A Data View's declared MCP access, or null when no view carries this id.
+	 *
+	 * Views declare `mcp` with the same `mcp-collection.json` shape collections
+	 * use, so this reads identically to the collection branch above.
+	 */
+	private function viewAccess(string $id, string $promptName): ?string
+	{
+		if (!$this->views instanceof DataViewLister) {
+			return null;
+		}
+
+		try {
+			foreach ($this->views->listViews() as $entry) {
+				if (!is_array($entry) || (string)($entry['id'] ?? '') !== $id) {
+					continue;
+				}
+
+				$mcp = is_array($entry['mcp'] ?? null) ? $entry['mcp'] : [];
+
+				return isset($mcp['access']) && is_string($mcp['access']) && $mcp['access'] !== ''
+					? $mcp['access']
+					: 'admin';
+			}
+		} catch (\Throwable $e) {
+			$this->logger->warning('Failed to resolve target-view access for prompt', [
+				'prompt' => $promptName,
+				'target' => $id,
+				'error'  => $e->getMessage(),
+			]);
+		}
+
+		return null;
 	}
 }

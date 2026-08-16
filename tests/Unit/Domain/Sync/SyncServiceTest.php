@@ -67,6 +67,57 @@ final class SyncServiceTest extends TestCase
 		expect($diff['objects'])->toBe([]);
 	}
 
+	public function testDiffIgnoresPlaygroundCollectionFromAnOlderRemote(): void
+	{
+		// The local exporter no longer emits the Twig Playground's collection,
+		// but a remote on an older release still does. Left alone it reports a
+		// permanent "only on production" that the operator cannot select (the
+		// UI lists local collections) and would never want to resolve.
+		$this->exporter->method('exportSyncData')->willReturn(new JumpStartData('Local', ''));
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
+			'collections' => [
+				'reserved' => [
+					['id' => 'playground', 'schema' => 'playground'],
+					['id' => 'mailer', 'schema' => 'mailer'],
+				],
+				'custom' => [],
+			],
+		])));
+
+		$diff = $this->service->diff('https://example.com', 'key');
+
+		expect($diff['collections'])->not->toHaveKey('playground');
+		expect($diff['collections'])->toHaveKey('mailer');
+	}
+
+	public function testPullDoesNotImportPlaygroundCollectionFromAnOlderRemote(): void
+	{
+		// Same asymmetry on the write path: pulling from an older remote must
+		// not create the scratchpad collection on this install.
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
+			'collections' => [
+				'reserved' => [
+					['id' => 'playground', 'schema' => 'playground'],
+					['id' => 'mailer', 'schema' => 'mailer'],
+				],
+				'custom' => [],
+			],
+		])));
+
+		$imported = null;
+		$this->importer->method('importFromDefinition')
+			->willReturnCallback(function (array $payload) use (&$imported) {
+				$imported = $payload;
+
+				return OperationResult::success('ok', []);
+			});
+
+		$this->service->pull('https://example.com', 'key');
+
+		expect(array_column($imported['collections']['reserved'], 'id'))->toBe(['mailer']);
+	}
+
 	// ==================== Push Tests ====================
 
 	public function testPushReturnsNothingWhenEmpty(): void
@@ -187,6 +238,53 @@ final class SyncServiceTest extends TestCase
 		$this->expectExceptionMessage('Connection refused');
 
 		$this->service->push('https://example.com', 'key');
+	}
+
+	public function testPushReportsFailureWhenTheRemoteRejectsTheContents(): void
+	{
+		// The receive endpoint answers 200 even when the importer refused every
+		// item — it reports per-item failures in the body rather than throwing.
+		// Reading only the status code turned a wholly failed push into
+		// "Push complete.", which is how a reserved-name refusal reached a user
+		// as a clean result.
+		$jumpstart = new JumpStartData();
+		$jumpstart->addCustomCollection(['id' => 'extensions', 'schema' => 'extension', 'name' => 'Extensions']);
+
+		$this->exporter->method('exportSyncData')->willReturn($jumpstart);
+		$this->exporter->method('setMetadata');
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
+			'success' => false,
+			'message' => 'Import completed with errors',
+			'results' => [],
+			'errors'  => ['Collection extensions: Cannot save collection with a reserved name'],
+		])));
+
+		$result = $this->service->push('https://example.com', 'key');
+
+		expect($result->success)->toBeFalse();
+		expect($result->error)->toContain('Cannot save collection with a reserved name');
+		expect($result->data['remote_result']['errors'])->toHaveCount(1);
+	}
+
+	public function testPushCountsCollectionsSeparatelyFromObjects(): void
+	{
+		// A settings-only push carries collections and nothing else. Counting
+		// `objects` under the `collections` key reported 0 here, so a push that
+		// did real work was indistinguishable from a no-op.
+		$jumpstart = new JumpStartData();
+		$jumpstart->addCustomCollection(['id' => 'addons', 'schema' => 'extension', 'name' => 'Extensions']);
+
+		$this->exporter->method('exportSyncData')->willReturn($jumpstart);
+		$this->exporter->method('setMetadata');
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, '{"success":true,"errors":[]}'));
+
+		$result = $this->service->push('https://example.com', 'key');
+
+		expect($result->success)->toBeTrue();
+		expect($result->data['collections'])->toBe(1);
+		expect($result->data['objects'])->toBe(0);
 	}
 
 	// ==================== Pull Tests ====================
@@ -380,15 +478,19 @@ final class SyncServiceTest extends TestCase
 		$this->service->push('https://example.com', 'key', null, null, $map);
 	}
 
-	public function testPullCountsCollectionObjects(): void
+	public function testPullReportsObjectsAndCollectionsSeparately(): void
 	{
+		// Objects used to be reported under the `collections` key, which made a
+		// settings-only sync read as 0 and an object sync read as if it had
+		// moved collections. They are distinct counts.
 		$remotePayload = json_encode([
-			'schemas'   => [],
-			'templates' => [],
-			'objects'   => [
+			'schemas'     => [],
+			'templates'   => [],
+			'objects'     => [
 				['collection' => 'builder-pages', 'id' => 'home', 'data' => []],
 				['collection' => 'builder-pages', 'id' => 'about', 'data' => []],
 			],
+			'collections' => ['reserved' => [], 'custom' => []],
 		]);
 
 		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)$remotePayload));
@@ -399,7 +501,60 @@ final class SyncServiceTest extends TestCase
 		$result = $this->service->pull('https://example.com', 'key');
 
 		expect($result->success)->toBeTrue();
-		expect($result->data['collections'])->toBe(2);
+		expect($result->data['objects'])->toBe(2);
+		expect($result->data['collections'])->toBe(0);
+	}
+
+	public function testPullImportsAPayloadThatOnlyCarriesCollectionSettings(): void
+	{
+		// The "nothing to pull" guard used to check schemas, templates and
+		// objects only, so a settings-only pull short-circuited and never
+		// reached the importer — the collection silently never arrived.
+		$remotePayload = json_encode([
+			'schemas'     => [],
+			'templates'   => [],
+			'objects'     => [],
+			'collections' => [
+				'reserved' => [],
+				'custom'   => [['id' => 'addons', 'schema' => 'extension', 'name' => 'Extensions']],
+			],
+		]);
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)$remotePayload));
+
+		$this->importer->expects($this->once())
+			->method('importFromDefinition')
+			->willReturn(OperationResult::success('Import complete.', ['results' => [], 'errors' => [], 'summary' => []]));
+
+		$result = $this->service->pull('https://example.com', 'key');
+
+		expect($result->success)->toBeTrue();
+		expect($result->message)->not->toContain('Nothing to pull');
+		expect($result->data['collections'])->toBe(1);
+	}
+
+	public function testPullReportsFailureWhenTheImportCollectsErrors(): void
+	{
+		$remotePayload = json_encode([
+			'schemas'   => [],
+			'templates' => [],
+			'objects'   => [['collection' => 'builder-pages', 'id' => 'home', 'data' => []]],
+		]);
+
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)$remotePayload));
+
+		$this->importer->method('importFromDefinition')->willReturn(
+			OperationResult::success('Import completed with errors', [
+				'results' => [],
+				'errors'  => ['Collection extensions: Cannot save collection with a reserved name'],
+				'summary' => [],
+			]),
+		);
+
+		$result = $this->service->pull('https://example.com', 'key');
+
+		expect($result->success)->toBeFalse();
+		expect($result->error)->toContain('reserved name');
 	}
 
 	public function testPullFiltersTemplates(): void

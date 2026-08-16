@@ -11,11 +11,13 @@ Total CMS provides "load more" helpers that render the first page of results ser
 
 - **Edition**: Standard edition or higher (requires templates feature)
 - **Template file**: A Twig template that renders a single item (receives an `{{ object }}` variable)
-- **HTMX**: Include the HTMX script in your page or load from a CDN
+- **HTMX**: bundled with Total CMS and emitted by `cms.assetsBody()`, along with the `pagination.css` that styles the controls
 
-```html
-<script src="{{ cms.api }}/assets/htmx.min.js?v={{ cms.version }}"></script>
+```twig
+{{ cms.assetsBody() }}   {# just before </body>, with cms.assetsHead() in <head> #}
 ```
+
+If your layout already calls the [core asset helpers](docs/twig/overview), there is nothing more to add. Without them the button renders unstyled and clicking it fetches nothing, since htmx never loads.
 
 ## Collection Load More
 

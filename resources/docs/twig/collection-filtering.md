@@ -617,7 +617,7 @@ Use `excludeRemainder` to only return items that match the order array:
 {# Returns exactly 3 items (if they exist) in that order #}
 ```
 
-### Using Collection Metadata
+### Using Collection Settings
 
 Store sort orders in the collection's metadata for easy admin editing. Use the `collection` option to automatically look up the order:
 

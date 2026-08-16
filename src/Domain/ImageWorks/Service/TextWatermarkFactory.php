@@ -47,7 +47,7 @@ readonly class TextWatermarkFactory
 	 */
 	public function generateTextWatermark(array $params): string
 	{
-		// Text watermarks require Pro edition
+		// Standard edition and above (moved down from Pro in 3.5.0).
 		$this->editionFeatures->canOrFail(EditionFeature::TEXT_WATERMARKS);
 
 		$text = $params['marktext'] ?? '';

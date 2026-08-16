@@ -133,10 +133,20 @@ Each prompt has an **Access** setting:
 
 | Setting | Who can call the prompt |
 |---|---|
-| `(inherit from collection)` | Inherits the target collection's MCP access. Blank `targetCollection` defaults to `admin`. |
+| `(inherit from target)` | Inherits the MCP access of the collection or Data View named in **Target**. A blank target defaults to `admin`. |
 | `Admin only` | API-key authenticated callers only. |
 | `Authenticated` | OAuth Bearer token callers (and admin). |
 | `Public` | Anonymous AI agents (and all above). |
+
+### Targeting a collection or a Data View
+
+**Target** accepts either, in one picker — entries are labelled with their kind, because the two are separate namespaces and an id can exist in both.
+
+When an id does exist as both, it resolves to the **collection**. That order is deliberate rather than alphabetical: collections are filtered by access group, and Data Views are not — a view's own `mcp.access` is its entire gate, by design. Resolving a colliding id to the collection lands on the stricter of the two models; the other order would let a view named after a collection silently widen a prompt's reach.
+
+That difference is worth knowing whenever you inherit from a view. `authenticated` on a collection means "signed-in callers whose groups grant access to it"; `authenticated` on a view means "any signed-in caller", with no group filtering. If a prompt's reach should respect access groups, target a collection or set **Access** explicitly.
+
+One subtlety: whether the target *exists* as a collection decides which branch runs, not whether that collection sets `mcp.access`. A real collection with no MCP access configured resolves to `admin` and stops — it does not fall through to a same-named view.
 
 Persona enforcement runs at two points:
 

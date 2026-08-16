@@ -46,6 +46,16 @@ jobs:
       - name: Validate composer.json and composer.lock
         run: composer validate
 
+      # Must run before `composer build`, which regenerates the manifest against
+      # dist and would mask a stale one in the repo. The committed manifest is
+      # what source installs (composer dev-* / create-project) verify against,
+      # and when it drifts the site answers every request with "installation has
+      # been corrupted". The test suite cannot catch it — the check is skipped
+      # under APP_ENV=test — so CI is the only gate before a customer sees it.
+      # No dependencies needed: make-bundle.php is plain PHP with no autoload.
+      - name: Check bundle integrity manifest is current
+        run: composer run bundle:check
+
       - name: Install dependencies
         run: composer build
 

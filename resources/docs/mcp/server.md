@@ -45,6 +45,16 @@ The same `/mcp` URL serves three personas; the tool surface scales per caller:
 
 Public access is **default-deny**. Anonymous requests get a 401 unless the operator explicitly flips `mcp.publicAccess` on in settings AND marks at least one collection's `mcp.access` as `public` in the schema editor.
 
+### Editions: reading everywhere, writing on Pro
+
+The MCP endpoint requires **Standard or Pro**. Lite does not include it. What differs between Standard and Pro is which personas are available to reach it.
+
+The public persona works everywhere, so any Total CMS site can expose collections for an AI agent to read. The other two personas depend on credentials that are Pro features — an API key for the admin persona, the OAuth server for the authenticated one — so **writing to your site from an agent requires Pro**, as does any access scoped to a particular user.
+
+That gate is enforced where the persona is decided, not only where credentials are issued. A key or token that outlives the licence which created it — after a trial lapses, a downgrade, or a restored backup — is treated as absent rather than honoured: the caller falls through to anonymous and still gets whatever is genuinely public.
+
+Two things degrade naturally below Pro rather than erroring: Data Views are a Pro feature, so `list_views` and `query_view` come back empty; and custom schemas are Pro, so only built-in schemas are exposed.
+
 ### The three-layer rule (scope, group, exposure)
 
 Every authenticated (OAuth) call to a collection or object has to clear three independent gates — think of them as three separate locks that all have to be open:
@@ -103,7 +113,7 @@ API keys and OAuth both authenticate `/mcp` requests, but they serve different t
 
 ### Prerequisites
 
-- **Pro edition** — OAuth is a Pro+ feature. Trials count.
+- **Pro edition** — the OAuth server is a Pro feature (trials count). The MCP endpoint itself is not gated; only this authenticated persona is.
 - **Keys generated.** Run `tcms oauth:setup` once if you haven't already.
 - **OAuth server enabled.** Toggle on in **Admin → Settings → OAuth Server**.
 - **Read the full OAuth setup guide** at [OAuth Server](docs/apis/oauth) before continuing — it covers key generation, client creation, scope definitions, and dynamic registration.
@@ -261,7 +271,7 @@ Operators control AI exposure via two layers of MCP config — one per **collect
 |---|---|---|
 | `access` | `"admin"` | Who can call `query_collection` / `search_collection` / `get_object` against this collection. `"admin"` requires an API key; `"public"` allows anonymous AI agents. |
 | `description` | empty | AI-targeted description shown in `list_collections` and the dynamic tool-description catalog. Falls back to the collection's general description if blank. |
-| `resource` | `true` | When true, the collection is exposed as a `tcms://{collection}/` resource and its objects via the `tcms://{collection}/{id}` template. Set to `false` if you want the collection in tools but not in `resources/list`. |
+| `resource` | `false` | When true, the collection is exposed as a `tcms://{collection}/` resource and its objects via the `tcms://{collection}/{id}` template. Off unless you turn it on — resources are a second way to reach data the tools already serve, so a collection stays out of `resources/list` until you ask for it. |
 
 The same `mcp` card lives on each **data view** (in the dataviews editor) with identical fields. A view marked `mcp.access: 'public'` shows up in `list_views` for anonymous callers and is fetchable at `tcms://view/{id}`.
 
@@ -334,9 +344,9 @@ Total CMS exposes three URI shapes:
 
 | URI | What it is | Registered when |
 |---|---|---|
-| `tcms://{collection}/` | Collection summary — recent items, capped at 50 | Every collection with `mcp.resource: true` (default) |
+| `tcms://{collection}/` | Collection summary — recent items, capped at 50 | Collections with `mcp.resource: true` (off by default) |
 | `tcms://{collection}/{id}` | Single object | Same; registered as a *template*, not enumerated per-object |
-| `tcms://view/{id}` | A data view's cached result | Every data view with `mcp.resource: true` |
+| `tcms://view/{id}` | A data view's cached result | Data views with `mcp.resource: true` (off by default) |
 
 Agents address these via three SDK transport methods:
 

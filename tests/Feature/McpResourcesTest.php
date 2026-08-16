@@ -16,10 +16,16 @@ beforeEach(function (): void {
 
 	$this->setUpApp(bootstrap());
 
-	// Ensure the blog collection exists for resource enumeration.
+	// Ensure the blog collection exists for resource enumeration, and opt it
+	// into resource exposure — `mcp.resource` is off unless set, so a collection
+	// under test has to ask for it exactly as a real one does.
 	$container         = $this->app->getContainer();
 	$collectionFetcher = $container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
-	$collectionFetcher->fetchOrCreateReserved('blog');
+	$blog              = $collectionFetcher->fetchOrCreateReserved('blog');
+	if ($blog !== null) {
+		$blog->mcp = array_merge(is_array($blog->mcp) ? $blog->mcp : [], ['resource' => true]);
+		$container->get(TotalCMS\Domain\Collection\Repository\CollectionRepository::class)->saveCollection($blog);
+	}
 
 	// Write a test API key to .system/apikeys.json so admin persona is resolved.
 	// The key covers all methods on all paths (same as "All endpoints" in the UI).

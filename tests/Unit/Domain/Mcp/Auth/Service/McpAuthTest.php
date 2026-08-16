@@ -9,6 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
@@ -32,9 +34,17 @@ final class McpAuthTest extends TestCase
 		$this->config->auth = ['collection' => 'auth'];
 	}
 
-	private function auth(): McpAuth
+	/**
+	 * @param list<EditionFeature> $denied Features this licence does NOT include
+	 */
+	private function auth(array $denied = []): McpAuth
 	{
-		return new McpAuth($this->authenticator, $this->accessControl, $this->config);
+		$editions = $this->createMock(EditionFeatureService::class);
+		$editions->method('can')->willReturnCallback(
+			static fn (EditionFeature $f): bool => !in_array($f, $denied, true),
+		);
+
+		return new McpAuth($this->authenticator, $this->accessControl, $this->config, $editions);
 	}
 
 	/**
@@ -115,6 +125,61 @@ final class McpAuthTest extends TestCase
 		$persona = $this->auth()->resolvePersona($request);
 
 		$this->assertSame(McpPersona::ADMIN, $persona);
+	}
+
+	// ──────────────────────────────────────────────────────────────────────────
+	// Edition gating. MCP is available on every edition, but only the anonymous
+	// persona comes with it: the ADMIN and AUTHENTICATED personas require
+	// credentials that are Pro-only. A credential can outlive the licence that
+	// created it — a lapsed trial, a downgrade, a restored backup, a copied
+	// tcms-data — so the persona resolver has to check the edition itself
+	// rather than trust that no key or token exists.
+	// ──────────────────────────────────────────────────────────────────────────
+
+	public function testValidApiKeyOnNonProResolvesPublicNotAdmin(): void
+	{
+		$request = $this->createMock(ServerRequestInterface::class);
+		// A genuinely valid key: the authenticator would happily accept it.
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->authenticator->method('authenticate')->willReturn($this->makeApiKey());
+
+		$persona = $this->auth(denied: [EditionFeature::API_KEYS])->resolvePersona($request);
+
+		// Treated as absent rather than invalid — the caller is anonymous and
+		// still gets whatever the site exposes publicly.
+		$this->assertSame(McpPersona::PUBLIC_, $persona);
+	}
+
+	public function testValidApiKeyOnNonProIsRefusedWhenPublicAccessIsOff(): void
+	{
+		$this->config->mcp = ['publicAccess' => false];
+		$request           = $this->createMock(ServerRequestInterface::class);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->authenticator->method('authenticate')->willReturn($this->makeApiKey());
+
+		// No persona is available to this caller at all: the key cannot grant
+		// ADMIN on this edition, and anonymous access is switched off.
+		$this->expectException(McpAuthException::class);
+		$this->auth(denied: [EditionFeature::API_KEYS])->resolvePersona($request);
+	}
+
+	public function testOauthTokenOnNonProResolvesPublicNotAuthenticated(): void
+	{
+		$request = $this->bearerRequest(['mcp:tools', 'cms:read']);
+
+		$persona = $this->auth(denied: [EditionFeature::OAUTH_SERVER])->resolvePersona($request);
+
+		$this->assertSame(McpPersona::PUBLIC_, $persona);
+	}
+
+	public function testApiKeyStillResolvesAdminWhenTheEditionIncludesIt(): void
+	{
+		// The control for the two above: nothing changes on Pro.
+		$request = $this->createMock(ServerRequestInterface::class);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->authenticator->method('authenticate')->willReturn($this->makeApiKey());
+
+		$this->assertSame(McpPersona::ADMIN, $this->auth()->resolvePersona($request));
 	}
 
 	public function testInvalidKeyThrows(): void

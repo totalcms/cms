@@ -253,4 +253,51 @@ final class JumpStartExportSyncDataTest extends TestCase
 		expect($result->schemas)->toHaveCount(0);
 		expect($result->templates)->toHaveCount(0);
 	}
+
+	public function testExportSyncDataExcludesPlaygroundCollectionMeta(): void
+	{
+		// The Twig Playground creates its collection on demand, on whichever
+		// install someone happens to open the tool on. Mirroring that container
+		// reports a permanent "only on production" the operator can neither act
+		// on (the UI lists local collections only) nor would ever want to fix.
+		// Its objects are already excluded — the settings must match.
+		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
+
+		$playground         = new CollectionData();
+		$playground->id     = 'playground';
+		$playground->schema = 'playground';
+
+		$blog         = new CollectionData();
+		$blog->id     = 'blog';
+		$blog->schema = 'blog';
+
+		$this->collectionLister->method('listAllCollections')->willReturn([$playground, $blog]);
+		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([]));
+
+		$result = $this->exporter->exportSyncData();
+
+		$exported = array_column($result->collections['reserved'], 'id');
+		expect($exported)->toContain('blog');
+		expect($exported)->not->toContain('playground');
+	}
+
+	public function testExportSyncDataExcludesPlaygroundEvenWhenExplicitlyFiltered(): void
+	{
+		// Defense in depth: a stale or hand-rolled filter naming 'playground'
+		// must not smuggle it back into the mirror.
+		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
+
+		$playground         = new CollectionData();
+		$playground->id     = 'playground';
+		$playground->schema = 'playground';
+
+		$this->collectionLister->method('listAllCollections')->willReturn([$playground]);
+		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([]));
+
+		$result = $this->exporter->exportSyncData(null, null, null, ['playground']);
+
+		expect($result->collections)->toBe(['reserved' => [], 'custom' => []]);
+	}
 }

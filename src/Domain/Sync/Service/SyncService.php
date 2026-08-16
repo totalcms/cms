@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Sync\Service;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\Playground\Data\PlaygroundData;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\OperationResult;
 
@@ -154,14 +155,72 @@ readonly class SyncService
 			));
 		}
 
-		$remoteResult = json_decode($httpResponse->body, true);
+		$decoded      = json_decode($httpResponse->body, true);
+		$remoteResult = is_array($decoded) ? $decoded : [];
 
-		return OperationResult::success('Push complete.', [
+		$counts = [
 			'schemas'       => count($jumpstart->schemas),
 			'templates'     => count($jumpstart->templates),
-			'collections'   => count($jumpstart->objects),
-			'remote_result' => is_array($remoteResult) ? $remoteResult : [],
-		]);
+			'collections'   => $this->countCollections($jumpstart->collections),
+			'objects'       => count($jumpstart->objects),
+			'remote_result' => $remoteResult,
+		];
+
+		// A 2xx only means the payload was accepted for import. The receiving
+		// importer collects per-item failures and still answers 200, so the
+		// transport succeeding says nothing about whether anything was written.
+		// Reporting "Push complete." here hid errors the remote had already
+		// diagnosed precisely — e.g. "Cannot save collection with a reserved
+		// name" — and made a wholly failed push read as a clean one.
+		$remoteErrors = $this->stringList($remoteResult['errors'] ?? null);
+		if (($remoteResult['success'] ?? true) === false || $remoteErrors !== []) {
+			return OperationResult::failure(
+				'Push rejected by the remote.',
+				$remoteErrors === [] ? null : implode('; ', $remoteErrors),
+				$counts,
+			);
+		}
+
+		return OperationResult::success('Push complete.', $counts);
+	}
+
+	/**
+	 * Count both arms of a JumpStart `collections` block.
+	 *
+	 * Collections are stored as `['reserved' => [...], 'custom' => [...]]`,
+	 * so a plain count() over the wrapper always returns 2 and counting
+	 * `objects` instead (as this once did) reports 0 for a settings-only
+	 * sync — the exact case that looks like a silent no-op.
+	 *
+	 * @param array<string,mixed> $collections
+	 */
+	private function countCollections(array $collections): int
+	{
+		$reserved = is_array($collections['reserved'] ?? null) ? $collections['reserved'] : [];
+		$custom   = is_array($collections['custom'] ?? null) ? $collections['custom'] : [];
+
+		return count($reserved) + count($custom);
+	}
+
+	/**
+	 * Normalise a payload's error bag to a list of strings.
+	 *
+	 * @return list<string>
+	 */
+	private function stringList(mixed $value): array
+	{
+		if (!is_array($value)) {
+			return [];
+		}
+
+		$out = [];
+		foreach ($value as $entry) {
+			if (is_scalar($entry) || $entry instanceof \Stringable) {
+				$out[] = (string)$entry;
+			}
+		}
+
+		return $out;
 	}
 
 	/**
@@ -240,15 +299,22 @@ readonly class SyncService
 	): OperationResult {
 		$payload = $this->fetchRemoteSyncData($url, $key, $schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter);
 
-		$schemaCount     = count($payload['schemas'] ?? []);
-		$templateCount   = count($payload['templates'] ?? []);
-		$collectionCount = count($payload['objects'] ?? []);
+		$schemaCount   = count($payload['schemas'] ?? []);
+		$templateCount = count($payload['templates'] ?? []);
+		$objectCount   = count($payload['objects'] ?? []);
+		// Collections were previously counted from `objects` and left out of the
+		// guard below entirely, so a settings-only pull short-circuited to
+		// "Nothing to pull" and never reached the importer at all.
+		$collectionCount = $this->countCollections(
+			is_array($payload['collections'] ?? null) ? $payload['collections'] : [],
+		);
 
-		if ($schemaCount === 0 && $templateCount === 0 && $collectionCount === 0) {
+		if ($schemaCount === 0 && $templateCount === 0 && $objectCount === 0 && $collectionCount === 0) {
 			return OperationResult::success('Nothing to pull — no matching schemas, templates, or collections found.', [
 				'schemas'     => 0,
 				'templates'   => 0,
 				'collections' => 0,
+				'objects'     => 0,
 			]);
 		}
 
@@ -262,12 +328,27 @@ readonly class SyncService
 		// collections mirrored down from production.
 		$result = $this->jumpStartImporter->importFromDefinition($payload, true, allowSystemCollections: true);
 
-		return OperationResult::success('Pull complete.', [
+		$counts = [
 			'schemas'       => $schemaCount,
 			'templates'     => $templateCount,
 			'collections'   => $collectionCount,
-			'import_result' => $result,
-		]);
+			'objects'       => $objectCount,
+			'import_result' => $result->toArray(),
+		];
+
+		// Same contract as push(): the importer reports per-item failures in its
+		// own result rather than throwing, so returning success unconditionally
+		// would report a clean pull over a refused import.
+		$importErrors = $this->stringList($result->data['errors'] ?? null);
+		if (!$result->success || $importErrors !== []) {
+			return OperationResult::failure(
+				'Pull completed with errors.',
+				$importErrors === [] ? null : implode('; ', $importErrors),
+				$counts,
+			);
+		}
+
+		return OperationResult::success('Pull complete.', $counts);
 	}
 
 	/**
@@ -317,6 +398,14 @@ readonly class SyncService
 			));
 		}
 
+		// Unconditional, and deliberately not part of the filter block below:
+		// a remote on an older release still exports the Twig Playground's
+		// collection (see JumpStartExporter::exportSyncCollectionMeta for why
+		// it no longer travels). Dropping it on arrival keeps a version-
+		// mismatched remote from reporting a phantom "only on production" in
+		// the diff, or creating the scratchpad collection here on pull.
+		$payload = $this->stripCollectionMeta($payload, PlaygroundData::COLLECTION_ID);
+
 		if ($collectionMetaFilter !== null && isset($payload['collections']) && is_array($payload['collections'])) {
 			foreach (['custom', 'reserved'] as $kind) {
 				if (!isset($payload['collections'][$kind]) || !is_array($payload['collections'][$kind])) {
@@ -324,16 +413,52 @@ readonly class SyncService
 				}
 				$payload['collections'][$kind] = array_values(array_filter(
 					$payload['collections'][$kind],
-					function (mixed $entry) use ($collectionMetaFilter): bool {
-						$id = is_string($entry) ? $entry : (string)(is_array($entry) ? ($entry['id'] ?? '') : '');
-
-						return in_array($id, $collectionMetaFilter, true);
-					}
+					static fn (mixed $entry): bool => in_array(self::collectionEntryId($entry), $collectionMetaFilter, true)
 				));
 			}
 		}
 
 		return $payload;
+	}
+
+	/**
+	 * Remove one collection id from both arms of a payload's `collections`
+	 * block, whatever entry shape it uses.
+	 *
+	 * @param array<string,mixed> $payload
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function stripCollectionMeta(array $payload, string $id): array
+	{
+		if (!isset($payload['collections']) || !is_array($payload['collections'])) {
+			return $payload;
+		}
+
+		foreach (['custom', 'reserved'] as $kind) {
+			if (!isset($payload['collections'][$kind]) || !is_array($payload['collections'][$kind])) {
+				continue;
+			}
+			$payload['collections'][$kind] = array_values(array_filter(
+				$payload['collections'][$kind],
+				static fn (mixed $entry): bool => self::collectionEntryId($entry) !== $id
+			));
+		}
+
+		return $payload;
+	}
+
+	/**
+	 * A collections-block entry is either a bare id string (reserved defaults)
+	 * or a settings array keyed by `id`.
+	 */
+	private static function collectionEntryId(mixed $entry): string
+	{
+		if (is_string($entry)) {
+			return $entry;
+		}
+
+		return is_array($entry) ? (string)($entry['id'] ?? '') : '';
 	}
 
 	/**

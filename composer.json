@@ -100,6 +100,7 @@
     "composer/composer": "^2.4",
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
+    "nikic/php-parser": "^5.0",
     "totalcms/pest-plugin-slim": "^4.0",
     "totalcms/slim-test": "^4.0",
     "overtrue/phplint": "^9.0",
@@ -170,6 +171,7 @@
     "test:updatesnaps": "pest --update-snapshots",
     "test:js": "yarn test:js",
     "bundle": "php bin/make-bundle.php",
+    "bundle:check": "php bin/make-bundle.php --check",
     "docs:validate": "php bin/validate-docs.php",
     "md": [
       "@md:src",
