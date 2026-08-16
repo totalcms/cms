@@ -86,11 +86,13 @@ class PushCommand extends BaseCommand
 		if ($this->isJson($input)) {
 			$output->writeln((string)json_encode($result->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-			return Command::SUCCESS;
+			return $result->success ? Command::SUCCESS : Command::FAILURE;
 		}
 
-		$this->renderSyncResult($output, $result->message, $result->data);
+		$this->renderSyncResult($output, $result->message, $result->data, $result->error);
 
-		return Command::SUCCESS;
+		// A remote that accepted the request but refused the contents is a
+		// failed push. Exiting 0 there makes it invisible to scripts and CI.
+		return $result->success ? Command::SUCCESS : Command::FAILURE;
 	}
 }

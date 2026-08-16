@@ -71,11 +71,12 @@ class PullCommand extends BaseCommand
 		if ($this->isJson($input)) {
 			$output->writeln((string)json_encode($result->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-			return Command::SUCCESS;
+			return $result->success ? Command::SUCCESS : Command::FAILURE;
 		}
 
-		$this->renderSyncResult($output, $result->message, $result->data);
+		$this->renderSyncResult($output, $result->message, $result->data, $result->error);
 
-		return Command::SUCCESS;
+		// An import that collected errors is a failed pull, not a quiet one.
+		return $result->success ? Command::SUCCESS : Command::FAILURE;
 	}
 }

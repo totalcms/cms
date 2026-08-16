@@ -376,15 +376,27 @@ trait SyncFilterOptions
 	/**
 	 * @param array<string,mixed> $data OperationResult data from SyncService
 	 */
-	private function renderSyncResult(OutputInterface $output, string $message, array $data): void
+	private function renderSyncResult(OutputInterface $output, string $message, array $data, ?string $error = null): void
 	{
 		$output->writeln('');
-		$output->writeln("<info>{$message}</info>");
+		$output->writeln($error === null ? "<info>{$message}</info>" : "<error>{$message}</error>");
+
+		// Collections and objects are separate counts. This line used to print
+		// the `collections` value under an "Objects" label, so a settings-only
+		// sync reported "Objects: 0" and read as a no-op even when it worked.
 		$output->writeln(sprintf(
-			'  Schemas: %s, Templates: %s, Objects: %s',
+			'  Schemas: %s, Templates: %s, Collections: %s, Objects: %s',
 			$data['schemas'] ?? 0,
 			$data['templates'] ?? 0,
 			$data['collections'] ?? 0,
+			$data['objects'] ?? 0,
 		));
+
+		if ($error !== null) {
+			$output->writeln('');
+			foreach (explode('; ', $error) as $line) {
+				$output->writeln("  <error>{$line}</error>");
+			}
+		}
 	}
 }
