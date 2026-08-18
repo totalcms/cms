@@ -7,8 +7,8 @@
 
 {% set form = cms.form.builder(builder.pagesCollection, {
 	id          : url.params.path,
-	save        : canSave ? "Save" : false,
-	delete      : canDelete ? "Delete" : false,
+	save        : canSave,
+	delete      : canDelete,
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	deleteActions : [

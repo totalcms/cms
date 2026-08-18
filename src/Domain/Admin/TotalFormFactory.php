@@ -144,7 +144,7 @@ readonly class TotalFormFactory
 	{
 		// Admin routes (/admin/...) don't have the /api prefix
 		$api     = str_starts_with($route, '/admin') ? $this->config->api : $this->api;
-		$options = array_merge($options, [
+		$options = array_merge($this->buttonLabels($options), [
 			'route'                    => $route,
 			'api'                      => $api,
 			'objectFetcher'            => $this->objectFetcher,
@@ -454,7 +454,7 @@ readonly class TotalFormFactory
 		$options = array_merge([
 			'id'         => '',
 			'collection' => '',
-		], $options, [
+		], $this->buttonLabels($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
 			'objectFetcher'            => $this->objectFetcher,
@@ -487,7 +487,7 @@ readonly class TotalFormFactory
 			'path'       => '',
 			'collection' => '',
 			'id'         => '',
-		], $options, [
+		], $this->buttonLabels($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
 			'objectFetcher'            => $this->objectFetcher,
@@ -519,8 +519,8 @@ readonly class TotalFormFactory
 	public function playground(string $id = '', array $options = []): string
 	{
 		$options = array_merge([
-			'save'        => 'Save',
-			'delete'      => 'Delete',
+			'save'        => true,
+			'delete'      => true,
 			'class'       => 'playground-form no-unsaved-warning',
 		], $options);
 		$options['id'] = $id;
@@ -536,8 +536,8 @@ readonly class TotalFormFactory
 		$this->dataViewLister->ensureCollection();
 
 		$options = array_merge([
-			'save'        => 'Save',
-			'delete'      => 'Delete',
+			'save'        => true,
+			'delete'      => true,
 			'class'       => 'dataview-form help-on-hover help-box no-unsaved-warning',
 		], $options);
 		$options['id'] = $id;
@@ -551,8 +551,8 @@ readonly class TotalFormFactory
 	public function mailer(string $id = '', array $options = []): string
 	{
 		$options = array_merge([
-			'save'        => 'Save',
-			'delete'      => 'Delete',
+			'save'        => true,
+			'delete'      => true,
 			'class'       => 'help-on-hover help-box mailer-form formgrid',
 			'useFormGrid' => false,
 		], $options);
@@ -744,7 +744,7 @@ readonly class TotalFormFactory
 		$options = array_merge([
 			'id'         => '',
 			'collection' => '',
-		], $options, [
+		], $this->buttonLabels($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
 			'objectFetcher'            => $this->objectFetcher,
@@ -772,7 +772,7 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function builder(string $collection, array $options = []): ObjectForm
 	{
-		$options = array_merge($options, [
+		$options = array_merge($this->buttonLabels($options), [
 			// These options cannot be overridden
 			'collection'               => $collection,
 			'api'                      => $this->api,
@@ -808,7 +808,7 @@ readonly class TotalFormFactory
 	 */
 	public function deckBuilder(string $collection, string $property, array $options = []): DeckItemForm
 	{
-		$options = array_merge($options, [
+		$options = array_merge($this->buttonLabels($options), [
 			// These options cannot be overridden
 			'collection'               => $collection,
 			'property'                 => $property,
@@ -882,16 +882,53 @@ readonly class TotalFormFactory
 		return $form->build();
 	}
 
-	public function save(string $label = 'Save'): string
+	/**
+	 * Resolve the `save` / `delete` button labels in a form options array.
+	 *
+	 * Pass `true` to get the button with its DEFAULT label — resolved from the
+	 * admin translation catalog (`btn.save` / `btn.delete`), so the buttons
+	 * follow the operator's locale instead of being hardcoded English. Pass
+	 * `false` (or null) to hide the button, or an explicit string to override
+	 * the label with your own wording.
+	 *
+	 * Every form-building entry point runs its options through here, which is
+	 * why templates can simply write `save: canSave` instead of repeating a
+	 * translated literal at each call site.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function buttonLabels(array $options): array
 	{
-		$button = new SaveButton($label);
+		foreach (['save' => 'btn.save', 'delete' => 'btn.delete'] as $option => $key) {
+			if (!isset($options[$option])) {
+				continue;
+			}
+
+			$value = $options[$option];
+
+			if (is_string($value)) {
+				// Explicit label — the caller's own wording wins.
+				continue;
+			}
+
+			$options[$option] = $value ? $this->translationService->trans($key) : '';
+		}
+
+		return $options;
+	}
+
+	public function save(?string $label = null): string
+	{
+		$button = new SaveButton($label ?? $this->translationService->trans('btn.save'));
 
 		return $button->build();
 	}
 
-	public function delete(string $label = 'Delete'): string
+	public function delete(?string $label = null): string
 	{
-		$button = new DeleteButton($label);
+		$button = new DeleteButton($label ?? $this->translationService->trans('btn.delete'));
 
 		return $button->build();
 	}
@@ -982,7 +1019,7 @@ readonly class TotalFormFactory
 
 		return $this->totalform('/admin/settings/' . $section, $formfields, [
 			'method'      => 'POST',
-			'save'        => 'Save Settings',
+			'save'        => $this->translationService->trans('btn.save_settings'),
 			'class'       => 'help-on-hover help-box',
 		]);
 	}
@@ -1004,7 +1041,7 @@ readonly class TotalFormFactory
 
 		return $this->totalform('/admin/extensions/' . $extensionId . '/settings', $formfields, [
 			'method' => 'POST',
-			'save'   => 'Save Settings',
+			'save'   => $this->translationService->trans('btn.save_settings'),
 			'class'  => 'help-on-hover help-box',
 		]);
 	}
@@ -1138,8 +1175,8 @@ readonly class TotalFormFactory
 	{
 		$options = array_merge([
 			'collection' => 'blog',
-			'save'       => 'Save',
-			'delete'     => 'Delete',
+			'save'       => true,
+			'delete'     => true,
 			'fields'     => [],
 		], $options);
 
@@ -1285,8 +1322,8 @@ readonly class TotalFormFactory
 	{
 		$options = array_merge([
 			'collection' => 'feed',
-			'save'       => 'Save',
-			'delete'     => 'Delete',
+			'save'       => true,
+			'delete'     => true,
 		], $options);
 
 		$class            = trim('custom-layout ' . ($options['class'] ?? ''));

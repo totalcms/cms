@@ -28,6 +28,7 @@ return [
 	// ── Common Buttons ──────────────────────────────────────────────────────
 	'btn.save'            => 'Zapisz',
 	'btn.delete'          => 'Usuń',
+	'btn.save_settings'   => 'Zapisz ustawienia',
 	'btn.duplicate'       => 'Duplikuj',
 	'btn.export'          => 'Eksportuj',
 	'btn.import'          => 'Importuj',

@@ -263,8 +263,8 @@
 		{% set canDelete = cms.auth.canAccessCollection('automations', 'delete') %}
 		{% set automationOptions = {
 			id            : url.id == 'new' ? '' : url.id,
-			save          : canSave ? "Save" : false,
-			delete        : (canDelete and url.id != 'new') ? "Delete" : false,
+			save          : canSave,
+			delete        : (canDelete and url.id != 'new'),
 			class         : 'help-on-hover help-box automation-form',
 			deleteActions : [{
 				"action" : "redirect",

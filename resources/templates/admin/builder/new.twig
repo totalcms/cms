@@ -3,7 +3,7 @@
 </header>
 
 {{ cms.form.template({
-	save        : cms.auth.canAccessBuilder() ? "Save" : false,
+	save        : cms.auth.canAccessBuilder(),
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	newActions : [

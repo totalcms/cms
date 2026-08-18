@@ -21,8 +21,8 @@
 {# Default hardcoded options #}
 {% set defaultOptions = {
 	id          : url.id,
-	save        : canSave ? "Save" : false,
-	delete      : canDelete ? "Delete" : false,
+	save        : canSave,
+	delete      : canDelete,
 	helpStyle   : 'label',
 	helpOnFocus : true,
 } %}

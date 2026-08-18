@@ -28,6 +28,7 @@ return [
 	// ── Common Buttons ──────────────────────────────────────────────────────
 	'btn.save'            => 'Opslaan',
 	'btn.delete'          => 'Verwijderen',
+	'btn.save_settings'   => 'Instellingen opslaan',
 	'btn.duplicate'       => 'Dupliceren',
 	'btn.export'          => 'Exporteren',
 	'btn.import'          => 'Importeren',
