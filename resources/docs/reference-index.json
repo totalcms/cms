@@ -1427,7 +1427,7 @@
         },
         {
             "name": "cms.form.delete",
-            "signature": "delete(string $label = 'Delete'): string",
+            "signature": "delete(?string $label = null): string",
             "description": "",
             "examples": [],
             "url": "https://docs.totalcms.co/forms/builder/"
@@ -1623,7 +1623,7 @@
         },
         {
             "name": "cms.form.save",
-            "signature": "save(string $label = 'Save'): string",
+            "signature": "save(?string $label = null): string",
             "description": "",
             "examples": [],
             "url": "https://docs.totalcms.co/forms/builder/"
@@ -4131,6 +4131,39 @@
             "options": [],
             "examples": [
                 "tcms object:create blog my-post.json\necho '{\"id\":\"hello\",\"title\":\"Hello\"}' | tcms object:create blog -\ntcms object:create blog my-post.json --json    # echoes the saved object"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "object:patch",
+            "description": "Merge changes into an existing object, leaving every field you don't mention untouched. Like `object:create`, it goes through the full save pipeline \u2014 validation runs, the collection index updates, and `object.updated` fires \u2014 so it stays consistent with the admin in a way that editing the JSON file by hand does not.",
+            "arguments": [
+                {
+                    "name": "collection",
+                    "required": true,
+                    "description": "Collection ID"
+                },
+                {
+                    "name": "id",
+                    "required": true,
+                    "description": "Object ID"
+                },
+                {
+                    "name": "file",
+                    "required": true,
+                    "description": "Path to a JSON file holding the fields to merge, or `-` for stdin"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--property",
+                    "description": "Merge into this property instead of the top level, preserving its other keys"
+                }
+            ],
+            "examples": [
+                "tcms object:patch blog my-post patch.json\necho '{\"title\":\"New Title\"}' | tcms object:patch blog my-post -\ntcms object:patch blog my-post patch.json --json    # echoes the saved object",
+                "# Replaces the whole image field \u2014 name, size and dimensions are lost\necho '{\"image\":{\"alt\":\"A description\"}}' | tcms object:patch image social -\n\n# Changes only alt, preserving everything else on the field\necho '{\"alt\":\"A description\"}' | tcms object:patch image social - --property=image"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"

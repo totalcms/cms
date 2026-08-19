@@ -265,7 +265,7 @@ These are non-obvious details that are important when working in these areas:
 ### CLI System (`tcms`)
 - **Framework**: Symfony Console via `CliApplication`
 - **Entry Point**: `resources/bin/tcms` (shipped; exposed as `vendor/bin/tcms` via Composer `bin`). In this repo run it as `php resources/bin/tcms` — there is no `bin/tcms` symlink.
-- **Commands**: `collection:list|get|export|import|query`, `object:list|get|export|delete`, `schema:list|get|export|import`, `jumpstart:export|import`, `builder:init|frontend|routes|history`, `extension:list|enable|disable|remove`, `update:check|apply|rollback`, `automations:process`, `jobs:process`, `mcp:status`, `mcp:test`, `oauth:setup`, `oauth:gc`, `repair:files`, `repair:index`, `rss:import`, `search:reindex`, `deck:import`, `cache:clear`, `skill:install`, `deploy`, `info`, `pull`, `push`
+- **Commands**: `collection:list|get|export|import|query`, `object:list|get|create|patch|export|delete`, `schema:list|get|export|import`, `jumpstart:export|import`, `builder:init|frontend|routes|history`, `extension:list|enable|disable|remove`, `update:check|apply|rollback`, `automations:process`, `jobs:process`, `mcp:status`, `mcp:test`, `oauth:setup`, `oauth:gc`, `repair:files`, `repair:index`, `rss:import`, `search:reindex`, `deck:import`, `cache:clear`, `skill:install`, `deploy`, `info`, `pull`, `push`
 - **Extension Commands**: Loaded after core commands with collision protection (extensions cannot shadow built-in command names)
 - **Output Formats**: Human-readable tables by default, `--json` flag for machine-readable output
 

@@ -301,6 +301,38 @@ tcms object:create blog my-post.json --json    # echoes the saved object
 | `collection` | Yes | Collection ID |
 | `file` | Yes | Path to a JSON file holding one object, or `-` for stdin |
 
+### `object:patch`
+
+Merge changes into an existing object, leaving every field you don't mention untouched. Like `object:create`, it goes through the full save pipeline — validation runs, the collection index updates, and `object.updated` fires — so it stays consistent with the admin in a way that editing the JSON file by hand does not.
+
+Use this for a targeted change to one object. `object:create` only makes new objects, and `collection:import` works in bulk.
+
+```bash
+tcms object:patch blog my-post patch.json
+echo '{"title":"New Title"}' | tcms object:patch blog my-post -
+tcms object:patch blog my-post patch.json --json    # echoes the saved object
+```
+
+**The merge is shallow.** Patching a structured field from the top level replaces it wholesale, which will quietly discard the parts you didn't mention. Target the property instead to merge *into* it:
+
+```bash
+# Replaces the whole image field — name, size and dimensions are lost
+echo '{"image":{"alt":"A description"}}' | tcms object:patch image social -
+
+# Changes only alt, preserving everything else on the field
+echo '{"alt":"A description"}' | tcms object:patch image social - --property=image
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `collection` | Yes | Collection ID |
+| `id` | Yes | Object ID |
+| `file` | Yes | Path to a JSON file holding the fields to merge, or `-` for stdin |
+
+| Option | Description |
+|--------|-------------|
+| `--property` | Merge into this property instead of the top level, preserving its other keys |
+
 ### `object:export`
 
 Export a single object as JSON or ZIP (with assets).

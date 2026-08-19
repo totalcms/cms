@@ -29,7 +29,9 @@ The left sidebar is divided into two sections separated by a divider:
 
 ### Site Pages Section
 
-Lists all page objects from the `builder-pages` collection as a tree. Each page shows its title and links to the page edit form. Click a page to edit its metadata (title, route, template, image, status, page data, etc.).
+Lists all page objects from the `builder-pages` collection as a tree. Each page is labelled by its **route** — the short, unique thing that identifies it in the router — with its title shown on hover. Page titles are written for a browser tab and truncate to noise at sidebar width. Click a page to edit its metadata (title, route, template, image, status, page data, etc.).
+
+Pages with no route yet are labelled *(no route)*.
 
 Pages are displayed in the order defined by the order file (`tcms-data/{collection}/.order.json`) — see [Reordering Pages](#reordering-pages). Visual cues help you scan the tree quickly:
 
@@ -52,7 +54,7 @@ Each category is collapsible. Click any template to open it in the editor.
 
 ### Filter
 
-A search filter at the top of the sidebar matches against both **page titles** and **template filenames**. The filter narrows the visible tree as you type — folders with no matching descendants collapse out of view.
+A search filter at the top of the sidebar matches against the rendered labels — so **page routes** and **template filenames**. Search for a page by its URL rather than its title. The filter narrows the visible tree as you type — folders with no matching descendants collapse out of view.
 
 ### Footer Buttons
 
