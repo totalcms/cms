@@ -91,6 +91,7 @@ class CliApplication
 		$app->addCommand(new Command\ObjectListCommand($totalcms));
 		$app->addCommand(new Command\ObjectGetCommand($totalcms));
 		$app->addCommand(new Command\ObjectCreateCommand($totalcms));
+		$app->addCommand(new Command\ObjectPatchCommand($totalcms));
 		$app->addCommand(new Command\ObjectExportCommand($totalcms));
 		$app->addCommand(new Command\ObjectDeleteCommand($totalcms));
 

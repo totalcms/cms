@@ -37,9 +37,16 @@
 		   available, but the file-tree sidebar wants everything visible. #}
 		<details open>
 			<summary>
+				{# Route as the label, title on hover -- the reverse of what this
+				   was. A page title is written for a browser tab ("Total CMS 3 —
+				   Your Site. Your Data. Your Terms.") and truncates to noise at
+				   sidebar width, while the route is short, unique, and is what
+				   actually identifies a page in a router-driven builder.
+				   Note this also decides what the sidebar filter matches, since
+				   TreeView filters on the rendered label. #}
 				<a {% if activePageId == page.id %}class="active"{% endif %}
 					href="builder/page/{{ page.id }}"
-					title="{{ page.route ?: t('builder.sidebar.no_route') }}">{{ page.title }}</a>
+					title="{{ page.title }}">{{ page.route ?: t('builder.sidebar.no_route') }}</a>
 			</summary>
 			<ul class="tree-view" data-parent="{{ page.id }}">
 			{% for child in page.children %}
