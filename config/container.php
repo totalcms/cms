@@ -28,6 +28,7 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\ImpersonationService;
 use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
@@ -263,6 +264,15 @@ return [
 	// enforcing 0600 on settings files, which may hold extension secrets.
 	ExtensionSettingsManager::class => fn (ContainerInterface $container): ExtensionSettingsManager => new ExtensionSettingsManager(
 		$container->get(StorageFilesystemAdapter::class),
+		(string)$container->get(Config::class)->datadir,
+	),
+
+	// Same reason as above: the datadir is needed for a real filesystem path.
+	// apikeys.json is rewritten wholesale on every authentication, so its
+	// mutations need an flock and an atomic rename, neither of which the
+	// storage adapter exposes.
+	ApiKeyRepository::class => fn (ContainerInterface $container): ApiKeyRepository => new ApiKeyRepository(
+		$container->get(StorageAdapterInterface::class),
 		(string)$container->get(Config::class)->datadir,
 	),
 
