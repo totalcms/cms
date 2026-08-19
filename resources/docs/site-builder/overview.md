@@ -480,6 +480,8 @@ Behavior:
 - URL-encodes param values automatically.
 - Optional third argument selects a different pages collection: `cms.builder.url('about', {}, 'my-custom-pages')`.
 
+`url()` returns a **relative** path. For canonical tags, `og:url` and redirects, use `cms.builder.canonicalUrl(page)` — it resolves scheme and domain from the site config, so no template needs a hard-coded host. See [cms.builder reference](docs/site-builder/twig).
+
 ### Draft vs Nav
 
 The `draft` and `nav` toggles serve different purposes:

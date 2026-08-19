@@ -140,6 +140,51 @@ class BuilderTwigAdapter
 		return '';
 	}
 
+	/**
+	 * Get the canonical (absolute) URL for a builder page.
+	 *
+	 * The page counterpart to cms.collection.canonicalObjectUrl(). url()
+	 * returns a site-relative path, but canonical tags, og:url and redirects
+	 * all need scheme and host — and assembling those in a layout means
+	 * hardcoding a domain, which is wrong everywhere the site is not
+	 * production and goes stale silently.
+	 *
+	 *     {{ cms.builder.canonicalUrl('pricing') }}
+	 *     {{ cms.builder.canonicalUrl(page) }}
+	 *     {{ cms.builder.canonicalUrl('blog-post', { id: 'hello' }) }}
+	 *
+	 * Takes a page id or a whole page array, mirroring canonicalObjectUrl's
+	 * string|array, so a layout can hand over the `page` it already has
+	 * instead of digging out an id.
+	 *
+	 * Returns an empty string wherever url() does — a missing page, or one
+	 * with no route — so the gap stays visible rather than emitting a bare
+	 * domain that looks like a working link.
+	 *
+	 * @param string|array<string,mixed> $pageOrId
+	 * @param array<string,mixed> $params
+	 *
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 */
+	public function canonicalUrl(string|array $pageOrId, array $params = [], ?string $collection = null): string
+	{
+		$pageId = is_array($pageOrId) ? (string)($pageOrId['id'] ?? '') : $pageOrId;
+
+		if ($pageId === '') {
+			return '';
+		}
+
+		$url = $this->url($pageId, $params, $collection);
+
+		if ($url === '' || str_starts_with($url, 'http')) {
+			return $url;
+		}
+
+		$scheme = $_SERVER['REQUEST_SCHEME'] ?? 'https';
+
+		return $scheme . '://' . $this->config->domain . $url;
+	}
+
 	// -------------------------
 	// Stacks coexistence
 	// -------------------------

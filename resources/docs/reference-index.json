@@ -878,6 +878,16 @@
             "url": "https://docs.totalcms.co/site-builder/twig/"
         },
         {
+            "name": "cms.builder.canonicalUrl",
+            "signature": "canonicalUrl(string|array $pageOrId, array $params = [], ?string $collection = null): string",
+            "description": "Get the canonical (absolute) URL for a builder page. The page counterpart to cms.collection.canonicalObjectUrl(). url() returns a site-relative path, but canonical tags, og:url and redirects all need scheme and host \u2014 and assembling those in a layout means hardcoding a domain, which is wrong everywhere the site is not production and goes stale silently.",
+            "examples": [
+                "<link rel=\"canonical\" href=\"{{ cms.builder.canonicalUrl(page) }}\">\n<meta property=\"og:url\" content=\"{{ cms.builder.canonicalUrl(page) }}\">",
+                "{{ cms.builder.canonicalUrl('pricing') }}\n{{ cms.builder.canonicalUrl('blog-post', { id: post.id }) }}"
+            ],
+            "url": "https://docs.totalcms.co/site-builder/twig/"
+        },
+        {
             "name": "cms.builder.css",
             "signature": "css(string $path): string",
             "description": "Output a <link rel=\"stylesheet\"> tag for a CSS asset.",
@@ -956,7 +966,9 @@
             "name": "cms.builder.url",
             "signature": "url(string $pageId, array $params = [], ?string $collection = null): string",
             "description": "Reverse-route a builder page by ID, filling in dynamic `{param}` segments. {{ cms.builder.url('about') }} => /about {{ cms.builder.url('blog-post', { id: 'hello' }) }} => /blog/hello",
-            "examples": [],
+            "examples": [
+                "{# Static page #}\n<a href=\"{{ cms.builder.url('about') }}\">About</a>\n\n{# Dynamic route \u2014 params fill the placeholders #}\n<a href=\"{{ cms.builder.url('blog-post', { id: post.id }) }}\">{{ post.title }}</a>"
+            ],
             "url": "https://docs.totalcms.co/site-builder/twig/"
         },
         {

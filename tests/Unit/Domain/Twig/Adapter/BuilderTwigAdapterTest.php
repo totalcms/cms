@@ -496,6 +496,60 @@ final class BuilderTwigAdapterTest extends TestCase
 		$this->assertSame('/about', $this->adapter->url('about', ['extra' => 'unused']));
 	}
 
+	// --- canonicalUrl() ---
+
+	public function testCanonicalUrlReturnsAbsoluteUrl(): void
+	{
+		$this->config->domain = 'example.com';
+		$this->setupPages($this->samplePages());
+
+		$this->assertSame('https://example.com/about', $this->adapter->canonicalUrl('about'));
+	}
+
+	public function testCanonicalUrlAcceptsAPageArray(): void
+	{
+		// A layout already holds `page`; making it dig out an id would be noise.
+		$this->config->domain = 'example.com';
+		$this->setupPages($this->samplePages());
+
+		$this->assertSame(
+			'https://example.com/about',
+			$this->adapter->canonicalUrl(['id' => 'about', 'title' => 'About'])
+		);
+	}
+
+	public function testCanonicalUrlFillsDynamicParam(): void
+	{
+		$this->config->domain = 'example.com';
+		$this->setupPages($this->samplePages());
+
+		$this->assertSame(
+			'https://example.com/blog/hello',
+			$this->adapter->canonicalUrl('blog-post', ['id' => 'hello'])
+		);
+	}
+
+	public function testCanonicalUrlHonoursTheApiBase(): void
+	{
+		$this->config->domain = 'example.com';
+		$this->config->api    = '/myapp';
+		$this->setupPages($this->samplePages());
+
+		$this->assertSame('https://example.com/myapp/about', $this->adapter->canonicalUrl('about'));
+	}
+
+	public function testCanonicalUrlReturnsEmptyRatherThanABareDomain(): void
+	{
+		// A missing or unrouted page must not degrade to "https://example.com",
+		// which would look like a working link to the homepage.
+		$this->config->domain = 'example.com';
+		$this->setupPages($this->samplePages());
+
+		$this->assertSame('', $this->adapter->canonicalUrl('nonexistent'));
+		$this->assertSame('', $this->adapter->canonicalUrl([]));
+		$this->assertSame('', $this->adapter->canonicalUrl(''));
+	}
+
 	// --- stacksPage() ---
 
 	public function testStacksPageReadsHtmlFile(): void
