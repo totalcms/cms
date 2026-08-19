@@ -13,7 +13,7 @@ An automation's **triggers** decide *when* its handler runs. Each automation can
 
 ## Schedule
 
-Runs the handler on a cron schedule. Requires the [`automations:process` command](overview.md#scheduling-the-process-command) to be run by cron.
+Runs the handler on a cron schedule. Requires the [`automations:process` command](docs/automations/overview#scheduling-the-process-command) to be run by cron.
 
 | Field | Description |
 |-------|-------------|
@@ -50,10 +50,10 @@ POST /automations/{id}
 
 | Field | Description |
 |-------|-------------|
-| `auth` | `apiKey` (key scoped to `POST /automations`), `sameOrigin` (browser form posts from this site only), or `none` (public, rate-limited per IP). See [Webhooks](webhooks.md). |
+| `auth` | `apiKey` (key scoped to `POST /automations`), `sameOrigin` (browser form posts from this site only), or `none` (public, rate-limited per IP). See [Webhooks](docs/automations/webhooks). |
 | `sync` | When on, the request blocks and the response is the handler's return value. When off, the run is queued and the endpoint returns `202 Accepted` immediately. |
 
-Request query and body are passed to the handler as `$ctx->args`. See [Webhooks](webhooks.md) for authentication and payload details.
+Request query and body are passed to the handler as `$ctx->args`. See [Webhooks](docs/automations/webhooks) for authentication and payload details.
 
 ## Event
 

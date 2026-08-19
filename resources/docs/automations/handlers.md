@@ -83,7 +83,7 @@ The handler is stored in its own `.php` file next to the automation object (an *
 
 | Property | What it is |
 |----------|------------|
-| `$ctx->mailer` | Send a [Mailer](../notifications/mailer.md) email — `sendEmail($mailerId, $data)` |
+| `$ctx->mailer` | Send a [Mailer](docs/notifications/mailer) email — `sendEmail($mailerId, $data)` |
 | `$ctx->config` | Core configuration |
 | `$ctx->logger` | PSR-3 logger writing to `jobs.log` (channel `automations`) |
 | `$ctx->trigger` | The trigger row that fired this run (e.g. `$ctx->trigger['type']`) |
@@ -113,7 +113,7 @@ return function ($ctx) {
 ## Return values and errors
 
 - **Return value** — whatever the closure returns is recorded on the run record and, for a synchronous webhook, becomes the HTTP response body. Return arrays/scalars (JSON-encodable).
-- **Throwing** marks the run **failed**. In development the error surfaces loudly; in production it's contained, optionally emailed via the automation's error mailer, and counts toward [auto-disable](overview.md#failure-handling).
+- **Throwing** marks the run **failed**. In development the error surfaces loudly; in production it's contained, optionally emailed via the automation's error mailer, and counts toward [auto-disable](docs/automations/overview#failure-handling).
 
 ## The handler advisory
 

@@ -47,7 +47,7 @@ or
 Authorization: Bearer tcms_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-Grant it when creating the key: in **Utilities → API Keys → New**, include **POST** in the methods, then under *Specific Endpoints* select **All Automations** (or grant all endpoints). A key that isn't scoped for `POST /automations` is rejected with `401`. See [API Keys](../apis/api-keys.md).
+Grant it when creating the key: in **Utilities → API Keys → New**, include **POST** in the methods, then under *Specific Endpoints* select **All Automations** (or grant all endpoints). A key that isn't scoped for `POST /automations` is rejected with `401`. See [API Keys](docs/apis/api-keys).
 
 ## Synchronous vs. asynchronous
 
@@ -88,4 +88,4 @@ The API key itself is read only from headers — it's never part of `$ctx->args`
 
 ## Server rewrite rules
 
-`POST /automations/{id}` is a root-level route. If your server needs explicit rewrite rules (e.g. a Stacks install), make sure the automations path is routed to `index.php` — see [Apache](../operations/apache.md) and [Nginx](../operations/nginx.md).
+`POST /automations/{id}` is a root-level route. If your server needs explicit rewrite rules (e.g. a Stacks install), make sure the automations path is routed to `index.php` — see [Apache](docs/operations/apache) and [Nginx](docs/operations/nginx).

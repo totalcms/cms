@@ -117,6 +117,6 @@ If no options are checked, the user sees: *"Please select at least one option."*
 
 ### Schema-Level Required
 
-Both field types also respect the schema's top-level `required` array. For checklist specifically, an empty array (`[]`) is rejected by the schema validator at save time, mirroring the client-side "at least one" check. See [Schema Validation](../schemas/validation.md#required-fields) for details.
+Both field types also respect the schema's top-level `required` array. For checklist specifically, an empty array (`[]`) is rejected by the schema validator at save time, mirroring the client-side "at least one" check. See [Schema Validation](docs/schemas/validation#required-fields) for details.
 
-For conditional required scenarios — where the field is only required based on another field's value — use `settings.required` paired with `settings.visibility` and **leave the field out of the schema's `required` array**. See [Required (Form-Level)](all-fields.md#required-form-level).
+For conditional required scenarios — where the field is only required based on another field's value — use `settings.required` paired with `settings.visibility` and **leave the field out of the schema's `required` array**. See [Required (Form-Level)](docs/fields/all-fields#required-form-level).
