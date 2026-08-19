@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\JumpStart\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -36,6 +37,7 @@ readonly class JumpStartExporter
 		private TemplateFetcher $templateFetcher,
 		private JumpStartData $jumpstart,
 		private CacheManager $cacheManager,
+		private BuilderOrderRepository $orderRepository,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::JumpStartExporter);
@@ -150,6 +152,23 @@ readonly class JumpStartExporter
 			// the importer can clear them on the receiving side.
 			foreach (['properties', 'customProperties', 'formSettings', 'manualSort', 'sitemap', 'mcp'] as $key) {
 				$config[$key] ??= [];
+			}
+
+			// The sidebar order / page hierarchy rides with the collection's
+			// settings. It lives in its own file (.order.json, owned by
+			// BuilderOrderRepository) rather than in CollectionData, but it is
+			// configuration rather than content, so it belongs to the same
+			// selection the operator makes for settings: tick Pages under
+			// Collection Settings and its arrangement travels with them. That
+			// also means a reorder shows up as the collection differing,
+			// instead of needing a category of its own that would only ever
+			// hold one row.
+			//
+			// Read through the repository, not BuilderOrderService: the
+			// service migrates and WRITES an order file when none exists, and
+			// an export must never mutate the site it is reading.
+			if ($this->orderRepository->exists($collection->id)) {
+				$config['pageOrder'] = $this->orderRepository->read($collection->id);
 			}
 
 			if (in_array($collection->schema, SchemaData::RESERVED_SCHEMAS)) {

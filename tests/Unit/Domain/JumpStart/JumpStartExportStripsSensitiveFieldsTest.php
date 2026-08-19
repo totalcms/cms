@@ -10,6 +10,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -49,6 +50,7 @@ final class JumpStartExportStripsSensitiveFieldsTest extends TestCase
 			$templateFetcher,
 			new JumpStartData(),
 			$cacheManager,
+			$this->createMock(BuilderOrderRepository::class),
 			$loggerFactory,
 		);
 	}

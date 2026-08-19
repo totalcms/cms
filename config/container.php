@@ -33,6 +33,7 @@ use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\ImpersonationService;
 use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
+use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\FragmentCache;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
@@ -409,6 +410,7 @@ return [
 		$container->get(TemplateFetcher::class),
 		new JumpStartData(),
 		$container->get(CacheManager::class),
+		$container->get(BuilderOrderRepository::class),
 		$container->get(LoggerFactory::class),
 	),
 
