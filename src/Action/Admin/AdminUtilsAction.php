@@ -725,11 +725,19 @@ readonly class AdminUtilsAction
 	 * fields. Falls back to the object id so the UI always has something
 	 * to render.
 	 *
+	 * `route` comes first deliberately. Of the syncable collections only
+	 * builder-pages carries one, and for a page the URL path identifies the
+	 * record better than its title does: paths are unique and stable, whereas
+	 * two pages can share a title (localized variants especially — "About" and
+	 * "Über Uns" both live at telling paths). Every other syncable collection
+	 * (mailer, automations, mcp-prompt, dataviews) has no `route`, so they keep
+	 * falling through to title/name/subject exactly as before.
+	 *
 	 * @param array<string,mixed> $entry
 	 */
 	private function labelForIndexEntry(array $entry, string $fallback): string
 	{
-		foreach (['title', 'name', 'subject', 'route', 'label'] as $field) {
+		foreach (['route', 'title', 'name', 'subject', 'label'] as $field) {
 			$value = $entry[$field] ?? null;
 			if (is_string($value) && trim($value) !== '') {
 				return $value;
