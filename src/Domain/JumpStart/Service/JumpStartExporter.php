@@ -376,8 +376,19 @@ readonly class JumpStartExporter
 				switch ($fieldType) {
 					case 'image':
 					case 'gallery':
-						// Normalize image and gallery properties to their respective types
-						$processedData[$fieldName] = $fieldType;
+						// Omitted, not normalized to the type name. Writing
+						// "image" here collided with the factory-rule syntax the
+						// importer honors, so every sync round-trip made the
+						// destination FABRICATE a random placeholder image —
+						// silently, and on every push, because the payload can
+						// never say "this field is empty".
+						//
+						// Binaries do not travel, so an image reference must not
+						// either: sending one would point the destination at a
+						// file it does not have. Leaving the key out is the only
+						// honest encoding of "this did not travel", and the
+						// importer reads its absence as "keep what you have".
+						unset($processedData[$fieldName]);
 						break;
 
 					case 'depot':

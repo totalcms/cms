@@ -65,6 +65,7 @@ class JumpStartImporter
 		private readonly ObjectSaver $objectSaver,
 		private readonly ObjectUpdater $objectUpdater,
 		private readonly SchemaSaver $schemaSaver,
+		private readonly \TotalCMS\Domain\Schema\Service\SchemaFetcher $schemaFetcher,
 		private readonly TemplateSaver $templateSaver,
 		private readonly FactoryImporter $factoryImporter,
 		private readonly \TotalCMS\Domain\Event\Service\EventDispatcher $eventDispatcher,
@@ -518,6 +519,7 @@ class JumpStartImporter
 				return 'skipped';
 			}
 			$this->syncBackup->backupObject($collectionId, $objectId);
+			$objectData = $this->preserveUntravelledMedia($collectionId, $objectId, $collection->schema, $objectData);
 			$this->updateImportedObject($collectionId, $objectId, $objectData);
 			$this->addResult(sprintf('Object %s/%s: updated', $collectionId, $objectId));
 
@@ -528,6 +530,67 @@ class JumpStartImporter
 		$this->addResult(sprintf('Object %s/%s: created', $collectionId, $objectId));
 
 		return 'created';
+	}
+
+	/**
+	 * Carry the destination's own image/gallery values through an upsert.
+	 *
+	 * The upsert path replaces the whole object, so a field the payload does
+	 * not mention would be wiped. JumpStart carries no binaries, which means an
+	 * image field is not syncable data in either direction: the source cannot
+	 * send one (the file would not exist here) and must not clear one (it has
+	 * no authority over media it never received). The destination owns these
+	 * fields, and images are managed in the admin rather than through sync.
+	 *
+	 * Only fields ABSENT from the payload are restored. A value that is present
+	 * is an authored factory rule, and those are still honored — that is a
+	 * deliberate feature of hand-written starter kits, and the reason the
+	 * exporter now omits the key rather than writing a type name that was
+	 * indistinguishable from one.
+	 *
+	 * @param array<string,mixed> $objectData
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function preserveUntravelledMedia(
+		string $collectionId,
+		string $objectId,
+		string $schemaId,
+		array $objectData,
+	): array {
+		try {
+			$schema   = $this->schemaFetcher->fetchSchema($schemaId);
+			$existing = $this->objectFetcher->fetchObject($collectionId, $objectId)->toArray();
+		} catch (\Throwable $e) {
+			// Non-fatal: without the schema or the current object there is
+			// nothing to preserve, and failing the import over it would be a
+			// worse outcome than an untouched media field.
+			$this->logger->warning('Could not preserve media fields on import', [
+				'collection' => $collectionId,
+				'id'         => $objectId,
+				'error'      => $e->getMessage(),
+			]);
+
+			return $objectData;
+		}
+
+		foreach ($schema->properties as $fieldName => $property) {
+			$fieldType = $property['field'] ?? $property['type'] ?? '';
+
+			if (!in_array($fieldType, ['image', 'gallery'], true)) {
+				continue;
+			}
+
+			if (array_key_exists($fieldName, $objectData)) {
+				continue;
+			}
+
+			if (array_key_exists($fieldName, $existing)) {
+				$objectData[$fieldName] = $existing[$fieldName];
+			}
+		}
+
+		return $objectData;
 	}
 
 	/**
