@@ -182,7 +182,9 @@ composer run test:all
 - **Test Data**: Maintain comprehensive test datasets in `/tests/test-data/` for integration testing
 - **Error Handling**: Test both success and failure scenarios with graceful error handling
 - **Stale Twig cache**: Twig render tests can serve stale compiled templates after a `.twig` edit (test env has `auto_reload` off) — `rm -rf cache/*` before re-running locally
-- **Bundle integrity**: `resources/bundle` is a config-integrity manifest. After editing `config/`, verify with `composer run test` (runs @bundle); never hand-edit the bundle (stale bundle → 400 "corrupted")
+- **Bundle integrity**: `resources/bundle` hashes `config/`, `resources/templates/` **and select `src/` files** — not just config. After editing anything it covers, rebuild with `composer run bundle` and commit the manifest alongside the change. Never hand-edit it. A stale manifest makes every write fail at runtime with 400 "installation has been corrupted"
+  - **Tests do not catch this.** `tests/bootstrap.php` sets `APP_ENV=test`, which switches `BundleMiddleware`'s check off so the suite doesn't have to regenerate the manifest after every edit, and no test covers the manifest. `composer test` is plain pest with no bundle step. The gate is `composer run bundle:check` (~0.3s), which CI runs — but only after a push, so an install tracking `dev-develop` can pull the broken commit first
+  - Install the pre-commit hook with `bin/install-hooks.sh` to run that check automatically. Note the manifest hashes the **working tree, not the index**: rebuild with unstaged edits to a covered file present and it records content that isn't in the commit
 
 ### CSS Styling Guidelines
 - **Use Design System Variables**: Always use CSS variables from `/css/variables.scss` instead of hardcoding colors or values
