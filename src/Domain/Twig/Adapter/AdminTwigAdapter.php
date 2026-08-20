@@ -570,7 +570,12 @@ readonly class AdminTwigAdapter
 	{
 		$collections = $this->collectionLister->listAllCollections();
 		$schemas     = $this->schemaLister->listCustomSchemas();
-		$templates   = $this->templateLister->listBuilderTemplates();
+		// Recursive: builder templates live in layouts/, pages/, partials/ and
+		// macros/, so a non-recursive scan only sees files sitting loose at the
+		// top of builder/ — of which a conventionally organised site has none,
+		// and the dashboard reported 0 templates. Every other whole-tree caller
+		// already passes true here.
+		$templates   = $this->templateLister->listBuilderTemplates(null, true);
 
 		// Sum totalObjects from all collections (much faster than counting index objects)
 		$totalObjects = 0;

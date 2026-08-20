@@ -160,9 +160,14 @@ final class StarterServiceTest extends TestCase
 		$this->writeManifest('blog', ['name' => 'Blog']);
 
 		$lister = $this->createMock(TemplateLister::class);
+		// Asserts the recursive flag, not just the folder: a site nesting its
+		// pages (pages/blog/index.twig) looks empty to a shallow scan, and the
+		// guard would scaffold a starter over an existing site. PHPUnit ignores
+		// arguments beyond the constraints given, so listing only 'pages' here
+		// matched either way and let that regress silently.
 		$lister->method('listBuilderTemplates')
-			->with('pages')
-			->willReturn(['existing']);
+			->with('pages', true)
+			->willReturn(['blog/index']);
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('createLogger')->willReturn(new NullLogger());

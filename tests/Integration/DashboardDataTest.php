@@ -46,6 +46,27 @@ describe('Dashboard Data Methods', function (): void {
 		expect($stats['totalObjects'])->toBe(10);
 	});
 
+	it('dashboard stats counts builder templates inside subfolders', function (): void {
+		// Builder templates live in layouts/, pages/, partials/ and macros/ --
+		// a conventionally organised site has nothing loose at the top of
+		// builder/. The stat listed non-recursively, so it reported 0 templates
+		// on sites with dozens of them.
+		$container = $this->app->getContainer();
+		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+
+		// Relative to a baseline: the read-layer union already includes the
+		// built-in defaults, so the absolute count is environment-dependent.
+		$before = $adapter->dashboardStats()['templates'];
+
+		foreach ([['home', 'pages'], ['base', 'layouts'], ['nav', 'partials']] as [$id, $folder]) {
+			$path = templatePath($id, $folder);
+			@mkdir(dirname($path), 0777, true);
+			file_put_contents($path, '<p>' . $id . '</p>');
+		}
+
+		expect($adapter->dashboardStats()['templates'])->toBe($before + 3);
+	});
+
 	it('dashboard collections returns all collections sorted by lastUpdated', function (): void {
 		// Create collections
 		postJson('/api/collections', [
