@@ -400,9 +400,12 @@ describe('McpEndpointAction — listening stream (GET)', function (): void {
 		/** @var Config $config */
 		$config      = $this->app->getContainer()->get(Config::class);
 		$config->mcp = array_merge($config->mcp, [
-			'publicAccess'                 => true,
-			'listeningStream'              => true,
-			'listeningStreamSeconds'       => 0,
+			'publicAccess'    => true,
+			'listeningStream' => true,
+			// Non-zero: at a zero window the cap deliberately no-ops (there is
+			// no occupancy to bound), so a 0 here would exempt the very
+			// behaviour this test exists to prove.
+			'listeningStreamSeconds'       => 1,
 			'listeningStreamMaxConcurrent' => 1,
 		]);
 
@@ -428,6 +431,47 @@ describe('McpEndpointAction — listening stream (GET)', function (): void {
 		expect($second->getHeaderLine('Content-Type'))->not()->toContain('text/event-stream');
 	});
 
+	it('does not consume a cap slot when the window is 0', function (): void {
+		// A zero window releases the worker before the next request arrives, so
+		// there is no concurrency to bound and the cap must stand aside. If it
+		// does not, the 1s TTL floor turns it into a global opens-per-second
+		// limit — a second, coarser rate limiter pooling every caller into one
+		// bucket, which refuses probes during ordinary traffic. Observed in
+		// production as 16/20 probes admitted at a cap of 20 with no worker
+		// anywhere near being held; a refused probe is precisely the 405 the
+		// listening stream exists to avoid.
+		/** @var Config $config */
+		$config      = $this->app->getContainer()->get(Config::class);
+		$config->mcp = array_merge($config->mcp, [
+			'publicAccess'           => true,
+			'listeningStream'        => true,
+			'listeningStreamSeconds' => 0,
+			// Deliberately lower than the number of requests below: with the
+			// bypass working, the cap is never consulted.
+			'listeningStreamMaxConcurrent' => 1,
+		]);
+
+		/** @var CacheManager $cache */
+		$cache = $this->app->getContainer()->get(CacheManager::class);
+		$cache->clearData('mcp_listening_stream_slots');
+
+		$first = \TotalCMS\Slim\Pest\get('/mcp', ['Accept' => 'text/event-stream']);
+
+		if ($first->getStatusCode() !== 200) {
+			expect($first->getStatusCode())->toBeIn([403, 404]);
+
+			return;
+		}
+
+		// Every one of these would be a 405 if a zero window still consumed
+		// slots against a cap of 1.
+		foreach (range(1, 5) as $_) {
+			$next = \TotalCMS\Slim\Pest\get('/mcp', ['Accept' => 'text/event-stream']);
+			expect($next->getStatusCode())->toBe(200);
+			expect($next->getHeaderLine('Content-Type'))->toContain('text/event-stream');
+		}
+	});
+
 	it('does not cap when listeningStreamMaxConcurrent is 0', function (): void {
 		// `<= 0` disables the cap, matching McpRateLimitMiddleware's
 		// convention for its own limit. Without this an operator setting 0
@@ -435,9 +479,11 @@ describe('McpEndpointAction — listening stream (GET)', function (): void {
 		/** @var Config $config */
 		$config      = $this->app->getContainer()->get(Config::class);
 		$config->mcp = array_merge($config->mcp, [
-			'publicAccess'                 => true,
-			'listeningStream'              => true,
-			'listeningStreamSeconds'       => 0,
+			'publicAccess'    => true,
+			'listeningStream' => true,
+			// Non-zero so this exercises the `$max <= 0` bypass specifically
+			// and not the separate zero-window one.
+			'listeningStreamSeconds'       => 1,
 			'listeningStreamMaxConcurrent' => 0,
 		]);
 

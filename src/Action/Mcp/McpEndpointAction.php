@@ -349,8 +349,12 @@ readonly class McpEndpointAction
 	/**
 	 * Reserve one of the globally-capped listening-stream slots.
 	 *
-	 * Counts stream *opens* within a rolling window equal to the stream
-	 * duration rather than tracking open/close pairs. Because every stream
+	 * No-ops when the configured window is zero — see the guard below; there
+	 * is no occupancy to bound and counting would degrade into a coarse global
+	 * rate limit.
+	 *
+	 * Otherwise counts stream *opens* within a rolling window equal to the
+	 * stream duration rather than tracking open/close pairs. Because every stream
 	 * lives for exactly that window, opens-in-the-last-window is the
 	 * concurrency — and an increment-only counter cannot drift. A
 	 * decrement-on-close counter can: a worker killed mid-stream (FPM
@@ -378,10 +382,28 @@ readonly class McpEndpointAction
 			return true;
 		}
 
-		// TTL floor of 1s: with `listeningStreamSeconds` at 0 the streams cost
-		// no worker time and the cap is moot, but a sub-second TTL is not
-		// portable across cache backends.
-		$window = max(1, (int)ceil($this->listeningStreamSeconds()));
+		$seconds = $this->listeningStreamSeconds();
+		if ($seconds <= 0.0) {
+			// Nothing to bound. A zero-length window writes its keepalive and
+			// returns, so the worker is free again before the next request
+			// arrives and concurrency is ~0 however fast opens come in.
+			//
+			// Consuming a slot here would be actively harmful: the TTL below
+			// floors at 1s, so at a 0 window the counter stops measuring
+			// concurrent streams and starts measuring opens per second —
+			// a global request-rate limit, which is McpRateLimitMiddleware's
+			// job and which it does per-IP rather than pooling every caller
+			// into one bucket. The observable effect was probes being refused
+			// during ordinary traffic: 16/20 admitted at a cap of 20 with no
+			// worker anywhere near being held. A refused probe is exactly the
+			// 405 this whole feature exists to prevent.
+			return true;
+		}
+
+		// TTL floor of 1s: sub-second TTLs are not portable across cache
+		// backends. Only reached with a non-zero window, where the counter is
+		// measuring real concurrency.
+		$window = max(1, (int)ceil($seconds));
 		$key    = self::LISTENING_STREAM_SLOTS_KEY;
 
 		$count = $this->cache->getData($key);
