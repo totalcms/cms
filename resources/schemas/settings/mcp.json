@@ -83,11 +83,45 @@
 			"type"        : "number",
 			"field"       : "number",
 			"label"       : "Listening Stream Duration (seconds)",
-			"help"        : "How long the listening stream (above) stays open before closing on its own. Clamped to 1-30 seconds no matter what's entered here. Behind a buffering reverse proxy (Cloudflare, nginx with <code>proxy_buffering on</code>) the worker is held for the full duration even after the real client disconnects, so keep this as short as your scanning clients need — a couple of seconds is enough to deliver the first bytes.",
-			"placeholder" : "5",
-			"default"     : 5,
-			"min"         : 1,
+			"help"        : "How long the listening stream (above) stays open before closing on its own. Clamped to 0-30 seconds no matter what's entered here. <strong>0 is the cheapest setting that still passes a probe</strong> — the client still gets a real 200 <code>text/event-stream</code> response with a keepalive event in it, but the worker is released in milliseconds instead of held for the whole window. Behind a buffering reverse proxy (Cloudflare, nginx with <code>proxy_buffering on</code>) the worker is held for the full duration even after the real client disconnects, so keep this as short as your scanning clients accept.",
+			"placeholder" : "1",
+			"default"     : 1,
+			"min"         : 0,
 			"max"         : 30,
+			"settings" : {
+				"visibility": {
+					"watch": "listeningStream",
+					"value": true,
+					"operator": "=="
+				}
+			}
+		},
+		"listeningStreamMaxConcurrent": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Max Concurrent Listening Streams",
+			"help"        : "Hard ceiling on listening streams opened site-wide per window, across all callers. This is the only limit that applies to OAuth-authenticated clients — the public rate limit above exempts anyone sending an <code>Authorization: Bearer</code> header — and the only one that bounds the total rather than a single IP. Keep it a small fraction of your <code>pm.max_children</code>: these streams carry nothing but keepalives, so every worker they hold is taken from real request handling. Callers above the cap get the normal 405. Set to <code>0</code> to disable the cap.",
+			"placeholder" : "2",
+			"default"     : 2,
+			"min"         : 0,
+			"max"         : 50,
+			"settings" : {
+				"visibility": {
+					"watch": "listeningStream",
+					"value": true,
+					"operator": "=="
+				}
+			}
+		},
+		"listeningStreamRetryMs": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Listening Stream Reconnect Delay (ms)",
+			"help"        : "How long a client is told to wait before reconnecting after the stream closes, sent as the SSE <code>retry:</code> field. A client occupies a worker for the duration above, then idles for this long, so raising it lowers the steady-state cost of every connected client proportionally. Nothing is lost while disconnected: T3 never pushes unsolicited messages over this stream — subscription notifications are delivered on the client's next request. Some clients ignore this and reconnect immediately; those are bounded by the cap above.",
+			"placeholder" : "15000",
+			"default"     : 15000,
+			"min"         : 0,
+			"max"         : 300000,
 			"settings" : {
 				"visibility": {
 					"watch": "listeningStream",

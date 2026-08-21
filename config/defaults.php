@@ -442,21 +442,60 @@ $settings['mcp'] = [
 	// requests that actually ask for an SSE upgrade — a plain GET (browser,
 	// crawler, uptime monitor) still gets the SDK's normal 405.
 	//
-	// Worker-occupancy math: each open stream holds one PHP-FPM worker for
-	// the full `listeningStreamSeconds` window. At the default rate limit
-	// (`publicIpPerMinute: 60`) and a 5s window, one IP can hold ~5 workers
-	// concurrently — within policy on a typical shared-hosting pool
-	// (`pm.max_children` often 5-20). Behind a buffering reverse proxy
+	// Worker-occupancy math. Each open stream holds one PHP-FPM worker for the
+	// full `listeningStreamSeconds` window. Behind a buffering reverse proxy
 	// (Cloudflare, nginx with proxy_buffering on) the proxy holds the origin
 	// connection independently of the real client, so `connection_aborted()`
 	// never fires there — assume every stream holds its worker for the FULL
 	// window regardless of whether the real client is still listening.
-	// `listeningStreamSeconds` is therefore the only real bound; it is
-	// clamped to 1-30 in code no matter what's configured here. Set
-	// `listeningStream` false to skip the stream entirely under worker
-	// pressure and let the SDK return its normal 405.
+	//
+	// An earlier version of this note reasoned per-IP — "at `publicIpPerMinute:
+	// 60` and a 5s window one IP holds ~5 workers, within policy on a 5-20
+	// worker pool" — and concluded the feature was self-limiting. It is not,
+	// for two reasons, both observed in production:
+	//
+	//   1. The per-IP limiter exempts every caller sending `Authorization:
+	//      Bearer ...` (see McpRateLimitMiddleware), which is every
+	//      OAuth-authenticated MCP client. Those callers have no per-IP bound
+	//      at all.
+	//   2. Even for anonymous callers it bounds one IP, not the aggregate. 17
+	//      clients at ~5 workers each is ~85 workers of demand against a pool
+	//      of 20 — which is exactly what pinned a production pool at its
+	//      ceiling around the clock until `listeningStreamMaxConcurrent`
+	//      landed.
+	//
+	// A client cycles `listeningStreamSeconds` occupied then
+	// `listeningStreamRetryMs` idle, so a well-behaved one holds
+	// `seconds / (seconds + retry)` of a worker continuously — 71% at the old
+	// 5s/2s defaults, ~6% at today's 1s/15s. Clients that ignore `retry:` (some
+	// do; they reconnect within the same second) are bounded only by
+	// `listeningStreamMaxConcurrent`.
+	//
+	// `listeningStreamSeconds` is clamped to 0-30 in code no matter what's set
+	// here. Zero is legal and is the cheapest setting that still satisfies a
+	// probe: the opening keepalive and `retry:` are written before the wait
+	// loop, so the client still gets a real 200 `text/event-stream` response
+	// with an event in it while the worker is released in milliseconds. Set
+	// `listeningStream` false to skip the stream entirely under worker pressure
+	// and let the SDK return its normal 405.
 	'listeningStream'        => true,
-	'listeningStreamSeconds' => 5,
+	'listeningStreamSeconds' => 1,
+	// Hard ceiling on listening streams opened site-wide per window, across all
+	// callers, authenticated or not. This is the only bound that applies to
+	// OAuth clients and the only one that bounds the aggregate. Keep it a small
+	// fraction of `pm.max_children` — the streams carry nothing but keepalives,
+	// so anything they take is taken from real request handling. 0 or less
+	// disables the cap (matching McpRateLimitMiddleware's convention); over the
+	// cap, callers get the SDK's normal spec-legal 405.
+	'listeningStreamMaxConcurrent' => 2,
+	// `retry:` value (milliseconds) sent to the client, telling it how long to
+	// wait before reconnecting once the window closes. Raising this is the
+	// cheapest reduction in steady-state worker cost for well-behaved clients;
+	// the trade is that a client is disconnected for longer, which costs
+	// nothing here because T3 never pushes unsolicited JSON-RPC messages over
+	// this stream (subscription notifications are flushed on the client's next
+	// POST response by the SDK transport, not here).
+	'listeningStreamRetryMs' => 15000,
 ];
 
 // WordPress-compatible XML-RPC publishing endpoint. Off by default: the path is

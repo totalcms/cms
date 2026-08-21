@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Mcp\Schema\JsonRpc\MessageInterface;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\postJson;
@@ -199,6 +200,9 @@ describe('McpEndpointAction — listening stream (GET)', function (): void {
 		$config->mcp = array_merge($config->mcp, [
 			'publicAccess'    => true,
 			'listeningStream' => true,
+			// Cap is exercised by its own tests below; disabled here so an
+			// unrelated assertion can never fail on a shared counter.
+			'listeningStreamMaxConcurrent' => 0,
 		]);
 
 		$response = \TotalCMS\Slim\Pest\get('/mcp', ['Accept' => 'text/event-stream']);
@@ -230,6 +234,9 @@ describe('McpEndpointAction — listening stream (GET)', function (): void {
 		$config->mcp = array_merge($config->mcp, [
 			'publicAccess'    => true,
 			'listeningStream' => true,
+			// Cap is exercised by its own tests below; disabled here so an
+			// unrelated assertion can never fail on a shared counter.
+			'listeningStreamMaxConcurrent' => 0,
 		]);
 
 		$response = \TotalCMS\Slim\Pest\get('/mcp');
@@ -245,6 +252,9 @@ describe('McpEndpointAction — listening stream (GET)', function (): void {
 		$config->mcp = array_merge($config->mcp, [
 			'publicAccess'    => true,
 			'listeningStream' => false,
+			// Cap is exercised by its own tests below; disabled here so an
+			// unrelated assertion can never fail on a shared counter.
+			'listeningStreamMaxConcurrent' => 0,
 		]);
 
 		$response = \TotalCMS\Slim\Pest\get('/mcp', ['Accept' => 'text/event-stream']);
@@ -270,6 +280,9 @@ describe('McpEndpointAction — listening stream (GET)', function (): void {
 		$config->mcp = array_merge($config->mcp, [
 			'publicAccess'    => false,
 			'listeningStream' => true,
+			// Cap is exercised by its own tests below; disabled here so an
+			// unrelated assertion can never fail on a shared counter.
+			'listeningStreamMaxConcurrent' => 0,
 		]);
 
 		$response = \TotalCMS\Slim\Pest\get('/mcp', ['Accept' => 'text/event-stream']);
@@ -304,6 +317,13 @@ describe('McpEndpointAction — listening stream (GET)', function (): void {
 			'publicAccess'           => true,
 			'listeningStream'        => true,
 			'listeningStreamSeconds' => 1,
+			// Cap is exercised by its own tests below; disabled here so an
+			// unrelated assertion can never fail on a shared counter.
+			'listeningStreamMaxConcurrent' => 0,
+			// Pinned rather than left to the default so this assertion tests
+			// that config reaches the wire, not that a particular default is
+			// still in place.
+			'listeningStreamRetryMs' => 4321,
 		]);
 
 		$response = \TotalCMS\Slim\Pest\get('/mcp', ['Accept' => 'text/event-stream']);
@@ -321,7 +341,7 @@ describe('McpEndpointAction — listening stream (GET)', function (): void {
 
 		// At least two keepalive records: the initial one plus one loop pass.
 		expect(substr_count($captured, ': keepalive'))->toBeGreaterThanOrEqual(2);
-		expect($captured)->toContain('retry: 2000');
+		expect($captured)->toContain('retry: 4321');
 
 		// The loop actually held the worker for roughly the window (not an
 		// instant return) but terminated close to it (not hung indefinitely).
@@ -329,17 +349,20 @@ describe('McpEndpointAction — listening stream (GET)', function (): void {
 		expect($elapsed)->toBeLessThan(3.0);
 	});
 
-	it('clamps a configured 0-second window up to the 1-second floor', function (): void {
-		// Defends I2's clamp: an operator (or a bug) setting 0 — or anything
-		// below the floor — must not turn the loop into a no-op that skips
-		// straight to "closed," because that skips the one real keepalive
-		// pass entirely.
+	it('a 0-second window still answers the probe but releases the worker immediately', function (): void {
+		// Zero is now a legal, supported setting rather than something the
+		// clamp rounds away — and it is the whole point of the change: a probe
+		// only checks that it got a 200 with `text/event-stream` carrying an
+		// event, all of which is written before the wait loop. So a 0 window
+		// satisfies every scanner while costing ~0 worker time, which is what
+		// makes the feature safe to leave on under `pm.max_children` pressure.
 		/** @var Config $config */
 		$config      = $this->app->getContainer()->get(Config::class);
 		$config->mcp = array_merge($config->mcp, [
-			'publicAccess'           => true,
-			'listeningStream'        => true,
-			'listeningStreamSeconds' => 0,
+			'publicAccess'                 => true,
+			'listeningStream'              => true,
+			'listeningStreamSeconds'       => 0,
+			'listeningStreamMaxConcurrent' => 0,
 		]);
 
 		$response = \TotalCMS\Slim\Pest\get('/mcp', ['Accept' => 'text/event-stream']);
@@ -351,13 +374,89 @@ describe('McpEndpointAction — listening stream (GET)', function (): void {
 			return;
 		}
 
+		expect($response->getHeaderLine('Content-Type'))->toContain('text/event-stream');
+
 		$startedAt = microtime(true);
 		$captured  = triggerListeningStreamBody($response);
 		$elapsed   = microtime(true) - $startedAt;
 
+		// The probe still gets a real event — this is what a scanner checks.
 		expect($captured)->toContain(': keepalive');
-		// Clamped to the 1s floor, not 0 — proves the clamp is live, not just
-		// documented.
-		expect($elapsed)->toBeGreaterThanOrEqual(0.9);
+		expect($captured)->toContain('retry: ');
+
+		// And the worker came straight back. The old floor held it ~1s; the
+		// assertion is deliberately loose (well under that) so it proves the
+		// loop was skipped without being flaky on a slow CI box.
+		expect($elapsed)->toBeLessThan(0.5);
+	});
+
+	it('falls through to the SDK 405 once the concurrent-stream cap is reached', function (): void {
+		// The cap is the only bound that applies to OAuth-authenticated
+		// callers (McpRateLimitMiddleware exempts anything sending
+		// `Authorization: Bearer ...`) and the only one that bounds the
+		// aggregate rather than a single IP. Over the cap the caller gets the
+		// SDK's ordinary spec-legal 405 — identical to `listeningStream` being
+		// off — so no client sees a novel failure mode.
+		/** @var Config $config */
+		$config      = $this->app->getContainer()->get(Config::class);
+		$config->mcp = array_merge($config->mcp, [
+			'publicAccess'                 => true,
+			'listeningStream'              => true,
+			'listeningStreamSeconds'       => 0,
+			'listeningStreamMaxConcurrent' => 1,
+		]);
+
+		/** @var CacheManager $cache */
+		$cache = $this->app->getContainer()->get(CacheManager::class);
+		$cache->clearData('mcp_listening_stream_slots');
+
+		$first  = \TotalCMS\Slim\Pest\get('/mcp', ['Accept' => 'text/event-stream']);
+		$status = $first->getStatusCode();
+
+		if ($status !== 200) {
+			expect($status)->toBeIn([403, 404]);
+
+			return;
+		}
+
+		expect($first->getHeaderLine('Content-Type'))->toContain('text/event-stream');
+
+		// Second open inside the same window exceeds a cap of 1.
+		$second = \TotalCMS\Slim\Pest\get('/mcp', ['Accept' => 'text/event-stream']);
+
+		expect($second->getStatusCode())->toBe(405);
+		expect($second->getHeaderLine('Content-Type'))->not()->toContain('text/event-stream');
+	});
+
+	it('does not cap when listeningStreamMaxConcurrent is 0', function (): void {
+		// `<= 0` disables the cap, matching McpRateLimitMiddleware's
+		// convention for its own limit. Without this an operator setting 0
+		// expecting "no limit" would instead get "no streams."
+		/** @var Config $config */
+		$config      = $this->app->getContainer()->get(Config::class);
+		$config->mcp = array_merge($config->mcp, [
+			'publicAccess'                 => true,
+			'listeningStream'              => true,
+			'listeningStreamSeconds'       => 0,
+			'listeningStreamMaxConcurrent' => 0,
+		]);
+
+		/** @var CacheManager $cache */
+		$cache = $this->app->getContainer()->get(CacheManager::class);
+		$cache->clearData('mcp_listening_stream_slots');
+
+		$first = \TotalCMS\Slim\Pest\get('/mcp', ['Accept' => 'text/event-stream']);
+
+		if ($first->getStatusCode() !== 200) {
+			expect($first->getStatusCode())->toBeIn([403, 404]);
+
+			return;
+		}
+
+		foreach (range(1, 3) as $_) {
+			$next = \TotalCMS\Slim\Pest\get('/mcp', ['Accept' => 'text/event-stream']);
+			expect($next->getStatusCode())->toBe(200);
+			expect($next->getHeaderLine('Content-Type'))->toContain('text/event-stream');
+		}
 	});
 });

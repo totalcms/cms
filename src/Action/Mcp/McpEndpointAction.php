@@ -11,6 +11,7 @@ use Mcp\Server\Transport\StreamableHttpTransport;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
@@ -50,6 +51,13 @@ use TotalCMS\Support\Config;
  */
 readonly class McpEndpointAction
 {
+	/**
+	 * Cache key for the global listening-stream admission counter. Shared by
+	 * every request on the site, so CacheManager's domain prefixing keeps
+	 * multi-site installs from sharing one budget.
+	 */
+	private const LISTENING_STREAM_SLOTS_KEY = 'mcp_listening_stream_slots';
+
 	public function __construct(
 		private McpServerFactory $serverFactory,
 		private McpAuth $mcpAuth,
@@ -61,6 +69,7 @@ readonly class McpEndpointAction
 		private OAuthActivityLogger $activityLogger,
 		private McpUrlBuilder $urlBuilder,
 		private AccessControlService $accessControl,
+		private CacheManager $cache,
 	) {
 	}
 
@@ -279,7 +288,19 @@ readonly class McpEndpointAction
 					->withHeader('Content-Type', 'text/plain');
 			}
 
-			return $this->listeningStreamResponse($response);
+			// Global admission control. The per-IP rate limiter
+			// (McpRateLimitMiddleware) does not bound this: it exempts every
+			// caller presenting `Authorization: Bearer ...`, which is every
+			// OAuth-authenticated MCP client, and even for anonymous callers
+			// it bounds one IP rather than the aggregate. N clients at the
+			// per-IP limit can therefore hold N x window workers between them.
+			// Over the cap we fall through to the SDK's normal 405 — the same
+			// spec-legal answer the endpoint gave before this feature existed,
+			// so a client that treats 405 as "no server-initiated stream"
+			// degrades exactly as it would with `listeningStream` off.
+			if ($this->reserveListeningStreamSlot()) {
+				return $this->listeningStreamResponse($response);
+			}
 		}
 
 		$server = $this->serverFactory->build($persona, $toolsOnly);
@@ -307,6 +328,75 @@ readonly class McpEndpointAction
 	}
 
 	/**
+	 * Resolved, clamped duration of one listening stream, in seconds. Shared by
+	 * the stream itself and by the admission counter's TTL so the two can never
+	 * disagree about how long a stream lives.
+	 */
+	private function listeningStreamSeconds(): float
+	{
+		// Clamp regardless of what's configured — a fat-fingered (or
+		// maliciously large) `mcp.listeningStreamSeconds` in tcms.php must not
+		// be able to pin a worker for minutes/hours. Zero is legal and is the
+		// cheapest setting that still satisfies a probe: the opening keepalive
+		// and `retry:` are written before the loop, so the client still sees a
+		// real 200 `text/event-stream` response with an event in it, and the
+		// worker is released in milliseconds instead of held for the window.
+		$configured = (float)($this->config->mcp['listeningStreamSeconds'] ?? 1);
+
+		return max(0.0, min(30.0, $configured));
+	}
+
+	/**
+	 * Reserve one of the globally-capped listening-stream slots.
+	 *
+	 * Counts stream *opens* within a rolling window equal to the stream
+	 * duration rather than tracking open/close pairs. Because every stream
+	 * lives for exactly that window, opens-in-the-last-window is the
+	 * concurrency — and an increment-only counter cannot drift. A
+	 * decrement-on-close counter can: a worker killed mid-stream (FPM
+	 * `request_terminate_timeout`, OOM, pool reload) never runs its decrement,
+	 * the count ratchets upward, and under continuous traffic each increment
+	 * refreshes the TTL so the leak never expires. The trade is fixed-window
+	 * rather than sliding: a burst straddling a boundary can admit up to 2x
+	 * the cap briefly, which is a far better failure mode than a gate that
+	 * silently welds itself shut.
+	 *
+	 * Storage goes through CacheManager (Redis in production, graceful
+	 * fallback to APCu/Memcached/filesystem). On APCu the counter is
+	 * per-worker, so the effective cap is `listeningStreamMaxConcurrent x
+	 * worker_count` — same caveat McpRateLimitMiddleware documents. Fails
+	 * open: an unreachable cache reads zero and the stream is allowed, so a
+	 * broken cache degrades to the pre-cap behaviour rather than disabling
+	 * the feature.
+	 */
+	private function reserveListeningStreamSlot(): bool
+	{
+		$max = (int)($this->config->mcp['listeningStreamMaxConcurrent'] ?? 2);
+		if ($max <= 0) {
+			// Cap disabled, matching McpRateLimitMiddleware's convention for
+			// its own `<= 0` limit.
+			return true;
+		}
+
+		// TTL floor of 1s: with `listeningStreamSeconds` at 0 the streams cost
+		// no worker time and the cap is moot, but a sub-second TTL is not
+		// portable across cache backends.
+		$window = max(1, (int)ceil($this->listeningStreamSeconds()));
+		$key    = self::LISTENING_STREAM_SLOTS_KEY;
+
+		$count = $this->cache->getData($key);
+		$count = is_int($count) ? $count : 0;
+
+		if ($count >= $max) {
+			return false;
+		}
+
+		$this->cache->storeData($key, $count + 1, $window);
+
+		return true;
+	}
+
+	/**
 	 * Emits a bounded SSE stream of keepalive comments and nothing else.
 	 *
 	 * T3 never has a server-initiated JSON-RPC message to push on this path
@@ -330,18 +420,20 @@ readonly class McpEndpointAction
 	 * `connection_aborted()` never fires there even after the real client is
 	 * long gone — the checks below only help on a direct, non-proxied
 	 * connection (e.g. PHP's built-in dev server). Assume every stream holds
-	 * its worker for the FULL configured window; the window length (clamped
-	 * below) is the only real bound in production.
+	 * its worker for the FULL configured window.
+	 *
+	 * Two things bound the cost in production, and both are needed: the window
+	 * length (listeningStreamSeconds(), clamped to 0-30) caps how long any one
+	 * stream holds its worker, and reserveListeningStreamSlot() caps how many
+	 * may be open at once across all callers. The window alone is not enough —
+	 * it bounds one stream, not the fleet.
 	 */
 	private function listeningStreamResponse(ResponseInterface $response): ResponseInterface
 	{
-		// Clamp regardless of what's configured — a fat-fingered (or
-		// maliciously large) `mcp.listeningStreamSeconds` in tcms.php must not
-		// be able to pin a worker for minutes/hours.
-		$configured = (float)($this->config->mcp['listeningStreamSeconds'] ?? 5);
-		$seconds    = max(1.0, min(30.0, $configured));
+		$seconds = $this->listeningStreamSeconds();
+		$retryMs = max(0, (int)($this->config->mcp['listeningStreamRetryMs'] ?? 15000));
 
-		$stream = new CallbackStream(static function () use ($seconds): void {
+		$stream = new CallbackStream(static function () use ($seconds, $retryMs): void {
 			// Defeat zlib output buffering — common on shared hosting, T3's
 			// core audience. Without this, `flush()` below silently no-ops:
 			// PHP buffers everything for compression and the client sees
@@ -379,8 +471,16 @@ readonly class McpEndpointAction
 				// loop — effectively a permanently held worker. Sent once, on
 				// the first record; the SSE spec updates the client's
 				// reconnection timer whenever it sees the field, so one is enough.
+				//
+				// This is the single biggest lever on steady-state cost for a
+				// well-behaved client: a client cycles `seconds` occupied then
+				// `retry` idle, so it holds `seconds / (seconds + retry)` of a
+				// worker continuously. At the old 2s value with a 5s window
+				// that was 71% of a worker *per connected client*, forever.
+				// Clients that ignore `retry:` are bounded by
+				// reserveListeningStreamSlot() instead.
 				echo ": keepalive\n";
-				echo "retry: 2000\n\n";
+				echo "retry: {$retryMs}\n\n";
 				@ob_flush();
 				flush();
 
