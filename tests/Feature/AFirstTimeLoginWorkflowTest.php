@@ -76,6 +76,8 @@ describe('First Time Login Workflow', function (): void {
 	it('creates first user when authenticating on new installation', function (): void {
 		$container    = $this->app->getContainer();
 		$loginService = $container->get(LoginService::class);
+		$indexReader  = $container->get(IndexReader::class);
+		$config       = $container->get(TotalCMS\Support\Config::class);
 
 		$email    = 'admin@test.com';
 		$password = 'secure-password-123';
@@ -83,14 +85,24 @@ describe('First Time Login Workflow', function (): void {
 		// Perform first login - should create user
 		$user = $loginService->authenticate($email, $password);
 
-		// Verify user was created with correct data
+		// Verify user was created with correct data. The id is assigned by the
+		// auth schema's "${oid}" autogen setting (not hardcoded), so assert its
+		// shape and cross-check it against the index rather than a fixed value.
 		expect($user)->toBeArray();
-		expect($user['id'])->toBe('admin');
+		expect($user['id'])->toBeString();
+		expect((string)$user['id'])->not()->toBe('');
 		expect($user['name'])->toBe('Admin');
 		expect($user['email'])->toBe($email);
 		expect($user['active'])->toBe(true);
 		expect($user['groups'])->toContain(UserValidationService::ADMINGROUP);
 		expect(password_verify($password, (string)$user['password']))->toBeTrue();
+
+		// Confirm the authenticated user's id matches the single object the
+		// index recorded for the freshly-created auth collection.
+		$index = $indexReader->fetchIndex($config->auth['collection']);
+		expect($index->objects->count())->toBe(1);
+		$indexedIds = $index->objects->map(static fn (array $object) => (string)$object['id'])->values()->all();
+		expect($indexedIds)->toBe([(string)$user['id']]);
 	});
 
 	it('does not create duplicate users on subsequent logins', function (): void {

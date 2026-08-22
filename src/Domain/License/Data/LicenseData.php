@@ -69,7 +69,7 @@ readonly class LicenseData
 			dnsVerified         : $response['dnsVerified'] ?? false,
 			versionAuthorized   : $response['versionAuthorized'] ?? true,
 			allowedVersion      : $response['allowedVersion'] ?? null,
-			registered          : $response['registered'] ?? true,
+			registered          : filter_var($response['registered'] ?? true, FILTER_VALIDATE_BOOLEAN),
 			timestamp           : time(),
 		);
 	}

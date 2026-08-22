@@ -9,7 +9,52 @@
 		<p>{{ t('wizard.license_desc') }}</p>
 	</section>
 
-	{% if error %}
+	{% for message in flash.get('error') %}
+		<div class="cms-error" role="alert">
+			{{ message }}
+		</div>
+	{% endfor %}
+
+	{% if pending %}
+		<p>{{ t('wizard.license_code_sent', {'{email}': pending.email}) }}</p>
+		{% set codeFields %}
+			{{ cms.form.field("code", "text", {
+				label       : t('wizard.license_code'),
+				required    : true,
+				placeholder : "123456",
+				settings    : { maxlength: 6 },
+			}) }}
+		{% endset %}
+		{{ cms.form.simple(cms.base ~ '/setup/license/verify', codeFields, {
+			class  : "setup-form",
+			method : "POST",
+			label  : t('wizard.license_code_btn'),
+			ajax   : false,
+		}) }}
+		<form method="POST" action="{{ cms.base }}/setup/license" class="license-resend">
+			<button type="submit" class="dash-button transparent">{{ t('wizard.license_resend') }}</button>
+		</form>
+	{% elseif needsRegistration %}
+		<p>{{ t('wizard.license_register_intro') }}</p>
+		{% set regFields %}
+			{{ cms.form.field("name", "text", {
+				label       : t('wizard.license_name'),
+				required    : true,
+				value       : prefillName,
+			}) }}
+			{{ cms.form.field("email", "email", {
+				label       : t('wizard.license_email'),
+				required    : true,
+				value       : prefillEmail,
+			}) }}
+		{% endset %}
+		{{ cms.form.simple(cms.base ~ '/setup/license', regFields, {
+			class  : "setup-form",
+			method : "POST",
+			label  : t('wizard.license_start_btn'),
+			ajax   : false,
+		}) }}
+	{% elseif error %}
 		<div class="cms-error" role="alert">
 			{{ t('wizard.license_error', {'{error}': error}) }}
 		</div>
@@ -66,6 +111,10 @@
 
 .setup-continue {
 	margin-top: 1rem;
+}
+
+.license-resend {
+	margin-top: 0.75rem;
 }
 </style>
 {% endblock %}

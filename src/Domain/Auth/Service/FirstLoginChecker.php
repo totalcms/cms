@@ -53,7 +53,6 @@ readonly class FirstLoginChecker
 		$name = trim($name);
 
 		$this->objectSaver->saveObject($this->collection, [
-			'id'       => 'admin',
 			'name'     => $name !== '' ? $name : 'Admin',
 			'email'    => $email,
 			'password' => $password,

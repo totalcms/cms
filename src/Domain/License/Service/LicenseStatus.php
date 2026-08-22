@@ -193,6 +193,22 @@ readonly class LicenseStatus
 	}
 
 	/**
+	 * A grandfathered anonymous trial: active, but no contact registered with
+	 * the license server — the operator gets no expiry reminders until they
+	 * register.
+	 */
+	public function isUnregisteredTrial(): bool
+	{
+		try {
+			$license = $this->licenseValidator->validateLicense();
+
+			return $license->trial && $license->valid && !$license->registered;
+		} catch (\Throwable) {
+			return false;
+		}
+	}
+
+	/**
 	 * Check if edition simulation is allowed.
 	 * Pro and above editions (Pro, Enterprise, Development, Trial) can simulate.
 	 */

@@ -42,6 +42,19 @@ function createLicenseStatusWithException(): LicenseStatus
 	return new LicenseStatus($licenseValidator, $loggerFactory);
 }
 
+function createLicenseStatusWithData(LicenseData $licenseData): LicenseStatus
+{
+	$licenseValidator = test()->createMock(LicenseValidator::class);
+	$licenseValidator->method('validateLicense')->willReturn($licenseData);
+
+	$loggerFactory = test()->createMock(LoggerFactory::class);
+	$logger        = test()->createMock(Psr\Log\LoggerInterface::class);
+	$loggerFactory->method('addFileHandler')->willReturnSelf();
+	$loggerFactory->method('createLogger')->willReturn($logger);
+
+	return new LicenseStatus($licenseValidator, $loggerFactory);
+}
+
 describe('LicenseStatus', function (): void {
 	test('can be instantiated', function (): void {
 		$licenseStatus = createLicenseStatus();
@@ -93,5 +106,62 @@ describe('LicenseStatus::canSimulateEdition', function (): void {
 	test('Expired license cannot simulate', function (): void {
 		$status = createLicenseStatusWithException();
 		expect($status->canSimulateEdition())->toBeFalse();
+	});
+});
+
+describe('LicenseStatus::isUnregisteredTrial', function (): void {
+	test('true for valid unregistered trial', function (): void {
+		$licenseData = new LicenseData(
+			valid              : true,
+			trial              : true,
+			domain             : 'example.com',
+			edition            : 'trial',
+			message            : '',
+			validationToken    : null,
+			updatesValid       : true,
+			trialDaysRemaining : 14,
+			registered         : false,
+		);
+
+		$status = createLicenseStatusWithData($licenseData);
+		expect($status->isUnregisteredTrial())->toBeTrue();
+	});
+
+	test('false for registered trial', function (): void {
+		$licenseData = new LicenseData(
+			valid              : true,
+			trial              : true,
+			domain             : 'example.com',
+			edition            : 'trial',
+			message            : '',
+			validationToken    : null,
+			updatesValid       : true,
+			trialDaysRemaining : 14,
+			registered         : true,
+		);
+
+		$status = createLicenseStatusWithData($licenseData);
+		expect($status->isUnregisteredTrial())->toBeFalse();
+	});
+
+	test('false for valid non-trial license', function (): void {
+		$licenseData = new LicenseData(
+			valid              : true,
+			trial              : false,
+			domain             : 'example.com',
+			edition            : 'pro',
+			message            : '',
+			validationToken    : null,
+			updatesValid       : true,
+			registered         : false,
+		);
+
+		$status = createLicenseStatusWithData($licenseData);
+		expect($status->isUnregisteredTrial())->toBeFalse();
+	});
+
+	test('false when validator throws', function (): void {
+		$status = createLicenseStatusWithException();
+		expect($status->isUnregisteredTrial())->toBeFalse();
 	});
 });

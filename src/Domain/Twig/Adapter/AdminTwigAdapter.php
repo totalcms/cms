@@ -867,6 +867,16 @@ readonly class AdminTwigAdapter
 			];
 		}
 
+		// 2b. Unregistered trial — no contact on file means no expiry reminders
+		if ($this->licenseStatus->isUnregisteredTrial()) {
+			$alerts[] = [
+				'level'    => 'info',
+				'message'  => 'Register your trial to get email reminders before it expires.',
+				'link'     => 'utils/license-manager',
+				'linkText' => 'Register trial',
+			];
+		}
+
 		// 3. Job queue stalled
 		$queueHealth = $this->jobQueueHealth->status();
 		if ($queueHealth->stalled) {

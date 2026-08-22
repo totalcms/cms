@@ -90,4 +90,23 @@ final class FirstLoginCheckerTest extends TestCase
 
 		$this->assertSame('Admin', $captured['name'] ?? null);
 	}
+
+	public function testCreateFirstUserDoesNotHardcodeTheId(): void
+	{
+		// The auth schema's id field has `settings.autogen: "${oid}"` — the
+		// saved payload must omit 'id' entirely so ObjectFactory/ObjectSaver
+		// generate it, instead of forcing the literal id 'admin'.
+		$captured = [];
+		$this->objectSaver->expects($this->once())
+			->method('saveObject')
+			->willReturnCallback(function (string $collection, array $data) use (&$captured) {
+				$captured = $data;
+
+				return $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+			});
+
+		$this->checker->createFirstUser('a@b.com', 'password123', 'Joe Workman');
+
+		$this->assertArrayNotHasKey('id', $captured);
+	}
 }

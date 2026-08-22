@@ -27,6 +27,8 @@ return function (App $app): void {
 
 		// Step 4: License
 		$group->get('/license', Setup\LicenseSetupAction::class)->setName('setup-license');
+		$group->post('/license', Setup\LicenseRegisterSubmitAction::class)->setName('setup-license-submit');
+		$group->post('/license/verify', Setup\LicenseVerifySubmitAction::class)->setName('setup-license-verify');
 
 		// Step 5: Error monitoring choice
 		$group->get('/error-monitoring', Setup\ErrorMonitoringSetupAction::class)->setName('setup-error-monitoring');
