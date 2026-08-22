@@ -352,6 +352,75 @@ describe('LicenseValidator HTTP calls', function (): void {
 	});
 });
 
+describe('LicenseValidator trial registration', function (): void {
+	test('registerTrial posts domain, name, and email to /trial/register', function (): void {
+		$apiResponse = ['status' => 'verification_required', 'email' => 'joe@example.com', 'expiresAt' => '2026-08-21 12:00:00'];
+		$httpClient  = test()->createMock(HttpClientInterface::class);
+		$httpClient->expects(test()->once())
+			->method('request')
+			->with(
+				'POST',
+				test()->stringContains('/trial/register'),
+				test()->callback(function (array $options): bool {
+					$body = json_decode($options['body'] ?? '', true);
+
+					return ($body['name'] ?? '') === 'Joe' && ($body['email'] ?? '') === 'joe@example.com' && isset($body['domain']);
+				})
+			)
+			->willReturn(new HttpResponse(200, (string)json_encode($apiResponse)));
+
+		$validator = new LicenseValidator(createMockConfig(), createMockCacheManager(), $httpClient);
+		$result    = $validator->registerTrial('Joe', 'joe@example.com');
+		expect($result['status'])->toBe('verification_required');
+	});
+
+	test('verifyTrial posts code and returns trial_created', function (): void {
+		$apiResponse = ['status' => 'trial_created', 'trial' => 'true', 'valid' => 'true', 'registered' => 'true'];
+		$httpClient  = test()->createMock(HttpClientInterface::class);
+		$httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode($apiResponse)));
+
+		$validator = new LicenseValidator(createMockConfig(), createMockCacheManager(), $httpClient);
+		$result    = $validator->verifyTrial('joe@example.com', '123456');
+		expect($result['status'])->toBe('trial_created');
+	});
+
+	test('verifyTrial surfaces server error as LicenseException', function (): void {
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->method('request')
+			->willReturn(new HttpResponse(400, (string)json_encode(['error' => 'Incorrect verification code.'])));
+
+		$validator = new LicenseValidator(createMockConfig(), createMockCacheManager(), $httpClient);
+		expect(fn () => $validator->verifyTrial('joe@example.com', '000000'))
+			->toThrow(LicenseException::class, 'Incorrect verification code.');
+	});
+
+	test('verifyTrial clears the license cache when the trial is created', function (): void {
+		$apiResponse = ['status' => 'trial_created', 'trial' => 'true', 'valid' => 'true', 'registered' => 'true'];
+		$httpClient  = test()->createMock(HttpClientInterface::class);
+		$httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode($apiResponse)));
+
+		$cache = test()->createMock(CacheManager::class);
+		$cache->method('getLicenseData')->willReturn(null);
+		$cache->expects(test()->once())->method('clearLicenseData')->with(LicenseData::CACHE_KEY);
+
+		$validator = new LicenseValidator(createMockConfig(), $cache, $httpClient);
+		$validator->verifyTrial('joe@example.com', '123456');
+	});
+
+	test('registerTrial does not clear the license cache when verification is still required', function (): void {
+		$apiResponse = ['status' => 'verification_required', 'email' => 'joe@example.com', 'expiresAt' => '2026-08-21 12:00:00'];
+		$httpClient  = test()->createMock(HttpClientInterface::class);
+		$httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode($apiResponse)));
+
+		$cache = test()->createMock(CacheManager::class);
+		$cache->method('getLicenseData')->willReturn(null);
+		$cache->expects(test()->never())->method('clearLicenseData');
+
+		$validator = new LicenseValidator(createMockConfig(), $cache, $httpClient);
+		$validator->registerTrial('Joe', 'joe@example.com');
+	});
+});
+
 describe('LicenseValidator store URL', function (): void {
 	test('store URL points at the production license host for the current domain', function (): void {
 		$validator = new LicenseValidator(

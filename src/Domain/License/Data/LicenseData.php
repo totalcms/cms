@@ -25,6 +25,7 @@ readonly class LicenseData
 		public bool $dnsVerified = false,
 		public bool $versionAuthorized = true,
 		public ?string $allowedVersion = null,
+		public bool $registered = true,
 		public int $timestamp = 0,
 	) {
 	}
@@ -68,6 +69,7 @@ readonly class LicenseData
 			dnsVerified         : $response['dnsVerified'] ?? false,
 			versionAuthorized   : $response['versionAuthorized'] ?? true,
 			allowedVersion      : $response['allowedVersion'] ?? null,
+			registered          : $response['registered'] ?? true,
 			timestamp           : time(),
 		);
 	}
@@ -92,6 +94,7 @@ readonly class LicenseData
 			dnsVerified        : (bool)($data['dnsVerified'] ?? false),
 			versionAuthorized  : (bool)($data['versionAuthorized'] ?? true),
 			allowedVersion     : $data['allowedVersion'] ?? null,
+			registered         : (bool)($data['registered'] ?? true),
 			timestamp          : (int)($data['timestamp'] ?? 0),
 		);
 	}
@@ -124,6 +127,7 @@ readonly class LicenseData
 			'dnsVerified'        => $this->dnsVerified,
 			'versionAuthorized'  => $this->versionAuthorized,
 			'allowedVersion'     => $this->allowedVersion,
+			'registered'         => $this->registered,
 			'timestamp'          => $this->timestamp,
 		];
 	}

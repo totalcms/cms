@@ -39,16 +39,24 @@ readonly class AccountSetupSubmitAction
 		$data  = (array)$request->getParsedBody();
 		$flash = $this->session->getFlash();
 
+		$name            = trim((string)($data['name'] ?? ''));
 		$email           = trim((string)($data['email'] ?? ''));
 		$password        = (string)($data['password'] ?? '');
 		$confirmPassword = (string)($data['password-confirm'] ?? '');
 
-		// Stash the submitted email so the form can repopulate it on every
-		// validation-failure redirect (passwords are NEVER stashed). Also reused
-		// by the complete page to display "logged in as".
+		// Stash the submitted name/email so the form can repopulate them on every
+		// validation-failure redirect (passwords are NEVER stashed). Email is also
+		// reused by the complete page to display "logged in as".
+		$this->session->set('setup_admin_name', $name);
 		$this->session->set('setup_admin_email', $email);
 
 		// Validate
+		if ($name === '') {
+			$flash->add('error', $this->translator->trans('wizard.account_name_req'));
+
+			return $this->redirectRenderer->redirectFor($response, 'setup-account');
+		}
+
 		if ($email === '') {
 			$flash->add('error', $this->translator->trans('wizard.account_email_req'));
 
@@ -80,7 +88,7 @@ readonly class AccountSetupSubmitAction
 		}
 
 		try {
-			$this->firstLoginChecker->createFirstUser($email, $password);
+			$this->firstLoginChecker->createFirstUser($email, $password, $name);
 		} catch (\Throwable $e) {
 			$flash->add('error', $this->translator->trans('wizard.account_fail', ['{error}' => $e->getMessage()]));
 

@@ -16,6 +16,13 @@
 	{% endfor %}
 
 	{% set formFields %}
+		{{ cms.form.field("name", "text", {
+			label       : t('wizard.account_name'),
+			required    : true,
+			placeholder : "Jane Smith",
+			value       : sessionData.setup_admin_name|default(''),
+		}) }}
+
 		{{ cms.form.field("email", "email", {
 			label       : t('wizard.account_email'),
 			required    : true,

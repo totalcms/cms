@@ -200,7 +200,19 @@ describe('LicenseData', function (): void {
 			'dnsVerified'        => true,
 			'versionAuthorized'  => false,
 			'allowedVersion'     => '3.1.0',
+			'registered'         => true,
 			'timestamp'          => 1234567890,
 		]);
+	});
+
+	test('registered defaults to true when absent from API response', function (): void {
+		$data = LicenseData::fromApiResponse(['valid' => true, 'trial' => true, 'domain' => 'x.com']);
+		expect($data->registered)->toBeTrue();
+	});
+
+	test('registered false round-trips through toArray/fromArray', function (): void {
+		$data = LicenseData::fromApiResponse(['valid' => false, 'trial' => false, 'registered' => false]);
+		expect($data->registered)->toBeFalse();
+		expect(LicenseData::fromArray($data->toArray())->registered)->toBeFalse();
 	});
 });
