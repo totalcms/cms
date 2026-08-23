@@ -6,7 +6,11 @@
 <main class="login-layout admin-layout">
 	<section class="setup-header">
 		<h1>{{ t('wizard.license_title') }}</h1>
-		<p>{{ t('wizard.license_desc') }}</p>
+		{# In the register/code states the step-specific line below is the real
+		   subtitle; the generic "license validated" copy would be misleading. #}
+		{% if not (pending or needsRegistration) %}
+			<p>{{ t('wizard.license_desc') }}</p>
+		{% endif %}
 	</section>
 
 	{% for message in flash.get('error') %}
@@ -88,7 +92,14 @@
 		</table>
 	{% endif %}
 
-	<a href="{{ cms.base }}/setup/error-monitoring" class="dash-button setup-continue">{{ t('wizard.continue') }}</a>
+	{% if pending or needsRegistration %}
+		{# Registering is the primary action here, so the skip is demoted to a
+		   quiet link — but kept, so a customer with a license key or a dev
+		   install isn't trapped on this step. #}
+		<a href="{{ cms.base }}/setup/error-monitoring" class="setup-skip-link">{{ t('wizard.license_skip_link') }}</a>
+	{% else %}
+		<a href="{{ cms.base }}/setup/error-monitoring" class="dash-button setup-continue">{{ t('wizard.continue') }}</a>
+	{% endif %}
 </main>
 
 <style>
@@ -115,6 +126,18 @@
 
 .license-resend {
 	margin-top: 0.75rem;
+}
+
+.setup-skip-link {
+	display: inline-block;
+	margin-top: 1.5rem;
+	color: oklch(var(--totalform-darkgray));
+	font-size: 0.9rem;
+	text-decoration: underline;
+}
+
+.setup-skip-link:hover {
+	color: oklch(var(--totalform-text-color));
 }
 </style>
 {% endblock %}

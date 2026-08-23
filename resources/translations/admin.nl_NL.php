@@ -1277,6 +1277,7 @@ return [
 	'wizard.license_desc'           => 'Uw Total CMS licentie is gevalideerd.',
 	'wizard.license_error'          => 'Licentie kon niet worden gevalideerd: {error}',
 	'wizard.license_skip'           => 'U kunt doorgaan met de setup en uw licentie later in het beheerpaneel configureren.',
+	'wizard.license_skip_link'      => 'Voorlopig overslaan — u kunt de licentie later instellen.',
 	'wizard.license_domain'         => 'Domein',
 	'wizard.license_edition'        => 'Editie',
 	'wizard.license_status'         => 'Status',

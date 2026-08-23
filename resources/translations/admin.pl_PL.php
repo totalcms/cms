@@ -1277,6 +1277,7 @@ return [
 	'wizard.license_desc'           => 'Twoja licencja Total CMS została zweryfikowana.',
 	'wizard.license_error'          => 'Nie można zweryfikować licencji: {error}',
 	'wizard.license_skip'           => 'Możesz kontynuować konfigurację i ustawić licencję później w panelu administracyjnym.',
+	'wizard.license_skip_link'      => 'Pomiń na razie — licencję możesz skonfigurować później.',
 	'wizard.license_domain'         => 'Domena',
 	'wizard.license_edition'        => 'Edycja',
 	'wizard.license_status'         => 'Status',
