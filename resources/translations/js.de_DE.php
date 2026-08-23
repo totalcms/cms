@@ -14,6 +14,10 @@ return [
 	'confirm.video_in_use'         => 'Dieses {label} wird derzeit im Inhalt verwendet. Durch das Löschen wird die Referenz ungültig. Fortfahren?',
 	'confirm.delete_label'         => 'Dieses {label} löschen?',
 
+	// Confirm dialog buttons — defaults for every tcmsConfirm() call
+	'confirm.yes_sure'             => 'Ja, ich bin sicher',
+	'confirm.cancel'               => 'Abbrechen',
+
 	// ── Error Messages ──────────────────────────────────────────────────────
 	'error.featured_update'        => 'Der Hervorgehoben-Status konnte nicht aktualisiert werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',
 	'error.cache_clear'            => 'Der Cache konnte nicht geleert werden. Ein Netzwerk- oder Zeitüberschreitungsfehler ist aufgetreten. Bitte versuchen Sie es erneut.',

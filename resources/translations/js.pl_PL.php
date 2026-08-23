@@ -14,6 +14,10 @@ return [
 	'confirm.video_in_use'         => 'Element {label} jest obecnie używany w treści. Usunięcie go zerwie odwołanie. Kontynuować?',
 	'confirm.delete_label'         => 'Usunąć: {label}?',
 
+	// Confirm dialog buttons — defaults for every tcmsConfirm() call
+	'confirm.yes_sure'             => 'Tak, potwierdzam',
+	'confirm.cancel'               => 'Anuluj',
+
 	// ── Error Messages ──────────────────────────────────────────────────────
 	'error.featured_update'        => 'Nie udało się zaktualizować statusu wyróżnienia. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',
 	'error.cache_clear'            => 'Nie udało się wyczyścić cache. Wystąpił błąd sieci lub przekroczono limit czasu. Spróbuj ponownie.',

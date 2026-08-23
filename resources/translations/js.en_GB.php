@@ -14,6 +14,10 @@ return [
 	'confirm.video_in_use'         => 'This {label} is currently used in the content. Deleting it will break the reference. Continue?',
 	'confirm.delete_label'         => 'Delete this {label}?',
 
+	// Confirm dialog buttons — defaults for every tcmsConfirm() call
+	'confirm.yes_sure'             => "Yes, I'm sure",
+	'confirm.cancel'               => 'Cancel',
+
 	// ── Error Messages ──────────────────────────────────────────────────────
 	'error.featured_update'        => 'Failed to update featured status. A network or timeout error occurred. Please try again.',
 	'error.cache_clear'            => 'Failed to clear cache. A network or timeout error occurred. Please try again.',

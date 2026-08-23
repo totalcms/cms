@@ -34,6 +34,8 @@
  *   they always confirm.
  */
 
+import { t } from './i18n';
+
 const DEFAULT_COUNTDOWN = 5;
 
 function resolveCountdown(override) {
@@ -47,8 +49,8 @@ export default function tcmsConfirm(options = {}) {
 	const {
 		title        = '',
 		message      = 'Are you sure?',
-		confirmLabel = "Yes, I'm sure",
-		cancelLabel  = 'Cancel',
+		confirmLabel = t('confirm.yes_sure', {}, "Yes, I'm sure"),
+		cancelLabel  = t('confirm.cancel', {}, 'Cancel'),
 		countdown    = null,
 		element      = null,
 	} = options;
