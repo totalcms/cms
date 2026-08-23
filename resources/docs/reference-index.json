@@ -1809,6 +1809,13 @@
             "url": "https://docs.totalcms.co/twig/edition/"
         },
         {
+            "name": "cms.license.isUnregisteredTrial",
+            "signature": "isUnregisteredTrial(): bool",
+            "description": "A grandfathered anonymous trial: active, but no contact registered with the license server \u2014 the operator gets no expiry reminders until they register.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/edition/"
+        },
+        {
             "name": "cms.locale.get",
             "signature": "get(): string",
             "description": "Get the current locale. Requires the PHP intl extension to be installed.",
