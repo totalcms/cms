@@ -71,9 +71,12 @@ class DepotField extends FormField
 	/** @param array<array<string,mixed>> $files */
 	private function buildBrowser(array $files): string
 	{
-		$filter  = '<div class="depot-filter-wrapper">'
-			. '<input type="search" class="depot-filter" placeholder="Filter files...">'
-			. '</div>';
+		$search  = HTMLUtils::inlineElement('input', [
+			'type'        => 'search',
+			'class'       => 'depot-filter',
+			'placeholder' => $this->t('depot.filter_placeholder', 'Filter files...'),
+		]);
+		$filter  = HTMLUtils::element('div', $search, ['class' => 'depot-filter-wrapper']);
 		$browser = HTMLUtils::element('ul', $this->buildFolder($files), ['class' => 'depot-browser']);
 
 		return HTMLUtils::element('div', $filter . $browser, ['class' => 'depot-browser-wrapper']);
@@ -159,6 +162,8 @@ class DepotField extends FormField
 
 	protected function filePreview(): string
 	{
+		$preview = htmlspecialchars($this->t('depot.preview', 'Preview'), ENT_QUOTES, 'UTF-8');
+
 		return <<<HTML
 		<div class="file-preview cms-hide">
 			<div class="file file-icon">
@@ -180,7 +185,7 @@ class DepotField extends FormField
 					<div class="file-tags"></div>
 				</div>
 			</div>
-			<button type="button" class="preview-file" disabled>Preview</button>
+			<button type="button" class="preview-file" disabled>{$preview}</button>
 		</div>
 		<dialog class="cms-modal preview-dialog">
 			<div class="preview-content"></div>

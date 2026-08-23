@@ -1437,4 +1437,8 @@ return [
 	'oauth.consent.deny'                  => 'Anuluj',
 	'oauth.error.title'                   => 'Błąd autoryzacji',
 	'oauth.error.return'                  => 'Wróć do {site}',
+
+	// ── Depot Field ─────────────────────────────────────────────────────────
+	'depot.filter_placeholder'      => 'Filtruj pliki...',
+	'depot.preview'                 => 'Podgląd',
 ];

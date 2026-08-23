@@ -162,6 +162,7 @@ readonly class TotalFormFactory
 			'config'                   => $this->config,
 			'metaResolver'             => $this->metaResolver,
 			'formActionRegistry'       => $this->formActionRegistry,
+			'translator'               => $this->translationService->trans(...),
 		]);
 
 		$form = new TotalForm(...$options);

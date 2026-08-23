@@ -353,9 +353,34 @@ class TotalForm implements \Stringable
 		// route only handles POST (no PUT/edit path exists).
 		protected bool $register                 = false,
 		protected ?FormActionRegistry $formActionRegistry = null,
+		// Admin-catalog translator, supplied by TotalFormFactory as
+		// TranslationService::trans(...). Optional: TotalForm is also built
+		// directly (tests, extensions), and those callers fall back to the
+		// English default passed at each call site.
+		protected ?\Closure $translator = null,
 	) {
 		$this->init();
 		$this->initClass();
+	}
+
+	/**
+	 * Translate an admin-catalog key for form chrome.
+	 *
+	 * `$default` is the English text to show when no translator was injected,
+	 * or when the key is missing from every catalog — without it a bare key
+	 * ('depot.preview') would render straight into the UI.
+	 *
+	 * @param array<string,string> $params
+	 */
+	public function t(string $key, string $default = '', array $params = []): string
+	{
+		if (!$this->translator instanceof \Closure) {
+			return $default !== '' ? $default : $key;
+		}
+
+		$text = (string)($this->translator)($key, $params, 'admin');
+
+		return ($text === $key && $default !== '') ? $default : $text;
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

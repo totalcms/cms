@@ -60,6 +60,17 @@ class FormField
 		$this->init();
 	}
 
+	/**
+	 * Translate an admin-catalog key for field chrome (placeholders, button
+	 * labels). `$default` is the English fallback — see TotalForm::t().
+	 *
+	 * @param array<string,string> $params
+	 */
+	protected function t(string $key, string $default = '', array $params = []): string
+	{
+		return $this->form->t($key, $default, $params);
+	}
+
 	public function init(): void
 	{
 		$this->uuid      = uniqid();
