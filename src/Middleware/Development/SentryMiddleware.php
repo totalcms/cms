@@ -114,6 +114,11 @@ class SentryMiddleware implements MiddlewareInterface
 			// Server configuration errors
 			'Class "finfo" not found',
 			'No space left on device',
+			// session_start() returned false: session.save_path is missing,
+			// unwritable, or the account is out of inodes/quota. Seen on shared
+			// hosting where crawler traffic fills the session directory. PHP
+			// could not give us a session; there is nothing for T3 to fix.
+			'Failed to start the session',
 			// Filesystem-level locking conflict — typically when the install
 			// lives on iCloud Drive / Dropbox / OneDrive where the sync daemon
 			// holds locks that conflict with PHP's file writes (EDEADLK).
@@ -122,7 +127,13 @@ class SentryMiddleware implements MiddlewareInterface
 			'Callable TotalCMS\\',
 			'" not found',
 			'must be of type',
-			'Failed opening required',
+			// Covers both wordings PHP uses when a file the autoloader or
+			// bootstrap expected is absent: require says "Failed opening
+			// required 'x'", include says "Failed opening 'x' for inclusion".
+			// Either way a file that shipped with the package is missing, so
+			// the install is incomplete — a truncated upload or a partial zip
+			// extraction, not something T3 can fix at runtime.
+			'Failed opening',
 			// Free-function from a vendor namespace undefined — only happens
 			// when Composer's `files` autoload didn't load (incomplete upload,
 			// corrupted autoload_files.php, vendor package missing entirely).
