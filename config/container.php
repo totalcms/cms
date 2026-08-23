@@ -28,10 +28,12 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\ImpersonationService;
 use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
+use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\FragmentCache;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
@@ -266,6 +268,15 @@ return [
 		(string)$container->get(Config::class)->datadir,
 	),
 
+	// Same reason as above: the datadir is needed for a real filesystem path.
+	// apikeys.json is rewritten wholesale on every authentication, so its
+	// mutations need an flock and an atomic rename, neither of which the
+	// storage adapter exposes.
+	ApiKeyRepository::class => fn (ContainerInterface $container): ApiKeyRepository => new ApiKeyRepository(
+		$container->get(StorageAdapterInterface::class),
+		(string)$container->get(Config::class)->datadir,
+	),
+
 	// Output (fragment) cache behind the {% cache %} Twig tag. Explicit so the
 	// fragmentTtl / fragments config defaults can be passed through.
 	FragmentCache::class => function (ContainerInterface $container): FragmentCache {
@@ -399,6 +410,7 @@ return [
 		$container->get(TemplateFetcher::class),
 		new JumpStartData(),
 		$container->get(CacheManager::class),
+		$container->get(BuilderOrderRepository::class),
 		$container->get(LoggerFactory::class),
 	),
 

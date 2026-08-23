@@ -162,6 +162,8 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'setup-error-monitoring',
 		'setup-error-monitoring-submit',
 		'setup-license',
+		'setup-license-submit',
+		'setup-license-verify',
 		'setup-server-config',
 		'setup-welcome',
 		'setup-welcome-submit',

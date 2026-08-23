@@ -73,8 +73,14 @@ readonly class StarterService
 			return OperationResult::failure("Starter '{$starterName}' not found");
 		}
 
-		// Check if page templates already exist
-		if (!$force && $this->templateLister->listBuilderTemplates('pages') !== []) {
+		// Check if page templates already exist. Recursive, or a site that nests
+		// its pages (pages/blog/index.twig) looks empty to this guard and gets
+		// scaffolded over.
+		//
+		// Still scoped to pages/ rather than the whole tree: the built-in
+		// defaults layer ships layouts/default.twig, so a whole-tree check is
+		// non-empty on a fresh install and would refuse every first scaffold.
+		if (!$force && $this->templateLister->listBuilderTemplates('pages', true) !== []) {
 			return OperationResult::failure('Templates already exist. Use --force to overwrite.');
 		}
 

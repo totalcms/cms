@@ -205,7 +205,62 @@ class LicenseValidator
 	}
 
 	/**
-	 * Call license validation API with auto trial creation.
+	 * Register a trial contact with the license server. Returns the API
+	 * response: status 'verification_required' (code emailed) or
+	 * 'trial_created' (email already verified — trial is live).
+	 *
+	 * @throws LicenseException
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function registerTrial(string $name, string $email): array
+	{
+		$response = $this->makeHttpRequest('/trial/register', [
+			'domain' => $this->config->domain,
+			'name'   => $name,
+			'email'  => $email,
+		]);
+
+		if (($response['status'] ?? '') === 'trial_created') {
+			$this->clearCache();
+		}
+
+		return $response;
+	}
+
+	/**
+	 * Redeem a 6-digit verification code, creating the trial.
+	 *
+	 * @throws LicenseException
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function verifyTrial(string $email, string $code): array
+	{
+		$response = $this->makeHttpRequest('/trial/verify', [
+			'domain' => $this->config->domain,
+			'email'  => $email,
+			'code'   => $code,
+		]);
+
+		if (($response['status'] ?? '') === 'trial_created') {
+			$this->clearCache();
+		}
+
+		return $response;
+	}
+
+	/**
+	 * Call license validation API, letting the server resolve trial state
+	 * gracefully via auto_trial=true.
+	 *
+	 * auto_trial no longer implies the server will always mint a trial —
+	 * whether a trial is actually created is decided server-side by the
+	 * AUTO_TRIAL_CREATION flag. When that flag is off, an unlicensed domain
+	 * gets back a registration-required response, which LicenseData maps to
+	 * valid:false, trial:false, registered:false so the client can route the
+	 * operator to registerTrial()/verifyTrial() instead of assuming a trial
+	 * already exists.
 	 */
 	private function callLicenseApi(): LicenseData
 	{
@@ -217,10 +272,12 @@ class LicenseValidator
 			'version' => $version,
 		];
 
-		// Use auto_trial=true parameter - server will create trial if no license exists
+		// auto_trial=true just asks the server to resolve trial state gracefully;
+		// it does not guarantee a trial gets minted (see this method's docblock above)
 		$response = $this->makeHttpRequest('/license/validate?auto_trial=true', $payload);
 
-		// With auto_trial=true, response should always be valid (either license or trial)
+		// May come back valid (license or minted trial) or registration-required —
+		// fromApiResponse() maps either shape onto LicenseData
 		return LicenseData::fromApiResponse($response);
 	}
 

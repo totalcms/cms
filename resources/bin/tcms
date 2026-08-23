@@ -3,6 +3,24 @@
 
 declare(strict_types=1);
 
+// This script ships inside the project directory, which on Stacks and zip
+// installs sits under the document root — so `tcms` is fetchable over HTTP.
+// Served that way it would boot the container, discover and boot every
+// extension, and render a command list to a stranger; the stderr writes it
+// makes along the way are themselves fatal, because STDIN/STDOUT/STDERR are
+// only defined under the CLI SAPI.
+//
+// The test is REQUEST_METHOD rather than PHP_SAPI: some shared hosts run cron
+// through php-cgi, which is not the CLI SAPI but is not a web request either,
+// and those crons must keep working. Only an actual HTTP request is refused.
+if (isset($_SERVER['REQUEST_METHOD'])) {
+	http_response_code(403);
+	header('Content-Type: text/plain; charset=utf-8');
+	echo "tcms is a command line tool and cannot be run over HTTP.\n";
+
+	exit(1);
+}
+
 ini_set('memory_limit', '512M');
 
 // Locate the Composer autoloader. Several invocation styles must all work:

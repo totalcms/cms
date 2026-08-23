@@ -170,7 +170,7 @@ Generate Nginx rewrite rules for pretty URLs.
 
 Build an HTMX-powered quick action button. The route is relative to the site
 base, so it can target any route — include the `/api` prefix for API routes,
-or point at a public route like an [automation webhook](../automations/webhooks.md).
+or point at a public route like an [automation webhook](docs/automations/webhooks).
 (A leading slash is optional; `/api/cache/clear` and `api/cache/clear` are
 equivalent.)
 

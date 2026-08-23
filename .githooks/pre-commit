@@ -1,0 +1,57 @@
+#!/bin/sh
+# totalcms-hook — installed by bin/install-hooks.sh; edit .githooks/pre-commit
+#
+# Blocks a commit that would leave resources/bundle stale.
+#
+# BundleMiddleware verifies the manifest at runtime, and a mismatch makes every
+# write fail with "Total CMS installation has been corrupted. Please reinstall."
+#
+# Nothing else catches this before a push:
+#   - The test suite cannot. tests/bootstrap.php sets APP_ENV=test, which
+#     switches the check off so the suite does not have to regenerate the
+#     manifest after every source edit.
+#   - No test covers the manifest at all.
+#   - CI does run `composer run bundle:check`, but that is after the push, and
+#     an install tracking dev-develop can pull the broken commit first.
+#
+# Installed by bin/install-hooks.sh. Runs in ~0.3s over ~1000 files.
+
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$root" || exit 0
+
+# Nothing to verify in a checkout without the manifest or a usable php.
+[ -f resources/bundle ] || exit 0
+[ -f bin/make-bundle.php ] || exit 0
+command -v php >/dev/null 2>&1 || exit 0
+
+if php bin/make-bundle.php --check >/dev/null 2>&1; then
+	exit 0
+fi
+
+echo ""
+echo "pre-commit: resources/bundle is stale — commit blocked."
+echo ""
+echo "  A file the manifest covers (config/, resources/templates/, and parts of"
+echo "  src/) changed without the manifest being rebuilt. Committing this leaves"
+echo "  every install that pulls it returning 400 \"installation has been"
+echo "  corrupted\" on the first write."
+echo ""
+echo "  Fix:"
+echo "    composer run bundle && git add resources/bundle"
+echo ""
+
+# The manifest hashes the working tree, not the index. With unstaged edits to a
+# covered file present, rebuilding records content that is not in the commit --
+# producing a manifest that is wrong the moment it lands.
+unstaged=$(git diff --name-only 2>/dev/null)
+if [ -n "$unstaged" ]; then
+	echo "  Note: unstaged changes are present. Rebuilding hashes the working tree,"
+	echo "  so stage or stash these first or the manifest will describe files that"
+	echo "  are not in this commit:"
+	echo "$unstaged" | sed 's/^/    /'
+	echo ""
+fi
+
+echo "  Use --no-verify only if the manifest is being rebuilt separately."
+echo ""
+exit 1

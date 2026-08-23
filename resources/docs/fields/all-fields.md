@@ -111,7 +111,7 @@ Generates: `My Article (2025)`
 }
 ```
 
-**For ID-specific autogen features** (slugification, uniqueness checking, OID padding), see the [ID Settings](id.md) documentation.
+**For ID-specific autogen features** (slugification, uniqueness checking, OID padding), see the [ID Settings](docs/fields/id) documentation.
 
 ## Calc (Computed Fields)
 
@@ -550,7 +550,7 @@ This works transparently — no extra configuration beyond setting both `require
 
 All fields support validation rules like `pattern`, `minLength`, `maxLength`, `minimum`, `maximum`, `enum`, and more. These are added in the **Extra Schema Definitions** section of a property, not in Settings.
 
-For full details and examples, see [Schema Validation](../schemas/validation.md).
+For full details and examples, see [Schema Validation](docs/schemas/validation).
 
 ## Reference Schema: `totalcms`
 

@@ -13,8 +13,24 @@ namespace TotalCMS\Domain\Property\Service;
  */
 final class ImageHashService
 {
-	/** Keys excluded from the hash input to avoid circular or always-changing values. */
-	public const EXCLUDED_KEYS = ['hash', 'updateDate', 'modifiedAt'];
+	/**
+	 * Keys excluded from the hash input to avoid circular or always-changing
+	 * values.
+	 *
+	 * `uploadDate` is excluded because it tracks WHEN the field was last
+	 * written, not what it holds. Every upload already gets a unique filename
+	 * (PropertyRepository::getUniqueFilename() appends a uniqid suffix), so
+	 * `name` changes whenever new bytes arrive — a re-upload of the same file
+	 * included. Feeding uploadDate in added no cache-busting the name didn't
+	 * already provide, and cost stability: any write that rebuilt an untouched
+	 * image field produced a fresh hash, needlessly busting ImageWorks crops
+	 * and making two identical images (an empty one especially) compare
+	 * unequal across installs.
+	 *
+	 * `updateDate` and `modifiedAt` match no field ImageData actually emits —
+	 * kept as harmless defensive aliases.
+	 */
+	public const EXCLUDED_KEYS = ['hash', 'uploadDate', 'updateDate', 'modifiedAt'];
 
 	/**
 	 * Compute a short content hash from image data.

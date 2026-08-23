@@ -310,7 +310,7 @@ Once registered, the field type can be used in schemas:
 
 ## Event Listeners
 
-Subscribe to content events. See [Events](events.md) for the full event reference.
+Subscribe to content events. See [Events](docs/extensions/events) for the full event reference.
 
 ```php
 public function register(ExtensionContext $context): void
@@ -326,7 +326,7 @@ public function register(ExtensionContext $context): void
 
 ## Automations
 
-Ship a server-side [automation](../automations/overview.md) as part of your extension. Like the user-authored automations in the admin, an extension automation runs on a **schedule** or a content **event** — but its handler is the closure you register here, held in memory (never written to disk). The handler receives an `AutomationContext` with pre-injected services (`objectFetcher`, `objectSaver`, `objectUpdater`, `objectRemover`, `indexReader`, `mailer`, `config`, `logger`) plus the run payload (`trigger`, `args`, `event`).
+Ship a server-side [automation](docs/automations/overview) as part of your extension. Like the user-authored automations in the admin, an extension automation runs on a **schedule** or a content **event** — but its handler is the closure you register here, held in memory (never written to disk). The handler receives an `AutomationContext` with pre-injected services (`objectFetcher`, `objectSaver`, `objectUpdater`, `objectRemover`, `indexReader`, `mailer`, `config`, `logger`) plus the run payload (`trigger`, `args`, `event`).
 
 ```php
 public function register(ExtensionContext $context): void

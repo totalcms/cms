@@ -83,11 +83,11 @@ Container definitions (`container`) are deliberately **not** flagged: extensions
 
 …or when a quick **static scan** of the extension's source finds high-risk calls (`shell_exec`, `eval`, raw network requests, `base64_decode`, and similar). The scan reads the code as text — it never runs the extension to check it.
 
-Bundled extensions (the ones that ship with Total CMS) are exempt from the source scan — they version with core and ship reviewed in the package. Their capability list still shows. For extension developers: persisting files through the [storage API](extension-points.md#file-storage) instead of raw `file_put_contents()` keeps your scan clean — the flag exists for unconstrained writes, not for state kept in the sanctioned per-extension directory.
+Bundled extensions (the ones that ship with Total CMS) are exempt from the source scan — they version with core and ship reviewed in the package. Their capability list still shows. For extension developers: persisting files through the [storage API](docs/extensions/extension-points#file-storage) instead of raw `file_put_contents()` keeps your scan clean — the flag exists for unconstrained writes, not for state kept in the sanctioned per-extension directory.
 
 The review screen has up to three parts:
 
-1. **From the developer** — a plain-language note (the extension's [`reviewNote`](manifest.md)) explaining what it does and why it needs the access it asks for.
+1. **From the developer** — a plain-language note (the extension's [`reviewNote`](docs/extensions/manifest)) explaining what it does and why it needs the access it asks for.
 2. **What this extension can access** — the sensitive capabilities, in neutral terms, with a reminder that you can disable individual features afterward.
 3. **Source-code patterns to review** — any high-risk calls the scan found, with file and line. These aren't proof of anything malicious — many legitimate extensions use them — but they're worth a look.
 
@@ -116,9 +116,9 @@ Clean updates that don't add capabilities install with no interruption at all.
 
 If you're building an extension, these features shape how operators experience it:
 
-- **Write a [`reviewNote`](manifest.md).** If your extension uses any sensitive capability, the operator *will* see the review screen — your note is your chance to explain, in plain language, what you do and why. A good note is the difference between a confident "Enable" and a nervous one.
+- **Write a [`reviewNote`](docs/extensions/manifest).** If your extension uses any sensitive capability, the operator *will* see the review screen — your note is your chance to explain, in plain language, what you do and why. A good note is the difference between a confident "Enable" and a nervous one.
 - **You see exactly what they see.** When you enable your own extension while testing, you get the same review screen — so you can preview how it reads.
 - **Capabilities you add in an update default to off** for existing users. They'll find the new capability in your extension's settings and opt into it. Plan for that: don't assume a capability added in a point release is immediately active for everyone.
 - **Keep high-risk calls intentional and explainable.** If your code legitimately needs `file_get_contents('https://…')` or `base64_decode`, that's fine — it'll show on the review screen, and your `reviewNote` can put it in context. Avoid surprising patterns you can't justify.
 
-See the [Manifest Reference](manifest.md) for the `reviewNote` field and the full capability list.
+See the [Manifest Reference](docs/extensions/manifest) for the `reviewNote` field and the full capability list.

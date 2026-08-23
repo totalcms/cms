@@ -8,7 +8,7 @@ since: "3.5.0"
 
 Total CMS ships a small set of **bundled extensions** in the package itself (under `resources/extensions/`). They're installed automatically — no `composer require`, no upload — and, with one exception, disabled by default. Enable the ones you want from **Admin → Extensions**.
 
-The exception is `totalcms/docs` (see the table below), which ships marked `default_enabled` in its manifest — see [`default_enabled`](manifest.md#default-enabled) for the mechanism and why it's bundled-only.
+The exception is `totalcms/docs` (see the table below), which ships marked `default_enabled` in its manifest — see [`default_enabled`](docs/extensions/manifest#default-enabled) for the mechanism and why it's bundled-only.
 
 ## Why bundled extensions?
 

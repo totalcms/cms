@@ -6,10 +6,59 @@
 <main class="login-layout admin-layout">
 	<section class="setup-header">
 		<h1>{{ t('wizard.license_title') }}</h1>
-		<p>{{ t('wizard.license_desc') }}</p>
+		{# In the register/code states the step-specific line below is the real
+		   subtitle; the generic "license validated" copy would be misleading. #}
+		{% if not (pending or needsRegistration) %}
+			<p>{{ t('wizard.license_desc') }}</p>
+		{% endif %}
 	</section>
 
-	{% if error %}
+	{% for message in flash.get('error') %}
+		<div class="cms-error" role="alert">
+			{{ message }}
+		</div>
+	{% endfor %}
+
+	{% if pending %}
+		<p>{{ t('wizard.license_code_sent', {'{email}': pending.email}) }}</p>
+		{% set codeFields %}
+			{{ cms.form.field("text", "code", {
+				label       : t('wizard.license_code'),
+				required    : true,
+				placeholder : "123456",
+				settings    : { maxlength: 6 },
+			}) }}
+		{% endset %}
+		{{ cms.form.simple(cms.base ~ '/setup/license/verify', codeFields, {
+			class  : "setup-form",
+			method : "POST",
+			label  : t('wizard.license_code_btn'),
+			ajax   : false,
+		}) }}
+		<form method="POST" action="{{ cms.base }}/setup/license" class="license-resend">
+			<button type="submit" class="dash-button transparent">{{ t('wizard.license_resend') }}</button>
+		</form>
+	{% elseif needsRegistration %}
+		<p>{{ t('wizard.license_register_intro') }}</p>
+		{% set regFields %}
+			{{ cms.form.field("text", "name", {
+				label       : t('wizard.license_name'),
+				required    : true,
+				value       : prefillName,
+			}) }}
+			{{ cms.form.field("email", "email", {
+				label       : t('wizard.license_email'),
+				required    : true,
+				value       : prefillEmail,
+			}) }}
+		{% endset %}
+		{{ cms.form.simple(cms.base ~ '/setup/license', regFields, {
+			class  : "setup-form",
+			method : "POST",
+			label  : t('wizard.license_start_btn'),
+			ajax   : false,
+		}) }}
+	{% elseif error %}
 		<div class="cms-error" role="alert">
 			{{ t('wizard.license_error', {'{error}': error}) }}
 		</div>
@@ -43,7 +92,14 @@
 		</table>
 	{% endif %}
 
-	<a href="{{ cms.base }}/setup/error-monitoring" class="dash-button setup-continue">{{ t('wizard.continue') }}</a>
+	{% if pending or needsRegistration %}
+		{# Registering is the primary action here, so the skip is demoted to a
+		   quiet link — but kept, so a customer with a license key or a dev
+		   install isn't trapped on this step. #}
+		<a href="{{ cms.base }}/setup/error-monitoring" class="setup-skip-link">{{ t('wizard.license_skip_link') }}</a>
+	{% else %}
+		<a href="{{ cms.base }}/setup/error-monitoring" class="dash-button setup-continue">{{ t('wizard.continue') }}</a>
+	{% endif %}
 </main>
 
 <style>
@@ -66,6 +122,22 @@
 
 .setup-continue {
 	margin-top: 1rem;
+}
+
+.license-resend {
+	opacity: 0.8;
+}
+
+.setup-skip-link {
+	display: block;
+	text-align: center;
+	color: oklch(var(--totalform-darkgray));
+	font-size: 0.9rem;
+	text-decoration: underline;
+}
+
+.setup-skip-link:hover {
+	color: oklch(var(--totalform-text-color));
 }
 </style>
 {% endblock %}

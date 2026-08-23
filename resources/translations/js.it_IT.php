@@ -14,6 +14,10 @@ return [
 	'confirm.video_in_use'         => 'Questo {label} è attualmente utilizzato nel contenuto. Eliminandolo si interromperà il riferimento. Continuare?',
 	'confirm.delete_label'         => 'Eliminare questo {label}?',
 
+	// Confirm dialog buttons — defaults for every tcmsConfirm() call
+	'confirm.yes_sure'             => 'Sì, confermo',
+	'confirm.cancel'               => 'Annulla',
+
 	// ── Error Messages ──────────────────────────────────────────────────────
 	'error.featured_update'        => 'Aggiornamento dello stato in evidenza non riuscito. Si è verificato un errore di rete o di timeout. Riprova.',
 	'error.cache_clear'            => 'Cancellazione della cache non riuscita. Si è verificato un errore di rete o di timeout. Riprova.',

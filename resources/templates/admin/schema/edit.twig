@@ -16,8 +16,8 @@
 
 {{ cms.form.schema({
 	id          : url.schema,
-	save        : cms.auth.canAccessSchema(url.schema, 'update') ? "Save" : false,
-	delete      : cms.auth.canAccessSchema(url.schema, 'delete') ? "Delete" : false,
+	save        : cms.auth.canAccessSchema(url.schema, 'update'),
+	delete      : cms.auth.canAccessSchema(url.schema, 'delete'),
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	deleteActions : [

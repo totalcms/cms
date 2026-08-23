@@ -35,16 +35,16 @@ public function register(ExtensionContext $context): void
 }
 ```
 
-The handler receives the same [`AutomationContext`](handlers.md#the-automationcontext) as a file-based automation.
+The handler receives the same [`AutomationContext`](docs/automations/handlers#the-automationcontext) as a file-based automation.
 
 ## How they differ from file automations
 
 - **Code, not content.** The handler is a closure held in memory, rebuilt from your extension's code each request — nothing is written to the `automations` collection.
 - **Read-only in the admin.** Operators can run or disable an extension automation, but they can't edit the closure (it lives in your code). They appear in the automations list tagged as extension-owned.
-- **Schedule + event only.** Extension automations participate in schedule and event dispatch. For HTTP, register a [public route](../extensions/extension-points.md#public-routes) instead of a webhook trigger — an extension automation's id (`vendor/name:id`) isn't a URL path.
+- **Schedule + event only.** Extension automations participate in schedule and event dispatch. For HTTP, register a [public route](docs/extensions/extension-points#public-routes) instead of a webhook trigger — an extension automation's id (`vendor/name:id`) isn't a URL path.
 
 ## The capability toggle
 
 Registering an automation surfaces the auto-detected **`automations`** capability for your extension. Operators can switch it off from the extension's permissions — that hides and stops dispatching all of the extension's automations without uninstalling it. It's also flagged on the pre-enable review screen, since automations run code on a schedule or content events.
 
-See [Extension Points → Automations](../extensions/extension-points.md#automations) for the reference, and the [extension starter](https://github.com/totalcms/extension-starter) for a working example.
+See [Extension Points → Automations](docs/extensions/extension-points#automations) for the reference, and the [extension starter](https://github.com/totalcms/extension-starter) for a working example.

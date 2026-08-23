@@ -5,16 +5,23 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\JumpStart\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\Data\CoreEvent;
+use TotalCMS\Domain\Event\Payload\ImportEventPayload;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Domain\Sync\Service\SyncBackupService;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -58,6 +65,14 @@ class JumpStartImporter
 	 */
 	private bool $upsert = false;
 
+	/**
+	 * Page orders lifted off incoming collection settings, keyed by collection
+	 * id, awaiting the objects they arrange. See stashPageOrder().
+	 *
+	 * @var array<string,list<array<string,mixed>>>
+	 */
+	private array $pendingPageOrder = [];
+
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly CollectionSaver $collectionSaver,
@@ -65,10 +80,12 @@ class JumpStartImporter
 		private readonly ObjectSaver $objectSaver,
 		private readonly ObjectUpdater $objectUpdater,
 		private readonly SchemaSaver $schemaSaver,
+		private readonly SchemaFetcher $schemaFetcher,
 		private readonly TemplateSaver $templateSaver,
 		private readonly FactoryImporter $factoryImporter,
-		private readonly \TotalCMS\Domain\Event\Service\EventDispatcher $eventDispatcher,
-		private readonly \TotalCMS\Domain\Sync\Service\SyncBackupService $syncBackup,
+		private readonly EventDispatcher $eventDispatcher,
+		private readonly SyncBackupService $syncBackup,
+		private readonly BuilderOrderService $orderService,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::JumpStartImporter);
@@ -82,7 +99,7 @@ class JumpStartImporter
 	 *
 	 * @param array<string,mixed> $objectData
 	 */
-	private function saveImportedObject(string $collection, array $objectData): \TotalCMS\Domain\Object\Data\ObjectData
+	private function saveImportedObject(string $collection, array $objectData): ObjectData
 	{
 		$this->eventDispatcher->suspendForImport($collection);
 		try {
@@ -92,7 +109,7 @@ class JumpStartImporter
 			$object = $this->objectSaver->saveObject($collection, $objectData, preserveDates: true);
 			$this->eventDispatcher->dispatch(
 				CoreEvent::IMPORT_CREATED,
-				new \TotalCMS\Domain\Event\Payload\ObjectEventPayload($collection, $object->id, $object),
+				new ObjectEventPayload($collection, $object->id, $object),
 			);
 
 			return $object;
@@ -111,7 +128,7 @@ class JumpStartImporter
 	 *
 	 * @param array<string,mixed> $objectData
 	 */
-	private function updateImportedObject(string $collection, string $id, array $objectData): \TotalCMS\Domain\Object\Data\ObjectData
+	private function updateImportedObject(string $collection, string $id, array $objectData): ObjectData
 	{
 		$this->eventDispatcher->suspendForImport($collection);
 		try {
@@ -123,7 +140,7 @@ class JumpStartImporter
 			$object = $this->objectUpdater->updateObject($collection, $id, $objectData, preserveDates: true);
 			$this->eventDispatcher->dispatch(
 				CoreEvent::IMPORT_UPDATED,
-				new \TotalCMS\Domain\Event\Payload\ObjectEventPayload($collection, $object->id, $object),
+				new ObjectEventPayload($collection, $object->id, $object),
 			);
 
 			return $object;
@@ -250,6 +267,9 @@ class JumpStartImporter
 		if (isset($definition['factory'])) {
 			$this->processFactory($definition['factory']);
 		}
+		// Last, and deliberately so: the order arrived with the collection
+		// settings but can only be applied once the pages it arranges exist.
+		$this->applyPendingPageOrder();
 
 		$data = [
 			'results' => $this->results,
@@ -291,6 +311,110 @@ class JumpStartImporter
 	}
 
 	/**
+	 * Lift `pageOrder` off each collection entry and hold it until the pages
+	 * exist.
+	 *
+	 * The order travels inside the collection's settings — it is configuration,
+	 * so it belongs to the same selection the operator makes for settings —
+	 * but it cannot be APPLIED there. Collections are processed before objects,
+	 * and BuilderOrderService::write() reconciles the tree against the pages
+	 * that currently exist, so an order written at collection time would have
+	 * every id stripped out as unknown and the arrangement lost.
+	 *
+	 * Stripping the key also keeps it out of CollectionSaver, which would
+	 * otherwise be handed a field that is not part of CollectionData.
+	 *
+	 * @param array<string, mixed> $collections
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function stashPageOrder(array $collections): array
+	{
+		foreach (['custom', 'reserved'] as $kind) {
+			if (!isset($collections[$kind]) || !is_array($collections[$kind])) {
+				continue;
+			}
+
+			foreach ($collections[$kind] as $index => $entry) {
+				// Bare-string reserved entries carry no settings at all.
+				if (!is_array($entry) || !isset($entry['pageOrder'])) {
+					continue;
+				}
+
+				$id = (string)($entry['id'] ?? '');
+				if ($id !== '' && is_array($entry['pageOrder'])) {
+					$this->pendingPageOrder[$id] = $this->normalizeOrderTree($entry['pageOrder']);
+				}
+
+				unset($entry['pageOrder']);
+				$collections[$kind][$index] = $entry;
+			}
+		}
+
+		return $collections;
+	}
+
+	/**
+	 * Coerce an incoming order tree into the shape BuilderOrderService expects.
+	 *
+	 * The payload arrives from a remote, so nothing about its shape is
+	 * guaranteed — non-array nodes are dropped and keys are normalised to
+	 * strings rather than trusted. BuilderOrderService::write() reconciles the
+	 * ids afterwards; this only guarantees the container shape.
+	 *
+	 * @param array<mixed> $tree
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	private function normalizeOrderTree(array $tree): array
+	{
+		$clean = [];
+
+		foreach ($tree as $node) {
+			if (!is_array($node)) {
+				continue;
+			}
+
+			$normalized = [];
+			foreach ($node as $key => $value) {
+				$normalized[(string)$key] = $value;
+			}
+
+			$clean[] = $normalized;
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * Apply the page orders held back by stashPageOrder(), once the pages they
+	 * describe have been imported.
+	 *
+	 * Writes through BuilderOrderService rather than the repository so the
+	 * incoming tree is reconciled against this site's pages: ids the
+	 * destination does not have are dropped, and pages it has that the tree
+	 * omits are appended, so a partial or stale tree cannot orphan a page.
+	 */
+	private function applyPendingPageOrder(): void
+	{
+		foreach ($this->pendingPageOrder as $collectionId => $tree) {
+			if ($this->refuseSystemCollection($collectionId, 'Page order')) {
+				continue;
+			}
+
+			try {
+				/** @var list<array<string,mixed>> $tree */
+				$this->orderService->write($collectionId, $tree);
+				$this->addResult(sprintf('Page order %s: applied', $collectionId));
+			} catch (\Throwable $e) {
+				$this->addError(sprintf('Page order %s: %s', $collectionId, $e->getMessage()));
+			}
+		}
+
+		$this->pendingPageOrder = [];
+	}
+
+	/**
 	 * @param array<int, array<string, string>> $templates
 	 */
 	private function processTemplates(array $templates): void
@@ -309,6 +433,8 @@ class JumpStartImporter
 	/** @param array<string, mixed> $collections */
 	private function processCollections(array $collections): void
 	{
+		$collections = $this->stashPageOrder($collections);
+
 		// Process custom collections
 		if (isset($collections['custom'])) {
 			foreach ($collections['custom'] as $collectionDef) {
@@ -479,7 +605,7 @@ class JumpStartImporter
 		foreach ($touchedByCollection as $collectionId => $stats) {
 			$this->eventDispatcher->dispatch(
 				CoreEvent::IMPORT_COMPLETED,
-				new \TotalCMS\Domain\Event\Payload\ImportEventPayload(
+				new ImportEventPayload(
 					$collectionId,
 					$stats['count'],
 					$stats['created'],
@@ -518,6 +644,7 @@ class JumpStartImporter
 				return 'skipped';
 			}
 			$this->syncBackup->backupObject($collectionId, $objectId);
+			$objectData = $this->preserveUntravelledMedia($collectionId, $objectId, $collection->schema, $objectData);
 			$this->updateImportedObject($collectionId, $objectId, $objectData);
 			$this->addResult(sprintf('Object %s/%s: updated', $collectionId, $objectId));
 
@@ -528,6 +655,67 @@ class JumpStartImporter
 		$this->addResult(sprintf('Object %s/%s: created', $collectionId, $objectId));
 
 		return 'created';
+	}
+
+	/**
+	 * Carry the destination's own image/gallery values through an upsert.
+	 *
+	 * The upsert path replaces the whole object, so a field the payload does
+	 * not mention would be wiped. JumpStart carries no binaries, which means an
+	 * image field is not syncable data in either direction: the source cannot
+	 * send one (the file would not exist here) and must not clear one (it has
+	 * no authority over media it never received). The destination owns these
+	 * fields, and images are managed in the admin rather than through sync.
+	 *
+	 * Only fields ABSENT from the payload are restored. A value that is present
+	 * is an authored factory rule, and those are still honored — that is a
+	 * deliberate feature of hand-written starter kits, and the reason the
+	 * exporter now omits the key rather than writing a type name that was
+	 * indistinguishable from one.
+	 *
+	 * @param array<string,mixed> $objectData
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function preserveUntravelledMedia(
+		string $collectionId,
+		string $objectId,
+		string $schemaId,
+		array $objectData,
+	): array {
+		try {
+			$schema   = $this->schemaFetcher->fetchSchema($schemaId);
+			$existing = $this->objectFetcher->fetchObject($collectionId, $objectId)->toArray();
+		} catch (\Throwable $e) {
+			// Non-fatal: without the schema or the current object there is
+			// nothing to preserve, and failing the import over it would be a
+			// worse outcome than an untouched media field.
+			$this->logger->warning('Could not preserve media fields on import', [
+				'collection' => $collectionId,
+				'id'         => $objectId,
+				'error'      => $e->getMessage(),
+			]);
+
+			return $objectData;
+		}
+
+		foreach ($schema->properties as $fieldName => $property) {
+			$fieldType = $property['field'] ?? $property['type'] ?? '';
+
+			if (!in_array($fieldType, ['image', 'gallery'], true)) {
+				continue;
+			}
+
+			if (array_key_exists($fieldName, $objectData)) {
+				continue;
+			}
+
+			if (array_key_exists($fieldName, $existing)) {
+				$objectData[$fieldName] = $existing[$fieldName];
+			}
+		}
+
+		return $objectData;
 	}
 
 	/**

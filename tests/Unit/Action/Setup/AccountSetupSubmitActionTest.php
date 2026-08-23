@@ -65,6 +65,18 @@ final class AccountSetupSubmitActionTest extends TestCase
 		);
 	}
 
+	public function testRedirectsOnEmptyName(): void
+	{
+		$this->flash->expects($this->once())->method('add')->with('error', $this->anything());
+		$this->redirectRenderer->expects($this->once())
+			->method('redirectFor')
+			->with($this->anything(), 'setup-account');
+
+		$this->firstLoginChecker->expects($this->never())->method('createFirstUser');
+
+		($this->action)($this->createRequest(['name' => '', 'email' => 'admin@example.com', 'password' => 'test1234', 'password-confirm' => 'test1234']), $this->createMock(ResponseInterface::class));
+	}
+
 	public function testRedirectsOnEmptyEmail(): void
 	{
 		$this->flash->expects($this->once())->method('add')->with('error', $this->anything());
@@ -74,7 +86,7 @@ final class AccountSetupSubmitActionTest extends TestCase
 
 		$this->firstLoginChecker->expects($this->never())->method('createFirstUser');
 
-		($this->action)($this->createRequest(['email' => '', 'password' => 'test1234', 'password-confirm' => 'test1234']), $this->createMock(ResponseInterface::class));
+		($this->action)($this->createRequest(['name' => 'Joe Workman', 'email' => '', 'password' => 'test1234', 'password-confirm' => 'test1234']), $this->createMock(ResponseInterface::class));
 	}
 
 	public function testRedirectsOnInvalidEmail(): void
@@ -83,7 +95,7 @@ final class AccountSetupSubmitActionTest extends TestCase
 
 		$this->firstLoginChecker->expects($this->never())->method('createFirstUser');
 
-		($this->action)($this->createRequest(['email' => 'not-an-email', 'password' => 'test1234', 'password-confirm' => 'test1234']), $this->createMock(ResponseInterface::class));
+		($this->action)($this->createRequest(['name' => 'Joe Workman', 'email' => 'not-an-email', 'password' => 'test1234', 'password-confirm' => 'test1234']), $this->createMock(ResponseInterface::class));
 	}
 
 	public function testRedirectsOnEmptyPassword(): void
@@ -92,7 +104,7 @@ final class AccountSetupSubmitActionTest extends TestCase
 
 		$this->firstLoginChecker->expects($this->never())->method('createFirstUser');
 
-		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => '', 'password-confirm' => '']), $this->createMock(ResponseInterface::class));
+		($this->action)($this->createRequest(['name' => 'Joe Workman', 'email' => 'admin@example.com', 'password' => '', 'password-confirm' => '']), $this->createMock(ResponseInterface::class));
 	}
 
 	public function testRedirectsOnShortPassword(): void
@@ -101,13 +113,14 @@ final class AccountSetupSubmitActionTest extends TestCase
 
 		$this->firstLoginChecker->expects($this->never())->method('createFirstUser');
 
-		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'short', 'password-confirm' => 'short']), $this->createMock(ResponseInterface::class));
+		($this->action)($this->createRequest(['name' => 'Joe Workman', 'email' => 'admin@example.com', 'password' => 'short', 'password-confirm' => 'short']), $this->createMock(ResponseInterface::class));
 	}
 
-	public function testEmailIsStashedEvenWhenValidationFails(): void
+	public function testNameAndEmailAreStashedEvenWhenValidationFails(): void
 	{
 		// Validation fails (short password) but the form should still remember
-		// the email so the operator doesn't have to re-type it on the redirect.
+		// the name and email so the operator doesn't have to re-type them on
+		// the redirect.
 		$this->firstLoginChecker->expects($this->never())->method('createFirstUser');
 
 		$captured = [];
@@ -116,8 +129,9 @@ final class AccountSetupSubmitActionTest extends TestCase
 				$captured[$key] = $value;
 			});
 
-		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'short', 'password-confirm' => 'short']), $this->createMock(ResponseInterface::class));
+		($this->action)($this->createRequest(['name' => 'Joe Workman', 'email' => 'admin@example.com', 'password' => 'short', 'password-confirm' => 'short']), $this->createMock(ResponseInterface::class));
 
+		$this->assertSame('Joe Workman', $captured['setup_admin_name'] ?? null);
 		$this->assertSame('admin@example.com', $captured['setup_admin_email'] ?? null);
 	}
 
@@ -127,14 +141,14 @@ final class AccountSetupSubmitActionTest extends TestCase
 
 		$this->firstLoginChecker->expects($this->never())->method('createFirstUser');
 
-		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'different']), $this->createMock(ResponseInterface::class));
+		($this->action)($this->createRequest(['name' => 'Joe Workman', 'email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'different']), $this->createMock(ResponseInterface::class));
 	}
 
 	public function testCreatesUserAutoLoginsAndRedirectsToLicense(): void
 	{
 		$this->firstLoginChecker->expects($this->once())
 			->method('createFirstUser')
-			->with('admin@example.com', 'password123');
+			->with('admin@example.com', 'password123', 'Joe Workman');
 
 		$this->setupState->expects($this->once())
 			->method('completeStep')
@@ -153,9 +167,9 @@ final class AccountSetupSubmitActionTest extends TestCase
 			->method('establish')
 			->with('admin', 'admin');
 
-		// Only the email is stashed directly on the session by this action — so
-		// the form can repopulate it on validation failure and the complete
-		// page can display "logged in as".
+		// Both the name and email are stashed directly on the session by this
+		// action — so the form can repopulate them on validation failure and
+		// the complete page can display "logged in as".
 		$captured = [];
 		$this->session->method('set')
 			->willReturnCallback(static function (string $key, mixed $value) use (&$captured): void {
@@ -166,9 +180,9 @@ final class AccountSetupSubmitActionTest extends TestCase
 			->method('redirectFor')
 			->with($this->anything(), 'setup-license');
 
-		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'password123']), $this->createMock(ResponseInterface::class));
+		($this->action)($this->createRequest(['name' => 'Joe Workman', 'email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'password123']), $this->createMock(ResponseInterface::class));
 
-		$this->assertSame(['setup_admin_email' => 'admin@example.com'], $captured);
+		$this->assertSame(['setup_admin_name' => 'Joe Workman', 'setup_admin_email' => 'admin@example.com'], $captured);
 	}
 
 	public function testHandlesUserCreationFailure(): void
@@ -180,7 +194,7 @@ final class AccountSetupSubmitActionTest extends TestCase
 		$this->setupState->expects($this->never())->method('completeStep');
 		$this->loginService->expects($this->never())->method('authenticate');
 
-		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'password123']), $this->createMock(ResponseInterface::class));
+		($this->action)($this->createRequest(['name' => 'Joe Workman', 'email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'password123']), $this->createMock(ResponseInterface::class));
 	}
 
 	public function testAutoLoginFailureIsNonFatal(): void
@@ -204,7 +218,7 @@ final class AccountSetupSubmitActionTest extends TestCase
 			->method('redirectFor')
 			->with($this->anything(), 'setup-license');
 
-		($this->action)($this->createRequest(['email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'password123']), $this->createMock(ResponseInterface::class));
+		($this->action)($this->createRequest(['name' => 'Joe Workman', 'email' => 'admin@example.com', 'password' => 'password123', 'password-confirm' => 'password123']), $this->createMock(ResponseInterface::class));
 	}
 
 	/**

@@ -18,9 +18,13 @@ final class ApiKeyRepositoryTest extends TestCase
 	protected function setUp(): void
 	{
 		// Clean up any existing test data before starting
-		$testFile = sys_get_temp_dir() . '/.system/apikeys.json';
-		if (file_exists($testFile)) {
-			unlink($testFile);
+		// The sidecar lock is cleared alongside the data file so the .system
+		// directory can still be removed when it is otherwise empty.
+		foreach (['/.system/apikeys.json', '/.system/apikeys.json.lock'] as $relative) {
+			$testFile = sys_get_temp_dir() . $relative;
+			if (file_exists($testFile)) {
+				unlink($testFile);
+			}
 		}
 
 		$systemDir = sys_get_temp_dir() . '/.system';
@@ -33,15 +37,19 @@ final class ApiKeyRepositoryTest extends TestCase
 				new LocalFilesystemAdapter(sys_get_temp_dir())
 			)
 		);
-		$this->repository = new ApiKeyRepository($filesystem);
+		$this->repository = new ApiKeyRepository($filesystem, sys_get_temp_dir());
 	}
 
 	protected function tearDown(): void
 	{
 		// Clean up test file
-		$testFile = sys_get_temp_dir() . '/.system/apikeys.json';
-		if (file_exists($testFile)) {
-			unlink($testFile);
+		// The sidecar lock is cleared alongside the data file so the .system
+		// directory can still be removed when it is otherwise empty.
+		foreach (['/.system/apikeys.json', '/.system/apikeys.json.lock'] as $relative) {
+			$testFile = sys_get_temp_dir() . $relative;
+			if (file_exists($testFile)) {
+				unlink($testFile);
+			}
 		}
 
 		// Clean up .system directory if empty
@@ -267,5 +275,89 @@ final class ApiKeyRepositoryTest extends TestCase
 		$this->repository->updateLastUsed('non-existent-key');
 
 		$this->assertTrue(true); // No exception = pass
+	}
+
+	/**
+	 * The production data-loss bug: a torn read used to decode to nothing, and
+	 * the very next write persisted that nothing over every real key. Refusing
+	 * to read a malformed file is what makes overwriting it impossible.
+	 */
+	public function testMalformedFileThrowsInsteadOfReadingAsEmpty(): void
+	{
+		$this->writeRawKeyFile('{"apikeys": [{"id": "half-writ');
+
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessageMatches('/not valid JSON/');
+
+		$this->repository->getAll();
+	}
+
+	public function testMalformedFileIsNeverOverwritten(): void
+	{
+		$corrupt = '{"apikeys": [{"id": "half-writ';
+		$this->writeRawKeyFile($corrupt);
+
+		$apiKey = new ApiKeyData([
+			'id'      => 'new-key',
+			'name'    => 'New Key',
+			'key'     => 'tcms_new',
+			'created' => '2025-01-15T10:30:00Z',
+			'scopes'  => ['methods' => ['GET'], 'paths' => ['*']],
+		]);
+
+		try {
+			$this->repository->save($apiKey);
+			$this->fail('Saving over a malformed key file should have thrown.');
+		} catch (\RuntimeException) {
+			// expected
+		}
+
+		$this->assertSame(
+			$corrupt,
+			file_get_contents(sys_get_temp_dir() . '/.system/apikeys.json'),
+			'The malformed file must be left exactly as found, not replaced.'
+		);
+	}
+
+	public function testEmptyFileIsTreatedAsNoKeys(): void
+	{
+		// Distinct from malformed: a zero-byte file is what a never-used
+		// install looks like, so it must stay usable rather than throw.
+		$this->writeRawKeyFile('');
+
+		$this->assertSame([], $this->repository->getAll());
+	}
+
+	public function testUpdateLastUsedIsDebouncedWithinTheWindow(): void
+	{
+		$this->repository->save(new ApiKeyData([
+			'id'       => 'debounce-id',
+			'name'     => 'Debounced',
+			'key'      => 'tcms_debounce',
+			'created'  => '2025-01-15T10:30:00Z',
+			'lastUsed' => gmdate('Y-m-d\TH:i:s\Z'),
+			'scopes'   => ['methods' => ['GET'], 'paths' => ['*']],
+		]));
+
+		$path   = sys_get_temp_dir() . '/.system/apikeys.json';
+		$before = filemtime($path);
+
+		// A just-stamped key is inside the debounce window, so authenticating
+		// again must not rewrite the file at all.
+		$this->repository->updateLastUsed('tcms_debounce');
+		clearstatcache(true, $path);
+
+		$this->assertSame($before, filemtime($path));
+	}
+
+	private function writeRawKeyFile(string $contents): void
+	{
+		$dir = sys_get_temp_dir() . '/.system';
+
+		if (!is_dir($dir)) {
+			mkdir($dir, 0755, true);
+		}
+
+		file_put_contents($dir . '/apikeys.json', $contents);
 	}
 }

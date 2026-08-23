@@ -286,6 +286,16 @@
 	flex      : 0 1 auto;
 	min-width : 0;
 }
+/* The <input> is a flex item too, and flex-shrink defaults to 1 — so once the
+   label above hits min-width: 0, the checkbox itself becomes the only thing
+   left that can give way, and it visibly shrinks as labels get longer. Only
+   the label should absorb the overflow. Scoped here rather than in
+   choice-field.scss because the squeeze only exists where the row is forced
+   to width: 100% (above); elsewhere rows are width: max-content and nothing
+   competes for space. */
+.sync-section .checklist-field div.checkbox > input.checkbox {
+	flex : 0 0 auto;
+}
 
 .sync-actions {
 	display: flex;

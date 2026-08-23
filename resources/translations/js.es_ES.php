@@ -14,6 +14,10 @@ return [
 	'confirm.video_in_use'         => 'Este {label} se está utilizando actualmente en el contenido. Eliminarlo romperá la referencia. ¿Desea continuar?',
 	'confirm.delete_label'         => '¿Eliminar este {label}?',
 
+	// Confirm dialog buttons — defaults for every tcmsConfirm() call
+	'confirm.yes_sure'             => 'Sí, confirmo',
+	'confirm.cancel'               => 'Cancelar',
+
 	// ── Error Messages ──────────────────────────────────────────────────────
 	'error.featured_update'        => 'No se pudo actualizar el estado de destacado. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',
 	'error.cache_clear'            => 'No se pudo limpiar la caché. Se produjo un error de red o de tiempo de espera. Por favor, inténtelo de nuevo.',

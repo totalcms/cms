@@ -16,7 +16,7 @@
 	<section>
 		{% set form = cms.form.builder(user.collection, {
 			id          : user.id,
-			save        : "Save",
+			save        : true,
 			helpStyle   : 'label',
 			helpOnFocus : true,
 		}) %}

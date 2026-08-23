@@ -327,6 +327,31 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 		$this->assertSame([], $adapter->dashboardAlerts(), 'No alerts when showIcon is false.');
 	}
 
+	public function testUnregisteredTrialEmitsInfoAlert(): void
+	{
+		$mock = $this->createMock(LicenseStatus::class);
+		$mock->method('getSidebarStatus')->willReturn(new LicenseStatusData(showIcon: false));
+		$mock->method('isUnregisteredTrial')->willReturn(true);
+
+		$adapter = $this->makeAlertsAdapter(['licenseStatus' => $mock]);
+		$alerts  = $adapter->dashboardAlerts();
+
+		$this->assertNotEmpty($alerts);
+		$this->assertContains('info', array_column($alerts, 'level'));
+		$this->assertContains('Register your trial to get email reminders before it expires.', array_column($alerts, 'message'));
+	}
+
+	public function testRegisteredTrialEmitsNoUnregisteredTrialAlert(): void
+	{
+		$mock = $this->createMock(LicenseStatus::class);
+		$mock->method('getSidebarStatus')->willReturn(new LicenseStatusData(showIcon: false));
+		$mock->method('isUnregisteredTrial')->willReturn(false);
+
+		$adapter = $this->makeAlertsAdapter(['licenseStatus' => $mock]);
+
+		$this->assertSame([], $adapter->dashboardAlerts());
+	}
+
 	// -------------------------------------------------------------------------
 	// dashboardAlerts() — failed automations
 	// -------------------------------------------------------------------------

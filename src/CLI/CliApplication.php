@@ -22,6 +22,25 @@ use TotalCMS\TotalCMS;
  */
 class CliApplication
 {
+	/**
+	 * Write to stderr without assuming the CLI SAPI.
+	 *
+	 * STDIN/STDOUT/STDERR are defined only under `cli`, so a bare
+	 * `fwrite(STDERR, ...)` is a fatal ("Undefined constant STDERR") anywhere
+	 * else — including the php-cgi crons some shared hosts run. That turned
+	 * every warning path here into a crash on exactly the installs least able
+	 * to diagnose it. The `php://stderr` wrapper works in any SAPI.
+	 */
+	private static function stderr(string $message): void
+	{
+		$handle = defined('STDERR') ? STDERR : fopen('php://stderr', 'wb');
+		if ($handle === false) {
+			return;
+		}
+
+		fwrite($handle, $message);
+	}
+
 	public static function run(): void
 	{
 		// Auto-detect project root for Composer installs
@@ -35,10 +54,10 @@ class CliApplication
 		try {
 			$totalcms = new TotalCMS(autoStartBuffer: false);
 		} catch (\Throwable $e) {
-			fwrite(STDERR, "Error: Failed to initialize Total CMS.\n");
-			fwrite(STDERR, "This usually means no web request has been made yet to setup the environment.\n");
-			fwrite(STDERR, "Visit your Total CMS site in a browser first, then retry.\n");
-			fwrite(STDERR, $e->getMessage() . "\n");
+			self::stderr("Error: Failed to initialize Total CMS.\n");
+			self::stderr("This usually means no web request has been made yet to setup the environment.\n");
+			self::stderr("Visit your Total CMS site in a browser first, then retry.\n");
+			self::stderr($e->getMessage() . "\n");
 			exit(1);
 		}
 		$totalcms->disableCache();
@@ -91,6 +110,7 @@ class CliApplication
 		$app->addCommand(new Command\ObjectListCommand($totalcms));
 		$app->addCommand(new Command\ObjectGetCommand($totalcms));
 		$app->addCommand(new Command\ObjectCreateCommand($totalcms));
+		$app->addCommand(new Command\ObjectPatchCommand($totalcms));
 		$app->addCommand(new Command\ObjectExportCommand($totalcms));
 		$app->addCommand(new Command\ObjectDeleteCommand($totalcms));
 
@@ -157,14 +177,14 @@ class CliApplication
 			foreach ($extensionManager->getAllCommands() as $command) {
 				$name = $command->getName();
 				if ($name !== null && in_array($name, $coreNames, true)) {
-					fwrite(STDERR, "Warning: Extension command '{$name}' blocked: conflicts with a core command.\n");
+					self::stderr("Warning: Extension command '{$name}' blocked: conflicts with a core command.\n");
 
 					continue;
 				}
 				$app->addCommand($command);
 			}
 		} catch (\Throwable $e) {
-			fwrite(STDERR, "Warning: Failed to load extension commands: {$e->getMessage()}\n");
+			self::stderr("Warning: Failed to load extension commands: {$e->getMessage()}\n");
 		}
 
 		$app->run();

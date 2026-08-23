@@ -32,6 +32,7 @@ use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectCloner;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectPropertyIncrementer;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
@@ -312,6 +313,20 @@ class TotalCMS
 	public function objectUpdater(): ObjectUpdater
 	{
 		return $this->container->get(ObjectUpdater::class);
+	}
+
+	/**
+	 * Get the object patcher for merging changes into existing objects.
+	 *
+	 * Unlike objectUpdater(), which replaces the whole object, this merges the
+	 * given keys over what is already stored.
+	 *
+	 * Usage:
+	 *   $object = $totalcms->objectPatcher()->patchObject('blog', 'my-post', ['title' => 'New Title']);
+	 */
+	public function objectPatcher(): ObjectPatcher
+	{
+		return $this->container->get(ObjectPatcher::class);
 	}
 
 	/**

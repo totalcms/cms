@@ -169,9 +169,13 @@ echo '  CLI commands: ' . count($referenceDocs['cli_commands']) . "\n";
 $extensionApi = buildExtensionApiReference();
 $builderApi   = buildBuilderApiReference();
 
+// No build timestamp: nothing reads one, and it made the index the only
+// generated file that changed on every rebuild — 412 KB of diff on a run that
+// produced identical content. Without it a rebuild over unchanged docs is a
+// no-op, so any diff here means the documentation actually changed. Git already
+// records when the file was last built, more reliably than a self-reported stamp.
 $referenceIndex = [
 	'version'        => 1,
-	'built_at'       => date('c'),
 	'twig_functions' => $twigFunctions,
 	'twig_filters'   => $referenceDocs['twig_filters'],
 	'field_types'    => $referenceDocs['field_types'],

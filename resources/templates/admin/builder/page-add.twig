@@ -5,7 +5,7 @@
 {% set canSave = cms.auth.canAccessCollection(builder.pagesCollection, 'create') %}
 
 {% set form = cms.form.builder(builder.pagesCollection, {
-	save        : canSave ? "Save" : false,
+	save        : canSave,
 	helpStyle   : 'label',
 	helpOnFocus : true,
 	newActions : [

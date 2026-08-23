@@ -14,6 +14,10 @@ return [
 	'confirm.video_in_use'         => 'Dit {label} wordt momenteel gebruikt in de inhoud. Verwijdering zal de verwijzing verbreken. Doorgaan?',
 	'confirm.delete_label'         => 'Dit {label} verwijderen?',
 
+	// Confirm dialog buttons — defaults for every tcmsConfirm() call
+	'confirm.yes_sure'             => 'Ja, ik weet het zeker',
+	'confirm.cancel'               => 'Annuleren',
+
 	// ── Error Messages ──────────────────────────────────────────────────────
 	'error.featured_update'        => 'De uitgelichte status kon niet worden bijgewerkt. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',
 	'error.cache_clear'            => 'De cache kon niet worden gewist. Er is een netwerk- of time-outfout opgetreden. Probeer het opnieuw.',

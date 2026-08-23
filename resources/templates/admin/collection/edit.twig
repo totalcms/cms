@@ -32,8 +32,8 @@
 
 {{ cms.form.collection({
 	id           : url.collection,
-	save         : cms.auth.canAccessCollectionMeta(url.collection, 'update') ? "Save" : false,
-	delete       : cms.auth.canAccessCollectionMeta(url.collection, 'delete') ? "Delete" : false,
+	save         : cms.auth.canAccessCollectionMeta(url.collection, 'update'),
+	delete       : cms.auth.canAccessCollectionMeta(url.collection, 'delete'),
 	helpStyle    : 'label',
 	helpOnFocus  : true,
 	deleteActions : [

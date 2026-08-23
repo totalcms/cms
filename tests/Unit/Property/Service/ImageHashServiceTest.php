@@ -74,11 +74,37 @@ describe('ImageHashService', function (): void {
 		expect(ImageHashService::compute($a))->not->toBe(ImageHashService::compute($b));
 	});
 
-	test('ImageHashService → changes when uploadDate changes', function (): void {
+	/*
+	 * uploadDate used to feed the hash, on the theory that it was needed to
+	 * catch a file being replaced in place. It isn't: PropertyRepository's
+	 * getUniqueFilename() appends a uniqid suffix to every upload, so `name`
+	 * already differs whenever new bytes arrive — including a re-upload of the
+	 * same file. All uploadDate added was instability: an image nothing had
+	 * touched got a fresh hash on any write that rebuilt the field, which
+	 * churned ImageWorks crops and made two identical images compare unequal.
+	 */
+	test('ImageHashService → ignores uploadDate (a new upload changes name instead)', function (): void {
 		$a = ['name' => 'photo.jpg', 'uploadDate' => '2026-04-17T12:00:00+00:00'];
 		$b = ['name' => 'photo.jpg', 'uploadDate' => '2026-04-18T12:00:00+00:00'];
 
+		expect(ImageHashService::compute($a))->toBe(ImageHashService::compute($b));
+	});
+
+	test('ImageHashService → still changes when a new upload lands (name differs)', function (): void {
+		$a = ['name' => 'photo-a1b2c.jpg', 'uploadDate' => '2026-04-17T12:00:00+00:00'];
+		$b = ['name' => 'photo-d3e4f.jpg', 'uploadDate' => '2026-04-18T12:00:00+00:00'];
+
 		expect(ImageHashService::compute($a))->not->toBe(ImageHashService::compute($b));
+	});
+
+	test('ImageHashService → hashes two empty images identically', function (): void {
+		// The sync regression: pages with no image at all read as "differs"
+		// between two installs purely because each side stamped its own
+		// uploadDate onto an empty field.
+		$local = ['name' => '', 'size' => 0, 'uploadDate' => '2026-08-19T03:55:06+00:00'];
+		$prod  = ['name' => '', 'size' => 0, 'uploadDate' => '2026-08-19T04:21:32+00:00'];
+
+		expect(ImageHashService::compute($local))->toBe(ImageHashService::compute($prod));
 	});
 
 	test('ImageHashService → handles empty image data', function (): void {

@@ -42,7 +42,7 @@ readonly class FirstLoginChecker
 		}
 	}
 
-	public function createFirstUser(string $email, string $password): void
+	public function createFirstUser(string $email, string $password, string $name = 'Admin'): void
 	{
 		// Ensure auth collection exists
 		$this->collectionFetcher->fetchOrCreateReserved($this->collection);
@@ -50,9 +50,10 @@ readonly class FirstLoginChecker
 		// Create default access groups before creating first user
 		$this->accessGroupManager->createDefaultGroups();
 
+		$name = trim($name);
+
 		$this->objectSaver->saveObject($this->collection, [
-			'id'       => 'admin',
-			'name'     => 'Admin',
+			'name'     => $name !== '' ? $name : 'Admin',
 			'email'    => $email,
 			'password' => $password,
 			'active'   => true,

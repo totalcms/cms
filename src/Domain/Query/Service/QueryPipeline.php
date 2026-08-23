@@ -113,7 +113,14 @@ readonly class QueryPipeline
 	}
 
 	/**
-	 * Simple contains filter — matches if any scalar field contains the term (case-insensitive).
+	 * Simple contains filter — matches if any scalar field contains the term
+	 * (case-insensitive).
+	 *
+	 * List-shaped fields (`tags`, `categories`, and any other `list` property —
+	 * a sequential array) are matched item by item, so filtering for a known tag
+	 * finds the objects carrying it. Associative composites (image, card, color,
+	 * file) are skipped: their internal metadata is not what the operator sees in
+	 * the table, and matching it would make terms like "png" hit every row.
 	 *
 	 * @param array<int,array<string,mixed>> $items
 	 *
@@ -128,8 +135,22 @@ readonly class QueryPipeline
 
 		return array_values(array_filter($items, static function (array $item) use ($term): bool {
 			foreach ($item as $value) {
-				if (is_scalar($value) && str_contains(mb_strtolower((string)$value), $term)) {
-					return true;
+				if (is_scalar($value)) {
+					if (str_contains(mb_strtolower((string)$value), $term)) {
+						return true;
+					}
+
+					continue;
+				}
+
+				if (!is_array($value) || !array_is_list($value)) {
+					continue;
+				}
+
+				foreach ($value as $listItem) {
+					if (is_scalar($listItem) && str_contains(mb_strtolower((string)$listItem), $term)) {
+						return true;
+					}
 				}
 			}
 

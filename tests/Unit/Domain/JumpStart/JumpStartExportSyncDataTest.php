@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\JumpStart;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
@@ -56,6 +57,7 @@ final class JumpStartExportSyncDataTest extends TestCase
 			$this->templateFetcher,
 			new JumpStartData(),
 			$cacheManager,
+			$this->createMock(BuilderOrderRepository::class),
 			$loggerFactory
 		);
 	}

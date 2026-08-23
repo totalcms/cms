@@ -25,7 +25,7 @@ By default, required string and array fields are automatically validated:
 
 You can override this behavior by explicitly setting `minLength` or `minItems`.
 
-> **Conditional required?** The schema's top-level `required` array is a hard data invariant enforced on every save. If you need a field that is only required when another field has a particular value (e.g. "email required only when notifications toggle is on"), use the form-level `settings.required` option paired with `settings.visibility` instead. See [Required (Form-Level)](../fields/all-fields.md#required-form-level) in the All Fields docs.
+> **Conditional required?** The schema's top-level `required` array is a hard data invariant enforced on every save. If you need a field that is only required when another field has a particular value (e.g. "email required only when notifications toggle is on"), use the form-level `settings.required` option paired with `settings.visibility` instead. See [Required (Form-Level)](docs/fields/all-fields#required-form-level) in the All Fields docs.
 
 ## String Validation
 

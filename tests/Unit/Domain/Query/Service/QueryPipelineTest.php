@@ -153,6 +153,64 @@ final class QueryPipelineTest extends TestCase
 		$this->assertSame('1', $result->items[0]['id']);
 	}
 
+	public function testContainsFilterMatchesScalarFields(): void
+	{
+		$this->cacheManager->method('getApiResponse')->willReturn(null);
+
+		$items = [
+			['id' => '1', 'title' => 'Hello World'],
+			['id' => '2', 'title' => 'Goodbye'],
+		];
+
+		$result = $this->pipeline->execute($items, ['filter' => 'world'], 'test');
+
+		$this->assertSame(['1'], array_column($result->items, 'id'));
+	}
+
+	public function testContainsFilterMatchesListFieldItems(): void
+	{
+		$this->cacheManager->method('getApiResponse')->willReturn(null);
+
+		$items = [
+			['id' => '1', 'title' => 'First', 'tags' => ['travel', 'food']],
+			['id' => '2', 'title' => 'Second', 'tags' => ['tech']],
+		];
+
+		$result = $this->pipeline->execute($items, ['filter' => 'trav'], 'test');
+
+		$this->assertSame(['1'], array_column($result->items, 'id'));
+	}
+
+	public function testContainsFilterMatchesListFieldCaseInsensitively(): void
+	{
+		$this->cacheManager->method('getApiResponse')->willReturn(null);
+
+		$items = [
+			['id' => '1', 'categories' => ['Announcements']],
+			['id' => '2', 'categories' => ['Reviews']],
+		];
+
+		$result = $this->pipeline->execute($items, ['filter' => 'announce'], 'test');
+
+		$this->assertSame(['1'], array_column($result->items, 'id'));
+	}
+
+	public function testContainsFilterIgnoresNestedObjectFields(): void
+	{
+		$this->cacheManager->method('getApiResponse')->willReturn(null);
+
+		// An image (associative composite) must not leak its internal metadata
+		// into the filter — otherwise "png" would match every object.
+		$items = [
+			['id' => '1', 'title' => 'First', 'image' => ['name' => 'shot.png', 'mime' => 'image/png']],
+			['id' => '2', 'title' => 'Second', 'image' => ['name' => 'other.png', 'mime' => 'image/png']],
+		];
+
+		$result = $this->pipeline->execute($items, ['filter' => 'png'], 'test');
+
+		$this->assertSame(0, $result->total);
+	}
+
 	// --- Ids (show-selected) ---
 
 	public function testIdsFilterRestrictsToTheGivenIds(): void
