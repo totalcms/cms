@@ -16,7 +16,7 @@
 	{% endfor %}
 
 	{% set formFields %}
-		{{ cms.form.field("name", "text", {
+		{{ cms.form.field("text", "name", {
 			label       : t('wizard.account_name'),
 			required    : true,
 			placeholder : "Jane Smith",

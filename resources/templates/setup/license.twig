@@ -18,7 +18,7 @@
 	{% if pending %}
 		<p>{{ t('wizard.license_code_sent', {'{email}': pending.email}) }}</p>
 		{% set codeFields %}
-			{{ cms.form.field("code", "text", {
+			{{ cms.form.field("text", "code", {
 				label       : t('wizard.license_code'),
 				required    : true,
 				placeholder : "123456",
@@ -37,7 +37,7 @@
 	{% elseif needsRegistration %}
 		<p>{{ t('wizard.license_register_intro') }}</p>
 		{% set regFields %}
-			{{ cms.form.field("name", "text", {
+			{{ cms.form.field("text", "name", {
 				label       : t('wizard.license_name'),
 				required    : true,
 				value       : prefillName,
