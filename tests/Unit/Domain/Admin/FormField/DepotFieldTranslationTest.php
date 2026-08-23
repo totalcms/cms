@@ -48,7 +48,7 @@ function depotFormForLocale(?string $locale): TotalForm
 {
 	$real = formWithTranslator($locale === null ? null : translatorForLocale($locale));
 
-	$test = test();
+	$test             = test();
 	$form             = $test->createMock(TotalForm::class);
 	$form->id         = '';
 	$form->collection = 'test-collection';

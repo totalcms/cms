@@ -248,7 +248,7 @@ class ApiKeyRepository extends StorageRepository
 		}
 
 		/** @var list<array<string,mixed>> $list */
-		$list = array_values(array_filter($keys, 'is_array'));
+		$list = array_values(array_filter($keys, is_array(...)));
 
 		return $list;
 	}
