@@ -8,8 +8,6 @@ export default class Dialog  {
 			console.warn("Missing dialog element");
 			return;
 		}
-		if (dialog.dialog) return dialog.dialog;
-
         // Define option defaults
         const defaults = {
 			open       : null,
@@ -18,6 +16,20 @@ export default class Dialog  {
 			onClose    : null,
 			openOnLoad : false,
         };
+
+		// One Dialog instance per node, so listeners are never double-bound.
+		// But callers legitimately re-construct against a node they share
+		// between items (the depot folder dialog, reused for whichever folder
+		// is selected) and pass fresh callbacks each time. Returning the cached
+		// instance while keeping the FIRST call's options made those callbacks
+		// act on a stale item. Adopt the new options; the already-bound
+		// listeners read them at call time.
+		if (dialog.dialog) {
+			dialog.dialog.options = Object.assign({}, defaults, options);
+
+			return dialog.dialog;
+		}
+
         this.options = Object.assign({}, defaults, options);
 
 		this.dialog = dialog;
