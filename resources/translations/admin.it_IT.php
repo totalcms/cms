@@ -1277,7 +1277,7 @@ return [
 	'wizard.license_desc'           => 'La tua licenza Total CMS è stata validata.',
 	'wizard.license_error'          => 'Impossibile validare la licenza: {error}',
 	'wizard.license_skip'           => 'Puoi continuare con la configurazione e impostare la licenza più tardi nella dashboard di amministrazione.',
-	'wizard.license_skip_link'      => 'Salta per ora — puoi configurare la licenza più tardi.',
+	'wizard.license_skip_link'      => 'Salta per ora',
 	'wizard.license_domain'         => 'Dominio',
 	'wizard.license_edition'        => 'Versione',
 	'wizard.license_status'         => 'Stato',

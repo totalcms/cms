@@ -1277,7 +1277,7 @@ return [
 	'wizard.license_desc'           => 'Your Total CMS license has been validated.',
 	'wizard.license_error'          => 'Could not validate license: {error}',
 	'wizard.license_skip'           => 'You can continue with setup and configure your license later in the admin dashboard.',
-	'wizard.license_skip_link'      => 'Skip for now — you can set up licensing later.',
+	'wizard.license_skip_link'      => 'Skip for now',
 	'wizard.license_domain'         => 'Domain',
 	'wizard.license_edition'        => 'Edition',
 	'wizard.license_status'         => 'Status',
