@@ -134,9 +134,11 @@ final class OAuthDiscoveryActionTest extends TestCase
 	/**
 	 * Every endpoint is built by concatenation onto the issuer, so echoing an
 	 * unvalidated path would publish an authorization_endpoint pointing
-	 * anywhere on the host the caller names.
+	 * anywhere on the host the caller names. An unrecognised path therefore
+	 * falls back to this install's own document — the caller's path must not
+	 * appear anywhere in the response.
 	 */
-	public function testPathSuffixedFormRejectsABasePathTheInstallDoesNotServe(): void
+	public function testPathSuffixedFormNeverReflectsABasePathTheInstallDoesNotServe(): void
 	{
 		$action = $this->makeAction(config: $this->makeConfig(api: '', oauth: []));
 
@@ -146,8 +148,15 @@ final class OAuthDiscoveryActionTest extends TestCase
 			scriptName: '/rw_common/plugins/stacks/tcms/public/index.php',
 		);
 
-		$this->assertSame(404, $result->getStatusCode());
-		$this->assertSame('', trim((string)$result->getBody()));
+		$this->assertSame(200, $result->getStatusCode());
+
+		$body = (string)$result->getBody();
+		$this->assertStringNotContainsString('attacker', $body);
+
+		/** @var array<string,mixed> $data */
+		$data = json_decode($body, true);
+		$this->assertSame('https://example.com', $data['issuer']);
+		$this->assertSame('https://example.com/oauth/authorize', $data['authorization_endpoint']);
 	}
 
 	public function testPathSuffixedFormAcceptsThePinnedApiPrefix(): void
@@ -181,23 +190,39 @@ final class OAuthDiscoveryActionTest extends TestCase
 		$data = json_decode((string)$match->getBody(), true);
 		$this->assertSame('https://example.com/pinned', $data['issuer']);
 
-		// SCRIPT_NAME candidates must not widen an explicit issuer.
+		// SCRIPT_NAME candidates must not widen an explicit issuer — the
+		// configured one is still what comes back.
 		$other = $this->invoke(
 			$this->makeAction(config: $config),
 			suffixPath: 'cms',
 			scriptName: '/cms/index.php',
 		);
-		$this->assertSame(404, $other->getStatusCode());
+		$this->assertSame(200, $other->getStatusCode());
+
+		/** @var array<string,mixed> $otherData */
+		$otherData = json_decode((string)$other->getBody(), true);
+		$this->assertSame('https://example.com/pinned', $otherData['issuer']);
 	}
 
-	/** A root install has no path component, so §3.1 never applies to it. */
-	public function testPathSuffixedFormIs404OnARootInstall(): void
+	/**
+	 * A root install's issuer has no path component, so §3.1 never applies —
+	 * but clients ask anyway, appending the protected resource path
+	 * (`/.well-known/oauth-authorization-server/mcp`) instead of the issuer
+	 * path. Answering that with a 404 made Claude Desktop report the server as
+	 * having no OAuth at all, so it must return the install's own document.
+	 */
+	public function testPathSuffixedFormServesTheInstallDocumentOnARootInstall(): void
 	{
 		$action = $this->makeAction(config: $this->makeConfig(api: '', oauth: []));
 
-		$result = $this->invoke($action, suffixPath: 'anything', scriptName: '/index.php');
+		$result = $this->invoke($action, suffixPath: 'mcp', scriptName: '/index.php');
 
-		$this->assertSame(404, $result->getStatusCode());
+		$this->assertSame(200, $result->getStatusCode());
+
+		/** @var array<string,mixed> $data */
+		$data = json_decode((string)$result->getBody(), true);
+		$this->assertSame('https://example.com', $data['issuer']);
+		$this->assertSame('https://example.com/oauth/token', $data['token_endpoint']);
 	}
 
 	public function testReturns404WhenEditionDoesNotAllowOAuth(): void

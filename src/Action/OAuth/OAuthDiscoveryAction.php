@@ -57,27 +57,30 @@ readonly class OAuthDiscoveryAction
 			return $this->renderer->json($response, $this->provider->metadata());
 		}
 
-		$issuer = $this->issuerForPath($request, '/' . trim($path, '/'));
-		if ($issuer === null) {
-			return $response->withStatus(404);
-		}
-
-		return $this->renderer->json($response, $this->provider->metadata($issuer));
+		// A path we don't recognise falls back to this install's own document.
+		// Clients do not all derive this URL from the issuer as §3.1 specifies —
+		// some append the protected RESOURCE path instead, so a root install
+		// whose issuer has no path component still gets asked for
+		// `/.well-known/oauth-authorization-server/mcp`. 404ing that made such a
+		// client conclude the server has no OAuth at all. Falling back reflects
+		// nothing back to the caller — the document describes this install, the
+		// same as the bare route — so it costs nothing to be lenient here.
+		return $this->renderer->json(
+			$response,
+			$this->provider->metadata($this->issuerForPath($request, '/' . trim($path, '/'))),
+		);
 	}
 
 	/**
-	 * Build the issuer for a queried base path, or null if this install
-	 * doesn't answer at that path.
+	 * Build the issuer for a queried base path, or null when this install does
+	 * not answer at that path — in which case the caller serves its own
+	 * document rather than anything derived from the query.
 	 *
 	 * Validation is not optional: every endpoint in the metadata document is
 	 * built by concatenation onto the issuer, so echoing an arbitrary path
 	 * back would publish an `authorization_endpoint` pointing at any location
-	 * on this host the caller names.
-	 *
-	 * A path we don't recognise gets a 404 rather than the default document.
-	 * Handing back metadata whose `issuer` disagrees with the one that was
-	 * asked about is something RFC 8414 requires the client to reject anyway,
-	 * so the 404 fails the same flow in a way that's actually diagnosable.
+	 * on this host the caller names. Returning null is what keeps an unknown
+	 * path out of the response entirely.
 	 *
 	 * Scheme and host come from `config->url`, never the inbound Host header,
 	 * matching how OAuthDiscoveryProvider builds the default issuer.

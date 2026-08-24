@@ -25,17 +25,28 @@ beforeEach(function (): void {
 });
 
 /**
- * The authorization-server form is routed but NOT a mirror of the bare
- * document: the path in the URL *is* the issuer the client is asking about,
- * and it verifies the returned `issuer` echoes it. A base path this install
- * doesn't answer at can't be echoed — every endpoint in the document is built
- * onto the issuer, so reflecting an arbitrary path would publish endpoints
- * pointing anywhere on the host. Unknown path therefore means 404.
+ * When the queried path IS a base path this install answers at, the document
+ * echoes it as the issuer (see OAuthDiscoveryActionTest). When it is not, the
+ * install's own document comes back instead — the caller's path must never
+ * reach the response, because every endpoint is built onto the issuer.
+ *
+ * It must not 404: clients do not all derive this URL from the issuer the way
+ * RFC 8414 §3.1 specifies, and one that appends the resource path instead
+ * reads a 404 here as "this server has no OAuth".
  */
-test('path-suffixed authorization-server metadata rejects a base path this install does not serve', function (): void {
+test('path-suffixed authorization-server metadata never reflects an unknown base path', function (): void {
 	$response = get('/.well-known/oauth-authorization-server/some/sub/path');
 
-	expect($response->getStatusCode())->toBe(404);
+	// non-Pro editions 404 the whole OAuth surface — acceptable
+	expect($response->getStatusCode())->toBeIn([200, 404]);
+
+	if ($response->getStatusCode() === 200) {
+		$body = (string)$response->getBody();
+		expect($body)->not->toContain('some/sub/path');
+
+		$doc = json_decode($body, true);
+		expect($doc['authorization_endpoint'] ?? '')->toStartWith((string)($doc['issuer'] ?? 'x'));
+	}
 });
 
 test('the bare authorization-server form still answers', function (): void {
