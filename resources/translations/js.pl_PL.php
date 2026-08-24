@@ -9,6 +9,7 @@ return [
 	'confirm.delete_item'          => 'Czy na pewno chcesz to usunąć? Tej operacji nie można cofnąć.',
 	'confirm.delete_files'         => 'Czy na pewno chcesz usunąć pliki ({count})? Tej operacji nie można cofnąć.',
 	'confirm.delete_folder_name'   => 'Wprowadzona nazwa folderu nie jest zgodna. Usuwanie anulowano.',
+	'confirm.delete_folder'        => 'Czy na pewno chcesz usunąć ten folder i całą jego zawartość? Tej operacji nie można cofnąć. Wpisz nazwę folderu, aby potwierdzić: "{name}"',
 	'confirm.image_in_use'         => 'Ten obraz jest obecnie używany w treści. Usunięcie go zerwie odwołanie. Kontynuować?',
 	'confirm.file_in_use'          => 'Ten plik jest obecnie używany w treści. Usunięcie go zerwie link. Kontynuować?',
 	'confirm.video_in_use'         => 'Element {label} jest obecnie używany w treści. Usunięcie go zerwie odwołanie. Kontynuować?',
@@ -27,4 +28,7 @@ return [
 	'error.no_processed_images'    => 'Brak przetworzonych obrazów do pobrania',
 	'error.enter_definition'       => 'Najpierw wprowadź definicję Twig',
 	'error.testing_view'           => 'Błąd podczas testowania widoku: {message}',
+
+	// ── Depot Field ─────────────────────────────────────────────────────────
+	'depot.processing'             => 'Przetwarzanie...',
 ];

@@ -40,7 +40,7 @@ class DepotDropField extends FormField
 	{
 		$button = HTMLUtils::element('button', '', [
 			'type'  => 'button',
-			'title' => 'Upload Files',
+			'title' => $this->t('depot.upload_files', 'Upload Files'),
 		]);
 
 		return HTMLUtils::element('div', $button, ['class' => 'depot-drop-upload dz-clickable']);

@@ -9,6 +9,7 @@ return [
 	'confirm.delete_item'          => 'Sei sicuro di voler eliminare questo elemento? Questa azione non può essere annullata.',
 	'confirm.delete_files'         => 'Sei sicuro di voler eliminare {count} file? Questa azione non può essere annullata.',
 	'confirm.delete_folder_name'   => 'Il nome della cartella inserito non corrisponde. Eliminazione annullata.',
+	'confirm.delete_folder'        => 'Sei sicuro di voler eliminare questa cartella e tutto il suo contenuto? Questa azione non può essere annullata. Digita il nome della cartella per confermare: "{name}"',
 	'confirm.image_in_use'         => 'Questa immagine è attualmente utilizzata nel contenuto. Eliminandola si interromperà il riferimento. Continuare?',
 	'confirm.file_in_use'          => 'Questo file è attualmente referenziato nel contenuto. Eliminandolo si interromperà il link. Continuare?',
 	'confirm.video_in_use'         => 'Questo {label} è attualmente utilizzato nel contenuto. Eliminandolo si interromperà il riferimento. Continuare?',
@@ -27,4 +28,7 @@ return [
 	'error.no_processed_images'    => 'Nessuna immagine elaborata da scaricare',
 	'error.enter_definition'       => 'Inserisci prima una definizione Twig',
 	'error.testing_view'           => 'Errore nel test della vista: {message}',
+
+	// ── Depot Field ─────────────────────────────────────────────────────────
+	'depot.processing'             => 'Elaborazione...',
 ];
