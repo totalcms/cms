@@ -72,19 +72,33 @@ CGIPassAuth On
 
 **Symptom:** An install that lives under a subpath — most commonly a Stacks site, where Total CMS runs at something like `/rw_common/plugins/stacks/tcms` rather than the domain root — has MCP clients failing to connect, or connecting inconsistently depending on which URL was used to discover the server.
 
-**Cause and fix, two separate issues:**
+**Two separate things going on here — one to fix, one to simply know about:**
 
 **1. The endpoint isn't at `/mcp` on the bare domain.** On a subpath install, the real MCP endpoint includes the install's base path — something like `https://your-site.com/rw_common/plugins/stacks/tcms/mcp`, not `https://your-site.com/mcp`. Don't guess or assume the short form. Copy the exact endpoint URL from **Admin → Settings → MCP Server** and paste it into the client's configuration verbatim.
 
-**2. Two discovery authorities can disagree.** The setup wizard's Server Config step offers an optional root catch-all rewrite for subpath installs — adding it lets short root-relative URLs and the RFC well-known discovery locations (`/.well-known/mcp.json`, `/.well-known/oauth-authorization-server`, etc.) resolve at the domain root in addition to the install's real subpath. That's convenient, but it means the site can now answer discovery requests two different ways — once from the root, once from the actual subpath — and if those two answers ever disagree on which endpoint to use, a client that discovers through one shape and connects through the other can fail in confusing, hard-to-reproduce ways.
+**2. Two discovery authorities, both of which work.** The setup wizard's Server Config step offers an optional root catch-all rewrite for subpath installs — adding it lets short root-relative URLs and the RFC well-known discovery locations (`/.well-known/mcp.json`, `/.well-known/oauth-authorization-server`, etc.) resolve at the domain root in addition to the install's real subpath. The site then answers discovery two ways: once from the root, once from the actual subpath.
 
-If the **Test connection** panel reports a **Single discovery authority** warning (meaning the root and subpath discovery documents advertise different endpoints), pin the canonical base explicitly by setting `api` in `config/tcms.php`:
+**You do not need to do anything about this.** Each shape is internally consistent — a client that discovers through the root connects through the root, one that discovers through the subpath stays on the subpath, and both reach the same server. The **Test connection** panel reports which endpoints the two shapes advertise so you can see the situation, not because it needs fixing.
 
-```php
-'api' => '/rw_common/plugins/stacks/tcms',
+If you would rather standardise on one shape — so both discovery documents advertise identical endpoints — pin the canonical base by setting `api`:
+
+```json
+"api": "/rw_common/plugins/stacks/tcms"
 ```
 
-(Use an empty string `''` if you want the root shape to be canonical instead.) Pinning `api` also ensures that RFC discovery URLs (`/.well-known/oauth-authorization-server`, `/.well-known/mcp.json`, etc.) advertise a consistent issuer, which strict OAuth clients require — until it's pinned, root-shaped requests advertise a bare-host issuer that differs from subpath-shaped requests. This resolves the ambiguity without changing how the install actually serves requests — it just tells Total CMS which base path is the one true answer when it reports discovery metadata.
+Use an empty string `""` to make the root shape canonical instead. This is a preference, not a repair: it changes only which base path Total CMS reports in discovery metadata, never how the install serves requests.
+
+**Where that line goes depends on how Total CMS was installed:**
+
+| Install type | File | Format |
+|---|---|---|
+| Any install | `tcms-data/.system/settings.json` | JSON key, as above |
+| Composer | `config/tcms.php` in the **project root** (not `vendor/`) | `'api' => '/your/path',` inside the returned array |
+| Zip / Stacks | `config/tcms.php`, or `tcms.php` in your **document root** | `'api' => '/your/path',` inside the returned array |
+
+`settings.json` is the recommended spot for all three. It is merged last, so it wins over every other config file; it survives a RapidWeaver republish, which a file in the document root may not; and the admin Settings screens deep-merge when they save, so a hand-added key is not overwritten.
+
+Clear the cache after changing it, then re-run **Test connection**.
 
 ---
 
@@ -100,7 +114,7 @@ If the **Test connection** panel reports a **Single discovery authority** warnin
 
 **Root URL rewrite** — Subpath installs only. Checks whether `/.well-known/mcp.json` is reachable at the domain root, which only works if the setup wizard's optional root catch-all rewrite rules were added. A warn here doesn't mean the MCP server is broken — it still works fine at its full subpath URL — it means the shorter root-relative discovery path isn't available, which some MCP clients try first.
 
-**Single discovery authority** — Subpath installs with the root rewrite in place. Compares the endpoint advertised by the root-shape discovery document against the one advertised at the real subpath. A warn means the two disagree — see [Subfolder installs (Stacks)](#subfolder-installs-stacks) above for the fix.
+**Single discovery authority** — Subpath installs with the root rewrite in place. Compares the endpoint advertised by the root-shape discovery document against the one advertised at the real subpath. This always passes; when the two differ it says so in the detail line, which is informational — both shapes work, and clients stay on whichever one they discovered through. See [Subfolder installs (Stacks)](#subfolder-installs-stacks) above if you would rather standardise on one.
 
 **OAuth discovery** — Checks that the JWKS endpoint (`/.well-known/jwks.json`) answers when OAuth is enabled. A fail usually means OAuth signing keys were never generated — run `tcms oauth:setup`.
 

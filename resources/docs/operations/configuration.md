@@ -33,10 +33,17 @@ return [
 	// Data directory location. Default: document root + /tcms-data
 	// 'datadir' => __DIR__ . '/tcms-data',
 
-	// URL prefix where the API is mounted. Default: '/api'
-	// 'api' => '/api',
+	// URL prefix the app is mounted at. Empty at the domain root; set it for
+	// a subfolder install, e.g. '/rw_common/plugins/stacks/tcms'.
+	// 'api' => '',
 ];
 ```
+
+### Which `config/` directory?
+
+On a **Composer** install this is the `config/` directory in your project root, next to `composer.json` — not the one inside `vendor/totalcms/cms/`. On a **zip or Stacks** install there is only one `config/` directory, inside the Total CMS folder, and that is the one.
+
+Zip and Stacks installs have a second override file: **`tcms.php` in your document root**. It uses the same returned-array format and is merged *after* `config/tcms.php`, so it wins. This is the file the setup wizard and the admin Settings screens write to, which is why an override you put in `config/tcms.php` can appear to be ignored — check the document-root file for a competing key before assuming the setting is broken.
 
 ## The Deep-Merge Override Model
 

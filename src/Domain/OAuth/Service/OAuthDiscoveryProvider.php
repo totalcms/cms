@@ -22,11 +22,19 @@ final readonly class OAuthDiscoveryProvider
 	}
 
 	/**
+	 * `$issuer` lets the caller pin the advertised issuer — used by the
+	 * RFC 8414 §3.1 path-suffixed well-known route, whose clients verify the
+	 * returned `issuer` matches the one they queried. Callers MUST have
+	 * validated it as a base path this install actually answers at (see
+	 * OAuthDiscoveryAction); every endpoint below is built from it, so an
+	 * unchecked value would let a caller point them anywhere on this host.
+	 * Defaults to this install's own resolved issuer when omitted.
+	 *
 	 * @return array<string,mixed>
 	 */
-	public function metadata(): array
+	public function metadata(?string $issuer = null): array
 	{
-		$issuer     = $this->resolveIssuer();
+		$issuer ??= $this->resolveIssuer();
 		$grantTypes = (array)($this->config->oauth['allowedGrantTypes'] ?? ['authorization_code', 'refresh_token']);
 		$dynamic    = (bool)($this->config->oauth['dynamicRegistration'] ?? false);
 

@@ -24,13 +24,29 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-test('path-suffixed authorization-server metadata answers like the bare form', function (): void {
-	$bare     = get('/.well-known/oauth-authorization-server');
-	$suffixed = get('/.well-known/oauth-authorization-server/some/sub/path');
+/**
+ * The authorization-server form is routed but NOT a mirror of the bare
+ * document: the path in the URL *is* the issuer the client is asking about,
+ * and it verifies the returned `issuer` echoes it. A base path this install
+ * doesn't answer at can't be echoed — every endpoint in the document is built
+ * onto the issuer, so reflecting an arbitrary path would publish endpoints
+ * pointing anywhere on the host. Unknown path therefore means 404.
+ */
+test('path-suffixed authorization-server metadata rejects a base path this install does not serve', function (): void {
+	$response = get('/.well-known/oauth-authorization-server/some/sub/path');
 
-	expect($suffixed->getStatusCode())->toBe($bare->getStatusCode());
+	expect($response->getStatusCode())->toBe(404);
+});
+
+test('the bare authorization-server form still answers', function (): void {
+	$bare = get('/.well-known/oauth-authorization-server');
+
+	// non-Pro editions 404 the whole OAuth surface — acceptable
+	expect($bare->getStatusCode())->toBeIn([200, 404]);
 	if ($bare->getStatusCode() === 200) {
-		expect((string)$suffixed->getBody())->toBe((string)$bare->getBody());
+		$doc = json_decode((string)$bare->getBody(), true);
+		expect($doc['issuer'] ?? '')->not->toBe('');
+		expect($doc['authorization_endpoint'] ?? '')->toStartWith((string)$doc['issuer']);
 	}
 });
 

@@ -64,6 +64,34 @@ final class BasePath
 		return '';
 	}
 
+	/**
+	 * The mount prefixes this install could legitimately be reached at,
+	 * derived from SCRIPT_NAME alone — no request path required.
+	 *
+	 * `resolve()` needs the request path to pick between the two layouts
+	 * above, which makes it request-shaped: a request that arrives through
+	 * a root catch-all rewrite (`/.well-known/...` on a subfolder install)
+	 * carries no subpath to cross-check against, so it resolves to `''`
+	 * even though the install really does live under one.
+	 *
+	 * OAuth discovery has to answer "is this issuer path mine?" for exactly
+	 * those requests. Both candidates are returned because SCRIPT_NAME can't
+	 * tell the layouts apart on its own; the caller matches against the set.
+	 *
+	 * @return list<string> ordered outermost-first, empties dropped
+	 */
+	public static function candidates(string $scriptName): array
+	{
+		if ($scriptName === '') {
+			return [];
+		}
+
+		$scriptDir = self::normalizeDir(dirname(str_replace('\\', '/', $scriptName)));
+		$parentDir = self::normalizeDir(dirname($scriptDir));
+
+		return array_values(array_unique(array_filter([$scriptDir, $parentDir], static fn (string $dir): bool => $dir !== '')));
+	}
+
 	private static function normalizeDir(string $dir): string
 	{
 		$dir = str_replace('\\', '/', $dir);

@@ -275,14 +275,23 @@ readonly class McpConnectionChecker
 			);
 		}
 
+		// Differing endpoints used to mean a broken connector: the subpath
+		// shape led a client to an RFC 8414 §3.1 metadata URL that answered
+		// at the domain root and advertised the bare-host issuer, so the
+		// issuer never matched the one the client was verifying and OAuth
+		// died right after the grant. OAuthDiscoveryAction now answers that
+		// URL for the issuer that was queried, which leaves each shape
+		// internally consistent — a client that discovers and connects
+		// through either one works. So this is reported, not flagged: two
+		// working authorities is a preference to settle, not a fault.
 		return new McpCheckResult(
 			'dual_authority',
 			'Single discovery authority',
-			'warn',
-			"This site answers on two base paths that advertise different endpoints ($rootEp vs $subpathEp). "
-			. 'A client that discovers through one shape and connects through the other can fail in confusing ways.',
-			"Pin the canonical base path: set 'api' explicitly in config/tcms.php "
-			. '(empty string for root-shape URLs, or the full install subpath).'
+			'pass',
+			"This site answers on two base paths, each advertising its own endpoint ($rootEp vs $subpathEp). "
+			. 'Both work, and a client stays on whichever shape it discovered through. '
+			. "To standardise on one, pin 'api' — see the Subfolder installs section of the MCP troubleshooting docs "
+			. 'for which file that goes in on your install type.'
 		);
 	}
 

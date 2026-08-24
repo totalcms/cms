@@ -45,4 +45,37 @@ final class BasePathTest extends TestCase
 			'unmatched request path' => ['/cms/index.php', '/totally/different', ''],
 		];
 	}
+
+	/**
+	 * candidates() exists because resolve() is request-shaped: a request
+	 * arriving through a subfolder install's root catch-all rewrite carries no
+	 * subpath to cross-check against, so it resolves to '' even though the
+	 * install really does live under one. OAuth discovery has to answer "is
+	 * this issuer path mine?" for exactly those requests.
+	 *
+	 * @param list<string> $expected
+	 */
+	#[DataProvider('candidateProvider')]
+	public function testListsReachableMountPrefixesWithoutARequestPath(string $scriptName, array $expected): void
+	{
+		expect(BasePath::candidates($scriptName))->toBe($expected);
+	}
+
+	/** @return array<string,array{string,list<string>}> */
+	public static function candidateProvider(): array
+	{
+		return [
+			// The Stacks case: resolve() would say '' for a root-shaped
+			// request, but the install is genuinely reachable at both of these.
+			'stacks' => [
+				'/rw_common/plugins/stacks/tcms/public/index.php',
+				['/rw_common/plugins/stacks/tcms/public', '/rw_common/plugins/stacks/tcms'],
+			],
+			'composer subpath' => ['/cms/index.php', ['/cms']],
+			// Root install has no path component at all — nothing to offer.
+			'root install'        => ['/index.php', []],
+			'cli-server basename' => ['index.php', []],
+			'empty script name'   => ['', []],
+		];
+	}
 }

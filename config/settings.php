@@ -17,7 +17,15 @@ if (TotalCMS\Support\PathResolver::isComposerInstall() && file_exists($projectTc
 		$settings = array_replace_recursive($settings, $installationSettings);
 	}
 } elseif (file_exists($packageTcms)) {
-	require $packageTcms;
+	// Zip / Stacks installs. Historically this file assigned into $settings
+	// directly (it is required into this scope, so that still works and a
+	// file with no return statement yields int 1 here). Returning an array
+	// is the documented style everywhere else, though, and silently dropping
+	// it sent operators chasing overrides that never applied — so honour both.
+	$installationSettings = require $packageTcms;
+	if (is_array($installationSettings)) {
+		$settings = array_replace_recursive($settings, $installationSettings);
+	}
 }
 
 // Unit-test and integration environment (Travis CI)
