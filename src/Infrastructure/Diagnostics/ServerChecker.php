@@ -8,6 +8,7 @@ use TotalCMS\Domain\Bundle\Service\BundleChecker;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Mcp\Service\McpConnectionChecker;
+use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
 
@@ -288,6 +289,11 @@ class ServerChecker
 			// OPcache detection (incl. file-cache-only hosts) lives in the service
 			'opcache'   => $this->opcacheService->isAvailable(),
 			'intl'      => extension_loaded('intl') && class_exists('Locale') && class_exists('NumberFormatter'),
+			// Presence is not capability. A host was found whose Imagick loaded
+			// but had no coders registered at all, so this page reported
+			// "Installed / High impact for image operations" while the site
+			// could not render a single JPEG. Report what it can actually do.
+			'imagick'   => ImagickSupport::isUsable(),
 			'apcu'      => extension_loaded('apcu') && function_exists('apcu_store') && function_exists('apcu_fetch'),
 			'redis'     => extension_loaded('redis') && class_exists('Redis'),
 			'memcached' => extension_loaded('memcached') && class_exists('Memcached'),
