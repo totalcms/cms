@@ -7,6 +7,15 @@ describe('DepotDropField', function (): void {
 	beforeEach(function (): void {
 		$this->form     = $this->createMock(TotalForm::class);
 		$this->form->id = 'test-id';
+
+		// createMock() stubs t() to return '', which is not how the real method
+		// behaves: TotalForm::t() falls back to the English default whenever no
+		// translator closure was injected. Without this the mock renders empty
+		// attributes for every translated string and the assertions below test
+		// the mock rather than the field.
+		$this->form->method('t')->willReturnCallback(
+			static fn (string $key, string $default = '', array $params = []): string => $default !== '' ? $default : $key,
+		);
 	});
 
 	test('DepotDropField → buildFormField returns HTML with input', function (): void {
