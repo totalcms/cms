@@ -156,4 +156,31 @@ final readonly class OAuthActivityLogger
 			'remote_addr' => $remoteAddr,
 		]);
 	}
+
+	/**
+	 * A rejected token exchange.
+	 *
+	 * Every other step of the authorization-code flow already writes a line, so
+	 * a log that ends at `consent.granted` used to mean the exchange failed —
+	 * with no record of why. That gap cost days on a real support case: the
+	 * client registered, the operator consented, and then nothing, with the only
+	 * evidence sitting in the web server's access log.
+	 *
+	 * The exception's error type and hint are the diagnostic (`invalid_grant`
+	 * "Authorization code has expired", `invalid_client`, a failed
+	 * `code_verifier`). Neither carries the code or the client secret, so this
+	 * is safe to write. Warning level: a failed exchange is either a
+	 * misconfigured client or someone probing.
+	 */
+	public function tokenFailed(string $clientId, string $grantType, string $error, ?string $hint, string $remoteAddr): void
+	{
+		$this->logger->warning('OAuth token exchange failed', [
+			'type'        => 'token.failed',
+			'client_id'   => $clientId,
+			'grant_type'  => $grantType,
+			'error'       => $error,
+			'hint'        => $hint ?? '',
+			'remote_addr' => $remoteAddr,
+		]);
+	}
 }

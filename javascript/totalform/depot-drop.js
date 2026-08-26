@@ -2,6 +2,7 @@ import TotalField from "./totalfield";
 import DropletTestSet from "./droplet-testset";
 import Dropzone from "@deltablot/dropzone";
 import { csrfHeaders } from "../csrf";
+import { t } from "../i18n";
 
 //-----------------------------------------------
 // Total CMS Depot Drop Field (write-only upload)
@@ -110,7 +111,7 @@ export default class DepotDropField extends TotalField {
         const label = progressBar.querySelector(".dz-upload-progress-label");
 
         if (upload) upload.style.width = progress + "%";
-        if (label) label.textContent = progress === 100 ? "Processing..." : Math.round(progress) + "%";
+        if (label) label.textContent = progress === 100 ? t("depot.processing") : Math.round(progress) + "%";
     }
 
     createProgressBar() {

@@ -102,13 +102,32 @@ readonly class McpConnectionChecker
 				'headers' => ['Content-Type: application/json', 'Accept: application/json, text/event-stream'],
 				'body'    => self::INITIALIZE_BODY,
 			]);
+			// This probe sends no credentials, so on a site with anonymous access
+			// switched off a 401 is the CORRECT answer, not a fault. Reporting it
+			// as a failure — and blaming a WAF — sent a real support case chasing
+			// a firewall that did not exist, on a server whose only problem was
+			// that it was configured exactly as the operator intended.
+			$anonymousDisabled = !(bool)($this->config->mcp['publicAccess'] ?? false);
+			if ($init->statusCode === 401 && $anonymousDisabled) {
+				return new McpCheckResult(
+					'endpoint',
+					'MCP endpoint',
+					'pass',
+					'Discovery answers, and initialize correctly requires credentials — '
+					. 'Public Access is off, so an unauthenticated 401 is the expected response.'
+				);
+			}
+
 			if ($init->statusCode !== 200) {
 				return new McpCheckResult(
 					'endpoint',
 					'MCP endpoint',
 					'fail',
 					"initialize at {$this->config->mcpEndpoint()} answered HTTP {$init->statusCode}.",
-					'Check the MCP server is enabled and nothing (maintenance mode, WAF) intercepts the endpoint.'
+					$init->statusCode === 401
+						? 'The endpoint requires credentials but Public Access is on, so anonymous callers should be served. '
+							. 'Check whether something upstream is demanding authentication.'
+						: 'Check the MCP server is enabled and nothing (maintenance mode, WAF) intercepts the endpoint.'
 				);
 			}
 
@@ -172,8 +191,49 @@ readonly class McpConnectionChecker
 				],
 				'body' => self::INITIALIZE_BODY,
 			]);
+
+			// Control request: same call, no Authorization at all.
+			//
+			// Comparing the two is the only discriminator that holds in every
+			// configuration. Judging the Bearer response alone — "401 means the
+			// header arrived" — is vacuous on a site with Public Access off,
+			// because a stripped header also yields 401 there (login_required
+			// instead of invalid_token). That false pass hid a genuinely
+			// stripped header on a live site while every other probe agreed
+			// nothing was wrong.
+			//
+			// If the credential reaches PHP the two answers must differ. If they
+			// are identical, the header made no difference to the outcome, which
+			// means it never arrived.
+			$control = $this->http->request('POST', $this->config->mcpEndpoint(), self::TIMEOUT + [
+				'headers' => [
+					'Content-Type: application/json',
+					'Accept: application/json, text/event-stream',
+				],
+				'body' => self::INITIALIZE_BODY,
+			]);
 		} catch (\Throwable $e) {
 			return $this->unreachable('bearer_header', 'Bearer auth reaches PHP', $e);
+		}
+
+		$identical = $response->statusCode === $control->statusCode
+			&& $response->body === $control->body;
+
+		if ($identical) {
+			return new McpCheckResult(
+				'bearer_header',
+				'Bearer auth reaches PHP',
+				'fail',
+				"A request carrying a Bearer token and one carrying none were answered identically (HTTP {$response->statusCode}). "
+				. 'The Authorization header is being stripped before PHP (SAPI: ' . PHP_SAPI . '), so OAuth clients authenticate '
+				. 'successfully and are then treated as anonymous on every call. OAuth cannot work until this is resolved — '
+				. 'the tokens are valid, but no client can present them.',
+				'Apache running PHP as CGI/FastCGI drops the Authorization header unless the vhost sets '
+				. '"CGIPassAuth On" (2.4.13+) or an .htaccess exports it — and on a subfolder install that must cover '
+				. 'every .htaccess the request passes through, not just public/.htaccess. Switching the domain to '
+				. 'PHP-FPM avoids the CGI handler entirely. If neither takes effect the host is stripping it above '
+				. 'the account level.'
+			);
 		}
 
 		if ($response->statusCode === 401) {
@@ -181,7 +241,8 @@ readonly class McpConnectionChecker
 				'bearer_header',
 				'Bearer auth reaches PHP',
 				'pass',
-				'An invalid Bearer token is correctly rejected with 401 — the Authorization header reaches Total CMS.'
+				'An invalid Bearer token is rejected differently from an unauthenticated request — '
+				. 'the Authorization header reaches Total CMS.'
 			);
 		}
 
@@ -275,14 +336,23 @@ readonly class McpConnectionChecker
 			);
 		}
 
+		// Differing endpoints used to mean a broken connector: the subpath
+		// shape led a client to an RFC 8414 §3.1 metadata URL that answered
+		// at the domain root and advertised the bare-host issuer, so the
+		// issuer never matched the one the client was verifying and OAuth
+		// died right after the grant. OAuthDiscoveryAction now answers that
+		// URL for the issuer that was queried, which leaves each shape
+		// internally consistent — a client that discovers and connects
+		// through either one works. So this is reported, not flagged: two
+		// working authorities is a preference to settle, not a fault.
 		return new McpCheckResult(
 			'dual_authority',
 			'Single discovery authority',
-			'warn',
-			"This site answers on two base paths that advertise different endpoints ($rootEp vs $subpathEp). "
-			. 'A client that discovers through one shape and connects through the other can fail in confusing ways.',
-			"Pin the canonical base path: set 'api' explicitly in config/tcms.php "
-			. '(empty string for root-shape URLs, or the full install subpath).'
+			'pass',
+			"This site answers on two base paths, each advertising its own endpoint ($rootEp vs $subpathEp). "
+			. 'Both work, and a client stays on whichever shape it discovered through. '
+			. "To standardise on one, pin 'api' — see the Subfolder installs section of the MCP troubleshooting docs "
+			. 'for which file that goes in on your install type.'
 		);
 	}
 

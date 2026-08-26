@@ -32,13 +32,26 @@ class DepotField extends FormField
 		return $input . $browser . $addFolder . $folderDialog . $fileTemplate . $folderTemplate . $protectionDialog;
 	}
 
+	/**
+	 * Translated string escaped for interpolation into a heredoc template.
+	 * HTMLUtils escapes attribute values itself, so this is only needed where
+	 * we assemble markup by hand rather than through the builders.
+	 */
+	private function esc(string $key, string $default): string
+	{
+		return htmlspecialchars($this->t($key, $default), ENT_QUOTES, 'UTF-8');
+	}
+
 	/** @param array<array<string,mixed>> $files */
 	private function buildLayout(array $files): string
 	{
 		$browser    = $this->buildBrowser($files);
 		$preview    = $this->depotPreview();
 		$layout     = HTMLUtils::element('div', $browser . $preview, ['class' => 'depot-layout']);
-		$editButton = HTMLUtils::button('', ['class' => 'protect', 'title' => 'Edit Depot Protection']);
+		$editButton = HTMLUtils::button('', [
+			'class' => 'protect',
+			'title' => $this->t('depot.edit_protection', 'Edit Depot Protection'),
+		]);
 
 		return HTMLUtils::element('div', $editButton . $layout, ['class' => 'depot-layout-container']);
 	}
@@ -51,14 +64,14 @@ class DepotField extends FormField
 
 		$content = $this->form->subField('protected', [
 			'field'       => 'checkbox',
-			'label'       => 'Protected by Collection',
-			'help'        => 'Access group protection is set in the Collection.',
+			'label'       => $this->t('depot.protected_label', 'Protected by Collection'),
+			'help'        => $this->t('depot.protected_help', 'Access group protection is set in the Collection.'),
 			'value'       => $depot['protected'] ?? $defaultProtected,
 		]);
 		$content .= $this->form->subField('password', [
 			'field'    => 'password',
-			'label'    => 'Password',
-			'help'     => 'Require a password to download files from this depot. This overrides all collection level access controls.',
+			'label'    => $this->t('depot.password_label', 'Password'),
+			'help'     => $this->t('depot.password_help', 'Require a password to download files from this depot. This overrides all collection level access controls.'),
 			'value'    => $depot['password'] ?? '',
 			'required' => false,
 			'settings' => ['ignoreManagers' => true],
@@ -115,7 +128,7 @@ class DepotField extends FormField
 		// <div class="size">3MB</div>
 		// </li>
 
-		$name = $file['name'] ?? 'Unknown';
+		$name = $file['name'] ?? $this->t('depot.unknown_file', 'Unknown');
 		$ext  = strtolower(pathinfo($name, PATHINFO_EXTENSION));
 		$size = FileUtils::fileSizeString($file['size'] ?? 0);
 
@@ -162,7 +175,13 @@ class DepotField extends FormField
 
 	protected function filePreview(): string
 	{
-		$preview = htmlspecialchars($this->t('depot.preview', 'Preview'), ENT_QUOTES, 'UTF-8');
+		$preview  = $this->esc('depot.preview', 'Preview');
+		$size     = $this->esc('depot.size', 'Size');
+		$date     = $this->esc('depot.date', 'Date');
+		$count    = $this->esc('depot.count_short', 'D.Count');
+		$download = $this->esc('depot.download_short', 'D.Name');
+		$comments = $this->esc('depot.comments', 'Comments');
+		$tags     = $this->esc('depot.tags', 'Tags');
 
 		return <<<HTML
 		<div class="file-preview cms-hide">
@@ -171,17 +190,17 @@ class DepotField extends FormField
 			</div>
 			<div class="file-info">
 				<div>
-					<div class="info"><h6>Size</h6><span class="file-size"></span></div>
-					<div class="info"><h6>Date</h6><span class="file-date"></span></div>
-					<div class="info"><h6>D.Count</h6><span class="file-count"></span></div>
-					<div class="info"><h6>D.Name</h6><span class="file-download"></span></div>
+					<div class="info"><h6>{$size}</h6><span class="file-size"></span></div>
+					<div class="info"><h6>{$date}</h6><span class="file-date"></span></div>
+					<div class="info"><h6>{$count}</h6><span class="file-count"></span></div>
+					<div class="info"><h6>{$download}</h6><span class="file-download"></span></div>
 				</div>
 				<div>
-					<h6>Comments</h6>
+					<h6>{$comments}</h6>
 					<p class="file-comments"></p>
 				</div>
 				<div>
-					<h6>Tags</h6>
+					<h6>{$tags}</h6>
 					<div class="file-tags"></div>
 				</div>
 			</div>
@@ -197,14 +216,21 @@ class DepotField extends FormField
 	{
 		$addFolderDisabled = $this->form->isEditMode() ? '' : 'disabled';
 
+		$edit      = $this->esc('depot.edit_file_info', 'Edit File Info');
+		$links     = $this->esc('depot.download_links', 'Download Links');
+		$download  = $this->esc('depot.download_file', 'Download File');
+		$upload    = $this->esc('depot.upload', 'Upload');
+		$newFolder = $this->esc('depot.new_folder', 'New Folder');
+		$trash     = $this->esc('depot.delete_file', 'Delete File');
+
 		return <<<HTML
 		<div class="actionbar">
-			<button type="button" class="edit" title="Edit File Info" disabled></button>
-			<button type="button" class="links" title="Download Links" disabled></button>
-			<button type="button" class="download" title="Download File" disabled></button>
-			<button type="button" class="upload dz-clickable" title="Upload"></button>
-			<button type="button" class="add-folder" title="New Folder" {$addFolderDisabled}></button>
-			<button type="button" class="trash" title="Delete File" disabled></button>
+			<button type="button" class="edit" title="{$edit}" disabled></button>
+			<button type="button" class="links" title="{$links}" disabled></button>
+			<button type="button" class="download" title="{$download}" disabled></button>
+			<button type="button" class="upload dz-clickable" title="{$upload}"></button>
+			<button type="button" class="add-folder" title="{$newFolder}" {$addFolderDisabled}></button>
+			<button type="button" class="trash" title="{$trash}" disabled></button>
 		</div>
 		HTML;
 	}
@@ -213,10 +239,10 @@ class DepotField extends FormField
 	{
 		$content = $this->form->subField('addpath', [
 			'field' => 'text',
-			'label' => 'Folder path',
-			'help'  => 'The name and path to the folder that you want to create.',
+			'label' => $this->t('depot.folder_path_label', 'Folder path'),
+			'help'  => $this->t('depot.folder_path_help', 'The name and path to the folder that you want to create.'),
 		]);
-		$button   = HTMLUtils::button('Add Folder');
+		$button   = HTMLUtils::button($this->esc('depot.add_folder', 'Add Folder'));
 		$content .= HTMLUtils::element('section', $button);
 
 		return HTMLUtils::dialog($content, 'folder-add-dialog');
@@ -244,8 +270,8 @@ class DepotField extends FormField
 	{
 		$content = $this->form->subField('name', [
 			'field'    => 'text',
-			'label'    => 'Folder Name',
-			'help'     => 'The name of the folder.',
+			'label'    => $this->t('depot.folder_name_label', 'Folder Name'),
+			'help'     => $this->t('depot.folder_name_help', 'The name of the folder.'),
 			'value'    => $data['name'] ?? '',
 			'required' => false, // Not required - folder renaming feature is incomplete, validation will be done in JS when implemented
 		]);
@@ -275,7 +301,7 @@ class DepotField extends FormField
 
 	private function closeSection(): string
 	{
-		$button = HTMLUtils::button('Close', ['class' => 'close']);
+		$button = HTMLUtils::button($this->esc('btn.close', 'Close'), ['class' => 'close']);
 
 		return HTMLUtils::element('section', $button);
 	}
@@ -285,25 +311,25 @@ class DepotField extends FormField
 	{
 		$content = $this->form->subField('download', [
 			'field' => 'text',
-			'label' => 'Download Name',
-			'help'  => 'The name of the file when it gets downloaded.',
+			'label' => $this->t('depot.download_name_label', 'Download Name'),
+			'help'  => $this->t('depot.download_name_help', 'The name of the file when it gets downloaded.'),
 			'value' => $fileData['download'] ?? $fileData['name'] ?? '',
 		]);
 		$content .= $this->form->subField('comments', [
 			'field'       => 'textarea',
-			'label'       => 'Comments',
-			'help'        => 'Comments about this file',
+			'label'       => $this->t('depot.comments', 'Comments'),
+			'help'        => $this->t('depot.comments_help', 'Comments about this file'),
 			'value'       => $fileData['comments'] ?? '',
 		]);
 		$content .= $this->form->subField('tags', [
 			'field'       => 'list',
-			'label'       => 'Tags',
-			'help'        => 'Add tags to help organize your files.',
-			'placeholder' => 'Add Tags',
+			'label'       => $this->t('depot.tags', 'Tags'),
+			'help'        => $this->t('depot.tags_help', 'Add tags to help organize your files.'),
+			'placeholder' => $this->t('depot.tags_placeholder', 'Add Tags'),
 			'value'       => $fileData['tags'] ?? [],
 		]);
 
-		return HTMLUtils::details('Info', $content);
+		return HTMLUtils::details($this->t('depot.section_info', 'Info'), $content);
 	}
 
 	/** @param array<string,mixed> $fileData */
@@ -311,48 +337,48 @@ class DepotField extends FormField
 	{
 		$content = $this->form->subField('name', [
 			'field'    => 'text',
-			'label'    => 'Filename',
+			'label'    => $this->t('depot.filename_label', 'Filename'),
 			'icon'     => false,
 			'readonly' => true,
 			'value'    => $fileData['name'] ?? '',
 		]);
 		$content .= $this->form->subField('ext', [
 			'field'    => 'text',
-			'label'    => 'Extension',
+			'label'    => $this->t('depot.extension_label', 'Extension'),
 			'icon'     => false,
 			'readonly' => true,
 			'value'    => $fileData['ext'] ?? '',
 		]);
 		$content .= $this->form->subField('size', [
 			'field'    => 'number',
-			'label'    => 'Size',
+			'label'    => $this->t('depot.size', 'Size'),
 			'icon'     => false,
 			'readonly' => true,
 			'value'    => $fileData['size'] ?? '',
 		]);
 		$content .= $this->form->subField('count', [
 			'field'    => 'number',
-			'label'    => 'Download Count',
+			'label'    => $this->t('depot.download_count_label', 'Download Count'),
 			'icon'     => false,
 			'readonly' => true,
 			'value'    => $fileData['count'] ?? '',
 		]);
 		$content .= $this->form->subField('mime', [
 			'field'    => 'text',
-			'label'    => 'MIME Type',
+			'label'    => $this->t('depot.mime_label', 'MIME Type'),
 			'icon'     => false,
 			'readonly' => true,
 			'value'    => $fileData['mime'] ?? '',
 		]);
 		$content .= $this->form->subField('uploadDate', [
 			'field'    => 'datetime',
-			'label'    => 'Upload Date',
+			'label'    => $this->t('depot.upload_date_label', 'Upload Date'),
 			'icon'     => false,
 			'readonly' => true,
 			'value'    => $fileData['uploadDate'] ?? '',
 		]);
 
-		return HTMLUtils::details('Meta (Readonly)', $content);
+		return HTMLUtils::details($this->t('depot.section_meta', 'Meta (Readonly)'), $content);
 	}
 
 	/**

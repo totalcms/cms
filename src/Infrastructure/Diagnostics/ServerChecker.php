@@ -8,6 +8,7 @@ use TotalCMS\Domain\Bundle\Service\BundleChecker;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Mcp\Service\McpConnectionChecker;
+use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
 
@@ -57,6 +58,12 @@ class ServerChecker
 		$info = [
 			'Total CMS Version'  => $this->getVersion(),
 			'PHP Version'        => PHP_VERSION,
+			// The SAPI is the first thing worth knowing when a header goes
+			// missing: `cgi-fcgi` drops the Authorization header unless the
+			// vhost passes it explicitly, which silently turns every
+			// Bearer-authenticated MCP/API client anonymous. Switching a cPanel
+			// domain to PHP-FPM changes this to `fpm-fcgi` and usually fixes it.
+			'PHP SAPI'           => PHP_SAPI,
 			'Operating System'   => PHP_OS,
 			'Web Server'         => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
 			'Domain'             => $_SERVER['SERVER_NAME'] ?? 'Unknown',
@@ -288,6 +295,11 @@ class ServerChecker
 			// OPcache detection (incl. file-cache-only hosts) lives in the service
 			'opcache'   => $this->opcacheService->isAvailable(),
 			'intl'      => extension_loaded('intl') && class_exists('Locale') && class_exists('NumberFormatter'),
+			// Presence is not capability. A host was found whose Imagick loaded
+			// but had no coders registered at all, so this page reported
+			// "Installed / High impact for image operations" while the site
+			// could not render a single JPEG. Report what it can actually do.
+			'imagick'   => ImagickSupport::isUsable(),
 			'apcu'      => extension_loaded('apcu') && function_exists('apcu_store') && function_exists('apcu_fetch'),
 			'redis'     => extension_loaded('redis') && class_exists('Redis'),
 			'memcached' => extension_loaded('memcached') && class_exists('Memcached'),

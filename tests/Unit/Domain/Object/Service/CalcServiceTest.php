@@ -409,3 +409,53 @@ it('throws on unbalanced parentheses', function (): void {
 	$calc = new CalcService();
 	$calc->evaluate('(${a} + ${b}', ['a' => 1, 'b' => 2]);
 })->throws(\RuntimeException::class);
+
+// --------------------------------------------------
+// Formatted (currency) values
+//
+// applyCalcFields() runs on raw request data, BEFORE PropertyFactory builds a
+// PriceData — so calc sees whatever the caller posted. Raw API posts, CSV/JSON
+// imports and JS-disabled browsers can all carry a display-formatted price
+// ("$5,000.00"), which is_numeric() rejects. Those must parse, but values that
+// merely happen to contain digits (dates, times, phone numbers) must NOT: a
+// plausible-looking wrong total is worse than a visible zero.
+// --------------------------------------------------
+
+it('parses display-formatted currency values', function (string $input, float $expected): void {
+	$calc = new CalcService();
+	expect($calc->evaluate('${price}', ['price' => $input]))->toBe($expected);
+})->with([
+	['5,000.00',     5000.0],
+	['$5,000.00',    5000.0],
+	['100.000,50 €', 100000.5],
+	['1,234',        1234.0],
+	['-2,500.00',    -2500.0],
+]);
+
+it('sums a deck column of formatted currency values', function (): void {
+	$calc = new CalcService();
+	$data = ['ausgabe' => [
+		'a' => ['nettobetrag' => '5,000.00'],
+		'b' => ['nettobetrag' => '6,000.00'],
+	]];
+	expect($calc->evaluate('sum(${ausgabe.nettobetrag})', $data))->toBe(11000.0);
+});
+
+it('treats non-numeric values that merely contain digits as zero', function (string $input): void {
+	$calc = new CalcService();
+	expect($calc->evaluate('${value}', ['value' => $input]))->toBe(0.0);
+})->with([
+	'time'    => ['12:30'],
+	'date'    => ['2026-08-25'],
+	'phone'   => ['555-1234'],
+	'text'    => ['3 items'],
+	'version' => ['v2.1'],
+	'word'    => ['abc'],
+]);
+
+it('leaves already-numeric strings to native float parsing', function (): void {
+	$calc = new CalcService();
+	// '1.500' is is_numeric, so it means 1.5 — never 1500 (which is how a
+	// price-specific normalizer would read the dot as a thousands separator).
+	expect($calc->evaluate('${a}', ['a' => '1.500']))->toBe(1.5);
+});

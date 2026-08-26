@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Property\Data\PriceData;
 use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 
 /**
@@ -46,8 +47,7 @@ class CalcService
 				if (!is_array($item)) {
 					continue;
 				}
-				$val      = $item[$fieldName] ?? 0;
-				$values[] = is_numeric($val) ? (string)(float)$val : '0';
+				$values[] = $this->numericLiteral($item[$fieldName] ?? 0);
 			}
 
 			return $values !== [] ? implode(', ', $values) : '0';
@@ -56,13 +56,41 @@ class CalcService
 		// Then replace simple field references with their numeric values.
 		// The deck-dot-notation pass above has already consumed any ${prop.field} forms,
 		// so anything remaining is a single-key reference.
-		$expr = TemplatePlaceholder::render($expr, function (string $key) use ($objectData): string {
-			$value = $objectData[$key] ?? 0;
-
-			return is_numeric($value) ? (string)(float)$value : '0';
-		});
+		$expr = TemplatePlaceholder::render($expr, fn (string $key): string => $this->numericLiteral($objectData[$key] ?? 0));
 
 		return $this->parse($expr);
+	}
+
+	/**
+	 * The numeric contribution of a field value, as a literal for the tokenizer.
+	 *
+	 * Calc runs on raw request data, BEFORE PropertyFactory builds a PriceData,
+	 * so a price can arrive display-formatted ("$5,000.00") from a raw API post,
+	 * a CSV/JSON import, or a JS-disabled browser. is_numeric() rejects those, so
+	 * without the second tier they would silently evaluate as 0.
+	 *
+	 * The shape guard keeps PriceData's deliberately permissive normalizer away
+	 * from values that merely contain digits: it strips every non-separator
+	 * character, so unguarded it reads a time field ("12:30" → 1230), a date
+	 * ("2026-08-25" → 2026) or a phone ("555-1234" → 555) as a real number. A
+	 * visible 0 beats a wrong total that nobody notices.
+	 *
+	 * Mirrored in JS by javascript/totalform/number-parse.mjs — the two engines
+	 * evaluate the same expressions and are held together by
+	 * tests/fixtures/calc-number-coercion.json.
+	 */
+	private function numericLiteral(mixed $value): string
+	{
+		if (is_numeric($value)) {
+			return (string)(float)$value;
+		}
+
+		// Digits and separators only, with at most a leading/trailing currency symbol.
+		if (is_string($value) && preg_match('/^\s*\p{Sc}?\s*-?[\d.,]+\s*\p{Sc}?\s*$/u', $value) === 1) {
+			return (string)(float)PriceData::normalize($value);
+		}
+
+		return '0';
 	}
 
 	private function parse(string $expr): float

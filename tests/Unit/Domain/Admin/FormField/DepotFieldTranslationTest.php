@@ -113,4 +113,64 @@ describe('DepotField chrome', function (): void {
 
 		expect($html)->toContain('placeholder="Filter files..."');
 	});
+
+	/**
+	 * The rest of the field's chrome — action bar titles, the add-folder
+	 * dialog, the preview headings — was hardcoded English long after the
+	 * filter and Preview button were translated. These lock in the sweep.
+	 *
+	 * Only markup DepotField assembles itself is asserted: subField() is
+	 * mocked to '', so the dialog field labels never reach the output here.
+	 * Their keys are covered by the catalog-parity assertion below.
+	 */
+	test('renders the action bar and add-folder chrome in the form locale', function (): void {
+		$html = renderDepot('de_DE');
+
+		expect($html)->toContain('title="Dateiinformationen bearbeiten"');
+		expect($html)->toContain('title="Download-Links"');
+		expect($html)->toContain('title="Datei herunterladen"');
+		expect($html)->toContain('title="Hochladen"');
+		expect($html)->toContain('title="Neuer Ordner"');
+		expect($html)->toContain('title="Datei löschen"');
+		expect($html)->toContain('title="Depot-Schutz bearbeiten"');
+		expect($html)->toContain('>Ordner hinzufügen</button>');
+	});
+
+	test('renders the file preview headings in the form locale', function (): void {
+		$html = renderDepot('de_DE');
+
+		expect($html)->toContain('<h6>Größe</h6>');
+		expect($html)->toContain('<h6>Datum</h6>');
+		expect($html)->toContain('<h6>Kommentare</h6>');
+		expect($html)->toContain('<h6>Schlagwörter</h6>');
+	});
+
+	test('leaks no raw depot key anywhere in the rendered field', function (): void {
+		foreach (['de_DE', 'es_ES', 'pl_PL', null] as $locale) {
+			$html = renderDepot($locale);
+
+			expect($html)->not->toMatch('/\bdepot\.[a-z_]+/');
+			expect($html)->not->toContain('btn.close');
+		}
+	});
+
+	/**
+	 * Every key the field asks for must exist in en_US, or a locale that has
+	 * no override silently falls through to the English default and the miss
+	 * is invisible. Guards the sweep against a typo'd key.
+	 */
+	test('every key DepotField and DepotDropField request exists in the admin catalog', function (): void {
+		$src = file_get_contents(dirname(__DIR__, 5) . '/src/Domain/Admin/FormField/DepotField.php')
+			. file_get_contents(dirname(__DIR__, 5) . '/src/Domain/Admin/FormField/DepotDropField.php');
+
+		preg_match_all('/->(?:t|esc)\(\s*\'([a-z][a-z0-9_.]*)\'/', (string)$src, $matches);
+
+		$catalog = require dirname(__DIR__, 5) . '/resources/translations/admin.en_US.php';
+		$keys    = array_unique($matches[1]);
+
+		expect($keys)->not->toBeEmpty();
+		foreach ($keys as $key) {
+			expect($catalog)->toHaveKey($key);
+		}
+	});
 });

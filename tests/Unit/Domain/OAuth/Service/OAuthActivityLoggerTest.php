@@ -216,4 +216,46 @@ final class OAuthActivityLoggerTest extends TestCase
 		$sut = new OAuthActivityLogger($logger);
 		$sut->rateLimitHit('/oauth/token', '198.51.100.7');
 	}
+
+	/**
+	 * Every other step of the authorization-code flow writes a line, so a log
+	 * that stopped at consent.granted used to mean "the exchange failed, reason
+	 * unknown" — the gap that made a real support case unresolvable from our own
+	 * logs. Warning level, and the error type plus hint are the diagnostic.
+	 */
+	public function testTokenFailedLogsAtWarningWithTheDiagnosis(): void
+	{
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('warning')
+			->with(
+				'OAuth token exchange failed',
+				$this->callback(
+					static fn (array $ctx): bool => $ctx['type'] === 'token.failed'
+					&& $ctx['client_id'] === 'c-9'
+					&& $ctx['grant_type'] === 'authorization_code'
+					&& $ctx['error'] === 'invalid_grant'
+					&& $ctx['hint'] === 'Failed to verify `code_verifier`.'
+					&& $ctx['remote_addr'] === '160.79.106.177'
+				),
+			);
+
+		$sut = new OAuthActivityLogger($logger);
+		$sut->tokenFailed('c-9', 'authorization_code', 'invalid_grant', 'Failed to verify `code_verifier`.', '160.79.106.177');
+	}
+
+	/** A null hint must not become the string "null" in the audit trail. */
+	public function testTokenFailedNormalisesAMissingHintToAnEmptyString(): void
+	{
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('warning')
+			->with(
+				'OAuth token exchange failed',
+				$this->callback(static fn (array $ctx): bool => $ctx['hint'] === ''),
+			);
+
+		$sut = new OAuthActivityLogger($logger);
+		$sut->tokenFailed('c-9', 'refresh_token', 'invalid_client', null, '');
+	}
 }

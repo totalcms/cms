@@ -9,6 +9,7 @@ return [
 	'confirm.delete_item'          => 'Are you sure that you want to delete this? This cannot be undone.',
 	'confirm.delete_files'         => 'Are you sure that you want to delete {count} files? This cannot be undone.',
 	'confirm.delete_folder_name'   => 'Folder name entered does not match. Deletion cancelled.',
+	'confirm.delete_folder'        => 'Are you sure that you want to delete this folder and all of its contents? This cannot be undone. Type the folder name to confirm this action: "{name}"',
 	'confirm.image_in_use'         => 'This image is currently used in the content. Deleting it will break the reference. Continue?',
 	'confirm.file_in_use'          => 'This file is currently referenced in the content. Deleting it will break the link. Continue?',
 	'confirm.video_in_use'         => 'This {label} is currently used in the content. Deleting it will break the reference. Continue?',
@@ -27,4 +28,7 @@ return [
 	'error.no_processed_images'    => 'No processed images to download',
 	'error.enter_definition'       => 'Please enter a Twig definition first',
 	'error.testing_view'           => 'Error testing view: {message}',
+
+	// ── Depot Field ─────────────────────────────────────────────────────────
+	'depot.processing'             => 'Processing...',
 ];

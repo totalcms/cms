@@ -17,8 +17,9 @@ class ImagePaletteGenerator
 	 */
 	public static function getPalette(string $imagepath): array
 	{
-		// Early return if required extensions are not loaded
-		if (!extension_loaded('imagick') && !extension_loaded('gd')) {
+		// Early return if neither backend can actually decode an image. Imagick is
+		// tested for capability rather than presence — see ImagickSupport.
+		if (!ImagickSupport::isUsable() && !extension_loaded('gd')) {
 			throw new \RuntimeException('Image processing extensions not loaded (imagick or gd required)');
 		}
 
@@ -47,11 +48,13 @@ class ImagePaletteGenerator
 		// truecolor canvas in PHP's memory budget, so a large image (e.g. a
 		// 7500x5001 JPEG) can exhaust memory_limit and kill the worker with an
 		// UNCATCHABLE fatal — which silently leaves the object's image metadata
-		// empty. ColorThief uses Imagick when it's available (bounded
-		// differently), so the guard only applies to GD-only installs. Throwing
-		// RuntimeException here routes the large image into the caller's graceful
-		// "skip palette, continue the save" path instead of OOM-killing the request.
-		if (!extension_loaded('imagick') && extension_loaded('gd')) {
+		// empty. Imagick is bounded differently, so the guard only applies when
+		// we are actually going to use GD — which is why it tests capability
+		// rather than presence: a loaded-but-unusable Imagick still lands on GD.
+		// Throwing RuntimeException here routes the large image into the caller's
+		// graceful "skip palette, continue the save" path instead of OOM-killing
+		// the request.
+		if (!ImagickSupport::isUsable() && extension_loaded('gd')) {
 			$limit = self::memoryLimitBytes();
 			if ($limit > 0) {
 				$bits      = $imageInfo['bits'] ?? 8;
@@ -72,8 +75,12 @@ class ImagePaletteGenerator
 		// Getting the top 15 colors from the image then reduce to top 5
 		// This produces the best results after a lot of testing
 		try {
+			// Pick the adapter rather than letting ColorThief choose: its
+			// ImageLoader prefers Imagick whenever the extension is loaded, which
+			// on a host with a non-functional ImageMagick means every palette
+			// fails with "Unable to read image from path" while GD sits unused.
 			/** @var ?array<string> $palette */
-			$palette = ColorThief::getPalette($imagepath, 15, 10, null, 'hex');
+			$palette = ColorThief::getPalette($imagepath, 15, 10, null, 'hex', ImagickSupport::isUsable() ? 'Imagick' : 'Gd');
 		} catch (\Throwable $e) {
 			// Wrap any ColorThief errors in our exception
 			$error = "ColorThief failed to generate palette for {$imagepath}: " . $e->getMessage();

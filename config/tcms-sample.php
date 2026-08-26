@@ -14,5 +14,11 @@ return [
 	//
 	// Uncomment to customize the data directory location:
 	// 'datadir' => __DIR__ . '/tcms-data',
-	// 'api' => '/api',
+
+	// URL prefix this install is mounted at. Auto-detected per request, which
+	// is right for almost everyone. Pin it only for a subfolder install that
+	// also answers at the domain root (the optional root catch-all rewrite) —
+	// otherwise OAuth/MCP discovery advertises a different issuer depending on
+	// which shape the request came in through. Empty string = domain root.
+	// 'api' => '/rw_common/plugins/stacks/tcms',
 ];

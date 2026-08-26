@@ -24,13 +24,40 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-test('path-suffixed authorization-server metadata answers like the bare form', function (): void {
-	$bare     = get('/.well-known/oauth-authorization-server');
-	$suffixed = get('/.well-known/oauth-authorization-server/some/sub/path');
+/**
+ * When the queried path IS a base path this install answers at, the document
+ * echoes it as the issuer (see OAuthDiscoveryActionTest). When it is not, the
+ * install's own document comes back instead — the caller's path must never
+ * reach the response, because every endpoint is built onto the issuer.
+ *
+ * It must not 404: clients do not all derive this URL from the issuer the way
+ * RFC 8414 §3.1 specifies, and one that appends the resource path instead
+ * reads a 404 here as "this server has no OAuth".
+ */
+test('path-suffixed authorization-server metadata never reflects an unknown base path', function (): void {
+	$response = get('/.well-known/oauth-authorization-server/some/sub/path');
 
-	expect($suffixed->getStatusCode())->toBe($bare->getStatusCode());
+	// non-Pro editions 404 the whole OAuth surface — acceptable
+	expect($response->getStatusCode())->toBeIn([200, 404]);
+
+	if ($response->getStatusCode() === 200) {
+		$body = (string)$response->getBody();
+		expect($body)->not->toContain('some/sub/path');
+
+		$doc = json_decode($body, true);
+		expect($doc['authorization_endpoint'] ?? '')->toStartWith((string)($doc['issuer'] ?? 'x'));
+	}
+});
+
+test('the bare authorization-server form still answers', function (): void {
+	$bare = get('/.well-known/oauth-authorization-server');
+
+	// non-Pro editions 404 the whole OAuth surface — acceptable
+	expect($bare->getStatusCode())->toBeIn([200, 404]);
 	if ($bare->getStatusCode() === 200) {
-		expect((string)$suffixed->getBody())->toBe((string)$bare->getBody());
+		$doc = json_decode((string)$bare->getBody(), true);
+		expect($doc['issuer'] ?? '')->not->toBe('');
+		expect($doc['authorization_endpoint'] ?? '')->toStartWith((string)$doc['issuer']);
 	}
 });
 

@@ -218,3 +218,41 @@ describe('TotalField value', () => {
 		expect(f.input.value).toBe('');
 	});
 });
+
+describe('TotalField calc write-back', () => {
+	test('recalculation routes through setValue() so masked fields reformat', () => {
+		document.body.innerHTML = '';
+		const form = document.createElement('form');
+		const source = document.createElement('div');
+		source.className = 'form-field';
+		source.innerHTML = '<input name="amount" value="500">';
+
+		const container = document.createElement('div');
+		container.className = 'form-field';
+		container.dataset.type = 'price';
+		container.innerHTML = '<input name="total" value="">';
+		form.append(source, container);
+		document.body.appendChild(form);
+
+		// Stand-in for PriceField: setValue() is the only entry point that reaches
+		// the mask, so a calc result written straight to input.value shows up raw.
+		class MaskedField extends TotalField {
+			setValue(value) {
+				this.masked = value;
+				this.input.value = `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+				this.changed();
+			}
+		}
+
+		const field = new MaskedField(container, {
+			calc: '${amount} * 2',
+			form: { form, generateData: () => ({ amount: 500 }) },
+		});
+		field.form = { form, generateData: () => ({ amount: 5000 }) };
+
+		source.querySelector('input').dispatchEvent(new Event('input', { bubbles: true }));
+
+		expect(field.masked).toBe(10000);
+		expect(field.input.value).toBe('$10,000.00');
+	});
+});

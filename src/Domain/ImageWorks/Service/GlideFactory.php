@@ -7,6 +7,7 @@ use League\Glide\Server;
 use League\Glide\ServerFactory;
 use Slim\Psr7\Response;
 use Slim\Psr7\Stream;
+use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
@@ -53,7 +54,11 @@ readonly class GlideFactory
 			'source_path_prefix'     => $source,
 			'cache_path_prefix'      => sprintf('%s/%s', $source, $cacheDir ?? self::CACHEDIR),
 			'watermarks_path_prefix' => $watermarkPath ?? TextWatermarkFactory::WATERMARK_DIR,
-			'driver'                 => extension_loaded('imagick') ? 'imagick' : 'gd',
+			// Capability, not presence: an Imagick that loads but has no coders
+			// registered would otherwise be chosen over a working GD, and every
+			// render would fail with Intervention's opaque "Unable to decode
+			// input" behind a 404. See ImagickSupport.
+			'driver'                 => ImagickSupport::isUsable() ? 'imagick' : 'gd',
 			'defaults'               => is_array($this->config->imageworks['defaults'] ?? []) ? $this->config->imageworks['defaults'] : [],
 			'presets'                => $this->presets($imageData),
 			'response'               => new PsrResponseFactory(new Response(), fn ($stream): Stream => new Stream($stream)),

@@ -13,11 +13,20 @@ class PriceData extends NumberData
 {
 	public function __construct(string|int|float $price = 0, array $settings = [])
 	{
-		parent::__construct($this->normalize($price), $settings);
+		parent::__construct(self::normalize($price), $settings);
 	}
 
-	/** Coerce a possibly-formatted price into a numeric string floatval() accepts. */
-	private function normalize(string|int|float $value): string
+	/**
+	 * Coerce a possibly-formatted price into a numeric string floatval() accepts.
+	 *
+	 * Public because CalcService needs the same parsing: calc runs on raw request
+	 * data, before PropertyFactory builds a PriceData, so a posted "$5,000.00"
+	 * would otherwise evaluate as 0. Deliberately permissive — it strips anything
+	 * that isn't a digit or separator — so only call it on values already known
+	 * to be prices (PropertyFactory dispatches on `field === 'price'`; CalcService
+	 * gates on a formatted-number shape).
+	 */
+	public static function normalize(string|int|float $value): string
 	{
 		if (is_int($value) || is_float($value)) {
 			return (string)$value;
@@ -41,9 +50,9 @@ class PriceData extends NumberData
 			$s         = str_replace($thousands, '', $s);
 			$s         = str_replace($decimal, '.', $s);
 		} elseif ($hasComma) {
-			$s = $this->resolveSingleSeparator($s, ',');
+			$s = self::resolveSingleSeparator($s, ',');
 		} elseif ($hasDot) {
-			$s = $this->resolveSingleSeparator($s, '.');
+			$s = self::resolveSingleSeparator($s, '.');
 		}
 
 		return $s;
@@ -55,7 +64,7 @@ class PriceData extends NumberData
 	 *  - appears once with exactly 3 trailing digits → thousands ("100,000")
 	 *  - otherwise → decimal point ("100,50" / "100.5")
 	 */
-	private function resolveSingleSeparator(string $s, string $sep): string
+	private static function resolveSingleSeparator(string $s, string $sep): string
 	{
 		if (substr_count($s, $sep) > 1) {
 			return str_replace($sep, '', $s);

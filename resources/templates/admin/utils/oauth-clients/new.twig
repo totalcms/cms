@@ -33,7 +33,10 @@
 		}) }}
 	{% endset %}
 
-	{{ cms.form.totalform("/api/oauth-clients", formFields, {
+	{# Route is relative to the form's data-api, which already carries the
+	   `/api` prefix (TotalFormFactory::totalform) — a leading /api here
+	   would post to /api/api/oauth-clients and 404. #}
+	{{ cms.form.totalform("/oauth-clients", formFields, {
 		class  : "oauth-client-form",
 		method : "POST",
 		save   : t('oauth_clients.create_submit'),

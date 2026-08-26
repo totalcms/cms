@@ -5,6 +5,9 @@
 // Uses ${deckProperty.fieldName} syntax to reference deck item fields
 // for aggregate functions: sum(${items.total}), avg(${items.price}), etc.
 //-----------------------------------------------
+import { collectScopedFieldValues } from './fieldCollection.mjs';
+import { toCalcNumber } from './number-parse.mjs';
+
 export default class Calc {
 
 	constructor(field) {
@@ -83,7 +86,7 @@ export default class Calc {
 
 		// Then replace simple field references with their numeric values
 		expr = expr.replace(/\${(.*?)}/g, (match, key) => {
-			const val = parseFloat(data[key]);
+			const val = toCalcNumber(data[key]);
 			return isNaN(val) ? '0' : String(val);
 		});
 
@@ -128,12 +131,12 @@ export default class Calc {
 		const items = deckField.querySelectorAll(itemSelector);
 
 		items.forEach(item => {
-			// Find the field within this deck item
-			const fieldInput = item.querySelector(`[name="${fieldName}"]`);
-			if (fieldInput) {
-				const val = parseFloat(fieldInput.value);
-				if (!isNaN(val)) values.push(val);
-			}
+			// Read the item's own top-level fields through their TotalField
+			// instances: a masked field (price) renders "5,000.00" in the DOM,
+			// which parseFloat truncates at the group separator. Scoping also
+			// keeps a composite's sub-field from shadowing the real column.
+			const val = toCalcNumber(collectScopedFieldValues(item)[fieldName]);
+			if (!isNaN(val)) values.push(val);
 		});
 
 		return values;
@@ -144,10 +147,9 @@ export default class Calc {
 	 */
 	collectFormData() {
 		if (this.field.isInDeck) {
-			const data = {};
-			const fields = this.field.deckItem.querySelectorAll('input, textarea, select');
-			fields.forEach(field => data[field.name] = field.value);
-			return data;
+			// Typed values via each field's TotalField instance — see
+			// collectDeckFieldValues() above for why the raw DOM value lies.
+			return collectScopedFieldValues(this.field.deckItem);
 		}
 
 		let data = this.field.form.generateData();
