@@ -58,6 +58,12 @@ class ServerChecker
 		$info = [
 			'Total CMS Version'  => $this->getVersion(),
 			'PHP Version'        => PHP_VERSION,
+			// The SAPI is the first thing worth knowing when a header goes
+			// missing: `cgi-fcgi` drops the Authorization header unless the
+			// vhost passes it explicitly, which silently turns every
+			// Bearer-authenticated MCP/API client anonymous. Switching a cPanel
+			// domain to PHP-FPM changes this to `fpm-fcgi` and usually fixes it.
+			'PHP SAPI'           => PHP_SAPI,
 			'Operating System'   => PHP_OS,
 			'Web Server'         => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
 			'Domain'             => $_SERVER['SERVER_NAME'] ?? 'Unknown',
