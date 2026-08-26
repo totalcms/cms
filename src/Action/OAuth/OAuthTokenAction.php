@@ -58,7 +58,7 @@ readonly class OAuthTokenAction
 				$parsedBody = (array)($request->getParsedBody() ?? []);
 				$clientId   = (string)($parsedBody['client_id'] ?? '');
 				$grantType  = (string)($parsedBody['grant_type'] ?? '');
-				$scopes     = self::scopesFromJwt((string)$payload['access_token']);
+				$scopes     = $this->scopesFromJwt((string)$payload['access_token']);
 
 				if ($grantType === 'authorization_code') {
 					$this->activityLogger->tokenIssued($clientId, '', $scopes);
@@ -91,7 +91,7 @@ readonly class OAuthTokenAction
 	 *
 	 * @return list<string>
 	 */
-	private static function scopesFromJwt(string $jwt): array
+	private function scopesFromJwt(string $jwt): array
 	{
 		$segments = explode('.', $jwt);
 		if (count($segments) !== 3) {

@@ -86,7 +86,7 @@ final class ImagickSupport
 		}
 
 		return self::$formats = array_map(
-			static fn (string $format): string => strtoupper($format),
+			strtoupper(...),
 			$formats,
 		);
 	}

@@ -52,7 +52,7 @@ readonly class OAuthDiscoveryAction
 		// RouteContext::fromRequest(), which throws outright when routing
 		// hasn't run — the bare route must keep working regardless.
 		$route = $request->getAttribute(RouteContext::ROUTE);
-		$path  = $route instanceof RouteInterface ? (string)($route->getArgument('path') ?? '') : '';
+		$path  = $route instanceof RouteInterface ? $route->getArgument('path') ?? '' : '';
 		if (trim($path, '/') === '') {
 			return $this->renderer->json($response, $this->provider->metadata());
 		}

@@ -56,9 +56,7 @@ class CalcService
 		// Then replace simple field references with their numeric values.
 		// The deck-dot-notation pass above has already consumed any ${prop.field} forms,
 		// so anything remaining is a single-key reference.
-		$expr = TemplatePlaceholder::render($expr, function (string $key) use ($objectData): string {
-			return $this->numericLiteral($objectData[$key] ?? 0);
-		});
+		$expr = TemplatePlaceholder::render($expr, fn (string $key): string => $this->numericLiteral($objectData[$key] ?? 0));
 
 		return $this->parse($expr);
 	}
