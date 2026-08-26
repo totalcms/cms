@@ -71,3 +71,63 @@ describe('Calc.evaluate', () => {
 		expect(calc('${x} +', { data: { x: '5' } }).evaluate()).toBeNull();
 	});
 });
+
+//-----------------------------------------------
+// Masked fields (price) render a locale-formatted string in input.value —
+// "5,000.00" — which parseFloat truncates at the group separator (→ 5). Calc
+// must read the field's typed value, never the raw DOM value.
+// Regression: a deck column of 5,000 + 6,000 totalled 11.
+//-----------------------------------------------
+
+/** A `.form-field` wrapper whose TotalField.getValue() returns the typed number. */
+function priceCell(name, display, typed) {
+	const wrap = document.createElement('div');
+	wrap.className = 'form-field';
+	wrap.dataset.type = 'price';
+	wrap.innerHTML = `<input type="text" name="${name}" value="${display}">`;
+	wrap.totalfield = { input: wrap.querySelector('input'), getValue: () => typed };
+	return wrap;
+}
+
+describe('Calc with display-formatted (masked) field values', () => {
+	test('aggregates a deck column by typed value, not the formatted DOM value', () => {
+		const form = document.createElement('form');
+		const deck = document.createElement('div');
+		deck.className = 'form-field';
+		deck.dataset.type = 'deckTable';
+		deck.innerHTML = '<input type="hidden" name="ausgabe">';
+		form.append(deck);
+
+		[['5,000.00', 5000], ['6,000.00', 6000]].forEach(([display, typed]) => {
+			const row = document.createElement('div');
+			row.className = 'deck-table-row';
+			row.append(priceCell('nettobetrag', display, typed));
+			deck.append(row);
+		});
+
+		const c = Object.create(Calc.prototype);
+		c.expression = 'sum(${ausgabe.nettobetrag})';
+		c.field = { settings: {}, isInDeck: false, form: { form, generateData: () => ({}) } };
+
+		expect(c.collectDeckFieldValues('ausgabe', 'nettobetrag')).toEqual([5000, 6000]);
+		expect(c.evaluate()).toBe(11000);
+	});
+
+	test('reads a sibling field inside a deck item by typed value', () => {
+		const item = document.createElement('div');
+		item.className = 'deck-item';
+		item.append(priceCell('price', '5,000.00', 5000));
+
+		const qty = document.createElement('div');
+		qty.className = 'form-field';
+		qty.innerHTML = '<input type="number" name="qty" value="2">';
+		qty.totalfield = { input: qty.querySelector('input'), getValue: () => '2' };
+		item.append(qty);
+
+		const c = Object.create(Calc.prototype);
+		c.expression = '${qty} * ${price}';
+		c.field = { settings: {}, isInDeck: true, deckItem: item, form: null };
+
+		expect(c.evaluate()).toBe(10000);
+	});
+});

@@ -123,12 +123,15 @@ export default class TotalField {
 			this.input.value = result;
 		}
 
-		// Recalculate when referenced fields change
+		// Recalculate when referenced fields change. Write through setValue()
+		// rather than input.value: a field that formats its display (price masks
+		// the input) has to re-render the number, or the recomputed total shows
+		// up raw — "1100" where every other price reads "$1,100.00". The base
+		// setValue() is input.value + changed(), so plain fields are unaffected.
 		this.calc.attachListeners(() => {
 			const val = this.calc.evaluate();
 			if (val !== null) {
-				this.input.value = val;
-				this.changed();
+				this.setValue(val);
 			}
 		});
 	}

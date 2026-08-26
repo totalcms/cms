@@ -1,0 +1,33 @@
+{
+	"_comment": "Single source of truth for how a calc expression coerces a referenced field value to a number. Asserted by BOTH the JS engine (tests/js/calcParity.test.mjs → javascript/totalform/number-parse.mjs, used by calc.js) and the PHP engine (tests/Unit/Domain/Object/Service/CalcCoercionParityTest.php → src/Domain/Object/Service/CalcService.php) against the same cases. Calc runs twice — live in the browser and again on save — so a value the two engines read differently shows one total on screen and stores another. Add a case here whenever you change coercion in either engine; the other engine's test fails until it matches, which is how drift is caught. Each case evaluates the expression '${v}' with 'value' bound to v, and asserts 'equals'.",
+	"cases": [
+		{ "name": "integer", "value": 5000, "equals": 5000 },
+		{ "name": "float", "value": 1.5, "equals": 1.5 },
+		{ "name": "zero", "value": 0, "equals": 0 },
+		{ "name": "negative number", "value": -250.5, "equals": -250.5 },
+
+		{ "name": "numeric string", "value": "5000", "equals": 5000 },
+		{ "name": "numeric string with decimals", "value": "1.5", "equals": 1.5 },
+		{ "name": "numeric string, trailing zeros are decimals not grouping", "value": "1.500", "equals": 1.5 },
+		{ "name": "numeric string, negative", "value": "-42.25", "equals": -42.25 },
+
+		{ "name": "grouped thousands", "value": "5,000.00", "equals": 5000 },
+		{ "name": "grouped thousands, no decimals", "value": "1,234", "equals": 1234 },
+		{ "name": "leading currency symbol", "value": "$5,000.00", "equals": 5000 },
+		{ "name": "trailing currency symbol, EU separators", "value": "100.000,50 €", "equals": 100000.5 },
+		{ "name": "yen, whole units", "value": "¥100,000", "equals": 100000 },
+		{ "name": "EU decimal comma", "value": "100,50", "equals": 100.5 },
+		{ "name": "EU grouped millions", "value": "1.234.567,89", "equals": 1234567.89 },
+		{ "name": "US grouped millions", "value": "1,234,567.89", "equals": 1234567.89 },
+		{ "name": "negative formatted", "value": "-2,500.00", "equals": -2500 },
+
+		{ "name": "time is not a number", "value": "12:30", "equals": 0 },
+		{ "name": "date is not a number", "value": "2026-08-25", "equals": 0 },
+		{ "name": "phone is not a number", "value": "555-1234", "equals": 0 },
+		{ "name": "text with a leading digit is not a number", "value": "3 items", "equals": 0 },
+		{ "name": "version string is not a number", "value": "v2.1", "equals": 0 },
+		{ "name": "word is not a number", "value": "abc", "equals": 0 },
+		{ "name": "empty string", "value": "", "equals": 0 },
+		{ "name": "missing value", "value": null, "equals": 0 }
+	]
+}
