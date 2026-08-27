@@ -86,6 +86,7 @@ class SentryMiddleware implements MiddlewareInterface
 			'No file found in request',
 			'Unknown format',
 			'Upload target path is not writable',
+			'Cannot enable maintenance mode',
 			'it could not be created: Read-only file system',
 			'Permission denied',
 			'contains invalid json type',

@@ -15,10 +15,8 @@ You'll be up and running in under 5 minutes. The setup wizard handles everything
 ## Composer install (recommended)
 
 ```bash
-composer create-project totalcms/totalcms my-site --stability=beta
+composer create-project totalcms/totalcms my-site
 ```
-
-> **Beta note:** The `--stability=beta` flag is required while 3.5 is in beta. Drop it once 3.5 stable ships.
 
 This downloads Total CMS into `my-site/`, then runs a short post-install script that asks you a few setup questions. Make sure your server meets the [System Requirements](docs/get-started/requirements) before installing.
 
@@ -77,7 +75,7 @@ For CI or scripted installs, set environment variables and the prompts use those
 
 ```bash
 TCMS_LAYOUT=root TCMS_STARTER=blog TCMS_FRONTEND=1 \
-  composer create-project totalcms/totalcms my-site --stability=beta --no-interaction
+  composer create-project totalcms/totalcms my-site --no-interaction
 ```
 
 ## Alternative: zip download

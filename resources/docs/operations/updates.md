@@ -18,6 +18,37 @@ Total CMS includes a built-in update system that checks for new versions and app
 
 Updates only replace the application files (`tcms/`). Your content in `tcms-data/` is never touched.
 
+> This built-in updater applies to **zip installs**. Composer installs update through Composer — see below. The dashboard and `tcms update:apply` refuse to run on a Composer install and point you at `composer update`.
+
+## Composer installs
+
+If you installed with `composer create-project totalcms/totalcms`, update from the project root:
+
+```bash
+composer update totalcms/cms
+php resources/bin/tcms cache:clear
+```
+
+Your project's `composer.json` requires `totalcms/cms: ^3.5`, so this picks up every 3.5.x release and stops before 4.0.
+
+### Pre-release versions
+
+The project skeleton ships with `"minimum-stability": "dev"` and `"prefer-stable": true`. That combination lets a fresh install reach a pre-release when no stable release exists yet, while always choosing the stable release when there is one.
+
+So if you installed during the 3.5 beta or RC period — with or without `--stability=beta` — **there is nothing to change.** That flag only told Composer which version of the `totalcms/totalcms` skeleton to download; it is never written into your project, so it has no effect on later updates. Once 3.5.0 stable is published, `composer update totalcms/cms` moves you onto it and keeps you on stable releases from then on.
+
+The one exception is a `composer.json` you edited yourself. If your `require` block pins a pre-release explicitly — `"totalcms/cms": "dev-develop"`, `"3.5.0-rc.21"`, or `"^3.5@beta"` — Composer keeps honoring that pin. Change it back to the default and update:
+
+```bash
+composer require totalcms/cms:^3.5
+```
+
+To confirm what you're actually running:
+
+```bash
+composer show totalcms/cms | head -3
+```
+
 ## Checking for Updates
 
 ### Dashboard

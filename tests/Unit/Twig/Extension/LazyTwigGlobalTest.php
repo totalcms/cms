@@ -313,7 +313,7 @@ final class LazyTwigGlobalTest extends TestCase
 		// Test with different object types
 		$factories = [
 			fn (): \stdClass => new \stdClass(),
-			fn (): \DateTime    => new \DateTime(),
+			fn (): \DateTime => new \DateTime(),
 			fn (): \ArrayObject => new \ArrayObject(['test' => 'data']),
 		];
 
