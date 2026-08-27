@@ -14,7 +14,7 @@
     "esbuild-plugin-copy": "^2.0.1",
     "esbuild-plugin-glob": "^2.2.1",
     "esbuild-sass-plugin": "^3.7.0",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.1",
     "sass-embedded": "^1.97.3",
     "vitest": "^4.1.9"
   },
@@ -65,7 +65,7 @@
     "codemirror": "^6.0.2",
     "dompurify": "^3.4.0",
     "highlight.js": "^11.11.1",
-    "htmx.org": "4.0.0-beta4",
+    "htmx.org": "4.0.0-beta6",
     "imask": "^7.6.1",
     "js-beautify": "^2.0.3",
     "lightgallery": "^2.8.2",

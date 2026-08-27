@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22 # Vitest 4 / Vite 8 require Node >= 20.19 / 22.12
+          node-version: 22 # jsdom 30 requires ^22.22.2; Vitest 4 / Vite 8 require >= 20.19 / 22.12
           cache: yarn
 
       - name: Install Yarn
