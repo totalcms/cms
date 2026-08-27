@@ -118,6 +118,21 @@
 					if (isSortableRace) return null;
 				}
 
+				// Ignore htmx's synchronous event-dispatch recursion. The cycle is
+				// entirely inside htmx (dispatchEvent -> trigger handler -> dispatchEvent)
+				// with no T3 frame anywhere in it, and htmx 4 is still a beta. A stack
+				// overflow, not a request loop — the frames never unwind. Scoped tightly
+				// to RangeError + an htmx frame so genuine htmx errors still report.
+				if (errorName === 'RangeError' && message.includes('call stack size exceeded')) {
+					var htmxFrames = (event.exception && event.exception.values || []).flatMap(function(v) {
+						return (v.stacktrace && v.stacktrace.frames) || [];
+					});
+					var inHtmx = htmxFrames.some(function(f) {
+						return f.filename && f.filename.includes('htmx');
+					});
+					if (inHtmx) return null;
+				}
+
 				return event;
 			}
 		});
