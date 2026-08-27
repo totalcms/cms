@@ -12,6 +12,9 @@ cache.properties
 vendor/
 build/
 node_modules/
+# This project uses yarn. CI runs `yarn install --frozen-lockfile`; nothing
+# reads a package-lock, and a second lockfile only drifts from yarn.lock.
+package-lock.json
 dist/
 
 tmp/*
