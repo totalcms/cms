@@ -291,6 +291,15 @@ class ExtensionManager
 		}
 
 		// Collect extension routes into lookup tables (dispatched by static route handlers)
+		//
+		// Every registrar call is extension code running inside our boot, so each
+		// drain goes through the guard: a registrar that throws (the classic case
+		// is a callback type-hinted `Slim\Routing\RouteCollectorProxy` instead of
+		// our RouteCollector) loses only its own route group instead of taking the
+		// whole application down with an uncaught TypeError.
+		/** @var array<string,string> extension id => first route-registration failure */
+		$routeErrors = [];
+
 		foreach ($this->contexts as $id => $context) {
 			$state = $this->stateRepository->getState($id);
 
@@ -298,20 +307,12 @@ class ExtensionManager
 
 			// Authenticated API routes
 			if (!$state instanceof ExtensionState || $state->isPermitted('routes:api')) {
-				foreach ($context->getRegisteredRoutes() as $registrar) {
-					$collector = new RouteCollector(isPublic: false);
-					$registrar($collector);
-					$extRoutes = array_merge($extRoutes, $collector->getRoutes());
-				}
+				$extRoutes = array_merge($extRoutes, $this->collectRoutes($id, 'routes:api', $context->getRegisteredRoutes(), false, $routeErrors));
 			}
 
 			// Public routes
 			if (!$state instanceof ExtensionState || $state->isPermitted('routes:public')) {
-				foreach ($context->getRegisteredPublicRoutes() as $registrar) {
-					$collector = new RouteCollector(isPublic: true);
-					$registrar($collector);
-					$extRoutes = array_merge($extRoutes, $collector->getRoutes());
-				}
+				$extRoutes = array_merge($extRoutes, $this->collectRoutes($id, 'routes:public', $context->getRegisteredPublicRoutes(), true, $routeErrors));
 			}
 
 			if ($extRoutes !== []) {
@@ -320,12 +321,7 @@ class ExtensionManager
 
 			// Admin routes
 			if (!$state instanceof ExtensionState || $state->isPermitted('routes:admin')) {
-				$adminRoutes = [];
-				foreach ($context->getRegisteredAdminRoutes() as $registrar) {
-					$collector = new RouteCollector(isPublic: false);
-					$registrar($collector);
-					$adminRoutes = array_merge($adminRoutes, $collector->getRoutes());
-				}
+				$adminRoutes = $this->collectRoutes($id, 'routes:admin', $context->getRegisteredAdminRoutes(), false, $routeErrors);
 
 				if ($adminRoutes !== []) {
 					$this->extensionAdminRoutes[$id] = $adminRoutes;
@@ -354,6 +350,13 @@ class ExtensionManager
 				unset($this->loadedExtensions[$id], $this->contexts[$id]);
 			}
 			$this->profiler->record($id, (int)((hrtime(true) - $start) / 1000));
+		}
+
+		// Surface route-registration failures on the extension AFTER the boot
+		// loop: a successful boot() calls clearError(), which would otherwise
+		// wipe an error recorded during the route drain above.
+		foreach ($routeErrors as $id => $message) {
+			$this->stateRepository->recordError($id, $message);
 		}
 
 		// Register extension schema directories (Pro+ only)
@@ -543,6 +546,50 @@ class ExtensionManager
 		}
 
 		$this->booted = true;
+	}
+
+	/**
+	 * Run one extension's route registrars and collect what they declared.
+	 *
+	 * Each registrar is guarded individually: a throwing registrar contributes
+	 * no routes, is logged and counted toward auto-quarantine like any other
+	 * extension hook, and surfaces as an error on the extension in the admin —
+	 * but the drain continues and the rest of the application boots normally.
+	 *
+	 * @param list<callable>       $registrars
+	 * @param array<string,string> $errors Collects "extension id => message" for the caller to
+	 *                                     record on state once the boot loop is done
+	 *
+	 * @return list<array{method: string, path: string, handler: mixed, public: bool, permission: string|null}>
+	 */
+	private function collectRoutes(string $id, string $hookType, array $registrars, bool $isPublic, array &$errors): array
+	{
+		$routes = [];
+
+		foreach ($registrars as $registrar) {
+			$collector = new RouteCollector(isPublic: $isPublic);
+
+			$collected = $this->guard->run(
+				$id,
+				$hookType,
+				function () use ($registrar, $collector): array {
+					$registrar($collector);
+
+					return $collector->getRoutes();
+				},
+				fallback: null,
+			);
+
+			if ($collected === null) {
+				$errors[$id] ??= "{$hookType} registration failed — see the extensions log for the full error.";
+
+				continue;
+			}
+
+			$routes = array_merge($routes, $collected);
+		}
+
+		return $routes;
 	}
 
 	// -------------------------------------------------------------------------

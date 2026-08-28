@@ -1,6 +1,8 @@
 <?php
 
 use Slim\App;
+use TotalCMS\Factory\LogChannel;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\ContainerFactory;
 
@@ -41,9 +43,25 @@ if ($sentryEnabled === true) {
 // Create App instance
 $app = $container->get(App::class);
 
+// Extension bootstrap is the one place where third-party code runs before the
+// app can serve anything, so both phases get a hard net around them. The manager
+// already guards each extension individually; this catches whatever a future gap
+// (or a broken state file) lets escape, so the worst case is "extensions are
+// unavailable" rather than a blank 500 on every route including the admin page
+// the operator needs to go and disable the offending extension.
+$bootExtensions = static function (callable $phase, string $label) use ($container): void {
+    try {
+        $phase();
+    } catch (Throwable $e) {
+        $container->get(LoggerFactory::class)
+            ->channelLogger(LogChannel::Extensions)
+            ->critical("Extension {$label} failed; extensions are degraded: " . $e->getMessage(), ['exception' => $e]);
+    }
+};
+
 // Discover and register extensions (before middleware/routes so extensions can add container definitions)
 $extensionManager = $container->get(TotalCMS\Domain\Extension\Service\ExtensionManager::class);
-$extensionManager->discoverAndRegister();
+$bootExtensions(static fn () => $extensionManager->discoverAndRegister(), 'discoverAndRegister()');
 
 // Register middleware
 (require __DIR__ . '/middleware.php')($app);
@@ -52,6 +70,6 @@ $extensionManager->discoverAndRegister();
 (require __DIR__ . '/routes.php')($app);
 
 // Boot extensions (register Twig items, schemas, events, etc.)
-$extensionManager->bootAll();
+$bootExtensions(static fn () => $extensionManager->bootAll(), 'bootAll()');
 
 return $app;

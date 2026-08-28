@@ -476,6 +476,12 @@ final class ExtensionContext
 	 * Register API routes under /ext/{vendor}/{name}/.
 	 *
 	 * These routes require authentication (session or API key).
+	 *
+	 * The registrar is called with a {@see Service\RouteCollector}, NOT a Slim
+	 * RouteCollectorProxy — extension routes are captured and dispatched by
+	 * core, never added to Slim directly. Type-hinting the Slim class throws.
+	 *
+	 * @param callable(Service\RouteCollector): void $registrar
 	 */
 	public function addRoutes(callable $registrar): void
 	{
@@ -487,6 +493,12 @@ final class ExtensionContext
 	 *
 	 * These routes have NO authentication — use for webhooks, embeds,
 	 * and endpoints that must be accessible without credentials.
+	 *
+	 * The registrar is called with a {@see Service\RouteCollector}, NOT a Slim
+	 * RouteCollectorProxy — extension routes are captured and dispatched by
+	 * core, never added to Slim directly. Type-hinting the Slim class throws.
+	 *
+	 * @param callable(Service\RouteCollector): void $registrar
 	 */
 	public function addPublicRoutes(callable $registrar): void
 	{
@@ -498,6 +510,12 @@ final class ExtensionContext
 	 *
 	 * These routes are protected by admin auth middleware.
 	 * Templates can extend admin-dashboard.twig for the admin layout.
+	 *
+	 * The registrar is called with a {@see Service\RouteCollector}, NOT a Slim
+	 * RouteCollectorProxy — extension routes are captured and dispatched by
+	 * core, never added to Slim directly. Type-hinting the Slim class throws.
+	 *
+	 * @param callable(Service\RouteCollector): void $registrar
 	 */
 	public function addAdminRoutes(callable $registrar): void
 	{

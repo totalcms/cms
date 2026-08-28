@@ -145,16 +145,20 @@ tcms acme:generate-sitemap
 
 Extensions can register three types of routes, each with different authentication and URL prefixes.
 
+Your registrar callback receives a `TotalCMS\Domain\Extension\Service\RouteCollector` — **not** a Slim `RouteCollectorProxy`. Extension routes are captured into a lookup table and dispatched by core at request time, so they are never handed to Slim directly. Type-hinting the Slim class makes the callback throw a `TypeError` the moment your extension is enabled. Type-hint `RouteCollector`, or leave the parameter untyped.
+
+`RouteCollector` supports `get()`, `post()`, `put()`, `patch()`, `delete()` and `any()`, each taking `(string $path, mixed $handler, ?string $permission = null)`.
+
 ### API Routes
 
 Register authenticated API routes under `/ext/{vendor}/{name}/`.
 
 ```php
-use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Domain\Extension\Service\RouteCollector;
 
 public function register(ExtensionContext $context): void
 {
-    $context->addRoutes(function (RouteCollectorProxy $group): void {
+    $context->addRoutes(function (RouteCollector $group): void {
         $group->get('/status', StatusAction::class);
         $group->post('/analyze', AnalyzeAction::class);
     });
@@ -172,11 +176,11 @@ The routes above are accessible at:
 Register routes under `/admin/ext/{vendor}/{name}/`. These routes require a logged-in dashboard user and are **super-admin only by default**. Templates can extend `admin-dashboard.twig` for the admin layout.
 
 ```php
-use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Domain\Extension\Service\RouteCollector;
 
 public function register(ExtensionContext $context): void
 {
-    $context->addAdminRoutes(function (RouteCollectorProxy $group): void {
+    $context->addAdminRoutes(function (RouteCollector $group): void {
         $group->get('/dashboard', MyDashboardAction::class);
         $group->get('/settings', MySettingsAction::class);
 
@@ -201,11 +205,11 @@ Operators have the final say over `'any'` surfaces: each access group has an **E
 Register unauthenticated routes under `/ext/{vendor}/{name}/`. These routes have no authentication — use for webhooks, embeds, and endpoints that must be accessible without credentials.
 
 ```php
-use Slim\Routing\RouteCollectorProxy;
+use TotalCMS\Domain\Extension\Service\RouteCollector;
 
 public function register(ExtensionContext $context): void
 {
-    $context->addPublicRoutes(function (RouteCollectorProxy $group): void {
+    $context->addPublicRoutes(function (RouteCollector $group): void {
         $group->post('/webhook', WebhookAction::class);
         $group->get('/embed/{id}', EmbedAction::class);
     });

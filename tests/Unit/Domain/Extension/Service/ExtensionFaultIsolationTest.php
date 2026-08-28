@@ -116,4 +116,65 @@ describe('Extension fault isolation', function (): void {
 		expect($writtenData)->toHaveKey('test-vendor/broken-ext');
 		expect($writtenData['test-vendor/broken-ext']['error'])->toContain('boot() failed');
 	});
+
+	test('route registrar that throws is contained and does not break boot', function (): void {
+		// Reproduces the real-world crash: an extension type-hinting its route
+		// callback as Slim\Routing\RouteCollectorProxy. Invoking it throws a
+		// TypeError out of the route drain, which used to escape bootAll() and
+		// 500 every request — admin included, so the operator could not even get
+		// in to disable the extension.
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+
+		$writtenData = [];
+		$storage     = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(true);
+		$storage->method('read')->willReturn(json_encode([
+			'test-vendor/hello-world'        => ['enabled' => true, 'installed_at' => '', 'version' => '1.0.0', 'error' => null],
+			'test-vendor/broken-routes-ext'  => ['enabled' => true, 'installed_at' => '', 'version' => '1.0.0', 'error' => null],
+		]));
+		$storage->method('write')->willReturnCallback(function (string $path, string $content) use (&$writtenData): bool {
+			$writtenData = json_decode($content, true);
+
+			return true;
+		});
+		$stateRepo = new ExtensionStateRepository($storage);
+
+		$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->datadir = $fixturesDir;
+
+		$settingsStorage = test()->createMock(StorageFilesystemAdapter::class);
+		$settingsStorage->method('fileExists')->willReturn(false);
+
+		$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
+		$discovery         = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
+		$container         = test()->createMock(ContainerInterface::class);
+		$container->method('has')->willReturn(false);
+
+		$manager = new ExtensionManager(
+			$discovery,
+			$stateRepo,
+			new ExtensionDependencySorter(),
+			new ExtensionSettingsManager($settingsStorage),
+			$container,
+			new NullLogger(),
+			$manifestValidator,
+			testExtensionGuard(),
+			testExtensionProfiler(),
+		);
+
+		$manager->discoverAndRegister();
+
+		// Boot must not throw.
+		$manager->bootAll();
+
+		// The healthy extension's routes are unaffected.
+		expect($manager->matchExtensionRoute('test-vendor/hello-world', 'GET', '/api/data'))->not->toBeNull();
+
+		// The broken extension contributes no routes...
+		expect($manager->matchExtensionRoute('test-vendor/broken-routes-ext', 'POST', '/compile'))->toBeNull();
+
+		// ...and the failure is attributed to it in state, so the admin can see
+		// which extension and which capability broke.
+		expect($writtenData['test-vendor/broken-routes-ext']['error'])->toContain('routes:api');
+	});
 });
