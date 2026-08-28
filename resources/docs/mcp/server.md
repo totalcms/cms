@@ -4,11 +4,12 @@ description: "Expose your Total CMS site as a Model Context Protocol server so A
 related:
   - apis/rest-api
   - apis/api-keys
+  - site-builder/overview
   - schemas/reference
   - extensions/extension-points
   - operations/security
 audience: intermediate
-updated: 2026-08-13
+updated: 2026-08-27
 ---
 
 # MCP Server
@@ -236,9 +237,11 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | `update_object` | admin‡ | Replace a content object by id. Idempotent. Full replace, not a partial merge — send the whole object. See *Binary fields* below. |
 | `patch_object` | admin‡ | Merge a subset of fields into an existing object — omitted fields keep their current values, so no get/round-trip is needed. Containers (card/deck/list) replace whole. The safer default for targeted agent edits. See *Binary fields* below. |
 | `list_extensions` | admin | Every installed extension with id, name, enabled flag, capabilities. |
+| `list_templates` | admin‡ | List the Site Builder Twig templates (builder templates only — reserved admin templates are never listed). Read-only. See *Site Builder templates* below. |
+| `get_template` | admin‡ | Fetch one template's raw Twig source plus the read layer it resolved from. Read-only. See *Site Builder templates* below. |
 | `clear_cache` | admin‡ | **Destructive.** Flush every available cache backend. Returns per-backend status. |
 
-‡ Not admin-only in practice: each of these carries a group requirement that **extends** the base admin gate — an AUTHENTICATED caller whose access groups grant the matching operation (`objects` create/update for the object-write tools, `schemas` for the schema tools, `collectionsMeta` for `create_collection`, the `cache` util for `clear_cache`) sees and can call the tool too, scoped to the collections/schemas their groups actually cover. The call-time guard re-checks the specific target on every call — `tools/list` visibility is a convenience, not the enforcement. `list_schemas`, `get_schema`, and `list_extensions` stay plain admin-only (no requirement declared).
+‡ Not admin-only in practice: each of these carries a group requirement that **extends** the base admin gate — an AUTHENTICATED caller whose access groups grant the matching operation (`objects` create/update for the object-write tools, `schemas` for the schema tools, `collectionsMeta` for `create_collection`, the `cache` util for `clear_cache`, the `builder` page permission for the template tools) sees and can call the tool too, scoped to the collections/schemas their groups actually cover. The call-time guard re-checks the specific target on every call — `tools/list` visibility is a convenience, not the enforcement. `list_schemas`, `get_schema`, and `list_extensions` stay plain admin-only (no requirement declared).
 
 #### Binary fields on the object write tools
 
@@ -250,6 +253,27 @@ Image, file, gallery, and depot fields can't be written through MCP — they nee
 This means content-rich collections (blog posts with an optional hero image, etc.) work end-to-end from an agent. Set binary fields afterward in the admin UI, or via the admin clone feature.
 
 > Reading objects with `get_object` / `query_collection` returns binary fields too. If you fetch an object, edit a text field, and send it back to `update_object`, strip the binary fields first (or blank them) — otherwise the call is refused. (`patch_object` sidesteps the whole issue: send only the fields you changed.)
+
+#### Site Builder templates
+
+`list_templates` and `get_template` expose the Site Builder's Twig templates **read-only**. There is deliberately no save tool: writing Twig is a much larger authority grant than writing content — a template reaches the whole `cms.*` surface — so it is a separate decision rather than something that arrives alongside read access.
+
+Read access exists because agents editing `builder-pages` objects are otherwise working blind. A page's free-form `data` field is exposed to its template as `page.data.*`, and without reading the template an agent can only guess which keys it consumes. The workflow is:
+
+1. `get_object` the page from `builder-pages` to see its `template` (a *selector* — the name of the template file, not its source).
+2. `get_template` that path to read the Twig and see which `page.data.*` keys it reads.
+3. `patch_object` the page's `data` with matching keys.
+
+Both tools require the `builder` access-group permission and a `cms:admin` scope — templates are structural, so even reads sit behind the admin scope rather than `cms:read`.
+
+Paths are builder-relative and carry no `.twig` extension, exactly as `list_templates` returns them (`pages/home`, `layouts/base`, `partials/nav`). Traversal (`..`, backslashes, a leading `/`) is rejected outright rather than silently rewritten.
+
+Every response reports where templates are actually edited on this install:
+
+- `git_managed: false` — templates live in `tcms-data/builder/` and are edited in the Site Builder admin UI.
+- `git_managed: true` — the project has a `builder/` directory, so templates are source-controlled and read-only to the admin UI *and* MCP alike. The git repository is the only write path. See [Site Builder](docs/site-builder/overview).
+
+`get_template` additionally reports the `layer` the file resolved from — `project` (git-managed source of truth), `data` (admin-edited, in `tcms-data`), or `built-in` (shipped default) — so an agent knows which file it just read.
 
 ---
 

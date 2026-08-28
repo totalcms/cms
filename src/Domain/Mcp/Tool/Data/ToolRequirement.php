@@ -21,7 +21,7 @@ use TotalCMS\Domain\Auth\Data\UserAuthority;
 final readonly class ToolRequirement
 {
 	/**
-	 * @param string      $domain        'objects' | 'schemas' | 'collections-meta' | 'cache' | 'site'
+	 * @param string      $domain        'objects' | 'schemas' | 'collections-meta' | 'cache' | 'site' | 'builder'
 	 * @param string      $operation     'create' | 'read' | 'update' | 'delete'
 	 * @param string|null $collectionArg Name of the tool's input argument that carries the target
 	 *                                   collection/schema id. Unused by Task 6; read by Task 7's
@@ -64,6 +64,10 @@ final readonly class ToolRequirement
 			'schemas'          => $a->canSchema($this->operation, $target),
 			'cache'            => $a->canUtil('cache'),
 			'site'             => $a->isAdmin,
+			// Builder templates are a single page-level grant, not a
+			// per-target one — there is no id to check, so $target is
+			// ignored and the boolean permission is the whole answer.
+			'builder'          => $a->canBuilder(),
 			default            => false,
 		};
 	}
@@ -109,6 +113,10 @@ final readonly class ToolRequirement
 			'schemas'          => $a->canSchemasOperation($this->operation),
 			'cache'            => $a->canUtil('cache'),
 			'site'             => false,
+			// Same boolean grant as isSatisfiedFor() — 'builder' has no
+			// per-target concept, so "possible for any target" and "possible
+			// for this target" are the same question.
+			'builder'          => $a->canBuilder(),
 			default            => false,
 		};
 	}

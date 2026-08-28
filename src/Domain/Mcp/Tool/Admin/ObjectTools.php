@@ -118,7 +118,7 @@ readonly class ObjectTools
 	{
 		$registry->register(new McpToolDefinition(
 			name: 'create_object',
-			description: 'Create a new object inside a collection. Required: collection (existing collection id) + data (field values matching the collection schema). Optional: id (otherwise derived from the schema slug/autogen rules). Errors if an object with the resolved id already exists in the collection, or if the collection schema contains an image/file/gallery/depot field — binary fields cannot be written via MCP yet.',
+			description: 'Create a new object inside a collection. Required: collection (existing collection id) + data (field values matching the collection schema). Optional: id (otherwise derived from the schema slug/autogen rules). Errors if an object with the resolved id already exists in the collection. Binary fields (image, file, gallery, depot) cannot be given VALUES via MCP yet, but a collection that merely CONTAINS them is fully writable — omit those fields from data (they are left unset) and populate them in the admin UI. Only a payload that puts a non-empty value into a binary field is refused.',
 			access: 'admin',
 			handler: $this->createHandler(...),
 			inputSchema: [
@@ -146,7 +146,7 @@ readonly class ObjectTools
 						// → PHP [] workaround that mcp/sdk needs for optional
 						// fields.
 						'type'        => 'object',
-						'description' => 'Field values keyed by schema property name. Use describe_collection to discover the property list and their types. Binary fields (image, file, gallery, depot) are NOT supported yet — see tool description.',
+						'description' => 'Field values keyed by schema property name. Use describe_collection to discover the property list and their types. Omit binary fields (image, file, gallery, depot) — they cannot be given values via MCP yet, and a payload that sets one is refused. Their presence in the schema does not block the write.',
 					],
 				],
 			],
@@ -162,7 +162,7 @@ readonly class ObjectTools
 
 		$registry->register(new McpToolDefinition(
 			name: 'update_object',
-			description: 'Replace an existing object. Required: collection + id + data. The data shape is the complete object body — fields not present in the payload revert to the schema default. To change a subset of fields, prefer patch_object (merge semantics, no round-trip needed); if you do use this tool, fetch the current object first via get_object with format "html". Same binary-field restriction as create_object.',
+			description: 'Replace an existing object. Required: collection + id + data. The data shape is the complete object body — fields not present in the payload revert to the schema default. To change a subset of fields, prefer patch_object (merge semantics, no round-trip needed); if you do use this tool, fetch the current object first via get_object with format "html". Binary fields (image, file, gallery, depot) cannot be given values via MCP yet, but they do not block the write: omit them and their current values are carried forward. Only a payload that puts a non-empty value into one is refused — so strip binary fields from any object you fetched before sending it back.',
 			access: 'admin',
 			handler: $this->updateHandler(...),
 			inputSchema: [
@@ -200,7 +200,7 @@ readonly class ObjectTools
 
 		$registry->register(new McpToolDefinition(
 			name: 'patch_object',
-			description: 'Update a SUBSET of an object\'s fields. Required: collection + id + data. This is a merge, not a replace: fields present in data are written, omitted fields keep their current values — no need to fetch the object first. Container fields (card, deck, list) are replaced whole when present, never deep-merged — send the complete container to change any part of it. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Binary fields (image, file, gallery, depot) cannot be written and always keep their current values. Prefer this over update_object for targeted edits.',
+			description: 'Update a SUBSET of an object\'s fields. Required: collection + id + data. This is a merge, not a replace: fields present in data are written, omitted fields keep their current values — no need to fetch the object first. Container fields (card, deck, list) are replaced whole when present, never deep-merged — send the complete container to change any part of it. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Binary fields (image, file, gallery, depot) cannot be given values via MCP yet, but they never block the write — omit them and they keep their current values. Only a payload that sets a non-empty value into one is refused. Prefer this over update_object for targeted edits.',
 			access: 'admin',
 			handler: $this->patchHandler(...),
 			inputSchema: [

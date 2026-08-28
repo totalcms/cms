@@ -25,6 +25,17 @@ readonly class TemplateFetcher
 	}
 
 	/**
+	 * Fetch a BUILDER template only — no fallback to the reserved admin
+	 * templates. `fetchTemplate()` falls back to those by design (the admin
+	 * editor wants one lookup); callers that must not surface core internals
+	 * want this instead. Null when the id isn't a builder template.
+	 */
+	public function fetchBuilderTemplate(string $id, ?string $folder = null): ?TemplateData
+	{
+		return $this->storage->fetchBuilderTemplate($id, $folder);
+	}
+
+	/**
 	 * check if a template exists.
 	 *
 	 * @param string $id Template ID
