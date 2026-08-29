@@ -478,6 +478,74 @@ final class SyncServiceTest extends TestCase
 		$this->service->push('https://example.com', 'key', null, null, $map);
 	}
 
+	private function capturingClientReturns(?string &$captured): void
+	{
+		$this->httpClient->method('request')
+			->willReturnCallback(function (string $method, string $url) use (&$captured): HttpResponse {
+				$captured = $url;
+
+				return new HttpResponse(200, (string)json_encode(['success' => true]));
+			});
+	}
+
+	public function testSeedPushTargetsTheSkipExistingEndpoint(): void
+	{
+		$payload = new JumpStartData('Local', '');
+		$payload->addObject(['collection' => 'blog', 'id' => 'welcome']);
+		$this->exporter->method('exportSyncData')->willReturn($payload);
+
+		$captured = null;
+		$this->capturingClientReturns($captured);
+
+		$this->service->push('https://prod.example.com', 'k', null, null, null, null, ['blog' => null], false);
+
+		$this->assertSame('https://prod.example.com/api/import/jumpstart', $captured);
+	}
+
+	public function testOverwriteSendsSeededObjectsToTheUpsertEndpoint(): void
+	{
+		$payload = new JumpStartData('Local', '');
+		$payload->addObject(['collection' => 'blog', 'id' => 'welcome']);
+		$this->exporter->method('exportSyncData')->willReturn($payload);
+
+		$captured = null;
+		$this->capturingClientReturns($captured);
+
+		$this->service->push('https://prod.example.com', 'k', null, null, null, null, ['blog' => null], true);
+
+		$this->assertSame('https://prod.example.com/api/sync/import', $captured);
+	}
+
+	public function testPushWithoutASeedFilterKeepsTheMirrorEndpoint(): void
+	{
+		$payload = new JumpStartData('Local', '');
+		$payload->addSchema(['id' => 'products', 'properties' => ['name' => []]]);
+		$this->exporter->method('exportSyncData')->willReturn($payload);
+
+		$captured = null;
+		$this->capturingClientReturns($captured);
+
+		$this->service->push('https://prod.example.com', 'k');
+
+		$this->assertSame('https://prod.example.com/api/sync/import', $captured);
+	}
+
+	public function testSeedFilterReachesTheExporter(): void
+	{
+		$payload = new JumpStartData('Local', '');
+		$payload->addObject(['collection' => 'blog', 'id' => 'welcome']);
+
+		$this->exporter->expects($this->once())
+			->method('exportSyncData')
+			->with(null, null, null, null, ['blog' => ['welcome']])
+			->willReturn($payload);
+
+		$captured = null;
+		$this->capturingClientReturns($captured);
+
+		$this->service->push('https://prod.example.com', 'k', null, null, null, null, ['blog' => ['welcome']], false);
+	}
+
 	public function testPullReportsObjectsAndCollectionsSeparately(): void
 	{
 		// Objects used to be reported under the `collections` key, which made a

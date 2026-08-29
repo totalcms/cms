@@ -95,10 +95,24 @@ readonly class SyncService
 	 *   - ['id' => [...ids]] → only those object ids
 	 *   - key absent         → skip that collection
 	 *
+	 * Two endpoints, chosen by mode rather than by flag:
+	 *
+	 *   - `/api/sync/import` — upsert. The mirror path, and what every
+	 *     push used before seeding existed. The pushing side is
+	 *     authoritative.
+	 *   - `/api/import/jumpstart` — skips objects that already exist on
+	 *     the target. The seed path: `--objects` without `--overwrite`.
+	 *
+	 * Selecting by route preserves the existing contract ("the route's
+	 * existence is the contract — no flag to forget") and has a useful
+	 * side effect: both routes shipped in 3.5.0, so a seed push works
+	 * against a production server that has not upgraded yet.
+	 *
 	 * @param list<string>|null                       $schemaFilter
 	 * @param list<string>|null                       $templateFilter
 	 * @param array<string,list<string>|null>|null    $collectionsFilter
 	 * @param list<string>|null                       $collectionMetaFilter Collection SETTINGS to include (tristate)
+	 * @param array<string,list<string>|null>|null    $seedFilter
 	 */
 	public function push(
 		string $url,
@@ -107,11 +121,19 @@ readonly class SyncService
 		?array $templateFilter = null,
 		?array $collectionsFilter = null,
 		?array $collectionMetaFilter = null,
+		?array $seedFilter = null,
+		bool $overwrite = false,
 	): OperationResult {
 		$templateFilter = $this->syncableTemplateFilter($templateFilter);
 
 		$this->jumpStartExporter->setMetadata('Sync Push', 'Pushed via Total CMS sync');
-		$jumpstart = $this->jumpStartExporter->exportSyncData($schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter);
+		$jumpstart = $this->jumpStartExporter->exportSyncData(
+			$schemaFilter,
+			$templateFilter,
+			$collectionsFilter,
+			$collectionMetaFilter,
+			$seedFilter,
+		);
 
 		if ($jumpstart->isEmpty()) {
 			return OperationResult::success('Nothing to push — no matching schemas, templates, or collections found.', [
@@ -121,13 +143,12 @@ readonly class SyncService
 			]);
 		}
 
-		// Push to the sync-specific receive endpoint, NOT the general
-		// `/api/import/jumpstart` route. The two endpoints behave the same
-		// way auth-wise (both DualAuthMiddleware), but `/api/sync/import`
-		// runs the importer in upsert mode so a sync push lands as a true
-		// mirror of local rather than silently skipping rows that already
-		// exist on the remote (the starter-kit semantics that
-		// `/api/import/jumpstart` is built around).
+		// A seed push must not clobber what is already on the target, so it
+		// goes to the skip-existing route. --overwrite opts back into the
+		// mirror route. See this method's docblock.
+		$seeding  = $seedFilter !== null && !$overwrite;
+		$endpoint = $seeding ? '/api/import/jumpstart' : '/api/sync/import';
+
 		// Use the X-API-Key header instead of `Authorization: Bearer` because
 		// OAuthBearerMiddleware (outer layer on the /api/ group since Phase 4)
 		// intercepts any Bearer token and tries to validate it as a JWT —
@@ -137,7 +158,7 @@ readonly class SyncService
 		// and falls through to the API-key validator cleanly.
 		// rtrim guards against accidentally-trailing slashes producing a
 		// double-slash in the request URL.
-		$httpResponse = $this->httpClient->request('POST', rtrim($url, '/') . '/api/sync/import', [
+		$httpResponse = $this->httpClient->request('POST', rtrim($url, '/') . $endpoint, [
 			'headers' => [
 				'X-API-Key: ' . $key,
 				'Content-Type: application/json',
