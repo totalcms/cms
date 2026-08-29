@@ -302,4 +302,66 @@ final class JumpStartExportSyncDataTest extends TestCase
 
 		expect($result->collections)->toBe(['reserved' => [], 'custom' => []]);
 	}
+
+	public function testSeedFilterReachesCollectionsOutsideTheAllowlist(): void
+	{
+		// The whole point of --objects: `blog` is not in SyncableCollections::IDS,
+		// so the mirror path ignores it. The seed path must not.
+		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
+
+		$blog         = new CollectionData();
+		$blog->id     = 'blog';
+		$blog->schema = 'blog';
+		$this->collectionLister->method('listAllCollections')->willReturn([$blog]);
+
+		$this->indexReader->expects($this->once())
+			->method('fetchIndex')
+			->with('blog')
+			->willReturn(new IndexData([]));
+
+		$this->exporter->exportSyncData(null, null, [], [], ['blog' => null]);
+	}
+
+	public function testSeedFilterStillRefusesCarvedOutCollections(): void
+	{
+		// Defense in depth on the seed path: `image` is binary-only, so even an
+		// explicit request must not reach it — the binary IS the object there.
+		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
+		$this->collectionLister->method('listAllCollections')->willReturn([]);
+		$this->indexReader->expects($this->never())->method('fetchIndex');
+
+		$result = $this->exporter->exportSyncData(null, null, [], [], ['image' => null]);
+
+		expect($result->objects)->toHaveCount(0);
+	}
+
+	public function testSeedFilterRefusesCollectionsOwnedByAFeatureFlag(): void
+	{
+		// builder-pages is reachable, but through --pages. One way to move a
+		// thing is enough, so the seed path must refuse it.
+		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
+		$this->collectionLister->method('listAllCollections')->willReturn([]);
+		$this->indexReader->expects($this->never())->method('fetchIndex');
+
+		$result = $this->exporter->exportSyncData(null, null, [], [], ['builder-pages' => null]);
+
+		expect($result->objects)->toHaveCount(0);
+	}
+
+	public function testMirrorPathStillIgnoresNonAllowlistedCollections(): void
+	{
+		// Regression guard on this task's refactor: extracting the shared loop
+		// must not loosen the mirror path's allowlist.
+		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
+		$this->collectionLister->method('listAllCollections')->willReturn([]);
+		$this->indexReader->expects($this->never())->method('fetchIndex');
+
+		$result = $this->exporter->exportSyncData(null, null, ['blog' => null], []);
+
+		expect($result->objects)->toHaveCount(0);
+	}
 }
