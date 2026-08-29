@@ -329,7 +329,15 @@ final class JumpStartExportSyncDataTest extends TestCase
 		// explicit request must not reach it — the binary IS the object there.
 		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
 		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
-		$this->collectionLister->method('listAllCollections')->willReturn([]);
+
+		// The collection EXISTS locally, so the seedable() guard is the only
+		// thing that can prevent the export. Returning [] here would make the
+		// loop skip on "unknown collection" and the test would pass even with
+		// the guard broken.
+		$image         = new CollectionData();
+		$image->id     = 'image';
+		$image->schema = 'image';
+		$this->collectionLister->method('listAllCollections')->willReturn([$image]);
 		$this->indexReader->expects($this->never())->method('fetchIndex');
 
 		$result = $this->exporter->exportSyncData(null, null, [], [], ['image' => null]);
@@ -343,7 +351,15 @@ final class JumpStartExportSyncDataTest extends TestCase
 		// thing is enough, so the seed path must refuse it.
 		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
 		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
-		$this->collectionLister->method('listAllCollections')->willReturn([]);
+
+		// The collection EXISTS locally, so the seedable() guard is the only
+		// thing that can prevent the export. Returning [] here would make the
+		// loop skip on "unknown collection" and the test would pass even with
+		// the guard broken.
+		$builderPages         = new CollectionData();
+		$builderPages->id     = 'builder-pages';
+		$builderPages->schema = 'builder-page';
+		$this->collectionLister->method('listAllCollections')->willReturn([$builderPages]);
 		$this->indexReader->expects($this->never())->method('fetchIndex');
 
 		$result = $this->exporter->exportSyncData(null, null, [], [], ['builder-pages' => null]);
@@ -357,7 +373,15 @@ final class JumpStartExportSyncDataTest extends TestCase
 		// must not loosen the mirror path's allowlist.
 		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
 		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
-		$this->collectionLister->method('listAllCollections')->willReturn([]);
+
+		// The collection EXISTS locally, so the allowlist guard is the only
+		// thing that can prevent the export. Returning [] here would make the
+		// loop skip on "unknown collection" and the test would pass even with
+		// the guard broken.
+		$blog         = new CollectionData();
+		$blog->id     = 'blog';
+		$blog->schema = 'blog';
+		$this->collectionLister->method('listAllCollections')->willReturn([$blog]);
 		$this->indexReader->expects($this->never())->method('fetchIndex');
 
 		$result = $this->exporter->exportSyncData(null, null, ['blog' => null], []);
