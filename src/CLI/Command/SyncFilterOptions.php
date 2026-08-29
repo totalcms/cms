@@ -159,7 +159,12 @@ trait SyncFilterOptions
 
 			$ids = $idPart === null ? null : $this->parseListOption($idPart);
 
-			// A bare mention means "all", which beats any id list.
+			// A bare mention means "all", which beats any id list — in
+			// either order. Without this guard, a bare mention recorded
+			// first (--objects=blog --objects=blog:a) would get silently
+			// narrowed back down to ['a'] by the merge below, since
+			// `$filter[$collectionId] ?? []` treats the existing `null`
+			// (all) as if nothing had been recorded yet.
 			if (array_key_exists($collectionId, $filter) && ($filter[$collectionId] === null || $ids === null)) {
 				$filter[$collectionId] = null;
 				continue;
@@ -210,21 +215,18 @@ trait SyncFilterOptions
 	 * @param array<string,mixed>                                                                              $payload
 	 * @param string                                                                                           $verb    'push' or 'pull', for the human headline
 	 * @param array{schemas:array<string,mixed>,templates:array<string,mixed>,objects:array<string,mixed>,collections:array<string,mixed>}|null $diff
+	 * @param array<string,mixed>|null                                                                         $seeded  A `--objects` seed export (JumpStartData::toArray() shape), shown as
+	 *                                                                                                                  a manifest addendum on the diff path — SyncService::diff() has no seed
+	 *                                                                                                                  filter, so seeded objects never appear in $diff itself. push-only;
+	 *                                                                                                                  pull never has a seed filter to pass here.
 	 */
-	private function renderSyncDryRun(InputInterface $input, OutputInterface $output, array $payload, string $url, string $verb, ?array $diff = null): int
+	private function renderSyncDryRun(InputInterface $input, OutputInterface $output, array $payload, string $url, string $verb, ?array $diff = null, ?array $seeded = null): int
 	{
 		$schemas   = is_array($payload['schemas'] ?? null) ? $payload['schemas'] : [];
 		$templates = is_array($payload['templates'] ?? null) ? $payload['templates'] : [];
 		$objects   = is_array($payload['objects'] ?? null) ? $payload['objects'] : [];
 
-		// Group object ids by collection for display.
-		/** @var array<string,list<string>> $objectsByCollection */
-		$objectsByCollection = [];
-		foreach ($objects as $object) {
-			if (is_array($object)) {
-				$objectsByCollection[(string)($object['collection'] ?? 'unknown')][] = (string)($object['id'] ?? 'unknown');
-			}
-		}
+		$objectsByCollection = $this->groupObjectsByCollection($objects);
 
 		if ($this->isJson($input)) {
 			$schemaIds         = array_map(fn (array $s): string => (string)($s['id'] ?? ''), $schemas);
@@ -265,6 +267,9 @@ trait SyncFilterOptions
 			if ($diff !== null) {
 				$data['diff'] = $diff;
 			}
+			if ($seeded !== null) {
+				$data['seeded'] = $this->groupObjectsByCollection(is_array($seeded['objects'] ?? null) ? $seeded['objects'] : []);
+			}
 			$output->writeln((string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
 			return \Symfony\Component\Console\Command\Command::SUCCESS;
@@ -293,7 +298,21 @@ trait SyncFilterOptions
 				$this->renderDiffCategory($output, $this->collectionDisplayName((string)$collectionId), $items, $verb);
 			}
 
-			if ($diff['schemas'] === [] && $diff['templates'] === [] && $diff['objects'] === [] && $diff['collections'] === []) {
+			// The diff never covers a seed — SyncService::diff() has no seed
+			// filter, and diffing against the target isn't even the right
+			// question for one (a seed never overwrites). What belongs here
+			// instead is a manifest of what will be sent, reusing the same
+			// rendering the remote-unreachable fallback below uses.
+			$seededByCollection = $seeded !== null
+				? $this->groupObjectsByCollection(is_array($seeded['objects'] ?? null) ? $seeded['objects'] : [])
+				: [];
+			$this->renderObjectManifest(
+				$output,
+				$seededByCollection,
+				'Seeded objects (new on the target; objects it already has are skipped):',
+			);
+
+			if ($diff['schemas'] === [] && $diff['templates'] === [] && $diff['objects'] === [] && $diff['collections'] === [] && $seededByCollection === []) {
 				$output->writeln('Nothing matches — no schemas, templates, or objects selected.');
 			}
 
@@ -314,18 +333,55 @@ trait SyncFilterOptions
 			}
 		}
 
-		if ($objectsByCollection !== []) {
-			$output->writeln('Objects (existing objects on the target are overwritten):');
-			foreach ($objectsByCollection as $collectionId => $ids) {
-				$output->writeln(sprintf('  %s (%d): %s', $collectionId, count($ids), implode(', ', $ids)));
-			}
-		}
+		$this->renderObjectManifest($output, $objectsByCollection, 'Objects (existing objects on the target are overwritten):');
 
 		if ($schemas === [] && $templates === [] && $objectsByCollection === []) {
 			$output->writeln('Nothing matches — no schemas, templates, or objects selected.');
 		}
 
 		return \Symfony\Component\Console\Command\Command::SUCCESS;
+	}
+
+	/**
+	 * Group a list of exported object records (JumpStartData::toArray()'s
+	 * 'objects' key — each `['collection' => ..., 'id' => ..., 'data' => ...]`)
+	 * by collection id, for manifest display.
+	 *
+	 * @param array<mixed> $objects
+	 *
+	 * @return array<string,list<string>>
+	 */
+	private function groupObjectsByCollection(array $objects): array
+	{
+		$grouped = [];
+		foreach ($objects as $object) {
+			if (is_array($object)) {
+				$grouped[(string)($object['collection'] ?? 'unknown')][] = (string)($object['id'] ?? 'unknown');
+			}
+		}
+
+		return $grouped;
+	}
+
+	/**
+	 * Print one "collection (n): id, id, ..." manifest section under a given
+	 * heading. Shared by the plain-payload fallback (remote unreachable) and
+	 * the seeded-objects addendum on the diff path, so the two renderings
+	 * can never drift apart.
+	 *
+	 * @param array<string,list<string>> $objectsByCollection
+	 */
+	private function renderObjectManifest(OutputInterface $output, array $objectsByCollection, string $heading): void
+	{
+		if ($objectsByCollection === []) {
+			return;
+		}
+
+		$output->writeln($heading);
+		foreach ($objectsByCollection as $collectionId => $ids) {
+			$output->writeln(sprintf('  %s (%d): %s', $collectionId, count($ids), implode(', ', $ids)));
+		}
+		$output->writeln('');
 	}
 
 	/**

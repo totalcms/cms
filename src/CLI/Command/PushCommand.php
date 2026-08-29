@@ -80,7 +80,19 @@ class PushCommand extends BaseCommand
 			}
 
 			if ($diff !== null) {
-				return $this->renderSyncDryRun($input, $output, [], $remote['url'], 'push', $diff);
+				// diff() never sees a seed (no seed filter on that call, and
+				// diffing a seed against the target isn't the right question
+				// anyway — see renderSyncDryRun). Export it separately so it
+				// can be shown as its own manifest, not blended into the
+				// diff-derived object lists.
+				$seeded = null;
+				if ($seedFilter !== null) {
+					$seedExporter = $this->totalcms->jumpStartExporter();
+					$seedExporter->setMetadata('CLI Push', 'Dry run preview (seed)');
+					$seeded = $seedExporter->exportSyncData([], [], [], [], $seedFilter)->toArray();
+				}
+
+				return $this->renderSyncDryRun($input, $output, [], $remote['url'], 'push', $diff, $seeded);
 			}
 
 			// Remote unreachable — fall back to a plain manifest of what
