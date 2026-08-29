@@ -39,7 +39,8 @@ These five are the only collections sync can move *destructively* (overwriting a
 
 `push --objects=collection` (or `collection:id,id` for specific objects, repeatable) exports object data from any **seedable** collection and imports it on the target through the skip-existing endpoint: an object the target already has by that id is left untouched. This is seeding, not mirroring — it's for landing starter/demo content on a fresh production site, not for keeping two live sites in sync.
 
-- Add `--overwrite` to let the local copy win over an existing object on the target instead of being skipped. Combined with `--objects`, this is the only irreversible thing `push` can do, which is why the command refuses `--overwrite` without a prior `--dry-run` unless you also pass `--force` (needed for non-interactive/CI runs).
+- Add `--overwrite` to let the local copy win over an existing object on the target instead of being skipped. Combined with `--objects`, this is the only irreversible thing `push` can do, so **`--objects` with `--overwrite` always requires `--force`** — in a terminal and in CI alike. Run `tcms push --objects=... --overwrite --dry-run` first to see what would change (a dry run never pushes, so it needs no `--force`), then re-run with `--force`. `--overwrite` on its own, with no `--objects`, is a no-op and is not guarded: everything else upserts either way.
+- A push that mixes seeded objects with anything else — `push --schemas=faq --objects=faq` — sends **two** requests: the schemas, templates, feature-flag objects and collection settings upsert through `/api/sync/import`, then the seeded objects alone go to the skip-existing `/api/import/jumpstart`. Each half keeps the semantics its flag documents. The mirror half goes first (so a new schema or collection exists before its rows land); if it fails, the seed is not sent and the command says so, and it exits non-zero if either half fails.
 - `--objects` and `--overwrite` are **push-only** — `pull` has no seeding mode.
 - Not every collection is seedable:
   - The five feature-flag collections (`builder-pages`, `dataviews`, `mailer`, `mcp-prompt`, `automations`) are reachable only through their own flag, not `--objects`.
@@ -149,8 +150,9 @@ tcms push --collections=comparisons,builder-pages
 tcms push --objects=blog
 
 # Seed two specific objects, and let this run overwrite any that already exist
+# (--overwrite alongside --objects always needs --force; dry-run first to see what changes)
 tcms push --objects=blog:launch-day,q3-roadmap --overwrite --dry-run
-tcms push --objects=blog:launch-day,q3-roadmap --overwrite
+tcms push --objects=blog:launch-day,q3-roadmap --overwrite --force
 
 # Combine filters
 tcms push --schemas=blog --templates=blog-post
@@ -232,7 +234,9 @@ When you pull, the process is reversed — the production server exports, and th
 
 Step 2 uses `/api/sync/import` rather than the general `/api/import/jumpstart` route, and the difference matters. The general import route is built for starter kits, so it *skips* anything that already exists. The sync route runs the importer in **upsert** mode instead, so a push lands as a true mirror of the source rather than silently ignoring every record the target already has.
 
-`push --objects` is the one exception: it routes through the skip-existing import path instead (the same one starter kits use), which is what makes it a seed rather than a mirror. `--overwrite` switches it to the same upsert path everything else uses.
+`push --objects` is the one exception: the seeded objects route through the skip-existing import path instead (the same one starter kits use), which is what makes them a seed rather than a mirror. `--overwrite` switches them to the same upsert path everything else uses.
+
+The two modes are per-item, not per-push. A push that seeds objects *and* carries anything else splits into two requests — the upserting half to `/api/sync/import`, the seeded objects to `/api/import/jumpstart` — so naming `--objects` never quietly downgrades your schemas, pages or collection settings to skip-existing. The upserting half is sent first, and if it fails the seed is not sent at all.
 
 ## Overwrite Behavior
 

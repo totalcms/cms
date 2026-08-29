@@ -118,7 +118,7 @@ trait SyncFilterOptions
 				'Seed object data: collection, or collection:id,id. Repeatable. Existing objects on the target are left alone',
 			)
 			->addOption('overwrite', null, InputOption::VALUE_NONE, 'Let --objects overwrite objects that already exist on the target')
-			->addOption('force', null, InputOption::VALUE_NONE, 'Allow --overwrite without a prior --dry-run when not attached to a terminal');
+			->addOption('force', null, InputOption::VALUE_NONE, 'Required alongside --overwrite: confirms you have seen a --dry-run');
 	}
 
 	/**

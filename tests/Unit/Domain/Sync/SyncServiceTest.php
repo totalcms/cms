@@ -546,6 +546,191 @@ final class SyncServiceTest extends TestCase
 		$this->service->push('https://prod.example.com', 'k', null, null, null, null, ['blog' => ['welcome']], false);
 	}
 
+	/**
+	 * Record every outbound request as ['url' => …, 'body' => …] and answer
+	 * each one with the next queued response, falling back to a plain 200
+	 * success once the queue runs out. capturingClientReturns() only keeps
+	 * the LAST url, which cannot tell a one-request push from a two-request
+	 * one — the exact distinction the split transport turns on.
+	 *
+	 * @param list<array{url:string,body:string}> $requests
+	 * @param list<HttpResponse>                  $responses
+	 */
+	private function recordingClient(array &$requests, array $responses = []): void
+	{
+		$this->httpClient->method('request')
+			->willReturnCallback(function (string $method, string $url, array $options) use (&$requests, &$responses): HttpResponse {
+				$requests[] = ['url' => $url, 'body' => (string)($options['body'] ?? '')];
+
+				return array_shift($responses) ?? new HttpResponse(200, (string)json_encode(['success' => true]));
+			});
+	}
+
+	public function testAMixedPushSplitsTheSeededObjectsOntoTheirOwnRequest(): void
+	{
+		// The reason the split exists. Choosing one endpoint for the whole
+		// payload sent the schema, the page and the collection settings
+		// through the skip-existing importer as well, which runs with
+		// upsert=false: pages already on the target were silently skipped,
+		// schemas were overwritten with no backup, and existing collections
+		// had their lifetime oid counter recomputed. Mixed payloads are the
+		// primary use case, so each half has to keep its own semantics.
+		$payload = new JumpStartData('Local', '');
+		$payload->addSchema(['id' => 'faq', 'properties' => []]);
+		$payload->addTemplate(['id' => 'faq-list', 'template' => '<ul></ul>']);
+		$payload->addCustomCollection(['id' => 'faq', 'schema' => 'faq', 'name' => 'FAQ']);
+		$payload->addObject(['collection' => 'builder-pages', 'id' => 'home']);
+		$payload->addObject(['collection' => 'faq', 'id' => 'what-is-t3']);
+		$this->exporter->method('exportSyncData')->willReturn($payload);
+
+		$requests = [];
+		$this->recordingClient($requests);
+
+		$result = $this->service->push(
+			'https://prod.example.com',
+			'k',
+			['faq'],
+			['faq-list'],
+			['builder-pages' => null],
+			['faq'],
+			['faq' => null],
+			false,
+		);
+
+		$this->assertCount(2, $requests);
+		$this->assertSame('https://prod.example.com/api/sync/import', $requests[0]['url']);
+		$this->assertSame('https://prod.example.com/api/import/jumpstart', $requests[1]['url']);
+
+		$mirror = json_decode($requests[0]['body'], true);
+		$seed   = json_decode($requests[1]['body'], true);
+
+		// Everything that upserts stays on the mirror leg — including the
+		// feature-flag objects, which --pages documents as upserting.
+		expect(array_column($mirror['schemas'], 'id'))->toBe(['faq']);
+		expect(array_column($mirror['templates'], 'id'))->toBe(['faq-list']);
+		expect($mirror['collections']['custom'])->toHaveCount(1);
+		expect(array_column($mirror['objects'], 'id'))->toBe(['home']);
+
+		// The seed leg carries the seeded objects and nothing else.
+		expect($seed['schemas'])->toBe([]);
+		expect($seed['templates'])->toBe([]);
+		expect($seed['collections']['custom'])->toBe([]);
+		expect(array_column($seed['objects'], 'id'))->toBe(['what-is-t3']);
+
+		expect($result->success)->toBeTrue();
+		expect($result->data['objects'])->toBe(2);
+		expect($result->data['seeded'])->toBe(1);
+	}
+
+	public function testOverwriteKeepsAMixedPushOnOneUpsertRequest(): void
+	{
+		// --overwrite means every item upserts, so there is nothing to split.
+		$payload = new JumpStartData('Local', '');
+		$payload->addSchema(['id' => 'faq', 'properties' => []]);
+		$payload->addObject(['collection' => 'faq', 'id' => 'what-is-t3']);
+		$this->exporter->method('exportSyncData')->willReturn($payload);
+
+		$requests = [];
+		$this->recordingClient($requests);
+
+		$this->service->push('https://prod.example.com', 'k', ['faq'], [], [], [], ['faq' => null], true);
+
+		$this->assertCount(1, $requests);
+		$this->assertSame('https://prod.example.com/api/sync/import', $requests[0]['url']);
+
+		$body = json_decode($requests[0]['body'], true);
+		expect(array_column($body['objects'], 'id'))->toBe(['what-is-t3']);
+	}
+
+	public function testASeedOnlyPushSendsJustTheJumpstartRequest(): void
+	{
+		$payload = new JumpStartData('Local', '');
+		$payload->addObject(['collection' => 'blog', 'id' => 'welcome']);
+		$this->exporter->method('exportSyncData')->willReturn($payload);
+
+		$requests = [];
+		$this->recordingClient($requests);
+
+		$this->service->push('https://prod.example.com', 'k', [], [], [], [], ['blog' => null], false);
+
+		$this->assertCount(1, $requests);
+		$this->assertSame('https://prod.example.com/api/import/jumpstart', $requests[0]['url']);
+	}
+
+	public function testABarePushStillSendsExactlyOneMirrorRequest(): void
+	{
+		// The full mirror is the contract every existing install relies on:
+		// one request, one endpoint, upsert semantics. Splitting must never
+		// reach a push that names no --objects.
+		$payload = new JumpStartData('Local', '');
+		$payload->addSchema(['id' => 'products', 'properties' => []]);
+		$payload->addObject(['collection' => 'builder-pages', 'id' => 'home']);
+		$this->exporter->method('exportSyncData')->willReturn($payload);
+
+		$requests = [];
+		$this->recordingClient($requests);
+
+		$result = $this->service->push('https://prod.example.com', 'k');
+
+		$this->assertCount(1, $requests);
+		$this->assertSame('https://prod.example.com/api/sync/import', $requests[0]['url']);
+		expect($result->success)->toBeTrue();
+	}
+
+	public function testASplitPushReportsTheSeedLegFailingAfterTheMirrorLanded(): void
+	{
+		// Partial success is the split's own failure mode: the mirror is
+		// already on the target when the seed is refused. Swallowing that
+		// would leave the operator believing the whole push landed.
+		$payload = new JumpStartData('Local', '');
+		$payload->addSchema(['id' => 'faq', 'properties' => []]);
+		$payload->addObject(['collection' => 'faq', 'id' => 'what-is-t3']);
+		$this->exporter->method('exportSyncData')->willReturn($payload);
+
+		$requests = [];
+		$this->recordingClient($requests, [
+			new HttpResponse(200, (string)json_encode(['success' => true])),
+			new HttpResponse(200, (string)json_encode([
+				'success' => false,
+				'errors'  => ['Object what-is-t3: collection faq does not exist'],
+			])),
+		]);
+
+		$result = $this->service->push('https://prod.example.com', 'k', ['faq'], [], [], [], ['faq' => null], false);
+
+		$this->assertCount(2, $requests);
+		expect($result->success)->toBeFalse();
+		expect($result->message)->toContain('mirror payload landed');
+		expect($result->message)->toContain('seeded objects failed');
+		expect($result->error)->toContain('Seed: Object what-is-t3');
+		expect($result->data['schemas'])->toBe(1);
+		expect($result->data['seeded'])->toBe(1);
+	}
+
+	public function testASplitPushHoldsBackTheSeedWhenTheMirrorFails(): void
+	{
+		// Mirror first, and only then the seed: rows must not land in a
+		// collection whose schema or settings never arrived.
+		$payload = new JumpStartData('Local', '');
+		$payload->addSchema(['id' => 'faq', 'properties' => []]);
+		$payload->addObject(['collection' => 'faq', 'id' => 'what-is-t3']);
+		$this->exporter->method('exportSyncData')->willReturn($payload);
+
+		$requests = [];
+		$this->recordingClient($requests, [
+			new HttpResponse(500, (string)json_encode(['error' => ['message' => 'Boom']])),
+		]);
+
+		$result = $this->service->push('https://prod.example.com', 'k', ['faq'], [], [], [], ['faq' => null], false);
+
+		$this->assertCount(1, $requests);
+		$this->assertSame('https://prod.example.com/api/sync/import', $requests[0]['url']);
+		expect($result->success)->toBeFalse();
+		expect($result->message)->toContain('mirror payload failed');
+		expect($result->message)->toContain('not sent');
+		expect($result->error)->toContain('Mirror: Push failed (HTTP 500): Boom');
+	}
+
 	public function testPullReportsObjectsAndCollectionsSeparately(): void
 	{
 		// Objects used to be reported under the `collections` key, which made a

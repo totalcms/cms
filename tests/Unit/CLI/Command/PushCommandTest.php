@@ -525,11 +525,89 @@ it('passes overwrite=true to push() when --overwrite is given', function (): voi
 	$app->addCommand($command);
 	$tester = new CommandTester($command);
 
-	// Interactive (CommandTester's default) so the --overwrite guard, which
-	// only fires for a non-interactive run without --force, doesn't get in
-	// the way of asserting what push() receives.
+	// --force because the guard applies to every run, interactive included;
+	// this test is about what push() receives, not about the guard.
+	$tester->execute(['--objects' => ['blog'], '--overwrite' => true, '--force' => true]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('refuses --objects --overwrite without --force in an interactive run', function (): void {
+	// Where operators actually are. Gating the guard on !isInteractive() left
+	// it unreachable from a terminal, so a plain `tcms push --objects=blog
+	// --overwrite` clobbered production with nothing asked of it, while the
+	// docs promised it would refuse.
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->expects($this->never())->method('push');
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	// CommandTester runs interactive by default.
 	$tester->execute(['--objects' => ['blog'], '--overwrite' => true]);
 
+	expect($tester->getDisplay())->toContain('Refusing --overwrite');
+	expect($tester->getStatusCode())->toBe(1);
+});
+
+it('lets --objects --overwrite through in an interactive run with --force', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->expects($this->once())
+		->method('push')
+		->willReturn(OperationResult::success('Pushed', ['schemas' => 0, 'templates' => 0, 'collections' => 0, 'objects' => 1]));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--objects' => ['blog'], '--overwrite' => true, '--force' => true]);
+
+	expect($tester->getDisplay())->not->toContain('Refusing --overwrite');
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('does not trip the guard when --overwrite is given without --objects', function (): void {
+	// Without a seed filter --overwrite changes nothing — the payload upserts
+	// through /api/sync/import either way — so blocking a CI script that
+	// passes it defensively helps nobody.
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->expects($this->once())
+		->method('push')
+		->with(
+			'https://production.example.com',
+			'test-key',
+			null,
+			null,
+			null,
+			null,
+			null,
+			true,
+		)
+		->willReturn(OperationResult::success('Pushed', ['schemas' => 1, 'templates' => 0, 'collections' => 0, 'objects' => 0]));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--overwrite' => true], ['interactive' => false]);
+
+	expect($tester->getDisplay())->not->toContain('Refusing --overwrite');
 	expect($tester->getStatusCode())->toBe(0);
 });
 

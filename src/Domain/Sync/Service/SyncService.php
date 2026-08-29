@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Sync\Service;
 
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
+use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Playground\Data\PlaygroundData;
+use TotalCMS\Domain\Sync\Data\SyncableCollections;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\OperationResult;
 
@@ -19,6 +21,12 @@ use TotalCMS\Support\OperationResult;
  */
 readonly class SyncService
 {
+	/** Upsert: the pushing side is authoritative. */
+	private const ENDPOINT_MIRROR = '/api/sync/import';
+
+	/** Skip-existing: the target keeps whatever it already has. */
+	private const ENDPOINT_SEED = '/api/import/jumpstart';
+
 	public function __construct(
 		private JumpStartExporter $jumpStartExporter,
 		private JumpStartImporter $jumpStartImporter,
@@ -108,6 +116,20 @@ readonly class SyncService
 	 * side effect: both routes shipped in 3.5.0, so a seed push works
 	 * against a production server that has not upgraded yet.
 	 *
+	 * The two modes are per-ITEM, not per-push, so a seeding push splits
+	 * its payload and sends BOTH requests: everything that upserts to
+	 * `/api/sync/import`, the seeded objects alone to
+	 * `/api/import/jumpstart`. Picking one endpoint for the whole payload
+	 * (as this first did) routed a mixed push like
+	 * `push --schemas=faq --objects=faq` entirely through the skip-existing
+	 * importer, which runs with upsert=false: pages already on the target
+	 * were silently skipped, schemas were overwritten with no backup, and
+	 * existing collections had their lifetime oid counter recomputed from
+	 * the live index. Mixed payloads are the primary use case ("a new
+	 * collection plus its starter rows"), so they must be split, not
+	 * refused. `--overwrite` makes everything upsert again, so it stays a
+	 * single request exactly as before.
+	 *
 	 * @param list<string>|null                       $schemaFilter
 	 * @param list<string>|null                       $templateFilter
 	 * @param array<string,list<string>|null>|null    $collectionsFilter
@@ -143,41 +165,26 @@ readonly class SyncService
 			]);
 		}
 
-		// A seed push must not clobber what is already on the target, so it
-		// goes to the skip-existing route. --overwrite opts back into the
-		// mirror route. See this method's docblock.
-		$seeding  = $seedFilter !== null && !$overwrite;
-		$endpoint = $seeding ? '/api/import/jumpstart' : '/api/sync/import';
-
-		// Use the X-API-Key header instead of `Authorization: Bearer` because
-		// OAuthBearerMiddleware (outer layer on the /api/ group since Phase 4)
-		// intercepts any Bearer token and tries to validate it as a JWT —
-		// plain API keys aren't JWTs, so the request would 401 before
-		// DualAuthMiddleware/ApiKeyAuthMiddleware (which accept both header
-		// formats) ever ran. X-API-Key is invisible to OAuthBearerMiddleware
-		// and falls through to the API-key validator cleanly.
-		// rtrim guards against accidentally-trailing slashes producing a
-		// double-slash in the request URL.
-		$httpResponse = $this->httpClient->request('POST', rtrim($url, '/') . $endpoint, [
-			'headers' => [
-				'X-API-Key: ' . $key,
-				'Content-Type: application/json',
-				'Accept: application/json',
-			],
-			'body'    => $jumpstart->toJson(),
-			'timeout' => 60,
-		]);
-
-		if ($httpResponse->statusCode >= 400) {
-			throw new \RuntimeException(sprintf(
-				'Push failed (HTTP %d): %s',
-				$httpResponse->statusCode,
-				$this->extractRemoteError($httpResponse->body),
-			));
+		// A seed push must not clobber what is already on the target, so its
+		// objects go to the skip-existing route while everything else keeps
+		// the mirror route. --overwrite makes the whole payload upsert again,
+		// which is one request. See this method's docblock.
+		if ($seedFilter === null || $overwrite) {
+			return $this->pushMirrorOnly($url, $key, $jumpstart);
 		}
 
-		$decoded      = json_decode($httpResponse->body, true);
-		$remoteResult = is_array($decoded) ? $decoded : [];
+		[$mirror, $seed] = $this->splitSeededObjects($jumpstart, $seedFilter);
+
+		return $this->pushSplit($url, $key, $mirror, $seed);
+	}
+
+	/**
+	 * The single-request path: one upsert POST, exactly as every push worked
+	 * before seeding existed.
+	 */
+	private function pushMirrorOnly(string $url, string $key, JumpStartData $jumpstart): OperationResult
+	{
+		$remoteResult = $this->postPayload($url, $key, self::ENDPOINT_MIRROR, $jumpstart);
 
 		$counts = [
 			'schemas'       => count($jumpstart->schemas),
@@ -203,6 +210,183 @@ readonly class SyncService
 		}
 
 		return OperationResult::success('Push complete.', $counts);
+	}
+
+	/**
+	 * The two-request path for a seeding push.
+	 *
+	 * Order matters: the mirror goes first so a schema or collection the
+	 * seeded rows depend on exists on the target before they land. A failed
+	 * mirror therefore cancels the seed rather than dropping rows into a
+	 * half-built collection — and the result says so, because a partial push
+	 * that reports as a clean one is exactly the failure mode this whole
+	 * split exists to remove.
+	 */
+	private function pushSplit(string $url, string $key, JumpStartData $mirror, JumpStartData $seed): OperationResult
+	{
+		$errors       = [];
+		$mirrorResult = [];
+		$seedResult   = [];
+
+		$mirrorState = 'was empty';
+		$mirrorOk    = true;
+		if (!$mirror->isEmpty()) {
+			[$mirrorOk, $mirrorResult, $mirrorErrors] = $this->attemptPush($url, $key, self::ENDPOINT_MIRROR, $mirror);
+			$mirrorState                              = $mirrorOk ? 'landed' : 'failed';
+			foreach ($mirrorErrors as $error) {
+				$errors[] = 'Mirror: ' . $error;
+			}
+		}
+
+		$seedState = 'none to send';
+		$seedOk    = true;
+		if (!$seed->isEmpty()) {
+			if (!$mirrorOk) {
+				$seedOk    = false;
+				$seedState = 'not sent (the mirror request failed first)';
+			} else {
+				[$seedOk, $seedResult, $seedErrors] = $this->attemptPush($url, $key, self::ENDPOINT_SEED, $seed);
+				$seedState                          = $seedOk ? 'landed' : 'failed';
+				foreach ($seedErrors as $error) {
+					$errors[] = 'Seed: ' . $error;
+				}
+			}
+		}
+
+		$counts = [
+			'schemas'       => count($mirror->schemas),
+			'templates'     => count($mirror->templates),
+			'collections'   => $this->countCollections($mirror->collections),
+			'objects'       => count($mirror->objects) + count($seed->objects),
+			'seeded'        => count($seed->objects),
+			'remote_result' => $mirrorResult,
+			'seed_result'   => $seedResult,
+		];
+
+		if ($mirrorOk && $seedOk) {
+			return OperationResult::success('Push complete.', $counts);
+		}
+
+		return OperationResult::failure(
+			sprintf('Push incomplete — mirror payload %s; seeded objects %s.', $mirrorState, $seedState),
+			$errors === [] ? null : implode('; ', $errors),
+			$counts,
+		);
+	}
+
+	/**
+	 * Send one leg of a split push and normalise every way it can fail —
+	 * transport (a thrown RuntimeException) and per-item (a 200 whose body
+	 * reports errors) — into the same tuple, so one failing leg can be
+	 * reported alongside the other leg's outcome instead of unwinding the
+	 * whole call.
+	 *
+	 * @return array{0:bool,1:array<string,mixed>,2:list<string>}
+	 */
+	private function attemptPush(string $url, string $key, string $endpoint, JumpStartData $payload): array
+	{
+		try {
+			$result = $this->postPayload($url, $key, $endpoint, $payload);
+		} catch (\RuntimeException $e) {
+			return [false, [], [$e->getMessage()]];
+		}
+
+		$errors = $this->stringList($result['errors'] ?? null);
+		$ok     = ($result['success'] ?? true) !== false && $errors === [];
+
+		if (!$ok && $errors === []) {
+			$errors = ['The remote reported the import as unsuccessful.'];
+		}
+
+		return [$ok, $result, $errors];
+	}
+
+	/**
+	 * POST one payload and decode the remote's answer.
+	 *
+	 * Use the X-API-Key header instead of `Authorization: Bearer` because
+	 * OAuthBearerMiddleware (outer layer on the /api/ group since Phase 4)
+	 * intercepts any Bearer token and tries to validate it as a JWT —
+	 * plain API keys aren't JWTs, so the request would 401 before
+	 * DualAuthMiddleware/ApiKeyAuthMiddleware (which accept both header
+	 * formats) ever ran. X-API-Key is invisible to OAuthBearerMiddleware
+	 * and falls through to the API-key validator cleanly.
+	 * rtrim guards against accidentally-trailing slashes producing a
+	 * double-slash in the request URL.
+	 *
+	 * @throws \RuntimeException On a transport error or a 4xx/5xx answer
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function postPayload(string $url, string $key, string $endpoint, JumpStartData $payload): array
+	{
+		$httpResponse = $this->httpClient->request('POST', rtrim($url, '/') . $endpoint, [
+			'headers' => [
+				'X-API-Key: ' . $key,
+				'Content-Type: application/json',
+				'Accept: application/json',
+			],
+			'body'    => $payload->toJson(),
+			'timeout' => 60,
+		]);
+
+		if ($httpResponse->statusCode >= 400) {
+			throw new \RuntimeException(sprintf(
+				'Push failed (HTTP %d): %s',
+				$httpResponse->statusCode,
+				$this->extractRemoteError($httpResponse->body),
+			));
+		}
+
+		$decoded = json_decode($httpResponse->body, true);
+
+		return is_array($decoded) ? $decoded : [];
+	}
+
+	/**
+	 * Partition one export into the upsert payload and the seed-only payload.
+	 *
+	 * The split is exact rather than heuristic: `--objects` can only reach
+	 * collections SyncableCollections::seedable() allows, and that method
+	 * excludes every collection the mirror path can carry objects for (the
+	 * five FEATURE_FLAGS ids), so no object can belong to both halves.
+	 *
+	 * Only objects move to the seed payload — schemas, templates and
+	 * collection settings stay on the mirror leg, which upserts them as the
+	 * flags for those categories have always documented.
+	 *
+	 * @param array<string,list<string>|null> $seedFilter
+	 *
+	 * @return array{0:JumpStartData,1:JumpStartData}
+	 */
+	private function splitSeededObjects(JumpStartData $jumpstart, array $seedFilter): array
+	{
+		$mirrorObjects = [];
+		$seedObjects   = [];
+
+		foreach ($jumpstart->objects as $object) {
+			$collection = (string)($object['collection'] ?? '');
+			if ($collection !== '' && array_key_exists($collection, $seedFilter) && SyncableCollections::seedable($collection)) {
+				$seedObjects[] = $object;
+				continue;
+			}
+			$mirrorObjects[] = $object;
+		}
+
+		// Clone rather than construct: JumpStartData's constructor stamps the
+		// description with a timestamp, so a fresh instance would carry
+		// different metadata than the export the operator is pushing.
+		$mirror          = clone $jumpstart;
+		$mirror->objects = $mirrorObjects;
+
+		$seed              = clone $jumpstart;
+		$seed->schemas     = [];
+		$seed->templates   = [];
+		$seed->factory     = [];
+		$seed->collections = ['reserved' => [], 'custom' => []];
+		$seed->objects     = $seedObjects;
+
+		return [$mirror, $seed];
 	}
 
 	/**

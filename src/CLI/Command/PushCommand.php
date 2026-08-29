@@ -57,12 +57,21 @@ class PushCommand extends BaseCommand
 
 		$overwrite = (bool)$input->getOption('overwrite');
 
-		// --overwrite is the only irreversible thing this command does: sync
-		// never deletes, and a seed never clobbers. Require the operator to
-		// have seen the diff first, or to say --force when there is no
-		// terminal to show it on.
-		if ($overwrite && !$input->getOption('dry-run') && !$input->getOption('force') && !$input->isInteractive()) {
-			return $this->outputError($input, $output, 'Refusing --overwrite in a non-interactive run without --force. Run --dry-run first to see what would change.');
+		// --objects --overwrite is the only irreversible thing this command
+		// does: sync never deletes, and a seed never clobbers. Require an
+		// explicit --force, in EVERY run. Gating on !isInteractive() left the
+		// guard unreachable from a normal terminal — where operators actually
+		// are — so `push --objects=blog --overwrite` clobbered production with
+		// nothing asked of it. A prior --dry-run is invisible to a later
+		// invocation, so --force is the escape hatch; --dry-run in this same
+		// invocation short-circuits below without pushing anything.
+		//
+		// Only when a seed filter is present: without --objects, --overwrite
+		// changes nothing (the payload upserts through /api/sync/import either
+		// way), so refusing a CI script that passes it defensively helps
+		// nobody.
+		if ($overwrite && $seedFilter !== null && !$input->getOption('dry-run') && !$input->getOption('force')) {
+			return $this->outputError($input, $output, 'Refusing --overwrite without --force: it overwrites objects that already exist on the target. Run --dry-run first to see what would change, then re-run with --force.');
 		}
 
 		// Dry run — preview only, don't push. SyncService::diff() is the same
