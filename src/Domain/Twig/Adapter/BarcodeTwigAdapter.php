@@ -22,7 +22,7 @@ readonly class BarcodeTwigAdapter
 	 */
 	public function code128(string $data, array $options = []): string
 	{
-		return $this->generator->code128($data, $options);
+		return $this->safely(fn (): string => $this->generator->code128($data, $options));
 	}
 
 	/**
@@ -32,7 +32,7 @@ readonly class BarcodeTwigAdapter
 	 */
 	public function code39(string $data, array $options = []): string
 	{
-		return $this->generator->code39($data, $options);
+		return $this->safely(fn (): string => $this->generator->code39($data, $options));
 	}
 
 	/**
@@ -42,7 +42,7 @@ readonly class BarcodeTwigAdapter
 	 */
 	public function code93(string $data, array $options = []): string
 	{
-		return $this->generator->code93($data, $options);
+		return $this->safely(fn (): string => $this->generator->code93($data, $options));
 	}
 
 	/**
@@ -52,7 +52,7 @@ readonly class BarcodeTwigAdapter
 	 */
 	public function ean13(string $data, array $options = []): string
 	{
-		return $this->generator->ean13($data, $options);
+		return $this->safely(fn (): string => $this->generator->ean13($data, $options));
 	}
 
 	/**
@@ -62,7 +62,7 @@ readonly class BarcodeTwigAdapter
 	 */
 	public function ean8(string $data, array $options = []): string
 	{
-		return $this->generator->ean8($data, $options);
+		return $this->safely(fn (): string => $this->generator->ean8($data, $options));
 	}
 
 	/**
@@ -72,7 +72,7 @@ readonly class BarcodeTwigAdapter
 	 */
 	public function upca(string $data, array $options = []): string
 	{
-		return $this->generator->upca($data, $options);
+		return $this->safely(fn (): string => $this->generator->upca($data, $options));
 	}
 
 	/**
@@ -82,7 +82,7 @@ readonly class BarcodeTwigAdapter
 	 */
 	public function upce(string $data, array $options = []): string
 	{
-		return $this->generator->upce($data, $options);
+		return $this->safely(fn (): string => $this->generator->upce($data, $options));
 	}
 
 	/**
@@ -92,7 +92,7 @@ readonly class BarcodeTwigAdapter
 	 */
 	public function i25(string $data, array $options = []): string
 	{
-		return $this->generator->i25($data, $options);
+		return $this->safely(fn (): string => $this->generator->i25($data, $options));
 	}
 
 	/**
@@ -102,7 +102,7 @@ readonly class BarcodeTwigAdapter
 	 */
 	public function codabar(string $data, array $options = []): string
 	{
-		return $this->generator->codabar($data, $options);
+		return $this->safely(fn (): string => $this->generator->codabar($data, $options));
 	}
 
 	/**
@@ -112,7 +112,7 @@ readonly class BarcodeTwigAdapter
 	 */
 	public function custom(string $data, string $type, array $options = []): string
 	{
-		return $this->generator->custom($data, $type, $options);
+		return $this->safely(fn (): string => $this->generator->custom($data, $type, $options));
 	}
 
 	/**
@@ -134,13 +134,12 @@ readonly class BarcodeTwigAdapter
 	{
 		$length = strlen($data);
 
-		return match ($length) {
+		return $this->safely(fn (): string => match ($length) {
 			7, 8    => $this->generator->ean8($data, $options),
-			11      => $this->generator->upca($data, $options),
-			12      => $this->generator->upca($data, $options),
+			11, 12  => $this->generator->upca($data, $options),
 			13      => $this->generator->ean13($data, $options),
 			default => throw new \InvalidArgumentException("Invalid product code length: {$length}. Expected 7-8, 11-13 digits."),
-		};
+		});
 	}
 
 	/**
@@ -151,7 +150,7 @@ readonly class BarcodeTwigAdapter
 	public function text(string $data, array $options = []): string
 	{
 		// Use Code 128 as default for text/alphanumeric data
-		return $this->generator->code128($data, $options);
+		return $this->safely(fn (): string => $this->generator->code128($data, $options));
 	}
 
 	/**
@@ -161,12 +160,38 @@ readonly class BarcodeTwigAdapter
 	 */
 	public function numeric(string $data, array $options = []): string
 	{
-		// Validate numeric data
-		if (!preg_match('/^\d+$/', $data)) {
-			throw new \InvalidArgumentException('Numeric barcode requires digits only');
-		}
+		return $this->safely(function () use ($data, $options): string {
+			if (!preg_match('/^\d+$/', $data)) {
+				throw new \InvalidArgumentException('Numeric barcode requires digits only');
+			}
 
-		// Use Interleaved 2 of 5 for numeric data
-		return $this->generator->i25($data, $options);
+			// Use Interleaved 2 of 5 for numeric data
+			return $this->generator->i25($data, $options);
+		});
+	}
+
+	/**
+	 * Render a barcode, or an HTML comment saying why it could not be.
+	 *
+	 * A template must not be able to take a page down over one bad barcode
+	 * value. Every other Twig adapter here degrades the same way — returning
+	 * '' or [] rather than throwing — and a barcode is decoration on someone
+	 * else's page, not the page itself.
+	 *
+	 * The reason is not swallowed: it goes into the markup as a comment, so
+	 * whoever is building the template sees it in View Source without having
+	 * to enable anything, while a visitor sees nothing. The generator still
+	 * throws for callers who can handle it — this softening is only for the
+	 * Twig surface.
+	 *
+	 * @param \Closure(): string $render
+	 */
+	private function safely(\Closure $render): string
+	{
+		try {
+			return $render();
+		} catch (\Throwable $e) {
+			return '<!-- barcode: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES | ENT_SUBSTITUTE) . ' -->';
+		}
 	}
 }

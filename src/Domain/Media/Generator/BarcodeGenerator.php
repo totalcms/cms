@@ -174,10 +174,11 @@ class BarcodeGenerator
 	 */
 	public function upce(string $data, array $options = []): string
 	{
-		// Validate UPC-E format (7 or 8 digits)
-		if (!preg_match('/^\d{7,8}$/', $data)) {
-			throw new \InvalidArgumentException('UPC-E requires 7 or 8 digits');
+		if (!preg_match('/^\d{6,8}$/', $data)) {
+			throw new \InvalidArgumentException('UPC-E requires 6, 7 or 8 digits');
 		}
+
+		$data = self::upcePayload($data);
 
 		$width  = $options['width'] ?? -1;
 		$height = $options['height'] ?? -1;
@@ -235,7 +236,44 @@ class BarcodeGenerator
 	}
 
 	/**
-	 * Generate Codabar barcode (numeric with start/stop characters).
+	 * Reduce a UPC-E code to the 6-digit payload the encoder needs.
+	 *
+	 * UPC-E is written three ways: the bare 6-digit payload, 7 digits with
+	 * either the number-system prefix or the check digit, and the familiar
+	 * 8-digit display form `system + payload + check`. Only the payload
+	 * carries information — the prefix is 0 or 1 and the check digit is
+	 * derived — so every form reduces to the same six digits and the same
+	 * UPC-A expansion.
+	 *
+	 * This exists because tc-lib-barcode < 2.14 accepted the longer forms
+	 * and silently encoded the WRONG product: it zero-padded the input and
+	 * appended a check digit instead of decompressing, so `04252614`
+	 * encoded UPC-A 0000042526148 rather than the correct 0042100005264.
+	 * 2.14 added validation and rejects the longer forms outright. Rather
+	 * than break every caller that passes the 8-digit form, normalise it —
+	 * the same input now produces a barcode that actually scans as the
+	 * product it names.
+	 *
+	 * A 7-digit code is the only ambiguous case: a leading 0 or 1 is a
+	 * number-system prefix (nothing else is valid there), so anything else
+	 * means the trailing digit is the check digit.
+	 */
+	private static function upcePayload(string $data): string
+	{
+		return match (strlen($data)) {
+			8       => substr($data, 1, 6),
+			7       => in_array($data[0], ['0', '1'], true) ? substr($data, 1, 6) : substr($data, 0, 6),
+			default => $data,
+		};
+	}
+
+	/**
+	 * Generate Codabar barcode (numeric; the encoder supplies start/stop).
+	 *
+	 * A, B, C and D are reserved as Codabar's start/stop characters and are
+	 * added by the encoder, so they must not appear in $data. Passing them
+	 * used to encode literally — 'A1234B' became AA1234BA, which does not
+	 * scan — and is now rejected.
 	 *
 	 * @param array<string,mixed> $options
 	 */

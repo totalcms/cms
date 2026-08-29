@@ -84,7 +84,7 @@
     "symfony/property-access": "^7.1",
     "symfony/serializer": "^7.1",
     "symfony/translation": "^7.4",
-    "tecnickcom/tc-lib-barcode": "^2.4",
+    "tecnickcom/tc-lib-barcode": "^2.14",
     "totalcms/color-thief-php": "^2.5.0",
     "twig/cssinliner-extra": "^3.21",
     "twig/html-extra": "^3.21",
