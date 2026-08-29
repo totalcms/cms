@@ -20,6 +20,7 @@ class PushCommand extends BaseCommand
 			->setName('push')
 			->setDescription('Push schemas, templates, site features and collection settings to the production server');
 		$this->addSyncFilterOptions('push');
+		$this->addPushObjectOptions();
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
@@ -36,8 +37,32 @@ class PushCommand extends BaseCommand
 
 		try {
 			[$schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter] = $this->resolveSyncFilters($input);
+			$seedFilter = $this->resolveSeedFilter($input);
 		} catch (\InvalidArgumentException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
+		}
+
+		// --objects is itself a filter: resolveSyncFilters() doesn't know
+		// about it (it's push-only), so a bare `--objects=blog` with nothing
+		// else mentioned would otherwise leave the other categories at "all"
+		// and turn a one-collection seed into an unintended full mirror.
+		// Bring it in line with every other filter option: narrow whatever
+		// the operator didn't mention to none.
+		if ($seedFilter !== null) {
+			$schemaFilter         ??= [];
+			$templateFilter       ??= [];
+			$collectionsFilter    ??= [];
+			$collectionMetaFilter ??= [];
+		}
+
+		$overwrite = (bool)$input->getOption('overwrite');
+
+		// --overwrite is the only irreversible thing this command does: sync
+		// never deletes, and a seed never clobbers. Require the operator to
+		// have seen the diff first, or to say --force when there is no
+		// terminal to show it on.
+		if ($overwrite && !$input->getOption('dry-run') && !$input->getOption('force') && !$input->isInteractive()) {
+			return $this->outputError($input, $output, 'Refusing --overwrite in a non-interactive run without --force. Run --dry-run first to see what would change.');
 		}
 
 		// Dry run — preview only, don't push. SyncService::diff() is the same
@@ -66,7 +91,8 @@ class PushCommand extends BaseCommand
 				$schemaFilter,
 				$this->totalcms->syncService()->syncableTemplateFilter($templateFilter),
 				$collectionsFilter,
-				$collectionMetaFilter
+				$collectionMetaFilter,
+				$seedFilter,
 			)->toArray();
 
 			return $this->renderSyncDryRun($input, $output, $local, $remote['url'], 'push');
@@ -78,7 +104,7 @@ class PushCommand extends BaseCommand
 		}
 
 		try {
-			$result = $this->totalcms->syncService()->push($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter);
+			$result = $this->totalcms->syncService()->push($remote['url'], $remote['key'], $schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter, $seedFilter, $overwrite);
 		} catch (\RuntimeException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
 		}

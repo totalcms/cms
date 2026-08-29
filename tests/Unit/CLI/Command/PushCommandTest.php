@@ -279,3 +279,108 @@ it('offers every feature flag', function (string $flag): void {
 
 	expect($command->getDefinition()->hasOption($flag))->toBeTrue();
 })->with(array_keys(\TotalCMS\Domain\Sync\Data\SyncableCollections::FEATURE_FLAGS));
+
+it('parses a bare --objects collection as all objects', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], [], ['blog' => null])
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--objects' => ['blog']]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('parses collection:id,id into an object id filter', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], [], ['blog' => ['welcome', 'about']])
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--objects' => ['blog:welcome,about']]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('accepts --objects more than once', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], [], ['blog' => ['welcome'], 'faq' => null])
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--objects' => ['blog:welcome', 'faq']]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('points at the dedicated flag when --objects names a feature collection', function (): void {
+	$app     = new Application();
+	$command = new PushCommand($this->totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--objects' => ['builder-pages']]);
+
+	expect($tester->getDisplay())->toContain('--pages');
+	expect($tester->getStatusCode())->toBe(1);
+});
+
+it('refuses to seed binary-only collections with an explanation', function (): void {
+	$app     = new Application();
+	$command = new PushCommand($this->totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--objects' => ['image']]);
+
+	expect($tester->getDisplay())->toContain('binaries never travel');
+	expect($tester->getStatusCode())->toBe(1);
+});

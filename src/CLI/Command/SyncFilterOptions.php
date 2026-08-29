@@ -103,6 +103,100 @@ trait SyncFilterOptions
 	}
 
 	/**
+	 * Push-only options. `pull` deliberately does not get these: pulling
+	 * production content down to dev has a different risk profile and no
+	 * stated use case. Everything the two commands DO share still agrees
+	 * exactly, which is what the trait exists to guarantee.
+	 */
+	private function addPushObjectOptions(): void
+	{
+		$this
+			->addOption(
+				'objects',
+				null,
+				InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
+				'Seed object data: collection, or collection:id,id. Repeatable. Existing objects on the target are left alone',
+			)
+			->addOption('overwrite', null, InputOption::VALUE_NONE, 'Let --objects overwrite objects that already exist on the target')
+			->addOption('force', null, InputOption::VALUE_NONE, 'Allow --overwrite without a prior --dry-run when not attached to a terminal');
+	}
+
+	/**
+	 * Parse `--objects` into the exporter's seed filter shape.
+	 *
+	 * Repeats merge: `--objects=blog:a --objects=blog:b` selects both, and a
+	 * bare `--objects=blog` alongside either one widens to the whole
+	 * collection, since "all" is a superset of any id list.
+	 *
+	 * @return array<string,list<string>|null>|null null when --objects was not given
+	 */
+	private function resolveSeedFilter(InputInterface $input): ?array
+	{
+		/** @var list<string> $values */
+		$values = $input->getOption('objects');
+		if ($values === []) {
+			return null;
+		}
+
+		/** @var array<string,list<string>|null> $filter */
+		$filter = [];
+		foreach ($values as $value) {
+			if (str_contains($value, ':')) {
+				[$collectionId, $idPart] = explode(':', $value, 2);
+			} else {
+				$collectionId = $value;
+				$idPart       = null;
+			}
+
+			$collectionId = trim($collectionId);
+			if ($collectionId === '') {
+				throw new \InvalidArgumentException('--objects needs a collection id, e.g. --objects=blog');
+			}
+
+			if (!SyncableCollections::seedable($collectionId)) {
+				throw new \InvalidArgumentException($this->seedRefusal($collectionId));
+			}
+
+			$ids = $idPart === null ? null : $this->parseListOption($idPart);
+
+			// A bare mention means "all", which beats any id list.
+			if (array_key_exists($collectionId, $filter) && ($filter[$collectionId] === null || $ids === null)) {
+				$filter[$collectionId] = null;
+				continue;
+			}
+
+			$filter[$collectionId] = $ids === null
+				? null
+				: array_values(array_unique(array_merge($filter[$collectionId] ?? [], $ids)));
+		}
+
+		return $filter;
+	}
+
+	/** Why a collection cannot be seeded, phrased so the operator knows what to do instead. */
+	private function seedRefusal(string $collectionId): string
+	{
+		$flag = SyncableCollections::flagFor($collectionId);
+		if ($flag !== null) {
+			return sprintf(
+				"'%s' has its own flag — use --%s instead of --objects=%s.",
+				$collectionId,
+				$flag,
+				$collectionId,
+			);
+		}
+
+		if ($collectionId === 'playground') {
+			return "'playground' cannot be seeded: it is a per-install scratchpad, created on demand by whichever environment opens the Twig Playground.";
+		}
+
+		return sprintf(
+			"'%s' cannot be seeded: binaries never travel, so the objects would arrive pointing at files the target does not have.",
+			$collectionId,
+		);
+	}
+
+	/**
 	 * Render a dry-run preview of a sync payload — including the objects,
 	 * which the original implementation omitted. Objects are the most
 	 * dangerous part of the payload (a push overwrites them on the target),
