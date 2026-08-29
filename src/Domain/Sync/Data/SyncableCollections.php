@@ -31,8 +31,81 @@ final class SyncableCollections
 		'automations',
 	];
 
+	/**
+	 * The five feature-named CLI flags and the collection each one moves.
+	 *
+	 * These collections are site machinery the developer authors — Pages,
+	 * Data Views, Mailer templates, MCP prompts, Automations. The operator
+	 * knows them by their admin labels, not by collection id, which is why
+	 * the flags are named for the feature and not for the storage. It also
+	 * spares anyone having to know that the collection is `builder-pages`
+	 * while the schema is `builder-page`.
+	 *
+	 * Values must stay in lockstep with IDS — SyncableCollectionsTest fails
+	 * if they drift. IDS cannot be derived from this map because a PHP
+	 * constant expression cannot call array_values().
+	 *
+	 * @var array<string,string>
+	 */
+	public const FEATURE_FLAGS = [
+		'pages'       => 'builder-pages',
+		'dataviews'   => 'dataviews',
+		'mailer'      => 'mailer',
+		'mcp-prompts' => 'mcp-prompt',
+		'automations' => 'automations',
+	];
+
+	/**
+	 * Collections that `--objects` refuses to seed.
+	 *
+	 * `playground` is a per-install scratchpad, created on demand by
+	 * whichever environment someone happens to open the Twig Playground on.
+	 * It is already excluded from sync elsewhere for the same reason.
+	 *
+	 * The other four are binary-only. Everywhere else an omitted binary
+	 * field is one field among many and the record still carries its title
+	 * and body, but in these collections the binary IS the object —
+	 * processObjectData() strips it, so seeding would land a record
+	 * pointing at a file the target does not have. Refusing beats shipping
+	 * an empty husk.
+	 *
+	 * The five in FEATURE_FLAGS are excluded by seedable() rather than
+	 * listed here: they are reachable, just through their own flag.
+	 *
+	 * @var list<string>
+	 */
+	public const SEED_EXCLUDED = [
+		'playground',
+		'image',
+		'gallery',
+		'file',
+		'depot',
+	];
+
 	public static function contains(string $id): bool
 	{
 		return in_array($id, self::IDS, true);
+	}
+
+	/**
+	 * Whether `--objects` may seed this collection.
+	 *
+	 * Unlike contains(), this is permissive by default: seeding cannot
+	 * overwrite anything (the receiving endpoint skips existing objects),
+	 * so the guard only has to stop collections where seeding is
+	 * meaningless or actively misleading.
+	 */
+	public static function seedable(string $id): bool
+	{
+		return !in_array($id, self::SEED_EXCLUDED, true)
+			&& !in_array($id, self::FEATURE_FLAGS, true);
+	}
+
+	/** The feature flag that owns this collection, if any. */
+	public static function flagFor(string $collectionId): ?string
+	{
+		$flag = array_search($collectionId, self::FEATURE_FLAGS, true);
+
+		return $flag === false ? null : $flag;
 	}
 }
