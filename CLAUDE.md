@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Total CMS is a modern PHP-based Content Management System using flat-file JSON storage. Built with Slim 4 framework, it provides a RESTful API with Twig templating and a comprehensive admin interface. The product is in production with 200+ sites. Version 3.5 (currently in release candidates) adds the CLI, extension system, event system, Composer distribution, Site Builder, public registration, platform-installation flow, built-in MCP server, and Automations.
+Total CMS is a modern PHP-based Content Management System using flat-file JSON storage. Built with Slim 4 framework, it provides a RESTful API with Twig templating and a comprehensive admin interface. The product is in production with 200+ sites. Version 3.5 (shipped 2026-08-26) added the CLI, extension system, event system, Composer distribution, Site Builder, public registration, platform-installation flow, built-in MCP server, and Automations. Active development is on `develop` toward 3.6.
 
 ### Related Projects
 - **Total CMS License API** ([totalcms/license.totalcms.co](https://github.com/totalcms/license.totalcms.co)): License validation and trial management with similar Slim 4 architecture
 - **Total CMS 3 Stacks**: Stacks plugin for the Stacks platform
 - **Documentation Site** ([totalcms/docs.totalcms.co](https://github.com/totalcms/docs.totalcms.co)): Public docs at docs.totalcms.co (Astro Starlight). Source of truth is `/resources/docs/` in this repo; synced to the docs site via the build script
-- **Marketing Site**: totalcms.co — static HTML site (local: `~/Websites/totalcms.co`)
+- **Marketing Site**: totalcms.co — built with Total CMS itself (Site Builder), so it doubles as the dogfood install (local: `~/Websites/totalcms.co`)
 - **Extension Starter** ([totalcms/extension-starter](https://github.com/totalcms/extension-starter)): Template repo for building T3 extensions, demonstrates every extension point
 - **Official Docs Connector**: `https://totalcms.co/mcp` — the marketing site's own MCP server serves the T3 documentation to AI agents (`docs_search`, `docs_get`, `docs_lookup`) via a private extension. Successor to the retired standalone mcp.totalcms.co app.
 - **Project Repo** ([totalcms/totalcms-project](https://github.com/totalcms/totalcms-project)): Composer project template for installing T3 via `composer create-project`
@@ -18,9 +18,10 @@ Total CMS is a modern PHP-based Content Management System using flat-file JSON s
 ## Technology Stack
 
 - **Backend**: PHP 8.2+, Slim 4, Twig 3, PHP-DI 7, PSR-7/PSR-15
-- **Frontend**: ESBuild, Sass/SCSS, TypeScript/ES6+, HTMX 4.0, Node.js/Yarn
+- **Frontend**: ESBuild, Sass/SCSS, TypeScript/ES6+, HTMX 4.x, Node.js/Yarn
 - **Rich Text**: Tiptap editor (replaced Froala)
-- **Testing**: Pest (PHP testing), PHPStan Level 8, PHP-CS-Fixer, PHPMD
+- **Search**: `SearchProvider` abstraction — built-in `text` provider by default, optional Algolia (`algolia/algoliasearch-client-php`)
+- **Testing**: Pest (PHP testing), PHPStan Level 8, PHP-CS-Fixer, PHPMD, Rector
 
 ## Common Development Commands
 
@@ -51,10 +52,23 @@ composer run cs:fix
 
 # Run tests with Pest
 composer run test
+composer run test:filter -- --filter=SomeTest   # single test
+composer run test:quick                          # fast subset
+composer run test:parallel                       # parallel runner
+
+# Verify the bundle integrity manifest is current (~0.3s).
+# Run this after editing anything under config/, resources/templates/,
+# or the covered src/ files — a stale manifest breaks writes at runtime
+# with 400 "installation has been corrupted", and the test suite does NOT
+# catch it. See "Bundle integrity" under Testing Best Practices.
+composer run bundle:check
 
 # Run all quality checks
 composer run test:all
 ```
+
+`composer.json` defines ~40 scripts; the others worth knowing are `quality` /
+`quality:full`, `docs:validate`, `rector` / `rector:fix`, and `mcp:inspect`.
 
 ## Architecture Overview
 
@@ -64,14 +78,25 @@ composer run test:all
   - **`/src/Domain/Extension/`** - Extension system: discovery, lifecycle, permissions, settings, route collection
   - **`/src/Domain/Event/`** - Core event dispatcher (used by extensions and internal services)
   - **`/src/Domain/Automation/`** - Automations: schedule/webhook/event triggers, queue, runner, state store
+  - **`/src/Domain/DataView/`** - Data Views: saved cross-collection queries (Pro+ edition feature)
+  - **`/src/Domain/Search/`** - Search provider abstraction, indexing jobs, reindex listeners
+  - **`/src/Domain/XmlRpc/`** - WordPress-compatible XML-RPC publishing endpoint (off by default)
   - **`/src/Domain/JumpStart/`** - JumpStart data import/export system
   - **`/src/Domain/Import/`** - CMS import systems (Alloy, Total CMS 1, Wordpress, CSV, JSON, RSS, URL)
   - **`/src/Domain/Factory/`** - Factory system for generating test data using Faker
   - **`/src/Domain/ImageWorks/`** - Image processing with watermarking, font management, and caching
   - **`/src/Domain/Twig/`** - Twig templating system with adapters, extensions, and custom functions
+  - **`/src/Domain/Mailer/`** - Transactional + bulk mailer (bulk is edition-gated)
+  - **`/src/Domain/AccessGroup/`** + **`/src/Domain/ApiKey/`** + **`/src/Domain/OAuth/`** - Authorization credentials and grouping
+  - **`/src/Domain/Sync/`** - `tcms push` / `tcms pull` collection sync (5-collection allowlist)
+  - **`/src/Domain/Visualizer/`** - Collection + object relationship diagrams (Mermaid)
+  - *(53 domains total — the above are the high-traffic ones; browse `src/Domain/` for the rest)*
 - **`/src/CLI/`** - Symfony Console CLI application and commands
-- **`/src/Middleware/`** - HTTP middleware for auth, CORS, licensing, validation
+- **`/src/Middleware/`** - HTTP middleware for auth, CORS, licensing, edition gating, validation
 - **`/src/Renderer/`** - Response rendering (JSON, XML, Twig, Raw)
+- **`/src/Infrastructure/`** - Framework wiring, diagnostics, server checks
+- **`/src/Composer/`** - Composer plugin (ships the agent skill, install hooks)
+- **`/src/Handler/`**, **`/src/Support/`**, **`/src/Traits/`**, **`/src/Transformer/`** - Cross-cutting helpers
 - **`/src/Utils/`** - Utility classes for file handling, image processing, QR codes
 - **`/config/`** - Hierarchical PHP configuration and route definitions
 - **`/tcms-data/`** - JSON-based flat-file storage for collections
@@ -94,6 +119,10 @@ composer run test:all
 
 - **Collection System**: 33 reserved schemas (`SchemaData::RESERVED_SCHEMAS` — blog, image, gallery, builder-page, automations, mcp-*, etc.) plus user-defined custom schemas, all stored as JSON files
 - **Collection Reports**: Reporting API and admin utility for collection data
+- **Data Views**: Saved, filtered, dependency-resolved views across collections, rebuilt on a schedule. Pro+ edition feature with its own access middleware; exposed to MCP via `list_views` / `get_view` / `query_view` / `describe_view`
+- **Search**: Pluggable `SearchProvider` abstraction (built-in `text` by default, Algolia optional), with index jobs and event listeners; `tcms search:reindex` rebuilds
+- **XML-RPC Publishing**: WordPress-compatible endpoint so MarsEdit/Byword/Ulysses can publish into T3. **Off by default** — gated behind `$settings['xmlrpc']`
+- **Data Visualizers**: Admin relationship diagrams — collection ERD and object flowchart, both Mermaid, sharing one `RelationshipAnalyzer`
 - **Site Builder**: Dynamic page router serving `builder-pages` collection objects at configurable URL patterns, with starter scaffolding, template designer, and optional Vite frontend pipeline
 - **Setup Wizard**: First-run web wizard (welcome → environment → data-path → account → license → server-config → complete) for operator onboarding, with auto-login on account creation
 - **Public Registration**: `/admin/register/{collection}` endpoint with opt-in allow-list for self-signup forms; auto-logs the new user in via `SessionLogin`
@@ -108,11 +137,11 @@ composer run test:all
 - **Admin Interface**: Form builder with 20+ field types, JavaScript components
 - **Passkey Authentication**: WebAuthn passkey support for passwordless admin login
 - **Cache System**: Multi-backend caching with APCu-first priority (APCu -> Redis -> Memcached -> Filesystem)
-- **CLI Tool (`tcms`)**: Symfony Console CLI for collections, schemas, objects, JumpStart, sync, updates, builder scaffolding, and extension management
+- **CLI Tool (`tcms`)**: Symfony Console CLI for collections, schemas, objects, JumpStart, sync, updates, builder scaffolding, search reindexing, and extension management
 - **Extension System**: Two-phase lifecycle (register → boot) for third-party extensions with capability-based permissions
 - **Event System**: Synchronous event dispatcher with 20 core events (object/collection/schema/template/user CRUD, import.*, bulk.deleted, extension lifecycle, devmode, cache.cleared)
 - **Automations**: Schedule, webhook, and event-triggered automations with a job queue, run history, and guard rails; handlers are externalized code fields
-- **Built-in MCP Server**: OAuth 2.1, schema/collection tools, resources, prompts, and search providers so AI agents can query the site directly
+- **Built-in MCP Server**: OAuth 2.1, schema/collection/data-view tools, read-only Site Builder template tools, resources, prompts, and search providers so AI agents can query the site directly
 - **Composer Distribution**: Public Packagist distribution via `composer create-project totalcms/totalcms`
 - **Build System**: ESBuild with code splitting
 
@@ -125,7 +154,7 @@ composer run test:all
 - **Extensions**: Third-party extensions in `tcms-data/extensions/{vendor}/{name}/` with auto-detected capability permissions
 - **Enhanced Libraries**: Custom couleur fork with OKLCH improvements ([joeworkman-forks/couleur](https://github.com/joeworkman-forks/couleur))
 - **Memory Management**: Streaming patterns for large datasets (see `JumpStartData::streamJsonToFile()` for examples)
-- **Emergency Cache**: `/api/emergency/cache/clear` endpoint for customer self-service cache clearing (note the `/api` prefix — it is registered inside the `/api` group)
+- **Emergency Cache**: `/api/emergency/cache/clear` and `/api/emergency/cache/clear-license` endpoints for customer self-service cache clearing (note the `/api` prefix — both are registered inside the `/api` group)
 - **Logging**: Zip installs log to `tcms-data/.system/logs` (survives updates); Composer installs log to `projectRoot/logs`. Nine-file LogFile/LogChannel taxonomy.
 - **Releases**: `bin/prepare-release.sh` builds the dist zip, registers the version with the license API, and uploads to S3 (`totalcms-archive/releases/`). Licensed downloads via `license.totalcms.co/version/download/{version|latest}`; public latest-zip via `license.totalcms.co/download/latest`.
 
@@ -267,7 +296,7 @@ These are non-obvious details that are important when working in these areas:
 ### CLI System (`tcms`)
 - **Framework**: Symfony Console via `CliApplication`
 - **Entry Point**: `resources/bin/tcms` (shipped; exposed as `vendor/bin/tcms` via Composer `bin`). In this repo run it as `php resources/bin/tcms` — there is no `bin/tcms` symlink.
-- **Commands**: `collection:list|get|export|import|query`, `object:list|get|create|patch|export|delete`, `schema:list|get|export|import`, `jumpstart:export|import`, `builder:init|frontend|routes|history`, `extension:list|enable|disable|remove`, `update:check|apply|rollback`, `automations:process`, `jobs:process`, `mcp:status`, `mcp:test`, `oauth:setup`, `oauth:gc`, `repair:files`, `repair:index`, `rss:import`, `search:reindex`, `deck:import`, `cache:clear`, `skill:install`, `deploy`, `info`, `pull`, `push`
+- **Commands**: `collection:list|get|export|import|query`, `object:list|get|create|patch|export|delete`, `schema:list|get|export|import|lint`, `jumpstart:export|import`, `builder:init|frontend|routes|history`, `extension:list|enable|disable|remove`, `update:check|apply|rollback`, `automations:process`, `jobs:process`, `mcp:status`, `mcp:test`, `oauth:setup`, `oauth:gc`, `repair:files`, `repair:index`, `rss:import`, `search:reindex`, `deck:import`, `cache:clear`, `skill:install`, `deploy`, `info`, `pull`, `push`
 - **Extension Commands**: Loaded after core commands with collision protection (extensions cannot shadow built-in command names)
 - **Output Formats**: Human-readable tables by default, `--json` flag for machine-readable output
 
@@ -285,6 +314,25 @@ These are non-obvious details that are important when working in these areas:
 - **Execution**: `AutomationRunner` executes handlers with an `AutomationContext` (schedule runs have `request`/`event` null; event runs carry the event payload). `AutomationQueue` + `tcms automations:process` handle queued runs; `AutomationGuard` provides guard rails; run history via `RunRecord`/`AutomationRunReader`
 - **Key files**: `src/Domain/Automation/`, `src/Action/Automation/` (webhook, run-now, re-enable), `src/Middleware/Automation/`
 
+### Search
+- **Providers**: `$settings['search']['activeProvider']` is `'text'` (built-in) or a registered provider id such as `'algolia'`. Providers register through the `SearchProvider` interface, so extensions can add their own.
+- **`indexOnSave` gotcha**: when true, `object.created` / `object.updated` events push straight to the active provider's `index()`. **Disable it during bulk imports** to avoid hammering an external embedding/index API, then re-enable and run `tcms search:reindex`.
+- **Structure**: `src/Domain/Search/` splits Data / Job / Listener / Service
+
+### Data Views
+- **Concept**: A saved, filtered, dependency-resolved query across one or more collections, materialized on a schedule rather than computed per request. Stored via the reserved `dataviews` schema.
+- **Double gate**: `DataViewsEditionMiddleware` (Pro+ edition, `EditionFeature::DATA_VIEWS`) **and** `DataViewsAccessMiddleware` (per-user access groups). Both must pass — an edition check alone is not authorization.
+- **Services**: `src/Domain/DataView/Service/` — `DataViewBuilder` (materialize), `DataViewFetcher`, `DataViewQueryService`, `DataViewFilter`, `DataViewDependencyResolver` (which collections a view depends on), `DataViewUpdateScheduler` (rebuild cadence), `DataViewLister`, `DataViewRemover`
+- **Surfaces**: admin page (`AdminDataViewsAction`), REST actions (`src/Action/DataView/` — query, fetch, rebuild, test), and MCP tools (`list_views`, `get_view`, `query_view`, `describe_view`)
+- **Access groups**: `dataviews` is a grantable resource in `AccessGroupData` — check `AccessControlService` when changing view visibility
+
+### XML-RPC Publishing
+- **Purpose**: WordPress-compatible XML-RPC so desktop editors (MarsEdit, Byword, Ulysses) publish into T3
+- **Off by default**: `$settings['xmlrpc']` is `['enable' => false, 'ratePerIp' => 60]` (`config/defaults.php`); route in `config/routes/public/xmlrpc.php`
+- **Structure**: `src/Domain/XmlRpc/` splits Transport (parser/writer/fault), Handler (blog, post read/write, taxonomy, system, unsupported), and Service (`MethodRouter`, `PostMapper`, `BlogRegistry`, `XmlRpcAuth`)
+- **Auth**: API keys as the credential, not session cookies — see `XmlRpcAuth`
+- **`editPost` must patch, not replace** — clients send partial post structs; a full replace silently drops fields the editor did not send
+
 ### Configuration System
 - **Deep Merge**: Override specific nested settings without replacing entire arrays
 - **Usage**: Return array from tcms.php for deep merging
@@ -295,6 +343,12 @@ These are non-obvious details that are important when working in these areas:
 - **Data Structure**: 8 essential fields (valid, trial, domain, edition, message, validationToken, updatesValid, trialDaysRemaining)
 - **Cache Integration**: Multi-backend with 24-hour TTL
 - **Version Authorization**: License API validates the running T3 version is authorized for the license. Unauthorized versions show a dashboard warning.
+
+### Edition Gating
+- **Pattern**: Paid features are gated per-edition at the route level, not inline in services. `EditionFeature` (`src/Domain/License/Data/EditionFeature.php`) enumerates the gated features; each gets a thin middleware extending `BaseEditionMiddleware` that returns its `EditionFeature`, attached to the relevant route group.
+- **Current features** (10): `custom_schemas`, `image_watermarks`, `external_rest_api`, `qr_codes`, `barcodes`, `data_views`, `rss_import`, `bulk_mailer`, `passkeys`, `access_groups`
+- **Middlewares** live in `src/Middleware/License/` — 14 of them, since some features gate more than one route group (collections, schemas, templates, API keys, OAuth, automations, mailer)
+- **When adding a feature**: decide early whether it is edition-gated. Adding the gate later means retrofitting routes, and the middleware is the only enforcement point — services do not check editions themselves.
 
 ### Documentation (`resources/docs/`)
 - **Source of truth**: `resources/docs/*.md` is mirrored to docs.totalcms.co. Template changes to `resources/templates/admin/docs.twig` only affect the in-admin viewer — the public site has its own template that needs parallel changes.
