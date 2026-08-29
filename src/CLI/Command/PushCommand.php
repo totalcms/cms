@@ -18,7 +18,7 @@ class PushCommand extends BaseCommand
 		parent::configure();
 		$this
 			->setName('push')
-			->setDescription('Push schemas, templates, and allowlisted collection objects to the production server');
+			->setDescription('Push schemas, templates, site features and collection settings to the production server');
 		$this->addSyncFilterOptions('push');
 	}
 

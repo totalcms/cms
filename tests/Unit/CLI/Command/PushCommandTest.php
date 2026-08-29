@@ -170,3 +170,112 @@ it('passes template filter to exporter on dry-run', function (): void {
 
 	$tester->execute(['--templates' => 'blog-post,sidebar', '--dry-run' => true]);
 });
+
+it('maps feature flags onto the collections filter', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	// A fresh totalcms/syncService/exporter mock trio, per the pattern above
+	// (e.g. "passes schema filter to exporter on dry-run") — re-stubbing
+	// jumpStartExporter() on $this->totalcms a second time would just add a
+	// second matcher behind the one from beforeEach, which always wins.
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with(
+			[],
+			[],
+			['builder-pages' => null],
+			[],
+			null,
+		)
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--pages' => null]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('narrows a feature flag to specific object ids', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with(
+			[],
+			[],
+			['builder-pages' => ['home', 'about']],
+			[],
+			null,
+		)
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--pages' => 'home,about']);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('sends --collections to the collection SETTINGS filter', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], ['blog'], null)
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--collections' => 'blog']);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('no longer offers --collection-meta', function (): void {
+	$command = new PushCommand($this->totalcms);
+
+	expect($command->getDefinition()->hasOption('collection-meta'))->toBeFalse();
+});
+
+it('offers every feature flag', function (string $flag): void {
+	$command = new PushCommand($this->totalcms);
+
+	expect($command->getDefinition()->hasOption($flag))->toBeTrue();
+})->with(array_keys(\TotalCMS\Domain\Sync\Data\SyncableCollections::FEATURE_FLAGS));

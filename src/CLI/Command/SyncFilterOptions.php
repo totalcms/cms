@@ -19,22 +19,39 @@ use TotalCMS\Domain\Sync\Data\SyncableCollections;
  */
 trait SyncFilterOptions
 {
+	/**
+	 * Options shared by `push` and `pull`.
+	 *
+	 * The five feature flags replace the old `--collections`, which named a
+	 * gated set of collection ids and leaked storage detail: to the operator
+	 * those five are Pages, Data Views, Mailer templates, MCP prompts and
+	 * Automations — features, not collections. `--collections` is now the
+	 * collection SETTINGS flag (formerly `--collection-meta`), which is what
+	 * the name should always have meant.
+	 */
 	private function addSyncFilterOptions(string $verb): void
 	{
 		$this
 			->addOption('schemas', null, InputOption::VALUE_REQUIRED, "Comma-separated schema IDs to {$verb}")
-			->addOption('templates', null, InputOption::VALUE_REQUIRED, "Comma-separated template IDs to {$verb}")
-			->addOption('collections', null, InputOption::VALUE_REQUIRED, sprintf(
-				'Comma-separated collection IDs whose objects to %s (allowed: %s)',
-				$verb,
-				implode(', ', SyncableCollections::IDS),
-			))
-			->addOption('collection-meta', null, InputOption::VALUE_REQUIRED, "Comma-separated collection IDs whose SETTINGS to {$verb} (any collection; counters never travel)")
+			->addOption('templates', null, InputOption::VALUE_REQUIRED, "Comma-separated template IDs to {$verb}");
+
+		foreach (array_keys(SyncableCollections::FEATURE_FLAGS) as $flag) {
+			// VALUE_OPTIONAL with a `false` default gives three states:
+			// absent => false, `--pages` => null (all), `--pages=a,b` => 'a,b'.
+			$this->addOption($flag, null, InputOption::VALUE_OPTIONAL, sprintf(
+				'%s %s — all of them, or =id,id for specific ones',
+				ucfirst($verb),
+				$flag,
+			), false);
+		}
+
+		$this
+			->addOption('collections', null, InputOption::VALUE_REQUIRED, "Comma-separated collection IDs whose SETTINGS to {$verb} (any collection; counters never travel)")
 			->addOption('dry-run', null, InputOption::VALUE_NONE, "Preview what would be {$verb}ed without applying");
 	}
 
 	/**
-	 * Resolve the three category filters from CLI options.
+	 * Resolve the category filters from CLI options.
 	 *
 	 * A bare command (no filter options at all) means "full mirror": every
 	 * category resolves to null / all. But the moment ANY filter option is
@@ -45,35 +62,33 @@ trait SyncFilterOptions
 	 * "all", turned a one-schema deploy into an unintended content overwrite
 	 * on the target.
 	 *
-	 * @return array{list<string>|null, list<string>|null, array<string,null>|null, list<string>|null}
+	 * @return array{list<string>|null, list<string>|null, array<string,list<string>|null>|null, list<string>|null}
 	 */
 	private function resolveSyncFilters(InputInterface $input): array
 	{
-		$schemas     = $this->parseListOption($input->getOption('schemas'));
-		$templates   = $this->parseListOption($input->getOption('templates'));
-		$collections = $this->parseListOption($input->getOption('collections'));
-		$meta        = $this->parseListOption($input->getOption('collection-meta'));
+		$schemas   = $this->parseListOption($input->getOption('schemas'));
+		$templates = $this->parseListOption($input->getOption('templates'));
+		$settings  = $this->parseListOption($input->getOption('collections'));
 
-		if ($collections !== null) {
-			$unknown = array_diff($collections, SyncableCollections::IDS);
-			if ($unknown !== []) {
-				throw new \InvalidArgumentException(sprintf(
-					'Unknown sync collection(s): %s. Objects can only sync from: %s.',
-					implode(', ', $unknown),
-					implode(', ', SyncableCollections::IDS),
-				));
+		/** @var array<string,list<string>|null> $features */
+		$features   = [];
+		$anyFeature = false;
+		foreach (SyncableCollections::FEATURE_FLAGS as $flag => $collectionId) {
+			$value = $input->getOption($flag);
+			if ($value === false) {
+				continue; // flag not given
 			}
+			$anyFeature               = true;
+			$features[$collectionId] = $this->parseListOption($value);
 		}
 
-		$anyFilter = $schemas !== null || $templates !== null || $collections !== null || $meta !== null;
+		$anyFilter = $schemas !== null || $templates !== null || $settings !== null || $anyFeature;
 
 		return [
 			$schemas ?? ($anyFilter ? [] : null),
 			$templates ?? ($anyFilter ? [] : null),
-			$collections !== null
-				? array_fill_keys($collections, null)
-				: ($anyFilter ? [] : null),
-			$meta ?? ($anyFilter ? [] : null),
+			$anyFeature ? $features : ($anyFilter ? [] : null),
+			$settings ?? ($anyFilter ? [] : null),
 		];
 	}
 
