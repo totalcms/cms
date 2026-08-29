@@ -4366,7 +4366,7 @@
         },
         {
             "name": "push",
-            "description": "Push schemas and templates to the production server.",
+            "description": "Push schemas, templates, site-machinery objects, collection settings, and (optionally) seed object data to the production server.",
             "arguments": [],
             "options": [
                 {
@@ -4378,12 +4378,40 @@
                     "description": "Comma-separated template IDs to push"
                 },
                 {
-                    "name": "--collections",
-                    "description": "Comma-separated allowlisted collection IDs whose objects to push"
+                    "name": "--pages[=id,id]",
+                    "description": "Site Builder pages \u2014 all of them, or just the ones listed"
                 },
                 {
-                    "name": "--collection-meta",
-                    "description": "Comma-separated collection IDs whose settings to push (any collection; counters never travel)"
+                    "name": "--dataviews[=id,id]",
+                    "description": "Data Views \u2014 all of them, or just the ones listed"
+                },
+                {
+                    "name": "--mailer[=id,id]",
+                    "description": "Mailer templates \u2014 all of them, or just the ones listed"
+                },
+                {
+                    "name": "--mcp-prompts[=id,id]",
+                    "description": "MCP prompts \u2014 all of them, or just the ones listed"
+                },
+                {
+                    "name": "--automations[=id,id]",
+                    "description": "Automations \u2014 all of them, or just the ones listed"
+                },
+                {
+                    "name": "--collections",
+                    "description": "Comma-separated collection IDs whose SETTINGS to push (any collection; counters never travel)"
+                },
+                {
+                    "name": "--objects",
+                    "description": "Seed object data: `collection` or `collection:id,id`, repeatable. Existing objects on the target are skipped unless `--overwrite` is given. Push-only"
+                },
+                {
+                    "name": "--overwrite",
+                    "description": "Let `--objects` overwrite objects that already exist on the target"
+                },
+                {
+                    "name": "--force",
+                    "description": "Allow `--overwrite` without a prior `--dry-run` when not attached to a terminal"
                 },
                 {
                     "name": "--dry-run",
@@ -4391,14 +4419,14 @@
                 }
             ],
             "examples": [
-                "tcms push\ntcms push --dry-run\ntcms push --schemas=blog,products\ntcms push --templates=blog-post,sidebar\ntcms push --collections=builder-pages\ntcms push --schemas=blog --templates=blog-post --dry-run"
+                "tcms push\ntcms push --dry-run\ntcms push --schemas=blog,products\ntcms push --templates=blog-post,sidebar\ntcms push --pages\ntcms push --pages=home,about\ntcms push --collections=comparisons,builder-pages\ntcms push --objects=blog\ntcms push --objects=blog:launch-day --overwrite --dry-run\ntcms push --schemas=blog --templates=blog-post --dry-run"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"
         },
         {
             "name": "pull",
-            "description": "Pull schemas, templates, and allowlisted collection objects from the production server.",
+            "description": "Pull schemas, templates, site-machinery objects, and collection settings from the production server. `--objects`/`--overwrite` have no pull equivalent \u2014 seeding is push-only.",
             "arguments": [],
             "options": [
                 {
@@ -4410,12 +4438,28 @@
                     "description": "Comma-separated template IDs to pull"
                 },
                 {
-                    "name": "--collections",
-                    "description": "Comma-separated allowlisted collection IDs whose objects to pull"
+                    "name": "--pages[=id,id]",
+                    "description": "Site Builder pages \u2014 all of them, or just the ones listed"
                 },
                 {
-                    "name": "--collection-meta",
-                    "description": "Comma-separated collection IDs whose settings to pull (any collection; counters never travel)"
+                    "name": "--dataviews[=id,id]",
+                    "description": "Data Views \u2014 all of them, or just the ones listed"
+                },
+                {
+                    "name": "--mailer[=id,id]",
+                    "description": "Mailer templates \u2014 all of them, or just the ones listed"
+                },
+                {
+                    "name": "--mcp-prompts[=id,id]",
+                    "description": "MCP prompts \u2014 all of them, or just the ones listed"
+                },
+                {
+                    "name": "--automations[=id,id]",
+                    "description": "Automations \u2014 all of them, or just the ones listed"
+                },
+                {
+                    "name": "--collections",
+                    "description": "Comma-separated collection IDs whose SETTINGS to pull (any collection; counters never travel)"
                 },
                 {
                     "name": "--dry-run",
@@ -4423,7 +4467,7 @@
                 }
             ],
             "examples": [
-                "tcms pull\ntcms pull --dry-run\ntcms pull --schemas=blog\ntcms pull --templates=blog-post,sidebar\ntcms pull --collections=builder-pages"
+                "tcms pull\ntcms pull --dry-run\ntcms pull --schemas=blog\ntcms pull --templates=blog-post,sidebar\ntcms pull --pages=home,about\ntcms pull --collections=comparisons"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"

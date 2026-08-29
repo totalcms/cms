@@ -18,7 +18,7 @@ class PullCommand extends BaseCommand
 		parent::configure();
 		$this
 			->setName('pull')
-			->setDescription('Pull schemas, templates, and allowlisted collection objects from the production server');
+			->setDescription('Pull schemas, templates, site features and collection settings from the production server');
 		$this->addSyncFilterOptions('pull');
 	}
 

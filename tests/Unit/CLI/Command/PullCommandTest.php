@@ -57,6 +57,18 @@ it('errors when sync URL is empty', function (): void {
 	expect($tester->getStatusCode())->toBe(1);
 });
 
+it('no longer offers --collection-meta', function (): void {
+	$command = new PullCommand($this->totalcms);
+
+	expect($command->getDefinition()->hasOption('collection-meta'))->toBeFalse();
+});
+
+it('offers every feature flag', function (string $flag): void {
+	$command = new PullCommand($this->totalcms);
+
+	expect($command->getDefinition()->hasOption($flag))->toBeTrue();
+})->with(array_keys(\TotalCMS\Domain\Sync\Data\SyncableCollections::FEATURE_FLAGS));
+
 it('errors when sync key is empty', function (): void {
 	file_put_contents($this->tmpDir . '/.system/settings.json', (string)json_encode([
 		'sync' => ['url' => 'https://example.com', 'key' => ''],

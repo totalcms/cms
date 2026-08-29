@@ -32,16 +32,25 @@ collection settings with the configured production server.
 vendor/bin/tcms pull --dry-run          # ALWAYS dry-run first — shows per-item
                                         # status (new / differs / likely newer)
 vendor/bin/tcms push --schemas=blog     # exclusive: ONLY these schemas move
-vendor/bin/tcms push --collection-meta=blog   # collection SETTINGS (not objects)
-vendor/bin/tcms pull --collections=blog       # collection OBJECTS
+vendor/bin/tcms push --pages            # Site Builder pages
+vendor/bin/tcms push --pages=home,about # just those two
+vendor/bin/tcms push --collections=blog # collection SETTINGS (not objects)
+vendor/bin/tcms push --objects=blog     # seed blog OBJECTS to production
 ```
 
 Semantics that matter:
 
 - **Naming any filter excludes every other category.** A bare `push`/`pull` is
   a full mirror; `--schemas=x` moves only that.
-- `--collections` means **objects**; `--collection-meta` means **settings**
-  (URL, MCP card, sitemap…). Different flags, different data.
+- `--collections` means collection **settings** (URL, MCP card, sitemap…).
+  `--objects` means object **data**. Different flags, different data.
+- **`--objects` seeds — it never overwrites.** Objects that already exist on
+  the target are skipped. Add `--overwrite` to make the local copy win, which
+  is the only irreversible thing `push` can do.
+- **Binaries never travel.** Image, file, gallery and depot fields are omitted
+  from the payload and the receiving side keeps whatever it already had, so a
+  pushed post will not blank a production image. The `image`, `gallery`,
+  `file` and `depot` collections cannot be seeded at all.
 - **Counters never sync.** `count`, `totalObjects`, and `lastUpdated` are
   environment-local; the receiving side always keeps its own.
 - **The receiving side backs up before overwriting** — snapshots land in

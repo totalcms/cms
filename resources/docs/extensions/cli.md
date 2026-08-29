@@ -533,18 +533,24 @@ tcms jumpstart:import my-site.json --json
 
 ## Sync Commands
 
-Push and pull schemas and templates between a local development instance and a production server. Configure the production server URL and API key in **Settings > Sync** in the admin dashboard.
+Push and pull schemas, templates, site-machinery objects, and collection settings between a local development instance and a production server. Configure the production server URL and API key in **Settings > Sync** in the admin dashboard. Full details, including the object-seeding workflow: [Sync guide](operations/sync).
+
+> **3.5.1 note:** `--collections` now means collection *settings* (it used to mean objects from five allowlisted collections). The flag formerly named `collection-meta` is gone — `--collections` does its job now. Objects for those five collections move via their own feature flags instead (`--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, `--automations`), and any other collection's object data can be seeded with `--objects`. Full breaking-changes writeup: [Sync guide](operations/sync).
 
 ### `push`
 
-Push schemas and templates to the production server.
+Push schemas, templates, site-machinery objects, collection settings, and (optionally) seed object data to the production server.
 
 ```bash
 tcms push
 tcms push --dry-run
 tcms push --schemas=blog,products
 tcms push --templates=blog-post,sidebar
-tcms push --collections=builder-pages
+tcms push --pages
+tcms push --pages=home,about
+tcms push --collections=comparisons,builder-pages
+tcms push --objects=blog
+tcms push --objects=blog:launch-day --overwrite --dry-run
 tcms push --schemas=blog --templates=blog-post --dry-run
 ```
 
@@ -552,35 +558,47 @@ tcms push --schemas=blog --templates=blog-post --dry-run
 |--------|-------------|
 | `--schemas` | Comma-separated schema IDs to push |
 | `--templates` | Comma-separated template IDs to push |
-| `--collections` | Comma-separated allowlisted collection IDs whose objects to push |
-| `--collection-meta` | Comma-separated collection IDs whose settings to push (any collection; counters never travel) |
+| `--pages[=id,id]` | Site Builder pages — all of them, or just the ones listed |
+| `--dataviews[=id,id]` | Data Views — all of them, or just the ones listed |
+| `--mailer[=id,id]` | Mailer templates — all of them, or just the ones listed |
+| `--mcp-prompts[=id,id]` | MCP prompts — all of them, or just the ones listed |
+| `--automations[=id,id]` | Automations — all of them, or just the ones listed |
+| `--collections` | Comma-separated collection IDs whose SETTINGS to push (any collection; counters never travel) |
+| `--objects` | Seed object data: `collection` or `collection:id,id`, repeatable. Existing objects on the target are skipped unless `--overwrite` is given. Push-only |
+| `--overwrite` | Let `--objects` overwrite objects that already exist on the target |
+| `--force` | Allow `--overwrite` without a prior `--dry-run` when not attached to a terminal |
 | `--dry-run` | Compare both sides: per-item unchanged/differs/new status with newer-side hints |
 
 ### `pull`
 
-Pull schemas, templates, and allowlisted collection objects from the production server.
+Pull schemas, templates, site-machinery objects, and collection settings from the production server. `--objects`/`--overwrite` have no pull equivalent — seeding is push-only.
 
 ```bash
 tcms pull
 tcms pull --dry-run
 tcms pull --schemas=blog
 tcms pull --templates=blog-post,sidebar
-tcms pull --collections=builder-pages
+tcms pull --pages=home,about
+tcms pull --collections=comparisons
 ```
 
 | Option | Description |
 |--------|-------------|
 | `--schemas` | Comma-separated schema IDs to pull |
 | `--templates` | Comma-separated template IDs to pull |
-| `--collections` | Comma-separated allowlisted collection IDs whose objects to pull |
-| `--collection-meta` | Comma-separated collection IDs whose settings to pull (any collection; counters never travel) |
+| `--pages[=id,id]` | Site Builder pages — all of them, or just the ones listed |
+| `--dataviews[=id,id]` | Data Views — all of them, or just the ones listed |
+| `--mailer[=id,id]` | Mailer templates — all of them, or just the ones listed |
+| `--mcp-prompts[=id,id]` | MCP prompts — all of them, or just the ones listed |
+| `--automations[=id,id]` | Automations — all of them, or just the ones listed |
+| `--collections` | Comma-separated collection IDs whose SETTINGS to pull (any collection; counters never travel) |
 | `--dry-run` | Compare both sides: per-item unchanged/differs/new status with newer-side hints |
 
-**What gets synced:** Custom schemas, custom templates, collection settings (any collection — never its counters), and objects from five reserved collections — `builder-pages`, `mailer`, `mcp-prompt`, `dataviews`, `automations`. The collection list is hardcoded and cannot be extended.
+**What gets synced:** Custom schemas, custom templates, collection settings for any collection (never its counters), objects for the five feature-flagged collections — `builder-pages` (`--pages`), `mailer`, `mcp-prompt` (`--mcp-prompts`), `dataviews`, `automations` — and, push-only, seeded object data for any other seedable collection via `--objects`.
 
-**What never gets synced:** Objects in your own custom collections, media/images, system settings, API keys, reserved schemas. A custom collection's *schema* syncs; the objects inside it do not.
+**What never gets synced:** Objects in custom collections you haven't named with `--objects`; the `image`, `gallery`, `file`, `depot`, and `playground` collections, which can never be seeded; image/file/gallery/depot **fields** on any object, which are always stripped from every payload; media/images; system settings; API keys; reserved schemas. A custom collection's *schema* syncs; its objects only travel if you explicitly seed them.
 
-**Filter semantics:** a bare `tcms push` or `tcms pull` is a full mirror — every category travels. The moment any of `--schemas`, `--templates`, or `--collections` is given, the categories you did not mention are excluded entirely, so `tcms push --schemas=blog` moves the blog schema and nothing else.
+**Filter semantics:** a bare `tcms push` or `tcms pull` is a full mirror of schemas, templates, the five feature-flagged collections, and collection settings — it never seeds `--objects`, which only runs when named explicitly. The moment any filter flag is given, the categories you did not mention are excluded entirely, so `tcms push --schemas=blog` moves the blog schema and nothing else.
 
 **Backups:** before an overwrite lands, the receiving instance snapshots the current version to `tcms-data/.system/backups/{schemas,objects}/...` (ten most recent per item). See the [Sync guide](operations/sync) for details.
 
