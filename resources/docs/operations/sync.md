@@ -8,24 +8,50 @@ since: "3.5.0"
 
 Sync lets you push schemas and templates from a local development instance to a production server, or pull them from production to your local environment. This enables a proper development workflow where you build and test locally, then deploy structural changes to production without touching content or media.
 
+## Breaking changes in 3.5.1
+
+3.5.1 renames the sync flags and changes what one of them means:
+
+- **`--collections` now means collection SETTINGS**, not objects. Before 3.5.1 it moved objects from five allowlisted collections; that meaning is gone.
+- **The flag formerly named `collection-meta` is removed.** Its job — pushing/pulling collection settings — is now `--collections`.
+- Objects for the five site-machinery collections move via their own feature flags instead: `--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, `--automations`.
+- **New:** `push --objects=collection[:id,id]` seeds object data from any seedable collection to production. Unlike everything else in Sync, it never overwrites — existing objects on the target are skipped unless you add `--overwrite`. It is push-only; `pull` has no equivalent.
+
+If you have scripts or CI steps calling `tcms push --collections=...` expecting objects, or the old collection-settings flag, update them before upgrading.
+
 ## What Gets Synced
 
 - Custom schemas (`.schemas/` directory)
 - Custom templates
-- **Collection settings** — every collection's configuration (`.meta.json`): URL, MCP card, sitemap settings, access groups, schema overrides, form settings. A collection that exists on the source but not the target is created there (settings only — its objects don't travel). The environment-local counters (`count`, `totalObjects`) and the content timestamp (`lastUpdated`) **never** move: the receiving side always keeps its own, no matter what a payload carries.
-- Objects from five reserved collections: `builder-pages`, `mailer`, `mcp-prompt`, `dataviews`, `automations`
+- **Collection settings** — every collection's configuration (`.meta.json`): URL, MCP card, sitemap settings, access groups, schema overrides, form settings. Moved with `--collections` (any collection, not just the five below). A collection that exists on the source but not the target is created there (settings only — its objects don't travel). The environment-local counters (`count`, `totalObjects`) and the content timestamp (`lastUpdated`) **never** move: the receiving side always keeps its own, no matter what a payload carries.
+- **Site-machinery objects**, one feature flag per collection — `--pages` (`builder-pages`), `--dataviews` (`dataviews`), `--mailer` (`mailer`), `--mcp-prompts` (`mcp-prompt`), `--automations` (`automations`). Each upserts: given with no value it moves every object in that collection (`--pages`), given a value it moves just those ids (`--pages=home,about`).
+- **Seeded objects (push only)** — `--objects=collection[:id,id]` exports object data from any seedable collection and lands it on the target, but only where the target doesn't already have that id. See [Seeding objects with `--objects`](#seeding-objects-with-objects) below.
 
-> **Git-managed templates are excluded.** If you keep a `builder/` folder at your project root, templates travel by git, not Sync — so Sync skips them and carries schemas and allowlisted collection objects only. See [Git-First Templates](operations/git-first-templates).
+> **Git-managed templates are excluded.** If you keep a `builder/` folder at your project root, templates travel by git, not Sync — so Sync skips them and carries schemas and the flagged/settings/seeded data only. See [Git-First Templates](operations/git-first-templates).
 
-### The collection allowlist
+### The five feature flags
 
-Sync moves objects for exactly those five collections and no others. The list is hardcoded, not a config option, and that is deliberate: the moment it becomes configurable, operators add collections holding images, files, galleries or depots and reasonably assume the binaries travel with them. Sync does not move binaries, and appearing to would be worse than refusing.
+`--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, and `--automations` each move one reserved collection's objects, always in upsert mode (same as schemas and templates — the target's copy is replaced). They're named for the admin feature, not the storage collection, so you don't have to know that Pages live in a collection called `builder-pages`.
 
-The practical consequence is that **your own custom collections' objects never sync.** A `products` or `comparisons` collection you defined holds content — it belongs to whichever server owns it. Sync carries the *schema* that defines it and the collection's *settings*, never the objects inside it.
+These five are the only collections sync can move *destructively* (overwriting an existing object on the target). Every other collection's objects only ever arrive via `--objects`, which is non-destructive by default — see below.
+
+### Seeding objects with `--objects`
+
+`push --objects=collection` (or `collection:id,id` for specific objects, repeatable) exports object data from any **seedable** collection and imports it on the target through the skip-existing endpoint: an object the target already has by that id is left untouched. This is seeding, not mirroring — it's for landing starter/demo content on a fresh production site, not for keeping two live sites in sync.
+
+- Add `--overwrite` to let the local copy win over an existing object on the target instead of being skipped. Combined with `--objects`, this is the only irreversible thing `push` can do, which is why the command refuses `--overwrite` without a prior `--dry-run` unless you also pass `--force` (needed for non-interactive/CI runs).
+- `--objects` and `--overwrite` are **push-only** — `pull` has no seeding mode.
+- Not every collection is seedable:
+  - The five feature-flag collections (`builder-pages`, `dataviews`, `mailer`, `mcp-prompt`, `automations`) are reachable only through their own flag, not `--objects`.
+  - `image`, `gallery`, `file`, and `depot` can never be seeded — see [Binaries never travel](#what-never-gets-synced) below.
+  - `playground` can never be seeded — it's a per-install scratchpad created on demand, not portable content.
+- Binaries never travel even for seedable collections: a card or field that references an image/file/gallery/depot is exported without that field, so the receiving object simply won't have it populated. A pushed blog post never blanks a production image field, because the field never arrives at all.
 
 ## What Never Gets Synced
 
-- Objects in custom collections, or in any reserved collection outside the five above
+- Objects in custom collections you haven't explicitly moved with `--objects`
+- `image`, `gallery`, `file`, and `depot` collections — cannot be seeded at all (see above); and image/file/gallery/depot **fields** on any object are always stripped from every payload, seeded or not
+- `playground` — never syncs, never seeds
 - Media files and images
 - System settings
 - API keys
@@ -50,7 +76,7 @@ they do. From then on:
   over live data — delete them once the site is live so they can't be reached
   for by accident.
 - **Schemas and collection settings** remain yours to develop locally — that is
-  what `push --schemas` / `--collection-meta` are for. A dry run showing the
+  what `push --schemas` / `push --collections` are for. A dry run showing the
   remote side "likely newer" means someone changed it in production: pull it
   before you push over it.
 - **Templates** follow whichever mode you chose: git-managed (a project-root
@@ -101,7 +127,7 @@ The CLI provides `push` and `pull` commands that read the same sync settings fro
 ### Push
 
 ```bash
-# Full mirror: all schemas, templates, and allowlisted collection objects
+# Full mirror: all schemas, templates, feature-flagged objects, and settings
 tcms push
 
 # Push specific schemas only — nothing else travels
@@ -110,23 +136,35 @@ tcms push --schemas=blog,products
 # Push specific templates only
 tcms push --templates=blog-post,sidebar
 
-# Push the objects of specific allowlisted collections only
-tcms push --collections=builder-pages,automations
+# Push all Site Builder pages
+tcms push --pages
+
+# Push just two pages
+tcms push --pages=home,about
 
 # Push the SETTINGS of specific collections only (any collection)
-tcms push --collection-meta=comparisons,builder-pages
+tcms push --collections=comparisons,builder-pages
+
+# Seed blog objects to a fresh production site — existing posts are skipped
+tcms push --objects=blog
+
+# Seed two specific objects, and let this run overwrite any that already exist
+tcms push --objects=blog:launch-day,q3-roadmap --overwrite --dry-run
+tcms push --objects=blog:launch-day,q3-roadmap --overwrite
 
 # Combine filters
 tcms push --schemas=blog --templates=blog-post
 
-# Preview the full payload (objects included) without sending
+# Preview the full payload without sending
 tcms push --dry-run
 
 # JSON output for scripting
 tcms push --json
 ```
 
-Filters are exclusive: as soon as any of `--schemas`, `--templates`, `--collections`, or `--collection-meta` is given, the categories you did not mention are left out entirely.
+Filters are exclusive: as soon as any of `--schemas`, `--templates`, `--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, `--automations`, `--collections`, or `--objects` is given, the categories you did not mention are left out entirely.
+
+`--objects` and `--overwrite` are push-only — seeding content onto production has no pull equivalent.
 
 ### Pull
 
@@ -137,8 +175,8 @@ tcms pull
 # Pull specific items — nothing else travels
 tcms pull --schemas=products
 tcms pull --templates=blog-post,sidebar
-tcms pull --collections=builder-pages
-tcms pull --collection-meta=comparisons
+tcms pull --pages=home,about
+tcms pull --collections=comparisons
 
 # Preview without applying
 tcms pull --dry-run
@@ -163,11 +201,13 @@ Schemas:
   + invoice       new on remote
   = 6 unchanged: blog, events, faq, review, team, testimonial
 
-Objects — builder-pages:
+Pages:
   ~ home          differs — remote newer (…) ← would overwrite the newer copy
   = 10 unchanged: about, blog, contact, …
   · 2 only on remote — untouched (push never deletes)
 ```
+
+`--dry-run` also previews a `--objects` seed, under its own "Seeded objects" section listing what's new on the target — a seed never overwrites, so it has no `~`/`=`/`·` rows of its own.
 
 How to read it:
 
@@ -184,7 +224,7 @@ If the remote can't be reached, the preview degrades to a plain listing of the p
 
 Sync is built on top of Total CMS's JumpStart system. When you push:
 
-1. The local instance exports the selected schemas, templates and allowlisted collection objects as a JumpStart payload
+1. The local instance exports the selected schemas, templates, feature-flagged objects and collection settings as a JumpStart payload
 2. The payload is sent to the production server's `/api/sync/import` endpoint
 3. The production server imports it, replacing any existing versions
 
@@ -192,11 +232,15 @@ When you pull, the process is reversed — the production server exports, and th
 
 Step 2 uses `/api/sync/import` rather than the general `/api/import/jumpstart` route, and the difference matters. The general import route is built for starter kits, so it *skips* anything that already exists. The sync route runs the importer in **upsert** mode instead, so a push lands as a true mirror of the source rather than silently ignoring every record the target already has.
 
+`push --objects` is the one exception: it routes through the skip-existing import path instead (the same one starter kits use), which is what makes it a seed rather than a mirror. `--overwrite` switches it to the same upsert path everything else uses.
+
 ## Overwrite Behavior
 
-Sync always overwrites on the target. If a schema, template or object with the same ID already exists there, it is replaced with the synced version. This is intentional — sync deploys known changes, it does not merge them.
+Everything except a plain `--objects` seed overwrites on the target: if a schema, template, page/dataview/mailer/mcp-prompt/automation object, or collection's settings already exists there under the same ID, it is replaced with the synced version. This is intentional — sync deploys known changes, it does not merge them.
 
-> **A bare `tcms push` is a full mirror — it includes objects.** With no filter flags, a push carries every custom schema, every template, and every object in all five allowlisted collections. If pages are edited on the production server, push from local with that in mind. To move one thing, name it: the moment any filter flag is given, the categories you did not mention are excluded — `tcms push --schemas=blog` pushes the blog schema and nothing else. `--dry-run` shows the complete payload, objects included.
+`--objects` is the exception, and deliberately so: existing objects on the target are left alone unless you add `--overwrite`, because seeding a fresh site with starter content should never clobber something an editor already changed in production.
+
+> **A bare `tcms push` is a full mirror.** With no filter flags, a push carries every custom schema, every template, every object in the five feature-flagged collections, and every collection's settings — but never seeds `--objects`, which only ever runs when named explicitly. If pages are edited on the production server, push from local with that in mind. To move one thing, name it: the moment any filter flag is given, the categories you did not mention are excluded — `tcms push --schemas=blog` pushes the blog schema and nothing else. `--dry-run` shows the complete payload.
 
 ## Automatic Backups
 
@@ -214,7 +258,7 @@ Backups only cover what sync overwrites. They are not a substitute for real back
 
 ## Timestamps
 
-Schemas carry a top-level `updated` value stamped on every save, and each of the five syncable collections has an auto-maintained `updated` field. These exist so dry-run can tell you which side of a difference holds the newer edit.
+Schemas carry a top-level `updated` value stamped on every save, and each of the five feature-flagged collections (`builder-pages`, `dataviews`, `mailer`, `mcp-prompt`, `automations`) has an auto-maintained `updated` field. These exist so dry-run can tell you which side of a difference holds the newer edit.
 
 Collections carry **two** timestamps with deliberately different meanings:
 
