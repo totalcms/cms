@@ -32,3 +32,19 @@ it('names the flag that owns a collection', function (): void {
 	expect(SyncableCollections::flagFor('mcp-prompt'))->toBe('mcp-prompts');
 	expect(SyncableCollections::flagFor('blog'))->toBeNull();
 });
+
+it('offers seedable collections to the Sync Manager', function (string $id): void {
+	expect(SyncableCollections::seedableInUi($id))->toBeTrue();
+})->with(['blog', 'text', 'my-products']);
+
+it('withholds auth from the Sync Manager even though the CLI allows it', function (): void {
+	// Password hashes never travel, so a seeded user arrives as an account
+	// nobody can sign into. Deliberate as `--objects=auth`; a trap as a
+	// checkbox sitting next to Blog.
+	expect(SyncableCollections::seedable('auth'))->toBeTrue();
+	expect(SyncableCollections::seedableInUi('auth'))->toBeFalse();
+});
+
+it('withholds everything the seed carve-outs already refuse', function (string $id): void {
+	expect(SyncableCollections::seedableInUi($id))->toBeFalse();
+})->with(['playground', 'image', 'gallery', 'file', 'depot', 'builder-pages', 'automations']);

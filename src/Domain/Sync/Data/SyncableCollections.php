@@ -101,6 +101,29 @@ final class SyncableCollections
 			&& !in_array($id, self::FEATURE_FLAGS, true);
 	}
 
+	/**
+	 * Seedable, but deliberately never offered in the Sync Manager.
+	 *
+	 * `auth` is the whole list. Password hashes are stripped from every sync
+	 * payload, so a seeded user arrives as an account nobody can sign into.
+	 * That is a defensible expert action behind `tcms push --objects=auth`,
+	 * where the operator typed the collection's name. It is a trap as a
+	 * checkbox sitting between Blog and FAQ, where one careless tick creates
+	 * broken accounts on a live site.
+	 *
+	 * This is the one place the UI narrows what the CLI allows, so it lives
+	 * beside the other carve-outs rather than in the admin action.
+	 *
+	 * @var list<string>
+	 */
+	public const UI_SEED_EXCLUDED = ['auth'];
+
+	/** Whether the Sync Manager may offer this collection for seeding. */
+	public static function seedableInUi(string $id): bool
+	{
+		return self::seedable($id) && !in_array($id, self::UI_SEED_EXCLUDED, true);
+	}
+
 	/** The feature flag that owns this collection, if any. */
 	public static function flagFor(string $collectionId): ?string
 	{

@@ -4,6 +4,7 @@
 {% set schemas = syncData.schemas %}
 {% set templates = syncData.templates %}
 {% set collections = syncData.collections %}
+{% set seedCollections = syncData.seedCollections|default([]) %}
 {% set isConfigured = settings.url is not empty and settings.key is not empty %}
 
 <section class="sync-utility">
@@ -181,6 +182,46 @@
 		</div>
 		{% endfor %}
 
+		{# Seed Objects — the one section that adds rather than mirrors.
+		   Push-only, and all-or-nothing per collection: a picker over a
+		   collection with thousands of rows is unusable, and `tcms push
+		   --objects=blog:id,id` already covers the surgical case. #}
+		<div class="sync-section sync-section-seed">
+			<h3>{{ t('sync.seed_title') }} <span class="sync-push-only">{{ t('sync.seed_push_only') }}</span></h3>
+			<p class="sync-seed-desc">{{ t('sync.seed_desc') }}</p>
+
+			{% if seedCollections|length == 0 %}
+				<p class="sync-empty">{{ t('sync.seed_none') }}</p>
+			{% else %}
+				{% set seedOptions = [] %}
+				{% for collection in seedCollections %}
+					{# Count in the label rather than a separate pluralised
+					   string: it keeps the row honest about size without
+					   needing plural rules in seven languages. #}
+					{% set seedOptions = seedOptions|merge([{
+						value: collection.id,
+						label: collection.name ~ ' (' ~ collection.count ~ ')'
+					}]) %}
+				{% endfor %}
+
+				{# No toggleAll. Every other checklist in the admin lists schemas
+				   or templates — small, cheap things where "all of them" is a
+				   normal intent. This one lists content collections holding
+				   thousands of objects each, and a seed carries every object
+				   every time regardless of what the target already has. A
+				   one-click select-all would make the most expensive and
+				   rarest operation here the easiest to trigger, and the
+				   confirm dialog does not save you: someone who just clicked
+				   select-all confirms through it. Its absence is also a
+				   signal that this list is not like the others. #}
+				{{ cms.form.field("checklist", "seed_objects", {
+					value    : [],
+					options  : seedOptions,
+					settings : { fieldGrid: "320px", toggleAll: false }
+				}) }}
+			{% endif %}
+		</div>
+
 	{% endset %}
 
 	{{ cms.form.totalform("", formFields, {
@@ -255,6 +296,23 @@
 	margin-block: 0.5rem;
 }
 
+.sync-section-seed .sync-seed-desc {
+	margin: 0 0 0.75rem;
+	font-size: 0.85rem;
+	color: oklch(var(--totalform-darkgray));
+}
+.sync-push-only {
+	margin-left: 0.5rem;
+	padding: 0.1rem 0.4rem;
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+	font-size: 0.7rem;
+	font-weight: normal;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: oklch(var(--totalform-darkgray));
+	vertical-align: middle;
+}
 .sync-section h3 {
 	margin-block-start: 0;
 	margin-block-end: 1rem;
@@ -397,6 +455,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	const syncableCollections = {{ collections|map(c => c.id)|json_encode|raw }};
 	// Display names for the Collection Settings section (id -> admin name).
+	// Seed Objects: id -> {name, count}. Seeding is all-or-nothing, so the
+	// count IS what would be sent — no diff to consult, and nothing the
+	// remote could tell us anyway (its /api/sync/export only reports the
+	// five allowlisted collections).
+	const seedCollections = {{ syncData.seedCollections|default([])|reduce((m, c) => m|merge({(c.id): {name: c.name, count: c.count}}), {})|json_encode|raw }};
+
 	const metaNames = {{ syncData.collectionMeta|default([])|reduce((m, c) => m|merge({(c.id): c.name}), {})|json_encode|raw }};
 
 	// Populated by loadDiff(); null means "no comparison available" and every
@@ -561,6 +625,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		return ids.length === 0 ? { mode: 'none', ids: [] } : { mode: 'specific', ids };
 	}
 
+	/** Checked Seed Objects collection ids. Push-only; empty on a pull. */
+	function readSeedSelection() {
+		return Array.from(form.querySelectorAll('input[name="seed_objects"]:checked')).map(cb => cb.value);
+	}
+
 	async function doSync(action) {
 		const body = csrfBody();
 
@@ -580,6 +649,13 @@ document.addEventListener('DOMContentLoaded', function() {
 			body.append(`collections[${cid}][mode]`, sel.mode);
 			if (sel.mode === 'specific') sel.ids.forEach(s => body.append(`collections[${cid}][items][]`, s));
 		});
+
+		// Seeding is push-only. The section stays visible on a pull (the
+		// direction is chosen after selection, by which button you press),
+		// so drop the field rather than letting the server ignore it.
+		if (action === 'push') {
+			readSeedSelection().forEach(cid => body.append('seed_objects[]', cid));
+		}
 
 		const activeBtn = action === 'push' ? pushBtn : pullBtn;
 		activeBtn.classList.add('processing');
@@ -708,7 +784,21 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (untouched) {
 			html += `<p class="sync-muted">${untouched} exist only on ${action === 'push' ? 'production' : 'this site'} — untouched (sync never deletes).</p>`;
 		}
-		if (!overwrite.length && !create.length && !unchanged) {
+		// Seeded objects get their own block: "240 will be sent, existing ones
+		// skipped" is a different claim from the diff's "3 differ, 1 is new",
+		// and blending them would imply a comparison that never happened.
+		const seeded = action === 'push' ? readSeedSelection() : [];
+		if (seeded.length) {
+			const total = seeded.reduce((n, cid) => n + (seedCollections[cid] ? seedCollections[cid].count : 0), 0);
+			html += `<p><strong>${total}</strong> object${total === 1 ? '' : 's'} will be seeded to production:</p>`;
+			html += list(seeded, cid => {
+				const c = seedCollections[cid] || { name: cid, count: 0 };
+				return `<li>${c.name} — ${c.count} object${c.count === 1 ? '' : 's'}</li>`;
+			});
+			html += `<p class="sync-muted">Objects already on production are skipped, including ones edited here since. Images and files never travel.</p>`;
+		}
+
+		if (!overwrite.length && !create.length && !unchanged && !seeded.length) {
 			html = '<p>Nothing is selected — this sync would do nothing.</p>';
 		}
 
@@ -716,7 +806,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		document.getElementById('sync-preview-body').innerHTML    = html;
 		const confirmBtn = document.getElementById('sync-preview-confirm');
 		confirmBtn.textContent = (action === 'push' ? pushBtn : pullBtn).textContent.trim();
-		confirmBtn.disabled    = !overwrite.length && !create.length && !unchanged;
+		confirmBtn.disabled    = !overwrite.length && !create.length && !unchanged && !seeded.length;
 		confirmBtn.dataset.action = action;
 
 		previewEl.dialog ? previewEl.dialog.open() : previewEl.showModal();
