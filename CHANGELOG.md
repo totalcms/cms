@@ -2,6 +2,34 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.1] - 2026-08-30
+
+### Upgrade notes
+
+- **Regenerate any UPC-E or Codabar barcodes.** Both were being encoded incorrectly, and the fix below means existing ones are wrong wherever they have been printed or saved. UPC-E now takes the 6-digit payload; the 7- and 8-digit forms are still accepted and normalised, so no template needs changing. Codabar data must no longer contain A–D — the encoder supplies the start/stop characters itself
+- **`tcms push --collections` has changed meaning.** It used to move *objects* from five allowlisted collections; it now moves collection **settings**, which is what the name should always have meant. Scripts calling `push --collections=builder-pages` expecting objects will silently push settings instead — use `--pages` for those objects
+- **`tcms push --collection-meta` is removed.** Its job is now `--collections`. This one fails loudly as an unknown option
+- **`cms.barcode.upce()` output**: the rendered `data-value` attribute now carries the 6-digit payload actually encoded rather than the input string, when a longer form was passed
+
+### Added
+
+- **Seed content to production**: `tcms push --objects=blog` sends a collection's objects to your production server, skipping anything already there. Any collection can be seeded, not just the five that sync could already move — so a new feature's schema, collection and starter content can all travel together. `--objects=blog:welcome,about` narrows to specific objects; `--overwrite` (with `--force`) lets the local copy win instead
+- **Seed Objects in the Sync Manager**: pick the collections whose objects should be seeded on push. All-or-nothing per collection, and the Sync Manager can only add — overwriting stays on the CLI where it has to be asked for explicitly
+- **Feature-named sync flags**: `--pages`, `--dataviews`, `--mailer`, `--mcp-prompts` and `--automations`, each accepting an optional id list (`--pages=home,about`). They replace the old `--collections`, which named a gated set of collection ids and required knowing that Site Builder pages live in a collection called `builder-pages`
+- **MCP: read-only Site Builder template tools** — `list_templates` and `get_template`, so an agent editing `builder-pages` can see which `page.data.*` keys a template actually consumes instead of guessing. Admin-scoped, and deliberately read-only: writing Twig reaches the whole `cms.*` surface, which is a larger authority grant than writing content
+
+### Changed
+
+- **A mixed push now sends two requests.** Seeded objects go to the skip-existing import endpoint while everything else keeps its upsert semantics, so `push --schemas=faq --objects=faq` deploys the schema *and* seeds its rows without either behaving like the other. Both routes already existed in 3.5.0, so a seed push works against a production server that has not upgraded yet
+- **`tecnickcom/tc-lib-barcode` moves to `^2.14`**, which brings real input validation to the barcode encoders. Values that used to render an incorrect barcode now raise an error instead. In a Twig template that error renders as an HTML comment rather than breaking the page — so a bad barcode value degrades to a missing barcode, with the reason visible in View Source
+- **Binaries still never travel.** Image, file, gallery and depot fields are omitted from every sync payload and the receiving side keeps what it already had, so a seeded post cannot blank a production image. The `image`, `gallery`, `file` and `depot` collections cannot be seeded at all — the binary *is* the object there, and seeding one would land a record pointing at a file the target does not have
+
+### Fixed
+
+- **UPC-E barcodes encoded the wrong product.** `upce()` accepted 7–8 digits, but UPC-E's payload is 6, and the encoder never decompressed the longer forms — it zero-padded the input and appended a check digit. `04252614` encoded UPC-A `0000042526148` instead of the correct `0042100005264`, scanning cleanly as a product that does not exist. All input forms now reduce to the same payload and the same barcode
+- **Codabar barcodes did not scan.** A, B, C and D are reserved as Codabar's start/stop characters and the encoder adds them itself, so passing `A1234B` encoded literally as `AA1234BA`. Such values are now rejected with an explanation rather than silently producing an unreadable barcode
+- **A throwing extension route registrar can no longer take down the site.** An extension whose route callback threw took the exception straight out of the boot sequence, producing an empty HTTP 500 on every route — including `/admin`, so the operator could not reach the page to disable it. Route registrars now run through the existing extension guard: a thrower loses only its own routes, is logged with attribution, and surfaces as an error in the admin
+
 ## [3.5.0] - 2026-08-26
 
 Total CMS 3.5 is a platform release. The jump from 3.2 reflects the scope: new top-level subsystems — Site Builder, Extensions, CLI, MCP server, OAuth, Automations, Internationalization, Composer distribution, Setup Wizard, Event system — sit alongside the existing collections and templates engine.
