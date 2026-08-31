@@ -42,7 +42,6 @@ class CalcCoercionParityTest extends TestCase
 
 	/**
 	 * @param array<string,mixed> $case
-	 *
 	 */
 	#[DataProvider('coercionProvider')]
 	public function testEngineMatchesSharedCoercionSet(array $case): void
