@@ -484,9 +484,18 @@ class PersistentLoginService
 			return;
 		}
 
-		$tokenFile = $this->tokenDir . '/' . $selector . '.json';
-		if (file_exists($tokenFile)) {
-			@unlink($tokenFile);
+		// Both files: a selector being cleared is being retired, and the
+		// callers are all burn-this-token paths (a failed verification, or
+		// logout). Removing only the live file left a wrong-token attempt
+		// against a rotated token's .grace.json usable for the rest of its
+		// window, while the same attempt against a live token burned it
+		// immediately — the grace window is a concurrency allowance, not a
+		// second chance at guessing.
+		foreach (['.json', '.grace.json'] as $suffix) {
+			$file = $this->tokenDir . '/' . $selector . $suffix;
+			if (file_exists($file)) {
+				@unlink($file);
+			}
 		}
 	}
 

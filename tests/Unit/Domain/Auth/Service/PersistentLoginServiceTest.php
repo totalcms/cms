@@ -730,6 +730,22 @@ describe('restoreFromPersistentToken succeeds', function (): void {
 		expect(persistentLoginService(persistentLoginManagedSession())->restoreFromPersistentToken())->toBeFalse();
 	});
 
+	it('burns the grace file when verification against it fails', function (): void {
+		// A wrong token against a LIVE token deletes it immediately, so guessing
+		// gets one attempt. Against a rotated token's .grace.json nothing was
+		// deleted — clearPersistentTokenFile() only ever unlinked
+		// "{selector}.json" — so the retired secret stayed guessable for the rest
+		// of its window. The grace period is a concurrency allowance, not a
+		// second chance.
+		$selector = persistentLoginSelector();
+		persistentLoginWriteToken($selector, ['grace_until' => time() + 30], grace: true);
+		persistentLoginCookie($selector . ':' . str_repeat('f', 64));
+
+		expect(persistentLoginService(persistentLoginManagedSession())->restoreFromPersistentToken())
+			->toBeFalse();
+
+		expect(persistentLoginGraceFiles())->toBeEmpty();
+	});
 	it('still refuses a grace file with a bad token half', function (): void {
 		// The grace path skips the missing token file but must not skip the
 		// hash check — otherwise knowing a retired selector would be enough.
