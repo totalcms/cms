@@ -253,47 +253,46 @@ not coming from your proxy.
 
 ### Behind Cloudflare
 
-Cloudflare connects to your origin from its own public addresses — and they are
-easy to misread, because `172.64.0.0/13` looks like the private `172.16.0.0/12`
-block and is not part of it. So `auto` will ignore Cloudflare's headers and
-treat every visitor as the same client, which shows up as rate limits firing on
-legitimate traffic.
+**Nothing to configure.** Total CMS ships Cloudflare's published edge ranges and
+recognises requests coming from them, so `auto` believes `CF-Connecting-IP` when
+it genuinely came from Cloudflare and ignores it when someone else sends it. The
+ranges are refreshed from
+[cloudflare.com/ips](https://www.cloudflare.com/ips/) when each release is
+built.
 
-There are two ways to fix that. **The first is better.**
+Settings → Server Info shows what your install is doing, including when the
+bundled ranges were last verified. If Cloudflare ever adds a range that your
+version predates, that panel says so directly rather than leaving you to work it
+out from rate limits misbehaving — Cloudflare stamps every forwarded request
+with a `CF-Ray` header, so a request carrying one from an address outside the
+known ranges is a reliable sign the list needs updating. Updating Total CMS
+fixes it.
 
-**1. Resolve the real address in your web server (recommended).** Apache's
-`mod_remoteip` and nginx's `real_ip` module rewrite the connecting address from
-`CF-Connecting-IP`, but only for requests that genuinely came from Cloudflare's
-IP ranges. `REMOTE_ADDR` then holds the real visitor before PHP sees it, so
-`auto` is correct and you can leave `trustProxyHeaders` alone.
-
-```apache
-# Apache — with Cloudflare's published ranges
-RemoteIPHeader CF-Connecting-IP
-RemoteIPTrustedProxy 173.245.48.0/20 103.21.244.0/22 # ...and the rest
-```
-
-```nginx
-# nginx — with Cloudflare's published ranges
-set_real_ip_from 173.245.48.0/20;
-set_real_ip_from 103.21.244.0/22; # ...and the rest
-real_ip_header CF-Connecting-IP;
-```
-
-Cloudflare publishes the current list at
-[cloudflare.com/ips](https://www.cloudflare.com/ips/). This approach also fixes
-the address your access logs and error reporting see, not just Total CMS, and
-keeps the range list in the place your server tooling already maintains.
-
-**2. Set `trustProxyHeaders` to `always`.** Simpler, and appropriate when you
-cannot configure the web server. It believes the headers no matter who sent
-them, so it is only safe once your origin cannot be reached directly — see
+Whatever the setting, restricting your origin so it can only be reached through
+Cloudflare remains worth doing — see
 [protecting your origin server](https://developers.cloudflare.com/fundamentals/security/protect-your-origin-server/).
-If someone can reach your origin by IP, this setting is an open door.
 
-To check what your install is doing now, look at **Proxy Headers** in
-Settings → Server Info. It reports the current mode and says plainly when
-headers are being ignored.
+### Behind another CDN or proxy
+
+For a proxy that connects from a public address and is not Cloudflare — Fastly,
+Akamai, a load balancer on another host — `auto` has no way to tell it from a
+visitor, so it will ignore its headers. Two options:
+
+1. **Resolve the address in your web server.** Apache's `mod_remoteip` and
+   nginx's `real_ip` module rewrite the connecting address from a header, but
+   only for requests that genuinely came from the proxy's IP ranges.
+   `REMOTE_ADDR` then holds the real visitor before PHP sees it, `auto` is
+   correct, and your access logs get the right address too.
+
+   ```nginx
+   set_real_ip_from 10.0.0.0/8;   # your proxy's addresses
+   real_ip_header X-Forwarded-For;
+   ```
+
+2. **Set `trustProxyHeaders` to `always`.** Simpler, and appropriate when you
+   cannot configure the web server. It believes the headers no matter who sent
+   them, so it is only safe once your origin cannot be reached directly. If
+   someone can reach your origin by IP, this setting is an open door.
 
 ## HTTPS and Transport Security
 

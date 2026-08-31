@@ -10,6 +10,7 @@ use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Mcp\Service\McpConnectionChecker;
 use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
+use TotalCMS\Domain\Security\Request\CloudflareIpRanges;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
 
@@ -100,6 +101,10 @@ class ServerChecker
 		// even when it is working, because the broken case looks like a rate
 		// limiter misbehaving rather than a setting being wrong.
 		$info['Proxy Headers'] = $this->clientIpResolver->diagnosticSummary($_SERVER);
+		// Shown unconditionally: if a release ever ships without refreshing
+		// these, the date is the only visible sign until a request happens to
+		// arrive from a range this build does not know.
+		$info['Cloudflare IP Ranges'] = 'last verified ' . CloudflareIpRanges::LAST_VERIFIED;
 
 		// MCP connection check summary (last run of Settings → MCP → Test connection)
 		$last = $this->mcpChecker->lastRun();

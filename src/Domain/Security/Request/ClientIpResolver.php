@@ -21,19 +21,24 @@ use TotalCMS\Support\Config;
  * the headers are honoured only when the peer is something that plausibly *is*
  * a proxy, which `$config->trustProxyHeaders` decides:
  *
- *   'auto'   (default) trust them when the peer is private or loopback — a
- *            reverse proxy on the same host or LAN, which is the common
- *            deployment and needs no configuration.
- *   'always' trust them unconditionally. For Cloudflare and other proxies that
- *            connect from public addresses, where the operator has confirmed
+ *   'auto'   (default) trust them when the peer is a private or loopback
+ *            address — a reverse proxy on this host or LAN — or one of
+ *            Cloudflare's published edge ranges. Covers both common
+ *            deployments with no configuration.
+ *   'always' trust them unconditionally. For any other CDN or proxy that
+ *            connects from a public address, where the operator has confirmed
  *            the origin is not reachable directly.
  *   'never'  ignore them and always use the peer address.
  *
- * Deliberately no bundled Cloudflare range list: it would need refreshing
- * forever, and when it went stale it would fail quietly — every visitor
- * collapsing into one bucket and rate limits firing on legitimate traffic. An
- * operator behind Cloudflare should be firewalling the origin to Cloudflare
- * anyway, and once they have, range checking adds nothing.
+ * The Cloudflare ranges are regenerated from cloudflare.com at build time (see
+ * bin/update-cloudflare-ips.php), so nobody has to remember. The list going
+ * stale is still the risk worth naming, because it fails quietly — every
+ * visitor collapsing into one bucket, rate limits firing on real traffic,
+ * nothing pointing at the cause. Cloudflare stamps every request it forwards
+ * with `CF-Ray`, so a request carrying that header from an address outside the
+ * ranges is positive evidence the list has drifted, and Server Info says so.
+ * That header is forgeable and never grants trust — it is only ever a hint
+ * that something needs looking at.
  */
 readonly class ClientIpResolver
 {
@@ -47,8 +52,13 @@ readonly class ClientIpResolver
 	/** In precedence order: Cloudflare's header, then the standard chain. */
 	private const FORWARD_HEADERS = ['CF-Connecting-IP', 'X-Forwarded-For'];
 
-	public function __construct(private Config $config)
-	{
+	/** Stamped by Cloudflare on every request it forwards to an origin. */
+	private const CLOUDFLARE_MARKER = 'CF-Ray';
+
+	public function __construct(
+		private Config $config,
+		private CidrMatcher $cidrMatcher = new CidrMatcher(),
+	) {
 	}
 
 	public function resolve(ServerRequestInterface $request): string
@@ -117,26 +127,51 @@ readonly class ClientIpResolver
 		$hasHeader = false;
 
 		foreach (self::FORWARD_HEADERS as $header) {
-			// Derived from the one list rather than spelled out again: $_SERVER
-			// holds the same headers under their CGI names, and two hand-kept
-			// copies of the same two strings is how they drift apart.
-			if (isset($serverParams['HTTP_' . strtoupper(str_replace('-', '_', $header))])) {
+			if (isset($serverParams[self::cgiName($header)])) {
 				$hasHeader = true;
 				break;
 			}
+		}
+
+		// A request stamped by Cloudflare from an address outside the bundled
+		// ranges means the list has drifted since this release was built. It is
+		// the one symptom that distinguishes "stale ranges" from "not behind a
+		// proxy", and without it the two look identical from here.
+		$looksLikeStaleRanges = isset($serverParams[self::cgiName(self::CLOUDFLARE_MARKER)])
+			&& !$this->isCloudflare($peer);
+
+		if ($looksLikeStaleRanges && $this->config->trustProxyHeaders === self::TRUST_AUTO) {
+			return "auto — request stamped by Cloudflare (CF-Ray) from {$peer}, which is NOT in the "
+				. 'Cloudflare ranges bundled with this release (last verified '
+				. CloudflareIpRanges::LAST_VERIFIED . '). Update Total CMS, or set trustProxyHeaders '
+				. "to 'always' if the origin cannot be reached directly. Until then every visitor "
+				. 'shares one rate-limit bucket.';
 		}
 
 		return match (true) {
 			$this->config->trustProxyHeaders === self::TRUST_NEVER  => "never — using the connecting address ({$peer})",
 			$this->config->trustProxyHeaders === self::TRUST_ALWAYS => 'always — trusting proxy headers',
 			!$hasHeader                                             => "auto — no proxy headers on this request, using {$peer}",
+			$this->isCloudflare($peer)                              => "auto — trusting Cloudflare's headers from {$peer}",
 			$this->isPrivateAddress($peer)                          => "auto — trusting proxy headers from {$peer}",
 			default                                                 => "auto — IGNORING proxy headers: this request came from {$peer}, which is "
-					. 'not a private address. If this server is behind Cloudflare, either configure '
-					. "mod_remoteip / nginx real_ip for Cloudflare's ranges (preferred) or set "
-					. "trustProxyHeaders to 'always'. "
+					. 'neither a private address nor a Cloudflare edge. If another CDN or proxy '
+					. "is in front of this server, set trustProxyHeaders to 'always' — after "
+					. 'confirming the origin cannot be reached directly. '
 					. 'See Docs → Operations → Security → Running Behind a Proxy.',
 		};
+	}
+
+	/**
+	 * The $_SERVER key a given HTTP header arrives under.
+	 *
+	 * Derived rather than spelled out a second time: every header name this
+	 * class knows lives in exactly one constant, and two hand-kept copies of the
+	 * same strings is how they drift apart.
+	 */
+	private static function cgiName(string $header): string
+	{
+		return 'HTTP_' . strtoupper(str_replace('-', '_', $header));
 	}
 
 	private function peerAddress(ServerRequestInterface $request): string
@@ -155,8 +190,18 @@ readonly class ClientIpResolver
 			// the UNKNOWN placeholder reads as private — 0.0.0.0 is a reserved
 			// address — and a server that failed to populate REMOTE_ADDR would
 			// trust whatever headers the caller sent.
-			default => $peer !== self::UNKNOWN && $this->isPrivateAddress($peer),
+			default => $peer !== self::UNKNOWN
+				&& ($this->isPrivateAddress($peer) || $this->isCloudflare($peer)),
 		};
+	}
+
+	/** Whether the request reached us from one of Cloudflare's edge ranges. */
+	public function isCloudflare(string $peer): bool
+	{
+		return $this->cidrMatcher->matches(
+			$peer,
+			array_merge(CloudflareIpRanges::V4, CloudflareIpRanges::V6),
+		);
 	}
 
 	private function isIpAddress(string $value): bool

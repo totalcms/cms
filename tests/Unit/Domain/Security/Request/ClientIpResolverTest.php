@@ -8,6 +8,7 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
+use TotalCMS\Domain\Security\Request\CloudflareIpRanges;
 
 /**
  * One place decides which address a request came from, for every rate limiter,
@@ -43,10 +44,11 @@ final class ClientIpResolverTest extends TestCase
 		$this->assertSame('203.0.113.5', $this->resolver()->resolve($this->request('203.0.113.5')));
 	}
 
-	public function testIgnoresProxyHeadersFromAPublicPeer(): void
+	public function testIgnoresProxyHeadersFromAnUnrecognisedPublicPeer(): void
 	{
-		// Nothing forwarded this request, so the headers are the caller's own
-		// claim about itself. This is the spoof the whole class exists to stop.
+		// 203.0.113.5 is neither private nor a Cloudflare edge, so nothing
+		// forwarded this request and the headers are the caller's own claim
+		// about itself. This is the spoof the whole class exists to stop.
 		$resolved = $this->resolver()->resolve($this->request('203.0.113.5', [
 			'CF-Connecting-IP' => '1.1.1.1',
 			'X-Forwarded-For'  => '2.2.2.2',
@@ -212,11 +214,11 @@ final class ClientIpResolverTest extends TestCase
 
 		$this->assertStringContainsString('IGNORING', $summary);
 		$this->assertStringContainsString('203.0.113.5', $summary);
-		// Both routes out, not just the config switch: resolving the address in
-		// the web server is the better fix, and it is the one an operator is
-		// least likely to think of on their own.
-		$this->assertStringContainsString('mod_remoteip', $summary);
+		// It has to name the way out. Cloudflare is handled by the bundled
+		// ranges, so what is left here is another CDN or proxy, and the answer
+		// for that is the setting.
 		$this->assertStringContainsString('trustProxyHeaders', $summary);
+		$this->assertStringContainsString('cannot be reached directly', $summary);
 	}
 
 	public function testTheDiagnosticIsQuietWhenThingsAreWiredCorrectly(): void
@@ -256,5 +258,91 @@ final class ClientIpResolverTest extends TestCase
 
 			$this->assertStringContainsString('IGNORING', $summary, "{$header} not detected by the diagnostic");
 		}
+	}
+
+	// ── Cloudflare ───────────────────────────────────────────────────────────
+
+	public function testTrustsCloudflaresHeaderFromACloudflareEdge(): void
+	{
+		// The reason 'auto' is a usable default for the many installs behind
+		// Cloudflare: the edge connects from a public address, so the
+		// private-peer rule alone would ignore it and collapse every visitor
+		// into one rate-limit bucket.
+		$resolved = $this->resolver()->resolve($this->request('172.68.10.1', [
+			'CF-Connecting-IP' => '198.51.100.9',
+		]));
+
+		$this->assertSame('198.51.100.9', $resolved);
+	}
+
+	public function testStillRefusesAForgedCloudflareHeaderFromElsewhere(): void
+	{
+		// Knowing Cloudflare's ranges must not become "believe anyone who sends
+		// Cloudflare's header".
+		$resolved = $this->resolver()->resolve($this->request('203.0.113.5', [
+			'CF-Connecting-IP' => '198.51.100.9',
+		]));
+
+		$this->assertSame('203.0.113.5', $resolved);
+	}
+
+	public function testAPrivateAddressIsNotMistakenForACloudflareEdge(): void
+	{
+		// Cloudflare's 172.64.0.0/13 looks like RFC 1918's 172.16.0.0/12 and is
+		// not part of it. Both are trusted here, but for different reasons, and
+		// the diagnostic has to say which.
+		$this->assertStringContainsString(
+			'Cloudflare',
+			$this->resolver()->diagnosticSummary([
+				'REMOTE_ADDR'           => '172.68.10.1',
+				'HTTP_CF_CONNECTING_IP' => '1.1.1.1',
+			]),
+		);
+		$this->assertStringNotContainsString(
+			'Cloudflare',
+			$this->resolver()->diagnosticSummary([
+				'REMOTE_ADDR'           => '172.16.0.1',
+				'HTTP_CF_CONNECTING_IP' => '1.1.1.1',
+			]),
+		);
+	}
+
+	public function testReportsWhenTheBundledCloudflareRangesLookStale(): void
+	{
+		// The failure this exists to make visible: Cloudflare adds an address
+		// range, this release does not know it yet, and every visitor silently
+		// starts sharing a bucket. CF-Ray is what separates that from "there is
+		// no proxy" — it is stamped by Cloudflare on every forwarded request.
+		$summary = $this->resolver()->diagnosticSummary([
+			'REMOTE_ADDR'           => '203.0.113.5',
+			'HTTP_CF_RAY'           => '8a1b2c3d4e5f6789-LHR',
+			'HTTP_CF_CONNECTING_IP' => '198.51.100.9',
+		]);
+
+		$this->assertStringContainsString('CF-Ray', $summary);
+		$this->assertStringContainsString('NOT in the Cloudflare ranges', $summary);
+		$this->assertStringContainsString(CloudflareIpRanges::LAST_VERIFIED, $summary);
+	}
+
+	public function testDoesNotCryStaleWhenTheRangesAreWorking(): void
+	{
+		$summary = $this->resolver()->diagnosticSummary([
+			'REMOTE_ADDR' => '172.68.10.1',
+			'HTTP_CF_RAY' => '8a1b2c3d4e5f6789-LHR',
+		]);
+
+		$this->assertStringNotContainsString('NOT in the Cloudflare ranges', $summary);
+	}
+
+	public function testCfRayNeverGrantsTrustOnItsOwn(): void
+	{
+		// The header is forgeable, so it is only ever a hint for the operator.
+		// Believing it would reopen the spoof by a new name.
+		$resolved = $this->resolver()->resolve($this->request('203.0.113.5', [
+			'CF-Ray'           => '8a1b2c3d4e5f6789-LHR',
+			'CF-Connecting-IP' => '198.51.100.9',
+		]));
+
+		$this->assertSame('203.0.113.5', $resolved);
 	}
 }
