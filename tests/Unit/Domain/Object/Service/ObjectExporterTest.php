@@ -451,13 +451,16 @@ describe('CSV headers', function (): void {
 		]));
 		$h['storage']->method('fetchObjectIds')->willReturn([]);
 
-		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][0])->toBe(['title', 'legacy']);
+		// `id` is prepended because this schema does not declare one.
+		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][0])->toBe(['id', 'title', 'legacy']);
 	});
 
-	it('drops the id column entirely when the schema does not declare an id property', function (): void {
-		// Surprising but real: CSV columns come from the SCHEMA, so a schema
-		// without `id` produces a CSV with no id column — re-importing it
-		// creates new objects instead of updating the originals.
+	it('prepends an id column when the schema does not declare an id property', function (): void {
+		// CSV columns come from the SCHEMA, but the id is not optional: without
+		// an id column a re-import has nothing to match on, so an
+		// export/edit/import round trip creates a duplicate of every record
+		// instead of updating the originals. The exporter therefore forces an
+		// id column in front when the schema does not supply one.
 		$h = objectExporterHarness();
 
 		$h['schemas']->method('fetchSchemaForCollection')->willReturn(objectExporterSchema([
@@ -469,8 +472,34 @@ describe('CSV headers', function (): void {
 		]);
 
 		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'])->toBe([
-			['title'],
-			['Title'],
+			['id', 'title'],
+			['post-1', 'Title'],
+		]);
+	});
+
+	it('leaves a schema-declared id column exactly where the schema puts it', function (): void {
+		// The safety property for the 36 shipped schemas that DO declare `id`:
+		// the forced column is only added when missing, never moved. If it were
+		// hoisted to the front instead, every existing export would change
+		// column order and break scripts and diffs that consume those files.
+		$h = objectExporterHarness();
+
+		$h['schemas']->method('fetchSchemaForCollection')->willReturn(objectExporterSchema([
+			'title'   => objectExporterTextProperty(),
+			'id'      => objectExporterTextProperty(),
+			'summary' => objectExporterTextProperty(),
+		]));
+		$h['storage']->method('fetchObjectIds')->willReturn(['post-1']);
+		objectExporterMapObjects($h['objects'], [
+			'post-1' => objectExporterObject('post-1', [
+				'title'   => new StringData('Title text'),
+				'summary' => new StringData('Summary text'),
+			]),
+		]);
+
+		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'])->toBe([
+			['title', 'id', 'summary'],
+			['Title text', 'post-1', 'Summary text'],
 		]);
 	});
 
@@ -583,6 +612,7 @@ describe('CSV card flattening', function (): void {
 		]);
 
 		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][1])->toBe([
+			'obj',
 			'{"src":"/images/a.jpg","alt":"A"}',
 			'7',
 		]);
@@ -608,7 +638,7 @@ describe('CSV card flattening', function (): void {
 		]);
 
 		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][1])
-			->toBe(['line one\nline two\nline three']);
+			->toBe(['obj', 'line one\nline two\nline three']);
 	});
 
 	it('leaves an empty cell for a card sub-property with no stored value', function (): void {
@@ -626,7 +656,7 @@ describe('CSV card flattening', function (): void {
 			'obj' => objectExporterObject('obj', ['meta' => new CardData(['set' => 'value'])]),
 		]);
 
-		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][1])->toBe(['value', '']);
+		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][1])->toBe(['obj', 'value', '']);
 	});
 
 	it('leaves the card columns empty when the stored property is not actually a card', function (): void {
@@ -647,7 +677,8 @@ describe('CSV card flattening', function (): void {
 			'obj' => objectExporterObject('obj', ['meta' => new StringData('was a card once')]),
 		]);
 
-		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][1])->toBe(['', '']);
+		// The id still exports — only the unreadable card columns blank out.
+		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][1])->toBe(['obj', '', '']);
 	});
 
 	it('falls back to one JSON column when the card has no schemaref', function (): void {
@@ -665,8 +696,8 @@ describe('CSV card flattening', function (): void {
 		]);
 
 		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'])->toBe([
-			['meta'],
-			['{"a":1,"b":"two"}'],
+			['id', 'meta'],
+			['obj', '{"a":1,"b":"two"}'],
 		]);
 	});
 
@@ -684,8 +715,8 @@ describe('CSV card flattening', function (): void {
 		]);
 
 		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'])->toBe([
-			['meta'],
-			['{"a":1}'],
+			['id', 'meta'],
+			['obj', '{"a":1}'],
 		]);
 	});
 
@@ -709,8 +740,8 @@ describe('CSV card flattening', function (): void {
 		]);
 
 		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'])->toBe([
-			['meta.label'],
-			['Nested ref'],
+			['id', 'meta.label'],
+			['obj', 'Nested ref'],
 		]);
 	});
 });
@@ -761,7 +792,7 @@ describe('CSV localized text flattening', function (): void {
 			]),
 		]);
 
-		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][1])->toBe(['first\nsecond']);
+		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][1])->toBe(['page-1', 'first\nsecond']);
 	});
 
 	it('falls back to a single column when no locales are configured', function (): void {
@@ -780,8 +811,8 @@ describe('CSV localized text flattening', function (): void {
 		]);
 
 		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'])->toBe([
-			['heading'],
-			['Hello'],
+			['id', 'heading'],
+			['page-1', 'Hello'],
 		]);
 	});
 
@@ -797,7 +828,8 @@ describe('CSV localized text flattening', function (): void {
 			'page-1' => objectExporterObject('page-1', ['heading' => new StringData('plain text')]),
 		]);
 
-		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][1])->toBe(['', '']);
+		// The id still exports — only the unreadable locale columns blank out.
+		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][1])->toBe(['page-1', '', '']);
 	});
 
 	it('ignores blank locale codes in the i18n config', function (): void {
@@ -815,7 +847,7 @@ describe('CSV localized text flattening', function (): void {
 		]));
 		$h['storage']->method('fetchObjectIds')->willReturn([]);
 
-		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][0])->toBe(['heading.en_US']);
+		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][0])->toBe(['id', 'heading.en_US']);
 	});
 });
 
@@ -838,7 +870,7 @@ describe('CSV export behaviour', function (): void {
 		]);
 
 		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'][1])
-			->toBe(['one\ntwo\nthree\nfour']);
+			->toBe(['post-1', 'one\ntwo\nthree\nfour']);
 	});
 
 	it('skips unreadable objects but keeps the header and the readable rows', function (): void {
@@ -962,8 +994,8 @@ describe('CSV export behaviour', function (): void {
 		]);
 
 		expect($h['exporter']->exportAllObjectsForCSv('posts')['data'])->toBe([
-			['my.prop'],
-			['dotted'],
+			['id', 'my.prop'],
+			['post-1', 'dotted'],
 		]);
 	});
 });

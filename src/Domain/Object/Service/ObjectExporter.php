@@ -241,6 +241,19 @@ readonly class ObjectExporter
 			$headers[] = $nameStr;
 		}
 
+		// Columns come from the schema, but every object has an id and
+		// ObjectData::forCsv() always supplies one. A schema that does not
+		// declare an `id` property produced a CSV with no id column, and
+		// importing that file back creates new objects instead of updating the
+		// originals — an export/edit/import round trip silently duplicated every
+		// record.
+		//
+		// Only added when missing: a schema that declares `id` keeps it in the
+		// position the schema gives it, so those exports are unchanged.
+		if (!in_array('id', $headers, true)) {
+			array_unshift($headers, 'id');
+		}
+
 		return [
 			'headers'        => $headers,
 			'cardSubProps'   => $cardSubProps,
