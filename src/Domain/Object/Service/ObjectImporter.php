@@ -144,10 +144,14 @@ class ObjectImporter
 
 		$this->objectID = $objectData['id'];
 
-		// Same self-suspend pattern as importObject() — ObjectPatcher doesn't
-		// fire `object.updated` today, but we still call suspendForImport to
-		// keep the lifecycle consistent in case that changes, and to give
-		// import.completed auto-resume something to clean up.
+		// Same self-suspend pattern as importObject(), and load-bearing rather
+		// than defensive: ObjectPatcher::patchObject() reaches
+		// ObjectUpdater::updateObject(), which dispatches
+		// CoreEvent::OBJECT_UPDATED on any non-silent patch. Without this
+		// suspension a bulk re-import would fire object.updated per row and
+		// wake every listener — search re-indexing, automations — for work
+		// that import.updated already reports. It also gives
+		// import.completed's auto-resume something to clean up.
 		$wasSuspended = $this->eventDispatcher->isImportSuspended($collection);
 		if (!$wasSuspended) {
 			$this->eventDispatcher->suspendForImport($collection);
@@ -439,7 +443,12 @@ class ObjectImporter
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	private function replacePathTemplates(string $path = ''): string
 	{
-		$path = str_replace('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT'], $path);
+		// config/defaults.php populates this for CLI runs (from cache/.docroot,
+		// falling back to <project>/public), so it is normally set even under
+		// the job runner. Guarded anyway to match every other DOCUMENT_ROOT
+		// read in the codebase — unguarded, a missing key warns and then
+		// trips a str_replace(): passing null deprecation per media property.
+		$path = str_replace('DOCUMENT_ROOT', (string)($_SERVER['DOCUMENT_ROOT'] ?? ''), $path);
 
 		// Strip shell-style backslash escapes (e.g. "Placeholder\ Images" -> "Placeholder Images")
 		// so paths copy-pasted from a terminal resolve correctly.
