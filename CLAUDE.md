@@ -50,11 +50,19 @@ composer run stan
 composer run cs
 composer run cs:fix
 
-# Run tests with Pest
-composer run test
-composer run test:filter -- --filter=SomeTest   # single test
-composer run test:quick                          # fast subset
-composer run test:parallel                       # parallel runner
+# Run tests — bin/runtests.sh is the normal entry point.
+# No args: bundle:check, stan, docs:validate, JS tests, PHP tests (~45s).
+# With a filter: ONLY the matching PHP tests, for a fast edit-run loop.
+bin/runtests.sh                          # everything
+bin/runtests.sh SomeTest                 # tests matching a name
+bin/runtests.sh tests/Feature/Foo.php    # a single file or directory
+bin/runtests.sh --lint                   # also run phplint (~36s)
+
+# The underlying Composer scripts, if you need one directly:
+composer run test                                # serial, ~140s
+composer run test:parallel                       # parallel, ~40s
+composer run test:parallel -- --filter=SomeTest  # parallel + filter
+composer run test:all:parallel                   # stan + docs + PHP + JS
 
 # Verify the bundle integrity manifest is current (~0.3s).
 # Run this after editing anything under config/, resources/templates/,
@@ -204,15 +212,18 @@ composer run test:all
 - **Change Tracking**: Keep git diffs clean by focusing on specific files being worked on
 
 ### Testing Best Practices
-- **Run tests via Composer**: `composer test -- --filter=X` (sets `apc.enable_cli`, avoids MCP rate-limit flakiness) — never invoke `vendor/bin/pest` directly
+- **Run tests via `bin/runtests.sh`** (or a Composer script) — never invoke `vendor/bin/pest` directly. Both set `apc.enable_cli`, which avoids MCP rate-limit flakiness. `bin/runtests.sh X` filters to matching PHP tests; with no argument it runs the full battery.
+- **Parallel is the default and the suite is parallel-safe.** `--parallel` needs no flag from you — `test:parallel` is ~40s against ~140s serial. Each worker gets its own sandbox under `tests/.workers/{TEST_TOKEN}/{tcms-data,cache,tmp}` via `tests/worker-paths.php`, which `tests/bootstrap.php`, `tests/Pest.php` and `config/local.test.php` all read. If you add a path that tests write to, route it through there too or workers will race. Delete every sandbox with `rm -rf tests/.workers`.
+- **A global function declared in one `*Test.php` is invisible to another under `--parallel`** (the two files can land in different workers). Shared test helpers belong in `tests/Pest.php`.
+- **Never let a test reach the network.** `tests/Feature/SyncMediaFieldTest.php` used to download from picsum.photos through the `image` factory rule, and broke whenever that service did. Stub the seam instead — e.g. `FakerPicsum::setHttpClient()`
 - **API Endpoint Testing**: Use `postJson()` instead of `post()` for JSON endpoints
 - **Flexible Status Codes**: Use `toBeIn([200, 400, 404, 405])` instead of exact matches for better test framework compatibility
 - **Framework Compatibility**: Follow existing working test patterns (e.g., `AuthTest.php`) for reliable results
 - **Test Data**: Maintain comprehensive test datasets in `/tests/test-data/` for integration testing
 - **Error Handling**: Test both success and failure scenarios with graceful error handling
-- **Stale Twig cache**: Twig render tests can serve stale compiled templates after a `.twig` edit (test env has `auto_reload` off) — `rm -rf cache/*` before re-running locally
+- **Stale Twig cache**: Twig render tests can serve stale compiled templates after a `.twig` edit (test env has `auto_reload` off) — `rm -rf cache/*` before re-running locally. Under `--parallel` the cache is per-worker, so clear `tests/.workers/*/cache` (or just `rm -rf tests/.workers`) instead
 - **Bundle integrity**: `resources/bundle` hashes `config/`, `resources/templates/` **and select `src/` files** — not just config. After editing anything it covers, rebuild with `composer run bundle` and commit the manifest alongside the change. Never hand-edit it. A stale manifest makes every write fail at runtime with 400 "installation has been corrupted"
-  - **Tests do not catch this.** `tests/bootstrap.php` sets `APP_ENV=test`, which switches `BundleMiddleware`'s check off so the suite doesn't have to regenerate the manifest after every edit, and no test covers the manifest. `composer test` is plain pest with no bundle step. The gate is `composer run bundle:check` (~0.3s), which CI runs — but only after a push, so an install tracking `dev-develop` can pull the broken commit first
+  - **Tests do not catch this.** `tests/bootstrap.php` sets `APP_ENV=test`, which switches `BundleMiddleware`'s check off so the suite doesn't have to regenerate the manifest after every edit, and no test covers the manifest. `composer test` is plain pest with no bundle step. The gate is `composer run bundle:check` (~0.3s), which CI runs — but only after a push, so an install tracking `dev-develop` can pull the broken commit first. `bin/runtests.sh` runs it as its first step, so use that and you cannot miss it
   - Install the pre-commit hook with `bin/install-hooks.sh` to run that check automatically. Note the manifest hashes the **working tree, not the index**: rebuild with unstaged edits to a covered file present and it records content that isn't in the commit
 
 ### CSS Styling Guidelines
