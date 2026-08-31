@@ -30,11 +30,45 @@ class PersistentLoginService
 		private readonly UserValidationService $userValidator,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->tokenDir = $this->config->tmpdir . '/persistent_tokens';
+		// Under the data dir, NOT tmpdir. tmpdir is projectRoot/tmp, inside the
+		// application directory a zip update swaps out — so every update threw
+		// away every "keep me signed in" token and logged the whole site out.
+		// Same reasoning that moved zip-install logs in c75ca8fb; tcms-data is
+		// the thing updates leave alone.
+		$this->tokenDir = $this->config->systemDir() . '/persistent_tokens';
 		if (!is_dir($this->tokenDir)) {
 			@mkdir($this->tokenDir, 0755, true);
+			// Carry tokens over from the old location so the update that ships
+			// this does not itself log everyone out. Only ever runs once: the
+			// directory exists from here on.
+			$this->migrateTokensFrom($this->config->tmpdir . '/persistent_tokens');
 		}
 		$this->logger = $loggerFactory->channelLogger(LogChannel::PersistentLogin);
+	}
+
+	/**
+	 * Move existing token files out of a previous location.
+	 *
+	 * Best-effort throughout: a token that cannot be moved just means one user
+	 * signs in again, which is the outcome we would have had anyway. Nothing
+	 * here may throw — this runs during container construction.
+	 */
+	private function migrateTokensFrom(string $previousDir): void
+	{
+		if ($previousDir === $this->tokenDir || !is_dir($previousDir)) {
+			return;
+		}
+
+		foreach ((array)@scandir($previousDir) as $entry) {
+			$name = (string)$entry;
+			if (!str_ends_with($name, '.json')) {
+				continue;
+			}
+
+			@rename($previousDir . '/' . $name, $this->tokenDir . '/' . $name);
+		}
+
+		@rmdir($previousDir);
 	}
 
 	/**

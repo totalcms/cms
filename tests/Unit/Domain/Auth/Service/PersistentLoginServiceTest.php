@@ -46,7 +46,9 @@ function persistentLoginTmpDir(?string $set = null): string
 
 function persistentLoginTokenDir(): string
 {
-	return persistentLoginTmpDir() . '/persistent_tokens';
+	// Under the data dir's .system, matching the service: tokens live where a
+	// zip update will not sweep them away.
+	return persistentLoginTmpDir() . '/.system/persistent_tokens';
 }
 
 /** @param array<string,mixed> $authOverrides */
@@ -277,7 +279,7 @@ afterEach(function (): void {
 		return;
 	}
 
-	@chmod($dir . '/persistent_tokens', 0755);
+	@chmod($dir . '/.system/persistent_tokens', 0755);
 	/** @var \SplFileInfo $file */
 	foreach (new \RecursiveIteratorIterator(
 		new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
@@ -482,7 +484,7 @@ describe('restoreFromPersistentToken refuses', function (): void {
 	]);
 
 	it('a traversal selector without touching the file it points at', function (): void {
-		// tokenDir is <tmp>/persistent_tokens, so the selector `../victim`
+		// tokenDir is <datadir>/.system/persistent_tokens, so `../victim`
 		// resolves to <tmp>/victim.json. Before the format guard, the failure
 		// path would have @unlink()ed it — arbitrary .json deletion from an
 		// unauthenticated request.
@@ -930,3 +932,68 @@ function persistentLoginSession(array $data = []): SessionInterface
 {
 	return new InMemorySession($data);
 }
+
+describe('PersistentLoginService token location', function (): void {
+	it('carries tokens over from the old tmp location on first run', function (): void {
+		// tmpdir is projectRoot/tmp, inside the directory a zip update swaps
+		// out, so tokens used to be destroyed by every update. Moving them
+		// under the data dir fixes that going forward — but the update that
+		// ships the move must not itself be the one that logs everyone out.
+		$sandbox = persistentLoginTmpDir();
+
+		// Undo beforeEach's pre-created dir: the migration runs only when the
+		// new location does not exist yet, which is the state an upgrade
+		// lands in.
+		rmdir(persistentLoginTokenDir());
+		rmdir($sandbox . '/.system');
+
+		$oldDir = $sandbox . '/persistent_tokens';
+		mkdir($oldDir, 0755, true);
+		file_put_contents($oldDir . '/abc123.json', json_encode(['user_id' => 'user-1']));
+		file_put_contents($oldDir . '/def456.grace.json', json_encode(['user_id' => 'user-2']));
+
+		persistentLoginService(persistentLoginSession());
+
+		expect(file_exists(persistentLoginTokenDir() . '/abc123.json'))->toBeTrue()
+			// Grace files travel too, or a rotation in flight during the update
+			// loses its fallback.
+			->and(file_exists(persistentLoginTokenDir() . '/def456.grace.json'))->toBeTrue()
+			->and(is_dir($oldDir))->toBeFalse();
+	});
+
+	it('keeps a signed-in user signed in across the move', function (): void {
+		// The point of the migration, end to end: a token written before the
+		// upgrade still restores a session after it.
+		$sandbox = persistentLoginTmpDir();
+		rmdir(persistentLoginTokenDir());
+		rmdir($sandbox . '/.system');
+
+		$oldDir = $sandbox . '/persistent_tokens';
+		mkdir($oldDir, 0755, true);
+
+		$selector = persistentLoginSelector();
+		$plain    = str_repeat('b', 64);
+		file_put_contents($oldDir . '/' . $selector . '.json', json_encode([
+			'user_id'    => 'user-1',
+			'collection' => 'auth',
+			'token_hash' => password_hash($plain, PASSWORD_BCRYPT, ['cost' => 4]),
+			'created_at' => time() - 60,
+			'expires_at' => time() + 3600,
+		]));
+		persistentLoginCookie($selector . ':' . $plain);
+
+		$service = persistentLoginService(persistentLoginManagedSession());
+
+		expect($service->restoreFromPersistentToken())->toBeTrue();
+	});
+
+	it('does not disturb tokens already in the new location', function (): void {
+		// Every request after the first: the directory exists, so nothing is
+		// scanned or moved.
+		persistentLoginWriteToken('existing');
+
+		persistentLoginService(persistentLoginSession());
+
+		expect(file_exists(persistentLoginTokenDir() . '/existing.json'))->toBeTrue();
+	});
+});
