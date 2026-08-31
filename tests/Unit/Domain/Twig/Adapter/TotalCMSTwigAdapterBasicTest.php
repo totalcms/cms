@@ -153,11 +153,24 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
-		$result = $adapter->login();
-		expect($result)->toBe('/admin/login');
+		// login() falls back to $_SERVER['REQUEST_URI'] when no redirect is
+		// given, so these assertions only hold when that global is unset.
+		// Pin it rather than depending on whatever ran earlier in the same
+		// process — under `pest --parallel` that differs per worker.
+		$previousUri = $_SERVER['REQUEST_URI'] ?? null;
+		unset($_SERVER['REQUEST_URI']);
 
-		$result = $adapter->login('admin');
-		expect($result)->toBe('/admin/login/admin');
+		try {
+			$result = $adapter->login();
+			expect($result)->toBe('/admin/login');
+
+			$result = $adapter->login('admin');
+			expect($result)->toBe('/admin/login/admin');
+		} finally {
+			if ($previousUri !== null) {
+				$_SERVER['REQUEST_URI'] = $previousUri;
+			}
+		}
 	}
 
 	public function testJobQueuePendingInfoReturnsEmptyStringForNoPendingJobs(): void

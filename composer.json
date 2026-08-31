@@ -161,11 +161,11 @@
     "test": "php -d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=. vendor/bin/pest --display-notices --display-warnings --display-errors --display-deprecations",
     "test:filter": "php -d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=. vendor/bin/pest --display-notices --display-warnings --display-errors --display-deprecations --filter",
     "test:quick": "php -d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=. vendor/bin/pest --display-notices --display-warnings --display-errors --display-deprecations",
-    "test:parallel": "php -d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=. vendor/bin/pest tests/Unit --parallel --processes=4 --display-notices --display-warnings --display-errors --display-deprecations",
-    "test:parallel:all": "php -d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=. vendor/bin/pest --parallel --processes=4 --display-notices --display-warnings --display-errors --display-deprecations",
+    "test:parallel": "php -d apc.enable_cli=1 vendor/bin/pest --parallel --passthru-php=\"-d apc.enable_cli=1\" --display-notices --display-warnings --display-errors --display-deprecations",
+    "test:parallel:all": "php -d apc.enable_cli=1 vendor/bin/pest --parallel --passthru-php=\"-d apc.enable_cli=1\" --display-notices --display-warnings --display-errors --display-deprecations",
     "test:phpunit": "php -d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=. vendor/bin/phpunit --configuration phpunit.xml --do-not-cache-result --colors=always --display-warnings --display-deprecations --no-coverage",
     "test:coverage": "php -d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=. vendor/bin/pest --coverage --coverage-clover=build/coverage/clover.xml --coverage-html=build/coverage --coverage-text --display-notices --display-warnings --display-errors --display-deprecations",
-    "test:coverage:parallel": "php -d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=. vendor/bin/pest --parallel --processes=4 --coverage --coverage-clover=build/coverage/clover.xml --coverage-html=build/coverage --coverage-text",
+    "test:coverage:parallel": "php -d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=. vendor/bin/pest --parallel --passthru-php=\"-d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=.\" --coverage --coverage-clover=build/coverage/clover.xml --coverage-html=build/coverage --coverage-text",
     "test:coverage:phpunit": "php -d apc.enable_cli=1 -d pcov.enabled=1 -d pcov.directory=. vendor/bin/phpunit --configuration phpunit.xml --do-not-cache-result --colors=always --display-warnings --display-deprecations --coverage-clover build/coverage/clover.xml --coverage-html build/coverage --coverage-text",
     "test:coverage:type": "pest --type-coverage",
     "test:updatesnaps": "pest --update-snapshots",
@@ -186,6 +186,12 @@
       "@stan",
       "@docs:validate",
       "@test",
+      "@test:js"
+    ],
+    "test:all:parallel": [
+      "@stan",
+      "@docs:validate",
+      "@test:parallel",
       "@test:js"
     ],
     "test:build": [

@@ -2,6 +2,8 @@
 
 $_SERVER['APP_ENV'] = 'test';
 
+require_once __DIR__ . '/worker-paths.php';
+
 // Ensure Symfony Console Resources directory exists (missing in some CI environments)
 $consoleResourcesDir = dirname((new ReflectionClass(Symfony\Component\Console\Application::class))->getFileName()) . '/Resources';
 if (!is_dir($consoleResourcesDir)) {
@@ -89,7 +91,7 @@ function testData(string $file): string
 
 function cmsDataDir(): string
 {
-	return __DIR__ . '/tcms-data/';
+	return tcmsTestDataDir() . '/';
 }
 
 function templatePath(string $id, ?string $folder = null): string
@@ -438,4 +440,23 @@ function csrfValidatorFor(
 		$manager,
 		new TotalCMS\Domain\Security\CSRF\RequestOriginValidator($config),
 	);
+}
+
+/**
+ * Mock HTTP client returning a fixed response.
+ *
+ * Lives here rather than in a test file because two suites need it
+ * (LicenseValidatorHttpTest and TemplateDesignerSyncTest). A global
+ * function declared inside one *Test.php file is only visible to another
+ * when both happen to load into the same process — true for a serial run,
+ * false under `pest --parallel`, where the two files can land in different
+ * workers and the call fails with "undefined function".
+ */
+function createMockHttpClient(
+	TotalCMS\Support\HttpResponse $response,
+): TotalCMS\Support\HttpClientInterface {
+	$client = test()->createMock(TotalCMS\Support\HttpClientInterface::class);
+	$client->method('request')->willReturn($response);
+
+	return $client;
 }

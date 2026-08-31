@@ -20,6 +20,13 @@ if (!is_dir($sessionPath)) {
 ini_set('session.save_path', $sessionPath);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/worker-paths.php';
+
+// Publish the per-worker paths so config/local.test.php resolves to the same
+// sandbox this bootstrap prepares.
+$_SERVER['TCMS_TEST_DATADIR']  = tcmsTestDataDir();
+$_SERVER['TCMS_TEST_CACHEDIR'] = tcmsTestCacheDir();
+$_SERVER['TCMS_TEST_TMPDIR']   = tcmsTestTmpDir();
 
 // Define ROOT for CakePHP I18n translations (resources/locales/)
 if (!defined('ROOT')) {
@@ -45,7 +52,7 @@ if (!defined('ROOT')) {
 // ─────────────────────────────────────────────────────────────────────────────
 (function (): void {
 	$src = __DIR__ . '/tcms-data-fixtures';
-	$dst = __DIR__ . '/tcms-data';
+	$dst = tcmsTestDataDir();
 
 	if (is_dir($src)) {
 		$copy = function (string $src, string $dst) use (&$copy): void {
