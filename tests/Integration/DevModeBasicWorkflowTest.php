@@ -18,7 +18,7 @@ final class DevModeBasicWorkflowTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->testDataDir     = sys_get_temp_dir() . '/tcms-devmode-' . uniqid();
+		$this->testDataDir     = devModeDataDir();
 		$this->devModeManager  = devModeManager($this->testDataDir);
 		$this->testDevModeFile = devModeFile($this->testDataDir);
 		$this->cleanupDevModeFile();
