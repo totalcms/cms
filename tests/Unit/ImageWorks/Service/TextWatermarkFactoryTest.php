@@ -105,7 +105,7 @@ class TextWatermarkFactoryTest extends TestCase
 			->method('write')
 			->with(
 				$this->stringStartsWith('.system/watermarks/'),
-				$this->isType('string')
+				$this->isString()
 			)
 			->willReturn(true);
 
@@ -144,7 +144,7 @@ class TextWatermarkFactoryTest extends TestCase
 			->method('write')
 			->with(
 				$this->stringStartsWith('.system/watermarks/'),
-				$this->isType('string')
+				$this->isString()
 			)
 			->willReturn(true);
 

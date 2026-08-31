@@ -178,7 +178,7 @@ final class TemplateRepositoryTest extends TestCase
 
 		$result = $this->repo->listBuilderTemplates('pages', true);
 
-		$this->assertContainsOnly('string', $result);
+		$this->assertContainsOnlyString($result);
 		$this->assertContains('404', $result);
 	}
 

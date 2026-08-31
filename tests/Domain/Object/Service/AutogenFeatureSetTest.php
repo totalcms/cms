@@ -2,6 +2,7 @@
 
 namespace Tests\Domain\Object\Service;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Service\AutogenService;
 
@@ -36,8 +37,8 @@ class AutogenFeatureSetTest extends TestCase
 	/**
 	 * @param array<string,mixed> $case
 	 *
-	 * @dataProvider featureSetProvider
 	 */
+	#[DataProvider('featureSetProvider')]
 	public function testEngineMatchesSharedFeatureSet(array $case): void
 	{
 		/** @var array<string,mixed> $fields */
