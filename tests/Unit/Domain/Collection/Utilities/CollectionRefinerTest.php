@@ -192,11 +192,30 @@ describe('CollectionRefiner :: unknown fields and empty values', function (): vo
 			->toBe(['post-1', 'post-2', 'post-3']);
 	});
 
-	it('DANGER: a boolean false value stringifies to empty and returns every row', function (): void {
-		// `{property: 'draft', value: false}` reads like "only published rows"
-		// but strval(false) === '' so the rule is dropped entirely and DRAFTS
-		// ARE RETURNED. Use the `isfalse` operator instead.
+	it('treats a boolean false value as a real filter, not a missing one', function (): void {
+		// `{property: 'draft', operator: 'equal', value: false}` reads as
+		// "published only", and it used to return the whole collection —
+		// strval(false) is '', and an empty filter value means "no value
+		// supplied, match everything", so the rule was dropped and DRAFTS WERE
+		// RETURNED to anonymous visitors.
+		//
+		// Booleans are now mapped to '1'/'0' before that check. '0' is also the
+		// correct comparison rather than merely a non-empty placeholder: equal()
+		// is loose, and a stored `false` equals '0' while a stored `true` does
+		// not.
 		expect(collectionRefinerFilterIds([['property' => 'draft', 'operator' => 'equal', 'value' => false]]))
+			->toBe(['post-1', 'post-3']);
+	});
+
+	it('treats a boolean true value as a real filter too', function (): void {
+		expect(collectionRefinerFilterIds([['property' => 'draft', 'operator' => 'equal', 'value' => true]]))
+			->toBe(['post-2']);
+	});
+
+	it('still treats a genuinely absent value as no filter', function (): void {
+		// Deliberately unchanged: a rule whose value comes from a blank search
+		// box should not filter anything out. Only the boolean case was wrong.
+		expect(collectionRefinerFilterIds([['property' => 'draft', 'operator' => 'equal', 'value' => '']]))
 			->toBe(['post-1', 'post-2', 'post-3']);
 	});
 

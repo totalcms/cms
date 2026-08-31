@@ -69,7 +69,7 @@ class CollectionRefiner
 			$filteredCollection = $this->filterByRule(
 				collection  : $filteredCollection,
 				property    : $rule['property'],
-				filterValue : strval($value),
+				filterValue : self::filterValueToString($value),
 				operator    : $rule['operator'] ?? 'equal',
 			);
 		}
@@ -121,7 +121,7 @@ class CollectionRefiner
 			$filtered = $this->filterByRule(
 				collection  : $collection,
 				property    : $property,
-				filterValue : strval($value),
+				filterValue : self::filterValueToString($value),
 				operator    : $operator,
 			);
 
@@ -160,7 +160,7 @@ class CollectionRefiner
 			$filteredCollection = $this->filterByRule(
 				collection  : $filteredCollection,
 				property    : $property,
-				filterValue : strval($value),
+				filterValue : self::filterValueToString($value),
 				operator    : $operator,
 			);
 		}
@@ -188,6 +188,28 @@ class CollectionRefiner
 		}
 
 		return $unique;
+	}
+
+	/**
+	 * Render a rule's value as the string filterByRule() expects.
+	 *
+	 * Booleans are mapped to '1'/'0' rather than run through strval(), because
+	 * strval(false) is '' — and an empty filter value means "no value supplied,
+	 * match everything" a few lines below. That made
+	 * `{property: 'draft', operator: 'equal', value: false}` — which reads as
+	 * "published only" — return the entire collection, drafts included.
+	 *
+	 * '1'/'0' is also the correct comparison, not just a non-empty placeholder:
+	 * equal() compares loosely, and a stored `false` equals '0' while a stored
+	 * `true` does not.
+	 */
+	private static function filterValueToString(mixed $value): string
+	{
+		if (is_bool($value)) {
+			return $value ? '1' : '0';
+		}
+
+		return strval($value);
 	}
 
 	/**
