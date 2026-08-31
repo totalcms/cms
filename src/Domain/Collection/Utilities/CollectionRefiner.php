@@ -483,17 +483,34 @@ class CollectionRefiner
 
 	protected static function past(string $date): bool
 	{
-		return strtotime($date) < time();
+		// strtotime() returns false on an unparseable date, and false < time()
+		// is true — so a row with a corrupt or empty date used to satisfy a
+		// `past` publish gate and go live. Matches the guard thisYear(),
+		// isWeekday() and dayOfWeek() already had.
+		$timestamp = strtotime($date);
+		if ($timestamp === false) {
+			return false;
+		}
+
+		return $timestamp < time();
 	}
 
 	protected static function future(string $date): bool
 	{
-		return strtotime($date) > time();
+		$timestamp = strtotime($date);
+		if ($timestamp === false) {
+			return false;
+		}
+
+		return $timestamp > time();
 	}
 
 	protected static function today(string $date): bool
 	{
 		$time = strtotime($date);
+		if ($time === false) {
+			return false;
+		}
 
 		return $time >= strtotime('today') && $time < strtotime('tomorrow');
 	}
@@ -528,12 +545,26 @@ class CollectionRefiner
 
 	protected static function after(string $date, string $dateAfter): bool
 	{
-		return strtotime($date) > strtotime($dateAfter);
+		$timestamp = strtotime($date);
+		$boundary  = strtotime($dateAfter);
+		if ($timestamp === false || $boundary === false) {
+			return false;
+		}
+
+		return $timestamp > $boundary;
 	}
 
 	protected static function before(string $date, string $dateBefore): bool
 	{
-		return strtotime($date) < strtotime($dateBefore);
+		// Both sides are guarded: an unparseable boundary would otherwise make
+		// every row match or none of them, depending on which side failed.
+		$timestamp = strtotime($date);
+		$boundary  = strtotime($dateBefore);
+		if ($timestamp === false || $boundary === false) {
+			return false;
+		}
+
+		return $timestamp < $boundary;
 	}
 
 	// ---------------------------------------------------------------------------------

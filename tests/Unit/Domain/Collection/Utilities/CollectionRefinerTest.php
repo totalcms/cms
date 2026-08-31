@@ -572,14 +572,56 @@ describe('CollectionRefiner :: date operators', function (): void {
 		expect(collectionRefinerIdsWhere('date', 'dayOfWeek', 'Monday', $rows))->toBe([]);
 	});
 
-	it('BUG: an unparseable date counts as being in the past', function (): void {
-		// past()/future() compare strtotime() directly, and strtotime() returns
-		// false for garbage — false < time() is true. A row with a corrupt or
-		// empty date field therefore passes a `past` publish gate and goes live.
-		// Pinned so the day this is fixed is a deliberate behaviour change.
+	it('does not treat an unparseable date as being in the past', function (): void {
+		// past()/future() compared strtotime() directly, and strtotime() returns
+		// false for garbage — false < time() is true. A row with a corrupt date
+		// therefore passed a `past` publish gate and went live. The guard now
+		// matches thisYear()/isWeekday()/dayOfWeek(), which always had one.
+		//
+		// Failing closed is the safe direction: a broken date stops publishing
+		// rather than publishing something unintended.
 		$rows = [['id' => 'broken', 'date' => 'not-a-date']];
-		expect(collectionRefinerIdsWhere('date', 'past', null, $rows))->toBe(['broken']);
+
+		expect(collectionRefinerIdsWhere('date', 'past', null, $rows))->toBe([]);
 		expect(collectionRefinerIdsWhere('date', 'future', null, $rows))->toBe([]);
+		expect(collectionRefinerIdsWhere('date', 'today', null, $rows))->toBe([]);
+	});
+
+	it('does not match an unparseable date against a boundary', function (): void {
+		$rows = [['id' => 'broken', 'date' => 'not-a-date']];
+
+		expect(collectionRefinerIdsWhere('date', 'before', '2030-01-01', $rows))->toBe([]);
+		expect(collectionRefinerIdsWhere('date', 'after', '2000-01-01', $rows))->toBe([]);
+	});
+
+	it('does not match when the boundary itself is unparseable', function (): void {
+		// An unparseable boundary would otherwise make every row match or none,
+		// depending on which side of the comparison failed.
+		$rows = [['id' => 'ok', 'date' => '2020-06-01']];
+
+		expect(collectionRefinerIdsWhere('date', 'before', 'not-a-date', $rows))->toBe([]);
+		expect(collectionRefinerIdsWhere('date', 'after', 'not-a-date', $rows))->toBe([]);
+	});
+
+	it('treats an empty date field the same as a corrupt one', function (): void {
+		// An unset date is the common real-world case — a row saved before the
+		// field existed, or an import that left it blank.
+		$rows = [['id' => 'blank', 'date' => '']];
+
+		expect(collectionRefinerIdsWhere('date', 'past', null, $rows))->toBe([]);
+	});
+
+	it('still resolves genuine dates on both sides of now', function (): void {
+		// The guard must not have broken the operators it protects.
+		$rows = [
+			['id' => 'old',   'date' => '2000-01-01'],
+			['id' => 'ahead', 'date' => '2099-01-01'],
+		];
+
+		expect(collectionRefinerIdsWhere('date', 'past', null, $rows))->toBe(['old']);
+		expect(collectionRefinerIdsWhere('date', 'future', null, $rows))->toBe(['ahead']);
+		expect(collectionRefinerIdsWhere('date', 'before', '2050-01-01', $rows))->toBe(['old']);
+		expect(collectionRefinerIdsWhere('date', 'after', '2050-01-01', $rows))->toBe(['ahead']);
 	});
 });
 
