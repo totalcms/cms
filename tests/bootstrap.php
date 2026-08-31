@@ -9,8 +9,13 @@ declare(strict_types=1);
 // covers the phpunit bootstrap path.
 $_SERVER['APP_ENV'] = 'test';
 
-// may need to increase memory limit for tests in php.ini
-ini_set('memory_limit', '1G');
+// Tests need more headroom than a stock php.ini gives. This runs after
+// PHPUnit has applied phpunit.xml's <ini> block, so a plain ini_set() here
+// wins over both that and any -d flag — which is what made
+// test:coverage:parallel die in CoverageMerger: the coverage scripts asked
+// for more and every worker silently clamped back to 1G. Honour an explicit
+// request instead. The env var reaches workers, which php.ini flags do not.
+ini_set('memory_limit', getenv('TCMS_TEST_MEMORY_LIMIT') ?: '1G');
 
 // Set session save path to writable directory for CI environments
 $sessionPath = sys_get_temp_dir() . '/php_sessions';
