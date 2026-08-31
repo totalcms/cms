@@ -226,6 +226,34 @@ describe('CollectionRefiner :: unknown fields and empty values', function (): vo
 		expect(collectionRefinerIdsWhere('membersonly', 'istrue'))->toBe([]);
 	});
 
+	it('resolves a dotted property in the unrecognised-operator fallback', function (): void {
+		// The fallback used $record[$property] — the raw key — so a dotted path
+		// missed entirely and emitted an undefined-key warning on every row. It
+		// now uses the value getPropertyValueForRecord() already resolved.
+		$rows = [
+			['id' => 'a', 'meta' => ['author' => 'joe']],
+			['id' => 'b', 'meta' => ['author' => 'sam']],
+		];
+
+		expect(collectionRefinerIdsWhere('meta.author', 'nonsenseOperator', 'joe', $rows))->toBe(['a']);
+	});
+
+	it('does not dispatch to this class own methods as if they were operators', function (): void {
+		// method_exists() matched anything on the class, so `operator:
+		// 'filterUnique'` reached a method expecting an array, raising a
+		// TypeError — a 500 for what should be an empty result or a plain
+		// comparison. Only protected static helpers taking one or two arguments
+		// are operators now.
+		$rows = [['id' => 'a', 'title' => 'One'], ['id' => 'b', 'title' => 'Two']];
+
+		foreach (['filterUnique', 'getPropertyValueForRecord', 'filterArrayByRule', 'filter'] as $notAnOperator) {
+			expect(fn () => collectionRefinerIdsWhere('id', $notAnOperator, 'a', $rows))
+				->not->toThrow(TypeError::class);
+		}
+
+		// Each degrades to the loose-comparison fallback.
+		expect(collectionRefinerIdsWhere('id', 'filterUnique', 'a', $rows))->toBe(['a']);
+	});
 	it('falls back to a direct loose comparison for an unrecognised operator', function (): void {
 		// A typo'd operator must not silently match everything; it degrades to
 		// `$record[$property] == $value`.
@@ -419,16 +447,36 @@ describe('CollectionRefiner :: array property values', function (): void {
 		expect(collectionRefinerIdsWhere('tags', 'hasMax', '1', $rows))->toBe(['one', 'garbage']);
 	});
 
-	it('BUG: hasMin / hasCount never match a real array property', function (): void {
-		// post-1 has 2 tags and post-2 has 1, yet hasMin:1 returns nothing.
-		// filterByRule detects an array property value and delegates to
-		// filterArrayByRule, which calls the operator once PER ELEMENT — so
-		// hasMin receives the string 'php', json_decode fails, and the count is
-		// always 0. The count operators therefore only work on JSON strings, not
-		// on the arrays the docs describe. Locked in so a fix is a visible,
-		// deliberate change rather than an accident.
-		expect(collectionRefinerIdsWhere('tags', 'hasMin', '1'))->toBe([]);
-		expect(collectionRefinerIdsWhere('tags', 'hasCount', '2'))->toBe([]);
+	it('counts a real array property, not just a JSON-encoded one', function (): void {
+		// filterByRule dispatches per element when a property holds an array —
+		// `tags contains 'php'` means "any element contains php". These three
+		// operators ask about the array itself, so per-element dispatch handed
+		// hasMin the string 'php', json_decode failed, and the count was always
+		// 0: hasMin and hasCount never matched a real array, and hasMax matched
+		// any non-empty one whatever its size.
+		//
+		// List fields are stored as real arrays, so this was the normal case,
+		// not an edge one.
+		$rows = [
+			['id' => 'three', 'tags' => ['a', 'b', 'c']],
+			['id' => 'one',   'tags' => ['a']],
+		];
+
+		expect(collectionRefinerIdsWhere('tags', 'hasMin', '2', $rows))->toBe(['three']);
+		expect(collectionRefinerIdsWhere('tags', 'hasCount', '1', $rows))->toBe(['one']);
+		expect(collectionRefinerIdsWhere('tags', 'hasMax', '1', $rows))->toBe(['one']);
+	});
+
+	it('still dispatches other operators per element on an array property', function (): void {
+		// The fix must not turn every operator into a whole-array one: `contains`
+		// still has to mean "any element contains this".
+		$rows = [
+			['id' => 'post-1', 'tags' => ['php', 'twig']],
+			['id' => 'post-2', 'tags' => ['design']],
+		];
+
+		expect(collectionRefinerIdsWhere('tags', 'contains', 'php', $rows))->toBe(['post-1']);
+		expect(collectionRefinerIdsWhere('tags', 'equal', 'design', $rows))->toBe(['post-2']);
 	});
 });
 

@@ -18,6 +18,18 @@ class CollectionRefiner
 	private static array $paramCountCache = [];
 
 	/**
+	 * Operators that take the whole property value rather than one element.
+	 *
+	 * Everything else is applied per element when the property is an array —
+	 * `tags contains 'php'` means "any element contains php". These three ask
+	 * about the array itself, so per-element dispatch handed them a single
+	 * string, json_decode() failed, and they counted 0 every time: hasMin and
+	 * hasCount never matched a real array property, and hasMax matched any
+	 * non-empty one regardless of size.
+	 */
+	private const WHOLE_VALUE_OPERATORS = ['hasMin', 'hasMax', 'hasCount'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param array<array<string,mixed>> $collection
@@ -235,12 +247,28 @@ class CollectionRefiner
 
 		// Cache reflection results to avoid repeated reflection calls
 		if (!isset(self::$paramCountCache[$operator])) {
+			$isOperator = false;
+
 			if (method_exists($this, $operator)) {
-				$reflection                       = new \ReflectionMethod(CollectionRefiner::class, $operator);
-				self::$paramCountCache[$operator] = $reflection->getNumberOfParameters();
-				self::$methodCache[$operator]     = true;
-			} else {
-				self::$methodCache[$operator]     = false;
+				$reflection = new \ReflectionMethod(CollectionRefiner::class, $operator);
+
+				// An operator is a protected static helper taking the value and,
+				// optionally, the value to compare it against. method_exists()
+				// alone also matches this class's own machinery — filterUnique(),
+				// getPropertyValueForRecord(), filterArrayByRule() — and
+				// dispatching to one of those raises a TypeError, turning a
+				// typo'd operator into a 500 rather than an empty result.
+				$isOperator = $reflection->isProtected()
+					&& $reflection->isStatic()
+					&& $reflection->getNumberOfParameters() <= 2;
+
+				if ($isOperator) {
+					self::$paramCountCache[$operator] = $reflection->getNumberOfParameters();
+				}
+			}
+
+			self::$methodCache[$operator] = $isOperator;
+			if (!$isOperator) {
 				self::$paramCountCache[$operator] = 2; // Default for fallback
 			}
 		}
@@ -261,7 +289,7 @@ class CollectionRefiner
 			}
 
 			if ($methodExists) {
-				if (is_array($propertyValue)) {
+				if (is_array($propertyValue) && !in_array($operator, self::WHOLE_VALUE_OPERATORS, true)) {
 					$found = self::filterArrayByRule($propertyValue, $filterValue, $operator);
 
 					return $not ? !$found : $found;
@@ -276,7 +304,10 @@ class CollectionRefiner
 				return $not ? !$found : $found;
 			}
 
-			return $record[$property] == $filterValue;
+			// $propertyValue, not $record[$property]: the raw key misses a dotted
+			// path like `meta.author` and emits an undefined-key warning, where
+			// the resolved value has already walked it.
+			return $propertyValue == $filterValue;
 		});
 	}
 
