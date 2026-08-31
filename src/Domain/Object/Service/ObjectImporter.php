@@ -200,10 +200,18 @@ class ObjectImporter
 		// nested arrays before the unknown-property filter strips them.
 		$objectData = $this->unflattenDottedProperties($objectData, $schema);
 
-		// Filter out properties that are not in the schema
+		// Filter out properties that are not in the schema.
+		//
+		// `id` survives regardless: it identifies the object rather than
+		// describing it, and ObjectData carries it separately from the schema
+		// properties. A schema that does not declare an `id` property (one of
+		// the 37 shipped ones, and any custom schema) previously had the id
+		// stripped here — before updateObject()'s own empty($objectData['id'])
+		// check, which then rejected the payload with "Object ID is required
+		// for updating" even though the caller had supplied one.
 		$objectData = array_filter(
 			$objectData,
-			fn ($value, $name): bool => isset($schema->properties[$name]),
+			fn ($value, $name): bool => $name === 'id' || isset($schema->properties[$name]),
 			ARRAY_FILTER_USE_BOTH
 		);
 

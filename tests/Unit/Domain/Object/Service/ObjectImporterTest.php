@@ -770,15 +770,39 @@ describe('ObjectImporter::updateObject', function (): void {
 			->toThrow(\InvalidArgumentException::class, 'Object does not exist');
 	});
 
-	it('rejects the payload when the schema has no id property', function (): void {
-		// TRAP: the schema filter runs BEFORE the id check, so `id` survives
-		// only because it is declared as a property. A custom schema without an
-		// `id` field can therefore never be updated by an importer — it fails
-		// with the misleading "Object ID is required" message.
+	it('updates an object whose schema does not declare an id property', function (): void {
+		// The schema filter runs BEFORE the id check, and it used to drop `id`
+		// along with any other undeclared key — so a custom schema without an
+		// `id` property could never be updated by an importer. It failed with
+		// the misleading "Object ID is required for updating" even though the
+		// caller had supplied one.
+		//
+		// `id` identifies the object rather than describing it, so it now
+		// survives the filter regardless of what the schema declares.
 		$handle = objectImporterHarness(['title' => ['type' => 'string']], ['exists' => true]);
 
-		expect(fn () => $handle->importer->updateObject('blog', ['id' => 'post-1', 'title' => 'Hi']))
+		$handle->importer->updateObject('blog', ['id' => 'post-1', 'title' => 'Hi']);
+
+		expect($handle->patchedId)->toBe('post-1');
+	});
+
+	it('still rejects an update with no id at all', function (): void {
+		// The guard has to keep working — preserving `id` through the filter
+		// must not turn a genuinely missing id into a silent no-op.
+		$handle = objectImporterHarness(['title' => ['type' => 'string']], ['exists' => true]);
+
+		expect(fn () => $handle->importer->updateObject('blog', ['title' => 'Hi']))
 			->toThrow(\InvalidArgumentException::class, 'Object ID is required for updating');
+	});
+
+	it('does not let an undeclared property through alongside the id', function (): void {
+		// Only `id` is exempt from the schema filter. A stale CSV column must
+		// still be dropped rather than written to the object.
+		$handle = objectImporterHarness(['title' => ['type' => 'string']], ['exists' => true]);
+
+		$handle->importer->updateObject('blog', ['id' => 'post-1', 'title' => 'Hi', 'wp_meta' => 'junk']);
+
+		expect($handle->patchedPayload)->not->toHaveKey('wp_meta');
 	});
 
 	it('slugifies the incoming id so it matches what import wrote', function (): void {
