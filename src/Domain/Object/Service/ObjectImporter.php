@@ -453,6 +453,11 @@ class ObjectImporter
 		$list = preg_split('/[,|]/', $list) ?: [];
 		$list = array_map(trim(...), $list);
 
-		return array_filter($list);
+		// Drop empty entries only. A bare array_filter() discards every falsy
+		// value, so a list containing "0" silently lost it, and without
+		// array_values() the surviving keys stayed sparse — "a,,b" produced
+		// [0 => 'a', 2 => 'b'], which json_encode writes as an object rather
+		// than a list, changing the stored shape of the field.
+		return array_values(array_filter($list, static fn (string $item): bool => $item !== ''));
 	}
 }

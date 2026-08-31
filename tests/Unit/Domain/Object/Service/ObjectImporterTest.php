@@ -351,7 +351,43 @@ describe('ObjectImporter::importObject payload correctness', function (): void {
 
 		$handle->importer->importObject('blog', ['tags' => ' php , twig| cms ']);
 
-		expect(array_values($handle->savedPayload['tags']))->toBe(['php', 'twig', 'cms']);
+		// Asserted without array_values(): the stored value must already be a
+		// list, because that is what gets persisted.
+		expect($handle->savedPayload['tags'])->toBe(['php', 'twig', 'cms']);
+	});
+
+	it('keeps a "0" entry in a list instead of filtering it away', function (): void {
+		// convertList() used a bare array_filter(), which drops every falsy
+		// value. A tag list of "0,1,2" — or any list where 0 is a legitimate
+		// value, like ratings or sizes — silently lost that entry on import.
+		$handle = objectImporterHarness(['tags' => ['$ref' => objectImporterRef('list')]]);
+
+		$handle->importer->importObject('blog', ['tags' => '0,1,2']);
+
+		expect($handle->savedPayload['tags'])->toBe(['0', '1', '2']);
+	});
+
+	it('reindexes after dropping blanks so the value stays a JSON list', function (): void {
+		// Without array_values() the surviving keys stayed sparse:
+		// "a,,b" produced [0 => 'a', 2 => 'b'], which json_encode writes as
+		// {"0":"a","2":"b"} — an object, not an array. Anything reading the
+		// field back as a list, in Twig or over the API, then sees the wrong
+		// shape.
+		$handle = objectImporterHarness(['tags' => ['$ref' => objectImporterRef('list')]]);
+
+		$handle->importer->importObject('blog', ['tags' => 'a,,b']);
+
+		expect($handle->savedPayload['tags'])->toBe(['a', 'b']);
+		expect(array_keys($handle->savedPayload['tags']))->toBe([0, 1]);
+		expect(json_encode($handle->savedPayload['tags']))->toBe('["a","b"]');
+	});
+
+	it('drops trailing and leading delimiters without leaving gaps', function (): void {
+		$handle = objectImporterHarness(['tags' => ['$ref' => objectImporterRef('list')]]);
+
+		$handle->importer->importObject('blog', ['tags' => ',php,,twig,']);
+
+		expect($handle->savedPayload['tags'])->toBe(['php', 'twig']);
 	});
 
 	it('decodes JSON ref values instead of treating them as filesystem paths', function (): void {
