@@ -172,13 +172,45 @@ readonly class ObjectExporter
 			'cardSubProps'    => $cardSubProps,
 			'localizedProps'  => $localizedProps,
 		]            = $this->buildCsvHeaders($schema);
-		$objects     = [$headers];
 		$errors      = [];
+
+		// Columns come from the schema, so anything an object still stores that
+		// the schema no longer declares had no column and was dropped — while
+		// the JSON export, which reads the object rather than the schema, kept
+		// it. A CSV taken as a backup after a schema edit was therefore missing
+		// data, silently. Undeclared properties now get columns of their own,
+		// appended after the declared ones so existing consumers keep the
+		// column order they already depend on.
+		//
+		// Rows are held until the extra columns are known. That is no worse
+		// than before: the whole export was already accumulated in memory.
+		$declared = array_flip($headers);
+		$expanded = array_merge(array_keys($cardSubProps), array_keys($localizedProps));
+		$extras   = [];
+		$pending  = [];
 
 		foreach ($objectIds as $id) {
 			try {
-				$object    = $this->objectFetcher->fetchObject($collection, $id);
-				$objects[] = $this->buildCsvRow($object, $headers, $cardSubProps, $localizedProps);
+				$object = $this->objectFetcher->fetchObject($collection, $id);
+				$forCsv = $object->forCsv();
+
+				$undeclared = [];
+				foreach ($forCsv as $key => $value) {
+					$keyStr = (string)$key;
+					// Card and localized properties are already represented by
+					// their `name.subkey` columns; their own name appearing here
+					// is the stringified whole, not a missing column.
+					if (isset($declared[$keyStr]) || in_array($keyStr, $expanded, true)) {
+						continue;
+					}
+					$undeclared[$keyStr] = (string)$value;
+					$extras[$keyStr]     = true;
+				}
+
+				$pending[] = [
+					'row'        => $this->buildCsvRow($object, $headers, $cardSubProps, $localizedProps),
+					'undeclared' => $undeclared,
+				];
 			} catch (\Throwable $e) {
 				$this->logger->warning('Skipping object during CSV export due to data mismatch', [
 					'collection' => $collection,
@@ -189,6 +221,19 @@ readonly class ObjectExporter
 				]);
 				$errors[] = $id;
 			}
+		}
+
+		$extraColumns = array_keys($extras);
+		$objects      = [array_merge($headers, $extraColumns)];
+
+		foreach ($pending as $entry) {
+			$tail = [];
+			foreach ($extraColumns as $column) {
+				// An object that does not have this property gets an empty cell,
+				// which the importer reads as absent.
+				$tail[] = $entry['undeclared'][$column] ?? '';
+			}
+			$objects[] = array_merge($entry['row'], $tail);
 		}
 
 		return [
@@ -369,6 +414,16 @@ readonly class ObjectExporter
 		$raw = $property->get($subProp);
 		if ($raw === null) {
 			return '';
+		}
+
+		// Booleans render the way BooleanData does, not the way PHP casts them.
+		// (string)false is '' — indistinguishable from an empty cell — and
+		// (string)true is '1', while a top-level boolean column in the same file
+		// says 'true'. Two spellings of the same value in one export, and one of
+		// them lossy. ObjectImporter converts these back using the card's own
+		// sub-schema, so the value comes home a boolean rather than a string.
+		if (is_bool($raw)) {
+			return $raw ? 'true' : 'false';
 		}
 
 		// Nested arrays (e.g. an image stored inside a card) round-trip as JSON.

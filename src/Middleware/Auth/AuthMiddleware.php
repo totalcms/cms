@@ -49,7 +49,7 @@ readonly class AuthMiddleware implements MiddlewareInterface
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return $handler->handle($request);
 		}
 

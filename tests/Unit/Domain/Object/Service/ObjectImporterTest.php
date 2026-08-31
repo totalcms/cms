@@ -444,6 +444,83 @@ describe('ObjectImporter::importObject payload correctness', function (): void {
 			->and($handle->savedPayload['title'])->toBe('Post title');
 	});
 
+	it('restores a card boolean as a boolean, not the string it travelled as', function (): void {
+		// CardData stores sub-values verbatim — there is no property type doing
+		// the coercion a top-level field gets — so a CSV round trip used to turn
+		// a real `false` into '' and `true` into '1'. Which sub-keys are
+		// booleans comes from the card's own sub-schema.
+		$handle = objectImporterHarness([
+			'hero' => [
+				'$ref'      => objectImporterRef('card'),
+				'schemaref' => 'hero-card',
+			],
+		]);
+		$handle->schemaFetcher->method('fetchSchema')->willReturn(objectImporterSchema([
+			'featured' => ['type' => 'boolean'],
+			'label'    => ['type' => 'string'],
+		]));
+
+		$handle->importer->importObject('blog', [
+			'hero.featured' => 'false',
+			'hero.label'    => 'Hello',
+		]);
+
+		expect($handle->savedPayload['hero']['featured'])->toBeFalse()
+			->and($handle->savedPayload['hero']['label'])->toBe('Hello');
+	});
+
+	it('restores a true card boolean too', function (): void {
+		$handle = objectImporterHarness([
+			'hero' => [
+				'$ref'      => objectImporterRef('card'),
+				'schemaref' => 'hero-card',
+			],
+		]);
+		$handle->schemaFetcher->method('fetchSchema')->willReturn(objectImporterSchema([
+			'featured' => ['type' => 'boolean'],
+		]));
+
+		$handle->importer->importObject('blog', ['hero.featured' => 'true']);
+
+		expect($handle->savedPayload['hero']['featured'])->toBeTrue();
+	});
+
+	it('leaves a card string sub-field alone even when it reads like a boolean', function (): void {
+		// The reason this is driven by the sub-schema rather than by inspecting
+		// the text: a card field that legitimately holds the word "true" must
+		// stay a string.
+		$handle = objectImporterHarness([
+			'hero' => [
+				'$ref'      => objectImporterRef('card'),
+				'schemaref' => 'hero-card',
+			],
+		]);
+		$handle->schemaFetcher->method('fetchSchema')->willReturn(objectImporterSchema([
+			'answer' => ['type' => 'string'],
+		]));
+
+		$handle->importer->importObject('blog', ['hero.answer' => 'true']);
+
+		expect($handle->savedPayload['hero']['answer'])->toBe('true');
+	});
+
+	it('imports a card whose sub-schema cannot be loaded, without coercing', function (): void {
+		// A missing sub-schema must not lose the card; values just stay strings,
+		// which is what happened before any of this.
+		$handle = objectImporterHarness([
+			'hero' => [
+				'$ref'      => objectImporterRef('card'),
+				'schemaref' => 'gone',
+			],
+		]);
+		$handle->schemaFetcher->method('fetchSchema')
+			->willThrowException(new \RuntimeException('no such schema'));
+
+		$handle->importer->importObject('blog', ['hero.featured' => 'false']);
+
+		expect($handle->savedPayload['hero'])->toBe(['featured' => 'false']);
+	});
+
 	it('unflattens dotted localized columns keyed by locale', function (): void {
 		// All three localized field types share one $ref; a regression here
 		// would collapse a multi-locale site down to a single string value.

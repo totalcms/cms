@@ -160,6 +160,25 @@ class Config
 	 * Computed (not a stored property) so it tracks `datadir` even when that is
 	 * set after construction (e.g. tests building Config via reflection).
 	 */
+	/**
+	 * Whether the authentication system is switched on.
+	 *
+	 * Twenty call sites read `$config->auth['enable'] === false` directly. The
+	 * key is in defaults.php, so on a normally-built Config it is always there
+	 * — but a Config assembled programmatically (an extension, a test, a
+	 * partial settings array) can omit it, and the bare read then emits
+	 * "Undefined array key". It fails secure, evaluating to "auth stays on",
+	 * but on installs that promote warnings to exceptions it throws instead:
+	 * from AuthMiddleware that is a 500 on every authenticated request.
+	 *
+	 * Absent means enabled, matching the shipped default. Only an explicit
+	 * `false` disables, as before — a truthy string or 0 does not.
+	 */
+	public function authEnabled(): bool
+	{
+		return ($this->auth['enable'] ?? true) !== false;
+	}
+
 	public function systemDir(): string
 	{
 		return rtrim($this->datadir, '/\\') . '/.system';

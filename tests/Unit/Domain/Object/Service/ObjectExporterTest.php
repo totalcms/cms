@@ -514,11 +514,11 @@ describe('CSV headers', function (): void {
 		]);
 	});
 
-	it('drops object properties that the schema no longer declares', function (): void {
-		// Same schema-driven-headers consequence in the other direction: data
-		// still stored on the object but removed from the schema is NOT in the
-		// CSV. JSON export keeps it; CSV does not. Worth knowing before someone
-		// treats a CSV export as a backup.
+	it('keeps object properties that the schema no longer declares', function (): void {
+		// Headers come from the schema, so data still stored on the object but
+		// removed from the schema used to have no column and vanish — while the
+		// JSON export, which reads the object, kept it. A CSV taken as a backup
+		// after a schema edit was quietly short.
 		$h = objectExporterHarness();
 
 		$h['schemas']->method('fetchSchemaForCollection')->willReturn(objectExporterSchema([
@@ -528,15 +528,70 @@ describe('CSV headers', function (): void {
 		$h['storage']->method('fetchObjectIds')->willReturn(['post-1']);
 		objectExporterMapObjects($h['objects'], [
 			'post-1' => objectExporterObject('post-1', [
-				'title'   => new StringData('Kept'),
-				'orphan'  => new StringData('Dropped by CSV'),
+				'title'  => new StringData('Kept'),
+				'orphan' => new StringData('Also kept now'),
 			]),
 		]);
 
 		$result = $h['exporter']->exportAllObjectsForCSv('posts');
 
-		expect($result['data'][0])->not->toContain('orphan')
-			->and($result['data'][1])->toBe(['post-1', 'Kept']);
+		// Appended after the declared columns, not woven in: existing consumers
+		// keep the column order they already depend on.
+		expect($result['data'][0])->toBe(['id', 'title', 'orphan'])
+			->and($result['data'][1])->toBe(['post-1', 'Kept', 'Also kept now']);
+	});
+
+	it('pads rows for an undeclared property only some objects have', function (): void {
+		// Column count has to stay constant across rows or the file is
+		// unparseable, and the extra column is discovered from whichever object
+		// happens to carry it.
+		$h = objectExporterHarness();
+
+		$h['schemas']->method('fetchSchemaForCollection')->willReturn(objectExporterSchema([
+			'id'    => objectExporterTextProperty(),
+			'title' => objectExporterTextProperty(),
+		]));
+		$h['storage']->method('fetchObjectIds')->willReturn(['post-1', 'post-2']);
+		objectExporterMapObjects($h['objects'], [
+			'post-1' => objectExporterObject('post-1', ['title' => new StringData('No orphan')]),
+			'post-2' => objectExporterObject('post-2', [
+				'title'  => new StringData('Has orphan'),
+				'orphan' => new StringData('Only here'),
+			]),
+		]);
+
+		$result = $h['exporter']->exportAllObjectsForCSv('posts');
+
+		expect($result['data'][0])->toBe(['id', 'title', 'orphan'])
+			->and($result['data'][1])->toBe(['post-1', 'No orphan', ''])
+			->and($result['data'][2])->toBe(['post-2', 'Has orphan', 'Only here']);
+	});
+
+	it('does not mistake a flattened card for an undeclared property', function (): void {
+		// forCsv() carries the card under its own name as one stringified
+		// value, while the headers carry `name.subkey` columns. Treating that
+		// as an undeclared property would append a duplicate column holding the
+		// whole card again.
+		$h = objectExporterHarness();
+
+		$h['schemas']->method('fetchSchemaForCollection')->willReturn(objectExporterSchema([
+			'id'      => objectExporterTextProperty(),
+			'details' => objectExporterCardProperty('detail-card'),
+		]));
+		$h['schemas']->method('fetchSchema')->willReturn(objectExporterSchema([
+			'id'    => objectExporterTextProperty(),
+			'label' => objectExporterTextProperty(),
+		]));
+		$h['storage']->method('fetchObjectIds')->willReturn(['post-1']);
+		objectExporterMapObjects($h['objects'], [
+			'post-1' => objectExporterObject('post-1', [
+				'details' => new CardData(['label' => 'Hello']),
+			]),
+		]);
+
+		$result = $h['exporter']->exportAllObjectsForCSv('posts');
+
+		expect($result['data'][0])->toBe(['id', 'details.label']);
 	});
 
 	it('leaves an empty cell for a schema property the object has no value for', function (): void {
@@ -598,6 +653,35 @@ describe('CSV card flattening', function (): void {
 			],
 			'errors' => [],
 		]);
+	});
+
+	it('writes a card boolean the way every other boolean column is written', function (): void {
+		// (string)false is '' — indistinguishable from an empty cell, which the
+		// importer reads as "absent" — and (string)true is '1', while a
+		// top-level boolean column in the same file says 'true'. Two spellings
+		// of one value in one export, one of them lossy.
+		$h = objectExporterHarness();
+
+		$h['schemas']->method('fetchSchemaForCollection')->willReturn(objectExporterSchema([
+			'id'   => objectExporterTextProperty(),
+			'hero' => objectExporterCardProperty('hero-card'),
+		]));
+		$h['schemas']->method('fetchSchema')->willReturn(objectExporterSchema([
+			'id'       => objectExporterTextProperty(),
+			'featured' => objectExporterTextProperty(),
+			'archived' => objectExporterTextProperty(),
+		]));
+		$h['storage']->method('fetchObjectIds')->willReturn(['post-1']);
+		objectExporterMapObjects($h['objects'], [
+			'post-1' => objectExporterObject('post-1', [
+				'hero' => new CardData(['featured' => true, 'archived' => false]),
+			]),
+		]);
+
+		$result = $h['exporter']->exportAllObjectsForCSv('posts');
+
+		expect($result['data'][0])->toBe(['id', 'hero.featured', 'hero.archived'])
+			->and($result['data'][1])->toBe(['post-1', 'true', 'false']);
 	});
 
 	it('json-encodes a nested array stored inside a card', function (): void {

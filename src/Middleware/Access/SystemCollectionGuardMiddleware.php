@@ -56,7 +56,7 @@ readonly class SystemCollectionGuardMiddleware implements MiddlewareInterface
 	{
 		// Auth disabled globally = no security model; pass through (consistent
 		// with BaseAccessMiddleware).
-		if (($this->config->auth['enable'] ?? true) === false) {
+		if (!$this->config->authEnabled()) {
 			return $handler->handle($request);
 		}
 

@@ -8,11 +8,13 @@ use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Property\Data\BooleanData;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Property\Service\DepotSaver;
 use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\GallerySaver;
 use TotalCMS\Domain\Property\Service\ImageSaver;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -312,9 +314,12 @@ class ObjectImporter
 				continue;
 			}
 
-			$prefix    = $name . '.';
-			$nested    = [];
-			$foundKeys = false;
+			$prefix         = $name . '.';
+			$nested         = [];
+			$foundKeys      = false;
+			$booleanSubKeys = $property['$ref'] === SchemaData::PROPERTY_TYPE_TO_REF['card']
+				? $this->fetchCardBooleanSubKeys($property)
+				: [];
 
 			foreach (array_keys($objectData) as $key) {
 				$keyStr = (string)$key;
@@ -331,6 +336,15 @@ class ObjectImporter
 				// plain strings, so this branch is a no-op for them.
 				if (is_string($value) && $value !== '' && ($value[0] === '{' || $value[0] === '[') && $this->isJson($value)) {
 					$value = json_decode($value, true);
+				} elseif (is_string($value) && in_array($subKey, $booleanSubKeys, true)) {
+					// CardData stores sub-values verbatim — there is no property
+					// type doing the coercion a top-level field would get — so a
+					// CSV round trip used to turn a real `false` into the string
+					// `''` and `true` into `'1'`. Which sub-keys are booleans
+					// comes from the card's own sub-schema rather than from
+					// guessing at the text, so a card field that legitimately
+					// holds the word "true" stays a string.
+					$value = BooleanData::isTruthy($value);
 				}
 				$nested[$subKey] = $value;
 				unset($objectData[$keyStr]);
@@ -343,6 +357,38 @@ class ObjectImporter
 		}
 
 		return $objectData;
+	}
+
+	/**
+	 * The sub-properties of a card that are declared as booleans.
+	 *
+	 * @param array<string,mixed> $property
+	 *
+	 * @return array<int,string>
+	 */
+	private function fetchCardBooleanSubKeys(array $property): array
+	{
+		$schemaref = PropertyDefinition::extractSchemaRef($property);
+		if ($schemaref === null) {
+			return [];
+		}
+
+		try {
+			$subSchema = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($schemaref));
+		} catch (\Throwable) {
+			// A card whose sub-schema has gone missing still imports; its
+			// values just stay strings, which is what happened before.
+			return [];
+		}
+
+		$booleans = [];
+		foreach ($subSchema->properties as $subName => $subProperty) {
+			if (is_array($subProperty) && ($subProperty['type'] ?? null) === 'boolean') {
+				$booleans[] = (string)$subName;
+			}
+		}
+
+		return $booleans;
 	}
 
 	private function saveImages(): void
