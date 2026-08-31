@@ -157,7 +157,7 @@ class PersistentLoginService
 		// unvalidated selector like `../../tcms-data/.system/apikeys` would read
 		// and DELETE arbitrary `.json` files. Reject anything that isn't our
 		// exact format before it touches the filesystem.
-		if (preg_match('/^[a-f0-9]{32}$/', $selector) !== 1) {
+		if (!$this->isValidSelector($selector)) {
 			$this->logger->warning('Invalid persistent cookie selector format');
 			$this->clearPersistentCookie();
 
@@ -457,8 +457,33 @@ class PersistentLoginService
 	/**
 	 * Clear persistent token file only (does not clear cookie).
 	 */
+	/**
+	 * Whether a selector is safe to build a filesystem path from.
+	 *
+	 * Selectors come out of a cookie, so they are attacker-controlled. The
+	 * \z anchor rather than $ is deliberate: $ also matches before a
+	 * trailing newline, which would let a selector through that the guard
+	 * reads as rejecting.
+	 */
+	private function isValidSelector(string $selector): bool
+	{
+		return preg_match('/^[a-f0-9]{32}\z/', $selector) === 1;
+	}
+
 	private function clearPersistentTokenFile(string $selector): void
 	{
+		// Validate here rather than at the call sites: this is the only place
+		// that turns a selector into a path to unlink, so guarding it covers
+		// every caller. clearPersistentLogin() previously passed the cookie's
+		// selector straight through, which let a logged-in user with a
+		// remember-me session delete any .json file reachable from tokenDir by
+		// editing their own cookie and hitting logout.
+		if (!$this->isValidSelector($selector)) {
+			$this->logger->warning('Refusing to clear persistent token for an invalid selector');
+
+			return;
+		}
+
 		$tokenFile = $this->tokenDir . '/' . $selector . '.json';
 		if (file_exists($tokenFile)) {
 			@unlink($tokenFile);
