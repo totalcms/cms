@@ -221,6 +221,80 @@ Configure upload restrictions in your collection schemas:
 ```
 
 
+## Running Behind a Proxy
+
+Rate limiting, webhook throttling and the OAuth registration log all need to
+know which address a request came from. When Total CMS sits behind a reverse
+proxy or a CDN, the connecting address is the proxy's, and the real visitor is
+in a header the proxy adds — `CF-Connecting-IP` for Cloudflare, or
+`X-Forwarded-For`.
+
+The catch is that a visitor can send those headers too, and nothing about a
+header says who set it. If Total CMS believed them unconditionally, anyone could
+send a different value on each request, land in a fresh rate-limit bucket every
+time, and never be limited at all.
+
+`trustProxyHeaders` in `tcms.php` decides when those headers are believed:
+
+```php
+$settings['trustProxyHeaders'] = 'auto'; // 'auto' | 'always' | 'never'
+```
+
+| Value | Behaviour |
+| --- | --- |
+| `auto` (default) | Believe the headers only when the request arrives from a private or loopback address — a reverse proxy on the same machine or LAN. |
+| `always` | Believe the headers on every request. |
+| `never` | Ignore the headers; always use the connecting address. |
+
+**`auto` is right for nginx or Apache in front of PHP**, which is the usual
+setup, and it needs no configuration. It is also safe on a server exposed
+directly to the internet, because a request arriving from a public address is
+not coming from your proxy.
+
+### Behind Cloudflare
+
+Cloudflare connects to your origin from its own public addresses — and they are
+easy to misread, because `172.64.0.0/13` looks like the private `172.16.0.0/12`
+block and is not part of it. So `auto` will ignore Cloudflare's headers and
+treat every visitor as the same client, which shows up as rate limits firing on
+legitimate traffic.
+
+There are two ways to fix that. **The first is better.**
+
+**1. Resolve the real address in your web server (recommended).** Apache's
+`mod_remoteip` and nginx's `real_ip` module rewrite the connecting address from
+`CF-Connecting-IP`, but only for requests that genuinely came from Cloudflare's
+IP ranges. `REMOTE_ADDR` then holds the real visitor before PHP sees it, so
+`auto` is correct and you can leave `trustProxyHeaders` alone.
+
+```apache
+# Apache — with Cloudflare's published ranges
+RemoteIPHeader CF-Connecting-IP
+RemoteIPTrustedProxy 173.245.48.0/20 103.21.244.0/22 # ...and the rest
+```
+
+```nginx
+# nginx — with Cloudflare's published ranges
+set_real_ip_from 173.245.48.0/20;
+set_real_ip_from 103.21.244.0/22; # ...and the rest
+real_ip_header CF-Connecting-IP;
+```
+
+Cloudflare publishes the current list at
+[cloudflare.com/ips](https://www.cloudflare.com/ips/). This approach also fixes
+the address your access logs and error reporting see, not just Total CMS, and
+keeps the range list in the place your server tooling already maintains.
+
+**2. Set `trustProxyHeaders` to `always`.** Simpler, and appropriate when you
+cannot configure the web server. It believes the headers no matter who sent
+them, so it is only safe once your origin cannot be reached directly — see
+[protecting your origin server](https://developers.cloudflare.com/fundamentals/security/protect-your-origin-server/).
+If someone can reach your origin by IP, this setting is an open door.
+
+To check what your install is doing now, look at **Proxy Headers** in
+Settings → Server Info. It reports the current mode and says plainly when
+headers are being ignored.
+
 ## HTTPS and Transport Security
 
 ### Always Use HTTPS

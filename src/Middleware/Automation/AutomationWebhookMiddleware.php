@@ -14,6 +14,7 @@ use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Automation\Service\AutomationResolver;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Security\CSRF\RequestOriginValidator;
+use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -38,6 +39,7 @@ final readonly class AutomationWebhookMiddleware implements MiddlewareInterface
 		private ResponseFactoryInterface $responseFactory,
 		private Config $config,
 		private RequestOriginValidator $originValidator,
+		private ClientIpResolver $clientIpResolver,
 	) {
 	}
 
@@ -91,7 +93,7 @@ final readonly class AutomationWebhookMiddleware implements MiddlewareInterface
 			return null;
 		}
 
-		$key   = self::RATE_PREFIX . md5($this->clientIp($request));
+		$key   = self::RATE_PREFIX . md5($this->clientIpResolver->resolve($request));
 		$count = $this->cache->getData($key);
 		$count = is_int($count) ? $count : 0;
 
@@ -103,18 +105,6 @@ final readonly class AutomationWebhookMiddleware implements MiddlewareInterface
 		$this->cache->storeData($key, $count + 1, self::WINDOW);
 
 		return null;
-	}
-
-	private function clientIp(ServerRequestInterface $request): string
-	{
-		if ($request->hasHeader('CF-Connecting-IP')) {
-			return $request->getHeaderLine('CF-Connecting-IP');
-		}
-		if ($request->hasHeader('X-Forwarded-For')) {
-			return trim(explode(',', $request->getHeaderLine('X-Forwarded-For'))[0]);
-		}
-
-		return $request->getServerParams()['REMOTE_ADDR'] ?? '0.0.0.0';
 	}
 
 	private function error(int $status, string $message): ResponseInterface

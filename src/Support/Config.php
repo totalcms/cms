@@ -29,6 +29,8 @@ class Config
 	public string $notfound           = '';
 	public int $maxDownloadSize       = 2048;
 	public bool $debug                = false;
+	/** 'auto' | 'always' | 'never' — see ClientIpResolver. */
+	public string $trustProxyHeaders  = 'auto';
 	public bool $sentry               = true;
 	public string $appLogLevel        = 'info';
 	/** @var array<string,mixed> */
@@ -80,6 +82,7 @@ class Config
 	{
 		$this->env                = $settings['env'] ?? 'prod';
 		$this->appEnv             = (string)($settings['appEnv'] ?? '');
+		$this->trustProxyHeaders  = (string)($settings['trustProxyHeaders'] ?? 'auto');
 		$this->template           = $settings['template'];
 		$this->dashboard          = $settings['dashboard'];
 		$this->datadir            = $settings['datadir'];

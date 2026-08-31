@@ -26,11 +26,6 @@ setlocale(LC_ALL, 'C.UTF-8', 'en_US.UTF-8', 'en_US');
 // JSON fix for saving float values
 ini_set('serialize_precision', '-1');
 
-// Cloudflare IP address header
-if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
-	$_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_CF_CONNECTING_IP'];
-}
-
 // Settings
 $settings = [];
 
@@ -39,6 +34,25 @@ $settings['sentry'] = true;
 
 // Default env to production
 $settings['env'] = 'prod';
+
+// Whether to believe the client-IP headers a proxy sets (`CF-Connecting-IP`,
+// `X-Forwarded-For`). A client can set them too, so believing them
+// unconditionally lets anyone forge an identity and walk past every per-IP
+// rate limit. Resolved centrally by ClientIpResolver.
+//
+//   'auto'   (default) trust them only when the request arrives from a private
+//            or loopback address — a reverse proxy on this host or LAN. Right
+//            for nginx/Apache in front of PHP, and safe on a server exposed
+//            directly to the internet.
+//   'always' trust them unconditionally. Set this behind Cloudflare or any
+//            proxy that connects from a public address, AFTER confirming the
+//            origin cannot be reached directly — otherwise this is the hole.
+//   'never'  ignore them; always use the connecting address.
+//
+// This replaced a line here that rewrote $_SERVER['REMOTE_ADDR'] from
+// CF-Connecting-IP on every request, which made even the connecting address
+// forgeable — for logging and Sentry as well as the rate limiters.
+$settings['trustProxyHeaders'] = 'auto';
 
 // Internationalization config.
 //

@@ -103,6 +103,7 @@ final class XmlRpcRateLimitMiddlewareTest extends TestCase
 			new XmlRpcResponseWriter(),
 			new RawRenderer(),
 			new Psr17Factory(),
+			\testClientIpResolver(),
 		);
 	}
 

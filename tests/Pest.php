@@ -395,6 +395,23 @@ function recursiveCopy(string $src, string $dst): void
 }
 
 /**
+ * A ClientIpResolver for tests, with the proxy-header trust mode of your choice.
+ *
+ * 'auto' (the shipped default) honours CF-Connecting-IP / X-Forwarded-For only
+ * when the request arrives from a private or loopback address, so a test that
+ * wants those headers honoured must either present a private REMOTE_ADDR or ask
+ * for 'always'.
+ */
+function testClientIpResolver(
+	string $trustProxyHeaders = TotalCMS\Domain\Security\Request\ClientIpResolver::TRUST_AUTO,
+): TotalCMS\Domain\Security\Request\ClientIpResolver {
+	$config                    = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config->trustProxyHeaders = $trustProxyHeaders;
+
+	return new TotalCMS\Domain\Security\Request\ClientIpResolver($config);
+}
+
+/**
  * A private data dir for one test, safe to use under --parallel.
  *
  * Test files used to build these as `sys_get_temp_dir() . '/prefix-' . uniqid()`.

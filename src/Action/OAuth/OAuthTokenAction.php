@@ -10,6 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
+use TotalCMS\Domain\Security\Request\ClientIpResolver;
 
 readonly class OAuthTokenAction
 {
@@ -17,6 +18,7 @@ readonly class OAuthTokenAction
 		private AuthorizationServer $authServer,
 		private OAuthActivityLogger $activityLogger,
 		private OAuthClientPruner $clientPruner,
+		private ClientIpResolver $clientIpResolver,
 	) {
 	}
 
@@ -28,14 +30,16 @@ readonly class OAuthTokenAction
 			// Record the rejection. Without this the audit trail simply stops
 			// after consent.granted and the reason lives only in the web
 			// server's access log, which the operator usually cannot reach.
-			$parsedBody   = (array)($request->getParsedBody() ?? []);
-			$serverParams = $request->getServerParams();
+			$parsedBody = (array)($request->getParsedBody() ?? []);
 			$this->activityLogger->tokenFailed(
 				(string)($parsedBody['client_id'] ?? ''),
 				(string)($parsedBody['grant_type'] ?? ''),
 				$e->getErrorType(),
 				$e->getHint(),
-				(string)($serverParams['REMOTE_ADDR'] ?? ''),
+				// Through the resolver, not REMOTE_ADDR directly: behind a proxy
+				// the raw value is the proxy, and an audit trail naming the
+				// proxy for every rejection is no audit trail.
+				$this->clientIpResolver->resolve($request),
 			);
 
 			return $e->generateHttpResponse($response);

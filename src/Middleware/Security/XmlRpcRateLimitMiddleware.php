@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Domain\XmlRpc\Transport\XmlRpcResponseWriter;
 use TotalCMS\Renderer\RawRenderer;
 use TotalCMS\Support\Config;
@@ -34,6 +35,7 @@ readonly class XmlRpcRateLimitMiddleware implements MiddlewareInterface
 		private XmlRpcResponseWriter $writer,
 		private RawRenderer $renderer,
 		private ResponseFactoryInterface $responseFactory,
+		private ClientIpResolver $clientIpResolver,
 	) {
 	}
 
@@ -45,7 +47,7 @@ readonly class XmlRpcRateLimitMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$key   = self::CACHE_PREFIX . md5($this->clientIp($request));
+		$key   = self::CACHE_PREFIX . md5($this->clientIpResolver->resolve($request));
 		$count = $this->getCount($key);
 
 		if ($count >= $limit) {
@@ -77,20 +79,5 @@ readonly class XmlRpcRateLimitMiddleware implements MiddlewareInterface
 	private function incrementCount(string $key, int $ttl): void
 	{
 		$this->cache->storeData($key, $this->getCount($key) + 1, $ttl);
-	}
-
-	private function clientIp(ServerRequestInterface $request): string
-	{
-		if ($request->hasHeader('CF-Connecting-IP')) {
-			return $request->getHeaderLine('CF-Connecting-IP');
-		}
-
-		if ($request->hasHeader('X-Forwarded-For')) {
-			return trim(explode(',', $request->getHeaderLine('X-Forwarded-For'))[0]);
-		}
-
-		$server = $request->getServerParams();
-
-		return (string)($server['REMOTE_ADDR'] ?? 'unknown');
 	}
 }

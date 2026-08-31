@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Middleware\Security\RateLimitMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -98,9 +99,17 @@ final class RateLimitMiddlewareTest extends TestCase
 	}
 
 	/** @param array<string,mixed> $mailer */
-	private function middleware(CacheManager $cache, array $mailer): RateLimitMiddleware
-	{
-		return new RateLimitMiddleware($cache, new JsonRenderer(), $this->config($mailer));
+	private function middleware(
+		CacheManager $cache,
+		array $mailer,
+		string $trustProxyHeaders = ClientIpResolver::TRUST_AUTO,
+	): RateLimitMiddleware {
+		return new RateLimitMiddleware(
+			$cache,
+			new JsonRenderer(),
+			$this->config($mailer),
+			\testClientIpResolver($trustProxyHeaders),
+		);
 	}
 
 	/**
@@ -301,8 +310,8 @@ final class RateLimitMiddlewareTest extends TestCase
 		$handler    = $this->countingHandler();
 
 		// The client is the first entry; the rest are proxies it passed through.
-		$middleware->process($this->request('172.16.0.1', ['X-Forwarded-For' => ' 203.0.113.9 , 70.41.3.18 ']), $handler);
-		$response = $middleware->process($this->request('172.16.0.1', ['X-Forwarded-For' => '203.0.113.9, 10.0.0.1']), $handler);
+		$middleware->process($this->request('10.0.0.1', ['X-Forwarded-For' => ' 203.0.113.9 , 70.41.3.18 ']), $handler);
+		$response = $middleware->process($this->request('10.0.0.1', ['X-Forwarded-For' => '203.0.113.9, 10.0.0.1']), $handler);
 
 		// Same client, different proxy chain: still the same bucket, and the
 		// surrounding whitespace must not make it a different key.
@@ -315,8 +324,8 @@ final class RateLimitMiddlewareTest extends TestCase
 		$handler    = $this->countingHandler();
 
 		$headers = ['CF-Connecting-IP' => '203.0.113.7', 'X-Forwarded-For' => '198.51.100.4'];
-		$middleware->process($this->request('172.16.0.1', $headers), $handler);
-		$response = $middleware->process($this->request('172.16.0.1', ['CF-Connecting-IP' => '203.0.113.7']), $handler);
+		$middleware->process($this->request('10.0.0.1', $headers), $handler);
+		$response = $middleware->process($this->request('10.0.0.1', ['CF-Connecting-IP' => '203.0.113.7']), $handler);
 
 		$this->assertSame(429, $response->getStatusCode());
 	}
@@ -372,5 +381,76 @@ final class RateLimitMiddlewareTest extends TestCase
 		}
 
 		$this->assertSame(5, $handler->calls);
+	}
+
+	// ── Refusing to take a spoofed identity ──────────────────────────────────
+
+	public function testIgnoresProxyHeadersWhenTheRequestCameStraightFromTheInternet(): void
+	{
+		// The bypass this closes: with the headers trusted unconditionally, a
+		// caller sends a different CF-Connecting-IP each time, lands in a fresh
+		// bucket every request, and the per-IP cap never applies. The peer here
+		// is public, so nothing forwarded this and the headers are its own
+		// claim about itself.
+		$middleware = $this->middleware($this->workingCache(), ['ratePerIp' => 1]);
+		$handler    = $this->countingHandler();
+
+		$this->assertSame(200, $middleware->process(
+			$this->request('203.0.113.5', ['CF-Connecting-IP' => '1.1.1.1']),
+			$handler,
+		)->getStatusCode());
+
+		$this->assertSame(429, $middleware->process(
+			$this->request('203.0.113.5', ['CF-Connecting-IP' => '2.2.2.2']),
+			$handler,
+		)->getStatusCode());
+
+		$this->assertSame(1, $handler->calls);
+	}
+
+	public function testIgnoresAForgedForwardedForFromAPublicPeer(): void
+	{
+		$middleware = $this->middleware($this->workingCache(), ['ratePerIp' => 1]);
+		$handler    = $this->countingHandler();
+
+		$middleware->process($this->request('203.0.113.5', ['X-Forwarded-For' => '1.1.1.1']), $handler);
+		$response = $middleware->process($this->request('203.0.113.5', ['X-Forwarded-For' => '2.2.2.2']), $handler);
+
+		$this->assertSame(429, $response->getStatusCode());
+	}
+
+	public function testHonoursProxyHeadersFromAPublicPeerWhenTheOperatorOptsIn(): void
+	{
+		// What a Cloudflare install sets: the edge connects from a public
+		// address, and the operator has confirmed the origin is not directly
+		// reachable, so the header is the only real client identity available.
+		$middleware = $this->middleware(
+			$this->workingCache(),
+			['ratePerIp' => 1],
+			ClientIpResolver::TRUST_ALWAYS,
+		);
+		$handler = $this->countingHandler();
+
+		$middleware->process($this->request('203.0.113.5', ['CF-Connecting-IP' => '1.1.1.1']), $handler);
+		$response = $middleware->process($this->request('203.0.113.5', ['CF-Connecting-IP' => '2.2.2.2']), $handler);
+
+		$this->assertSame(200, $response->getStatusCode());
+		$this->assertSame(2, $handler->calls);
+	}
+
+	public function testCanBeToldToIgnoreProxyHeadersEntirely(): void
+	{
+		$middleware = $this->middleware(
+			$this->workingCache(),
+			['ratePerIp' => 1],
+			ClientIpResolver::TRUST_NEVER,
+		);
+		$handler = $this->countingHandler();
+
+		// Even from a private peer, which 'auto' would trust.
+		$middleware->process($this->request('10.0.0.1', ['CF-Connecting-IP' => '1.1.1.1']), $handler);
+		$response = $middleware->process($this->request('10.0.0.1', ['CF-Connecting-IP' => '2.2.2.2']), $handler);
+
+		$this->assertSame(429, $response->getStatusCode());
 	}
 }
