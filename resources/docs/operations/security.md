@@ -116,6 +116,68 @@ Total CMS implements several session security measures:
 - Secure session cookies (when using HTTPS)
 - CSRF protection on all state-changing operations
 
+### Where session files are stored
+
+Total CMS keeps session files in `tcms-data/.system/sessions`, not PHP's default
+location. PHP's default is a single directory shared by every site on the
+server, and its cleanup runs on whichever site happens to trigger it, using
+*that* site's session lifetime — often 24 minutes. A neighbouring site's cleanup
+would delete your session files no matter what Total CMS configured, which is a
+common cause of "it keeps logging me out" on shared hosting.
+
+If that directory cannot be created or written to, Total CMS falls back to
+PHP's default rather than failing: a session directory it cannot write to would
+mean nobody can log in at all.
+
+To put sessions somewhere else — a data directory on network storage is the
+usual reason — set the path explicitly in `tcms.php`:
+
+```php
+$settings['session']['save_path'] = '/var/lib/tcms-sessions';
+```
+
+### Sharing a login across subdomains
+
+By default a login applies to one hostname. The session cookie is set for the
+exact host, so signing in at `admin.example.com` does not sign you in at
+`shop.example.com`, even when both are Total CMS installs.
+
+Two things have to line up to share a login across subdomains of the same
+domain:
+
+1. **The installs must share their session storage**, which happens
+   automatically when they share one `tcms-data` folder, or can be set
+   explicitly with `session.save_path` on both.
+2. **The cookie must be widened to the parent domain** on both installs:
+
+   ```php
+   $settings['session']['cookie_domain'] = '.example.com';
+   ```
+
+"Keep me signed in" follows the same rule — its cookie inherits the session
+cookie's domain — so a persistent login is shared too.
+
+If the installs share one `tcms-data` folder, also set:
+
+```php
+$settings['cache']['domainScoped'] = false;
+```
+
+so they share one cache namespace instead of keeping separate ones.
+
+**Only do this if you control every subdomain.** Widening the cookie means
+*every* host under `example.com` receives it on every request — including any
+subdomain running software you did not write, and any subdomain someone else
+controls. `HttpOnly` stops JavaScript from reading the cookie; it does nothing
+about the server on the other end, which sees it in the request headers. A
+forgotten `test.example.com` or a customer-controlled `blog.example.com` is
+enough to turn this into a way to collect admin sessions.
+
+This works for subdomains of one domain only. `example.com` and `example.net`
+cannot share a cookie, and no configuration changes that — sharing a login
+across genuinely different domains needs a redirect-based handoff, which Total
+CMS does not currently provide.
+
 ### Account Security
 
 - Limit login attempts to prevent brute force attacks
