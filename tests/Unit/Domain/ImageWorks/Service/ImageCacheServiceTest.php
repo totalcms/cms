@@ -210,12 +210,33 @@ describe('ImageCacheService::clearAllCollectionImageCaches', function (): void {
 		expect(file_exists($this->datadir . '/blog/post-1/image/photo.jpg'))->toBeTrue();
 	});
 
-	it('always reports zero cache directories cleared', function (): void {
-		// Documents a reporting gap rather than endorsing it: the summary
-		// declares a `cache_directories_cleared` key that nothing ever
-		// increments, because clearCollectionImageCache() returns a bool rather
-		// than a count. The number is always 0 no matter how much was removed.
+	it('counts the cache directories it removed, not just the collections', function (): void {
+		// One collection, two objects, so two .cache directories. The summary
+		// used to hardcode 0 here: clearCollectionImageCache() returns a bool,
+		// so there was nothing to total. removeCacheDirectories() returns the
+		// count that this now adds up.
 		imageCacheTree($this->datadir, 'blog', ['post-1' => 5, 'post-2' => 5]);
+
+		$result = imageCacheService($this->datadir)->clearAllCollectionImageCaches();
+
+		expect($result['collections_processed'])->toBe(1);
+		expect($result['cache_directories_cleared'])->toBe(2);
+	});
+
+	it('totals cache directories across every collection', function (): void {
+		imageCacheTree($this->datadir, 'blog', ['post-1' => 2, 'post-2' => 1]);
+		imageCacheTree($this->datadir, 'gallery', ['shoot-1' => 3]);
+		imageCacheTree($this->datadir, 'pages', ['home' => 0]);
+
+		$result = imageCacheService($this->datadir)->clearAllCollectionImageCaches();
+
+		expect($result['collections_processed'])->toBe(3);
+		// blog has two cached objects, gallery one, pages none.
+		expect($result['cache_directories_cleared'])->toBe(3);
+	});
+
+	it('reports zero when there was nothing cached to clear', function (): void {
+		imageCacheTree($this->datadir, 'blog', ['post-1' => 0]);
 
 		$result = imageCacheService($this->datadir)->clearAllCollectionImageCaches();
 
