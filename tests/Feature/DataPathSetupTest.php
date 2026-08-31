@@ -32,13 +32,6 @@ afterAll(function (): void {
 });
 
 describe('Data Path Setup Feature', function (): void {
-	it('redirects to setup page when tcms-data does not exist', function (): void {
-		// Note: This test is skipped in test environment because bootstrap
-		// pre-configures datadir, preventing the redirect to setup.
-		// The setup wizard flow is tested in production environments.
-		$this->markTestSkipped('Setup redirect requires unconfigured environment');
-	});
-
 	it('renders setup page successfully when tcms-data missing', function (): void {
 		$response = get('/setup/data-path');
 
@@ -71,26 +64,6 @@ describe('Data Path Setup Feature', function (): void {
 		$body = (string)$response->getBody();
 		expect($body)->toContain('name="customPath"');
 		expect($body)->toMatch('/visibility.*location.*custom/');
-	});
-
-	it('handles setup form submission with default location', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
-	});
-
-	it('creates data directory with correct permissions for default location', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
-	});
-
-	it('handles setup form submission with docroot location', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
-	});
-
-	it('creates data directory in docroot when selected', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
-	});
-
-	it('uses existing data directory if it already exists', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
 	});
 
 	it('validates custom path is absolute', function (): void {
@@ -150,10 +123,6 @@ describe('Data Path Setup Feature', function (): void {
 		}
 	});
 
-	it('allows normal access when tcms-data exists', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
-	});
-
 	it('handles form submission with empty location', function (): void {
 		recursiveDelete(cmsDataDir(), [], true);
 
@@ -164,18 +133,6 @@ describe('Data Path Setup Feature', function (): void {
 		// Should redirect back with error
 		expect($response->getStatusCode())->toBe(302);
 		expect($response->getHeaderLine('Location'))->toBe('/setup/data-path');
-	});
-
-	it('allows custom folder names', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
-	});
-
-	it('saves custom path to tcms.php', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
-	});
-
-	it('does not save tcms.php for default location', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
 	});
 
 	it('contains proper HTML structure', function (): void {
@@ -219,17 +176,5 @@ describe('Data Path Setup Feature', function (): void {
 			// May redirect to login, but never to setup
 			expect($location)->not->toBe('/setup/data-path');
 		}
-	});
-
-	it('cleans up empty default directory when docroot is selected', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
-	});
-
-	it('does not remove default directory if it contains files', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
-	});
-
-	it('cleans up empty default directory when custom path is selected', function (): void {
-		$this->markTestSkipped('Requires filesystem write permissions outside test environment');
 	});
 });

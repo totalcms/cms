@@ -262,98 +262,6 @@ class PropertyFactoryTest extends TestCase
 		$this->assertEquals('Test Item', $deckArray['item1']['title']);
 	}
 
-	public function testCreateDeckWithDeckrefProcessing(): void
-	{
-		$this->markTestSkipped('Complex deck processing - focus on core functionality first');
-
-		$propertySchema = [
-			'type'    => 'deck',
-			'deckref' => 'https://example.com/schemas/item.json',
-		];
-		$value = [
-			'item1' => [
-				'title' => 'Test Item',
-				'date'  => '2024-01-15',
-				'color' => '#ff0000',
-			],
-		];
-
-		// Create a real SchemaData object with the properties we need
-		$schemaArray = [
-			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-			'$id'        => 'https://example.com/schemas/item.json',
-			'type'       => 'object',
-			'properties' => [
-				'title' => ['type' => 'string'],
-				'date'  => ['type' => 'date'],
-				'color' => ['type' => 'color'],
-			],
-		];
-		$mockSchema = new SchemaData($schemaArray);
-
-		$this->schemaFetcher
-			->expects($this->once())
-			->method('fetchSchema')
-			->with('item')
-			->willReturn($mockSchema);
-
-		$this->deckCompatibilityChecker
-			->expects($this->once())
-			->method('isCompatible')
-			->willReturn(true);
-
-		$deck = $this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema), $value);
-
-		$this->assertInstanceOf(DeckData::class, $deck);
-		$deckArray = $deck->transform();
-		$this->assertArrayHasKey('item1', $deckArray);
-		$this->assertEquals('Test Item', $deckArray['item1']['title']);
-	}
-
-	public function testCreateDeckWithIncompatibleSchema(): void
-	{
-		$this->markTestSkipped('Complex deck schema validation - focus on core functionality first');
-
-		$propertySchema = [
-			'type'    => 'deck',
-			'deckref' => 'https://example.com/schemas/incompatible.json',
-		];
-		$value = [
-			'item1' => ['title' => 'Test'],
-		];
-
-		// Create a real SchemaData object
-		$mockSchema = new SchemaData([
-			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-			'$id'        => 'https://example.com/schemas/incompatible.json',
-			'type'       => 'object',
-			'properties' => [
-				'title' => ['type' => 'string'],
-			],
-		]);
-
-		$this->schemaFetcher
-			->expects($this->once())
-			->method('fetchSchema')
-			->with('incompatible')
-			->willReturn($mockSchema);
-
-		$this->deckCompatibilityChecker
-			->expects($this->once())
-			->method('isCompatible')
-			->willReturn(false);
-
-		$this->deckCompatibilityChecker
-			->expects($this->once())
-			->method('getIncompatibleProperties')
-			->willReturn(['gallery', 'depot']);
-
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage("Deck schema 'incompatible' contains incompatible properties: gallery, depot");
-
-		$this->propertyFactory->createDeck(PropertyDefinition::fromArray($propertySchema), $value);
-	}
-
 	public function testCreateDeckWithSchemaExceptionFallsBackToOriginalData(): void
 	{
 		$propertySchema = [
@@ -415,65 +323,6 @@ class PropertyFactoryTest extends TestCase
 		$this->assertArrayHasKey('item3', $deckArray);
 	}
 
-	public function testProcessIndividualDeckItem(): void
-	{
-		$this->markTestSkipped('Complex individual deck processing - focus on core functionality first');
-
-		$collection   = 'test-collection';
-		$propertyName = 'features';
-		$itemData     = [
-			'id'    => 'feature1',
-			'title' => 'Test Feature',
-			'date'  => '2024-01-15',
-		];
-
-		// Mock collection schema
-		$mockCollectionSchema = new SchemaData([
-			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-			'type'       => 'object',
-			'properties' => [
-				'features' => [
-					'type'     => 'deck',
-					'deckref'  => 'https://example.com/schemas/feature.json',
-					'settings' => ['maxItems' => 10],
-				],
-			],
-		]);
-
-		// Mock deck item schema
-		$mockDeckSchema = new SchemaData([
-			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-			'type'       => 'object',
-			'properties' => [
-				'title' => ['type' => 'string'],
-				'date'  => ['type' => 'date'],
-			],
-		]);
-
-		$this->schemaFetcher
-			->expects($this->once())
-			->method('fetchSchemaForCollection')
-			->with($collection)
-			->willReturn($mockCollectionSchema);
-
-		$this->schemaFetcher
-			->expects($this->once())
-			->method('fetchSchema')
-			->with('feature')
-			->willReturn($mockDeckSchema);
-
-		$this->deckCompatibilityChecker
-			->expects($this->once())
-			->method('isCompatible')
-			->willReturn(true);
-
-		$result = $this->propertyFactory->processIndividualDeckItem($collection, $propertyName, $itemData);
-
-		$this->assertIsArray($result);
-		$this->assertArrayHasKey('title', $result);
-		$this->assertEquals('Test Feature', $result['title']);
-	}
-
 	public function testProcessIndividualDeckItemWithoutPropertyConfig(): void
 	{
 		$collection   = 'test-collection';
@@ -498,44 +347,6 @@ class PropertyFactoryTest extends TestCase
 		$result = $this->propertyFactory->processIndividualDeckItem($collection, $propertyName, $itemData);
 
 		// Should return original data unchanged
-		$this->assertEquals($itemData, $result);
-	}
-
-	public function testProcessIndividualDeckItemWithProcessingException(): void
-	{
-		$this->markTestSkipped('Complex individual deck processing - focus on core functionality first');
-
-		$collection   = 'test-collection';
-		$propertyName = 'features';
-		$itemData     = ['id' => 'feature1', 'title' => 'Test'];
-
-		// Mock collection schema
-		$mockCollectionSchema = new SchemaData([
-			'$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-			'type'       => 'object',
-			'properties' => [
-				'features' => [
-					'type'    => 'deck',
-					'deckref' => 'https://example.com/schemas/error.json',
-				],
-			],
-		]);
-
-		$this->schemaFetcher
-			->expects($this->once())
-			->method('fetchSchemaForCollection')
-			->with($collection)
-			->willReturn($mockCollectionSchema);
-
-		$this->schemaFetcher
-			->expects($this->once())
-			->method('fetchSchema')
-			->with('error')
-			->willThrowException(new \Exception('Processing error'));
-
-		$result = $this->propertyFactory->processIndividualDeckItem($collection, $propertyName, $itemData);
-
-		// Should return original data when processing fails
 		$this->assertEquals($itemData, $result);
 	}
 
