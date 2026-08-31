@@ -241,17 +241,15 @@ describe('ImageWorks transforms', function (): void {
 		expect($out['width'])->toBe(500);
 	});
 
-	it('does NOT apply configured defaults to an unparameterised URL', function (): void {
-		// Documents a discrepancy rather than endorsing it. cleanupParams()
-		// deliberately avoids its "return original" shortcut when defaults are
-		// configured ($hasDefaults), but it still returns an empty param array,
-		// and responseFromImageData() takes its own shortcut on exactly that:
+	it('serves the untouched original for an unparameterised URL, defaults or not', function (): void {
+		// Intended behaviour: a URL with no params is how you ask for the
+		// original file, and configured defaults must not quietly override
+		// that. responseFromImageData() short-circuits on an empty param array
+		// straight to returnOriginalImage(), so Glide never runs.
 		//
-		//     if ($this->params === []) { return $this->returnOriginalImage(...); }
-		//
-		// so Glide never runs and the defaults never apply — in precisely the
-		// case they exist for. The image comes back at full size.
-		$out = imageTransformRun($this->root, [], 'defaults-not-applied', [
+		// Defaults still apply to anything Glide does render — see
+		// 'applies configured defaults once any param is present' above.
+		$out = imageTransformRun($this->root, [], 'original-with-defaults-configured', [
 			'defaults' => ['w' => 500],
 		]);
 
