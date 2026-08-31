@@ -280,7 +280,16 @@ $settings['session'] = [
 	'use_only_cookies'       => true,
 	// 'sid_length'             => 64,
 	// 'sid_bits_per_character' => 6,
-	// 'save_path'              => $settings['tmpdir'] . '/sessions/' . md5($settings['domain']), // Domain-specific session path
+	// Session file location. Left empty here and resolved in Config as
+	// <datadir>/.system/sessions, because defaults.php cannot know the final
+	// datadir (a tcms.php override lands after this file). Set it explicitly
+	// to override.
+	//
+	// Why not PHP's default: that is one directory shared with every other
+	// site on the server, and its garbage collection runs on whichever
+	// vhost's gc_maxlifetime triggers it — often 24 minutes — so a neighbour
+	// reaps our session files regardless of the 24 hours set below.
+	'save_path'              => '',
 	'conflictStrategy'       => 'preserve', // How to handle existing sessions: 'preserve', 'replace'
 ];
 

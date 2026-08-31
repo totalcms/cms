@@ -117,6 +117,28 @@ class Config
 		// it caused orphaned values to silently shadow the new i18n default.
 		$this->locale             = $this->i18n['default'] !== '' ? $this->i18n['default'] : 'en_US';
 		$this->session            = $settings['session'];
+		// Session files under the data dir, resolved after the tcms.php merge
+		// for the same reason as the log path above. Two things this buys:
+		//
+		//  - PHP's default save path is one directory shared by every site on
+		//    the box. Session GC there is driven by whichever vhost triggers
+		//    it, using ITS gc_maxlifetime — commonly 1440 (24 minutes) — so a
+		//    neighbour's sweep deletes our session files no matter what we set
+		//    ours to. That is the classic "Total CMS logged me out again" on
+		//    shared hosting.
+		//  - <datadir>/.system is the directory the shipped Apache and nginx
+		//    rules already deny, which is where authenticated session state
+		//    belongs.
+		//
+		// Deliberately NOT keyed on the domain. It was, briefly, in 7cb08704b,
+		// and reverted five days later in 7ca13fef7: $domain comes from
+		// HTTP_HOST, so example.com and www.example.com hashed to different
+		// directories and a redirect between them logged the user out. tmpdir
+		// and datadir are per-install already, so there is nothing left to
+		// scope by.
+		if (($this->session['save_path'] ?? '') === '') {
+			$this->session['save_path'] = $this->systemDir() . '/sessions';
+		}
 		$this->auth               = $settings['auth'];
 		$this->debug              = $settings['debug'];
 		$this->notfound           = $settings['notfound'];
