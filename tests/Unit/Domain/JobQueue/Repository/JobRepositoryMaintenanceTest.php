@@ -21,7 +21,7 @@ final class JobRepositoryMaintenanceTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->datadir = sys_get_temp_dir() . '/tcms-jq-maint-' . uniqid();
+		$this->datadir = \tcmsTestTempDir('tcms-jq-maint');
 	}
 
 	protected function tearDown(): void

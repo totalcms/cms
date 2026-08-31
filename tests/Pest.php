@@ -395,22 +395,20 @@ function recursiveCopy(string $src, string $dst): void
 }
 
 /**
- * A private data dir for one dev-mode test, safe to use under --parallel.
+ * A private data dir for one test, safe to use under --parallel.
  *
- * The five dev-mode test files used to build this as
- * `sys_get_temp_dir() . '/tcms-devmode-' . uniqid()`. uniqid() is derived from
- * the clock (seconds + microseconds) with no per-process entropy, so two
- * workers entering setUp() in the same microsecond get the SAME directory —
- * and paratest runs those five files concurrently. Measured across 8 concurrent
- * processes, 16000 uniqid() calls produced 3928 distinct values.
- *
- * When it collided, one file's setUp()/tearDown() unlinked the state file that
- * another was mid-test on, and the victim saw dev mode switch itself off.
+ * Test files used to build these as `sys_get_temp_dir() . '/prefix-' . uniqid()`.
+ * uniqid() is derived from the clock (seconds + microseconds) with no
+ * per-process entropy, so two workers entering setUp() in the same microsecond
+ * get the SAME directory. Measured across 8 concurrent processes, 16000
+ * uniqid() calls produced 3928 distinct values. When it collided, one file's
+ * setUp()/tearDown() deleted state another was mid-test on.
  *
  * The worker token makes the path unique across processes and random_bytes()
- * makes it unique within one, so neither half depends on the clock.
+ * makes it unique within one, so neither half depends on the clock. The
+ * directory is removed at shutdown if the test left it empty.
  */
-function devModeDataDir(): string
+function tcmsTestTempDir(string $prefix): string
 {
 	try {
 		$suffix = bin2hex(random_bytes(8));
@@ -421,24 +419,33 @@ function devModeDataDir(): string
 	$token = tcmsTestWorkerToken();
 	$token = $token === '' ? 'solo' : $token;
 
-	$dir = sys_get_temp_dir() . '/tcms-devmode-' . $token . '-' . getmypid() . '-' . $suffix;
+	$dir = sys_get_temp_dir() . '/' . $prefix . '-' . $token . '-' . getmypid() . '-' . $suffix;
 
-	// Each call leaves behind `<dir>/.system/` once the test unlinks its state
-	// file, and nothing ever removed them: this machine had 7280 of them from
-	// past runs. Clean up our own at shutdown, matched by the prefix we wrote.
+	// Nothing used to remove these: this machine had 7280 leftovers from past
+	// runs. Clean up our own at shutdown, matched by the prefix we wrote.
 	static $dirs = [];
 	if ($dirs === []) {
 		register_shutdown_function(static function () use (&$dirs): void {
 			foreach ($dirs as $created) {
-				@unlink($created . '/.system/totalcms_devmode.json');
+				foreach ((array)@scandir($created . '/.system') as $entry) {
+					if ($entry !== '.' && $entry !== '..') {
+						@unlink($created . '/.system/' . $entry);
+					}
+				}
 				@rmdir($created . '/.system');
-				@rmdir($created); // leaves the dir alone if a test put anything else in it
+				@rmdir($created); // left alone if the test put anything else in it
 			}
 		});
 	}
 	$dirs[] = $dir;
 
 	return $dir;
+}
+
+/** A private data dir for one dev-mode test. See tcmsTestTempDir(). */
+function devModeDataDir(): string
+{
+	return tcmsTestTempDir('tcms-devmode');
 }
 
 /**

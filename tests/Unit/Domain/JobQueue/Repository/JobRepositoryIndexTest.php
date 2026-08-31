@@ -22,7 +22,7 @@ final class JobRepositoryIndexTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->datadir = sys_get_temp_dir() . '/tcms-jq-idx-' . uniqid();
+		$this->datadir = \tcmsTestTempDir('tcms-jq-idx');
 	}
 
 	protected function tearDown(): void

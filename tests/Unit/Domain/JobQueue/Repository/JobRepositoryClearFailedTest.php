@@ -20,7 +20,7 @@ final class JobRepositoryClearFailedTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->datadir = sys_get_temp_dir() . '/tcms-jobqueue-test-' . uniqid();
+		$this->datadir = \tcmsTestTempDir('tcms-jobqueue-test');
 	}
 
 	protected function tearDown(): void
