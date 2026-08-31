@@ -75,12 +75,18 @@ function watermarkGenerator(string $root, bool $editionAllows = true, array $wat
 
 /**
  * @param array<string,mixed> $params
+ * @param array<string,mixed> $watermarkSchema settings.watermark from the schema
  *
  * @return array{width:int,height:int,bytes:int,body:string}
  */
-function watermarkRun(string $root, array $params, string $label, bool $editionAllows = true): array
-{
-	$response = watermarkGenerator($root, $editionAllows)
+function watermarkRun(
+	string $root,
+	array $params,
+	string $label,
+	bool $editionAllows = true,
+	array $watermarkSchema = [],
+): array {
+	$response = watermarkGenerator($root, $editionAllows, $watermarkSchema)
 		->generateImage('blog', 'post-1', 'image', $params);
 
 	$body = (string)$response->getBody();
@@ -264,5 +270,85 @@ describe('ImageWorks watermark edition gate', function (): void {
 
 		expect($gated['width'])->toBe(900);
 		expect(watermarkPixelDiff($plain['body'], $gated['body']))->toBe(0.0);
+	});
+});
+
+describe('ImageWorks schema-enforced watermarks', function (): void {
+	// settings.watermark on the image/gallery property is how an operator
+	// protects originals. Two things make it protection rather than decoration,
+	// and neither is obvious from the parameter list: it survives a URL with no
+	// params at all, and it beats anything the URL asks for.
+
+	it('watermarks an unparameterised URL, so the clean original is not reachable', function (): void {
+		// Without schema settings an empty param list returns the untouched
+		// file. cleanupParams() checks for schema watermarks precisely so that
+		// shortcut does not hand out an unmarked original.
+		$plain = watermarkRun($this->root, ['w' => 900], 'wm-schema-baseline');
+
+		$protected = watermarkRun($this->root, [], 'wm-schema-forced-on-original', true, [
+			'marktext'      => 'PROTECTED',
+			'marktextsize'  => 140,
+			'marktextpos'   => 'center',
+			'marktextcolor' => 'ffffff',
+		]);
+
+		// Processed rather than served raw: it went through Glide.
+		expect($protected['width'])->toBe(WATERMARK_SOURCE_W);
+		expect($protected['bytes'])->not->toBe($plain['bytes']);
+	});
+
+	it('lets schema settings win over conflicting URL parameters', function (): void {
+		// array_merge($params, $schemaWatermarks) puts the schema last on
+		// purpose: a visitor cannot weaken or move the mark from the query
+		// string.
+		$urlOnly = watermarkRun($this->root, [
+			'w' => 900, 'marktext' => 'URL CHOICE', 'marktextsize' => 40, 'marktextpos' => 'top-left',
+		], 'wm-schema-url-only');
+
+		$schemaWins = watermarkRun($this->root, [
+			'w' => 900, 'marktext' => 'URL CHOICE', 'marktextsize' => 40, 'marktextpos' => 'top-left',
+		], 'wm-schema-overrides-url', true, [
+			'marktext'     => 'SCHEMA WINS',
+			'marktextsize' => 120,
+			'marktextpos'  => 'center',
+		]);
+
+		expect(watermarkPixelDiff($urlOnly['body'], $schemaWins['body']))->toBeGreaterThan(0.5);
+	});
+});
+
+describe('ImageWorks watermark limit setting', function (): void {
+	// `limit` keeps small derivatives clean while still protecting anything big
+	// enough to be worth taking. It is a pixel threshold, and it is not
+	// currently covered by the docs.
+
+	it('skips the watermark below the limit, so thumbnails stay clean', function (): void {
+		$plain  = watermarkRun($this->root, ['w' => 300], 'wm-limit-thumb-plain');
+		$thumb  = watermarkRun($this->root, ['w' => 300], 'wm-limit-thumb', true, [
+			'marktext' => 'PROTECTED', 'marktextsize' => 120, 'limit' => 800,
+		]);
+
+		expect(watermarkPixelDiff($plain['body'], $thumb['body']))->toBe(0.0);
+	});
+
+	it('applies the watermark once the request exceeds the limit', function (): void {
+		$plain = watermarkRun($this->root, ['w' => 1200], 'wm-limit-large-plain');
+		$large = watermarkRun($this->root, ['w' => 1200], 'wm-limit-large', true, [
+			'marktext' => 'PROTECTED', 'marktextsize' => 160, 'limit' => 800,
+		]);
+
+		expect(watermarkPixelDiff($plain['body'], $large['body']))->toBeGreaterThan(0.5);
+	});
+
+	it('applies the watermark when no dimensions are requested at all', function (): void {
+		// The original is the thing most worth protecting, so "no dimensions"
+		// counts as over the limit rather than under it.
+		$plain     = watermarkRun($this->root, ['w' => 300], 'wm-limit-original-plain');
+		$original  = watermarkRun($this->root, [], 'wm-limit-original', true, [
+			'marktext' => 'PROTECTED', 'marktextsize' => 200, 'limit' => 800,
+		]);
+
+		expect($original['width'])->toBe(WATERMARK_SOURCE_W);
+		expect($original['bytes'])->not->toBe($plain['bytes']);
 	});
 });

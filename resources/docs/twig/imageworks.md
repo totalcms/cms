@@ -158,6 +158,65 @@ You can configure watermarks at the schema, collection, or per-object level usin
 
 Watermark settings follow the three-level override hierarchy: **schema → collection → per-object**. Override at the collection level in collection meta, or per-object using custom properties.
 
+### Protecting Original Images
+
+Schema-level watermarks are not just a convenience — they are how you stop the
+unmarked original being downloaded. Two behaviours make that work, and both are
+deliberate:
+
+**They apply even when the URL asks for nothing.** An image URL with no
+parameters normally returns the original file untouched, which is how you fetch
+the source image. When the property carries `settings.watermark`, that shortcut
+is skipped: the image is processed and marked before it is served, so there is
+no URL that yields a clean original.
+
+**They override URL parameters.** Schema settings are merged *after* anything
+in the query string, so a visitor cannot weaken, move or remove the mark by
+editing the URL. Passing `marktextsize=1` against a schema that sets
+`marktextsize=140` still produces the schema's watermark.
+
+If you need the unmarked file, read it from the object's property directly in a
+template rather than through an ImageWorks URL.
+
+### Limiting Watermarks by Size
+
+Marking every derivative is rarely wanted — a 150px thumbnail with a watermark
+across it is usually just ugly. The `limit` setting is a pixel threshold that
+keeps small renders clean while still protecting anything large enough to be
+worth taking:
+
+```json
+{
+    "image": {
+        "field": "image",
+        "settings": {
+            "watermark": {
+                "marktext": "© Example Co",
+                "marktextsize": 140,
+                "marktextpos": "center",
+                "limit": 800
+            }
+        }
+    }
+}
+```
+
+With `limit: 800`:
+
+| Request | Watermarked? |
+|---------|--------------|
+| `w=300` (below the limit) | No |
+| `w=1200` (above the limit) | Yes |
+| `h=1000` (height above the limit) | Yes |
+| No dimensions at all | **Yes** |
+
+The last row is the important one. A request with no width or height is asking
+for the original, which is exactly the case worth protecting, so it is treated
+as over the limit rather than under it.
+
+`limit` is a watermark-only setting and is removed before the remaining values
+are passed to the image processor.
+
 ## Text Watermarks
 
 Render text directly on images without needing a separate watermark image.
