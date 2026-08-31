@@ -212,21 +212,32 @@ describe('exportAllObjects', function (): void {
 		expect($h['exporter']->exportAllObjects('posts'))->toBe([]);
 	});
 
-	it('aborts the whole export when a single object cannot be read', function (): void {
-		// Documented behaviour difference: unlike the JSON/CSV variants this
-		// method has NO try/catch, so one corrupt object kills a JumpStart
-		// export instead of producing a partial file. Pinning it so the
-		// difference is a deliberate choice and not an accident.
+	it('skips an object it cannot read and returns the rest', function (): void {
+		// This used to have no try/catch, so one object whose stored data no
+		// longer matched the schema aborted the export and the operator got
+		// nothing — the one failure mode where they most want the other
+		// objects out. Now it matches the JSON and CSV variants.
 		$h = objectExporterHarness();
 
-		$h['storage']->method('fetchObjectIds')->willReturn(['good', 'broken']);
+		$h['storage']->method('fetchObjectIds')->willReturn(['good', 'broken', 'also-good']);
 		objectExporterMapObjects($h['objects'], [
-			'good'   => objectExporterObject('good', ['title' => new StringData('Fine')]),
-			'broken' => new \RuntimeException('type mismatch'),
+			'good'      => objectExporterObject('good', ['title' => new StringData('Fine')]),
+			'broken'    => new \RuntimeException('type mismatch'),
+			'also-good' => objectExporterObject('also-good', ['title' => new StringData('Also fine')]),
 		]);
 
-		expect(fn () => $h['exporter']->exportAllObjects('posts'))
-			->toThrow(\RuntimeException::class, 'type mismatch');
+		// Crucially it keeps going past the failure rather than stopping there.
+		expect(array_column($h['exporter']->exportAllObjects('posts'), 'id'))
+			->toBe(['good', 'also-good']);
+	});
+
+	it('returns an empty export rather than throwing when nothing can be read', function (): void {
+		$h = objectExporterHarness();
+
+		$h['storage']->method('fetchObjectIds')->willReturn(['broken']);
+		objectExporterMapObjects($h['objects'], ['broken' => new \RuntimeException('type mismatch')]);
+
+		expect($h['exporter']->exportAllObjects('posts'))->toBe([]);
 	});
 });
 

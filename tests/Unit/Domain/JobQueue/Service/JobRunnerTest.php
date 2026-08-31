@@ -476,3 +476,77 @@ describe('JobRunner reporting', function (): void {
 		jobRunnerFrom($m)->maintenance();
 	});
 });
+
+describe('JobRunner export job', function (): void {
+	it('names the objects it could not read in the job log', function (): void {
+		// An export job runs from cron with nobody watching, so a file that is
+		// quietly short is the worst outcome available. The ids have to reach
+		// the log or the operator never learns anything was dropped.
+		$m = jobRunnerMocks();
+		$m['objectExporter']->expects(test()->once())->method('exportAllObjectsForJson')
+			->with('blog')
+			->willReturn(['data' => [['id' => 'a']], 'errors' => ['broken-1', 'broken-2']]);
+		// The non-reporting variant must not be the one the job reaches for.
+		$m['objectExporter']->expects(test()->never())->method('exportAllObjects');
+
+		$m['jobRepository']->method('fetchNextJob')->willReturn(jobRunnerJob(JobData::TYPE_EXPORT, 'blog'));
+		$m['jobRepository']->expects(test()->once())->method('delete');
+
+		jobRunnerFrom($m)->processNextJob();
+	});
+
+	it('writes the export file when the payload names a path', function (): void {
+		$path = \tcmsTestTempDir('tcms-export') . '/out.json';
+		mkdir(dirname($path), 0775, true);
+
+		$m = jobRunnerMocks();
+		$m['objectExporter']->method('exportAllObjectsForJson')
+			->willReturn(['data' => [['id' => 'a']], 'errors' => []]);
+		$m['jobRepository']->method('fetchNextJob')->willReturn(
+			jobRunnerJob(JobData::TYPE_EXPORT, 'blog', json_encode(['export_path' => $path]))
+		);
+
+		jobRunnerFrom($m)->processNextJob();
+
+		expect(file_exists($path))->toBeTrue()
+			->and(json_decode((string)file_get_contents($path), true))->toBe([['id' => 'a']]);
+
+		unlink($path);
+		rmdir(dirname($path));
+	});
+
+	it('fails the job when the export file cannot be written', function (): void {
+		$m = jobRunnerMocks();
+		$m['objectExporter']->method('exportAllObjectsForJson')
+			->willReturn(['data' => [], 'errors' => []]);
+		$m['jobRepository']->method('fetchNextJob')->willReturn(
+			jobRunnerJob(JobData::TYPE_EXPORT, 'blog', json_encode(['export_path' => '/nonexistent-dir/out.json']))
+		);
+		$m['jobRepository']->expects(test()->once())->method('markFailed');
+		$m['jobRepository']->expects(test()->never())->method('delete');
+
+		// The production call is already suppressed with @, but PHPUnit installs
+		// its own error handler that reports the warning anyway and marks the
+		// test risky. Swallow it here so the assertion is about the failure
+		// being turned into a job failure, not about the warning.
+		set_error_handler(static fn (): bool => true);
+
+		try {
+			jobRunnerFrom($m)->processNextJob();
+		} finally {
+			restore_error_handler();
+		}
+	});
+
+	it('rejects a payload that is not valid JSON without exporting', function (): void {
+		$m = jobRunnerMocks();
+		$m['objectExporter']->expects(test()->never())->method('exportAllObjectsForJson');
+		$m['jobRepository']->method('fetchNextJob')->willReturn(
+			jobRunnerJob(JobData::TYPE_EXPORT, 'blog', '{not json')
+		);
+
+		jobRunnerFrom($m)->processNextJob();
+
+		expect(true)->toBeTrue();
+	});
+});

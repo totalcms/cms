@@ -38,8 +38,24 @@ readonly class ObjectExporter
 		$objectIds = $this->storage->fetchObjectIds($collection);
 
 		foreach ($objectIds as $id) {
-			$object    = $this->objectFetcher->fetchObject($collection, $id);
-			$objects[] = $object->toArray();
+			try {
+				$object    = $this->objectFetcher->fetchObject($collection, $id);
+				$objects[] = $object->toArray();
+			} catch (\Throwable $e) {
+				// Skip and log, as the JSON and CSV exports already do. This
+				// used to have no try/catch, so a single object whose stored
+				// data no longer matched the schema aborted the entire export
+				// — the one failure mode where an operator most wants the other
+				// 999 objects out. Callers that need to know what was dropped
+				// should use exportAllObjectsForJson(), which returns the ids.
+				$this->logger->warning('Skipping object during export due to data mismatch', [
+					'collection' => $collection,
+					'object_id'  => $id,
+					'error'      => $e->getMessage(),
+					'exception'  => $e::class,
+					'hint'       => 'This usually happens when the schema was modified after objects were created. Check if the stored data type matches the current schema.',
+				]);
+			}
 		}
 
 		return $objects;

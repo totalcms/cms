@@ -314,28 +314,49 @@ readonly class JobRunner
 			return;
 		}
 
-		// Export all objects from the collection
-		$exportedData = $this->objectExporter->exportAllObjects($job->collection);
+		// exportAllObjectsForJson() rather than exportAllObjects(): both now skip
+		// an object they cannot read, but only this one reports which. An export
+		// job runs from cron with nobody watching, so a silently short file is
+		// the worst outcome available — the ids go in the completion log.
+		[
+			'data'   => $exportedData,
+			'errors' => $skippedIds,
+		] = $this->objectExporter->exportAllObjectsForJson($job->collection);
+
+		if ($skippedIds !== []) {
+			$this->logger->warning('Export skipped objects that could not be read', [
+				'collection'    => $job->collection,
+				'job_id'        => $job->id,
+				'skipped_count' => count($skippedIds),
+				'skipped_ids'   => $skippedIds,
+			]);
+		}
 
 		// If a specific export path is provided in the payload, save to file
 		if (isset($data['export_path']) && is_string($data['export_path'])) {
 			$exportPath = $data['export_path'];
 			$jsonData   = json_encode($exportedData, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
 
-			if (file_put_contents($exportPath, $jsonData) === false) {
+			// Suppressed so the explicit message below is what the operator sees:
+			// on installs that promote warnings to exceptions the raw
+			// "failed to open stream" would be thrown first and say nothing
+			// about which job or collection it belongs to.
+			if (@file_put_contents($exportPath, $jsonData) === false) {
 				throw new \RuntimeException("Failed to write export data to: {$exportPath}");
 			}
 
 			$this->logger->info("Exported {$job->collection} to {$exportPath}", [
-				'collection'   => $job->collection,
-				'export_path'  => $exportPath,
-				'object_count' => count($exportedData),
+				'collection'    => $job->collection,
+				'export_path'   => $exportPath,
+				'object_count'  => count($exportedData),
+				'skipped_count' => count($skippedIds),
 			]);
 		} else {
 			// Log export completion (data could be retrieved elsewhere)
 			$this->logger->info("Exported {$job->collection} data", [
-				'collection'   => $job->collection,
-				'object_count' => count($exportedData),
+				'collection'    => $job->collection,
+				'object_count'  => count($exportedData),
+				'skipped_count' => count($skippedIds),
 			]);
 		}
 	}
