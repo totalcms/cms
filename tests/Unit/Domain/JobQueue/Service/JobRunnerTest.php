@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\DataView\Service\DataViewBuilder;
 use TotalCMS\Domain\Factory\Service\FactoryImporter;
@@ -248,5 +249,230 @@ describe('JobRunner queue helpers', function (): void {
 		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 
 		expect(jobRunnerFrom($m)->hasPendingJobs())->toBeTrue();
+	});
+});
+
+/** A CollectionData with just the fields the import optimisation touches. */
+function jobRunnerCollection(string $id, bool $queueRebuildOnSave = false): CollectionData
+{
+	$collection                     = new CollectionData();
+	$collection->id                 = $id;
+	$collection->name               = $id;
+	$collection->schema             = 'blog';
+	$collection->queueRebuildOnSave = $queueRebuildOnSave;
+
+	return $collection;
+}
+
+describe('JobRunner::processPendingJobs', function (): void {
+	it('drains the queue until nothing is pending', function (): void {
+		$m = jobRunnerMocks();
+		// Pending three times, then empty. The loop asks before each job, so a
+		// runner that checked once would process one job and call it a day.
+		$m['jobRepository']->method('hasPendingJobs')->willReturnOnConsecutiveCalls(true, true, true, false);
+		$m['jobRepository']->method('fetchPendingJobs')->willReturn([]);
+		$m['jobRepository']->method('fetchNextJob')->willReturn(jobRunnerJob(JobData::TYPE_REBUILD));
+		$m['indexBuilder']->method('buildIndex')->willReturn(new IndexData([]));
+		$m['jobRepository']->expects(test()->exactly(3))->method('delete');
+
+		jobRunnerFrom($m)->processPendingJobs();
+	});
+
+	it('stops the whole run when the mail rate limit is hit', function (): void {
+		// The remaining jobs must stay pending for the next cron tick rather
+		// than being burned through and marked failed against a limit that has
+		// nothing to do with them.
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
+		$m['jobRepository']->method('fetchPendingJobs')->willReturn([]);
+		$m['jobRepository']->method('fetchNextJob')->willReturn(jobRunnerJob(JobData::TYPE_EMAIL));
+		$m['bulkMailerRepository']->method('countSentSince')->willReturn(500);
+		// Deferred, not failed: the job is put back to pending untouched.
+		$m['jobRepository']->expects(test()->once())->method('resetJobStatus');
+		$m['jobRepository']->expects(test()->never())->method('markFailed');
+		$m['jobRepository']->expects(test()->never())->method('delete');
+
+		// Reaching the end at all is half the point: the exception is caught by
+		// processPendingJobs and breaks the loop rather than escaping to cron.
+		jobRunnerFrom($m, ['maxPerHour' => 10])->processPendingJobs();
+
+		expect(true)->toBeTrue();
+	});
+});
+
+describe('JobRunner import optimisation', function (): void {
+	it('turns on queued rebuilds for collections with import work waiting', function (): void {
+		// Rebuilding the index once at the end beats rebuilding it per imported
+		// object, which is what makes a large import finish this century.
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('fetchPendingJobs')->willReturn([
+			jobRunnerJob(JobData::TYPE_IMPORT, 'blog'),
+		]);
+		$m['collectionRepository']->method('fetchCollection')->willReturn(jobRunnerCollection('blog'));
+		$m['collectionRepository']->expects(test()->once())->method('saveCollection')
+			->with(test()->callback(fn (CollectionData $c): bool => $c->queueRebuildOnSave === true));
+
+		$optimised = jobRunnerFrom($m)->enableImportOptimization();
+
+		expect($optimised)->toHaveCount(1);
+	});
+
+	it('leaves a collection alone when queued rebuilds are already on', function (): void {
+		// Otherwise finalising would switch off a setting the operator chose,
+		// as a side effect of an unrelated import.
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('fetchPendingJobs')->willReturn([
+			jobRunnerJob(JobData::TYPE_IMPORT, 'blog'),
+		]);
+		$m['collectionRepository']->method('fetchCollection')->willReturn(jobRunnerCollection('blog', true));
+		$m['collectionRepository']->expects(test()->never())->method('saveCollection');
+
+		expect(jobRunnerFrom($m)->enableImportOptimization())->toBe([]);
+	});
+
+	it('ignores job types that do not write objects', function (): void {
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('fetchPendingJobs')->willReturn([
+			jobRunnerJob(JobData::TYPE_EXPORT, 'blog'),
+			jobRunnerJob(JobData::TYPE_REBUILD, 'blog'),
+		]);
+		$m['collectionRepository']->expects(test()->never())->method('fetchCollection');
+
+		expect(jobRunnerFrom($m)->enableImportOptimization())->toBe([]);
+	});
+
+	it('skips a collection that no longer exists', function (): void {
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('fetchPendingJobs')->willReturn([
+			jobRunnerJob(JobData::TYPE_FACTORY, 'deleted-collection'),
+		]);
+		$m['collectionRepository']->method('fetchCollection')->willReturn(null);
+
+		expect(jobRunnerFrom($m)->enableImportOptimization())->toBe([]);
+	});
+
+	it('rebuilds the index and restores the setting when finalising', function (): void {
+		$m          = jobRunnerMocks();
+		$collection = jobRunnerCollection('blog', true);
+
+		$m['indexBuilder']->expects(test()->once())->method('buildIndex')->with('blog');
+		$m['collectionRepository']->expects(test()->once())->method('saveCollection')
+			->with(test()->callback(fn (CollectionData $c): bool => $c->queueRebuildOnSave === false));
+
+		jobRunnerFrom($m)->finalizeImportOptimization([$collection]);
+	});
+});
+
+describe('JobRunner::processNextJobWithDetails', function (): void {
+	it('returns null when there is nothing to do', function (): void {
+		// The CLI distinguishes "queue empty" from "job ran", so null here is
+		// what stops it reporting phantom work.
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(false);
+		$m['jobRepository']->expects(test()->never())->method('fetchNextJob');
+
+		expect(jobRunnerFrom($m)->processNextJobWithDetails())->toBeNull();
+	});
+
+	it('reports the job it completed', function (): void {
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
+		$m['jobRepository']->method('fetchNextJob')->willReturn(jobRunnerJob(JobData::TYPE_REBUILD));
+		$m['indexBuilder']->method('buildIndex')->willReturn(new IndexData([]));
+		$m['jobRepository']->expects(test()->once())->method('delete');
+
+		$result = jobRunnerFrom($m)->processNextJobWithDetails();
+
+		expect($result['success'])->toBeTrue()
+			->and($result['job']['type'])->toBe(JobData::TYPE_REBUILD)
+			->and($result)->not->toHaveKey('error');
+	});
+
+	it('reports the failure reason instead of throwing', function (): void {
+		// The caller is a CLI command that has to keep going and print
+		// something useful, so the error comes back in the payload.
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
+		$m['jobRepository']->method('fetchNextJob')->willReturn(jobRunnerJob(JobData::TYPE_REBUILD));
+		$m['indexBuilder']->method('buildIndex')->willThrowException(new RuntimeException('disk full'));
+		$m['jobRepository']->expects(test()->once())->method('markFailed');
+		$m['jobRepository']->expects(test()->never())->method('delete');
+
+		$result = jobRunnerFrom($m)->processNextJobWithDetails();
+
+		expect($result['success'])->toBeFalse()
+			->and($result['error'])->toBe('disk full');
+	});
+});
+
+describe('JobRunner::retryFailedJobsWithStats', function (): void {
+	it('retries jobs that have attempts left and skips the exhausted ones', function (): void {
+		// Without the cap a permanently broken job is retried on every cron
+		// run forever, and its error drowns the log.
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('fetchFailedJobs')->willReturn([
+			jobRunnerJob(JobData::TYPE_IMPORT, 'blog', '{}', 0),
+			jobRunnerJob(JobData::TYPE_IMPORT, 'blog', '{}', 2),
+			jobRunnerJob(JobData::TYPE_IMPORT, 'blog', '{}', 3),
+			jobRunnerJob(JobData::TYPE_IMPORT, 'blog', '{}', 9),
+		]);
+		$m['jobRepository']->expects(test()->exactly(2))->method('resetJobStatus');
+
+		$stats = jobRunnerFrom($m)->retryFailedJobsWithStats();
+
+		expect($stats)->toBe(['total_failed' => 4, 'retried' => 2, 'skipped' => 2]);
+	});
+
+	it('reports zeros on an empty failure list', function (): void {
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('fetchFailedJobs')->willReturn([]);
+
+		expect(jobRunnerFrom($m)->retryFailedJobsWithStats())
+			->toBe(['total_failed' => 0, 'retried' => 0, 'skipped' => 0]);
+	});
+});
+
+describe('JobRunner reporting', function (): void {
+	it('passes the queue breakdown through untouched', function (): void {
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('queueByStatus')->willReturn(['pending' => 3, 'failed' => 1]);
+		$m['jobRepository']->method('queueByType')->willReturn(['import' => 4]);
+
+		$runner = jobRunnerFrom($m);
+
+		expect($runner->getQueueStatus())->toBe(['pending' => 3, 'failed' => 1])
+			->and($runner->getQueueByType())->toBe(['import' => 4]);
+	});
+
+	it('reports how many crashed jobs it returned to the queue', function (): void {
+		// A worker killed mid-job leaves it in-progress forever; this is the
+		// only thing that frees it.
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('resetInProgressJobs')->willReturn(2);
+
+		expect(jobRunnerFrom($m)->resetStuckJobs())->toBe(2);
+	});
+
+	it('reports zero when nothing was stuck', function (): void {
+		$m = jobRunnerMocks();
+		$m['jobRepository']->method('resetInProgressJobs')->willReturn(0);
+
+		expect(jobRunnerFrom($m)->resetStuckJobs())->toBe(0);
+	});
+
+	it('passes the maintenance window through and returns the outcome', function (): void {
+		$m = jobRunnerMocks();
+		$m['jobRepository']->expects(test()->once())->method('maintenance')->with(7)
+			->willReturn(['pruned' => 12, 'vacuumed' => true]);
+
+		expect(jobRunnerFrom($m)->maintenance(7))->toBe(['pruned' => 12, 'vacuumed' => true]);
+	});
+
+	it('defaults maintenance to a 30 day window', function (): void {
+		$m = jobRunnerMocks();
+		$m['jobRepository']->expects(test()->once())->method('maintenance')->with(30)
+			->willReturn(['pruned' => 0, 'vacuumed' => true]);
+
+		jobRunnerFrom($m)->maintenance();
 	});
 });
