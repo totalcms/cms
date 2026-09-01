@@ -640,8 +640,13 @@ class CollectionRefiner
 	 */
 	protected static function thisMonth(string $date): bool
 	{
-		$time       = strtotime($date);
-		$monthStart = strtotime('first day of this month');
+		$time = strtotime($date);
+		// `midnight` is required. Unlike the weekday forms ("monday this week"),
+		// which reset the clock, "first day of this month" only changes the day
+		// and keeps the CURRENT time — so the boundary lands at the 1st at,
+		// say, 14:30. A record dated the 1st is stored as midnight, which is
+		// earlier, so it fell outside this window every day of the month.
+		$monthStart = strtotime('midnight first day of this month');
 		$monthEnd   = strtotime('last day of this month 23:59:59');
 
 		return $time >= $monthStart && $time <= $monthEnd;

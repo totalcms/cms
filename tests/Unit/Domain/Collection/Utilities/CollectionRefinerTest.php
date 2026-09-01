@@ -586,6 +586,41 @@ describe('CollectionRefiner :: date operators', function (): void {
 			->toContain('today')->not->toContain('ancient');
 	});
 
+	it('includes a record dated the first of the month, on any day', function (): void {
+		// The boundary bug this pins was invisible for all but one day a month.
+		// `first day of this month` changes the day and keeps the CURRENT clock
+		// time, so the window started at the 1st at (say) 14:30 while a
+		// date-only record on the 1st is midnight — earlier, therefore outside.
+		// A post dated the 1st vanished from "this month" for the whole month,
+		// and the suite only noticed when the run itself happened on the 1st.
+		//
+		// Anchoring the fixture on the 1st rather than on today makes it fail
+		// every day instead of one.
+		$rows = [
+			['id' => 'first-of-month', 'date' => date('Y-m-01')],
+			['id' => 'mid-month', 'date' => date('Y-m-15')],
+			['id' => 'ancient', 'date' => '2000-01-15'],
+		];
+
+		expect(collectionRefinerIdsWhere('date', 'thisMonth', null, $rows))
+			->toContain('first-of-month')
+			->toContain('mid-month')
+			->not->toContain('ancient');
+	});
+
+	it('includes a record dated the last of the month, on any day', function (): void {
+		// The other end of the same window, for symmetry: monthEnd sets an
+		// explicit 23:59:59 and so was always right, but nothing held it there.
+		$rows = [
+			['id' => 'last-of-month', 'date' => date('Y-m-t')],
+			['id' => 'ancient', 'date' => '2000-01-15'],
+		];
+
+		expect(collectionRefinerIdsWhere('date', 'thisMonth', null, $rows))
+			->toContain('last-of-month')
+			->not->toContain('ancient');
+	});
+
 	it('identifies weekdays and weekends', function (): void {
 		$rows = [
 			['id' => 'monday', 'date' => '2020-06-15'],
