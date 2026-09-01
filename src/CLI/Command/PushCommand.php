@@ -37,7 +37,7 @@ class PushCommand extends BaseCommand
 
 		try {
 			[$schemaFilter, $templateFilter, $collectionsFilter, $collectionMetaFilter] = $this->resolveSyncFilters($input);
-			$seedFilter = $this->resolveSeedFilter($input);
+			$seedFilter                                                                 = $this->resolveSeedFilter($input);
 		} catch (\InvalidArgumentException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
 		}
@@ -49,9 +49,9 @@ class PushCommand extends BaseCommand
 		// Bring it in line with every other filter option: narrow whatever
 		// the operator didn't mention to none.
 		if ($seedFilter !== null) {
-			$schemaFilter         ??= [];
-			$templateFilter       ??= [];
-			$collectionsFilter    ??= [];
+			$schemaFilter ??= [];
+			$templateFilter ??= [];
+			$collectionsFilter ??= [];
 			$collectionMetaFilter ??= [];
 		}
 

@@ -153,9 +153,7 @@ readonly class OrphanScanner
 			}
 
 			$source = $rel['source'];
-			if (!isset($scannedCollections[$source])) {
-				$scannedCollections[$source] = true;
-			}
+			$scannedCollections[$source] ??= true;
 		}
 
 		$report->collectionsScanned = count($scannedCollections);

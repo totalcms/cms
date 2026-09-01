@@ -868,9 +868,7 @@ class TotalCMSTwigFilters
 				$keyString = '_ungrouped';
 			}
 
-			if (!isset($result[$keyString])) {
-				$result[$keyString] = [];
-			}
+			$result[$keyString] ??= [];
 			$result[$keyString][] = $item;
 		}
 
@@ -906,9 +904,7 @@ class TotalCMSTwigFilters
 				$keyString = '_ungrouped';
 			}
 
-			if (!isset($result[$keyString])) {
-				$result[$keyString] = 0;
-			}
+			$result[$keyString] ??= 0;
 			$result[$keyString]++;
 		}
 
@@ -1051,9 +1047,7 @@ class TotalCMSTwigFilters
 
 		// Use the same ParsedownMarkdown class that powers Twig's MarkdownExtension
 		static $markdown = null;
-		if ($markdown === null) {
-			$markdown = new \TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown();
-		}
+		$markdown ??= new \TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown();
 
 		return $markdown->convert($value);
 	}

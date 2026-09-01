@@ -31,7 +31,7 @@ readonly class SimpleForm implements \Stringable
 	{
 		// Add CSRF token if manager is available and method requires protection
 		$csrfField = '';
-		if ($this->csrfManager && in_array(strtoupper($this->method), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+		if ($this->csrfManager instanceof CSRFTokenManager && in_array(strtoupper($this->method), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
 			$csrfField = $this->csrfManager->getTokenField();
 		}
 

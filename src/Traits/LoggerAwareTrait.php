@@ -20,9 +20,7 @@ trait LoggerAwareTrait
 	 */
 	protected function getLogger(): LoggerInterface
 	{
-		if ($this->logger === null) {
-			$this->logger = $this->createLogger();
-		}
+		$this->logger ??= $this->createLogger();
 
 		return $this->logger;
 	}

@@ -144,7 +144,7 @@ readonly class TemplateTools
 
 		$template = $this->fetcher->fetchBuilderTemplate($name, $folder);
 
-		if ($template === null) {
+		if (!$template instanceof \TotalCMS\Domain\Template\Data\TemplateData) {
 			throw new ToolCallException(sprintf(
 				'get_template: template "%s" not found. Use list_templates to see available templates. Paths are builder-relative and carry no .twig extension.',
 				$path,

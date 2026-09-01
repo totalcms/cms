@@ -61,9 +61,7 @@ class ManualSorter
 
 			if ($value !== null && isset($orderMap[$value])) {
 				$position = $orderMap[$value];
-				if (!isset($ordered[$position])) {
-					$ordered[$position] = [];
-				}
+				$ordered[$position] ??= [];
 				$ordered[$position][] = $item;
 			} else {
 				$remaining[] = $item;

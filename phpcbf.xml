@@ -13,6 +13,14 @@
     <file>./config</file>
     <file>./public/index.php</file>
 
+    <!-- Parallel-test sandboxes. Each worker gets its own cache/ under here and
+         fills it with compiled Twig templates — generated code that will never
+         satisfy PSR-12. PHPCS has no dot-directory rule (unlike php-cs-fixer's
+         ignoreDotFiles, and Rector skips ./tests outright), so it walks in and
+         phpcbf exits 2, aborting `composer clean` for anyone who has run the
+         test suite. The directory is gitignored; nothing in it is ours. -->
+    <exclude-pattern>*/tests/\.workers/*</exclude-pattern>
+
     <rule ref="PSR2">
         <exclude name="Generic.WhiteSpace.DisallowTabIndent"/>
         <!-- Exclude control structure spacing that conflicts with custom formatting -->

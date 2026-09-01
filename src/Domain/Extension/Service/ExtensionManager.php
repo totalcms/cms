@@ -655,9 +655,7 @@ class ExtensionManager
 			} else {
 				// Add new capabilities as ON, keep existing choices
 				foreach (array_keys($capabilities) as $cap) {
-					if (!isset($state->permissions[$cap])) {
-						$state->permissions[$cap] = true;
-					}
+					$state->permissions[$cap] ??= true;
 				}
 				// Remove capabilities the extension no longer uses
 				$state->permissions = array_intersect_key($state->permissions, $capabilities);
@@ -1894,9 +1892,7 @@ class ExtensionManager
 			// updated extension), but never override an always-on infrastructure
 			// capability — those have no toggle and must stay true.
 			foreach (array_keys($capabilities) as $cap) {
-				if (!isset($state->permissions[$cap])) {
-					$state->permissions[$cap] = in_array($cap, ExtensionContext::ALWAYS_ON_CAPABILITIES, true);
-				}
+				$state->permissions[$cap] ??= in_array($cap, ExtensionContext::ALWAYS_ON_CAPABILITIES, true);
 			}
 			// Remove capabilities the extension no longer uses
 			$state->permissions = array_intersect_key($state->permissions, $capabilities);

@@ -84,6 +84,7 @@ readonly class ImageCacheService
 
 		return $cachesCleared;
 	}
+
 	/**
 	 * Get image cache statistics for a collection.
 	 *

@@ -15,7 +15,6 @@ declare(strict_types=1);
  * ranges are left exactly as they are: shipping yesterday's correct list beats
  * shipping today's empty one.
  */
-
 const SOURCES = [
 	'V4' => 'https://www.cloudflare.com/ips-v4',
 	'V6' => 'https://www.cloudflare.com/ips-v6',
@@ -151,7 +150,7 @@ foreach (SOURCES as $name => $url) {
 		// Exit 2, distinct from a real failure, so build.sh can tell "could not
 		// refresh" from "the script is broken" and shout about the first
 		// without failing the release over it.
-		fwrite(STDERR, "  ! keeping the ranges committed on " . currentLastVerified() . "\n");
+		fwrite(STDERR, '  ! keeping the ranges committed on ' . currentLastVerified() . "\n");
 		exit(2);
 	}
 	printf("  %s: %d ranges\n", $name, count($ranges));

@@ -36,7 +36,7 @@ beforeEach(function (): void {
 	$image = imagecreatetruecolor(16, 16);
 	ob_start();
 	imagejpeg($image);
-	$jpeg = (string) ob_get_clean();
+	$jpeg = (string)ob_get_clean();
 	imagedestroy($image);
 
 	$httpClient = test()->createMock(HttpClientInterface::class);

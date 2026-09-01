@@ -79,7 +79,7 @@ trait SyncFilterOptions
 				continue; // flag not given
 			}
 			$anyFeature               = true;
-			$features[$collectionId] = $this->parseListOption($value);
+			$features[$collectionId]  = $this->parseListOption($value);
 		}
 
 		$anyFilter = $schemas !== null || $templates !== null || $settings !== null || $anyFeature;

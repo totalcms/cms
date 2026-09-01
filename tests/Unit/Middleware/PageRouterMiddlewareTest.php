@@ -548,7 +548,6 @@ final class PageRouterMiddlewareTest extends TestCase
 	 * Content-Type is auto-detected from the route's file extension. A page
 	 * routed at `/robots.txt` serves as text/plain so the rendered output is
 	 * treated as a plain-text file by browsers and crawlers.
-	 *
 	 */
 	#[DataProvider('contentTypeByExtensionProvider')]
 	public function testContentTypeAutoDetectedFromRouteExtension(string $route, string $expectedContentTypeFragment): void

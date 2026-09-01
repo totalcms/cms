@@ -20,9 +20,7 @@ class TwigFunctionCache
 	{
 		$cacheKey = self::generateCacheKey($key, $args);
 
-		if (!isset(self::$cache[$cacheKey])) {
-			self::$cache[$cacheKey] = $function(...$args);
-		}
+		self::$cache[$cacheKey] ??= $function(...$args);
 
 		return self::$cache[$cacheKey];
 	}

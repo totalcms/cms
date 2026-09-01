@@ -217,7 +217,8 @@
 	"clean": [
 		"@rector:fix",
 		"@cs:fix",
-		"@sniffer:fix"
+		"@sniffer:fix",
+		"@bundle"
 	]
   }
 }

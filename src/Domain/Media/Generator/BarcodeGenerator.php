@@ -178,7 +178,7 @@ class BarcodeGenerator
 			throw new \InvalidArgumentException('UPC-E requires 6, 7 or 8 digits');
 		}
 
-		$data = self::upcePayload($data);
+		$data = $this->upcePayload($data);
 
 		$width  = $options['width'] ?? -1;
 		$height = $options['height'] ?? -1;
@@ -258,7 +258,7 @@ class BarcodeGenerator
 	 * number-system prefix (nothing else is valid there), so anything else
 	 * means the trailing digit is the check digit.
 	 */
-	private static function upcePayload(string $data): string
+	private function upcePayload(string $data): string
 	{
 		return match (strlen($data)) {
 			8       => substr($data, 1, 6),

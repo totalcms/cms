@@ -691,9 +691,7 @@ class CacheManager
 		// Filesystem is ALWAYS checked as absolute fallback for license data,
 		// even when filesystem caching is disabled in config (see comment in
 		// storeLicenseData() for why). `getMandatory` bypasses the enabled flag.
-		if ($result === null) {
-			$result = $this->filesystemService->getMandatory($domainKey);
-		}
+		$result ??= $this->filesystemService->getMandatory($domainKey);
 
 		// Reconstruct LicenseData from cached array
 		if (is_array($result) && isset($result['valid'], $result['domain'])) {

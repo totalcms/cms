@@ -50,13 +50,13 @@ $app = $container->get(App::class);
 // unavailable" rather than a blank 500 on every route including the admin page
 // the operator needs to go and disable the offending extension.
 $bootExtensions = static function (callable $phase, string $label) use ($container): void {
-    try {
-        $phase();
-    } catch (Throwable $e) {
-        $container->get(LoggerFactory::class)
-            ->channelLogger(LogChannel::Extensions)
-            ->critical("Extension {$label} failed; extensions are degraded: " . $e->getMessage(), ['exception' => $e]);
-    }
+	try {
+		$phase();
+	} catch (Throwable $e) {
+		$container->get(LoggerFactory::class)
+			->channelLogger(LogChannel::Extensions)
+			->critical("Extension {$label} failed; extensions are degraded: " . $e->getMessage(), ['exception' => $e]);
+	}
 };
 
 // Discover and register extensions (before middleware/routes so extensions can add container definitions)

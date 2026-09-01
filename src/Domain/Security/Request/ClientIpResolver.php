@@ -127,7 +127,7 @@ readonly class ClientIpResolver
 		$hasHeader = false;
 
 		foreach (self::FORWARD_HEADERS as $header) {
-			if (isset($serverParams[self::cgiName($header)])) {
+			if (isset($serverParams[$this->cgiName($header)])) {
 				$hasHeader = true;
 				break;
 			}
@@ -137,7 +137,7 @@ readonly class ClientIpResolver
 		// ranges means the list has drifted since this release was built. It is
 		// the one symptom that distinguishes "stale ranges" from "not behind a
 		// proxy", and without it the two look identical from here.
-		$looksLikeStaleRanges = isset($serverParams[self::cgiName(self::CLOUDFLARE_MARKER)])
+		$looksLikeStaleRanges = isset($serverParams[$this->cgiName(self::CLOUDFLARE_MARKER)])
 			&& !$this->isCloudflare($peer);
 
 		if ($looksLikeStaleRanges && $this->config->trustProxyHeaders === self::TRUST_AUTO) {
@@ -169,7 +169,7 @@ readonly class ClientIpResolver
 	 * class knows lives in exactly one constant, and two hand-kept copies of the
 	 * same strings is how they drift apart.
 	 */
-	private static function cgiName(string $header): string
+	private function cgiName(string $header): string
 	{
 		return 'HTTP_' . strtoupper(str_replace('-', '_', $header));
 	}

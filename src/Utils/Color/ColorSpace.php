@@ -79,7 +79,7 @@ enum ColorSpace: string
 			}
 		}
 
-		return ($throw || !$fallback)
+		return ($throw || !$fallback instanceof ColorSpace)
 			? throw new UnsupportedColorSpace($name)
 			: $fallback
 		;

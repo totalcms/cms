@@ -36,7 +36,6 @@ class AutogenFeatureSetTest extends TestCase
 
 	/**
 	 * @param array<string,mixed> $case
-	 *
 	 */
 	#[DataProvider('featureSetProvider')]
 	public function testEngineMatchesSharedFeatureSet(array $case): void

@@ -16,9 +16,9 @@ $settings['root']     = dirname(__DIR__);
 // TEST_TOKEN); plain paths for a serial run. Published by tests/bootstrap.php
 // — see tests/worker-paths.php. OAuth key paths below derive from datadir, so
 // they follow automatically.
-$settings['datadir']  = $_SERVER['TCMS_TEST_DATADIR']  ?? ($settings['root'] . '/tests/tcms-data');
+$settings['datadir']  = $_SERVER['TCMS_TEST_DATADIR'] ?? ($settings['root'] . '/tests/tcms-data');
 $settings['cachedir'] = $_SERVER['TCMS_TEST_CACHEDIR'] ?? ($settings['root'] . '/cache');
-$settings['tmpdir']   = $_SERVER['TCMS_TEST_TMPDIR']   ?? ($settings['root'] . '/tmp');
+$settings['tmpdir']   = $_SERVER['TCMS_TEST_TMPDIR'] ?? ($settings['root'] . '/tmp');
 $settings['domain']   = 'totalcms.test';
 
 // OAuth signing-key paths are computed in defaults.php using $settings['datadir']
