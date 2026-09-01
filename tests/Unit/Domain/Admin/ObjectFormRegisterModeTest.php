@@ -179,24 +179,8 @@ final class ObjectFormRegisterModeTest extends TestCase
 
 	// ── The ordinary admin form is unchanged ─────────────────────────────────
 
-	public function testANormalFormStillTargetsTheCollectionRoute(): void
-	{
-		$form = $this->form(['register' => false]);
-
-		$this->init($form);
-
-		$this->assertSame('/collections/members', $this->read($form, 'route'));
-		$this->assertFalse($this->read($form, 'addOnly'));
-	}
-
-	public function testANormalAddOnlyFormAlsoRefusesAQueryStringId(): void
-	{
-		// addOnly is the general control; registration mode is one caller of it.
-		$_GET['id'] = 'admin';
-
-		$form = $this->form(['addOnly' => true]);
-		$this->init($form);
-
-		$this->assertSame('', $this->read($form, 'id'));
-	}
+	// The generic addOnly behaviour — a normal form honouring $_GET['id'], an
+	// addOnly form refusing it, POST vs PUT — is covered by
+	// FormAddOnlySecurityTest. This file only holds what registration mode adds
+	// on top: that it turns addOnly on for you, and where it posts.
 }
