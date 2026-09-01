@@ -69,7 +69,7 @@ class LicenseValidator
 		// Check cache first (unless force refresh)
 		if (!$forceRefresh) {
 			$cached = $this->getCachedLicense();
-			if ($cached && $cached->isCacheValid()) {
+			if ($cached instanceof LicenseData && $cached->isCacheValid()) {
 				$this->cachedResult = $cached;
 
 				return $this->cachedResult;

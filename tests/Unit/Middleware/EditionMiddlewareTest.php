@@ -494,8 +494,6 @@ final class EditionMiddlewareTest extends TestCase
 	// Tests: each middleware checks the correct feature
 	// ------------------------------------------------------------------
 
-	/**
-	 */
 	#[DataProvider('middlewareFeatureProvider')]
 	public function testEachMiddlewareChecksCorrectFeature(string $middlewareClass, EditionFeature $expectedFeature): void
 	{

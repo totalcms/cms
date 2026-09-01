@@ -442,9 +442,7 @@ abstract class Util
 		}
 
 		foreach (self::toArray($spaces) as $space) {
-			if ($space === null) {
-				$space = '[0-9A-Za-z]+';
-			}
+			$space ??= '[0-9A-Za-z]+';
 
 			$n  = '-?[0-9\.]*((deg)|%)?';
 			$s  = '[\s,]*';

@@ -36,7 +36,7 @@ if (!function_exists('tcmsTestWorkerToken')) {
 			$token = $_SERVER['TEST_TOKEN'] ?? '';
 		}
 
-		return (string) preg_replace('/[^A-Za-z0-9_]/', '', (string) $token);
+		return (string)preg_replace('/[^A-Za-z0-9_]/', '', (string)$token);
 	}
 
 	/**

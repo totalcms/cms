@@ -57,9 +57,7 @@ readonly class AuthTwigAdapter
 			? sprintf('%s/%s', $this->config->api, 'admin/login')
 			: sprintf('%s/%s/%s', $this->config->api, 'admin/login', $collection);
 
-		if ($redirect === null) {
-			$redirect = $_SERVER['REQUEST_URI'] ?? '';
-		}
+		$redirect ??= $_SERVER['REQUEST_URI'] ?? '';
 
 		if ($redirect !== '') {
 			$loginUrl .= '?' . http_build_query(['redirect' => $redirect]);

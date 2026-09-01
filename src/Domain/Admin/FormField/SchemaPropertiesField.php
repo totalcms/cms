@@ -24,10 +24,7 @@ class SchemaPropertiesField extends PropertiesField
 	{
 		parent::init();
 
-		if (!isset($this->properties['id'])) {
-			// Add the default ID property if it doesn't exist
-			$this->properties['id'] = $this->createPropertyField('id', self::DEFAULT_ID_OPTIONS);
-		}
+		$this->properties['id'] ??= $this->createPropertyField('id', self::DEFAULT_ID_OPTIONS);
 	}
 
 	public function buildFormField(): string

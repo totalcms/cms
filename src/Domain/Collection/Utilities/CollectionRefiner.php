@@ -81,7 +81,7 @@ class CollectionRefiner
 			$filteredCollection = $this->filterByRule(
 				collection  : $filteredCollection,
 				property    : $rule['property'],
-				filterValue : self::filterValueToString($value),
+				filterValue : $this->filterValueToString($value),
 				operator    : $rule['operator'] ?? 'equal',
 			);
 		}
@@ -133,7 +133,7 @@ class CollectionRefiner
 			$filtered = $this->filterByRule(
 				collection  : $collection,
 				property    : $property,
-				filterValue : self::filterValueToString($value),
+				filterValue : $this->filterValueToString($value),
 				operator    : $operator,
 			);
 
@@ -172,7 +172,7 @@ class CollectionRefiner
 			$filteredCollection = $this->filterByRule(
 				collection  : $filteredCollection,
 				property    : $property,
-				filterValue : self::filterValueToString($value),
+				filterValue : $this->filterValueToString($value),
 				operator    : $operator,
 			);
 		}
@@ -215,7 +215,7 @@ class CollectionRefiner
 	 * equal() compares loosely, and a stored `false` equals '0' while a stored
 	 * `true` does not.
 	 */
-	private static function filterValueToString(mixed $value): string
+	private function filterValueToString(mixed $value): string
 	{
 		if (is_bool($value)) {
 			return $value ? '1' : '0';
