@@ -9,8 +9,13 @@ declare(strict_types=1);
 // covers the phpunit bootstrap path.
 $_SERVER['APP_ENV'] = 'test';
 
-// may need to increase memory limit for tests in php.ini
-ini_set('memory_limit', '1G');
+// Tests need more headroom than a stock php.ini gives. This runs after
+// PHPUnit has applied phpunit.xml's <ini> block, so a plain ini_set() here
+// wins over both that and any -d flag — which is what made
+// test:coverage:parallel die in CoverageMerger: the coverage scripts asked
+// for more and every worker silently clamped back to 1G. Honour an explicit
+// request instead. The env var reaches workers, which php.ini flags do not.
+ini_set('memory_limit', getenv('TCMS_TEST_MEMORY_LIMIT') ?: '1G');
 
 // Set session save path to writable directory for CI environments
 $sessionPath = sys_get_temp_dir() . '/php_sessions';
@@ -20,6 +25,13 @@ if (!is_dir($sessionPath)) {
 ini_set('session.save_path', $sessionPath);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/worker-paths.php';
+
+// Publish the per-worker paths so config/local.test.php resolves to the same
+// sandbox this bootstrap prepares.
+$_SERVER['TCMS_TEST_DATADIR']  = tcmsTestDataDir();
+$_SERVER['TCMS_TEST_CACHEDIR'] = tcmsTestCacheDir();
+$_SERVER['TCMS_TEST_TMPDIR']   = tcmsTestTmpDir();
 
 // Define ROOT for CakePHP I18n translations (resources/locales/)
 if (!defined('ROOT')) {
@@ -45,7 +57,7 @@ if (!defined('ROOT')) {
 // ─────────────────────────────────────────────────────────────────────────────
 (function (): void {
 	$src = __DIR__ . '/tcms-data-fixtures';
-	$dst = __DIR__ . '/tcms-data';
+	$dst = tcmsTestDataDir();
 
 	if (is_dir($src)) {
 		$copy = function (string $src, string $dst) use (&$copy): void {

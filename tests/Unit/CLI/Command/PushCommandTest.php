@@ -170,3 +170,546 @@ it('passes template filter to exporter on dry-run', function (): void {
 
 	$tester->execute(['--templates' => 'blog-post,sidebar', '--dry-run' => true]);
 });
+
+it('maps feature flags onto the collections filter', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	// A fresh totalcms/syncService/exporter mock trio, per the pattern above
+	// (e.g. "passes schema filter to exporter on dry-run") — re-stubbing
+	// jumpStartExporter() on $this->totalcms a second time would just add a
+	// second matcher behind the one from beforeEach, which always wins.
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with(
+			[],
+			[],
+			['builder-pages' => null],
+			[],
+			null,
+		)
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--pages' => null]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('narrows a feature flag to specific object ids', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with(
+			[],
+			[],
+			['builder-pages' => ['home', 'about']],
+			[],
+			null,
+		)
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--pages' => 'home,about']);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('sends --collections to the collection SETTINGS filter', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], ['blog'], null)
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--collections' => 'blog']);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('no longer offers --collection-meta', function (): void {
+	$command = new PushCommand($this->totalcms);
+
+	expect($command->getDefinition()->hasOption('collection-meta'))->toBeFalse();
+});
+
+it('offers every feature flag', function (string $flag): void {
+	$command = new PushCommand($this->totalcms);
+
+	expect($command->getDefinition()->hasOption($flag))->toBeTrue();
+})->with(array_keys(\TotalCMS\Domain\Sync\Data\SyncableCollections::FEATURE_FLAGS));
+
+it('parses a bare --objects collection as all objects', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], [], ['blog' => null])
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--objects' => ['blog']]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('parses collection:id,id into an object id filter', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], [], ['blog' => ['welcome', 'about']])
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--objects' => ['blog:welcome,about']]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('accepts --objects more than once', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], [], ['blog' => ['welcome'], 'faq' => null])
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--objects' => ['blog:welcome', 'faq']]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('points at the dedicated flag when --objects names a feature collection', function (): void {
+	$app     = new Application();
+	$command = new PushCommand($this->totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--objects' => ['builder-pages']]);
+
+	expect($tester->getDisplay())->toContain('--pages');
+	expect($tester->getStatusCode())->toBe(1);
+});
+
+it('refuses to seed binary-only collections with an explanation', function (): void {
+	$app     = new Application();
+	$command = new PushCommand($this->totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--objects' => ['image']]);
+
+	expect($tester->getDisplay())->toContain('binaries never travel');
+	expect($tester->getStatusCode())->toBe(1);
+});
+
+it('widens a bare mention over a previous id list for the same collection', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], [], ['blog' => null])
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--objects' => ['blog:a', 'blog']]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('keeps a bare mention recorded first from being narrowed by a later id list', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], [], ['blog' => null])
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	// Bare mention FIRST this time — the order that actually exercises the
+	// array_key_exists guard: without it, `$filter['blog'] ?? []` treats
+	// the already-recorded `null` (all) as if nothing had been recorded,
+	// and the merge below would narrow it back down to ['a'].
+	$tester->execute(['--dry-run' => true, '--objects' => ['blog', 'blog:a']]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('merges id lists for the same collection across repeats', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], [], ['blog' => ['a', 'b']])
+		->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--objects' => ['blog:a', 'blog:b']]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('passes the seed filter and overwrite=false to push() on a real push', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->expects($this->once())
+		->method('push')
+		->with(
+			'https://production.example.com',
+			'test-key',
+			[],
+			[],
+			[],
+			[],
+			['blog' => null],
+			false,
+		)
+		->willReturn(OperationResult::success('Pushed', ['schemas' => 0, 'templates' => 0, 'collections' => 0, 'objects' => 1]));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--objects' => ['blog']]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('passes overwrite=true to push() when --overwrite is given', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->expects($this->once())
+		->method('push')
+		->with(
+			'https://production.example.com',
+			'test-key',
+			[],
+			[],
+			[],
+			[],
+			['blog' => null],
+			true,
+		)
+		->willReturn(OperationResult::success('Pushed', ['schemas' => 0, 'templates' => 0, 'collections' => 0, 'objects' => 1]));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	// --force because the guard applies to every run, interactive included;
+	// this test is about what push() receives, not about the guard.
+	$tester->execute(['--objects' => ['blog'], '--overwrite' => true, '--force' => true]);
+
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('refuses --objects --overwrite without --force in an interactive run', function (): void {
+	// Where operators actually are. Gating the guard on !isInteractive() left
+	// it unreachable from a terminal, so a plain `tcms push --objects=blog
+	// --overwrite` clobbered production with nothing asked of it, while the
+	// docs promised it would refuse.
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->expects($this->never())->method('push');
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	// CommandTester runs interactive by default.
+	$tester->execute(['--objects' => ['blog'], '--overwrite' => true]);
+
+	expect($tester->getDisplay())->toContain('Refusing --overwrite');
+	expect($tester->getStatusCode())->toBe(1);
+});
+
+it('lets --objects --overwrite through in an interactive run with --force', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->expects($this->once())
+		->method('push')
+		->willReturn(OperationResult::success('Pushed', ['schemas' => 0, 'templates' => 0, 'collections' => 0, 'objects' => 1]));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--objects' => ['blog'], '--overwrite' => true, '--force' => true]);
+
+	expect($tester->getDisplay())->not->toContain('Refusing --overwrite');
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('does not trip the guard when --overwrite is given without --objects', function (): void {
+	// Without a seed filter --overwrite changes nothing — the payload upserts
+	// through /api/sync/import either way — so blocking a CI script that
+	// passes it defensively helps nobody.
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->expects($this->once())
+		->method('push')
+		->with(
+			'https://production.example.com',
+			'test-key',
+			null,
+			null,
+			null,
+			null,
+			null,
+			true,
+		)
+		->willReturn(OperationResult::success('Pushed', ['schemas' => 1, 'templates' => 0, 'collections' => 0, 'objects' => 0]));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--overwrite' => true], ['interactive' => false]);
+
+	expect($tester->getDisplay())->not->toContain('Refusing --overwrite');
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('refuses --overwrite in a non-interactive run without --force', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->expects($this->never())->method('push');
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--objects' => ['blog'], '--overwrite' => true], ['interactive' => false]);
+
+	expect($tester->getDisplay())->toContain('Refusing --overwrite');
+	expect($tester->getStatusCode())->toBe(1);
+});
+
+it('lets --overwrite through in a non-interactive run with --force', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->expects($this->once())
+		->method('push')
+		->willReturn(OperationResult::success('Pushed', ['schemas' => 0, 'templates' => 0, 'collections' => 0, 'objects' => 1]));
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--objects' => ['blog'], '--overwrite' => true, '--force' => true], ['interactive' => false]);
+
+	expect($tester->getDisplay())->not->toContain('Refusing --overwrite');
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('lets --overwrite through in a non-interactive run with --dry-run', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willThrowException(new \RuntimeException('unreachable in test'));
+	$syncService->expects($this->never())->method('push');
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->method('exportSyncData')->willReturn($this->jumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--objects' => ['blog'], '--overwrite' => true, '--dry-run' => true], ['interactive' => false]);
+
+	expect($tester->getDisplay())->not->toContain('Refusing --overwrite');
+	expect($tester->getStatusCode())->toBe(0);
+});
+
+it('shows the seed manifest in dry-run output when the diff succeeds', function (): void {
+	$totalcms         = $this->createMock(TotalCMS::class);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+
+	$emptyDiff = ['schemas' => [], 'templates' => [], 'objects' => [], 'collections' => []];
+
+	$syncService = $this->createMock(SyncService::class);
+	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
+	$syncService->method('diff')->willReturn($emptyDiff);
+	$totalcms->method('syncService')->willReturn($syncService);
+
+	$seedJumpstart = new JumpStartData('Test', 'Seed export');
+	$seedJumpstart->addObject(['collection' => 'blog', 'id' => 'welcome', 'data' => []]);
+
+	$exporter = $this->createMock(JumpStartExporter::class);
+	$exporter->method('setMetadata');
+	$exporter->expects($this->once())
+		->method('exportSyncData')
+		->with([], [], [], [], ['blog' => null])
+		->willReturn($seedJumpstart);
+	$totalcms->method('jumpStartExporter')->willReturn($exporter);
+
+	$app     = new Application();
+	$command = new PushCommand($totalcms);
+	$app->addCommand($command);
+	$tester = new CommandTester($command);
+
+	$tester->execute(['--dry-run' => true, '--objects' => ['blog']]);
+
+	$output = $tester->getDisplay();
+	expect($output)->toContain('Seeded objects');
+	expect($output)->toContain('blog');
+	expect($output)->toContain('welcome');
+	expect($output)->not->toContain('Nothing matches');
+	expect($tester->getStatusCode())->toBe(0);
+});

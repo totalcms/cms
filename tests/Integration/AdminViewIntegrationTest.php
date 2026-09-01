@@ -237,6 +237,26 @@ describe('Utility and Management Views', function (): void {
 		assertNoAdminErrors($response, '/admin/utils/access-groups/new');
 	});
 
+	it('loads the image cache utility without errors', function (): void {
+		// This page calls ImageCacheService straight from Twig
+		// (cms.admin.imageCacheService.getAllCollectionImageCacheStats) and
+		// renders stats.collection / cached_files / total_size_mb, so a change
+		// to that service's shape breaks the page rather than an API response.
+		$response = get('/admin/utils/image-cache');
+		assertNoAdminErrors($response, '/admin/utils/image-cache');
+	});
+
+	it('renders the image cache stats table headings', function (): void {
+		// Proves the Twig call actually returned something renderable rather
+		// than the page merely surviving.
+		$response = get('/admin/utils/image-cache');
+		$body     = (string)$response->getBody();
+
+		// assertNoAdminErrors() tolerates 302/404, so pin the real render.
+		expect($response->getStatusCode())->toBe(200);
+		expect($body)->toContain('/cache/images');
+		expect($body)->toContain('/cache/images/all');
+	});
 	it('loads cache management without errors', function (): void {
 		$response = get('/admin/cache');
 		assertNoAdminErrors($response, '/admin/cache');

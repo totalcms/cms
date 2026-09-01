@@ -66,6 +66,15 @@ class TemplateRepository
 			$rel .= $folder . '/';
 		}
 
+		// Same treatment for the template name. It legitimately carries
+		// slashes (a recursive listing returns nested names like
+		// `pages/about`), so slashes stay — but `..` and backslashes are
+		// stripped exactly as they are for the folder. Without this, a
+		// caller-supplied name is the traversal hole the folder sanitize
+		// was written to close.
+		$template = str_replace(['..', '\\'], ['', '/'], $template);
+		$template = ltrim($template, '/');
+
 		return $rel . $template . $ext;
 	}
 

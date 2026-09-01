@@ -84,6 +84,7 @@ use TotalCMS\Domain\Mcp\Tool\Admin\ExtensionTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\ObjectTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SchemaTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SiteInfoTool;
+use TotalCMS\Domain\Mcp\Tool\Admin\TemplateTools;
 use TotalCMS\Domain\Mcp\Tool\Compat\FetchTool;
 use TotalCMS\Domain\Mcp\Tool\Compat\SearchTool;
 use TotalCMS\Domain\Mcp\Tool\Content\GetObjectTool;
@@ -182,9 +183,25 @@ return [
 			return new PhpSession();
 		}
 
-		// Ensure session directory exists
-		if (isset($sessionConfig['save_path']) && !is_dir($sessionConfig['save_path'])) {
-			@mkdir($sessionConfig['save_path'], 0755, true);
+		// Our own session directory, but only if we can actually write to it.
+		// A save_path PHP cannot write to does not degrade — sessions stop
+		// working entirely and nobody can log in, including the operator, with
+		// no obvious cause. So this is checked rather than assumed, and any
+		// failure falls back to PHP's default path: shared with the rest of the
+		// server and vulnerable to a neighbour's garbage collection, but
+		// working. 0700 because these files carry authenticated session state
+		// and nothing outside this install has any business reading them.
+		$savePath = (string)($sessionConfig['save_path'] ?? '');
+		if ($savePath !== '') {
+			if (!is_dir($savePath)) {
+				@mkdir($savePath, 0700, true);
+			}
+
+			if (!is_dir($savePath) || !is_writable($savePath)) {
+				unset($sessionConfig['save_path']);
+			}
+		} else {
+			unset($sessionConfig['save_path']);
 		}
 
 		// CRITICAL: Set cache_limiter BEFORE any other session configuration
@@ -194,11 +211,24 @@ return [
 		}
 
 		// Force session settings to prevent hosting provider overrides
-		if (isset($sessionConfig['name'])) {
+		if (isset($sessionConfig['name']) && $sessionConfig['name'] !== '') {
 			ini_set('session.name', $sessionConfig['name']);
 		}
-		if (isset($sessionConfig['save_path'])) {
+		if (isset($sessionConfig['save_path']) && $sessionConfig['save_path'] !== '') {
 			ini_set('session.save_path', $sessionConfig['save_path']);
+
+			// Taking over save_path means taking over its cleanup. Debian and
+			// Ubuntu ship session.gc_probability=0 and sweep PHP's default
+			// directory from cron instead — so on those hosts, moving the path
+			// leaves nothing collecting expired files and the directory grows
+			// without limit. Only nudged upward, never down: a host that has
+			// already opted into more frequent collection keeps its setting.
+			if ((int)ini_get('session.gc_probability') < 1) {
+				ini_set('session.gc_probability', '1');
+			}
+			if ((int)ini_get('session.gc_divisor') < 1) {
+				ini_set('session.gc_divisor', '1000');
+			}
 		}
 		if (isset($sessionConfig['cookie_domain'])) {
 			ini_set('session.cookie_domain', $sessionConfig['cookie_domain']);
@@ -637,6 +667,10 @@ return [
 		$container->get(ExtensionTools::class)->register($registry);
 		$container->get(CollectionTools::class)->register($registry);
 		$container->get(ObjectTools::class)->register($registry);
+		// Read-only: list_templates / get_template. No save tool — writing
+		// Twig is a larger authority grant than writing content and is a
+		// separate decision.
+		$container->get(TemplateTools::class)->register($registry);
 
 		// Public tools (work for both admin and public personas; per-collection
 		// access is enforced inside each handler via McpSchemaResolver).

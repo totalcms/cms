@@ -312,7 +312,9 @@ else
 fi
 
 print_info "Running PHP tests..."
-if composer run test; then
+# Parallel, not the serial `test`: that script also turns on pcov coverage
+# instrumentation, which nothing here consumes, and takes ~140s against ~22s.
+if composer run test:parallel; then
     print_success "PHP Tests passed"
 else
     print_error "PHP Tests failed"

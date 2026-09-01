@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
 use TotalCMS\Domain\OAuth\Service\OAuthDynamicRegistrar;
+use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -20,6 +21,7 @@ readonly class OAuthRegisterAction
 		private Config $config,
 		private OAuthActivityLogger $activityLogger,
 		private OAuthClientPruner $clientPruner,
+		private ClientIpResolver $clientIpResolver,
 	) {
 	}
 
@@ -56,7 +58,7 @@ readonly class OAuthRegisterAction
 			], 400);
 		}
 
-		$remoteAddr = $this->extractClientIp($request);
+		$remoteAddr = $this->clientIpResolver->resolve($request);
 		$this->activityLogger->dynamicRegistration(
 			(string)$result['client_id'],
 			(string)$result['client_name'],
@@ -72,19 +74,5 @@ readonly class OAuthRegisterAction
 		$this->clientPruner->maybeRunDaily();
 
 		return $this->renderer->json($response, $result, 201);
-	}
-
-	private function extractClientIp(ServerRequestInterface $request): string
-	{
-		if ($request->hasHeader('CF-Connecting-IP')) {
-			return $request->getHeaderLine('CF-Connecting-IP');
-		}
-		if ($request->hasHeader('X-Forwarded-For')) {
-			$first = explode(',', $request->getHeaderLine('X-Forwarded-For'))[0];
-
-			return trim($first);
-		}
-
-		return $request->getServerParams()['REMOTE_ADDR'] ?? '0.0.0.0';
 	}
 }

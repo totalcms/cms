@@ -80,12 +80,17 @@ readonly class JumpStartExporter
 	 * @param list<string>|null                       $collectionMetaFilter Tristate: null = every
 	 *                                                                      local collection's settings,
 	 *                                                                      [] = none, list = those ids
+	 * @param array<string,list<string>|null>|null    $seedFilter A `--objects` seed push. Unlike
+	 *                                                             $collectionsFilter, this reaches any
+	 *                                                             seedable collection, not just the
+	 *                                                             five-collection sync allowlist.
 	 */
 	public function exportSyncData(
 		?array $schemaFilter = null,
 		?array $templateFilter = null,
 		?array $collectionsFilter = null,
 		?array $collectionMetaFilter = null,
+		?array $seedFilter = null,
 	): JumpStartData {
 		$this->logger->info('Starting sync data export');
 
@@ -94,6 +99,9 @@ readonly class JumpStartExporter
 		$this->exportCustomSchemas($schemaFilter);
 		$this->exportTemplates($templateFilter);
 		$this->exportSyncCollectionObjects($collectionsFilter);
+		if ($seedFilter !== null) {
+			$this->exportSeedCollectionObjects($seedFilter);
+		}
 		$this->exportSyncCollectionMeta($collectionMetaFilter);
 
 		$this->logger->info('Completed sync data export', [
@@ -299,7 +307,6 @@ readonly class JumpStartExporter
 	 */
 	private function exportSyncCollectionObjects(?array $filter): void
 	{
-		// Build the iteration target as a map of collectionId => idFilter.
 		// null filter (CLI / back-compat) expands to "every allowlisted
 		// collection, every object in it". An explicit map preserves only
 		// allowlisted keys; missing keys mean the operator chose not to
@@ -309,12 +316,53 @@ readonly class JumpStartExporter
 		} else {
 			$targets = [];
 			foreach ($filter as $id => $idFilter) {
-				if (in_array($id, SyncableCollections::IDS, true)) {
-					$targets[$id] = $idFilter;
+				if (SyncableCollections::contains((string)$id)) {
+					$targets[(string)$id] = $idFilter;
 				}
 			}
 		}
 
+		$this->exportCollectionObjects($targets);
+	}
+
+	/**
+	 * Export objects for a `--objects` seed push.
+	 *
+	 * Unlike exportSyncCollectionObjects(), this reaches ANY collection the
+	 * seed carve-outs permit — content and custom collections included. The
+	 * guard is seedable(), not the five-collection allowlist, because a
+	 * seed push cannot overwrite: it targets /api/import/jumpstart, whose
+	 * importer skips objects that already exist on the receiving side.
+	 *
+	 * The same defense-in-depth rule applies — a malformed filter must not
+	 * reach an excluded collection — and processObjectData() still strips
+	 * binaries and credentials, so the payload carries object data only.
+	 *
+	 * @param array<string,list<string>|null> $filter
+	 */
+	private function exportSeedCollectionObjects(array $filter): void
+	{
+		$targets = [];
+		foreach ($filter as $id => $idFilter) {
+			if (SyncableCollections::seedable((string)$id)) {
+				$targets[(string)$id] = $idFilter;
+			}
+		}
+
+		$this->exportCollectionObjects($targets);
+	}
+
+	/**
+	 * Shared object-export loop for both the mirror and seed paths.
+	 *
+	 * Callers are responsible for having already filtered $targets down to
+	 * collections they are allowed to export — this method trusts its input,
+	 * which is why both callers guard before delegating.
+	 *
+	 * @param array<string,list<string>|null> $targets collectionId => object ids, or null for all
+	 */
+	private function exportCollectionObjects(array $targets): void
+	{
 		if ($targets === []) {
 			return;
 		}

@@ -23,8 +23,16 @@ readonly class IndexReader
 		$index = $this->storage->fetchIndex($collection);
 
 		if (is_null($index)) {
-			// Build the index if it does not exist
-			return $this->builder->buildIndex($collection);
+			$built = $this->builder->buildIndex($collection);
+
+			// Read back what the build wrote rather than returning its value.
+			// Above IndexBuilder's streaming threshold the build writes entries
+			// straight to the index file and returns an EMPTY IndexData — the
+			// content is never assembled in memory. Returning that verbatim
+			// served an empty index for exactly the collections large enough
+			// that nobody notices quickly, so every listing on the site came
+			// back empty until some later request read the index again.
+			return $this->storage->fetchIndex($collection) ?? $built;
 		}
 
 		return $index;

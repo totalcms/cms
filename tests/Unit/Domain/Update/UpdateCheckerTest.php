@@ -217,7 +217,7 @@ final class UpdateCheckerTest extends TestCase
 			->willReturn(null);
 		$this->cacheManager->expects($this->once())
 			->method('storeComputedData')
-			->with($expectedKey, $this->isType('array'), 86400);
+			->with($expectedKey, $this->isArray(), 86400);
 
 		$this->httpClient->method('request')->willReturn(new HttpResponse(200, (string)json_encode([
 			'available' => true,

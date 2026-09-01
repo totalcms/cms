@@ -59,7 +59,7 @@ final readonly class AuthFieldPolicy
 	 */
 	private function authDisabled(): bool
 	{
-		return ($this->config->auth['enable'] ?? true) === false;
+		return !$this->config->authEnabled();
 	}
 
 	/**

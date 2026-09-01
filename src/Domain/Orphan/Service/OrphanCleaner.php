@@ -132,7 +132,7 @@ readonly class OrphanCleaner
 				$cleaned++;
 			} else {
 				$failed++;
-				$errors[] = "{$entry->collection}/{$entry->objectId}.{$entry->property}: {$result->error}";
+				$errors[] = "{$entry->collection}/{$entry->objectId}.{$entry->property}: {$result->message}";
 			}
 		}
 

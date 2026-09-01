@@ -17,7 +17,7 @@ final class DevModeManagerTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$dataDir               = sys_get_temp_dir() . '/tcms-devmode-' . uniqid();
+		$dataDir               = devModeDataDir();
 		$this->devModeManager  = devModeManager($dataDir);
 		$this->testDevModeFile = devModeFile($dataDir);
 

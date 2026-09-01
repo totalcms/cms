@@ -323,7 +323,7 @@ class FileSaverTest extends TestCase
 
 		$this->mockObjectPatcher->expects($this->once())
 			->method('patchNestedProperty')
-			->with($collection, $objectID, $property, $childKey, $this->isType('array'))
+			->with($collection, $objectID, $property, $childKey, $this->isArray())
 			->willReturn(new ObjectData($objectID, []));
 
 		$result = $this->fileSaver->save($collection, $objectID, $property, $filePath, $childKey);

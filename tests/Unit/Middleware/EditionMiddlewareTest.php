@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Middleware;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -493,9 +494,7 @@ final class EditionMiddlewareTest extends TestCase
 	// Tests: each middleware checks the correct feature
 	// ------------------------------------------------------------------
 
-	/**
-	 * @dataProvider middlewareFeatureProvider
-	 */
+	#[DataProvider('middlewareFeatureProvider')]
 	public function testEachMiddlewareChecksCorrectFeature(string $middlewareClass, EditionFeature $expectedFeature): void
 	{
 		$this->editionFeatures->expects($this->once())

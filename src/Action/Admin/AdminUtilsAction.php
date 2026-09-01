@@ -219,6 +219,27 @@ readonly class AdminUtilsAction
 			}
 			usort($collectionMeta, static fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
 
+			// Collections whose OBJECTS the Seed Objects section may offer.
+			// Narrower than the settings list above: seedableInUi() drops the
+			// five with their own sections, the binary-only collections (the
+			// binary IS the object there, so a seeded row points at a file the
+			// target does not have), the playground scratchpad, and `auth`.
+			// The object count rides along so nobody blind-ticks a
+			// five-thousand-row collection.
+			$seedCollections = [];
+			foreach ($this->collectionLister->listAllCollections() as $collection) {
+				if (!SyncableCollections::seedableInUi($collection->id)) {
+					continue;
+				}
+
+				$seedCollections[] = [
+					'id'    => $collection->id,
+					'name'  => $collection->name !== '' ? $collection->name : ucfirst($collection->id),
+					'count' => max($collection->totalObjects, 0),
+				];
+			}
+			usort($seedCollections, static fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
+
 			$syncData = [
 				'settings'            => $this->settingsFetcher->loadSection('sync'),
 				'schemas'             => $this->schemaLister->listCustomSchemas(),
@@ -226,6 +247,7 @@ readonly class AdminUtilsAction
 				'templatesGitManaged' => $templatesGitManaged,
 				'collections'         => $this->resolveSyncableCollections(),
 				'collectionMeta'      => $collectionMeta,
+				'seedCollections'     => $seedCollections,
 			];
 		}
 

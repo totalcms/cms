@@ -2,11 +2,14 @@
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Factory\Faker\FakerPicsum;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\HttpResponse;
 
 // Regression: sync used to FABRICATE images on the destination.
 //
@@ -22,6 +25,24 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 // The destination owns these fields; images are managed in the admin.
 
 beforeEach(function (): void {
+	// The `image` factory rule downloads a placeholder from picsum.photos. Stub
+	// the HTTP client so this file never depends on a third-party service being
+	// reachable — picsum returning 503 made the factory-rule test below fail,
+	// and a 20s timeout made every run slower. FakerPicsum::setHttpClient()
+	// exists for exactly this (see tests/Unit/Domain/Factory/FakerPicsumTest.php).
+	//
+	// A real JPEG, not filler bytes: the imported value is saved as an image
+	// property and goes through mime detection.
+	$image = imagecreatetruecolor(16, 16);
+	ob_start();
+	imagejpeg($image);
+	$jpeg = (string)ob_get_clean();
+	imagedestroy($image);
+
+	$httpClient = test()->createMock(HttpClientInterface::class);
+	$httpClient->method('request')->willReturn(new HttpResponse(200, $jpeg));
+	FakerPicsum::setHttpClient($httpClient);
+
 	recursiveDelete(cmsDataDir());
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
@@ -53,6 +74,10 @@ beforeEach(function (): void {
 	$this->exporter = $c->get(JumpStartExporter::class);
 	$this->fetcher  = $c->get(ObjectFetcher::class);
 	$this->saver    = $c->get(ObjectSaver::class);
+});
+
+afterEach(function (): void {
+	FakerPicsum::setHttpClient(null);
 });
 
 it('omits image fields from the sync payload instead of writing a type marker', function (): void {

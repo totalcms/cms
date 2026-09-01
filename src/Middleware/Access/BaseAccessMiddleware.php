@@ -54,7 +54,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
 		// If auth is disabled globally, allow through
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return $handler->handle($request);
 		}
 

@@ -2,167 +2,100 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Action\Auth;
+use TotalCMS\Action\Auth\PasskeyLoginAction;
 
-use PHPUnit\Framework\TestCase;
+// The user-state gate that runs during passkey login: the same active /
+// expired / login-count rules password login enforces. A passkey that skipped
+// them would let a disabled or expired account back in without a password.
+//
+// These tests drive the SHIPPED PasskeyLoginAction::checkUserState(). The
+// previous version of this file declared its own private copy of that logic and
+// tested the copy — zero references to the real class — so it stayed green no
+// matter what the action did. checkUserState() is private and touches none of
+// the action's five dependencies, so an instance without the constructor plus
+// reflection reaches the real method with nothing mocked.
 
-/**
- * Tests for PasskeyLoginAction's user state checking logic.
- *
- * These tests verify the same user validation rules that apply to password login
- * are also enforced during passkey authentication.
- */
-final class PasskeyLoginActionTest extends TestCase
+/** @param array<string,mixed> $user */
+function passkeyCheckUserState(array $user): void
 {
-	/**
-	 * Test the user state check logic extracted from PasskeyLoginAction.
-	 * We test this as a standalone method since the action depends on HTTP infrastructure.
-	 */
-	public function testActiveUserPassesStateCheck(): void
-	{
-		$user = [
-			'id'     => 'admin',
-			'active' => true,
-			'email'  => 'admin@test.com',
-		];
-
-		$this->expectNotToPerformAssertions();
-		$this->checkUserState($user);
-	}
-
-	public function testInactiveUserFailsStateCheck(): void
-	{
-		$user = [
-			'id'     => 'admin',
-			'active' => false,
-			'email'  => 'admin@test.com',
-		];
-
-		$this->expectException(\RuntimeException::class);
-		$this->expectExceptionMessage('not active');
-		$this->checkUserState($user);
-	}
-
-	public function testMissingActiveFieldFailsStateCheck(): void
-	{
-		$user = [
-			'id'    => 'admin',
-			'email' => 'admin@test.com',
-		];
-
-		$this->expectException(\RuntimeException::class);
-		$this->expectExceptionMessage('not active');
-		$this->checkUserState($user);
-	}
-
-	public function testExpiredUserFailsStateCheck(): void
-	{
-		$user = [
-			'id'         => 'admin',
-			'active'     => true,
-			'email'      => 'admin@test.com',
-			'expiration' => '2020-01-01T00:00:00+00:00',
-		];
-
-		$this->expectException(\RuntimeException::class);
-		$this->expectExceptionMessage('expired');
-		$this->checkUserState($user);
-	}
-
-	public function testFutureExpirationPassesStateCheck(): void
-	{
-		$user = [
-			'id'         => 'admin',
-			'active'     => true,
-			'email'      => 'admin@test.com',
-			'expiration' => '2030-12-31T23:59:59+00:00',
-		];
-
-		$this->expectNotToPerformAssertions();
-		$this->checkUserState($user);
-	}
-
-	public function testEmptyExpirationPassesStateCheck(): void
-	{
-		$user = [
-			'id'         => 'admin',
-			'active'     => true,
-			'email'      => 'admin@test.com',
-			'expiration' => '',
-		];
-
-		$this->expectNotToPerformAssertions();
-		$this->checkUserState($user);
-	}
-
-	public function testMaxLoginCountExceededFailsStateCheck(): void
-	{
-		$user = [
-			'id'            => 'admin',
-			'active'        => true,
-			'email'         => 'admin@test.com',
-			'maxLoginCount' => 5,
-			'loginCount'    => 5,
-		];
-
-		$this->expectException(\RuntimeException::class);
-		$this->expectExceptionMessage('maximum login count');
-		$this->checkUserState($user);
-	}
-
-	public function testLoginCountBelowMaxPassesStateCheck(): void
-	{
-		$user = [
-			'id'            => 'admin',
-			'active'        => true,
-			'email'         => 'admin@test.com',
-			'maxLoginCount' => 10,
-			'loginCount'    => 3,
-		];
-
-		$this->expectNotToPerformAssertions();
-		$this->checkUserState($user);
-	}
-
-	public function testZeroMaxLoginCountMeansUnlimited(): void
-	{
-		$user = [
-			'id'            => 'admin',
-			'active'        => true,
-			'email'         => 'admin@test.com',
-			'maxLoginCount' => 0,
-			'loginCount'    => 999,
-		];
-
-		$this->expectNotToPerformAssertions();
-		$this->checkUserState($user);
-	}
-
-	/**
-	 * Mirror of PasskeyLoginAction::checkUserState() for isolated testing.
-	 *
-	 * @param array<string,mixed> $user
-	 */
-	private function checkUserState(array $user): void
-	{
-		if (!isset($user['active']) || !$user['active']) {
-			throw new \RuntimeException('User account is not active');
-		}
-
-		if (
-			isset($user['expiration'])
-			&& !empty($user['expiration'])
-			&& strtotime((string)$user['expiration']) < time()
-		) {
-			throw new \RuntimeException('User account has expired');
-		}
-
-		if (
-			isset($user['maxLoginCount'], $user['loginCount'])
-			&& $user['maxLoginCount'] > 0
-			&& $user['loginCount'] >= $user['maxLoginCount']
-		) {
-			throw new \RuntimeException('User account has reached the maximum login count');
-		}
-	}
+	$action = (new ReflectionClass(PasskeyLoginAction::class))->newInstanceWithoutConstructor();
+	$method = new ReflectionMethod(PasskeyLoginAction::class, 'checkUserState');
+	$method->invoke($action, $user);
 }
+
+describe('PasskeyLoginAction user state gate', function (): void {
+	it('lets an active account through', function (): void {
+		passkeyCheckUserState(['id' => 'admin', 'active' => true, 'email' => 'admin@test.com']);
+
+		expect(true)->toBeTrue(); // reaching here is the assertion: no throw
+	});
+
+	it('refuses an account that has been deactivated', function (): void {
+		expect(fn () => passkeyCheckUserState(['id' => 'admin', 'active' => false]))
+			->toThrow(RuntimeException::class, 'not active');
+	});
+
+	it('refuses an account with no active flag at all', function (): void {
+		// Fails closed: a user record predating the field, or one written by an
+		// importer that omitted it, must not authenticate.
+		expect(fn () => passkeyCheckUserState(['id' => 'admin', 'email' => 'admin@test.com']))
+			->toThrow(RuntimeException::class, 'not active');
+	});
+});
+
+describe('PasskeyLoginAction expiration', function (): void {
+	it('refuses an expired account', function (): void {
+		expect(fn () => passkeyCheckUserState([
+			'id' => 'admin', 'active' => true, 'expiration' => '2020-01-01T00:00:00+00:00',
+		]))->toThrow(RuntimeException::class, 'expired');
+	});
+
+	it('allows an expiration still in the future', function (): void {
+		passkeyCheckUserState([
+			'id' => 'admin', 'active' => true, 'expiration' => '2099-01-01T00:00:00+00:00',
+		]);
+
+		expect(true)->toBeTrue();
+	});
+
+	it('treats an empty expiration as no expiry', function (): void {
+		// The field is optional; blank must mean "never expires" rather than
+		// "expired at the epoch", which would lock out every account that has
+		// not set one.
+		passkeyCheckUserState(['id' => 'admin', 'active' => true, 'expiration' => '']);
+
+		expect(true)->toBeTrue();
+	});
+});
+
+describe('PasskeyLoginAction login count', function (): void {
+	it('refuses an account that has used up its logins', function (): void {
+		expect(fn () => passkeyCheckUserState([
+			'id' => 'admin', 'active' => true, 'maxLoginCount' => 5, 'loginCount' => 5,
+		]))->toThrow(RuntimeException::class, 'maximum login count');
+	});
+
+	it('allows an account still under its limit', function (): void {
+		passkeyCheckUserState([
+			'id' => 'admin', 'active' => true, 'maxLoginCount' => 5, 'loginCount' => 4,
+		]);
+
+		expect(true)->toBeTrue();
+	});
+
+	it('treats a zero maximum as unlimited', function (): void {
+		// 0 is the "no limit" sentinel. Reading it as a limit would lock out
+		// every account that never set one.
+		passkeyCheckUserState([
+			'id' => 'admin', 'active' => true, 'maxLoginCount' => 0, 'loginCount' => 100,
+		]);
+
+		expect(true)->toBeTrue();
+	});
+
+	it('ignores a login count with no maximum set', function (): void {
+		passkeyCheckUserState(['id' => 'admin', 'active' => true, 'loginCount' => 999]);
+
+		expect(true)->toBeTrue();
+	});
+});

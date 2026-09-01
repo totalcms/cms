@@ -53,6 +53,40 @@ final class TemplateRepositoryTest extends TestCase
 		$this->rrmdir($this->tmpRoot);
 	}
 
+	public function testTemplateNameCannotTraverseOutOfTheBuilderDirectory(): void
+	{
+		// A .twig file sitting outside the builder tree. `relativeTemplatePath()`
+		// appends the extension, so an unsanitized name is an arbitrary-read
+		// primitive for anything ending .twig — the folder argument was already
+		// sanitized, the template name was not.
+		file_put_contents($this->tmpRoot . '/secret.twig', 'TOP SECRET');
+
+		$this->assertNull($this->repo->fetchBuilderTemplate('../secret'));
+		$this->assertNull($this->repo->fetchBuilderTemplate('../../secret'));
+		$this->assertNull($this->repo->fetchBuilderTemplate('pages/../../secret'));
+		$this->assertFalse($this->repo->builderTemplateExists('../secret'));
+	}
+
+	public function testLeadingSlashInTemplateNameDoesNotEscapeToAbsolutePath(): void
+	{
+		file_put_contents($this->tmpRoot . '/secret.twig', 'TOP SECRET');
+
+		$this->assertNull($this->repo->fetchBuilderTemplate('/' . $this->tmpRoot . '/secret'));
+	}
+
+	public function testNestedTemplateNamesStillResolveAfterSanitizing(): void
+	{
+		// Slashes are legitimate — a recursive listing returns nested names
+		// like `pages/about`, and those must round-trip back through a fetch.
+		// Over-sanitizing here would break the normal path.
+		file_put_contents($this->tmpRoot . '/builder/pages/about.twig', '<h1>about</h1>');
+
+		$template = $this->repo->fetchBuilderTemplate('pages/about');
+
+		$this->assertNotNull($template);
+		$this->assertSame('<h1>about</h1>', $template->contents);
+	}
+
 	public function testRecursiveListingExcludesHistorySnapshots(): void
 	{
 		// Real templates
@@ -144,7 +178,7 @@ final class TemplateRepositoryTest extends TestCase
 
 		$result = $this->repo->listBuilderTemplates('pages', true);
 
-		$this->assertContainsOnly('string', $result);
+		$this->assertContainsOnlyString($result);
 		$this->assertContains('404', $result);
 	}
 

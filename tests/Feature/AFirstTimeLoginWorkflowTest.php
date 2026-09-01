@@ -7,18 +7,37 @@ use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 
+beforeAll(function (): void {
+	// The fresh-installation state this whole file needs. It used to be created
+	// as a side effect of the first test, which made every later test depend on
+	// that one having run: any --filter matching some of these tests but not
+	// the first left them asserting "new installation" against a populated data
+	// dir. Doing it here means the file's precondition holds however the tests
+	// are selected.
+	recursiveDelete(cmsDataDir(), [], true);
+});
+
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
 	}
 	$this->setUpApp(bootstrap());
+
+	// FirstLoginChecker caches its answer, and the data dir was just emptied
+	// underneath it.
+	$this->app->getContainer()->get(CacheManager::class)->clearAllCaches();
 });
 
 afterAll(function (): void {
 	// Restore access control test data after fresh installation tests complete
 	// This ensures subsequent access control tests have the required test users
-	$testDataPath = __DIR__ . '/../tcms-data';
-	$fixturesPath = $testDataPath . '-fixtures';
+	// cmsDataDir(), not tests/tcms-data: under --parallel each worker has its
+	// own data dir, and this used to delete the worker's copy and put the
+	// fixtures back in the shared one — leaving every file scheduled after this
+	// one in the same worker with an empty data dir. The fixtures themselves
+	// are shared and read-only.
+	$testDataPath = rtrim(cmsDataDir(), '/');
+	$fixturesPath = __DIR__ . '/../tcms-data-fixtures';
 
 	// Restore auth directory
 	$authSource = $fixturesPath . '/auth';
@@ -43,14 +62,7 @@ afterAll(function (): void {
 
 describe('First Time Login Workflow', function (): void {
 	it('detects new installation correctly when no users exist', function (): void {
-		// Ensure clean state for the start of the workflow tests
-		// Force complete deletion for fresh installation testing
-		recursiveDelete(cmsDataDir(), [], true);
-		$container    = $this->app->getContainer();
-		$cacheManager = $container->get(CacheManager::class);
-		$cacheManager->clearAllCaches();
-
-		$firstLoginChecker = $container->get(FirstLoginChecker::class);
+		$firstLoginChecker = $this->app->getContainer()->get(FirstLoginChecker::class);
 
 		// On a fresh installation, should detect as new
 		expect($firstLoginChecker->isNewInstallation())->toBeTrue();
@@ -116,7 +128,18 @@ describe('First Time Login Workflow', function (): void {
 		$email    = 'admin@test.com';
 		$password = 'secure-password-123';
 
-		// First check what the index shows
+		// These tests are stages of one workflow and normally run in order, so
+		// the user already exists by now. State it rather than assume it: a
+		// filtered run can start at this test, and "assert 1 user" would then
+		// fail for a reason that has nothing to do with duplicate creation.
+		//
+		// isNewInstallation() first — it is what creates the auth collection on
+		// a fresh install, and without it there is no index to count.
+		$firstLoginChecker->isNewInstallation();
+		if ($indexReader->fetchIndex($authCollection)->objects->count() === 0) {
+			$loginService->authenticate($email, $password);
+		}
+
 		$index           = $indexReader->fetchIndex($authCollection);
 		$userCountBefore = $index->objects->count();
 		expect($userCountBefore)->toBe(1);

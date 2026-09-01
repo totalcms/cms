@@ -10,6 +10,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -48,6 +49,7 @@ readonly class McpRateLimitMiddleware implements MiddlewareInterface
 		private ApiKeyAuthenticator $apiKeyAuthenticator,
 		private JsonRenderer $renderer,
 		private Config $config,
+		private ClientIpResolver $clientIpResolver,
 	) {
 	}
 
@@ -66,7 +68,7 @@ readonly class McpRateLimitMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$ip    = $this->getClientIp($request);
+		$ip    = $this->clientIpResolver->resolve($request);
 		$key   = self::CACHE_PREFIX . md5($ip);
 		$count = $this->getCount($key);
 
@@ -82,24 +84,6 @@ readonly class McpRateLimitMiddleware implements MiddlewareInterface
 			->withHeader('X-RateLimit-Limit', (string)$limit)
 			->withHeader('X-RateLimit-Remaining', (string)max(0, $limit - $count - 1))
 			->withHeader('X-RateLimit-Window', (string)self::WINDOW);
-	}
-
-	private function getClientIp(ServerRequestInterface $request): string
-	{
-		// Trust proxy-injected client-IP headers in this order: Cloudflare, then
-		// X-Forwarded-For first hop. Both can be spoofed in misconfigured
-		// environments, so production operators MUST front the server with a
-		// trusted reverse proxy if the rate limit is load-bearing for security.
-		if ($request->hasHeader('CF-Connecting-IP')) {
-			return $request->getHeaderLine('CF-Connecting-IP');
-		}
-		if ($request->hasHeader('X-Forwarded-For')) {
-			$first = explode(',', $request->getHeaderLine('X-Forwarded-For'))[0];
-
-			return trim($first);
-		}
-
-		return $request->getServerParams()['REMOTE_ADDR'] ?? '0.0.0.0';
 	}
 
 	private function getCount(string $key): int

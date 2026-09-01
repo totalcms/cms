@@ -43,8 +43,13 @@ describe('DeleteFileAction', function (): void {
 	});
 });
 
-describe('UploadFileAction', function (): void {
-	it('returns 400 when no file is provided', function (): void {
+// This block only checks that the upload route resolves; the GET it issues
+// reaches ListUploadFilesAction, and the assertion accepts any of six status
+// codes, so it says nothing about UploadFileAction itself. The real behaviour
+// (dangerous extensions, filename sanitisation, subpath traversal, link
+// building) is covered in tests/Unit/Action/Upload/UploadFileActionTest.php.
+describe('Upload route resolution', function (): void {
+	it('resolves the upload path without erroring', function (): void {
 		// GET hits the ListUploadFilesAction which may return 200 (empty list)
 		$response = get('/api/upload/blog/test-id/content');
 		expect($response->getStatusCode())->toBeIn([200, 400, 401, 403, 404, 405]);

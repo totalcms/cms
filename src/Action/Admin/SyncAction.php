@@ -48,6 +48,7 @@ readonly class SyncAction
 		$templates      = $this->parseSelection($post, 'templates');
 		$collections    = $this->parseCollectionsSelection($post);
 		$collectionMeta = $this->parseSelection($post, 'collection_meta');
+		$seed           = $this->parseSeedSelection($post);
 
 		// The diff action compares without writing anything, so it answers
 		// with its own shape (statuses per item) rather than an
@@ -72,7 +73,14 @@ readonly class SyncAction
 
 		try {
 			$result = match ($action) {
-				'push'  => $this->syncService->push($url, $key, $schemas, $templates, $collections, $collectionMeta),
+				// $overwrite is hard-coded false and has no form field. The
+				// Sync Manager can add objects to production but never replace
+				// them: overwriting is irreversible, so it stays on the CLI
+				// behind --force where the operator had to type it.
+				'push'  => $this->syncService->push($url, $key, $schemas, $templates, $collections, $collectionMeta, $seed, false),
+				// Seeding is push-only. The section stays visible in the UI
+				// (push/pull is chosen after selection, by which button you
+				// click), so a pull can carry the field — drop it here.
 				'pull'  => $this->syncService->pull($url, $key, $schemas, $templates, $collections, $collectionMeta),
 				default => throw new \InvalidArgumentException("Unknown sync action: {$action}"),
 			};
@@ -89,6 +97,50 @@ readonly class SyncAction
 		}
 
 		return $this->renderer->json($response, $result->toArray());
+	}
+
+	/**
+	 * Resolve the Seed Objects selection into the seed-filter map.
+	 *
+	 * The form posts a plain list of collection ids:
+	 *
+	 *   seed_objects[] = blog
+	 *   seed_objects[] = faq
+	 *
+	 * Seeding is all-or-nothing per collection, so every value in the map is
+	 * null ("every object in this collection"). There is no per-object picker
+	 * to serialise — a collection with thousands of rows would be unusable as
+	 * a checkbox list, and the CLI already covers the surgical case with
+	 * `--objects=blog:id,id`.
+	 *
+	 * Every id is re-checked against seedableInUi(). The rendered form only
+	 * ever offers valid ones, but the form is not the boundary — a
+	 * hand-crafted POST must not reach `auth`, a binary-only collection, or
+	 * one that has its own section.
+	 *
+	 * Returns null when the request carried no selection at all, which keeps
+	 * a push with nothing ticked identical to a push from before this
+	 * section existed.
+	 *
+	 * @param array<string,mixed> $post
+	 *
+	 * @return array<string,null>|null
+	 */
+	private function parseSeedSelection(array $post): ?array
+	{
+		$ids = $this->parseList($post['seed_objects'] ?? []);
+		if ($ids === null) {
+			return null;
+		}
+
+		$out = [];
+		foreach ($ids as $id) {
+			if (SyncableCollections::seedableInUi($id)) {
+				$out[$id] = null;
+			}
+		}
+
+		return $out === [] ? null : $out;
 	}
 
 	/**

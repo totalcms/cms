@@ -158,26 +158,46 @@ final class BarcodeGeneratorTest extends TestCase
 
 	public function testUpceValidInput(): void
 	{
-		$result = $this->barcodeGenerator->upce('1234567');
+		// The bare 6-digit payload — what UPC-E actually encodes.
+		$result = $this->barcodeGenerator->upce('425261');
 
 		$this->assertIsString($result);
 		$this->assertStringContainsString('data-type="UPCE"', $result);
-		$this->assertStringContainsString('data-value="1234567"', $result);
+		$this->assertStringContainsString('data-value="425261"', $result);
 	}
 
-	public function testUpceValidInputWith8Digits(): void
+	public function testUpceNormalisesTheEightDigitDisplayForm(): void
 	{
-		$result = $this->barcodeGenerator->upce('12345670');
+		// `04252614` is system(0) + payload(425261) + check(4) — the form a
+		// product label carries. It must reduce to the same payload, and so
+		// encode the same UPC-A (0042100005264) as the bare form above.
+		// tc-lib-barcode < 2.14 accepted this and silently encoded the WRONG
+		// product (0000042526148); 2.14 rejects it outright. Normalising is
+		// what keeps existing callers working AND correct.
+		$result = $this->barcodeGenerator->upce('04252614');
 
-		$this->assertIsString($result);
-		$this->assertStringContainsString('data-type="UPCE"', $result);
-		$this->assertStringContainsString('data-value="12345670"', $result);
+		$this->assertStringContainsString('data-value="425261"', $result);
+		$this->assertSame(
+			$this->barcodeGenerator->upce('425261'),
+			$result,
+			'every UPC-E input form must produce an identical barcode',
+		);
+	}
+
+	public function testUpceNormalisesSevenDigitForms(): void
+	{
+		$expected = $this->barcodeGenerator->upce('425261');
+
+		// Leading 0 is a number-system prefix; anything else means the
+		// trailing digit is the check digit.
+		$this->assertSame($expected, $this->barcodeGenerator->upce('0425261'));
+		$this->assertSame($expected, $this->barcodeGenerator->upce('4252614'));
 	}
 
 	public function testUpceThrowsExceptionForInvalidInput(): void
 	{
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('UPC-E requires 7 or 8 digits');
+		$this->expectExceptionMessage('UPC-E requires 6, 7 or 8 digits');
 
 		$this->barcodeGenerator->upce('123');
 	}
@@ -210,11 +230,21 @@ final class BarcodeGeneratorTest extends TestCase
 
 	public function testCodabarGeneratesValidOutput(): void
 	{
-		$result = $this->barcodeGenerator->codabar('A1234B');
+		// A-D are CODABAR start/stop characters and the encoder supplies them
+		// itself, so they must not appear in the data. Passing 'A1234B' used
+		// to encode literally as AA1234BA, which does not scan.
+		$result = $this->barcodeGenerator->codabar('1234');
 
 		$this->assertIsString($result);
 		$this->assertStringContainsString('data-type="CODABAR"', $result);
-		$this->assertStringContainsString('data-value="A1234B"', $result);
+		$this->assertStringContainsString('data-value="1234"', $result);
+	}
+
+	public function testCodabarRejectsReservedStartStopCharactersInData(): void
+	{
+		$this->expectException(\InvalidArgumentException::class);
+
+		$this->barcodeGenerator->codabar('A1234B');
 	}
 
 	public function testCustomBarcodeWithValidType(): void
@@ -365,7 +395,8 @@ final class BarcodeGeneratorTest extends TestCase
 			'upca'    => ['method' => 'upca', 'data' => '12345678901'],
 			'upce'    => ['method' => 'upce', 'data' => '1234567'],
 			'i25'     => ['method' => 'i25', 'data' => '1234567890'],
-			'codabar' => ['method' => 'codabar', 'data' => 'A1234B'],
+			// No A-D in the data: the encoder supplies the start/stop chars.
+			'codabar' => ['method' => 'codabar', 'data' => '1234'],
 		];
 
 		foreach ($testCases as $name => $case) {

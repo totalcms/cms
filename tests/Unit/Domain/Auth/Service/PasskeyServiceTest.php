@@ -78,7 +78,7 @@ final class PasskeyServiceTest extends TestCase
 			->method('set')
 			->with(
 				SessionKeys::WEBAUTHN_REGISTER_OPTIONS,
-				$this->isType('string')
+				$this->isString()
 			);
 
 		$options = $this->service->generateRegistrationOptions($userId, $collection);
@@ -145,7 +145,7 @@ final class PasskeyServiceTest extends TestCase
 			->method('set')
 			->with(
 				SessionKeys::WEBAUTHN_AUTH_OPTIONS,
-				$this->isType('string')
+				$this->isString()
 			);
 
 		$options = $this->service->generateAuthenticationOptions();

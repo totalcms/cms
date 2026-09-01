@@ -18,6 +18,18 @@ class CollectionRefiner
 	private static array $paramCountCache = [];
 
 	/**
+	 * Operators that take the whole property value rather than one element.
+	 *
+	 * Everything else is applied per element when the property is an array —
+	 * `tags contains 'php'` means "any element contains php". These three ask
+	 * about the array itself, so per-element dispatch handed them a single
+	 * string, json_decode() failed, and they counted 0 every time: hasMin and
+	 * hasCount never matched a real array property, and hasMax matched any
+	 * non-empty one regardless of size.
+	 */
+	private const WHOLE_VALUE_OPERATORS = ['hasMin', 'hasMax', 'hasCount'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param array<array<string,mixed>> $collection
@@ -69,7 +81,7 @@ class CollectionRefiner
 			$filteredCollection = $this->filterByRule(
 				collection  : $filteredCollection,
 				property    : $rule['property'],
-				filterValue : strval($value),
+				filterValue : $this->filterValueToString($value),
 				operator    : $rule['operator'] ?? 'equal',
 			);
 		}
@@ -121,7 +133,7 @@ class CollectionRefiner
 			$filtered = $this->filterByRule(
 				collection  : $collection,
 				property    : $property,
-				filterValue : strval($value),
+				filterValue : $this->filterValueToString($value),
 				operator    : $operator,
 			);
 
@@ -160,7 +172,7 @@ class CollectionRefiner
 			$filteredCollection = $this->filterByRule(
 				collection  : $filteredCollection,
 				property    : $property,
-				filterValue : strval($value),
+				filterValue : $this->filterValueToString($value),
 				operator    : $operator,
 			);
 		}
@@ -191,6 +203,28 @@ class CollectionRefiner
 	}
 
 	/**
+	 * Render a rule's value as the string filterByRule() expects.
+	 *
+	 * Booleans are mapped to '1'/'0' rather than run through strval(), because
+	 * strval(false) is '' — and an empty filter value means "no value supplied,
+	 * match everything" a few lines below. That made
+	 * `{property: 'draft', operator: 'equal', value: false}` — which reads as
+	 * "published only" — return the entire collection, drafts included.
+	 *
+	 * '1'/'0' is also the correct comparison, not just a non-empty placeholder:
+	 * equal() compares loosely, and a stored `false` equals '0' while a stored
+	 * `true` does not.
+	 */
+	private function filterValueToString(mixed $value): string
+	{
+		if (is_bool($value)) {
+			return $value ? '1' : '0';
+		}
+
+		return strval($value);
+	}
+
+	/**
 	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
 	 *
 	 * @param array<array<string,mixed>> $collection
@@ -213,12 +247,28 @@ class CollectionRefiner
 
 		// Cache reflection results to avoid repeated reflection calls
 		if (!isset(self::$paramCountCache[$operator])) {
+			$isOperator = false;
+
 			if (method_exists($this, $operator)) {
-				$reflection                       = new \ReflectionMethod(CollectionRefiner::class, $operator);
-				self::$paramCountCache[$operator] = $reflection->getNumberOfParameters();
-				self::$methodCache[$operator]     = true;
-			} else {
-				self::$methodCache[$operator]     = false;
+				$reflection = new \ReflectionMethod(CollectionRefiner::class, $operator);
+
+				// An operator is a protected static helper taking the value and,
+				// optionally, the value to compare it against. method_exists()
+				// alone also matches this class's own machinery — filterUnique(),
+				// getPropertyValueForRecord(), filterArrayByRule() — and
+				// dispatching to one of those raises a TypeError, turning a
+				// typo'd operator into a 500 rather than an empty result.
+				$isOperator = $reflection->isProtected()
+					&& $reflection->isStatic()
+					&& $reflection->getNumberOfParameters() <= 2;
+
+				if ($isOperator) {
+					self::$paramCountCache[$operator] = $reflection->getNumberOfParameters();
+				}
+			}
+
+			self::$methodCache[$operator] = $isOperator;
+			if (!$isOperator) {
 				self::$paramCountCache[$operator] = 2; // Default for fallback
 			}
 		}
@@ -239,7 +289,7 @@ class CollectionRefiner
 			}
 
 			if ($methodExists) {
-				if (is_array($propertyValue)) {
+				if (is_array($propertyValue) && !in_array($operator, self::WHOLE_VALUE_OPERATORS, true)) {
 					$found = self::filterArrayByRule($propertyValue, $filterValue, $operator);
 
 					return $not ? !$found : $found;
@@ -254,7 +304,10 @@ class CollectionRefiner
 				return $not ? !$found : $found;
 			}
 
-			return $record[$property] == $filterValue;
+			// $propertyValue, not $record[$property]: the raw key misses a dotted
+			// path like `meta.author` and emits an undefined-key warning, where
+			// the resolved value has already walked it.
+			return $propertyValue == $filterValue;
 		});
 	}
 
@@ -461,17 +514,34 @@ class CollectionRefiner
 
 	protected static function past(string $date): bool
 	{
-		return strtotime($date) < time();
+		// strtotime() returns false on an unparseable date, and false < time()
+		// is true — so a row with a corrupt or empty date used to satisfy a
+		// `past` publish gate and go live. Matches the guard thisYear(),
+		// isWeekday() and dayOfWeek() already had.
+		$timestamp = strtotime($date);
+		if ($timestamp === false) {
+			return false;
+		}
+
+		return $timestamp < time();
 	}
 
 	protected static function future(string $date): bool
 	{
-		return strtotime($date) > time();
+		$timestamp = strtotime($date);
+		if ($timestamp === false) {
+			return false;
+		}
+
+		return $timestamp > time();
 	}
 
 	protected static function today(string $date): bool
 	{
 		$time = strtotime($date);
+		if ($time === false) {
+			return false;
+		}
 
 		return $time >= strtotime('today') && $time < strtotime('tomorrow');
 	}
@@ -506,12 +576,26 @@ class CollectionRefiner
 
 	protected static function after(string $date, string $dateAfter): bool
 	{
-		return strtotime($date) > strtotime($dateAfter);
+		$timestamp = strtotime($date);
+		$boundary  = strtotime($dateAfter);
+		if ($timestamp === false || $boundary === false) {
+			return false;
+		}
+
+		return $timestamp > $boundary;
 	}
 
 	protected static function before(string $date, string $dateBefore): bool
 	{
-		return strtotime($date) < strtotime($dateBefore);
+		// Both sides are guarded: an unparseable boundary would otherwise make
+		// every row match or none of them, depending on which side failed.
+		$timestamp = strtotime($date);
+		$boundary  = strtotime($dateBefore);
+		if ($timestamp === false || $boundary === false) {
+			return false;
+		}
+
+		return $timestamp < $boundary;
 	}
 
 	// ---------------------------------------------------------------------------------
@@ -556,8 +640,13 @@ class CollectionRefiner
 	 */
 	protected static function thisMonth(string $date): bool
 	{
-		$time       = strtotime($date);
-		$monthStart = strtotime('first day of this month');
+		$time = strtotime($date);
+		// `midnight` is required. Unlike the weekday forms ("monday this week"),
+		// which reset the clock, "first day of this month" only changes the day
+		// and keeps the CURRENT time — so the boundary lands at the 1st at,
+		// say, 14:30. A record dated the 1st is stored as midnight, which is
+		// earlier, so it fell outside this window every day of the month.
+		$monthStart = strtotime('midnight first day of this month');
 		$monthEnd   = strtotime('last day of this month 23:59:59');
 
 		return $time >= $monthStart && $time <= $monthEnd;

@@ -61,7 +61,12 @@ readonly class UploadFileAction
 		// Validate MIME type against actual file content (permissive — no category restriction)
 		$mimeValidation = $this->validator->validateMimeTypeFromFile($filepath, null);
 		if (!$mimeValidation['valid']) {
-			unlink($filepath);
+			// Guarded: one of the failure modes here is "File does not exist",
+			// where an unconditional unlink() emits a warning while cleaning up
+			// something that was never written.
+			if (is_file($filepath)) {
+				unlink($filepath);
+			}
 
 			return $this->renderer->json($response, [
 				'error'   => 'File content validation failed',

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Mcp\Schema\JsonRpc\MessageInterface;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\License\Data\Edition;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\postJson;
@@ -53,40 +55,68 @@ describe('McpEndpointAction', function (): void {
 		expect($response->getHeaderLine('Content-Type'))->toContain('application/json');
 	});
 
-	it('returns structured error body on 401 / 403 / 404', function (): void {
-		$response = postJson('/mcp', mcpInitializePayload());
-		$status   = $response->getStatusCode();
+	// The three tests below used to wrap every assertion in `if ($status === …)`
+	// so they would work whatever the environment served. In this environment
+	// /mcp answers 200, so those branches never ran: the tests asserted nothing
+	// and could not fail. Each now CREATES the condition it is about, so the
+	// error contract is actually checked.
 
-		if (in_array($status, [401, 403, 404], true)) {
-			$body = json_decode((string)$response->getBody(), true);
-			expect($body)->toHaveKey('error');
-			expect($body['error'])->toHaveKey('message');
-			expect($body['error']['message'])->toBeString();
-		}
+	it('returns a structured error body when MCP is disabled', function (): void {
+		$config      = $this->app->getContainer()->get(Config::class);
+		$config->mcp = array_merge($config->mcp, ['enabled' => false]);
+
+		$response = postJson('/mcp', mcpInitializePayload());
+
+		expect($response->getStatusCode())->toBe(404);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body)->toHaveKey('error');
+		expect($body['error'])->toHaveKey('message');
+		expect($body['error']['message'])->toBeString()->not->toBe('');
+	});
+
+	it('returns a structured error body when public access is off', function (): void {
+		$config      = $this->app->getContainer()->get(Config::class);
+		$config->mcp = array_merge($config->mcp, ['publicAccess' => false]);
+
+		$response = postJson('/mcp', mcpInitializePayload());
+
+		expect($response->getStatusCode())->toBe(401);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body)->toHaveKey('error');
+		expect($body['error']['message'] ?? '')->toBeString()->not->toBe('');
 	});
 
 	it('non-Pro edition error body carries edition and required fields', function (): void {
+		// The host needs to know WHICH edition it got and what is required, or
+		// it cannot tell the operator what to do about it.
+		$editions = test()->createMock(EditionFeatureService::class);
+		$editions->method('can')->willReturn(false);
+		$editions->method('getEdition')->willReturn(Edition::LITE);
+		$this->app->getContainer()->set(EditionFeatureService::class, $editions);
+
 		$response = postJson('/mcp', mcpInitializePayload());
 
-		if ($response->getStatusCode() === 403) {
-			$body = json_decode((string)$response->getBody(), true);
-			expect($body['error'])->toHaveKeys(['message', 'edition', 'required']);
-			expect($body['error']['required'])->toBe('pro');
-		}
+		expect($response->getStatusCode())->toBe(403);
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['error'])->toHaveKeys(['message', 'edition', 'required']);
+		expect($body['error']['required'])->toBe('pro');
+		expect($body['error']['edition'])->toBe('lite');
 	});
 
-	it('emits WWW-Authenticate header on 401 keyed by reason (login_required vs invalid_token)', function (): void {
+	it('emits WWW-Authenticate on 401 keyed by reason (login_required vs invalid_token)', function (): void {
 		// Mandatory for Anthropic Directory: MCP hosts use WWW-Authenticate to
 		// pick the right lazy-auth UX. login_required = "you need to log in";
 		// invalid_token = "your credentials didn't work, try again." Without
-		// the header, hosts can't distinguish.
+		// the header, hosts cannot distinguish.
+		$config      = $this->app->getContainer()->get(Config::class);
+		$config->mcp = array_merge($config->mcp, ['publicAccess' => false]);
+
 		$response = postJson('/mcp', mcpInitializePayload());
 
-		if ($response->getStatusCode() === 401) {
-			$header = $response->getHeaderLine('WWW-Authenticate');
-			expect($header)->toStartWith('Bearer realm="MCP"');
-			expect($header)->toMatch('/error="(login_required|invalid_token)"/');
-		}
+		expect($response->getStatusCode())->toBe(401);
+		$header = $response->getHeaderLine('WWW-Authenticate');
+		expect($header)->toStartWith('Bearer realm="MCP"');
+		expect($header)->toMatch('/error="(login_required|invalid_token)"/');
 	});
 
 	it('rejects bogus API key with 401', function (): void {

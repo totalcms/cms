@@ -34,6 +34,10 @@ config/env.php
 # tracked.
 /tests/tcms-data
 
+# Per-worker sandboxes for `pest --parallel` (see tests/worker-paths.php).
+# One dir per paratest worker; safe to delete at any time.
+/tests/.workers
+
 # Internal working docs — planning specs and pre-release audit reports.
 # Kept local-only (also already export-ignore'd from the Composer package).
 # Audit reports in particular can contain unpatched-vulnerability detail.

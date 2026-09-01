@@ -36,7 +36,7 @@ final class DevModeApiTest extends TestCase
 	protected function setUp(): void
 	{
 		parent::setUp();
-		$this->devModeManager = devModeManager(sys_get_temp_dir() . '/tcms-devmode-' . uniqid());
+		$this->devModeManager = devModeManager(devModeDataDir());
 
 		// Create a simple CacheManager for testing (all services disabled)
 		$config = new Config([

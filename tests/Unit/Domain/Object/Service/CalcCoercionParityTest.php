@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Object\Service;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Service\CalcService;
 
@@ -41,9 +42,8 @@ class CalcCoercionParityTest extends TestCase
 
 	/**
 	 * @param array<string,mixed> $case
-	 *
-	 * @dataProvider coercionProvider
 	 */
+	#[DataProvider('coercionProvider')]
 	public function testEngineMatchesSharedCoercionSet(array $case): void
 	{
 		$calc = new CalcService();

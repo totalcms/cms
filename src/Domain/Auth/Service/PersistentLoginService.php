@@ -30,11 +30,45 @@ class PersistentLoginService
 		private readonly UserValidationService $userValidator,
 		LoggerFactory $loggerFactory,
 	) {
-		$this->tokenDir = $this->config->tmpdir . '/persistent_tokens';
+		// Under the data dir, NOT tmpdir. tmpdir is projectRoot/tmp, inside the
+		// application directory a zip update swaps out — so every update threw
+		// away every "keep me signed in" token and logged the whole site out.
+		// Same reasoning that moved zip-install logs in c75ca8fb; tcms-data is
+		// the thing updates leave alone.
+		$this->tokenDir = $this->config->systemDir() . '/persistent_tokens';
 		if (!is_dir($this->tokenDir)) {
 			@mkdir($this->tokenDir, 0755, true);
+			// Carry tokens over from the old location so the update that ships
+			// this does not itself log everyone out. Only ever runs once: the
+			// directory exists from here on.
+			$this->migrateTokensFrom($this->config->tmpdir . '/persistent_tokens');
 		}
 		$this->logger = $loggerFactory->channelLogger(LogChannel::PersistentLogin);
+	}
+
+	/**
+	 * Move existing token files out of a previous location.
+	 *
+	 * Best-effort throughout: a token that cannot be moved just means one user
+	 * signs in again, which is the outcome we would have had anyway. Nothing
+	 * here may throw — this runs during container construction.
+	 */
+	private function migrateTokensFrom(string $previousDir): void
+	{
+		if ($previousDir === $this->tokenDir || !is_dir($previousDir)) {
+			return;
+		}
+
+		foreach ((array)@scandir($previousDir) as $entry) {
+			$name = (string)$entry;
+			if (!str_ends_with($name, '.json')) {
+				continue;
+			}
+
+			@rename($previousDir . '/' . $name, $this->tokenDir . '/' . $name);
+		}
+
+		@rmdir($previousDir);
 	}
 
 	/**
@@ -157,7 +191,7 @@ class PersistentLoginService
 		// unvalidated selector like `../../tcms-data/.system/apikeys` would read
 		// and DELETE arbitrary `.json` files. Reject anything that isn't our
 		// exact format before it touches the filesystem.
-		if (preg_match('/^[a-f0-9]{32}$/', $selector) !== 1) {
+		if (!$this->isValidSelector($selector)) {
 			$this->logger->warning('Invalid persistent cookie selector format');
 			$this->clearPersistentCookie();
 
@@ -457,11 +491,45 @@ class PersistentLoginService
 	/**
 	 * Clear persistent token file only (does not clear cookie).
 	 */
+	/**
+	 * Whether a selector is safe to build a filesystem path from.
+	 *
+	 * Selectors come out of a cookie, so they are attacker-controlled. The
+	 * \z anchor rather than $ is deliberate: $ also matches before a
+	 * trailing newline, which would let a selector through that the guard
+	 * reads as rejecting.
+	 */
+	private function isValidSelector(string $selector): bool
+	{
+		return preg_match('/^[a-f0-9]{32}\z/', $selector) === 1;
+	}
+
 	private function clearPersistentTokenFile(string $selector): void
 	{
-		$tokenFile = $this->tokenDir . '/' . $selector . '.json';
-		if (file_exists($tokenFile)) {
-			@unlink($tokenFile);
+		// Validate here rather than at the call sites: this is the only place
+		// that turns a selector into a path to unlink, so guarding it covers
+		// every caller. clearPersistentLogin() previously passed the cookie's
+		// selector straight through, which let a logged-in user with a
+		// remember-me session delete any .json file reachable from tokenDir by
+		// editing their own cookie and hitting logout.
+		if (!$this->isValidSelector($selector)) {
+			$this->logger->warning('Refusing to clear persistent token for an invalid selector');
+
+			return;
+		}
+
+		// Both files: a selector being cleared is being retired, and the
+		// callers are all burn-this-token paths (a failed verification, or
+		// logout). Removing only the live file left a wrong-token attempt
+		// against a rotated token's .grace.json usable for the rest of its
+		// window, while the same attempt against a live token burned it
+		// immediately — the grace window is a concurrency allowance, not a
+		// second chance at guessing.
+		foreach (['.json', '.grace.json'] as $suffix) {
+			$file = $this->tokenDir . '/' . $selector . $suffix;
+			if (file_exists($file)) {
+				@unlink($file);
+			}
 		}
 	}
 

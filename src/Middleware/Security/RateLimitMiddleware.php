@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -30,6 +31,7 @@ readonly class RateLimitMiddleware implements MiddlewareInterface
 		private CacheManager $cache,
 		private JsonRenderer $renderer,
 		private Config $config,
+		private ClientIpResolver $clientIpResolver,
 	) {
 	}
 
@@ -42,7 +44,7 @@ readonly class RateLimitMiddleware implements MiddlewareInterface
 		$window           = (int)($mailerConfig['rateWindow'] ?? 300); // 5 minutes
 
 		// Get identifier (IP address)
-		$ip    = $this->getClientIp($request);
+		$ip    = $this->clientIpResolver->resolve($request);
 		$ipKey = self::CACHE_PREFIX . 'ip_' . md5($ip);
 
 		// Get template ID from request body
@@ -77,26 +79,6 @@ readonly class RateLimitMiddleware implements MiddlewareInterface
 			->withHeader('X-RateLimit-IP-Limit', (string)$perIpLimit)
 			->withHeader('X-RateLimit-IP-Remaining', (string)max(0, $perIpLimit - $ipCount - 1))
 			->withHeader('X-RateLimit-Window', (string)$window);
-	}
-
-	private function getClientIp(ServerRequestInterface $request): string
-	{
-		// Check for Cloudflare IP first
-		if ($request->hasHeader('CF-Connecting-IP')) {
-			return $request->getHeaderLine('CF-Connecting-IP');
-		}
-
-		// Check for forwarded IP
-		if ($request->hasHeader('X-Forwarded-For')) {
-			$ips = explode(',', $request->getHeaderLine('X-Forwarded-For'));
-
-			return trim($ips[0]);
-		}
-
-		// Get from server params
-		$serverParams = $request->getServerParams();
-
-		return $serverParams['REMOTE_ADDR'] ?? '0.0.0.0';
 	}
 
 	private function getCount(string $key): int

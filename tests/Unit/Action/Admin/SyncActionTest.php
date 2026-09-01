@@ -195,4 +195,117 @@ final class SyncActionTest extends TestCase
 
 		($this->action)($this->request, $this->response, ['action' => 'push']);
 	}
+
+	public function testSeedSelectionReachesPushAsAnAllOrNothingMap(): void
+	{
+		$this->settingsFetcher->method('loadSection')->willReturn([
+			'url' => 'https://production.example.com',
+			'key' => 'api-key',
+		]);
+
+		$this->request->method('getParsedBody')->willReturn([
+			'seed_objects' => ['blog', 'faq'],
+		]);
+
+		// All-or-nothing: every value is null (every object in the
+		// collection). The UI has no way to express an id list.
+		$this->syncService->expects($this->once())
+			->method('push')
+			->with(
+				'https://production.example.com',
+				'api-key',
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				['blog' => null, 'faq' => null],
+				false,
+			)
+			->willReturn(OperationResult::success('Push complete.', []));
+
+		($this->action)($this->request, $this->response, ['action' => 'push']);
+	}
+
+	public function testTheUiCanNeverOverwrite(): void
+	{
+		// Overwriting is CLI-only, behind --force. No form field, however
+		// crafted, may flip the 8th argument.
+		$this->settingsFetcher->method('loadSection')->willReturn([
+			'url' => 'https://production.example.com',
+			'key' => 'api-key',
+		]);
+
+		$this->request->method('getParsedBody')->willReturn([
+			'seed_objects' => ['blog'],
+			'overwrite'    => '1',
+			'force'        => 'true',
+		]);
+
+		$this->syncService->expects($this->once())
+			->method('push')
+			->with(
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				false,
+			)
+			->willReturn(OperationResult::success('Push complete.', []));
+
+		($this->action)($this->request, $this->response, ['action' => 'push']);
+	}
+
+	public function testSeedSelectionIgnoresCollectionsTheUiMustNotOffer(): void
+	{
+		// A hand-crafted POST must not reach auth (never offered), the
+		// binary-only collections, or a collection that has its own section.
+		$this->settingsFetcher->method('loadSection')->willReturn([
+			'url' => 'https://production.example.com',
+			'key' => 'api-key',
+		]);
+
+		$this->request->method('getParsedBody')->willReturn([
+			'seed_objects' => ['blog', 'auth', 'image', 'playground', 'builder-pages'],
+		]);
+
+		$this->syncService->expects($this->once())
+			->method('push')
+			->with(
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				$this->anything(),
+				['blog' => null],
+				false,
+			)
+			->willReturn(OperationResult::success('Push complete.', []));
+
+		($this->action)($this->request, $this->response, ['action' => 'push']);
+	}
+
+	public function testPullNeverCarriesASeedSelection(): void
+	{
+		// Seeding is push-only. The section stays visible in the UI, so a
+		// pull can carry the field — it must be dropped, not forwarded.
+		$this->settingsFetcher->method('loadSection')->willReturn([
+			'url' => 'https://production.example.com',
+			'key' => 'api-key',
+		]);
+
+		$this->request->method('getParsedBody')->willReturn([
+			'seed_objects' => ['blog'],
+		]);
+
+		$this->syncService->expects($this->once())
+			->method('pull')
+			->with('https://production.example.com', 'api-key', null, null)
+			->willReturn(OperationResult::success('Pull complete.', []));
+
+		($this->action)($this->request, $this->response, ['action' => 'pull']);
+	}
 }

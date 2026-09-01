@@ -1,0 +1,11 @@
+{
+    "id": "test-vendor/broken-routes-ext",
+    "name": "Broken Routes Extension",
+    "description": "Route registrar type-hinted against Slim's RouteCollectorProxy instead of the RouteCollector core actually passes — reproduces the real-world crash that used to take the whole app down at boot.",
+    "version": "1.0.0",
+    "requires": {
+        "totalcms": ">=3.0.0"
+    },
+    "entrypoint": "Extension.php",
+    "license": "MIT"
+}

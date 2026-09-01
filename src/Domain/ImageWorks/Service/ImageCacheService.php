@@ -29,14 +29,34 @@ readonly class ImageCacheService
 	 */
 	public function clearCollectionImageCache(string $collection): bool
 	{
-		// Get the collection path from config
+		$this->removeCacheDirectories($collection);
+
+		// Clear the cached stats since the image cache has changed
+		$this->clearCachedStats();
+
+		return true;
+	}
+
+	/**
+	 * Remove every .cache directory beneath a collection and report how many
+	 * were removed.
+	 *
+	 * Split out of clearCollectionImageCache() so the all-collections summary
+	 * can total the directories it cleared. That method returns a bool, which
+	 * left `cache_directories_cleared` reporting 0 however much was removed.
+	 *
+	 * @throws \RuntimeException if the collection does not exist or cannot be scanned
+	 */
+	private function removeCacheDirectories(string $collection): int
+	{
 		$collectionPath = PathUtils::absolutePath($this->config->datadir, $collection);
 
 		if (!is_dir($collectionPath)) {
 			throw new \RuntimeException("Collection directory does not exist: {$collectionPath}");
 		}
 
-		// First, collect all .cache directories to avoid iterator issues during deletion
+		// Collect first, delete after: removing directories while the iterator
+		// is walking them is what this ordering avoids.
 		$cacheDirectories = [];
 
 		try {
@@ -54,7 +74,6 @@ readonly class ImageCacheService
 			throw new \RuntimeException('Failed to scan collection directory: ' . $e->getMessage(), $e->getCode(), $e);
 		}
 
-		// Now remove all found cache directories
 		$cachesCleared = 0;
 		foreach ($cacheDirectories as $cachePath) {
 			if (is_dir($cachePath)) {
@@ -63,10 +82,7 @@ readonly class ImageCacheService
 			}
 		}
 
-		// Clear the cached stats since the image cache has changed
-		$this->clearCachedStats();
-
-		return true;
+		return $cachesCleared;
 	}
 
 	/**
@@ -219,7 +235,7 @@ readonly class ImageCacheService
 
 		foreach ($collections as $collection) {
 			try {
-				$this->clearCollectionImageCache($collection);
+				$results['cache_directories_cleared'] += $this->removeCacheDirectories($collection);
 				$results['collections_processed']++;
 			} catch (\RuntimeException $e) {
 				$results['errors'][] = "Failed to clear cache for collection '{$collection}': " . $e->getMessage();

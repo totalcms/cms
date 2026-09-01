@@ -473,9 +473,24 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$config->api = '';
 		$configProp->setValue($adapter, $config);
 
-		expect($adapter->login())->toBe('/admin/login');
-		expect($adapter->login('admin'))->toBe('/admin/login/admin');
-		expect($adapter->login(''))->toBe('/admin/login');
+		// login() falls back to $_SERVER['REQUEST_URI'] when no redirect is
+		// given, so these assertions only hold when that global is unset.
+		// Any earlier test in the same process can leave it populated —
+		// harmless serially, but under `pest --parallel` file order differs
+		// per worker and this started failing with a ?redirect= suffix.
+		// Pin the global rather than depending on ambient state.
+		$previousUri = $_SERVER['REQUEST_URI'] ?? null;
+		unset($_SERVER['REQUEST_URI']);
+
+		try {
+			expect($adapter->login())->toBe('/admin/login');
+			expect($adapter->login('admin'))->toBe('/admin/login/admin');
+			expect($adapter->login(''))->toBe('/admin/login');
+		} finally {
+			if ($previousUri !== null) {
+				$_SERVER['REQUEST_URI'] = $previousUri;
+			}
+		}
 	}
 
 	public function testProcessJobQueueCommandGeneration(): void

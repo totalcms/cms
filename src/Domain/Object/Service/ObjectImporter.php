@@ -8,11 +8,13 @@ use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Property\Data\BooleanData;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Property\Service\DepotSaver;
 use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\GallerySaver;
 use TotalCMS\Domain\Property\Service\ImageSaver;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -144,10 +146,14 @@ class ObjectImporter
 
 		$this->objectID = $objectData['id'];
 
-		// Same self-suspend pattern as importObject() — ObjectPatcher doesn't
-		// fire `object.updated` today, but we still call suspendForImport to
-		// keep the lifecycle consistent in case that changes, and to give
-		// import.completed auto-resume something to clean up.
+		// Same self-suspend pattern as importObject(), and load-bearing rather
+		// than defensive: ObjectPatcher::patchObject() reaches
+		// ObjectUpdater::updateObject(), which dispatches
+		// CoreEvent::OBJECT_UPDATED on any non-silent patch. Without this
+		// suspension a bulk re-import would fire object.updated per row and
+		// wake every listener — search re-indexing, automations — for work
+		// that import.updated already reports. It also gives
+		// import.completed's auto-resume something to clean up.
 		$wasSuspended = $this->eventDispatcher->isImportSuspended($collection);
 		if (!$wasSuspended) {
 			$this->eventDispatcher->suspendForImport($collection);
@@ -196,10 +202,18 @@ class ObjectImporter
 		// nested arrays before the unknown-property filter strips them.
 		$objectData = $this->unflattenDottedProperties($objectData, $schema);
 
-		// Filter out properties that are not in the schema
+		// Filter out properties that are not in the schema.
+		//
+		// `id` survives regardless: it identifies the object rather than
+		// describing it, and ObjectData carries it separately from the schema
+		// properties. A schema that does not declare an `id` property (one of
+		// the 37 shipped ones, and any custom schema) previously had the id
+		// stripped here — before updateObject()'s own empty($objectData['id'])
+		// check, which then rejected the payload with "Object ID is required
+		// for updating" even though the caller had supplied one.
 		$objectData = array_filter(
 			$objectData,
-			fn ($value, $name): bool => isset($schema->properties[$name]),
+			fn ($value, $name): bool => $name === 'id' || isset($schema->properties[$name]),
 			ARRAY_FILTER_USE_BOTH
 		);
 
@@ -300,9 +314,12 @@ class ObjectImporter
 				continue;
 			}
 
-			$prefix    = $name . '.';
-			$nested    = [];
-			$foundKeys = false;
+			$prefix         = $name . '.';
+			$nested         = [];
+			$foundKeys      = false;
+			$booleanSubKeys = $property['$ref'] === SchemaData::PROPERTY_TYPE_TO_REF['card']
+				? $this->fetchCardBooleanSubKeys($property)
+				: [];
 
 			foreach (array_keys($objectData) as $key) {
 				$keyStr = (string)$key;
@@ -319,6 +336,15 @@ class ObjectImporter
 				// plain strings, so this branch is a no-op for them.
 				if (is_string($value) && $value !== '' && ($value[0] === '{' || $value[0] === '[') && $this->isJson($value)) {
 					$value = json_decode($value, true);
+				} elseif (is_string($value) && in_array($subKey, $booleanSubKeys, true)) {
+					// CardData stores sub-values verbatim — there is no property
+					// type doing the coercion a top-level field would get — so a
+					// CSV round trip used to turn a real `false` into the string
+					// `''` and `true` into `'1'`. Which sub-keys are booleans
+					// comes from the card's own sub-schema rather than from
+					// guessing at the text, so a card field that legitimately
+					// holds the word "true" stays a string.
+					$value = BooleanData::isTruthy($value);
 				}
 				$nested[$subKey] = $value;
 				unset($objectData[$keyStr]);
@@ -331,6 +357,38 @@ class ObjectImporter
 		}
 
 		return $objectData;
+	}
+
+	/**
+	 * The sub-properties of a card that are declared as booleans.
+	 *
+	 * @param array<string,mixed> $property
+	 *
+	 * @return array<int,string>
+	 */
+	private function fetchCardBooleanSubKeys(array $property): array
+	{
+		$schemaref = PropertyDefinition::extractSchemaRef($property);
+		if ($schemaref === null) {
+			return [];
+		}
+
+		try {
+			$subSchema = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($schemaref));
+		} catch (\Throwable) {
+			// A card whose sub-schema has gone missing still imports; its
+			// values just stay strings, which is what happened before.
+			return [];
+		}
+
+		$booleans = [];
+		foreach ($subSchema->properties as $subName => $subProperty) {
+			if (is_array($subProperty) && ($subProperty['type'] ?? null) === 'boolean') {
+				$booleans[] = (string)$subName;
+			}
+		}
+
+		return $booleans;
 	}
 
 	private function saveImages(): void
@@ -439,7 +497,12 @@ class ObjectImporter
 	/** @SuppressWarnings("PHPMD.Superglobals") */
 	private function replacePathTemplates(string $path = ''): string
 	{
-		$path = str_replace('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT'], $path);
+		// config/defaults.php populates this for CLI runs (from cache/.docroot,
+		// falling back to <project>/public), so it is normally set even under
+		// the job runner. Guarded anyway to match every other DOCUMENT_ROOT
+		// read in the codebase — unguarded, a missing key warns and then
+		// trips a str_replace(): passing null deprecation per media property.
+		$path = str_replace('DOCUMENT_ROOT', (string)($_SERVER['DOCUMENT_ROOT'] ?? ''), $path);
 
 		// Strip shell-style backslash escapes (e.g. "Placeholder\ Images" -> "Placeholder Images")
 		// so paths copy-pasted from a terminal resolve correctly.
@@ -453,6 +516,11 @@ class ObjectImporter
 		$list = preg_split('/[,|]/', $list) ?: [];
 		$list = array_map(trim(...), $list);
 
-		return array_filter($list);
+		// Drop empty entries only. A bare array_filter() discards every falsy
+		// value, so a list containing "0" silently lost it, and without
+		// array_values() the surviving keys stayed sparse — "a,,b" produced
+		// [0 => 'a', 2 => 'b'], which json_encode writes as an object rather
+		// than a list, changing the stored shape of the field.
+		return array_values(array_filter($list, static fn (string $item): bool => $item !== ''));
 	}
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Middleware;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Factory\ServerRequestFactory;
@@ -547,9 +548,8 @@ final class PageRouterMiddlewareTest extends TestCase
 	 * Content-Type is auto-detected from the route's file extension. A page
 	 * routed at `/robots.txt` serves as text/plain so the rendered output is
 	 * treated as a plain-text file by browsers and crawlers.
-	 *
-	 * @dataProvider contentTypeByExtensionProvider
 	 */
+	#[DataProvider('contentTypeByExtensionProvider')]
 	public function testContentTypeAutoDetectedFromRouteExtension(string $route, string $expectedContentTypeFragment): void
 	{
 		$request = (new ServerRequestFactory())->createServerRequest('GET', $route);

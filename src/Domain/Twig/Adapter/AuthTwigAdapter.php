@@ -57,9 +57,7 @@ readonly class AuthTwigAdapter
 			? sprintf('%s/%s', $this->config->api, 'admin/login')
 			: sprintf('%s/%s/%s', $this->config->api, 'admin/login', $collection);
 
-		if ($redirect === null) {
-			$redirect = $_SERVER['REQUEST_URI'] ?? '';
-		}
+		$redirect ??= $_SERVER['REQUEST_URI'] ?? '';
 
 		if ($redirect !== '') {
 			$loginUrl .= '?' . http_build_query(['redirect' => $redirect]);
@@ -117,7 +115,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function isAdmin(): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -134,7 +132,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessCollection(string $collection, string $operation = 'read'): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -170,7 +168,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessCollectionsOperation(string $operation = 'read'): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -187,7 +185,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessCollectionMeta(string $collection, string $operation = 'read'): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -204,7 +202,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessCollectionsMetaOperation(string $operation = 'read'): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -221,7 +219,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessSchema(string $schema, string $operation = 'read'): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -238,7 +236,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessSchemasOperation(string $operation = 'read'): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -252,7 +250,7 @@ readonly class AuthTwigAdapter
 
 	public function canAccessUtil(string $page): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -266,7 +264,7 @@ readonly class AuthTwigAdapter
 
 	public function canAccessUtils(): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -280,7 +278,7 @@ readonly class AuthTwigAdapter
 
 	public function canAccessMailer(): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -294,7 +292,7 @@ readonly class AuthTwigAdapter
 
 	public function canAccessPlayground(): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -308,7 +306,7 @@ readonly class AuthTwigAdapter
 
 	public function canAccessDataViews(): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -322,7 +320,7 @@ readonly class AuthTwigAdapter
 
 	public function canAccessBuilder(): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -336,7 +334,7 @@ readonly class AuthTwigAdapter
 
 	public function canAccessExtension(string $extensionId): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 
@@ -350,7 +348,7 @@ readonly class AuthTwigAdapter
 
 	public function canAccessDocs(): bool
 	{
-		if ($this->config->auth['enable'] === false) {
+		if (!$this->config->authEnabled()) {
 			return true;
 		}
 

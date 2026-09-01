@@ -116,6 +116,68 @@ Total CMS implements several session security measures:
 - Secure session cookies (when using HTTPS)
 - CSRF protection on all state-changing operations
 
+### Where session files are stored
+
+Total CMS keeps session files in `tcms-data/.system/sessions`, not PHP's default
+location. PHP's default is a single directory shared by every site on the
+server, and its cleanup runs on whichever site happens to trigger it, using
+*that* site's session lifetime — often 24 minutes. A neighbouring site's cleanup
+would delete your session files no matter what Total CMS configured, which is a
+common cause of "it keeps logging me out" on shared hosting.
+
+If that directory cannot be created or written to, Total CMS falls back to
+PHP's default rather than failing: a session directory it cannot write to would
+mean nobody can log in at all.
+
+To put sessions somewhere else — a data directory on network storage is the
+usual reason — set the path explicitly in `tcms.php`:
+
+```php
+$settings['session']['save_path'] = '/var/lib/tcms-sessions';
+```
+
+### Sharing a login across subdomains
+
+By default a login applies to one hostname. The session cookie is set for the
+exact host, so signing in at `admin.example.com` does not sign you in at
+`shop.example.com`, even when both are Total CMS installs.
+
+Two things have to line up to share a login across subdomains of the same
+domain:
+
+1. **The installs must share their session storage**, which happens
+   automatically when they share one `tcms-data` folder, or can be set
+   explicitly with `session.save_path` on both.
+2. **The cookie must be widened to the parent domain** on both installs:
+
+   ```php
+   $settings['session']['cookie_domain'] = '.example.com';
+   ```
+
+"Keep me signed in" follows the same rule — its cookie inherits the session
+cookie's domain — so a persistent login is shared too.
+
+If the installs share one `tcms-data` folder, also set:
+
+```php
+$settings['cache']['domainScoped'] = false;
+```
+
+so they share one cache namespace instead of keeping separate ones.
+
+**Only do this if you control every subdomain.** Widening the cookie means
+*every* host under `example.com` receives it on every request — including any
+subdomain running software you did not write, and any subdomain someone else
+controls. `HttpOnly` stops JavaScript from reading the cookie; it does nothing
+about the server on the other end, which sees it in the request headers. A
+forgotten `test.example.com` or a customer-controlled `blog.example.com` is
+enough to turn this into a way to collect admin sessions.
+
+This works for subdomains of one domain only. `example.com` and `example.net`
+cannot share a cookie, and no configuration changes that — sharing a login
+across genuinely different domains needs a redirect-based handoff, which Total
+CMS does not currently provide.
+
 ### Account Security
 
 - Limit login attempts to prevent brute force attacks
@@ -220,6 +282,79 @@ Configure upload restrictions in your collection schemas:
 }
 ```
 
+
+## Running Behind a Proxy
+
+Rate limiting, webhook throttling and the OAuth registration log all need to
+know which address a request came from. When Total CMS sits behind a reverse
+proxy or a CDN, the connecting address is the proxy's, and the real visitor is
+in a header the proxy adds — `CF-Connecting-IP` for Cloudflare, or
+`X-Forwarded-For`.
+
+The catch is that a visitor can send those headers too, and nothing about a
+header says who set it. If Total CMS believed them unconditionally, anyone could
+send a different value on each request, land in a fresh rate-limit bucket every
+time, and never be limited at all.
+
+`trustProxyHeaders` in `tcms.php` decides when those headers are believed:
+
+```php
+$settings['trustProxyHeaders'] = 'auto'; // 'auto' | 'always' | 'never'
+```
+
+| Value | Behaviour |
+| --- | --- |
+| `auto` (default) | Believe the headers only when the request arrives from a private or loopback address — a reverse proxy on the same machine or LAN. |
+| `always` | Believe the headers on every request. |
+| `never` | Ignore the headers; always use the connecting address. |
+
+**`auto` is right for nginx or Apache in front of PHP**, which is the usual
+setup, and it needs no configuration. It is also safe on a server exposed
+directly to the internet, because a request arriving from a public address is
+not coming from your proxy.
+
+### Behind Cloudflare
+
+**Nothing to configure.** Total CMS ships Cloudflare's published edge ranges and
+recognises requests coming from them, so `auto` believes `CF-Connecting-IP` when
+it genuinely came from Cloudflare and ignores it when someone else sends it. The
+ranges are refreshed from
+[cloudflare.com/ips](https://www.cloudflare.com/ips/) when each release is
+built.
+
+Settings → Server Info shows what your install is doing, including when the
+bundled ranges were last verified. If Cloudflare ever adds a range that your
+version predates, that panel says so directly rather than leaving you to work it
+out from rate limits misbehaving — Cloudflare stamps every forwarded request
+with a `CF-Ray` header, so a request carrying one from an address outside the
+known ranges is a reliable sign the list needs updating. Updating Total CMS
+fixes it.
+
+Whatever the setting, restricting your origin so it can only be reached through
+Cloudflare remains worth doing — see
+[protecting your origin server](https://developers.cloudflare.com/fundamentals/security/protect-your-origin-server/).
+
+### Behind another CDN or proxy
+
+For a proxy that connects from a public address and is not Cloudflare — Fastly,
+Akamai, a load balancer on another host — `auto` has no way to tell it from a
+visitor, so it will ignore its headers. Two options:
+
+1. **Resolve the address in your web server.** Apache's `mod_remoteip` and
+   nginx's `real_ip` module rewrite the connecting address from a header, but
+   only for requests that genuinely came from the proxy's IP ranges.
+   `REMOTE_ADDR` then holds the real visitor before PHP sees it, `auto` is
+   correct, and your access logs get the right address too.
+
+   ```nginx
+   set_real_ip_from 10.0.0.0/8;   # your proxy's addresses
+   real_ip_header X-Forwarded-For;
+   ```
+
+2. **Set `trustProxyHeaders` to `always`.** Simpler, and appropriate when you
+   cannot configure the web server. It believes the headers no matter who sent
+   them, so it is only safe once your origin cannot be reached directly. If
+   someone can reach your origin by IP, this setting is an open door.
 
 ## HTTPS and Transport Security
 

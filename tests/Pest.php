@@ -2,6 +2,8 @@
 
 $_SERVER['APP_ENV'] = 'test';
 
+require_once __DIR__ . '/worker-paths.php';
+
 // Ensure Symfony Console Resources directory exists (missing in some CI environments)
 $consoleResourcesDir = dirname((new ReflectionClass(Symfony\Component\Console\Application::class))->getFileName()) . '/Resources';
 if (!is_dir($consoleResourcesDir)) {
@@ -89,7 +91,7 @@ function testData(string $file): string
 
 function cmsDataDir(): string
 {
-	return __DIR__ . '/tcms-data/';
+	return tcmsTestDataDir() . '/';
 }
 
 function templatePath(string $id, ?string $folder = null): string
@@ -393,6 +395,77 @@ function recursiveCopy(string $src, string $dst): void
 }
 
 /**
+ * A ClientIpResolver for tests, with the proxy-header trust mode of your choice.
+ *
+ * 'auto' (the shipped default) honours CF-Connecting-IP / X-Forwarded-For only
+ * when the request arrives from a private or loopback address, so a test that
+ * wants those headers honoured must either present a private REMOTE_ADDR or ask
+ * for 'always'.
+ */
+function testClientIpResolver(
+	string $trustProxyHeaders = TotalCMS\Domain\Security\Request\ClientIpResolver::TRUST_AUTO,
+): TotalCMS\Domain\Security\Request\ClientIpResolver {
+	$config                    = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config->trustProxyHeaders = $trustProxyHeaders;
+
+	return new TotalCMS\Domain\Security\Request\ClientIpResolver($config);
+}
+
+/**
+ * A private data dir for one test, safe to use under --parallel.
+ *
+ * Test files used to build these as `sys_get_temp_dir() . '/prefix-' . uniqid()`.
+ * uniqid() is derived from the clock (seconds + microseconds) with no
+ * per-process entropy, so two workers entering setUp() in the same microsecond
+ * get the SAME directory. Measured across 8 concurrent processes, 16000
+ * uniqid() calls produced 3928 distinct values. When it collided, one file's
+ * setUp()/tearDown() deleted state another was mid-test on.
+ *
+ * The worker token makes the path unique across processes and random_bytes()
+ * makes it unique within one, so neither half depends on the clock. The
+ * directory is removed at shutdown if the test left it empty.
+ */
+function tcmsTestTempDir(string $prefix): string
+{
+	try {
+		$suffix = bin2hex(random_bytes(8));
+	} catch (Random\RandomException) {
+		$suffix = bin2hex((string)getmypid()) . bin2hex((string)mt_rand());
+	}
+
+	$token = tcmsTestWorkerToken();
+	$token = $token === '' ? 'solo' : $token;
+
+	$dir = sys_get_temp_dir() . '/' . $prefix . '-' . $token . '-' . getmypid() . '-' . $suffix;
+
+	// Nothing used to remove these: this machine had 7280 leftovers from past
+	// runs. Clean up our own at shutdown, matched by the prefix we wrote.
+	static $dirs = [];
+	if ($dirs === []) {
+		register_shutdown_function(static function () use (&$dirs): void {
+			foreach ($dirs as $created) {
+				foreach ((array)@scandir($created . '/.system') as $entry) {
+					if ($entry !== '.' && $entry !== '..') {
+						@unlink($created . '/.system/' . $entry);
+					}
+				}
+				@rmdir($created . '/.system');
+				@rmdir($created); // left alone if the test put anything else in it
+			}
+		});
+	}
+	$dirs[] = $dir;
+
+	return $dir;
+}
+
+/** A private data dir for one dev-mode test. See tcmsTestTempDir(). */
+function devModeDataDir(): string
+{
+	return tcmsTestTempDir('tcms-devmode');
+}
+
+/**
  * Build a DevModeManager rooted at the given data dir. The state file lives at
  * `<datadir>/.system/totalcms_devmode.json` — per-install, never the shared
  * global /tmp path (which collides across tenants on shared hosting). Pass the
@@ -438,4 +511,23 @@ function csrfValidatorFor(
 		$manager,
 		new TotalCMS\Domain\Security\CSRF\RequestOriginValidator($config),
 	);
+}
+
+/**
+ * Mock HTTP client returning a fixed response.
+ *
+ * Lives here rather than in a test file because two suites need it
+ * (LicenseValidatorHttpTest and TemplateDesignerSyncTest). A global
+ * function declared inside one *Test.php file is only visible to another
+ * when both happen to load into the same process — true for a serial run,
+ * false under `pest --parallel`, where the two files can land in different
+ * workers and the call fails with "undefined function".
+ */
+function createMockHttpClient(
+	TotalCMS\Support\HttpResponse $response,
+): TotalCMS\Support\HttpClientInterface {
+	$client = test()->createMock(TotalCMS\Support\HttpClientInterface::class);
+	$client->method('request')->willReturn($response);
+
+	return $client;
 }

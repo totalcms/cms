@@ -60,6 +60,81 @@ final class ToolRequirementVisibilityTest extends TestCase
 		]);
 	}
 
+	/**
+	 * A group with the Site Builder page permission. `canBuilder()` also
+	 * honours a legacy `templates` key for groups saved before the dedicated
+	 * `builder` permission existed — covered separately below.
+	 */
+	private function builderGroup(): AccessGroupData
+	{
+		return new AccessGroupData([
+			'id'          => 'designer',
+			'description' => 'Site Builder access',
+			'permissions' => [
+				'collectionsMeta' => ['operations' => ['read'], 'all' => true, 'allowed' => []],
+				'collections'     => ['operations' => ['read'], 'all' => true, 'allowed' => []],
+				'schemas'         => ['operations' => ['read'], 'all' => true, 'allowed' => []],
+				'utils'           => ['all' => false, 'allowed' => []],
+				'builder'         => true,
+			],
+		]);
+	}
+
+	// ── builder domain ─────────────────────────────────────────────────────
+
+	public function testBuilderRequirementSatisfiedByBuilderPermission(): void
+	{
+		$authority = new UserAuthority(isAdmin: false, groups: [$this->builderGroup()]);
+		$req       = new ToolRequirement('builder', 'read');
+
+		// 'builder' has no per-target concept, so the target argument is
+		// ignored — pass a nonsense one to prove it.
+		$this->assertTrue($req->isSatisfiedFor($authority, ''));
+		$this->assertTrue($req->isSatisfiedFor($authority, 'anything'));
+		$this->assertTrue($req->isSatisfiedForAny($authority));
+	}
+
+	public function testBuilderRequirementDeniedWithoutBuilderPermission(): void
+	{
+		// A viewer can read every collection and schema but has no builder
+		// grant — broad read access must not imply template access.
+		$authority = new UserAuthority(isAdmin: false, groups: [$this->viewerGroup()]);
+		$req       = new ToolRequirement('builder', 'read');
+
+		$this->assertFalse($req->isSatisfiedFor($authority, ''));
+		$this->assertFalse($req->isSatisfiedForAny($authority));
+	}
+
+	public function testBuilderRequirementSatisfiedForAdmin(): void
+	{
+		$admin = new UserAuthority(isAdmin: true, groups: []);
+		$req   = new ToolRequirement('builder', 'read');
+
+		$this->assertTrue($req->isSatisfiedFor($admin, ''));
+		$this->assertTrue($req->isSatisfiedForAny($admin));
+	}
+
+	public function testBuilderRequirementHonoursLegacyTemplatesPermission(): void
+	{
+		$legacy = new AccessGroupData([
+			'id'          => 'legacy-designer',
+			'permissions' => ['templates' => true],
+		]);
+		$authority = new UserAuthority(isAdmin: false, groups: [$legacy]);
+		$req       = new ToolRequirement('builder', 'read');
+
+		$this->assertTrue($req->isSatisfiedFor($authority, ''));
+	}
+
+	public function testRequiredScopeBuilderIsCmsAdmin(): void
+	{
+		// Templates are structural, so even read access sits behind
+		// cms:admin rather than cms:read.
+		$req = new ToolRequirement('builder', 'read');
+
+		$this->assertSame('cms:admin', $req->requiredScope());
+	}
+
 	// ── requiredScope() mapping ────────────────────────────────────────────
 
 	public function testRequiredScopeObjectsReadIsCmsRead(): void

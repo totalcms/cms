@@ -47,6 +47,19 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Before the dist copy, so the release ships the ranges as they stood at build
+# time. Never fails the build: if cloudflare.com is unreachable the committed
+# ranges are kept, because yesterday's correct list beats today's empty one.
+echo "Updating Cloudflare IP ranges..."
+CLOUDFLARE_IPS_STALE=""
+php bin/update-cloudflare-ips.php
+if [ $? -eq 2 ]; then
+    # Not fatal — the committed ranges still ship, and they are almost certainly
+    # still correct. But it must not scroll past: if this keeps failing the list
+    # rots silently and every Cloudflare site's rate limiting degrades.
+    CLOUDFLARE_IPS_STALE="yes"
+fi
+
 echo "Building documentation search index..."
 php bin/build-docs-index.php
 
@@ -207,4 +220,22 @@ else
     fi
     cp version.json dist
     echo "Beta build for v$VERSION ($BUILD) is complete."
+fi
+
+if [ -n "$CLOUDFLARE_IPS_STALE" ]; then
+    echo ""
+    echo "############################################################"
+    echo "# WARNING: Cloudflare IP ranges were NOT refreshed"
+    echo "#"
+    echo "# cloudflare.com could not be reached, or returned something"
+    echo "# unexpected. This build ships the previously committed"
+    echo "# ranges, which are probably still correct — but if this"
+    echo "# keeps happening the list will rot, and every site behind"
+    echo "# Cloudflare will quietly collapse into one rate-limit"
+    echo "# bucket."
+    echo "#"
+    echo "# Check https://www.cloudflare.com/ips-v4 and re-run:"
+    echo "#   php bin/update-cloudflare-ips.php"
+    echo "############################################################"
+    echo ""
 fi

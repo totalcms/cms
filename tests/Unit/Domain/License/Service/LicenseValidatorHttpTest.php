@@ -25,14 +25,6 @@ function createMockCacheManager(?LicenseData $cachedData = null): CacheManager
 	return $cache;
 }
 
-function createMockHttpClient(HttpResponse $response): HttpClientInterface
-{
-	$client = test()->createMock(HttpClientInterface::class);
-	$client->method('request')->willReturn($response);
-
-	return $client;
-}
-
 function createMockHttpClientWithException(RuntimeException $exception): HttpClientInterface
 {
 	$client = test()->createMock(HttpClientInterface::class);

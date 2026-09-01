@@ -15,12 +15,24 @@ class BooleanData extends PropertyData implements \Stringable
 	public function __construct(int|string|bool $status = false, public array $settings = [])
 	{
 		if (is_string($status)) {
-			$status = in_array(strtolower($status), ['true', '1', 'yes'], true);
+			$status = self::isTruthy($status);
 		}
 		if (is_int($status)) {
 			$status = $status === 1;
 		}
 		$this->status = $status;
+	}
+
+	/**
+	 * Which strings count as true, in one place.
+	 *
+	 * Used by the constructor and by ObjectImporter, which has to coerce card
+	 * sub-values itself — CardData stores them verbatim, with no property type
+	 * doing it on the way past.
+	 */
+	public static function isTruthy(string $value): bool
+	{
+		return in_array(strtolower($value), ['true', '1', 'yes'], true);
 	}
 
 	public function transform(): bool

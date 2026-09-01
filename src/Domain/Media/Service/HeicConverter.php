@@ -48,9 +48,7 @@ class HeicConverter
 		}
 
 		// If no destination provided, use same name with .jpg extension
-		if ($destinationPath === null) {
-			$destinationPath = preg_replace('/\.(heic|heif)$/i', '.jpg', $sourcePath);
-		}
+		$destinationPath ??= preg_replace('/\.(heic|heif)$/i', '.jpg', $sourcePath);
 
 		// Ensure destinationPath is a string (preg_replace can return null on error)
 		if (!is_string($destinationPath)) {
