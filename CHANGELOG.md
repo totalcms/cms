@@ -2,7 +2,7 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.5.1] - 2026-08-30
+## [3.5.1] - 2026-08-31
 
 ### Upgrade notes
 
@@ -44,6 +44,9 @@ All notable changes to Total CMS will be documented in this file.
 - **A partial `auth` configuration no longer breaks every request.** Twenty places read `auth['enable']` directly. On installs that turn PHP warnings into exceptions, a settings array without that key made the authentication middleware throw on every request — a 500 rather than a login page. Missing now means enabled, as the shipped default always intended
 
 - **A throwing extension route registrar can no longer take down the site.** An extension whose route callback threw took the exception straight out of the boot sequence, producing an empty HTTP 500 on every route — including `/admin`, so the operator could not reach the page to disable it. Route registrars now run through the existing extension guard: a thrower loses only its own routes, is logged with attribution, and surfaces as an error in the admin
+
+- **Large collections could render an empty listing.** Collections over 500 objects build their index by streaming it straight to disk, and the build returned nothing because the content is deliberately never held in memory. Anything that triggered that build and used its result — a fresh install, a cleared index, a repair, the rebuild endpoint — got zero objects back, so the page rendered empty and the rebuild reported an empty index. The next request was already correct, because the file itself was written, but nothing reported the empty one
+- **"This month" excluded the first of the month.** The window opened at the 1st at the current clock time rather than midnight, so a record dated the 1st — stored as midnight, therefore earlier — fell outside it. A post dated the 1st was missing from every "this month" filter for the whole month, not just on the 1st. "This week" was unaffected
 
 ## [3.5.0] - 2026-08-26
 
