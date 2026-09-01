@@ -1,183 +1,202 @@
 <?php
 
-use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+declare(strict_types=1);
+
+namespace Tests\Unit\Domain\Admin;
+
+use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Admin\ObjectForm;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\DataView\Service\DataViewFilter;
-use TotalCMS\Domain\Index\Service\IndexFilter;
-use TotalCMS\Domain\Index\Service\IndexReader;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
-use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Support\Config;
 
 /**
- * `register: true` retargets the form at the public-registration endpoint
- * (POST /admin/register/{collection}) and forces addOnly so the JS can't
- * flip into edit/PUT mode.
+ * `cms.form.builder('members', {register: true})` puts a form on a PUBLIC page
+ * that writes into a collection of users. Everything else this class does is an
+ * admin convenience; this mode is an internet-facing surface.
+ *
+ * The control worth holding is the add-only forcing. TotalForm::init() reads
+ * `$_GET['id']` into the form's id and, for a normal admin form, loads that
+ * object so it can be edited. On a public registration form that would mean
+ * anyone appending `?id=admin` gets an existing user's record loaded into the
+ * form. ObjectForm::init() sets addOnly BEFORE calling parent::init(), which is
+ * what stops the read ever happening — an ordering detail with nothing in the
+ * type system to protect it.
  */
-describe('ObjectForm register mode', function (): void {
-	beforeEach(function (): void {
-		$this->objectFetcher            = $this->createMock(ObjectFetcher::class);
-		$this->collectionFetcher        = $this->createMock(CollectionFetcher::class);
-		$this->collectionLister         = $this->createMock(CollectionLister::class);
-		$this->indexReader              = $this->createMock(IndexReader::class);
-		$this->indexFilter              = $this->createMock(IndexFilter::class);
-		$this->schemaFetcher            = $this->createMock(SchemaFetcher::class);
-		$this->schemaLister             = $this->createMock(SchemaLister::class);
-		$this->accessGroupLister        = $this->createMock(AccessGroupLister::class);
-		$this->collectionEditionService = $this->createMock(CollectionEditionService::class);
-		$this->editionFeatures          = $this->createMock(EditionFeatureService::class);
-		$this->csrfManager              = $this->createMock(CSRFTokenManager::class);
-		$this->config                   = Config::init();
-		$this->metaResolver             = $this->createMock(PropertyMetaResolver::class);
-		$this->dataViewFilter           = $this->createMock(DataViewFilter::class);
+final class ObjectFormRegisterModeTest extends TestCase
+{
+	protected function tearDown(): void
+	{
+		unset($_GET['id']);
+	}
 
-		$this->schemaData             = new SchemaData();
-		$this->schemaData->id         = 'members-schema';
-		$this->schemaData->properties = [
-			'id'       => ['type' => 'string'],
-			'email'    => ['type' => 'string'],
-			'password' => ['type' => 'string'],
+	/** @param array<string,mixed> $properties */
+	private function form(array $properties): ObjectForm
+	{
+		$reflection = new \ReflectionClass(ObjectForm::class);
+		$form       = $reflection->newInstanceWithoutConstructor();
+
+		$config            = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->api       = '/api';
+		$config->dashboard = [];
+
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
+		$objectFetcher->method('existsObject')->willReturn(true);
+		$objectFetcher->method('fetchObject')
+			->willThrowException(new \RuntimeException('an existing object must not be loaded here'));
+
+		$collection             = new CollectionData();
+		$collection->id         = 'members';
+		$collection->name       = 'Members';
+		$collection->schema     = 'members';
+
+		$collectionFetcher = $this->createMock(CollectionFetcher::class);
+		$collectionFetcher->method('fetchCollection')->willReturn($collection);
+
+		$schemaFetcher = $this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class);
+		$schemaFetcher->method('fetchSchema')->willReturn(new \TotalCMS\Domain\Schema\Data\SchemaData());
+
+		$defaults = [
+			'register'          => false,
+			'addOnly'           => false,
+			'id'                => '',
+			'collection'        => 'members',
+			'method'            => 'POST',
+			'data'              => [],
+			'config'            => $config,
+			'objectFetcher'     => $objectFetcher,
+			'collectionFetcher' => $collectionFetcher,
+			'schemaFetcher'     => $schemaFetcher,
 		];
-		$this->schemaData->required = [];
 
-		$this->collectionData         = new CollectionData();
-		$this->collectionData->id     = 'members';
-		$this->collectionData->schema = 'members-schema';
+		foreach (array_merge($defaults, $properties) as $name => $value) {
+			$property = $this->findProperty($reflection, $name);
+			if ($property instanceof \ReflectionProperty) {
+				$property->setAccessible(true);
+				$property->setValue($form, $value);
+			}
+		}
 
-		$this->schemaFetcher->method('fetchSchema')->willReturn($this->schemaData);
-		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collectionData);
-		// Even if some object with id 'whatever' exists, register mode must
-		// not flip into edit mode — verified below.
-		$this->objectFetcher->method('existsObject')->willReturn(true);
+		return $form;
+	}
 
-		// Pin the config's api prefix so the route assertion is deterministic
-		// across run environments.
-		$this->config->api = '';
-	});
+	private function findProperty(\ReflectionClass $reflection, string $name): ?\ReflectionProperty
+	{
+		for ($class = $reflection; $class !== false; $class = $class->getParentClass()) {
+			if ($class->hasProperty($name)) {
+				return $class->getProperty($name);
+			}
+		}
 
-	test('retargets route to /admin/register/{collection}', function (): void {
-		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
-			api: '/api',
-			collection: 'members',
-			register: true,
-		);
+		return null;
+	}
 
-		$reflection = new ReflectionClass($form);
+	private function init(ObjectForm $form): void
+	{
+		$method = new \ReflectionMethod(ObjectForm::class, 'init');
+		$method->setAccessible(true);
+		$method->invoke($form);
+	}
 
-		$route = $reflection->getProperty('route')->getValue($form);
-		expect($route)->toBe('/admin/register/members');
+	/** Read a property back off the form, whichever class in the chain declares it. */
+	private function read(ObjectForm $form, string $name): mixed
+	{
+		$property = $this->findProperty(new \ReflectionClass(ObjectForm::class), $name);
+		$property->setAccessible(true);
 
-		// `data-api` should drop the /api prefix — /admin/register lives at the
-		// config base, not under the API prefix.
-		$api = $reflection->getProperty('api')->getValue($form);
-		expect($api)->toBe('');
-	});
+		return $property->getValue($form);
+	}
 
-	test('forces addOnly regardless of how it was passed', function (): void {
-		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
-			api: '/api',
-			collection: 'members',
-			// Even if the caller explicitly disabled addOnly, register mode
-			// must win — there's no PUT endpoint to flip into.
-			addOnly: false,
-			register: true,
-		);
+	// ── The security control ─────────────────────────────────────────────────
 
-		$reflection = new ReflectionClass($form);
-		expect($reflection->getProperty('addOnly')->getValue($form))->toBeTrue();
-	});
+	public function testRegistrationModeForcesAddOnly(): void
+	{
+		$form = $this->form(['register' => true]);
 
-	test('does not load existing object even if id is provided', function (): void {
-		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
-			api: '/api',
-			collection: 'members',
-			id: 'someone',
-			register: true,
-		);
+		$this->init($form);
 
-		$reflection = new ReflectionClass($form);
+		$this->assertTrue($this->read($form, 'addOnly'));
+	}
 
-		// addOnly is set before parent::init() runs, so the parent's $_GET['id']
-		// auto-load path also never fires. Route should still be the registration
-		// endpoint — never the /collections/{id} edit route.
-		expect($reflection->getProperty('route')->getValue($form))->toBe('/admin/register/members');
-		expect($reflection->getProperty('id')->getValue($form))->toBe('');
-		expect($reflection->getProperty('method')->getValue($form))->not->toBe('PUT');
-	});
+	public function testAnIdInTheQueryStringCannotReachARegistrationForm(): void
+	{
+		// The attack this closes: /signup?id=admin on a public page. The
+		// objectFetcher in this harness throws if fetchObject() is ever called,
+		// so loading someone's record fails the test rather than passing it
+		// quietly.
+		$_GET['id'] = 'admin';
 
-	test('does not interfere with normal builder when register is false', function (): void {
-		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
-			api: '/api',
-			collection: 'members',
-		);
+		$form = $this->form(['register' => true]);
+		$this->init($form);
 
-		$reflection = new ReflectionClass($form);
-		expect($reflection->getProperty('route')->getValue($form))->toBe('/collections/members');
-		expect($reflection->getProperty('api')->getValue($form))->toBe('/api');
-	});
-});
+		$this->assertSame('', $this->read($form, 'id'));
+	}
+
+	public function testAnIdPassedAsAnOptionIsAlsoIgnored(): void
+	{
+		$form = $this->form(['register' => true, 'id' => 'admin']);
+
+		$this->init($form);
+
+		$this->assertSame('', $this->read($form, 'id'));
+	}
+
+	public function testARegistrationFormStaysAPostAndNeverBecomesAPut(): void
+	{
+		// /admin/register/{collection} has no PUT route, so a form that
+		// switched method would fail at submit time — and switching only
+		// happens when an existing object was loaded, which must not occur.
+		$form = $this->form(['register' => true, 'id' => 'admin']);
+
+		$this->init($form);
+
+		$this->assertSame('POST', $this->read($form, 'method'));
+	}
+
+	// ── Where the form posts ─────────────────────────────────────────────────
+
+	public function testRegistrationRetargetsAtThePublicEndpoint(): void
+	{
+		$form = $this->form(['register' => true]);
+
+		$this->init($form);
+
+		$this->assertSame('/admin/register/members', $this->read($form, 'route'));
+	}
+
+	public function testRegistrationDropsTheApiPrefix(): void
+	{
+		// /admin/register lives at the config base, not under the API prefix.
+		// Getting this wrong posts the form at /api/admin/register/... and it
+		// 404s for every visitor.
+		$form = $this->form(['register' => true]);
+
+		$this->init($form);
+
+		$this->assertSame('/api', $this->read($form, 'api'));
+	}
+
+	// ── The ordinary admin form is unchanged ─────────────────────────────────
+
+	public function testANormalFormStillTargetsTheCollectionRoute(): void
+	{
+		$form = $this->form(['register' => false]);
+
+		$this->init($form);
+
+		$this->assertSame('/collections/members', $this->read($form, 'route'));
+		$this->assertFalse($this->read($form, 'addOnly'));
+	}
+
+	public function testANormalAddOnlyFormAlsoRefusesAQueryStringId(): void
+	{
+		// addOnly is the general control; registration mode is one caller of it.
+		$_GET['id'] = 'admin';
+
+		$form = $this->form(['addOnly' => true]);
+		$this->init($form);
+
+		$this->assertSame('', $this->read($form, 'id'));
+	}
+}
