@@ -86,6 +86,18 @@ Validate strings against a regular expression.
 - **URL-safe slug**: `^[a-z0-9-]+$`
 - **Hex color**: `^#[0-9A-Fa-f]{6}$`
 - **Phone (US)**: `^\\d{3}-\\d{3}-\\d{4}$`
+- **Version (x.y.z)**: `^\\d+\\.\\d+\\.\\d+$`
+- **Version (semver)**: `^v?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$`
+
+> **Backslashes must be doubled.** `\\d` is how you write `\d` in JSON — a
+> single `\d` is not a legal JSON escape. The schema editor's JSON field
+> repairs a lone `\d` for you on save, but the doubled form is what is stored.
+
+> **Anchor your patterns.** JSON Schema's `pattern` is a substring match, not a
+> full match. Without `^` and `$`, `\\d+\\.\\d+\\.\\d+` happily accepts
+> `junk-3.5.0-junk`. The same patterns are available unanchored for form fields
+> as `patterns.version` and `patterns.versionExtended` — see
+> [Validation Patterns](docs/forms/patterns).
 
 ### format
 
