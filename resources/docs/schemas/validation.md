@@ -63,13 +63,53 @@ Enforce minimum and maximum string length.
 
 Validate strings against a regular expression.
 
+#### Named patterns (recommended)
+
+Total CMS ships a registry of ready-made patterns. Reference one by name and
+it expands to the real regex when the schema is saved:
+
 ```json
 {
-	"pattern": "^[a-zA-Z0-9_-]+$"
+	"release": {
+		"type": "string",
+		"field": "text",
+		"label": "Release",
+		"pattern": "patterns.version"
+	}
 }
 ```
 
-**Example - Slug field:**
+That stores `^\\d+\\.\\d+\\.\\d+$`, so `3.5.0` is accepted and `3.5`,
+`v3.5.0` and `junk-3.5.0-junk` are all rejected.
+
+These are the same names used by form fields, so a field and its schema stay
+on one definition. There are no backslashes to escape, and the expansion adds
+the `^` and `$` anchors for you.
+
+Frequently used names:
+
+| Name | Accepts |
+| --- | --- |
+| `patterns.version` | `3.5.0` |
+| `patterns.versionExtended` | `3.5.0`, `v3.5.1-rc.1`, `3.5.0+build.7` |
+| `patterns.slug` | `my-post-title` |
+| `patterns.uuid` | `123e4567-e89b-42d3-a456-426614174000` |
+| `patterns.hex` | `#aabbcc` |
+| `patterns.domain` | `totalcms.co` |
+| `patterns.integer` | `-42` |
+| `patterns.phone.usa` | `555-123-4567` |
+| `patterns.postCode.uk` | `SW1A 1AA` |
+
+Nested patterns use their dotted path, exactly as in Twig. See
+[Validation Patterns](docs/forms/patterns) for the full list.
+
+An unknown name is an error on save rather than a silently broken schema, so
+a typo like `patterns.verison` tells you immediately.
+
+#### Literal regex
+
+When no named pattern fits, write the regex yourself:
+
 ```json
 {
 	"slug": {
@@ -87,17 +127,15 @@ Validate strings against a regular expression.
 - **Hex color**: `^#[0-9A-Fa-f]{6}$`
 - **Phone (US)**: `^\\d{3}-\\d{3}-\\d{4}$`
 - **Version (x.y.z)**: `^\\d+\\.\\d+\\.\\d+$`
-- **Version (semver)**: `^v?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$`
 
 > **Backslashes must be doubled.** `\\d` is how you write `\d` in JSON — a
 > single `\d` is not a legal JSON escape. The schema editor's JSON field
 > repairs a lone `\d` for you on save, but the doubled form is what is stored.
+> Named patterns avoid the problem entirely.
 
-> **Anchor your patterns.** JSON Schema's `pattern` is a substring match, not a
-> full match. Without `^` and `$`, `\\d+\\.\\d+\\.\\d+` happily accepts
-> `junk-3.5.0-junk`. The same patterns are available unanchored for form fields
-> as `patterns.version` and `patterns.versionExtended` — see
-> [Validation Patterns](docs/forms/patterns).
+> **Anchor your literal patterns.** JSON Schema's `pattern` is a substring
+> match, not a full match. Without `^` and `$`, `\\d+\\.\\d+\\.\\d+` happily
+> accepts `junk-3.5.0-junk`. Named patterns are anchored for you.
 
 ### format
 

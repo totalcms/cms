@@ -70,26 +70,50 @@ patterns.phone.international
 
 ## Using These in Schema Validation
 
-The patterns above are stored **unanchored**, because an HTML `pattern`
-attribute is anchored by the browser automatically.
-
-JSON Schema's `pattern` keyword is not — it is a substring match. Pasting a
-bare pattern into a property's **Extra Schema Definitions** gives you
-validation that accepts almost anything:
+The same patterns work in a schema. In a property's **Extra Schema
+Definitions**, set `pattern` to the pattern's name:
 
 ```json
-{ "pattern": "\\d+\\.\\d+\\.\\d+" }
+{ "pattern": "patterns.version" }
 ```
 
-That accepts `junk-3.5.0-junk`. Wrap it in `^` and `$` instead:
+On save this expands to the real regex, anchored:
 
 ```json
 { "pattern": "^\\d+\\.\\d+\\.\\d+$" }
 ```
 
-Note the doubled backslashes: `\\d` is how you write `\d` in JSON. The schema
-editor's JSON field repairs a single `\d` for you, but the doubled form is
-what actually gets stored.
+Nested patterns use their dotted path, exactly as in Twig:
+
+```json
+{ "pattern": "patterns.phone.usa" }
+{ "pattern": "patterns.postCode.uk" }
+```
+
+Prefer this over pasting a regex. It is shorter, it keeps the form field and
+the schema on one definition, and there are no backslashes to escape.
+
+### Why the expansion adds anchors
+
+The patterns above are stored **unanchored**, because an HTML `pattern`
+attribute is anchored by the browser automatically.
+
+JSON Schema's `pattern` is a substring match instead, so a bare
+`\\d+\\.\\d+\\.\\d+` would accept `junk-3.5.0-junk`. The expansion wraps
+`^` and `$` so a schema and a form field sharing one pattern agree on what
+they accept.
+
+### Notes
+
+- **A literal regex is left alone.** Anything not starting with `patterns.` is
+  stored as typed — that is the escape hatch if you want unanchored matching.
+- **An unknown name is an error.** `patterns.verison` fails on save rather than
+  being stored as a literal regex, which would compile fine and reject every
+  value.
+- **`passwordMinLength(8)` is not available** in a schema. Dynamic patterns are
+  methods, not stored values, so they work only in Twig.
+- **`notBlank` means "no whitespace anywhere"**, not "not empty" — anchored,
+  `\S+` rejects `hello world`. Use `minLength` for a not-empty check.
 
 ## Dynamic Patterns
 

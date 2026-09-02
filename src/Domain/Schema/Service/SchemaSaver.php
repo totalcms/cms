@@ -9,6 +9,7 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 
 readonly class SchemaSaver
@@ -75,6 +76,7 @@ readonly class SchemaSaver
 		}
 
 		$schemaData['properties'] = self::applyDefaultTypes($schemaData['properties']);
+		$schemaData['properties'] = self::expandPatternAliases($schemaData['properties']);
 		$schemaData['properties'] = self::propertyTypeToRef($schemaData['properties']);
 		$schemaData['properties'] = self::normalizeDefaultValues($schemaData['properties']);
 		$schemaData               = self::sanitizeRequiredAndIndex($schemaData, $this->getInheritedPropertyNames($schemaData));
@@ -175,6 +177,85 @@ readonly class SchemaSaver
 		}
 
 		return $properties;
+	}
+
+	/** Prefix marking a `pattern` value as a reference to the shared registry. */
+	public const PATTERN_ALIAS_PREFIX = 'patterns.';
+
+	/**
+	 * Expand `patterns.*` aliases in property definitions into real regexes.
+	 *
+	 * Operators reference the shared registry by the same name they already use
+	 * in Twig — `{"pattern": "patterns.version"}` — instead of pasting a literal
+	 * regex into Extra Schema Definitions. It is shorter, it keeps one source of
+	 * truth for both surfaces, and it has no backslashes to escape.
+	 *
+	 * Expansion happens here, once, at save: the stored schema is then real
+	 * JSON Schema, so the validator, MCP schema exposure and exports all see a
+	 * genuine regex rather than a name only this code understands.
+	 *
+	 * The result is anchored. The registry stores patterns bare because an HTML
+	 * `pattern` attribute is anchored by the browser; JSON Schema's `pattern` is
+	 * a substring match, so an unexpanded `\d+\.\d+\.\d+` would happily accept
+	 * "junk-3.5.0-junk". Anchoring also keeps server-side validation in step
+	 * with the form field sharing the same pattern.
+	 *
+	 * A literal regex is passed through untouched — that is the escape hatch for
+	 * anyone who wants unanchored behaviour.
+	 *
+	 * @param array<string,array<string,mixed>> $properties
+	 *
+	 * @return array<string,array<string,mixed>>
+	 *
+	 * @throws \UnexpectedValueException when an alias names no known pattern
+	 */
+	public static function expandPatternAliases(array $properties): array
+	{
+		$registry = null;
+
+		foreach ($properties as $key => $options) {
+			$pattern = $options['pattern'] ?? null;
+			if (!is_string($pattern) || !str_starts_with($pattern, self::PATTERN_ALIAS_PREFIX)) {
+				continue;
+			}
+
+			$registry ??= new TotalCMSTwigPatterns();
+			$properties[$key]['pattern'] = '^' . self::resolvePatternAlias($pattern, $registry) . '$';
+		}
+
+		return $properties;
+	}
+
+	/**
+	 * Resolve `patterns.version` or `patterns.postCode.usa` against the registry.
+	 *
+	 * An unknown alias throws rather than falling through as a literal regex:
+	 * `patterns.verison` compiles fine and matches nothing, so passing it along
+	 * would reject every value with no indication why. Failing here surfaces the
+	 * typo while the operator is still in the schema editor.
+	 *
+	 * @throws \UnexpectedValueException
+	 */
+	private static function resolvePatternAlias(string $alias, TotalCMSTwigPatterns $registry): string
+	{
+		$path = explode('.', substr($alias, strlen(self::PATTERN_ALIAS_PREFIX)));
+		$name = array_shift($path);
+
+		// get_object_vars() from outside the class yields only public properties,
+		// which is exactly the documented surface — and keeps this free of dynamic
+		// property access. Dynamic patterns like passwordMinLength() are methods,
+		// so they are correctly not addressable as aliases.
+		$value = get_object_vars($registry)[$name] ?? null;
+
+		foreach ($path as $segment) {
+			$value = is_array($value) ? ($value[$segment] ?? null) : null;
+		}
+
+		if (!is_string($value)) {
+			throw new \UnexpectedValueException("Unknown validation pattern: {$alias}");
+		}
+
+		return $value;
 	}
 
 	/**
