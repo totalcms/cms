@@ -529,6 +529,18 @@ The middleware inspects the route's extension and maps it to the appropriate MIM
 | `.svg` | `image/svg+xml` |
 | _(none / unknown)_ | `text/html` |
 
+There is one exception to the extension rule. A route whose last segment is
+exactly `rss` — `/changelog/rss`, or `/rss` — is served as
+`application/rss+xml` even though it has no extension, because feed URLs are
+conventionally written that way. The match is exact, so `/rss-help` is still
+an ordinary page, and no other type is matched this way: `/docs/css` and
+`/support/txt` stay HTML.
+
+That matters for more than the header. The Page Inspector overlay and the
+live-reload snippet are injected into every `text/html` response, so a feed
+that falls through to the HTML default gets that markup spliced into its XML
+when an admin is logged in.
+
 ### Example: robots.txt
 
 Create a builder page with route `/robots.txt` and a template like:

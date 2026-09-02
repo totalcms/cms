@@ -293,6 +293,25 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 	{
 		$extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
-		return self::EXTENSION_CONTENT_TYPES[$extension] ?? 'text/html; charset=utf-8';
+		if ($extension !== '') {
+			return self::EXTENSION_CONTENT_TYPES[$extension] ?? 'text/html; charset=utf-8';
+		}
+
+		// Feed routes are conventionally written without an extension
+		// (/changelog/rss), and the HTML default is not merely imprecise for
+		// one: process() injects the Page Inspector and live-reload snippet
+		// into every text/html response, so an admin fetching their own feed
+		// would get overlay markup spliced into the XML.
+		//
+		// Deliberately narrow — an exact `rss` segment only, so /rss-help
+		// stays a page, and no other map key is matched this way because
+		// /docs/css and /support/txt are far likelier to be pages than files.
+		// A path that does carry an extension is handled above, so .rss is
+		// unaffected.
+		if (strtolower(basename($path)) === 'rss') {
+			return self::EXTENSION_CONTENT_TYPES['rss'];
+		}
+
+		return 'text/html; charset=utf-8';
 	}
 }
