@@ -76,7 +76,17 @@ export default class PropertyField {
 			// fieldCollection.mjs.
 			if (isNestedField(field, this.container)) continue;
 
-			let value = field.totalfield.getValue();
+			// A field can throw while reading its own value (a JSON field
+			// holding invalid JSON). Name the field on the way up — the schema
+			// editor renders one collapsed dialog per property, so a bare
+			// parser message like "Bad escaped character in JSON at position
+			// 15" gives the user nothing to open.
+			let value;
+			try {
+				value = field.totalfield.getValue();
+			} catch (error) {
+				throw new Error(`${field.totalfield.property}: ${error.message}`);
+			}
 			if (value) {
 				properties[field.totalfield.property] = value;
 			}
