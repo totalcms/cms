@@ -1,5 +1,34 @@
 import TotalField from './totalfield';
 
+// A complete, legal JSON escape — \uXXXX or one of the single-character
+// escapes JSON allows after a backslash.
+const LEGAL_ESCAPE = /\\(?:u[0-9a-fA-F]{4}|["\\\/bfnrt])/;
+
+//-----------------------------------------------
+// Forgive the JSON mistakes people actually make in this field.
+//
+// The box holds JSON Schema fragments, and the common one is a regex — which
+// is nearly all backslashes: {"pattern": "^\d+\.\d+\.\d+$"}. JSON only allows
+// a backslash before " \ / b f n r t u, so \d and \. are hard parse errors
+// ("Bad escaped character") even though the intent is obvious.
+//
+// The alternation is ordered, so at each backslash a COMPLETE legal escape is
+// matched first and passed through untouched; only a backslash that starts no
+// legal escape falls through to the second branch and gets doubled. That makes
+// the repair idempotent — already-correct \\d stays \\d rather than becoming a
+// literal backslash — which matters because this runs on every failed parse.
+//
+// Trailing commas are handled here too; they used to be stripped from every
+// value, valid or not.
+//-----------------------------------------------
+export function repairJson(value) {
+	return value
+		.replaceAll(new RegExp(`${LEGAL_ESCAPE.source}|\\\\`, 'g'), match => (match === '\\' ? '\\\\' : match))
+		.replaceAll("\n", "")
+		.replaceAll(/,\s*\}/g, "}")
+		.replaceAll(/,\s*\]/g, "]");
+}
+
 //-----------------------------------------------
 // Total CMS JSON Field
 //-----------------------------------------------
@@ -69,13 +98,20 @@ export default class JSONField extends TotalField {
     }
 
     getValue() {
-        let value = this.editor ? this.editor.getValue() : this.input.value;
-        // trim trailing commas for users from JSON string.
-        value = value.replaceAll("\n", "")
-            .replaceAll(/,\s*\}/g, "}")
-            .replaceAll(/,\s*\]/g, "]");
+        const value = this.editor ? this.editor.getValue() : this.input.value;
+        if (value.trim().length === 0) return "";
 
-        return value.length > 0 ? JSON.parse(value) : "";
+        // Parse the value as typed first, so valid JSON is never rewritten —
+        // the repair pass is lossy (it strips newlines) and has no business
+        // touching input that already parses. Only a failure earns a repair.
+        try {
+            return JSON.parse(value);
+        } catch {
+            // Let this throw if the repair didn't rescue it: TotalForm.save()
+            // reports the parse error rather than hanging, and swallowing it
+            // here would save an empty value over the user's input.
+            return JSON.parse(repairJson(value));
+        }
     }
 
     changed() {
