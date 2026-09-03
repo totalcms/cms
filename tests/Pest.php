@@ -531,3 +531,34 @@ function createMockHttpClient(
 
 	return $client;
 }
+
+/**
+ * Drain a streamed (CallbackStream) response body and return what it wrote.
+ *
+ * A streamed body echoes its frames rather than returning them, so the content
+ * lands in an output buffer and has to be captured from there. Two buffers are
+ * nested because the two streams T3 serves flush differently:
+ *
+ *   - T3's own GET listening stream calls `@ob_flush()`, which pushes its
+ *     content from the inner buffer out to the enclosing one.
+ *   - The SDK's `subscriptions/listen` stream calls plain `flush()`, which
+ *     targets the SAPI and leaves the content sitting in the inner buffer.
+ *
+ * So neither buffer alone is reliable — the earlier single-capture version read
+ * empty for SDK streams because it discarded the inner buffer the content was
+ * still in. Both are captured and concatenated.
+ *
+ * Lives here rather than in a test file because both streams need it, and a
+ * global declared inside one *Test.php is invisible to another under
+ * `pest --parallel` where the two files can land in different workers.
+ */
+function drainStreamedBody(Psr\Http\Message\ResponseInterface|TotalCMS\Slim\Test\TestResponse $response): string
+{
+	ob_start();
+	ob_start();
+	$response->getBody()->__toString();
+	$inner = (string)ob_get_clean();
+	$outer = (string)ob_get_clean();
+
+	return $inner . $outer;
+}

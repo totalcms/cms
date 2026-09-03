@@ -217,12 +217,7 @@ describe('McpEndpointAction', function (): void {
  */
 function triggerListeningStreamBody(TotalCMS\Slim\Test\TestResponse $response): string
 {
-	ob_start();
-	ob_start();
-	$response->getBody()->__toString();
-	ob_end_clean();
-
-	return (string)ob_get_clean();
+	return drainStreamedBody($response);
 }
 
 describe('McpEndpointAction — listening stream (GET)', function (): void {

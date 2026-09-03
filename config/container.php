@@ -9,6 +9,7 @@ use Mcp\Server\Protocol as McpProtocol;
 use Mcp\Server\Session\FileSessionStore as McpFileSessionStore;
 use Mcp\Server\Session\SessionManager as McpSessionManager;
 use Mcp\Server\Session\SessionStoreInterface as McpSessionStoreInterface;
+use Mcp\Server\Subscription\NotificationBusInterface;
 use Monolog\Level;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
@@ -74,6 +75,9 @@ use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\DataViewResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
+use TotalCMS\Domain\Mcp\Subscription\Service\BusResourceNotifier;
+use TotalCMS\Domain\Mcp\Subscription\Service\CompositeResourceNotifier;
+use TotalCMS\Domain\Mcp\Subscription\Service\FileNotificationBus;
 use TotalCMS\Domain\Mcp\Subscription\Service\McpNotificationService;
 use TotalCMS\Domain\Mcp\Subscription\Service\McpSubscriptionManager;
 use TotalCMS\Domain\Mcp\Subscription\Service\ResourceNotifier;
@@ -792,6 +796,7 @@ return [
 		$container->get(PersonaContext::class),
 		$container->get(OAuthScopeRegistry::class),
 		$container->get(OAuthActivityLogger::class),
+		$container->get(NotificationBusInterface::class),
 	),
 
 	// Subscription storage: reverse URI→sessionIds index at
@@ -818,7 +823,43 @@ return [
 	// here, but Protocol holds no per-session state — its constructor is
 	// session-agnostic and sendNotification takes session as a parameter. We
 	// build one Protocol against the SessionManager and reuse it across calls.
-	ResourceNotifier::class => fn (ContainerInterface $container): ResourceNotifier => $container->get(McpNotificationService::class),
+	// Shared notification log for the modern (2026-07-28) era, where nobody
+	// tracks subscribers and each `subscriptions/listen` stream reads forward
+	// and filters for itself. File-backed for the same reason the session store
+	// is: the request that writes an object and the one holding a stream open
+	// are different PHP-FPM workers, and T3's APCu-first cache is per-process.
+	// Sits beside mcp-subscriptions.json, outside /mcp-sessions/, so
+	// McpSessionInvalidator::invalidateAll() cannot wipe it.
+	FileNotificationBus::class => fn (ContainerInterface $container): FileNotificationBus => new FileNotificationBus(
+		$container->get(Config::class)->tmpdir . '/mcp-notifications.json',
+		logger: $container->get(LoggerFactory::class)
+			->channelLogger(LogChannel::McpNotification, Level::Debug),
+	),
+
+	// Consumers depend on the interface, not the file implementation — the
+	// modern era's storage is an operational choice, and binding it here is
+	// what lets a test substitute one.
+	NotificationBusInterface::class => fn (ContainerInterface $container): NotificationBusInterface => $container->get(FileNotificationBus::class),
+
+	// One object change, both protocol eras. The handshake era pushes into each
+	// subscribed session's queue; the modern era appends once to the bus. The
+	// listener knows about neither — it holds a ResourceNotifier and calls it.
+	ResourceNotifier::class => function (ContainerInterface $container): ResourceNotifier {
+		$logger = $container->get(LoggerFactory::class)
+			->channelLogger(LogChannel::McpNotification, Level::Debug);
+
+		// Kill switch off: keep the handshake-era notifier (harmlessly finds no
+		// subscribers) but do not write a bus file nothing will ever read.
+		if (($container->get(Config::class)->mcp['subscriptionsEnabled'] ?? true) === false) {
+			return $container->get(McpNotificationService::class);
+		}
+
+		return new CompositeResourceNotifier(
+			$logger,
+			$container->get(McpNotificationService::class),
+			new BusResourceNotifier($container->get(NotificationBusInterface::class), $logger),
+		);
+	},
 
 	McpNotificationService::class => function (ContainerInterface $container): McpNotificationService {
 		$sessionManager = new McpSessionManager($container->get(McpSessionStoreInterface::class));

@@ -1022,6 +1022,9 @@ readonly class TotalFormFactory
 			'method'      => 'POST',
 			'save'        => $this->translationService->trans('btn.save_settings'),
 			'class'       => 'help-on-hover help-box',
+			// Optional per-section layout. Absent from most settings schemas, in
+			// which case TotalForm renders one field per row exactly as before.
+			'formgrid'    => is_string($schema['formgrid'] ?? null) ? $schema['formgrid'] : '',
 		]);
 	}
 

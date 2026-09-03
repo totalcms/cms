@@ -11,6 +11,7 @@ use Mcp\Schema\ToolAnnotations;
 use Mcp\Server;
 use Mcp\Server\Resource\SubscriptionManagerInterface;
 use Mcp\Server\Session\SessionStoreInterface;
+use Mcp\Server\Subscription\NotificationBusInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
@@ -20,6 +21,7 @@ use TotalCMS\Domain\Mcp\Prompt\Handler\ExtensionPromptHandler;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Mcp\Subscription\Service\PersonaNotificationBus;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -60,6 +62,7 @@ readonly class McpServerFactory
 		private PersonaContext $personaContext,
 		private OAuthScopeRegistry $scopeRegistry,
 		private OAuthActivityLogger $activityLogger,
+		private NotificationBusInterface $notificationBus,
 	) {
 	}
 
@@ -88,14 +91,10 @@ readonly class McpServerFactory
 			)
 			->setSession($this->sessionStore)
 			->setLogger($this->logger)
-			// Serve only the session-based protocol era. mcp/sdk 0.8 turns on a
-			// second, session-free dispatcher (spec 2026-07-28) by default, so one
-			// endpoint answers both eras. T3 is not ready for that leg: resource
-			// subscriptions are keyed on SessionInterface (see McpSubscriptionManager),
-			// so subscribe/unsubscribe would silently no-op for a stateless client.
-			// Opting out keeps the protocol surface identical to mcp/sdk 0.7.
-			// Remove this once the stateless era is deliberately supported.
-			->withoutModernEra();
+			// Bound how long a modern-era `subscriptions/listen` stream holds a
+			// PHP-FPM worker. The SDK default is 30s; see mcp.subscriptionStreamSeconds
+			// in config/defaults.php for why T3 does not inherit it.
+			->setSubscriptionLifetime($this->subscriptionStreamSeconds());
 
 		// Forward MCP handler/SDK errors to Sentry. The SDK swallows every
 		// Throwable into a JSON-RPC error response without rethrowing, so
@@ -167,7 +166,9 @@ readonly class McpServerFactory
 		// additionally narrows collection-scoped resources to what their
 		// access groups grant `read` on, so resources/list matches the
 		// call-time gate CollectionResource::read() enforces.
+		$visibleUris = [];
 		foreach ($this->resourceRegistry->forPersona($persona, $this->personaContext->getAuthority()) as $resource) {
+			$visibleUris[] = $resource->uri;
 			$builder->addResource(
 				handler: $resource->handler,
 				uri: $resource->uri,
@@ -175,6 +176,22 @@ readonly class McpServerFactory
 				description: $resource->description,
 				mimeType: $resource->mimeType,
 			);
+		}
+
+		// Modern-era (2026-07-28) subscriptions. That era dropped
+		// resources/subscribe — and with it the SDK's only registry check on a
+		// subscription URI. `subscriptions/listen` takes the URIs it wants as
+		// plain strings and filters with a bare in_array, so without a gate an
+		// anonymous caller could watch write activity on collections their
+		// persona cannot read. PersonaNotificationBus is that gate, and it is
+		// built from exactly the URIs registered for this persona above, so the
+		// two can never disagree.
+		//
+		// Same kill switch as the handshake-era manager below: off means no
+		// stream is fed, and resources/subscribe keeps the SDK's per-session
+		// default.
+		if (($this->config->mcp['subscriptionsEnabled'] ?? true) !== false) {
+			$builder->setNotificationBus(new PersonaNotificationBus($this->notificationBus, $visibleUris));
 		}
 
 		foreach ($this->resourceRegistry->templatesForPersona($persona, $this->personaContext->getAuthority()) as $template) {
@@ -529,5 +546,42 @@ readonly class McpServerFactory
 			'client'  => $name !== '' ? $name : '(unknown)',
 			'version' => $version,
 		]);
+	}
+
+	/**
+	 * Resolved, clamped lifetime of one `subscriptions/listen` stream, seconds.
+	 *
+	 * Mirrors listeningStreamSeconds() in McpEndpointAction: a mistyped or
+	 * maliciously large value in tcms.php must not let one caller hold a worker
+	 * indefinitely, so the ceiling lives in code rather than in config.
+	 *
+	 * The FLOOR matters more than the ceiling here, and is not symmetric with
+	 * listeningStreamSeconds() where zero is legal and cheap. StatelessProtocol
+	 * reads its deadline as:
+	 *
+	 *     $deadline = 0.0 >= $lifetime ? \INF : microtime(true) + $lifetime;
+	 *
+	 * — so zero or negative means *never close*, not *close immediately*. A
+	 * config value of 0 would pin one PHP-FPM worker per listen stream for the
+	 * life of the process. Anything at or below zero therefore falls back to the
+	 * default rather than being passed through.
+	 *
+	 * The 0.25 floor is the SDK's own poll interval (usleep(250_000)), below
+	 * which a window cannot complete even one pass over the bus.
+	 *
+	 * Public because McpEndpointAction needs the same number to size its
+	 * admission-counter window — the counter is only correct while the window it
+	 * uses equals how long the stream it admits actually lives. One source of
+	 * truth rather than two clamps that can drift apart.
+	 */
+	public function subscriptionStreamSeconds(): float
+	{
+		$configured = $this->config->mcp['subscriptionStreamSeconds'] ?? 1;
+
+		if (!is_numeric($configured) || (float)$configured <= 0.0) {
+			return 1.0;
+		}
+
+		return max(0.25, min(30.0, (float)$configured));
 	}
 }

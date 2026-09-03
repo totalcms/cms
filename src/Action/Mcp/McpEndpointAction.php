@@ -6,7 +6,6 @@ namespace TotalCMS\Action\Mcp;
 
 use Mcp\Server\Transport\CallbackStream;
 use Mcp\Server\Transport\Http\Middleware\DnsRebindingProtectionMiddleware;
-use Mcp\Server\Transport\Http\Middleware\ProtocolVersionMiddleware;
 use Mcp\Server\Transport\StreamableHttpTransport;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -298,8 +297,39 @@ readonly class McpEndpointAction
 			// spec-legal answer the endpoint gave before this feature existed,
 			// so a client that treats 405 as "no server-initiated stream"
 			// degrades exactly as it would with `listeningStream` off.
-			if ($this->reserveListeningStreamSlot()) {
+			if ($this->reserveListeningStreamSlot($this->listeningStreamSeconds())) {
 				return $this->listeningStreamResponse($response);
+			}
+		}
+
+		// Admission control for modern-era (2026-07-28) `subscriptions/listen`.
+		//
+		// That method is a long-lived SSE stream: StatelessProtocol::listen()
+		// holds one PHP-FPM worker for mcp.subscriptionStreamSeconds, polling the bus
+		// every 250ms. It is the same worker-occupancy problem as the GET
+		// keepalive stream below, and it is bounded the same way — by the one
+		// counter that applies site-wide and does not exempt OAuth callers, as
+		// the note in config/defaults.php explains at length.
+		//
+		// Two refusals, both answered as a JSON-RPC error rather than a
+		// transport failure so a client can tell "not now" from "broken":
+		//   1. subscriptions are switched off, in which case no bus is wired and
+		//      the stream would hold a worker to deliver nothing at all;
+		//   2. the site-wide concurrency cap is already spent.
+		if ($this->isListenRequest($request)) {
+			$subscriptionsOn = ($this->config->mcp['subscriptionsEnabled'] ?? true) !== false;
+
+			if (!$subscriptionsOn || !$this->reserveListeningStreamSlot($this->serverFactory->subscriptionStreamSeconds())) {
+				return $this->renderer->json($response, [
+					'jsonrpc' => '2.0',
+					'id'      => null,
+					'error'   => [
+						'code'    => -32000,
+						'message' => $subscriptionsOn
+							? 'Too many concurrent subscription streams; retry shortly.'
+							: 'Resource subscriptions are disabled on this server.',
+					],
+				], $subscriptionsOn ? 503 : 501);
 			}
 		}
 
@@ -312,19 +342,53 @@ readonly class McpEndpointAction
 		// mode (an explicit mcp.allowedOrigins list), scoped to the server's own
 		// host plus the configured origins — satisfying the spec's
 		// 403-on-invalid-Origin without breaking the open-by-default policy.
-		// ProtocolVersionMiddleware is always on (validates the MCP-Protocol-Version
-		// header; tolerant of its absence during initialize and for legacy clients).
+		//
+		// ProtocolVersionMiddleware is deliberately NOT in this list. Custom
+		// middleware runs at the edge, before InboundClassifier decides which
+		// protocol era a request belongs to, and that middleware only recognises
+		// handshake revisions — so listing it here rejects every modern
+		// (2026-07-28) request before the stateless dispatcher ever sees it. The
+		// transport applies it itself, to handshake traffic only, via
+		// StreamableHttpTransport::handshakeMiddleware(). The SDK logs a warning
+		// if it finds one in a custom list; putting it back reintroduces the bug
+		// that warning describes.
 		$middleware = [];
 		if (!McpTransportSecurity::isOpen($allowedOrigins)) {
 			$middleware[] = new DnsRebindingProtectionMiddleware(
 				McpTransportSecurity::allowedHosts($allowedOrigins, $request->getUri()->getHost()),
 			);
 		}
-		$middleware[] = new ProtocolVersionMiddleware();
 
 		$transport = new StreamableHttpTransport($request, middleware: $middleware);
 
 		return $server->run($transport);
+	}
+
+	/**
+	 * Is this a modern-era `subscriptions/listen` call?
+	 *
+	 * Read from the already-parsed body where Slim's BodyParsingMiddleware
+	 * populated one, falling back to the raw stream, and rewinding either way so
+	 * StreamableHttpTransport still reads from position 0. Mirrors the scope
+	 * gate's body inspection above.
+	 */
+	private function isListenRequest(ServerRequestInterface $request): bool
+	{
+		if ($request->getMethod() !== 'POST') {
+			return false;
+		}
+
+		$parsed = $request->getParsedBody();
+		if (is_array($parsed)) {
+			$rpc = $parsed;
+		} else {
+			$request->getBody()->rewind();
+			$rpc = json_decode($request->getBody()->getContents(), true);
+		}
+		$request->getBody()->rewind();
+
+		return is_array($rpc)
+			&& ($rpc['method'] ?? null) === 'subscriptions/listen';
 	}
 
 	/**
@@ -347,9 +411,22 @@ readonly class McpEndpointAction
 	}
 
 	/**
-	 * Reserve one of the globally-capped listening-stream slots.
+	 * Reserve one of the globally-capped stream slots.
 	 *
-	 * No-ops when the configured window is zero — see the guard below; there
+	 * $seconds is how long the stream being admitted will actually live, and
+	 * MUST be that stream's own window. The counter's correctness rests on
+	 * "every stream lives for exactly this window, so opens-in-the-last-window
+	 * IS the concurrency" — pass a different number and the count stops meaning
+	 * anything. The two stream kinds have different durations
+	 * (`listeningStreamSeconds` for the GET keepalive stream,
+	 * `subscriptionStreamSeconds` for modern-era `subscriptions/listen`), which is why
+	 * this is an argument rather than a second read of one setting.
+	 *
+	 * The budget itself is deliberately SHARED between them: both hold a worker
+	 * from the same pool, so what matters to `pm.max_children` is the total, not
+	 * how it splits. Two independent caps would let the pair reach 2x.
+	 *
+	 * No-ops when the passed window is zero — see the guard below; there
 	 * is no occupancy to bound and counting would degrade into a coarse global
 	 * rate limit.
 	 *
@@ -373,7 +450,7 @@ readonly class McpEndpointAction
 	 * broken cache degrades to the pre-cap behaviour rather than disabling
 	 * the feature.
 	 */
-	private function reserveListeningStreamSlot(): bool
+	private function reserveListeningStreamSlot(float $seconds): bool
 	{
 		$max = (int)($this->config->mcp['listeningStreamMaxConcurrent'] ?? 2);
 		if ($max <= 0) {
@@ -382,7 +459,6 @@ readonly class McpEndpointAction
 			return true;
 		}
 
-		$seconds = $this->listeningStreamSeconds();
 		if ($seconds <= 0.0) {
 			// Nothing to bound. A zero-length window writes its keepalive and
 			// returns, so the worker is free again before the next request

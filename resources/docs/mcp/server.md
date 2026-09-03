@@ -354,7 +354,8 @@ Settings live in **Admin → Settings → MCP Server** and serialize to `mcp.*` 
 | `mcp.allowedOrigins` | `[]` | CORS origin allow-list for **browser-rendered** AI clients. Empty = browsers blocked. See [CORS and browser AI clients](#cors-and-browser-ai-clients) below. |
 | `mcp.publicIpPerMinute` | `60` | Per-IP rate limit on anonymous requests, 60-second window. API key callers bypass. Set to `0` to disable. |
 | `mcp.toolPrefix` | `""` | Optional snake_case prefix prepended to every tool name (`bistro` → `bistro_list_collections`). Useful when an agent connects to multiple T3 sites simultaneously. |
-| `mcp.subscriptionsEnabled` | `true` | Master switch for resource subscriptions. When `false`, `resources/subscribe` still succeeds at the protocol level but T3 won't push `notifications/resources/updated` when content changes. See [Resource subscriptions](#resource-subscriptions). |
+| `mcp.subscriptionsEnabled` | `true` | Master switch for resource subscriptions. When `false`, `resources/subscribe` still succeeds at the protocol level but T3 won't push `notifications/resources/updated` when content changes, and `subscriptions/listen` is refused outright. See [Resource subscriptions](#resource-subscriptions). |
+| `mcp.subscriptionStreamSeconds` | `1` | How long one modern-era `subscriptions/listen` stream stays open, in seconds. Each open stream holds one PHP worker, so raise it only with headroom to spare. Clamped to 0.25-30. See [Protocol eras](#protocol-eras). |
 
 Changing any of these triggers a session invalidation — active agent sessions get "session not found" on their next request and auto-reconnect with the new surface.
 
@@ -417,7 +418,26 @@ Data views are the bounded exception to the "collection-level only" rule. Subscr
 
 ### Kill switch
 
-Set `mcp.subscriptionsEnabled: false` to disable push entirely. The SDK still accepts subscribe calls (so non-conformant clients that error on rejected subscriptions don't break) but T3 stops fanning out notifications. Useful when a noisy listener interferes with a deploy or migration.
+Set `mcp.subscriptionsEnabled: false` to disable push entirely. Handshake-era `resources/subscribe` calls are still accepted (so non-conformant clients that error on rejected subscriptions don't break) but T3 stops fanning out notifications. Modern-era `subscriptions/listen` is refused with a JSON-RPC error and HTTP 501 instead — that method is a long-lived stream, and accepting one only to deliver nothing would hold a worker for the full window. Useful when a noisy listener interferes with a deploy or migration.
+
+---
+
+## Protocol eras
+
+Total CMS serves two generations of the MCP specification from the same `/mcp` URL. Every request is classified once, on arrival, and routed to the matching dispatcher — clients do not choose an endpoint, and nothing needs configuring.
+
+| Era | Revisions | Shape |
+|---|---|---|
+| Handshake | `2025-03-26`, `2025-06-18`, `2025-11-25` | Client calls `initialize`, gets an `Mcp-Session-Id`, and reuses it. State lives in the session. |
+| Modern | `2026-07-28` | No handshake and no session. Every request carries the client's identity in `params._meta` and repeats its subject in `Mcp-Method` / `Mcp-Name` headers. |
+
+Tools, resources and prompts are identical across both — the same registry, the same persona filtering, the same authorization. Only the lifecycle differs.
+
+Two differences are worth knowing about:
+
+**Version negotiation.** A client states the revision it speaks; the server agrees when it supports it and counter-offers its own when it does not. A client asking for `2026-07-28` on a server that tops out earlier gets a supported revision back and decides for itself whether to continue.
+
+**Subscriptions.** The modern era removed `resources/subscribe`. Its replacement is `subscriptions/listen`, a single SSE stream on which the client names the resource URIs it wants and receives updates until the window closes. T3 filters that stream by the caller's persona, so a client only ever receives updates for resources it could read directly — naming a URI it has no access to is accepted but silently never delivers. Each stream holds one PHP worker for `mcp.subscriptionStreamSeconds`, and the site-wide `mcp.listeningStreamMaxConcurrent` cap bounds how many can be open at once; over the cap, callers get a JSON-RPC error and HTTP 503 and should retry.
 
 ---
 

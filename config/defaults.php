@@ -451,10 +451,37 @@ $settings['mcp'] = [
 	'allowedOrigins'       => [],
 	'publicIpPerMinute'    => 60,
 	'toolPrefix'           => '',
-	// Operator kill switch for resource subscriptions. When off, the SDK falls
-	// back to its per-session-only default — resources/subscribe still works
-	// but T3 won't push notifications/resources/updated when content changes.
+	// Operator kill switch for resource subscriptions. When off, handshake-era
+	// resources/subscribe still succeeds (so clients that error on a rejected
+	// subscription keep working) but T3 won't push
+	// notifications/resources/updated when content changes, and modern-era
+	// subscriptions/listen is refused outright by McpEndpointAction — that one
+	// is a long-lived stream, and accepting it only to deliver nothing would
+	// hold a worker for the whole window.
 	'subscriptionsEnabled' => true,
+	// Modern-era (2026-07-28) `subscriptions/listen` stream lifetime, seconds.
+	//
+	// That era replaced `resources/subscribe` with a long-lived SSE stream: the
+	// SDK's StatelessProtocol::listen() holds the worker for this long, polling
+	// the notification bus every 250ms. It is the same worker-occupancy problem
+	// documented at length below for `listeningStreamSeconds`, and the SDK's own
+	// default is 30 seconds — thirty times the value that incident settled on.
+	// So T3 sets it explicitly rather than inheriting it, and bounds the
+	// aggregate with `listeningStreamMaxConcurrent` like the GET stream.
+	//
+	// Unlike the GET keepalive stream this one carries real notifications, so
+	// there is a reason to hold it open: a client learns about a change within
+	// the window rather than on its next poll. Raise it only with worker
+	// headroom to spare.
+	//
+	// Clamped to 0.25-30 in code, and — unlike `listeningStreamSeconds` — zero
+	// is NOT a valid "cheapest setting" here. StatelessProtocol reads its
+	// deadline as `0.0 >= $lifetime ? INF : ...`, so zero or negative means the
+	// stream never closes and pins a worker for the life of the process. Any
+	// such value falls back to the default. To stop serving these streams
+	// entirely, set `subscriptionsEnabled` false — McpEndpointAction refuses
+	// subscriptions/listen outright in that case.
+	'subscriptionStreamSeconds' => 1,
 	// Bounded SSE "listening stream" for GET /mcp. The mcp/sdk transport only
 	// dispatches OPTIONS/POST/DELETE — a bare GET falls through to a spec-legal
 	// 405 (no server-initiated stream to offer). That's compliant, but some
