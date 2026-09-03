@@ -508,6 +508,8 @@ API routes always take priority over builder pages.
 
 The Site Builder isn't just for HTML pages. Any text-based file the web expects at a specific path — `robots.txt`, `llms.txt`, `ads.txt`, `security.txt`, `humans.txt`, `manifest.json`, custom RSS feeds — can be served as a builder page. Total CMS auto-detects the right `Content-Type` from the route's file extension.
 
+For feeds specifically, `cms.feed.rss()` builds the document for you rather than writing the XML by hand — see [Feeds](docs/twig/feeds).
+
 ### How It Works
 
 1. Create a builder page with a route like `/robots.txt`

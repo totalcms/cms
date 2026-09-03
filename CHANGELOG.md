@@ -2,6 +2,27 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [3.5.2] - 2026-09-02
+
+### Upgrade notes
+
+- **A Site Builder page routed at `/rss` now serves `application/rss+xml`.** An extensionless route used to fall through to `text/html`; a route whose last segment is exactly `rss` is now treated as a feed. Only that exact segment counts — `/rss-help` is still a page, and no other type is matched this way. If you have an HTML page at `/rss`, rename its route
+- **Enclosure types are no longer `application/octet-stream` for images and PDFs.** `/feed/rss/{collection}` guessed from a table covering only mp3, ogg, wav, mp4 and webm, so every other attachment was labelled as a generic download. Nothing needs changing; subscribers just start seeing the real type
+
+### Added
+
+- **Feeds in Twig**: `cms.feed.rss()` and `cms.feed.atom()` build a feed from two arguments — the feed's own details, and a list of items the template has already shaped. Choosing and shaping stays where `|filter`, `|sortBy` and `|map` already live, which is what the existing `/feed/rss/{collection}` endpoint cannot reach: it maps fields by name, so it cannot compose a title out of two fields or run a Markdown field through `|markdown`. Escaping, CDATA, RFC-2822 dates and the `atom:link` self reference are handled for you. Items take an optional `media` for enclosures — a bare URL, or `{url, type, length}` for a podcast, where image and file fields already carry `mime` and `size`. See [Feeds](https://docs.totalcms.co/twig/feeds)
+- **Named validation patterns in schemas**: a property's Extra Schema Definitions can say `{"pattern": "patterns.version"}` instead of carrying a literal regex. It is the same name a form field uses, so both share one definition, and there are no backslashes to escape. Nested patterns use their dotted path (`patterns.postCode.usa`). Expansion happens once, on save, so the stored schema is still real JSON Schema for the validator, MCP and exports — and it adds the `^`/`$` anchors, which a literal pattern needs and often does not get
+- **`patterns.version` and `patterns.versionExtended`**: a plain three-part release number (`3.5.0`), and full semver with an optional `v` prefix, prerelease and build metadata (`v3.5.1-rc.1`, `3.5.0+build.7`)
+
+### Changed
+
+- **The JSON field forgives unescaped backslashes.** The Extra Schema Definitions box holds JSON Schema fragments, and the common one is a regex — nearly all backslashes. JSON only permits a backslash before `" \ / b f n r t u`, so `{"pattern": "^\d+$"}` was a hard parse error even though the intent is plain. A backslash that starts no legal escape is now doubled, alongside the trailing commas the field already forgave. The repair is idempotent, and runs only when the value fails to parse — valid JSON is never rewritten
+
+### Fixed
+
+- **A form no longer hangs when a field cannot read its own value.** A JSON field holding invalid JSON threw out of value collection, and because the payload was gathered as an argument to the save request, the throw escaped before the error handler was attached. The form stayed in the processing state that blocks every later submit — a dead form, no request sent, and no message shown. The payload is now collected before the form is locked, and the error names the offending field
+
 ## [3.5.1] - 2026-08-31
 
 ### Upgrade notes

@@ -45,6 +45,13 @@ readonly class FeedTwigAdapter
 	}
 
 	/**
+	 * Render an RSS 2.0 feed from feed details and a list of items.
+	 *
+	 * `meta` requires `title`, `link` and `description`; each item takes
+	 * `title`, `link`, `date` and `content`, plus optional `id`, `summary`,
+	 * `author` and `media`. Items are emitted in the order given, so sort
+	 * before mapping.
+	 *
 	 * @param array<string,mixed> $meta
 	 * @param iterable<array<string,mixed>> $items
 	 */
@@ -54,6 +61,8 @@ readonly class FeedTwigAdapter
 	}
 
 	/**
+	 * Render an Atom 1.0 feed from the same arguments as `rss()`.
+	 *
 	 * Atom additionally requires `meta.self` — readers use it to re-fetch, so
 	 * there is no safe default to invent.
 	 *

@@ -1356,14 +1356,14 @@
         {
             "name": "cms.feed.atom",
             "signature": "atom(array $meta, iterable $items = []): Markup",
-            "description": "Atom additionally requires `meta.self` \u2014 readers use it to re-fetch, so there is no safe default to invent.",
+            "description": "Render an Atom 1.0 feed from the same arguments as `rss()`. Atom additionally requires `meta.self` \u2014 readers use it to re-fetch, so there is no safe default to invent.",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/"
         },
         {
             "name": "cms.feed.rss",
             "signature": "rss(array $meta, iterable $items = []): Markup",
-            "description": "",
+            "description": "Render an RSS 2.0 feed from feed details and a list of items. `meta` requires `title`, `link` and `description`; each item takes `title`, `link`, `date` and `content`, plus optional `id`, `summary`, `author` and `media`. Items are emitted in the order given, so sort before mapping.",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/"
         },
