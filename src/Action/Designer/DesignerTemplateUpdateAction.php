@@ -8,7 +8,7 @@ use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
- * Handles PUT /designer/templates/{path}.
+ * Handles PUT /api/designer/templates/{path}.
  * Updates template content via the Designer API.
  */
 readonly class DesignerTemplateUpdateAction

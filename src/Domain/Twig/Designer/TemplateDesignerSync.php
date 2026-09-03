@@ -62,7 +62,9 @@ class TemplateDesignerSync
 		$currentDomain     = rtrim($this->config->domain, '/');
 		// Production uses clean API paths; strip /public/index.php which only appears on local PHP CLI dev servers
 		$cleanApi          = (string)preg_replace('#/public/index\.php$#', '', $this->config->api);
-		$productionApi     = $productionDomain . '/' . ltrim($cleanApi, '/');
+		// `config->api` is the install's mount prefix (empty at the domain root),
+		// NOT the `/api` route group — so rtrim before the route path is appended.
+		$productionApi     = rtrim($productionDomain . '/' . ltrim($cleanApi, '/'), '/');
 
 		// If domains match, this IS production — no sync needed
 		if ($currentDomain === $productionDomain) {
@@ -100,7 +102,8 @@ class TemplateDesignerSync
 	 */
 	private function syncRemote(string $productionUrl, string $templatePath, string $token, string $content, string &$error): string
 	{
-		$url = $productionUrl . '/designer/templates/' . $templatePath;
+		// The designer route lives inside the `/api` group (config/routes.php).
+		$url = $productionUrl . '/api/designer/templates/' . ltrim($templatePath, '/');
 
 		try {
 			$response = $this->httpClient->request('PUT', $url, [

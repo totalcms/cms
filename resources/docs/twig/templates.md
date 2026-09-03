@@ -142,7 +142,7 @@ The Designer API provides a public endpoint for remote template updates. This en
 #### Update Template
 
 ```http
-PUT /designer/templates/{path}
+PUT /api/designer/templates/{path}
 X-Designer-Token: your-token-here
 Content-Type: text/plain
 
@@ -159,7 +159,9 @@ Returns `200` with:
 }
 ```
 
-> The token can also be passed as a query parameter: `/designer/templates/path?token=your-token`
+> The token can also be passed as a query parameter: `/api/designer/templates/path?token=your-token`
+
+> The endpoint lives under the install's API prefix. On a subfolder install, prepend the install base path — e.g. `https://example.com/tcms/api/designer/templates/products/tile`.
 
 ### Multiple Designer Blocks
 
@@ -196,6 +198,6 @@ This is useful when prototyping templates that aren't ready for production yet.
 
 - Designer API endpoints are **public** (no session or API key required) but gated by the Designer Token
 - Each template has its own unique token — compromising one token does not affect other templates
-- Tokens are auto-generated UUIDs and cannot be edited manually
+- Tokens are auto-generated random strings and cannot be edited manually
 - The Designer toggle must be explicitly enabled per template
 - The API only allows updating template **content** — metadata (token, enabled status) cannot be changed via the Designer API

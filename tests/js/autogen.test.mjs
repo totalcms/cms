@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs';
+
+import { vi } from 'vitest';
+
 import Autogen from '../../javascript/totalform/autogen.js';
 
 //-----------------------------------------------
@@ -75,5 +79,31 @@ describe('Autogen.generate', () => {
 	test('${uid-N} composes with other tokens', () => {
 		const out = makeAutogen('${title}-${uid-5}', { fields: { title: 'post' } }).generate();
 		expect(out).toMatch(/^post-[0-9a-z]{5}$/);
+	});
+});
+
+//-----------------------------------------------
+// The Designer Token is generated from the pattern in the shipped template
+// schema. It must carry its full advertised entropy — a pattern that repeats
+// one ${uid} draw looks 14 chars long but is only 7 chars of randomness.
+//-----------------------------------------------
+describe('designer token pattern', () => {
+	const schema = JSON.parse(
+		readFileSync('resources/schemas/template.json', 'utf8'),
+	);
+	const pattern = schema.properties.designerToken.settings.autogen;
+
+	test('generates a token that is random across its whole length', () => {
+		// Deterministic draws so "both halves are identical" can only mean the
+		// pattern reused a single interpolated value.
+		const random = vi.spyOn(Math, 'random');
+		let n = 0;
+		random.mockImplementation(() => ((n++ * 0.0137) % 1));
+
+		const token = makeAutogen(pattern).generate();
+		random.mockRestore();
+
+		expect(token).toHaveLength(14);
+		expect(token.slice(0, 7)).not.toBe(token.slice(7));
 	});
 });

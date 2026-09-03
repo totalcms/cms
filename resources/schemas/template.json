@@ -70,7 +70,7 @@
 			"help"     : "A unique token required for remote template updates. Share this with your development tool.",
 			"field"    : "id",
 			"settings" : {
-				"autogen"    : "${uid}${uid}",
+				"autogen"    : "${uid-14}",
 				"readonly"   : true,
 				"visibility" : {
 					"watch"    : "designerEnabled",

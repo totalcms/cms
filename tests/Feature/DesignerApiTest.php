@@ -101,6 +101,24 @@ describe('Designer API - PUT', function (): void {
 		delete('/api/templates/templates/put-test')->assertOk();
 	});
 
+	it('tolerates a template id sent with a leading slash', function (): void {
+		$info = createDesignerTemplate('slash-test', '<h1>Original</h1>');
+
+		// Third-party dev tools compose this URL themselves; a stray leading
+		// slash on the id yields an empty path segment and must still resolve.
+		$response = $this->put('/api/designer/templates//templates/slash-test', [
+			'template' => '<h1>Updated despite the stray slash</h1>',
+		], [
+			'X-Designer-Token' => $info['token'],
+		]);
+		expect($response->getStatusCode())->toBe(200);
+
+		$content = file_get_contents(templatePath('slash-test', 'templates'));
+		expect($content)->toBe('<h1>Updated despite the stray slash</h1>');
+
+		delete('/api/templates/templates/slash-test')->assertOk();
+	});
+
 	it('returns 401 with invalid token on PUT', function (): void {
 		$info = createDesignerTemplate('put-auth-test');
 
