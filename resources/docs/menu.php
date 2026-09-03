@@ -116,6 +116,7 @@ return [
 					['title' => 'Templates',            'path' => 'twig/templates'],
 					['title' => 'Conditionals',         'path' => 'twig/conditionals'],
 					['title' => 'Markdown',             'path' => 'twig/markdown'],
+					['title' => 'Feeds',                'path' => 'twig/feeds'],
 					['title' => 'Factory',              'path' => 'twig/factory'],
 					['title' => 'Collections',          'path' => 'twig/collections'],
 					['title' => 'Collection Filtering', 'path' => 'twig/collection-filtering'],

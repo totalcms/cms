@@ -1354,6 +1354,20 @@
             "url": "https://docs.totalcms.co/twig/edition/"
         },
         {
+            "name": "cms.feed.atom",
+            "signature": "atom(array $meta, iterable $items = []): Markup",
+            "description": "Atom additionally requires `meta.self` \u2014 readers use it to re-fetch, so there is no safe default to invent.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.feed.rss",
+            "signature": "rss(array $meta, iterable $items = []): Markup",
+            "description": "",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.form.blog",
             "signature": "blog(array $options = []): string",
             "description": "",

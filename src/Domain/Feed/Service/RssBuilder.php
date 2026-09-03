@@ -198,18 +198,14 @@ class RssBuilder
 		}
 	}
 
+	/**
+	 * Shared with FeedWriter so the two do not answer differently for the same
+	 * file. The shared table also covers images and PDFs, which this one did
+	 * not — those previously went out as application/octet-stream.
+	 */
 	private function mimeType(string $media): string
 	{
-		$extension = pathinfo($media, PATHINFO_EXTENSION);
-
-		return match ($extension) {
-			'mp3'   => 'audio/mpeg',
-			'ogg'   => 'audio/ogg',
-			'wav'   => 'audio/wav',
-			'mp4'   => 'video/mp4',
-			'webm'  => 'video/webm',
-			default => 'application/octet-stream',
-		};
+		return MediaMimeGuesser::guess($media);
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

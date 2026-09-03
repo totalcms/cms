@@ -135,6 +135,7 @@ use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\FeedTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
@@ -419,6 +420,7 @@ return [
 		$container->get(CollectionTwigAdapter::class),
 		$container->get(AdminTwigAdapter::class),
 		$container->get(BuilderTwigAdapter::class),
+		$container->get(FeedTwigAdapter::class),
 		new LocaleTwigAdapter($container->get(TranslationService::class), $container->get(Config::class)),
 		new UtilsTwigAdapter(),
 	),
