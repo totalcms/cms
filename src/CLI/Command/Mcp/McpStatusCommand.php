@@ -59,11 +59,28 @@ class McpStatusCommand extends BaseCommand
 		$admin  = array_map(static fn ($t): string => $t->name, $registry->forPersona(McpPersona::ADMIN));
 		$public = array_map(static fn ($t): string => $t->name, $registry->forPersona(McpPersona::PUBLIC_));
 
+		// The licensing domain is auto-detected from the request Host header, and
+		// the CLI has neither that nor SERVER_NAME — so config/defaults.php falls
+		// back to the literal 'unknown', the license API has no record for it, and
+		// the edition reads as a trial on a properly licensed install.
+		//
+		// The gate itself is right and worth reporting: on Lite it is the reason
+		// /mcp answers 403, which is the second thing an operator checks after
+		// `enabled`. So report it, and say when the number underneath it came from
+		// a domain we never actually resolved. Same root cause the Docker /
+		// reverse-proxy warning in LicenseValidationMiddleware covers, reached a
+		// different way.
+		$domainResolved = $config->domain !== ''
+			&& $config->domain !== 'unknown'
+			&& !Config::isNonRoutableHost($config->domain);
+
 		$data = [
-			'enabled'       => (bool)($mcpConfig['enabled'] ?? true),
-			'public_access' => (bool)($mcpConfig['publicAccess'] ?? false),
-			'edition_ok'    => $editions->can(EditionFeature::MCP_SERVER),
-			'edition'       => $editions->getEdition()->value,
+			'enabled'         => (bool)($mcpConfig['enabled'] ?? true),
+			'public_access'   => (bool)($mcpConfig['publicAccess'] ?? false),
+			'edition_ok'      => $editions->can(EditionFeature::MCP_SERVER),
+			'edition'         => $editions->getEdition()->value,
+			'domain'          => $config->domain,
+			'domain_resolved' => $domainResolved,
 			'tool_prefix'   => (string)($mcpConfig['toolPrefix'] ?? ''),
 			'tools'         => [
 				'admin'  => $admin,
@@ -88,6 +105,18 @@ class McpStatusCommand extends BaseCommand
 		$output->writeln(sprintf('  public access: %s', $ok((bool)$data['public_access'])));
 		$output->writeln(sprintf('  edition gate:  %s  <comment>(edition=%s)</comment>', $ok((bool)$data['edition_ok']), $data['edition']));
 		$output->writeln(sprintf('  tool prefix:   %s', $data['tool_prefix'] === '' ? '<comment>(none)</comment>' : (string)$data['tool_prefix']));
+
+		if (!(bool)$data['domain_resolved']) {
+			$output->writeln('');
+			$output->writeln(sprintf(
+				"  <comment>Note: the licensing domain resolved to '%s', so the edition above is</comment>",
+				$data['domain'] === '' ? '(empty)' : (string)$data['domain'],
+			));
+			$output->writeln('  <comment>not this site\'s. It comes from the request Host header, which the CLI</comment>');
+			$output->writeln('  <comment>does not have — set `domain` in config/tcms.php to read it correctly</comment>');
+			$output->writeln('  <comment>here. Web requests are unaffected.</comment>');
+		}
+
 		$output->writeln('');
 
 		$tools       = (array)$data['tools'];
