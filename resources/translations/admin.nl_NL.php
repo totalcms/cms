@@ -956,6 +956,7 @@ return [
 	'api_keys.all_automations_ep'    => 'Alle automatiseringen',
 	'api_keys.xmlrpc_ep'             => 'XML-RPC-publicatie',
 	'api_keys.sync_manager_ep'       => 'Sync Manager',
+	'api_keys.import_ep'             => 'Inhoud importeren (seeding)',
 	'api_keys.create_submit'         => 'API-sleutel aanmaken',
 	'api_keys.success_title'         => 'API-sleutel succesvol aangemaakt',
 	'api_keys.save_warning'          => 'Sla deze sleutel nu op!',

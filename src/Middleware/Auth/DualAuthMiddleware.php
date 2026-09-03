@@ -117,6 +117,17 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		// If API key header was provided but validation failed, return JSON error
 		// Don't fall back to session auth - the client is clearly making an API request
 		if ($hasApiKeyHeader) {
+			// The response stays deliberately vague: distinguishing "no such key"
+			// from "key lacks this path" would confirm a valid key to anyone
+			// guessing. The operator gets the detail in the log instead, because
+			// the two failures need completely different fixes and the message
+			// alone sends you looking at the key when the grant is the problem.
+			$this->logger->warning('API key rejected', [
+				'method' => $request->getMethod(),
+				'path'   => $request->getUri()->getPath(),
+				'reason' => 'unknown key, or the key does not grant this method and path',
+			]);
+
 			return $this->unauthorizedJsonResponse('Invalid API key or insufficient permissions');
 		}
 

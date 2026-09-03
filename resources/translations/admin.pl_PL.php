@@ -956,6 +956,7 @@ return [
 	'api_keys.all_automations_ep'    => 'Wszystkie Automations',
 	'api_keys.xmlrpc_ep'             => 'Publikowanie XML-RPC',
 	'api_keys.sync_manager_ep'       => 'Menedżer synchronizacji',
+	'api_keys.import_ep'             => 'Import treści (seeding)',
 	'api_keys.create_submit'         => 'Utwórz klucz API',
 	'api_keys.success_title'         => 'Klucz API utworzony pomyślnie',
 	'api_keys.save_warning'          => 'Zapisz ten klucz teraz!',
