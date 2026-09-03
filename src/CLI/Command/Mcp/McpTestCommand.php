@@ -11,6 +11,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Command\BaseCommand;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 /**
@@ -62,7 +63,15 @@ class McpTestCommand extends BaseCommand
 
 		$container = $this->totalcms->container();
 		$registry  = $container->get(ToolRegistry::class);
-		$tool      = $registry->get($toolName);
+
+		// Mirror McpServerFactory::build(), which registers schema-defined
+		// saved-query tools per request. Without this the container's registry
+		// holds core tools only, so a saved query is reported as "not found"
+		// here while mcp:status lists it and the live server serves it — the
+		// operator is told the same tool both does and does not exist.
+		$container->get(SchemaToolRegistrar::class)->register($registry);
+
+		$tool = $registry->get($toolName);
 
 		if ($tool === null) {
 			$available = implode(', ', array_map(static fn ($t): string => $t->name, $registry->all()));
