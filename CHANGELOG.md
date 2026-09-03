@@ -92,7 +92,7 @@ The complete feature breakdown is in the 3.5.0 release notes at [docs.totalcms.c
 
 - **API prefix**: API routes now live under `/api/`. External callers must add the prefix; server-side templating is unaffected
 - **Template include paths**: the templates root is namespaced — prefix paths with `templates/`, e.g. `{% include 'templates/header.twig' %}`. The same applies anywhere a template path appears
-- **Whitelabel location**: whitelabel templates must live under `Whitelabel/`. Re-save each in the admin to migrate it
+- **Whitelabel location**: whitelabel templates must live under `whitelabel/`. Re-save each in the admin to migrate it
 - **CSRF on API writes**: session-authenticated API writes require a CSRF token. A verified same-origin request is accepted in its place, so browser forms are unaffected — but anything scripted against the API with a session cookie needs updating. API-key callers are unaffected
 - **Super-admin scope**: super admins are recognised only in the default auth collection. Sites running several auth collections may find an operator has lost privileges, and should be granted them in the default collection
 - **API key path grants** now match on segment boundaries and across the `/api` prefix. A key that was unintentionally reaching neighbouring paths will stop

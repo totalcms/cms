@@ -87,7 +87,15 @@ readonly class McpServerFactory
 				. 'Tool descriptions describe their inputs and outputs.'
 			)
 			->setSession($this->sessionStore)
-			->setLogger($this->logger);
+			->setLogger($this->logger)
+			// Serve only the session-based protocol era. mcp/sdk 0.8 turns on a
+			// second, session-free dispatcher (spec 2026-07-28) by default, so one
+			// endpoint answers both eras. T3 is not ready for that leg: resource
+			// subscriptions are keyed on SessionInterface (see McpSubscriptionManager),
+			// so subscribe/unsubscribe would silently no-op for a stateless client.
+			// Opting out keeps the protocol surface identical to mcp/sdk 0.7.
+			// Remove this once the stateless era is deliberately supported.
+			->withoutModernEra();
 
 		// Forward MCP handler/SDK errors to Sentry. The SDK swallows every
 		// Throwable into a JSON-RPC error response without rethrowing, so
