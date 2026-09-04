@@ -28,9 +28,28 @@ final readonly class AuthFieldPolicy
 	 * Fields a non-super-admin may never set on a collection whose schema
 	 * defines them. Confirmed against resources/schemas/auth.json.
 	 *
+	 * Three of these are not permissions but the state permissions are measured
+	 * against, and are just as load-bearing:
+	 *
+	 *   - `loginCount` is the counter `maxLoginCount` is compared to
+	 *     (LoginService / PasskeyLoginAction both test
+	 *     `loginCount >= maxLoginCount`). Protecting only the ceiling left the
+	 *     limit unenforceable: a user at their quota could save their own
+	 *     profile with `loginCount: 0` and grant themselves unlimited logins.
+	 *   - `lastlogin` and `created` are the audit trail. A writable audit trail
+	 *     is not one.
+	 *
+	 * None of this blocks the legitimate writers, which reach the store through
+	 * domain services rather than the guarded Actions: LastLoginUpdateService
+	 * patches `lastlogin`/`loginCount` via ObjectPatcher, and `created` is
+	 * assigned server-side by DateFieldResetter::resetOnCreateFields() on every
+	 * create. On update these revert to the stored value, which also fixes the
+	 * benign version of the bug — the admin form PUTs the whole object, so a
+	 * profile save used to rewind `loginCount` to whatever was rendered.
+	 *
 	 * @var list<string>
 	 */
-	public const PRIVILEGED_FIELDS = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys'];
+	public const PRIVILEGED_FIELDS = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'loginCount', 'lastlogin', 'created'];
 
 	/** Schema id whose records are user/auth records. */
 	private const AUTH_SCHEMA = 'auth';

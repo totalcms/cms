@@ -54,9 +54,18 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 		// Users should always be able to update their own record in their auth
 		// collection. Only reachable for session callers — Bearer requests
 		// always return above via the accessAuthority branch.
+		//
+		// AUTH_COLLECTION is empty for anyone who logged in at the plain
+		// `/admin/login` route, which has no `{collection}` argument — i.e.
+		// almost everyone (AuthLoginSubmitAction: `$args['collection'] ?? ''`).
+		// An empty value means "the default auth collection" everywhere else in
+		// the codebase (see UserValidationService::validateUserById), so it must
+		// be resolved before comparing. Comparing the raw session value made
+		// this carve-out dead for every default-login user: their own profile
+		// save fell through to the group check and 403'd. Super-admins never saw
+		// it — they bypass in BaseAccessMiddleware before reaching here.
 		if ($operation === 'update' && $collection && $objectId) {
-			$authCollection = $this->session->get(SessionKeys::AUTH_COLLECTION);
-			if ($collection === $authCollection && $objectId === $userId) {
+			if ($collection === $this->actorAuthCollection() && $objectId === $userId) {
 				return true;
 			}
 		}
@@ -69,5 +78,16 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 
 		// No specific collection (e.g., GET /collections, POST /collections) - check general collection operation permission
 		return $this->accessControl->canAccessCollectionsOperation($userId, $operation);
+	}
+
+	/**
+	 * The auth collection the session user belongs to, with an empty session
+	 * value resolved to the configured default.
+	 */
+	private function actorAuthCollection(): string
+	{
+		$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
+
+		return $collection !== '' ? $collection : (string)$this->config->auth['collection'];
 	}
 }
