@@ -141,10 +141,43 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 				$this->logGroupRejection($request, $userId, $operation);
 			}
 
+			$this->logDenial($request, $userId, $operation, $isOAuthBearer);
+
 			return $this->forbiddenResponse($request, $this->getErrorMessage());
 		}
 
 		return $handler->handle($request);
+	}
+
+	/**
+	 * Record every access-group denial to the access log.
+	 *
+	 * The response deliberately says only "Access denied" (or a slightly fuller
+	 * sentence in dev), so without this there is NO server-side record of who was
+	 * refused what: logGroupRejection() below covers only OAuth Bearer callers,
+	 * leaving session users — i.e. everyone using the admin — completely silent.
+	 * Diagnosing "my editor cannot save their own profile" then means reading the
+	 * session off disk to work out which comparison failed. Route name and
+	 * operation are the two facts that identify the check that refused.
+	 */
+	private function logDenial(ServerRequestInterface $request, string $userId, string $operation, bool $isOAuthBearer): void
+	{
+		// Read the route attribute directly rather than through
+		// RouteContext::fromRequest(), which throws when routing metadata is
+		// absent. This runs on the denial path: a throw here would turn a clean
+		// 403 into a 500, which is a worse outcome than an unnamed log line.
+		$route     = $request->getAttribute(\Slim\Routing\RouteContext::ROUTE);
+		$routeName = $route instanceof \Slim\Interfaces\RouteInterface ? (string)$route->getName() : 'unknown';
+
+		$this->loggerFactory->channelLogger(LogChannel::Access)->warning('Access denied', [
+			'resource'    => static::RESOURCE_NAME,
+			'operation'   => $operation,
+			'user_id'     => $userId === '' ? '(none)' : $userId,
+			'auth_method' => $isOAuthBearer ? 'oauth_bearer' : 'session',
+			'route_name'  => $routeName,
+			'method'      => $request->getMethod(),
+			'path'        => $request->getUri()->getPath(),
+		]);
 	}
 
 	/**

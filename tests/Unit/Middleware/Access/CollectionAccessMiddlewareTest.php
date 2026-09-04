@@ -66,6 +66,21 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 		$this->handler = $this->createMock(RequestHandlerInterface::class);
 		$this->handler->method('handle')->willReturn($this->allowed);
 
+		// Capture what the access channel is told when a request is refused.
+		$this->logged        = new \ArrayObject();
+		$this->accessLogger  = new class ($this->logged) extends \Psr\Log\AbstractLogger {
+			public function __construct(private \ArrayObject $sink)
+			{
+			}
+
+			public function log($level, string|\Stringable $message, array $context = []): void
+			{
+				$this->sink[] = ['level' => $level, 'message' => (string)$message, 'context' => $context];
+			}
+		};
+		$this->loggerFactory = $this->createMock(LoggerFactory::class);
+		$this->loggerFactory->method('channelLogger')->willReturn($this->accessLogger);
+
 		$this->middleware = new CollectionAccessMiddleware(
 			$this->userValidation,
 			$this->accessControl,
@@ -75,7 +90,7 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 			$responseFactory,
 			$this->config,
 			$this->operationDetector,
-			$this->createMock(LoggerFactory::class),
+			$this->loggerFactory,
 			new OAuthActivityLogger(new NullLogger()),
 		);
 
@@ -155,5 +170,26 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 		$response = $this->middleware->process(($this->requestFor)('blog', 'alex-park'), $this->handler);
 
 		expect($response)->toBe($this->forbidden);
+	});
+
+	it('logs a denial so an operator can see who was refused what', function (): void {
+		($this->signInAs)('alex-park', '');
+
+		$this->middleware->process(($this->requestFor)('auth', 'jordan-lee'), $this->handler);
+
+		expect($this->logged)->toHaveCount(1);
+		expect($this->logged[0]['message'])->toBe('Access denied');
+		expect($this->logged[0]['context']['user_id'])->toBe('alex-park');
+		expect($this->logged[0]['context']['operation'])->toBe('update');
+		expect($this->logged[0]['context']['auth_method'])->toBe('session');
+		expect($this->logged[0]['context']['resource'])->toBe('collection');
+	});
+
+	it('logs nothing when the request is allowed', function (): void {
+		($this->signInAs)('alex-park', '');
+
+		$this->middleware->process(($this->requestFor)('auth', 'alex-park'), $this->handler);
+
+		expect($this->logged)->toHaveCount(0);
 	});
 });
