@@ -54,6 +54,74 @@ final class RenderTwigAdapterTest extends TestCase
 		);
 	}
 
+	// --- server-rendered first page (load: true) ---
+
+	/**
+	 * `template: 'myblog'` must reach the Twig loader as
+	 * `templates/myblog.twig` — user templates live in the `templates` builder
+	 * category, and the loader roots are the builder read layers.
+	 *
+	 * Regression: this rendered `myblog.twig`, which resolved to
+	 * `builder/myblog.twig` and blew up with "Unable to find template" on every
+	 * site upgraded past the 3.5 migration that moved templates into
+	 * `builder/templates/`.
+	 */
+	public function testFirstPageRendersFromTheTemplatesCategory(): void
+	{
+		$this->assertFirstPageRendersAs('myblog', 'templates/myblog.twig');
+	}
+
+	public function testFirstPageAcceptsAFolderedId(): void
+	{
+		$this->assertFirstPageRendersAs('blog/card.twig', 'templates/blog/card.twig');
+	}
+
+	public function testFirstPageDoesNotDoubleTheCategory(): void
+	{
+		$this->assertFirstPageRendersAs('templates/myblog', 'templates/myblog.twig');
+	}
+
+	private function assertFirstPageRendersAs(string $given, string $expected): void
+	{
+		$twigEngine = $this->createMock(TwigEngine::class);
+		$twigEngine->expects($this->once())
+			->method('render')
+			->with($expected, $this->anything())
+			->willReturn('<article></article>');
+
+		$this->indexQueryService
+			->method('query')
+			->willReturn(new QueryResult([['id' => 'post-1']], 1, 0, 1));
+
+		$adapter = $this->makeAdapterWithTwig($twigEngine);
+		$adapter->loadMore('blog', ['template' => $given, 'load' => true, 'limit' => 1]);
+	}
+
+	private function makeAdapterWithTwig(TwigEngine $twigEngine): RenderTwigAdapter
+	{
+		$config      = $this->createMock(Config::class);
+		$config->api = '';
+
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+
+		return new RenderTwigAdapter(
+			$this->htmxRenderer,
+			$config,
+			$this->createMock(DataTwigAdapter::class),
+			$this->createMock(MediaTwigAdapter::class),
+			$this->createMock(CollectionFetcher::class),
+			$this->createMock(CollectionLister::class),
+			$this->createMock(SchemaFetcher::class),
+			$this->createMock(GridRenderer::class),
+			$loggerFactory,
+			twigEngineFactory: fn (): TwigEngine => $twigEngine,
+			indexQueryService: $this->indexQueryService,
+			dataViewQueryServiceFactory: fn (): MockObject => $this->dataViewQueryService,
+		);
+	}
+
 	// --- loadMore ---
 
 	public function testLoadMoreReturnsErrorWhenTemplateMissing(): void

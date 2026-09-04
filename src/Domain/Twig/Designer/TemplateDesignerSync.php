@@ -86,7 +86,7 @@ class TemplateDesignerSync
 	private function syncLocal(string $templatePath, string $content, string &$error): string
 	{
 		try {
-			[$folder, $name] = TemplatePath::parse($templatePath);
+			[$folder, $name] = TemplatePath::parseInTemplates($templatePath);
 			$this->templateSaver->saveTemplate($name, $content, $folder);
 
 			return 'ok';

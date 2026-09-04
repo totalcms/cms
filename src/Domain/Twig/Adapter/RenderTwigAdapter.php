@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
@@ -320,10 +321,8 @@ class RenderTwigAdapter
 		$twigEngine = $factory();
 		$html       = '';
 
-		// Ensure template has .twig extension
-		if (!str_ends_with($template, '.twig')) {
-			$template .= '.twig';
-		}
+		// Every user template lives in the `templates` builder category.
+		$template = TemplatePath::loaderPath($template);
 
 		foreach ($items as $item) {
 			$data = ['object' => $item];

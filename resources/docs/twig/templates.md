@@ -94,7 +94,7 @@ This tag captures raw template content before Twig compiles it, preserving expre
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `for 'path'` | Yes | Template ID (without `.twig` extension) |
+| `for 'path'` | Yes | Template ID, without the `.twig` extension, relative to `builder/templates/`. `myblog` addresses `builder/templates/myblog.twig`; `grids/card` nests below it. A leading `templates/` is optional and ignored. |
 | `on 'url'` | Yes | Production API base URL |
 | `token 'token'` | No | Designer token for remote sync (required for production sync) |
 

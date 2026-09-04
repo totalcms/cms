@@ -273,3 +273,58 @@ describe('TemplateDesignerSync', function (): void {
 		$sync->sync('test-key');
 	});
 });
+
+/**
+ * The local save and the remote lookup must resolve an id to the SAME file.
+ *
+ * Regression: `for 'myblog'` used to save `builder/myblog.twig` locally and
+ * report a green "Local: ✓", while the remote looked for the real template at
+ * `builder/templates/myblog.twig` and answered "Template not found". Both ends
+ * now go through TemplatePath::parseDesigner().
+ */
+describe('TemplateDesignerSync local path resolution', function (): void {
+	test('saves a bare id into the templates builder category', function (): void {
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->method('request')->willReturn(new HttpResponse(200, ''));
+
+		$saver = test()->createMock(TemplateSaver::class);
+		$saver->expects(test()->once())
+			->method('saveTemplate')
+			->with('myblog', '<p>Hello</p>', 'templates');
+
+		$registry = new TemplateDesignerRegistry();
+		registerBlock($registry, template: 'myblog');
+
+		createDesignerSync($httpClient, templateSaver: $saver, registry: $registry)->sync('test-key');
+	});
+
+	test('does not double the category when the id already carries it', function (): void {
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->method('request')->willReturn(new HttpResponse(200, ''));
+
+		$saver = test()->createMock(TemplateSaver::class);
+		$saver->expects(test()->once())
+			->method('saveTemplate')
+			->with('myblog', '<p>Hello</p>', 'templates');
+
+		$registry = new TemplateDesignerRegistry();
+		registerBlock($registry, template: 'templates/myblog');
+
+		createDesignerSync($httpClient, templateSaver: $saver, registry: $registry)->sync('test-key');
+	});
+
+	test('nests a sub folder under the templates category', function (): void {
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->method('request')->willReturn(new HttpResponse(200, ''));
+
+		$saver = test()->createMock(TemplateSaver::class);
+		$saver->expects(test()->once())
+			->method('saveTemplate')
+			->with('card', '<p>Hello</p>', 'templates/grids');
+
+		$registry = new TemplateDesignerRegistry();
+		registerBlock($registry, template: 'grids/card');
+
+		createDesignerSync($httpClient, templateSaver: $saver, registry: $registry)->sync('test-key');
+	});
+});

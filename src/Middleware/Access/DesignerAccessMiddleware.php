@@ -40,8 +40,8 @@ readonly class DesignerAccessMiddleware implements MiddlewareInterface
 			return $this->errorResponse(404, 'Template path is required');
 		}
 
-		// Parse into folder + name
-		[$folder, $name] = TemplatePath::parse($path);
+		// Parse into folder + name, rooted at the `templates` builder category.
+		[$folder, $name] = TemplatePath::parseInTemplates($path);
 
 		// Check if the template exists
 		if (!$this->templateRepository->builderTemplateExists($name, $folder)) {

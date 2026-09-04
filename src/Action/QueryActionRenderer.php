@@ -12,6 +12,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Admin\AdminTableRenderer;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -106,7 +107,7 @@ readonly class QueryActionRenderer
 
 		$html = '';
 		foreach ($result->items as $item) {
-			$html .= $this->twigEngine->render($template . '.twig', ['object' => $item] + $context);
+			$html .= $this->twigEngine->render(TemplatePath::loaderPath($template), ['object' => $item] + $context);
 		}
 
 		$mode = $params['mode'] ?? '';
