@@ -2,7 +2,7 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.5.2] - 2026-09-02
+## [3.5.2] - 2026-09-05
 
 ### Upgrade notes
 
