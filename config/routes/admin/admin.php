@@ -30,6 +30,7 @@ use TotalCMS\Action\Admin\Impersonate\ImpersonateStopAction;
 use TotalCMS\Action\Admin\LogDownloadAction;
 use TotalCMS\Action\Admin\SyncAction;
 use TotalCMS\Action\Admin\UpdateAction;
+use TotalCMS\Action\Admin\UpdateBackupDeleteAction;
 use TotalCMS\Action\Automation\AutomationReenableAction;
 use TotalCMS\Action\Automation\AutomationRunNowAction;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
@@ -99,6 +100,7 @@ return function (App $app): void {
 		$group->get('/utils/logs/download', LogDownloadAction::class)->setName('admin-utils-logs-download')->add(UtilsAccessMiddleware::class);
 
 		$group->post('/utils/update/apply', UpdateAction::class)->setName('admin-update-apply')->add(AdminOnlyMiddleware::class);
+		$group->post('/utils/update/backup/delete', UpdateBackupDeleteAction::class)->setName('admin-update-backup-delete')->add(AdminOnlyMiddleware::class);
 
 		$group->get('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils')->add(UtilsAccessMiddleware::class);
 		$group->post('/utils[/{page}[/{action}]]', AdminUtilsAction::class)->setName('admin-utils-post')->add(UtilsAccessMiddleware::class);

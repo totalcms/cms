@@ -508,6 +508,8 @@ API routes always take priority over builder pages.
 
 The Site Builder isn't just for HTML pages. Any text-based file the web expects at a specific path — `robots.txt`, `llms.txt`, `ads.txt`, `security.txt`, `humans.txt`, `manifest.json`, custom RSS feeds — can be served as a builder page. Total CMS auto-detects the right `Content-Type` from the route's file extension.
 
+For feeds specifically, `cms.feed.rss()` builds the document for you rather than writing the XML by hand — see [Feeds](docs/twig/feeds).
+
 ### How It Works
 
 1. Create a builder page with a route like `/robots.txt`
@@ -528,6 +530,18 @@ The middleware inspects the route's extension and maps it to the appropriate MIM
 | `.csv` | `text/csv` |
 | `.svg` | `image/svg+xml` |
 | _(none / unknown)_ | `text/html` |
+
+There is one exception to the extension rule. A route whose last segment is
+exactly `rss` — `/changelog/rss`, or `/rss` — is served as
+`application/rss+xml` even though it has no extension, because feed URLs are
+conventionally written that way. The match is exact, so `/rss-help` is still
+an ordinary page, and no other type is matched this way: `/docs/css` and
+`/support/txt` stay HTML.
+
+That matters for more than the header. The Page Inspector overlay and the
+live-reload snippet are injected into every `text/html` response, so a feed
+that falls through to the HTML default gets that markup spliced into its XML
+when an admin is logged in.
 
 ### Example: robots.txt
 

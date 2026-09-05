@@ -32,22 +32,26 @@
 			{{ updateInfo.changelog|markdown }}
 		</div>
 		{% endif %}
+	</div>
 
-		<div class="update-actions">
-			{% if composerInstall %}
-			<div class="update-composer-notice">
-				<p>This installation is managed by Composer. Run <code>composer update totalcms/cms</code> to update.</p>
-			</div>
-			{% elseif updateInfo.updatesValid %}
-			<button type="button" class="dash-button" id="update-btn">
-				{{ t('update.update_btn', {'{version}': updateInfo.version}) }}
-			</button>
-			{% else %}
-			<div class="update-renew-notice">
-				<p>{{ t('update.renew_required') }} <a href="utils/license-manager">{{ t('update.renew_link') }}</a></p>
-			</div>
-			{% endif %}
+	<div class="update-actions" id="update-actions">
+		{% if composerInstall %}
+		<div class="update-composer-notice">
+			<p>This installation is managed by Composer. Run <code>composer update totalcms/cms</code> to update.</p>
 		</div>
+		{% elseif updateInfo.updatesValid %}
+		<label class="update-keep-backup">
+			<input type="checkbox" id="keep-backup" checked>
+			{{ t('update.keep_backup') }}
+		</label>
+		<button type="button" class="dash-button" id="update-btn">
+			{{ t('update.update_btn', {'{version}': updateInfo.version}) }}
+		</button>
+		{% else %}
+		<div class="update-renew-notice">
+			<p>{{ t('update.renew_required') }} <a href="utils/license-manager">{{ t('update.renew_link') }}</a></p>
+		</div>
+		{% endif %}
 	</div>
 	{% else %}
 	<div class="update-current-notice">
@@ -55,6 +59,17 @@
 	</div>
 	<div class="update-check-action">
 		<a href="utils/update?check=1" class="dash-button transparent">{{ t('update.check_btn') }}</a>
+	</div>
+	{% endif %}
+
+	{% if retainedBackup %}
+	<div class="update-previous" id="update-previous">
+		<div class="update-previous-info">
+			<strong>{{ t('update.previous') }}</strong>
+			<span class="update-previous-meta">{{ retainedBackup.name }} &middot; {{ (retainedBackup.bytes / 1048576)|round }} MB</span>
+			<p class="update-previous-hint">{{ t('update.previous_hint')|raw }}</p>
+		</div>
+		<button type="button" class="dash-button transparent" id="delete-backup-btn">{{ t('update.previous_delete') }}</button>
 	</div>
 	{% endif %}
 
@@ -160,6 +175,38 @@
 	font-weight: 500;
 }
 
+.update-keep-backup {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 10px;
+	font-size: 0.9rem;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.update-previous {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-top: 24px;
+	padding: 12px 16px;
+	background: oklch(var(--totalform-nearwhite));
+	border: 1px solid oklch(var(--totalform-border-color));
+	border-radius: var(--totalform-radius);
+}
+
+.update-previous-meta {
+	margin-left: 8px;
+	color: oklch(var(--totalform-darkgray));
+}
+
+.update-previous-hint {
+	margin: 4px 0 0;
+	font-size: 0.85rem;
+	color: oklch(var(--totalform-darkgray));
+}
+
 .update-installing {
 	text-align: center;
 	padding: 2rem 1rem;
@@ -181,6 +228,13 @@ document.getElementById('update-btn')?.addEventListener('click', async () => {
 	const available = document.querySelector('.update-available');
 	const results = document.getElementById('update-results');
 
+	// The actions block sits OUTSIDE the card whose innerHTML is replaced with
+	// the installing message, so it has to be removed by hand — otherwise the
+	// button stays live while the update runs.
+	const keepBackupEl = document.getElementById('keep-backup');
+	const keepBackup   = keepBackupEl ? keepBackupEl.checked : true;
+	document.getElementById('update-actions')?.remove();
+
 	available.innerHTML = '<div class="update-installing"><h3>Installing Update&hellip;</h3><p>Please wait while the update is being applied. Do not close this page.</p></div>';
 	results.innerHTML = '';
 
@@ -190,7 +244,9 @@ document.getElementById('update-btn')?.addEventListener('click', async () => {
 			headers: {
 				'X-Requested-With': 'XMLHttpRequest',
 				'X-CSRF-Token': '{{ csrf_token() }}',
+				'Content-Type': 'application/json',
 			},
+			body: JSON.stringify({ keepBackup: keepBackup }),
 		});
 		const data = await res.json();
 		if (data.success) {
@@ -203,4 +259,28 @@ document.getElementById('update-btn')?.addEventListener('click', async () => {
 		available.innerHTML = `<div class="update-installing error"><h3>Update Failed</h3><p>Unexpected error. Check the server logs.</p></div>`;
 	}
 });
+
+const deleteBackupBtn = document.getElementById('delete-backup-btn');
+if (deleteBackupBtn) {
+	deleteBackupBtn.addEventListener('click', async () => {
+		deleteBackupBtn.disabled = true;
+		try {
+			const res = await fetch('utils/update/backup/delete', {
+				method: 'POST',
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest',
+					'X-CSRF-Token': '{{ csrf_token() }}',
+				},
+			});
+			const data = await res.json();
+			if (data.success) {
+				document.getElementById('update-previous').remove();
+			} else {
+				deleteBackupBtn.disabled = false;
+			}
+		} catch (e) {
+			deleteBackupBtn.disabled = false;
+		}
+	});
+}
 </script>

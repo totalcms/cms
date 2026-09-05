@@ -71,6 +71,14 @@ class SVGSanitizer
 		}
 		$sanitized = self::sanitize($svg);
 
+		// Note: enshrined/svg-sanitize returns false — which sanitize() maps to
+		// '' — when it refuses a document outright rather than cleaning it. Since
+		// 1.0 that includes any SVG which REFERENCES an XML entity (the XXE and
+		// billion-laughs shapes, which 0.x used to partially clean and hand back).
+		// Declaring an entity is still fine, as is a plain DOCTYPE, so ordinary
+		// Illustrator and Inkscape exports are unaffected. A refusal lands on the
+		// isValidSvg() check below and is rejected the same way malformed input
+		// is, which is the behaviour we want — fail closed, store nothing.
 		// Verify it's still valid SVG after sanitization
 		if (!self::isValidSvg($sanitized)) {
 			throw new \InvalidArgumentException('Invalid SVG content after sanitization');

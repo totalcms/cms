@@ -16,7 +16,21 @@ Total CMS includes a built-in update system that checks for new versions and app
 4. During the update, the site briefly enters maintenance mode
 5. The previous version is backed up for rollback if needed
 
-Updates only replace the application files (`tcms/`). Your content in `tcms-data/` is never touched.
+## What an update replaces
+
+An update installs the new release over the application folder **one top-level directory at a time**, not file by file. For each directory the release ships, the existing one is moved aside and the new one takes its place — so a folder you added inside one of them is removed along with its parent rather than merged.
+
+This is why nothing you author should live inside the Total CMS folder.
+
+| | On update |
+|---|---|
+| Anything **outside** the Total CMS folder — your pages, stylesheets, scripts, fonts, media | Never touched |
+| `tcms-data/` | Never touched, wherever it lives |
+| `.env`, `tcms.php`, `logs/`, `.git/` | Preserved, even inside the application folder |
+| `cache/`, `tmp/` | Left alone — the release does not ship them |
+| `config/`, `public/`, `resources/`, `src/`, `vendor/`, `autoload.php`, `.htaccess`, `.gitignore`, `version.json` | **Replaced in full** |
+
+If you have added your own files inside any of those replaced directories — a `public/my-assets/` folder, for example — move them out of the Total CMS folder before updating. See [Installation](https://docs.totalcms.co/get-started/installation) for the recommended layout.
 
 > This built-in updater applies to **zip installs**. Composer installs update through Composer — see below. The dashboard and `tcms update:apply` refuse to run on a Composer install and point you at `composer update`.
 
@@ -99,9 +113,17 @@ When an update is applied:
 5. The new files are extracted into place
 6. All caches are cleared
 7. Maintenance mode is disabled
-8. The update is logged to `tcms-data/.system/logs/totalcms.log` (channel `update`)
+8. The previous version is kept or discarded, and the update is logged to `tcms-data/.system/logs/totalcms.log` (channel `update`)
 
 The entire process typically takes a few seconds.
+
+### Keeping the previous version
+
+By default a successful update keeps one copy of the version it replaced, at `tcms-data/.system/backups/`. It costs roughly 60 MB, only the most recent is kept, and the Update Manager shows it with a button to remove it when you want the disk back.
+
+Untick **Keep a copy of the previous version** before updating — or pass `--no-backup` to `tcms update:apply` — if you would rather not spend the space.
+
+The copy is deliberately kept inside your data directory rather than beside the application. A directory sitting next to the application is inside the document root on most installs, and the previous release's PHP would be reachable over the web there. If your data directory is on a different filesystem — which the "above document root" option can mean — the copy cannot be moved there safely and is discarded instead; the update log says when that happens.
 
 ## Maintenance Mode
 
@@ -111,7 +133,7 @@ Admin routes continue to work during maintenance so the update action can comple
 
 ## Rollback
 
-If an update causes issues, you can roll back to the previous version:
+Rollback restores the previous version — either the copy a successful update kept, or the one left behind by an update that failed part-way through. If you turned the copy off, or it could not be kept, there is nothing to restore and `tcms update:rollback` reports that no backup was found.
 
 ### CLI
 
@@ -123,7 +145,7 @@ tcms update:rollback
 tcms update:rollback --force
 ```
 
-Rollback restores the backup directory that was created during the update. Only the most recent backup is available.
+Only the most recent previous version is available. A backup left behind by a failed update takes precedence over the retained copy, since that install is broken right now.
 
 ### Manual Rollback
 

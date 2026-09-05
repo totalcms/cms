@@ -14,6 +14,7 @@ use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
@@ -320,10 +321,8 @@ class RenderTwigAdapter
 		$twigEngine = $factory();
 		$html       = '';
 
-		// Ensure template has .twig extension
-		if (!str_ends_with($template, '.twig')) {
-			$template .= '.twig';
-		}
+		// Every user template lives in the `templates` builder category.
+		$template = TemplatePath::loaderPath($template);
 
 		foreach ($items as $item) {
 			$data = ['object' => $item];

@@ -237,6 +237,50 @@ function chmodReflectsPrivateMode(string $dir): bool
  * in place. Idempotent — safe to call standalone if you need to restore
  * fixtures without first wiping the dir.
  */
+/**
+ * Sign in as a fixture user with authentication switched ON.
+ *
+ * The suite runs with `auth.enable = false` (config/local.test.php) so ~9,900
+ * tests don't each need a session. The side effect is that EVERY access
+ * middleware returns early — BaseAccessMiddleware::process() bails on
+ * `!authEnabled()` before it ever reaches checkPermission(). A feature test
+ * that means to assert authorization therefore asserts nothing unless it turns
+ * auth on first, which is how the self-profile carve-out stayed broken from
+ * 3.1.0 to 3.5.2 with a green suite the whole way.
+ *
+ * Safe to mutate: Config::init() returns a fresh object, the container caches
+ * one per container, and each test builds its own app via
+ * setUpApp(bootstrap()) — so this cannot leak into another test.
+ *
+ * `$authCollection` defaults to '' on purpose. That is what a real sign-in at
+ * the plain `/admin/login` route stores (it has no `{collection}` segment), so
+ * it is the realistic case, not an edge one.
+ */
+function signInAs(Slim\App $app, string $userId, string $authCollection = ''): void
+{
+	/** @var TotalCMS\Support\Config $config */
+	$config         = $app->getContainer()->get(TotalCMS\Support\Config::class);
+	$auth           = $config->auth;
+	$auth['enable'] = true;
+	$config->auth   = $auth;
+
+	/** @var Odan\Session\PhpSession $session */
+	$session = $app->getContainer()->get(Odan\Session\PhpSession::class);
+	if (!$session->isStarted()) {
+		$session->start();
+	}
+	$session->set(TotalCMS\Domain\Session\SessionKeys::AUTH_USER, $userId);
+	$session->set(TotalCMS\Domain\Session\SessionKeys::AUTH_COLLECTION, $authCollection);
+
+	// A session-authenticated API write must also carry the CSRF token — the
+	// browser sends it from TotalForm / the admin meta tag. Mint one into the
+	// same session and register it as a default header so the test exercises
+	// the authorization layer rather than stopping at CSRF.
+	/** @var TotalCMS\Domain\Security\CSRF\CSRFTokenManager $csrf */
+	$csrf = $app->getContainer()->get(TotalCMS\Domain\Security\CSRF\CSRFTokenManager::class);
+	TotalCMS\Slim\Pest\withHeader('X-CSRF-Token', $csrf->getToken());
+}
+
 function restoreFixtures(): void
 {
 	$src = __DIR__ . '/tcms-data-fixtures';
@@ -530,4 +574,35 @@ function createMockHttpClient(
 	$client->method('request')->willReturn($response);
 
 	return $client;
+}
+
+/**
+ * Drain a streamed (CallbackStream) response body and return what it wrote.
+ *
+ * A streamed body echoes its frames rather than returning them, so the content
+ * lands in an output buffer and has to be captured from there. Two buffers are
+ * nested because the two streams T3 serves flush differently:
+ *
+ *   - T3's own GET listening stream calls `@ob_flush()`, which pushes its
+ *     content from the inner buffer out to the enclosing one.
+ *   - The SDK's `subscriptions/listen` stream calls plain `flush()`, which
+ *     targets the SAPI and leaves the content sitting in the inner buffer.
+ *
+ * So neither buffer alone is reliable — the earlier single-capture version read
+ * empty for SDK streams because it discarded the inner buffer the content was
+ * still in. Both are captured and concatenated.
+ *
+ * Lives here rather than in a test file because both streams need it, and a
+ * global declared inside one *Test.php is invisible to another under
+ * `pest --parallel` where the two files can land in different workers.
+ */
+function drainStreamedBody(Psr\Http\Message\ResponseInterface|TotalCMS\Slim\Test\TestResponse $response): string
+{
+	ob_start();
+	ob_start();
+	$response->getBody()->__toString();
+	$inner = (string)ob_get_clean();
+	$outer = (string)ob_get_clean();
+
+	return $inner . $outer;
 }

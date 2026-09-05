@@ -647,9 +647,29 @@ export default class TotalForm {
 			return;
 		}
 		this.validated = true;
+
+		// Collect the payload BEFORE locking the form. A field can throw while
+		// reading its own value — a JSON field holding invalid JSON is the
+		// common case — and generateData() used to be evaluated as an argument
+		// to postAPI(), so that throw escaped save() before .catch() existed.
+		// The form stayed in the "processing" state isProcessing() uses to
+		// block every later submit (see the guard in autosave), which read as
+		// a permanent hang with no request sent and no message shown.
+		//
+		// This runs after `validated = true` on purpose: TotalFormManager
+		// branches on that flag to decide between showing the message and
+		// silently resetting its banner (totalform-manager.js formListeners).
+		let data;
+		try {
+			data = this.generateData();
+		} catch (error) {
+			this.error(`Cannot save: ${error.message}`);
+			return;
+		}
+
 		this.closeDialog();
         this.processing();
-        this.api.postAPI(this.route, this.generateData(), this.method)
+        this.api.postAPI(this.route, data, this.method)
             .then(response => this.afterSave(response))
             .catch(error => this.error(error));
     }

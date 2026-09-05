@@ -180,15 +180,71 @@ final class SvgSanitizationTest extends TestCase
 
 	public function testRejectsCompleteMaliciousPayload(): void
 	{
+		// The test name has always said "rejects"; until enshrined/svg-sanitize
+		// 1.0 it did not. 0.22 cleaned this down to `<svg></svg>` and handed it
+		// back — the entity expansion silently dropped. 1.0 refuses any document
+		// that REFERENCES an entity rather than partially processing it, which
+		// our wrapper turns into a rejection. That is the stricter answer for an
+		// XXE-shaped document, so assert the rejection rather than the cleaning.
 		$maliciousPayload = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE svg [<!ENTITY lol "lol">]><svg><script>&lol;</script></svg>';
 
-		$svgData = new SvgData($maliciousPayload);
-		$result  = (string)$svgData;
+		$this->expectException(\InvalidArgumentException::class);
 
+		new SvgData($maliciousPayload);
+	}
+
+	/**
+	 * @dataProvider entityReferencingPayloadProvider
+	 */
+	public function testRefusesAnySvgThatReferencesAnEntity(string $label, string $payload): void
+	{
+		// The three shapes 0.22 used to accept and clean: an XXE file read, a
+		// billion-laughs expansion, and a benign-looking entity that it left in
+		// the output verbatim as `fill="&c;"`. All are now refused outright.
+		$this->expectException(\InvalidArgumentException::class);
+
+		new SvgData($payload);
+	}
+
+	/**
+	 * @return array<string,array{string,string}>
+	 */
+	public static function entityReferencingPayloadProvider(): array
+	{
+		return [
+			'xxe file read'  => ['xxe', '<!DOCTYPE svg [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><svg><text>&xxe;</text></svg>'],
+			'billion laughs' => ['bomb', '<!DOCTYPE svg [<!ENTITY a "aa"><!ENTITY b "&a;&a;">]><svg><text>&b;</text></svg>'],
+			'benign entity'  => ['benign', '<!DOCTYPE svg [<!ENTITY c "red">]><svg><circle cx="1" cy="1" r="1" fill="&c;"/></svg>'],
+		];
+	}
+
+	/**
+	 * @dataProvider ordinaryExportProvider
+	 */
+	public function testOrdinaryDesignToolExportsStillPassThrough(string $label, string $payload): void
+	{
+		// The compatibility half of the above. A DOCTYPE on its own is what every
+		// Illustrator export carries, and declaring an unused entity is harmless
+		// — neither is refused. If this ever fails, the sanitizer has started
+		// rejecting real customer artwork, which is a far worse regression than
+		// anything the strictness above buys.
+		$result = (string)(new SvgData($payload));
+
+		$this->assertStringContainsString('<svg', $result);
 		$this->assertStringNotContainsString('<!DOCTYPE', $result);
 		$this->assertStringNotContainsString('<!ENTITY', $result);
-		$this->assertStringNotContainsString('<script', $result);
-		$this->assertStringNotContainsString('&lol;', $result);
+	}
+
+	/**
+	 * @return array<string,array{string,string}>
+	 */
+	public static function ordinaryExportProvider(): array
+	{
+		return [
+			'illustrator doctype'                  => ['ai', '<?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40"/></svg>'],
+			'inkscape prolog'                      => ['ink', '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="red"/></svg>'],
+			'entity declared but never referenced' => ['unused', '<!DOCTYPE svg [<!ENTITY lol "lol">]><svg xmlns="http://www.w3.org/2000/svg"><circle cx="1" cy="1" r="1"/></svg>'],
+		];
 	}
 
 	public function testHandlesXmlEntities(): void

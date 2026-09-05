@@ -217,8 +217,9 @@ it('returns 400 when HTML format missing template', function (): void {
 });
 
 it('renders HTML with template and pagination headers', function (): void {
-	// Create a test template in the builder directory
-	$templateDir = cmsDataDir() . 'builder/test/';
+	// User templates live in the `templates` builder category — the same
+	// place cms.render.* and the Designer resolve them (TemplatePath).
+	$templateDir = cmsDataDir() . 'builder/templates/test/';
 	if (!is_dir($templateDir)) {
 		mkdir($templateDir, 0755, true);
 	}

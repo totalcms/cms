@@ -27,7 +27,12 @@ class SchemaLintCommand extends BaseCommand
 		$id = $input->getArgument('id');
 
 		if ($id !== null) {
-			if (!$this->totalcms->schemaFetcher()->schemaExists((string)$id)) {
+			// A schema whose file is present but unparseable is not missing, and
+			// saying so would be the least useful answer this command could give
+			// — reporting bad schemas is its whole purpose. Let it through so the
+			// linter names the file and the reason.
+			$fetcher = $this->totalcms->schemaFetcher();
+			if (!$fetcher->schemaExists((string)$id) && !$fetcher->schemaIsUnreadable((string)$id)) {
 				return $this->outputError($input, $output, "Schema not found: {$id}");
 			}
 			$schemaIds = [(string)$id];

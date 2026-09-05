@@ -721,6 +721,34 @@ final class PageRouterMiddlewareTest extends TestCase
 	}
 
 	/** @return array<string,array{string,string}> */
+	/**
+	 * The Page Inspector overlay and live-reload snippet are injected only into
+	 * text/html responses. Before `/changelog/rss` resolved to application/rss+xml
+	 * it fell through to the HTML default, so an admin fetching their own feed got
+	 * the overlay markup spliced into the XML.
+	 */
+	public function testSkipsInspectorForExtensionlessRssRoute(): void
+	{
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/changelog/rss');
+		$handler = $this->createHandler(404);
+
+		$match = new RouteMatch(
+			template: 'pages/feed.twig',
+			pageData: ['id' => 'changelog-rss', 'title' => 'Feed'],
+			params: [],
+		);
+
+		$this->pageRouter->method('match')->willReturn($match);
+		$this->twigEngine->method('render')->willReturn('<rss></rss>');
+
+		$this->pageInspector->expects($this->never())->method('maybeInject');
+		$this->pageReloadInjector->expects($this->never())->method('maybeInject');
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertStringContainsString('application/rss+xml', $response->getHeaderLine('Content-Type'));
+	}
+
 	public static function contentTypeByExtensionProvider(): array
 	{
 		return [
@@ -733,6 +761,21 @@ final class PageRouterMiddlewareTest extends TestCase
 			'Markdown'                           => ['/notes.md', 'text/markdown'],
 			'unknown extension defaults to HTML' => ['/about', 'text/html'],
 			'no extension defaults to HTML'      => ['/blog/post', 'text/html'],
+			// A feed route is conventionally written without an extension, and
+			// an RSS document served as text/html gets the Page Inspector
+			// injected into it (see testSkipsInspectorForExtensionlessRssRoute).
+			'bare rss segment'                   => ['/changelog/rss', 'application/rss+xml'],
+			'bare rss segment at the root'       => ['/rss', 'application/rss+xml'],
+			'rss extension still works'          => ['/changelog/feed.rss', 'application/rss+xml'],
+			// Only an exact `rss` segment counts — a page whose name merely
+			// starts with rss is still a page.
+			'rss- prefix stays HTML'             => ['/rss-help', 'text/html'],
+			'rss as a word fragment stays HTML'  => ['/crossroads', 'text/html'],
+			// The rule is deliberately narrow: other map keys are not matched
+			// as bare segments, because /docs/css and /support/txt are far more
+			// likely to be pages than files.
+			'bare css segment stays HTML'        => ['/docs/css', 'text/html'],
+			'bare json segment stays HTML'       => ['/data/json', 'text/html'],
 		];
 	}
 }

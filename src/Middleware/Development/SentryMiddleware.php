@@ -47,7 +47,6 @@ class SentryMiddleware implements MiddlewareInterface
 			\Opis\JsonSchema\Exceptions\InvalidKeywordException::class, // Invalid schema definition - user error
 			\Opis\JsonSchema\Exceptions\UnresolvedReferenceException::class, // User schema $ref points at a missing/external schema
 			\ParseError::class, // Corrupted PHP files - user installation issue
-			\ArgumentCountError::class, // Constructor mismatch - stale deployment or corrupted installation
 			// Every Symfony Console exception is a CLI-usage mistake at the
 			// terminal (unknown command/namespace, unknown option, wrong arg
 			// count) — never a T3 bug. A genuine failure inside a command body
@@ -194,8 +193,9 @@ class SentryMiddleware implements MiddlewareInterface
 			// concrete provider file is missing (e.g. broken Faker install).
 			'Cannot instantiate abstract class',
 			// User Twig template calling an adapter/function without its
-			// required arguments (surfaces as a shutdown fatal, so the
-			// ArgumentCountError ignore above doesn't catch it).
+			// required arguments. This surfaces at shutdown as an
+			// ErrorException — a genuinely thrown ArgumentCountError is our own
+			// bug and is reported ahead of this list.
 			'Too few arguments to function',
 			// User Twig template arithmetic on incompatible values — e.g.
 			// `{{ user-response }}` parses as subtraction, not a variable name.
@@ -359,6 +359,22 @@ class SentryMiddleware implements MiddlewareInterface
 		// Check if this exception class should be filtered as a user error
 		$userErrorExceptions = $config['user_error_exceptions'] ?? [];
 		$userErrorMessages   = $config['user_error_messages'] ?? [];
+
+		// A THROWN ArgumentCountError is always our bug — we called something
+		// with the wrong arguments. It reaches here only because it extends
+		// TypeError extends Error, and `\Error` is in the list below, so the
+		// "Too few arguments to function" pattern would swallow it. That
+		// pattern exists for the OTHER shape: a user's Twig template calling an
+		// adapter without its arguments, which surfaces at shutdown as an
+		// ErrorException, not as this class. Report the real one.
+		//
+		// This was not theoretical. RemoverFactory built a class name out of a
+		// property type taken from customer-authored schema JSON; a schema
+		// saying `"field": "upload"` reached UploadRemover's two-argument
+		// constructor with four, and the resulting 500 was never reported.
+		if ($exception instanceof \ArgumentCountError) {
+			return $event;
+		}
 
 		foreach ($userErrorExceptions as $exceptionClass) {
 			if ($exception instanceof $exceptionClass) {

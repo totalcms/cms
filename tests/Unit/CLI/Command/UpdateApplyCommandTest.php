@@ -107,6 +107,45 @@ describe('update:apply', function (): void {
 		expect($tester->getStatusCode())->toBe(0);
 	});
 
+	// The previous version is kept unless --no-backup says otherwise, matching
+	// the Update Manager's checkbox default.
+	it('passes the backup preference through to the applier', function (array $options, bool $expected): void {
+		$totalcms = $this->createMock(TotalCMS::class);
+
+		$checker = $this->createMock(UpdateChecker::class);
+		$checker->method('checkForUpdate')->willReturn(new UpdateInfo(
+			available: true,
+			version: '3.3.0',
+			releaseDate: '2026-04-10',
+			severity: 'minor',
+			changelog: 'New features',
+			buildHash: 'abc',
+			downloadUrl: '/download/3.3.0'
+		));
+		$totalcms->method('updateChecker')->willReturn($checker);
+
+		$downloader = $this->createMock(UpdateDownloader::class);
+		$downloader->method('download')->willReturn('/tmp/update-3.3.0.zip');
+		$totalcms->method('updateDownloader')->willReturn($downloader);
+
+		$applier = $this->createMock(UpdateApplier::class);
+		$applier->expects($this->once())->method('apply')
+			->with('/tmp/update-3.3.0.zip', '3.3.0', $expected);
+		$totalcms->method('updateApplier')->willReturn($applier);
+
+		$app     = new Application();
+		$command = new UpdateApplyCommand($totalcms);
+		$app->addCommand($command);
+		$tester = new CommandTester($command);
+
+		$tester->execute($options + ['--force' => true]);
+
+		expect($tester->getStatusCode())->toBe(0);
+	})->with([
+		'default keeps it'      => [[], true],
+		'--no-backup skips it'  => [['--no-backup' => true], false],
+	]);
+
 	it('outputs JSON on success', function (): void {
 		$totalcms = $this->createMock(TotalCMS::class);
 

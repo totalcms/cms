@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Mcp\Schema\JsonRpc\MessageInterface;
+use Mcp\Schema\Enum\ProtocolVersion;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -151,20 +151,22 @@ describe('McpEndpointAction', function (): void {
 			expect($body)->toHaveKey('result');
 			expect($body['result'])->toHaveKeys(['protocolVersion', 'capabilities', 'serverInfo']);
 
-			// The SDK's InitializeHandler does NOT echo the version the client
-			// requested (mcpInitializePayload() above pins '2025-06-18' as a fixed
-			// client stance) — it always answers with the version it itself
-			// advertises (Mcp\Schema\JsonRpc\InitializeHandler returns
-			// $configuration->protocolVersion, which we never set, so it falls
-			// back to MessageInterface::PROTOCOL_VERSION). That is spec-legal: a
-			// server may respond with a different protocol version than the one
-			// requested if it doesn't support it, and it's the CLIENT's job to
-			// decide whether to proceed or disconnect. So assert against the
-			// SDK's own constant instead of a hardcoded literal, which is exactly
-			// what drifted here (the SDK bumped its default from 2025-06-18 to
-			// 2025-11-25) — pinning to the source of truth means this test can
-			// never go stale on the next SDK bump.
-			expect($body['result']['protocolVersion'])->toBe(MessageInterface::PROTOCOL_VERSION->value);
+			// mcp/sdk 0.8 negotiates the revision during initialize rather than
+			// always answering with its own default. mcpInitializePayload() pins
+			// '2025-06-18' as a fixed client stance; the SDK still supports that
+			// revision, so the server agrees on it and echoes it back. It only
+			// counter-offers a revision of its own when it cannot speak the one
+			// asked for — and then it is the CLIENT's job to proceed or disconnect.
+			//
+			// Assert the negotiation rule (server agrees with a supported request)
+			// rather than MessageInterface::PROTOCOL_VERSION. The SDK's default
+			// moves on most bumps — it went 2025-06-18 → 2025-11-25 → and 0.8 added
+			// 2026-07-28 — but the negotiation rule cannot change without a spec
+			// change, so this assertion does not go stale.
+			$requested = mcpInitializePayload()['params']['protocolVersion'];
+			expect(ProtocolVersion::tryFrom($requested))
+				->not->toBeNull('The pinned client revision is no longer known to the SDK.');
+			expect($body['result']['protocolVersion'])->toBe($requested);
 		}
 	});
 
@@ -215,12 +217,7 @@ describe('McpEndpointAction', function (): void {
  */
 function triggerListeningStreamBody(TotalCMS\Slim\Test\TestResponse $response): string
 {
-	ob_start();
-	ob_start();
-	$response->getBody()->__toString();
-	ob_end_clean();
-
-	return (string)ob_get_clean();
+	return drainStreamedBody($response);
 }
 
 describe('McpEndpointAction — listening stream (GET)', function (): void {

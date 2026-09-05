@@ -16,6 +16,7 @@ use TotalCMS\Domain\Admin\AdminTableRenderer;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Query\Data\QueryResult;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\JsonRenderer;
@@ -106,7 +107,7 @@ readonly class QueryActionRenderer
 
 		$html = '';
 		foreach ($result->items as $item) {
-			$html .= $this->twigEngine->render($template . '.twig', ['object' => $item] + $context);
+			$html .= $this->twigEngine->render(TemplatePath::loaderPath($template), ['object' => $item] + $context);
 		}
 
 		$mode = $params['mode'] ?? '';

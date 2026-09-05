@@ -74,6 +74,7 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'admin-profile',
 		'admin-sync',
 		'admin-update-apply',
+		'admin-update-backup-delete',
 		'admin-utils-access-groups',
 		'admin-utils-api-keys',
 		'all-collection-image-cache-delete',

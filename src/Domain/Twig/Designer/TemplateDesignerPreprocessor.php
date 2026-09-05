@@ -31,7 +31,10 @@ class TemplateDesignerPreprocessor
 		return (string)preg_replace_callback(
 			self::PATTERN,
 			static function (array $matches) use ($registry, $templateName, &$index): string {
-				$templatePath = $matches[1];
+				// Normalize the id at the source: a leading slash would become an
+				// empty URL segment on the remote PUT and a folder literally named
+				// "/templates" on the local save.
+				$templatePath = ltrim($matches[1], '/');
 				$domain       = $matches[2];
 				$token        = $matches[3];
 				$content      = $matches[4];

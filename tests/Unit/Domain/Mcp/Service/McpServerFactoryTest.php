@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Mcp\Service;
 use Mcp\Server;
 use Mcp\Server\Resource\SessionSubscriptionManager;
 use Mcp\Server\Session\InMemorySessionStore;
+use Mcp\Server\Subscription\InMemoryNotificationBus;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
@@ -102,6 +103,10 @@ final class McpServerFactoryTest extends TestCase
 			new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
 			new OAuthScopeRegistry(),
 			new OAuthActivityLogger(new NullLogger()),
+			// Modern-era notification bus. Nothing in this file opens a
+			// subscriptions/listen stream, so an in-memory bus is enough — it
+			// only has to exist for the builder to accept it.
+			new InMemoryNotificationBus(),
 		);
 	}
 

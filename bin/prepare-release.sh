@@ -463,10 +463,15 @@ determine_severity() {
 
 SEVERITY=$(determine_severity "$CURRENT_VERSION" "$NEW_VERSION")
 
-# Extract changelog (latest section from CHANGELOG.md)
+# Extract this version's changelog section. Shared with bin/gh-releases.sh so
+# the license API and the GitHub release page cannot drift apart. Capped for
+# the API field; the GitHub release gets the section in full.
 CHANGELOG=""
 if [ -f "CHANGELOG.md" ]; then
-    CHANGELOG=$(awk '/^## /{if(found)exit; found=1; next} found{print}' CHANGELOG.md | head -50)
+    CHANGELOG=$(bin/changelog-notes.sh "$NEW_VERSION" 2>/dev/null | head -50 || true)
+    if [ -z "$CHANGELOG" ]; then
+        print_warning "No CHANGELOG.md section found for $NEW_VERSION"
+    fi
 fi
 
 # Register version with license API
@@ -574,13 +579,64 @@ echo "  ✓ Sentry release notified"
 echo "  ✓ Distribution zip created: $DIST_ZIP"
 echo "  ✓ Version registered with license API"
 echo
-echo "Next steps:"
-echo "  1. Review the changes on release/$NEW_VERSION"
-echo "  2. Test the production build locally"
-echo "  3. Finish the release via git flow (creates the tag, merges to main + develop):"
-echo "       git flow release finish $NEW_VERSION"
-echo "  4. Push branches and tags:"
-echo "       git push github --all && git push github --tags"
-echo "  5. Verify https://packagist.org/packages/totalcms/cms shows $NEW_VERSION"
-echo "  6. Create a GitHub release for $NEW_VERSION with changelog notes"
+
+# ---------------------------------------------------------------
+# Optionally finish the release.
+#
+# Everything above prepares the release branch. Finishing is what makes it
+# public: git flow merges into main and develop, creates the tag, and --push
+# sends both plus the tag to github. Only then does the tag exist for
+# gh-releases.sh to attach notes to — which is why publishing cannot happen
+# earlier in this script.
+#
+# Defaults to no, and is skipped entirely when stdin is not a terminal so a
+# CI run never merges to main on its own.
+# ---------------------------------------------------------------
+FINISHED=0
+if [ -t 0 ]; then
+    echo "Finishing will:"
+    echo "  • merge release/$NEW_VERSION into main and develop"
+    echo "  • create tag $NEW_VERSION and push everything to github"
+    echo "  • publish the GitHub release from CHANGELOG.md"
+    echo
+    read -p "Finish the release now? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if ! git flow version >/dev/null 2>&1; then
+            print_error "git flow not found — finish the release manually"
+        elif git flow release finish "$NEW_VERSION" -m "$NEW_VERSION" --push; then
+            print_success "Release finished, tagged and pushed"
+
+            print_info "Publishing GitHub release..."
+            if bin/gh-releases.sh "$NEW_VERSION"; then
+                print_success "GitHub release published"
+                FINISHED=1
+            else
+                print_warning "GitHub release failed — retry with: bin/gh-releases.sh $NEW_VERSION"
+            fi
+        else
+            # A conflict leaves the finish half-done; git flow owns the recovery.
+            print_error "git flow release finish failed"
+            print_info "  Resolve the conflicts, then: git flow release finish --continue"
+            print_info "  Or back it out entirely with: git flow release finish --abort"
+            exit 1
+        fi
+    fi
+fi
+
+echo
+if [ "$FINISHED" -eq 1 ]; then
+    echo "Released $NEW_VERSION. Remaining:"
+    echo "  1. Verify https://packagist.org/packages/totalcms/cms shows $NEW_VERSION"
+    echo "  2. Check the release page: https://github.com/totalcms/cms/releases/tag/$NEW_VERSION"
+else
+    echo "Next steps:"
+    echo "  1. Review the changes on release/$NEW_VERSION"
+    echo "  2. Test the production build locally"
+    echo "  3. Finish the release via git flow (creates the tag, merges to main + develop):"
+    echo "       git flow release finish $NEW_VERSION --push"
+    echo "  4. Publish the GitHub release (needs the tag pushed):"
+    echo "       bin/gh-releases.sh $NEW_VERSION"
+    echo "  5. Verify https://packagist.org/packages/totalcms/cms shows $NEW_VERSION"
+fi
 echo

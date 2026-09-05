@@ -48,8 +48,13 @@ readonly class UpdateAction
 			// Download the update
 			$zipPath = $this->updateDownloader->download($updateInfo->version, $updateInfo->downloadUrl);
 
-			// Apply the update
-			$this->updateApplier->apply($zipPath, $updateInfo->version);
+			// Apply the update. The Update Manager's checkbox decides whether the
+			// previous version is kept; default on, so an operator who never
+			// touches it still gets the safety net.
+			$body       = (array)$request->getParsedBody();
+			$keepBackup = !isset($body['keepBackup']) || filter_var($body['keepBackup'], FILTER_VALIDATE_BOOL);
+
+			$this->updateApplier->apply($zipPath, $updateInfo->version, $keepBackup);
 
 			// Clear the update check cache
 			$this->updateChecker->clearCache();

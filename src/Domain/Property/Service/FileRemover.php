@@ -48,8 +48,23 @@ class FileRemover
 		$this->storage->deleteFile($collection, $objectID, $property, $name);
 
 		$files = $this->fetchProperty($collection, $objectID, $property)->transform();
+
+		// This is the fallback remover for every property type without one of
+		// its own, which is not just the gallery shape it was written for.
+		// GalleryData::transform() returns a LIST of file maps; ImageData and
+		// FileData return a flat map of a single file's own fields, so the
+		// filter below was handed `'upload-test.png'['name']` and threw
+		// "Cannot access offset of type string on string" — a 500 on every
+		// delete from a single-image or single-file property.
+		//
+		// There is no list to filter in the single-value case: the file that
+		// was just deleted IS the property, so removing it empties it.
+		if (!array_is_list($files)) {
+			return $this->updateObject($collection, $objectID, $property, []);
+		}
+
 		foreach ($files as $key => $file) {
-			if ($file['name'] === $name) {
+			if (is_array($file) && ($file['name'] ?? null) === $name) {
 				unset($files[$key]);
 				break;
 			}

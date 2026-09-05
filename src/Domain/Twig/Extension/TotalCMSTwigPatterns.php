@@ -30,6 +30,11 @@ class TotalCMSTwigPatterns
 	public string $currency                 = '\d+([\.\,]\d{1,2})?';
 	public string $latitudeLongitude        = '(\-?\d+(\.\d+)?),\s*(\-?\d+(\.\d+)?)';
 	public string $html                     = '<([a-z]+)([^<]+)*(?:>(.*)<\/\1>|\s+/>)';
+	public string $version                  = '\d+\.\d+\.\d+';
+	// Full semver with an optional `v` prefix: 3.5.0, v3.5.0, 3.5.1-rc.1,
+	// 3.5.0+build.7. A superset of $version — anything the plain three-part
+	// pattern accepts, this one accepts too.
+	public string $versionExtended          = 'v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?';
 
 	/** @var array<string> */
 	public array $postCode = [

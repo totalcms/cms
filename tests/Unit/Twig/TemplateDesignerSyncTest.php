@@ -16,10 +16,11 @@ function createDesignerSync(
 	bool $featureEnabled = true,
 	?TemplateSaver $templateSaver = null,
 	?TemplateDesignerRegistry $registry = null,
+	string $api = '',
 ): TemplateDesignerSync {
 	$config         = test()->createMock(Config::class);
 	$config->domain = $currentDomain;
-	$config->api    = '/api';
+	$config->api    = $api;
 
 	$editionFeatures = test()->createMock(EditionFeatureService::class);
 	$editionFeatures->method('can')->with(EditionFeature::TEMPLATES)->willReturn($featureEnabled);
@@ -98,6 +99,66 @@ describe('TemplateDesignerSync', function (): void {
 		expect($result)->toContain('Template Designer');
 		expect($result)->toContain('pages/home.twig');
 		expect($result)->toContain('tcms-designer-badge');
+	});
+
+	test('PUTs to the /api-prefixed designer route on a root install', function (): void {
+		$url        = '';
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->expects(test()->once())
+			->method('request')
+			->with('PUT', test()->callback(function (string $requested) use (&$url): bool {
+				$url = $requested;
+
+				return true;
+			}), test()->anything())
+			->willReturn(new HttpResponse(200, ''));
+
+		$registry = new TemplateDesignerRegistry();
+		registerBlock($registry);
+
+		createDesignerSync($httpClient, registry: $registry)->sync('test-key');
+
+		expect($url)->toBe('https://production.example.com/api/designer/templates/pages/home.twig');
+	});
+
+	test('PUTs to the /api-prefixed designer route on a subpath install', function (): void {
+		$url        = '';
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->expects(test()->once())
+			->method('request')
+			->with('PUT', test()->callback(function (string $requested) use (&$url): bool {
+				$url = $requested;
+
+				return true;
+			}), test()->anything())
+			->willReturn(new HttpResponse(200, ''));
+
+		$registry = new TemplateDesignerRegistry();
+		registerBlock($registry);
+
+		createDesignerSync($httpClient, registry: $registry, api: '/site-assets/stacks/tcms3/tcms')->sync('test-key');
+
+		expect($url)->toBe('https://production.example.com/site-assets/stacks/tcms3/tcms/api/designer/templates/pages/home.twig');
+	});
+
+	test('normalizes a template id written with a leading slash', function (): void {
+		$url        = '';
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->expects(test()->once())
+			->method('request')
+			->with('PUT', test()->callback(function (string $requested) use (&$url): bool {
+				$url = $requested;
+
+				return true;
+			}), test()->anything())
+			->willReturn(new HttpResponse(200, ''));
+
+		$registry = new TemplateDesignerRegistry();
+		registerBlock($registry, template: '/templates/loadmore-copies');
+
+		createDesignerSync($httpClient, registry: $registry)->sync('test-key');
+
+		expect($url)->toBe('https://production.example.com/api/designer/templates/templates/loadmore-copies');
 	});
 
 	test('sends correct headers with designer token', function (): void {
@@ -210,5 +271,60 @@ describe('TemplateDesignerSync', function (): void {
 
 		$sync = createDesignerSync($httpClient, registry: $registry);
 		$sync->sync('test-key');
+	});
+});
+
+/**
+ * The local save and the remote lookup must resolve an id to the SAME file.
+ *
+ * Regression: `for 'myblog'` used to save `builder/myblog.twig` locally and
+ * report a green "Local: ✓", while the remote looked for the real template at
+ * `builder/templates/myblog.twig` and answered "Template not found". Both ends
+ * now go through TemplatePath::parseDesigner().
+ */
+describe('TemplateDesignerSync local path resolution', function (): void {
+	test('saves a bare id into the templates builder category', function (): void {
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->method('request')->willReturn(new HttpResponse(200, ''));
+
+		$saver = test()->createMock(TemplateSaver::class);
+		$saver->expects(test()->once())
+			->method('saveTemplate')
+			->with('myblog', '<p>Hello</p>', 'templates');
+
+		$registry = new TemplateDesignerRegistry();
+		registerBlock($registry, template: 'myblog');
+
+		createDesignerSync($httpClient, templateSaver: $saver, registry: $registry)->sync('test-key');
+	});
+
+	test('does not double the category when the id already carries it', function (): void {
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->method('request')->willReturn(new HttpResponse(200, ''));
+
+		$saver = test()->createMock(TemplateSaver::class);
+		$saver->expects(test()->once())
+			->method('saveTemplate')
+			->with('myblog', '<p>Hello</p>', 'templates');
+
+		$registry = new TemplateDesignerRegistry();
+		registerBlock($registry, template: 'templates/myblog');
+
+		createDesignerSync($httpClient, templateSaver: $saver, registry: $registry)->sync('test-key');
+	});
+
+	test('nests a sub folder under the templates category', function (): void {
+		$httpClient = test()->createMock(HttpClientInterface::class);
+		$httpClient->method('request')->willReturn(new HttpResponse(200, ''));
+
+		$saver = test()->createMock(TemplateSaver::class);
+		$saver->expects(test()->once())
+			->method('saveTemplate')
+			->with('card', '<p>Hello</p>', 'templates/grids');
+
+		$registry = new TemplateDesignerRegistry();
+		registerBlock($registry, template: 'grids/card');
+
+		createDesignerSync($httpClient, templateSaver: $saver, registry: $registry)->sync('test-key');
 	});
 });

@@ -40,6 +40,23 @@ TWIG;
 		$this->assertStringContainsString('<article>{{ object.title }}</article>', $block['content']);
 	}
 
+	public function testTemplateIdIsNormalizedWhenWrittenWithLeadingSlash(): void
+	{
+		$source = <<<'TWIG'
+{% templatedesigner for '/templates/loadmore-copies' on 'https://example.com' token 'abc123' %}
+<article>{{ object.title }}</article>
+{% endtemplatedesigner %}
+TWIG;
+
+		$this->preprocessor->preprocess($source, 'test.twig');
+
+		$block = $this->registry->get('_designer_test_twig_0');
+		$this->assertNotNull($block);
+		// A leading slash would otherwise become an empty URL segment on the
+		// remote PUT and a folder literally named "/templates" on the local save.
+		$this->assertSame('templates/loadmore-copies', $block['template']);
+	}
+
 	public function testBlockWithoutToken(): void
 	{
 		$source = <<<'TWIG'

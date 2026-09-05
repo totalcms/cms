@@ -80,14 +80,29 @@ TCMS_LAYOUT=root TCMS_STARTER=blog TCMS_FRONTEND=1 \
 
 ## Alternative: zip download
 
-If Composer isn't available — shared hosting, restricted environments, or you just prefer file uploads — install from a zip:
+If Composer isn't available — shared hosting, restricted environments, or you just prefer file uploads — install from a zip.
+
+Total CMS goes in a folder of its own inside your existing site. Your pages and assets stay outside it, and your document root does not move.
 
 1. Download the Total CMS zip from [totalcms.co](https://totalcms.co)
-2. Extract it to your server
-3. Point your web server's document root at the extracted `public/` directory
-4. Visit your site — the setup wizard starts automatically
+2. Extract it into a folder inside your site. `tcms/` is the convention:
 
-The zip workflow is otherwise identical to Composer: same wizard, same admin, same update flow.
+   ```
+   yoursite.com/            # your document root — unchanged
+   ├── index.php            # your pages
+   ├── styles/  images/     # your stylesheets, scripts, fonts, media
+   └── tcms/                # Total CMS lives here, and only here
+   ```
+
+3. Leave your document root pointing at your site — **not** at anything inside `tcms/`
+4. Visit `/tcms/` — the setup wizard starts automatically
+5. At the data-path step, take the default. `tcms-data/` belongs beside the `tcms/` folder, not inside it
+
+> **Nothing of yours goes inside `tcms/`.**
+>
+> An update replaces that folder's contents wholesale — it installs the new release's `config/`, `public/`, `resources/`, `src/` and `vendor/` over the old ones rather than merging file by file. A folder you add inside any of those is removed along with its parent. Your own stylesheets, scripts, fonts, images and video belong in your site, outside `tcms/`. See [Updates](https://docs.totalcms.co/operations/updates) for exactly what an update replaces and what it leaves alone.
+
+Apart from where the files sit, the zip workflow is identical to Composer: same wizard, same admin, same update flow.
 
 ## Setup wizard
 
@@ -176,7 +191,11 @@ After the wizard completes, you land in the admin dashboard. From here:
 
 ## Directory structure
 
-After installation:
+The application and your content are deliberately separate, and the shape differs slightly between the two install methods.
+
+### Composer install
+
+Total CMS owns the domain, and the document root points inside the application at `public/`.
 
 ```
 /var/www/example.com/
@@ -197,9 +216,24 @@ After installation:
     └── [collections]/        # Collection data (blog, gallery, etc.)
 ```
 
-The application (`my-site/`) and your content (`tcms-data/`) are deliberately separate.
+Composer installs update with `composer update totalcms/cms`, which resolves files individually — so the built-in updater's whole-directory replacement does not apply here.
 
-> **Updates only touch the application.** Your content is never affected.
+### Zip install
+
+Total CMS sits in a folder inside your site. Your document root stays on your own site, and `tcms-data/` sits beside the application rather than inside it.
+
+```
+/var/www/example.com/         # your document root
+├── index.php                 # your pages
+├── styles/  images/          # your stylesheets, scripts, fonts, media
+├── tcms/                     # Application — replaced wholesale on update
+│   ├── config/  public/  resources/  src/  vendor/
+│   ├── cache/  logs/  tmp/   # runtime, left alone by updates
+│   └── version.json
+└── tcms-data/                # Your content — never touched by updates
+```
+
+> **Everything of yours lives outside `tcms/`.** An update replaces that folder's contents, so it is not a place to keep anything you authored. See [Updates](https://docs.totalcms.co/operations/updates).
 
 ## Web server configuration
 

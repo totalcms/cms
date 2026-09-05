@@ -2,6 +2,7 @@
 	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
 	"title"       : "MCP Server Settings",
 	"description" : "Configure the Model Context Protocol server. Exposes <code>/mcp</code> so AI agents can discover and query your site. Available on Pro and higher editions. Per-collection access is configured on each collection's schema (Phase 1).",
+	"formgrid"    : "enabled .\ntoolPrefix .\n---Public Access---\npublicAccess .\npublicIpPerMinute .\nallowedOrigins allowedOrigins\n---Resource Subscriptions---\nsubscriptionsEnabled .\nsubscriptionStreamSeconds .\n---SSE Probe Responses---\nlisteningStream .\nlisteningStreamSeconds listeningStreamRetryMs\n---Worker Budget---\nlisteningStreamMaxConcurrent .",
 	"type"        : "object",
 	"properties"  : {
 		"enabled": {
@@ -69,8 +70,25 @@
 			"type"    : "boolean",
 			"field"   : "toggle",
 			"label"   : "Enable Resource Subscriptions",
-			"help"    : "When on, AI agents can call <code>resources/subscribe</code> on URIs like <code>tcms://blog/</code> and T3 will push <code>notifications/resources/updated</code> when matching content changes. When off, the SDK still accepts subscribe calls but T3 won't push notifications — the kill switch for production troubleshooting.",
+			"help"    : "When on, AI agents can call <code>resources/subscribe</code> on URIs like <code>tcms://blog/</code> and T3 will push <code>notifications/resources/updated</code> when matching content changes. Clients on the 2026-07-28 specification use <code>subscriptions/listen</code> instead, which T3 filters by the caller's access — an agent is only ever told about resources it could read directly. When off, the SDK still accepts subscribe calls but T3 won't push notifications, and <code>subscriptions/listen</code> is refused outright rather than holding a worker to deliver nothing — the kill switch for production troubleshooting.",
 			"default" : true
+		},
+		"subscriptionStreamSeconds": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Subscription Stream Duration (seconds)",
+			"help"        : "How long one <code>subscriptions/listen</code> stream stays open before closing on its own. That is the 2026-07-28 specification's replacement for <code>resources/subscribe</code>: a client opens one stream, names the resources it cares about, and receives updates until the window closes. <strong>Not the same as the Listening Stream Duration below</strong> — that one answers scanner probes with keepalives and nothing else, while this one carries real notifications, so there is an actual reason to hold it open. Each open stream holds one PHP worker for the whole window, and it shares the <em>Max Concurrent Listening Streams</em> ceiling below. Unlike the setting below, <strong>0 is not a cheap option here</strong> — it means <em>never close</em> to the underlying SDK, so anything at or below zero is ignored and 1 second is used instead. To stop serving these streams at all, turn off Enable Resource Subscriptions.",
+			"placeholder" : "1",
+			"default"     : 1,
+			"min"         : 1,
+			"max"         : 30,
+			"settings" : {
+				"visibility": {
+					"watch": "subscriptionsEnabled",
+					"value": true,
+					"operator": "=="
+				}
+			}
 		},
 		"listeningStream": {
 			"type"    : "boolean",
@@ -100,18 +118,11 @@
 			"type"        : "number",
 			"field"       : "number",
 			"label"       : "Max Concurrent Listening Streams",
-			"help"        : "Hard ceiling on listening streams opened site-wide per window, across all callers. This is the only limit that applies to OAuth-authenticated clients — the public rate limit above exempts anyone sending an <code>Authorization: Bearer</code> header — and the only one that bounds the total rather than a single IP. Keep it a small fraction of your <code>pm.max_children</code>: these streams carry nothing but keepalives, so every worker they hold is taken from real request handling. Callers above the cap get the normal 405. Set to <code>0</code> to disable the cap.",
+			"help"        : "Hard ceiling on streams opened site-wide per window, across all callers, covering both the listening stream above and <code>subscriptions/listen</code>. Both hold a PHP worker from the same pool, so they share one budget — separate caps would let the pair reach twice this number. This is the only limit that applies to OAuth-authenticated clients — the public rate limit above exempts anyone sending an <code>Authorization: Bearer</code> header — and the only one that bounds the total rather than a single IP. Keep it a small fraction of your <code>pm.max_children</code>: every worker a stream holds is taken from real request handling. Over the cap, probes get the normal 405 and subscription streams get a 503 telling them to retry. Set to <code>0</code> to disable the cap.",
 			"placeholder" : "2",
 			"default"     : 2,
 			"min"         : 0,
-			"max"         : 50,
-			"settings" : {
-				"visibility": {
-					"watch": "listeningStream",
-					"value": true,
-					"operator": "=="
-				}
-			}
+			"max"         : 50
 		},
 		"listeningStreamRetryMs": {
 			"type"        : "number",

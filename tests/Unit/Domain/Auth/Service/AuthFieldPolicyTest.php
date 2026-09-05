@@ -37,7 +37,7 @@ final class AuthFieldPolicyTest extends TestCase
 	 * @param list<string> $props
 	 * @param list<string> $inheritFrom
 	 */
-	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = [], bool $authEnabled = true): AuthFieldPolicy
+	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'loginCount', 'lastlogin', 'created', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = [], bool $authEnabled = true): AuthFieldPolicy
 	{
 		$schema              = new SchemaData();
 		$schema->id          = $schemaId;
@@ -283,5 +283,70 @@ final class AuthFieldPolicyTest extends TestCase
 		expect($this->makePolicy(isSuperAdmin: false)->canWriteProperty('u1', 'auth', 'groups'))->toBeFalse();
 		expect($this->makePolicy(isSuperAdmin: false)->canWriteProperty('u1', 'auth', 'name'))->toBeTrue();
 		expect($this->makePolicy(isSuperAdmin: true)->canWriteProperty('admin', 'auth', 'groups'))->toBeTrue();
+	}
+
+	/**
+	 * `maxLoginCount` was protected but `loginCount` — the counter it is
+	 * measured against — was not, so a user at their quota could save their own
+	 * profile with `loginCount: 0` and hand themselves unlimited logins.
+	 * See LoginService::164 / PasskeyLoginAction::94.
+	 */
+	public function testANonAdminCannotResetTheirOwnLoginQuota(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			existing: ['loginCount' => 5, 'maxLoginCount' => 5, 'name' => 'Old'],
+		);
+
+		$out = $policy->enforce('u1', 'auth', 'u1', ['loginCount' => 0, 'name' => 'New']);
+
+		expect($out['loginCount'])->toBe(5);
+		expect($out['name'])->toBe('New');
+	}
+
+	public function testANonAdminCannotForgeTheirAuditTrail(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			existing: ['lastlogin' => '2026-01-01T00:00:00+00:00', 'created' => '2020-06-06T00:00:00+00:00'],
+		);
+
+		$out = $policy->enforce('u1', 'auth', 'u1', [
+			'lastlogin' => '2026-09-04T00:00:00+00:00',
+			'created'   => '1999-01-01T00:00:00+00:00',
+		]);
+
+		expect($out['lastlogin'])->toBe('2026-01-01T00:00:00+00:00');
+		expect($out['created'])->toBe('2020-06-06T00:00:00+00:00');
+	}
+
+	/**
+	 * A super-admin still needs to correct these by hand — e.g. clearing a
+	 * login quota for a user who hit it legitimately.
+	 */
+	public function testASuperAdminMayStillSetTheCounterAndTimestamps(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: true,
+			existing: ['loginCount' => 5, 'lastlogin' => '2026-01-01T00:00:00+00:00'],
+		);
+
+		$out = $policy->enforce('admin', 'auth', 'u1', ['loginCount' => 0, 'lastlogin' => 'now']);
+
+		expect($out['loginCount'])->toBe(0);
+		expect($out['lastlogin'])->toBe('now');
+	}
+
+	/** Public registration must not be able to seed a counter or a birth date. */
+	public function testRegistrationStripsTheCounterAndTimestamps(): void
+	{
+		$out = $this->makePolicy(isSuperAdmin: false)->stripProtected('auth', [
+			'name'       => 'x',
+			'loginCount' => -100,
+			'lastlogin'  => 'whenever',
+			'created'    => '1999-01-01T00:00:00+00:00',
+		]);
+
+		expect($out)->toBe(['name' => 'x']);
 	}
 }

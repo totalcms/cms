@@ -358,6 +358,16 @@ class TotalForm implements \Stringable
 		// directly (tests, extensions), and those callers fall back to the
 		// English default passed at each call site.
 		protected ?\Closure $translator = null,
+		// Formgrid for a form built from pre-rendered field HTML rather than a
+		// SchemaData — settings sections are the case: TotalFormFactory::settings()
+		// renders each field itself and hands the markup to build(), so there is no
+		// SchemaData to carry a layout. Ignored when $schemaData is present, which
+		// stays the source of truth for schema-driven forms.
+		//
+		// Last in the list on purpose: CollectionForm, SchemaForm and TemplateForm
+		// call parent::__construct() positionally, so a new parameter anywhere else
+		// silently shifts their arguments.
+		protected string $formgrid = '',
 	) {
 		$this->init();
 		$this->initClass();
@@ -500,9 +510,17 @@ class TotalForm implements \Stringable
 	{
 		$formId       = null;
 		$formStyleTag = '';
+		$sectionHtml  = '';
 
-		if ($this->schemaData instanceof SchemaData && $this->useFormGrid) {
-			$formgrid = $this->schemaData->formgrid;
+		// A schema-driven form takes its layout from SchemaData; a form built from
+		// pre-rendered HTML takes it from the injected string. Only the second can
+		// be empty and still mean "no grid" — a SchemaData with no formgrid falls
+		// back to one field per row, as it always has.
+		$hasSchemaData = $this->schemaData instanceof SchemaData;
+		$rawFormgrid   = $hasSchemaData ? $this->schemaData->formgrid : $this->formgrid;
+
+		if ($this->useFormGrid && ($hasSchemaData || $rawFormgrid !== '')) {
+			$formgrid = $rawFormgrid;
 
 			// Generate a default formgrid from field names if none defined
 			if ($formgrid === '') {
@@ -514,6 +532,15 @@ class TotalForm implements \Stringable
 			$gridBuilder  = new FormGridBuilder($formgrid);
 			$gridBuilder->ensureFieldsIncluded(array_keys($this->fields));
 			$formStyleTag = $gridBuilder->toStyleTag($formId);
+
+			// Section headers and dividers normally come from fieldContent(), which
+			// only runs for fields TotalForm built itself. A caller passing rendered
+			// markup skips that entirely, so emit them here instead. They lead the
+			// content either way — their visual position comes from the grid area,
+			// not from source order.
+			if (!$hasSchemaData) {
+				$sectionHtml = $gridBuilder->buildGridSectionHtml();
+			}
 		}
 
 		$attributes = array_filter([
@@ -557,7 +584,7 @@ class TotalForm implements \Stringable
 			$csrfField = $this->csrfManager->getTokenField();
 		}
 
-		$content  = $this->buildError() . $csrfField . $content;
+		$content  = $this->buildError() . $csrfField . $sectionHtml . $content;
 		$content .= $this->fieldContent();
 
 		$save     = $this->saveButton();

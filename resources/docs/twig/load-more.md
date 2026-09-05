@@ -49,7 +49,7 @@ Works identically to the collection version but queries a DataView by its ID.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `template` | string | **required** | Twig template file for rendering each item. Receives `{{ object }}` |
+| `template` | string | **required** | Twig template for rendering each item, resolved inside `builder/templates/`. Receives `{{ object }}` |
 | `limit` | int | `20` | Number of items per page |
 | `sort` | string | — | Sort field. Shorthand: `date` or `-date` (descending). Colon format: `date:asc`, `date:desc`, or `date:desc,title:asc` for multi-sort |
 | `include` | string | — | Include filter (e.g., `published:true,featured:true`) |
@@ -61,6 +61,8 @@ Works identically to the collection version but queries a DataView by its ID.
 | `transition` | bool | `false` | Enable HTMX view transitions |
 | `load` | bool | `false` | Render the first page of items server-side (SEO-friendly) |
 | `empty` | string | — | HTML to display when filters match zero items |
+
+> **Where templates live.** Template ids are relative to `builder/templates/` — `blog/card` addresses `tcms-data/builder/templates/blog/card.twig`. This is the same folder the admin Templates UI writes to and the same one `{% templatedesigner %}` syncs, so an id means the same file everywhere. A leading `templates/` is optional and ignored. The `.twig` extension is optional.
 
 ## Trigger Modes
 
@@ -333,7 +335,7 @@ If you pre-rendered items server-side, set `offset` to skip those:
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `target` | string | **required** | CSS selector for the container to append items into |
-| `template` | string | **required** | Twig template for rendering each item |
+| `template` | string | **required** | Twig template for rendering each item, resolved inside `builder/templates/` |
 | `limit` | int | `20` | Items per page |
 | `offset` | int | `0` | Starting offset |
 | `load` | bool | `false` | Auto-fetch first batch on page load |

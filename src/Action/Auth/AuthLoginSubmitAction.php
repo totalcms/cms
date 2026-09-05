@@ -127,6 +127,15 @@ readonly class AuthLoginSubmitAction
 		// For SuperAdmin cross-collection authentication, use the collection they were authenticated against
 		$sessionCollection = $user['_authenticated_collection'] ?? $collection;
 
+		// `$collection` is empty on the plain `/admin/login` route (no
+		// `{collection}` argument), so store the configured default rather than
+		// an empty string. Readers that compare the session value literally —
+		// the self-profile carve-out in CollectionAccessMiddleware — otherwise
+		// never match, and the user is denied writes to their own record.
+		if ((string)$sessionCollection === '') {
+			$sessionCollection = (string)$this->config->auth['collection'];
+		}
+
 		$this->sessionLogin->establish((string)$user['id'], (string)$sessionCollection, $persistentLogin);
 		$this->session->delete(SessionKeys::LOGIN_ATTEMPTS);
 
