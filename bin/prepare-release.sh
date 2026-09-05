@@ -211,7 +211,7 @@ print_info "Checking git status..."
 if [ -n "$(git status --porcelain)" ]; then
     print_warning "You have uncommitted changes:"
     git status --short
-    read -p "Do you want to continue anyway? (y/N) " -n 1 -r
+    read -p "Do you want to continue anyway? (y/N) " -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         print_info "Aborting release preparation"
@@ -273,7 +273,7 @@ if composer run clean; then
     if [ -n "$(git status --porcelain)" ]; then
         print_warning "Code style fixer made changes:"
         git status --short
-        read -p "Do you want to commit these changes? (Y/n) " -n 1 -r
+        read -p "Do you want to commit these changes? (Y/n) " -r
         echo
         if [[ ! $REPLY =~ ^[Nn]$ ]]; then
             git add .
@@ -292,7 +292,7 @@ if composer run stan; then
     print_success "PHPStan passed"
 else
     print_error "PHPStan failed"
-    read -p "Continue anyway? (y/N) " -n 1 -r
+    read -p "Continue anyway? (y/N) " -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         exit 1
@@ -304,7 +304,7 @@ if composer run docs:validate; then
     print_success "Docs validated"
 else
     print_error "Docs validation failed"
-    read -p "Continue anyway? (y/N) " -n 1 -r
+    read -p "Continue anyway? (y/N) " -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         exit 1
@@ -318,7 +318,7 @@ if composer run test:parallel; then
     print_success "PHP Tests passed"
 else
     print_error "PHP Tests failed"
-    read -p "Continue anyway? (y/N) " -n 1 -r
+    read -p "Continue anyway? (y/N) " -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         exit 1
@@ -330,7 +330,7 @@ if composer run test:js; then
     print_success "JS Tests passed"
 else
     print_error "JS Tests failed"
-    read -p "Continue anyway? (y/N) " -n 1 -r
+    read -p "Continue anyway? (y/N) " -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         exit 1
@@ -599,9 +599,34 @@ if [ -t 0 ]; then
     echo "  • create tag $NEW_VERSION and push everything to github"
     echo "  • publish the GitHub release from CHANGELOG.md"
     echo
-    read -p "Finish the release now? (y/N) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # Discard anything typed during the minutes of building, uploading and
+    # registering above. A stray keystroke there sits in the terminal's line
+    # buffer, and the read below would consume it INSTANTLY — answering the one
+    # question in this script that merges to master, tags, pushes and publishes,
+    # without ever pausing. It defaults to no, so it looks like nothing
+    # happened. (bash 3.2 ships with macOS and has no `read -t 0`, so drain
+    # with a short timeout rather than testing for readiness.)
+    while read -r -t 1 -n 256 _; do :; done 2>/dev/null
+    REPLY=""
+
+    # And do not let empty mean no here. Empty is exactly what a stray newline
+    # produces; this prompt deserves a deliberate answer.
+    while true; do
+        # A failed read means EOF (Ctrl-D, or stdin closed under us). Treat it
+        # as no and stop, or this loop spins forever printing the reminder.
+        if ! read -p "Finish the release now? (y/n) " -r; then
+            REPLY="n"
+            echo
+            break
+        fi
+        case "$REPLY" in
+            [Yy]|[Yy][Ee][Ss]) break ;;
+            [Nn]|[Nn][Oo])     break ;;
+            *) echo "Please answer y or n." ;;
+        esac
+    done
+
+    if [[ $REPLY =~ ^[Yy] ]]; then
         if ! git flow version >/dev/null 2>&1; then
             print_error "git flow not found — finish the release manually"
         elif git flow release finish "$NEW_VERSION" -m "$NEW_VERSION" --push; then
