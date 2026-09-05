@@ -19,14 +19,30 @@ readonly class RemoverFactory
 	) {
 	}
 
+	/**
+	 * Removers taking the four-argument FileRemover constructor, by property
+	 * type. Everything else falls back to FileRemover.
+	 *
+	 * An explicit map, NOT a class name built from the type. resolveType()
+	 * falls back to a property's `type` and then its `field`, both straight
+	 * from schema JSON a customer can author, so `ucfirst($type) . 'Remover'`
+	 * put user input into a class name. A custom schema saying
+	 * `"field": "upload"` resolved to the real UploadRemover, whose
+	 * constructor takes two arguments of different types — and the resulting
+	 * ArgumentCountError fired BEFORE the instanceof guard below could reject
+	 * it. That error was on Sentry's ignore list, so the 500 went unreported.
+	 *
+	 * @var array<string,class-string<FileRemover>>
+	 */
+	private const REMOVERS = [
+		'depot' => DepotRemover::class,
+	];
+
 	public function generateRemoverService(string $collection, string $property): FileRemover
 	{
 		$type = $this->getPropertyType($collection, $property);
 
-		$className = 'TotalCMS\\Domain\\Property\\Service\\' . ucfirst($type) . 'Remover';
-		if (!class_exists($className)) {
-			$className = FileRemover::class;
-		}
+		$className = self::REMOVERS[$type] ?? FileRemover::class;
 
 		$remover = new $className(
 			$this->storage,
@@ -35,10 +51,10 @@ readonly class RemoverFactory
 			$this->objectFetcher
 		);
 
-		if (!$remover instanceof FileRemover) {
-			throw new \DomainException('Error creating file remover service.');
-		}
-
+		// No instanceof guard: REMOVERS is typed class-string<FileRemover>, so
+		// the type system now guarantees what that runtime check used to guess
+		// at — and it could never fire anyway, because a wrong class blew up in
+		// the constructor above it.
 		return $remover;
 	}
 

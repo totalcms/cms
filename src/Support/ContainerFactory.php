@@ -31,6 +31,16 @@ use DI\ContainerBuilder;
  * compiled files and boots uncompiled for that one request; the next request
  * recompiles cleanly.
  *
+ * Know the limit of that self-heal: it covers what `build()` itself throws —
+ * a compiled file that will not parse or load. PHP-DI resolves entries LAZILY,
+ * so a compiled container that loads fine but holds a definition referencing
+ * something no longer resolvable does not fail here. It fails later, at
+ * `$container->get(...)`, far outside this try/catch, as a DependencyException
+ * naming a class the caller never asked for. Nothing wipes the cache in that
+ * case. The version/mtime keying above is what is actually relied on to
+ * prevent it; the catch below is the backstop for a corrupt file, not for a
+ * stale definition.
+ *
  * Dev / test environments build an uncompiled container — definitions are
  * live-editable, no cache invalidation to think about.
  */
