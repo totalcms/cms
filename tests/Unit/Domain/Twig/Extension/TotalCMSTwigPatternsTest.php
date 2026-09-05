@@ -14,8 +14,7 @@ use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
  * operators to use both.
  */
 describe('TotalCMSTwigPatterns version patterns', function (): void {
-	$anchored = fn (string $pattern, string $subject): bool
-		=> preg_match('/^' . $pattern . '$/', $subject) === 1;
+	$anchored = fn (string $pattern, string $subject): bool => preg_match('/^' . $pattern . '$/', $subject) === 1;
 
 	// -------------------------
 	// version — plain three-part

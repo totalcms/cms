@@ -40,9 +40,9 @@ use TotalCMS\Support\Config;
  */
 describe('CollectionAccessMiddleware self-profile carve-out', function (): void {
 	beforeEach(function (): void {
-		$this->accessControl = $this->createMock(AccessControlService::class);
-		$this->session       = $this->createMock(SessionInterface::class);
-		$this->userValidation = $this->createMock(UserValidationService::class);
+		$this->accessControl     = $this->createMock(AccessControlService::class);
+		$this->session           = $this->createMock(SessionInterface::class);
+		$this->userValidation    = $this->createMock(UserValidationService::class);
 		$this->operationDetector = $this->createMock(OperationDetector::class);
 
 		$this->config             = Config::init();
@@ -68,7 +68,7 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 
 		// Capture what the access channel is told when a request is refused.
 		$this->logged        = new \ArrayObject();
-		$this->accessLogger  = new class ($this->logged) extends \Psr\Log\AbstractLogger {
+		$this->accessLogger  = new class($this->logged) extends \Psr\Log\AbstractLogger {
 			public function __construct(private \ArrayObject $sink)
 			{
 			}

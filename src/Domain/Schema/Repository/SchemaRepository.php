@@ -4,8 +4,8 @@ namespace TotalCMS\Domain\Schema\Repository;
 
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Storage\Exception\CorruptedStorageFileException;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
+use TotalCMS\Domain\Storage\Exception\CorruptedStorageFileException;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Storage\StorageRepository;

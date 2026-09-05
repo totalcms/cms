@@ -81,8 +81,8 @@ class McpStatusCommand extends BaseCommand
 			'edition'         => $editions->getEdition()->value,
 			'domain'          => $config->domain,
 			'domain_resolved' => $domainResolved,
-			'tool_prefix'   => (string)($mcpConfig['toolPrefix'] ?? ''),
-			'tools'         => [
+			'tool_prefix'     => (string)($mcpConfig['toolPrefix'] ?? ''),
+			'tools'           => [
 				'admin'  => $admin,
 				'public' => $public,
 			],

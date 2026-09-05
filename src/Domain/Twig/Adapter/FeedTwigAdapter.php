@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
-use Twig\Markup;
 use TotalCMS\Domain\Feed\Service\FeedWriter;
+use Twig\Markup;
 
 /**
  * Twig sub-adapter for building syndication feeds.
