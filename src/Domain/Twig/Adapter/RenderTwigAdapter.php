@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
@@ -15,6 +14,7 @@ use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;

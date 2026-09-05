@@ -44,18 +44,16 @@ readonly class RemoverFactory
 
 		$className = self::REMOVERS[$type] ?? FileRemover::class;
 
-		$remover = new $className(
+		// No instanceof guard: REMOVERS is typed class-string<FileRemover>, so
+		// the type system now guarantees what that runtime check used to guess
+		// at — and it could never fire anyway, because a wrong class blew up in
+		// the constructor above it.
+		return new $className(
 			$this->storage,
 			$this->propFetcher,
 			$this->objectPatcher,
 			$this->objectFetcher
 		);
-
-		// No instanceof guard: REMOVERS is typed class-string<FileRemover>, so
-		// the type system now guarantees what that runtime check used to guess
-		// at — and it could never fire anyway, because a wrong class blew up in
-		// the constructor above it.
-		return $remover;
 	}
 
 	private function getPropertyType(string $collection, string $property): string

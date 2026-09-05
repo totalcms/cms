@@ -57,7 +57,7 @@ final class FileNotificationBusTest extends TestCase
 		$bus = $this->bus();
 		$bus->publish(new ResourceUpdatedNotification('tcms://blog/'));
 
-		$cursor = $bus->cursor();
+		$cursor         = $bus->cursor();
 		[$found, $next] = $bus->since($cursor);
 
 		$this->assertSame([], $found);

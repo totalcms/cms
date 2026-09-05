@@ -26,7 +26,6 @@ const STATELESS_TEST_API_KEY = 'tcms_mcp_stateless_era_test_key_000000000';
  * suite — every other MCP test speaks the handshake era, so a regression here
  * (a middleware ordering slip, a missing dispatcher) would pass CI silently.
  */
-
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
@@ -364,9 +363,9 @@ describe('MCP stateless era (2026-07-28)', function (): void {
 		// prevent. The window is now the admitted stream's own.
 		$config      = $this->app->getContainer()->get(Config::class);
 		$config->mcp = array_merge($config->mcp, [
-			'listeningStreamSeconds'       => 0,
+			'listeningStreamSeconds'             => 0,
 			'subscriptionStreamSeconds'          => 0.25,
-			'listeningStreamMaxConcurrent' => 1,
+			'listeningStreamMaxConcurrent'       => 1,
 		]);
 
 		$first = statelessRequest($this->app, 'subscriptions/listen', [

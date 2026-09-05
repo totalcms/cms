@@ -9,8 +9,8 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Twig\Extension\TotalCMSTwigPatterns;
 
 readonly class SchemaSaver
 {
@@ -205,9 +205,9 @@ readonly class SchemaSaver
 	 *
 	 * @param array<string,array<string,mixed>> $properties
 	 *
-	 * @return array<string,array<string,mixed>>
-	 *
 	 * @throws \UnexpectedValueException when an alias names no known pattern
+	 *
+	 * @return array<string,array<string,mixed>>
 	 */
 	public static function expandPatternAliases(array $properties): array
 	{

@@ -17,7 +17,6 @@ use TotalCMS\Domain\Admin\TotalFormFactory;
  * constructor takes fifteen collaborators, and stubbing them would test the
  * stubs rather than the seam.
  */
-
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();

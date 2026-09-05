@@ -6,8 +6,8 @@ namespace Tests\Unit\Domain\Mcp\Service;
 
 use Mcp\Server;
 use Mcp\Server\Resource\SessionSubscriptionManager;
-use Mcp\Server\Subscription\InMemoryNotificationBus;
 use Mcp\Server\Session\InMemorySessionStore;
+use Mcp\Server\Subscription\InMemoryNotificationBus;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;

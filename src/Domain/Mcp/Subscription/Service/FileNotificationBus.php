@@ -52,9 +52,9 @@ use Psr\Log\NullLogger;
  * dropped notification is a missed refresh, and it must never be able to fail a
  * request that is only trying to save an object.
  */
-final class FileNotificationBus implements NotificationBusInterface
+final readonly class FileNotificationBus implements NotificationBusInterface
 {
-	private readonly MessageFactory $messageFactory;
+	private MessageFactory $messageFactory;
 
 	/**
 	 * @param string $busFile absolute path to the buffer file
@@ -62,10 +62,10 @@ final class FileNotificationBus implements NotificationBusInterface
 	 * @param int    $ttl     seconds an entry stays readable
 	 */
 	public function __construct(
-		private readonly string $busFile,
-		private readonly int $backlog = 256,
-		private readonly int $ttl = 120,
-		private readonly LoggerInterface $logger = new NullLogger(),
+		private string $busFile,
+		private int $backlog = 256,
+		private int $ttl = 120,
+		private LoggerInterface $logger = new NullLogger(),
 		?MessageFactory $messageFactory = null,
 	) {
 		$this->messageFactory = $messageFactory ?? MessageFactory::make();
@@ -109,8 +109,8 @@ final class FileNotificationBus implements NotificationBusInterface
 
 	public function since(int $cursor): array
 	{
-		$state = $this->read();
-		$head  = $state['cursor'];
+		$state  = $this->read();
+		$head   = $state['cursor'];
 		$oldest = time() - $this->ttl;
 
 		$found = [];
