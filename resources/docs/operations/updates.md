@@ -16,7 +16,21 @@ Total CMS includes a built-in update system that checks for new versions and app
 4. During the update, the site briefly enters maintenance mode
 5. The previous version is backed up for rollback if needed
 
-Updates only replace the application files (`tcms/`). Your content in `tcms-data/` is never touched.
+## What an update replaces
+
+An update installs the new release over the application folder **one top-level directory at a time**, not file by file. For each directory the release ships, the existing one is moved aside and the new one takes its place — so a folder you added inside one of them is removed along with its parent rather than merged.
+
+This is why nothing you author should live inside the Total CMS folder.
+
+| | On update |
+|---|---|
+| Anything **outside** the Total CMS folder — your pages, stylesheets, scripts, fonts, media | Never touched |
+| `tcms-data/` | Never touched, wherever it lives |
+| `.env`, `tcms.php`, `logs/`, `.git/` | Preserved, even inside the application folder |
+| `cache/`, `tmp/` | Left alone — the release does not ship them |
+| `config/`, `public/`, `resources/`, `src/`, `vendor/`, `autoload.php`, `.htaccess`, `.gitignore`, `version.json` | **Replaced in full** |
+
+If you have added your own files inside any of those replaced directories — a `public/my-assets/` folder, for example — move them out of the Total CMS folder before updating. See [Installation](https://docs.totalcms.co/get-started/installation) for the recommended layout.
 
 > This built-in updater applies to **zip installs**. Composer installs update through Composer — see below. The dashboard and `tcms update:apply` refuse to run on a Composer install and point you at `composer update`.
 
@@ -99,9 +113,11 @@ When an update is applied:
 5. The new files are extracted into place
 6. All caches are cleared
 7. Maintenance mode is disabled
-8. The update is logged to `tcms-data/.system/logs/totalcms.log` (channel `update`)
+8. The backup is removed and the update is logged to `tcms-data/.system/logs/totalcms.log` (channel `update`)
 
 The entire process typically takes a few seconds.
+
+The backup at step 4 exists only for the duration of the update. If any step fails, it is restored automatically and left in place for inspection; once the update completes successfully it is deleted. **Take your own backup before updating** if you want to be able to return to the previous version afterwards.
 
 ## Maintenance Mode
 
@@ -111,7 +127,7 @@ Admin routes continue to work during maintenance so the update action can comple
 
 ## Rollback
 
-If an update causes issues, you can roll back to the previous version:
+Rollback recovers from an update that **failed part-way through** — the backup it restores is the one taken during that update, and it is deleted once an update succeeds. There is nothing to roll back to after a successful update, and `tcms update:rollback` will report that no backup was found. To return to an earlier version after a successful update, restore your own backup.
 
 ### CLI
 
@@ -123,7 +139,7 @@ tcms update:rollback
 tcms update:rollback --force
 ```
 
-Rollback restores the backup directory that was created during the update. Only the most recent backup is available.
+Rollback restores the backup directory left behind by a failed update. Only the most recent one is available, and only while an update has not since completed successfully.
 
 ### Manual Rollback
 
