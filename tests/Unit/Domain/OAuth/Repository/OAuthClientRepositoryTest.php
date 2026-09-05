@@ -106,4 +106,42 @@ final class OAuthClientRepositoryTest extends TestCase
 			createdBy: 'admin',
 		);
 	}
+
+	/**
+	 * Pins the contract: an unreadable store yields no records and no warning.
+	 *
+	 * Note this passes against the older stat-then-read form too, at least on
+	 * macOS — it documents the guarantee rather than reproducing a specific
+	 * failure.
+	 */
+	public function testAnUnreadableStoreDegradesQuietlyInsteadOfWarning(): void
+	{
+		file_put_contents($this->tmpFile, '{}');
+		if (!@chmod($this->tmpFile, 0000) || is_readable($this->tmpFile)) {
+			$this->markTestSkipped('chmod does not restrict reads here (running as root?)');
+		}
+
+		$warnings = [];
+		set_error_handler(static function (int $no, string $str) use (&$warnings): bool {
+			// Honour `@` the way PHP's own handler does — a custom handler is
+			// still invoked for suppressed diagnostics, so without this the
+			// test cannot tell a suppressed read from an unsuppressed one.
+			if ((error_reporting() & $no) === 0) {
+				return true;
+			}
+			$warnings[] = $str;
+
+			return true;
+		});
+
+		try {
+			$repo = new OAuthClientRepository($this->tmpFile);
+			$this->assertSame([], $repo->all());
+		} finally {
+			restore_error_handler();
+			@chmod($this->tmpFile, 0644);
+		}
+
+		$this->assertSame([], $warnings, 'reading an unreadable store must not warn');
+	}
 }

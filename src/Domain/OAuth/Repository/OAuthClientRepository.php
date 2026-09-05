@@ -73,10 +73,16 @@ final readonly class OAuthClientRepository
 	 */
 	private function loadAll(): array
 	{
-		if (!is_file($this->storagePath)) {
+		// One read, not is_file() + read. Anything that makes the read fail after
+		// the stat succeeds — the file removed in between, or present but
+		// unreadable — turns a path that should degrade quietly to "no records
+		// yet" into a "Failed to open stream" warning. Reading once and checking
+		// the result has no window in which that can happen. Same shape as
+		// CronTokenProvider and FileNotificationBus, which already read this way.
+		$raw = @file_get_contents($this->storagePath);
+		if ($raw === false) {
 			return [];
 		}
-		$raw  = (string)file_get_contents($this->storagePath);
 		$data = json_decode($raw, true);
 		if (!is_array($data) || !isset($data['clients']) || !is_array($data['clients'])) {
 			return [];
