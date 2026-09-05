@@ -142,6 +142,38 @@ final class UpdateApplierTest extends TestCase
 		$this->assertFileExists($this->appRoot . '/.env');
 	}
 
+	// ── refusing a bad archive ───────────────────────────────────────────────
+
+	/**
+	 * extractTo() reporting success is not proof the archive was complete, and
+	 * the swap is atomic per top-level item — so a fragment would be installed
+	 * over a working install, one directory at a time. A truncated release is
+	 * refused before anything is touched.
+	 */
+	public function testRefusesAnArchiveMissingShippedDirectories(): void
+	{
+		$this->seedInstall();
+
+		$zipPath = $this->tmpDir . '/truncated.zip';
+		$zip     = new \ZipArchive();
+		$zip->open($zipPath, \ZipArchive::CREATE);
+		$zip->addFromString('src/New.php', '<?php // new code');
+		$zip->addFromString('composer.json', '{}');
+		$zip->close();
+
+		try {
+			$this->createApplier($this->appRoot)->apply($zipPath, '3.9.9');
+			$this->fail('an incomplete archive should not install');
+		} catch (\RuntimeException $e) {
+			$this->assertStringContainsString('incomplete', $e->getMessage());
+		}
+
+		// The install is untouched: old code still there, new code never arrived.
+		$this->assertFileExists($this->appRoot . '/src/Old.php');
+		$this->assertFileDoesNotExist($this->appRoot . '/src/New.php');
+		$this->assertStringContainsString('old index', (string)file_get_contents($this->appRoot . '/public/index.php'));
+	}
+
 	// ── backup retention ─────────────────────────────────────────────────────
 
 	/**
@@ -279,6 +311,11 @@ final class UpdateApplierTest extends TestCase
 		$zip->addFromString($prefix . 'src/New.php', '<?php // new code');
 		$zip->addFromString($prefix . 'public/index.php', '<?php // new index');
 		$zip->addFromString($prefix . 'composer.json', '{"name":"totalcms/cms"}');
+		// A release ships these too, and the applier now refuses an archive
+		// missing any of them rather than installing a fragment.
+		$zip->addFromString($prefix . 'config/settings.php', '<?php return [];');
+		$zip->addFromString($prefix . 'resources/.keep', '');
+		$zip->addFromString($prefix . 'vendor/autoload.php', '<?php // autoload');
 		if ($includeTcmsData) {
 			$zip->addFromString($prefix . 'tcms-data/blog/post-1.json', '{"title":"OVERWRITTEN"}');
 		}

@@ -178,8 +178,20 @@ class UpdateApplier
 			throw new \RuntimeException('Failed to open update zip');
 		}
 
-		$zip->extractTo($extractDir);
+		// extractTo() returns false and leaves a PARTIAL tree behind when it runs
+		// out of disk, hits a permission it cannot satisfy, or meets a damaged
+		// entry. Ignoring that meant a half-extracted release could be renamed
+		// over a working install: the swap itself is atomic per item, so what
+		// lands is a mix of versions, or a truncated file. A zero-length
+		// `config/routes/public/sitemap.php` is enough to make `require` return
+		// int(1) and kill every request with "Value of type int is not callable"
+		// before any middleware — including the integrity check — can report it.
+		$extracted = $zip->extractTo($extractDir);
 		$zip->close();
+
+		if ($extracted === false) {
+			throw new \RuntimeException('Failed to extract the update zip — the archive may be incomplete or the disk full');
+		}
 
 		$scanned = scandir($extractDir);
 		$entries = $scanned === false ? [] : array_values(array_filter(
@@ -188,10 +200,30 @@ class UpdateApplier
 		));
 
 		if (count($entries) === 1 && is_dir($extractDir . '/' . $entries[0])) {
-			return $extractDir . '/' . $entries[0];
+			return $this->assertLooksLikeARelease($extractDir . '/' . $entries[0]);
 		}
 
-		return $extractDir;
+		return $this->assertLooksLikeARelease($extractDir);
+	}
+
+	/**
+	 * Refuse to swap a staged tree that is not recognisably a release.
+	 *
+	 * extractTo() reporting success is not proof the archive was complete — a
+	 * truncated download can still yield a valid-looking zip with entries
+	 * missing. Checking for the directories every release ships is cheap and
+	 * turns "install silently replaced with a fragment" into a failed update
+	 * that leaves the site running.
+	 */
+	private function assertLooksLikeARelease(string $source): string
+	{
+		foreach (['config', 'src', 'resources', 'vendor', 'public'] as $required) {
+			if (!is_dir($source . '/' . $required)) {
+				throw new \RuntimeException("Update archive is incomplete: {$required}/ is missing — refusing to install it");
+			}
+		}
+
+		return $source;
 	}
 
 	/**
