@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
 /**
@@ -48,6 +49,7 @@ class UpdateApplier
 		private readonly MaintenanceMode $maintenanceMode,
 		private readonly CacheManager $cacheManager,
 		LoggerFactory $loggerFactory,
+		private readonly Config $config,
 		?string $appRoot = null,
 	) {
 		$this->logger  = $loggerFactory->channelLogger(LogChannel::Update);
@@ -57,7 +59,7 @@ class UpdateApplier
 	/**
 	 * Apply an update from a downloaded zip file.
 	 */
-	public function apply(string $zipPath, string $version): void
+	public function apply(string $zipPath, string $version, bool $keepBackup = true): void
 	{
 		if (PathResolver::isComposerInstall()) {
 			throw new \RuntimeException('This installation is managed by Composer. Run `composer update totalcms/cms` to update.');
@@ -100,7 +102,7 @@ class UpdateApplier
 			$this->maintenanceMode->disable();
 			$this->logger->info('Maintenance mode disabled');
 
-			$this->deleteDirectory($backupDir);
+			$this->settleBackup($backupDir, $version, $keepBackup);
 			$this->logger->info("Update to {$version} complete");
 		} catch (\Throwable $e) {
 			$this->maintenanceMode->disable();
@@ -265,21 +267,169 @@ class UpdateApplier
 		clearstatcache(true);
 	}
 
+	/**
+	 * Decide what happens to the working backup once the update has succeeded.
+	 *
+	 * The backup itself is NOT optional — it is how a failure mid-swap is
+	 * undone, and it has to live beside the app root so every rename stays on
+	 * one device. What is optional is KEEPING it afterwards.
+	 *
+	 * Where it is kept matters more than whether. `{appRoot}.backup-*` is a
+	 * sibling of the application, which in the recommended layout puts it
+	 * inside the document root: retaining it there would leave the previous
+	 * release's `public/`, `src/` and `vendor/` web-servable and executable at
+	 * a guessable path — including whatever the update just patched. So a
+	 * retained backup moves into the data directory, which updates never touch
+	 * and which is either outside the web tree or carries a deny-all
+	 * `.htaccess`.
+	 *
+	 * If that move cannot be done as a rename — a data directory on another
+	 * device, which the "above document root" option makes likely — the backup
+	 * is discarded rather than left where it started. A backup silently sitting
+	 * in the web root is the outcome this is written to prevent, and copying
+	 * 60MB inside the request that triggered the update is not a trade worth
+	 * making. The log says which happened.
+	 */
+	private function settleBackup(string $backupDir, string $version, bool $keepBackup): void
+	{
+		if (!$keepBackup) {
+			$this->deleteDirectory($backupDir);
+
+			return;
+		}
+
+		$retainRoot = $this->retainedBackupRoot();
+
+		if (!is_dir($retainRoot) && !@mkdir($retainRoot, 0755, true) && !is_dir($retainRoot)) {
+			$this->logger->warning('Could not create the backup directory; previous version discarded');
+			$this->deleteDirectory($backupDir);
+
+			return;
+		}
+
+		if (!$this->sameDevice($backupDir, $retainRoot)) {
+			$this->logger->warning(
+				'Data directory is on a different filesystem; previous version discarded rather than left in the web root'
+			);
+			$this->deleteDirectory($backupDir);
+
+			return;
+		}
+
+		// Exactly one retained backup. Prune before moving so a failed move
+		// cannot leave two.
+		$this->pruneRetainedBackups($retainRoot);
+
+		$target = $retainRoot . '/' . $version . '-' . date('Ymd-His');
+		if (!rename($backupDir, $target)) {
+			$this->logger->warning('Could not move the previous version into the data directory; discarded');
+			$this->deleteDirectory($backupDir);
+
+			return;
+		}
+
+		$this->logger->info("Previous version kept at {$target}");
+	}
+
+	/** Where a retained backup lives: inside the data dir, never inside the app. */
+	private function retainedBackupRoot(): string
+	{
+		return rtrim($this->config->datadir, '/') . '/.system/backups';
+	}
+
+	private function pruneRetainedBackups(string $retainRoot): void
+	{
+		$existing = glob($retainRoot . '/*', GLOB_ONLYDIR);
+		foreach ($existing === false ? [] : $existing as $dir) {
+			$this->deleteDirectory($dir);
+		}
+	}
+
+	/**
+	 * Whether two paths sit on the same filesystem, so rename() will not fail
+	 * with EXDEV. Compares the containing directories — the source may be the
+	 * thing being moved and the target may not exist yet.
+	 */
+	private function sameDevice(string $a, string $b): bool
+	{
+		$statA = @stat(is_dir($a) ? $a : dirname($a));
+		$statB = @stat(is_dir($b) ? $b : dirname($b));
+
+		return $statA !== false && $statB !== false && $statA['dev'] === $statB['dev'];
+	}
+
+	/**
+	 * The backup to roll back to.
+	 *
+	 * Two places can hold one, and the order matters. A `{appRoot}.backup-*`
+	 * sibling only survives when an update failed AND its automatic rollback
+	 * also failed — the install is broken right now, so that wins. Otherwise
+	 * the retained copy of the previous version, which a successful update
+	 * leaves in the data directory.
+	 */
 	private function findLatestBackup(): ?string
 	{
 		$parentDir = dirname($this->appRoot);
 		$appName   = basename($this->appRoot);
-		$pattern   = $parentDir . '/' . $appName . '.backup-*';
-		$backups   = glob($pattern);
 
-		if ($backups === false || $backups === []) {
+		foreach ([$parentDir . '/' . $appName . '.backup-*', $this->retainedBackupRoot() . '/*'] as $pattern) {
+			$backups = glob($pattern, GLOB_ONLYDIR);
+			if ($backups === false || $backups === []) {
+				continue;
+			}
+
+			// Descending: names carry version + timestamp, most recent first.
+			rsort($backups);
+
+			return $backups[0];
+		}
+
+		return null;
+	}
+
+	/**
+	 * The retained previous version, for the Update Manager to show and offer
+	 * to restore or remove. Null when nothing is being kept.
+	 *
+	 * @return array{path: string, name: string, bytes: int}|null
+	 */
+	public function retainedBackup(): ?array
+	{
+		$dirs = glob($this->retainedBackupRoot() . '/*', GLOB_ONLYDIR);
+		if ($dirs === false || $dirs === []) {
 			return null;
 		}
 
-		// Sort descending to get the most recent
-		rsort($backups);
+		rsort($dirs);
+		$path = $dirs[0];
 
-		return $backups[0];
+		return ['path' => $path, 'name' => basename($path), 'bytes' => $this->directorySize($path)];
+	}
+
+	/** Remove the retained previous version, freeing its disk. */
+	public function discardRetainedBackup(): void
+	{
+		$this->pruneRetainedBackups($this->retainedBackupRoot());
+	}
+
+	private function directorySize(string $dir): int
+	{
+		if (!is_dir($dir)) {
+			return 0;
+		}
+
+		$bytes    = 0;
+		$iterator = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+		);
+
+		foreach ($iterator as $file) {
+			if ($file instanceof \SplFileInfo && $file->isFile()) {
+				$bytes += $file->getSize();
+			}
+		}
+
+		return $bytes;
 	}
 
 	private function deleteDirectory(string $dir): void

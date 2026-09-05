@@ -112,6 +112,7 @@ final class AdminUtilsActionTest extends TestCase
 			$this->settingsFetcher,
 			$this->templateLister,
 			$this->updateChecker,
+			$this->createMock(\TotalCMS\Domain\Update\Service\UpdateApplier::class),
 			$this->oauthClientRepository,
 			$this->oauthGrantRepository,
 			$this->oauthScopeRegistry,

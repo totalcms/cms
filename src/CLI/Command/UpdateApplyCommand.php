@@ -18,7 +18,8 @@ class UpdateApplyCommand extends BaseCommand
 		$this
 			->setName('update:apply')
 			->setDescription('Download and apply an available update')
-			->addOption('force', null, InputOption::VALUE_NONE, 'Skip confirmation prompt');
+			->addOption('force', null, InputOption::VALUE_NONE, 'Skip confirmation prompt')
+			->addOption('no-backup', null, InputOption::VALUE_NONE, 'Do not keep a copy of the previous version');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
@@ -89,7 +90,7 @@ class UpdateApplyCommand extends BaseCommand
 		}
 
 		try {
-			$this->totalcms->updateApplier()->apply($zipPath, $updateInfo->version);
+			$this->totalcms->updateApplier()->apply($zipPath, $updateInfo->version, !$input->getOption('no-backup'));
 		} catch (\Throwable $e) {
 			return $this->outputError($input, $output, 'Update failed: ' . $e->getMessage());
 		}

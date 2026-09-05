@@ -35,6 +35,7 @@ use TotalCMS\Domain\Sync\Data\SyncableCollections;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
+use TotalCMS\Domain\Update\Service\UpdateApplier;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Domain\Visualizer\Service\VisualizerService;
 use TotalCMS\Renderer\TwigRenderer;
@@ -58,6 +59,7 @@ readonly class AdminUtilsAction
 		private SettingsFetcher $settingsFetcher,
 		private TemplateLister $templateLister,
 		private UpdateChecker $updateChecker,
+		private UpdateApplier $updateApplier,
 		private OAuthClientRepository $oauthClientRepository,
 		private OAuthGrantRepository $oauthGrantRepository,
 		private OAuthScopeRegistry $oauthScopeRegistry,
@@ -181,7 +183,8 @@ readonly class AdminUtilsAction
 		}
 
 		// Update utility data
-		$updateInfo = null;
+		$updateInfo     = null;
+		$retainedBackup = null;
 		if ($page === 'update') {
 			$forceCheck = ($query['check'] ?? '') === '1';
 			try {
@@ -189,6 +192,9 @@ readonly class AdminUtilsAction
 			} catch (\Throwable) {
 				// Silently fail — update check is not critical
 			}
+			// The copy of the previous version a successful update kept, so the
+			// page can show that it exists and offer to reclaim the disk.
+			$retainedBackup = $this->updateApplier->retainedBackup();
 		}
 
 		// Sync utility data
@@ -336,6 +342,7 @@ readonly class AdminUtilsAction
 			'rssError'                  => $rssError,
 			'rssCollections'            => $rssAnalysis !== null ? $this->collectionLister->listAllCollections() : null,
 			'updateInfo'                => $updateInfo,
+			'retainedBackup'            => $retainedBackup,
 			'composerInstall'           => \TotalCMS\Support\PathResolver::isComposerInstall(),
 			'syncData'                  => $syncData,
 			'jumpstartData'             => $jumpstartData,

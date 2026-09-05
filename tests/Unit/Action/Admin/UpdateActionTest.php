@@ -166,4 +166,60 @@ final class UpdateActionTest extends TestCase
 
 		($this->action)($this->request, $this->response);
 	}
+
+	/**
+	 * The Update Manager's checkbox is the only thing that decides whether the
+	 * previous version is kept, so it has to actually reach the applier. An
+	 * operator who never touches it gets the safety net.
+	 */
+	public function testKeepsThePreviousVersionWhenTheRequestSaysNothing(): void
+	{
+		$this->stubAvailableUpdate();
+		$this->request->method('getParsedBody')->willReturn(null);
+
+		$this->updateApplier->expects($this->once())
+			->method('apply')
+			->with('/tmp/update-3.3.0.zip', '3.3.0', true);
+
+		($this->action)($this->request, $this->response);
+	}
+
+	public function testHonoursAnUntickedKeepBackupCheckbox(): void
+	{
+		$this->stubAvailableUpdate();
+		$this->request->method('getParsedBody')->willReturn(['keepBackup' => false]);
+
+		$this->updateApplier->expects($this->once())
+			->method('apply')
+			->with('/tmp/update-3.3.0.zip', '3.3.0', false);
+
+		($this->action)($this->request, $this->response);
+	}
+
+	/** JSON gives a real bool, but a form post would give the string. */
+	public function testTreatsTheStringFalseAsUnticked(): void
+	{
+		$this->stubAvailableUpdate();
+		$this->request->method('getParsedBody')->willReturn(['keepBackup' => 'false']);
+
+		$this->updateApplier->expects($this->once())
+			->method('apply')
+			->with('/tmp/update-3.3.0.zip', '3.3.0', false);
+
+		($this->action)($this->request, $this->response);
+	}
+
+	private function stubAvailableUpdate(): void
+	{
+		$this->updateChecker->method('checkForUpdate')->willReturn(new UpdateInfo(
+			available: true,
+			version: '3.3.0',
+			releaseDate: '2026-04-10',
+			severity: 'minor',
+			changelog: 'New features',
+			buildHash: 'abc',
+			downloadUrl: '/version/download/3.3.0'
+		));
+		$this->updateDownloader->method('download')->willReturn('/tmp/update-3.3.0.zip');
+	}
 }

@@ -113,11 +113,17 @@ When an update is applied:
 5. The new files are extracted into place
 6. All caches are cleared
 7. Maintenance mode is disabled
-8. The backup is removed and the update is logged to `tcms-data/.system/logs/totalcms.log` (channel `update`)
+8. The previous version is kept or discarded, and the update is logged to `tcms-data/.system/logs/totalcms.log` (channel `update`)
 
 The entire process typically takes a few seconds.
 
-The backup at step 4 exists only for the duration of the update. If any step fails, it is restored automatically and left in place for inspection; once the update completes successfully it is deleted. **Take your own backup before updating** if you want to be able to return to the previous version afterwards.
+### Keeping the previous version
+
+By default a successful update keeps one copy of the version it replaced, at `tcms-data/.system/backups/`. It costs roughly 60 MB, only the most recent is kept, and the Update Manager shows it with a button to remove it when you want the disk back.
+
+Untick **Keep a copy of the previous version** before updating — or pass `--no-backup` to `tcms update:apply` — if you would rather not spend the space.
+
+The copy is deliberately kept inside your data directory rather than beside the application. A directory sitting next to the application is inside the document root on most installs, and the previous release's PHP would be reachable over the web there. If your data directory is on a different filesystem — which the "above document root" option can mean — the copy cannot be moved there safely and is discarded instead; the update log says when that happens.
 
 ## Maintenance Mode
 
@@ -127,7 +133,7 @@ Admin routes continue to work during maintenance so the update action can comple
 
 ## Rollback
 
-Rollback recovers from an update that **failed part-way through** — the backup it restores is the one taken during that update, and it is deleted once an update succeeds. There is nothing to roll back to after a successful update, and `tcms update:rollback` will report that no backup was found. To return to an earlier version after a successful update, restore your own backup.
+Rollback restores the previous version — either the copy a successful update kept, or the one left behind by an update that failed part-way through. If you turned the copy off, or it could not be kept, there is nothing to restore and `tcms update:rollback` reports that no backup was found.
 
 ### CLI
 
@@ -139,7 +145,7 @@ tcms update:rollback
 tcms update:rollback --force
 ```
 
-Rollback restores the backup directory left behind by a failed update. Only the most recent one is available, and only while an update has not since completed successfully.
+Only the most recent previous version is available. A backup left behind by a failed update takes precedence over the retained copy, since that install is broken right now.
 
 ### Manual Rollback
 
