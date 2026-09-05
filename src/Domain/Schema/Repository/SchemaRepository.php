@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Schema\Repository;
 
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Storage\Exception\CorruptedStorageFileException;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
@@ -290,19 +291,45 @@ class SchemaRepository extends StorageRepository
 		return $schema;
 	}
 
+	/**
+	 * A predicate must answer. One unparseable schema file used to throw out of
+	 * here and take down every caller — nine of them, including the admin
+	 * schema page and `schema:lint`, the very tool for finding bad schemas. A
+	 * corrupt file is reported as absent so the rest of the install keeps
+	 * working; {@see schemaIsUnreadable()} tells the difference where it
+	 * matters.
+	 */
 	public function schemaExists(string $id): bool
 	{
-		$schema = $this->fetchDefaultSchema($id);
+		try {
+			$schema = $this->fetchDefaultSchema($id);
 
-		if (!$schema instanceof SchemaData) {
-			$schema = $this->fetchExtensionSchema($id);
-		}
+			if (!$schema instanceof SchemaData) {
+				$schema = $this->fetchExtensionSchema($id);
+			}
 
-		if (!$schema instanceof SchemaData) {
-			$schema = $this->fetchCustomSchema($id);
+			if (!$schema instanceof SchemaData) {
+				$schema = $this->fetchCustomSchema($id);
+			}
+		} catch (CorruptedStorageFileException) {
+			return false;
 		}
 
 		return $schema instanceof SchemaData;
+	}
+
+	/** Whether the schema's stored file is present but cannot be decoded. */
+	public function schemaIsUnreadable(string $id): bool
+	{
+		try {
+			$this->getSchema($id);
+		} catch (CorruptedStorageFileException) {
+			return true;
+		} catch (\Throwable) {
+			return false;
+		}
+
+		return false;
 	}
 
 	/**

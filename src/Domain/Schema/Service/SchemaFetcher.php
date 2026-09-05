@@ -47,6 +47,15 @@ readonly class SchemaFetcher
 	}
 
 	/**
+	 * Whether the schema's stored file is present but cannot be decoded — the
+	 * case schemaExists() deliberately reports as absent.
+	 */
+	public function schemaIsUnreadable(string $id): bool
+	{
+		return $this->storage->schemaIsUnreadable($id);
+	}
+
+	/**
 	 * Check if a schema ID is a custom (non-reserved, non-extension) schema.
 	 */
 	public function isCustomSchema(string $schemaId): bool
