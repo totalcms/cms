@@ -12,6 +12,7 @@ use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Renderer\RawRenderer;
 
 /**
  * Default Error Renderer.
@@ -33,6 +34,7 @@ readonly class DefaultErrorHandler
 		private ResponseFactoryInterface $responseFactory,
 		LoggerFactory $loggerFactory,
 		private OPcacheService $opcacheService,
+		private RawRenderer $rawRenderer,
 	) {
 		$this->logger          = $loggerFactory
 			->channelLogger(LogChannel::App);
@@ -95,11 +97,23 @@ readonly class DefaultErrorHandler
 
 		// Render response with no-cache headers to prevent browser caching of errors
 		$response = $this->responseFactory->createResponse();
-		$response = $this->renderer->json($response, [
-			'error' => [
-				'message' => $errorMessage,
-			],
-		]);
+
+		// An htmx request swaps whatever comes back, error status or not, so a
+		// JSON body would land in the page as text. Give it a fragment instead:
+		// the same status, the same message, and for a validation failure one
+		// <li> per field so a form can show inline errors.
+		if ($request->getHeaderLine('HX-Request') === 'true') {
+			$response = $this->rawRenderer->render(
+				$response->withHeader('Content-Type', 'text/html'),
+				$this->htmlFragment($statusCode, $errorMessage, $exception),
+			);
+		} else {
+			$response = $this->renderer->json($response, [
+				'error' => [
+					'message' => $errorMessage,
+				],
+			]);
+		}
 
 		// Add no-cache headers for error responses to prevent browser/proxy caching
 		$response = $response
@@ -110,6 +124,52 @@ readonly class DefaultErrorHandler
 			->withStatus($statusCode);
 
 		return $response;
+	}
+
+	/**
+	 * The HTML error fragment for htmx callers.
+	 */
+	private function htmlFragment(int $statusCode, string $errorMessage, \Throwable $exception): string
+	{
+		$escape = static fn (string $text): string => htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+		$fields = $this->validationFields($exception);
+
+		$html = sprintf('<div class="cms-error cms-error-%d" role="alert">', $statusCode);
+		if ($fields !== []) {
+			$html .= '<p>Please fix the highlighted fields.</p><ul class="cms-error-fields">';
+			foreach ($fields as $field => $message) {
+				$html .= sprintf('<li data-field="%s">%s</li>', $escape($field), $escape($message));
+			}
+			$html .= '</ul>';
+		} else {
+			$html .= '<p>' . $escape($errorMessage) . '</p>';
+		}
+
+		return $html . '</div>';
+	}
+
+	/**
+	 * Field → message pairs from a SchemaValidator failure, whose message is
+	 * `Schema Validation Failed. (/path) message;(/other) message`. A JSON
+	 * pointer path becomes a dotted field name (`/cover/exif` → `cover.exif`).
+	 *
+	 * @return array<string,string>
+	 */
+	private function validationFields(\Throwable $exception): array
+	{
+		$message = $exception->getMessage();
+		if (!str_starts_with($message, 'Schema Validation Failed.')) {
+			return [];
+		}
+
+		$fields = [];
+		preg_match_all('#\(/([^)]*)\)\s*([^;]+)#', $message, $matches, PREG_SET_ORDER);
+		foreach ($matches as $match) {
+			$field          = trim(str_replace('/', '.', $match[1]));
+			$fields[$field] = trim($match[2]);
+		}
+
+		return $fields;
 	}
 
 	/**

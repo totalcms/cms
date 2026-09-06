@@ -126,6 +126,7 @@ return [
 					['title' => 'CMS Grid Tag',         'path' => 'twig/cmsgrid-tag'],
 					['title' => 'Cache Tag',            'path' => 'twig/cache-tag'],
 					['title' => 'Load More',            'path' => 'twig/load-more'],
+					['title' => 'HTMX Recipes',         'path' => 'twig/htmx'],
 				],
 			],
 			[

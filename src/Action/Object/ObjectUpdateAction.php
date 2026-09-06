@@ -15,6 +15,7 @@ readonly class ObjectUpdateAction
 		private JsonRenderer $renderer,
 		private ObjectUpdater $objectUpdater,
 		private PrivilegedFieldGuard $guard,
+		private FragmentResponder $fragments,
 	) {
 	}
 
@@ -24,6 +25,10 @@ readonly class ObjectUpdateAction
 		$data   = (array)$request->getParsedBody();
 		$data   = $this->guard->guard($request, $args['collection'], $args['id'], $data);
 		$object = $this->objectUpdater->updateObject($args['collection'], $args['id'], $data);
+
+		if ($this->fragments->wants($request)) {
+			return $this->fragments->respond($request, $response, $object, $args['collection']);
+		}
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
 	}

@@ -366,6 +366,7 @@ Operations that unauthenticated users can perform on this collection via the API
 - `create` without authentication can lead to spam
 - `update` and `delete` are rarely appropriate for public access
 - Consider rate limiting for public endpoints
+- Public counters (likes, "was this helpful") are not a collection operation: set `publicIncrement: true` on the number field instead — see [Number and Range Fields](docs/fields/number-range)
 
 **Common patterns:**
 ```json
@@ -374,6 +375,7 @@ Operations that unauthenticated users can perform on this collection via the API
 
 // Public form submissions (contact forms)
 {"publicOperations": ["create"]}
+
 
 // Fully protected (admin-only)
 {"publicOperations": []}

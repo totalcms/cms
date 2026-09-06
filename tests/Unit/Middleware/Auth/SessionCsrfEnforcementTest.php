@@ -15,6 +15,7 @@ use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Factory\LoggerFactory;
@@ -126,6 +127,7 @@ function makeDualAuthMiddleware(PhpSession $session, CSRFTokenManager $csrfManag
 		test()->createMock(OperationDetector::class),
 		$editionFeatures,
 		csrfTestValidator($csrfManager),
+		test()->createMock(PropertyMetaResolver::class),
 		csrfTestLoggerFactory(),
 	);
 }

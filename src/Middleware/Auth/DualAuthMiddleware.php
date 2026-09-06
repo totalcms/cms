@@ -18,6 +18,7 @@ use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -54,6 +55,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private OperationDetector $operationDetector,
 		private EditionFeatureService $editionFeatures,
 		private \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator $csrfValidator,
+		private PropertyMetaResolver $propertyMeta,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::DualAuth);
@@ -277,6 +279,21 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 	 * - HEAD/object-exists requests are always allowed (for ID validation)
 	 * - Other operations must be in collection's publicOperations array
 	 */
+	private function propertyAllowsPublicIncrement(string $collectionId, string $property): bool
+	{
+		if ($property === '') {
+			return false;
+		}
+
+		try {
+			$meta = $this->propertyMeta->resolve($collectionId, $property);
+		} catch (\Throwable) {
+			return false;
+		}
+
+		return ($meta['settings']['publicIncrement'] ?? false) === true;
+	}
+
 	private function isPublicCollectionRequest(ServerRequestInterface $request): bool
 	{
 		// Must have collection in route - get from route arguments, not request attributes
@@ -300,6 +317,13 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		$operation = $this->operationDetector->detectPublicOperation($request);
 		if ($operation === null) {
 			return false;
+		}
+
+		// Counters are granted per property, not per collection: a number field
+		// with `publicIncrement: true` in its settings may be incremented or
+		// decremented anonymously, and nothing else about the object opens up.
+		if ($operation === 'increment') {
+			return $this->propertyAllowsPublicIncrement($collectionId, (string)$route->getArgument('property'));
 		}
 
 		// Check if collection allows this operation publicly

@@ -2077,6 +2077,15 @@
             "url": "https://docs.totalcms.co/twig/render/"
         },
         {
+            "name": "cms.render.incrementUrl",
+            "signature": "incrementUrl(string $collection, string $id, string $property, int $amount = 1): string",
+            "description": "Target for an hx-post that increments a number property (likes, \"was this helpful\"). Anonymous callers need the collection's `increment` public operation.",
+            "examples": [
+                "{{ cms.render.incrementUrl('posts', post.id, 'likes') }}"
+            ],
+            "url": "https://docs.totalcms.co/twig/render/"
+        },
+        {
             "name": "cms.render.loadMore",
             "signature": "loadMore(string $collection, array $options = []): string",
             "description": "Generate an HTMX trigger element for paginated content loading. The initial page is rendered server-side by the user's template. This outputs the HTMX element that triggers loading page 2+.",
@@ -2113,6 +2122,15 @@
             "url": "https://docs.totalcms.co/twig/render/"
         },
         {
+            "name": "cms.render.objectFragmentUrl",
+            "signature": "objectFragmentUrl(string $collection, string $id, array $options = []): string",
+            "description": "URL for one object rendered through a template (quick views, expandable rows, inline detail).",
+            "examples": [
+                "{{ cms.render.objectFragmentUrl('products', product.id, {template: 'products/quick-view'}) }}"
+            ],
+            "url": "https://docs.totalcms.co/twig/render/"
+        },
+        {
             "name": "cms.render.paginationFull",
             "signature": "paginationFull(int $totalObjects, int $currentPage, int $pageLimit, string $pageKey = 'p', string $prevContent = 'Previous', string $nextContent = 'Next', array $getData = []): string",
             "description": "Render full pagination with numbered page links, plus Previous/Next.",
@@ -2127,6 +2145,33 @@
             "description": "Render simple Previous/Next pagination links.",
             "examples": [
                 "{{ cms.render.paginationSimple(totalItems, currentPage, itemsPerPage) }}\n\n{# With custom labels and page key #}\n{{ cms.render.paginationSimple(items|length, page, 10, 'page', 'Prev', 'Next') }}\n\n{# Preserve query string parameters #}\n{{ cms.render.paginationSimple(total, page, 10, 'p', 'Previous', 'Next', {sort: 'date', q: query}) }}"
+            ],
+            "url": "https://docs.totalcms.co/twig/render/"
+        },
+        {
+            "name": "cms.render.queryUrl",
+            "signature": "queryUrl(string $collection, array $options = []): string",
+            "description": "URL for an HTML fragment of a collection query \u2014 the endpoint behind loadMore(), exposed for hx-get on your own elements (live search, facets, lazy sections). Returns the raw URL; Twig's autoescape handles `&` inside attributes.",
+            "examples": [
+                "{{ cms.render.queryUrl('blog', {template: 'blog/card', limit: 12, search: 'php'}) }}"
+            ],
+            "url": "https://docs.totalcms.co/twig/render/"
+        },
+        {
+            "name": "cms.render.saveUrl",
+            "signature": "saveUrl(string $collection, array $options = []): string",
+            "description": "Target for an hx-post (create) or, with `id`, hx-put / hx-patch (update) of an object. With `template`, an HTMX request gets that template rendered against the saved object instead of JSON.",
+            "examples": [
+                "{{ cms.render.saveUrl('contact', {template: 'forms/thanks'}) }}          {# hx-post target #}\n{{ cms.render.saveUrl('posts', {id: post.id, template: 'posts/card'}) }} {# hx-put / hx-patch target #}"
+            ],
+            "url": "https://docs.totalcms.co/twig/render/"
+        },
+        {
+            "name": "cms.render.viewQueryUrl",
+            "signature": "viewQueryUrl(string $viewId, array $options = []): string",
+            "description": "URL for an HTML fragment of a Data View query. Same options as queryUrl().",
+            "examples": [
+                "{{ cms.render.viewQueryUrl('recent-posts', {template: 'cards/item', limit: 10}) }}"
             ],
             "url": "https://docs.totalcms.co/twig/render/"
         },
@@ -3068,7 +3113,7 @@
             "name": "number-range",
             "title": "Number and Range Fields",
             "description": "Configure number and range input fields in Total CMS with min, max, and step settings for precise numeric value control.",
-            "content": "number and range fields { \"min\" : 1, \"max\" : 10, \"step\" : 0.25 }",
+            "content": "number and range fields { \"min\" : 1, \"max\" : 10, \"step\" : 0.25 } public counters a number field can be opened to anonymous increments \u2014 likes, \"was this helpful\", download counts \u2014 without opening anything else on the object: { \"likes\": { \"type\" : \"number\", \"field\" : \"number\", \"default\" : 0, \"settings\" : { \"publicincrement\" : true } } } with publicincrement set, unauthenticated callers may post to the field's /increment and /decrement routes; every other write still needs authentication or the collection's publicoperations . anonymous counter writes are limited to 60 per minute per ip. treat the number as a soft signal, not a vote: anyone can call it. the htmx recipes docs/twig/htmx page shows the one-line like button.",
             "url": "https://docs.totalcms.co/fields/number-range/"
         },
         {
@@ -3655,7 +3700,7 @@
             "description": "Operations that unauthenticated users can perform on this collection via the API.",
             "examples": [
                 "{\n    \"publicOperations\": [\"read\"]\n}",
-                "// Public read-only (blog, portfolio)\n{\"publicOperations\": [\"read\"]}\n\n// Public form submissions (contact forms)\n{\"publicOperations\": [\"create\"]}\n\n// Fully protected (admin-only)\n{\"publicOperations\": []}"
+                "// Public read-only (blog, portfolio)\n{\"publicOperations\": [\"read\"]}\n\n// Public form submissions (contact forms)\n{\"publicOperations\": [\"create\"]}\n\n\n// Fully protected (admin-only)\n{\"publicOperations\": []}"
             ],
             "url": "https://docs.totalcms.co/collections/settings/"
         },

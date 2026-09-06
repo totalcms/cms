@@ -11,14 +11,11 @@ use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
-use Slim\Exception\HttpForbiddenException;
 use TotalCMS\Domain\Admin\AdminTableRenderer;
 use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Query\Data\QueryResult;
-use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
-use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Domain\Rendering\Service\FragmentRenderer;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\OffsetPaginator;
 use TotalCMS\Renderer\RawRenderer;
@@ -36,8 +33,7 @@ readonly class QueryActionRenderer
 		private JsonRenderer $jsonRenderer,
 		private RawRenderer $rawRenderer,
 		private HtmxRenderer $htmxRenderer,
-		private TwigEngine $twigEngine,
-		private EditionFeatureService $editionFeatures,
+		private FragmentRenderer $fragments,
 		private AdminTableRenderer $adminTableRenderer,
 	) {
 	}
@@ -91,23 +87,21 @@ readonly class QueryActionRenderer
 		array $params,
 		string $baseUrl,
 	): ResponseInterface {
-		$template = $params['template'] ?? '';
-		if ($template === '') {
-			throw new HttpBadRequestException($request, 'The "template" parameter is required for HTML format.');
-		}
-
-		if (!$this->editionFeatures->can(EditionFeature::TEMPLATES)) {
-			throw new HttpForbiddenException($request, 'Templates feature requires Standard edition or higher.');
-		}
+		$template = (string)($params['template'] ?? '');
 
 		$context = [];
 		if (isset($params['_collection'])) {
 			$context['collection'] = $params['_collection'];
 		}
 
+		// FragmentRenderer owns the "template required" and edition checks;
+		// render once with no object so an empty result still validates.
 		$html = '';
+		if ($result->items === []) {
+			$this->fragments->render($request, $template, $context);
+		}
 		foreach ($result->items as $item) {
-			$html .= $this->twigEngine->render(TemplatePath::loaderPath($template), ['object' => $item] + $context);
+			$html .= $this->fragments->render($request, $template, ['object' => $item] + $context);
 		}
 
 		$mode = $params['mode'] ?? '';

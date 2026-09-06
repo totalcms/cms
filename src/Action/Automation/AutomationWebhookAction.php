@@ -11,7 +11,9 @@ use TotalCMS\Domain\Automation\Service\AutomationGuard;
 use TotalCMS\Domain\Automation\Service\AutomationQueue;
 use TotalCMS\Domain\Automation\Service\AutomationRunner;
 use TotalCMS\Middleware\Automation\AutomationWebhookMiddleware;
+use Slim\Exception\HttpInternalServerErrorException;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Renderer\RawRenderer;
 
 /**
  * `POST /automations/{id}` — fires an automation's webhook trigger. Auth has
@@ -28,6 +30,7 @@ final readonly class AutomationWebhookAction
 		private AutomationRunner $runner,
 		private JsonRenderer $renderer,
 		private AutomationGuard $guard,
+		private RawRenderer $rawRenderer,
 	) {
 	}
 
@@ -56,6 +59,19 @@ final readonly class AutomationWebhookAction
 			$exception = $record->exception;
 			if ($exception !== null && !$this->guard->shouldSurfaceErrors()) {
 				$exception = 'Automation handler failed. See the server logs for details.';
+			}
+
+			// An htmx caller wants markup to swap in. A handler that returns a
+			// string gets it back verbatim as HTML; a failure throws so
+			// DefaultErrorHandler renders the error fragment with the same
+			// guarded message the JSON branch would carry.
+			if ($request->getHeaderLine('HX-Request') === 'true') {
+				if ($record->status !== 'success') {
+					throw new HttpInternalServerErrorException($request, (string)($exception ?? 'Automation handler failed.'));
+				}
+				if (is_string($record->return)) {
+					return $this->rawRenderer->render($response->withHeader('Content-Type', 'text/html'), $record->return);
+				}
 			}
 
 			return $this->renderer->json($response, [

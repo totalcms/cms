@@ -303,6 +303,45 @@ Generate a standalone HTMX button for paginated DataView loading into an externa
 }) }}
 ```
 
+## Fragment URLs
+
+The HTML-fragment endpoints behind Load More, exposed for your own `hx-get`
+and `hx-post` attributes. Each returns a raw URL; Twig's autoescape handles it
+inside an attribute. See [HTMX Recipes](docs/twig/htmx) for complete examples.
+
+### queryUrl()
+
+```twig
+{{ cms.render.queryUrl('blog', {template: 'blog/card', limit: 12, search: 'php'}) }}
+```
+
+Options: `template` (required), `limit`, `offset`, `sort`, `include`, `exclude`, `search`, `mode`.
+
+### viewQueryUrl()
+
+```twig
+{{ cms.render.viewQueryUrl('recent-posts', {template: 'cards/item', limit: 10}) }}
+```
+
+### objectFragmentUrl()
+
+```twig
+{{ cms.render.objectFragmentUrl('products', product.id, {template: 'products/quick-view'}) }}
+```
+
+### saveUrl()
+
+```twig
+{{ cms.render.saveUrl('contact', {template: 'forms/thanks'}) }}          {# hx-post target #}
+{{ cms.render.saveUrl('posts', {id: post.id, template: 'posts/card'}) }} {# hx-put / hx-patch target #}
+```
+
+### incrementUrl()
+
+```twig
+{{ cms.render.incrementUrl('posts', post.id, 'likes') }}
+```
+
 ## Depot Browser
 
 ### depotBrowser()

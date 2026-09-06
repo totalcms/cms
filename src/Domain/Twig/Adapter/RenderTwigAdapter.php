@@ -118,6 +118,107 @@ class RenderTwigAdapter
 	}
 
 	/**
+	 * URL for an HTML fragment of a collection query — the endpoint behind
+	 * loadMore(), exposed for hx-get on your own elements (live search,
+	 * facets, lazy sections). Returns the raw URL; Twig's autoescape handles
+	 * `&` inside attributes.
+	 *
+	 * ```twig
+	 * <input name="search" hx-get="{{ cms.render.queryUrl('blog', {template: 'blog/card', limit: 12}) }}"
+	 *        hx-trigger="input changed delay:300ms" hx-target="#results">
+	 * ```
+	 *
+	 * @param array<string,mixed> $options template (required), limit, offset, sort, include, exclude, search, mode
+	 */
+	public function queryUrl(string $collection, array $options = []): string
+	{
+		return $this->config->api . '/api/collections/' . rawurlencode($collection) . '/query?' . http_build_query($this->fragmentParams($options, 'queryUrl'));
+	}
+
+	/**
+	 * URL for an HTML fragment of a Data View query. Same options as queryUrl().
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function viewQueryUrl(string $viewId, array $options = []): string
+	{
+		return $this->config->api . '/api/dataviews/' . rawurlencode($viewId) . '/query?' . http_build_query($this->fragmentParams($options, 'viewQueryUrl'));
+	}
+
+	/**
+	 * URL for one object rendered through a template (quick views, expandable
+	 * rows, inline detail).
+	 *
+	 * @param array<string,mixed> $options template (required)
+	 */
+	public function objectFragmentUrl(string $collection, string $id, array $options = []): string
+	{
+		$template = (string)($options['template'] ?? '');
+		if ($template === '') {
+			throw new \InvalidArgumentException('cms.render.objectFragmentUrl: the "template" option is required.');
+		}
+
+		return $this->config->api . '/api/collections/' . rawurlencode($collection) . '/' . rawurlencode($id)
+			. '?' . http_build_query(['format' => 'html', 'template' => $template]);
+	}
+
+	/**
+	 * Target for an hx-post (create) or, with `id`, hx-put / hx-patch (update)
+	 * of an object. With `template`, an HTMX request gets that template
+	 * rendered against the saved object instead of JSON.
+	 *
+	 * @param array<string,mixed> $options id, template
+	 */
+	public function saveUrl(string $collection, array $options = []): string
+	{
+		$url = $this->config->api . '/api/collections/' . rawurlencode($collection);
+		$id  = (string)($options['id'] ?? '');
+		if ($id !== '') {
+			$url .= '/' . rawurlencode($id);
+		}
+		$template = (string)($options['template'] ?? '');
+
+		return $template === '' ? $url : $url . '?' . http_build_query(['template' => $template]);
+	}
+
+	/**
+	 * Target for an hx-post that increments a number property (likes,
+	 * "was this helpful"). Anonymous callers need the collection's
+	 * `increment` public operation.
+	 */
+	public function incrementUrl(string $collection, string $id, string $property, int $amount = 1): string
+	{
+		$url = $this->config->api . '/api/collections/' . rawurlencode($collection) . '/' . rawurlencode($id) . '/' . rawurlencode($property) . '/increment';
+
+		return $amount === 1 ? $url : $url . '/' . $amount;
+	}
+
+	/**
+	 * Query parameters for the HTML fragment endpoints. Only keys the caller
+	 * set are emitted, so the URL says exactly what the template asked for.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array<string,string>
+	 */
+	private function fragmentParams(array $options, string $helper): array
+	{
+		$template = (string)($options['template'] ?? '');
+		if ($template === '') {
+			throw new \InvalidArgumentException("cms.render.{$helper}: the \"template\" option is required.");
+		}
+
+		$params = ['format' => 'html', 'template' => $template];
+		foreach (['limit', 'offset', 'sort', 'include', 'exclude', 'search', 'mode'] as $key) {
+			if (isset($options[$key]) && (string)$options[$key] !== '') {
+				$params[$key] = (string)$options[$key];
+			}
+		}
+
+		return $params;
+	}
+
+	/**
 	 * Generate an HTMX trigger element for paginated DataView loading.
 	 *
 	 * Usage in Twig:

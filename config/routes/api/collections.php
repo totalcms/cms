@@ -16,6 +16,7 @@ use TotalCMS\Middleware\Auth\DualAuthMiddleware;
 use TotalCMS\Middleware\License\CollectionEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 use TotalCMS\Middleware\Security\ExternalCorsMiddleware;
+use TotalCMS\Middleware\Security\IncrementRateLimitMiddleware;
 
 return function (RouteCollectorProxyInterface $app): void {
 	$app->group('/collections', function (RouteCollectorProxy $group): void {
@@ -66,8 +67,10 @@ return function (RouteCollectorProxyInterface $app): void {
 		$group->put('/{collection}/{id}/{property}', Action\Object\ObjectUpdatePropertyAction::class)->setName('property-update');
 		$group->patch('/{collection}/{id}/{property}', Action\Object\ObjectPatchPropertyAction::class)->setName('property-patch');
 		$group->delete('/{collection}/{id}/{property}', Action\Object\ObjectDeletePropertyAction::class)->setName('property-delete');
-		$group->post('/{collection}/{id}/{property}/increment[/{amount}]', Action\Object\ObjectPropertyIncrementAction::class)->setName('property-increment');
-		$group->post('/{collection}/{id}/{property}/decrement[/{amount}]', Action\Object\ObjectPropertyDecrementAction::class)->setName('property-decrement');
+		// Counters may be opened to the public via the collection's `increment`
+		// operation; anonymous callers are rate-limited per IP.
+		$group->post('/{collection}/{id}/{property}/increment[/{amount}]', Action\Object\ObjectPropertyIncrementAction::class)->setName('property-increment')->add(IncrementRateLimitMiddleware::class);
+		$group->post('/{collection}/{id}/{property}/decrement[/{amount}]', Action\Object\ObjectPropertyDecrementAction::class)->setName('property-decrement')->add(IncrementRateLimitMiddleware::class);
 
 		// Depot file move — MUST register before the greedy `{path:.+}` PUT below.
 		// Same FastRoute ordering concern as the `/cache` DELETE route: the bare

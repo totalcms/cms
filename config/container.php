@@ -162,6 +162,7 @@ use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Middleware\LazySessionStartMiddleware;
 use TotalCMS\Middleware\Response\PreviewRouteMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Renderer\RawRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\GuzzleHttpClient;
 use TotalCMS\Support\HttpClientInterface;
@@ -388,7 +389,8 @@ return [
 		$container->get(JsonRenderer::class),
 		$container->get(ResponseFactoryInterface::class),
 		$container->get(LoggerFactory::class),
-		$container->get(OPcacheService::class)
+		$container->get(OPcacheService::class),
+		$container->get(RawRenderer::class),
 	),
 
 	PhpRenderer::class => fn (ContainerInterface $container): PhpRenderer => new PhpRenderer($container->get(Config::class)->template),

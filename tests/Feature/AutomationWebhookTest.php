@@ -6,6 +6,7 @@ use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 
+use function TotalCMS\Slim\Pest\post;
 use function TotalCMS\Slim\Pest\postJson;
 
 beforeEach(function (): void {
@@ -162,3 +163,33 @@ it('does not let X-Forwarded-Host nominate the origin for a sameOrigin webhook',
 it('404s for an unknown webhook id', function (): void {
 	expect(postJson('/automations/nope', [])->getStatusCode())->toBe(404);
 });
+
+it('returns a string handler result as html for an htmx request on a sync webhook', function (): void {
+	saveWebhookAutomation($this->app->getContainer(), 'signup', 'none', true, "<?php\n\nreturn function (\$ctx) { return '<p class=\"ok\">Thanks, ' . htmlspecialchars((string)\$ctx->args['email']) . '</p>'; };\n");
+
+	$response = post('/automations/signup', ['email' => 'joe@example.com'], ['HX-Request' => 'true']);
+
+	expect($response->getStatusCode())->toBe(200);
+	expect($response->getHeaderLine('Content-Type'))->toContain('text/html');
+	expect((string)$response->getBody())->toBe('<p class="ok">Thanks, joe@example.com</p>');
+});
+
+it('keeps json for the same sync webhook without the htmx header', function (): void {
+	saveWebhookAutomation($this->app->getContainer(), 'signup2', 'none', true, "<?php\n\nreturn function (\$ctx) { return '<p>Thanks</p>'; };\n");
+
+	$response = postJson('/automations/signup2', ['email' => 'joe@example.com']);
+
+	expect($response->getStatusCode())->toBe(200);
+	expect(json_decode((string)$response->getBody(), true)['return'])->toBe('<p>Thanks</p>');
+});
+
+it('renders a failing sync webhook as an error fragment for an htmx request', function (): void {
+	saveWebhookAutomation($this->app->getContainer(), 'boom2', 'none', true, "<?php\n\nreturn function (\$ctx) { throw new \\RuntimeException('kaboom'); };\n");
+
+	$response = post('/automations/boom2', [], ['HX-Request' => 'true']);
+
+	expect($response->getStatusCode())->toBe(500);
+	expect($response->getHeaderLine('Content-Type'))->toContain('text/html');
+	expect((string)$response->getBody())->toContain('cms-error-500');
+});
+

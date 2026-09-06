@@ -21,6 +21,7 @@ readonly class ObjectSaveAction
 		private JsonRenderer $renderer,
 		private ObjectSaver $service,
 		private PrivilegedFieldGuard $guard,
+		private FragmentResponder $fragments,
 	) {
 	}
 
@@ -37,6 +38,10 @@ readonly class ObjectSaveAction
 		$data   = (array)$request->getParsedBody();
 		$data   = $this->guard->guard($request, $args['collection'], (string)($data['id'] ?? ''), $data);
 		$object = $this->service->saveObject($args['collection'], $data);
+
+		if ($this->fragments->wants($request)) {
+			return $this->fragments->respond($request, $response, $object, $args['collection']);
+		}
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
 	}

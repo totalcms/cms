@@ -10,7 +10,8 @@ use Slim\Routing\RouteContext;
 /**
  * Operation Detector Service.
  *
- * Maps route names to CRUD operations (create, read, update, delete).
+ * Maps route names to CRUD operations (create, read, update, delete), plus the
+ * narrower public `increment` operation for the counter routes.
  * Centralized route mapping used by DualAuthMiddleware and BaseAccessMiddleware.
  */
 readonly class OperationDetector
@@ -200,9 +201,21 @@ readonly class OperationDetector
 	}
 
 	/**
-	 * Detect the CRUD operation type based on route name.
+	 * Routes that anonymous callers may use under the `increment` public
+	 * operation. For a logged-in user these are ordinary updates (see
+	 * detectOperation()); for the public they are a narrower grant, so a
+	 * collection can allow likes and counters without allowing anonymous
+	 * PUT/PATCH on the whole object.
+	 */
+	private const INCREMENT_ROUTES = [
+		'property-increment',
+		'property-decrement',
+	];
+
+	/**
+	 * Detect the public operation type based on route name.
 	 *
-	 * @return string|null Operation type: 'create', 'read', 'update', 'delete', or null if not determinable
+	 * @return string|null Operation type: 'create', 'read', 'update', 'delete', 'increment', or null if not determinable
 	 */
 	public function detectPublicOperation(ServerRequestInterface $request): ?string
 	{
@@ -210,6 +223,10 @@ readonly class OperationDetector
 
 		if ($routeName === '') {
 			return null;
+		}
+
+		if (in_array($routeName, self::INCREMENT_ROUTES, true)) {
+			return 'increment';
 		}
 
 		// Check if route is in public routes

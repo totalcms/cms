@@ -7,6 +7,8 @@ description: "Add HTMX-powered infinite scroll and load more buttons to Total CM
 
 Total CMS provides "load more" helpers that render the first page of results server-side, then fetch subsequent pages via API as the user scrolls or clicks a button.
 
+The same endpoint powers live search, filtering, lazy sections and more — see [HTMX Recipes](docs/twig/htmx).
+
 ## Requirements
 
 - **Edition**: Standard edition or higher (requires templates feature)
