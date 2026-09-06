@@ -56,7 +56,27 @@ Most collection views use interactive data tables that support:
 - **Filtering** - Search within collections
 - **Pagination** - Navigate large datasets
 - **Bulk Actions** - Select multiple items for operations
-- **Quick Edit** - Inline editing for simple changes
+- **Quick Edit** - Inline editing for simple changes (see below)
+
+### Editing in the Table
+
+Simple values can be changed without opening the object. Hover a cell and a
+pencil appears at its right edge; click it and the cell becomes that one
+field, with a check mark to save and a cross to cancel beside it. Enter saves
+from a single-line input, Escape cancels, and the cell shows the new value as
+soon as the save lands. While a cell is open, no other cell offers a pencil.
+Nothing else on the page reloads, and the value is saved exactly as the
+object form would save it: a toggle stays a boolean, a list stays a list,
+rich text stays HTML.
+
+The pencil appears on text, textarea, number, range, price, toggle,
+checkbox, select, radio, multiselect, checklist, date, datetime, time, url,
+email, phone, color, list and styled text fields. Identity fields (`id`,
+slugs), passwords and secrets, readonly fields such as the created and
+updated timestamps, and composites (images, galleries, files, depots, decks,
+cards, code) do not offer it: open the object to edit those. A field the
+current user's access group cannot change is refused the same way it is on
+the object form.
 
 ### Form Builder
 

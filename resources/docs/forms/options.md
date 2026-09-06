@@ -34,6 +34,7 @@ All Total CMS form methods accept `formSettings` to control form behavior, appea
     helpOnHover: true,             # Show help on hover (bool, default: false)
     helpOnFocus: false,            # Show help on focus (bool, default: false)
     hideID: false,                 # Hide the ID field (bool, default: false)
+    fieldIcons: true,              # Render the icon slot beside each field; a field's own `icon` option overrides (bool, default: true)
     addOnly: true,                 # Security: Only allow creating new objects, never editing (bool, default: false)
     register: true,                # Retarget the form at /admin/register/{collection} so the new user is also auto-logged-in (bool, default: false)
 }) }}

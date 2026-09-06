@@ -1,0 +1,63 @@
+{#
+	The inside of one collection-table cell. Shared by table-row.twig (every
+	column of every row) and AdminCellAction (one cell, re-rendered after an
+	inline edit), so the two can never drift. Receives `object`, `col`
+	({name, type, editable}) and `_collection`.
+#}
+{% set value = attribute(object, col.name) %}
+{% if value is null or value == '' %}
+{% elseif col.type == 'boolean' %}
+	{{ value ? '&#10004;' : '' }}
+{% elseif col.type == 'date' %}
+	{{ value|date('Y-m-d H:i')|replace({'00:00': ''})|trim }}
+{% elseif col.type == 'image' %}
+	{% if value.size is defined and value.size > 0 %}
+		<img src="{{ cms.media.imagePath(object.id, {w:128, h:128, q:30, fit:'crop-focalpoint'}, {collection: _collection, property: col.name}) }}" alt="{{ value.alt|default('') }}" width="128" height="128" loading="lazy">
+	{% endif %}
+{% elseif col.type == 'gallery' %}
+	{% if value|length > 0 %}
+		<div class="gallery-preview">
+			<img src="{{ cms.media.galleryPath(object.id, 'first', {w:128, h:128, q:30, fit:'crop-focalpoint'}, {collection: _collection, property: col.name}) }}" alt="{{ _collection }} / {{ object.id }} / {{ col.name }} gallery preview" width="128" height="128" loading="lazy">
+			<span class="image-count">{{ value|length }}</span>
+		</div>
+	{% endif %}
+{% elseif col.type == 'color' %}
+	{% if value.hex is defined %}
+		<div class="color-preview" style="background-color: {{ value.hex }}">{{ value.hex }}</div>
+	{% endif %}
+{% elseif col.type == 'card' %}
+	{# A card is a single sub-object. Show a summary of its scalar fields
+	   (skip the internal id and nested composites like image/file). #}
+	{{ value|filter((v, k) => k != 'id' and v is not iterable)|join(', ')|striptags }}
+{% elseif col.type in ['deck', 'depot', 'array'] %}
+	{{ value|length }}
+{% elseif col.type == 'file' %}
+	{{ value.name|default('') }}
+{% elseif col.type == 'list' %}
+	{{ value|join(', ') }}
+{% elseif col.type == 'svg' %}
+	{{ value|raw }}
+{% elseif col.type == 'code' %}
+	{{ value|e }}
+{% elseif col.type == 'password' %}
+	********
+{% elseif col.type in ['localizedtext', 'localizedstyledtext'] %}
+	{# Show the defaultLocale value (or first non-empty) in the list view.
+	   Mirrors PropertyData::__toString() behavior — but operates on the
+	   already-transformed dict, since transform() runs before render. #}
+	{% set defaultLocale = cms.config('defaultLocale') %}
+	{% set displayValue = defaultLocale ? value[defaultLocale]|default('') : '' %}
+	{% if displayValue == '' %}
+		{% set displayValue = value|filter(v => v != '')|first|default('') %}
+	{% endif %}
+	{{ displayValue|striptags }}
+{% else %}
+	{# Defensive: never strip_tags() an array — an unhandled composite
+	   (array-valued) column falls back to its item count instead of crashing. #}
+	{% if value is iterable %}{{ value|length }}{% else %}{{ value|striptags }}{% endif %}
+{% endif %}
+{% if col.editable|default(false) %}
+	<button type="button" class="inline-edit-trigger" title="Edit {{ col.name }}"
+	        hx-get="collections/{{ _collection }}/{{ object.id }}/cell/{{ col.name }}/edit"
+	        hx-target="closest td" hx-swap="innerHTML"></button>
+{% endif %}

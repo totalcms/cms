@@ -1,6 +1,8 @@
 //-----------------------------------------------
 // Total CMS Collection Table Component (HTMX)
 //-----------------------------------------------
+import { bootInlineEdit } from './inline-edit';
+
 export default class AdminTable {
 
 	constructor(wrapper) {
@@ -60,7 +62,7 @@ export default class AdminTable {
 
 			// Handle row clicks for navigation
 			const row = target.closest('tr[data-object-id]');
-			if (row && !target.closest('td.action') && !target.closest('button') && !target.closest('a') && !target.closest('nav')) {
+			if (row && !target.closest('td.action') && !target.closest('button') && !target.closest('a') && !target.closest('nav') && !target.closest('form.inline-edit')) {
 				this.handleRowClick(e, row);
 				return;
 			}
@@ -198,6 +200,14 @@ export default class AdminTable {
 		// camelCase `htmx:afterSwap`.
 		this.wrapper.addEventListener('htmx:after:swap', (e) => {
 			if (e.target?.id === `table-body-${this.collection}`) this.restoreChecks();
+		});
+
+		// An inline-edit fragment landed in a cell: give it a TotalForm. In
+		// htmx 4 `htmx:after:swap` is dispatched on the document with the
+		// target in `detail.ctx`, so it never passes through the wrapper;
+		// `htmx:after:settle` is dispatched on the swap target itself.
+		this.wrapper.addEventListener('htmx:after:settle', (e) => {
+			if (e.target?.tagName === 'TD') bootInlineEdit(e.target);
 		});
 
 		// Esc exits selection mode (same as Done). If a popover is open, let

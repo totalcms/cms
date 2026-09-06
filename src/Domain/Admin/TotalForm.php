@@ -364,10 +364,15 @@ class TotalForm implements \Stringable
 		// SchemaData to carry a layout. Ignored when $schemaData is present, which
 		// stays the source of truth for schema-driven forms.
 		//
-		// Last in the list on purpose: CollectionForm, SchemaForm and TemplateForm
-		// call parent::__construct() positionally, so a new parameter anywhere else
-		// silently shifts their arguments.
+		// After every positional parameter on purpose: CollectionForm, SchemaForm
+		// and TemplateForm call parent::__construct() positionally, so a new
+		// parameter anywhere earlier silently shifts their arguments. Add new
+		// options below this line only.
 		protected string $formgrid = '',
+		// Render the icon slot (`.form-group-icon`) beside each field. Off for
+		// forms whose fields live somewhere the icon has no room — one field
+		// swapped into a table cell. A field's own `icon` option still wins.
+		protected bool $fieldIcons = true,
 	) {
 		$this->init();
 		$this->initClass();
@@ -1288,6 +1293,10 @@ class TotalForm implements \Stringable
 		// buildFieldOptions in an ObjectForm
 		unset($options['deck_context']);
 		unset($options['subfield']);
+
+		if (!$this->fieldIcons && !array_key_exists('icon', $options)) {
+			$options['icon'] = false;
+		}
 
 		$fieldType        = $options['field'] ?? '';
 		$fieldType        = self::canonicalFieldType($fieldType); // canonicalize (multicheckbox → checklist)

@@ -7,6 +7,7 @@ use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Admin\Admin404Action;
 use TotalCMS\Action\Admin\AdminAutomationsAction;
 use TotalCMS\Action\Admin\AdminBuilderAction;
+use TotalCMS\Action\Admin\AdminCellAction;
 use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDataViewsAction;
 use TotalCMS\Action\Admin\AdminDocsAction;
@@ -89,6 +90,12 @@ return function (App $app): void {
 
 		$group->get('/collections[/{collection}[/{id}]]', AdminCollectionAction::class)->setName('admin-collection')->add(CollectionEditionMiddleware::class)->add(CollectionAccessMiddleware::class);
 		$group->post('/collections/{collection}/{id}', AdminCollectionAction::class)->setName('admin-collection-post')->add(CollectionEditionMiddleware::class)->add(CollectionAccessMiddleware::class);
+
+		// Inline edit: one cell of the collection table as a fragment — display,
+		// edit form, and save-then-display. Same access rules as the object page.
+		$group->get('/collections/{collection}/{id}/cell/{property}', AdminCellAction::class)->setName('admin-collection-cell')->add(CollectionEditionMiddleware::class)->add(CollectionAccessMiddleware::class);
+		$group->get('/collections/{collection}/{id}/cell/{property}/edit', AdminCellAction::class)->setName('admin-collection-cell-edit')->add(CollectionEditionMiddleware::class)->add(CollectionAccessMiddleware::class);
+		$group->patch('/collections/{collection}/{id}/cell/{property}', AdminCellAction::class)->setName('admin-collection-cell-patch')->add(CollectionEditionMiddleware::class)->add(CollectionAccessMiddleware::class);
 
 		$group->get('/docs[/{page:.*}]', AdminDocsAction::class)->setName('admin-docs')->add(DocsAccessMiddleware::class);
 

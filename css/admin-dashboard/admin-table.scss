@@ -167,3 +167,133 @@
 dialog.dialog-clone-object {
 	height : revert;
 }
+
+// --- Inline cell editing -------------------------------------------------
+// The pencil sits at the right edge of a cell and only shows on hover; the
+// swapped-in form replaces the cell content with the field and two small
+// buttons. Both stay inside the cell so the table never reflows.
+.admin-table-wrapper {
+	td {
+		position : relative;
+	}
+	.inline-edit-trigger {
+		position      : absolute;
+		top           : 0.25rem;
+		right         : 0.25rem;
+		width         : 1.5rem;
+		height        : 1.5rem;
+		padding       : 0;
+		border        : 0;
+		background    : oklch(var(--totalform-nearwhite));
+		border-radius : var(--totalform-radius);
+		cursor        : pointer;
+		opacity       : 0;
+		transition    : opacity 0.15s ease;
+
+		&::before {
+			content          : "";
+			position         : absolute;
+			inset            : 0;
+			background-color : oklch(var(--totalform-darkgray));
+			mask-image       : var(--icon-edit);
+			mask-repeat      : no-repeat;
+			mask-position    : center;
+			mask-size        : 0.9rem;
+		}
+		&:hover {
+			background : oklch(var(--totalform-icon-bg));
+			&::before {
+				background-color : oklch(var(--totalform-text-color));
+			}
+		}
+	}
+	td:hover .inline-edit-trigger,
+	.inline-edit-trigger:focus-visible {
+		opacity : 1;
+	}
+	// One edit at a time: while a cell is being edited, no other cell offers
+	// a pencil, so the open form is the only thing that looks editable.
+	&:has(form.inline-edit) .inline-edit-trigger {
+		display : none;
+	}
+
+	// The field takes the full cell width; the save/cancel pair sits under
+	// it, right-aligned, so a short column never squeezes the input.
+	form.inline-edit {
+		display        : flex;
+		flex-direction : column;
+		gap            : 0.35rem;
+		min-width      : 14rem;
+		cursor         : default;
+
+		// A lone checkbox or toggle needs no room to type in: let the cell
+		// keep its natural width.
+		&:has(input[type="checkbox"]) {
+			min-width : 0;
+		}
+
+		.form-field {
+			margin : 0;
+			// The column header already names the field. The top label goes;
+			// the checkbox/toggle label inside the group stays in the tree for
+			// screen readers but takes no space.
+			> label {
+				display : none;
+			}
+			.form-group > label {
+				position    : absolute;
+				width       : 1px;
+				height      : 1px;
+				overflow    : hidden;
+				clip-path   : inset(50%);
+				white-space : nowrap;
+			}
+		}
+		// Icon-only save (check) and cancel (cross), same masked-glyph
+		// pattern as the bulk toolbar buttons.
+		.inline-edit-actions {
+			display         : flex;
+			justify-content : flex-end;
+			gap             : 0.25rem;
+
+			button {
+				position      : relative;
+				width         : 1.5rem;
+				height        : 1.5rem;
+				padding       : 0;
+				border        : 1px solid oklch(var(--totalform-border-color));
+				border-radius : var(--totalform-radius);
+				background    : oklch(var(--totalform-nearwhite));
+				cursor        : pointer;
+
+				&::before {
+					content          : "";
+					position         : absolute;
+					inset            : 0;
+					background-color : oklch(var(--totalform-text-color));
+					mask-image       : var(--inline-icon);
+					mask-repeat      : no-repeat;
+					mask-position    : center;
+					mask-size        : 0.8rem;
+				}
+				&:hover {
+					background : oklch(var(--totalform-icon-bg));
+				}
+			}
+			.inline-edit-save {
+				--inline-icon : var(--icon-check);
+				background    : oklch(var(--totalform-accent));
+				border-color  : oklch(var(--totalform-accent));
+				&::before {
+					background-color : oklch(var(--totalform-purewhite));
+				}
+				&:hover {
+					background : oklch(var(--totalform-accent) / 0.85);
+				}
+			}
+			.inline-edit-cancel {
+				--inline-icon : var(--icon-close);
+			}
+		}
+	}
+}

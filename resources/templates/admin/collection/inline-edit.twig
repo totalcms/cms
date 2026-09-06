@@ -1,0 +1,21 @@
+{#
+	One field of one object, swapped into a table cell by AdminCellAction.
+	`data-inline-edit` is what admin-table.js looks for after a swap to boot
+	a TotalForm on it. The save is not an hx-patch on the form: inline-edit.js
+	sends TotalForm.generateData() as JSON to `data-action` via htmx.ajax, so
+	the value is what the object form would have saved, not a naive
+	serialization of the inputs. Cancel simply re-fetches the display cell.
+	`no-unsaved-warning` matters: TotalForm otherwise installs a page-wide
+	beforeunload guard, and this instance outlives its markup with its field
+	still marked unsaved (the save went through htmx, not the form), so every
+	reload after an inline edit would ask "Changes you made may not be saved".
+#}
+<form class="totalform inline-edit no-save no-status-banner no-unsaved-warning" method="post"
+      data-inline-edit="1" data-action="{{ action }}">
+	{{ field|raw }}
+	<div class="inline-edit-actions">
+		<button type="submit" class="inline-edit-save" title="Save (Enter)" aria-label="Save"></button>
+		<button type="button" class="inline-edit-cancel" title="Cancel (Esc)" aria-label="Cancel"
+		        hx-get="{{ action }}" hx-target="closest td" hx-swap="innerHTML"></button>
+	</div>
+</form>

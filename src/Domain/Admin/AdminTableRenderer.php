@@ -58,8 +58,9 @@ readonly class AdminTableRenderer
 		$columns = [];
 		foreach ($schemaData->index as $property) {
 			$columns[] = [
-				'name' => $property,
-				'type' => $this->getPropertyType($schemaData, $property),
+				'name'  => $property,
+				'type'  => $this->getPropertyType($schemaData, $property),
+				'editable' => InlineEditable::allows($schemaData->properties[$property] ?? []),
 			];
 		}
 
