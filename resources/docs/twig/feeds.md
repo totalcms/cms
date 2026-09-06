@@ -114,6 +114,91 @@ media: {
 Podcast clients use `length` for progress and buffering, so it is worth
 supplying. One enclosure per item — RSS 2.0 permits no more.
 
+## Podcasts
+
+Add a `podcast` block to the feed details and to each item and the feed gains
+the iTunes and Podcast Index tags Apple Podcasts, Spotify and the open
+directories read. Leave it out and the feed is exactly what it was.
+
+```twig
+{{ cms.feed.rss({
+    title: show.title, link: '/', self: '/podcast.xml', description: show.description,
+    podcast: {
+        author:   show.author,
+        owner:    {name: show.author, email: show.email},
+        image:    'https://example.com/media/cover.jpg',
+        category: ['Technology', 'Business > Entrepreneurship'],
+        explicit: false,
+    }
+}, episodes|sortBy('-date')|map(e => {
+    id: e.id, title: e.title, link: cms.builder.url('episode', {id: e.id}),
+    date: e.date, content: e.notes|markdown,
+    media: {url: cms.media.stream(e, {property: 'audio'}), type: e.audio.mime, length: e.audio.size},
+    podcast: {duration: e.duration, episode: e.number, season: e.season},
+})) }}
+```
+
+### What Apple requires
+
+When `podcast` is present these are required, and the feed refuses to render
+without them: `author`, `owner` (`{name, email}`), `image`, `category`,
+`explicit`, and the feed's `self` URL.
+
+- **`image`** must be an absolute URL ending in `.jpg` or `.png`, with no query
+  string, 1400–3000 px square. An ImageWorks URL with parameters is rejected,
+  and so is `.jpeg`; point at the stored file, or serve a resized copy at a
+  plain path.
+- **`category`** is a string or a list, from Apple's category list.
+  Sub-categories are written `Parent > Child`. A category that is not on the
+  list fails with the closest matches named.
+- **`explicit`** is `true` or `false`.
+- **`self`** is what apps re-fetch with, and the Podcast Index `guid` is
+  derived from it. Keep it stable for the life of the show.
+
+### Feed keys
+
+| Key | Tag | Notes |
+| --- | --- | --- |
+| `author`, `owner`, `image`, `category`, `explicit` | required | see above |
+| `type` | `itunes:type` | `episodic` (default) or `serial` |
+| `subtitle`, `summary` | | summary defaults to `description` |
+| `newFeedUrl` | `itunes:new-feed-url` | when the feed moves |
+| `complete`, `block` | | booleans |
+| `guid` | `podcast:guid` | derived from `self` when omitted |
+| `locked` | `podcast:locked` | `{owner: email, value: true}` |
+| `funding` | `podcast:funding` | `{url, title}` or a list of them |
+
+### Item keys
+
+| Key | Tag | Notes |
+| --- | --- | --- |
+| `duration` | `itunes:duration` | seconds, or `HH:MM:SS` (written as seconds) |
+| `episode`, `season` | | whole numbers |
+| `episodeType` | | `full` (default), `trailer`, `bonus` |
+| `image` | | per-episode art, same rules as the feed image |
+| `explicit` | | overrides the feed value |
+| `title`, `subtitle`, `summary` | | summary defaults to the item summary, then the content with tags stripped |
+| `block` | | boolean |
+| `transcript` | `podcast:transcript` | `{url, type}` — e.g. `application/srt` |
+| `chapters` | `podcast:chapters` | `{url, type: 'application/json+chapters'}` |
+| `people` | `podcast:person` | list of `{name, role?, group?, img?, href?}` |
+| `soundbites` | `podcast:soundbite` | list of `{startTime, duration, title?}` |
+
+The enclosure is `media`, exactly as above. Podcast apps cache the enclosure
+URL for a long time, so it must be a public, stable URL; a signed or expiring
+link is a broken episode later.
+
+### Downloads
+
+Total CMS does not count downloads. Podcasters use a prefix analytics service
+instead, which is one change to the enclosure URL:
+
+```twig
+media: {url: 'https://op3.dev/e/' ~ (audioUrl|replace({'https://': ''})), type: e.audio.mime, length: e.audio.size},
+```
+
+Atom feeds ignore the `podcast` block: podcast apps read RSS.
+
 ## Atom
 
 Same arguments, different renderer:

@@ -62,4 +62,19 @@ describe('FeedTwigAdapter', function (): void {
 
 		feedAdapter()->rss($meta, []);
 	})->throws(DomainException::class, 'title');
+
+	test('passes a podcast block through to the writer', function (): void {
+		$out = feedAdapter()->rss(adapterMeta([
+			'self'    => 'https://example.com/podcast.xml',
+			'podcast' => [
+				'author'   => 'Joe',
+				'owner'    => ['name' => 'Joe', 'email' => 'joe@example.com'],
+				'image'    => 'https://example.com/cover.png',
+				'category' => 'Technology',
+				'explicit' => false,
+			],
+		]), [['title' => 'Ep', 'link' => '/ep/1', 'date' => '2026-08-26', 'podcast' => ['duration' => 60]]]);
+
+		expect((string)$out)->toContain('<itunes:duration>60</itunes:duration>');
+	});
 });

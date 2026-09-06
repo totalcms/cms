@@ -1,6 +1,8 @@
 parameters:
   level: 8
   inferPrivatePropertyTypeFromConstructor: true
+  stubFiles:
+    - phpstan-stubs/laminas-feed-writer-feed.stub
   reportUnmatchedIgnoredErrors: false
   paths:
     - src

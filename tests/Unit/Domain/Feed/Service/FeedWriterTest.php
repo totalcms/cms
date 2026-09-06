@@ -288,3 +288,56 @@ describe('FeedWriter errors', function (): void {
 		feedWriter()->write(feedMeta(), [feedItem()], 'jsonfeed');
 	})->throws(DomainException::class, 'jsonfeed');
 });
+
+describe('FeedWriter podcast', function (): void {
+	/** @return array<string,mixed> */
+	function podcastFeedMeta(): array
+	{
+		return feedMeta([
+			'self'    => 'https://example.com/podcast.xml',
+			'podcast' => [
+				'author'   => 'Joe Workman',
+				'owner'    => ['name' => 'Joe Workman', 'email' => 'joe@example.com'],
+				'image'    => 'https://example.com/cover.jpg',
+				'category' => 'Technology',
+				'explicit' => false,
+			],
+		]);
+	}
+
+	test('output is unchanged when no podcast key is present', function (): void {
+		$xml = feedWriter()->write(feedMeta(), [feedItem()], 'rss');
+
+		expect($xml)->not->toContain('itunes:');
+		expect($xml)->not->toContain('podcast:');
+	});
+
+	test('emits channel and item podcast tags together with the enclosure', function (): void {
+		$item = feedItem([
+			'media'   => ['url' => 'https://example.com/ep1.mp3', 'type' => 'audio/mpeg', 'length' => 1234],
+			'podcast' => ['duration' => 600, 'episode' => 1],
+		]);
+
+		$xml = feedWriter()->write(podcastFeedMeta(), [$item], 'rss');
+		$rss = parseFeed($xml);
+
+		expect($xml)->toContain('<itunes:author>Joe Workman</itunes:author>');
+		expect($xml)->toContain('<itunes:duration>600</itunes:duration>');
+		expect($xml)->toContain('<itunes:episode>1</itunes:episode>');
+		expect((string)$rss->channel->item[0]->enclosure['url'])->toBe('https://example.com/ep1.mp3');
+	});
+
+	test('atom ignores the podcast block without failing', function (): void {
+		$xml = feedWriter()->write(podcastFeedMeta(), [feedItem(['podcast' => ['duration' => 5]])], 'atom');
+
+		expect($xml)->toContain('http://www.w3.org/2005/Atom');
+		expect($xml)->not->toContain('itunes:');
+	});
+
+	test('names the missing podcast key in the error', function (): void {
+		$meta = podcastFeedMeta();
+		unset($meta['podcast']['owner']);
+
+		feedWriter()->write($meta, [feedItem()], 'rss');
+	})->throws(DomainException::class, 'meta.podcast.owner');
+});

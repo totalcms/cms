@@ -4,6 +4,10 @@ All notable changes to Total CMS will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Podcast feeds**: `cms.feed.rss()` takes an optional `podcast` block on the feed details and on each item and writes the iTunes and Podcast Index tags Apple Podcasts, Spotify and the open directories read — author, owner, artwork, categories, explicit, episode and season numbers, duration, transcripts, chapters, people, soundbites, funding and a stable `podcast:guid` derived from the feed URL. Without the block the feed is unchanged. Apple's required fields are required here too, and a category that is not on Apple's list fails with the closest matches named, so a feed that renders is a feed the directories accept. See [Feeds](https://docs.totalcms.co/twig/feeds#podcasts)
+
 ### Fixed
 
 - **A corrupt state file under `tcms-data/.system` can no longer be overwritten with an empty one.** The extension state, migrations ledger, per-automation state and live-reload pulse files each answered an unreadable or malformed read with "treat it as empty", and the next save wrote that emptiness back — the same shape of bug that wiped `apikeys.json` in 3.5.1, just in files that were not credentials. One `AtomicJsonStore` now owns the temp-file-and-rename commit, the optional sidecar lock, and a corrupt-file policy every caller has to name. Extension state, migrations and automation state read as empty for the request, log an error naming the file, and refuse to write until the file reads cleanly again, so a broken `extensions.json` shows every extension as off for one request instead of turning them all off for good. The reload pulse is disposable and starts fresh. API keys keep throwing, with their lock and 0600 mode now provided by the store

@@ -1,0 +1,30 @@
+<?php
+
+namespace Laminas\Feed\Writer;
+
+/**
+ * Laminas\Feed\Writer\Feed forwards unknown methods to its loaded extension
+ * objects via __call and exposes no accessor for them, so the iTunes and
+ * Podcast Index setters used by TotalCMS\Domain\Feed\Service\PodcastTags are
+ * invisible to static analysis. This stub declares the ones we call; the
+ * real signatures live in Laminas\Feed\Writer\Extension\ITunes\Feed and
+ * Laminas\Feed\Writer\Extension\PodcastIndex\Feed.
+ *
+ * @method $this addItunesAuthor(string $value)
+ * @method $this addItunesOwner(array{name: string, email: string} $value)
+ * @method $this setItunesImage(string $value)
+ * @method $this setItunesCategories(array<int|string, string|list<string>> $values)
+ * @method $this setItunesExplicit(bool|string $value)
+ * @method $this setItunesType(string $type)
+ * @method $this setItunesSummary(string $value)
+ * @method $this setItunesSubtitle(string $value)
+ * @method $this setItunesNewFeedUrl(string $value)
+ * @method $this setItunesComplete(bool $status)
+ * @method $this setItunesBlock(string $value)
+ * @method $this setPodcastIndexGuid(array{value: string} $value)
+ * @method $this setPodcastIndexLocked(array{value: string, owner: string} $value)
+ * @method $this addPodcastIndexFunding(array{url: string, title: string} $value)
+ */
+class Feed
+{
+}

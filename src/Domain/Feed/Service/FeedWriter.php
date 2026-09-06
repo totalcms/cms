@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Feed\Service;
 
 use Laminas\Feed\Writer\Entry;
 use Laminas\Feed\Writer\Feed;
+use Laminas\Feed\Writer\Writer;
 use TotalCMS\Support\Config;
 
 /**
@@ -49,6 +50,10 @@ readonly class FeedWriter
 				implode(', ', self::FORMATS),
 			));
 		}
+
+		// Laminas registers the iTunes extension on every Feed; PodcastIndex it
+		// does not. Registering again is a no-op, so no static guard is needed.
+		Writer::registerExtension('PodcastIndex');
 
 		$feed = new Feed();
 		$this->applyMeta($feed, $meta, $format);
@@ -119,6 +124,12 @@ readonly class FeedWriter
 			if ($value !== '') {
 				$feed->{$setter}($value);
 			}
+		}
+
+		// Podcast tags are RSS-only: the directories read RSS, and Atom has no
+		// iTunes namespace convention. Ignored for atom rather than refused.
+		if ($format === 'rss' && is_array($meta['podcast'] ?? null)) {
+			$this->podcastTags()->applyToFeed($feed, $meta['podcast'], $meta);
 		}
 	}
 
@@ -194,7 +205,16 @@ readonly class FeedWriter
 
 		$this->applyMedia($entry, $item['media'] ?? null);
 
+		if ($format === 'rss' && is_array($item['podcast'] ?? null)) {
+			$this->podcastTags()->applyToEntry($entry, $item['podcast'], $item);
+		}
+
 		return $entry;
+	}
+
+	private function podcastTags(): PodcastTags
+	{
+		return new PodcastTags($this->absolute(...));
 	}
 
 	/**
