@@ -1,0 +1,252 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/podcast-episode.json",
+	"id": "podcast-episode",
+	"type": "object",
+	"description": "One podcast episode: the audio (uploaded here, or a URL to your own host) plus everything Apple Podcasts and the open directories read per item. Pair with a Single Object Collection built from the podcast schema for the show itself.",
+	"formgrid": "id id\ntitle title\ndate draft\naudio audio\naudioUrl audioLength\nduration episodeType\nepisode season\ncontent content\nsummary summary\nart art\n---Optional---\nexplicit explicit\ntranscript transcriptUrl\nchapters chaptersUrl\nupdated created",
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"label": "Episode ID",
+			"help": "A unique ID for this episode. No spaces or special characters. Becomes the item guid, so do not change it once published.",
+			"field": "id",
+			"factory": "slug",
+			"settings": {
+				"autogen": "${title}"
+			}
+		},
+		"title": {
+			"type": "string",
+			"label": "Title",
+			"help": "The episode title as it appears in apps.",
+			"field": "text",
+			"factory": "catchPhrase"
+		},
+		"date": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Publish Date",
+			"help": "Episodes dated in the future are held back from the feed until then.",
+			"field": "date",
+			"default": "now",
+			"factory": "iso8601"
+		},
+		"draft": {
+			"type": "boolean",
+			"label": "Draft",
+			"help": "Drafts are left out of the feed.",
+			"field": "checkbox",
+			"default": false
+		},
+		"audio": {
+			"$ref": "https://www.totalcms.co/schemas/properties/file.json",
+			"label": "Audio File",
+			"help": "Upload the episode audio to host it here — MP3 is the safe choice, and Total CMS counts every listen. Leave empty and fill in Audio URL to host it elsewhere.",
+			"field": "file",
+			"settings": {
+				"rules": {
+					"filetype": [
+						"audio/mpeg",
+						"audio/mp3",
+						"audio/mp4",
+						"audio/x-m4a",
+						"audio/aac",
+						"audio/ogg",
+						"audio/wav"
+					]
+				}
+			}
+		},
+		"audioUrl": {
+			"$ref": "https://www.totalcms.co/schemas/properties/url.json",
+			"label": "Audio URL",
+			"help": "Used only when no file is uploaded above: the address of the episode audio on your own host or bucket. Not counted by Total CMS.",
+			"field": "url"
+		},
+		"audioLength": {
+			"type": "number",
+			"label": "Audio Size (bytes)",
+			"help": "Only for an Audio URL: the file size in bytes, which apps use for download progress. Uploaded files report it automatically.",
+			"field": "number",
+			"default": 0
+		},
+		"duration": {
+			"type": "number",
+			"label": "Duration (seconds)",
+			"help": "Length of the episode in seconds. Apps use it for progress bars; leave at 0 if unknown.",
+			"field": "number",
+			"default": 0
+		},
+		"episode": {
+			"type": "number",
+			"label": "Episode Number",
+			"help": "Optional. Apps show it and use it for ordering serial shows.",
+			"field": "number",
+			"default": 0
+		},
+		"season": {
+			"type": "number",
+			"label": "Season Number",
+			"help": "Optional.",
+			"field": "number",
+			"default": 0
+		},
+		"episodeType": {
+			"type": "string",
+			"label": "Episode Type",
+			"help": "Full is a normal episode. Trailers and bonus episodes are labelled as such in apps.",
+			"field": "select",
+			"default": "full",
+			"options": [
+				{
+					"value": "full",
+					"label": "Full"
+				},
+				{
+					"value": "trailer",
+					"label": "Trailer"
+				},
+				{
+					"value": "bonus",
+					"label": "Bonus"
+				}
+			]
+		},
+		"content": {
+			"type": "string",
+			"label": "Show Notes",
+			"help": "The full show notes. HTML is carried into the feed; apps render a plain-text version where they must.",
+			"field": "styledtext",
+			"factory": "styledtext"
+		},
+		"summary": {
+			"type": "string",
+			"label": "Summary",
+			"help": "Optional short plain-text description. When blank, the show notes are used with formatting stripped.",
+			"field": "textarea"
+		},
+		"art": {
+			"$ref": "https://www.totalcms.co/schemas/properties/image.json",
+			"label": "Episode Art",
+			"help": "Optional square artwork for this episode, JPG or PNG. The show's cover is used when blank.",
+			"field": "image"
+		},
+		"explicit": {
+			"type": "string",
+			"label": "Explicit",
+			"help": "Override the show-level setting for this episode.",
+			"field": "select",
+			"default": "inherit",
+			"options": [
+				{
+					"value": "inherit",
+					"label": "Same as show"
+				},
+				{
+					"value": "yes",
+					"label": "Explicit"
+				},
+				{
+					"value": "no",
+					"label": "Clean"
+				}
+			]
+		},
+		"transcript": {
+			"$ref": "https://www.totalcms.co/schemas/properties/file.json",
+			"label": "Transcript",
+			"help": "Optional. Upload an SRT, VTT, JSON or text transcript; apps that support transcripts fetch it from here.",
+			"field": "file",
+			"settings": {
+				"rules": {
+					"filetype": [
+						"application/x-subrip",
+						"text/vtt",
+						"application/json",
+						"text/plain",
+						"text/html",
+						"application/octet-stream"
+					]
+				}
+			}
+		},
+		"transcriptUrl": {
+			"$ref": "https://www.totalcms.co/schemas/properties/url.json",
+			"label": "Transcript URL",
+			"help": "Used only when no transcript file is uploaded: a link to a transcript hosted elsewhere.",
+			"field": "url"
+		},
+		"chapters": {
+			"$ref": "https://www.totalcms.co/schemas/properties/file.json",
+			"label": "Chapters",
+			"help": "Optional. Upload a Podcast Index chapters JSON file.",
+			"field": "file",
+			"settings": {
+				"rules": {
+					"filetype": [
+						"application/json",
+						"text/plain",
+						"application/octet-stream"
+					]
+				}
+			}
+		},
+		"chaptersUrl": {
+			"$ref": "https://www.totalcms.co/schemas/properties/url.json",
+			"label": "Chapters URL",
+			"help": "Used only when no chapters file is uploaded: a link to a chapters JSON file hosted elsewhere.",
+			"field": "url"
+		},
+		"created": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Date Created",
+			"help": "The date the episode was created",
+			"field": "hidden",
+			"factory": "iso8601",
+			"settings": {
+				"onCreate": true,
+				"readonly": true
+			}
+		},
+		"updated": {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Date Updated",
+			"help": "The date the episode was last updated",
+			"field": "hidden",
+			"factory": "iso8601",
+			"settings": {
+				"onUpdate": true,
+				"readonly": true
+			}
+		}
+	},
+	"required": [
+		"id",
+		"title",
+		"date",
+		"created",
+		"updated"
+	],
+	"index": [
+		"id",
+		"title",
+		"date",
+		"draft",
+		"audio",
+		"audioUrl",
+		"audioLength",
+		"duration",
+		"episode",
+		"season",
+		"episodeType",
+		"summary",
+		"art",
+		"explicit",
+		"transcript",
+		"transcriptUrl",
+		"chapters",
+		"chaptersUrl",
+		"created",
+		"updated"
+	]
+}

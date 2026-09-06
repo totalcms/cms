@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Feed\Service\FeedWriter;
+use TotalCMS\Domain\Feed\Service\PodcastFeedMapper;
+use TotalCMS\Support\Config;
 use Twig\Markup;
 
 /**
@@ -41,7 +43,43 @@ readonly class FeedTwigAdapter
 {
 	public function __construct(
 		private FeedWriter $writer,
+		private CollectionTwigAdapter $collections,
+		private Config $config,
 	) {
+	}
+
+	/**
+	 * A complete podcast feed from a `podcast` show collection (a Single Object
+	 * Collection) and a `podcast-episode` collection. Sugar over `rss()`: the
+	 * show and the episode index rows are fetched, mapped by PodcastFeedMapper,
+	 * and rendered. Drafts, future-dated episodes and episodes without audio
+	 * are left out; newest first.
+	 *
+	 * @param array<string,mixed> $options `self` (feed URL, default /podcast.xml),
+	 *                                     `link` (site URL, default /), `language`, `copyright`
+	 *
+	 * @throws \DomainException when the show record is missing
+	 */
+	public function podcast(string $showCollection = 'podcast', string $episodesCollection = 'episodes', array $options = []): Markup
+	{
+		$show = $this->collections->object($showCollection, $showCollection);
+		if ($show === []) {
+			throw new \DomainException(sprintf(
+				"cms.feed.podcast: no show record found in '%s'. Create it as a Single Object Collection from the podcast schema and fill in the show.",
+				$showCollection,
+			));
+		}
+
+		$mapped = (new PodcastFeedMapper($this->config))->map(
+			$showCollection,
+			$show,
+			$episodesCollection,
+			array_values($this->collections->objects($episodesCollection)),
+			$options,
+			fn (array $episode): string => $this->collections->canonicalObjectUrl($episodesCollection, $episode),
+		);
+
+		return $this->rss($mapped['meta'], $mapped['items']);
 	}
 
 	/**

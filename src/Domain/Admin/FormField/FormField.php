@@ -499,6 +499,7 @@ class FormField
 	 * - "collections": fetch unique category values from all collections
 	 * - "schemas": fetch unique category values from all schemas
 	 * - "locales": fetch locale codes from LocaleRegistry as {value, label} dicts.
+	 * - "podcastCategories": Apple's podcast taxonomy as optgroups (static).
 	 *
 	 * Return shape varies by source, and all three shapes `HTMLUtils::options()`
 	 * accepts are legal here: a flat list of strings, a list of `{value, label}`
@@ -568,6 +569,10 @@ class FormField
 
 		if ($source === 'events') {
 			return $this->form->eventsList();
+		}
+
+		if ($source === 'podcastCategories') {
+			return TotalForm::podcastCategoryOptions();
 		}
 
 		// Default: fetch from current collection

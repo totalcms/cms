@@ -120,6 +120,13 @@ Add a `podcast` block to the feed details and to each item and the feed gains
 the iTunes and Podcast Index tags Apple Podcasts, Spotify and the open
 directories read. Leave it out and the feed is exactly what it was.
 
+If your show uses the built-in `podcast` and `podcast-episode` schemas, you do
+not need any of this: `cms.feed.podcast('podcast', 'episodes')` fills the block
+in from those collections, serves uploaded audio through the counted
+streaming route or links to audio hosted elsewhere, and takes the feed URL
+from the show record. See [Podcasts](docs/collections/podcast). What follows
+is for feeds built from your own schema.
+
 ```twig
 {{ cms.feed.rss({
     title: show.title, link: '/', self: '/podcast.xml', description: show.description,

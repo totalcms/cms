@@ -39,6 +39,7 @@ return [
 			['title' => 'Importing Data',      'path' => 'collections/import'],
 			['title' => 'Exporting Data',      'path' => 'collections/export'],
 			['title' => 'Sitemap Builder',     'path' => 'collections/sitemap-builder'],
+			['title' => 'Podcasts',            'path' => 'collections/podcast'],
 		],
 	],
 	[

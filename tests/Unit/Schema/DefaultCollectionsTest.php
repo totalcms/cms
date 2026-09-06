@@ -36,6 +36,8 @@ final class DefaultCollectionsTest extends TestCase
 		'sitemap-meta'       => 'embedded in collection via schemaref',
 		'blog-legacy'        => 'deprecated, superseded by blog',
 		'builder-page'       => 'provisioned by BuilderInstaller as builder-pages',
+		'podcast'            => 'created deliberately by the operator as a singleton show collection, never auto-provisioned',
+		'podcast-episode'    => 'created deliberately by the operator alongside a podcast collection, never auto-provisioned',
 		'totalcms'           => 'reference schema, can never back a collection',
 		'totalcms-item'      => 'reference schema, can never back a collection',
 	];

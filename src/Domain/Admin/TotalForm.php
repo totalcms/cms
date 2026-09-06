@@ -787,6 +787,30 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Apple's podcast category taxonomy as grouped options, for
+	 * `propertyOptions: "podcastCategories"`. One <optgroup> per parent with
+	 * the parent itself selectable first, children after; values are the
+	 * canonical strings the feed writer validates against.
+	 *
+	 * Static: the taxonomy is a constant and needs no form state.
+	 *
+	 * @return array<string, list<array{value: string, label: string}>>
+	 */
+	public static function podcastCategoryOptions(): array
+	{
+		$groups = [];
+		foreach (\TotalCMS\Domain\Feed\Service\PodcastCategories::TAXONOMY as $parent => $children) {
+			$options = [['value' => $parent, 'label' => $parent]];
+			foreach ($children as $child) {
+				$options[] = ['value' => $parent . ' > ' . $child, 'label' => $child];
+			}
+			$groups[$parent] = $options;
+		}
+
+		return $groups;
+	}
+
+	/**
 	 * Get a list of available layout templates from the builder/layouts/ directory.
 	 * Used for propertyOptions: "layouts" in schema settings.
 	 *

@@ -1,0 +1,163 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/podcast.json",
+	"id"          : "podcast",
+	"type"        : "object",
+	"description" : "A podcast show — the channel-level details Apple Podcasts, Spotify and the open directories read. Create the collection as a Single Object Collection; episodes live in a separate collection built from the podcast-episode schema.",
+	"formgrid"    : "id id\ntitle feedUrl\nauthor ownerEmail\ndescription description\ncover cover\ncategories categories\nexplicit type\n---Optional---\nfundingUrl fundingTitle\nlocked newFeedUrl\nguid guid\nupdated created",
+	"properties"  : {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "Show ID",
+			"help"     : "A unique ID for this show. No spaces or special characters. For a Single Object Collection this is the collection id.",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : { "autogen" : "${title}" }
+		},
+		"title": {
+			"type"    : "string",
+			"label"   : "Show Title",
+			"help"    : "The name of the podcast as it appears in apps.",
+			"field"   : "text",
+			"factory" : "catchPhrase"
+		},
+		"description": {
+			"type"    : "string",
+			"label"   : "Description",
+			"help"    : "What the show is about. Plain text — this becomes the feed description and the iTunes summary (up to 4000 characters).",
+			"field"   : "textarea",
+			"factory" : "paragraph"
+		},
+		"author": {
+			"type"    : "string",
+			"label"   : "Author",
+			"help"    : "The person or organisation credited as the show's author. Required by Apple.",
+			"field"   : "text",
+			"factory" : "name"
+		},
+		"ownerEmail": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/email.json",
+			"label"   : "Owner Email",
+			"help"    : "Where Apple and Spotify send ownership notices and verification codes. Never shown in apps. Required by Apple.",
+			"field"   : "email",
+			"factory" : "email"
+		},
+		"cover": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
+			"label"   : "Cover Art",
+			"help"    : "Square artwork between 1400×1400 and 3000×3000 pixels, JPG or PNG. Apple rejects anything else. Required.",
+			"field"   : "image",
+			"factory" : "imageShapes(3000,3000)"
+		},
+		"feedUrl": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/url.json",
+			"label"   : "Feed URL",
+			"help"    : "The public URL of this show's feed, e.g. https://example.com/podcast.xml. Apps re-fetch with it and the show's permanent identifier is derived from it — set it once and do not change it.",
+			"field"   : "url"
+		},
+		"categories": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"   : "Categories",
+			"help"    : "Apple's category list. A show can have several; the first is the primary category shown in directories.",
+			"field"   : "list",
+			"settings" : { "propertyOptions" : "podcastCategories" },
+			"mcp"     : { "description" : "Apple Podcasts categories as canonical strings ('Technology' or 'Business > Entrepreneurship'). The first entry is the primary category." }
+		},
+		"explicit": {
+			"type"    : "boolean",
+			"label"   : "Explicit Content",
+			"help"    : "Tick if any episode contains explicit language or adult content. Required by Apple either way.",
+			"field"   : "checkbox",
+			"default" : false
+		},
+		"type": {
+			"type"    : "string",
+			"label"   : "Show Type",
+			"help"    : "Episodic shows are listened to in any order (newest first). Serial shows are meant to be heard in order (oldest first).",
+			"field"   : "select",
+			"default" : "episodic",
+			"options" : [
+				{ "value" : "episodic", "label" : "Episodic" },
+				{ "value" : "serial",   "label" : "Serial" }
+			]
+		},
+		"fundingUrl": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/url.json",
+			"label"   : "Funding URL",
+			"help"    : "Optional. A page where listeners can support the show; apps that read the Podcast Index namespace show it as a button.",
+			"field"   : "url"
+		},
+		"fundingTitle": {
+			"type"    : "string",
+			"label"   : "Funding Button Text",
+			"help"    : "Optional. The label for the funding link, e.g. \"Support the show\".",
+			"field"   : "text"
+		},
+		"locked": {
+			"type"    : "boolean",
+			"label"   : "Locked",
+			"help"    : "Tell directories that this feed must not be imported into another hosting platform without contacting the owner email.",
+			"field"   : "checkbox",
+			"default" : false
+		},
+		"newFeedUrl": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/url.json",
+			"label"   : "New Feed URL",
+			"help"    : "Only when the feed is moving: the URL apps should switch to. Leave blank otherwise.",
+			"field"   : "url"
+		},
+		"guid": {
+			"type"    : "string",
+			"label"   : "Podcast GUID",
+			"help"    : "Leave blank unless you are migrating a show that already has a Podcast Index GUID. When blank it is derived from the feed URL and must then never change.",
+			"field"   : "text"
+		},
+		"created": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"   : "Date Created",
+			"help"    : "The date the show record was created",
+			"field"   : "hidden",
+			"factory" : "iso8601",
+			"settings": { "onCreate" : true, "readonly": true }
+		},
+		"updated": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/date.json",
+			"label"   : "Date Updated",
+			"help"    : "The date the show record was last updated",
+			"field"   : "hidden",
+			"factory" : "iso8601",
+			"settings": { "onUpdate" : true, "readonly": true }
+		}
+	},
+	"required": [
+		"id",
+		"title",
+		"description",
+		"author",
+		"ownerEmail",
+		"feedUrl",
+		"cover",
+		"categories",
+		"created",
+		"updated"
+	],
+	"index": [
+		"id",
+		"title",
+		"description",
+		"author",
+		"ownerEmail",
+		"feedUrl",
+		"cover",
+		"categories",
+		"explicit",
+		"type",
+		"fundingUrl",
+		"fundingTitle",
+		"locked",
+		"newFeedUrl",
+		"guid",
+		"created",
+		"updated"
+	]
+}

@@ -47,6 +47,8 @@ class SchemaData
 		'number',
 		'builder-page',
 		'playground',
+		'podcast',
+		'podcast-episode',
 		'preset-item',
 		'sitemap-meta',
 		'styledtext',

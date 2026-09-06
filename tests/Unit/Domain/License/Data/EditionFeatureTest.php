@@ -13,6 +13,7 @@ final class EditionFeatureTest extends TestCase
 	public function testBlogSchemaLabel(): void
 	{
 		$this->assertSame('Blog Schema', EditionFeature::BLOG_SCHEMA->label());
+		$this->assertSame('Podcast Schema', EditionFeature::PODCAST_SCHEMA->label());
 	}
 
 	public function testDepotSchemaLabel(): void
@@ -94,6 +95,7 @@ final class EditionFeatureTest extends TestCase
 	{
 		$this->assertSame(Edition::STANDARD, EditionFeature::BLOG_SCHEMA->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::DEPOT_SCHEMA->requiredEdition());
+		$this->assertSame(Edition::STANDARD, EditionFeature::PODCAST_SCHEMA->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::IMAGE_WATERMARKS->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::MAILER_ACTIONS->requiredEdition());
 		$this->assertSame(Edition::STANDARD, EditionFeature::QR_CODES->requiredEdition());
@@ -137,6 +139,7 @@ final class EditionFeatureTest extends TestCase
 	public function testFeatureValues(): void
 	{
 		$this->assertSame('blog_schema', EditionFeature::BLOG_SCHEMA->value);
+		$this->assertSame('podcast_schema', EditionFeature::PODCAST_SCHEMA->value);
 		$this->assertSame('depot_schema', EditionFeature::DEPOT_SCHEMA->value);
 		$this->assertSame('custom_schemas', EditionFeature::CUSTOM_SCHEMAS->value);
 		$this->assertSame('image_watermarks', EditionFeature::IMAGE_WATERMARKS->value);

@@ -1361,6 +1361,13 @@
             "url": "https://docs.totalcms.co/twig/"
         },
         {
+            "name": "cms.feed.podcast",
+            "signature": "podcast(string $showCollection = 'podcast', string $episodesCollection = 'episodes', array $options = []): Markup",
+            "description": "A complete podcast feed from a `podcast` show collection (a Single Object Collection) and a `podcast-episode` collection. Sugar over `rss()`: the show and the episode index rows are fetched, mapped by PodcastFeedMapper, and rendered. Drafts, future-dated episodes and episodes without audio are left out; newest first.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.feed.rss",
             "signature": "rss(array $meta, iterable $items = []): Markup",
             "description": "Render an RSS 2.0 feed from feed details and a list of items. `meta` requires `title`, `link` and `description`; each item takes `title`, `link`, `date` and `content`, plus optional `id`, `summary`, `author` and `media`. Items are emitted in the order given, so sort before mapping.",

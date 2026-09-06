@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Feed\Service\FeedWriter;
+use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\FeedTwigAdapter;
 use TotalCMS\Support\Config;
 use Twig\Markup;
@@ -18,7 +19,11 @@ function feedAdapter(): FeedTwigAdapter
 	$config         = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->domain = 'example.com';
 
-	return new FeedTwigAdapter(new FeedWriter($config));
+	// rss()/atom() never touch the collection adapter; podcast() is covered by
+	// tests/Feature/PodcastFeedTest.php against real collections.
+	$collections = (new ReflectionClass(CollectionTwigAdapter::class))->newInstanceWithoutConstructor();
+
+	return new FeedTwigAdapter(new FeedWriter($config), $collections, $config);
 }
 
 /** @return array<string,mixed> */
