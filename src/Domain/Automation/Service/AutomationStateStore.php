@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Automation\Service;
 
+use Psr\Log\NullLogger;
+use TotalCMS\Domain\Storage\AtomicJsonStore;
+use TotalCMS\Domain\Storage\CorruptPolicy;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 
 /**
@@ -12,8 +15,11 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
  */
 final readonly class AutomationStateStore
 {
-	public function __construct(private StorageAdapterInterface $filesystem)
+	private AtomicJsonStore $store;
+
+	public function __construct(StorageAdapterInterface $filesystem, ?AtomicJsonStore $store = null)
 	{
+		$this->store = $store ?? new AtomicJsonStore($filesystem, '', new NullLogger());
 	}
 
 	public function lastFire(string $id, string $triggerKey): ?string
@@ -57,22 +63,16 @@ final readonly class AutomationStateStore
 	/** @return array<string,mixed> */
 	private function load(string $id): array
 	{
-		$path = $this->path($id);
-		if (!$this->filesystem->fileExists($path)) {
-			return [];
-		}
-		$data = json_decode($this->filesystem->read($path), true);
-
-		return is_array($data) ? $data : [];
+		// RefuseWrites per file: a broken state file means "no history" for
+		// this run, and nothing is written back until it is repaired or
+		// removed — better than silently resetting the auto-disable counter.
+		return $this->store->load($this->path($id), CorruptPolicy::RefuseWrites);
 	}
 
 	/** @param array<string,mixed> $state */
 	private function save(string $id, array $state): void
 	{
-		$json = (string)json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-		$tmp  = $this->path($id) . '.tmp.' . bin2hex(random_bytes(4));
-		$this->filesystem->write($tmp, $json);
-		$this->filesystem->move($tmp, $this->path($id));
+		$this->store->save($this->path($id), $state);
 	}
 
 	private function path(string $id): string

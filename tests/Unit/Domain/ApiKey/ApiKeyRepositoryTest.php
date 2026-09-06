@@ -8,7 +8,9 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
+use TotalCMS\Domain\Storage\AtomicJsonStore;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 
 final class ApiKeyRepositoryTest extends TestCase
@@ -37,7 +39,7 @@ final class ApiKeyRepositoryTest extends TestCase
 				new LocalFilesystemAdapter(sys_get_temp_dir())
 			)
 		);
-		$this->repository = new ApiKeyRepository($filesystem, sys_get_temp_dir());
+		$this->repository = new ApiKeyRepository($filesystem, new AtomicJsonStore($filesystem, sys_get_temp_dir(), new NullLogger()));
 	}
 
 	protected function tearDown(): void

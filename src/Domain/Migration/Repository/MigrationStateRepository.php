@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Migration\Repository;
 
+use Psr\Log\NullLogger;
+use TotalCMS\Domain\Storage\AtomicJsonStore;
+use TotalCMS\Domain\Storage\CorruptPolicy;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 
 /**
@@ -17,9 +20,13 @@ final class MigrationStateRepository
 	/** @var array<string,array{ranAt:string,result:int}>|null */
 	private ?array $cache = null;
 
+	private readonly AtomicJsonStore $store;
+
 	public function __construct(
-		private readonly StorageFilesystemAdapter $storage,
+		StorageFilesystemAdapter $storage,
+		?AtomicJsonStore $store = null,
 	) {
+		$this->store = $store ?? new AtomicJsonStore($storage, '', new NullLogger());
 	}
 
 	public function hasRun(string $migrationId): bool
@@ -48,19 +55,15 @@ final class MigrationStateRepository
 		}
 
 		$state = [];
-		if ($this->storage->fileExists(self::STATE_FILE)) {
-			$json    = $this->storage->read(self::STATE_FILE);
-			$decoded = json_decode($json, true);
-			if (is_array($decoded)) {
-				/** @var mixed $entry */
-				foreach ($decoded as $id => $entry) {
-					if (is_array($entry) && isset($entry['ranAt'], $entry['result'])) {
-						$state[(string)$id] = [
-							'ranAt'  => (string)$entry['ranAt'],
-							'result' => (int)$entry['result'],
-						];
-					}
-				}
+		// RefuseWrites: a malformed ledger re-runs migrations (they are
+		// idempotent) but must never be replaced by an empty ledger.
+		/** @var mixed $entry */
+		foreach ($this->store->load(self::STATE_FILE, CorruptPolicy::RefuseWrites) as $id => $entry) {
+			if (is_array($entry) && isset($entry['ranAt'], $entry['result'])) {
+				$state[(string)$id] = [
+					'ranAt'  => (string)$entry['ranAt'],
+					'result' => (int)$entry['result'],
+				];
 			}
 		}
 
@@ -71,14 +74,6 @@ final class MigrationStateRepository
 
 	private function persist(): void
 	{
-		$json = json_encode($this->cache ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-		if ($json === false) {
-			return;
-		}
-
-		// Atomic write — concurrent readers shouldn't see a partial file.
-		$tmp = self::STATE_FILE . '.tmp.' . bin2hex(random_bytes(4));
-		$this->storage->write($tmp, $json);
-		$this->storage->move($tmp, self::STATE_FILE);
+		$this->store->save(self::STATE_FILE, $this->cache ?? []);
 	}
 }

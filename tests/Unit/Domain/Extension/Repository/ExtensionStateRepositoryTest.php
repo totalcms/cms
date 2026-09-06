@@ -259,4 +259,21 @@ describe('ExtensionStateRepository', function (): void {
 
 		expect($repo->isEnabled('totalcms/plain-bundled-ext', $manifest))->toBeFalse();
 	});
+
+	test('a malformed state file reads as empty and is never written back', function (): void {
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(true);
+		$storage->method('read')->willReturn('{"vendor/ext": {"enabled": tru');
+		$storage->expects(test()->never())->method('write');
+		$storage->expects(test()->never())->method('move');
+
+		$repo = new ExtensionStateRepository($storage);
+
+		expect($repo->loadAll())->toBe([]);
+
+		// The write ExtensionManager does on discovery must be swallowed, not
+		// fatal: a corrupt file cannot be allowed to take the site down.
+		$repo->saveState('vendor/ext', new ExtensionState(enabled: true, installedAt: 'now', version: '1.0.0'));
+		expect($repo->getState('vendor/ext')?->enabled)->toBeTrue();
+	});
 });

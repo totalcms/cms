@@ -118,4 +118,13 @@ final class ReloadPulseRepositoryTest extends TestCase
 		}
 		rmdir($dir);
 	}
+
+	public function testMalformedPulseReadsAsZeroAndTheNextPulseReplacesIt(): void
+	{
+		file_put_contents($this->tmpRoot . '/.system/builder-reload-pulse.json', 'garbage');
+
+		expect($this->repo->currentTs())->toBe(0);
+		$this->repo->pulse('x');
+		expect($this->repo->currentTs())->toBeGreaterThan(0);
+	}
 }

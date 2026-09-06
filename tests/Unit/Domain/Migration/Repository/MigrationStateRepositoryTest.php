@@ -103,4 +103,17 @@ describe('MigrationStateRepository', function (): void {
 
 		expect($repo->hasRun('templates-to-builder'))->toBeTrue();
 	});
+
+	test('a malformed ledger reads as nothing-ran and is not overwritten', function (): void {
+		$storage = test()->createMock(StorageFilesystemAdapter::class);
+		$storage->method('fileExists')->willReturn(true);
+		$storage->method('read')->willReturn('{"templates-to-builder": {"ranAt"');
+		$storage->expects(test()->never())->method('move');
+
+		$repo = new MigrationStateRepository($storage);
+
+		expect($repo->hasRun('templates-to-builder'))->toBeFalse();
+		$repo->recordRan('templates-to-builder', 1);   // logged + refused, not fatal
+		expect($repo->hasRun('templates-to-builder'))->toBeTrue();
+	});
 });

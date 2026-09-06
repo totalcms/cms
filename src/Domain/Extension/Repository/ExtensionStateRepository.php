@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Repository;
 
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
+use TotalCMS\Domain\Storage\AtomicJsonStore;
+use TotalCMS\Domain\Storage\CorruptPolicy;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 
 /**
@@ -18,9 +21,17 @@ final class ExtensionStateRepository
 	/** @var array<string,ExtensionState>|null */
 	private ?array $cache = null;
 
+	private readonly AtomicJsonStore $store;
+
+	/**
+	 * The store is optional so the many direct constructions in tests keep
+	 * working; the container always supplies the real one (with a logger).
+	 */
 	public function __construct(
-		private readonly StorageFilesystemAdapter $storage,
+		StorageFilesystemAdapter $storage,
+		?AtomicJsonStore $store = null,
 	) {
+		$this->store = $store ?? new AtomicJsonStore($storage, '', new NullLogger());
 	}
 
 	/**
@@ -34,15 +45,11 @@ final class ExtensionStateRepository
 
 		$states = [];
 
-		if ($this->storage->fileExists(self::STATE_FILE)) {
-			$json = $this->storage->read(self::STATE_FILE);
-			$data = json_decode($json, true);
-			if (is_array($data)) {
-				foreach ($data as $id => $stateData) {
-					if (is_array($stateData)) {
-						$states[(string)$id] = ExtensionState::fromArray($stateData);
-					}
-				}
+		// RefuseWrites: a malformed file means "no extension state this
+		// request" (every extension reads as disabled), never "reset it all".
+		foreach ($this->store->load(self::STATE_FILE, CorruptPolicy::RefuseWrites) as $id => $stateData) {
+			if (is_array($stateData)) {
+				$states[(string)$id] = ExtensionState::fromArray($stateData);
 			}
 		}
 
@@ -125,17 +132,9 @@ final class ExtensionStateRepository
 			$output[$id] = $state->toArray();
 		}
 
-		$json = json_encode($output, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-		if ($json === false) {
-			return;
-		}
-
-		// Write atomically via temp file + rename. A non-atomic write leaves a
-		// window where concurrent readers see an empty/partial file, which causes
-		// discoverAndRegister() to treat the extension as new and overwrite the
-		// state with enabled=false.
-		$tmpFile = self::STATE_FILE . '.tmp.' . bin2hex(random_bytes(4));
-		$this->storage->write($tmpFile, $json);
-		$this->storage->move($tmpFile, self::STATE_FILE);
+		// Atomic temp+rename via the store. Returns false (and logs) when the
+		// file was read as corrupt; the in-memory cache still carries this
+		// request's changes, so a broken file cannot take the site down.
+		$this->store->save(self::STATE_FILE, $output);
 	}
 }

@@ -130,6 +130,7 @@ use TotalCMS\Domain\Search\Service\SearchService;
 use TotalCMS\Domain\Search\Service\SearchServiceInterface;
 use TotalCMS\Domain\Search\Service\TextSearchProvider;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
+use TotalCMS\Domain\Storage\AtomicJsonStore;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
@@ -303,13 +304,21 @@ return [
 		(string)$container->get(Config::class)->datadir,
 	),
 
-	// Same reason as above: the datadir is needed for a real filesystem path.
-	// apikeys.json is rewritten wholesale on every authentication, so its
-	// mutations need an flock and an atomic rename, neither of which the
-	// storage adapter exposes.
-	ApiKeyRepository::class => fn (ContainerInterface $container): ApiKeyRepository => new ApiKeyRepository(
+	// Read-modify-write for the `.system` JSON documents (extension state,
+	// migrations ledger, automation state, reload pulse, API keys). Explicit
+	// because the sidecar lock and the 0600 mode need the real datadir, and
+	// a corrupt read is worth a log line.
+	AtomicJsonStore::class => fn (ContainerInterface $container): AtomicJsonStore => new AtomicJsonStore(
 		$container->get(StorageAdapterInterface::class),
 		(string)$container->get(Config::class)->datadir,
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::App),
+	),
+
+	// apikeys.json is rewritten wholesale on every authentication, so its
+	// mutations run under the store's flock + atomic rename with 0600.
+	ApiKeyRepository::class => fn (ContainerInterface $container): ApiKeyRepository => new ApiKeyRepository(
+		$container->get(StorageAdapterInterface::class),
+		$container->get(AtomicJsonStore::class),
 	),
 
 	// Output (fragment) cache behind the {% cache %} Twig tag. Explicit so the

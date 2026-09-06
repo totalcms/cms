@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\ApiKey\Repository;
 
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\Storage\AtomicJsonStore;
+use TotalCMS\Domain\Storage\CorruptPolicy;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
-use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
  * Repository for managing API keys stored in .system/apikeys.json.
@@ -38,21 +39,15 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
  * Reads are deliberately unlocked. rename() atomicity is the guarantee; a
  * reader may see a slightly stale file but never an invalid one.
  *
- * All file content goes through the storage adapter, including the temp-file
- * write and the move that commits it — Flysystem's local move() is a rename(),
- * so the adapter already provides the atomicity. The only two things reaching
- * past it are the advisory lock and the 0600 mode, because the adapter
- * interface exposes neither, and both need a real path.
+ * All three now live in AtomicJsonStore (lock, temp+move commit, 0600 on the
+ * temp file, and the refuse-on-corrupt read policy); this class only says
+ * which policy it wants — CorruptPolicy::Throw — and shapes the payload.
  *
- * @see \TotalCMS\Domain\Builder\Repository\ReloadPulseRepository for the same
- *      adapter-based write/move commit.
- * @see \TotalCMS\Action\Cron\CronJobsAction for the same datadir-resolved flock.
+ * @see \TotalCMS\Domain\Storage\AtomicJsonStore
  */
 class ApiKeyRepository extends StorageRepository
 {
 	private const FILE_PATH = '.system/apikeys.json';
-
-	private const LOCK_FILE = '.system/apikeys.json.lock';
 
 	/**
 	 * Skip the lastUsed write when the stored stamp is already this recent.
@@ -67,7 +62,7 @@ class ApiKeyRepository extends StorageRepository
 
 	public function __construct(
 		StorageAdapterInterface $filesystem,
-		private readonly string $datadir,
+		private readonly AtomicJsonStore $store,
 	) {
 		parent::__construct($filesystem);
 	}
@@ -254,102 +249,32 @@ class ApiKeyRepository extends StorageRepository
 	}
 
 	/**
-	 * Read-modify-write under an exclusive lock, committed atomically.
-	 *
-	 * The lock lives in a sidecar .lock file rather than the data file itself
-	 * so the descriptor stays valid across the rename that replaces the data
-	 * file underneath it.
+	 * Read-modify-write under the store's exclusive sidecar lock, committed
+	 * atomically with 0600 on the temp file. A malformed file throws and is
+	 * never overwritten (CorruptPolicy::Throw).
 	 *
 	 * @param callable(array<string,mixed>): array<string,mixed> $callback
 	 */
 	private function mutate(callable $callback): void
 	{
-		$lock = $this->acquireLock();
+		$ok = $this->store->mutate(
+			self::FILE_PATH,
+			fn (array $data): array => $callback($this->withDefaults($data)),
+			CorruptPolicy::Throw,
+			lock: true,
+			secret: true,
+		);
 
-		try {
-			$updated = $callback($this->read());
-
-			$json = json_encode($updated, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-
-			if ($json === false) {
-				throw new \RuntimeException('Failed to encode API keys to JSON: ' . json_last_error_msg());
-			}
-
-			$this->commit($json);
-		} finally {
-			flock($lock, LOCK_UN);
-			fclose($lock);
+		if (!$ok) {
+			throw new \RuntimeException('Unable to write the API key file: ' . self::FILE_PATH);
 		}
-	}
-
-	/**
-	 * Open and exclusively lock the sidecar lock file.
-	 *
-	 * A sidecar rather than the data file itself, so the descriptor stays valid
-	 * across the move() that replaces the data file underneath it. Opened with
-	 * fopen because the storage adapter has no locking API — this is the same
-	 * datadir-resolved flock CronJobsAction uses for the job queue.
-	 *
-	 * @return resource
-	 */
-	private function acquireLock()
-	{
-		$lockPath = PathUtils::absolutePath($this->datadir, self::LOCK_FILE);
-
-		// The adapter creates .system/ on its first write, but the lock is
-		// taken before any write happens, so on a fresh install it may not
-		// exist yet.
-		$dir = dirname($lockPath);
-
-		if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
-			throw new \RuntimeException("Unable to create the API key directory: {$dir}");
-		}
-
-		$lock = fopen($lockPath, 'c');
-
-		if ($lock === false) {
-			throw new \RuntimeException("Unable to open the API key lock file: {$lockPath}");
-		}
-
-		if (!flock($lock, LOCK_EX)) {
-			fclose($lock);
-
-			throw new \RuntimeException("Unable to lock the API key file: {$lockPath}");
-		}
-
-		return $lock;
-	}
-
-	/**
-	 * Write $json to a temp file and move it over the target.
-	 *
-	 * write-then-move through the adapter, matching ReloadPulseRepository and
-	 * MigrationStateRepository: the local adapter's move() is a rename(), which
-	 * is atomic on POSIX, so an unlocked reader gets the old file or the new
-	 * one and never a half-written one. The random suffix keeps two temp files
-	 * from colliding if the lock is ever bypassed.
-	 *
-	 * The mode is set on the temp file rather than after the move so the
-	 * credentials are never briefly readable at the final path. chmod is the
-	 * one thing here the adapter cannot express — same reason
-	 * ExtensionSettingsManager takes the datadir.
-	 */
-	private function commit(string $json): void
-	{
-		$tmp = self::FILE_PATH . '.tmp.' . bin2hex(random_bytes(4));
-
-		$this->filesystem->write($tmp, $json);
-
-		@chmod(PathUtils::absolutePath($this->datadir, $tmp), 0600);
-
-		$this->filesystem->move($tmp, self::FILE_PATH);
 	}
 
 	/**
 	 * Read and decode the file.
 	 *
-	 * A missing file is a legitimately empty install. Anything else — an
-	 * unreadable file, malformed JSON, a non-array payload — throws, because
+	 * A missing or blank file is a legitimately empty install. Anything else —
+	 * an unreadable file, malformed JSON, a non-array payload — throws, because
 	 * every caller of this either hands the result to an authorization check
 	 * or writes it straight back. Returning [] here is what used to delete
 	 * every key on the install.
@@ -358,30 +283,16 @@ class ApiKeyRepository extends StorageRepository
 	 */
 	private function read(): array
 	{
-		if (!$this->filesystem->fileExists(self::FILE_PATH)) {
-			return ['apikeys' => []];
-		}
+		return $this->withDefaults($this->store->load(self::FILE_PATH, CorruptPolicy::Throw));
+	}
 
-		// The adapter throws UnableToReadFile rather than returning false, so
-		// an unreadable file already fails loudly instead of looking empty.
-		$content = $this->filesystem->read(self::FILE_PATH);
-
-		// A zero-byte file is the one ambiguous case. Treat it as empty rather
-		// than fatal so an install that has never had a key written still works.
-		if (trim($content) === '') {
-			return ['apikeys' => []];
-		}
-
-		$data = json_decode($content, true);
-
-		if (!is_array($data)) {
-			throw new \RuntimeException(
-				'The API key file is not valid JSON and will not be overwritten: '
-				. self::FILE_PATH . ' (' . json_last_error_msg() . ')'
-			);
-		}
-
-		/** @var array<string,mixed> $data */
-		return $data;
+	/**
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function withDefaults(array $data): array
+	{
+		return $data === [] ? ['apikeys' => []] : $data;
 	}
 }

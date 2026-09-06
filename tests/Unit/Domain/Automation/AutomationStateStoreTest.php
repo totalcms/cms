@@ -33,4 +33,15 @@ final class AutomationStateStoreTest extends TestCase
 		$store->resetFailures('daily');
 		expect($store->failures('daily'))->toBe(0);
 	}
+
+	public function testMalformedStateReadsAsEmptyAndIsNotOverwritten(): void
+	{
+		$fs = new InMemoryFilesystem();
+		$fs->write('.system/automations/daily.state.json', '{"failures": ');
+		$store = new AutomationStateStore($fs);
+
+		expect($store->failures('daily'))->toBe(0);
+		expect($store->incrementFailures('daily'))->toBe(1);
+		expect($fs->read('.system/automations/daily.state.json'))->toBe('{"failures": ');
+	}
 }

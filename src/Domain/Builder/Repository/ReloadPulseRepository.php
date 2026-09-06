@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\Repository;
 
+use Psr\Log\NullLogger;
+use TotalCMS\Domain\Storage\AtomicJsonStore;
+use TotalCMS\Domain\Storage\CorruptPolicy;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 
 /**
@@ -23,9 +26,13 @@ class ReloadPulseRepository
 {
 	public const PULSE_FILE = '.system/builder-reload-pulse.json';
 
+	private readonly AtomicJsonStore $store;
+
 	public function __construct(
-		private readonly StorageFilesystemAdapter $storage,
+		StorageFilesystemAdapter $storage,
+		?AtomicJsonStore $store = null,
 	) {
+		$this->store = $store ?? new AtomicJsonStore($storage, '', new NullLogger());
 	}
 
 	/**
@@ -35,17 +42,11 @@ class ReloadPulseRepository
 	 */
 	public function pulse(string $path = ''): void
 	{
-		$payload = [
+		// Atomic temp+rename via the store — readers never see a half-written file.
+		$this->store->save(self::PULSE_FILE, [
 			'ts'   => $this->microtimeMs(),
 			'path' => $path,
-		];
-
-		$json = (string)json_encode($payload, JSON_UNESCAPED_SLASHES);
-
-		// Atomic write — readers must never see a half-written file.
-		$tmp = self::PULSE_FILE . '.tmp.' . bin2hex(random_bytes(4));
-		$this->storage->write($tmp, $json);
-		$this->storage->move($tmp, self::PULSE_FILE);
+		]);
 	}
 
 	/**
@@ -80,14 +81,10 @@ class ReloadPulseRepository
 	/** @return array<string,mixed>|null */
 	private function read(): ?array
 	{
-		if (!$this->storage->fileExists(self::PULSE_FILE)) {
-			return null;
-		}
+		// TreatAsEmpty: the pulse file is disposable — the next save replaces it.
+		$data = $this->store->load(self::PULSE_FILE, CorruptPolicy::TreatAsEmpty);
 
-		$json = $this->storage->read(self::PULSE_FILE);
-		$data = json_decode($json, true);
-
-		return is_array($data) ? $data : null;
+		return $data === [] ? null : $data;
 	}
 
 	/**
