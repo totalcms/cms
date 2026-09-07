@@ -3604,6 +3604,17 @@
             "url": "https://docs.totalcms.co/collections/settings/"
         },
         {
+            "key": "format",
+            "type": "string",
+            "required": false,
+            "default": "\"json\"",
+            "description": "The file format objects in this collection are stored in: `json` (each object is `{id}.json`) or `markdown` (each object is `{id}.md`, YAML frontmatter plus a body from the schema's `content` property).",
+            "examples": [
+                "{\n    \"format\": \"markdown\"\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
             "key": "url",
             "type": "string",
             "required": false,
@@ -4146,6 +4157,32 @@
             ],
             "examples": [
                 "tcms collection:import blog posts.json\ntcms collection:import blog data.csv\ntcms collection:import blog posts.json --update\ntcms collection:import blog posts.json --format=json --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "collection:convert",
+            "description": "Convert a collection between `json` and `markdown` object storage; see [Storage Format](docs/collections/storage-format) for how the conversion works and how to read its output.",
+            "arguments": [
+                {
+                    "name": "collection",
+                    "required": true,
+                    "description": "Collection ID"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--to",
+                    "description": "Target format: `json` or `markdown`"
+                },
+                {
+                    "name": "--dry-run",
+                    "description": "Report what would change without writing anything"
+                }
+            ],
+            "examples": [
+                "tcms collection:convert docs --to=markdown\ntcms collection:convert docs --to=markdown --dry-run\ntcms collection:convert docs --to=json --json"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"

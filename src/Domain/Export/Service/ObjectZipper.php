@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Export\Service;
 
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
@@ -14,11 +15,12 @@ readonly class ObjectZipper
 {
 	public function __construct(
 		private Config $config,
+		private ObjectRepository $objects,
 	) {
 	}
 
 	/**
-	 * Create a zip file of an object's JSON file and assets folder.
+	 * Create a zip file of the object's file (`{id}.json` or `{id}.md`) and assets folder.
 	 *
 	 * @param string $collection The collection name
 	 * @param string $id         The object ID
@@ -32,15 +34,13 @@ readonly class ObjectZipper
 		$datadir = $this->config->datadir;
 
 		// Paths
-		$objectFile = PathUtils::buildPath(collection: $collection, filename: $id . '.json');
+		$objectFile = $this->objects->objectPath($collection, $id);
+		if ($objectFile === null) {
+			throw new \RuntimeException("Object not found: {$collection}/{$id}");
+		}
 		$assetsPath = PathUtils::buildPath(collection: $collection, filename: $id);
 
 		$fullObjectPath = PathUtils::absolutePath($datadir, $objectFile);
-
-		// Verify object exists
-		if (!file_exists($fullObjectPath)) {
-			throw new \RuntimeException("Object not found: {$collection}/{$id}");
-		}
 
 		// Create temp zip
 		$tempZipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR .
@@ -53,8 +53,8 @@ readonly class ObjectZipper
 			throw new \RuntimeException(sprintf('Failed to create zip file: %s (Error code: %d)', $tempZipPath, $result));
 		}
 
-		// Add JSON file
-		$zip->addFile($fullObjectPath, $id . '.json');
+		// Add the object's file
+		$zip->addFile($fullObjectPath, basename($objectFile));
 
 		// Add assets folder if exists and has non-cache contents
 		$fullAssetsPath = PathUtils::absolutePath($datadir, $assetsPath);
@@ -68,10 +68,10 @@ readonly class ObjectZipper
 	}
 
 	/**
-	 * Create a zip of several objects' JSON files and asset folders. Each object
-	 * lands at the zip root as `{id}.json` plus its `{id}/` assets folder, the
-	 * same layout createObjectZip() produces for a single object. Ids that no
-	 * longer exist are skipped.
+	 * Create a zip of several objects' files and asset folders. Each object
+	 * lands at the zip root as its file (`{id}.json` or `{id}.md`) plus its
+	 * `{id}/` assets folder, the same layout createObjectZip() produces for
+	 * a single object. Ids that no longer exist are skipped.
 	 *
 	 * @param array<int,string> $ids
 	 *
@@ -100,13 +100,13 @@ readonly class ObjectZipper
 				continue;
 			}
 
-			$objectFile     = PathUtils::buildPath(collection: $collection, filename: $id . '.json');
-			$fullObjectPath = PathUtils::absolutePath($datadir, $objectFile);
-			if (!file_exists($fullObjectPath)) {
+			$objectFile = $this->objects->objectPath($collection, $id);
+			if ($objectFile === null) {
 				continue; // skip missing ids and move on
 			}
+			$fullObjectPath = PathUtils::absolutePath($datadir, $objectFile);
 
-			$zip->addFile($fullObjectPath, $id . '.json');
+			$zip->addFile($fullObjectPath, basename($objectFile));
 
 			$assetsPath     = PathUtils::buildPath(collection: $collection, filename: $id);
 			$fullAssetsPath = PathUtils::absolutePath($datadir, $assetsPath);

@@ -61,6 +61,8 @@ readonly class CollectionSaver
 		// Check edition requirements for schema-specific features
 		$this->validateSchemaEdition($data['schema'] ?? '');
 
+		$data['format'] = $this->normalizeFormat($data['format'] ?? CollectionData::FORMAT_JSON);
+
 		// Normalize URL to path only (strip domain if present)
 		if (isset($data['url']) && $data['url'] !== '') {
 			$data['url'] = CollectionData::normalizeUrlToPath($data['url']);
@@ -164,6 +166,21 @@ readonly class CollectionSaver
 		if (!$existingCollection instanceof CollectionData) {
 			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
 		}
+
+		// The format is fixed at creation: the setting and the files on disk
+		// must agree, and only CollectionFormatConverter changes both.
+		// Normalized first so a harmless case/whitespace difference (e.g. the
+		// form re-posting `JSON`) is not mistaken for an attempted change.
+		if (isset($data['format']) && $data['format'] !== '' && $this->normalizeFormat($data['format']) !== $existingCollection->format) {
+			throw new \DomainException(sprintf(
+				"Collection '%s' is stored as %s. Change the storage format with `tcms collection:convert %s --to=%s`.",
+				$collectionId,
+				$existingCollection->format,
+				$collectionId,
+				(string)$data['format'],
+			));
+		}
+		$data['format'] = $existingCollection->format;
 
 		// Recalculate totalObjects from index if not explicitly provided (self-healing)
 		if (!isset($data['totalObjects'])) {
@@ -376,5 +393,18 @@ readonly class CollectionSaver
 		if (isset($schemaToFeature[$schema])) {
 			$this->editionFeatures->canOrFail($schemaToFeature[$schema]);
 		}
+	}
+
+	private function normalizeFormat(mixed $format): string
+	{
+		$format = strtolower(trim((string)$format));
+		if ($format === '') {
+			return CollectionData::FORMAT_JSON;
+		}
+		if (!in_array($format, CollectionData::FORMATS, true)) {
+			throw new \DomainException(sprintf("Unknown storage format '%s'. Use one of: %s.", $format, implode(', ', CollectionData::FORMATS)));
+		}
+
+		return $format;
 	}
 }

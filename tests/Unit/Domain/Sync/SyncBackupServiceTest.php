@@ -6,6 +6,7 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Monolog\Level;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Sync\Service\SyncBackupService;
 use TotalCMS\Factory\LoggerFactory;
@@ -25,7 +26,22 @@ describe('SyncBackupService', function (): void {
 			new Filesystem(new LocalFilesystemAdapter($this->tmpRoot))
 		);
 
-		$this->service = new SyncBackupService($storage, new LoggerFactory([
+		// Stand-in for the real repository's format resolution: whichever of
+		// {id}.json / {id}.md actually exists on disk, .json preferred.
+		$tmpRoot = $this->tmpRoot;
+		$objects = $this->createMock(ObjectRepository::class);
+		$objects->method('objectPath')->willReturnCallback(function (string $collection, string $id) use ($tmpRoot): ?string {
+			foreach (['.json', '.md'] as $ext) {
+				$path = sprintf('%s/%s%s', $collection, $id, $ext);
+				if (file_exists($tmpRoot . '/' . $path)) {
+					return $path;
+				}
+			}
+
+			return null;
+		});
+
+		$this->service = new SyncBackupService($storage, $objects, new LoggerFactory([
 			'level' => Level::Debug,
 			'test'  => new NullLogger(),
 		]));
@@ -64,6 +80,16 @@ describe('SyncBackupService', function (): void {
 		$backups = glob($this->tmpRoot . '/.system/backups/objects/builder-pages/home/home-*.json');
 		expect($backups)->toHaveCount(1);
 		expect(file_get_contents($backups[0]))->toBe('{"id":"home","title":"Home"}');
+	});
+
+	test('snapshots a markdown object under its .md name', function (): void {
+		file_put_contents($this->tmpRoot . '/builder-pages/home.md', "---\nid: home\ntitle: Home\n---\n\nBody\n");
+
+		$this->service->backupObject('builder-pages', 'home');
+
+		$backups = glob($this->tmpRoot . '/.system/backups/objects/builder-pages/home/home-*.md');
+		expect($backups)->toHaveCount(1);
+		expect(file_get_contents($backups[0]))->toBe("---\nid: home\ntitle: Home\n---\n\nBody\n");
 	});
 
 	test('does nothing when the source does not exist (a create, nothing to lose)', function (): void {

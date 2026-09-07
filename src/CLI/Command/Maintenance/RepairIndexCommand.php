@@ -52,16 +52,32 @@ class RepairIndexCommand extends BaseCommand
 			$collectionIds = [$collectionId];
 		}
 
+		$indexBuilder  = $this->totalcms->indexBuilder();
+		$objectFetcher = $this->totalcms->objectFetcher();
+
 		$results = [];
+		$skipped = [];
 		foreach ($collectionIds as $collectionId) {
-			$index                  = $this->totalcms->indexBuilder()->buildIndex($collectionId);
+			$index                  = $indexBuilder->buildIndex($collectionId);
 			$results[$collectionId] = $index->objects->count();
+			$skipped[$collectionId] = $indexBuilder->lastSkippedIds();
+
+			// A hand-edited object file only becomes visible through a
+			// rebuild, but a request handler may already have warmed this
+			// object's per-object cache from the stale contents. Clear it so
+			// repair:index actually refreshes what fetchObject() returns,
+			// not just the index itself. Deliberately NOT inside
+			// IndexBuilder::buildIndex() — that method also runs on every
+			// ordinary object save (via smartBuildIndex()), where evicting
+			// the whole collection's object cache per save would be wrong.
+			$objectFetcher->clearCollectionCache($collectionId);
 		}
 
 		if ($this->isJson($input)) {
 			$output->writeln((string)json_encode([
 				'status'  => 'rebuilt',
 				'indexes' => $results,
+				'skipped' => $skipped,
 			], JSON_PRETTY_PRINT));
 
 			return Command::SUCCESS;
@@ -69,6 +85,14 @@ class RepairIndexCommand extends BaseCommand
 
 		foreach ($results as $collectionId => $count) {
 			$output->writeln("<info>Rebuilt index for '{$collectionId}' — {$count} object(s).</info>");
+			if ($skipped[$collectionId] !== []) {
+				$output->writeln(sprintf(
+					"<comment>Skipped %d unreadable object(s) in '%s': %s — see the log.</comment>",
+					count($skipped[$collectionId]),
+					$collectionId,
+					implode(', ', $skipped[$collectionId]),
+				));
+			}
 		}
 
 		return Command::SUCCESS;

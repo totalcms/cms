@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Object\Repository;
 
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -9,6 +10,7 @@ use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
+use TotalCMS\Domain\Object\Service\ObjectFileCodec;
 use TotalCMS\Domain\Property\Service\ExternalFieldStore;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
@@ -26,6 +28,9 @@ class ObjectRepository extends StorageRepository
 	 */
 	private array $requestCache = [];
 
+	/** @var array<string,?string> collection id → body property, for this request */
+	private array $bodyPropertyCache = [];
+
 	public function __construct(
 		StorageAdapterInterface $filesystem,
 		private readonly ObjectFactory $factory,
@@ -35,6 +40,8 @@ class ObjectRepository extends StorageRepository
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly IndexRepository $indexRepository,
 		private readonly ExternalFieldStore $externalFields,
+		private readonly ObjectFileCodec $codec,
+		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct($filesystem);
 	}
@@ -61,24 +68,16 @@ class ObjectRepository extends StorageRepository
 		// Validate unique property constraints
 		$this->validateUniqueProperties($object, $collectionInfo, $collection);
 
-		$objectFile = $this->buildObjectPath($collection, $object->id);
-
 		// Externalize `external: true` code fields to sidecar files, then blank
 		// them in the canonical object JSON so the value lives in one place.
 		$persisted = $this->externalFields->persist($collection, $object);
 
-		if ($persisted === []) {
-			$this->filesystem->write($objectFile, $object->toJson());
-		} else {
-			$data = $object->toArray();
-			foreach ($persisted as $name) {
-				$data[$name] = '';
-			}
-			$this->filesystem->write(
-				$objectFile,
-				(string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
-			);
+		$objectFile = $this->writePath($collection, $object->id);
+		$data       = $object->toArray();
+		foreach ($persisted as $name) {
+			$data[$name] = '';
 		}
+		$this->filesystem->write($objectFile, $this->codec->encode($data, $this->format($collection), $this->bodyProperty($collection)));
 
 		// Invalidate object cache when saved (data has changed)
 		$cacheKey = "object:{$collection}:{$object->id}";
@@ -87,9 +86,7 @@ class ObjectRepository extends StorageRepository
 
 	public function existsObject(string $collection, string $id): bool
 	{
-		$objectFile = $this->buildObjectPath($collection, $id);
-
-		return $this->filesystem->fileExists($objectFile);
+		return $this->objectPath($collection, $id) !== null;
 	}
 
 	public function fetchObject(string $collection, string $id): ?ObjectData
@@ -113,17 +110,12 @@ class ObjectRepository extends StorageRepository
 		}
 
 		// Cache miss - fetch from filesystem (slowest)
-		$objectFile = $this->buildObjectPath($collection, $id);
+		$contents = $this->readContents($collection, $id);
+		if ($contents !== null) {
+			$this->cacheManager->storeComputedData($cacheKey, $contents, CacheManager::TTL_OBJECT_DATA);
+			$this->requestCache[$cacheKey] = $contents;
 
-		if ($this->filesystem->fileExists($objectFile)) {
-			$contents = json_decode($this->filesystem->read($objectFile), true);
-			if (is_array($contents)) {
-				// Cache the raw data in both caches
-				$this->cacheManager->storeComputedData($cacheKey, $contents, CacheManager::TTL_OBJECT_DATA);
-				$this->requestCache[$cacheKey] = $contents;
-
-				return $this->buildObject($collection, $contents);
-			}
+			return $this->buildObject($collection, $contents);
 		}
 
 		// If object file doesn't exist, invalidate cache to prevent stale data
@@ -138,18 +130,9 @@ class ObjectRepository extends StorageRepository
 	 */
 	public function fetchObjectFromDisk(string $collection, string $id): ?ObjectData
 	{
-		$objectFile = $this->buildObjectPath($collection, $id);
+		$contents = $this->readContents($collection, $id);
 
-		if (!$this->filesystem->fileExists($objectFile)) {
-			return null;
-		}
-
-		$contents = json_decode($this->filesystem->read($objectFile), true);
-		if (!is_array($contents)) {
-			return null;
-		}
-
-		return $this->buildObject($collection, $contents);
+		return $contents === null ? null : $this->buildObject($collection, $contents);
 	}
 
 	/**
@@ -168,11 +151,16 @@ class ObjectRepository extends StorageRepository
 
 	public function deleteObject(string $collection, string $id): bool
 	{
-		$filesPath  = $this->buildObjectFilesPath($collection, $id);
-		$objectFile = $this->buildObjectPath($collection, $id);
+		$filesPath = $this->buildObjectFilesPath($collection, $id);
 
 		$this->filesystem->deleteDirectory($filesPath);
-		$deleted = $this->filesystem->delete($objectFile);
+		$deleted = false;
+		foreach ([CollectionData::FORMAT_JSON, CollectionData::FORMAT_MARKDOWN] as $format) {
+			$path = PathUtils::buildPath(collection: $collection, filename: $id . $this->codec->extension($format));
+			if ($this->filesystem->fileExists($path)) {
+				$deleted = $this->filesystem->delete($path) || $deleted;
+			}
+		}
 
 		// Invalidate object cache when deleted
 		if ($deleted) {
@@ -196,6 +184,46 @@ class ObjectRepository extends StorageRepository
 
 		// Also invalidate collection index cache (objects list has changed)
 		$this->cacheManager->clearCollectionIndex($collection);
+	}
+
+	/**
+	 * Clear every cached copy of every object in a collection: the
+	 * request-level memo on this instance AND the persistent backends. Used
+	 * after an index rebuild (`tcms repair:index`) so a hand-edited file's
+	 * new contents are what fetchObject() returns next, not whatever was
+	 * already warmed into cache from before the edit — clearCollectionIndex()
+	 * alone only invalidates the index/object-id caches, not individual
+	 * objects.
+	 */
+	public function clearCollectionCache(string $collection): void
+	{
+		$prefix = "object:{$collection}:";
+		foreach (array_keys($this->requestCache) as $key) {
+			if (str_starts_with($key, $prefix)) {
+				unset($this->requestCache[$key]);
+			}
+		}
+
+		$this->cacheManager->clearCollectionObjects($collection);
+	}
+
+	/**
+	 * Delete exactly the given object file (used by the format converter to
+	 * remove the superseded file). Unlike deleteObject(), this never touches
+	 * the object's assets folder.
+	 */
+	public function deleteObjectFile(string $path): bool
+	{
+		$collection = dirname($path);
+		$id         = pathinfo($path, PATHINFO_FILENAME);
+
+		$deleted = $this->filesystem->delete($path);
+		if ($deleted) {
+			$cacheKey = "object:{$collection}:{$id}";
+			$this->invalidateObjectCache($cacheKey, $collection);
+		}
+
+		return $deleted;
 	}
 
 	public function copyObjectFiles(string $fromCollection, string $fromId, string $toCollection, string $toId): void
@@ -285,8 +313,89 @@ class ObjectRepository extends StorageRepository
 		return PathUtils::buildPath(collection: $collection, filename: $id);
 	}
 
-	private function buildObjectPath(string $collection, string $id): string
+	/**
+	 * Not memoized here — `CollectionFetcher` already holds the request-level
+	 * cache and is the single invalidation point (`clearCache()`). Memoizing
+	 * a second time in this class would let a format flip mid-request (e.g.
+	 * the markdown converter) go unnoticed by `writePath()`/`objectPath()`.
+	 */
+	private function format(string $collection): string
 	{
-		return PathUtils::buildPath(collection: $collection, filename: $id . self::FILE_EXT);
+		$info = $this->collectionFetcher->fetchCollection($collection);
+
+		return $info instanceof CollectionData ? $info->format : CollectionData::FORMAT_JSON;
+	}
+
+	private function bodyProperty(string $collection): ?string
+	{
+		if (!array_key_exists($collection, $this->bodyPropertyCache)) {
+			try {
+				$schema                               = $this->schemaFetcher->fetchSchemaForCollection($collection);
+				$this->bodyPropertyCache[$collection] = $this->codec->bodyProperty($schema->properties);
+			} catch (\Throwable) {
+				$this->bodyPropertyCache[$collection] = null;
+			}
+		}
+
+		return $this->bodyPropertyCache[$collection];
+	}
+
+	/** The path a write goes to: always the collection's format. */
+	private function writePath(string $collection, string $id): string
+	{
+		return PathUtils::buildPath(collection: $collection, filename: $id . $this->codec->extension($this->format($collection)));
+	}
+
+	/**
+	 * The file the object actually has, or null. The collection's format is
+	 * tried first, then the other extension, so a half-converted collection
+	 * and a file dropped in by hand both load.
+	 */
+	public function objectPath(string $collection, string $id): ?string
+	{
+		$preferred = $this->format($collection);
+		$other     = $preferred === CollectionData::FORMAT_MARKDOWN ? CollectionData::FORMAT_JSON : CollectionData::FORMAT_MARKDOWN;
+		foreach ([$preferred, $other] as $format) {
+			$path = PathUtils::buildPath(collection: $collection, filename: $id . $this->codec->extension($format));
+			if ($this->filesystem->fileExists($path)) {
+				return $path;
+			}
+		}
+
+		return null;
+	}
+
+	/** Format of an existing file, from its extension. */
+	private function formatOf(string $path): string
+	{
+		return str_ends_with($path, '.md') ? CollectionData::FORMAT_MARKDOWN : CollectionData::FORMAT_JSON;
+	}
+
+	/** @return array<string,mixed>|null null when the file is missing or unparseable */
+	private function readContents(string $collection, string $id): ?array
+	{
+		$path = $this->objectPath($collection, $id);
+		if ($path === null) {
+			return null;
+		}
+		try {
+			$data = $this->codec->decode($this->filesystem->read($path), $this->formatOf($path), $this->bodyProperty($collection));
+			// The file name is the object's identity, not whatever an `id:`
+			// line in hand-edited frontmatter says (it's optional, and wrong
+			// or absent values must not matter). Applies to both formats so a
+			// stray/mismatched `id` in a JSON file can't confuse it either.
+			$data['id'] = $id;
+
+			return $data;
+		} catch (\UnexpectedValueException $e) {
+			$this->logger->warning('Skipping unreadable object file', [
+				'collection' => $collection,
+				'id'         => $id,
+				'path'       => $path,
+				'error'      => $e->getMessage(),
+			]);
+
+			return null;
+		}
 	}
 }

@@ -249,6 +249,25 @@ tcms collection:import blog posts.json --format=json --json
 | `--format, -f` | Import format: `json` or `csv` (auto-detected from extension) |
 | `--update` | Update existing objects instead of skipping |
 
+### `collection:convert`
+
+Convert a collection between `json` and `markdown` object storage; see [Storage Format](docs/collections/storage-format) for how the conversion works and how to read its output.
+
+```bash
+tcms collection:convert docs --to=markdown
+tcms collection:convert docs --to=markdown --dry-run
+tcms collection:convert docs --to=json --json
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `collection` | Yes | Collection ID |
+
+| Option | Description |
+|--------|-------------|
+| `--to` | Target format: `json` or `markdown` |
+| `--dry-run` | Report what would change without writing anything |
+
 ---
 
 ## Object Commands

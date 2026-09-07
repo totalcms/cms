@@ -278,6 +278,14 @@ class CollectionForm extends TotalForm
 			}
 		}
 
+		// Storage format is creation-only. A disabled select is not submitted,
+		// and CollectionSaver keeps the stored value when it is absent.
+		if ($name === 'format' && $this->collectionData instanceof CollectionData) {
+			$options['disabled'] = true;
+			$options['readonly'] = true;
+			$options['help']     = sprintf('Fixed after creation. Change it with `tcms collection:convert %s --to=%s`.', $this->collectionData->id, $this->collectionData->isMarkdown() ? 'json' : 'markdown');
+		}
+
 		return $options;
 	}
 }

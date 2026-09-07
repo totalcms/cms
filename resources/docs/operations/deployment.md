@@ -69,6 +69,16 @@ Each step has a `--skip-*` flag (`--skip-container`, `--skip-cache`, `--skip-mig
 
 `tcms deploy` is the recommended entry point for any deploy script.
 
+### Markdown Collections
+
+A collection stored in [markdown format](docs/collections/storage-format) is edited as plain `.md` files — often committed to the same git repository as the site's code. Those edits are invisible to Total CMS until the collection's index is rebuilt, so add one line to your deploy script for each markdown collection you keep in git:
+
+```bash
+vendor/bin/tcms repair:index docs
+```
+
+Run it after the code checkout and before (or as part of) `tcms deploy`, so a page added or edited in the last commit shows up in the admin, API, and Twig as soon as the deploy finishes. `repair:index` also clears each object's cached copy right after it rebuilds the index (the admin's Rebuild Index button does the same for markdown collections), so a request that already had the old contents cached doesn't keep serving them after the deploy.
+
 ### Standard `bin/deploy.sh`
 
 The project skeleton (`totalcms/totalcms-project`) ships a reference script at `bin/deploy.sh`. The shape:

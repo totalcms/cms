@@ -367,6 +367,28 @@ final class JumpStartExportSyncDataTest extends TestCase
 		expect($result->objects)->toHaveCount(0);
 	}
 
+	public function testExportSyncCollectionMetaOmitsFormat(): void
+	{
+		// `format` describes local disk storage, not content: it must never
+		// ride along with a synced collection's settings, same as the
+		// environment-local counters it's stripped alongside.
+		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
+		$this->templateLister->method('listBuilderTemplates')->willReturn([]);
+
+		$docs         = new CollectionData();
+		$docs->id     = 'docs';
+		$docs->schema = 'blog';
+		$docs->format = CollectionData::FORMAT_MARKDOWN;
+
+		$this->collectionLister->method('listAllCollections')->willReturn([$docs]);
+		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([]));
+
+		$result = $this->exporter->exportSyncData();
+
+		$exported = array_values(array_filter($result->collections['reserved'], fn (array $c): bool => $c['id'] === 'docs'))[0] ?? null;
+		expect($exported)->not->toBeNull()->and($exported)->not->toHaveKey('format');
+	}
+
 	public function testMirrorPathStillIgnoresNonAllowlistedCollections(): void
 	{
 		// Regression guard on this task's refactor: extracting the shared loop

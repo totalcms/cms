@@ -98,12 +98,7 @@ class IndexRepository extends StorageRepository
 		}
 
 		// Cache miss - scan filesystem (expensive!)
-		$files = $this->filesystem->listFiles($collection);
-
-		// Filter for object json files
-		$files = array_filter($files, fn (string $path): bool => str_ends_with($path, StorageRepository::FILE_EXT) && !str_starts_with($path, '.'));
-
-		$objectIds = array_map(fn (string $path): string => basename($path, StorageRepository::FILE_EXT), $files);
+		$objectIds = $this->objectIdsFromFiles($collection);
 
 		if ($objectIds === []) {
 			// Clear cache if no objects to prevent serving stale data
@@ -124,11 +119,7 @@ class IndexRepository extends StorageRepository
 	 */
 	public function fetchObjectIdsFromDisk(string $collection): array
 	{
-		$files = $this->filesystem->listFiles($collection);
-
-		$files = array_filter($files, fn (string $path): bool => str_ends_with($path, StorageRepository::FILE_EXT) && !str_starts_with($path, '.'));
-
-		$objectIds = array_map(fn (string $path): string => basename($path, StorageRepository::FILE_EXT), $files);
+		$objectIds = $this->objectIdsFromFiles($collection);
 
 		// Update cache with fresh filesystem data
 		$cacheKey = "object_ids:{$collection}";
@@ -234,5 +225,34 @@ class IndexRepository extends StorageRepository
 	private function buildIndexPath(string $collection): string
 	{
 		return PathUtils::buildPath(collection: $collection, filename: self::INDEX_FILE);
+	}
+
+	/**
+	 * Object ids from the files in a collection directory: `{id}.json` and
+	 * `{id}.md`, each id once, dot-prefixed files skipped.
+	 *
+	 * @return array<string>
+	 */
+	private function objectIdsFromFiles(string $collection): array
+	{
+		$ids = [];
+		foreach ($this->filesystem->listFiles($collection) as $path) {
+			$name = basename($path);
+			if (str_starts_with($name, '.')) {
+				continue;
+			}
+			foreach (['.json', '.md'] as $ext) {
+				if (str_ends_with($name, $ext)) {
+					// Keyed on the id to dedupe a .json/.md pair for the same
+					// id down to one entry. PHP casts a numeric-string key
+					// like "1" to the int 1, so array_keys() alone would hand
+					// back an int here — cast back to string on the way out.
+					$ids[substr($name, 0, -strlen($ext))] = true;
+					break;
+				}
+			}
+		}
+
+		return array_map('strval', array_keys($ids));
 	}
 }

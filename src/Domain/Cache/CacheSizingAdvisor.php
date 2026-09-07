@@ -159,21 +159,19 @@ readonly class CacheSizingAdvisor
 		}
 
 		// Measure object files (skip dot-prefixed files)
-		$jsonFiles = glob($collectionPath . '/*.json');
-		if (is_array($jsonFiles)) {
-			foreach ($jsonFiles as $file) {
-				$basename = basename($file);
-				if (str_starts_with($basename, '.')) {
-					continue;
-				}
+		$objectFiles = array_merge(glob($collectionPath . '/*.json') ?: [], glob($collectionPath . '/*.md') ?: []);
+		foreach ($objectFiles as $file) {
+			$basename = basename($file);
+			if (str_starts_with($basename, '.')) {
+				continue;
+			}
 
-				$size = (int)filesize($file);
-				$objectCount++;
-				$objectBytes += $size;
+			$size = (int)filesize($file);
+			$objectCount++;
+			$objectBytes += $size;
 
-				if ($size > $largestBytes) {
-					$largestBytes = $size;
-				}
+			if ($size > $largestBytes) {
+				$largestBytes = $size;
 			}
 		}
 

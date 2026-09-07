@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Sync\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -24,7 +25,7 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
  * protect and survive application updates):
  *
  *   .system/backups/schemas/{id}/{id}-{YYYYMMDD-HHMMSS}.json
- *   .system/backups/objects/{collection}/{id}/{id}-{YYYYMMDD-HHMMSS}.json
+ *   .system/backups/objects/{collection}/{id}/{id}-{YYYYMMDD-HHMMSS}.json (or .md)
  *
  * Restore is a manual file copy by design — no UI yet. Each item keeps its
  * last KEEP snapshots; identical consecutive syncs don't stack duplicates
@@ -48,6 +49,7 @@ class SyncBackupService
 
 	public function __construct(
 		private readonly StorageAdapterInterface $filesystem,
+		private readonly ObjectRepository $objects,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::JumpStartImporter);
@@ -97,8 +99,13 @@ class SyncBackupService
 			return;
 		}
 
+		$sourcePath = $this->objects->objectPath($collection, $id);
+		if ($sourcePath === null) {
+			return;
+		}
+
 		$this->backup(
-			PathUtils::buildPath(collection: $collection, filename: $id . '.json'),
+			$sourcePath,
 			sprintf('%s/objects/%s/%s', self::BACKUP_ROOT, $collection, $id),
 			$id,
 		);
@@ -120,8 +127,9 @@ class SyncBackupService
 				return;
 			}
 
+			$extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
 			$this->filesystem->write(
-				sprintf('%s/%s-%s.json', $backupDir, $id, date('Ymd-His')),
+				sprintf('%s/%s-%s.%s', $backupDir, $id, date('Ymd-His'), $extension),
 				$contents,
 			);
 
@@ -138,7 +146,7 @@ class SyncBackupService
 
 	/**
 	 * Backup filenames embed a fixed-width UTC-agnostic timestamp
-	 * ({id}-YYYYMMDD-HHMMSS.json), so a reverse lexicographic sort IS
+	 * ({id}-YYYYMMDD-HHMMSS.{json|md}), so a reverse lexicographic sort IS
 	 * newest-first — no filesystem mtime needed.
 	 *
 	 * @return list<string>

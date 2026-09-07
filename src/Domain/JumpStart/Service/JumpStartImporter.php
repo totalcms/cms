@@ -534,6 +534,16 @@ class JumpStartImporter
 	 * side outright so no payload can ever move them. `count` feeds oid
 	 * generation, and lowering it would collide new object ids.
 	 *
+	 * `format` is stripped here too, but NOT in stripComputedCollectionFields()
+	 * — this method only ever touches a collection that already exists on
+	 * disk in its own format, and CollectionSaver::updateCollection() would
+	 * refuse a payload that disagreed with it anyway (the setting and the
+	 * files on disk must always agree; only CollectionFormatConverter changes
+	 * both). The CREATE path (createCustomCollection() for a brand-new
+	 * collection) is different: there is no existing format to protect, so a
+	 * `jumpstart:export` of a markdown collection can restore as markdown on
+	 * a fresh install — see stripComputedCollectionFields()'s docblock.
+	 *
 	 * @param array<string,mixed> $incoming
 	 */
 	private function upsertCollectionMeta(string $collectionId, array $incoming, CollectionData $existing): void
@@ -541,6 +551,8 @@ class JumpStartImporter
 		$this->syncBackup->backupCollectionMeta($collectionId);
 
 		$data = array_merge($existing->toArray(), $this->stripComputedCollectionFields($incoming));
+		unset($data['format']);
+		$data['format'] = $existing->format;
 
 		$this->collectionSaver->updateCollection($collectionId, $data, $existing, preserveDates: true);
 		$this->addResult(sprintf('Collection %s: updated', $collectionId));
@@ -551,6 +563,15 @@ class JumpStartImporter
 	 * write: `count` (lifetime oid counter), `totalObjects`, `lastUpdated`
 	 * (content timestamp). The exporter already strips them; stripping again
 	 * here enforces the rule against any hand-built payload.
+	 *
+	 * `format` is deliberately NOT stripped here. This method feeds BOTH the
+	 * create path (createCustomCollection(), via CollectionSaver::saveCollection())
+	 * and — through upsertCollectionMeta(), which strips `format` itself
+	 * afterwards — the update path. On create there is no existing on-disk
+	 * format to protect, so an incoming `format` (e.g. from a
+	 * `jumpstart:export` of a markdown collection) is honoured, letting a
+	 * fresh install restore it as markdown rather than silently defaulting
+	 * to json.
 	 *
 	 * @param array<string,mixed> $data
 	 *

@@ -154,7 +154,10 @@ readonly class JumpStartExporter
 			}
 
 			$config = $collection->toArray();
-			unset($config['count'], $config['totalObjects'], $config['lastUpdated']);
+			// `format` never travels with sync/JumpStart: they move objects,
+			// not files, so the receiving collection's own storage format
+			// decides how they land, same as the computed counters below.
+			unset($config['count'], $config['totalObjects'], $config['lastUpdated'], $config['format']);
 
 			// Mirror semantics: absent-when-empty keys must be explicit so
 			// the importer can clear them on the receiving side.

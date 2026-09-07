@@ -195,6 +195,46 @@ it('reconciles a tree naming pages the destination does not have', function (): 
 	expect($ids[0])->toBe('gamma');
 });
 
+it('creates a new collection in the format the import payload specifies', function (): void {
+	// The CREATE path is different from the update path below: there is no
+	// existing on-disk format to protect, so a `jumpstart:export` of a
+	// markdown collection restores as markdown on a fresh install rather
+	// than silently defaulting to json.
+	$this->importer->importFromDefinition([
+		'collections' => [
+			'custom' => [[
+				'id'     => 'docs',
+				'schema' => 'ordertest',
+				'name'   => 'Docs',
+				'format' => 'markdown',
+			]],
+		],
+	], upsert: true);
+
+	expect($this->fetcher->fetchCollection('docs')->format)->toBe('markdown');
+});
+
+it('imports a payload carrying format without error, and format stays what the receiving collection already has', function (): void {
+	// Sync/JumpStart move objects, not files: `format` describes the SENDING
+	// side's storage and is meaningless here. CollectionSaver refuses a
+	// format change through the normal update path (400), so a synced
+	// payload that happened to carry it must be stripped before it ever
+	// reaches CollectionSaver — otherwise every sync of a markdown
+	// collection's settings onto a json receiver (or vice versa) would fail.
+	$this->importer->importFromDefinition([
+		'collections' => [
+			'custom' => [[
+				'id'     => 'builder-pages',
+				'schema' => 'ordertest',
+				'name'   => 'Pages',
+				'format' => 'markdown',
+			]],
+		],
+	], upsert: true);
+
+	expect($this->fetcher->fetchCollection('builder-pages')->format)->toBe('json');
+});
+
 it('never persists pageOrder into the collection settings', function (): void {
 	// It is lifted off before CollectionSaver sees it — .meta.json must not
 	// grow a field that is not part of CollectionData.

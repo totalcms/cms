@@ -472,6 +472,27 @@ class CacheManager
 	}
 
 	/**
+	 * Clear every per-object cache entry for a collection (the
+	 * `object:{collection}:{id}` computed-data keys fetchObject() reads and
+	 * warms). Used after rebuilding a collection's index — e.g.
+	 * `tcms repair:index` picking up a hand-edited object file — so a
+	 * request that already warmed the old contents into cache sees the
+	 * refreshed object rather than the stale one.
+	 */
+	public function clearCollectionObjects(string $collectionName): bool
+	{
+		$pattern = $this->createKey(self::PREFIX_COMPUTED . ":object:{$collectionName}:*");
+		$success = $this->clearByPatternAllBackends($pattern);
+
+		// Signal for cross-process invalidation (CLI → web), same as clearByType().
+		if ($this->isCli && !$this->suppressSignals) {
+			$this->invalidationSignal->signalPattern($this->stripDomainPrefix($pattern));
+		}
+
+		return $success;
+	}
+
+	/**
 	 * Store session data (fast access, APCu preferred for single-server deployments).
 	 * Priority: APCu > Redis > Memcached > Filesystem.
 	 *

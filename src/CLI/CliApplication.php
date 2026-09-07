@@ -105,6 +105,7 @@ class CliApplication
 		$app->addCommand(new Command\CollectionQueryCommand($totalcms));
 		$app->addCommand(new Command\CollectionExportCommand($totalcms));
 		$app->addCommand(new Command\CollectionImportCommand($totalcms));
+		$app->addCommand(new Command\CollectionConvertCommand($totalcms));
 
 		// Object commands
 		$app->addCommand(new Command\ObjectListCommand($totalcms));

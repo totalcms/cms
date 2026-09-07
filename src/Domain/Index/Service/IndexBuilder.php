@@ -15,28 +15,54 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
-readonly class IndexBuilder
+class IndexBuilder
 {
 	private const STREAMING_THRESHOLD = 500; // Batch size for garbage collection during streaming.
 	private const GC_BATCH_SIZE       = 100; // Batch size for garbage collection during streaming.
 
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
+
+	/**
+	 * Ids skipped by the per-object catch blocks in the most recent
+	 * buildIndex() call. Reset at the start of every call, so a caller reads
+	 * it immediately after buildIndex() returns. Not readonly: unlike every
+	 * other property here (each a fixed collaborator handed in once at
+	 * construction), this one tracks per-call results and is reassigned on
+	 * every buildIndex() call.
+	 *
+	 * @var list<string>
+	 */
+	private array $skippedIds = [];
 
 	public function __construct(
-		private IndexRepository $storage,
-		private ObjectFetcher $objectFetcher,
-		private SchemaFetcher $schemaFetcher,
-		private CollectionFetcher $collectionFetcher,
-		private CollectionSaver $collectionSaver,
-		private JobQueuer $jobQueuer,
+		private readonly IndexRepository $storage,
+		private readonly ObjectFetcher $objectFetcher,
+		private readonly SchemaFetcher $schemaFetcher,
+		private readonly CollectionFetcher $collectionFetcher,
+		private readonly CollectionSaver $collectionSaver,
+		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory
 			->channelLogger(LogChannel::IndexBuilder);
 	}
 
+	/**
+	 * Ids skipped (unreadable/unparseable) by the most recent buildIndex()
+	 * call for any collection. Cleared at the start of each buildIndex() —
+	 * read it right after calling.
+	 *
+	 * @return list<string>
+	 */
+	public function lastSkippedIds(): array
+	{
+		return $this->skippedIds;
+	}
+
 	public function buildIndex(string $collection): IndexData
 	{
+		$this->skippedIds = [];
+
 		$this->logger->info('Starting index build', [
 			'collection' => $collection,
 		]);
@@ -96,6 +122,7 @@ readonly class IndexBuilder
 			} catch (\Throwable $e) {
 				// Skip objects that fail to load (e.g., type mismatches after schema changes)
 				// Log the error but continue building index with remaining valid objects
+				$this->skippedIds[] = $id;
 				$this->logger->warning('Skipping object during index build due to error', [
 					'collection' => $collection,
 					'object_id'  => $id,
@@ -148,6 +175,7 @@ readonly class IndexBuilder
 				// Explicitly free memory
 				unset($object, $summary);
 			} catch (\Throwable $e) {
+				$this->skippedIds[] = $id;
 				$this->logger->warning('Skipping object during index build due to error', [
 					'collection' => $collection,
 					'object_id'  => $id,

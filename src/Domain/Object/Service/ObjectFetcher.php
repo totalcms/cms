@@ -52,4 +52,14 @@ readonly class ObjectFetcher
 	{
 		return $this->storage->existsObject($collection, $id);
 	}
+
+	/**
+	 * Clear every cached copy of every object in a collection (request-level
+	 * and persistent). Used by IndexBuilder after a rebuild, so a hand-edited
+	 * file's new contents are what the next fetchObject() call returns.
+	 */
+	public function clearCollectionCache(string $collection): void
+	{
+		$this->storage->clearCollectionCache($collection);
+	}
 }

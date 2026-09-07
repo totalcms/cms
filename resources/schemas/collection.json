@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "name name\nid id\nschema schema\ndescription description\nsingleton singleton\nqueueRebuildOnSave queueRebuildOnSave\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\nrequireEmailVerification requireEmailVerification\n---Sitemap---\nsitemap sitemap\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
+	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\nrequireEmailVerification requireEmailVerification\n---Sitemap---\nsitemap sitemap\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -61,6 +61,17 @@
 			"label" : "Single Object Collection",
 			"help"  : "This collection holds exactly one object. Clicking it opens that object directly for editing.",
 			"field" : "checkbox"
+        },
+        "format": {
+			"type"    : "string",
+			"label"   : "Storage Format",
+			"help"    : "How each object is stored on disk. JSON is the default. Markdown writes {id}.md with YAML frontmatter and the content property as the body, for content managed in a text editor or git. Fixed after creation: change it with tcms collection:convert.",
+			"field"   : "select",
+			"default" : "json",
+			"options" : [
+				{ "value" : "json",     "label" : "JSON" },
+				{ "value" : "markdown", "label" : "Markdown" }
+			]
         },
         "url": {
 			"type"        : "string",

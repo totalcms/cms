@@ -34,6 +34,7 @@ return [
 		'title' => 'Collections',
 		'sub'   => [
 			['title' => 'Collection Settings', 'path' => 'collections/settings'],
+			['title' => 'Storage Format',      'path' => 'collections/storage-format'],
 			['title' => 'Form Settings',       'path' => 'collections/form-settings'],
 			['title' => 'Data Views',          'path' => 'collections/data-views'],
 			['title' => 'Importing Data',      'path' => 'collections/import'],

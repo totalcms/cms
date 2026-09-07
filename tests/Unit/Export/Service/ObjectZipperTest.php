@@ -6,6 +6,7 @@ namespace Tests\Unit\Export\Service;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Export\Service\ObjectZipper;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Support\Config;
 
 final class ObjectZipperTest extends TestCase
@@ -22,7 +23,22 @@ final class ObjectZipperTest extends TestCase
 		$this->config          = $this->createMock(Config::class);
 		$this->config->datadir = $this->tempDir;
 
-		$this->objectZipper = new ObjectZipper($this->config);
+		// Stand-in for the real repository's format resolution: whichever of
+		// {collection}/{id}.json / .md actually exists on disk, .json preferred.
+		$tempDir  = $this->tempDir;
+		$objects = $this->createMock(ObjectRepository::class);
+		$objects->method('objectPath')->willReturnCallback(function (string $collection, string $id) use ($tempDir): ?string {
+			foreach (['.json', '.md'] as $ext) {
+				$path = sprintf('%s/%s%s', $collection, $id, $ext);
+				if (file_exists($tempDir . '/' . $path)) {
+					return $path;
+				}
+			}
+
+			return null;
+		});
+
+		$this->objectZipper = new ObjectZipper($this->config, $objects);
 	}
 
 	protected function tearDown(): void

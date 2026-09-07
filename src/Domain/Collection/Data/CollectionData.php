@@ -41,6 +41,13 @@ class CollectionData
 	public bool $queueRebuildOnSave       = false;  // queue a rebuild of the collection
 	public bool $prettyUrl                = false;           // use pretty URLs for the collection
 	public bool $singleton                = false;           // collection holds exactly one object, edited directly (object id == collection id)
+	/** Object file format on disk: `json` (`{id}.json`) or `markdown` (`{id}.md`, YAML frontmatter + `content` body). Creation-only; see CollectionFormatConverter. */
+	public string $format = self::FORMAT_JSON;
+
+	public const FORMAT_JSON     = 'json';
+	public const FORMAT_MARKDOWN = 'markdown';
+	/** @var list<string> */
+	public const FORMATS = [self::FORMAT_JSON, self::FORMAT_MARKDOWN];
 	public bool $requireEmailVerification = false;     // when true, public registration creates inactive users + sends a verification email
 	public int $count                     = 0;                    // total number of objects created in this collection
 	public int $totalObjects              = -1;                // current number of objects (-1 = not calculated yet)
@@ -107,6 +114,7 @@ class CollectionData
 			'reverseSort'              => $this->reverseSort,
 			'prettyUrl'                => $this->prettyUrl,
 			'singleton'                => $this->singleton,
+			'format'                   => $this->format,
 			'requireEmailVerification' => $this->requireEmailVerification,
 			'queueRebuildOnSave'       => $this->queueRebuildOnSave,
 			'count'                    => $this->count,
@@ -150,6 +158,11 @@ class CollectionData
 	public function isValid(): bool
 	{
 		return isset($this->id) && isset($this->schema);
+	}
+
+	public function isMarkdown(): bool
+	{
+		return $this->format === self::FORMAT_MARKDOWN;
 	}
 
 	public function toJson(): string

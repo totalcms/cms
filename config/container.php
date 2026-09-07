@@ -40,6 +40,7 @@ use TotalCMS\Domain\Cache\FragmentCache;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionFormatConverter;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewDependencyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
@@ -61,6 +62,8 @@ use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionProfiler;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -119,11 +122,16 @@ use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
+use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Object\Service\ObjectFileCodec;
+use TotalCMS\Domain\Property\Service\ExternalFieldStore;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Schema\Service\SchemaValidator;
 use TotalCMS\Domain\Search\Listener\ContentChangeListener;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
 use TotalCMS\Domain\Search\Service\SearchService;
@@ -312,6 +320,33 @@ return [
 	AtomicJsonStore::class => fn (ContainerInterface $container): AtomicJsonStore => new AtomicJsonStore(
 		$container->get(StorageAdapterInterface::class),
 		(string)$container->get(Config::class)->datadir,
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::App),
+	),
+
+	// Explicit because LoggerInterface is not bound to a concrete class by
+	// default in this container — a hand-dropped or unparseable object file
+	// is worth a log line, not a silent null.
+	ObjectRepository::class => fn (ContainerInterface $container): ObjectRepository => new ObjectRepository(
+		$container->get(StorageAdapterInterface::class),
+		$container->get(ObjectFactory::class),
+		$container->get(SchemaValidator::class),
+		$container->get(CollectionFetcher::class),
+		$container->get(CacheManager::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(IndexRepository::class),
+		$container->get(ExternalFieldStore::class),
+		$container->get(ObjectFileCodec::class),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::App),
+	),
+
+	// Explicit for the same reason as ObjectRepository above: LoggerInterface
+	// has no default binding in this container.
+	CollectionFormatConverter::class => fn (ContainerInterface $container): CollectionFormatConverter => new CollectionFormatConverter(
+		$container->get(CollectionFetcher::class),
+		$container->get(CollectionRepository::class),
+		$container->get(ObjectRepository::class),
+		$container->get(IndexRepository::class),
+		$container->get(IndexBuilder::class),
 		$container->get(LoggerFactory::class)->channelLogger(LogChannel::App),
 	),
 
