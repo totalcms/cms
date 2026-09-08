@@ -247,6 +247,7 @@ class CollectionData
 			'text'         => ['labelPlural' => 'Content', 'labelSingular' => 'Text'],
 			'toggle'       => ['labelPlural' => 'Toggles', 'labelSingular' => 'Toggle'],
 			'url'          => ['labelPlural' => 'URLs', 'labelSingular' => 'URL'],
+			'video'        => ['labelPlural' => 'Videos', 'labelSingular' => 'Video'],
 		];
 
 		return $defaults[$schemaId] ?? ['labelPlural' => '', 'labelSingular' => ''];

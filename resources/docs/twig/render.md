@@ -72,6 +72,50 @@ Get the alt text for an image. Falls back through alt text, EXIF data, then file
 {{ cms.render.alt('post-1', {property: 'mycard.image'}) }}
 ```
 
+## Video
+
+### cms.render.video()
+
+Render a `video` field property (or a local `file`-field video upload) as an
+embed, a `<video>` element, or a click-to-play facade — whichever fits the
+provider.
+
+```twig
+{# An object from the ready-made video collection: collection and property both default to "video" #}
+{{ cms.render.video('intro') }}
+
+{# Hosted provider (YouTube, Vimeo, Livid, Bunny, Cloudflare, Loom, Wistia, Publitio) on your own schema #}
+{{ cms.render.video(post, {property: 'promo'}) }}
+
+{# Direct file URL (the `file` provider) — a muted looping background clip #}
+{{ cms.render.video(post, {property: 'trailer', autoplay: true, muted: true, loop: true}) }}
+
+{# Click-to-play facade — poster + play button, swaps in the iframe on click #}
+{{ cms.render.video(post, {property: 'promo', facade: true, muted: true}) }}
+
+{# Facade with the uploaded poster resized through ImageWorks #}
+{{ cms.render.video(post, {property: 'promo', facade: true, imageworks: {w: 1200}}) }}
+
+{# A file-field value (mime starting video/) streams through the same call #}
+{{ cms.render.video(post, {property: 'localClip'}) }}
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `collection` | string | `'video'` | Collection identifier |
+| `property` | string | `'video'` | Property name |
+| `autoplay` | bool | `false` | Autoplay (subject to browser muted-autoplay rules) |
+| `loop` | bool | `false` | Loop playback |
+| `muted` | bool | `false` | Mute |
+| `controls` | bool | `true` | Show player controls (`file` provider only) |
+| `class` | string | `''` | Extra CSS class on the wrapper |
+| `poster` | string | `''` | Override poster URL — otherwise resolved via `cms.media.videoPoster()` |
+| `facade` | bool | `false` | Click-to-play poster instead of an eager embed; ignored for the `file` provider, and for any value where no poster or thumbnail resolves (an `unknown` URL has no vendor thumbnail, so the poster must be uploaded) |
+
+An `unknown` provider URL is never modified — it renders as a generic iframe
+with the author's URL exactly as pasted. See [Video](docs/fields/video) for
+the full provider table and field settings.
+
 ## Galleries
 
 ### gallery()

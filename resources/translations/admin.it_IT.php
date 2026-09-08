@@ -1487,4 +1487,8 @@ return [
 	'depot.mime_label'              => 'Tipo MIME',
 	'depot.upload_date_label'       => 'Data di caricamento',
 	'depot.section_meta'            => 'Meta (sola lettura)',
+
+	'video.url_placeholder' => 'Incolla un URL di YouTube, Vimeo, Livid…',
+	'video.poster'          => 'Poster',
+	'video.thumbnail_chip'  => 'Miniatura di {provider}',
 ];

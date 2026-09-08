@@ -346,6 +346,9 @@
 .url-type {
 	--schema-type-icon : var(--icon-link);
 }
+.video-type {
+	--schema-type-icon : var(--icon-video);
+}
 .code-type {
 	--schema-type-icon : var(--icon-file-code);
 }
@@ -555,6 +558,13 @@
 	--schema-icon : var(--icon-file);
 
 	&.file-type:after {
+		display : none;
+	}
+}
+.video-field {
+	--schema-icon : var(--icon-video);
+
+	&.video-type:after {
 		display : none;
 	}
 }

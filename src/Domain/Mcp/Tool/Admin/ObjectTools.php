@@ -254,6 +254,7 @@ readonly class ObjectTools
 		// Refuse only if the payload actually tries to write a binary field;
 		// omitted binary fields are fine and left unset.
 		$this->refuseIfPayloadWritesBinary($collection, 'create_object', $data, $binary);
+		$this->refuseIfPayloadWritesVideoPoster($collection, 'create_object', $data, $schema);
 
 		// Drop any empty binary keys the agent may have echoed back so they
 		// don't reach the saver as stray empties.
@@ -288,6 +289,7 @@ readonly class ObjectTools
 		$binary         = $this->binaryFieldsIn($schema);
 
 		$this->refuseIfPayloadWritesBinary($collection, 'update_object', $data, $binary);
+		$this->refuseIfPayloadWritesVideoPoster($collection, 'update_object', $data, $schema);
 
 		// ObjectUpdater::updateObject validates that the resolved object id
 		// matches the route-style $id arg. Stamp the id onto the payload
@@ -300,6 +302,7 @@ readonly class ObjectTools
 		// Carry the existing object's binary values forward so an MCP edit
 		// that omits the image keeps it.
 		$data = $this->preserveBinaryFields($collection, $id, $data, $binary);
+		$data = $this->preserveVideoPosters($collection, $id, $data, $schema);
 
 		try {
 			$object = $this->updater->updateObject($collection, $id, $data);
@@ -327,11 +330,13 @@ readonly class ObjectTools
 		$binary         = $this->binaryFieldsIn($schema);
 
 		$this->refuseIfPayloadWritesBinary($collection, 'patch_object', $data, $binary);
+		$this->refuseIfPayloadWritesVideoPoster($collection, 'patch_object', $data, $schema);
 
 		// A patch never touches binary fields: non-empty values were refused
 		// above, and empty echoes are stripped here so the merge can't clear
 		// an existing image/file value.
 		$data = $this->stripBinaryFields($data, $binary);
+		$data = $this->preserveVideoPosters($collection, $id, $data, $schema);
 
 		// The merged object must keep the route id — drop any divergent id the
 		// agent slipped into the payload rather than failing the equality
@@ -478,6 +483,43 @@ readonly class ObjectTools
 	}
 
 	/**
+	 * Refuse the write if the payload sets a `video` field's nested `poster`
+	 * key. A video field's `url` is fine to write — the save pipeline
+	 * (PropertyDataProcessor) resolves the rest — but `poster` is an image
+	 * upload, same as the top-level binary fields above, just one level
+	 * deeper. Same message shape as refuseIfPayloadWritesBinary() so an
+	 * agent that has already learned to read one error reads the other.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	private function refuseIfPayloadWritesVideoPoster(string $collection, string $toolName, array $data, SchemaData $schema): void
+	{
+		$attempted = [];
+		foreach ($schema->properties as $name => $property) {
+			if (!self::isVideoProperty($property)) {
+				continue;
+			}
+
+			$name  = (string)$name;
+			$value = $data[$name] ?? null;
+			if (is_array($value) && array_key_exists('poster', $value) && !$this->isEmpty($value['poster'])) {
+				$attempted[] = $name . '.poster';
+			}
+		}
+
+		if ($attempted === []) {
+			return;
+		}
+
+		throw new ToolCallException(sprintf(
+			'%s: collection "%s" payload sets video poster field(s) [%s]. Poster images can\'t be written via MCP — omit them from your payload (on update they keep their current value) and upload them in the admin UI.',
+			$toolName,
+			$collection,
+			implode(', ', $attempted),
+		));
+	}
+
+	/**
 	 * Remove every binary field key from the payload. Used on create so a
 	 * stray empty echo doesn't reach the saver — binary fields are simply
 	 * left unset and take their schema default.
@@ -537,6 +579,19 @@ readonly class ObjectTools
 	}
 
 	/**
+	 * A schema property is a `video` field whether it's declared via
+	 * `"field": "video"` (the normal admin-authored shape) or `"type": "video"`
+	 * (the schema-ref shorthand `PropertyFactory` and
+	 * `PropertyDefinition::extractSchemaRef()` also recognize) — mirror both
+	 * so this guard doesn't miss a property the save pipeline treats as video.
+	 */
+	private static function isVideoProperty(mixed $property): bool
+	{
+		return is_array($property)
+			&& (($property['field'] ?? '') === 'video' || ($property['type'] ?? '') === 'video');
+	}
+
+	/**
 	 * @return list<array{name:string,type:string}>
 	 */
 	private function binaryFieldsIn(SchemaData $schema): array
@@ -550,5 +605,63 @@ readonly class ObjectTools
 		}
 
 		return $found;
+	}
+
+	/**
+	 * A `video` property's `poster` lives one level below the top-level binary
+	 * fields preserveBinaryFields() carries forward, so a payload that writes
+	 * `{promo: {url: '...'}}` — legitimate, since `url` is the only video key
+	 * an MCP write is allowed to set — would otherwise silently drop an
+	 * existing uploaded poster on both a full-replace update and a merge
+	 * patch. For every video property present in the payload as an array
+	 * without a `poster` key — or with one that's empty (null, '', or []),
+	 * treated identically to absent — copy the stored object's poster (when
+	 * present and non-empty) into the payload so it survives the save.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function preserveVideoPosters(string $collection, string $id, array $data, SchemaData $schema): array
+	{
+		$videoFields = [];
+		foreach ($schema->properties as $name => $property) {
+			if (self::isVideoProperty($property)) {
+				$videoFields[] = (string)$name;
+			}
+		}
+
+		// A poster key that's present but EMPTY (null, '', or []) — the same
+		// emptiness refuseIfPayloadWritesVideoPoster() treats as "not writing
+		// it" — must be carried forward exactly like an absent key. Without
+		// this, such a payload passes the refusal (it isn't a real write) but
+		// then reaches the updater/patcher with that empty value, wiping the
+		// stored poster instead of leaving it untouched.
+		$candidates = array_filter(
+			$videoFields,
+			fn (string $name): bool => is_array($data[$name] ?? null)
+				&& (!array_key_exists('poster', $data[$name]) || $this->isEmpty($data[$name]['poster'])),
+		);
+
+		if ($candidates === []) {
+			return $data;
+		}
+
+		try {
+			$existing = $this->objectFetcher->fetchObject($collection, $id)->toArray();
+		} catch (\Throwable) {
+			return $data;
+		}
+
+		foreach ($candidates as $name) {
+			$existingValue = $existing[$name] ?? null;
+			$poster        = is_array($existingValue) ? ($existingValue['poster'] ?? null) : null;
+
+			if (is_array($poster) && ($poster['name'] ?? '') !== '' && (int)($poster['size'] ?? 0) > 0) {
+				$data[$name]['poster'] = $poster;
+			}
+		}
+
+		return $data;
 	}
 }

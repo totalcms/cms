@@ -12,6 +12,7 @@ use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
+use TotalCMS\Domain\Property\Data\VideoData;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -81,6 +82,7 @@ class ImageGenerator
 		// types. Dispatch on the resolved data shape:
 		//   - CardData  → `obj[prop][child]`     (path is single segment)
 		//   - DeckData  → `obj[prop][itemId][child]` (path is `itemId/child`)
+		//   - VideoData → `obj[prop][poster]`    (path is always `poster`)
 		//   - GalleryData → existing gallery image lookup (path is the filename)
 		if ($propertyData instanceof CardData) {
 			return $this->generateNestedImage($collection, $id, $property, $path, $propertyData->card, $params, $request);
@@ -88,6 +90,13 @@ class ImageGenerator
 
 		if ($propertyData instanceof DeckData) {
 			return $this->generateNestedImage($collection, $id, $property, $path, $propertyData->deck, $params, $request);
+		}
+
+		// A video's one nested image is its typed `poster` — hand it over in the
+		// same `[childKey => imageRaw]` shape a card exposes so the lookup below
+		// is shared. Any other path under a video is simply not found.
+		if ($propertyData instanceof VideoData) {
+			return $this->generateNestedImage($collection, $id, $property, $path, ['poster' => $propertyData->poster], $params, $request);
 		}
 
 		if (!$propertyData instanceof GalleryData) {

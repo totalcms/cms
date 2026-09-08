@@ -49,6 +49,12 @@ readonly class SaverFactory
 			if (in_array($parentType, ['depot', 'gallery'], true)) {
 				$type     = $parentType;
 				$settings = $this->metaResolver->resolveSettings($collection, $property, $objectId);
+			} elseif ($parentType === 'video') {
+				// `video` is a value object, not a card: its one nested child is
+				// always `poster`, always an image, and its settings always come
+				// from the parent's own `settings.poster` block. No sub-schema is
+				// consulted because the shape isn't configurable.
+				[$type, $settings] = $this->resolveVideoChild($collection, $property, $objectId, $this->resolveChildKey($subpath));
 			} else {
 				$childKey = $this->resolveChildKey($subpath);
 				$type     = $this->resolveNestedChildType($collection, $property, $childKey);
@@ -94,6 +100,25 @@ readonly class SaverFactory
 		$pos = strrpos($subpath, '/');
 
 		return $pos === false ? $subpath : substr($subpath, $pos + 1);
+	}
+
+	/**
+	 * The `video` field's only nested child: `poster`, an image, configured by
+	 * the parent's `settings.poster`. Any other subpath under a video parent is
+	 * not a thing the field can store.
+	 *
+	 * @return array{0:string,1:array<string,mixed>}
+	 */
+	private function resolveVideoChild(string $collection, string $property, string $objectId, string $childKey): array
+	{
+		if ($childKey !== 'poster') {
+			throw new \UnexpectedValueException('Unknown saver service type for object.');
+		}
+
+		$parentSettings = $this->metaResolver->resolveSettings($collection, $property, $objectId);
+		$posterSettings = $parentSettings['poster'] ?? [];
+
+		return ['image', is_array($posterSettings) ? $posterSettings : []];
 	}
 
 	private function resolveNestedChildType(string $collection, string $parentProperty, string $childKey): string

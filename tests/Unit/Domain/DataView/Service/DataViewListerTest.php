@@ -4,7 +4,6 @@ namespace Tests\Unit\Domain\DataView\Service;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\DataView\Data\DataViewData;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
@@ -15,18 +14,15 @@ final class DataViewListerTest extends TestCase
 {
 	private DataViewLister $lister;
 	private MockObject&CollectionFetcher $collectionFetcher;
-	private MockObject&CollectionRepository $collectionRepository;
 	private MockObject&IndexReader $indexReader;
 
 	protected function setUp(): void
 	{
-		$this->collectionFetcher    = $this->createMock(CollectionFetcher::class);
-		$this->collectionRepository = $this->createMock(CollectionRepository::class);
-		$this->indexReader          = $this->createMock(IndexReader::class);
+		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
+		$this->indexReader       = $this->createMock(IndexReader::class);
 
 		$this->lister = new DataViewLister(
 			$this->collectionFetcher,
-			$this->collectionRepository,
 			$this->indexReader,
 		);
 	}
@@ -38,9 +34,9 @@ final class DataViewListerTest extends TestCase
 			['id' => 'view-2', 'title' => 'View Two'],
 		];
 
-		$this->collectionFetcher->method('collectionExists')
+		$this->collectionFetcher->method('fetchOrCreateReserved')
 			->with(DataViewData::COLLECTION_ID)
-			->willReturn(true);
+			->willReturn(null);
 
 		$this->indexReader->expects($this->once())
 			->method('fetchIndex')
@@ -54,13 +50,10 @@ final class DataViewListerTest extends TestCase
 
 	public function testListViewsCreatesCollectionIfMissing(): void
 	{
-		$this->collectionFetcher->method('collectionExists')
+		$this->collectionFetcher->expects($this->once())
+			->method('fetchOrCreateReserved')
 			->with(DataViewData::COLLECTION_ID)
-			->willReturn(false);
-
-		$this->collectionRepository->expects($this->once())
-			->method('saveReservedCollection')
-			->with(DataViewData::COLLECTION_ID);
+			->willReturn(null);
 
 		$this->indexReader->method('fetchIndex')
 			->willReturn(new IndexData([]));
@@ -71,12 +64,9 @@ final class DataViewListerTest extends TestCase
 	public function testEnsureCollectionSkipsCreationWhenExists(): void
 	{
 		$this->collectionFetcher->expects($this->once())
-			->method('collectionExists')
+			->method('fetchOrCreateReserved')
 			->with(DataViewData::COLLECTION_ID)
-			->willReturn(true);
-
-		$this->collectionRepository->expects($this->never())
-			->method('saveReservedCollection');
+			->willReturn(null);
 
 		$this->lister->ensureCollection();
 	}
@@ -84,13 +74,9 @@ final class DataViewListerTest extends TestCase
 	public function testEnsureCollectionCreatesReservedCollectionWhenMissing(): void
 	{
 		$this->collectionFetcher->expects($this->once())
-			->method('collectionExists')
+			->method('fetchOrCreateReserved')
 			->with(DataViewData::COLLECTION_ID)
-			->willReturn(false);
-
-		$this->collectionRepository->expects($this->once())
-			->method('saveReservedCollection')
-			->with(DataViewData::COLLECTION_ID);
+			->willReturn(null);
 
 		$this->lister->ensureCollection();
 	}

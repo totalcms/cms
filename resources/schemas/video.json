@@ -1,0 +1,29 @@
+{
+    "$schema"     : "https://json-schema.org/draft/2020-12/schema",
+    "$id"         : "https://www.totalcms.co/schemas/video.json",
+    "id"          : "video",
+    "type"        : "object",
+    "description" : "A schema for a Total CMS Video object: one hosted video (YouTube, Vimeo, Livid, Bunny, Cloudflare Stream, Loom, Wistia or a direct file URL) with an optional poster",
+    "properties"  : {
+        "id": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"   : "Video ID",
+			"help"    : "A unique ID for this video. No spaces or special characters.",
+			"field"   : "id",
+			"factory" : "slug"
+        },
+        "video": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/video.json",
+			"label"   : "Video",
+			"help"    : "Paste the video's URL. The provider, thumbnail and title are detected when you save; upload a poster to override the thumbnail.",
+			"field"   : "video"
+        }
+    },
+    "required": [
+        "id"
+    ],
+    "index": [
+        "id",
+		"video"
+    ]
+}

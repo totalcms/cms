@@ -141,6 +141,54 @@ class MediaTwigAdapter
 	}
 
 	/**
+	 * Resolve the poster URL for a `video` field property: the uploaded
+	 * poster (via ImageWorks, so it gets resizing/format negotiation) when
+	 * present, else the vendor thumbnail string, else `''`.
+	 *
+	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
+	 * @param array<string,string|int> $imageworks
+	 * @param array<string,mixed> $options
+	 */
+	public function videoPoster(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'video',
+			'property'   => 'video',
+		], $options);
+
+		if (in_array($idOrObject, [null, '', []], true)) {
+			return '';
+		}
+
+		[$rootProperty, $segments] = self::splitDottedProperty((string)$options['property']);
+
+		if (is_array($idOrObject)) {
+			$video = self::descendDottedPath($idOrObject, $rootProperty, $segments);
+		} else {
+			$video = $this->fetchData($options['collection'], $idOrObject, $rootProperty);
+			foreach ($segments as $segment) {
+				$video = is_array($video) ? ($video[$segment] ?? null) : null;
+			}
+		}
+
+		if (!is_array($video)) {
+			return '';
+		}
+
+		$poster    = $video['poster'] ?? null;
+		$hasPoster = is_array($poster) && (string)($poster['name'] ?? '') !== '' && (int)($poster['size'] ?? 0) > 0;
+
+		if ($hasPoster) {
+			$posterOptions             = $options;
+			$posterOptions['property'] = (string)$options['property'] . '.poster';
+
+			return $this->imagePath($idOrObject, $imageworks, $posterOptions);
+		}
+
+		return (string)($video['thumbnail'] ?? '');
+	}
+
+	/**
 	 * Get the image path for a gallery image.
 	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string

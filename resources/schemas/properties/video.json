@@ -1,0 +1,50 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/properties/video.json",
+	"description" : "Video object: an external video URL plus provider metadata derived on save and an optional uploaded poster image",
+	"type"        : "object",
+	"properties"  : {
+		"url": {
+			"$comment" : "The video URL as pasted by the author, after trim. Source of truth.",
+			"type"     : "string"
+		},
+		"provider": {
+			"$comment" : "Provider detected from the URL. Derived on save; empty before the save pipeline first resolves it (Task 4).",
+			"type"     : "string",
+			"enum"     : [
+				"",
+				"youtube",
+				"vimeo",
+				"livid",
+				"bunny",
+				"cloudflare",
+				"loom",
+				"wistia",
+				"publitio",
+				"file",
+				"unknown"
+			]
+		},
+		"videoId": {
+			"$comment" : "Provider-specific video id. Derived on save.",
+			"type"     : "string"
+		},
+		"thumbnail": {
+			"$comment" : "Vendor thumbnail URL, or empty when unavailable. Derived on save.",
+			"type"     : "string"
+		},
+		"title": {
+			"$comment" : "Video title from oEmbed when the provider returns one, else empty. Derived on save.",
+			"type"     : "string"
+		},
+		"aspectRatio": {
+			"$comment" : "W:H aspect ratio derived from oEmbed, else 16:9. Derived on save.",
+			"type"     : "string"
+		},
+		"poster": {
+			"$comment" : "Optional uploaded poster image, same shape as an image property",
+			"$ref"     : "https://www.totalcms.co/schemas/properties/image.json"
+		}
+	},
+	"additionalProperties": false
+}

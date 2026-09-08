@@ -288,6 +288,7 @@
 			&.schema-text { mask-image: var(--icon-text); }
 			&.schema-toggle { mask-image: var(--icon-toggle); }
 			&.schema-url { mask-image: var(--icon-link); }
+			&.schema-video { mask-image: var(--icon-video); }
 		}
 
 		a {
@@ -419,6 +420,7 @@
 		&.schema-text { mask-image: var(--icon-text); }
 		&.schema-toggle { mask-image: var(--icon-toggle); }
 		&.schema-url { mask-image: var(--icon-link); }
+		&.schema-video { mask-image: var(--icon-video); }
 	}
 
 	.activity-content {
@@ -589,6 +591,7 @@
 				&.schema-text { mask-image: var(--icon-text); }
 				&.schema-toggle { mask-image: var(--icon-toggle); }
 				&.schema-url { mask-image: var(--icon-link); }
+				&.schema-video { mask-image: var(--icon-video); }
 			}
 
 			.collection-name {
@@ -677,6 +680,7 @@
 				&.schema-text { mask-image: var(--icon-text); }
 				&.schema-toggle { mask-image: var(--icon-toggle); }
 				&.schema-url { mask-image: var(--icon-link); }
+				&.schema-video { mask-image: var(--icon-video); }
 			}
 
 			.collection-name {

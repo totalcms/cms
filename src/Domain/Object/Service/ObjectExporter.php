@@ -8,6 +8,7 @@ use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\LocalizedtextData;
+use TotalCMS\Domain\Property\Data\VideoData;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -243,11 +244,13 @@ readonly class ObjectExporter
 	}
 
 	/**
-	 * Build CSV column headers for a schema. Card and localized-text properties
-	 * expand into `{name}.{subKey}` columns; everything else uses the property
-	 * name as a single column.
+	 * Build CSV column headers for a schema. Card, video and localized-text
+	 * properties expand into `{name}.{subKey}` columns; everything else uses the
+	 * property name as a single column.
 	 *
 	 *   - Card properties pull sub-keys from the linked schemaref's fields.
+	 *   - Video properties use VideoData's fixed key list — the shape is not
+	 *     schema-driven.
 	 *   - Localized properties pull sub-keys from the site's configured
 	 *     `i18n.available` locales (`localizedtext`, `localizedtextarea`, and
 	 *     `localizedstyledtext` all share the same `$ref`).
@@ -271,6 +274,16 @@ readonly class ObjectExporter
 			}
 
 			$ref = $property['$ref'] ?? null;
+
+			// `video` is not a card — its key set is fixed by VideoData, so the
+			// columns come from that list rather than from a sub-schema lookup.
+			if ($ref === SchemaData::PROPERTY_TYPE_TO_REF['video']) {
+				$cardSubProps[$nameStr] = VideoData::KEYS;
+				foreach (VideoData::KEYS as $subProp) {
+					$headers[] = $nameStr . '.' . $subProp;
+				}
+				continue;
+			}
 
 			if ($ref === SchemaData::PROPERTY_TYPE_TO_REF['card']) {
 				$subProps = $this->fetchCardSubProperties($property);
@@ -372,8 +385,8 @@ readonly class ObjectExporter
 
 	/**
 	 * Build a single CSV row, pulling sub-values directly from CardData /
-	 * LocalizedtextData for dot-notation columns and falling back to the
-	 * standard CSV-stringified representation for everything else.
+	 * VideoData / LocalizedtextData for dot-notation columns and falling back to
+	 * the standard CSV-stringified representation for everything else.
 	 *
 	 * @param array<int,string>               $headers
 	 * @param array<string,array<int,string>> $cardSubProps
@@ -407,11 +420,16 @@ readonly class ObjectExporter
 	private function extractCardSubValue(ObjectData $object, string $cardName, string $subProp): string
 	{
 		$property = $object->properties->get($cardName);
-		if (!$property instanceof CardData) {
+
+		if ($property instanceof VideoData) {
+			// Not a card — the sub-values come off the typed value object.
+			$raw = $property->transform()[$subProp] ?? null;
+		} elseif ($property instanceof CardData) {
+			$raw = $property->get($subProp);
+		} else {
 			return '';
 		}
 
-		$raw = $property->get($subProp);
 		if ($raw === null) {
 			return '';
 		}

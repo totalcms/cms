@@ -2,6 +2,10 @@
 
 namespace TotalCMS\Domain\Rendering\Utilities;
 
+use TotalCMS\Domain\Video\Provider\VimeoProvider;
+use TotalCMS\Domain\Video\Provider\YouTubeProvider;
+use TotalCMS\Domain\Video\Service\VideoUrlResolver;
+
 class EmbedBuilder
 {
 	/** @param array<string,mixed> $options */
@@ -9,20 +13,37 @@ class EmbedBuilder
 	{
 		$url = htmlspecialchars_decode($url);
 
-		if (str_contains($url, 'vimeo')) {
-			return self::vimeo($url, $options);
+		// A URL with an unsafe scheme (javascript:, data:, ftp:, …) is never
+		// safe to embed — checked up front, before the mp3 shortcut and
+		// before the resolver, so nothing downstream can build an
+		// <audio>/<iframe> around it. A schemeless relative URL
+		// (`/embeds/thing.html`) or protocol-relative one
+		// (`//cdn.example.com/page`) is NOT unsafe and falls through as before.
+		if (VideoUrlResolver::hasUnsafeScheme($url)) {
+			return '';
 		}
-		if (str_contains($url, 'youtube')) {
-			return self::youtube($url, $options);
-		}
-		if (str_ends_with($url, 'mp4')) {
-			return self::video($url, $options);
-		}
+
 		if (str_ends_with($url, 'mp3')) {
 			return self::audio($url, $options);
 		}
 
-		return self::iframe($url);
+		$info = self::resolver()->resolve($url);
+
+		return match ($info->provider) {
+			'youtube' => self::youtube($url, $options),
+			'vimeo'   => self::vimeo($url, $options),
+			'file'    => self::video($url, $options),
+			'unknown' => self::iframe($url),
+			// Livid, Bunny, Cloudflare, Loom, Wistia: a plain iframe on the
+			// resolved embed URL. embedQuery() defaults to '' until a later
+			// task adds per-provider playback options.
+			default => HTMLUtils::iframe($info->embedUrl, 'cms-video-embed'),
+		};
+	}
+
+	private static function resolver(): VideoUrlResolver
+	{
+		return new VideoUrlResolver(VideoUrlResolver::defaultProviders());
 	}
 
 	/** @param array<string,mixed> $attrs */
@@ -55,34 +76,34 @@ class EmbedBuilder
 			'vcolor'   => '33aaff',
 		], $options);
 
-		if (str_contains($url, 'vimeo')) {
-			$path  = parse_url($url, PHP_URL_PATH);
-			$parts = explode('/', (string)$path);
+		$provider = new VimeoProvider();
 
-			if (count($parts) < 2) {
-				return self::link($url);
-			}
-
-			$videoId  = $parts[1];
-			$unlisted = $parts[2] ?? null;
-
-			$params = array_filter([
-				'h'        => $unlisted,
-				'autoplay' => $options['autoplay'],
-				'color'    => $options['vcolor'],
-				'loop'     => $options['loop'],
-				'api'      => 1,
-				'badge'    => 0,
-				'byline'   => 0,
-				'portrait' => 0,
-				'title'    => 0,
-			]);
-			$query = http_build_query($params);
-
-			return HTMLUtils::iframe("//player.vimeo.com/video/$videoId?$query", 'cms-video-embed');
+		if (!$provider->matches($url)) {
+			return self::link($url);
 		}
 
-		return self::link($url);
+		$info    = $provider->parse($url);
+		$videoId = $info->videoId;
+
+		// The unlisted hash (if any) rides on the resolved embed URL's own
+		// query string, so pull it back off rather than re-parsing $url.
+		parse_str((string)parse_url($info->embedUrl, PHP_URL_QUERY), $embedParams);
+		$unlisted = is_string($embedParams['h'] ?? null) ? $embedParams['h'] : null;
+
+		$params = array_filter([
+			'h'        => $unlisted,
+			'autoplay' => $options['autoplay'],
+			'color'    => $options['vcolor'],
+			'loop'     => $options['loop'],
+			'api'      => 1,
+			'badge'    => 0,
+			'byline'   => 0,
+			'portrait' => 0,
+			'title'    => 0,
+		]);
+		$query = http_build_query($params);
+
+		return HTMLUtils::iframe("//player.vimeo.com/video/$videoId?$query", 'cms-video-embed');
 	}
 
 	/**
@@ -101,40 +122,43 @@ class EmbedBuilder
 			'private'  => true,
 		], $options);
 
-		if (str_contains($url, 'youtube')) {
-			$queryString = parse_url($url, PHP_URL_QUERY);
-			parse_str((string)$queryString, $queryParams);
-			$videoId = is_string($queryParams['v']) ? $queryParams['v'] : '';
+		$provider = new YouTubeProvider();
 
-			if ($videoId === '') {
-				return self::link($url);
-			}
-
-			$query = [
-				'autoplay'    => $options['autoplay'],
-				'loop'        => $options['loop'],
-				'color'       => $options['ycolor'],
-				'theme'       => $options['ytheme'],
-				'origin'      => $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost',
-				'enablejsapi' => 1,
-				'rel'         => 0,
-				'showinfo'    => 0,
-			];
-
-			if (str_contains($url, 'list')) {
-				// playlist
-				$query['listType'] = 'playlist';
-				$query['list']     = $videoId;
-				$videoId           = '';
-			}
-			$httpQuery = http_build_query($query);
-
-			$domain = $options['private'] === true ? 'www.youtube-nocookie.com' : 'www.youtube.com';
-
-			return HTMLUtils::iframe("//$domain/embed/$videoId?$httpQuery", 'cms-video-embed');
+		if (!$provider->matches($url)) {
+			return self::link($url);
 		}
 
-		return self::link($url);
+		$videoId = $provider->parse($url)->videoId;
+
+		parse_str((string)parse_url($url, PHP_URL_QUERY), $queryParams);
+
+		$query = [
+			'autoplay'    => $options['autoplay'],
+			'loop'        => $options['loop'],
+			'color'       => $options['ycolor'],
+			'theme'       => $options['ytheme'],
+			'origin'      => $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost',
+			'enablejsapi' => 1,
+			'rel'         => 0,
+			'showinfo'    => 0,
+		];
+
+		if (str_starts_with($videoId, 'list:')) {
+			// A playlist with no specific video (youtube.com/playlist?list=...):
+			// embed the "videoseries" pseudo-video with the real playlist id.
+			$listId  = substr($videoId, strlen('list:'));
+			$videoId = 'videoseries';
+			$query   = ['list' => $listId] + $query;
+		} elseif (isset($queryParams['list']) && is_string($queryParams['list']) && $queryParams['list'] !== '') {
+			// watch?v=X&list=Y: keep embedding video X, but pass along the
+			// URL's real playlist id — never the video id.
+			$query['list'] = $queryParams['list'];
+		}
+		$httpQuery = http_build_query($query);
+
+		$domain = $options['private'] === true ? 'www.youtube-nocookie.com' : 'www.youtube.com';
+
+		return HTMLUtils::iframe("//$domain/embed/$videoId?$httpQuery", 'cms-video-embed');
 	}
 
 	public static function iframe(string $url): string

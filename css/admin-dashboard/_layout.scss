@@ -291,6 +291,7 @@ body {
 			&.schema-file, &.collection-file { --collection-icon : var(--icon-file) }
 			&.schema-gallery, &.collection-gallery { --collection-icon : var(--icon-gallery) }
 			&.schema-image, &.collection-image { --collection-icon : var(--icon-image) }
+			&.schema-video, &.collection-video { --collection-icon : var(--icon-video) }
 			&.schema-number, &.collection-number { --collection-icon : var(--icon-number) }
 			&.schema-playground, &.collection-playground { --collection-icon : var(--icon-twig-playground) }
 			&.schema-mailer, &.collection-mailer { --collection-icon : var(--icon-mailer) }

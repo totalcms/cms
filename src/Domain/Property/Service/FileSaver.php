@@ -9,6 +9,7 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Property\Data\VideoData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -164,7 +165,7 @@ class FileSaver
 	/**
 	 * Fetch the existing PropertyData for the field that's actually being saved —
 	 * either the top-level property or, when $subpath is set, the child stored at
-	 * `obj[$property][$subpath]` inside a CardData parent.
+	 * `obj[$property][$subpath]` inside a CardData or VideoData parent.
 	 */
 	protected function fetchExistingChildProperty(
 		string $collection,
@@ -180,6 +181,17 @@ class FileSaver
 			$parent = $this->propFetcher->fetchProperty($collection, $objectID, $property);
 		} catch (\UnexpectedValueException) {
 			return $this->createPropertyObject($collection, $property);
+		}
+
+		// Video-nested case: the parent is a value object with one fixed child,
+		// `poster`, read straight off the typed property — no sub-schema, no card.
+		if ($parent instanceof VideoData) {
+			$poster = $subpath === 'poster' ? $parent->poster : [];
+			if ($poster === []) {
+				return $this->createPropertyObject($collection, $property);
+			}
+
+			return $this->buildPropertyDataFromArray($poster);
 		}
 
 		// Card-nested case: parent is a CardData, child lives in `$parent->card[$subpath]`.

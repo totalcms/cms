@@ -238,6 +238,7 @@ class ObjectImporter
 			if (in_array($property['$ref'], [
 				SchemaData::PROPERTY_TYPE_TO_REF['card'],
 				SchemaData::PROPERTY_TYPE_TO_REF['image'],
+				SchemaData::PROPERTY_TYPE_TO_REF['video'],
 				SchemaData::PROPERTY_TYPE_TO_REF['gallery'],
 				SchemaData::PROPERTY_TYPE_TO_REF['file'],
 				SchemaData::PROPERTY_TYPE_TO_REF['depot'],
@@ -307,6 +308,9 @@ class ObjectImporter
 		$dottedRefs = [
 			SchemaData::PROPERTY_TYPE_TO_REF['card'],
 			SchemaData::PROPERTY_TYPE_TO_REF['localizedtext'],
+			// `video` is not a card, but it does export one column per stored
+			// key (VideoData::KEYS), so the same unflattening applies.
+			SchemaData::PROPERTY_TYPE_TO_REF['video'],
 		];
 
 		foreach ($schema->properties as $name => $property) {

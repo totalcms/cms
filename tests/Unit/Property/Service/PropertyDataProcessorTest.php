@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Tests\Unit\Property\Service;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\StringData;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
+use TotalCMS\Domain\Video\Service\VideoMetadataFetcher;
+use TotalCMS\Domain\Video\Service\VideoUrlResolver;
+use TotalCMS\Support\HttpClientInterface;
 
 final class PropertyDataProcessorTest extends TestCase
 {
@@ -18,7 +22,17 @@ final class PropertyDataProcessorTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->processor = new PropertyDataProcessor();
+		// The video branch is exercised in PropertyDataProcessorVideoTest;
+		// these collaborators are never called by the Date/Image/Gallery
+		// cases below, so a real resolver + fetcher over stub dependencies
+		// is enough to satisfy the constructor.
+		$this->processor = new PropertyDataProcessor(
+			new VideoUrlResolver(VideoUrlResolver::defaultProviders()),
+			new VideoMetadataFetcher(
+				$this->createStub(HttpClientInterface::class),
+				$this->createStub(LoggerInterface::class),
+			),
+		);
 	}
 
 	public function testImplementsInterface(): void

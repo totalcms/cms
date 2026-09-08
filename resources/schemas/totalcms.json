@@ -223,6 +223,12 @@
 			"help": "image field.",
 			"field": "image"
 		},
+		"video": {
+			"type": "video",
+			"label": "Video",
+			"help": "video field. An external video URL plus provider metadata derived on save, and an optional uploaded poster image. Top-level only in Phase 1.",
+			"field": "video"
+		},
 		"gallery": {
 			"$ref": "https://www.totalcms.co/schemas/properties/gallery.json",
 			"label": "Gallery",

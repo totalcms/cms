@@ -15,6 +15,7 @@ use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\PropertyData;
+use TotalCMS\Domain\Property\Data\VideoData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Domain\Repair\Data\RepairCandidate;
@@ -34,8 +35,17 @@ final readonly class CollectionFileRepairService
 	/** Top-level file-type field types. @var list<string> */
 	private const FILE_FIELDS = ['file', 'image', 'gallery', 'depot'];
 
-	/** Field types that nest other fields. @var list<string> */
+	/** Field types that nest other fields via a sub-schema. @var list<string> */
 	private const CONTAINER_FIELDS = ['card', 'deck'];
+
+	/**
+	 * The `video` field is not a container — it is a value object with one
+	 * fixed nested child. Its children are declared here rather than read from
+	 * a sub-schema, because VideoData owns the shape.
+	 *
+	 * @var array<string,string>
+	 */
+	private const VIDEO_CHILDREN = ['poster' => 'image'];
 
 	/**
 	 * File-type fields supported *inside* a card/deck. Cards and decks do not
@@ -150,6 +160,15 @@ final readonly class CollectionFileRepairService
 		$parent   = $object->properties->get($property);
 		$children = $spec['children'];
 
+		if ($spec['kind'] === 'video') {
+			foreach ($children as $childKey => $type) {
+				$existing = $parent instanceof VideoData ? $parent->poster : null;
+				$this->repairNestedChild($report, $collection, $id, $property, $childKey, $type, $existing, $apply);
+			}
+
+			return;
+		}
+
 		if ($spec['kind'] === 'card') {
 			foreach ($children as $childKey => $type) {
 				$existing = $parent instanceof CardData ? $parent->get($childKey) : null;
@@ -244,8 +263,9 @@ final readonly class CollectionFileRepairService
 	}
 
 	/**
-	 * Card/deck properties whose schema has at least one file/image child,
-	 * honoring filters.
+	 * Card/deck properties whose schema has at least one file/image child, plus
+	 * `video` properties (whose one `poster` child is fixed by VideoData rather
+	 * than by a sub-schema), honoring filters.
 	 *
 	 * @return array<string,array{kind:string,children:array<string,string>}>
 	 */
@@ -263,11 +283,18 @@ final readonly class CollectionFileRepairService
 				continue;
 			}
 			$field = (string)($definition['field'] ?? '');
-			if (!in_array($field, self::CONTAINER_FIELDS, true) || !$filters->allowsProperty((string)$name)) {
+			if (!$filters->allowsProperty((string)$name)) {
 				continue;
 			}
 
-			$children = $this->nestedFileChildren($definition, $filters);
+			if ($field === 'video') {
+				$children = $filters->allowsType('image') ? self::VIDEO_CHILDREN : [];
+			} elseif (in_array($field, self::CONTAINER_FIELDS, true)) {
+				$children = $this->nestedFileChildren($definition, $filters);
+			} else {
+				continue;
+			}
+
 			if ($children === []) {
 				continue;
 			}

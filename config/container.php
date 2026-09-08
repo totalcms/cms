@@ -162,6 +162,8 @@ use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Domain\Video\Service\VideoMetadataFetcher;
+use TotalCMS\Domain\Video\Service\VideoUrlResolver;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
@@ -430,7 +432,10 @@ return [
 
 	PhpRenderer::class => fn (ContainerInterface $container): PhpRenderer => new PhpRenderer($container->get(Config::class)->template),
 
-	PropertyDataProcessorInterface::class => fn (ContainerInterface $container): PropertyDataProcessor => new PropertyDataProcessor(),
+	PropertyDataProcessorInterface::class => fn (ContainerInterface $container): PropertyDataProcessor => new PropertyDataProcessor(
+		$container->get(VideoUrlResolver::class),
+		$container->get(VideoMetadataFetcher::class),
+	),
 
 	PropertyDataProcessor::class => fn (ContainerInterface $container) => $container->get(PropertyDataProcessorInterface::class),
 
@@ -481,6 +486,18 @@ return [
 	// editions, cache, data views, twig, etc.) are autowired — their
 	// constructors take only typed class dependencies that PHP-DI resolves.
 	HttpClientInterface::class => fn (): HttpClientInterface => new GuzzleHttpClient(),
+
+	// Explicit for the same reason as ObjectRepository above: LoggerInterface
+	// has no default binding in this container.
+	VideoMetadataFetcher::class => fn (ContainerInterface $container): VideoMetadataFetcher => new VideoMetadataFetcher(
+		$container->get(HttpClientInterface::class),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::App),
+	),
+
+	// Explicit because the constructor takes a plain array of providers —
+	// autowiring can't resolve that. Same provider list EmbedBuilder builds
+	// for its own (unrelated) private resolver.
+	VideoUrlResolver::class => fn (): VideoUrlResolver => new VideoUrlResolver(VideoUrlResolver::defaultProviders()),
 
 	JumpStartExporter::class => fn (ContainerInterface $container): JumpStartExporter => new JumpStartExporter(
 		$container->get(CollectionLister::class),

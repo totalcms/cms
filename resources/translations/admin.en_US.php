@@ -1487,4 +1487,8 @@ return [
 	'depot.mime_label'              => 'MIME Type',
 	'depot.upload_date_label'       => 'Upload Date',
 	'depot.section_meta'            => 'Meta (Readonly)',
+
+	'video.url_placeholder' => 'Paste a YouTube, Vimeo, Livid… URL',
+	'video.poster'          => 'Poster',
+	'video.thumbnail_chip'  => '{provider} thumbnail',
 ];

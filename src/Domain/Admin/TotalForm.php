@@ -93,6 +93,7 @@ class TotalForm implements \Stringable
 			'id',
 			'image',
 			'password',
+			'video',
 		],
 		'Localization Fields' => [
 			'localizedtext',
@@ -147,6 +148,7 @@ class TotalForm implements \Stringable
 		'time'                => 'time',
 		'toggle'              => 'boolean',
 		'url'                 => 'url',
+		'video'               => 'video',
 	];
 
 	/**
@@ -266,6 +268,7 @@ class TotalForm implements \Stringable
 		'time',
 		'toggle',
 		'url',
+		'video',
 	];
 
 	public const PROPERTY_FIELDS = [

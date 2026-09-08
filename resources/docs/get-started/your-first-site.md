@@ -32,7 +32,7 @@ The left sidebar holds your main navigation. Two icons we'll use today:
 
 A new install doesn't ship with content collections — you choose what you need. To get the standard ones in a single click, find the **Project Setup** link on the dashboard and open it.
 
-Click **Setup Default Collections**. Total CMS creates the standard collections — `blog`, `gallery`, `image`, `file`, and more — each wired up with the matching schema. This process could take a little while.
+Click **Setup Default Collections**. Total CMS creates the standard collections — `blog`, `gallery`, `image`, `video`, `file`, and more — each wired up with the matching schema. This process could take a little while.
 
 > Already have collections from a starter pack (`blog`, `business`, `portfolio`)? You can skip this step. The collections you need already exist.
 

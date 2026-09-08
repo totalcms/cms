@@ -58,6 +58,7 @@ class SchemaData
 		'totalcms',
 		'totalcms-item',
 		'url',
+		'video',
 	];
 
 	/**
@@ -105,6 +106,7 @@ class SchemaData
 		'text',
 		'toggle',
 		'url',
+		'video',
 	];
 
 	/**
@@ -171,6 +173,7 @@ class SchemaData
 		'svg',
 		'time',
 		'url',
+		'video',
 	];
 
 	/**
@@ -241,6 +244,7 @@ class SchemaData
 		'svg'           => 'https://www.totalcms.co/schemas/properties/svg.json',
 		'time'          => 'https://www.totalcms.co/schemas/properties/time.json',
 		'url'           => 'https://www.totalcms.co/schemas/properties/url.json',
+		'video'         => 'https://www.totalcms.co/schemas/properties/video.json',
 	];
 
 	public string $id          = '';

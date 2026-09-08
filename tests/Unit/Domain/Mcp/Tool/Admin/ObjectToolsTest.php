@@ -321,6 +321,282 @@ final class ObjectToolsTest extends TestCase
 		}
 	}
 
+	// ─── create_object video fields (nested poster, payload-level) ───────────
+
+	public function testCreateSucceedsWhenVideoFieldOnlySetsUrl(): void
+	{
+		// Writing `url` into a video field is fine — the save pipeline
+		// (PropertyDataProcessor) resolves provider/thumbnail/etc from it.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'    => ['field' => 'id'],
+				'promo' => ['field' => 'video'],
+			]));
+
+		$this->saver->expects($this->once())
+			->method('saveObject')
+			->with('clips', $this->callback(
+				static fn (array $data): bool => ($data['promo']['url'] ?? '') === 'https://youtu.be/abc123',
+			))
+			->willReturn($this->blogObject('one'));
+
+		$result = $this->tool->createHandler(collection: 'clips', data: [
+			'promo' => ['url' => 'https://youtu.be/abc123'],
+		]);
+
+		$this->assertSame(['id' => 'one'], $result);
+	}
+
+	public function testCreateRefusesWhenVideoFieldPayloadSetsPoster(): void
+	{
+		// A video field's `poster` is an image upload, same reasoning as the
+		// top-level binary fields above, just nested one level deeper.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'    => ['field' => 'id'],
+				'promo' => ['field' => 'video'],
+			]));
+
+		$this->saver->expects($this->never())->method('saveObject');
+
+		try {
+			$this->tool->createHandler(collection: 'clips', data: [
+				'promo' => ['url' => 'https://youtu.be/abc123', 'poster' => 'poster.jpg'],
+			]);
+			$this->fail('Expected ToolCallException.');
+		} catch (ToolCallException $e) {
+			$this->assertStringContainsString('promo.poster', $e->getMessage());
+		}
+	}
+
+	public function testCreateAllowsVideoFieldWithEmptyPosterEcho(): void
+	{
+		// An empty poster echo ('' / null / []) is treated as "not writing
+		// it" — same convention as the top-level binary-field check.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'    => ['field' => 'id'],
+				'promo' => ['field' => 'video'],
+			]));
+
+		$this->saver->expects($this->once())->method('saveObject')->willReturn($this->blogObject('one'));
+
+		$this->tool->createHandler(collection: 'clips', data: [
+			'promo' => ['url' => 'https://youtu.be/abc123', 'poster' => ''],
+		]);
+	}
+
+	public function testUpdateRefusesWhenVideoFieldPayloadSetsPoster(): void
+	{
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'    => ['field' => 'id'],
+				'promo' => ['field' => 'video'],
+			]));
+
+		$this->updater->expects($this->never())->method('updateObject');
+
+		try {
+			$this->tool->updateHandler(collection: 'clips', id: 'one', data: [
+				'promo' => ['url' => 'https://youtu.be/abc123', 'poster' => ['name' => 'poster.jpg']],
+			]);
+			$this->fail('Expected ToolCallException.');
+		} catch (ToolCallException $e) {
+			$this->assertStringContainsString('promo.poster', $e->getMessage());
+		}
+	}
+
+	public function testPatchRefusesWhenVideoFieldPayloadSetsPoster(): void
+	{
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'    => ['field' => 'id'],
+				'promo' => ['field' => 'video'],
+			]));
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+
+		$this->patcher->expects($this->never())->method('patchObject');
+
+		try {
+			$this->tool->patchHandler(collection: 'clips', id: 'one', data: [
+				'promo' => ['poster' => ['name' => 'poster.jpg']],
+			]);
+			$this->fail('Expected ToolCallException.');
+		} catch (ToolCallException $e) {
+			$this->assertStringContainsString('promo.poster', $e->getMessage());
+		}
+	}
+
+	public function testCreateRefusesWhenVideoFieldDeclaredByTypeOnlyPayloadSetsPoster(): void
+	{
+		// PropertyFactory / PropertyDefinition::extractSchemaRef() also treat
+		// `"type": "video"` (no `field` key) as a video property — the MCP
+		// guard must key on the same union, not `field` alone.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'    => ['field' => 'id'],
+				'promo' => ['type' => 'video'],
+			]));
+
+		$this->saver->expects($this->never())->method('saveObject');
+
+		try {
+			$this->tool->createHandler(collection: 'clips', data: [
+				'promo' => ['url' => 'https://youtu.be/abc123', 'poster' => ['name' => 'poster.jpg']],
+			]);
+			$this->fail('Expected ToolCallException.');
+		} catch (ToolCallException $e) {
+			$this->assertStringContainsString('promo.poster', $e->getMessage());
+		}
+	}
+
+	// ─── update/patch_object video poster preservation (final review fix #3) ─
+	//
+	// A video property's `poster` lives one level below the top-level binary
+	// fields preserveBinaryFields() already carries forward. Writing only
+	// `{promo: {url: '...'}}` (the only key an MCP write is allowed to set)
+	// must not drop an existing uploaded poster on a full-replace update or a
+	// merge patch.
+
+	public function testUpdatePreservesExistingVideoPosterWhenPayloadOmitsIt(): void
+	{
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'    => ['field' => 'id'],
+				'promo' => ['field' => 'video'],
+			]));
+
+		$existingPoster = ['name' => 'poster.jpg', 'size' => 12345, 'mime' => 'image/jpeg'];
+		$this->objectFetcher->method('fetchObject')
+			->with('clips', 'one')
+			->willReturn($this->objectWith('one', [
+				'promo' => ['url' => 'https://youtu.be/old', 'poster' => $existingPoster],
+			]));
+
+		$this->updater->expects($this->once())
+			->method('updateObject')
+			->with(
+				'clips',
+				'one',
+				$this->callback(static fn (array $data): bool => ($data['promo']['url'] ?? '') === 'https://youtu.be/new'
+						&& ($data['promo']['poster'] ?? null) === $existingPoster),
+			)
+			->willReturn($this->blogObject('one'));
+
+		$this->tool->updateHandler(collection: 'clips', id: 'one', data: [
+			'promo' => ['url' => 'https://youtu.be/new'],
+		]);
+	}
+
+	public function testPatchPreservesExistingVideoPosterWhenPayloadOmitsIt(): void
+	{
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'    => ['field' => 'id'],
+				'promo' => ['field' => 'video'],
+			]));
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+
+		$existingPoster = ['name' => 'poster.jpg', 'size' => 12345, 'mime' => 'image/jpeg'];
+		$this->objectFetcher->method('fetchObject')
+			->with('clips', 'one')
+			->willReturn($this->objectWith('one', [
+				'promo' => ['url' => 'https://youtu.be/old', 'poster' => $existingPoster],
+			]));
+
+		$this->patcher->expects($this->once())
+			->method('patchObject')
+			->with(
+				'clips',
+				'one',
+				$this->callback(static fn (array $data): bool => ($data['promo']['url'] ?? '') === 'https://youtu.be/new'
+						&& ($data['promo']['poster'] ?? null) === $existingPoster),
+			)
+			->willReturn($this->blogObject('one'));
+
+		$this->tool->patchHandler(collection: 'clips', id: 'one', data: [
+			'promo' => ['url' => 'https://youtu.be/new'],
+		]);
+	}
+
+	// Final review follow-up (Residual #2): a `poster` key that IS present
+	// but empty (null / []) passes refuseIfPayloadWritesVideoPoster()'s
+	// emptiness check (it isn't a real write) but must still be treated like
+	// an absent key here — otherwise it reaches the updater/patcher verbatim
+	// and wipes the stored poster instead of leaving it untouched.
+
+	public function testUpdatePreservesExistingVideoPosterWhenPayloadSendsAnExplicitNullPoster(): void
+	{
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'    => ['field' => 'id'],
+				'promo' => ['field' => 'video'],
+			]));
+
+		$existingPoster = ['name' => 'poster.jpg', 'size' => 12345, 'mime' => 'image/jpeg'];
+		$this->objectFetcher->method('fetchObject')
+			->with('clips', 'one')
+			->willReturn($this->objectWith('one', [
+				'promo' => ['url' => 'https://youtu.be/old', 'poster' => $existingPoster],
+			]));
+
+		$this->updater->expects($this->once())
+			->method('updateObject')
+			->with(
+				'clips',
+				'one',
+				$this->callback(static fn (array $data): bool => ($data['promo']['poster'] ?? 'MISSING') === $existingPoster),
+			)
+			->willReturn($this->blogObject('one'));
+
+		$this->tool->updateHandler(collection: 'clips', id: 'one', data: [
+			'promo' => ['url' => 'https://youtu.be/new', 'poster' => null],
+		]);
+	}
+
+	public function testPatchPreservesExistingVideoPosterWhenPayloadSendsAnEmptyArrayPoster(): void
+	{
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'    => ['field' => 'id'],
+				'promo' => ['field' => 'video'],
+			]));
+		$this->objectFetcher->method('existsObject')->willReturn(true);
+
+		$existingPoster = ['name' => 'poster.jpg', 'size' => 12345, 'mime' => 'image/jpeg'];
+		$this->objectFetcher->method('fetchObject')
+			->with('clips', 'one')
+			->willReturn($this->objectWith('one', [
+				'promo' => ['url' => 'https://youtu.be/old', 'poster' => $existingPoster],
+			]));
+
+		$this->patcher->expects($this->once())
+			->method('patchObject')
+			->with(
+				'clips',
+				'one',
+				$this->callback(static fn (array $data): bool => ($data['promo']['poster'] ?? 'MISSING') === $existingPoster),
+			)
+			->willReturn($this->blogObject('one'));
+
+		$this->tool->patchHandler(collection: 'clips', id: 'one', data: [
+			'promo' => ['url' => 'https://youtu.be/new', 'poster' => []],
+		]);
+	}
+
+	public function testUpdateDoesNotFetchExistingObjectWhenNoVideoPropertyIsPresent(): void
+	{
+		// Guard against a needless extra fetchObject() call on every plain
+		// update when the schema has no video field at all.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->textOnlySchema());
+
+		$this->objectFetcher->expects($this->never())->method('fetchObject');
+		$this->updater->method('updateObject')->willReturn($this->blogObject('my-post'));
+
+		$this->tool->updateHandler(collection: 'blog', id: 'my-post', data: ['title' => 'New']);
+	}
+
 	public function testCreateMissingCollectionSurfacesDiscoveryHint(): void
 	{
 		// SchemaFetcher throws UnexpectedValueException for unknown

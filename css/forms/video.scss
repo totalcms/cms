@@ -1,0 +1,183 @@
+//--------------------------------
+// Fieldset - Video Field
+//--------------------------------
+// Layout: the full-width URL row and its metadata on top, the media box
+// (poster dropzone / vendor thumbnail / empty dropzone) below it. Which layer
+// the media box shows is pure CSS state:
+//   - a poster image  → the poster's own `.dz-preview` (not `.not-found`)
+//   - else thumbnail   → `.video-vendor-thumbnail` (needs `.has-thumbnail`)
+//   - else             → nothing: an empty image dropzone (just the arrow)
+// video.js only toggles `.has-thumbnail` and the vendor <img>; poster state
+// comes from the image field's own markup via `:has()`.
+$video-media-width : 320px;
+
+.video-field {
+
+	.video-layout {
+		display : grid;
+		gap     : .75rem;
+	}
+
+	.video-details {
+		display : grid;
+		gap     : .5rem;
+	}
+
+	.video-url {
+		display     : flex;
+		align-items : center;
+		flex-wrap   : wrap;
+		gap         : .5rem;
+
+		// The input's own `.form-group` (input + group icon) takes the row;
+		// the provider badge sits after it.
+		> .form-group {
+			flex : 1 1 240px;
+		}
+
+		.video-url-input {
+			flex  : 1 1 auto;
+			width : auto;
+		}
+
+		// `_layout.scss` gives every `[type="url"]` the link icon; this input
+		// is a video, so it gets the video icon (higher specificity wins).
+		.video-url-input + .form-group-icon:after {
+			mask-image : var(--icon-video);
+		}
+
+		.video-provider {
+			padding          : .15rem .5rem;
+			border-radius    : var(--totalform-radius);
+			background-color : oklch(var(--totalform-icon-bg));
+			color            : oklch(var(--totalform-icon-color));
+			font-size        : .8em;
+			text-transform   : capitalize;
+			white-space      : nowrap;
+
+			&:empty {
+				display : none;
+			}
+		}
+	}
+
+	.video-title {
+		color      : oklch(var(--totalform-darkgray));
+		font-size  : .85em;
+		font-style : italic;
+
+		&:empty {
+			display : none;
+		}
+	}
+
+	//--------------------------------
+	// Media box
+	//--------------------------------
+	.video-media {
+		position         : relative;
+		width            : $video-media-width;
+		max-width        : 100%;
+		aspect-ratio     : var(--cms-video-ratio, 16 / 9);
+		overflow         : hidden;
+		border           : 1px solid oklch(var(--totalform-border-color));
+		border-radius    : var(--totalform-radius);
+		background-color : oklch(var(--totalform-nearwhite));
+
+		.video-vendor-thumbnail {
+			position   : absolute;
+			inset      : 0;
+			display    : none;
+			width      : 100%;
+			height     : 100%;
+			object-fit : cover;
+		}
+
+		// Show the vendor thumbnail only while there is no poster image in the
+		// box. With neither, the box is just the image field's empty dropzone.
+		&.has-thumbnail:not(:has(.dz-preview:not(.not-found))) .video-vendor-thumbnail {
+			display : block;
+		}
+
+		// The poster image field fills the box and becomes its drop target.
+		.card-fields,
+		.card-fields > .form-field,
+		.card-fields > .form-field > .form-group,
+		.total-preview,
+		.image-preview,
+		.dz-preview {
+			position : absolute;
+			inset    : 0;
+			height   : 100%;
+			margin   : 0;
+		}
+		.card-fields > .form-field > .form-group {
+			max-width : none;
+			min-width : 0;
+			width     : 100%;
+		}
+		.card-fields > .form-field > label,
+		.card-fields > .form-field > .help {
+			display : none;
+		}
+		.total-preview {
+			min-height : 0;
+		}
+		.image-preview {
+			background-image : none;
+		}
+		.dz-preview {
+			border     : 0;
+			box-shadow : none;
+
+			img {
+				width      : 100%;
+				height     : 100%;
+				max-width  : none;
+				margin     : 0;
+				object-fit : cover;
+			}
+		}
+
+		// The drop target's upload arrow: always shown while there is no
+		// poster. image.scss's own `:has(.not-found)` rule covers the top-level
+		// image field; this one keys off the media box instead. Over the
+		// vendor thumbnail it goes white so it reads on a photo; on the empty
+		// box it keeps the image field's normal grey.
+		&:not(:has(.dz-preview:not(.not-found))) .dz-overlay {
+			opacity : 0.85;
+		}
+		&.has-thumbnail:not(:has(.dz-preview:not(.not-found))) .dz-overlay {
+			background-color : oklch(var(--totalform-purewhite));
+			filter           : drop-shadow(0 1px 3px oklch(var(--totalform-black) / 0.6));
+		}
+
+		// A poster is never "featured" and cannot be reordered.
+		.actionbar .featured,
+		.actionbar .move {
+			display : none;
+		}
+
+		// Chips: which layer is showing.
+		.video-media-chip {
+			position         : absolute;
+			left             : .5rem;
+			bottom           : .5rem;
+			z-index          : 2;
+			display          : none;
+			padding          : .15rem .5rem;
+			border-radius    : var(--totalform-radius);
+			background-color : oklch(var(--totalform-black) / 0.65);
+			color            : oklch(var(--totalform-purewhite));
+			font-size        : .75em;
+			white-space      : nowrap;
+			pointer-events   : none;
+		}
+		&:has(.dz-preview:not(.not-found)) .video-media-chip.poster {
+			display : block;
+		}
+		&.has-thumbnail:not(:has(.dz-preview:not(.not-found))) .video-media-chip.thumbnail {
+			display : block;
+		}
+	}
+}

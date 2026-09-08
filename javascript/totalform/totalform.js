@@ -14,6 +14,7 @@ import PriceField from './price';
 import ColorField from './color';
 import DateField from './date';
 import CardField from './card';
+import VideoField from './video';
 import DeckField from './deck';
 import DeckTableField from './deckTable';
 import PasswordField from './password';
@@ -392,6 +393,9 @@ export default class TotalForm {
 
 			case "card":
 				return new CardField(field, settings);
+
+			case "video":
+				return new VideoField(field, settings);
 
 			case "deck":
                 return new DeckField(field, settings);

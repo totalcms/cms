@@ -285,7 +285,9 @@ export default class TotalField {
 		}
 
 		// Card ancestry — child's parent .form-field is the card.
-		const cardEl = this.container.parentElement?.closest('.form-field[data-type="card"]');
+		// A video field's poster sub-field nests the same way a card's does
+		// (see VideoField::buildPosterField()), so it counts as card ancestry too.
+		const cardEl = this.container.parentElement?.closest('.form-field[data-type="card"], .form-field[data-type="video"]');
 		if (cardEl?.totalfield?.property) {
 			return {
 				collection,

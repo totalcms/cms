@@ -19,6 +19,7 @@ use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Domain\Twig\Service\VideoRenderer;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -36,8 +37,9 @@ use Twig\Loader\ArrayLoader;
  */
 class RenderTwigAdapter
 {
-	private ?TwigEnvironment $captionTwig                       = null;
-	private ?DataViewQueryService $resolvedDataViewQueryService = null;
+	private ?TwigEnvironment $captionTwig                        = null;
+	private ?DataViewQueryService $resolvedDataViewQueryService  = null;
+	private ?VideoRenderer $videoRenderer                        = null;
 	private readonly LoggerInterface $logger;
 
 	public function __construct(
@@ -611,6 +613,26 @@ class RenderTwigAdapter
 		}
 
 		return $html;
+	}
+
+	/**
+	 * Render a `video` field property (or a local `file`-field video) as an
+	 * embed, `<video>` element, or click-to-play facade. All the work lives in
+	 * VideoRenderer; this is the Twig-facing entry point.
+	 *
+	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
+	 * @param array<string,mixed> $options collection, property, autoplay, loop, muted, controls, class, poster, facade, imageworks
+	 */
+	public function video(string|array|null $idOrObject, array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'video',
+			'property'   => 'video',
+		], $options);
+
+		$this->videoRenderer ??= new VideoRenderer($this->media, $this->data);
+
+		return $this->videoRenderer->render($idOrObject, $options);
 	}
 
 	/**

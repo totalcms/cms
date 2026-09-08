@@ -73,6 +73,32 @@ The same syntax works on the corresponding render macro:
 
 The Image Builder dialog (the imageworks utility opened from the admin form) detects nested images and shows the dotted-property macro in its "Copy macro" section, so you can copy a working snippet directly.
 
+## Video
+
+### videoPoster()
+
+Resolve the poster URL for a `video` field property: the uploaded poster (run
+through ImageWorks, so it gets resizing and format negotiation) when present,
+else the vendor thumbnail string, else `''`.
+
+```twig
+{# A video property on your own schema #}
+{{ cms.media.videoPoster(post, {w: 800}, {property: 'promo'}) }}
+
+{# An object from the ready-made video collection — collection and property default to "video" #}
+{{ cms.media.videoPoster('intro', {w: 800}) }}
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `idOrObject` | string\|array\|null | required | Object ID or full object data |
+| `imageworks` | array | `[]` | ImageWorks transformation parameters |
+| `options` | array | `[]` | Collection context: `collection`, `property` |
+
+This is what [`cms.render.video()`](docs/twig/render#cms-render-video) uses internally to
+resolve a poster when none is passed explicitly. See [Video](docs/fields/video)
+for the field's stored shape and provider list.
+
 ## Galleries
 
 ### galleryPath()

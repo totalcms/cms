@@ -78,6 +78,7 @@ return [
 					['title' => 'Styled Text',           'path' => 'fields/styled-text'],
 					['title' => 'SVG',                   'path' => 'fields/svg'],
 					['title' => 'Text Inputs',           'path' => 'fields/text-inputs'],
+					['title' => 'Video',                 'path' => 'fields/video'],
 				],
 			],
 			[
