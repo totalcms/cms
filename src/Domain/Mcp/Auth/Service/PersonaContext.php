@@ -18,15 +18,15 @@ use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
  * either breaking that reflection (variadic params aren't supported) or
  * polluting every tool's input schema with a `_persona` field.
  *
- * Instead McpEndpointAction writes the persona here after auth, and tools
+ * Instead McpRequestAuthorizer writes the persona here after auth, and tools
  * inject this service to read it during dispatch. The container treats this
  * as a singleton per request — same lifetime as the Slim app instance.
  *
- * For OAuth Bearer requests McpEndpointAction also stores the resolved scopes
+ * For OAuth Bearer requests McpRequestAuthorizer also stores the resolved scopes
  * via setScopes() so OAuthScopeEvaluator can read them during tool dispatch
  * without needing access to the PSR-7 request directly.
  *
- * For OAuth Bearer requests McpEndpointAction also resolves and stores the
+ * For OAuth Bearer requests McpRequestAuthorizer also resolves and stores the
  * caller's UserAuthority via setAuthority() so ToolRegistry::forPersona()
  * (via McpServerFactory) can filter requirement-gated tools by the caller's
  * actual access-group grants, and so Task 7's call-time guard can re-check
@@ -71,7 +71,7 @@ class PersonaContext
 	}
 
 	/**
-	 * Store the OAuth scopes for this request. Called by McpEndpointAction
+	 * Store the OAuth scopes for this request. Called by McpRequestAuthorizer
 	 * after Bearer authentication resolves an AUTHENTICATED persona.
 	 *
 	 * @param list<string> $scopes
@@ -93,7 +93,7 @@ class PersonaContext
 
 	/**
 	 * Store the resolved UserAuthority for this request. Called by
-	 * McpEndpointAction after Bearer authentication resolves an
+	 * McpRequestAuthorizer after Bearer authentication resolves an
 	 * AUTHENTICATED persona; left null for non-Bearer requests.
 	 */
 	public function setAuthority(?UserAuthority $authority): void
@@ -112,7 +112,7 @@ class PersonaContext
 	}
 
 	/**
-	 * Store the OAuth client id for this request. Called by McpEndpointAction
+	 * Store the OAuth client id for this request. Called by McpRequestAuthorizer
 	 * alongside setScopes()/setAuthority() so Task 7's call-time guard can
 	 * attribute oauth-activity log denials (scopeRejected/groupRejected) to
 	 * the calling client, mirroring BaseAccessMiddleware's REST equivalent.
@@ -133,7 +133,7 @@ class PersonaContext
 
 	/**
 	 * Store the resolved OAuth subject (user id) for this request. Called by
-	 * McpEndpointAction alongside setAuthority(); used only for oauth-activity
+	 * McpRequestAuthorizer alongside setAuthority(); used only for oauth-activity
 	 * log attribution in Task 7's call-time guard, not for authorization
 	 * decisions (UserAuthority already carries the resolved group grants).
 	 * Empty for non-Bearer requests.

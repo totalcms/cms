@@ -554,12 +554,12 @@ readonly class McpServerFactory
 	/**
 	 * Resolved, clamped lifetime of one `subscriptions/listen` stream, seconds.
 	 *
-	 * Mirrors listeningStreamSeconds() in McpEndpointAction: a mistyped or
+	 * Mirrors McpListeningStream::seconds(): a mistyped or
 	 * maliciously large value in tcms.php must not let one caller hold a worker
 	 * indefinitely, so the ceiling lives in code rather than in config.
 	 *
 	 * The FLOOR matters more than the ceiling here, and is not symmetric with
-	 * listeningStreamSeconds() where zero is legal and cheap. StatelessProtocol
+	 * McpListeningStream::seconds() where zero is legal and cheap. StatelessProtocol
 	 * reads its deadline as:
 	 *
 	 *     $deadline = 0.0 >= $lifetime ? \INF : microtime(true) + $lifetime;
