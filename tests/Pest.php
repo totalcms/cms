@@ -256,6 +256,40 @@ function chmodReflectsPrivateMode(string $dir): bool
  * the plain `/admin/login` route stores (it has no `{collection}` segment), so
  * it is the realistic case, not an edge one.
  */
+/**
+ * Assemble a RenderTwigAdapter from the collaborators the OLD monolithic
+ * constructor took, so the unit tests that mock those collaborators keep
+ * their shape after the adapter was split into per-concern renderers
+ * (LoadMore / Image / Gallery / CloneDialog). Same positional order and
+ * parameter names as that constructor had, so call sites only swap `new`.
+ */
+function buildRenderTwigAdapter(
+	TotalCMS\Domain\Twig\Service\HtmxRenderer $htmxRenderer,
+	TotalCMS\Support\Config $config,
+	TotalCMS\Domain\Twig\Adapter\DataTwigAdapter $data,
+	TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter $media,
+	TotalCMS\Domain\Collection\Service\CollectionFetcher $collectionFetcher,
+	TotalCMS\Domain\Collection\Service\CollectionLister $collectionLister,
+	TotalCMS\Domain\Schema\Service\SchemaFetcher $schemaFetcher,
+	TotalCMS\Domain\Twig\Service\GridRenderer $grid,
+	TotalCMS\Factory\LoggerFactory $loggerFactory,
+	?TotalCMS\Domain\Twig\Service\DepotBrowserRenderer $depotBrowserRenderer = null,
+	?TotalCMS\Domain\Index\Service\IndexQueryService $indexQueryService = null,
+	?\Closure $dataViewQueryServiceFactory = null,
+	?\Closure $twigEngineFactory = null,
+): TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter {
+	return new TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter(
+		$data,
+		$media,
+		$grid,
+		new TotalCMS\Domain\Twig\Service\LoadMoreRenderer($htmxRenderer, $config, $indexQueryService, $dataViewQueryServiceFactory, $twigEngineFactory),
+		new TotalCMS\Domain\Twig\Service\ImageRenderer($media, $data),
+		new TotalCMS\Domain\Twig\Service\GalleryRenderer($media, $data, $config, $loggerFactory),
+		new TotalCMS\Domain\Twig\Service\CloneDialogRenderer($config, $collectionFetcher, $schemaFetcher, $collectionLister),
+		$depotBrowserRenderer ?? new TotalCMS\Domain\Twig\Service\DepotBrowserRenderer(),
+	);
+}
+
 function signInAs(Slim\App $app, string $userId, string $authCollection = ''): void
 {
 	/** @var TotalCMS\Support\Config $config */

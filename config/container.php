@@ -158,9 +158,13 @@ use TotalCMS\Domain\Twig\Adapter\SchemaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\UtilsTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\ViewTwigAdapter;
+use TotalCMS\Domain\Twig\Service\CloneDialogRenderer;
 use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
+use TotalCMS\Domain\Twig\Service\GalleryRenderer;
 use TotalCMS\Domain\Twig\Service\GridRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;
+use TotalCMS\Domain\Twig\Service\ImageRenderer;
+use TotalCMS\Domain\Twig\Service\LoadMoreRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Video\Service\VideoMetadataFetcher;
 use TotalCMS\Domain\Video\Service\VideoUrlResolver;
@@ -439,20 +443,41 @@ return [
 
 	PropertyDataProcessor::class => fn (ContainerInterface $container) => $container->get(PropertyDataProcessorInterface::class),
 
-	RenderTwigAdapter::class => fn (ContainerInterface $container): RenderTwigAdapter => new RenderTwigAdapter(
+	// cms.render.* is a thin facade over one service per concern. The query
+	// services and the Twig engine reach LoadMoreRenderer lazily because the
+	// engine depends on the adapters that depend on it.
+	LoadMoreRenderer::class => fn (ContainerInterface $container): LoadMoreRenderer => new LoadMoreRenderer(
 		$container->get(HtmxRenderer::class),
 		$container->get(Config::class),
-		$container->get(DataTwigAdapter::class),
-		$container->get(MediaTwigAdapter::class),
-		$container->get(CollectionFetcher::class),
-		$container->get(CollectionLister::class),
-		$container->get(SchemaFetcher::class),
-		$container->get(GridRenderer::class),
-		$container->get(LoggerFactory::class),
-		$container->get(DepotBrowserRenderer::class),
 		$container->get(IndexQueryService::class),
 		fn () => $container->get(DataViewQueryService::class),
 		fn () => $container->get(TwigEngine::class),
+	),
+	ImageRenderer::class => fn (ContainerInterface $container): ImageRenderer => new ImageRenderer(
+		$container->get(MediaTwigAdapter::class),
+		$container->get(DataTwigAdapter::class),
+	),
+	GalleryRenderer::class => fn (ContainerInterface $container): GalleryRenderer => new GalleryRenderer(
+		$container->get(MediaTwigAdapter::class),
+		$container->get(DataTwigAdapter::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class),
+	),
+	CloneDialogRenderer::class => fn (ContainerInterface $container): CloneDialogRenderer => new CloneDialogRenderer(
+		$container->get(Config::class),
+		$container->get(CollectionFetcher::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(CollectionLister::class),
+	),
+	RenderTwigAdapter::class => fn (ContainerInterface $container): RenderTwigAdapter => new RenderTwigAdapter(
+		$container->get(DataTwigAdapter::class),
+		$container->get(MediaTwigAdapter::class),
+		$container->get(GridRenderer::class),
+		$container->get(LoadMoreRenderer::class),
+		$container->get(ImageRenderer::class),
+		$container->get(GalleryRenderer::class),
+		$container->get(CloneDialogRenderer::class),
+		$container->get(DepotBrowserRenderer::class),
 	),
 
 	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(

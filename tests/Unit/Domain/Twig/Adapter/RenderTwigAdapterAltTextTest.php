@@ -46,7 +46,7 @@ final class RenderTwigAdapterAltTextTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
-		$this->adapter = new RenderTwigAdapter(
+		$this->adapter = buildRenderTwigAdapter(
 			$this->createMock(HtmxRenderer::class),
 			$config,
 			$this->data,

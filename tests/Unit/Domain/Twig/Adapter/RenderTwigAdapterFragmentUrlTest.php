@@ -36,7 +36,7 @@ final class RenderTwigAdapterFragmentUrlTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$this->adapter = new RenderTwigAdapter(
+		$this->adapter = buildRenderTwigAdapter(
 			$this->createMock(HtmxRenderer::class),
 			$config,
 			$this->createMock(DataTwigAdapter::class),

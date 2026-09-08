@@ -39,7 +39,7 @@ final class RenderTwigAdapterTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$this->adapter = new RenderTwigAdapter(
+		$this->adapter = buildRenderTwigAdapter(
 			$this->htmxRenderer,
 			$config,
 			$this->createMock(DataTwigAdapter::class),
@@ -106,7 +106,7 @@ final class RenderTwigAdapterTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		return new RenderTwigAdapter(
+		return buildRenderTwigAdapter(
 			$this->htmxRenderer,
 			$config,
 			$this->createMock(DataTwigAdapter::class),
@@ -405,7 +405,7 @@ final class RenderTwigAdapterTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		return new RenderTwigAdapter(
+		return buildRenderTwigAdapter(
 			$htmxRenderer,
 			$config,
 			$this->createMock(DataTwigAdapter::class),

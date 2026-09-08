@@ -480,7 +480,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$adapter = new RenderTwigAdapter(
+		$adapter = buildRenderTwigAdapter(
 			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
 			$this->createMock(Config::class),
 			$this->createMock(DataTwigAdapter::class),

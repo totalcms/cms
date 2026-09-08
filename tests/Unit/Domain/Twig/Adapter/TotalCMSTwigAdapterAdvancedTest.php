@@ -171,7 +171,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			->with('image', 'test-id', 'image')
 			->willReturn(['alt' => 'Test alt text', 'filename' => 'test.jpg']);
 
-		$adapter = new RenderTwigAdapter(
+		$adapter = buildRenderTwigAdapter(
 			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
 			$this->createMock(\TotalCMS\Support\Config::class),
 			$data,
@@ -199,7 +199,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			->with('image', 'test-id', 'image')
 			->willReturn(['filename' => 'test.jpg']); // No alt field
 
-		$adapter = new RenderTwigAdapter(
+		$adapter = buildRenderTwigAdapter(
 			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
 			$this->createMock(\TotalCMS\Support\Config::class),
 			$data,
@@ -227,7 +227,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 			->with('image', 'test-id', 'image')
 			->willReturn('not an array');
 
-		$adapter = new RenderTwigAdapter(
+		$adapter = buildRenderTwigAdapter(
 			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
 			$this->createMock(\TotalCMS\Support\Config::class),
 			$data,
@@ -369,7 +369,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$renderAdapter = new RenderTwigAdapter(
+		$renderAdapter = buildRenderTwigAdapter(
 			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
 			$this->createMock(\TotalCMS\Support\Config::class),
 			$this->createMock(DataTwigAdapter::class),
@@ -415,7 +415,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$renderAdapter = new RenderTwigAdapter(
+		$renderAdapter = buildRenderTwigAdapter(
 			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
 			$this->createMock(\TotalCMS\Support\Config::class),
 			$this->createMock(DataTwigAdapter::class),
@@ -444,7 +444,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$renderAdapter = new RenderTwigAdapter(
+		$renderAdapter = buildRenderTwigAdapter(
 			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
 			$this->createMock(\TotalCMS\Support\Config::class),
 			$this->createMock(DataTwigAdapter::class),
@@ -474,7 +474,7 @@ final class TotalCMSTwigAdapterAdvancedTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
 
-		$renderAdapter = new RenderTwigAdapter(
+		$renderAdapter = buildRenderTwigAdapter(
 			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
 			$this->createMock(\TotalCMS\Support\Config::class),
 			$this->createMock(DataTwigAdapter::class),
