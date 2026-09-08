@@ -10,9 +10,6 @@ use Mcp\Schema\Prompt;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
-use TotalCMS\Domain\Admin\TotalForm;
-use TotalCMS\Domain\Automation\Service\AutomationRegistry;
-use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ExtensionEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -22,23 +19,24 @@ use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
+use TotalCMS\Domain\Extension\Data\FormAction;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
-use TotalCMS\Domain\License\Data\Edition;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Extension\Service\Boot\AssetsStep;
+use TotalCMS\Domain\Extension\Service\Boot\AutomationsStep;
+use TotalCMS\Domain\Extension\Service\Boot\EventListenersStep;
+use TotalCMS\Domain\Extension\Service\Boot\ExtensionBootStep;
+use TotalCMS\Domain\Extension\Service\Boot\FieldTypesStep;
+use TotalCMS\Domain\Extension\Service\Boot\FormActionsStep;
+use TotalCMS\Domain\Extension\Service\Boot\McpStep;
+use TotalCMS\Domain\Extension\Service\Boot\PageMiddlewareStep;
+use TotalCMS\Domain\Extension\Service\Boot\SchemaDirectoriesStep;
+use TotalCMS\Domain\Extension\Service\Boot\SearchProvidersStep;
+use TotalCMS\Domain\Extension\Service\Boot\TwigStep;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
-use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
-use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Search\Service\SearchProvider;
-use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
-use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
-use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
-use TotalCMS\Domain\Twig\Service\CoreAdminAssetRegistrar;
-use TotalCMS\Domain\Twig\Service\CoreFrontendAssetRegistrar;
-use TotalCMS\Domain\Twig\Service\TwigEngine;
 use Twig\AbstractTwigCallable;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
@@ -86,6 +84,40 @@ class ExtensionManager
 		'mcp:resources' => 'Exposes data that AI agents can fetch.',
 	];
 
+	/**
+	 * The wiring steps bootAll() runs, in order, after the register/boot
+	 * lifecycle. Ordering constraints:
+	 *  - McpStep runs before TwigStep so the MCP tool/resource registries
+	 *    are already filled by the time the first /mcp request can arrive
+	 *    (Twig wiring is what makes the rest of the app, including any
+	 *    request that could race an /mcp call, servable).
+	 *  - AssetsStep runs last. It was deliberately moved out from inside the
+	 *    old monolithic Twig-wiring block, where it ran before
+	 *    registerExtensionItems() (functions/filters/globals/nav/widgets).
+	 *    The two are independent: AssetsStep only touches
+	 *    TotalCMSTwigAdapter's asset lists, TwigStep's registerExtensionItems()
+	 *    only touches TwigEngine's callable/global registries, so reordering
+	 *    one after the other is safe.
+	 *  - Core assets rendering before extension assets is enforced inside
+	 *    AssetsStep itself (it registers CoreAdminAssetRegistrar /
+	 *    CoreFrontendAssetRegistrar before reading the extension asset
+	 *    accessors), not by AssetsStep's position in this list.
+	 *
+	 * @var list<class-string<ExtensionBootStep>>
+	 */
+	public const BOOT_STEPS = [
+		SchemaDirectoriesStep::class,
+		FieldTypesStep::class,
+		EventListenersStep::class,
+		AutomationsStep::class,
+		PageMiddlewareStep::class,
+		FormActionsStep::class,
+		McpStep::class,
+		SearchProvidersStep::class,
+		TwigStep::class,
+		AssetsStep::class,
+	];
+
 	public function __construct(
 		private readonly ExtensionDiscovery $discovery,
 		private readonly ExtensionStateRepository $stateRepository,
@@ -109,190 +141,18 @@ class ExtensionManager
 		}
 
 		$this->discoveredManifests = $this->discovery->discover();
-		$states                    = $this->stateRepository->loadAll();
 
-		// Auto-register state for newly discovered extensions
-		foreach ($this->discoveredManifests as $id => $manifest) {
-			$existingState = $states[$id] ?? null;
-
-			if (!$existingState instanceof ExtensionState) {
-				// Bundled extensions that declare default_enabled ship pre-approved
-				// (reviewed in the package, versioned with core) - register them
-				// fresh as ENABLED. Everything else, including a sideloaded/
-				// third-party extension that declares default_enabled, is untrusted
-				// code an operator hasn't consented to yet, so it stays DISABLED.
-				$initiallyEnabled = $manifest->bundled && $manifest->defaultEnabled;
-
-				if ($initiallyEnabled) {
-					$this->logger->info(sprintf(
-						"Extension '%s' has no stored state, registering fresh as ENABLED (bundled, default_enabled, version '%s').",
-						$id,
-						$manifest->version,
-					));
-				} else {
-					// DIAGNOSTIC: a discovered extension with no stored state is
-					// registered fresh as DISABLED. For a genuinely new extension
-					// this is correct; for one that was previously enabled it means
-					// its entry in extensions.json was lost (state-file reset /
-					// relocated on update) — which presents as "had to re-enable".
-					$this->logger->warning(sprintf(
-						"Extension '%s' has no stored state — registering fresh as DISABLED (version '%s'). "
-						. 'If it was previously enabled, its extensions.json state was lost.',
-						$id,
-						$manifest->version,
-					));
-				}
-				$this->stateRepository->saveState($id, new ExtensionState(
-					enabled: $initiallyEnabled,
-					installedAt: date('c'),
-					version: $manifest->version,
-					autoEnrolledBundled: $initiallyEnabled,
-				));
-
-				continue;
-			}
-
-			// Shadow-consent gap: a saved 'enabled' record was auto-written for a
-			// BUNDLED default_enabled manifest of this id (autoEnrolledBundled),
-			// but THIS discovery resolves the id to a NON-bundled manifest instead
-			// (a copy dropped into tcms-data/extensions/ or the project extensions
-			// dir shadows the bundled one - later roots win, see discover()). That
-			// auto-written consent belongs to the bundled code that was reviewed
-			// and shipped in the package; it must not silently transfer to whatever
-			// non-bundled code now resolves to the same id. Force it back to
-			// disabled and clear the marker so this only fires once per occurrence
-			// - from here it behaves like any other never-consented extension until
-			// an operator explicitly enables it (which is either the deliberate
-			// local override the docs describe, or an id-squat they now know about).
-			if ($existingState->autoEnrolledBundled && !$manifest->bundled) {
-				$this->logger->warning(sprintf(
-					"Extension '%s' resolved to a non-bundled manifest, but its saved 'enabled' state was auto-written for the bundled default_enabled extension of the same id. Not transferring that consent: disabling until an operator explicitly re-enables it. Verify this is an override you intended and not another extension using the same id.",
-					$id,
-				));
-
-				$existingState->enabled             = false;
-				$existingState->autoEnrolledBundled = false;
-				$this->stateRepository->saveState($id, $existingState);
-			}
-		}
-
-		// Sort enabled extensions by dependencies
-		$enabledManifests = array_filter(
-			$this->discoveredManifests,
-			fn (ExtensionManifest $m): bool => $this->stateRepository->isEnabled($m->id, $m),
+		$enrollment = new ExtensionEnrollment(
+			$this->stateRepository,
+			$this->discovery,
+			$this->sorter,
+			$this->manifestValidator,
+			$this->logger,
 		);
-
-		// DIAGNOSTIC: snapshot the enabled/disabled split at boot. Comparing
-		// this line across an upgrade shows at a glance whether the enabled set
-		// shrank wholesale (state loss) versus an individual extension being
-		// disabled by the re-consent gate below.
-		$skippedDisabled = array_values(
-			array_diff(array_keys($this->discoveredManifests), array_keys($enabledManifests))
-		);
-		$this->logger->info(sprintf(
-			'Extension load: discovered [%s]; enabled [%s]; skipped-disabled [%s].',
-			implode(', ', array_keys($this->discoveredManifests)),
-			implode(', ', array_keys($enabledManifests)),
-			implode(', ', $skippedDisabled),
-		));
-
-		try {
-			$sortedIds = $this->sorter->sort($enabledManifests);
-		} catch (\RuntimeException $e) {
-			$this->logger->error('Extension dependency error: ' . $e->getMessage());
-			$sortedIds = array_keys($enabledManifests);
-		}
+		$enrollment->enrol($this->discoveredManifests);
 
 		// Register phase
-		foreach ($sortedIds as $id) {
-			$manifest = $enabledManifests[$id] ?? null;
-			if ($manifest === null) {
-				continue;
-			}
-
-			// Auto-quarantined extensions stay enabled (the operator didn't disable
-			// them — the SYSTEM held them back after repeated crashes), so they pass
-			// the isEnabled() filter above. Skip loading them here until the operator
-			// re-enables (which clears the quarantine) so a crash-looping extension
-			// can't take the request down again.
-			$state = $this->stateRepository->getState($id);
-			if ($state instanceof ExtensionState && $state->isQuarantined()) {
-				$this->logger->warning("Extension '{$id}' is quarantined, skipping load.");
-
-				continue;
-			}
-
-			$reasons = $this->manifestValidator->getIncompatibilityReasons($manifest);
-			if ($reasons !== []) {
-				$this->logger->info("Extension '{$id}' is incompatible, skipping: " . implode('; ', $reasons));
-				$this->stateRepository->recordError($id, implode('; ', $reasons));
-
-				continue;
-			}
-
-			// Update re-consent: when a SIDELOADED extension's on-disk version no
-			// longer matches the version it was enabled at, the operator did not
-			// review this code. Statically scan the NEW code before it can register:
-			// risky patterns => disable it (and don't load it); clean => let it load
-			// but record the new version so any newly-registered capability lands
-			// OFF (see updateStoredCapabilities). Built-ins are exempt — they version
-			// with core and ship reviewed in the package.
-			if (
-				$state instanceof ExtensionState
-				&& !$manifest->bundled
-				&& $state->version !== ''
-				&& $manifest->version !== $state->version
-			) {
-				// DIAGNOSTIC: re-consent only triggers when the extension's OWN
-				// on-disk version differs from the version it was enabled at. If
-				// this fires after a Total-CMS-only update where the operator
-				// did not touch the extension, the manifest version is changing
-				// unexpectedly — log both values so we can see exactly what moved.
-				$this->logger->warning(sprintf(
-					"Extension '%s' update re-consent triggered: on-disk version '%s' != enabled-at version '%s'. Scanning new code.",
-					$id,
-					$manifest->version,
-					$state->version,
-				));
-
-				$extPath  = $this->discovery->getExtensionPath($id);
-				$findings = $extPath !== null ? (new DangerousCodeScanner())->scan($extPath) : [];
-
-				if ($extPath === null) {
-					// No path to scan — treat as clean (nothing to load anyway;
-					// registerExtension will report the missing directory) but log
-					// so a vanished extension dir doesn't silently skip the gate.
-					$this->logger->warning("Extension '{$id}' updated but its directory could not be resolved; skipping update scan.");
-				}
-
-				if ($findings !== []) {
-					// Risky update — disable, record why, bump the stored version so
-					// the gate doesn't re-trigger every request, and do NOT load it.
-					// The new (risky) code never registers or runs.
-					$state->enabled        = false;
-					$state->updateDisabled = [
-						'reason'    => 'A new version of this extension added risky code patterns.',
-						'findings'  => count($findings),
-						'updatedAt' => gmdate('c'),
-					];
-					$state->version = $manifest->version;
-					$this->stateRepository->saveState($id, $state);
-					$this->logger->warning("Extension '{$id}' disabled: an update added risky code (" . count($findings) . ' findings).');
-
-					continue;
-				}
-
-				// Clean update — record the new version and let it load normally.
-				// Newly-registered capabilities land OFF via updateStoredCapabilities.
-				$this->logger->info(sprintf(
-					"Extension '%s' update re-consent: new version '%s' scanned clean; kept enabled (any new capabilities default off).",
-					$id,
-					$manifest->version,
-				));
-				$state->version = $manifest->version;
-				$this->stateRepository->saveState($id, $state);
-			}
-
+		foreach ($enrollment->selectForRegister($this->discoveredManifests) as $id => $manifest) {
 			$this->registerExtension($id, $manifest);
 		}
 
@@ -378,190 +238,8 @@ class ExtensionManager
 			$this->stateRepository->recordError($id, $message);
 		}
 
-		// Register extension schema directories (Pro+ only)
-		if ($this->container->has(SchemaRepository::class)) {
-			$this->registerExtensionSchemas();
-		}
-
-		// Register extension field types in the form builder and schema property editor
-		$extFieldTypes = $this->getAllFieldTypes();
-		if ($extFieldTypes !== []) {
-			TotalForm::registerExtensionFieldTypes($extFieldTypes);
-			TotalForm::registerExtensionFieldDefaultTypes($this->getAllFieldDefaultTypes());
-		}
-
-		// Wire event listeners from extensions into the EventDispatcher
-		if ($this->container->has(EventDispatcher::class)) {
-			$eventListeners = $this->getAllEventListeners();
-			if ($eventListeners !== []) {
-				/** @var EventDispatcher $dispatcher */
-				$dispatcher = $this->container->get(EventDispatcher::class);
-				$dispatcher->registerAll($eventListeners);
-			}
-		}
-
-		// Wire extension-contributed automations into the shared registry so they
-		// join the schedule/event dispatch (read-only — handler is an in-memory
-		// closure). Permission-gated inside getAllAutomations().
-		if ($this->container->has(AutomationRegistry::class)) {
-			$extensionAutomations = $this->getAllAutomations();
-			if ($extensionAutomations !== []) {
-				/** @var AutomationRegistry $automationRegistry */
-				$automationRegistry = $this->container->get(AutomationRegistry::class);
-				foreach ($extensionAutomations as $key => $definition) {
-					$automationRegistry->register($key, $definition);
-				}
-			}
-		}
-
-		// Wire page-middleware registrations from extensions into the registry.
-		if ($this->container->has(PageMiddlewareRegistry::class)) {
-			/** @var PageMiddlewareRegistry $pageMiddlewareRegistry */
-			$pageMiddlewareRegistry = $this->container->get(PageMiddlewareRegistry::class);
-			foreach ($this->contexts as $id => $context) {
-				if (!$this->isCapabilityPermitted($id, 'page-middleware')) {
-					continue;
-				}
-				foreach ($context->getRegisteredPageMiddleware() as $name => $serviceId) {
-					try {
-						$pageMiddlewareRegistry->register($name, $serviceId);
-					} catch (\InvalidArgumentException $e) {
-						$this->logger->warning("Extension '{$id}' page-middleware registration failed: " . $e->getMessage());
-					}
-				}
-			}
-		}
-
-		// Wire form-action registrations from extensions into the registry.
-		if ($this->container->has(FormActionRegistry::class)) {
-			/** @var FormActionRegistry $formActionRegistry */
-			$formActionRegistry = $this->container->get(FormActionRegistry::class);
-			foreach ($this->contexts as $id => $context) {
-				if (!$this->isCapabilityPermitted($id, 'form-actions')) {
-					continue;
-				}
-				foreach ($context->getRegisteredFormActions() as $formAction) {
-					$formActionRegistry->register($formAction);
-				}
-			}
-		}
-
-		// Wire MCP tools and resources from extensions into their respective
-		// registries (strict-deny on collisions, both core-vs-extension and
-		// cross-extension). Runs before Twig wiring so registries are ready
-		// by the time the first /mcp request lands — boot is the latest safe
-		// moment since extensions populate their contexts during register().
-		if ($this->container->has(ToolRegistry::class)) {
-			/** @var ToolRegistry $toolRegistry */
-			$toolRegistry  = $this->container->get(ToolRegistry::class);
-			$mcpRegistrar  = new McpExtensionRegistrar($this->logger);
-			$mcpRegistrar->register($toolRegistry, $this->getAllMcpTools());
-
-			// Only request the ResourceRegistry singleton when extensions have
-			// resources to add. Resolving the registry eagerly would trigger
-			// its CollectionResourceRegistrar pass over every collection on
-			// disk, which (a) is wasted work when no extension contributes
-			// resources, and (b) snapshots the collection list at boot time —
-			// any collection created later in the same process (e.g. in a
-			// test's beforeEach) wouldn't appear in the registry.
-			$extensionResources = $this->getAllMcpResources();
-			$extensionTemplates = $this->getAllMcpResourceTemplates();
-			if (
-				($extensionResources !== [] || $extensionTemplates !== [])
-				&& $this->container->has(ResourceRegistry::class)
-			) {
-				/** @var ResourceRegistry $resourceRegistry */
-				$resourceRegistry = $this->container->get(ResourceRegistry::class);
-				$mcpRegistrar->registerResources($resourceRegistry, $extensionResources);
-				$mcpRegistrar->registerResourceTemplates($resourceRegistry, $extensionTemplates);
-			}
-		}
-
-		// Wire extension search providers into the SearchProviderRegistry.
-		// Strict-deny on collisions (matches MCP tool registrar policy). The
-		// registry's register() method already throws LogicException on
-		// duplicate ids — wrap each call so one bad extension can't break the
-		// rest of the drain.
-		if ($this->container->has(SearchProviderRegistry::class)) {
-			/** @var SearchProviderRegistry $searchRegistry */
-			$searchRegistry = $this->container->get(SearchProviderRegistry::class);
-			foreach ($this->getAllMcpSearchProviders() as $extensionId => $providers) {
-				foreach ($providers as $provider) {
-					try {
-						$searchRegistry->register($provider);
-					} catch (\LogicException $e) {
-						$this->logger->warning('Extension search provider registration collision; skipped', [
-							'extension'   => $extensionId,
-							'provider_id' => $provider->id(),
-							'message'     => $e->getMessage(),
-						]);
-					}
-				}
-			}
-		}
-
-		// Wire Twig items from extensions into the TwigEngine (with collision protection)
-		if ($this->container->has(TwigEngine::class)) {
-			/** @var TwigEngine $twigEngine */
-			$twigEngine = $this->container->get(TwigEngine::class);
-
-			$twigRegistrar = new TwigExtensionRegistrar($this->logger);
-			$twigRegistrar->filterAndRegister(
-				$twigEngine,
-				$this->container->get(TotalCMSTwigExtension::class),
-				$this->getAllTwigFunctions(),
-				$this->getAllTwigFilters(),
-				$this->getAllTwigGlobals(),
-			);
-
-			// Register extension template directories as Twig namespaces
-			foreach ($this->contexts as $id => $context) {
-				$templatesDir = $context->extensionPath() . '/templates';
-				if (is_dir($templatesDir)) {
-					$manifest  = $this->discoveredManifests[$id] ?? null;
-					$namespace = $manifest !== null
-						? $manifest->vendor() . '-' . $manifest->shortName()
-						: str_replace('/', '-', $id);
-					$twigEngine->addExtensionTemplatePath($templatesDir, $namespace);
-				}
-			}
-
-			// Pass extension nav items and widgets to templates as globals
-			$navItems = $this->getAllAdminNavItems();
-			$widgets  = $this->getAllDashboardWidgets();
-
-			$globals = [];
-			if ($navItems !== []) {
-				$globals['extensionNavItems'] = $navItems;
-			}
-			if ($widgets !== []) {
-				$globals['extensionDashWidgets'] = $widgets;
-			}
-
-			// Wire admin + frontend assets through the CMS adapter for the
-			// new cms.adminAssetsHead/Body() and cms.assetsHead/Body() helpers.
-			if ($this->container->has(TotalCMSTwigAdapter::class)) {
-				/** @var TotalCMSTwigAdapter $cmsAdapter */
-				$cmsAdapter = $this->container->get(TotalCMSTwigAdapter::class);
-
-				// Core T3 assets first so they render before extension assets.
-				(new CoreAdminAssetRegistrar())->register($cmsAdapter);
-				(new CoreFrontendAssetRegistrar())->register($cmsAdapter);
-
-				$adminAssets = $this->getAllAdminAssets();
-				if ($adminAssets !== []) {
-					$cmsAdapter->addAdminAssets($adminAssets);
-				}
-
-				$frontendAssets = $this->getAllFrontendAssets();
-				if ($frontendAssets !== []) {
-					$cmsAdapter->addFrontendAssets($frontendAssets);
-				}
-			}
-
-			if ($globals !== []) {
-				$twigEngine->registerExtensionItems([], [], $globals);
-			}
+		foreach (self::BOOT_STEPS as $stepClass) {
+			(new $stepClass($this->container, $this->logger))->wire($this);
 		}
 
 		$this->booted = true;
@@ -957,10 +635,7 @@ class ExtensionManager
 	public function getAllTwigFunctions(): array
 	{
 		$functions = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'twig:functions')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('twig:functions') as $id => $context) {
 			foreach ($context->getRegisteredTwigFunctions() as $fn) {
 				$functions[] = $this->guardTwigFunction($id, $fn);
 			}
@@ -980,10 +655,7 @@ class ExtensionManager
 	public function getAllMcpTools(): array
 	{
 		$byExtension = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'mcp:tools')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('mcp:tools') as $id => $context) {
 			$tools = $context->getRegisteredMcpTools();
 			if ($tools !== []) {
 				$byExtension[$id] = $tools;
@@ -1003,10 +675,7 @@ class ExtensionManager
 	public function getAllMcpResources(): array
 	{
 		$byExtension = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'mcp:resources')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('mcp:resources') as $id => $context) {
 			$resources = $context->getRegisteredMcpResources();
 			if ($resources !== []) {
 				$byExtension[$id] = $resources;
@@ -1026,10 +695,7 @@ class ExtensionManager
 	public function getAllMcpResourceTemplates(): array
 	{
 		$byExtension = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'mcp:resources')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('mcp:resources') as $id => $context) {
 			$templates = $context->getRegisteredMcpResourceTemplates();
 			if ($templates !== []) {
 				$byExtension[$id] = $templates;
@@ -1050,10 +716,7 @@ class ExtensionManager
 	public function getAllMcpSearchProviders(): array
 	{
 		$byExtension = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'mcp:search')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('mcp:search') as $id => $context) {
 			$providers = $context->getRegisteredSearchProviders();
 			if ($providers !== []) {
 				$byExtension[$id] = $providers;
@@ -1073,10 +736,7 @@ class ExtensionManager
 	public function getAllMcpPrompts(): array
 	{
 		$byExtension = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'mcp:prompts')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('mcp:prompts') as $id => $context) {
 			$prompts = $context->getRegisteredMcpPrompts();
 			if ($prompts !== []) {
 				$byExtension[$id] = $prompts;
@@ -1090,10 +750,7 @@ class ExtensionManager
 	public function getAllTwigFilters(): array
 	{
 		$filters = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'twig:filters')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('twig:filters') as $id => $context) {
 			foreach ($context->getRegisteredTwigFilters() as $filter) {
 				$filters[] = $this->guardTwigFilter($id, $filter);
 			}
@@ -1202,10 +859,7 @@ class ExtensionManager
 	public function getAllTwigGlobals(): array
 	{
 		$globals = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'twig:functions')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('twig:functions') as $id => $context) {
 			$globals = array_merge($globals, $context->getRegisteredTwigGlobals());
 		}
 
@@ -1216,10 +870,7 @@ class ExtensionManager
 	public function getAllCommands(): array
 	{
 		$commands = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'cli:commands')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('cli:commands') as $id => $context) {
 			$commands = array_merge($commands, $context->getRegisteredCommands());
 		}
 
@@ -1230,10 +881,7 @@ class ExtensionManager
 	public function getAllAdminNavItems(): array
 	{
 		$items = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'admin:nav')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('admin:nav') as $id => $context) {
 			foreach ($context->getRegisteredAdminNavItems() as $item) {
 				// Stamp the owning extension so templates can apply the
 				// access-group extension grant — never author-supplied.
@@ -1250,10 +898,7 @@ class ExtensionManager
 	public function getAllDashboardWidgets(): array
 	{
 		$widgets = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'admin:widgets')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('admin:widgets') as $id => $context) {
 			foreach ($context->getRegisteredDashboardWidgets() as $widget) {
 				// Stamp the owning extension so templates can apply the
 				// access-group extension grant — never author-supplied.
@@ -1295,14 +940,100 @@ class ExtensionManager
 		return $result;
 	}
 
+	/**
+	 * Extension schema directories to register on the SchemaRepository:
+	 * extension id => `<extensionPath>/schemas`, for permitted `schemas`
+	 * extensions whose directory exists.
+	 *
+	 * @return array<string,string>
+	 */
+	public function getAllSchemaDirs(): array
+	{
+		$dirs = [];
+		foreach ($this->permittedContexts('schemas') as $id => $context) {
+			$schemasDir = $context->extensionPath() . '/schemas';
+			if (is_dir($schemasDir)) {
+				$dirs[$id] = $schemasDir;
+			}
+		}
+
+		return $dirs;
+	}
+
+	/**
+	 * Twig template namespaces: `vendor-name` => `<extensionPath>/templates`
+	 * for every loaded extension whose directory exists. Not permission
+	 * gated (it never was: a template namespace exposes nothing by itself).
+	 *
+	 * The map is keyed by namespace, not by extension id, so two extensions
+	 * whose ids normalize to the same `vendor-name` string collide and the
+	 * later one (iteration order of `$this->contexts`) silently wins — the
+	 * old inline loop this replaced had the same collision, since it also
+	 * appended both paths to one shared namespace key.
+	 *
+	 * @return array<string,string>
+	 */
+	public function getAllTemplatePaths(): array
+	{
+		$paths = [];
+		foreach ($this->contexts as $id => $context) {
+			$templatesDir = $context->extensionPath() . '/templates';
+			if (!is_dir($templatesDir)) {
+				continue;
+			}
+			$manifest  = $this->discoveredManifests[$id] ?? null;
+			$namespace = $manifest !== null
+				? $manifest->vendor() . '-' . $manifest->shortName()
+				: str_replace('/', '-', $id);
+			$paths[$namespace] = $templatesDir;
+		}
+
+		return $paths;
+	}
+
+	/**
+	 * Page middleware registrations, gated by `page-middleware`:
+	 * extension id => (name => service id).
+	 *
+	 * @return array<string,array<string,string>>
+	 */
+	public function getAllPageMiddleware(): array
+	{
+		$all = [];
+		foreach ($this->permittedContexts('page-middleware') as $id => $context) {
+			$registered = $context->getRegisteredPageMiddleware();
+			if ($registered !== []) {
+				$all[$id] = $registered;
+			}
+		}
+
+		return $all;
+	}
+
+	/**
+	 * Form-action registrations, gated by `form-actions`:
+	 * extension id => list of FormAction.
+	 *
+	 * @return array<string,list<FormAction>>
+	 */
+	public function getAllFormActions(): array
+	{
+		$all = [];
+		foreach ($this->permittedContexts('form-actions') as $id => $context) {
+			$actions = $context->getRegisteredFormActions();
+			if ($actions !== []) {
+				$all[$id] = array_values($actions);
+			}
+		}
+
+		return $all;
+	}
+
 	/** @return array<string,class-string> */
 	public function getAllFieldTypes(): array
 	{
 		$types = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'fields')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('fields') as $id => $context) {
 			$types = array_merge($types, $context->getRegisteredFieldTypes());
 		}
 
@@ -1313,10 +1044,7 @@ class ExtensionManager
 	public function getAllFieldDefaultTypes(): array
 	{
 		$types = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'fields')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('fields') as $id => $context) {
 			$types = array_merge($types, $context->getRegisteredFieldDefaultTypes());
 		}
 
@@ -1329,7 +1057,7 @@ class ExtensionManager
 	 *
 	 * @return list<FrontendAsset>
 	 */
-	private function getAllAdminAssets(): array
+	public function getAllAdminAssets(): array
 	{
 		return $this->collectAssetRecords('admin:assets', fn (ExtensionContext $context): array => $context->getRegisteredAdminAssets());
 	}
@@ -1340,7 +1068,7 @@ class ExtensionManager
 	 *
 	 * @return list<FrontendAsset>
 	 */
-	private function getAllFrontendAssets(): array
+	public function getAllFrontendAssets(): array
 	{
 		return $this->collectAssetRecords('frontend:assets', fn (ExtensionContext $context): array => $context->getRegisteredFrontendAssets());
 	}
@@ -1409,10 +1137,7 @@ class ExtensionManager
 	public function getAllEventListeners(): array
 	{
 		$listeners = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'events:listen')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('events:listen') as $id => $context) {
 			foreach ($context->getRegisteredEventListeners() as $event => $eventListeners) {
 				foreach ($eventListeners as $listener) {
 					[$callable, $priority] = $listener;
@@ -1453,10 +1178,7 @@ class ExtensionManager
 	public function getAllAutomations(): array
 	{
 		$automations = [];
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'automations')) {
-				continue;
-			}
+		foreach ($this->permittedContexts('automations') as $id => $context) {
 			foreach ($context->getRegisteredAutomations() as $automation) {
 				$automations["{$id}:{$automation->id}"] = $automation;
 			}
@@ -1646,6 +1368,22 @@ class ExtensionManager
 	}
 
 	/**
+	 * The contexts of loaded extensions that are permitted `$capability`,
+	 * keyed by extension id. Every getAll*() accessor iterates this instead
+	 * of repeating the permission check.
+	 *
+	 * @return \Generator<string,ExtensionContext>
+	 */
+	private function permittedContexts(string $capability): \Generator
+	{
+		foreach ($this->contexts as $id => $context) {
+			if ($this->isCapabilityPermitted($id, $capability)) {
+				yield $id => $context;
+			}
+		}
+	}
+
+	/**
 	 * Detect capabilities by doing a trial register of the extension.
 	 *
 	 * Used during enable() to discover what the extension actually registers
@@ -1712,33 +1450,6 @@ class ExtensionManager
 			}
 		} catch (\Throwable) {
 			// Don't let event dispatch failures affect extension management
-		}
-	}
-
-	private function registerExtensionSchemas(): void
-	{
-		// Extension schemas require Pro edition or higher
-		if ($this->container->has(EditionFeatureService::class)) {
-			/** @var EditionFeatureService $editionService */
-			$editionService = $this->container->get(EditionFeatureService::class);
-			if ($editionService->getEdition()->level() < Edition::PRO->level()) {
-				return;
-			}
-		}
-
-		/** @var SchemaRepository $schemaRepo */
-		$schemaRepo = $this->container->get(SchemaRepository::class);
-
-		foreach ($this->contexts as $id => $context) {
-			if (!$this->isCapabilityPermitted($id, 'schemas')) {
-				continue;
-			}
-
-			$schemasDir = $context->extensionPath() . '/schemas';
-			if (is_dir($schemasDir)) {
-				$schemaRepo->registerExtensionSchemaDir($schemasDir);
-				$this->logger->debug("Registered extension schemas from '{$id}'");
-			}
 		}
 	}
 
