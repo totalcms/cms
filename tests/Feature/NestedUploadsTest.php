@@ -41,9 +41,9 @@ beforeEach(function (): void {
 	$schemas->saveSchema(['id' => 'widget-card', 'type' => 'object', 'properties' => [
 		'id'    => ['$ref' => 'https://www.totalcms.co/schemas/properties/slug.json', 'field' => 'id'],
 		'label' => ['type' => 'string', 'field' => 'text'],
-		'photo' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json', 'field' => 'image'],
+		'photo' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json', 'field' => 'image', 'settings' => ['extractPalette' => false]],
 		'doc'   => ['$ref' => 'https://www.totalcms.co/schemas/properties/file.json', 'field' => 'file'],
-		'promo' => ['type' => 'video', 'field' => 'video'],
+		'promo' => ['type' => 'video', 'field' => 'video', 'settings' => ['poster' => ['extractPalette' => false]]],
 	]]);
 	$ref = 'https://www.totalcms.co/schemas/custom/widget-card.json';
 	$schemas->saveSchema(['id' => 'widgets', 'type' => 'object', 'properties' => [
