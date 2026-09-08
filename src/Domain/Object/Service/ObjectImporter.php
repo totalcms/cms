@@ -308,10 +308,10 @@ class ObjectImporter
 		$dottedRefs = [
 			SchemaData::PROPERTY_TYPE_TO_REF['card'],
 			SchemaData::PROPERTY_TYPE_TO_REF['localizedtext'],
-			// `video` is not a card, but it does export one column per stored
-			// key (VideoData::KEYS), so the same unflattening applies.
-			SchemaData::PROPERTY_TYPE_TO_REF['video'],
 		];
+		// `video` is deliberately absent: it exports as a single column holding
+		// the URL, and VideoData accepts a bare URL string, so the plain column
+		// round-trips with no unflattening (the save pipeline derives the rest).
 
 		foreach ($schema->properties as $name => $property) {
 			if (!is_array($property) || !in_array($property['$ref'] ?? null, $dottedRefs, true)) {

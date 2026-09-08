@@ -7,6 +7,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Data\CardData;
+use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Data\VideoData;
@@ -165,7 +166,8 @@ class FileSaver
 	/**
 	 * Fetch the existing PropertyData for the field that's actually being saved —
 	 * either the top-level property or, when $subpath is set, the child stored at
-	 * `obj[$property][$subpath]` inside a CardData or VideoData parent.
+	 * `obj[$property][$subpath]` inside a CardData, DeckData or VideoData parent
+	 * (`$subpath` may be several segments deep).
 	 */
 	protected function fetchExistingChildProperty(
 		string $collection,
@@ -194,11 +196,14 @@ class FileSaver
 			return $this->buildPropertyDataFromArray($poster);
 		}
 
-		// Card-nested case: parent is a CardData, child lives in `$parent->card[$subpath]`.
-		// (Phase 2 only handles single-segment subpath = card child key. Deeper nesting
-		// for deck items lands in Phase 3.)
-		if ($parent instanceof CardData) {
-			$childRaw = $parent->card[$subpath] ?? null;
+		// Card/deck-nested case: descend the slash path through the parent's
+		// plain-array children — `image` under a card, `item/image` under a deck,
+		// and `promo/poster` (or `item/promo/poster`) when the child is a video.
+		if ($parent instanceof CardData || $parent instanceof DeckData) {
+			$childRaw = $parent instanceof CardData ? $parent->card : $parent->deck;
+			foreach (explode('/', $subpath) as $segment) {
+				$childRaw = is_array($childRaw) ? ($childRaw[$segment] ?? null) : null;
+			}
 			if (!is_array($childRaw)) {
 				return $this->createPropertyObject($collection, $property);
 			}

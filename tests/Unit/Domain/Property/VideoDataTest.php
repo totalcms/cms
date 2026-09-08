@@ -79,10 +79,21 @@ final class VideoDataTest extends TestCase
 		$this->assertSame('Hi', $video->title());
 	}
 
-	public function testNonJsonStringAndListsDecodeToAnEmptyVideo(): void
+	public function testABareStringIsTheUrl(): void
 	{
-		$this->assertSame('', (new VideoData('Array'))->url());
-		$this->assertSame('', (new VideoData(['a', 'b']))->url());
+		// CSV import, a card child written as `"promo": "https://…"`, an API
+		// client sending just the link — the save pipeline derives the rest.
+		$video = new VideoData('  https://youtu.be/abc123XYZ_-  ');
+
+		$this->assertSame('https://youtu.be/abc123XYZ_-', $video->url());
+		$this->assertSame('', $video->provider());
+	}
+
+	public function testMalformedJsonAndListsDecodeToAnEmptyVideo(): void
+	{
+		$this->assertSame('', (new VideoData('{not json'))->url());
+		$this->assertSame('', (new VideoData(''))->url());
+		$this->assertSame('', (new VideoData(['https://a', 'https://b']))->url());
 	}
 
 	public function testTransformReturnsTheSixKeysAndOmitsAnAbsentPoster(): void

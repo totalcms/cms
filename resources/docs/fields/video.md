@@ -160,10 +160,34 @@ replace and delete actions; deleting the poster drops the box back to the
 vendor thumbnail. The URL row carries a provider badge and the stored title.
 The collection table shows the same thumbnail and title for each object.
 
-**Not yet supported:** a `video` property inside a card or deck. In this
-release the URL and its derived keys work there, but a poster upload nested
-inside a card or deck will not resolve — a later release enables it. Phase 1
-only fully supports `video` as a top-level schema property.
+## Inside a card or deck
+
+A `video` property works inside a card or a deck item exactly as at the top
+level: the URL is resolved on save, the poster uploads through the same media
+box, and the stored shape is the same object one level down. Render it with
+the dotted property path, and the poster helper follows the same path:
+
+```twig
+{{ cms.render.video(post, {property: 'hero.promo'}) }}
+{{ cms.media.videoPoster(post, {w: 800}, {property: 'hero.promo'}) }}
+
+{% for item in post.slides %}
+	{{ cms.render.video(post, {property: 'slides.' ~ item.id ~ '.promo'}) }}
+{% endfor %}
+```
+
+The nested poster lives on disk at `{card}/{video}/poster` (or
+`{deck}/{item}/{video}/poster`) and `tcms repair:files` knows to look there. A
+card inside a card is not supported, as before. The MCP write guard that
+refuses a `poster` in a payload applies to top-level video properties only.
+
+## CSV
+
+A video exports as one column holding just its URL. On import the same column
+is accepted as a bare URL, and the save pipeline derives the provider,
+thumbnail, title and aspect ratio again. The poster is a file and does not
+travel through CSV. The same applies to a video inside a card, whose column is
+`{card}.{video}`.
 
 ## Rendering with `cms.render.video()`
 

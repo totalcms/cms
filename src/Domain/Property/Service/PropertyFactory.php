@@ -71,8 +71,10 @@ readonly class PropertyFactory
 			if (str_starts_with($value, '{') || str_starts_with($value, '[')) {
 				$decoded = json_decode($value, true);
 				$value   = is_array($decoded) ? $decoded : null;
-			} else {
-				// Non-JSON string for an array type (e.g. PHP's "Array" cast) — treat as null
+			} elseif ($type !== 'video') {
+				// Non-JSON string for an array type (e.g. PHP's "Array" cast) — treat as null.
+				// A video is the exception: a bare string is the URL (CSV import, an
+				// API client sending just the link) and VideoData reads it as such.
 				$value = null;
 			}
 		}
@@ -136,7 +138,10 @@ readonly class PropertyFactory
 				$processedDeckData[$itemId] = $processedItemData;
 			}
 
-			return new DeckData($processedDeckData, $settings);
+			$deck = new DeckData($processedDeckData, $settings);
+			[$deck->childTypes, $deck->childSettings] = $this->childTypesAndSettings($deckSchema);
+
+			return $deck;
 		} catch (\Exception) {
 			// If deck processing fails, return original data to avoid breaking the system
 			return new DeckData($value, $settings);
@@ -194,7 +199,10 @@ readonly class PropertyFactory
 				$processed[$fieldName] = $propertyObject->transform();
 			}
 
-			return new CardData($processed, $settings);
+			$card = new CardData($processed, $settings);
+			[$card->childTypes, $card->childSettings] = $this->childTypesAndSettings($cardSchema);
+
+			return $card;
 		} catch (\Exception) {
 			// If card processing fails, return original data to avoid breaking the system
 			return new CardData($value, $settings);
@@ -247,6 +255,29 @@ readonly class PropertyFactory
 	 *
 	 * @throws \InvalidArgumentException If schema contains incompatible properties
 	 */
+	/**
+	 * The resolved field type and settings of every child in a card/deck
+	 * sub-schema, so the built value object can say what its plain-array
+	 * children are (PropertyDataProcessor re-hydrates nested videos from it).
+	 *
+	 * @return array{0:array<string,string>,1:array<string,array<string,mixed>>}
+	 */
+	private function childTypesAndSettings(SchemaData $subSchema): array
+	{
+		$types    = [];
+		$settings = [];
+		foreach ($subSchema->properties as $fieldName => $fieldSchema) {
+			if (!is_array($fieldSchema)) {
+				continue;
+			}
+			$name            = (string)$fieldName;
+			$types[$name]    = PropertyDefinition::fromArray($fieldSchema)->resolveType();
+			$settings[$name] = is_array($fieldSchema['settings'] ?? null) ? $fieldSchema['settings'] : [];
+		}
+
+		return [$types, $settings];
+	}
+
 	private function validateDeckSchema(SchemaData $deckSchema, string $schemaId): void
 	{
 		// Use DeckCompatibilityChecker to validate the schema

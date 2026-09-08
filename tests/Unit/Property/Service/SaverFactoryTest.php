@@ -287,17 +287,15 @@ class SaverFactoryTest extends TestCase
 		$schema->properties = ['mycard' => ['field' => 'card', '$ref' => 'https://www.totalcms.co/schemas/properties/card.json']];
 		$this->mockSchemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 
+		// resolveNested() already returns the child's resolved settings, so the
+		// walker reads them off that result rather than making a second lookup.
 		$this->mockMetaResolver
 			->expects($this->once())
 			->method('resolveNested')
 			->with('test-collection', 'mycard', 'image')
-			->willReturn(['field' => 'image', 'type' => 'image']);
+			->willReturn(['field' => 'image', 'type' => 'image', 'settings' => ['quality' => 70]]);
 
-		$this->mockMetaResolver
-			->expects($this->once())
-			->method('resolveNestedSettings')
-			->with('test-collection', 'mycard', 'image')
-			->willReturn([]);
+		$this->mockMetaResolver->expects($this->never())->method('resolveNestedSettings');
 
 		$saver = $this->saverFactory->generateSaverService(
 			'test-collection',
@@ -308,12 +306,13 @@ class SaverFactoryTest extends TestCase
 
 		$this->assertInstanceOf(\TotalCMS\Domain\Property\Service\ImageSaver::class, $saver);
 		$this->assertEquals('image', $saver->type);
+		$this->assertSame(['quality' => 70], $this->settingsOf($saver));
 	}
 
 	public function testGenerateSaverServiceWithMultiSegmentSubpathUsesLastSegment(): void
 	{
-		// Phase 3 deck-style subpath: `item-3/image`. Factory should resolve the
-		// child type from the LAST segment ("image") — that's the actual field key.
+		// Deck-style subpath: `item-3/image`. The first segment is the item id
+		// (skipped); the child type comes from the schemaref child "image".
 		$schema             = $this->createMock(SchemaData::class);
 		$schema->properties = ['mydeck' => ['field' => 'deck', '$ref' => 'https://www.totalcms.co/schemas/properties/deck.json']];
 		$this->mockSchemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
@@ -324,10 +323,7 @@ class SaverFactoryTest extends TestCase
 			->with('test-collection', 'mydeck', 'image')
 			->willReturn(['field' => 'file', 'type' => 'file']);
 
-		$this->mockMetaResolver
-			->expects($this->once())
-			->method('resolveNestedSettings')
-			->willReturn([]);
+		$this->mockMetaResolver->expects($this->never())->method('resolveNestedSettings');
 
 		$saver = $this->saverFactory->generateSaverService(
 			'test-collection',
@@ -338,6 +334,46 @@ class SaverFactoryTest extends TestCase
 
 		$this->assertInstanceOf(FileSaver::class, $saver);
 		$this->assertEquals('file', $saver->type);
+	}
+
+	public function testGenerateSaverServiceWalksThroughAVideoInsideACardToItsPoster(): void
+	{
+		// `mycard/promo/poster`: the card's schemaref says `promo` is a video;
+		// a video's only child is `poster`, an image configured by the video's
+		// own `settings.poster`. No second schemaref hop is consulted.
+		$schema             = $this->createMock(SchemaData::class);
+		$schema->properties = ['mycard' => ['field' => 'card', '$ref' => 'https://www.totalcms.co/schemas/properties/card.json']];
+		$this->mockSchemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+
+		$this->mockMetaResolver
+			->expects($this->once())
+			->method('resolveNested')
+			->with('test-collection', 'mycard', 'promo')
+			->willReturn(['field' => 'video', 'type' => 'video', 'settings' => ['poster' => ['quality' => 55]]]);
+
+		$saver = $this->saverFactory->generateSaverService('test-collection', 'mycard', '', 'promo/poster');
+
+		$this->assertInstanceOf(\TotalCMS\Domain\Property\Service\ImageSaver::class, $saver);
+		$this->assertSame(['quality' => 55], $this->settingsOf($saver));
+	}
+
+	public function testGenerateSaverServiceRejectsANonPosterChildOfANestedVideo(): void
+	{
+		$schema             = $this->createMock(SchemaData::class);
+		$schema->properties = ['mycard' => ['field' => 'card', '$ref' => 'https://www.totalcms.co/schemas/properties/card.json']];
+		$this->mockSchemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+		$this->mockMetaResolver->method('resolveNested')->willReturn(['field' => 'video', 'type' => 'video']);
+
+		$this->expectException(\UnexpectedValueException::class);
+		$this->saverFactory->generateSaverService('test-collection', 'mycard', '', 'promo/thumbnail');
+	}
+
+	/** FileSaver keeps its settings protected; read them back for assertions. */
+	private function settingsOf(FileSaver $saver): array
+	{
+		$property = new \ReflectionProperty(FileSaver::class, 'settings');
+
+		return (array)$property->getValue($saver);
 	}
 
 	public function testGenerateSaverServiceWithSubpathOnDepotKeepsDepotSaver(): void

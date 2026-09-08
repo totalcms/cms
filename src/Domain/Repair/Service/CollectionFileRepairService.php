@@ -28,7 +28,8 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * Finds file/image/gallery/depot properties that are blank in an object's JSON
  * but still have files on disk, and rebuilds their metadata from those files
  * (the recovery path for a PUT that omitted the field). Handles top-level
- * properties and file/image fields nested one level inside a card or deck.
+ * properties, file/image fields nested one level inside a card or deck, and
+ * the poster of a video nested inside a card or deck.
  */
 final readonly class CollectionFileRepairService
 {
@@ -171,7 +172,7 @@ final readonly class CollectionFileRepairService
 
 		if ($spec['kind'] === 'card') {
 			foreach ($children as $childKey => $type) {
-				$existing = $parent instanceof CardData ? $parent->get($childKey) : null;
+				$existing = $parent instanceof CardData ? self::descend($parent->card, $childKey) : null;
 				$this->repairNestedChild($report, $collection, $id, $property, $childKey, $type, $existing, $apply);
 			}
 
@@ -182,10 +183,26 @@ final readonly class CollectionFileRepairService
 			$item      = $parent instanceof DeckData ? $parent->getItem($itemId) : null;
 			$itemHasId = is_array($item) && ($item['id'] ?? '') !== '';
 			foreach ($children as $childKey => $type) {
-				$existing = is_array($item) ? ($item[$childKey] ?? null) : null;
+				$existing = is_array($item) ? self::descend($item, $childKey) : null;
 				$this->repairNestedChild($report, $collection, $id, $property, $itemId . '/' . $childKey, $type, $existing, $apply, $itemId, $itemHasId);
 			}
 		}
+	}
+
+	/**
+	 * Follow a slash path (`image`, or `promo/poster` for a video's poster)
+	 * through a plain nested array.
+	 *
+	 * @param array<string,mixed> $raw
+	 */
+	private static function descend(array $raw, string $path): mixed
+	{
+		$cursor = $raw;
+		foreach (explode('/', $path) as $segment) {
+			$cursor = is_array($cursor) ? ($cursor[$segment] ?? null) : null;
+		}
+
+		return $cursor;
 	}
 
 	/**
@@ -226,8 +243,13 @@ final readonly class CollectionFileRepairService
 
 		if ($apply) {
 			try {
-				[$path, $data] = $this->nestedPatchTarget($subpath, $rebuilt, $itemId, $itemHasId);
+				[$path, $data, $backfillItemId] = $this->nestedPatchTarget($subpath, $rebuilt, $itemId, $itemHasId);
 				$this->objectPatcher->patchNestedProperty($collection, $id, $property, $path, $data, true);
+				if ($backfillItemId !== null) {
+					// A deep child (a video's poster) was patched at its own leaf;
+					// the item's missing `id` still has to be backfilled separately.
+					$this->objectPatcher->patchNestedProperty($collection, $id, $property, $backfillItemId, ['id' => $backfillItemId], true);
+				}
 				$candidate->applied = true;
 			} catch (\Throwable $e) {
 				$candidate->applied = false;
@@ -241,25 +263,38 @@ final readonly class CollectionFileRepairService
 	/**
 	 * Resolve where a rebuilt nested child is written and with what payload.
 	 *
-	 * Card child → patch the child leaf with its own data. Deck child → patch the
-	 * item with `{childKey: data}` plus the backfilled `id` when the item lacked
-	 * one (so the deck schema's required `id` is satisfied for disk-only items).
+	 * Card child → patch the child leaf with its own data (`photo`, or the
+	 * video's `promo/poster`; patchNestedProperty() walks the segments and
+	 * merges only the leaf, so the video's own keys survive).
 	 *
-	 * @return array{0:string,1:array<string,mixed>}
+	 * Deck child one level down (`item/photo`) → patch the item with
+	 * `{childKey: data}` plus the backfilled `id` when the item lacked one (so
+	 * the deck schema's required `id` is satisfied for disk-only items).
+	 *
+	 * Deck child deeper down (`item/promo/poster`) → patch its own leaf, the
+	 * same as a card child; a shallow item-level merge would replace the whole
+	 * `promo` and lose the video's url/provider. The item's `id` backfill, if
+	 * needed, is returned as the third element for the caller to apply.
+	 *
+	 * @return array{0:string,1:array<string,mixed>,2:?string}
 	 */
 	private function nestedPatchTarget(string $subpath, PropertyData $rebuilt, ?string $itemId, bool $itemHasId): array
 	{
 		if ($itemId === null) {
-			return [$subpath, $rebuilt->transform()];
+			return [$subpath, $rebuilt->transform(), null];
 		}
 
-		$childKey = substr($subpath, strrpos($subpath, '/') + 1);
-		$data     = [$childKey => $rebuilt->transform()];
+		$childPath = substr($subpath, strlen($itemId) + 1);
+		if (str_contains($childPath, '/')) {
+			return [$subpath, $rebuilt->transform(), $itemHasId ? null : $itemId];
+		}
+
+		$data = [$childPath => $rebuilt->transform()];
 		if (!$itemHasId) {
 			$data['id'] = $itemId;
 		}
 
-		return [$itemId, $data];
+		return [$itemId, $data, null];
 	}
 
 	/**
@@ -330,6 +365,16 @@ final readonly class CollectionFileRepairService
 				continue;
 			}
 			$childField = (string)($childDef['field'] ?? '');
+			// A video child is not a file itself, but its poster is: address it
+			// one segment deeper (`promo/poster`), the same path the upload uses.
+			if ($childField === 'video') {
+				foreach (self::VIDEO_CHILDREN as $grandKey => $grandType) {
+					if ($filters->allowsType($grandType)) {
+						$children[$childKey . '/' . $grandKey] = $grandType;
+					}
+				}
+				continue;
+			}
 			if (!in_array($childField, self::NESTED_FILE_FIELDS, true) || !$filters->allowsType($childField)) {
 				continue;
 			}

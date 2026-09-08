@@ -11,9 +11,11 @@
 	}
 
 	img, svg {
-		display   : block;
-		max-width : 3rem;
-		height    : auto;
+		display    : block;
+		max-width  : 5rem;
+		max-height : 3rem;
+		height     : auto;
+		width      : auto;
 	}
 	img {
 		border-radius : var(--totalform-radius);

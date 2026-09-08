@@ -244,13 +244,13 @@ readonly class ObjectExporter
 	}
 
 	/**
-	 * Build CSV column headers for a schema. Card, video and localized-text
+	 * Build CSV column headers for a schema. Card and localized-text
 	 * properties expand into `{name}.{subKey}` columns; everything else uses the
 	 * property name as a single column.
 	 *
 	 *   - Card properties pull sub-keys from the linked schemaref's fields.
-	 *   - Video properties use VideoData's fixed key list — the shape is not
-	 *     schema-driven.
+	 *   - Video properties are a single column holding just the URL (see
+	 *     buildCsvRow()); everything else about a video is derived on import.
 	 *   - Localized properties pull sub-keys from the site's configured
 	 *     `i18n.available` locales (`localizedtext`, `localizedtextarea`, and
 	 *     `localizedstyledtext` all share the same `$ref`).
@@ -274,16 +274,6 @@ readonly class ObjectExporter
 			}
 
 			$ref = $property['$ref'] ?? null;
-
-			// `video` is not a card — its key set is fixed by VideoData, so the
-			// columns come from that list rather than from a sub-schema lookup.
-			if ($ref === SchemaData::PROPERTY_TYPE_TO_REF['video']) {
-				$cardSubProps[$nameStr] = VideoData::KEYS;
-				foreach (VideoData::KEYS as $subProp) {
-					$headers[] = $nameStr . '.' . $subProp;
-				}
-				continue;
-			}
 
 			if ($ref === SchemaData::PROPERTY_TYPE_TO_REF['card']) {
 				$subProps = $this->fetchCardSubProperties($property);
@@ -385,8 +375,9 @@ readonly class ObjectExporter
 
 	/**
 	 * Build a single CSV row, pulling sub-values directly from CardData /
-	 * VideoData / LocalizedtextData for dot-notation columns and falling back to
-	 * the standard CSV-stringified representation for everything else.
+	 * LocalizedtextData for dot-notation columns, the bare URL for a video, and
+	 * falling back to the standard CSV-stringified representation for
+	 * everything else.
 	 *
 	 * @param array<int,string>               $headers
 	 * @param array<string,array<int,string>> $cardSubProps
@@ -411,6 +402,15 @@ readonly class ObjectExporter
 					continue;
 				}
 			}
+			// A video travels as its URL alone — the provider, thumbnail, title
+			// and ratio are re-derived on import, and the poster is a file that
+			// CSV cannot carry. (Its __toString() is title + url for the search
+			// index, which is not what a spreadsheet wants back.)
+			$property = $object->properties->get($header);
+			if ($property instanceof VideoData) {
+				$row[] = $property->url();
+				continue;
+			}
 			$row[] = $forCsv[$header] ?? '';
 		}
 
@@ -421,10 +421,7 @@ readonly class ObjectExporter
 	{
 		$property = $object->properties->get($cardName);
 
-		if ($property instanceof VideoData) {
-			// Not a card — the sub-values come off the typed value object.
-			$raw = $property->transform()[$subProp] ?? null;
-		} elseif ($property instanceof CardData) {
+		if ($property instanceof CardData) {
 			$raw = $property->get($subProp);
 		} else {
 			return '';
@@ -432,6 +429,12 @@ readonly class ObjectExporter
 
 		if ($raw === null) {
 			return '';
+		}
+
+		// A video inside a card travels as its URL alone, like a top-level one
+		// (buildCsvRow()); the card knows the child's type from its sub-schema.
+		if (($property->childTypes[$subProp] ?? '') === 'video' && is_array($raw)) {
+			return (string)($raw['url'] ?? '');
 		}
 
 		// Booleans render the way BooleanData does, not the way PHP casts them.

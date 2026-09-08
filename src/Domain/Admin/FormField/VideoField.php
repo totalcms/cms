@@ -162,13 +162,14 @@ class VideoField extends FormField
 			'label'        => $posterLabel,
 			'settings'     => is_array($this->settings['poster'] ?? null) ? $this->settings['poster'] : [],
 			'value'        => $poster,
-			// Single-segment nestedPath: the poster's upload URL and ImageWorks
-			// property path resolve to `{video-property}.poster`, exactly as a
-			// card child image does — see CardField::buildSubFields(). No
-			// `card_context` marker: `subField()` already sets `subfield: true`,
+			// The poster's upload URL and ImageWorks property path resolve to
+			// `{video-property}.poster` — or, when this video itself sits inside a
+			// card or deck item, `{card}.{video}.poster` / `{deck}.{item}.{video}.poster`
+			// — exactly as a card child image does (CardField::buildSubFields()).
+			// No `card_context` marker: `subField()` already sets `subfield: true`,
 			// which is what stops ObjectForm::buildFieldOptions() looking up a
 			// top-level schema property named `poster`.
-			'nestedPath'   => $this->name,
+			'nestedPath'   => $this->nestedPath !== null ? "{$this->nestedPath}.{$this->name}" : $this->name,
 		]);
 		// `.card-fields` is the wrapper card.js's subFields() scans for; video.js
 		// inherits that scan unchanged.

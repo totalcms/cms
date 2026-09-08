@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\DateData;
+use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Data\PropertyData;
@@ -48,7 +50,61 @@ class PropertyDataProcessor implements PropertyDataProcessorInterface
 			return $this->processGalleryData($property);
 		}
 
+		if ($property instanceof CardData) {
+			return $this->processCardData($property);
+		}
+
+		if ($property instanceof DeckData) {
+			return $this->processDeckData($property);
+		}
+
 		return $property;
+	}
+
+	/**
+	 * A card stores its children as plain arrays; the ones whose field type
+	 * needs save-time work (today: `video`, whose provider/thumbnail/title are
+	 * derived from the URL) are re-hydrated, processed, and written back.
+	 * Which children those are comes from the factory (CardData::$childTypes).
+	 */
+	private function processCardData(CardData $card): CardData
+	{
+		foreach ($card->childTypes as $name => $type) {
+			if ($type !== 'video' || !array_key_exists($name, $card->card)) {
+				continue;
+			}
+			$card->card[$name] = $this->processNestedVideo($card->card[$name], $card->childSettings[$name] ?? []);
+		}
+
+		return $card;
+	}
+
+	/** Same as processCardData(), for every item of a deck. */
+	private function processDeckData(DeckData $deck): DeckData
+	{
+		foreach ($deck->childTypes as $name => $type) {
+			if ($type !== 'video') {
+				continue;
+			}
+			foreach ($deck->deck as $itemId => $item) {
+				if (!array_key_exists($name, $item)) {
+					continue;
+				}
+				$deck->deck[$itemId][$name] = $this->processNestedVideo($item[$name], $deck->childSettings[$name] ?? []);
+			}
+		}
+
+		return $deck;
+	}
+
+	/**
+	 * @param array<string,mixed> $settings
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function processNestedVideo(mixed $raw, array $settings): array
+	{
+		return $this->processVideoData(new VideoData($raw, $settings))->transform();
 	}
 
 	/**

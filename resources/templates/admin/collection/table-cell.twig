@@ -35,11 +35,10 @@
 	{{ value.name|default('') }}
 {% elseif col.type == 'video' %}
 	{% if value.poster.size is defined and value.poster.size > 0 %}
-		<img src="{{ cms.media.imagePath(object.id, {w:128, h:128, q:30, fit:'crop-focalpoint'}, {collection: _collection, property: col.name ~ '.poster'}) }}" alt="{{ value.title|default('') }}" width="128" height="128" loading="lazy">
+		<img src="{{ cms.media.imagePath(object.id, {w:128, h:128, q:30}, {collection: _collection, property: col.name ~ '.poster'}) }}" alt="{{ value.title|default('') }}" width="128" height="128" loading="lazy">
 	{% elseif value.thumbnail is defined and value.thumbnail != '' %}
 		<img src="{{ value.thumbnail }}" alt="{{ value.title|default('') }}" width="128" height="128" loading="lazy">
 	{% endif %}
-	{{ value.title|default(value.url) }}
 {% elseif col.type == 'list' %}
 	{{ value|join(', ') }}
 {% elseif col.type == 'svg' %}

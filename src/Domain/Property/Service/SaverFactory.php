@@ -49,16 +49,8 @@ readonly class SaverFactory
 			if (in_array($parentType, ['depot', 'gallery'], true)) {
 				$type     = $parentType;
 				$settings = $this->metaResolver->resolveSettings($collection, $property, $objectId);
-			} elseif ($parentType === 'video') {
-				// `video` is a value object, not a card: its one nested child is
-				// always `poster`, always an image, and its settings always come
-				// from the parent's own `settings.poster` block. No sub-schema is
-				// consulted because the shape isn't configurable.
-				[$type, $settings] = $this->resolveVideoChild($collection, $property, $objectId, $this->resolveChildKey($subpath));
 			} else {
-				$childKey = $this->resolveChildKey($subpath);
-				$type     = $this->resolveNestedChildType($collection, $property, $childKey);
-				$settings = $this->metaResolver->resolveNestedSettings($collection, $property, $childKey);
+				[$type, $settings] = $this->walkNestedPath($collection, $property, $objectId, $parentType, $subpath);
 			}
 		} else {
 			$schema   = $this->schemaFetcher->fetchSchemaForCollection($collection);
@@ -91,40 +83,52 @@ readonly class SaverFactory
 	}
 
 	/**
-	 * Extract the child property key from a subpath. For Phase 2 (cards) the
-	 * subpath is a single segment that IS the child key. For Phase 3 (decks)
-	 * the subpath will look like `{itemId}/{childKey}` — the last segment wins.
-	 */
-	private function resolveChildKey(string $subpath): string
-	{
-		$pos = strrpos($subpath, '/');
-
-		return $pos === false ? $subpath : substr($subpath, $pos + 1);
-	}
-
-	/**
-	 * The `video` field's only nested child: `poster`, an image, configured by
-	 * the parent's `settings.poster`. Any other subpath under a video parent is
-	 * not a thing the field can store.
+	 * Resolve the type and settings of the child a nested upload targets by
+	 * walking `$subpath` from the top-level property down, one segment at a time:
+	 *
+	 *   card  → the next segment is a child in the card's schemaref
+	 *   deck  → the next segment is an item id (skipped), then a schemaref child
+	 *   video → the next segment must be `poster`, always an image, configured by
+	 *           the video's own `settings.poster`; no sub-schema is consulted
+	 *
+	 * So `poster` under a video, `image` under a card, `item/image` under a deck,
+	 * and `promo/poster` under a card (or `item/promo/poster` under a deck)
+	 * holding a video all resolve here. Card-in-card is not walked (a card's
+	 * schemaref child that is itself a card has no second schemaref hop).
 	 *
 	 * @return array{0:string,1:array<string,mixed>}
 	 */
-	private function resolveVideoChild(string $collection, string $property, string $objectId, string $childKey): array
+	private function walkNestedPath(string $collection, string $property, string $objectId, string $parentType, string $subpath): array
 	{
-		if ($childKey !== 'poster') {
-			throw new \UnexpectedValueException('Unknown saver service type for object.');
+		$segments       = explode('/', $subpath);
+		$parentSettings = $this->metaResolver->resolveSettings($collection, $property, $objectId);
+		$type           = $parentType;
+		$settings       = $parentSettings;
+
+		if ($type === 'deck') {
+			array_shift($segments); // the item id
 		}
 
-		$parentSettings = $this->metaResolver->resolveSettings($collection, $property, $objectId);
-		$posterSettings = $parentSettings['poster'] ?? [];
+		foreach ($segments as $segment) {
+			if ($type === 'video') {
+				if ($segment !== 'poster') {
+					throw new \UnexpectedValueException('Unknown saver service type for object.');
+				}
+				$posterSettings = $settings['poster'] ?? [];
+				$type           = 'image';
+				$settings       = is_array($posterSettings) ? $posterSettings : [];
+				continue;
+			}
 
-		return ['image', is_array($posterSettings) ? $posterSettings : []];
-	}
+			if ($type !== 'card' && $type !== 'deck') {
+				throw new \UnexpectedValueException('Unknown saver service type for object.');
+			}
 
-	private function resolveNestedChildType(string $collection, string $parentProperty, string $childKey): string
-	{
-		$childMeta = $this->metaResolver->resolveNested($collection, $parentProperty, $childKey);
+			$childMeta = $this->metaResolver->resolveNested($collection, $property, $segment);
+			$type      = PropertyDefinition::fromArray($childMeta)->resolveType();
+			$settings  = is_array($childMeta['settings'] ?? null) ? $childMeta['settings'] : [];
+		}
 
-		return PropertyDefinition::fromArray($childMeta)->resolveType();
+		return [$type, $settings];
 	}
 }

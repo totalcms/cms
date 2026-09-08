@@ -17,6 +17,20 @@ class CardData extends PropertyData implements \Stringable
 	public array $card;
 
 	/**
+	 * Field type of each child, keyed by child name (`['promo' => 'video']`),
+	 * recorded by PropertyFactory from the card's sub-schema. Children are
+	 * stored as plain arrays, so this is how the save pipeline knows which of
+	 * them to re-hydrate and process (a nested video's provider lookup).
+	 * Empty when the card was built without a schema.
+	 *
+	 * @var array<string,string>
+	 */
+	public array $childTypes = [];
+
+	/** @var array<string,array<string,mixed>> Resolved settings per child, same keys as $childTypes. */
+	public array $childSettings = [];
+
+	/**
 	 * @param array<mixed>        $card
 	 * @param array<string,mixed> $settings
 	 */

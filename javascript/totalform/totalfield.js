@@ -261,6 +261,22 @@ export default class TotalField {
 		// Parent object must have an ID before any upload can be addressed correctly.
 		if (!id) return null;
 
+		// Video ancestry — the poster sub-field (see VideoField::buildMedia())
+		// extends the VIDEO's own context by one segment, so a video at the top
+		// level gives `promo/poster`, a video inside a card `card/promo/poster`,
+		// and a video inside a deck item `deck/item/promo/poster`. Checked before
+		// the deck-item and card rules below so those resolve for the video
+		// itself, not for its poster.
+		const videoEl = this.container.parentElement?.closest('.form-field[data-type="video"], .form-field[data-type="card"], .deck-item, .deck-table-row');
+		if (videoEl?.matches?.('.form-field[data-type="video"]') && videoEl.totalfield) {
+			const ctx = videoEl.totalfield.getUploadContext();
+			if (!ctx) return null;
+			return {
+				...ctx,
+				subpath : ctx.subpath ? `${ctx.subpath}/${this.property}` : this.property,
+			};
+		}
+
 		// Deck item ancestry — wins over card detection because deck items can host cards.
 		if (this.deckItem) {
 			const deckEl    = this.deckItem.parentElement?.closest('.form-field[data-type="deck"]');
@@ -285,9 +301,7 @@ export default class TotalField {
 		}
 
 		// Card ancestry — child's parent .form-field is the card.
-		// A video field's poster sub-field nests the same way a card's does
-		// (see VideoField::buildPosterField()), so it counts as card ancestry too.
-		const cardEl = this.container.parentElement?.closest('.form-field[data-type="card"], .form-field[data-type="video"]');
+		const cardEl = this.container.parentElement?.closest('.form-field[data-type="card"]');
 		if (cardEl?.totalfield?.property) {
 			return {
 				collection,

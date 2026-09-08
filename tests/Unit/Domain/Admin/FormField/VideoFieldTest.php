@@ -141,6 +141,19 @@ it('renders the poster as a real nested image field whose upload path resolves t
     expect($html)->toContain('promo/poster');
 });
 
+it('passes its own dotted nested path down to the poster when the video sits inside a card', function (): void {
+    $field = new VideoField(form: $this->form, name: 'promo', nestedPath: 'hero', value: [
+        'url'    => 'https://youtu.be/abc123XYZ_-',
+        'poster' => ['name' => 'poster.jpg', 'size' => 500],
+    ]);
+
+    $html = $field->build();
+
+    // ImageField builds its preview from `{nestedPath}.{name}` = `hero.promo.poster`,
+    // which is the same three-segment path the upload and ImageWorks routes use.
+    expect($html)->toContain('hero/promo/poster');
+});
+
 it('shows the vendor thumbnail in the media box when there is no uploaded poster', function (): void {
     $field = new VideoField(form: $this->form, name: 'promo', value: [
         'url'       => 'https://youtu.be/abc123XYZ_-',

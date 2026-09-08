@@ -10,6 +10,20 @@ class DeckData extends PropertyData implements \Stringable
 	/** @var array<string|int,array<string,mixed>> */
 	public array $deck;
 
+	/**
+	 * Field type of each item child, keyed by child name, recorded by
+	 * PropertyFactory from the deck's item schema (every item shares it).
+	 * Items are stored as plain arrays, so this is how the save pipeline
+	 * knows which children to re-hydrate and process (a nested video's
+	 * provider lookup). Empty when the deck was built without a schema.
+	 *
+	 * @var array<string,string>
+	 */
+	public array $childTypes = [];
+
+	/** @var array<string,array<string,mixed>> Resolved settings per child, same keys as $childTypes. */
+	public array $childSettings = [];
+
 	/** @param array<mixed> $deck */
 	public function __construct(array $deck = [], public array $settings = [])
 	{

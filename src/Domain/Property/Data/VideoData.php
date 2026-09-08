@@ -22,8 +22,9 @@ class VideoData extends PropertyData implements \Stringable
 {
 	/**
 	 * The stored keys, in stored order. `poster` is deliberately last and is
-	 * only written when an image was actually uploaded. Used by the CSV
-	 * exporter to build `{property}.{key}` columns without a schema lookup.
+	 * only written when an image was actually uploaded. (CSV carries only the
+	 * URL — see ObjectExporter — so this list is documentation and a guard for
+	 * tests, not a column list.)
 	 *
 	 * @var list<string>
 	 */
@@ -60,16 +61,24 @@ class VideoData extends PropertyData implements \Stringable
 	}
 
 	/**
-	 * Accept the stored array, a JSON string of it (the admin form and CSV
-	 * import both hand complex fields over as JSON), or nothing.
+	 * Accept the stored array, a JSON string of it (the admin form hands
+	 * complex fields over as JSON), a bare URL string (CSV import, a card
+	 * child written as `"promo": "https://…"`, an API client sending just the
+	 * link — the save pipeline derives the rest), or nothing.
 	 *
 	 * @return array<string,mixed>
 	 */
 	private static function normalize(mixed $value): array
 	{
 		if (is_string($value)) {
-			$decoded = json_decode($value, true);
-			$value   = is_array($decoded) ? $decoded : [];
+			$trimmed = trim($value);
+			if (str_starts_with($trimmed, '{')) {
+				// JSON object (the admin form) — malformed JSON is nothing, not a URL.
+				$decoded = json_decode($trimmed, true);
+				$value   = is_array($decoded) ? $decoded : [];
+			} else {
+				$value = $trimmed !== '' ? ['url' => $trimmed] : [];
+			}
 		}
 
 		if (!is_array($value) || array_is_list($value)) {
