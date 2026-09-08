@@ -22,8 +22,6 @@ it('DateData converts date field from HTML datetime-local to ISO format', functi
 	expect($transformedValue)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
 	expect($transformedValue)->not()->toBe($htmlDateValue);
 
-	echo "Original: $htmlDateValue\n";
-	echo "Transformed: $transformedValue\n";
 });
 
 // Test that DateData processes datetime fields correctly
@@ -44,8 +42,6 @@ it('DateData converts datetime field from HTML datetime-local to ISO format', fu
 	expect($transformedValue)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
 	expect($transformedValue)->not()->toBe($htmlDatetimeValue);
 
-	echo "Original: $htmlDatetimeValue\n";
-	echo "Transformed: $transformedValue\n";
 });
 
 // Test DateData cleanDate with different formats

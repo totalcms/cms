@@ -173,18 +173,21 @@ function streamingMcpRequest(
  *
  * The SDK's CallbackStream uses ob_flush() internally which sends content
  * through the outer output buffer rather than into the captured string. We
- * wrap with ob_start()/ob_get_clean() as a courtesy to suppress test-runner
- * output — but callers should not rely on the return value for assertions.
- * Use session-file reads or disk-artifact checks for content verification.
+ * nest two output buffers so that flush lands in the outer buffer instead of
+ * the test runner's terminal (the same layout as drainStreamedBody() in
+ * Pest.php). Callers should not rely on captured output for assertions; use
+ * session-file reads or disk-artifact checks for content verification.
  */
 function triggerSseBody(ResponseInterface $response): void
 {
+	ob_start();
 	ob_start();
 	// Call __toString() explicitly (not a `(string)` cast) for its side effect:
 	// it reads the whole PSR-7 body, which drives the SSE CallbackStream and runs
 	// the tool's seeding loop. A discarded cast looks pointless to Rector's
 	// dead-code rules and gets stripped; an explicit method call is left alone.
 	$response->getBody()->__toString();
+	ob_end_clean();
 	ob_end_clean();
 }
 

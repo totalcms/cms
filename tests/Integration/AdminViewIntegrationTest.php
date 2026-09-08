@@ -15,10 +15,8 @@ use function TotalCMS\Slim\Pest\get;
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());
 
-	echo "\n🔄 Setting up admin view tests...\n";
 
 	// Create minimal collections programmatically (much faster than jumpstart import)
-	echo "📦 Creating test collections...\n";
 
 	$app       = bootstrap();
 	$container = $app->getContainer();
@@ -47,8 +45,6 @@ beforeAll(function (): void {
 		'schema' => 'feed',
 	]);
 
-	echo "✅ Test collections created successfully\n";
-	echo "🚀 Starting admin view tests...\n\n";
 });
 
 beforeEach(function (): void {
@@ -102,91 +98,67 @@ function assertNoAdminErrors($response, string $path): void
 
 describe('Admin Dashboard Views', function (): void {
 	it('loads dashboard home without errors', function (): void {
-		echo '🏠 Testing dashboard home...';
 		$response = get('/admin/');
 		assertNoAdminErrors($response, '/admin/');
-		echo " ✅\n";
 	});
 
 	it('loads dashboard overview without errors', function (): void {
-		echo '📊 Testing dashboard overview...';
 		$response = get('/admin/dashboard');
 		assertNoAdminErrors($response, '/admin/dashboard');
-		echo " ✅\n";
 	});
 });
 
 describe('Collection Management Views', function (): void {
 	it('loads collections list without errors', function (): void {
-		echo '📋 Testing collections list...';
 		$response = get('/admin/collections');
 		assertNoAdminErrors($response, '/admin/collections');
-		echo " ✅\n";
 	});
 
 	it('loads collection creation form without errors', function (): void {
-		echo '➕ Testing collection creation form...';
 		$response = get('/admin/collections/new');
 		assertNoAdminErrors($response, '/admin/collections/new');
-		echo " ✅\n";
 	});
 
 	it('loads blog collection edit form without errors', function (): void {
-		echo '📝 Testing blog collection edit form (useFormGrid check)...';
 		$response = get('/admin/collections/blog/edit');
 		assertNoAdminErrors($response, '/admin/collections/blog/edit');
-		echo " ✅\n";
 	});
 
 	it('loads products collection edit form without errors', function (): void {
-		echo '🛍️ Testing products collection edit form...';
 		$response = get('/admin/collections/products/edit');
 		assertNoAdminErrors($response, '/admin/collections/products/edit');
-		echo " ✅\n";
 	});
 
 	it('loads feed collection edit form without errors', function (): void {
-		echo '📡 Testing feed collection edit form...';
 		$response = get('/admin/collections/feed/edit');
 		assertNoAdminErrors($response, '/admin/collections/feed/edit');
-		echo " ✅\n";
 	});
 });
 
 describe('Object Management Views', function (): void {
 	it('loads blog objects list without errors', function (): void {
-		echo '📖 Testing blog objects list...';
 		$response = get('/admin/collections/blog');
 		assertNoAdminErrors($response, '/admin/collections/blog');
-		echo " ✅\n";
 	});
 
 	it('loads products objects list without errors', function (): void {
-		echo '🛒 Testing products objects list...';
 		$response = get('/admin/collections/products');
 		assertNoAdminErrors($response, '/admin/collections/products');
-		echo " ✅\n";
 	});
 
 	it('loads feed objects list without errors', function (): void {
-		echo '📰 Testing feed objects list...';
 		$response = get('/admin/collections/feed');
 		assertNoAdminErrors($response, '/admin/collections/feed');
-		echo " ✅\n";
 	});
 
 	it('loads blog object creation form without errors', function (): void {
-		echo '✏️ Testing blog object creation form...';
 		$response = get('/admin/collections/blog/new');
 		assertNoAdminErrors($response, '/admin/collections/blog/new');
-		echo " ✅\n";
 	});
 
 	it('loads products object creation form without errors', function (): void {
-		echo '🆕 Testing products object creation form...';
 		$response = get('/admin/collections/products/new');
 		assertNoAdminErrors($response, '/admin/collections/products/new');
-		echo " ✅\n";
 	});
 });
 
