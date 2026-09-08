@@ -212,7 +212,9 @@ iframe, here as a muted looping background clip:
 
 The facade is on by default: it renders the poster with a play button and
 swaps in the iframe on click, saving the iframe weight on pages listing many
-videos. It is skipped for the `file` provider, and for any value where no
+videos. The first hover (or touch) preconnects to the player's hosts so the
+click has less to wait for, and the poster stays on screen until the iframe
+has loaded, so there is no empty box while the player boots. It is skipped for the `file` provider, and for any value where no
 poster or thumbnail resolves (the eager embed renders instead) — for an
 `unknown` URL specifically, the poster must be uploaded, since there is no
 vendor thumbnail. `muted` and `loop` carry into the embed the click builds:
