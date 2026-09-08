@@ -111,7 +111,7 @@
 				"date": "2026-01-22T10:30:00+00:00",
 				"author": "Joe Workman",
 				"summary": "How to use Twig in your page templates — variables, filters, includes, and the cms global.",
-				"content": "<p>Total CMS uses <a href=\"https://twig.symfony.com\">Twig</a> for templating. Inside any builder template, you have access to the <code>cms</code> global — your gateway to collections, configuration, and dynamic content.</p><h3>Common patterns</h3><ul><li><code>cms.collection.objects('blog')</code> — fetch all blog posts</li><li><code>cms.data.raw('blog', params.id)</code> — fetch a single post</li><li><code>cms.config('domain')</code> — read a config value</li></ul><p>The <a href=\"/admin/utils/twig-playground\">Twig Playground</a> lets you experiment with templates without committing changes.</p>",
+				"content": "<p>Total CMS uses <a href=\"https://twig.symfony.com\">Twig</a> for templating. Inside any builder template, you have access to the <code>cms</code> global — your gateway to collections, configuration, and dynamic content.</p><h3>Common patterns</h3><ul><li><code>cms.collection.objects('blog')</code> — fetch all blog posts</li><li><code>cms.data.raw('blog', params.id)</code> — fetch a single post</li><li><code>cms.config('domain')</code> — read a config value</li></ul><p>The <a href=\"/admin/playground\">Twig Playground</a> lets you experiment with templates without committing changes.</p>",
 				"image": "imageBlur",
 				"categories": "tutorials",
 				"tags": "twig,templates,tutorial",

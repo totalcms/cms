@@ -18,7 +18,7 @@ namespace TotalCMS\Domain\Sync\Data;
  *   - JumpStartExporter::exportSyncData() — the export-time filter
  *   - JumpStartExporter::exportSyncCollectionObjects() — secondary guard that
  *     strips any non-allowlist ID even if a malformed filter reaches it
- *   - AdminUtilsAction — populates the UI's Collections section
+ *   - SyncPageData — populates the UI's Collections section
  */
 final class SyncableCollections
 {

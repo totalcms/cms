@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Action\Admin;
 
-use Odan\Session\SessionInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -12,142 +13,46 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\Route;
 use Slim\Routing\RoutingResults;
 use TotalCMS\Action\Admin\AdminUtilsAction;
-use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
-use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
-use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
-use TotalCMS\Domain\Auth\Data\UserAuthority;
-use TotalCMS\Domain\Auth\Service\AccessControlService;
-use TotalCMS\Domain\Builder\Service\BuilderInstaller;
-use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
-use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\Extension\Service\ExtensionManager;
-use TotalCMS\Domain\Import\RssImporter;
-use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Action\Admin\Utils\UtilsPageData;
+use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
-use TotalCMS\Domain\OAuth\Data\OAuthClientData;
-use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
-use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
-use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
-use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Domain\Settings\Services\SettingsFetcher;
-use TotalCMS\Domain\Template\Service\TemplateLister;
-use TotalCMS\Domain\Twig\Service\TwigEngine;
-use TotalCMS\Domain\Twig\Service\TwigLintService;
-use TotalCMS\Domain\Update\Service\UpdateApplier;
-use TotalCMS\Domain\Update\Service\UpdateChecker;
-use TotalCMS\Domain\Visualizer\Service\VisualizerService;
 use TotalCMS\Renderer\TwigRenderer;
-use TotalCMS\Support\Config;
 
 final class AdminUtilsActionTest extends TestCase
 {
-	private AdminUtilsAction $action;
 	private MockObject $renderer;
-	private MockObject $twigEngine;
-	private MockObject $twigLintService;
-	private MockObject $apiKeyFetcher;
-	private MockObject $accessGroupLister;
-	private MockObject $collectionLister;
-	private MockObject $collectionFetcher;
-	private MockObject $indexReader;
-	private MockObject $builderInstaller;
-	private MockObject $schemaLister;
-	private MockObject $rssImporter;
 	private MockObject $editionFeatures;
-	private MockObject $settingsFetcher;
-	private MockObject $templateLister;
-	private MockObject $updateChecker;
-	private MockObject $extensionManager;
-	private OAuthClientRepository $oauthClientRepository;
-	private OAuthGrantRepository $oauthGrantRepository;
-	private OAuthScopeRegistry $oauthScopeRegistry;
-	private string $oauthClientsTmpFile;
-	private string $oauthGrantsTmpFile;
 	private MockObject $request;
 	private MockObject $response;
-	private MockObject $visualizerService;
-	private \Odan\Session\SessionInterface&MockObject $session;
-	private MockObject $accessControlService;
-	private MockObject $mcpSchemaResolver;
-	private Config $config;
+	private MockObject $syncBuilder;
 
 	protected function setUp(): void
 	{
-		$this->renderer              = $this->createMock(TwigRenderer::class);
-		$this->twigEngine            = $this->createMock(TwigEngine::class);
-		$this->twigLintService       = $this->createMock(TwigLintService::class);
-		$this->apiKeyFetcher         = $this->createMock(ApiKeyFetcher::class);
-		$this->accessGroupLister     = $this->createMock(AccessGroupLister::class);
-		$this->collectionLister      = $this->createMock(CollectionLister::class);
-		$this->collectionFetcher     = $this->createMock(CollectionFetcher::class);
-		$this->indexReader           = $this->createMock(IndexReader::class);
-		$this->builderInstaller      = $this->createMock(BuilderInstaller::class);
-		$this->schemaLister          = $this->createMock(SchemaLister::class);
-		$this->rssImporter           = $this->createMock(RssImporter::class);
-		$this->editionFeatures       = $this->createMock(EditionFeatureService::class);
-		$this->settingsFetcher       = $this->createMock(SettingsFetcher::class);
-		$this->templateLister        = $this->createMock(TemplateLister::class);
-		$this->updateChecker         = $this->createMock(UpdateChecker::class);
-		$this->extensionManager      = $this->createMock(ExtensionManager::class);
-		// OAuth repositories + scope registry are all final classes (can't be
-		// doubled). Use real instances pointed at empty tmp files — the tests
-		// here exercise the action's plumbing, not OAuth data shape.
-		$this->oauthClientsTmpFile   = sys_get_temp_dir() . '/oauth-clients-utils-test-' . uniqid() . '.json';
-		$this->oauthGrantsTmpFile    = sys_get_temp_dir() . '/oauth-grants-utils-test-' . uniqid() . '.json';
-		$this->oauthClientRepository = new OAuthClientRepository($this->oauthClientsTmpFile);
-		$this->oauthGrantRepository  = new OAuthGrantRepository($this->oauthGrantsTmpFile);
-		$this->oauthScopeRegistry    = new OAuthScopeRegistry();
-		$this->request               = $this->createMock(ServerRequestInterface::class);
-		$this->response              = $this->createMock(ResponseInterface::class);
-		$this->visualizerService     = $this->createMock(VisualizerService::class);
-		$this->session               = $this->createMock(SessionInterface::class);
-		$this->accessControlService  = $this->createMock(AccessControlService::class);
-		$this->mcpSchemaResolver     = $this->createMock(McpSchemaResolver::class);
-		$this->config                = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$this->config->auth          = ['collection' => 'auth'];
+		$this->renderer        = $this->createMock(TwigRenderer::class);
+		$this->editionFeatures = $this->createMock(EditionFeatureService::class);
+		$this->request         = $this->createMock(ServerRequestInterface::class);
+		$this->response        = $this->createMock(ResponseInterface::class);
+		$this->syncBuilder     = $this->createMock(UtilsPageData::class);
+		$this->editionFeatures->method('can')->willReturn(true);
+	}
 
-		$this->action = new AdminUtilsAction(
+	private function action(): AdminUtilsAction
+	{
+		return new AdminUtilsAction(
 			$this->renderer,
-			$this->twigEngine,
-			$this->twigLintService,
-			$this->apiKeyFetcher,
-			$this->accessGroupLister,
-			$this->collectionLister,
-			$this->collectionFetcher,
-			$this->indexReader,
-			$this->builderInstaller,
-			$this->schemaLister,
-			$this->rssImporter,
 			$this->editionFeatures,
-			$this->settingsFetcher,
-			$this->templateLister,
-			$this->updateChecker,
-			$this->createMock(UpdateApplier::class),
-			$this->oauthClientRepository,
-			$this->oauthGrantRepository,
-			$this->oauthScopeRegistry,
-			$this->extensionManager,
-			$this->visualizerService,
-			$this->session,
-			$this->createMock(BuilderTemplatePaths::class),
-			$this->accessControlService,
-			$this->mcpSchemaResolver,
-			$this->config,
+			new UtilsPageDataResolver(['sync' => $this->syncBuilder]),
 		);
 	}
 
-	protected function tearDown(): void
+	private function givenRequest(string $path, string $method = 'GET', array $query = []): void
 	{
-		if (is_file($this->oauthClientsTmpFile)) {
-			unlink($this->oauthClientsTmpFile);
-		}
-		if (is_file($this->oauthGrantsTmpFile)) {
-			unlink($this->oauthGrantsTmpFile);
-		}
+		$uri = $this->createMock(UriInterface::class);
+		$uri->method('getPath')->willReturn($path);
+		$uri->method('getQuery')->willReturn('');
+		$this->request->method('getUri')->willReturn($uri);
+		$this->request->method('getMethod')->willReturn($method);
+		$this->request->method('getQueryParams')->willReturn($query);
 	}
 
 	/**
@@ -178,717 +83,130 @@ final class AdminUtilsActionTest extends TestCase
 	public function testRendersUtilsTemplateWithDefaultPage(): void
 	{
 		$this->setupRoutingContext();
+		$this->givenRequest('/admin/utils');
+		$expected = $this->createMock(ResponseInterface::class);
+		$this->renderer->expects($this->once())->method('template')
+			->with($this->response, 'admin/utils.twig', $this->callback(
+				fn (array $data): bool => $data['page'] === 'index' && $data['url']['page'] === 'utils' && $data['syncData'] === null,
+			))
+			->willReturn($expected);
 
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils');
-		$uri->method('getQuery')->willReturn('');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('GET');
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(fn ($data): bool => $data['page'] === 'index'
-						&& $data['url']['page'] === 'utils')
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, []);
-
-		$this->assertSame($expectedResponse, $result);
+		$this->assertSame($expected, ($this->action())($this->request, $this->response, []));
 	}
 
-	public function testHandlesTwigPlaygroundPostRequest(): void
+	public function testNamedRoutesForceTheirPage(): void
 	{
-		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils/twig-playground');
-		$uri->method('getQuery')->willReturn('');
+		$this->setupRoutingContext('admin-utils-api-keys');
+		$this->givenRequest('/admin/utils/api-keys');
+		$this->renderer->expects($this->once())->method('template')
+			->with($this->response, 'admin/utils.twig', $this->callback(
+				fn (array $data): bool => $data['page'] === 'api-keys' && $data['url']['params']['page'] === 'api-keys',
+			))
+			->willReturn($this->createMock(ResponseInterface::class));
 
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('POST');
-		$this->request->method('getParsedBody')->willReturn([
-			'twig' => '{{ "Hello World" }}',
-		]);
-
-		$this->twigEngine->expects($this->once())
-			->method('renderString')
-			->with('{{ "Hello World" }}')
-			->willReturn('Hello World');
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(fn ($data): bool => $data['page'] === 'twig-playground'
-						&& $data['results'] === 'Hello World')
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, ['page' => 'twig-playground']);
-
-		$this->assertSame($expectedResponse, $result);
+		($this->action())($this->request, $this->response, []);
 	}
 
-	public function testHandlesTwigPlaygroundErrors(): void
+	public function testMergesTheBuildersVariablesOverTheDefaults(): void
 	{
 		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils/twig-playground');
-		$uri->method('getQuery')->willReturn('');
+		$this->givenRequest('/admin/utils/sync');
+		$this->syncBuilder->expects($this->once())->method('build')
+			->with($this->request, 'sync', '')
+			->willReturn(['syncData' => ['settings' => []]]);
+		$this->renderer->expects($this->once())->method('template')
+			->with($this->response, 'admin/utils.twig', $this->callback(
+				fn (array $data): bool => $data['syncData'] === ['settings' => []] && $data['oauthGrants'] === null,
+			))
+			->willReturn($this->createMock(ResponseInterface::class));
 
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('POST');
-		$this->request->method('getParsedBody')->willReturn([
-			'twig' => '{{ invalid syntax',
-		]);
-
-		$this->twigEngine->expects($this->once())
-			->method('renderString')
-			->willThrowException(new \Exception('Syntax error'));
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(fn ($data): bool => str_contains((string)$data['results'], 'error')
-						&& str_contains((string)$data['results'], 'Syntax error'))
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, ['page' => 'twig-playground']);
-
-		$this->assertSame($expectedResponse, $result);
+		($this->action())($this->request, $this->response, ['page' => 'sync']);
 	}
 
-	public function testHandlesGetRequestWithoutProcessing(): void
+	public function testActionComesFromRouteArgsThenQuery(): void
 	{
 		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils/twig-playground');
-		$uri->method('getQuery')->willReturn('');
+		$this->givenRequest('/admin/utils/sync', 'GET', ['action' => 'from-query']);
+		$this->syncBuilder->expects($this->once())->method('build')
+			->with($this->request, 'sync', 'from-query')
+			->willReturn([]);
+		$this->renderer->method('template')->willReturn($this->createMock(ResponseInterface::class));
 
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('GET');
-
-		$this->twigEngine->expects($this->never())->method('renderString');
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(fn ($data): bool => $data['results'] === '')
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, ['page' => 'twig-playground']);
-
-		$this->assertSame($expectedResponse, $result);
+		($this->action())($this->request, $this->response, ['page' => 'sync']);
 	}
 
 	public function testIncludesPostDataWhenMethodIsPost(): void
 	{
 		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils');
-		$uri->method('getQuery')->willReturn('');
+		$this->givenRequest('/admin/utils/logs', 'POST');
+		$this->request->method('getParsedBody')->willReturn(['a' => 'b']);
+		$this->renderer->expects($this->once())->method('template')
+			->with($this->response, 'admin/utils.twig', $this->callback(
+				fn (array $data): bool => $data['postData'] === ['a' => 'b'],
+			))
+			->willReturn($this->createMock(ResponseInterface::class));
 
-		$postData = ['key' => 'value', 'foo' => 'bar'];
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('POST');
-		$this->request->method('getParsedBody')->willReturn($postData);
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(fn ($data): bool => $data['postData'] === $postData)
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, []);
-
-		$this->assertSame($expectedResponse, $result);
+		($this->action())($this->request, $this->response, ['page' => 'logs']);
 	}
 
 	public function testIncludesEmptyPostDataForGetRequest(): void
 	{
 		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils');
-		$uri->method('getQuery')->willReturn('');
+		$this->givenRequest('/admin/utils/logs');
+		$this->renderer->expects($this->once())->method('template')
+			->with($this->response, 'admin/utils.twig', $this->callback(
+				fn (array $data): bool => $data['postData'] === [],
+			))
+			->willReturn($this->createMock(ResponseInterface::class));
 
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('GET');
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(fn ($data): bool => $data['postData'] === [])
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, []);
-
-		$this->assertSame($expectedResponse, $result);
+		($this->action())($this->request, $this->response, ['page' => 'logs']);
 	}
 
-	public function testHandlesProjectSetupPage(): void
+	public function testImportPagesAreEditionGated(): void
 	{
+		$this->assertPageIsEditionGated('import-rss');
+	}
+
+	public function testImportWordpressPageIsEditionGated(): void
+	{
+		$this->assertPageIsEditionGated('import-wordpress');
+	}
+
+	private function assertPageIsEditionGated(string $page): void
+	{
+		$editions = $this->createMock(EditionFeatureService::class);
+		$editions->method('can')->willReturn(false);
 		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils/project-setup');
-		$uri->method('getQuery')->willReturn('');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('GET');
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(fn ($data): bool => $data['page'] === 'project-setup'
-						&& isset($data['totalcms1DetectionData']))
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, ['page' => 'project-setup']);
-
-		$this->assertSame($expectedResponse, $result);
-	}
-
-	public function testNullDetectionDataForNonProjectSetupPages(): void
-	{
-		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils/other-page');
-		$uri->method('getQuery')->willReturn('');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('GET');
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(fn ($data): bool => $data['totalcms1DetectionData'] === null)
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, ['page' => 'other-page']);
-
-		$this->assertSame($expectedResponse, $result);
-	}
-
-	public function testOnlyProcessesTwigPlaygroundPage(): void
-	{
-		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils/other-page');
-		$uri->method('getQuery')->willReturn('');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('POST');
-		$this->request->method('getParsedBody')->willReturn([
-			'twig' => '{{ "Should not process" }}',
-		]);
-
-		// TwigEngine should not be called for non-twig-playground pages
-		$this->twigEngine->expects($this->never())->method('renderString');
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->method('template')->willReturn($expectedResponse);
-
-		($this->action)($this->request, $this->response, ['page' => 'other-page']);
-	}
-
-	public function testRendersOAuthClientsPageWithClientGroupsAndGrantCounts(): void
-	{
-		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils/oauth-clients');
-		$uri->method('getQuery')->willReturn('');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('GET');
-		$this->request->method('getQueryParams')->willReturn([]);
-
-		// Seed one static client and one dynamic client
-		$staticClient = new OAuthClientData(
-			id: 'static-1',
-			name: 'Static App',
-			secretHash: '$2y$12$hash1',
-			redirectUris: ['https://example.com/cb'],
-			scopes: ['cms:read'],
-			isDynamic: false,
-			isConfidential: true,
-			createdAt: '2026-01-01T00:00:00Z',
-			createdBy: 'admin',
-		);
-		$dynamicClient = new OAuthClientData(
-			id: 'dynamic-1',
-			name: 'Dynamic App',
-			secretHash: '$2y$12$hash2',
-			redirectUris: ['https://dynamic.example.com/cb'],
-			scopes: ['cms:read'],
-			isDynamic: true,
-			isConfidential: true,
-			createdAt: '2026-01-01T00:00:00Z',
-			createdBy: 'admin',
-		);
-		$this->oauthClientRepository->save($staticClient);
-		$this->oauthClientRepository->save($dynamicClient);
-
-		// Seed one grant per client
-		$grant1 = new OAuthGrantData(
-			id: 'grant-1',
-			clientId: 'static-1',
-			userId: 'user@example.com',
-			scopes: ['cms:read'],
-			refreshTokenHash: 'hash-a',
-			issuedAt: '2026-01-01T00:00:00Z',
-			expiresAt: '2027-01-01T00:00:00Z',
-		);
-		$grant2 = new OAuthGrantData(
-			id: 'grant-2',
-			clientId: 'dynamic-1',
-			userId: 'user@example.com',
-			scopes: ['cms:read'],
-			refreshTokenHash: 'hash-b',
-			issuedAt: '2026-01-01T00:00:00Z',
-			expiresAt: '2027-01-01T00:00:00Z',
-		);
-		$this->oauthGrantRepository->save($grant1);
-		$this->oauthGrantRepository->save($grant2);
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(function (array $data): bool {
-					if ($data['page'] !== 'oauth-clients') {
-						return false;
-					}
-					$clients = $data['oauthClients'] ?? null;
-					if (!is_array($clients)) {
-						return false;
-					}
-					// One static client with one grant
-					if (count($clients['static']) !== 1) {
-						return false;
-					}
-					// One dynamic client with one grant
-					if (count($clients['dynamic']) !== 1) {
-						return false;
-					}
-					$staticRow  = $clients['static'][0];
-					$dynamicRow = $clients['dynamic'][0];
-
-					return $staticRow['client']->id === 'static-1'
-						&& $staticRow['grantCount'] === 1
-						&& $dynamicRow['client']->id === 'dynamic-1'
-						&& $dynamicRow['grantCount'] === 1;
-				})
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, ['page' => 'oauth-clients']);
-
-		$this->assertSame($expectedResponse, $result);
-	}
-
-	public function testRendersOAuthClientsNewFormWithScopeList(): void
-	{
-		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils/oauth-clients');
-		$uri->method('getQuery')->willReturn('action=new');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('GET');
-		$this->request->method('getQueryParams')->willReturn(['action' => 'new']);
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(function (array $data): bool {
-					if ($data['page'] !== 'oauth-clients') {
-						return false;
-					}
-					$form = $data['oauthClientsForm'] ?? null;
-					if (!is_array($form) || !isset($form['scopes'])) {
-						return false;
-					}
-
-					// OAuthScopeRegistry defines 6 T3 scopes
-					// (cms:read, cms:write, cms:admin, mcp:tools, mcp:resources, mcp:prompts)
-					return count($form['scopes']) === 6;
-				})
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, ['page' => 'oauth-clients', 'action' => 'new']);
-
-		$this->assertSame($expectedResponse, $result);
-	}
-
-	public function testRendersOAuthGrantsPageWithGrantsJoinedToClientNames(): void
-	{
-		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils/oauth-grants');
-		$uri->method('getQuery')->willReturn('');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('GET');
-		$this->request->method('getQueryParams')->willReturn([]);
-
-		// Seed a client and a grant
-		$client = new OAuthClientData(
-			id: 'client-xyz',
-			name: 'My OAuth App',
-			secretHash: '$2y$12$hash',
-			redirectUris: ['https://example.com/cb'],
-			scopes: ['cms:read'],
-			isDynamic: false,
-			isConfidential: true,
-			createdAt: '2026-01-01T00:00:00Z',
-			createdBy: 'admin',
-		);
-		$grant = new OAuthGrantData(
-			id: 'grant-xyz',
-			clientId: 'client-xyz',
-			userId: 'user@example.com',
-			scopes: ['cms:read'],
-			refreshTokenHash: 'hash-x',
-			issuedAt: '2026-01-01T00:00:00Z',
-			expiresAt: '2027-01-01T00:00:00Z',
-		);
-		$this->oauthClientRepository->save($client);
-		$this->oauthGrantRepository->save($grant);
-
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(function (array $data): bool {
-					if ($data['page'] !== 'oauth-grants') {
-						return false;
-					}
-					$grants = $data['oauthGrants'] ?? null;
-					if (!is_array($grants) || count($grants) !== 1) {
-						return false;
-					}
-					$row = $grants[0];
-
-					return $row['grant']->id === 'grant-xyz'
-						&& $row['clientName'] === 'My OAuth App';
-				})
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, ['page' => 'oauth-grants']);
-
-		$this->assertSame($expectedResponse, $result);
-	}
-
-	/**
-	 * Seeds one client + one grant for the oauth-grants page and runs the
-	 * action, returning the single computed row's 'effectiveReach' array.
-	 * Shared setup for the Effective Reach test scenarios below.
-	 *
-	 * $mcpAccessible controls McpSchemaResolver::isAccessibleTo($collection,
-	 * $persona) for the two collections seeded below ('blog', 'pages').
-	 * Defaults to "nothing is exposed at any persona level" (the real default
-	 * for a collection whose operator never touched mcp.access — it reads
-	 * 'admin', so isAccessibleTo() is false for both 'public' and
-	 * 'authenticated'). Tests that need a collection exposed pass their own
-	 * callback: fn(CollectionData $c, string $persona): bool.
-	 *
-	 * @param  list<string> $scopes
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function effectiveReachForSingleGrant(array $scopes, ?\Closure $mcpAccessible = null): array
-	{
-		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils/oauth-grants');
-		$uri->method('getQuery')->willReturn('');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getMethod')->willReturn('GET');
-		$this->request->method('getQueryParams')->willReturn([]);
-
-		$client = new OAuthClientData(
-			id: 'client-reach',
-			name: 'Reach Test App',
-			secretHash: '$2y$12$hash',
-			redirectUris: ['https://example.com/cb'],
-			scopes: ['cms:read'],
-			isDynamic: false,
-			isConfidential: true,
-			createdAt: '2026-01-01T00:00:00Z',
-			createdBy: 'admin',
-		);
-		$grant = new OAuthGrantData(
-			id: 'grant-reach',
-			clientId: 'client-reach',
-			userId: 'some-user',
-			scopes: $scopes,
-			refreshTokenHash: 'hash-reach',
-			issuedAt: '2026-01-01T00:00:00Z',
-			expiresAt: '2027-01-01T00:00:00Z',
-		);
-		$this->oauthClientRepository->save($client);
-		$this->oauthGrantRepository->save($grant);
-
-		$blog          = new CollectionData();
-		$blog->id      = 'blog';
-		$blog->schema  = 'blog';
-		$blog->name    = 'Blog';
-		$pages         = new CollectionData();
-		$pages->id     = 'pages';
-		$pages->schema = 'builder-page';
-		$pages->name   = 'Pages';
-
-		$this->collectionLister->method('listAllCollections')->willReturn([$blog, $pages]);
-		$this->mcpSchemaResolver->method('isAccessibleTo')
-			->willReturnCallback($mcpAccessible ?? static fn (CollectionData $collection, string $persona): bool => false);
-
-		$captured         = null;
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->method('template')
-			->willReturnCallback(function ($response, $template, $data) use (&$captured, $expectedResponse) {
-				$captured = $data;
-
-				return $expectedResponse;
-			});
-
-		($this->action)($this->request, $this->response, ['page' => 'oauth-grants']);
-
-		$this->assertIsArray($captured);
-		$grants = $captured['oauthGrants'];
-		$this->assertCount(1, $grants);
-
-		return $grants[0]['effectiveReach'];
-	}
-
-	public function testEffectiveReachListsOnlyTheirCollectionsForABloggerGrant(): void
-	{
-		$bloggerGroup = new AccessGroupData([
-			'id'          => 'blogger',
-			'permissions' => [
-				'collections' => [
-					'operations' => ['create', 'read', 'update', 'delete'],
-					'all'        => false,
-					'allowed'    => ['blog'],
-				],
-			],
-		]);
-		$authority = new UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
-
-		$this->accessControlService->method('userExists')->willReturn(true);
-		$this->accessControlService->method('authorityFor')->willReturn($authority);
-
-		// 'blog' has been opted into MCP for authenticated callers (e.g. the
-		// operator set mcp.access: 'authenticated') — see the DEFAULT-exposure
-		// counterpart test below, where the same group grant is NOT writable.
-		$reach = $this->effectiveReachForSingleGrant(
-			['cms:read', 'cms:write'],
-			static fn (CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'authenticated',
-		);
-
-		$this->assertFalse($reach['fullAdmin']);
-		$this->assertFalse($reach['userMissing']);
-		$this->assertFalse($reach['noAccess']);
-		$this->assertSame(['blog'], $reach['readable']);
-		$this->assertSame(['blog'], $reach['writable']);
-		$this->assertSame([], $reach['deleteOnly']);
-	}
-
-	public function testEffectiveReachHidesWriteWhenCollectionIsAtTheDefaultMcpAccess(): void
-	{
-		// Same blogger group grant as above, but 'blog' is left at the
-		// DEFAULT mcp.access ('admin' — not exposed to any OAuth caller).
-		// Every MCP write tool refuses this collection via
-		// ObjectTools::requireExposed(), so the page must not claim it's
-		// writable even though the access group grants create/update/delete.
-		$bloggerGroup = new AccessGroupData([
-			'id'          => 'blogger',
-			'permissions' => [
-				'collections' => [
-					'operations' => ['create', 'read', 'update', 'delete'],
-					'all'        => false,
-					'allowed'    => ['blog'],
-				],
-			],
-		]);
-		$authority = new UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
-
-		$this->accessControlService->method('userExists')->willReturn(true);
-		$this->accessControlService->method('authorityFor')->willReturn($authority);
-
-		// No callback override — helper defaults to "not exposed at any
-		// persona level", matching mcp.access's real default.
-		$reach = $this->effectiveReachForSingleGrant(['cms:read', 'cms:write']);
-
-		$this->assertSame(['blog'], $reach['readable']);
-		$this->assertSame([], $reach['writable']);
-		$this->assertSame([], $reach['deleteOnly']);
-	}
-
-	public function testEffectiveReachHidesWriteWhenTheGrantLacksTheWriteScope(): void
-	{
-		// Group grants full CRUD and the collection IS exposed to
-		// authenticated callers, but the grant itself only carries cms:read —
-		// the consent layer, not the group layer, is what's missing here.
-		$bloggerGroup = new AccessGroupData([
-			'id'          => 'blogger',
-			'permissions' => [
-				'collections' => [
-					'operations' => ['create', 'read', 'update', 'delete'],
-					'all'        => false,
-					'allowed'    => ['blog'],
-				],
-			],
-		]);
-		$authority = new UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
-
-		$this->accessControlService->method('userExists')->willReturn(true);
-		$this->accessControlService->method('authorityFor')->willReturn($authority);
-
-		$reach = $this->effectiveReachForSingleGrant(
-			['cms:read'],
-			static fn (CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'authenticated',
-		);
-
-		$this->assertSame(['blog'], $reach['readable']);
-		$this->assertSame([], $reach['writable']);
-		$this->assertSame([], $reach['deleteOnly']);
-	}
-
-	public function testEffectiveReachListsAPublicCollectionAsReadableEvenWithoutTheReadScope(): void
-	{
-		// Grant carries only mcp:tools (no cms:read at all) — but 'blog' is
-		// exposed mcp.access: 'public', so an authenticated caller must read
-		// it exactly like an anonymous one would (PersonaContext::
-		// canReadCollection()'s "authenticating must never subtract reach").
-		$authority = new UserAuthority(isAdmin: false, groups: []);
-
-		$this->accessControlService->method('userExists')->willReturn(true);
-		$this->accessControlService->method('authorityFor')->willReturn($authority);
-
-		$reach = $this->effectiveReachForSingleGrant(
-			['mcp:tools'],
-			static fn (CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'public',
-		);
-
-		$this->assertFalse($reach['noAccess']);
-		$this->assertSame(['blog'], $reach['readable']);
-		$this->assertSame([], $reach['writable']);
-	}
-
-	public function testEffectiveReachShowsNoAccessWhenUserHasNoGroups(): void
-	{
-		$authority = new UserAuthority(isAdmin: false, groups: []);
-
-		$this->accessControlService->method('userExists')->willReturn(true);
-		$this->accessControlService->method('authorityFor')->willReturn($authority);
-
-		$reach = $this->effectiveReachForSingleGrant(['cms:read', 'cms:write']);
-
-		$this->assertFalse($reach['fullAdmin']);
-		$this->assertFalse($reach['userMissing']);
-		$this->assertTrue($reach['noAccess']);
-		$this->assertSame([], $reach['readable']);
-		$this->assertSame([], $reach['writable']);
-	}
-
-	public function testEffectiveReachShowsFullAdministrativeAccessForAnAdminGrant(): void
-	{
-		$authority = new UserAuthority(isAdmin: true, groups: []);
-
-		$this->accessControlService->method('userExists')->willReturn(true);
-		$this->accessControlService->method('authorityFor')->willReturn($authority);
-
-		$reach = $this->effectiveReachForSingleGrant(['cms:admin']);
-
-		$this->assertTrue($reach['fullAdmin']);
-		$this->assertFalse($reach['userMissing']);
-		$this->assertFalse($reach['noAccess']);
-		$this->assertSame([], $reach['readable']);
-		$this->assertSame([], $reach['writable']);
-	}
-
-	public function testEffectiveReachShowsUserMissingForADeletedUser(): void
-	{
-		$this->accessControlService->method('userExists')->willReturn(false);
-		$this->accessControlService->expects($this->never())->method('authorityFor');
-
-		$reach = $this->effectiveReachForSingleGrant(['cms:read', 'cms:write']);
-
-		$this->assertFalse($reach['fullAdmin']);
-		$this->assertTrue($reach['userMissing']);
-		$this->assertFalse($reach['noAccess']);
-		$this->assertSame([], $reach['readable']);
-		$this->assertSame([], $reach['writable']);
+		$this->givenRequest("/admin/utils/{$page}");
+		$this->request->method('getHeaderLine')->willReturn('');
+		$this->renderer->expects($this->once())->method('template')
+			->with($this->response, 'access-denied.twig', $this->anything())
+			->willReturn($this->createMock(ResponseInterface::class));
+
+		$action = new AdminUtilsAction($this->renderer, $editions, new UtilsPageDataResolver([]));
+		$action($this->request, $this->response, ['page' => $page]);
 	}
 
 	public function testIncludesUrlData(): void
 	{
 		$this->setupRoutingContext();
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('getPath')->willReturn('/admin/utils/cache');
-		$uri->method('getQuery')->willReturn('action=clear');
 
+		$uri = $this->createMock(UriInterface::class);
+		$uri->method('getPath')->willReturn('/admin/utils/logs');
+		$uri->method('getQuery')->willReturn('a=1');
 		$this->request->method('getUri')->willReturn($uri);
 		$this->request->method('getMethod')->willReturn('GET');
+		$this->request->method('getQueryParams')->willReturn(['a' => '1']);
 
-		$args = ['page' => 'cache'];
+		$this->renderer->expects($this->once())->method('template')
+			->with($this->response, 'admin/utils.twig', $this->callback(
+				fn (array $data): bool => $data['url']['path'] === '/admin/utils/logs'
+					&& $data['url']['query'] === 'a=1'
+					&& $data['url']['params'] === ['page' => 'logs']
+					&& $data['url']['page'] === 'utils',
+			))
+			->willReturn($this->createMock(ResponseInterface::class));
 
-		$expectedResponse = $this->createMock(ResponseInterface::class);
-		$this->renderer->expects($this->once())
-			->method('template')
-			->with(
-				$this->response,
-				'admin/utils.twig',
-				$this->callback(fn ($data): bool => $data['url']['path'] === '/admin/utils/cache'
-						&& $data['url']['query'] === 'action=clear'
-						&& $data['url']['params'] === $args
-						&& $data['url']['page'] === 'utils')
-			)
-			->willReturn($expectedResponse);
-
-		$result = ($this->action)($this->request, $this->response, $args);
-
-		$this->assertSame($expectedResponse, $result);
+		($this->action())($this->request, $this->response, ['page' => 'logs']);
 	}
 }

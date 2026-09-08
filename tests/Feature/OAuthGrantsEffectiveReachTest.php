@@ -15,7 +15,7 @@ use function TotalCMS\Slim\Pest\putJson;
 
 /**
  * End-to-end coverage for the OAuth Grants admin page's "Effective reach"
- * row (src/Action/Admin/AdminUtilsAction.php::effectiveReachForGrant()).
+ * row (src/Action/Admin/Utils/OAuthPageData.php::effectiveReachForGrant()).
  * Unlike AdminUtilsActionTest (unit, mocked collaborators), this dispatches
  * a real request through the container so the actual AccessControlService +
  * McpSchemaResolver + real oauth-grants.twig template are exercised —

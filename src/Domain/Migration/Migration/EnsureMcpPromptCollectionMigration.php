@@ -11,7 +11,7 @@ use TotalCMS\Domain\Migration\Contract\MigrationInterface;
 
 /**
  * Ensures the `mcp-prompt` reserved collection exists on Pro-edition sites
- * upgrading to 3.5. Fresh installs get it via AdminUtilsAction::
+ * upgrading to 3.5. Fresh installs get it via ImportPageData::
  * createDefaultCollections() (run from the setup wizard); existing Pro
  * installs would otherwise have no Prompts sidebar entry until the operator
  * manually clicks "Create default collections" in project-setup.

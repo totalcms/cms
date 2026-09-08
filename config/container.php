@@ -28,6 +28,15 @@ use Slim\Factory\AppFactory;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\PhpRenderer;
+use TotalCMS\Action\Admin\Utils\AccessPageData;
+use TotalCMS\Action\Admin\Utils\ImportPageData;
+use TotalCMS\Action\Admin\Utils\JumpStartPageData;
+use TotalCMS\Action\Admin\Utils\OAuthPageData;
+use TotalCMS\Action\Admin\Utils\SyncPageData;
+use TotalCMS\Action\Admin\Utils\TwigDebuggerPageData;
+use TotalCMS\Action\Admin\Utils\UpdatePageData;
+use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
+use TotalCMS\Action\Admin\Utils\VisualizerPageData;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
@@ -1081,5 +1090,33 @@ return [
 		};
 
 		return new MethodRouter($handlers());
+	},
+
+	// === Admin Utils page data ===
+
+	// The utilities page → builder map. Explicit rather than autowired so the
+	// set of pages each builder serves is visible in one place.
+	UtilsPageDataResolver::class => function (ContainerInterface $container): UtilsPageDataResolver {
+		$oauth      = $container->get(OAuthPageData::class);
+		$access     = $container->get(AccessPageData::class);
+		$import     = $container->get(ImportPageData::class);
+		$visualizer = $container->get(VisualizerPageData::class);
+
+		return new UtilsPageDataResolver([
+			'oauth-clients'         => $oauth,
+			'oauth-grants'          => $oauth,
+			'access-groups'         => $access,
+			'api-keys'              => $access,
+			'project-setup'         => $import,
+			'import-totalcms-one'   => $import,
+			'import-rss'            => $import,
+			'update'                => $container->get(UpdatePageData::class),
+			'sync'                  => $container->get(SyncPageData::class),
+			'jumpstart'             => $container->get(JumpStartPageData::class),
+			'twig-debugger'         => $container->get(TwigDebuggerPageData::class),
+			'collection-visualizer' => $visualizer,
+			'object-visualizer'     => $visualizer,
+			'permission-matrix'     => $visualizer,
+		]);
 	},
 ];

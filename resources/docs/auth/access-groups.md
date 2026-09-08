@@ -329,7 +329,7 @@ Total CMS provides helper functions to check permissions in your templates, allo
 **Check playground access:**
 ```twig
 {% if cms.auth.canAccessPlayground() %}
-    <a href="/admin/utils/twig-playground">Twig Playground</a>
+    <a href="/admin/playground">Twig Playground</a>
 {% endif %}
 ```
 
