@@ -86,15 +86,22 @@ $context->addEventListener('collection.created', function (array $payload): void
 
 ### `collection.updated`
 
-Fired after a collection's settings are updated.
+Fired after a collection record is written. That includes every content
+save and every index build, which bump the collection's `count`,
+`totalObjects` and `lastUpdated` — check `configChanged` if you only care
+about the collection's settings.
 
 | Key | Type | Description |
 |---|---|---|
 | `collection` | `string` | Collection ID |
+| `configChanged` | `bool` | `true` when the configuration changed (name, url, schema, MCP access, …); `false` for a metadata-only bump from an object write or index build |
 
 ```php
 $context->addEventListener('collection.updated', function (array $payload): void {
-    // e.g., react to collection configuration changes
+    if (!($payload['configChanged'] ?? true)) {
+        return; // just counters moving
+    }
+    // react to collection configuration changes
 });
 ```
 

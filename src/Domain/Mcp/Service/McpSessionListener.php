@@ -21,8 +21,8 @@ namespace TotalCMS\Domain\Mcp\Service;
  *
  * Single method on purpose: we don't differentiate by event type — every
  * subscribed event has the same response, "drop the sessions, let clients
- * re-initialize on next request." Adding granularity would just be
- * over-engineering for one cheap operation.
+ * re-initialize on next request." The one exception is a metadata-only
+ * `collection.updated` (see onToolSurfaceChange()).
  */
 readonly class McpSessionListener
 {
@@ -32,11 +32,18 @@ readonly class McpSessionListener
 	}
 
 	/**
-	 * @param array<string,mixed> $payload event payload (unused — we don't
-	 *                                     differentiate by event type)
+	 * @param array<string,mixed> $payload event payload. Only one key matters:
+	 *   a `collection.updated` whose `configChanged` is false is the metadata
+	 *   cascade (count / totalObjects / lastUpdated bumped by an object write
+	 *   or an index build), which cannot change the tool surface — so it must
+	 *   not drop every live MCP session on every content save.
 	 */
 	public function onToolSurfaceChange(array $payload): void
 	{
+		if (($payload['configChanged'] ?? true) === false) {
+			return;
+		}
+
 		$this->invalidator->invalidateAll();
 	}
 }

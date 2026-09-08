@@ -226,9 +226,10 @@ readonly class CollectionSaver
 		// subset means it moves ONLY when settings actually changed — which
 		// is what sync freshness hints rely on. Imports preserve an authored
 		// value: it is the source's history, not a new edit here.
+		$configChanged = $this->configSubset($collection) !== $this->configSubset($existingCollection);
 		if ($preserveDates && $collection->updated !== '') {
 			// keep the authored value verbatim
-		} elseif ($this->configSubset($collection) !== $this->configSubset($existingCollection)) {
+		} elseif ($configChanged) {
 			$collection->updated = DateData::cleanDate();
 		} else {
 			$collection->updated = $existingCollection->updated;
@@ -239,7 +240,12 @@ readonly class CollectionSaver
 		// Clear request-level cache so subsequent fetches get fresh data
 		$this->collectionFetcher->clearCache($collectionId);
 
-		$this->eventDispatcher->dispatch(CoreEvent::COLLECTION_UPDATED, new CollectionEventPayload($collectionId));
+		// The payload says whether this was a real settings change or only the
+		// metadata cascade (count / totalObjects / lastUpdated) that every
+		// object write and index build routes through here — listeners that
+		// care about the collection's configuration (MCP tool surface) skip
+		// the latter, otherwise every content save would drop every MCP session.
+		$this->eventDispatcher->dispatch(CoreEvent::COLLECTION_UPDATED, new CollectionEventPayload($collectionId, $configChanged));
 
 		return $collection;
 	}
