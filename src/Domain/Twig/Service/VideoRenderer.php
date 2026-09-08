@@ -37,12 +37,12 @@ class VideoRenderer
 	 * cms.render.video().
 	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
-	 * @param array<string,mixed> $options collection, property, autoplay, loop, muted, controls, class, poster, facade, imageworks
-	 *   `imageworks` is an ImageWorks parameter array (`{w: 800, fm: 'webp'}`) applied to an
-	 *   uploaded poster — the same array cms.render.image() takes positionally. It never
+	 * @param array<string,mixed> $options collection, property, autoplay, loop, muted, controls, class, poster, facade
+	 * @param array<string,string|int> $posterImageworks ImageWorks parameters (`{w: 800, fm: 'webp'}`)
+	 *   applied to an uploaded poster — the same array cms.render.image() takes. It never
 	 *   touches a vendor thumbnail or a `poster` URL override, neither of which is ours.
 	 */
-	public function render(string|array|null $idOrObject, array $options = []): string
+	public function render(string|array|null $idOrObject, array $options = [], array $posterImageworks = []): string
 	{
 		$options = array_merge([
 			'collection' => 'video',
@@ -54,7 +54,6 @@ class VideoRenderer
 			'class'      => '',
 			'poster'     => '',
 			'facade'     => true,
-			'imageworks' => [],
 		], $options);
 
 		if (in_array($idOrObject, [null, '', []], true)) {
@@ -89,10 +88,9 @@ class VideoRenderer
 
 		$info = (new VideoUrlResolver(VideoUrlResolver::defaultProviders()))->resolve($url);
 
-		$title            = (string)($value['title'] ?? '');
-		$posterImageworks = is_array($options['imageworks']) ? $options['imageworks'] : [];
-		$storedRatio      = (string)($value['aspectRatio'] ?? '');
-		$aspectRatio      = $storedRatio !== '' ? $storedRatio : $info->aspectRatio;
+		$title       = (string)($value['title'] ?? '');
+		$storedRatio = (string)($value['aspectRatio'] ?? '');
+		$aspectRatio = $storedRatio !== '' ? $storedRatio : $info->aspectRatio;
 
 		if ($info->provider === 'file') {
 			$posterUrl = (string)$options['poster'] !== '' ? (string)$options['poster'] : $this->media->videoPoster($idOrObject, $posterImageworks, $options);

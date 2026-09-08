@@ -97,8 +97,8 @@ provider.
 {# Facade options carry into the embed built on click #}
 {{ cms.render.video(post, {property: 'promo', muted: true}) }}
 
-{# The uploaded poster resized through ImageWorks #}
-{{ cms.render.video(post, {property: 'promo', imageworks: {w: 1200}}) }}
+{# The uploaded poster resized through ImageWorks — the trailing argument, since video options lead in a video API #}
+{{ cms.render.video(post, {property: 'promo'}, {w: 1200}) }}
 
 {# A file-field value (mime starting video/) streams through the same call #}
 {{ cms.render.video(post, {property: 'localClip'}) }}

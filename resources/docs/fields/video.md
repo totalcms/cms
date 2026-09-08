@@ -136,7 +136,7 @@ On save:
 {{ cms.render.video('intro') }}
 
 {# The same object with its poster resized through ImageWorks #}
-{{ cms.render.video('intro', {imageworks: {w: 1200}}) }}
+{{ cms.render.video('intro', {}, {w: 1200}) }}
 
 {# An eager iframe instead of the click-to-play poster #}
 {{ cms.render.video('intro', {facade: false}) }}
@@ -192,8 +192,13 @@ travel through CSV. The same applies to a video inside a card, whose column is
 ## Rendering with `cms.render.video()`
 
 ```twig
-cms.render.video(object, {options})
+cms.render.video(object, {options}, {posterImageworks})
 ```
+
+The video options come first because this is a video API; the poster
+transform is the secondary knob, so it trails. That is the mirror of
+`cms.render.image(object, {imageworks}, {options})`, where the transform is
+the point and leads.
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -205,8 +210,11 @@ cms.render.video(object, {options})
 | `controls` | bool | `true` | Show player controls (`file` provider only) |
 | `class` | string | `''` | Extra CSS class on the wrapper |
 | `poster` | string | `''` | Override poster URL — otherwise resolved via `cms.media.videoPoster()` |
-| `imageworks` | array | `[]` | ImageWorks parameters (`{w: 800, fm: 'webp'}`) applied to an uploaded poster, the same array `cms.render.image()` takes. Ignored for a vendor thumbnail or a `poster` override, which are not served by T3 |
 | `facade` | bool | `true` | Click-to-play poster with a play button; the iframe loads on click. Set `false` for an eager iframe. Ignored for the `file` provider, and for any value where no poster or thumbnail resolves, which renders the eager iframe instead (an `unknown` URL has no vendor thumbnail, so the poster must be uploaded) |
+
+The optional third argument is an ImageWorks parameter array (`{w: 800, fm: 'webp'}`)
+applied to an uploaded poster, the same array `cms.render.image()` takes. It is
+ignored for a vendor thumbnail or a `poster` override, which are not served by T3.
 
 Hosted provider (YouTube, Vimeo, Livid, Bunny, Cloudflare, Loom, Wistia, Publitio) — by
 default a click-to-play facade: the poster (uploaded, else the vendor
@@ -223,7 +231,7 @@ The uploaded poster resized through ImageWorks, and an eager iframe instead
 of the facade:
 
 ```twig
-{{ cms.render.video(post, {property: 'promo', imageworks: {w: 1200, fm: 'webp'}}) }}
+{{ cms.render.video(post, {property: 'promo'}, {w: 1200, fm: 'webp'}) }}
 {{ cms.render.video(post, {property: 'promo', facade: false}) }}
 ```
 

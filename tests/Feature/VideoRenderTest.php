@@ -223,7 +223,7 @@ test('the imageworks option is applied to an uploaded poster in facade mode', fu
 		'poster'    => ['name' => 'poster.jpg', 'size' => 500, 'hash' => 'abc123'],
 	]);
 
-	$html = $this->render->video($object, ['property' => 'promo', 'facade' => true, 'imageworks' => ['w' => 1200, 'fm' => 'webp']]);
+	$html = $this->render->video($object, ['property' => 'promo', 'facade' => true], ['w' => 1200, 'fm' => 'webp']);
 
 	expect($html)->toContain('class="cms-video-facade"')
 		->and($html)->toContain('/imageworks/')
@@ -239,7 +239,7 @@ test('the imageworks option is applied to the <video> poster for the file provid
 		'poster' => ['name' => 'poster.jpg', 'size' => 500, 'hash' => 'abc123'],
 	]);
 
-	$html = $this->render->video($object, ['property' => 'promo', 'imageworks' => ['w' => 800]]);
+	$html = $this->render->video($object, ['property' => 'promo'], ['w' => 800]);
 
 	expect($html)->toContain('<video')
 		->and($html)->toContain('promo/poster')
@@ -249,7 +249,7 @@ test('the imageworks option is applied to the <video> poster for the file provid
 test('the imageworks option never touches a vendor thumbnail', function (): void {
 	$object = videoObject(['url' => 'https://vimeo.com/123456789', 'thumbnail' => 'https://cdn.example.com/thumb.jpg']);
 
-	$html = $this->render->video($object, ['property' => 'promo', 'facade' => true, 'imageworks' => ['w' => 1200]]);
+	$html = $this->render->video($object, ['property' => 'promo', 'facade' => true], ['w' => 1200]);
 
 	expect($html)->toContain('src="https://cdn.example.com/thumb.jpg"')
 		->and($html)->not->toContain('w=1200');

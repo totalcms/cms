@@ -215,10 +215,15 @@ class RenderTwigAdapter
 	 * embed, `<video>` element, or click-to-play facade. All the work lives in
 	 * VideoRenderer; this is the Twig-facing entry point.
 	 *
+	 * The video options come first because this is a video API; the poster
+	 * transform is the secondary knob, so it trails (the mirror of
+	 * cms.render.image(), where ImageWorks is the point and leads).
+	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
-	 * @param array<string,mixed> $options collection, property, autoplay, loop, muted, controls, class, poster, facade, imageworks
+	 * @param array<string,mixed> $options collection, property, autoplay, loop, muted, controls, class, poster, facade
+	 * @param array<string,string|int> $posterImageworks ImageWorks parameters applied to an uploaded poster
 	 */
-	public function video(string|array|null $idOrObject, array $options = []): string
+	public function video(string|array|null $idOrObject, array $options = [], array $posterImageworks = []): string
 	{
 		$options = array_merge([
 			'collection' => 'video',
@@ -227,7 +232,7 @@ class RenderTwigAdapter
 
 		$this->videoRenderer ??= new VideoRenderer($this->media, $this->data);
 
-		return $this->videoRenderer->render($idOrObject, $options);
+		return $this->videoRenderer->render($idOrObject, $options, $posterImageworks);
 	}
 
 	/**
