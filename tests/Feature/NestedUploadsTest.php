@@ -185,6 +185,41 @@ test('file inside a {container}: a nested DELETE clears the child and its direct
 		->and(is_dir(objectFilesPath('widgets', 'w1') . "/{$prefix}/doc"))->toBeFalse();
 })->with($containers);
 
+test('deck item: a nested DELETE addressed at an item the deck does not hold leaves the deck untouched', function (): void {
+	// A directory can exist for an id the JSON has no key for (a stale upload,
+	// or an id whose case differs on a case-insensitive filesystem). The
+	// remover's walk comes up empty — it must not wipe the whole deck.
+	mkdir(objectFilesPath('widgets', 'w1') . '/mydeck/ghost/doc', 0777, true);
+
+	expect(delete('/api/collections/widgets/w1/mydeck/ghost/doc')->getStatusCode())->toBe(200);
+	$object = widget();
+	expect(array_keys($object['mydeck']))->toBe(['one'])
+		->and(nestedValue($object, 'mydeck/one/label'))->toBe('Item label');
+});
+
+test('deck item with an uppercase id: save keeps the id and normalizes the file child, and a nested upload + DELETE round-trips', function (): void {
+	// Deck keys may carry uppercase (a `${timestamp}` id, an API client). The
+	// item factory must not turn the id into a lowercase slug that no longer
+	// matches its key — that used to make the deck fall back to raw storage,
+	// leaving the file child absent and every nested delete a 400.
+	$this->saver->saveObject('widgets', ['id' => 'w2', 'title' => 'W2', 'mycard' => ['label' => 'Card'], 'mydeck' => ['Item_B' => ['id' => 'Item_B', 'label' => 'B label']]]);
+	$stored = test()->fetcher->fetchObjectFromDisk('widgets', 'w2')->toArray();
+	expect(array_keys($stored['mydeck']))->toBe(['Item_B'])
+		->and($stored['mydeck']['Item_B']['id'])->toBe('Item_B')
+		->and($stored['mydeck']['Item_B']['doc']['name'] ?? null)->toBe('');
+
+	$fixture = nestedDocFixture();
+	expect(postUpload('/api/collections/widgets/w2/mydeck/Item_B/doc', $fixture, 'text/plain', 'doc')->getStatusCode())->toBe(200);
+	$stored = test()->fetcher->fetchObjectFromDisk('widgets', 'w2')->toArray();
+	expect($stored['mydeck']['Item_B']['doc']['name'] ?? '')->toBe(basename($fixture));
+
+	expect(delete('/api/collections/widgets/w2/mydeck/Item_B/doc')->getStatusCode())->toBe(200);
+	$stored = test()->fetcher->fetchObjectFromDisk('widgets', 'w2')->toArray();
+	expect($stored['mydeck']['Item_B']['doc']['name'] ?? null)->toBe('')
+		->and($stored['mydeck']['Item_B']['label'])->toBe('B label')
+		->and(is_dir(objectFilesPath('widgets', 'w2') . '/mydeck/Item_B/doc'))->toBeFalse();
+});
+
 // ─── video poster ────────────────────────────────────────────────────────────
 
 test('video poster inside a {container}: upload lands one level deeper, keeps the video keys and siblings, serves through ImageWorks', function (string $prefix, string $siblingPath, string $siblingValue): void {

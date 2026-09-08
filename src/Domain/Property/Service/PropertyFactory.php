@@ -136,6 +136,15 @@ readonly class PropertyFactory
 					$processedItemData[$fieldName] = $propertyObject->transform();
 				}
 
+				// The deck key is the item's identity. An `id` child is usually a
+				// slug field, and slugifying lowercases — so `Item_B` would come
+				// back as `item_b`, fail DeckData's key-equals-id rule, and push
+				// the whole deck onto the unprocessed fallback below. Keep the id
+				// bound to its key instead.
+				if (array_key_exists('id', $processedItemData)) {
+					$processedItemData['id'] = (string)$itemId;
+				}
+
 				$processedDeckData[$itemId] = $processedItemData;
 			}
 

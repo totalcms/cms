@@ -220,14 +220,17 @@ class FileField extends FormField
 			'label'    => 'Size',
 			'icon'     => false,
 			'readonly' => true,
-			'value'    => $fileData['size'] ?? '',
+			// Integers in file.json — an empty input serializes as null and
+			// fails validation, so cast like FileData does: an absent file, a
+			// null, or an empty string all read as 0.
+			'value'    => intval($fileData['size'] ?? 0),
 		]);
 		$content .= $this->form->subField('count', [
 			'field'    => 'number',
 			'label'    => 'Download Count',
 			'icon'     => false,
 			'readonly' => true,
-			'value'    => $fileData['count'] ?? '',
+			'value'    => intval($fileData['count'] ?? 0),
 		]);
 		$content .= $this->form->subField('mime', [
 			'field'    => 'text',

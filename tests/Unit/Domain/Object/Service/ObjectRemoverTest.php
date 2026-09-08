@@ -229,7 +229,7 @@ final class ObjectRemoverTest extends TestCase
 	public function testDeleteNestedPropertyClearsChildAndPreservesSiblings(): void
 	{
 		// Existing card with image and title children. Deleting just the image
-		// nulls obj[mycard][image] and removes the disk dir at coll/id/mycard/image/.
+		// removes obj[mycard][image] and the disk dir at coll/id/mycard/image/.
 		$existingObject = new class('test-id') extends ObjectData {
 			public function __construct(string $id)
 			{
@@ -261,13 +261,12 @@ final class ObjectRemoverTest extends TestCase
 			->method('deleteDirectory')
 			->with('posts', 'test-id', 'mycard', null, 'image');
 
-		// JSON-side: image is nulled, title preserved, sibling card metadata intact.
+		// JSON-side: image is removed, title preserved, sibling card metadata intact.
 		$expectedObjectData = [
 			'id'     => 'test-id',
 			'mycard' => [
 				'id'    => 'mycard',
 				'title' => 'My card title',
-				'image' => null,
 			],
 		];
 
@@ -289,8 +288,8 @@ final class ObjectRemoverTest extends TestCase
 
 	public function testDeleteNestedPropertyHandlesMultiSegmentDeckPath(): void
 	{
-		// Phase 3: deck-item child delete clears `obj[deckprop][itemId][childKey]`
-		// to null and removes the matching nested directory on disk.
+		// Phase 3: deck-item child delete removes `obj[deckprop][itemId][childKey]`
+		// and the matching nested directory on disk.
 		$existingObject = new class('test-id') extends ObjectData {
 			public function __construct(string $id)
 			{
@@ -327,14 +326,13 @@ final class ObjectRemoverTest extends TestCase
 			->method('deleteDirectory')
 			->with('posts', 'test-id', 'mydeck', null, 'item-3/image');
 
-		// JSON: only obj.mydeck.item-3.image is nulled; siblings preserved.
+		// JSON: only obj.mydeck.item-3.image is removed; siblings preserved.
 		$expectedObjectData = [
 			'id'     => 'test-id',
 			'mydeck' => [
 				'item-3' => [
 					'id'    => 'item-3',
 					'title' => 'Item 3',
-					'image' => null,
 				],
 				'item-4' => [
 					'id' => 'item-4',
@@ -389,5 +387,47 @@ final class ObjectRemoverTest extends TestCase
 			->with('posts', 'test-id', ['id' => 'test-id']);
 
 		$this->remover->deleteNestedProperty('posts', 'test-id', 'mycard', 'image');
+	}
+
+	public function testDeleteNestedPropertyLeavesTheDeckUntouchedWhenTheItemIsMissing(): void
+	{
+		// A directory can exist for an item id the JSON has no key for (a stale
+		// upload, or an id whose case differs on a case-insensitive filesystem).
+		// The walk comes up empty — the deck itself must survive intact.
+		$existingObject = new class('test-id') extends ObjectData {
+			public function __construct(string $id)
+			{
+				parent::__construct($id, []);
+			}
+
+			public function toArray(): array
+			{
+				return [
+					'id'     => 'test-id',
+					'mydeck' => [
+						'item-3' => ['id' => 'item-3', 'title' => 'Item 3'],
+					],
+				];
+			}
+		};
+
+		$this->objectFetcher->method('fetchObject')->willReturn($existingObject);
+
+		$this->propStorage
+			->expects($this->once())
+			->method('deleteDirectory')
+			->with('posts', 'test-id', 'mydeck', null, 'ghost/image');
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', [
+				'id'     => 'test-id',
+				'mydeck' => [
+					'item-3' => ['id' => 'item-3', 'title' => 'Item 3'],
+				],
+			]);
+
+		$this->remover->deleteNestedProperty('posts', 'test-id', 'mydeck', 'ghost/image');
 	}
 }
