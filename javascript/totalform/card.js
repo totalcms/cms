@@ -25,7 +25,7 @@ export default class CardField extends TotalField {
         // re-marking the card as unsaved on every cycle.
         this.container.addEventListener("subfield-change", e => {
             if (e.target === this.container) return;
-            this.changed();
+            this.onSubFieldChange(e);
         });
 
         // Visibility lookups (`watch: enabled`) need to resolve against the card's
@@ -34,6 +34,15 @@ export default class CardField extends TotalField {
         if (this.form && this.form.form) {
             this.form.form.addEventListener('totalform:ready', () => this.initVisibility(), { once: true });
         }
+    }
+
+    //-------------------------
+    // A sub-field changed: by default the card's own value changed with it.
+    // Subclasses can intercept for children that persist themselves (see
+    // VideoField's poster, which autosaves like any image field).
+    //-------------------------
+    onSubFieldChange(e) {
+        this.changed();
     }
 
     initVisibility() {

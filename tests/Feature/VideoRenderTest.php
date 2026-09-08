@@ -155,6 +155,26 @@ test('a file-field value (video/* mime) renders <video src> via cms.media.stream
 		->and($html)->toContain('/stream/clips/one/clip');
 });
 
+test('the facade is the default whenever a poster or thumbnail resolves', function (): void {
+	$object = videoObject(['url' => 'https://vimeo.com/123456789', 'thumbnail' => 'https://cdn.example.com/thumb.jpg', 'title' => 'Clip']);
+
+	$html = $this->render->video($object, ['property' => 'promo']);
+
+	expect($html)->toContain('class="cms-video-facade"')
+		->and($html)->toContain('src="https://cdn.example.com/thumb.jpg"')
+		->and($html)->not->toContain('<iframe');
+});
+
+test('facade: false forces the eager iframe even when a thumbnail resolves', function (): void {
+	$object = videoObject(['url' => 'https://vimeo.com/123456789', 'thumbnail' => 'https://cdn.example.com/thumb.jpg']);
+
+	$html = $this->render->video($object, ['property' => 'promo', 'facade' => false]);
+
+	expect($html)->toContain('class="cms-video-embed"')
+		->and($html)->toContain('<iframe')
+		->and($html)->not->toContain('cms-video-facade');
+});
+
 test('facade: true renders a poster + play button with data-embed carrying autoplay=1', function (): void {
 	$object = videoObject([
 		'url'       => 'https://vimeo.com/123456789',

@@ -53,7 +53,7 @@ class VideoRenderer
 			'controls'   => true,
 			'class'      => '',
 			'poster'     => '',
-			'facade'     => false,
+			'facade'     => true,
 			'imageworks' => [],
 		], $options);
 
@@ -100,10 +100,13 @@ class VideoRenderer
 			return $this->fileVideo($info->embedUrl !== '' ? $info->embedUrl : $url, $posterUrl, $aspectRatio, $options);
 		}
 
-		// An `unknown` embed URL is the author's own pasted URL, verbatim —
-		// never mutated with a query string, facade or not (EmbedBuilder::iframe()
-		// matches today's embed() behaviour; forcing autoplay=1 onto an arbitrary
-		// URL isn't safe to assume).
+		// The facade is the default (`facade: false` forces an eager iframe):
+		// a poster or vendor thumbnail with a play button costs one image
+		// instead of a player, and video-facade.js swaps the iframe in on
+		// click. An `unknown` embed URL is the author's own pasted URL,
+		// verbatim — never mutated with a query string, facade or not
+		// (EmbedBuilder::iframe() matches today's embed() behaviour; forcing
+		// autoplay=1 onto an arbitrary URL isn't safe to assume).
 		if (!empty($options['facade'])) {
 			$posterUrl = (string)$options['poster'] !== '' ? (string)$options['poster'] : $this->media->videoPoster($idOrObject, $posterImageworks, $options);
 

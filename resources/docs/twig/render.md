@@ -81,20 +81,24 @@ embed, a `<video>` element, or a click-to-play facade — whichever fits the
 provider.
 
 ```twig
-{# An object from the ready-made video collection: collection and property both default to "video" #}
+{# An object from the ready-made video collection: collection and property both default to "video".
+   Hosted providers render as a click-to-play facade (poster + play button) by default. #}
 {{ cms.render.video('intro') }}
 
 {# Hosted provider (YouTube, Vimeo, Livid, Bunny, Cloudflare, Loom, Wistia, Publitio) on your own schema #}
 {{ cms.render.video(post, {property: 'promo'}) }}
 
+{# An eager iframe instead of the facade #}
+{{ cms.render.video(post, {property: 'promo', facade: false}) }}
+
 {# Direct file URL (the `file` provider) — a muted looping background clip #}
 {{ cms.render.video(post, {property: 'trailer', autoplay: true, muted: true, loop: true}) }}
 
-{# Click-to-play facade — poster + play button, swaps in the iframe on click #}
-{{ cms.render.video(post, {property: 'promo', facade: true, muted: true}) }}
+{# Facade options carry into the embed built on click #}
+{{ cms.render.video(post, {property: 'promo', muted: true}) }}
 
-{# Facade with the uploaded poster resized through ImageWorks #}
-{{ cms.render.video(post, {property: 'promo', facade: true, imageworks: {w: 1200}}) }}
+{# The uploaded poster resized through ImageWorks #}
+{{ cms.render.video(post, {property: 'promo', imageworks: {w: 1200}}) }}
 
 {# A file-field value (mime starting video/) streams through the same call #}
 {{ cms.render.video(post, {property: 'localClip'}) }}
@@ -110,7 +114,7 @@ provider.
 | `controls` | bool | `true` | Show player controls (`file` provider only) |
 | `class` | string | `''` | Extra CSS class on the wrapper |
 | `poster` | string | `''` | Override poster URL — otherwise resolved via `cms.media.videoPoster()` |
-| `facade` | bool | `false` | Click-to-play poster instead of an eager embed; ignored for the `file` provider, and for any value where no poster or thumbnail resolves (an `unknown` URL has no vendor thumbnail, so the poster must be uploaded) |
+| `facade` | bool | `true` | Click-to-play poster with a play button; the iframe loads on click. Set `false` for an eager iframe. Ignored for the `file` provider, and for any value where no poster or thumbnail resolves, which renders the eager iframe instead (an `unknown` URL has no vendor thumbnail, so the poster must be uploaded) |
 
 An `unknown` provider URL is never modified — it renders as a generic iframe
 with the author's URL exactly as pasted. See [Video](docs/fields/video) for

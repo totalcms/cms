@@ -135,8 +135,11 @@ On save:
 {# The object with id "intro" in the video collection #}
 {{ cms.render.video('intro') }}
 
-{# The same object as a click-to-play facade, poster resized through ImageWorks #}
-{{ cms.render.video('intro', {facade: true, imageworks: {w: 1200}}) }}
+{# The same object with its poster resized through ImageWorks #}
+{{ cms.render.video('intro', {imageworks: {w: 1200}}) }}
+
+{# An eager iframe instead of the click-to-play poster #}
+{{ cms.render.video('intro', {facade: false}) }}
 
 {# Every video in the collection #}
 {% for video in cms.collection.objects('video') %}
@@ -179,22 +182,25 @@ cms.render.video(object, {options})
 | `class` | string | `''` | Extra CSS class on the wrapper |
 | `poster` | string | `''` | Override poster URL — otherwise resolved via `cms.media.videoPoster()` |
 | `imageworks` | array | `[]` | ImageWorks parameters (`{w: 800, fm: 'webp'}`) applied to an uploaded poster, the same array `cms.render.image()` takes. Ignored for a vendor thumbnail or a `poster` override, which are not served by T3 |
-| `facade` | bool | `false` | Click-to-play poster instead of an eager embed; ignored for the `file` provider, and for any value where no poster or thumbnail resolves (an `unknown` URL has no vendor thumbnail, so the poster must be uploaded) |
+| `facade` | bool | `true` | Click-to-play poster with a play button; the iframe loads on click. Set `false` for an eager iframe. Ignored for the `file` provider, and for any value where no poster or thumbnail resolves, which renders the eager iframe instead (an `unknown` URL has no vendor thumbnail, so the poster must be uploaded) |
 
-Hosted provider (YouTube, Vimeo, Livid, Bunny, Cloudflare, Loom, Wistia, Publitio) — a
-lazy-loaded iframe inside a responsive `aspect-ratio` wrapper. Pass `property`
-when the video sits on your own schema; leave both options out for an object
-from the ready-made `video` collection:
+Hosted provider (YouTube, Vimeo, Livid, Bunny, Cloudflare, Loom, Wistia, Publitio) — by
+default a click-to-play facade: the poster (uploaded, else the vendor
+thumbnail) with a play button, and the iframe only loads on click. Pass
+`property` when the video sits on your own schema; leave both options out for
+an object from the ready-made `video` collection:
 
 ```twig
 {{ cms.render.video(post, {property: 'promo'}) }}
 {{ cms.render.video('intro') }}
 ```
 
-Click-to-play facade with the uploaded poster resized through ImageWorks:
+The uploaded poster resized through ImageWorks, and an eager iframe instead
+of the facade:
 
 ```twig
-{{ cms.render.video(post, {property: 'promo', facade: true, imageworks: {w: 1200, fm: 'webp'}}) }}
+{{ cms.render.video(post, {property: 'promo', imageworks: {w: 1200, fm: 'webp'}}) }}
+{{ cms.render.video(post, {property: 'promo', facade: false}) }}
 ```
 
 Direct file URL (the `file` provider) — a `<video>` element instead of an
@@ -204,15 +210,15 @@ iframe, here as a muted looping background clip:
 {{ cms.render.video(post, {property: 'trailer', autoplay: true, muted: true, loop: true}) }}
 ```
 
-Click-to-play facade — renders the poster with a play button and swaps in the
-iframe on click, saving the iframe weight on pages listing many videos.
-Ignored for the `file` provider, and for any value where no poster or
-thumbnail resolves (the eager embed renders instead) — for an `unknown` URL
-specifically, the poster must be uploaded, since there is no vendor
-thumbnail:
+The facade is on by default: it renders the poster with a play button and
+swaps in the iframe on click, saving the iframe weight on pages listing many
+videos. It is skipped for the `file` provider, and for any value where no
+poster or thumbnail resolves (the eager embed renders instead) — for an
+`unknown` URL specifically, the poster must be uploaded, since there is no
+vendor thumbnail. `muted` and `loop` carry into the embed the click builds:
 
 ```twig
-{{ cms.render.video(post, {property: 'promo', facade: true, muted: true}) }}
+{{ cms.render.video(post, {property: 'promo', muted: true}) }}
 ```
 
 A file-field value (any `file` property whose stored `mime` starts with

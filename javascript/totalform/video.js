@@ -33,9 +33,6 @@ export default class VideoField extends CardField {
         this.thumbnailChip    = container.querySelector(".video-media-chip.thumbnail");
 
         this.urlInput.addEventListener("input", () => this.onUrlInput());
-        // Keep the informational has-poster class in step with the poster's
-        // own changes (upload, delete, edit) — CSS does the real switching.
-        container.addEventListener("subfield-change", () => this.updateMedia());
     }
 
     // The poster is the video's one card-shaped sub-field (see subFields() on
@@ -43,6 +40,45 @@ export default class VideoField extends CardField {
     // TotalField instance exists yet (e.g. during this constructor).
     posterField() {
         return this.subFields().find(field => field.property === "poster") ?? null;
+    }
+
+    // A change inside the poster is NOT a change to the video. In edit mode
+    // the poster persists itself exactly like a top-level image field: the
+    // upload POSTs straight onto the object, alt/focal-point edits PUT through
+    // image.js autosave(), and the trash button DELETEs the nested child. So
+    // the video's own baseline simply follows the poster's value instead of
+    // flagging the video unsaved and demanding a redundant Save. Anything
+    // the poster still owes (a queued upload on a not-yet-saved object) keeps
+    // surfacing through CardField.isUnsaved(), which asks the sub-field.
+    //
+    // Events from the poster's own internals (alt, focal point) bubble
+    // through here too, so the test is "originated inside the poster", not
+    // "is the poster".
+    onSubFieldChange(e) {
+        const poster = this.posterField();
+        if (poster && poster.container && poster.container.contains(e.target)) {
+            this.onPosterChange(poster);
+            return;
+        }
+        super.onSubFieldChange(e);
+    }
+
+    onPosterChange(poster) {
+        if (this.storedValue && typeof this.storedValue === "object") {
+            this.storedValue = { ...this.storedValue, poster: poster.getValue() };
+        }
+
+        // After a delete the image field clears its value but never calls
+        // saved() on itself (nothing else is left to persist), which would
+        // keep the video reporting unsaved through the sub-field. Nothing
+        // pending, no image: it is saved.
+        const pending  = poster.droplet && typeof poster.droplet.pendingFiles === "function" ? poster.droplet.pendingFiles().length : 0;
+        const hasImage = typeof poster.hasImage === "function" ? poster.hasImage() : true;
+        if (!hasImage && pending === 0 && typeof poster.saved === "function") {
+            poster.saved();
+        }
+
+        this.updateMedia();
     }
 
     // A changed URL invalidates every value the server derives from it, so the

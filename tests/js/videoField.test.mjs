@@ -192,18 +192,66 @@ describe('VideoField', () => {
         });
     });
 
-    test('a changed poster sub-field marks the video unsaved', () => {
+    test('a poster upload does not mark the video unsaved — the poster autosaves itself', () => {
         const video = buildVideoField({ posterValue: { name: 'poster.jpg' } });
         const posterEl = video.container.querySelector('.card-fields .form-field');
 
         expect(video.container.classList.contains('unsaved')).toBe(false);
 
-        // Simulate the poster's own changed() firing subfield-change once its
-        // value actually differs (TotalField.changed() bubbles this when
-        // isSubField() is true).
-        posterEl.totalfield.getValue = () => ({ name: 'new-poster.jpg' });
+        // Simulate image.js after a completed upload: the poster's value is the
+        // server's, and its changed() bubbles subfield-change to the video.
+        posterEl.totalfield.getValue = () => ({ name: 'new-poster.jpg', size: 900 });
         posterEl.dispatchEvent(new CustomEvent('subfield-change', { bubbles: true, detail: { field: posterEl.totalfield } }));
 
+        expect(video.container.classList.contains('unsaved')).toBe(false);
+        // The baseline followed the poster, so a later stray change event on
+        // the video (e.g. a blur) does not re-flag it either.
+        expect(video.storedValue.poster).toEqual({ name: 'new-poster.jpg', size: 900 });
+        video.changed();
+        expect(video.container.classList.contains('unsaved')).toBe(false);
+    });
+
+    test('a change inside the poster (alt text) does not mark the video unsaved either', () => {
+        const video = buildVideoField({ posterValue: { name: 'poster.jpg', alt: '' } });
+        const posterEl = video.container.querySelector('.card-fields .form-field');
+        const altEl = document.createElement('div');
+        altEl.className = 'form-field';
+        posterEl.appendChild(altEl);
+
+        posterEl.totalfield.getValue = () => ({ name: 'poster.jpg', alt: 'Hello' });
+        altEl.dispatchEvent(new CustomEvent('subfield-change', { bubbles: true, detail: { field: {} } }));
+
+        expect(video.container.classList.contains('unsaved')).toBe(false);
+        expect(video.storedValue.poster).toEqual({ name: 'poster.jpg', alt: 'Hello' });
+    });
+
+    test('deleting the poster marks the poster saved and drops has-poster, without touching the video', () => {
+        const video = buildVideoField({ posterValue: { name: 'poster.jpg', size: 500 }, hasPoster: true });
+        const posterEl = video.container.querySelector('.card-fields .form-field');
+        let savedCalls = 0;
+        posterEl.totalfield.saved = () => { savedCalls++; };
+
+        // Simulate image-preview.js after DELETE: value cleared, preview gone.
+        posterEl.totalfield.getValue = () => ({ name: '', size: 0 });
+        posterEl.totalfield.hasImage = () => false;
+        posterEl.querySelector('.dz-preview').remove();
+        posterEl.dispatchEvent(new CustomEvent('subfield-change', { bubbles: true, detail: { field: posterEl.totalfield } }));
+
+        expect(video.container.classList.contains('unsaved')).toBe(false);
+        expect(savedCalls).toBe(1);
+        expect(video.mediaContainer.classList.contains('has-poster')).toBe(false);
+    });
+
+    test('a URL edit still marks the video unsaved, and a following poster upload keeps it so', () => {
+        const video = buildVideoField({ posterValue: { name: 'poster.jpg' } });
+        const posterEl = video.container.querySelector('.card-fields .form-field');
+
+        video.urlInput.value = 'https://vimeo.com/999999';
+        video.urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+        expect(video.container.classList.contains('unsaved')).toBe(true);
+
+        posterEl.totalfield.getValue = () => ({ name: 'new-poster.jpg' });
+        posterEl.dispatchEvent(new CustomEvent('subfield-change', { bubbles: true, detail: { field: posterEl.totalfield } }));
         expect(video.container.classList.contains('unsaved')).toBe(true);
     });
 

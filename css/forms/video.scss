@@ -148,7 +148,7 @@ $video-media-width : 320px;
 			opacity : 0.85;
 		}
 		&.has-thumbnail:not(:has(.dz-preview:not(.not-found))) .dz-overlay {
-			background-color : oklch(var(--totalform-purewhite));
+			// background-color : oklch(var(--totalform-purewhite));
 			filter           : drop-shadow(0 1px 3px oklch(var(--totalform-black) / 0.6));
 		}
 
