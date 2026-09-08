@@ -10,6 +10,7 @@ use Mcp\Schema\Enum\Role;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Exception\PromptRenderException;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use Twig\Error\Error;
 
 final readonly class PromptRenderer
 {
@@ -35,7 +36,7 @@ final readonly class PromptRenderer
 
 		try {
 			$rendered = $this->twig->renderString($prompt->body, ['args' => $args]);
-		} catch (\Twig\Error\Error $e) {
+		} catch (Error $e) {
 			throw new PromptRenderException(
 				sprintf('Twig error in prompt "%s": %s', $prompt->name, $e->getMessage()),
 				0,

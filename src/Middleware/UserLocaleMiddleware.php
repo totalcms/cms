@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Middleware;
 
+use Cake\I18n\I18n;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -42,7 +43,7 @@ readonly class UserLocaleMiddleware implements MiddlewareInterface
 
 			if (extension_loaded('intl')) {
 				\Locale::setDefault($locale);
-				\Cake\I18n\I18n::setLocale($locale);
+				I18n::setLocale($locale);
 			}
 		}
 

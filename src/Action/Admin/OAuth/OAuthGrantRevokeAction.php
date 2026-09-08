@@ -6,6 +6,7 @@ namespace TotalCMS\Action\Admin\OAuth;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -34,7 +35,7 @@ readonly class OAuthGrantRevokeAction
 			]);
 		}
 
-		if (!$this->grants->find($id) instanceof \TotalCMS\Domain\OAuth\Data\OAuthGrantData) {
+		if (!$this->grants->find($id) instanceof OAuthGrantData) {
 			return $this->jsonRenderer->json($response->withStatus(404), [
 				'error' => ['message' => 'Grant not found'],
 			]);

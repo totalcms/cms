@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Formatter\TableHelper;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 
 class SchemaListCommand extends BaseCommand
 {
@@ -36,10 +37,10 @@ class SchemaListCommand extends BaseCommand
 
 		$category = $input->getOption('category');
 		if (is_string($category)) {
-			$schemas = array_filter($schemas, fn (\TotalCMS\Domain\Schema\Data\SchemaData $s): bool => $s->category === $category);
+			$schemas = array_filter($schemas, fn (SchemaData $s): bool => $s->category === $category);
 		}
 
-		$data = array_map(fn (\TotalCMS\Domain\Schema\Data\SchemaData $s): array => $s->toArray(), array_values($schemas));
+		$data = array_map(fn (SchemaData $s): array => $s->toArray(), array_values($schemas));
 
 		return $this->outputData($input, $output, $data);
 	}

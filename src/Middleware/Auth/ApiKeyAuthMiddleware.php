@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -36,7 +37,7 @@ readonly class ApiKeyAuthMiddleware implements MiddlewareInterface
 		// Authenticate using API key
 		$validatedKey = $this->authenticator->authenticate($request);
 
-		if (!$validatedKey instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
+		if (!$validatedKey instanceof ApiKeyData) {
 			return $this->unauthorizedResponse('Invalid API key or insufficient permissions');
 		}
 

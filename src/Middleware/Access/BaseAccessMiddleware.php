@@ -10,6 +10,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Interfaces\RouteInterface;
+use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
@@ -113,9 +115,9 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 			// Unable to detect operation, deny access and log in dev/debug mode
 			if ($this->config->env === 'dev' || $this->config->debug) {
 				$logger       = $this->loggerFactory->channelLogger(LogChannel::Access);
-				$routeContext = \Slim\Routing\RouteContext::fromRequest($request);
+				$routeContext = RouteContext::fromRequest($request);
 				$route        = $routeContext->getRoute();
-				$routeName    = $route instanceof \Slim\Interfaces\RouteInterface ? $route->getName() : 'unknown';
+				$routeName    = $route instanceof RouteInterface ? $route->getName() : 'unknown';
 
 				$logger->warning('Operation detection failed', [
 					'resource'   => static::RESOURCE_NAME,
@@ -166,8 +168,8 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 		// RouteContext::fromRequest(), which throws when routing metadata is
 		// absent. This runs on the denial path: a throw here would turn a clean
 		// 403 into a 500, which is a worse outcome than an unnamed log line.
-		$route     = $request->getAttribute(\Slim\Routing\RouteContext::ROUTE);
-		$routeName = $route instanceof \Slim\Interfaces\RouteInterface ? (string)$route->getName() : 'unknown';
+		$route     = $request->getAttribute(RouteContext::ROUTE);
+		$routeName = $route instanceof RouteInterface ? (string)$route->getName() : 'unknown';
 
 		$this->loggerFactory->channelLogger(LogChannel::Access)->warning('Access denied', [
 			'resource'    => static::RESOURCE_NAME,

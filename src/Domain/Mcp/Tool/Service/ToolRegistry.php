@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Service;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 
 /**
  * In-memory registry of MCP tool definitions.
@@ -81,7 +82,7 @@ class ToolRegistry
 	private function assertRequirementWellFormed(McpToolDefinition $tool): void
 	{
 		$requires = $tool->requires;
-		if (!$requires instanceof \TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement) {
+		if (!$requires instanceof ToolRequirement) {
 			return;
 		}
 

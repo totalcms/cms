@@ -8,6 +8,7 @@ use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Builder\Util\NestedFileTree;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Template\Data\TemplatePath;
@@ -159,7 +160,7 @@ readonly class BuilderTemplateRenderer
 	public function builderRouteForCollection(string $collectionId): ?array
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
-		if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData || $collection->url === '' || !$collection->prettyUrl) {
+		if (!$collection instanceof CollectionData || $collection->url === '' || !$collection->prettyUrl) {
 			return null;
 		}
 

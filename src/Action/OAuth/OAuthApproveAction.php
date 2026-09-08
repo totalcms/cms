@@ -7,6 +7,7 @@ namespace TotalCMS\Action\OAuth;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
+use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -103,7 +104,7 @@ readonly class OAuthApproveAction
 
 		$scopeObjects = $authRequest->getScopes();
 		$scopes       = array_map(
-			static fn (\League\OAuth2\Server\Entities\ScopeEntityInterface $s): string => $s->getIdentifier(),
+			static fn (ScopeEntityInterface $s): string => $s->getIdentifier(),
 			$scopeObjects,
 		);
 		$this->activityLogger->consentGranted($clientId, $userIdStr, array_values($scopes));

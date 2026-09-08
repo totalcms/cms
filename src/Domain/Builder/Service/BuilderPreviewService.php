@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Builder\Service;
 
 use TotalCMS\Domain\Builder\Data\PageData;
+use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -84,7 +85,7 @@ readonly class BuilderPreviewService
 	{
 		if ($previewUrl !== '') {
 			$match = $this->pageRouter->match($previewUrl);
-			if ($match instanceof \TotalCMS\Domain\Builder\Data\RouteMatch) {
+			if ($match instanceof RouteMatch) {
 				$data = ['params' => $match->params];
 				// Same convention as PageRouterMiddleware: collection-URL
 				// matches expose the record as `object`, builder-page matches

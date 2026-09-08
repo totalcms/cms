@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Admin;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server\RequestContext;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
@@ -331,12 +332,12 @@ readonly class SchemaTools
 		}
 
 		$authority = $this->personaContext->getAuthority();
-		if ($authority instanceof \TotalCMS\Domain\Auth\Data\UserAuthority && $authority->isAdmin) {
+		if ($authority instanceof UserAuthority && $authority->isAdmin) {
 			return;
 		}
 
 		if (
-			!$authority instanceof \TotalCMS\Domain\Auth\Data\UserAuthority
+			!$authority instanceof UserAuthority
 			|| !$authority->canCollectionMeta('create', $collectionId)
 			|| !$authority->canCollection('create', $collectionId)
 		) {

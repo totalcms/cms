@@ -6,6 +6,8 @@ namespace TotalCMS\Action\OAuth;
 
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Exception\OAuthServerException;
+use League\OAuth2\Server\Entities\ScopeEntityInterface;
+use League\OAuth2\Server\RequestTypes\AuthorizationRequestInterface;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -13,6 +15,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\OAuth\Adapter\LeagueScopeEntity;
+use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
@@ -98,7 +101,7 @@ readonly class OAuthAuthorizeAction
 		}
 
 		return $this->twig->template($response, 'oauth/consent.twig', [
-			'clientName' => $client instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData ? $client->name : $authRequest->getClient()->getIdentifier(),
+			'clientName' => $client instanceof OAuthClientData ? $client->name : $authRequest->getClient()->getIdentifier(),
 			'clientIcon' => $client?->iconPath,
 			'scopes'     => $scopeRows,
 			'userId'     => (string)$userId,
@@ -126,11 +129,11 @@ readonly class OAuthAuthorizeAction
 	 * unknown-only request would yield a scope-less token that MCP rejects
 	 * with insufficient_scope on every call.
 	 */
-	private function normalizeRequestedScopes(\League\OAuth2\Server\RequestTypes\AuthorizationRequestInterface $authRequest): void
+	private function normalizeRequestedScopes(AuthorizationRequestInterface $authRequest): void
 	{
 		$known = array_values(array_filter(
 			$authRequest->getScopes(),
-			fn (\League\OAuth2\Server\Entities\ScopeEntityInterface $s): bool => $this->scopes->has($s->getIdentifier()),
+			fn (ScopeEntityInterface $s): bool => $this->scopes->has($s->getIdentifier()),
 		));
 
 		if ($known === []) {

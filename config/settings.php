@@ -1,6 +1,8 @@
 <?php
 
+use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
+use TotalCMS\Support\PathResolver;
 
 // Defaults
 $settings = require __DIR__ . '/defaults.php';
@@ -8,10 +10,10 @@ $settings = require __DIR__ . '/defaults.php';
 // Load configuration overrides
 // For Composer installs: project-level config/tcms.php
 // For zip installs: package-level config/tcms.php (Stacks integration)
-$projectTcms = TotalCMS\Support\PathResolver::projectRoot() . '/config/tcms.php';
+$projectTcms = PathResolver::projectRoot() . '/config/tcms.php';
 $packageTcms = __DIR__ . '/tcms.php';
 
-if (TotalCMS\Support\PathResolver::isComposerInstall() && file_exists($projectTcms)) {
+if (PathResolver::isComposerInstall() && file_exists($projectTcms)) {
 	$installationSettings = require $projectTcms;
 	if (is_array($installationSettings)) {
 		$settings = array_replace_recursive($settings, $installationSettings);
@@ -86,7 +88,7 @@ if (($settings['env'] ?? '') === 'test') {
 	// Check multiple indicators that this is a legitimate test environment
 	$testIndicators = [
 		// PHPUnit/Pest testing frameworks are active
-		defined('PHPUNIT_RUNNING') || class_exists(PHPUnit\Framework\TestCase::class),
+		defined('PHPUNIT_RUNNING') || class_exists(TestCase::class),
 		function_exists('test') || function_exists('describe'),
 		// CLI environment (tests typically run from command line)
 		php_sapi_name() === 'cli',

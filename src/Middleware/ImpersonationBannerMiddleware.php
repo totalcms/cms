@@ -6,6 +6,7 @@ namespace TotalCMS\Middleware;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\SessionInterface;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -27,7 +28,7 @@ use TotalCMS\Domain\Session\SessionKeys;
 final readonly class ImpersonationBannerMiddleware implements MiddlewareInterface
 {
 	/**
-	 * @param App<\Psr\Container\ContainerInterface> $app
+	 * @param App<ContainerInterface> $app
 	 */
 	public function __construct(
 		private ImpersonationServiceInterface $impersonation,

@@ -13,14 +13,18 @@ use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Import\RssImporter;
+use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
@@ -40,6 +44,7 @@ use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Domain\Visualizer\Service\VisualizerService;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\PathResolver;
 
 readonly class AdminUtilsAction
 {
@@ -63,10 +68,10 @@ readonly class AdminUtilsAction
 		private OAuthClientRepository $oauthClientRepository,
 		private OAuthGrantRepository $oauthGrantRepository,
 		private OAuthScopeRegistry $oauthScopeRegistry,
-		private \TotalCMS\Domain\Extension\Service\ExtensionManager $extensionManager,
+		private ExtensionManager $extensionManager,
 		private VisualizerService $visualizerService,
 		private SessionInterface $session,
-		private \TotalCMS\Domain\Builder\Service\BuilderTemplatePaths $builderTemplatePaths,
+		private BuilderTemplatePaths $builderTemplatePaths,
 		private AccessControlService $accessControlService,
 		private McpSchemaResolver $mcpSchemaResolver,
 		private Config $config,
@@ -343,7 +348,7 @@ readonly class AdminUtilsAction
 			'rssCollections'            => $rssAnalysis !== null ? $this->collectionLister->listAllCollections() : null,
 			'updateInfo'                => $updateInfo,
 			'retainedBackup'            => $retainedBackup,
-			'composerInstall'           => \TotalCMS\Support\PathResolver::isComposerInstall(),
+			'composerInstall'           => PathResolver::isComposerInstall(),
 			'syncData'                  => $syncData,
 			'jumpstartData'             => $jumpstartData,
 			'visualizerData'            => $visualizerData,
@@ -473,7 +478,7 @@ readonly class AdminUtilsAction
 
 		foreach ($grants as $grant) {
 			$client     = $this->oauthClientRepository->find($grant->clientId);
-			$clientName = $client instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData ? $client->name : $grant->clientId;
+			$clientName = $client instanceof OAuthClientData ? $client->name : $grant->clientId;
 
 			$expiresAt       = null;
 			$isExpired       = false;
@@ -726,7 +731,7 @@ readonly class AdminUtilsAction
 			}
 
 			$objects = [];
-			if ($index instanceof \TotalCMS\Domain\Index\Data\IndexData) {
+			if ($index instanceof IndexData) {
 				foreach ($index->objects as $entry) {
 					$objectId = (string)($entry['id'] ?? '');
 					if ($objectId === '') {

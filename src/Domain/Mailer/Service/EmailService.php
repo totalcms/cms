@@ -12,6 +12,7 @@ use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\OperationResult;
+use function Pinky\transformString;
 
 /**
  * EmailService handles email template processing and sending.
@@ -176,7 +177,7 @@ readonly class EmailService
 		}
 
 		try {
-			$doc = \Pinky\transformString($html);
+			$doc = transformString($html);
 
 			return (string)$doc->saveHTML();
 		} catch (\Throwable $e) {

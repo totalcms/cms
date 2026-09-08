@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Service;
 
+use DI\CompiledContainer;
+use DI\Container;
+use Mcp\Schema\Prompt;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
+use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Automation\Service\AutomationRegistry;
+use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ExtensionEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
+use TotalCMS\Domain\Extension\Data\AutomationDefinition;
 use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
@@ -19,8 +27,19 @@ use TotalCMS\Domain\Extension\ExtensionInterface;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
+use TotalCMS\Domain\Search\Service\SearchProvider;
+use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
+use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
+use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
+use TotalCMS\Domain\Twig\Service\CoreAdminAssetRegistrar;
+use TotalCMS\Domain\Twig\Service\CoreFrontendAssetRegistrar;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
+use Twig\AbstractTwigCallable;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
@@ -367,16 +386,16 @@ class ExtensionManager
 		// Register extension field types in the form builder and schema property editor
 		$extFieldTypes = $this->getAllFieldTypes();
 		if ($extFieldTypes !== []) {
-			\TotalCMS\Domain\Admin\TotalForm::registerExtensionFieldTypes($extFieldTypes);
-			\TotalCMS\Domain\Admin\TotalForm::registerExtensionFieldDefaultTypes($this->getAllFieldDefaultTypes());
+			TotalForm::registerExtensionFieldTypes($extFieldTypes);
+			TotalForm::registerExtensionFieldDefaultTypes($this->getAllFieldDefaultTypes());
 		}
 
 		// Wire event listeners from extensions into the EventDispatcher
-		if ($this->container->has(\TotalCMS\Domain\Event\Service\EventDispatcher::class)) {
+		if ($this->container->has(EventDispatcher::class)) {
 			$eventListeners = $this->getAllEventListeners();
 			if ($eventListeners !== []) {
-				/** @var \TotalCMS\Domain\Event\Service\EventDispatcher $dispatcher */
-				$dispatcher = $this->container->get(\TotalCMS\Domain\Event\Service\EventDispatcher::class);
+				/** @var EventDispatcher $dispatcher */
+				$dispatcher = $this->container->get(EventDispatcher::class);
 				$dispatcher->registerAll($eventListeners);
 			}
 		}
@@ -384,11 +403,11 @@ class ExtensionManager
 		// Wire extension-contributed automations into the shared registry so they
 		// join the schedule/event dispatch (read-only — handler is an in-memory
 		// closure). Permission-gated inside getAllAutomations().
-		if ($this->container->has(\TotalCMS\Domain\Automation\Service\AutomationRegistry::class)) {
+		if ($this->container->has(AutomationRegistry::class)) {
 			$extensionAutomations = $this->getAllAutomations();
 			if ($extensionAutomations !== []) {
-				/** @var \TotalCMS\Domain\Automation\Service\AutomationRegistry $automationRegistry */
-				$automationRegistry = $this->container->get(\TotalCMS\Domain\Automation\Service\AutomationRegistry::class);
+				/** @var AutomationRegistry $automationRegistry */
+				$automationRegistry = $this->container->get(AutomationRegistry::class);
 				foreach ($extensionAutomations as $key => $definition) {
 					$automationRegistry->register($key, $definition);
 				}
@@ -396,9 +415,9 @@ class ExtensionManager
 		}
 
 		// Wire page-middleware registrations from extensions into the registry.
-		if ($this->container->has(\TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class)) {
-			/** @var \TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry $pageMiddlewareRegistry */
-			$pageMiddlewareRegistry = $this->container->get(\TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class);
+		if ($this->container->has(PageMiddlewareRegistry::class)) {
+			/** @var PageMiddlewareRegistry $pageMiddlewareRegistry */
+			$pageMiddlewareRegistry = $this->container->get(PageMiddlewareRegistry::class);
 			foreach ($this->contexts as $id => $context) {
 				if (!$this->isCapabilityPermitted($id, 'page-middleware')) {
 					continue;
@@ -432,9 +451,9 @@ class ExtensionManager
 		// cross-extension). Runs before Twig wiring so registries are ready
 		// by the time the first /mcp request lands — boot is the latest safe
 		// moment since extensions populate their contexts during register().
-		if ($this->container->has(\TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry::class)) {
-			/** @var \TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry $toolRegistry */
-			$toolRegistry  = $this->container->get(\TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry::class);
+		if ($this->container->has(ToolRegistry::class)) {
+			/** @var ToolRegistry $toolRegistry */
+			$toolRegistry  = $this->container->get(ToolRegistry::class);
 			$mcpRegistrar  = new McpExtensionRegistrar($this->logger);
 			$mcpRegistrar->register($toolRegistry, $this->getAllMcpTools());
 
@@ -449,10 +468,10 @@ class ExtensionManager
 			$extensionTemplates = $this->getAllMcpResourceTemplates();
 			if (
 				($extensionResources !== [] || $extensionTemplates !== [])
-				&& $this->container->has(\TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry::class)
+				&& $this->container->has(ResourceRegistry::class)
 			) {
-				/** @var \TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry $resourceRegistry */
-				$resourceRegistry = $this->container->get(\TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry::class);
+				/** @var ResourceRegistry $resourceRegistry */
+				$resourceRegistry = $this->container->get(ResourceRegistry::class);
 				$mcpRegistrar->registerResources($resourceRegistry, $extensionResources);
 				$mcpRegistrar->registerResourceTemplates($resourceRegistry, $extensionTemplates);
 			}
@@ -463,9 +482,9 @@ class ExtensionManager
 		// registry's register() method already throws LogicException on
 		// duplicate ids — wrap each call so one bad extension can't break the
 		// rest of the drain.
-		if ($this->container->has(\TotalCMS\Domain\Search\Service\SearchProviderRegistry::class)) {
-			/** @var \TotalCMS\Domain\Search\Service\SearchProviderRegistry $searchRegistry */
-			$searchRegistry = $this->container->get(\TotalCMS\Domain\Search\Service\SearchProviderRegistry::class);
+		if ($this->container->has(SearchProviderRegistry::class)) {
+			/** @var SearchProviderRegistry $searchRegistry */
+			$searchRegistry = $this->container->get(SearchProviderRegistry::class);
 			foreach ($this->getAllMcpSearchProviders() as $extensionId => $providers) {
 				foreach ($providers as $provider) {
 					try {
@@ -482,14 +501,14 @@ class ExtensionManager
 		}
 
 		// Wire Twig items from extensions into the TwigEngine (with collision protection)
-		if ($this->container->has(\TotalCMS\Domain\Twig\Service\TwigEngine::class)) {
-			/** @var \TotalCMS\Domain\Twig\Service\TwigEngine $twigEngine */
-			$twigEngine = $this->container->get(\TotalCMS\Domain\Twig\Service\TwigEngine::class);
+		if ($this->container->has(TwigEngine::class)) {
+			/** @var TwigEngine $twigEngine */
+			$twigEngine = $this->container->get(TwigEngine::class);
 
 			$twigRegistrar = new TwigExtensionRegistrar($this->logger);
 			$twigRegistrar->filterAndRegister(
 				$twigEngine,
-				$this->container->get(\TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension::class),
+				$this->container->get(TotalCMSTwigExtension::class),
 				$this->getAllTwigFunctions(),
 				$this->getAllTwigFilters(),
 				$this->getAllTwigGlobals(),
@@ -521,13 +540,13 @@ class ExtensionManager
 
 			// Wire admin + frontend assets through the CMS adapter for the
 			// new cms.adminAssetsHead/Body() and cms.assetsHead/Body() helpers.
-			if ($this->container->has(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class)) {
-				/** @var \TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter $cmsAdapter */
-				$cmsAdapter = $this->container->get(\TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+			if ($this->container->has(TotalCMSTwigAdapter::class)) {
+				/** @var TotalCMSTwigAdapter $cmsAdapter */
+				$cmsAdapter = $this->container->get(TotalCMSTwigAdapter::class);
 
 				// Core T3 assets first so they render before extension assets.
-				(new \TotalCMS\Domain\Twig\Service\CoreAdminAssetRegistrar())->register($cmsAdapter);
-				(new \TotalCMS\Domain\Twig\Service\CoreFrontendAssetRegistrar())->register($cmsAdapter);
+				(new CoreAdminAssetRegistrar())->register($cmsAdapter);
+				(new CoreFrontendAssetRegistrar())->register($cmsAdapter);
 
 				$adminAssets = $this->getAllAdminAssets();
 				if ($adminAssets !== []) {
@@ -956,7 +975,7 @@ class ExtensionManager
 	 * flat list) lets the registrar attribute collisions to a specific extension
 	 * in the warning log.
 	 *
-	 * @return array<string,list<\TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition>>
+	 * @return array<string,list<McpToolDefinition>>
 	 */
 	public function getAllMcpTools(): array
 	{
@@ -1026,7 +1045,7 @@ class ExtensionManager
 	 * 'text' provider OR another extension's provider are logged + skipped.
 	 * Gated by the `mcp:search` capability permission.
 	 *
-	 * @return array<string,list<\TotalCMS\Domain\Search\Service\SearchProvider>>
+	 * @return array<string,list<SearchProvider>>
 	 */
 	public function getAllMcpSearchProviders(): array
 	{
@@ -1049,7 +1068,7 @@ class ExtensionManager
 	 * McpServerFactory attribute collisions to a specific extension in the warning
 	 * log. Gated by the `mcp:prompts` capability permission.
 	 *
-	 * @return array<string,list<array{prompt: \Mcp\Schema\Prompt, handler: callable, access: string}>>
+	 * @return array<string,list<array{prompt: Prompt, handler: callable, access: string}>>
 	 */
 	public function getAllMcpPrompts(): array
 	{
@@ -1172,7 +1191,7 @@ class ExtensionManager
 	 */
 	private function twigCallableOptions(TwigFunction|TwigFilter $callable): array
 	{
-		$prop = new \ReflectionProperty(\Twig\AbstractTwigCallable::class, 'options');
+		$prop = new \ReflectionProperty(AbstractTwigCallable::class, 'options');
 		/** @var array<string,mixed> $options */
 		$options = $prop->getValue($callable);
 
@@ -1429,7 +1448,7 @@ class ExtensionManager
 	 * auto-detected `automations` capability — disabling it hides the
 	 * extension's automations without uninstalling.
 	 *
-	 * @return array<string,\TotalCMS\Domain\Extension\Data\AutomationDefinition>
+	 * @return array<string,AutomationDefinition>
 	 */
 	public function getAllAutomations(): array
 	{
@@ -1686,9 +1705,9 @@ class ExtensionManager
 	private function dispatchEvent(string $event, ExtensionEventPayload $payload): void
 	{
 		try {
-			if ($this->container->has(\TotalCMS\Domain\Event\Service\EventDispatcher::class)) {
-				/** @var \TotalCMS\Domain\Event\Service\EventDispatcher $dispatcher */
-				$dispatcher = $this->container->get(\TotalCMS\Domain\Event\Service\EventDispatcher::class);
+			if ($this->container->has(EventDispatcher::class)) {
+				/** @var EventDispatcher $dispatcher */
+				$dispatcher = $this->container->get(EventDispatcher::class);
 				$dispatcher->dispatch($event, $payload);
 			}
 		} catch (\Throwable) {
@@ -1779,8 +1798,8 @@ class ExtensionManager
 			// independent feature surface (see ExtensionContext::ALWAYS_ON_CAPABILITIES),
 			// so they're always applied for an enabled extension rather than gated
 			// behind a toggle that would only leave the extension enabled-but-broken.
-			if ($this->container instanceof \DI\Container) {
-				$compiled = $this->container instanceof \DI\CompiledContainer;
+			if ($this->container instanceof Container) {
+				$compiled = $this->container instanceof CompiledContainer;
 				// Strict-deny on core service overrides (same policy as Twig
 				// functions and MCP tools). set() entries join the known list,
 				// so cross-extension duplicates are denied here too.

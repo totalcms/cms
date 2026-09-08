@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\OAuth\Service;
 
+use TotalCMS\Domain\OAuth\Data\OAuthScopeData;
+
 /**
  * RFC 7591 dynamic client registration. Validates the inbound metadata
  * payload, then delegates to OAuthClientCreator with is_dynamic=true.
@@ -52,7 +54,7 @@ final readonly class OAuthDynamicRegistrar
 		$scopes = array_values(array_filter($scopes, $this->scopes->has(...)));
 		if ($scopes === []) {
 			$scopes = array_map(
-				static fn (\TotalCMS\Domain\OAuth\Data\OAuthScopeData $s): string => $s->identifier,
+				static fn (OAuthScopeData $s): string => $s->identifier,
 				$this->scopes->all(),
 			);
 		}

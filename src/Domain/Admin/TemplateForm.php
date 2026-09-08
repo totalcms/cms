@@ -15,6 +15,7 @@ use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
@@ -197,7 +198,7 @@ class TemplateForm extends TotalForm
 			} elseif ($name === 'template') {
 				$options['value'] = $this->templateData->contents;
 			} elseif (in_array($name, ['designerEnabled', 'designerToken'], true)
-				&& $this->templateData->designer instanceof \TotalCMS\Domain\Template\Data\DesignerMetadata
+				&& $this->templateData->designer instanceof DesignerMetadata
 			) {
 				$options['value'] = $this->templateData->designer->$name;
 			}

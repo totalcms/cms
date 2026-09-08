@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace TotalCMS\Middleware;
 
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\LoggerInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\PageData;
+use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Factory\LogChannel;
+use TotalCMS\Factory\LoggerFactory;
 
 /**
  * Page routing middleware — wraps the entire Slim pipeline.
@@ -52,7 +57,7 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		'xml'         => 'application/xml; charset=utf-8',
 	];
 
-	private \Psr\Log\LoggerInterface $logger;
+	private LoggerInterface $logger;
 
 	public function __construct(
 		private PageRouter $pageRouter,
@@ -60,9 +65,9 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		private PageMiddlewareRunner $pageMiddlewareRunner,
 		private PageInspectorRenderer $pageInspector,
 		private PageReloadInjectorRenderer $pageReloadInjector,
-		\TotalCMS\Factory\LoggerFactory $loggerFactory,
+		LoggerFactory $loggerFactory,
 	) {
-		$this->logger = $loggerFactory->channelLogger(\TotalCMS\Factory\LogChannel::App);
+		$this->logger = $loggerFactory->channelLogger(LogChannel::App);
 	}
 
 	public function process(
@@ -103,7 +108,7 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		// Try to match a builder page or collection URL
 		$match = $this->pageRouter->match($path);
 
-		if (!$match instanceof \TotalCMS\Domain\Builder\Data\RouteMatch) {
+		if (!$match instanceof RouteMatch) {
 			// A genuine miss — the routing 404 above was suppressed from the
 			// error log, so record it here without the exception theatrics.
 			$this->logger->info(sprintf('404: %s %s matched no route, builder page, or collection URL', $method, $path));
@@ -117,7 +122,7 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 			}
 		}
 
-		if (!$match instanceof \TotalCMS\Domain\Builder\Data\RouteMatch) {
+		if (!$match instanceof RouteMatch) {
 			return $response;
 		}
 
@@ -226,7 +231,7 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 	/**
 	 * Encode a RouteMatch as a JSON response.
 	 */
-	private function jsonResponse(\TotalCMS\Domain\Builder\Data\RouteMatch $match): ResponseInterface
+	private function jsonResponse(RouteMatch $match): ResponseInterface
 	{
 		// Mirror the template's variable convention for consumers — a
 		// collection-URL match returns the matched record under `object`,
@@ -264,7 +269,7 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 	private function injectInspectorIfHtml(
 		ResponseInterface $response,
 		ServerRequestInterface $request,
-		\TotalCMS\Domain\Builder\Data\RouteMatch $match,
+		RouteMatch $match,
 	): ResponseInterface {
 		$contentType = strtolower($response->getHeaderLine('Content-Type'));
 		if (!str_starts_with($contentType, 'text/html')) {
@@ -278,7 +283,7 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 			return $response;
 		}
 
-		$stream = (new \Nyholm\Psr7\Factory\Psr17Factory())->createStream($injected);
+		$stream = (new Psr17Factory())->createStream($injected);
 
 		return $response->withBody($stream);
 	}

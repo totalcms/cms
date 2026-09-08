@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace TotalCMS\CLI\Command\Extension;
 
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 use TotalCMS\CLI\Command\BaseCommand;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
@@ -63,9 +65,9 @@ class ExtensionRemoveCommand extends BaseCommand
 		}
 
 		if (!$input->getOption('force') && !$this->isJson($input)) {
-			/** @var \Symfony\Component\Console\Helper\QuestionHelper $helper */
+			/** @var QuestionHelper $helper */
 			$helper   = $this->getHelper('question');
-			$question = new \Symfony\Component\Console\Question\ConfirmationQuestion(
+			$question = new ConfirmationQuestion(
 				"Remove extension '{$id}'? This deletes the extension files but NOT its data. [y/N] ",
 				false,
 			);

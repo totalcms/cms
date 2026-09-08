@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Bundle\Service\BundleChecker;
 use TotalCMS\Support\Config;
@@ -50,7 +51,7 @@ readonly class BundleMiddleware implements MiddlewareInterface
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
 
-		if ($route instanceof \Slim\Interfaces\RouteInterface) {
+		if ($route instanceof RouteInterface) {
 			$routeName = $route->getName();
 
 			return $routeName !== null && str_starts_with($routeName, 'setup-');

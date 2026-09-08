@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Search\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Search\Data\SearchQuery;
+use TotalCMS\Domain\Search\Data\SearchResult;
 use TotalCMS\Support\Config;
 
 /**
@@ -37,7 +39,7 @@ final readonly class SearchService implements SearchServiceInterface
 	}
 
 	/**
-	 * @return list<\TotalCMS\Domain\Search\Data\SearchResult>
+	 * @return list<SearchResult>
 	 */
 	public function search(SearchQuery $query): array
 	{
@@ -108,7 +110,7 @@ final readonly class SearchService implements SearchServiceInterface
 	private function resolveCollectionOverride(string $collectionId): ?string
 	{
 		$collection = $this->collectionFetcher->fetchCollection($collectionId);
-		if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
+		if (!$collection instanceof CollectionData) {
 			return null;
 		}
 		$value = (string)($collection->mcp['searchProvider'] ?? '');

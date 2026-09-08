@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\OAuth\Adapter;
 
 use League\OAuth2\Server\Entities\RefreshTokenEntityInterface;
 use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
+use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;
@@ -41,7 +42,7 @@ final readonly class LeagueRefreshTokenRepository implements RefreshTokenReposit
 
 		/** @var list<string> $scopes */
 		$scopes = array_map(
-			static fn (\League\OAuth2\Server\Entities\ScopeEntityInterface $s): string => $s->getIdentifier(),
+			static fn (ScopeEntityInterface $s): string => $s->getIdentifier(),
 			$accessToken->getScopes(),
 		);
 

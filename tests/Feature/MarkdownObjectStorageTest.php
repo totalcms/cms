@@ -55,8 +55,22 @@ it('answers the API identically for both formats', function (): void {
 
 	$md   = json_decode((string)get('/api/collections/docs/hello')->assertOk()->getBody(), true);
 	$json = json_decode((string)get('/api/collections/posts/hello')->assertOk()->getBody(), true);
-	unset($md['created'], $md['updated'], $json['created'], $json['updated']);
-	expect($md)->toEqual($json);
+
+	// The two saves stamp their own dates (created/updated, the blog `date`,
+	// the image's uploadDate), and they can straddle a second boundary, so
+	// strip every timestamp wherever it sits — the response nests the object.
+	$stripDates = function (array $data) use (&$stripDates): array {
+		foreach ($data as $key => $value) {
+			if (in_array($key, ['created', 'updated', 'date', 'uploadDate'], true)) {
+				unset($data[$key]);
+			} elseif (is_array($value)) {
+				$data[$key] = $stripDates($value);
+			}
+		}
+
+		return $data;
+	};
+	expect($stripDates($md))->toEqual($stripDates($json));
 });
 
 it('resolves a read by existence in both directions and prefers the collection format', function (): void {

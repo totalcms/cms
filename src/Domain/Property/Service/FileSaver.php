@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
@@ -280,7 +281,7 @@ class FileSaver
 	 */
 	protected function convertHeicToJpeg(string $filePath): string
 	{
-		$converter = new \TotalCMS\Domain\Media\Service\HeicConverter();
+		$converter = new HeicConverter();
 		if (!$converter->isHeicFile($filePath)) {
 			return $filePath;
 		}

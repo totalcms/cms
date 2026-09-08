@@ -7,12 +7,14 @@ namespace TotalCMS\Domain\Mcp\Service;
 use Mcp\Capability\Registry\ElementReference;
 use Mcp\Capability\Registry\ReferenceHandler;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\JsonRpc\MessageInterface;
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server;
 use Mcp\Server\Resource\SubscriptionManagerInterface;
 use Mcp\Server\Session\SessionStoreInterface;
 use Mcp\Server\Subscription\NotificationBusInterface;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -23,6 +25,7 @@ use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Subscription\Service\PersonaNotificationBus;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
@@ -319,7 +322,7 @@ readonly class McpServerFactory
 	private function guardHandler(McpToolDefinition $tool): \Closure
 	{
 		$requires = $tool->requires;
-		if (!$requires instanceof \TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement) {
+		if (!$requires instanceof ToolRequirement) {
 			return $tool->handler;
 		}
 
@@ -411,7 +414,7 @@ readonly class McpServerFactory
 				// Fail closed when PersonaContext never resolved an
 				// authority for this Bearer request.
 				$authority = $personaContext->getAuthority();
-				if (!$authority instanceof \TotalCMS\Domain\Auth\Data\UserAuthority) {
+				if (!$authority instanceof UserAuthority) {
 					$activityLogger->groupRejected($clientId, $toolName, $personaContext->getUserId());
 
 					throw new ToolCallException(sprintf(
@@ -530,7 +533,7 @@ readonly class McpServerFactory
 	{
 		// Sourced from the SDK so the discovery document can never drift from
 		// the version the transport actually negotiates.
-		return \Mcp\Schema\JsonRpc\MessageInterface::PROTOCOL_VERSION->value;
+		return MessageInterface::PROTOCOL_VERSION->value;
 	}
 
 	/**

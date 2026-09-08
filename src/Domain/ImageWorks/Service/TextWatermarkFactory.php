@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\ImageWorks\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Exception\EditionFeatureException;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Factory\LogChannel;
@@ -41,7 +42,7 @@ readonly class TextWatermarkFactory
 	 *
 	 * @param array<string,mixed> $params Text watermark parameters
 	 *
-	 * @throws \TotalCMS\Domain\License\Exception\EditionFeatureException
+	 * @throws EditionFeatureException
 	 *
 	 * @return string Path to generated watermark image
 	 */

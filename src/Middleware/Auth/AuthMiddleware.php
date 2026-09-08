@@ -9,9 +9,11 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
+use Slim\Exception\HttpForbiddenException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
+use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -40,7 +42,7 @@ readonly class AuthMiddleware implements MiddlewareInterface
 		private Config $config,
 		private AccessManager $accessManager,
 		private PersistentLoginService $persistentLoginService,
-		private \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator $csrfValidator,
+		private CSRFRequestValidator $csrfValidator,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->defaultAuthCollection = $this->config->auth['collection'];
@@ -91,7 +93,7 @@ readonly class AuthMiddleware implements MiddlewareInterface
 		if (!$this->csrfValidator->passes($request)) {
 			$this->logger->debug('CSRF validation failed for session-authenticated request', ['path' => $request->getUri()->getPath()]);
 
-			throw new \Slim\Exception\HttpForbiddenException(
+			throw new HttpForbiddenException(
 				$request,
 				'CSRF validation failed. Session-authenticated requests must come from this site, or carry the CSRF token (X-CSRF-Token header or csrf_token field). Use an API key for scripted access.'
 			);

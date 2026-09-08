@@ -7,10 +7,12 @@ namespace TotalCMS\Action\Auth;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpForbiddenException;
+use TotalCMS\Action\Object\ObjectSaveAction;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
@@ -25,7 +27,7 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
  * Public registration endpoint. Creates a user in an opted-in auth collection,
  * and either auto-logs them in OR sends an email verification link, depending
  * on the collection's `requireEmailVerification` flag. Returns JSON in the
- * same shape as {@see \TotalCMS\Action\Object\ObjectSaveAction} so the
+ * same shape as {@see ObjectSaveAction} so the
  * standard form builder (`cms.form.builder('members', {register: true})`) can
  * chain deferred image uploads and post-save actions against the new record
  * without any special casing on the client side.
@@ -101,7 +103,7 @@ readonly class AuthRegisterSubmitAction
 		// collection BEFORE saving so we know whether to force-disable the
 		// new account.
 		$collectionData         = $this->collectionFetcher->fetchCollection($collection);
-		$requiresVerification   = $collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData && $collectionData->requireEmailVerification;
+		$requiresVerification   = $collectionData instanceof CollectionData && $collectionData->requireEmailVerification;
 
 		// Force account state server-side in ALL cases (previously `active` was
 		// only forced under verification, leaving it form-controllable otherwise):

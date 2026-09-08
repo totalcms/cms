@@ -6,6 +6,7 @@ namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Service\OperationDetector;
 
 /**
  * Cache Access Middleware.
@@ -30,7 +31,7 @@ use TotalCMS\Domain\Auth\Data\UserAuthority;
  * Falling through to UtilsAccessMiddleware's "no page" branch would check
  * "has ANY utils access at all" rather than "has cache access specifically",
  * over-granting to a caller with, say, only `jumpstart` access. These routes
- * also aren't in {@see \TotalCMS\Domain\Auth\Service\OperationDetector}'s
+ * also aren't in {@see OperationDetector}'s
  * route-name lists (they map to no CRUD-shaped resource), so the CRUD
  * operation is irrelevant to the permission check — hence the fixed
  * `canUtil('cache')` / `canAccessUtils($userId, 'cache')` short-circuit

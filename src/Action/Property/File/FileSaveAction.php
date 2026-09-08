@@ -4,12 +4,15 @@ namespace TotalCMS\Action\Property\File;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UploadedFileInterface;
+use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Admin\FormField\ImageField;
 use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
+use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
@@ -80,7 +83,7 @@ readonly class FileSaveAction
 				// nested-upload route catches more URL shapes than just card/deck
 				// children, so signal "no such resource" rather than 500ing on a
 				// URL that simply doesn't represent a file upload.
-				throw new \Slim\Exception\HttpNotFoundException($request, 'No file found in request for property: ' . $paramName);
+				throw new HttpNotFoundException($request, 'No file found in request for property: ' . $paramName);
 			}
 		} else {
 			// Block executables/scripts before storing — applies to every
@@ -122,7 +125,7 @@ readonly class FileSaveAction
 		// (used by depot folder uploads).
 		$rawPath = $args['path'] ?? $query['path'] ?? null;
 		$subpath = is_string($rawPath) && $rawPath !== ''
-			? \TotalCMS\Infrastructure\Filesystem\PathUtils::sanitizeSubpath($rawPath)
+			? PathUtils::sanitizeSubpath($rawPath)
 			: '';
 		$subpath = $subpath === '' ? null : $subpath;
 
@@ -255,7 +258,7 @@ readonly class FileSaveAction
 	 *
 	 * @return string|ResponseInterface Path to the final assembled file, or early response for chunks
 	 */
-	private function handleFileUpload(\Psr\Http\Message\UploadedFileInterface $file, array $body, ResponseInterface $response): string|ResponseInterface
+	private function handleFileUpload(UploadedFileInterface $file, array $body, ResponseInterface $response): string|ResponseInterface
 	{
 		// Check for upload errors
 		$error = $file->getError();

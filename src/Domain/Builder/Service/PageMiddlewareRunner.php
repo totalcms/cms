@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\Service;
 
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Builder\Data\PageData;
+use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -45,7 +47,7 @@ readonly class PageMiddlewareRunner
 
 		foreach ($page->middleware as $name) {
 			$middleware = $this->registry->resolve($name);
-			if (!$middleware instanceof \TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface) {
+			if (!$middleware instanceof PageMiddlewareInterface) {
 				$this->logger->warning('Skipping unknown page middleware', [
 					'name' => $name,
 					'page' => $page->id,
@@ -81,7 +83,7 @@ readonly class PageMiddlewareRunner
 	 */
 	private function failClosed(string $message): ResponseInterface
 	{
-		$factory  = new \Nyholm\Psr7\Factory\Psr17Factory();
+		$factory  = new Psr17Factory();
 		$response = $factory->createResponse(500)
 			->withHeader('Content-Type', 'text/plain; charset=utf-8');
 		$response->getBody()->write('Page middleware error: ' . $message);

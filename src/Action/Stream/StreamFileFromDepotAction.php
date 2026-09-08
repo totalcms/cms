@@ -7,6 +7,7 @@ namespace TotalCMS\Action\Stream;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Action\Download\DownloadFileFromDepotAction;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DepotData;
@@ -18,7 +19,7 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
 /**
- * Stream counterpart of {@see \TotalCMS\Action\Download\DownloadFileFromDepotAction}.
+ * Stream counterpart of {@see DownloadFileFromDepotAction}.
  * See that class for the dispatch rationale (nested file vs depot file at the
  * same URL shape).
  */

@@ -7,6 +7,8 @@ namespace TotalCMS\Domain\Mcp\Service;
 use Mcp\Event\ErrorEvent;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Sentry\State\Scope;
+use function Sentry\captureException;
+use function Sentry\withScope;
 
 /**
  * PSR-14 dispatcher handed to the MCP SDK so handler/SDK errors reach Sentry.
@@ -40,10 +42,10 @@ final class McpSentryErrorDispatcher implements EventDispatcherInterface
 			return $event;
 		}
 
-		\Sentry\withScope(static function (Scope $scope) use ($event, $throwable): void {
+		withScope(static function (Scope $scope) use ($event, $throwable): void {
 			$scope->setTag('context', 'mcp');
 			$scope->setTag('mcp.method', $event->getRequest()::getMethod());
-			\Sentry\captureException($throwable);
+			captureException($throwable);
 		});
 
 		return $event;

@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Psr7\Response;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
@@ -104,7 +105,7 @@ readonly class McpRateLimitMiddleware implements MiddlewareInterface
 	private function tooManyRequests(int $limit): ResponseInterface
 	{
 		return $this->renderer->json(
-			(new \Slim\Psr7\Response())->withStatus(429),
+			(new Response())->withStatus(429),
 			[
 				'error' => [
 					'message'    => 'Too many anonymous MCP requests from this IP. Slow down or use an API key.',

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension;
 
+use League\Flysystem\FilesystemException;
 use League\Flysystem\Visibility;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 
@@ -74,7 +75,7 @@ final readonly class ExtensionStorage
 	/**
 	 * Write a file, creating parent directories as needed.
 	 *
-	 * @throws \League\Flysystem\FilesystemException When the write fails
+	 * @throws FilesystemException When the write fails
 	 *                                               (e.g. unwritable datadir).
 	 *                                               Let it propagate from
 	 *                                               register()/boot() — the

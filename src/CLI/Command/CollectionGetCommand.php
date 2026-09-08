@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Formatter\TableHelper;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 
 class CollectionGetCommand extends BaseCommand
 {
@@ -25,7 +26,7 @@ class CollectionGetCommand extends BaseCommand
 		$id         = (string)$input->getArgument('id');
 		$collection = $this->totalcms->collectionFetcher()->fetchCollection($id);
 
-		if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
+		if (!$collection instanceof CollectionData) {
 			return $this->outputError($input, $output, "Collection '{$id}' not found.");
 		}
 

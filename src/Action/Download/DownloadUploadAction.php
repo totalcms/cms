@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Property\Service\UploadFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -57,7 +58,7 @@ readonly class DownloadUploadAction
 	private function enforceAccess(ServerRequestInterface $request, string $collection, string $property): void
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData || $collectionData->groups === []) {
+		if (!$collectionData instanceof CollectionData || $collectionData->groups === []) {
 			return;
 		}
 

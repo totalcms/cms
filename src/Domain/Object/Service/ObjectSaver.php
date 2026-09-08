@@ -3,9 +3,11 @@
 namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Property\Data\DateData;
@@ -20,8 +22,8 @@ readonly class ObjectSaver
 		private PropertyDataProcessorInterface $propertyProcessor,
 		private DateFieldResetter $dateFieldResetter,
 		private EventDispatcher $eventDispatcher,
-		private \TotalCMS\Domain\Collection\Service\CollectionFetcher $collectionFetcher,
-		private \TotalCMS\Domain\Index\Repository\IndexRepository $indexRepository,
+		private CollectionFetcher $collectionFetcher,
+		private IndexRepository $indexRepository,
 	) {
 	}
 

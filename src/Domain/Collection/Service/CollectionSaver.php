@@ -9,6 +9,7 @@ use TotalCMS\Domain\Event\Payload\CollectionEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Exception\EditionFeatureException;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -35,7 +36,7 @@ readonly class CollectionSaver
 	 *
 	 * @throws \DomainException
 	 * @throws \UnexpectedValueException
-	 * @throws \TotalCMS\Domain\License\Exception\EditionFeatureException
+	 * @throws EditionFeatureException
 	 */
 	/**
 	 * @param array<string,mixed> $data
@@ -384,7 +385,7 @@ readonly class CollectionSaver
 	/**
 	 * Validate that the schema is allowed for the current edition.
 	 *
-	 * @throws \TotalCMS\Domain\License\Exception\EditionFeatureException
+	 * @throws EditionFeatureException
 	 */
 	private function validateSchemaEdition(string $schema): void
 	{

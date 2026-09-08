@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Twig\Adapter;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\JobQueue\Data\JobQueueHealthData;
@@ -515,7 +516,7 @@ NGINX;
 	/**
 	 * Get collections that are inaccessible due to edition restrictions.
 	 *
-	 * @return array<\TotalCMS\Domain\Collection\Data\CollectionData>
+	 * @return array<CollectionData>
 	 */
 	public function inaccessibleCollections(): array
 	{

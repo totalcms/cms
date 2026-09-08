@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace TotalCMS\CLI\Command;
 
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 use TotalCMS\Support\Version;
 
 class UpdateApplyCommand extends BaseCommand
@@ -59,9 +61,9 @@ class UpdateApplyCommand extends BaseCommand
 			$output->writeln('<comment>This will update Total CMS and briefly put the site in maintenance mode.</comment>');
 			$output->writeln('');
 
-			/** @var \Symfony\Component\Console\Helper\QuestionHelper $helper */
+			/** @var QuestionHelper $helper */
 			$helper   = $this->getHelper('question');
-			$question = new \Symfony\Component\Console\Question\ConfirmationQuestion(
+			$question = new ConfirmationQuestion(
 				"Update to {$updateInfo->version}? [y/N] ",
 				false
 			);

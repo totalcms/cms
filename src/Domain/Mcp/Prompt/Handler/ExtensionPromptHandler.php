@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Prompt\Handler;
 
+use Mcp\Exception\PromptGetException;
+use Mcp\Schema\Prompt;
 use Mcp\Server\ClientGateway;
 use Mcp\Server\Handler\PromptHandlerInterface;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
@@ -20,7 +22,7 @@ use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
  * can only recover parameter names — argument descriptions and required flags
  * have nowhere to travel and are silently lost. Clients then render an
  * unlabelled, apparently-optional field for a required argument, with no hint
- * of what to type. `Builder::add()` takes the `\Mcp\Schema\Prompt` value
+ * of what to type. `Builder::add()` takes the `Prompt` value
  * object as given, so whatever an extension declared — descriptions included —
  * is what `prompts/list` publishes.
  *
@@ -52,7 +54,7 @@ final readonly class ExtensionPromptHandler implements PromptHandlerInterface
 	public function get(array $arguments, ClientGateway $gateway): mixed
 	{
 		if (!PromptRegistrar::personaCanAccess($this->persona, $this->access)) {
-			throw new \Mcp\Exception\PromptGetException(sprintf(
+			throw new PromptGetException(sprintf(
 				'Prompt "%s" requires %s access.',
 				$this->name,
 				$this->access,

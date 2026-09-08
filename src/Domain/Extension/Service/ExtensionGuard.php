@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Extension\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Extension\Data\ExtensionState;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 
 /**
@@ -115,7 +116,7 @@ final class ExtensionGuard
 	private function quarantine(string $extensionId, int $count, \Throwable $e): void
 	{
 		$state = $this->stateRepository->getState($extensionId);
-		if (!$state instanceof \TotalCMS\Domain\Extension\Data\ExtensionState || $state->isQuarantined()) {
+		if (!$state instanceof ExtensionState || $state->isQuarantined()) {
 			return;
 		}
 

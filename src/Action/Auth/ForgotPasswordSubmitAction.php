@@ -15,6 +15,7 @@ use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\OperationResult;
 
 /**
  * Process forgot password request and send reset email.
@@ -87,7 +88,7 @@ readonly class ForgotPasswordSubmitAction
 	/**
 	 * Send password reset email to user.
 	 */
-	private function sendResetEmail(string $email, string $token, string $collection): \TotalCMS\Support\OperationResult
+	private function sendResetEmail(string $email, string $token, string $collection): OperationResult
 	{
 		// Fetch user to get their name
 		$user     = $this->userValidator->findUserByEmail($email, $collection);
@@ -121,7 +122,7 @@ readonly class ForgotPasswordSubmitAction
 	/**
 	 * Send default password reset email using built-in template.
 	 */
-	private function sendDefaultResetEmail(string $email, string $name, string $resetUrl, int $expiryMinutes): \TotalCMS\Support\OperationResult
+	private function sendDefaultResetEmail(string $email, string $name, string $resetUrl, int $expiryMinutes): OperationResult
 	{
 		try {
 			// Render email template
@@ -139,7 +140,7 @@ readonly class ForgotPasswordSubmitAction
 				'bodyHtml'  => $htmlBody,
 			]);
 		} catch (\Exception $e) {
-			return \TotalCMS\Support\OperationResult::failure('Failed to send password reset email: ' . $e->getMessage());
+			return OperationResult::failure('Failed to send password reset email: ' . $e->getMessage());
 		}
 	}
 }

@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Property\Service;
 
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -37,8 +38,8 @@ readonly class PropertyMetaResolver
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
 
 		$schemaProp     = $schemaData->properties[$property] ?? [];
-		$collectionProp = $collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData ? ($collectionData->properties[$property] ?? []) : [];
-		$customProp     = ($objectId !== '' && $collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData)
+		$collectionProp = $collectionData instanceof CollectionData ? ($collectionData->properties[$property] ?? []) : [];
+		$customProp     = ($objectId !== '' && $collectionData instanceof CollectionData)
 			? ($collectionData->customProperties[$objectId][$property] ?? [])
 			: [];
 

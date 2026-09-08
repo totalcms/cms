@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
 
 /**
@@ -245,7 +246,7 @@ readonly class OperationDetector
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
 
-		if (!$route instanceof \Slim\Interfaces\RouteInterface) {
+		if (!$route instanceof RouteInterface) {
 			return '';
 		}
 

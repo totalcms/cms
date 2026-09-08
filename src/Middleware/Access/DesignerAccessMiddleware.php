@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplatePath;
@@ -34,7 +35,7 @@ readonly class DesignerAccessMiddleware implements MiddlewareInterface
 	{
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
-		$path         = $route instanceof \Slim\Interfaces\RouteInterface ? (string)$route->getArgument('path', '') : '';
+		$path         = $route instanceof RouteInterface ? (string)$route->getArgument('path', '') : '';
 
 		if ($path === '') {
 			return $this->errorResponse(404, 'Template path is required');

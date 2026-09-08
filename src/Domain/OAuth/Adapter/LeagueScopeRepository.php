@@ -8,6 +8,7 @@ use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
@@ -67,7 +68,7 @@ final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 		?string $authCodeId = null,
 	): array {
 		$client = $this->clients->find($clientEntity->getIdentifier());
-		if (!$client instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData) {
+		if (!$client instanceof OAuthClientData) {
 			return [];
 		}
 

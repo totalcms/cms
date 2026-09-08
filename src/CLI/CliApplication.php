@@ -9,10 +9,14 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Support\PathResolver;
 use TotalCMS\Support\Version;
 use TotalCMS\TotalCMS;
+use function Sentry\captureException;
+use function Sentry\configureScope;
+use function Sentry\flush;
 
 /**
  * CLI application bootstrap.
@@ -152,7 +156,7 @@ class CliApplication
 		// Extension-provided commands (with collision protection)
 		try {
 			$extensionManager = $totalcms->container()->get(
-				\TotalCMS\Domain\Extension\Service\ExtensionManager::class
+				ExtensionManager::class
 			);
 			$extensionManager->discoverAndRegister();
 
@@ -234,7 +238,7 @@ class CliApplication
 		$dispatcher = new EventDispatcher();
 
 		$dispatcher->addListener(ConsoleEvents::ERROR, static function (ConsoleErrorEvent $event): void {
-			\Sentry\configureScope(static function (Scope $scope) use ($event): void {
+			configureScope(static function (Scope $scope) use ($event): void {
 				$scope->setTag('context', 'cli');
 
 				$command = $event->getCommand();
@@ -243,8 +247,8 @@ class CliApplication
 				}
 			});
 
-			\Sentry\captureException($event->getError());
-			\Sentry\flush();
+			captureException($event->getError());
+			flush();
 		});
 
 		return $dispatcher;

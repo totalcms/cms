@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Action\XmlRpc\XmlRpcDiscoveryAction;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -311,7 +312,7 @@ class TotalCMSTwigAdapter
 	 * subfolder installs where guessing `{home}/xmlrpc.php` fails.
 	 *
 	 * The href is built from `$this->base` (== `$config->api`), the same source
-	 * {@see \TotalCMS\Action\XmlRpc\XmlRpcDiscoveryAction} uses to construct the
+	 * {@see XmlRpcDiscoveryAction} uses to construct the
 	 * endpoint it actually serves, so the two can never disagree.
 	 *
 	 * `assetsHead()` runs on every customer front-end page, so this is

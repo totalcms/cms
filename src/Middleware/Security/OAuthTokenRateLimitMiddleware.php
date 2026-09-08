@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Psr7\Response;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
@@ -105,7 +106,7 @@ readonly class OAuthTokenRateLimitMiddleware implements MiddlewareInterface
 	private function tooManyRequests(int $limit, int $window): ResponseInterface
 	{
 		return $this->renderer->json(
-			(new \Slim\Psr7\Response())->withStatus(429),
+			(new Response())->withStatus(429),
 			[
 				'error'             => 'too_many_requests',
 				'error_description' => 'Rate limit exceeded for this OAuth endpoint.',

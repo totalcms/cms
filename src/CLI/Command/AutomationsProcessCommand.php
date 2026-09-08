@@ -8,6 +8,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\Domain\Automation\Service\AutomationLoader;
+use TotalCMS\Domain\Automation\Service\AutomationQueue;
 use TotalCMS\Domain\Automation\Service\AutomationRunner;
 use TotalCMS\Domain\Automation\Service\AutomationStateStore;
 use TotalCMS\Domain\Automation\Service\ScheduleTicker;
@@ -53,7 +54,7 @@ class AutomationsProcessCommand extends BaseCommand
 		$ticker = $this->totalcms->container()->get(ScheduleTicker::class);
 
 		// Drain queued async runs (webhook async + event triggers) first.
-		$queue   = $this->totalcms->container()->get(\TotalCMS\Domain\Automation\Service\AutomationQueue::class);
+		$queue   = $this->totalcms->container()->get(AutomationQueue::class);
 		$drained = 0;
 		$queue->drain(function (array $job) use ($runner, &$drained): void {
 			$runner->run(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\CLI\Command;
 
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -44,7 +45,7 @@ class ObjectDeleteCommand extends BaseCommand
 		}
 
 		if (!$input->getOption('force') && !$this->isJson($input)) {
-			/** @var \Symfony\Component\Console\Helper\QuestionHelper $helper */
+			/** @var QuestionHelper $helper */
 			$helper   = $this->getHelper('question');
 			$question = new ConfirmationQuestion(
 				"Delete object '{$objectId}' from '{$collectionId}'? This cannot be undone. [y/N] ",

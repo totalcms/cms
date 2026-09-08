@@ -9,7 +9,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Exception\HttpForbiddenException;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
+use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
 
 /**
  * CSRF Protection Middleware.
@@ -56,7 +58,7 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 
 	public function __construct(
 		private ApiKeyAuthenticator $apiKeyAuthenticator,
-		private \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator $csrfValidator,
+		private CSRFRequestValidator $csrfValidator,
 	) {
 	}
 
@@ -76,7 +78,7 @@ readonly class CSRFProtectionMiddleware implements MiddlewareInterface
 		// bypass CSRF and ride the session cookie instead.
 		if ($this->apiKeyAuthenticator->hasApiKeyHeader($request)) {
 			$validatedKey = $this->apiKeyAuthenticator->authenticate($request);
-			if (!$validatedKey instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
+			if (!$validatedKey instanceof ApiKeyData) {
 				throw new HttpForbiddenException(
 					$request,
 					'Invalid API key. Request rejected.'

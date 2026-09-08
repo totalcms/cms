@@ -9,10 +9,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Exception\HttpException;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
+use TotalCMS\Domain\Template\Exception\TemplatesLockedException;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Middleware\PageRouterMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\RawRenderer;
+use function Sentry\captureException;
 
 /**
  * Default Error Renderer.
@@ -70,7 +73,7 @@ readonly class DefaultErrorHandler
 			&& $exception->getCode() === StatusCodeInterface::STATUS_NOT_FOUND
 			&& (
 				$request->getMethod() === 'HEAD'
-				|| (bool)$request->getAttribute(\TotalCMS\Middleware\PageRouterMiddleware::AUGMENTS_404)
+				|| (bool)$request->getAttribute(PageRouterMiddleware::AUGMENTS_404)
 			);
 
 		if ($logErrors && !$isExpected404) {
@@ -86,7 +89,7 @@ readonly class DefaultErrorHandler
 
 		// Integrate with Sentry (skip expected 404s)
 		if (!$isExpected404) {
-			\Sentry\captureException($exception);
+			captureException($exception);
 		}
 
 		// Detect status code
@@ -193,7 +196,7 @@ readonly class DefaultErrorHandler
 			$statusCode = StatusCodeInterface::STATUS_BAD_REQUEST;
 		}
 
-		if ($exception instanceof \TotalCMS\Domain\Template\Exception\TemplatesLockedException) {
+		if ($exception instanceof TemplatesLockedException) {
 			// Templates are git-managed on this environment — editing is forbidden.
 			$statusCode = StatusCodeInterface::STATUS_FORBIDDEN;
 		}

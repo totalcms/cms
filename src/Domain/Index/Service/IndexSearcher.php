@@ -3,12 +3,13 @@
 namespace TotalCMS\Domain\Index\Service;
 
 use Illuminate\Support\Collection;
+use TotalCMS\Domain\Query\Service\ObjectSearcher;
 
 readonly class IndexSearcher
 {
 	public function __construct(
 		private IndexReader $reader,
-		private \TotalCMS\Domain\Query\Service\ObjectSearcher $objectSearcher,
+		private ObjectSearcher $objectSearcher,
 	) {
 	}
 

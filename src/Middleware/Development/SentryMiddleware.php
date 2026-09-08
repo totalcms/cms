@@ -2,20 +2,36 @@
 
 namespace TotalCMS\Middleware\Development;
 
+use DI\Definition\Exception\InvalidDefinition;
+use DI\DependencyException;
+use DI\NotFoundException;
+use FastRoute\BadRouteException;
+use League\Csv\SyntaxError;
+use League\Flysystem\CorruptedPathDetected;
+use League\Flysystem\UnableToCreateDirectory;
+use League\Flysystem\UnableToMoveFile;
+use League\Flysystem\UnableToWriteFile;
+use Opis\JsonSchema\Exceptions\InvalidKeywordException;
+use Opis\JsonSchema\Exceptions\UnresolvedReferenceException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\State\Scope;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Exception\HttpUnauthorizedException;
+use Symfony\Component\Console\Exception\ExceptionInterface;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Support\Version;
+use function Sentry\captureException;
+use function Sentry\configureScope;
+use function Sentry\init;
 
 class SentryMiddleware implements MiddlewareInterface
 {
@@ -39,26 +55,26 @@ class SentryMiddleware implements MiddlewareInterface
 			HttpUnauthorizedException::class,
 			HttpForbiddenException::class,
 			HttpBadRequestException::class,
-			\League\Csv\SyntaxError::class,
-			\League\Flysystem\UnableToCreateDirectory::class,
-			\League\Flysystem\UnableToMoveFile::class,
-			\League\Flysystem\CorruptedPathDetected::class,
-			\FastRoute\BadRouteException::class, // Duplicate route registration - user configuration issue
-			\Opis\JsonSchema\Exceptions\InvalidKeywordException::class, // Invalid schema definition - user error
-			\Opis\JsonSchema\Exceptions\UnresolvedReferenceException::class, // User schema $ref points at a missing/external schema
+			SyntaxError::class,
+			UnableToCreateDirectory::class,
+			UnableToMoveFile::class,
+			CorruptedPathDetected::class,
+			BadRouteException::class, // Duplicate route registration - user configuration issue
+			InvalidKeywordException::class, // Invalid schema definition - user error
+			UnresolvedReferenceException::class, // User schema $ref points at a missing/external schema
 			\ParseError::class, // Corrupted PHP files - user installation issue
 			// Every Symfony Console exception is a CLI-usage mistake at the
 			// terminal (unknown command/namespace, unknown option, wrong arg
 			// count) — never a T3 bug. A genuine failure inside a command body
 			// throws an application exception, not a Console\Exception.
-			\Symfony\Component\Console\Exception\ExceptionInterface::class,
+			ExceptionInterface::class,
 		],
 		'user_error_exceptions' => [
 			\DomainException::class,
 			\InvalidArgumentException::class,
 			\RuntimeException::class,
 			\UnexpectedValueException::class,
-			\League\Flysystem\UnableToWriteFile::class,
+			UnableToWriteFile::class,
 			\TypeError::class,
 			\Error::class,
 			LicenseException::class,
@@ -232,9 +248,9 @@ class SentryMiddleware implements MiddlewareInterface
 	 * @var array<class-string>
 	 */
 	private const WEB_ONLY_IGNORE = [
-		\DI\DependencyException::class,
-		\DI\NotFoundException::class,
-		\DI\Definition\Exception\InvalidDefinition::class,
+		DependencyException::class,
+		NotFoundException::class,
+		InvalidDefinition::class,
 	];
 
 	/** @var array<string,mixed> */
@@ -303,14 +319,14 @@ class SentryMiddleware implements MiddlewareInterface
 		);
 
 		try {
-			\Sentry\init($options);
+			init($options);
 
 			// Add build hash as a tag for tracking beta builds
-			\Sentry\configureScope(function (\Sentry\State\Scope $scope): void {
+			configureScope(function (Scope $scope): void {
 				$scope->setTag('build', Version::build());
 			});
 		} catch (\Throwable $exception) {
-			\Sentry\captureException($exception);
+			captureException($exception);
 
 			throw $exception;
 		}

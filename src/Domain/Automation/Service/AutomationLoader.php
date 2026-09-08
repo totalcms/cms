@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Automation\Service;
 
 use TotalCMS\Domain\Automation\Data\AutomationDescriptor;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Extension\Data\AutomationDefinition;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -111,7 +112,7 @@ final readonly class AutomationLoader
 	{
 		if (str_contains($id, ':')) {
 			$definition = $this->registry->get($id);
-			if (!$definition instanceof \TotalCMS\Domain\Extension\Data\AutomationDefinition) {
+			if (!$definition instanceof AutomationDefinition) {
 				throw new \RuntimeException("Extension automation '{$id}' is not registered.");
 			}
 

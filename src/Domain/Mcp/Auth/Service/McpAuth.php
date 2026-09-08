@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Auth\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -145,7 +146,7 @@ readonly class McpAuth
 		// message — a key that's valid for REST but lacks `/mcp` is functionally
 		// identical to "no MCP access" from the caller's perspective.
 		$apiKey = $this->apiKeyAuthenticator->authenticate($request);
-		if (!$apiKey instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
+		if (!$apiKey instanceof ApiKeyData) {
 			throw new McpAuthException(
 				'Invalid API key or insufficient permissions for MCP access.',
 				reason: 'invalid_token',

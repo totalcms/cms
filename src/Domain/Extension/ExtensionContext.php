@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension;
 
+use Mcp\Schema\Content\PromptMessage;
+use Mcp\Schema\Content\TextContent;
+use Mcp\Schema\Enum\Role;
+use Mcp\Schema\Prompt;
 use Mcp\Schema\ToolAnnotations;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
+use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
@@ -16,6 +22,9 @@ use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Domain\Search\Service\SearchProvider;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Support\Config;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
@@ -91,10 +100,10 @@ final class ExtensionContext
 	/** @var list<array{uriTemplate: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> MCP resource templates (URI patterns with {placeholder} segments) */
 	private array $mcpResourceTemplates = [];
 
-	/** @var list<\TotalCMS\Domain\Search\Service\SearchProvider> */
+	/** @var list<SearchProvider> */
 	private array $searchProviders = [];
 
-	/** @var list<array{prompt: \Mcp\Schema\Prompt, handler: callable, access: string}> Code-defined MCP prompts registered by this extension */
+	/** @var list<array{prompt: Prompt, handler: callable, access: string}> Code-defined MCP prompts registered by this extension */
 	private array $registeredMcpPrompts = [];
 
 	public function __construct(
@@ -102,7 +111,7 @@ final class ExtensionContext
 		private readonly string $extensionPath,
 		private readonly ContainerInterface $container,
 		private readonly ExtensionSettingsManager $settingsManager,
-		private readonly \Psr\Log\LoggerInterface $logger,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -156,8 +165,8 @@ final class ExtensionContext
 	public function storage(): ExtensionStorage
 	{
 		return new ExtensionStorage(
-			$this->container->get(\TotalCMS\Domain\Storage\StorageAdapterInterface::class),
-			(string)$this->container->get(\TotalCMS\Support\Config::class)->datadir,
+			$this->container->get(StorageAdapterInterface::class),
+			(string)$this->container->get(Config::class)->datadir,
 			'.system/extension-data/' . $this->manifest->vendor() . '/' . $this->manifest->shortName(),
 		);
 	}
@@ -173,7 +182,7 @@ final class ExtensionContext
 	 * Prefix messages with the extension id (or your own tag) so multi-extension
 	 * logs remain readable.
 	 */
-	public function logger(): \Psr\Log\LoggerInterface
+	public function logger(): LoggerInterface
 	{
 		return $this->logger;
 	}
@@ -417,13 +426,13 @@ final class ExtensionContext
 	 *       ));
 	 *   }
 	 */
-	public function registerSearchProvider(\TotalCMS\Domain\Search\Service\SearchProvider $provider): void
+	public function registerSearchProvider(SearchProvider $provider): void
 	{
 		$this->searchProviders[] = $provider;
 	}
 
 	/**
-	 * @return list<\TotalCMS\Domain\Search\Service\SearchProvider>
+	 * @return list<SearchProvider>
 	 */
 	public function getRegisteredSearchProviders(): array
 	{
@@ -449,23 +458,23 @@ final class ExtensionContext
 	 * Example:
 	 *
 	 *   $context->registerMcpPrompt(
-	 *       new \Mcp\Schema\Prompt(name: 'audit_links', description: 'Audit broken links on any page.'),
+	 *       new Prompt(name: 'audit_links', description: 'Audit broken links on any page.'),
 	 *       handler: fn (array $arguments = []) => [
-	 *           new \Mcp\Schema\Content\PromptMessage(
-	 *               \Mcp\Schema\Enum\Role::User,
-	 *               new \Mcp\Schema\Content\TextContent('Check all links on: ' . ($arguments['url'] ?? '')),
+	 *           new PromptMessage(
+	 *               Role::User,
+	 *               new TextContent('Check all links on: ' . ($arguments['url'] ?? '')),
 	 *           ),
 	 *       ],
 	 *       access: 'admin',
 	 *   );
 	 */
-	public function registerMcpPrompt(\Mcp\Schema\Prompt $prompt, callable $handler, string $access = 'admin'): void
+	public function registerMcpPrompt(Prompt $prompt, callable $handler, string $access = 'admin'): void
 	{
 		$this->registeredMcpPrompts[] = ['prompt' => $prompt, 'handler' => $handler, 'access' => $access];
 	}
 
 	/**
-	 * @return list<array{prompt: \Mcp\Schema\Prompt, handler: callable, access: string}>
+	 * @return list<array{prompt: Prompt, handler: callable, access: string}>
 	 */
 	public function getRegisteredMcpPrompts(): array
 	{
@@ -661,7 +670,7 @@ final class ExtensionContext
 	/**
 	 * Register a per-page middleware that builder pages can opt into via
 	 * their `middleware` field. The class must implement
-	 * {@see \TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface}
+	 * {@see PageMiddlewareInterface}
 	 * and be resolvable from the container — usually via an
 	 * `addContainerDefinition()` call alongside this one.
 	 *

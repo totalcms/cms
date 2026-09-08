@@ -10,6 +10,7 @@ use TotalCMS\CLI\Command\BaseCommand;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Support\Config;
 
@@ -50,7 +51,7 @@ class McpStatusCommand extends BaseCommand
 		// saved a tool in a collection's MCP card sees it "missing". The
 		// before/after diff identifies which names are schema-defined.
 		$coreNames = array_map(static fn ($t): string => $t->name, $registry->all());
-		$container->get(\TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar::class)->register($registry);
+		$container->get(SchemaToolRegistrar::class)->register($registry);
 		$schemaTools = array_values(array_diff(
 			array_map(static fn ($t): string => $t->name, $registry->all()),
 			$coreNames,

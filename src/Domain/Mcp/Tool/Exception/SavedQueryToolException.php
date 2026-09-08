@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\Exception;
 
+use Mcp\Exception\ToolCallException;
+
 /**
  * Domain exception for schema-defined MCP tool failures.
  *
@@ -12,7 +14,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Exception;
  * with another tool), and placeholder (a filter value referenced an
  * undeclared param). Each carries a `recoveryHint` string appended to the
  * message when the tool handler catches this and rethrows it as a
- * `\Mcp\Exception\ToolCallException` (see SavedQueryTool::handle()) — the
+ * `ToolCallException` (see SavedQueryTool::handle()) — the
  * SDK sets `isError: true` on the MCP result for you, so dead ends become
  * next steps for the AI agent.
  */

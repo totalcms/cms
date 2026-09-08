@@ -43,7 +43,7 @@ use TotalCMS\Domain\Storage\StorageRepository;
  * temp file, and the refuse-on-corrupt read policy); this class only says
  * which policy it wants — CorruptPolicy::Throw — and shapes the payload.
  *
- * @see \TotalCMS\Domain\Storage\AtomicJsonStore
+ * @see AtomicJsonStore
  */
 class ApiKeyRepository extends StorageRepository
 {

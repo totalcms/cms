@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Psr7\Response;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Renderer\JsonRenderer;
@@ -101,7 +102,7 @@ readonly class RateLimitMiddleware implements MiddlewareInterface
 		$retryAfter = $window;
 
 		return $this->renderer->json(
-			(new \Slim\Psr7\Response())->withStatus(429),
+			(new Response())->withStatus(429),
 			[
 				'success'     => false,
 				'message'     => 'Rate limit exceeded',

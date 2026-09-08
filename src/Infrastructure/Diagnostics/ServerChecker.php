@@ -8,6 +8,7 @@ use TotalCMS\Domain\Bundle\Service\BundleChecker;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Mcp\Service\McpConnectionChecker;
+use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Domain\Security\Request\CloudflareIpRanges;
@@ -498,7 +499,7 @@ class ServerChecker
 	 */
 	private function getHeicInfo(): array
 	{
-		$result = (new \TotalCMS\Domain\Media\Service\HeicConverter())->selfTest();
+		$result = (new HeicConverter())->selfTest();
 
 		if ($result->success) {
 			return ['HEIC/HEIF Conversion' => 'Working'];

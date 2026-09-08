@@ -9,7 +9,9 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use TotalCMS\Domain\Index\Data\IndexData;
 
 class CollectionExportCommand extends BaseCommand
 {
@@ -76,7 +78,7 @@ class CollectionExportCommand extends BaseCommand
 		InputInterface $input,
 		OutputInterface $output,
 		string $collectionId,
-		\TotalCMS\Domain\Index\Data\IndexData $index,
+		IndexData $index,
 		string $outputFile,
 		int $total,
 	): int {
@@ -112,7 +114,7 @@ class CollectionExportCommand extends BaseCommand
 			} catch (\Throwable $e) {
 				$errors++;
 				if ($output->isVerbose()) {
-					$stderr = $output instanceof \Symfony\Component\Console\Output\ConsoleOutputInterface
+					$stderr = $output instanceof ConsoleOutputInterface
 						? $output->getErrorOutput()
 						: $output;
 					$stderr->writeln("<comment>Skipped {$id}: {$e->getMessage()}</comment>");
@@ -147,7 +149,7 @@ class CollectionExportCommand extends BaseCommand
 	private function fetchAllObjects(
 		OutputInterface $output,
 		string $collectionId,
-		\TotalCMS\Domain\Index\Data\IndexData $index,
+		IndexData $index,
 		int $total,
 	): ?array {
 		$objects = [];
@@ -164,7 +166,7 @@ class CollectionExportCommand extends BaseCommand
 			} catch (\Throwable $e) {
 				$errors++;
 				if ($output->isVerbose()) {
-					$stderr = $output instanceof \Symfony\Component\Console\Output\ConsoleOutputInterface
+					$stderr = $output instanceof ConsoleOutputInterface
 						? $output->getErrorOutput()
 						: $output;
 					$stderr->writeln("<comment>Skipped {$id}: {$e->getMessage()}</comment>");

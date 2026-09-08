@@ -11,6 +11,7 @@ use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
+use TotalCMS\Domain\Object\Service\AutogenService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DeckData;
@@ -154,7 +155,7 @@ class DeckCsvImporter
 		}
 
 		if ($autogenPattern !== '') {
-			$raw = \TotalCMS\Domain\Object\Service\AutogenService::generateWithOidCount($autogenPattern, $record, 0);
+			$raw = AutogenService::generateWithOidCount($autogenPattern, $record, 0);
 			$id  = SlugData::slugify($raw);
 
 			return str_replace('-', '_', $id);

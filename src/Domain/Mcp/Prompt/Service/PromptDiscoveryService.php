@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Prompt\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
@@ -123,7 +124,7 @@ final class PromptDiscoveryService
 		// CollectionData::$mcp is array<string,mixed>; MCP access is stored at $mcp['access'].
 		try {
 			$collection = $this->collections->fetchCollection($prompt->target);
-			if ($collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
+			if ($collection instanceof CollectionData) {
 				return isset($collection->mcp['access']) && is_string($collection->mcp['access']) && $collection->mcp['access'] !== ''
 					? $collection->mcp['access']
 					: 'admin';

@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
+use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\License\Service\LicenseValidator;
@@ -173,7 +174,7 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		$route        = $routeContext->getRoute();
 		$authRoutes   = ['login', 'logout'];
 
-		if ($route instanceof \Slim\Interfaces\RouteInterface) {
+		if ($route instanceof RouteInterface) {
 			$routeName = $route->getName();
 
 			// Allow authentication routes by name
@@ -220,7 +221,7 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
 
-		if (!$route instanceof \Slim\Interfaces\RouteInterface) {
+		if (!$route instanceof RouteInterface) {
 			return false;
 		}
 
@@ -235,7 +236,7 @@ readonly class LicenseValidationMiddleware implements MiddlewareInterface
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
 
-		if (!$route instanceof \Slim\Interfaces\RouteInterface) {
+		if (!$route instanceof RouteInterface) {
 			return false;
 		}
 

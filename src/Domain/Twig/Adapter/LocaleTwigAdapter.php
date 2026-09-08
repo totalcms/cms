@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
+use Cake\I18n\I18n;
 use TotalCMS\Domain\Locale\LocaleRegistry;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
@@ -56,7 +57,7 @@ readonly class LocaleTwigAdapter
 	{
 		if (extension_loaded('intl')) {
 			\Locale::setDefault($locale);
-			\Cake\I18n\I18n::setLocale($locale);
+			I18n::setLocale($locale);
 		}
 
 		return '';
@@ -76,7 +77,7 @@ readonly class LocaleTwigAdapter
 			return 'en_US';
 		}
 
-		return \Cake\I18n\I18n::getLocale();
+		return I18n::getLocale();
 	}
 
 	/**

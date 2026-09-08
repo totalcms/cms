@@ -12,6 +12,7 @@ use TotalCMS\Action\Admin\AdminCollectionAction;
 use TotalCMS\Action\Admin\AdminDataViewsAction;
 use TotalCMS\Action\Admin\AdminDocsAction;
 use TotalCMS\Action\Admin\AdminEditProfileAction;
+use TotalCMS\Action\Admin\AdminExtensionReviewAction;
 use TotalCMS\Action\Admin\AdminExtensionsAction;
 use TotalCMS\Action\Admin\AdminFileLinksAction;
 use TotalCMS\Action\Admin\AdminImageworksAction;
@@ -25,6 +26,8 @@ use TotalCMS\Action\Admin\AdminSettingsSaveSectionAction;
 use TotalCMS\Action\Admin\AdminUtilsAction;
 use TotalCMS\Action\Admin\Builder\BuilderPreviewAction;
 use TotalCMS\Action\Admin\Builder\BuilderReorderAction;
+use TotalCMS\Action\Admin\ExtensionSettingsAction;
+use TotalCMS\Action\Admin\ExtensionSettingsSaveAction;
 use TotalCMS\Action\Admin\ExtensionToggleAction;
 use TotalCMS\Action\Admin\Impersonate\ImpersonateStartAction;
 use TotalCMS\Action\Admin\Impersonate\ImpersonateStopAction;
@@ -34,12 +37,14 @@ use TotalCMS\Action\Admin\UpdateAction;
 use TotalCMS\Action\Admin\UpdateBackupDeleteAction;
 use TotalCMS\Action\Automation\AutomationReenableAction;
 use TotalCMS\Action\Automation\AutomationRunNowAction;
+use TotalCMS\Action\Extension\ExtensionAdminRouteAction;
 use TotalCMS\Middleware\Access\AdminOnlyMiddleware;
 use TotalCMS\Middleware\Access\BuilderAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Middleware\Access\CollectionMetaAccessMiddleware;
 use TotalCMS\Middleware\Access\DataViewsAccessMiddleware;
 use TotalCMS\Middleware\Access\DocsAccessMiddleware;
+use TotalCMS\Middleware\Access\ExtensionAdminAccessMiddleware;
 use TotalCMS\Middleware\Access\MailerAccessMiddleware;
 use TotalCMS\Middleware\Access\PlaygroundAccessMiddleware;
 use TotalCMS\Middleware\Access\SchemaAccessMiddleware;
@@ -55,6 +60,7 @@ use TotalCMS\Middleware\License\MailerEditionMiddleware;
 use TotalCMS\Middleware\License\SchemaEditionMiddleware;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
 use TotalCMS\Middleware\Security\CSRFProtectionMiddleware;
+use TotalCMS\Middleware\Security\SecurityHeadersMiddleware;
 use TotalCMS\Middleware\UserLocaleMiddleware;
 
 return function (App $app): void {
@@ -144,12 +150,12 @@ return function (App $app): void {
 		// Extension management
 		$group->get('/extensions', AdminExtensionsAction::class)->setName('admin-extensions')->add(AdminOnlyMiddleware::class);
 		$group->post('/extensions/{extension:.+}/{action:enable|disable}', ExtensionToggleAction::class)->setName('admin-extension-toggle')->add(AdminOnlyMiddleware::class);
-		$group->get('/extensions/{extension:.+}/review', TotalCMS\Action\Admin\AdminExtensionReviewAction::class)->setName('admin-extension-review')->add(AdminOnlyMiddleware::class);
-		$group->get('/extensions/{extension:.+}/settings', TotalCMS\Action\Admin\ExtensionSettingsAction::class)->setName('admin-extension-settings')->add(AdminOnlyMiddleware::class);
-		$group->post('/extensions/{extension:.+}/settings', TotalCMS\Action\Admin\ExtensionSettingsSaveAction::class)->setName('admin-extension-settings-save')->add(AdminOnlyMiddleware::class);
+		$group->get('/extensions/{extension:.+}/review', AdminExtensionReviewAction::class)->setName('admin-extension-review')->add(AdminOnlyMiddleware::class);
+		$group->get('/extensions/{extension:.+}/settings', ExtensionSettingsAction::class)->setName('admin-extension-settings')->add(AdminOnlyMiddleware::class);
+		$group->post('/extensions/{extension:.+}/settings', ExtensionSettingsSaveAction::class)->setName('admin-extension-settings-save')->add(AdminOnlyMiddleware::class);
 
 		// Extension admin pages (routed by extension system)
-		$group->any('/ext/{vendor}/{name}/{path:.+}', TotalCMS\Action\Extension\ExtensionAdminRouteAction::class)->setName('admin-ext-route')->add(TotalCMS\Middleware\Access\ExtensionAdminAccessMiddleware::class);
+		$group->any('/ext/{vendor}/{name}/{path:.+}', ExtensionAdminRouteAction::class)->setName('admin-ext-route')->add(ExtensionAdminAccessMiddleware::class);
 
 		// Start impersonation: super-admin only (enforced by ImpersonationService). Lives in
 		// the admin group — the operator starting it passes AuthMiddleware. (Stop is registered
@@ -173,5 +179,5 @@ return function (App $app): void {
 		->add(NoCacheMiddleware::class)
 		// Outermost so the headers land on every admin response, including
 		// auth redirects produced by the middlewares above.
-		->add(TotalCMS\Middleware\Security\SecurityHeadersMiddleware::class);
+		->add(SecurityHeadersMiddleware::class);
 };

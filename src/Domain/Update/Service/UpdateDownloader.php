@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Update\Service;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\PathResolver;
+use TotalCMS\Support\Version;
 
 /**
  * Downloads update zip files from the license server.
@@ -37,12 +38,12 @@ readonly class UpdateDownloader
 		$response = $this->httpClient->request('GET', $fullUrl, [
 			'headers' => [
 				'X-License-Domain: ' . $this->config->domain,
-				'X-License-Version: ' . \TotalCMS\Support\Version::number(),
+				'X-License-Version: ' . Version::number(),
 			],
 			'timeout'          => 300,
 			'follow_redirects' => 5,
 			'sink'             => $tempPath,
-			'user_agent'       => 'TotalCMS/' . \TotalCMS\Support\Version::number(),
+			'user_agent'       => 'TotalCMS/' . Version::number(),
 		]);
 
 		if ($response->statusCode >= 400) {

@@ -7,6 +7,7 @@ namespace TotalCMS\Action\Admin\OAuth;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
@@ -41,7 +42,7 @@ readonly class OAuthClientDeleteAction
 			]);
 		}
 
-		if (!$this->clients->find($id) instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData) {
+		if (!$this->clients->find($id) instanceof OAuthClientData) {
 			return $this->jsonRenderer->json($response->withStatus(404), [
 				'error' => ['message' => 'OAuth client not found'],
 			]);

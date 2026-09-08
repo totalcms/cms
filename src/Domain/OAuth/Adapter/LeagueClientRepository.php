@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\OAuth\Adapter;
 
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
+use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 
 /**
@@ -25,7 +26,7 @@ final readonly class LeagueClientRepository implements ClientRepositoryInterface
 	public function getClientEntity(string $clientIdentifier): ?ClientEntityInterface
 	{
 		$client = $this->clients->find($clientIdentifier);
-		if (!$client instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData) {
+		if (!$client instanceof OAuthClientData) {
 			return null;
 		}
 
@@ -35,7 +36,7 @@ final readonly class LeagueClientRepository implements ClientRepositoryInterface
 	public function validateClient(string $clientIdentifier, ?string $clientSecret, ?string $grantType): bool
 	{
 		$client = $this->clients->find($clientIdentifier);
-		if (!$client instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData) {
+		if (!$client instanceof OAuthClientData) {
 			return false;
 		}
 

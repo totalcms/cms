@@ -7,7 +7,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\SingletonCollectionResolver;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 
 /**
@@ -19,8 +21,8 @@ readonly class AdminCollectionAction
 		private TwigRenderer $twigRenderer,
 		private CollectionFetcher $collectionFetcher,
 		private ObjectFetcher $objectFetcher,
-		private \TotalCMS\Renderer\RedirectRenderer $redirectRenderer,
-		private \TotalCMS\Domain\Collection\Service\SingletonCollectionResolver $singletonResolver,
+		private RedirectRenderer $redirectRenderer,
+		private SingletonCollectionResolver $singletonResolver,
 	) {
 	}
 

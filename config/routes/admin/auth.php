@@ -6,6 +6,7 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Auth;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
+use TotalCMS\Middleware\Security\SecurityHeadersMiddleware;
 
 return function (App $app): void {
 	// Auth routes intentionally skip CSRFProtectionMiddleware. The threat model
@@ -28,5 +29,5 @@ return function (App $app): void {
 		$group->get('/resend-verification[/{collection}]', Auth\ResendVerificationAction::class)->setName('resend-verification');
 		$group->post('/resend-verification[/{collection}]', Auth\ResendVerificationSubmitAction::class);
 	})->add(NoCacheMiddleware::class)
-		->add(TotalCMS\Middleware\Security\SecurityHeadersMiddleware::class);
+		->add(SecurityHeadersMiddleware::class);
 };

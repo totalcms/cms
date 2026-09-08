@@ -15,11 +15,15 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
+use TotalCMS\Domain\Event\Data\CoreEvent;
+use TotalCMS\Domain\Extension\Data\FormAction;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
+use TotalCMS\Domain\Feed\Service\PodcastCategories;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Locale\LocaleRegistry;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
@@ -481,7 +485,7 @@ class TotalForm implements \Stringable
 			return match ($actionType) {
 				'mailer'   => $this->editionFeatures->can(EditionFeature::MAILER_ACTIONS),
 				'webhook'  => $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS),
-				default    => $this->formActionRegistry?->get($actionType) instanceof \TotalCMS\Domain\Extension\Data\FormAction
+				default    => $this->formActionRegistry?->get($actionType) instanceof FormAction
 					? $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS)
 					: true,
 			};
@@ -807,7 +811,7 @@ class TotalForm implements \Stringable
 	public static function podcastCategoryOptions(): array
 	{
 		$groups = [];
-		foreach (\TotalCMS\Domain\Feed\Service\PodcastCategories::TAXONOMY as $parent => $children) {
+		foreach (PodcastCategories::TAXONOMY as $parent => $children) {
 			$options = [['value' => $parent, 'label' => $parent]];
 			foreach ($children as $child) {
 				$options[] = ['value' => $parent . ' > ' . $child, 'label' => $child];
@@ -1237,7 +1241,7 @@ class TotalForm implements \Stringable
 	 */
 	public function localeList(): array
 	{
-		return \TotalCMS\Domain\Locale\LocaleRegistry::options();
+		return LocaleRegistry::options();
 	}
 
 	/**
@@ -1248,7 +1252,7 @@ class TotalForm implements \Stringable
 	 */
 	public function eventsList(): array
 	{
-		return \TotalCMS\Domain\Event\Data\CoreEvent::options();
+		return CoreEvent::options();
 	}
 
 	/**

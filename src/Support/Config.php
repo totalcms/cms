@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Support;
 
+use TotalCMS\Domain\Locale\LocaleRegistry;
 use TotalCMS\Domain\Property\Data\SlugData;
 
 class Config
@@ -422,14 +423,14 @@ class Config
 
 			return [
 				'default'   => $default,
-				'available' => \TotalCMS\Domain\Locale\LocaleRegistry::normalize($bucket['available'] ?? []),
+				'available' => LocaleRegistry::normalize($bucket['available'] ?? []),
 			];
 		}
 
 		// Legacy flat-key shape (3.5 sliver pre-rename). Fold into the bucket.
 		return [
 			'default'   => (string)($settings['defaultLocale'] ?? ''),
-			'available' => \TotalCMS\Domain\Locale\LocaleRegistry::normalize($settings['locales'] ?? []),
+			'available' => LocaleRegistry::normalize($settings['locales'] ?? []),
 		];
 	}
 }

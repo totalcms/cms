@@ -28,6 +28,7 @@ use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader as TwigFilesystemLoader;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
+use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 /**
@@ -193,7 +194,7 @@ readonly class TwigEngine
 	 * Register Twig functions, filters, and globals from extensions.
 	 *
 	 * @param list<TwigFunction> $functions
-	 * @param list<\Twig\TwigFilter>   $filters
+	 * @param list<TwigFilter>   $filters
 	 * @param array<string,mixed>      $globals
 	 */
 	public function registerExtensionItems(array $functions, array $filters, array $globals): void

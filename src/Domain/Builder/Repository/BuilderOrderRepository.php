@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\Repository;
 
+use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 
@@ -13,7 +14,7 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
  *
  * The repository deals only in raw nested-array trees — `list<{id, children}>`.
  * Reconciliation against the page index, legacy migration, and parent-map
- * walking all live in {@see \TotalCMS\Domain\Builder\Service\BuilderOrderService}.
+ * walking all live in {@see BuilderOrderService}.
  */
 class BuilderOrderRepository extends StorageRepository
 {

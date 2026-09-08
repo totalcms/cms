@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\OAuth\Service;
 
+use Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata;
+use TotalCMS\Domain\OAuth\Data\OAuthScopeData;
 use TotalCMS\Support\Config;
 
 /**
@@ -44,7 +46,7 @@ final readonly class OAuthDiscoveryProvider
 			'token_endpoint'                        => $issuer . '/oauth/token',
 			'revocation_endpoint'                   => $issuer . '/oauth/revoke',
 			'jwks_uri'                              => $issuer . '/.well-known/jwks.json',
-			'scopes_supported'                      => array_map(fn (\TotalCMS\Domain\OAuth\Data\OAuthScopeData $s): string => $s->identifier, $this->scopes->all()),
+			'scopes_supported'                      => array_map(fn (OAuthScopeData $s): string => $s->identifier, $this->scopes->all()),
 			'response_types_supported'              => ['code'],
 			'grant_types_supported'                 => array_values($grantTypes),
 			'code_challenge_methods_supported'      => (array)($this->config->oauth['pkceMethods'] ?? ['S256']),
@@ -73,13 +75,13 @@ final readonly class OAuthDiscoveryProvider
 	 * verify the returned `resource` matches the identifier they queried.
 	 * Defaults to T3's own API root when omitted.
 	 */
-	public function protectedResourceMetadata(?string $resource = null): \Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata
+	public function protectedResourceMetadata(?string $resource = null): ProtectedResourceMetadata
 	{
 		$resource ??= rtrim($this->config->url, '/') . rtrim($this->config->api, '/');
 
-		return new \Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata(
+		return new ProtectedResourceMetadata(
 			authorizationServers: [$this->resolveIssuer()],
-			scopesSupported: array_map(fn (\TotalCMS\Domain\OAuth\Data\OAuthScopeData $s): string => $s->identifier, $this->scopes->all()),
+			scopesSupported: array_map(fn (OAuthScopeData $s): string => $s->identifier, $this->scopes->all()),
 			resource: $resource,
 			extra: ['bearer_methods_supported' => ['header']],
 		);

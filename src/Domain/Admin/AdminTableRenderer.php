@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Query\Data\QueryResult;
@@ -46,7 +47,7 @@ readonly class AdminTableRenderer
 		}
 
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
+		if (!$collectionData instanceof CollectionData) {
 			throw new \RuntimeException("Collection '{$collection}' not found.");
 		}
 

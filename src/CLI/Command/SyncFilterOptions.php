@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI\Command;
 
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\Domain\Sync\Data\SyncableCollections;
+use TotalCMS\Domain\Sync\Service\SyncDiffService;
 
 /**
  * Shared filter handling for `tcms push` and `tcms pull`.
@@ -238,8 +240,8 @@ trait SyncFilterOptions
 			// everything that isn't exclusive to the receiving side.
 			if ($diff !== null) {
 				$receivingOnly = $verb === 'push'
-					? \TotalCMS\Domain\Sync\Service\SyncDiffService::REMOTE_ONLY
-					: \TotalCMS\Domain\Sync\Service\SyncDiffService::LOCAL_ONLY;
+					? SyncDiffService::REMOTE_ONLY
+					: SyncDiffService::LOCAL_ONLY;
 				$sourceKeys = fn (array $items): array => array_keys(
 					array_filter($items, fn (array $i): bool => $i['status'] !== $receivingOnly)
 				);
@@ -272,7 +274,7 @@ trait SyncFilterOptions
 			}
 			$output->writeln((string)json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-			return \Symfony\Component\Console\Command\Command::SUCCESS;
+			return Command::SUCCESS;
 		}
 
 		$output->writeln("Dry run — would {$verb} " . ($verb === 'push' ? 'to' : 'from') . " {$url}:");
@@ -316,7 +318,7 @@ trait SyncFilterOptions
 				$output->writeln('Nothing matches — no schemas, templates, or objects selected.');
 			}
 
-			return \Symfony\Component\Console\Command\Command::SUCCESS;
+			return Command::SUCCESS;
 		}
 
 		if ($schemas !== []) {
@@ -339,7 +341,7 @@ trait SyncFilterOptions
 			$output->writeln('Nothing matches — no schemas, templates, or objects selected.');
 		}
 
-		return \Symfony\Component\Console\Command\Command::SUCCESS;
+		return Command::SUCCESS;
 	}
 
 	/**
@@ -399,7 +401,7 @@ trait SyncFilterOptions
 		}
 
 		$sourceSide  = $verb === 'push' ? 'local' : 'remote';
-		$newStatus   = $verb === 'push' ? \TotalCMS\Domain\Sync\Service\SyncDiffService::LOCAL_ONLY : \TotalCMS\Domain\Sync\Service\SyncDiffService::REMOTE_ONLY;
+		$newStatus   = $verb === 'push' ? SyncDiffService::LOCAL_ONLY : SyncDiffService::REMOTE_ONLY;
 		$newLabel    = $verb === 'push' ? 'new on remote' : 'new locally';
 		$untouchedIn = $verb === 'push' ? 'remote' : 'local';
 
@@ -409,13 +411,13 @@ trait SyncFilterOptions
 
 		foreach ($items as $id => $item) {
 			switch ($item['status']) {
-				case \TotalCMS\Domain\Sync\Service\SyncDiffService::SAME:
+				case SyncDiffService::SAME:
 					$unchangedIds[] = (string)$id;
 					break;
 				case $newStatus:
 					$lines[] = sprintf('  <info>+</info> %-28s %s', $id, $newLabel);
 					break;
-				case \TotalCMS\Domain\Sync\Service\SyncDiffService::DIFFERS:
+				case SyncDiffService::DIFFERS:
 					$hint    = $this->freshnessHint($item);
 					$clobber = $item['newer'] !== null && $item['newer'] !== $sourceSide
 						? ' <error>← would overwrite the newer copy</error>'

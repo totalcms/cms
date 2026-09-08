@@ -1,10 +1,13 @@
 <?php
 
 use Slim\App;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\ContainerFactory;
+use TotalCMS\Support\PathResolver;
 
 // PHP built-in dev server (router-script mode, e.g.
 // `php -S localhost:8080 -t public public/index.php`): serve existing static
@@ -23,13 +26,13 @@ if (php_sapi_name() == 'cli-server') {
 	}
 }
 
-if (!class_exists(TotalCMS\Support\PathResolver::class, false)) {
+if (!class_exists(PathResolver::class, false)) {
 	require_once __DIR__ . '/../vendor/autoload.php';
 }
 
 // Define ROOT for CakePHP I18n translations (resources/locales/)
 if (!defined('ROOT')) {
-	define('ROOT', TotalCMS\Support\PathResolver::packageRoot());
+	define('ROOT', PathResolver::packageRoot());
 }
 
 $container = ContainerFactory::build();
@@ -37,7 +40,7 @@ $container = ContainerFactory::build();
 // Sentry Logger
 $sentryEnabled = $container->get(Config::class)->sentry;
 if ($sentryEnabled === true) {
-	TotalCMS\Middleware\Development\SentryMiddleware::initSentry();
+	SentryMiddleware::initSentry();
 }
 
 // Create App instance
@@ -60,7 +63,7 @@ $bootExtensions = static function (callable $phase, string $label) use ($contain
 };
 
 // Discover and register extensions (before middleware/routes so extensions can add container definitions)
-$extensionManager = $container->get(TotalCMS\Domain\Extension\Service\ExtensionManager::class);
+$extensionManager = $container->get(ExtensionManager::class);
 $bootExtensions(static fn () => $extensionManager->discoverAndRegister(), 'discoverAndRegister()');
 
 // Register middleware

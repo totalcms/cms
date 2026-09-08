@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Tool\SavedQuery;
 
 use Mcp\Exception\ToolCallException;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
@@ -95,7 +96,7 @@ final readonly class SavedQueryTool
 			}
 
 			$collection = $this->collectionRepository->fetchCollection($this->definition->collectionName);
-			if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
+			if (!$collection instanceof CollectionData) {
 				throw new ToolCallException(sprintf(
 					'Collection "%s" not found. Use list_collections to see available collections.',
 					$this->definition->collectionName,

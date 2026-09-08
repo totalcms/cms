@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -15,7 +16,7 @@ use TotalCMS\Support\Config;
 /**
  * Server-side authorization for privileged user-record fields.
  *
- * The object-write path ({@see \TotalCMS\Domain\Object\Service\ObjectFactory})
+ * The object-write path ({@see ObjectFactory})
  * copies every schema field from the request with no privilege filtering, so a
  * non-admin could otherwise self-assign `groups:['admin']` (escalation) or a
  * public registrant could submit it (mass-assignment). This policy is the single

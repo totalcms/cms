@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Service;
 
+use TotalCMS\Domain\Admin\SimpleForm;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -33,7 +35,7 @@ readonly class CloneDialogRenderer
 	public function render(string $collection): string
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
+		if (!$collectionData instanceof CollectionData) {
 			return '';
 		}
 
@@ -67,7 +69,7 @@ readonly class CloneDialogRenderer
 		]);
 		$idField = HTMLUtils::element('div', $label . $input);
 
-		$form = new \TotalCMS\Domain\Admin\SimpleForm(
+		$form = new SimpleForm(
 			api     : $this->config->api . '/api',
 			route   : '',
 			method  : 'POST',

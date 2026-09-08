@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Psr7\Response;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Renderer\JsonRenderer;
@@ -51,7 +52,7 @@ readonly class IncrementRateLimitMiddleware implements MiddlewareInterface
 
 		if ($count >= self::LIMIT_PER_MINUTE) {
 			return $this->renderer->json(
-				(new \Slim\Psr7\Response())->withStatus(429)->withHeader('Retry-After', (string)self::WINDOW),
+				(new Response())->withStatus(429)->withHeader('Retry-After', (string)self::WINDOW),
 				['error' => ['message' => 'Too many anonymous counter updates from this IP. Slow down.']],
 			);
 		}

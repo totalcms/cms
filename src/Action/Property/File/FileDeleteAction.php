@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Property\File;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\RemoverFactory;
@@ -51,7 +52,7 @@ readonly class FileDeleteAction
 			try {
 				$remover = $this->factory->generateRemoverService($args['collection'], $args['property']);
 			} catch (\Throwable) {
-				throw new \Slim\Exception\HttpNotFoundException($request);
+				throw new HttpNotFoundException($request);
 			}
 			$object = $remover->deleteFile(
 				$args['collection'],

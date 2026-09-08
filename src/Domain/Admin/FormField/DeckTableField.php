@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -153,7 +154,7 @@ class DeckTableField extends FormField
 				];
 
 				// Extract attribute settings from the resolved settings
-				$filteredAttributes = \TotalCMS\Domain\Admin\TotalForm::filterFieldAttributes($resolvedSettings);
+				$filteredAttributes = TotalForm::filterFieldAttributes($resolvedSettings);
 				$fieldConfig        = array_merge($fieldConfig, $filteredAttributes);
 
 				// For template rows (empty itemId), keep the default value if present

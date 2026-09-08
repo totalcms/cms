@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 
@@ -26,7 +27,7 @@ readonly class CollectionMetaAccessMiddleware extends BaseAccessMiddleware
 		// Get collection name from route
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
-		if (!$route instanceof \Slim\Interfaces\RouteInterface) {
+		if (!$route instanceof RouteInterface) {
 			// No route found, allow through (shouldn't happen)
 			return true;
 		}

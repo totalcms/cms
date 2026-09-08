@@ -11,6 +11,7 @@ use TotalCMS\Domain\Property\Data\ColorData;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Security\Encryption\Cipher;
+use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
 use Twig\TwigFilter;
 
 /**
@@ -1047,7 +1048,7 @@ class TotalCMSTwigFilters
 
 		// Use the same ParsedownMarkdown class that powers Twig's MarkdownExtension
 		static $markdown = null;
-		$markdown ??= new \TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown();
+		$markdown ??= new ParsedownMarkdown();
 
 		return $markdown->convert($value);
 	}

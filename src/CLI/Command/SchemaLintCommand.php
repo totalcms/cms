@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 
 class SchemaLintCommand extends BaseCommand
 {
@@ -38,7 +39,7 @@ class SchemaLintCommand extends BaseCommand
 			$schemaIds = [(string)$id];
 		} else {
 			$schemaIds = array_map(
-				fn (\TotalCMS\Domain\Schema\Data\SchemaData $schema): string => $schema->id,
+				fn (SchemaData $schema): string => $schema->id,
 				$this->totalcms->schemaLister()->listCustomSchemas()
 			);
 			if ($schemaIds === []) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\XmlRpc\Service;
 
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -61,7 +62,7 @@ readonly class XmlRpcAuth
 		// caller may actually do.
 		$apiKey = $this->apiKeyFetcher->validateKeyForPath($password, self::SCOPE_PATH);
 
-		if (!$apiKey instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
+		if (!$apiKey instanceof ApiKeyData) {
 			throw XmlRpcFault::badCredentials();
 		}
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\Service;
 
+use Mcp\Schema\ToolAnnotations;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -144,7 +145,7 @@ final class SchemaToolRegistrar
 						// Directory requirement: every tool carries a title.
 						// Saved queries are index reads by construction, so the
 						// read-only hints are safe to assert unconditionally.
-						annotations: new \Mcp\Schema\ToolAnnotations(
+						annotations: new ToolAnnotations(
 							title: ucwords(str_replace(['_', '-'], ' ', $definition->name)),
 							readOnlyHint: true,
 							destructiveHint: false,

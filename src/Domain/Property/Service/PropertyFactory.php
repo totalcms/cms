@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\DeckData;
+use TotalCMS\Domain\Property\Data\PriceData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -47,7 +48,7 @@ readonly class PropertyFactory
 		// `price` stores as a number but needs currency-aware parsing on input,
 		// so it has its own Data class even though resolveType() returns 'number'.
 		if ($field === 'price') {
-			$className = \TotalCMS\Domain\Property\Data\PriceData::class;
+			$className = PriceData::class;
 		} else {
 			$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
 		}

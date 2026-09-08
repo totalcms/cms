@@ -33,8 +33,12 @@ use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\ImpersonationService;
 use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
+use TotalCMS\Domain\Automation\Service\AutomationActivityLogger;
 use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
+use TotalCMS\Domain\Builder\EventListener\ReloadPulseListener;
+use TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware;
 use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
+use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\FragmentCache;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
@@ -71,6 +75,7 @@ use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRenderer;
@@ -78,6 +83,7 @@ use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\DataViewResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
+use TotalCMS\Domain\Mcp\Service\McpSessionListener;
 use TotalCMS\Domain\Mcp\Subscription\Service\BusResourceNotifier;
 use TotalCMS\Domain\Mcp\Subscription\Service\CompositeResourceNotifier;
 use TotalCMS\Domain\Mcp\Subscription\Service\FileNotificationBus;
@@ -168,6 +174,13 @@ use TotalCMS\Domain\Twig\Service\LoadMoreRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Video\Service\VideoMetadataFetcher;
 use TotalCMS\Domain\Video\Service\VideoUrlResolver;
+use TotalCMS\Domain\XmlRpc\Handler\BlogHandler;
+use TotalCMS\Domain\XmlRpc\Handler\PostReadHandler;
+use TotalCMS\Domain\XmlRpc\Handler\PostWriteHandler;
+use TotalCMS\Domain\XmlRpc\Handler\SystemHandler;
+use TotalCMS\Domain\XmlRpc\Handler\TaxonomyHandler;
+use TotalCMS\Domain\XmlRpc\Handler\UnsupportedHandler;
+use TotalCMS\Domain\XmlRpc\Service\MethodRouter;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
@@ -181,6 +194,7 @@ use TotalCMS\Support\Config;
 use TotalCMS\Support\GuzzleHttpClient;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\PathResolver;
+use TotalCMS\TotalCMS;
 
 return [
 	// Application settings — plain closure (rather than `Config::init(...)`)
@@ -565,10 +579,10 @@ return [
 		// mcp.access toggle, new/removed collections). Clients auto-reconnect
 		// and pick up the fresh surface on next request. mcp.* settings are
 		// handled directly in SettingsSaver — no settings-save event yet.
-		$dispatcher->listen('schema.saved', $lazy(TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
-		$dispatcher->listen('collection.created', $lazy(TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
-		$dispatcher->listen('collection.updated', $lazy(TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
-		$dispatcher->listen('collection.deleted', $lazy(TotalCMS\Domain\Mcp\Service\McpSessionListener::class, 'onToolSurfaceChange'), -100);
+		$dispatcher->listen('schema.saved', $lazy(McpSessionListener::class, 'onToolSurfaceChange'), -100);
+		$dispatcher->listen('collection.created', $lazy(McpSessionListener::class, 'onToolSurfaceChange'), -100);
+		$dispatcher->listen('collection.updated', $lazy(McpSessionListener::class, 'onToolSurfaceChange'), -100);
+		$dispatcher->listen('collection.deleted', $lazy(McpSessionListener::class, 'onToolSurfaceChange'), -100);
 
 		// IndexBuildListener
 		$dispatcher->listen('object.created', $lazy(IndexBuildListener::class, 'onObjectCreated'), -100);
@@ -619,10 +633,10 @@ return [
 		$dispatcher->listen('object.deleted', $lazy(McpResourceSubscriptionListener::class, 'onObjectDeleted'), -80);
 
 		// ReloadPulseListener — Builder live-reload
-		$dispatcher->listen('template.saved', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onTemplateSaved'), -50);
-		$dispatcher->listen('object.created', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
-		$dispatcher->listen('object.updated', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onObjectChanged'), -50);
-		$dispatcher->listen('devmode.disabled', $lazy(TotalCMS\Domain\Builder\EventListener\ReloadPulseListener::class, 'onDevModeDisabled'), -50);
+		$dispatcher->listen('template.saved', $lazy(ReloadPulseListener::class, 'onTemplateSaved'), -50);
+		$dispatcher->listen('object.created', $lazy(ReloadPulseListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('object.updated', $lazy(ReloadPulseListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('devmode.disabled', $lazy(ReloadPulseListener::class, 'onDevModeDisabled'), -50);
 
 		// ContentChangeListener — push content changes to the active search
 		// provider's index/delete. Skips when active=text or indexOnSave=false;
@@ -636,9 +650,9 @@ return [
 		// PromptChangeListener — invalidates the PromptDiscoveryService in-memory
 		// cache whenever an mcp-prompt object changes so prompt edits go live
 		// without a process restart. Priority -50 (same tier as ContentChangeListener).
-		$dispatcher->listen('object.created', $lazy(TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener::class, 'onObjectChanged'), -50);
-		$dispatcher->listen('object.updated', $lazy(TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener::class, 'onObjectChanged'), -50);
-		$dispatcher->listen('object.deleted', $lazy(TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('object.created', $lazy(PromptChangeListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('object.updated', $lazy(PromptChangeListener::class, 'onObjectChanged'), -50);
+		$dispatcher->listen('object.deleted', $lazy(PromptChangeListener::class, 'onObjectChanged'), -50);
 
 		// AutomationEventSubscriber — fans every core event out to matching
 		// event-trigger automations (enqueued async). Priority 100 = after all
@@ -673,7 +687,7 @@ return [
 
 	EnvironmentResolver::class => fn (ContainerInterface $container): EnvironmentResolver => new EnvironmentResolver(
 		$container->get(Config::class),
-		TotalCMS\TotalCMS::isPreview(),
+		TotalCMS::isPreview(),
 	),
 
 	ExtensionGuard::class => function (ContainerInterface $container): ExtensionGuard {
@@ -733,14 +747,14 @@ return [
 	// Per-page middleware infrastructure. Registry holds name → service-id
 	// mappings; runner consumes the registry. Core middleware are registered
 	// via the registry boot below; extensions register via ExtensionContext.
-	TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry::class => function (ContainerInterface $container): TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry {
-		$registry = new TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry(
+	PageMiddlewareRegistry::class => function (ContainerInterface $container): PageMiddlewareRegistry {
+		$registry = new PageMiddlewareRegistry(
 			$container,
 			$container->get(LoggerFactory::class),
 		);
 		// Core middleware. Names are stable contract — once shipped, don't
 		// rename without a deprecation cycle (sites have these in page records).
-		$registry->register('auth', TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware::class);
+		$registry->register('auth', PageAuthMiddleware::class);
 
 		return $registry;
 	},
@@ -1008,7 +1022,7 @@ return [
 			->channelLogger(LogChannel::OAuthActivity, Level::Info),
 	),
 
-	TotalCMS\Domain\Automation\Service\AutomationActivityLogger::class => fn (ContainerInterface $container): TotalCMS\Domain\Automation\Service\AutomationActivityLogger => new TotalCMS\Domain\Automation\Service\AutomationActivityLogger(
+	AutomationActivityLogger::class => fn (ContainerInterface $container): AutomationActivityLogger => new AutomationActivityLogger(
 		$container->get(LoggerFactory::class)
 			->channelLogger(LogChannel::AutomationsActivity, Level::Info),
 	),
@@ -1046,7 +1060,7 @@ return [
 
 	// === XML-RPC Publishing ===
 
-	TotalCMS\Domain\XmlRpc\Service\MethodRouter::class => function (ContainerInterface $c): TotalCMS\Domain\XmlRpc\Service\MethodRouter {
+	MethodRouter::class => function (ContainerInterface $c): MethodRouter {
 		// SystemHandler needs MethodRouter (to report mt.supportedMethods), and
 		// MethodRouter builds its map from the handlers below — a genuine cycle
 		// if handlers were resolved eagerly. A generator defers `$c->get()` calls
@@ -1058,14 +1072,14 @@ return [
 		// Handlers are registered here as they land: SystemHandler, BlogHandler,
 		// PostReadHandler, PostWriteHandler, TaxonomyHandler, UnsupportedHandler.
 		$handlers = function () use ($c): Generator {
-			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\BlogHandler::class);
-			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\SystemHandler::class);
-			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\PostReadHandler::class);
-			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\PostWriteHandler::class);
-			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\TaxonomyHandler::class);
-			yield $c->get(TotalCMS\Domain\XmlRpc\Handler\UnsupportedHandler::class);
+			yield $c->get(BlogHandler::class);
+			yield $c->get(SystemHandler::class);
+			yield $c->get(PostReadHandler::class);
+			yield $c->get(PostWriteHandler::class);
+			yield $c->get(TaxonomyHandler::class);
+			yield $c->get(UnsupportedHandler::class);
 		};
 
-		return new TotalCMS\Domain\XmlRpc\Service\MethodRouter($handlers());
+		return new MethodRouter($handlers());
 	},
 ];

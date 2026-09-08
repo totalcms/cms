@@ -4,6 +4,7 @@ namespace TotalCMS\Action\Object;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Renderer\JsonRenderer;
@@ -61,7 +62,7 @@ readonly class ObjectUpdatePropertyMetaAction
 					$query['path'] ?? null, // Optional depot folder path
 				);
 			} catch (\Throwable) {
-				throw new \Slim\Exception\HttpNotFoundException($request);
+				throw new HttpNotFoundException($request);
 			}
 		}
 

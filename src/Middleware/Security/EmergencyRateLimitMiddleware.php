@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Psr7\Response;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Renderer\JsonRenderer;
 
@@ -71,7 +72,7 @@ readonly class EmergencyRateLimitMiddleware implements MiddlewareInterface
 	private function tooManyRequests(): ResponseInterface
 	{
 		return $this->renderer->json(
-			(new \Slim\Psr7\Response())->withStatus(429),
+			(new Response())->withStatus(429),
 			[
 				'error'    => 'Emergency cache clear was used recently. Wait 15 minutes before calling again.',
 				'limit'    => self::LIMIT,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Resource\Handler;
 
 use Mcp\Exception\ToolCallException;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -62,7 +63,7 @@ readonly class CollectionResource
 	public function read(string $collection): array
 	{
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
+		if (!$collectionData instanceof CollectionData) {
 			throw new ToolCallException(\sprintf(
 				'Collection "%s" not found. Use list_collections to see available collections.',
 				$collection,

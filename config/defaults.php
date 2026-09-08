@@ -1,5 +1,10 @@
 <?php
 
+use Monolog\Level;
+use TotalCMS\Support\BasePath;
+use TotalCMS\Support\Config;
+use TotalCMS\Support\PathResolver;
+
 // Configure defaults for the whole application.
 
 // Error reporting
@@ -87,8 +92,8 @@ $settings['i18n'] = [
 $detectedHost = $_SERVER['HTTP_HOST'] ?? '';
 $serverName   = $_SERVER['SERVER_NAME'] ?? '';
 
-if (($detectedHost === '' || TotalCMS\Support\Config::isNonRoutableHost($detectedHost))
-	&& $serverName !== '' && !TotalCMS\Support\Config::isNonRoutableHost($serverName)
+if (($detectedHost === '' || Config::isNonRoutableHost($detectedHost))
+	&& $serverName !== '' && !Config::isNonRoutableHost($serverName)
 ) {
 	$detectedHost = $serverName;
 }
@@ -110,12 +115,12 @@ $settings['notfound']        = '/404';
 $settings['maxDownloadSize'] = 2048;
 
 // Path settings
-$settings['root']     = TotalCMS\Support\PathResolver::projectRoot();
+$settings['root']     = PathResolver::projectRoot();
 $settings['tmpdir']   = $settings['root'] . '/tmp';
 $settings['cachedir'] = $settings['root'] . '/cache';
 $settings['public']   = $settings['root'] . '/public';
-$settings['template'] = TotalCMS\Support\PathResolver::packageRoot() . '/resources/templates';
-$settings['schemas']  = TotalCMS\Support\PathResolver::packageRoot() . '/resources/schemas';
+$settings['template'] = PathResolver::packageRoot() . '/resources/templates';
+$settings['schemas']  = PathResolver::packageRoot() . '/resources/schemas';
 
 // Resolve DOCUMENT_ROOT: use server value if available, otherwise read from stored file.
 // Web requests persist the docroot so CLI tools can discover it automatically.
@@ -166,7 +171,7 @@ if ($scriptName === '' || !str_starts_with($scriptName, '/')) {
 	$settings['api'] = '';
 } else {
 	$requestPath     = (string)(parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?? '');
-	$settings['api'] = TotalCMS\Support\BasePath::resolve($scriptName, $requestPath);
+	$settings['api'] = BasePath::resolve($scriptName, $requestPath);
 }
 
 $settings['debug'] = false; // Set to true for development
@@ -240,7 +245,7 @@ $settings['logger'] = [
 	'name'        => 'totalcms',
 	'path'        => '',
 	'filename'    => 'totalcms.log',
-	'level'       => Monolog\Level::Info,
+	'level'       => Level::Info,
 	'maxFiles'    => 10,
 	'permissions' => 0775,
 ];

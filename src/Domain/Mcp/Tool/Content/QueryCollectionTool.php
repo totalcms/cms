@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Content;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
@@ -119,7 +120,7 @@ readonly class QueryCollectionTool
 		unset($locale);
 
 		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
+		if (!$collectionData instanceof CollectionData) {
 			throw new ToolCallException(sprintf(
 				'Collection "%s" not found. Use list_collections to see available collections.',
 				$collection,
@@ -185,7 +186,7 @@ readonly class QueryCollectionTool
 		$catalog = $this->schemaResolver->renderCatalog(
 			$persona,
 			McpSchemaResolver::DEFAULT_CATALOG_CAP,
-			fn (\TotalCMS\Domain\Collection\Data\CollectionData $c): bool => $this->personaContext->canReadCollection($c->id, $c),
+			fn (CollectionData $c): bool => $this->personaContext->canReadCollection($c->id, $c),
 		);
 
 		return $catalog === ''

@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Formatter\TableHelper;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 
 class CollectionListCommand extends BaseCommand
 {
@@ -30,10 +31,10 @@ class CollectionListCommand extends BaseCommand
 
 		$category = $input->getOption('category');
 		if (is_string($category)) {
-			$collections = array_filter($collections, fn (\TotalCMS\Domain\Collection\Data\CollectionData $c): bool => $c->category === $category);
+			$collections = array_filter($collections, fn (CollectionData $c): bool => $c->category === $category);
 		}
 
-		$data = array_map(fn (\TotalCMS\Domain\Collection\Data\CollectionData $c): array => $c->toArray(), array_values($collections));
+		$data = array_map(fn (CollectionData $c): array => $c->toArray(), array_values($collections));
 
 		return $this->outputData($input, $output, $data);
 	}

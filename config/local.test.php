@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Monolog\Level;
+
 // error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 // error_reporting(E_ALL);
 // ini_set('display_errors', '1');
@@ -31,7 +33,7 @@ $settings['oauth']['publicKeyPath']  = $settings['datadir'] . '/.system/oauth-ke
 $settings['error']['display_error_details'] = true;
 $settings['error']['log_errors']            = true;
 
-$settings['logger']['level']  = Monolog\Level::Debug;
+$settings['logger']['level']  = Level::Debug;
 $settings['logger']['path']   = $settings['root'] . '/logs';
 $settings['sentry']           = false;
 $settings['auth']['enable']   = false;

@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\Version;
 
 /**
  * Behaviour of the `cms.admin.*` helpers that had no test at all, exercised
@@ -100,6 +102,13 @@ test('inaccessibleCollections() and inaccessibleSchemas() are lists (empty under
 // ─── dashboard ───────────────────────────────────────────────────────────────
 
 test('dashboardSystemStatus() reports runtime, cache backends, the license row and the update slot', function (): void {
+	// The update checker asks the license server unless its answer is cached.
+	// Seed the cache so the test never reaches the network and the update
+	// slot is deterministic either way.
+	$cache    = $this->c->get(CacheManager::class);
+	$cacheKey = 'update_check_' . Version::number();
+	$cache->storeComputedData($cacheKey, ['available' => false, 'version' => Version::number()], 60);
+
 	$status = $this->admin->dashboardSystemStatus();
 
 	expect($status)->toHaveKeys(['phpVersion', 'totalcmsVersion', 'cacheBackends', 'memoryLimit', 'maxExecutionTime', 'environment', 'license', 'update'])
@@ -108,6 +117,9 @@ test('dashboardSystemStatus() reports runtime, cache backends, the license row a
 		->and($status['license'])->toHaveKeys(['severity', 'message', 'daysRemaining'])
 		->and($status['license']['severity'])->toBeIn(['success', 'warning', 'error', 'info'])
 		->and($status['update'])->toBeNull();
+
+	$cache->storeComputedData($cacheKey, ['available' => true, 'version' => '9.9.9', 'severity' => 'minor'], 60);
+	expect($this->admin->dashboardSystemStatus()['update'])->toBe(['version' => '9.9.9', 'severity' => 'minor']);
 });
 
 test('dashboardRecentObjects() lists the newest ten objects across custom collections, newest first, with edit links', function (): void {

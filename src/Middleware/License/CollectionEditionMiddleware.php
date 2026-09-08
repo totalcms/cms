@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\License\Data\Edition;
@@ -39,7 +40,7 @@ readonly class CollectionEditionMiddleware extends BaseEditionMiddleware
 		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
 
-		if (!$route instanceof \Slim\Interfaces\RouteInterface) {
+		if (!$route instanceof RouteInterface) {
 			return $handler->handle($request);
 		}
 

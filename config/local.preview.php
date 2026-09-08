@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Monolog\Level;
+
 // Stacks Preview Environment
 // echo "Stacks Preview Environment\n";
 
@@ -34,7 +36,7 @@ $settings['error']['display_error_details'] = false;
 $settings['error']['log_errors']            = true;
 $settings['error']['log_error_details']     = true;
 
-$settings['logger']['level']  = Monolog\Level::Debug;
+$settings['logger']['level']  = Level::Debug;
 $settings['assets']['minify'] = 0;
 // $settings['locale']['cache']  = null;
 $settings['logger']['path']   = $settings['datadir'] . '/logs';

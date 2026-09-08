@@ -7,6 +7,7 @@ namespace TotalCMS\Action\Extension;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
@@ -105,7 +106,7 @@ readonly class ExtensionRouteAction
 			return null;
 		}
 
-		if ($this->apiKeyAuthenticator->authenticate($request) instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
+		if ($this->apiKeyAuthenticator->authenticate($request) instanceof ApiKeyData) {
 			return null;
 		}
 

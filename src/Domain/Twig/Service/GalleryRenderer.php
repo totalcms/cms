@@ -7,6 +7,8 @@ namespace TotalCMS\Domain\Twig\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
+use TotalCMS\Domain\Query\Service\ObjectFilter;
+use TotalCMS\Domain\Query\Service\ObjectSearcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
@@ -273,14 +275,14 @@ class GalleryRenderer
 
 		// Filter images using include/exclude
 		if (isset($options['include']) || isset($options['exclude'])) {
-			$objectFilter = new \TotalCMS\Domain\Query\Service\ObjectFilter();
+			$objectFilter = new ObjectFilter();
 			$images       = $objectFilter->filterObjects($images, $options);
 			unset($options['include'], $options['exclude']);
 		}
 
 		// Search images using full-text search
 		if (isset($options['search']) && is_string($options['search']) && $options['search'] !== '') {
-			$objectSearcher = new \TotalCMS\Domain\Query\Service\ObjectSearcher();
+			$objectSearcher = new ObjectSearcher();
 			$images         = $objectSearcher->search($images, $options['search']);
 			unset($options['search']);
 		}

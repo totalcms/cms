@@ -11,7 +11,10 @@ use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Mcp\Tool\Admin\ObjectTools;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 
 /**
@@ -88,7 +91,7 @@ readonly class AccessGroupAnalyzer
 			$collections,
 		));
 		$schemaIds = array_values(array_map(
-			fn (\TotalCMS\Domain\Schema\Data\SchemaData $s): string => $s->id,
+			fn (SchemaData $s): string => $s->id,
 			$this->schemaLister->listAllSchemas(),
 		));
 		// Use listExtensionsWithAdminSurface() so the matrix columns match the
@@ -184,14 +187,14 @@ readonly class AccessGroupAnalyzer
 	 *
 	 *   - `read`   → set when the collection is `mcp.access: 'public'`
 	 *                (exposure alone is enough, mirrors
-	 *                {@see \TotalCMS\Domain\Mcp\Auth\Service\PersonaContext::canReadCollection()}'s
+	 *                {@see PersonaContext::canReadCollection()}'s
 	 *                public carve-out) OR the group grants `read`.
 	 *   - `create` → set when the group grants `create`. No separate exposure
 	 *                check is needed here: every collection in $mcpExposure is
 	 *                already 'public' or 'authenticated', both of which satisfy
 	 *                {@see McpSchemaResolver::isAccessibleTo()} for the
 	 *                'authenticated' persona — the same gate
-	 *                {@see \TotalCMS\Domain\Mcp\Tool\Admin\ObjectTools::requireExposed()}
+	 *                {@see ObjectTools::requireExposed()}
 	 *                applies before every write tool call.
 	 *   - `update` → same rule as `create`.
 	 *   - `delete` → NEVER set. MCP ships no delete tool at all

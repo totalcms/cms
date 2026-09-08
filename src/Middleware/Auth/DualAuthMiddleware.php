@@ -11,14 +11,19 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
+use Slim\Interfaces\RouteInterface;
+use Slim\Routing\RouteContext;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
+use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -54,7 +59,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private CollectionFetcher $collectionFetcher,
 		private OperationDetector $operationDetector,
 		private EditionFeatureService $editionFeatures,
-		private \TotalCMS\Domain\Security\CSRF\CSRFRequestValidator $csrfValidator,
+		private CSRFRequestValidator $csrfValidator,
 		private PropertyMetaResolver $propertyMeta,
 		LoggerFactory $loggerFactory,
 	) {
@@ -94,7 +99,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 
 		// Try API key authentication first
 		$apiKeyAuth = $this->authenticator->authenticate($request);
-		if ($apiKeyAuth instanceof \TotalCMS\Domain\ApiKey\Data\ApiKeyData) {
+		if ($apiKeyAuth instanceof ApiKeyData) {
 			// Check if External REST API feature is available for current edition
 			if (!$this->editionFeatures->can(EditionFeature::EXTERNAL_REST_API)) {
 				$edition = $this->editionFeatures->getEdition();
@@ -221,7 +226,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		$this->session->set(SessionKeys::REQUEST_REFERER_URL, $request->getHeaderLine('referer'));
 
 		// User is not logged in. Redirect to login page.
-		$routeParser = \Slim\Routing\RouteContext::fromRequest($request)->getRouteParser();
+		$routeParser = RouteContext::fromRequest($request)->getRouteParser();
 		$url         = $routeParser->urlFor($route);
 
 		return $this->responseFactory->createResponse()
@@ -297,9 +302,9 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 	private function isPublicCollectionRequest(ServerRequestInterface $request): bool
 	{
 		// Must have collection in route - get from route arguments, not request attributes
-		$routeContext = \Slim\Routing\RouteContext::fromRequest($request);
+		$routeContext = RouteContext::fromRequest($request);
 		$route        = $routeContext->getRoute();
-		if (!$route instanceof \Slim\Interfaces\RouteInterface) {
+		if (!$route instanceof RouteInterface) {
 			return false;
 		}
 
@@ -329,7 +334,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		// Check if collection allows this operation publicly
 		try {
 			$collection = $this->collectionFetcher->fetchCollection($collectionId);
-			if (!$collection instanceof \TotalCMS\Domain\Collection\Data\CollectionData) {
+			if (!$collection instanceof CollectionData) {
 				return false;
 			}
 

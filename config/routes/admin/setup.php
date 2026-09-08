@@ -6,6 +6,7 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use TotalCMS\Action\Setup;
 use TotalCMS\Middleware\Response\NoCacheMiddleware;
+use TotalCMS\Middleware\Security\SecurityHeadersMiddleware;
 use TotalCMS\Middleware\SetupLocaleMiddleware;
 
 return function (App $app): void {
@@ -40,5 +41,5 @@ return function (App $app): void {
 		// Step 7: Complete
 		$group->get('/complete', Setup\SetupCompleteAction::class)->setName('setup-complete');
 	})->add(SetupLocaleMiddleware::class)->add(NoCacheMiddleware::class)
-		->add(TotalCMS\Middleware\Security\SecurityHeadersMiddleware::class);
+		->add(SecurityHeadersMiddleware::class);
 };

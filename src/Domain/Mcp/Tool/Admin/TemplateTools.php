@@ -10,6 +10,7 @@ use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
@@ -144,7 +145,7 @@ readonly class TemplateTools
 
 		$template = $this->fetcher->fetchBuilderTemplate($name, $folder);
 
-		if (!$template instanceof \TotalCMS\Domain\Template\Data\TemplateData) {
+		if (!$template instanceof TemplateData) {
 			throw new ToolCallException(sprintf(
 				'get_template: template "%s" not found. Use list_templates to see available templates. Paths are builder-relative and carry no .twig extension.',
 				$path,

@@ -11,6 +11,8 @@ use Lcobucci\JWT\Token\Plain;
 use Lcobucci\JWT\Token\RegisteredClaims;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\OAuth\Data\OAuthClientData;
+use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthRevocationList;
@@ -71,7 +73,7 @@ readonly class OAuthRevokeAction
 
 		// Authenticate the client (required per RFC 7009 §2.1 for confidential clients).
 		$client = $this->clients->find($clientId);
-		if (!$client instanceof \TotalCMS\Domain\OAuth\Data\OAuthClientData || !password_verify($clientSecret, $client->secretHash)) {
+		if (!$client instanceof OAuthClientData || !password_verify($clientSecret, $client->secretHash)) {
 			return $this->renderer->json($response, [
 				'error'             => 'invalid_client',
 				'error_description' => 'client authentication failed',
@@ -88,7 +90,7 @@ readonly class OAuthRevokeAction
 			if ($refreshId !== null) {
 				$hash  = hash('sha256', $refreshId);
 				$grant = $this->grants->findByRefreshTokenHash($hash);
-				if ($grant instanceof \TotalCMS\Domain\OAuth\Data\OAuthGrantData && $grant->clientId === $client->id) {
+				if ($grant instanceof OAuthGrantData && $grant->clientId === $client->id) {
 					$this->grants->delete($grant->id);
 					$this->activityLogger->tokenRevoked($client->id, 'refresh_token', $grant->id);
 

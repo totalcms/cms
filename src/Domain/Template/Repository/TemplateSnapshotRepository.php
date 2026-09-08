@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Template\Repository;
 
 use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Domain\Template\Service\TemplateSnapshotService;
 
 /**
  * Storage for per-template version-history snapshots.
@@ -14,7 +15,7 @@ use TotalCMS\Domain\Storage\StorageRepository;
  * templates work the same: `pages/blog/post.twig` → `.history/pages/blog/post/`.
  *
  * The repository deals only in I/O — retention policy and capture sequencing
- * live in {@see \TotalCMS\Domain\Template\Service\TemplateSnapshotService}.
+ * live in {@see TemplateSnapshotService}.
  */
 class TemplateSnapshotRepository extends StorageRepository
 {

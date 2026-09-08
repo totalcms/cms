@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\License\Service;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Exception\LicenseException;
@@ -35,7 +36,7 @@ class LicenseValidator
 	) {
 		$this->logger = $loggerFactory instanceof LoggerFactory
 			? $loggerFactory->channelLogger(LogChannel::License)
-			: new \Psr\Log\NullLogger();
+			: new NullLogger();
 	}
 
 	/**

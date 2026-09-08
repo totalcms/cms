@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Twig\Service;
 
 use TotalCMS\Domain\Cron\Service\CronTokenProvider;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
@@ -157,7 +158,7 @@ readonly class JobQueueRenderer
 	 */
 	private function formatJobDate(string $utcDate): string
 	{
-		return \TotalCMS\Domain\Property\Data\DateData::utcToTimezone($utcDate, $this->config->timezone);
+		return DateData::utcToTimezone($utcDate, $this->config->timezone);
 	}
 
 	/**

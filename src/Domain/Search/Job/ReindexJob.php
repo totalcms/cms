@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Search\Job;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Search\Service\SearchProvider;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -55,7 +56,7 @@ readonly class ReindexJob
 		}
 
 		$provider = $this->registry->active($activeId);
-		if (!$provider instanceof \TotalCMS\Domain\Search\Service\SearchProvider) {
+		if (!$provider instanceof SearchProvider) {
 			throw new \RuntimeException(sprintf(
 				'ReindexJob: active provider "%s" not registered',
 				$activeId,

@@ -10,6 +10,7 @@ use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
+use TotalCMS\Domain\Object\Service\AutogenService;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DeckData;
@@ -167,7 +168,7 @@ class DeckJsonImporter
 			if (isset($item['id']) && trim((string)$item['id']) !== '') {
 				$itemId = $this->sanitizeId((string)$item['id']);
 			} elseif ($autogenPattern !== '') {
-				$raw    = \TotalCMS\Domain\Object\Service\AutogenService::generateWithOidCount($autogenPattern, $item, 0);
+				$raw    = AutogenService::generateWithOidCount($autogenPattern, $item, 0);
 				$itemId = $this->sanitizeId(SlugData::slugify($raw));
 			} else {
 				$itemId = str_replace('-', '_', AutogenIdService::generateUid());
