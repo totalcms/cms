@@ -14,7 +14,7 @@ use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
 use TotalCMS\Domain\License\Data\LicenseStatusData;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
-use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
+use TotalCMS\Domain\Twig\Service\DashboardRenderer;
 use TotalCMS\Domain\Update\Data\UpdateInfo;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
 
@@ -211,7 +211,7 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 	/**
 	 * @param array<string,mixed> $overrides
 	 */
-	private function makeAlertsAdapter(array $overrides = []): AdminTwigAdapter
+	private function makeAlertsAdapter(array $overrides = []): DashboardRenderer
 	{
 		$updateChecker  = $overrides['updateChecker'] ?? $this->mockUpdateChecker($this->noUpdateInfo());
 		$licenseStatus  = $overrides['licenseStatus'] ?? $this->mockLicenseStatus(new LicenseStatusData(showIcon: false));
@@ -219,7 +219,7 @@ final class AdminTwigAdapterDashboardAlertsTest extends TestCase
 		$runReader      = $overrides['runReader'] ?? $this->stubRunReader([]);
 		$stateRepo      = $overrides['stateRepo'] ?? $this->stubStateRepo([]);
 
-		$adapter = (new \ReflectionClass(AdminTwigAdapter::class))->newInstanceWithoutConstructor();
+		$adapter = (new \ReflectionClass(DashboardRenderer::class))->newInstanceWithoutConstructor();
 		$ref     = new \ReflectionClass($adapter);
 
 		$ref->getProperty('updateChecker')->setValue($adapter, $updateChecker);

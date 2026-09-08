@@ -30,7 +30,7 @@ final class BuilderTwigAdapterTest extends TestCase
 		$this->config->docroot = sys_get_temp_dir();
 		$this->config->api     = '';
 
-		$this->adapter = new BuilderTwigAdapter(
+		$this->adapter = buildBuilderTwigAdapter(
 			$this->builderConfig,
 			$this->indexReader,
 			$this->orderService,
@@ -758,7 +758,7 @@ final class BuilderTwigAdapterTest extends TestCase
 		]));
 
 		// Need a fresh adapter to reset the static manifest cache
-		$adapter = new BuilderTwigAdapter(
+		$adapter = buildBuilderTwigAdapter(
 			$this->builderConfig,
 			$this->indexReader,
 			$this->orderService,

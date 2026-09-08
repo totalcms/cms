@@ -11,7 +11,7 @@ use TotalCMS\Domain\Automation\Service\AutomationRunReader;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
-use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
+use TotalCMS\Domain\Twig\Service\DashboardRenderer;
 
 /**
  * Unit tests for AdminTwigAdapter::dashboardAutomations().
@@ -244,12 +244,12 @@ final class AdminTwigAdapterDashboardAutomationsTest extends TestCase
 	/**
 	 * @param array<string,mixed> $overrides
 	 */
-	private function makeAutomationsAdapter(array $overrides = []): AdminTwigAdapter
+	private function makeAutomationsAdapter(array $overrides = []): DashboardRenderer
 	{
 		$loader    = $overrides['loader'] ?? $this->stubLoader([]);
 		$runReader = $overrides['runReader'] ?? $this->stubRunReader([]);
 
-		$adapter = (new \ReflectionClass(AdminTwigAdapter::class))->newInstanceWithoutConstructor();
+		$adapter = (new \ReflectionClass(DashboardRenderer::class))->newInstanceWithoutConstructor();
 		$ref     = new \ReflectionClass($adapter);
 
 		$ref->getProperty('automationLoader')->setValue($adapter, $loader);

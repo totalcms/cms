@@ -498,7 +498,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$config      = $this->createMock(\TotalCMS\Support\Config::class);
 		$config->env = 'prod';
 
-		$adapter = new AdminTwigAdapter(
+		$adapter = buildAdminTwigAdapter(
 			$config,
 			$this->createMock(AuthTwigAdapter::class),
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),

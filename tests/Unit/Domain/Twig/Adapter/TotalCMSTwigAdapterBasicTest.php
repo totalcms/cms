@@ -201,9 +201,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$jobManager    = new \TotalCMS\Domain\JobQueue\Service\JobManager($jobRepository);
 		$jobManager->clearQueue();
 
-		$adapter = $this->createPartialMock(AdminTwigAdapter::class, []);
+		$adapter = $this->createPartialMock(\TotalCMS\Domain\Twig\Service\JobQueueRenderer::class, []);
 
-		$reflection = new \ReflectionClass(AdminTwigAdapter::class);
+		$reflection = new \ReflectionClass(\TotalCMS\Domain\Twig\Service\JobQueueRenderer::class);
 		$property   = $reflection->getProperty('jobManager');
 		$property->setValue($adapter, $jobManager);
 
@@ -240,9 +240,9 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$jobManager    = new \TotalCMS\Domain\JobQueue\Service\JobManager($jobRepository);
 		$jobManager->clearQueue();
 
-		$adapter = $this->createPartialMock(AdminTwigAdapter::class, []);
+		$adapter = $this->createPartialMock(\TotalCMS\Domain\Twig\Service\JobQueueRenderer::class, []);
 
-		$reflection = new \ReflectionClass(AdminTwigAdapter::class);
+		$reflection = new \ReflectionClass(\TotalCMS\Domain\Twig\Service\JobQueueRenderer::class);
 		$property   = $reflection->getProperty('jobManager');
 		$property->setValue($adapter, $jobManager);
 
@@ -357,7 +357,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$config      = $this->createMock(Config::class);
 		$config->env = 'prod';
 
-		$adapter = new AdminTwigAdapter(
+		$adapter = buildAdminTwigAdapter(
 			$config,
 			$this->createMock(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class),
 			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),

@@ -290,6 +290,78 @@ function buildRenderTwigAdapter(
 	);
 }
 
+/**
+ * Assemble an AdminTwigAdapter from the collaborators the OLD monolithic
+ * constructor took, so unit tests that mock those collaborators keep their
+ * shape after the adapter was split into DashboardRenderer /
+ * JobQueueRenderer / BuilderTemplateRenderer. Same positional order and
+ * parameter names as that constructor had, so call sites only swap `new`.
+ */
+function buildAdminTwigAdapter(
+	TotalCMS\Support\Config $config,
+	TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter $auth,
+	TotalCMS\Domain\Collection\Service\CollectionLister $collectionLister,
+	TotalCMS\Domain\Schema\Service\SchemaLister $schemaLister,
+	TotalCMS\Domain\Template\Service\TemplateLister $templateLister,
+	TotalCMS\Domain\JobQueue\Service\JobManager $jobManager,
+	TotalCMS\Domain\Cache\Service\DevModeManager $devModeManager,
+	TotalCMS\Domain\Collection\Service\CollectionEditionService $collectionEditionService,
+	TotalCMS\Domain\Cache\CacheReporter $cacheReporter,
+	TotalCMS\Domain\License\Service\LicenseStatus $licenseStatus,
+	TotalCMS\Domain\Index\Service\IndexReader $indexReader,
+	TotalCMS\Infrastructure\Diagnostics\ServerChecker $checker,
+	TotalCMS\Infrastructure\Diagnostics\LogAnalyzer $logAnalyzer,
+	TotalCMS\Domain\ImageWorks\Service\ImageCacheService $imageCacheService,
+	TotalCMS\Domain\Cache\CacheSizingAdvisor $cacheSizingAdvisor,
+	TotalCMS\Domain\Update\Service\UpdateChecker $updateChecker,
+	TotalCMS\Domain\Builder\Service\BuilderConfigService $builderConfig,
+	TotalCMS\Domain\Collection\Service\CollectionFetcher $collectionFetcher,
+	TotalCMS\Domain\Builder\Service\BuilderTemplatePaths $paths,
+	TotalCMS\Domain\JobQueue\Service\JobQueueHealth $jobQueueHealth,
+	TotalCMS\Domain\Translation\TranslationService $translator,
+	TotalCMS\Domain\License\Service\EditionFeatureService $editionFeatures,
+	TotalCMS\Domain\Automation\Service\AutomationLoader $automationLoader,
+	TotalCMS\Domain\Automation\Service\AutomationRunReader $automationRunReader,
+	TotalCMS\Domain\Extension\Repository\ExtensionStateRepository $extensionStateRepository,
+	TotalCMS\Domain\Cron\Service\CronTokenProvider $cronTokens,
+): TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter {
+	return new TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter(
+		$config,
+		$devModeManager,
+		$collectionEditionService,
+		$cacheReporter,
+		$licenseStatus,
+		$checker,
+		$logAnalyzer,
+		$imageCacheService,
+		$cacheSizingAdvisor,
+		$translator,
+		$editionFeatures,
+		new TotalCMS\Domain\Twig\Service\DashboardRenderer($config, $auth, $collectionLister, $schemaLister, $templateLister, $jobManager, $cacheReporter, $licenseStatus, $indexReader, $updateChecker, $jobQueueHealth, $editionFeatures, $automationLoader, $automationRunReader, $extensionStateRepository),
+		new TotalCMS\Domain\Twig\Service\JobQueueRenderer($config, $jobManager, $cronTokens),
+		new TotalCMS\Domain\Twig\Service\BuilderTemplateRenderer($templateLister, $paths, $builderConfig, $indexReader, $collectionFetcher),
+	);
+}
+
+/**
+ * Assemble a BuilderTwigAdapter from the collaborators the OLD constructor
+ * took (navigation and assets are now their own services).
+ */
+function buildBuilderTwigAdapter(
+	TotalCMS\Domain\Builder\Service\BuilderConfigService $builderConfig,
+	TotalCMS\Domain\Index\Service\IndexReader $indexReader,
+	TotalCMS\Domain\Builder\Service\BuilderOrderService $orderService,
+	TotalCMS\Support\Config $config,
+): TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter {
+	return new TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter(
+		$builderConfig,
+		$indexReader,
+		$config,
+		new TotalCMS\Domain\Twig\Service\BuilderNavigation($builderConfig, $indexReader, $orderService),
+		new TotalCMS\Domain\Twig\Service\BuilderAssetRenderer($config),
+	);
+}
+
 function signInAs(Slim\App $app, string $userId, string $authCollection = ''): void
 {
 	/** @var TotalCMS\Support\Config $config */

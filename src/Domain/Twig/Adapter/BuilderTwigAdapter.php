@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Twig\Adapter;
 
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
-use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Twig\Service\BuilderAssetRenderer;
+use TotalCMS\Domain\Twig\Service\BuilderNavigation;
 use TotalCMS\Support\Config;
 
 /**
@@ -16,20 +17,19 @@ use TotalCMS\Support\Config;
  */
 class BuilderTwigAdapter
 {
-	/** @var array<string,array{file:string}>|false|null false = not loaded yet */
-	private array|false|null $manifestCache = false;
-
+	/**
+	 * Navigation and assets are their own services (src/Domain/Twig/Service);
+	 * this class exposes them as `cms.builder.*` and keeps the page-URL
+	 * helpers and the Stacks bridge, which need the page index directly.
+	 */
 	public function __construct(
 		private readonly BuilderConfigService $builderConfig,
 		private readonly IndexReader $indexReader,
-		private readonly BuilderOrderService $orderService,
 		private readonly Config $config,
+		private readonly BuilderNavigation $navigation,
+		private readonly BuilderAssetRenderer $assets,
 	) {
 	}
-
-	// -------------------------
-	// Navigation
-	// -------------------------
 
 	/**
 	 * Get top-level navigation pages (no parent).
@@ -40,14 +40,7 @@ class BuilderTwigAdapter
 	 */
 	public function nav(?string $collection = null): array
 	{
-		$tree = $this->navTree($collection);
-
-		// Strip nested children — nav() returns flat top-level only
-		return array_map(static function (array $node): array {
-			unset($node['children']);
-
-			return $node;
-		}, $tree);
+		return $this->navigation->nav($collection);
 	}
 
 	/**
@@ -57,21 +50,7 @@ class BuilderTwigAdapter
 	 */
 	public function subnav(string $parentId, ?string $collection = null): array
 	{
-		$node = $this->findNode($this->navTree($collection), $parentId);
-		if ($node === null) {
-			return [];
-		}
-
-		$children = $node['children'] ?? [];
-		if (!is_array($children)) {
-			return [];
-		}
-
-		return array_map(static function (array $child): array {
-			unset($child['children']);
-
-			return $child;
-		}, $children);
+		return $this->navigation->subnav($parentId, $collection);
 	}
 
 	/**
@@ -83,7 +62,7 @@ class BuilderTwigAdapter
 	 */
 	public function navTree(?string $collection = null): array
 	{
-		return $this->hydrateOrderTree($collection, true);
+		return $this->navigation->navTree($collection);
 	}
 
 	/**
@@ -94,7 +73,7 @@ class BuilderTwigAdapter
 	 */
 	public function pagesTree(?string $collection = null): array
 	{
-		return $this->hydrateOrderTree($collection, false);
+		return $this->navigation->pagesTree($collection);
 	}
 
 	/**
@@ -232,10 +211,6 @@ class BuilderTwigAdapter
 		return $this->extractTagContent($contents, $extract);
 	}
 
-	// -------------------------
-	// Assets
-	// -------------------------
-
 	/**
 	 * Resolve an asset URL with cache busting.
 	 *
@@ -244,7 +219,7 @@ class BuilderTwigAdapter
 	 */
 	public function asset(string $path): string
 	{
-		return $this->resolveAssetUrl($path);
+		return $this->assets->asset($path);
 	}
 
 	/**
@@ -252,9 +227,7 @@ class BuilderTwigAdapter
 	 */
 	public function css(string $path): string
 	{
-		$url = $this->resolveAssetUrl($path);
-
-		return '<link rel="stylesheet" href="' . htmlspecialchars($url) . '">';
+		return $this->assets->css($path);
 	}
 
 	/**
@@ -264,10 +237,7 @@ class BuilderTwigAdapter
 	 */
 	public function js(string $path, array $options = []): string
 	{
-		$url  = $this->resolveAssetUrl($path);
-		$type = empty($options['module']) ? '' : ' type="module"';
-
-		return '<script' . $type . ' src="' . htmlspecialchars($url) . '"></script>';
+		return $this->assets->js($path, $options);
 	}
 
 	/**
@@ -277,111 +247,7 @@ class BuilderTwigAdapter
 	 */
 	public function preload(string $path, string $as): string
 	{
-		$url         = $this->resolveAssetUrl($path);
-		$crossorigin = $as === 'font' ? ' crossorigin' : '';
-
-		return '<link rel="preload" href="' . htmlspecialchars($url) . '" as="' . htmlspecialchars($as) . '"' . $crossorigin . '>';
-	}
-
-	// -------------------------
-	// Private — Navigation
-	// -------------------------
-
-	/**
-	 * Walk the order-file tree and attach each node's full page record from
-	 * the index. When $publicOnly is true, drafts and nav-hidden pages are
-	 * dropped (and any children of dropped pages are dropped too).
-	 *
-	 * @return array<array<string,mixed>>
-	 */
-	private function hydrateOrderTree(?string $collection, bool $publicOnly): array
-	{
-		$collectionId = $collection ?? $this->builderConfig->getPagesCollectionId();
-		$pageById     = $this->fetchPageRecordsById($collectionId);
-
-		if ($pageById === []) {
-			return [];
-		}
-
-		$tree = $this->orderService->read($collectionId);
-
-		return $this->attachRecords($tree, $pageById, $publicOnly);
-	}
-
-	/**
-	 * @param  list<array{id:string,children:list<array<string,mixed>>}> $tree
-	 * @param  array<string,array<string,mixed>>                          $pageById
-	 *
-	 * @return list<array<string,mixed>>
-	 */
-	private function attachRecords(array $tree, array $pageById, bool $publicOnly): array
-	{
-		$out = [];
-		foreach ($tree as $node) {
-			$id = $node['id'];
-			if (!isset($pageById[$id])) {
-				continue;
-			}
-			$record = $pageById[$id];
-
-			if ($publicOnly && (!empty($record['draft']) || ($record['nav'] ?? true) !== true)) {
-				continue;
-			}
-
-			$childrenRaw = $node['children'];
-			/** @var list<array{id:string,children:list<array<string,mixed>>}> $childrenRaw */
-			$record['children'] = $this->attachRecords($childrenRaw, $pageById, $publicOnly);
-			$out[]              = $record;
-		}
-
-		return $out;
-	}
-
-	/**
-	 * @return array<string,array<string,mixed>>
-	 */
-	private function fetchPageRecordsById(string $collectionId): array
-	{
-		try {
-			$index = $this->indexReader->fetchIndex($collectionId);
-		} catch (\Exception) {
-			return [];
-		}
-
-		$by = [];
-		foreach ($index->objects as $page) {
-			$id = (string)($page['id'] ?? '');
-			if ($id !== '') {
-				$by[$id] = $page;
-			}
-		}
-
-		return $by;
-	}
-
-	/**
-	 * Find a node by id anywhere in a tree.
-	 *
-	 * @param  array<array<string,mixed>>  $tree
-	 *
-	 * @return array<string,mixed>|null
-	 */
-	private function findNode(array $tree, string $id): ?array
-	{
-		foreach ($tree as $node) {
-			if ((string)($node['id'] ?? '') === $id) {
-				return $node;
-			}
-			$children = $node['children'] ?? [];
-			if (is_array($children)) {
-				$found = $this->findNode($children, $id);
-				if ($found !== null) {
-					return $found;
-				}
-			}
-		}
-
-		return null;
+		return $this->assets->preload($path, $as);
 	}
 
 	/**
@@ -397,107 +263,5 @@ class BuilderTwigAdapter
 		}
 
 		return $html;
-	}
-
-	// -------------------------
-	// Private — Assets
-	// -------------------------
-
-	/**
-	 * Resolve an asset path to a full URL with cache busting.
-	 */
-	private function resolveAssetUrl(string $path): string
-	{
-		$basePath = $this->getAssetsBasePath();
-		$manifest = $this->loadManifest();
-
-		// Check manifest for hashed filename
-		if ($manifest !== null && isset($manifest[$path])) {
-			return $basePath . '/' . $manifest[$path]['file'];
-		}
-
-		// Shorthand key without directory prefix (e.g., 'style.css' vs 'css/style.css')
-		if ($manifest !== null && !str_contains($path, '/')) {
-			foreach ($manifest as $entry) {
-				if (basename($entry['file']) === basename($path)) {
-					return $basePath . '/' . $entry['file'];
-				}
-			}
-		}
-
-		// Fall back to mtime cache busting
-		$diskPath = $this->config->docroot . '/' . ltrim($basePath, '/') . '/' . $path;
-		if (file_exists($diskPath)) {
-			$mtime = filemtime($diskPath);
-
-			return $basePath . '/' . $path . '?v=' . ($mtime ?: '0');
-		}
-
-		// File not found — return raw path
-		return $basePath . '/' . $path;
-	}
-
-	/**
-	 * Get the public base path for assets.
-	 */
-	private function getAssetsBasePath(): string
-	{
-		$assetsPath = (string)($this->config->builder['assetsPath'] ?? 'assets');
-		if ($assetsPath === '') {
-			$assetsPath = 'assets';
-		}
-
-		return '/' . trim($assetsPath, '/');
-	}
-
-	/**
-	 * Load and cache the asset manifest (Vite/esbuild format).
-	 *
-	 * @return array<string,array{file:string}>|null
-	 */
-	private function loadManifest(): ?array
-	{
-		if ($this->manifestCache !== false) {
-			return $this->manifestCache;
-		}
-
-		$basePath = $this->getAssetsBasePath();
-		$assetDir = $this->config->docroot . '/' . ltrim($basePath, '/');
-
-		// Vite 4 and most other build tools write `manifest.json` at the root
-		// of the output directory. Vite 5+ moved it under `.vite/` by default.
-		// Check both so customers can plug in either layout without having to
-		// override their build config. Our bundled scaffold pins the manifest
-		// at the root via `manifest: 'manifest.json'`, so this fallback only
-		// fires for BYO Vite-5 projects.
-		$manifestPath = $assetDir . '/manifest.json';
-		if (!file_exists($manifestPath)) {
-			$manifestPath = $assetDir . '/.vite/manifest.json';
-		}
-
-		if (!file_exists($manifestPath)) {
-			$this->manifestCache = null;
-
-			return null;
-		}
-
-		$contents = file_get_contents($manifestPath);
-		if ($contents === false) {
-			$this->manifestCache = null;
-
-			return null;
-		}
-
-		$decoded = json_decode($contents, true);
-		if (!is_array($decoded)) {
-			$this->manifestCache = null;
-
-			return null;
-		}
-
-		/** @var array<string,array{file:string}> $decoded */
-		$this->manifestCache = $decoded;
-
-		return $decoded;
 	}
 }

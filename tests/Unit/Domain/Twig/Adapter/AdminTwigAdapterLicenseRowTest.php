@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Data\LicenseStatusData;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
+use TotalCMS\Domain\Twig\Service\DashboardRenderer;
 
 /**
  * The licence row on the dashboard's system-status panel.
@@ -30,7 +30,7 @@ final class AdminTwigAdapterLicenseRowTest extends TestCase
 		$editionFeatures->method('getEdition')->willReturn($edition);
 		$editionFeatures->method('isSimulating')->willReturn($simulating);
 
-		$adapter = (new \ReflectionClass(AdminTwigAdapter::class))->newInstanceWithoutConstructor();
+		$adapter = (new \ReflectionClass(DashboardRenderer::class))->newInstanceWithoutConstructor();
 		(new \ReflectionClass($adapter))->getProperty('editionFeatures')->setValue($adapter, $editionFeatures);
 
 		$method = new \ReflectionMethod($adapter, 'dashboardLicenseStatus');

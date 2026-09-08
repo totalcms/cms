@@ -7,7 +7,7 @@ namespace Tests\Unit\Domain\Twig\Adapter;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Template\Service\TemplateLister;
-use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
+use TotalCMS\Domain\Twig\Service\BuilderTemplateRenderer;
 use TotalCMS\Support\Config;
 
 /**
@@ -49,9 +49,9 @@ final class AdminTwigAdapterTemplatesTest extends TestCase
 		return new BuilderTemplatePaths($config);
 	}
 
-	private function makeAdapter(BuilderTemplatePaths $paths, TemplateLister $lister): AdminTwigAdapter
+	private function makeAdapter(BuilderTemplatePaths $paths, TemplateLister $lister): BuilderTemplateRenderer
 	{
-		$adapter    = (new \ReflectionClass(AdminTwigAdapter::class))->newInstanceWithoutConstructor();
+		$adapter    = (new \ReflectionClass(BuilderTemplateRenderer::class))->newInstanceWithoutConstructor();
 		$reflection = new \ReflectionClass($adapter);
 		$reflection->getProperty('paths')->setValue($adapter, $paths);
 		$reflection->getProperty('templateLister')->setValue($adapter, $lister);
