@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Action\Setup;
 
 use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,9 +16,9 @@ use TotalCMS\Renderer\TwigRenderer;
 
 final class WelcomeActionTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $twigRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $translationService;
-	private \PHPUnit\Framework\MockObject\MockObject $session;
+	private MockObject $twigRenderer;
+	private MockObject $translationService;
+	private MockObject $session;
 	private WelcomeAction $action;
 
 	protected function setUp(): void

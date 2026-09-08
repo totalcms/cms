@@ -24,7 +24,6 @@ class BuilderNavigation
 	) {
 	}
 
-
 	/**
 	 * Get top-level navigation pages (no parent).
 	 *
@@ -90,8 +89,6 @@ class BuilderNavigation
 	{
 		return $this->hydrateOrderTree($collection, false);
 	}
-
-
 
 	/**
 	 * Walk the order-file tree and attach each node's full page record from

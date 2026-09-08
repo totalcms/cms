@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\postJson;
@@ -17,7 +18,7 @@ beforeEach(function (): void {
 		session_destroy();
 	}
 	$this->setUpApp(bootstrap());
-	$this->app->getContainer()->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)->fetchOrCreateReserved('blog');
+	$this->app->getContainer()->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
 });
 
 it('renders a 404 as an html fragment for an htmx request', function (): void {

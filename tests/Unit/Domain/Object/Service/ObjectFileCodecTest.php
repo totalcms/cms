@@ -24,16 +24,16 @@ describe('ObjectFileCodec', function (): void {
 			->toContain("related:\n  - twig/render")
 			->toContain("updated: '2026-08-27T10:00:00+00:00'")
 			->toEndWith("---\n\n# Load More\n\nText.\n");
-		expect($file)->not->toContain("content:");
+		expect($file)->not->toContain('content:');
 		expect($codec->decode($file, 'markdown', 'content'))->toBe($data);
 	});
 
 	test('round-trips every value shape and keeps timestamps as strings', function () use ($codec): void {
 		$data = [
-			'id' => 'x', 'n' => 3, 'f' => 1.5, 'b' => true, 'nul' => null, 'empty' => [], 'title' => 'No: really',
-			'image' => ['name' => 'a.jpg', 'size' => 10, 'exif' => ['nodata' => '']],
-			'deck' => [['id' => 'i1', 'label' => 'yes'], ['id' => 'i2', 'label' => 'null']],
-			'when' => '2026-01-01', 'multi' => "line one\nline two\n",
+			'id'      => 'x', 'n' => 3, 'f' => 1.5, 'b' => true, 'nul' => null, 'empty' => [], 'title' => 'No: really',
+			'image'   => ['name' => 'a.jpg', 'size' => 10, 'exif' => ['nodata' => '']],
+			'deck'    => [['id' => 'i1', 'label' => 'yes'], ['id' => 'i2', 'label' => 'null']],
+			'when'    => '2026-01-01', 'multi' => "line one\nline two\n",
 			'content' => '',
 		];
 		expect($codec->decode($codec->encode($data, 'markdown', 'content'), 'markdown', 'content'))->toBe($data);
@@ -92,8 +92,8 @@ describe('ObjectFileCodec', function (): void {
 	});
 
 	test('unparseable input throws', function () use ($codec): void {
-		expect(fn () => $codec->decode("---\nid: [\n---\n", 'markdown', 'content'))->toThrow(\UnexpectedValueException::class);
-		expect(fn () => $codec->decode('{not json', 'json', null))->toThrow(\UnexpectedValueException::class);
+		expect(fn () => $codec->decode("---\nid: [\n---\n", 'markdown', 'content'))->toThrow(UnexpectedValueException::class);
+		expect(fn () => $codec->decode('{not json', 'json', null))->toThrow(UnexpectedValueException::class);
 	});
 
 	test('malformed UTF-8 throws on encode rather than truncating the file to an empty string', function () use ($codec): void {
@@ -103,7 +103,7 @@ describe('ObjectFileCodec', function (): void {
 		// codec must throw instead so the save aborts before anything is
 		// written.
 		expect(fn () => $codec->encode(['id' => 'x', 'title' => "\xB1\x31"], 'json', null))
-			->toThrow(\UnexpectedValueException::class);
+			->toThrow(UnexpectedValueException::class);
 	});
 
 	test('bodyProperty is content only when string-typed', function () use ($codec): void {

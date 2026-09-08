@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Action\Stream;
 
 use Odan\Session\PhpSession;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -25,8 +26,8 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
  */
 final class StreamFileFromDepotActionDispatchTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $depotFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $fileFetcher;
+	private MockObject $depotFetcher;
+	private MockObject $fileFetcher;
 	private StreamFileFromDepotAction $action;
 
 	protected function setUp(): void

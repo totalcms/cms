@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/XmlRpcTestHelpers.php';
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\XmlRpc\Handler\PostReadHandler;
 
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
@@ -15,7 +17,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 	enableXmlRpc();
 	$container = $this->app->getContainer();
-	$container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)->fetchOrCreateReserved('blog');
+	$container->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
 
 	// Ids are deliberately NOT in date order: alphabetically 'read-post-a' <
 	// 'read-post-m' < 'read-post-z', but by date the order is a (newest),
@@ -93,7 +95,7 @@ it('returns recent posts newest first and honours the requested count', function
 
 it('clamps a request for every post to the maximum', function (): void {
 	// A client sending -1 ("all") must not be able to pull a whole collection.
-	expect(TotalCMS\Domain\XmlRpc\Handler\PostReadHandler::MAX_POSTS)->toBe(100);
+	expect(PostReadHandler::MAX_POSTS)->toBe(100);
 
 	$key  = xmlRpcKey();
 	$body = (string)postXmlRpc(xmlRpcBody(

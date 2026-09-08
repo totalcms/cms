@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/XmlRpcTestHelpers.php';
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\XmlRpc\Service\MethodRouter;
 
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
@@ -16,7 +18,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 	enableXmlRpc();
 	$container = $this->app->getContainer();
-	$container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)->fetchOrCreateReserved('blog');
+	$container->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
 
 	$container->get(ObjectSaver::class)->saveObject('blog', [
 		'id'         => 'taxonomy-one',
@@ -34,7 +36,7 @@ beforeEach(function (): void {
 
 it('registers every taxonomy method', function (): void {
 	$names = $this->app->getContainer()
-		->get(TotalCMS\Domain\XmlRpc\Service\MethodRouter::class)
+		->get(MethodRouter::class)
 		->methodNames();
 
 	foreach ([

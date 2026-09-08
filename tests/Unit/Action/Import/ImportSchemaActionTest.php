@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Import;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,10 +17,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ImportSchemaActionTest extends TestCase
 {
 	private ImportSchemaAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $schemaSaver;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

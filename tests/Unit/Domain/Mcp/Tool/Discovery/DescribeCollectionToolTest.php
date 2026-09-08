@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Tool\Discovery;
 
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -16,8 +17,8 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class DescribeCollectionToolTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $collections;
-	private \PHPUnit\Framework\MockObject\MockObject $resolver;
+	private MockObject $collections;
+	private MockObject $resolver;
 	private PersonaContext $persona;
 	private DescribeCollectionTool $tool;
 

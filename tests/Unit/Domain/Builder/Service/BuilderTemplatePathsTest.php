@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Builder\Service;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
+use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
@@ -238,7 +239,7 @@ final class BuilderTemplatePathsTest extends TestCase
 
 		$this->assertSame(
 			[
-				rtrim(\TotalCMS\Domain\Template\Repository\TemplateRepository::reservedTemplateDir(), '/'),
+				rtrim(TemplateRepository::reservedTemplateDir(), '/'),
 				$this->projectBuilder,
 				$this->dataBuilder,
 				$this->makePaths()->defaultsDir(),

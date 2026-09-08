@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\ImageWorks;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,9 +13,9 @@ use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 final class ImageWorksGalleryFetchDynamicActionTest extends TestCase
 {
 	private ImageWorksGalleryFetchDynamicAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $imageGenerator;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $imageGenerator;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

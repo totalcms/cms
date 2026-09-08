@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -34,7 +35,7 @@ final class RenderTwigAdapterFragmentUrlTest extends TestCase
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
-		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
 		$this->adapter = buildRenderTwigAdapter(
 			$this->createMock(HtmxRenderer::class),

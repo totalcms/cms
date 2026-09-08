@@ -7,16 +7,18 @@ namespace Tests\Unit\Domain\Mcp\Prompt\Service;
 use Mcp\Schema\Content\PromptMessage;
 use Mcp\Schema\Content\TextContent;
 use Mcp\Schema\Enum\Role;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptArgData;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Exception\PromptRenderException;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRenderer;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use Twig\Error\SyntaxError;
 
 final class PromptRendererTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $twig;
+	private MockObject $twig;
 	private PromptRenderer $renderer;
 
 	protected function setUp(): void
@@ -92,7 +94,7 @@ final class PromptRendererTest extends TestCase
 	{
 		$this->twig
 			->method('renderString')
-			->willThrowException(new \Twig\Error\SyntaxError('bad syntax'));
+			->willThrowException(new SyntaxError('bad syntax'));
 
 		$prompt = new PromptData(name: 'p', description: 'd', body: '{{ broken');
 

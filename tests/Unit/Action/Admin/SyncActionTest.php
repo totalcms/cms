@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Admin;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Admin\SyncAction;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Renderer\JsonRenderer;
@@ -16,11 +18,11 @@ use TotalCMS\Support\OperationResult;
 final class SyncActionTest extends TestCase
 {
 	private SyncAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $settingsFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $syncService;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $renderer;
+	private MockObject $settingsFetcher;
+	private MockObject $syncService;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -34,7 +36,7 @@ final class SyncActionTest extends TestCase
 			$this->renderer,
 			$this->settingsFetcher,
 			$this->syncService,
-			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
+			$this->createMock(CollectionFetcher::class),
 		);
 
 		// Default: renderer returns response for chaining

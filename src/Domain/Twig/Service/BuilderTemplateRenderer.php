@@ -34,7 +34,6 @@ readonly class BuilderTemplateRenderer
 	) {
 	}
 
-
 	/**
 	 * Whether builder template editing is locked because templates are
 	 * git-managed on this environment. Admin views use this to show a
@@ -44,7 +43,6 @@ readonly class BuilderTemplateRenderer
 	{
 		return $this->paths->locked();
 	}
-
 
 	/**
 	 * Group templates by folder for display in admin sidebar.
@@ -100,7 +98,6 @@ readonly class BuilderTemplateRenderer
 		return $folders;
 	}
 
-
 	/**
 	 * Get the builder file tree organized by category.
 	 *
@@ -148,7 +145,6 @@ readonly class BuilderTemplateRenderer
 
 		return $tree;
 	}
-
 
 	/**
 	 * Check if a builder page route covers a collection's URL pattern.

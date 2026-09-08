@@ -6,7 +6,9 @@ namespace Tests\Unit\Middleware;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\App;
@@ -17,10 +19,10 @@ use TotalCMS\Middleware\ImpersonationBannerMiddleware;
 
 final class ImpersonationBannerMiddlewareTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $impersonation;
-	private \PHPUnit\Framework\MockObject\MockObject $session;
-	private \PHPUnit\Framework\MockObject\MockObject $csrf;
-	private \PHPUnit\Framework\MockObject\MockObject $app;
+	private MockObject $impersonation;
+	private MockObject $session;
+	private MockObject $csrf;
+	private MockObject $app;
 
 	protected function setUp(): void
 	{
@@ -37,7 +39,7 @@ final class ImpersonationBannerMiddlewareTest extends TestCase
 	{
 		$this->app->method('getBasePath')->willReturn($basePath);
 
-		/** @var App<\Psr\Container\ContainerInterface> $app */
+		/** @var App<ContainerInterface> $app */
 		$app = $this->app;
 
 		return new ImpersonationBannerMiddleware(

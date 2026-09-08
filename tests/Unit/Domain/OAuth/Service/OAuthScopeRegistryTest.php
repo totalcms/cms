@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\OAuth\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\OAuth\Data\OAuthScopeData;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 
 final class OAuthScopeRegistryTest extends TestCase
@@ -12,7 +13,7 @@ final class OAuthScopeRegistryTest extends TestCase
 	public function testCoarseScopesPresent(): void
 	{
 		$registry    = new OAuthScopeRegistry();
-		$identifiers = array_map(fn (\TotalCMS\Domain\OAuth\Data\OAuthScopeData $s): string => $s->identifier, $registry->all());
+		$identifiers = array_map(fn (OAuthScopeData $s): string => $s->identifier, $registry->all());
 
 		$this->assertEqualsCanonicalizing(
 			['cms:read', 'cms:write', 'cms:admin', 'mcp:tools', 'mcp:resources', 'mcp:prompts'],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Property\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -19,12 +20,12 @@ use TotalCMS\Support\Config;
 class FileSaverTest extends TestCase
 {
 	private FileSaver $fileSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $mockStorage;
-	private \PHPUnit\Framework\MockObject\MockObject $mockPropFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectPatcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockLoggerFactory;
+	private MockObject $mockStorage;
+	private MockObject $mockPropFetcher;
+	private MockObject $mockObjectSaver;
+	private MockObject $mockObjectPatcher;
+	private MockObject $mockObjectFetcher;
+	private MockObject $mockLoggerFactory;
 
 	protected function setUp(): void
 	{

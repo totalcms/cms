@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Data\RatingData;
 
 describe('RatingData', function (): void {
@@ -15,7 +16,7 @@ describe('RatingData', function (): void {
 	test('RatingData → inherits from PropertyData', function (): void {
 		$rating = new RatingData('test-id');
 
-		expect($rating)->toBeInstanceOf(TotalCMS\Domain\Property\Data\PropertyData::class);
+		expect($rating)->toBeInstanceOf(PropertyData::class);
 	});
 
 	test('RatingData → has settings property from parent', function (): void {

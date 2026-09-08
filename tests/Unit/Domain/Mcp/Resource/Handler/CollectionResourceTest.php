@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Resource\Handler;
 
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
@@ -20,10 +21,10 @@ use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 
 final class CollectionResourceTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaResolver;
-	private \PHPUnit\Framework\MockObject\MockObject $urlBuilder;
+	private MockObject $collectionFetcher;
+	private MockObject $indexReader;
+	private MockObject $schemaResolver;
+	private MockObject $urlBuilder;
 	private PersonaContext $personaContext;
 	private CollectionResource $resource;
 

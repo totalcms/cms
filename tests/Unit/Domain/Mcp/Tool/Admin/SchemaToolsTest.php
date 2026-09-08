@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
@@ -23,14 +24,14 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
 
 final class SchemaToolsTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $lister;
-	private \PHPUnit\Framework\MockObject\MockObject $fetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $saver;
-	private \PHPUnit\Framework\MockObject\MockObject $remover;
-	private \PHPUnit\Framework\MockObject\MockObject $objectSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $personaContext;
+	private MockObject $lister;
+	private MockObject $fetcher;
+	private MockObject $saver;
+	private MockObject $remover;
+	private MockObject $objectSaver;
+	private MockObject $collectionFetcher;
+	private MockObject $collectionSaver;
+	private MockObject $personaContext;
 	private SchemaTools $tool;
 
 	protected function setUp(): void

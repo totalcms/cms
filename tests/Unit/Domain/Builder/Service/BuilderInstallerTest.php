@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\Builder\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
@@ -12,10 +13,10 @@ use TotalCMS\Domain\Template\Service\TemplateMigrationService;
 final class BuilderInstallerTest extends TestCase
 {
 	private BuilderInstaller $installer;
-	private \PHPUnit\Framework\MockObject\MockObject $builderConfig;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $templateMigration;
+	private MockObject $builderConfig;
+	private MockObject $collectionFetcher;
+	private MockObject $collectionSaver;
+	private MockObject $templateMigration;
 
 	protected function setUp(): void
 	{

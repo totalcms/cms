@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\Builder\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
@@ -17,11 +18,11 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 final class PageRouterTest extends TestCase
 {
 	private PageRouter $router;
-	private \PHPUnit\Framework\MockObject\MockObject $builderConfig;
-	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionLister;
-	private \PHPUnit\Framework\MockObject\MockObject $urlBuilder;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
+	private MockObject $builderConfig;
+	private MockObject $indexReader;
+	private MockObject $collectionLister;
+	private MockObject $urlBuilder;
+	private MockObject $objectFetcher;
 
 	protected function setUp(): void
 	{

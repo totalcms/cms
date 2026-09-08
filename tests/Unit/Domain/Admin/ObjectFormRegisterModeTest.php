@@ -9,6 +9,8 @@ use TotalCMS\Domain\Admin\ObjectForm;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Support\Config;
 
 /**
@@ -54,8 +56,8 @@ final class ObjectFormRegisterModeTest extends TestCase
 		$collectionFetcher = $this->createMock(CollectionFetcher::class);
 		$collectionFetcher->method('fetchCollection')->willReturn($collection);
 
-		$schemaFetcher = $this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class);
-		$schemaFetcher->method('fetchSchema')->willReturn(new \TotalCMS\Domain\Schema\Data\SchemaData());
+		$schemaFetcher = $this->createMock(SchemaFetcher::class);
+		$schemaFetcher->method('fetchSchema')->willReturn(new SchemaData());
 
 		$defaults = [
 			'register'          => false,

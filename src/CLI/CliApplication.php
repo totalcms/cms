@@ -14,6 +14,7 @@ use TotalCMS\Middleware\Development\SentryMiddleware;
 use TotalCMS\Support\PathResolver;
 use TotalCMS\Support\Version;
 use TotalCMS\TotalCMS;
+
 use function Sentry\captureException;
 use function Sentry\configureScope;
 use function Sentry\flush;

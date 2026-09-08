@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Cache\FragmentCache;
 use TotalCMS\Domain\Twig\Extension\CacheTokenParser;
 use Twig\Environment;
+use Twig\Error\SyntaxError;
 use Twig\Loader\ArrayLoader;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
 
@@ -27,7 +29,7 @@ function fakeFragmentCacheEnv(object $fragmentCache, array $templates): Environm
 
 		public function load(string $class): ?object
 		{
-			return $class === TotalCMS\Domain\Cache\FragmentCache::class ? $this->fc : null;
+			return $class === FragmentCache::class ? $this->fc : null;
 		}
 	});
 
@@ -84,5 +86,5 @@ test('cache tag rejects an unknown option', function (): void {
 	$discard = [];
 	$twig    = fakeFragmentCacheEnv(recordingFragmentCache($discard), ['t' => "{% cache 'k' bogus=1 %}X{% endcache %}"]);
 
-	expect(fn () => $twig->render('t', []))->toThrow(Twig\Error\SyntaxError::class);
+	expect(fn () => $twig->render('t', []))->toThrow(SyntaxError::class);
 });

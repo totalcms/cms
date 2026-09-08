@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+
 use function TotalCMS\Slim\Pest\postJson;
 use function TotalCMS\Slim\Pest\putJson;
 

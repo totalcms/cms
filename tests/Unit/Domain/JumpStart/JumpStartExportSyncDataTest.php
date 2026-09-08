@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\JumpStart;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -25,12 +27,12 @@ use TotalCMS\Factory\LoggerFactory;
 final class JumpStartExportSyncDataTest extends TestCase
 {
 	private JumpStartExporter $exporter;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionLister;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaLister;
-	private \PHPUnit\Framework\MockObject\MockObject $templateLister;
-	private \PHPUnit\Framework\MockObject\MockObject $templateFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
+	private MockObject $collectionLister;
+	private MockObject $schemaLister;
+	private MockObject $templateLister;
+	private MockObject $templateFetcher;
+	private MockObject $indexReader;
+	private MockObject $objectFetcher;
 
 	protected function setUp(): void
 	{
@@ -45,7 +47,7 @@ final class JumpStartExportSyncDataTest extends TestCase
 		$loggerFactory          = $this->createMock(LoggerFactory::class);
 
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
-		$loggerFactory->method('createLogger')->willReturn($this->createMock(\Psr\Log\LoggerInterface::class));
+		$loggerFactory->method('createLogger')->willReturn($this->createMock(LoggerInterface::class));
 
 		$this->exporter = new JumpStartExporter(
 			$this->collectionLister,

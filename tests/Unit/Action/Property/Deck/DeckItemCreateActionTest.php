@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Property\Deck;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -10,15 +11,16 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\DeckItemFactory;
 use TotalCMS\Domain\Property\Service\DeckItemSaver;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class DeckItemCreateActionTest extends TestCase
 {
 	private DeckItemCreateAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $deckItemSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $deckItemFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $deckItemSaver;
+	private MockObject $deckItemFactory;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -223,7 +225,7 @@ final class DeckItemCreateActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('jsonItem')
-			->with($this->response, $objectData, $this->isInstanceOf(\TotalCMS\Transformer\ObjectMetaTransformer::class))
+			->with($this->response, $objectData, $this->isInstanceOf(ObjectMetaTransformer::class))
 			->willReturn($response201);
 
 		($this->action)($this->request, $this->response, $args);

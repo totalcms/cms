@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Import;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -41,7 +42,7 @@ final class RssImporterUserAgentTest extends TestCase
 		$collectionFetcher->method('collectionExists')->willReturn(true);
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
-		$loggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
+		$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
 
 		return new RssImporter(
 			$collectionFetcher,

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Property\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Property\Service\FileFetcher;
@@ -19,9 +21,9 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
  */
 final class FileFetcherTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
-	private \PHPUnit\Framework\MockObject\MockObject $propFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
+	private MockObject $storage;
+	private MockObject $propFetcher;
+	private MockObject $objectFetcher;
 	private FileFetcher $fetcher;
 
 	protected function setUp(): void
@@ -65,7 +67,7 @@ final class FileFetcherTest extends TestCase
 	{
 		// PropertyFetcher returning non-FileData (e.g. CardData on a misrouted
 		// call) should fail loudly so DownloadAction returns 404.
-		$this->propFetcher->method('fetchProperty')->willReturn(new \TotalCMS\Domain\Property\Data\CardData([], []));
+		$this->propFetcher->method('fetchProperty')->willReturn(new CardData([], []));
 
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('Unable to retrieve file data');

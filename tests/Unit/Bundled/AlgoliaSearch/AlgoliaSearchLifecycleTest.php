@@ -9,8 +9,11 @@ namespace Tests\Unit\Bundled\AlgoliaSearch;
 require_once dirname(__DIR__, 4) . '/resources/extensions/totalcms/algolia-search/Service/AlgoliaSearchProvider.php';
 
 use DI\Container;
+use DI\ContainerBuilder;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Monolog\Level;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Bundled\AlgoliaSearch\Service\AlgoliaSearchProvider;
@@ -153,15 +156,15 @@ final class AlgoliaSearchLifecycleTest extends TestCase
 		// SearchProviderRegistry: real instance, pre-seeded into container.
 		$registry = new SearchProviderRegistry();
 
-		$builder = new \DI\ContainerBuilder();
+		$builder = new ContainerBuilder();
 		$builder->useAutowiring(false);
 		$builder->useAttributes(false);
 		$builder->addDefinitions([
 			LoggerFactory::class            => new LoggerFactory([
-				'level' => \Monolog\Level::Debug,
+				'level' => Level::Debug,
 				'test'  => new NullLogger(),
 			]),
-			EditionFeatureService::class    => fn (): \PHPUnit\Framework\MockObject\MockObject => $editionFeatures,
+			EditionFeatureService::class    => fn (): MockObject => $editionFeatures,
 			SearchProviderRegistry::class   => fn (): SearchProviderRegistry => $registry,
 		]);
 		$container = $builder->build();

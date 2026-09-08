@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Auth;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\AuthTokenService;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
@@ -17,10 +19,10 @@ use TotalCMS\Support\OperationResult;
 final class EmailVerificationServiceTest extends TestCase
 {
 	private EmailVerificationService $service;
-	private \PHPUnit\Framework\MockObject\MockObject $tokenService;
-	private \PHPUnit\Framework\MockObject\MockObject $userValidator;
-	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
+	private MockObject $tokenService;
+	private MockObject $userValidator;
+	private MockObject $objectUpdater;
+	private MockObject $config;
 
 	protected function setUp(): void
 	{
@@ -32,7 +34,7 @@ final class EmailVerificationServiceTest extends TestCase
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(
-			$this->createMock(\Psr\Log\LoggerInterface::class)
+			$this->createMock(LoggerInterface::class)
 		);
 
 		$this->service = new EmailVerificationService(

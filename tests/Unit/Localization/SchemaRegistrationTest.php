@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker;
 
 /**
  * Smoke tests for the wiring between SchemaData, PropertyFactory, and
@@ -44,7 +45,7 @@ describe('Localization sliver wiring', function (): void {
 		// Localized fields store a flat locale-keyed dict — no separate
 		// filesystem state (unlike gallery/depot) and no schemaref recursion
 		// (unlike nested decks), so they nest cleanly inside cards and decks.
-		$checker = new TotalCMS\Domain\Schema\Service\DeckCompatibilityChecker();
+		$checker = new DeckCompatibilityChecker();
 
 		$schema = [
 			'properties' => [

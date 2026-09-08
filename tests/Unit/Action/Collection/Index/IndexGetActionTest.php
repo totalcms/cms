@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Collection\Index;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,11 +16,11 @@ use TotalCMS\Transformer\IndexTransformer;
 final class IndexGetActionTest extends TestCase
 {
 	private IndexGetAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
-	private \PHPUnit\Framework\MockObject\MockObject $indexFilter;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $renderer;
+	private MockObject $indexReader;
+	private MockObject $indexFilter;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

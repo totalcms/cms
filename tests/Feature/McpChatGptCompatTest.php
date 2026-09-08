@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\postJson;
@@ -52,7 +54,7 @@ beforeEach(function (): void {
  *
  * @param array<string,mixed> $payload
  */
-function chatgptCompatMcp(Slim\App $app, array $payload, string $sessionId = ''): Psr\Http\Message\ResponseInterface
+function chatgptCompatMcp(App $app, array $payload, string $sessionId = ''): ResponseInterface
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -80,7 +82,7 @@ function chatgptCompatMcp(Slim\App $app, array $payload, string $sessionId = '')
  * anonymous public persona and return the negotiated Mcp-Session-Id.
  * Empty string means the endpoint was unavailable (edition/config gate).
  */
-function chatgptCompatHandshake(Slim\App $app): string
+function chatgptCompatHandshake(App $app): string
 {
 	$init = chatgptCompatMcp($app, [
 		'jsonrpc' => '2.0',
@@ -116,7 +118,7 @@ function chatgptCompatHandshake(Slim\App $app): string
  *
  * @return array<string,mixed>
  */
-function chatgptCompatDecode(Psr\Http\Message\ResponseInterface $response): array
+function chatgptCompatDecode(ResponseInterface $response): array
 {
 	$decoded = json_decode((string)$response->getBody(), true);
 
@@ -133,7 +135,7 @@ function chatgptCompatDecode(Psr\Http\Message\ResponseInterface $response): arra
  * AuthMiddleware (collection-save) / DualAuthMiddleware (object-save) gates pass
  * through without a session — no login flow is needed here.
  */
-function chatgptCompatSeedPublicObject(Slim\App $app): string
+function chatgptCompatSeedPublicObject(App $app): string
 {
 	$collectionId = 'mcp-compat-articles';
 	$objectId     = 'elephants-of-the-savanna';
@@ -383,7 +385,7 @@ describe('MCP ChatGPT-compat search/fetch', function (): void {
  *
  * @return array<string,mixed>|null
  */
-function chatgptCompatInitCapabilities(Slim\App $app, string $clientName = 'pest-client'): ?array
+function chatgptCompatInitCapabilities(App $app, string $clientName = 'pest-client'): ?array
 {
 	$init = chatgptCompatMcp($app, [
 		'jsonrpc' => '2.0',

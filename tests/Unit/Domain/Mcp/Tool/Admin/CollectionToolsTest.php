@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
@@ -13,7 +14,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class CollectionToolsTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $saver;
+	private MockObject $saver;
 	private CollectionTools $tool;
 
 	protected function setUp(): void

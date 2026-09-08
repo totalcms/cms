@@ -1,5 +1,7 @@
 <?php
 
+use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+
 use function TotalCMS\Slim\Pest\postJson;
 
 beforeEach(function (): void {
@@ -34,7 +36,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get TotalCMSTwigAdapter from container
 		$container = $this->app->getContainer();
-		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMSTwigAdapter::class);
 
 		// Get dashboard stats
 		$stats = $adapter->dashboardStats();
@@ -52,7 +54,7 @@ describe('Dashboard Data Methods', function (): void {
 		// builder/. The stat listed non-recursively, so it reported 0 templates
 		// on sites with dozens of them.
 		$container = $this->app->getContainer();
-		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMSTwigAdapter::class);
 
 		// Relative to a baseline: the read-layer union already includes the
 		// built-in defaults, so the absolute count is environment-dependent.
@@ -93,7 +95,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get adapter
 		$container = $this->app->getContainer();
-		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMSTwigAdapter::class);
 
 		// Get dashboard collections
 		$collections = $adapter->dashboardRecentCollections();
@@ -130,7 +132,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get adapter
 		$container = $this->app->getContainer();
-		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMSTwigAdapter::class);
 
 		// Get dashboard collections
 		$collections = $adapter->dashboardRecentCollections();
@@ -163,7 +165,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get adapter
 		$container = $this->app->getContainer();
-		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMSTwigAdapter::class);
 
 		// Get dashboard collections
 		$collections = $adapter->dashboardRecentCollections();
@@ -199,7 +201,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get adapter
 		$container = $this->app->getContainer();
-		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMSTwigAdapter::class);
 
 		// Get empty collections
 		$emptyCollections = $adapter->dashboardEmptyCollections();
@@ -234,7 +236,7 @@ describe('Dashboard Data Methods', function (): void {
 
 		// Get adapter
 		$container = $this->app->getContainer();
-		$adapter   = $container->get(TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter::class);
+		$adapter   = $container->get(TotalCMSTwigAdapter::class);
 
 		// Get empty collections
 		$emptyCollections = $adapter->dashboardEmptyCollections();

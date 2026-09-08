@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\ApiKey;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyDeleter;
@@ -9,7 +10,7 @@ use TotalCMS\Domain\ApiKey\Service\ApiKeyDeleter;
 final class ApiKeyDeleterTest extends TestCase
 {
 	private ApiKeyDeleter $apiKeyDeleter;
-	private \PHPUnit\Framework\MockObject\MockObject $repository;
+	private MockObject $repository;
 
 	protected function setUp(): void
 	{

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Object;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -10,15 +11,16 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class ObjectUpdatePropertyMetaActionTest extends TestCase
 {
 	private ObjectUpdatePropertyMetaAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $fileFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $objectUpdater;
+	private MockObject $renderer;
+	private MockObject $fileFetcher;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -163,7 +165,7 @@ final class ObjectUpdatePropertyMetaActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('jsonItem')
-			->with($this->response, $objectData, $this->isInstanceOf(\TotalCMS\Transformer\ObjectMetaTransformer::class))
+			->with($this->response, $objectData, $this->isInstanceOf(ObjectMetaTransformer::class))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, $args);

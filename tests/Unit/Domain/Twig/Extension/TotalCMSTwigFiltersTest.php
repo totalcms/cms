@@ -1,6 +1,7 @@
 <?php
 
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
+use Twig\TwigFilter;
 
 describe('TotalCMSTwigFilters', function (): void {
 	// -------------------------
@@ -14,13 +15,13 @@ describe('TotalCMSTwigFilters', function (): void {
 		expect(count($filters))->toBeGreaterThan(0);
 
 		foreach ($filters as $filter) {
-			expect($filter)->toBeInstanceOf(Twig\TwigFilter::class);
+			expect($filter)->toBeInstanceOf(TwigFilter::class);
 		}
 	});
 
 	test('TotalCMSTwigFilters → includes all custom functions in filters', function (): void {
 		$filters     = TotalCMSTwigFilters::getFilters();
-		$filterNames = array_map(fn (Twig\TwigFilter $filter): string => $filter->getName(), $filters);
+		$filterNames = array_map(fn (TwigFilter $filter): string => $filter->getName(), $filters);
 
 		foreach (TotalCMSTwigFilters::$customFunctions as $customFunction) {
 			expect($filterNames)->toContain($customFunction);
@@ -29,7 +30,7 @@ describe('TotalCMSTwigFilters', function (): void {
 
 	test('TotalCMSTwigFilters → includes all PHP functions in filters', function (): void {
 		$filters     = TotalCMSTwigFilters::getFilters();
-		$filterNames = array_map(fn (Twig\TwigFilter $filter): string => $filter->getName(), $filters);
+		$filterNames = array_map(fn (TwigFilter $filter): string => $filter->getName(), $filters);
 
 		foreach (TotalCMSTwigFilters::$phpFunctions as $phpFunction) {
 			expect($filterNames)->toContain($phpFunction);

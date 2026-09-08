@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Mcp\Tool\Admin\CacheTools;
@@ -11,7 +12,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class CacheToolsTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
+	private MockObject $cacheManager;
 	private CacheTools $tool;
 
 	protected function setUp(): void

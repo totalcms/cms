@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Event\Listener;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -21,9 +22,9 @@ final class IndexBuildListenerTest extends TestCase
 {
 	private EventDispatcher $dispatcher;
 	private IndexBuildListener $listener;
-	private \PHPUnit\Framework\MockObject\MockObject $indexBuilder;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionLister;
+	private MockObject $indexBuilder;
+	private MockObject $collectionFetcher;
+	private MockObject $collectionLister;
 
 	protected function setUp(): void
 	{

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Middleware;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -15,12 +16,12 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ApiKeyAuthMiddlewareTest extends TestCase
 {
 	private ApiKeyAuthMiddleware $middleware;
-	private \PHPUnit\Framework\MockObject\MockObject $authenticator;
-	private \PHPUnit\Framework\MockObject\MockObject $jsonRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $responseFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $handler;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $authenticator;
+	private MockObject $jsonRenderer;
+	private MockObject $responseFactory;
+	private MockObject $request;
+	private MockObject $handler;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

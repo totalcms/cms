@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Sitemap\Service;
 
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Index\Data\IndexData;
@@ -21,9 +22,9 @@ use TotalCMS\Support\Config;
 final class PageSitemapBuilderTest extends TestCase
 {
 	private PageSitemapBuilder $builder;
-	private \PHPUnit\Framework\MockObject\MockObject $mockBuilderConfig;
-	private \PHPUnit\Framework\MockObject\MockObject $mockIndexReader;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
+	private MockObject $mockBuilderConfig;
+	private MockObject $mockIndexReader;
+	private MockObject $config;
 
 	protected function setUp(): void
 	{

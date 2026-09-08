@@ -6,6 +6,8 @@ namespace Tests\Unit\Domain\Property;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Property\Data\CardData;
+use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Data\VideoData;
 use TotalCMS\Domain\Video\Data\VideoInfo;
 
@@ -22,8 +24,8 @@ final class VideoDataTest extends TestCase
 	public function testIsAPlainPropertyDataNotACard(): void
 	{
 		$video = new VideoData(['url' => 'https://youtu.be/abc123']);
-		$this->assertInstanceOf(\TotalCMS\Domain\Property\Data\PropertyData::class, $video);
-		$this->assertNotInstanceOf(\TotalCMS\Domain\Property\Data\CardData::class, $video);
+		$this->assertInstanceOf(PropertyData::class, $video);
+		$this->assertNotInstanceOf(CardData::class, $video);
 	}
 
 	public function testTypedGettersReadTheStoredValues(): void

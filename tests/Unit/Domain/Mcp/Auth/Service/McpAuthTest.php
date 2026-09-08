@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Auth\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
@@ -18,8 +19,8 @@ use TotalCMS\Support\Config;
 
 final class McpAuthTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $authenticator;
-	private \PHPUnit\Framework\MockObject\MockObject $accessControl;
+	private MockObject $authenticator;
+	private MockObject $accessControl;
 	private Config $config;
 
 	protected function setUp(): void

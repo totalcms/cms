@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Index\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -20,12 +23,12 @@ use TotalCMS\Factory\LoggerFactory;
 final class IndexBuilderTest extends TestCase
 {
 	private IndexBuilder $builder;
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
+	private MockObject $storage;
+	private MockObject $objectFetcher;
+	private MockObject $schemaFetcher;
+	private MockObject $collectionFetcher;
+	private MockObject $collectionSaver;
+	private MockObject $jobQueuer;
 
 	protected function setUp(): void
 	{
@@ -177,9 +180,9 @@ final class IndexBuilderTest extends TestCase
 	/**
 	 * @param array<string,mixed> $properties
 	 */
-	private function objectWith(array $properties): \TotalCMS\Domain\Object\Data\ObjectData
+	private function objectWith(array $properties): ObjectData
 	{
-		$object             = $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+		$object             = $this->createMock(ObjectData::class);
 		$object->properties = collect(array_map(
 			static fn (mixed $value): object => new class($value) {
 				public function __construct(private mixed $value)
@@ -314,7 +317,7 @@ final class IndexBuilderTest extends TestCase
 			['id' => 'post-2', 'title' => 'Other'],
 		]));
 
-		$object     = $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';
 		$object->method('toArray')->willReturn(['id' => 'post-1', 'title' => 'New']);
 
@@ -335,7 +338,7 @@ final class IndexBuilderTest extends TestCase
 	{
 		$this->storage->method('fetchIndex')->willReturn(null);
 
-		$object     = $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';
 		$object->method('toArray')->willReturn(['id' => 'post-1']);
 
@@ -354,7 +357,7 @@ final class IndexBuilderTest extends TestCase
 		// stops working once the rebuild lands.
 		$this->storage->method('fetchIndex')->willReturn(new IndexData());
 
-		$object     = $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';
 		$object->method('toArray')->willReturn(['id' => 'post-1', 'title' => 'T', 'body' => 'not indexed']);
 
@@ -402,9 +405,9 @@ final class IndexBuilderTest extends TestCase
 
 	// ── smartBuildIndex: which strategy a save triggers ──────────────────────
 
-	private function collectionWithQueueing(bool $queue): \TotalCMS\Domain\Collection\Data\CollectionData
+	private function collectionWithQueueing(bool $queue): CollectionData
 	{
-		$collection                     = new \TotalCMS\Domain\Collection\Data\CollectionData();
+		$collection                     = new CollectionData();
 		$collection->id                 = 'blog';
 		$collection->name               = 'blog';
 		$collection->schema             = 'blog';
@@ -421,7 +424,7 @@ final class IndexBuilderTest extends TestCase
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collectionWithQueueing(true));
 		$this->storage->method('fetchIndex')->willReturn(new IndexData());
 
-		$object     = $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';
 		$object->method('toArray')->willReturn(['id' => 'post-1']);
 

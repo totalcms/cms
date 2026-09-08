@@ -3,6 +3,7 @@
 namespace Tests\Integration\Cache;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\Service\APCuService;
@@ -12,7 +13,10 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 final class APCuIntegrationTest extends TestCase
@@ -32,14 +36,14 @@ final class APCuIntegrationTest extends TestCase
 		$opcacheService    = new OPcacheService();
 		$redisService      = new RedisService($this->config);
 		$memcachedService  = new MemcachedService($this->config);
-		$devModeManager    = new DevModeManager(new \TotalCMS\Domain\Event\Service\EventDispatcher(new \Psr\Log\NullLogger()), $this->config);
+		$devModeManager    = new DevModeManager(new EventDispatcher(new NullLogger()), $this->config);
 
 		// Create WatermarkCleanupService for cache cleanup testing
-		$mockStorage                = $this->createMock(\TotalCMS\Domain\Storage\StorageAdapterInterface::class);
-		$mockLoggerFactory          = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$mockStorage                = $this->createMock(StorageAdapterInterface::class);
+		$mockLoggerFactory          = $this->createMock(LoggerFactory::class);
 		$watermarkCleanupService    = new WatermarkCleanupService($mockStorage, $mockLoggerFactory);
 
-		$mockLoggerFactoryForCache = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$mockLoggerFactoryForCache = $this->createMock(LoggerFactory::class);
 		$invalidationSignal        = new CacheInvalidationSignal($this->config);
 		$this->cacheManager        = new CacheManager(
 			$filesystemService,
@@ -50,7 +54,7 @@ final class APCuIntegrationTest extends TestCase
 			$watermarkCleanupService,
 			$devModeManager,
 			$invalidationSignal,
-			new \TotalCMS\Domain\Event\Service\EventDispatcher(new \Psr\Log\NullLogger()),
+			new EventDispatcher(new NullLogger()),
 			$this->config,
 			$mockLoggerFactoryForCache
 		);

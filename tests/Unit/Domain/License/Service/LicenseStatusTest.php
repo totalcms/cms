@@ -1,5 +1,6 @@
 <?php
 
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\License\Data\LicenseData;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\License\Service\LicenseValidator;
@@ -22,7 +23,7 @@ function createLicenseStatus(string $edition = 'pro', bool $valid = true, bool $
 	$licenseValidator->method('validateLicense')->willReturn($licenseData);
 
 	$loggerFactory = test()->createMock(LoggerFactory::class);
-	$logger        = test()->createMock(Psr\Log\LoggerInterface::class);
+	$logger        = test()->createMock(LoggerInterface::class);
 	$loggerFactory->method('addFileHandler')->willReturnSelf();
 	$loggerFactory->method('createLogger')->willReturn($logger);
 
@@ -35,7 +36,7 @@ function createLicenseStatusWithException(): LicenseStatus
 	$licenseValidator->method('validateLicense')->willThrowException(new Exception('License expired'));
 
 	$loggerFactory = test()->createMock(LoggerFactory::class);
-	$logger        = test()->createMock(Psr\Log\LoggerInterface::class);
+	$logger        = test()->createMock(LoggerInterface::class);
 	$loggerFactory->method('addFileHandler')->willReturnSelf();
 	$loggerFactory->method('createLogger')->willReturn($logger);
 
@@ -48,7 +49,7 @@ function createLicenseStatusWithData(LicenseData $licenseData): LicenseStatus
 	$licenseValidator->method('validateLicense')->willReturn($licenseData);
 
 	$loggerFactory = test()->createMock(LoggerFactory::class);
-	$logger        = test()->createMock(Psr\Log\LoggerInterface::class);
+	$logger        = test()->createMock(LoggerInterface::class);
 	$loggerFactory->method('addFileHandler')->willReturnSelf();
 	$loggerFactory->method('createLogger')->willReturn($logger);
 

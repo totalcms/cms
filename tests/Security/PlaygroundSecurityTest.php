@@ -1,5 +1,7 @@
 <?php
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\postJson;
 
@@ -18,7 +20,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 	// Create the playground collection for tests (reserved collections no longer auto-create)
 	$container         = $this->app->getContainer();
-	$collectionFetcher = $container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
+	$collectionFetcher = $container->get(CollectionFetcher::class);
 	$collectionFetcher->fetchOrCreateReserved('playground');
 });
 

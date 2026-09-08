@@ -11,8 +11,11 @@ use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Support\Config;
+use Twig\TwigFilter;
+use Twig\TwigFunction;
 
 /**
  * Build a state repository backed by an in-memory storage map. Mirrors the
@@ -71,7 +74,7 @@ function reconsentManager(ExtensionStateRepository $stateRepo): ExtensionManager
 	$settingsStorage->method('fileExists')->willReturn(false);
 	$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-	$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
+	$manifestValidator = new ManifestValidator(test()->createMock(EditionFeatureService::class));
 	$discovery         = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 	$container         = test()->createMock(ContainerInterface::class);
 	$container->method('has')->willReturn(false);
@@ -200,11 +203,11 @@ describe('ExtensionManager update re-consent — new capabilities default OFF', 
 
 		// The off capability is filtered out of the accessor (the `shout` filter
 		// the fixture registers must not be exposed).
-		$filterNames = array_map(fn (Twig\TwigFilter $f): string => $f->getName(), $manager->getAllTwigFilters());
+		$filterNames = array_map(fn (TwigFilter $f): string => $f->getName(), $manager->getAllTwigFilters());
 		expect($filterNames)->not->toContain('shout');
 
 		// A permitted capability still flows through.
-		$functionNames = array_map(fn (Twig\TwigFunction $f): string => $f->getName(), $manager->getAllTwigFunctions());
+		$functionNames = array_map(fn (TwigFunction $f): string => $f->getName(), $manager->getAllTwigFunctions());
 		expect($functionNames)->toContain('hello_world');
 	});
 });

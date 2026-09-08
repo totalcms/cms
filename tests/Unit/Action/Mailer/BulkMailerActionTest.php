@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Mailer;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,7 +17,7 @@ use TotalCMS\Support\OperationResult;
 final class BulkMailerActionTest extends TestCase
 {
 	private BulkMailerAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $bulkMailerService;
+	private MockObject $bulkMailerService;
 	private RawRenderer $renderer;
 
 	protected function setUp(): void

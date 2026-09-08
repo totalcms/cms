@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Mailer;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,7 +16,7 @@ use TotalCMS\Renderer\JsonRenderer;
 final class BulkObjectOptionsActionTest extends TestCase
 {
 	private BulkObjectOptionsAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $indexFilter;
+	private MockObject $indexFilter;
 	private JsonRenderer $renderer;
 
 	protected function setUp(): void

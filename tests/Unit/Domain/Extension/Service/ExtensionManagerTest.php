@@ -2,14 +2,18 @@
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Support\Config;
+use Twig\TwigFilter;
+use Twig\TwigFunction;
 
 function createExtensionManager(
 	string $extensionsDir,
@@ -31,7 +35,7 @@ function createExtensionManager(
 	$settingsStorage->method('fileExists')->willReturn(false);
 	$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-	$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
+	$manifestValidator = new ManifestValidator(test()->createMock(EditionFeatureService::class));
 
 	// Default the "bundled" scan root to a directory that does not exist
 	// rather than letting ExtensionDiscovery fall through to the real
@@ -116,7 +120,7 @@ describe('ExtensionManager', function (): void {
 		$manager->discoverAndRegister();
 
 		$twigFunctions = $manager->getAllTwigFunctions();
-		$names         = array_map(fn (Twig\TwigFunction $fn): string => $fn->getName(), $twigFunctions);
+		$names         = array_map(fn (TwigFunction $fn): string => $fn->getName(), $twigFunctions);
 
 		expect($names)->toContain('hello_world');
 	});
@@ -136,7 +140,7 @@ describe('ExtensionManager', function (): void {
 		$manager->discoverAndRegister();
 
 		$filters = $manager->getAllTwigFilters();
-		$names   = array_map(fn (Twig\TwigFilter $f): string => $f->getName(), $filters);
+		$names   = array_map(fn (TwigFilter $f): string => $f->getName(), $filters);
 
 		expect($names)->toContain('shout');
 	});
@@ -156,7 +160,7 @@ describe('ExtensionManager', function (): void {
 		$manager->discoverAndRegister();
 
 		$commands = $manager->getAllCommands();
-		$names    = array_map(fn (Symfony\Component\Console\Command\Command $c): ?string => $c->getName(), $commands);
+		$names    = array_map(fn (Command $c): ?string => $c->getName(), $commands);
 
 		expect($names)->toContain('test-vendor:hello');
 	});
@@ -254,7 +258,7 @@ describe('ExtensionManager', function (): void {
 		expect($functions)->toBe([]);
 
 		$filters = $manager->getAllTwigFilters();
-		$names   = array_map(fn (Twig\TwigFilter $f): string => $f->getName(), $filters);
+		$names   = array_map(fn (TwigFilter $f): string => $f->getName(), $filters);
 		expect($names)->toContain('shout');
 	});
 

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Collection\Service\CollectionFactory;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 
 beforeEach(function (): void {
@@ -26,13 +28,13 @@ describe('reference schema collection guard', function (): void {
 	});
 
 	test('generateReservedCollection rejects a reference schema', function (): void {
-		$factory = $this->app->getContainer()->get(TotalCMS\Domain\Collection\Service\CollectionFactory::class);
+		$factory = $this->app->getContainer()->get(CollectionFactory::class);
 		expect(fn () => $factory->generateReservedCollection('totalcms'))
 			->toThrow(DomainException::class);
 	});
 
 	test('fetchOrCreateReserved does not provision a reference schema', function (): void {
-		$fetcher = $this->app->getContainer()->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
+		$fetcher = $this->app->getContainer()->get(CollectionFetcher::class);
 		expect($fetcher->fetchOrCreateReserved('totalcms'))->toBeNull();
 		expect($fetcher->fetchOrCreateReserved('totalcms-item'))->toBeNull();
 	});

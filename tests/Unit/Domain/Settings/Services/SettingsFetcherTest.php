@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\Settings\Services;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
@@ -10,8 +11,8 @@ use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 final class SettingsFetcherTest extends TestCase
 {
 	private SettingsFetcher $fetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $settingsRepository;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
+	private MockObject $settingsRepository;
+	private MockObject $schemaFetcher;
 
 	protected function setUp(): void
 	{

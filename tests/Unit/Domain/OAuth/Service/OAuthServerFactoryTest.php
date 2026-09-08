@@ -8,6 +8,7 @@ use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\ResourceServer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\OAuth\Adapter\LeagueAccessTokenRepository;
 use TotalCMS\Domain\OAuth\Adapter\LeagueAuthCodeRepository;
@@ -104,7 +105,7 @@ final class OAuthServerFactoryTest extends TestCase
 		$leagueScopes        = new LeagueScopeRepository(
 			$scopeReg,
 			$clientRepo,
-			$this->createMock(\TotalCMS\Domain\Auth\Service\AccessControlService::class),
+			$this->createMock(AccessControlService::class),
 			$this->makeConfig(),
 		);
 

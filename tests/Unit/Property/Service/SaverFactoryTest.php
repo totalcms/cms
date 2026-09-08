@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Property\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Service\DepotSaver;
 use TotalCMS\Domain\Property\Service\FileSaver;
+use TotalCMS\Domain\Property\Service\GallerySaver;
+use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Property\Service\SaverFactory;
@@ -24,14 +28,14 @@ use TotalCMS\Support\Config;
 class SaverFactoryTest extends TestCase
 {
 	private SaverFactory $saverFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $mockPropertyRepository;
-	private \PHPUnit\Framework\MockObject\MockObject $mockPropertyFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $mockSchemaFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectPatcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockLoggerFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $mockMetaResolver;
+	private MockObject $mockPropertyRepository;
+	private MockObject $mockPropertyFetcher;
+	private MockObject $mockObjectSaver;
+	private MockObject $mockSchemaFetcher;
+	private MockObject $mockObjectPatcher;
+	private MockObject $mockObjectFetcher;
+	private MockObject $mockLoggerFactory;
+	private MockObject $mockMetaResolver;
 
 	protected function setUp(): void
 	{
@@ -304,7 +308,7 @@ class SaverFactoryTest extends TestCase
 			'image', // subpath = child key
 		);
 
-		$this->assertInstanceOf(\TotalCMS\Domain\Property\Service\ImageSaver::class, $saver);
+		$this->assertInstanceOf(ImageSaver::class, $saver);
 		$this->assertEquals('image', $saver->type);
 		$this->assertSame(['quality' => 70], $this->settingsOf($saver));
 	}
@@ -353,7 +357,7 @@ class SaverFactoryTest extends TestCase
 
 		$saver = $this->saverFactory->generateSaverService('test-collection', 'mycard', '', 'promo/poster');
 
-		$this->assertInstanceOf(\TotalCMS\Domain\Property\Service\ImageSaver::class, $saver);
+		$this->assertInstanceOf(ImageSaver::class, $saver);
 		$this->assertSame(['quality' => 55], $this->settingsOf($saver));
 	}
 
@@ -396,7 +400,7 @@ class SaverFactoryTest extends TestCase
 			'subfolder',
 		);
 
-		$this->assertInstanceOf(\TotalCMS\Domain\Property\Service\DepotSaver::class, $saver);
+		$this->assertInstanceOf(DepotSaver::class, $saver);
 		$this->assertEquals('depot', $saver->type);
 	}
 
@@ -416,6 +420,6 @@ class SaverFactoryTest extends TestCase
 			'2024/spring',
 		);
 
-		$this->assertInstanceOf(\TotalCMS\Domain\Property\Service\GallerySaver::class, $saver);
+		$this->assertInstanceOf(GallerySaver::class, $saver);
 	}
 }

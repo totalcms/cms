@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Sitemap\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -20,9 +21,9 @@ use TotalCMS\Support\Config;
 final class SitemapIndexBuilderTest extends TestCase
 {
 	private SitemapIndexBuilder $builder;
-	private \PHPUnit\Framework\MockObject\MockObject $mockCollectionLister;
-	private \PHPUnit\Framework\MockObject\MockObject $mockBuilderConfig;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
+	private MockObject $mockCollectionLister;
+	private MockObject $mockBuilderConfig;
+	private MockObject $config;
 
 	protected function setUp(): void
 	{

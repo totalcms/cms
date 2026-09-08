@@ -4,23 +4,26 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Collection\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 
 final class CollectionSaverTest extends TestCase
 {
 	private CollectionSaver $saver;
-	private \PHPUnit\Framework\MockObject\MockObject $repository;
-	private \PHPUnit\Framework\MockObject\MockObject $factory;
-	private \PHPUnit\Framework\MockObject\MockObject $indexRepository;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
+	private MockObject $repository;
+	private MockObject $factory;
+	private MockObject $indexRepository;
+	private MockObject $collectionFetcher;
+	private MockObject $editionFeatures;
 
 	protected function setUp(): void
 	{
@@ -50,7 +53,7 @@ final class CollectionSaverTest extends TestCase
 			$this->indexRepository,
 			$this->collectionFetcher,
 			$this->editionFeatures,
-			new \TotalCMS\Domain\Event\Service\EventDispatcher(new \Psr\Log\NullLogger()),
+			new EventDispatcher(new NullLogger()),
 		);
 	}
 

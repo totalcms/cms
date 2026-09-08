@@ -6,6 +6,7 @@ namespace Tests\Unit\Bundled\Protect;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Bundled\Protect\ProtectMiddleware;
 use TotalCMS\Domain\Builder\Data\PageData;
 
@@ -555,7 +556,7 @@ final class ProtectMiddlewareTest extends TestCase
 	}
 
 	/** @param array<string,string> $cookies */
-	private function get(string $path, array $cookies = []): \Psr\Http\Message\ServerRequestInterface
+	private function get(string $path, array $cookies = []): ServerRequestInterface
 	{
 		$request = $this->psr17->createServerRequest('GET', $path);
 
@@ -567,7 +568,7 @@ final class ProtectMiddlewareTest extends TestCase
 	}
 
 	/** @param array<string,string> $body */
-	private function post(string $path, array $body = []): \Psr\Http\Message\ServerRequestInterface
+	private function post(string $path, array $body = []): ServerRequestInterface
 	{
 		return $this->psr17->createServerRequest('POST', $path)
 			->withParsedBody($body);

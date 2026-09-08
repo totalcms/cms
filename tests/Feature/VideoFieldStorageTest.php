@@ -12,8 +12,8 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 
-use function TotalCMS\Slim\Pest\postUpload;
 use function TotalCMS\Slim\Pest\get;
+use function TotalCMS\Slim\Pest\postUpload;
 
 /**
  * The `video` property type stores as a plain object whose key set is owned by

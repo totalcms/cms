@@ -3,6 +3,14 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth;
+use TotalCMS\Slim\Test\TestCase;
+use TotalCMS\Support\Config;
 
 /**
  * `test()` (called with no args) returns a Pest `HigherOrderTapProxy` wrapping
@@ -15,15 +23,15 @@ use Nyholm\Psr7\Factory\Psr17Factory;
  * Reflection is the standard way to reach a protected property from outside
  * the class hierarchy without forking the vendor package for a getter.
  */
-function xmlRpcTestApp(): Slim\App
+function xmlRpcTestApp(): App
 {
-	/** @var TotalCMS\Slim\Test\TestCase $testCase */
+	/** @var TestCase $testCase */
 	$testCase = test()->target;
 
 	return (new ReflectionProperty($testCase, 'app'))->getValue($testCase);
 }
 
-function postXmlRpc(string $xml, string $path = '/xmlrpc.php'): Psr\Http\Message\ResponseInterface
+function postXmlRpc(string $xml, string $path = '/xmlrpc.php'): ResponseInterface
 {
 	$request = (new Psr17Factory())
 		->createServerRequest('POST', $path)
@@ -84,16 +92,16 @@ function xmlRpcBoolParam(bool $value): string
 function enableXmlRpc(): void
 {
 	$container                                              = xmlRpcTestApp()->getContainer();
-	$container->get(TotalCMS\Support\Config::class)->xmlrpc = ['enable' => true, 'ratePerIp' => 0];
+	$container->get(Config::class)->xmlrpc                  = ['enable' => true, 'ratePerIp' => 0];
 
 	$container->set(
-		TotalCMS\Domain\License\Service\EditionFeatureService::class,
-		new class extends TotalCMS\Domain\License\Service\EditionFeatureService {
+		EditionFeatureService::class,
+		new class extends EditionFeatureService {
 			public function __construct()
 			{
 			}
 
-			public function can(TotalCMS\Domain\License\Data\EditionFeature $feature): bool
+			public function can(EditionFeature $feature): bool
 			{
 				return true;
 			}
@@ -112,13 +120,13 @@ function enableXmlRpc(): void
  */
 function xmlRpcKey(array $collections = ['blog'], array $methods = ['GET', 'POST', 'PUT', 'DELETE']): string
 {
-	$paths = [TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth::SCOPE_PATH];
+	$paths = [XmlRpcAuth::SCOPE_PATH];
 	foreach ($collections as $collection) {
 		$paths[] = '/collections/' . $collection;
 	}
 
 	return xmlRpcTestApp()->getContainer()
-		->get(TotalCMS\Domain\ApiKey\Service\ApiKeyCreator::class)
+		->get(ApiKeyCreator::class)
 		->createApiKey('xmlrpc test key', ['methods' => $methods, 'paths' => $paths])
 		->key;
 }

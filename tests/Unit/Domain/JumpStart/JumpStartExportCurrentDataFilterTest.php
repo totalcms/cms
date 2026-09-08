@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\JumpStart;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -39,7 +40,7 @@ final class JumpStartExportCurrentDataFilterTest extends TestCase
 
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(
-			$this->createMock(\Psr\Log\LoggerInterface::class)
+			$this->createMock(LoggerInterface::class)
 		);
 
 		// Seed two custom collections: blog + team

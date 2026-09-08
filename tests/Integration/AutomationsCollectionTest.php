@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
@@ -37,7 +38,7 @@ it('loads the bundled automations schema with the externalized handler field', f
 	$fetcher->fetchOrCreateReserved('automations');
 
 	$schema = $this->app->getContainer()
-		->get(TotalCMS\Domain\Schema\Service\SchemaFetcher::class)
+		->get(SchemaFetcher::class)
 		->fetchSchemaForCollection('automations');
 
 	expect($schema->properties)->toHaveKey('handler');

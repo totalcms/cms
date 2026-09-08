@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Service;
 
+use Mcp\Schema\ToolAnnotations;
 use Mcp\Server;
 use Mcp\Server\Resource\SessionSubscriptionManager;
 use Mcp\Server\Session\InMemorySessionStore;
 use Mcp\Server\Subscription\InMemoryNotificationBus;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -22,6 +26,8 @@ use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
+use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
@@ -61,13 +67,13 @@ final class McpServerFactoryTest extends TestCase
 
 		// SavedQueryToolFactory is final — construct a real one with a no-op
 		// container. It is never called when listAllCollections returns [].
-		$savedQueryFactory = new \TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory(
-			$this->createMock(\Psr\Container\ContainerInterface::class),
+		$savedQueryFactory = new SavedQueryToolFactory(
+			$this->createMock(ContainerInterface::class),
 		);
-		$schemaRegistrar = new \TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar(
+		$schemaRegistrar = new SchemaToolRegistrar(
 			$collectionRepoMock,
 			$savedQueryFactory,
-			$this->createMock(\Psr\Log\LoggerInterface::class),
+			$this->createMock(LoggerInterface::class),
 		);
 
 		// PromptDiscoveryService with a no-op IndexFilter (no prompts in test context).
@@ -82,7 +88,7 @@ final class McpServerFactoryTest extends TestCase
 		$promptRenderer  = new PromptRenderer($this->createMock(TwigEngine::class));
 		$promptRegistrar = new PromptRegistrar($promptRenderer);
 
-		$extensionManager = $this->createMock(\TotalCMS\Domain\Extension\Service\ExtensionManager::class);
+		$extensionManager = $this->createMock(ExtensionManager::class);
 		$extensionManager->method('getAllMcpPrompts')->willReturn([]);
 
 		return new McpServerFactory(
@@ -193,7 +199,7 @@ final class McpServerFactoryTest extends TestCase
 		// via successful Server build with both shapes registered; deeper
 		// per-tool annotation routing is exercised through SDK integration
 		// tests (the SDK exposes annotations via tools/list).
-		$customAnnotations = new \Mcp\Schema\ToolAnnotations(
+		$customAnnotations = new ToolAnnotations(
 			title: 'Custom',
 			readOnlyHint: false,
 			destructiveHint: true,

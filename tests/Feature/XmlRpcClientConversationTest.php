@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/XmlRpcTestHelpers.php';
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\XmlRpc\Service\MethodRouter;
 
 beforeEach(function (): void {
@@ -15,7 +17,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 	enableXmlRpc();
 	$this->app->getContainer()
-		->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)
+		->get(CollectionFetcher::class)
 		->fetchOrCreateReserved('blog');
 });
 
@@ -48,7 +50,7 @@ it('runs the full client conversation end to end', function (): void {
 	// The sequence MarsEdit actually performs: enumerate, list, publish, read
 	// back, edit, delete. If this passes, a real client works.
 	$key      = xmlRpcKey();
-	$fetcher  = $this->app->getContainer()->get(TotalCMS\Domain\Object\Service\ObjectFetcher::class);
+	$fetcher  = $this->app->getContainer()->get(ObjectFetcher::class);
 	$creds    = xmlRpcParam('joe') . xmlRpcParam($key);
 
 	$blogs = (string)postXmlRpc(xmlRpcBody('blogger.getUsersBlogs', xmlRpcParam('0000') . $creds))->getBody();

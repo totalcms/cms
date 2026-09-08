@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Update;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\License\Data\LicenseData;
@@ -16,9 +17,9 @@ use TotalCMS\Support\Version;
 final class UpdateCheckerTest extends TestCase
 {
 	private UpdateChecker $checker;
-	private \PHPUnit\Framework\MockObject\MockObject $httpClient;
-	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
-	private \PHPUnit\Framework\MockObject\MockObject $licenseValidator;
+	private MockObject $httpClient;
+	private MockObject $cacheManager;
+	private MockObject $licenseValidator;
 
 	protected function setUp(): void
 	{

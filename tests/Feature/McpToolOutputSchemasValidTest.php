@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Slim\App;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
@@ -151,7 +152,7 @@ function structuralProblems(mixed $schema, string $path = '$'): array
 /**
  * @return list<array{name: string, schema: array<string,mixed>}>
  */
-function toolsWithOutputSchemaFromRegistry(Slim\App $app): array
+function toolsWithOutputSchemaFromRegistry(App $app): array
 {
 	/** @var ToolRegistry $registry */
 	$registry = $app->getContainer()->get(ToolRegistry::class);

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Admin;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,14 +17,14 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminSettingsSaveSectionActionTest extends TestCase
 {
 	private AdminSettingsSaveSectionAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $saver;
-	private \PHPUnit\Framework\MockObject\MockObject $validator;
-	private \PHPUnit\Framework\MockObject\MockObject $emailSender;
-	private \PHPUnit\Framework\MockObject\MockObject $twigRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $renderer;
+	private MockObject $saver;
+	private MockObject $validator;
+	private MockObject $emailSender;
+	private MockObject $twigRenderer;
+	private MockObject $editionFeatures;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

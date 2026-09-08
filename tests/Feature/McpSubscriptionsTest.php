@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use Slim\App;
 use Symfony\Component\Uid\Uuid;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Listener\McpResourceSubscriptionListener;
 use TotalCMS\Domain\Mcp\Subscription\Service\SubscriptionIndex;
+use TotalCMS\Support\Config;
 
 /**
  * Cross-request push integration test for the MCP subscription chain:
@@ -35,13 +38,13 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 
 	$container         = $this->app->getContainer();
-	$collectionFetcher = $container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
+	$collectionFetcher = $container->get(CollectionFetcher::class);
 	$collectionFetcher->fetchOrCreateReserved('blog');
 
 	// Clean the subscription index file so each test starts from an empty
 	// reverse index. SubscriptionIndex lives at {tmpdir}/mcp-subscriptions.json
 	// (outside /mcp-sessions/ which gets wiped by McpSessionInvalidator).
-	$indexFile = $container->get(TotalCMS\Support\Config::class)->tmpdir . '/mcp-subscriptions.json';
+	$indexFile = $container->get(Config::class)->tmpdir . '/mcp-subscriptions.json';
 	if (file_exists($indexFile)) {
 		@unlink($indexFile);
 	}
@@ -53,10 +56,10 @@ beforeEach(function (): void {
  * SubscriptionIndex. Mirrors what McpSubscriptionManager::subscribe would do
  * if a client had subscribed via the MCP protocol.
  */
-function seedSubscriber(Slim\App $app, string $uri): string
+function seedSubscriber(App $app, string $uri): string
 {
 	$container = $app->getContainer();
-	$config    = $container->get(TotalCMS\Support\Config::class);
+	$config    = $container->get(Config::class);
 	$dir       = $config->tmpdir . '/mcp-sessions';
 	if (!is_dir($dir)) {
 		mkdir($dir, 0755, true);
@@ -128,7 +131,7 @@ describe('McpSubscriptions — cross-request push', function (): void {
 		$listener = $this->app->getContainer()->get(McpResourceSubscriptionListener::class);
 		$listener->onObjectCreated(['collection' => 'blog', 'id' => 'hello-world']);
 
-		$tmpdir = $this->app->getContainer()->get(TotalCMS\Support\Config::class)->tmpdir;
+		$tmpdir = $this->app->getContainer()->get(Config::class)->tmpdir;
 		$queued = readQueuedNotifications($tmpdir, $sessionId, 'tcms://blog/');
 		expect($queued)->not->toBeEmpty();
 		expect($queued[0]['method'])->toBe('notifications/resources/updated');
@@ -142,7 +145,7 @@ describe('McpSubscriptions — cross-request push', function (): void {
 		$listener = $this->app->getContainer()->get(McpResourceSubscriptionListener::class);
 		$listener->onObjectCreated(['collection' => 'blog', 'id' => 'p1']);
 
-		$tmpdir = $this->app->getContainer()->get(TotalCMS\Support\Config::class)->tmpdir;
+		$tmpdir = $this->app->getContainer()->get(Config::class)->tmpdir;
 		expect(readQueuedNotifications($tmpdir, $blogSession, 'tcms://blog/'))->not->toBeEmpty();
 		expect(readQueuedNotifications($tmpdir, $productSession, 'tcms://products/'))->toBe([]);
 	});
@@ -154,7 +157,7 @@ describe('McpSubscriptions — cross-request push', function (): void {
 		$listener = $this->app->getContainer()->get(McpResourceSubscriptionListener::class);
 		$listener->onObjectCreated(['collection' => 'blog', 'id' => 'p1']);
 
-		$tmpdir = $this->app->getContainer()->get(TotalCMS\Support\Config::class)->tmpdir;
+		$tmpdir = $this->app->getContainer()->get(Config::class)->tmpdir;
 		expect(readQueuedNotifications($tmpdir, $s1, 'tcms://blog/'))->not->toBeEmpty();
 		expect(readQueuedNotifications($tmpdir, $s2, 'tcms://blog/'))->not->toBeEmpty();
 	});
@@ -169,7 +172,7 @@ describe('McpSubscriptions — cross-request push', function (): void {
 		$listener->onObjectUpdated(['collection' => 'blog', 'id' => 'a']);
 		$listener->onObjectDeleted(['collection' => 'blog', 'id' => 'a']);
 
-		$tmpdir = $this->app->getContainer()->get(TotalCMS\Support\Config::class)->tmpdir;
+		$tmpdir = $this->app->getContainer()->get(Config::class)->tmpdir;
 		$queued = readQueuedNotifications($tmpdir, $sessionId, 'tcms://blog/');
 		expect(count($queued))->toBe(1);
 	});

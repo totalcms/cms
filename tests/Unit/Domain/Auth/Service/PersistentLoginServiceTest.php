@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Auth\Service;
 use Odan\Session\FlashInterface;
 use Odan\Session\SessionInterface;
 use Odan\Session\SessionManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
@@ -71,7 +72,7 @@ function persistentLoginConfig(array $authOverrides = []): Config
 
 function persistentLoginLoggerFactory(): LoggerFactory
 {
-	/** @var LoggerFactory&\PHPUnit\Framework\MockObject\MockObject $factory */
+	/** @var LoggerFactory&MockObject $factory */
 	$factory = test()->createMock(LoggerFactory::class);
 	$factory->method('channelLogger')->willReturn(new NullLogger());
 
@@ -86,7 +87,7 @@ function persistentLoginLoggerFactory(): LoggerFactory
  */
 function persistentLoginValidator(array|\Throwable $result = ['id' => 'user-1']): UserValidationService
 {
-	/** @var UserValidationService&\PHPUnit\Framework\MockObject\MockObject $validator */
+	/** @var UserValidationService&MockObject $validator */
 	$validator = test()->createMock(UserValidationService::class);
 
 	if ($result instanceof \Throwable) {

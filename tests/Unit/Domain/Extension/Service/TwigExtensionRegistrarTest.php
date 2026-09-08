@@ -1,5 +1,6 @@
 <?php
 
+use Psr\Log\AbstractLogger;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Extension\Service\TwigExtensionRegistrar;
 use Twig\TwigFilter;
@@ -7,7 +8,7 @@ use Twig\TwigFunction;
 
 function createTestLogger(): object
 {
-	return new class extends Psr\Log\AbstractLogger {
+	return new class extends AbstractLogger {
 		/** @var list<string> */
 		public array $messages = [];
 

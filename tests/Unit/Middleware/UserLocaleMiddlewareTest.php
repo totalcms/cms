@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Middleware;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,9 +15,9 @@ use TotalCMS\Middleware\UserLocaleMiddleware;
 
 final class UserLocaleMiddlewareTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $accessManager;
-	private \PHPUnit\Framework\MockObject\MockObject $translationService;
-	private \PHPUnit\Framework\MockObject\MockObject $handler;
+	private MockObject $accessManager;
+	private MockObject $translationService;
+	private MockObject $handler;
 	private UserLocaleMiddleware $middleware;
 
 	protected function setUp(): void

@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Tests\Unit\Action\Admin\OAuth;
 
 use Odan\Session\PhpSession;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\NullLogger;
+use Slim\Psr7\Response;
 use TotalCMS\Action\Admin\OAuth\OAuthClientDeleteAction;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
@@ -23,7 +25,7 @@ final class OAuthClientDeleteActionTest extends TestCase
 	private OAuthClientRepository $clients;
 	private OAuthGrantRepository $grants;
 	private JsonRenderer $jsonRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private MockObject $request;
 	private string $clientsTmpFile;
 	private string $grantsTmpFile;
 
@@ -90,7 +92,7 @@ final class OAuthClientDeleteActionTest extends TestCase
 
 	private function makeSlimResponse(): ResponseInterface
 	{
-		return new \Slim\Psr7\Response();
+		return new Response();
 	}
 
 	public function testDeletesClientSuccessfullyAndReturns200(): void

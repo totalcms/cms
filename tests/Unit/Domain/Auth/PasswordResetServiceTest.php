@@ -2,7 +2,9 @@
 
 namespace Tests\Unit\Domain\Auth;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\AuthTokenService;
 use TotalCMS\Domain\Auth\Service\PasswordResetService;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
@@ -15,11 +17,11 @@ use TotalCMS\Support\OperationResult;
 final class PasswordResetServiceTest extends TestCase
 {
 	private PasswordResetService $service;
-	private \PHPUnit\Framework\MockObject\MockObject $tokenService;
-	private \PHPUnit\Framework\MockObject\MockObject $userValidator;
-	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
-	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
+	private MockObject $tokenService;
+	private MockObject $userValidator;
+	private MockObject $objectUpdater;
+	private MockObject $config;
+	private MockObject $loggerFactory;
 
 	protected function setUp(): void
 	{
@@ -32,7 +34,7 @@ final class PasswordResetServiceTest extends TestCase
 		// Mock logger factory chain
 		$this->loggerFactory->method('addFileHandler')->willReturnSelf();
 		$this->loggerFactory->method('createLogger')->willReturn(
-			$this->createMock(\Psr\Log\LoggerInterface::class)
+			$this->createMock(LoggerInterface::class)
 		);
 
 		$this->service = new PasswordResetService(

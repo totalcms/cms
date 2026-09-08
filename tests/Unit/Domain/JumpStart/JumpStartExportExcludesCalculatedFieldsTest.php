@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\JumpStart;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -23,16 +25,16 @@ use TotalCMS\Factory\LoggerFactory;
 final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 {
 	private JumpStartExporter $exporter;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionLister;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaLister;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
-	private \PHPUnit\Framework\MockObject\MockObject $templateLister;
-	private \PHPUnit\Framework\MockObject\MockObject $templateFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $jumpstart;
-	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
-	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
+	private MockObject $collectionLister;
+	private MockObject $schemaLister;
+	private MockObject $schemaFetcher;
+	private MockObject $objectFetcher;
+	private MockObject $indexReader;
+	private MockObject $templateLister;
+	private MockObject $templateFetcher;
+	private MockObject $jumpstart;
+	private MockObject $cacheManager;
+	private MockObject $loggerFactory;
 
 	protected function setUp(): void
 	{
@@ -53,7 +55,7 @@ final class JumpStartExportExcludesCalculatedFieldsTest extends TestCase
 			->willReturnSelf();
 		$this->loggerFactory
 			->method('createLogger')
-			->willReturn($this->createMock(\Psr\Log\LoggerInterface::class));
+			->willReturn($this->createMock(LoggerInterface::class));
 
 		$this->exporter = new JumpStartExporter(
 			$this->collectionLister,

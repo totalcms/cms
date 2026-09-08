@@ -23,8 +23,8 @@ use TotalCMS\Domain\Video\Service\VideoUrlResolver;
 class PropertyDataProcessor implements PropertyDataProcessorInterface
 {
 	public function __construct(
-		private VideoUrlResolver $videoResolver,
-		private VideoMetadataFetcher $videoFetcher,
+		private readonly VideoUrlResolver $videoResolver,
+		private readonly VideoMetadataFetcher $videoFetcher,
 	) {
 	}
 
@@ -188,7 +188,7 @@ class PropertyDataProcessor implements PropertyDataProcessorInterface
 		// still matches means a previous fetch already ran (and failed) for
 		// this exact URL — don't hit the network again on every subsequent
 		// save of unrelated fields.
-		$meta = [];
+		$meta       = [];
 		$urlChanged = $storedProvider === '' || $storedProvider !== $info->provider || $storedVideoId !== $info->videoId;
 		if ($video->thumbnail() === '' && !in_array($info->provider, ['file', 'unknown'], true) && $urlChanged) {
 			$meta = $this->videoFetcher->fetch($info);

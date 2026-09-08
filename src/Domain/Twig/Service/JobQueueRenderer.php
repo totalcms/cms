@@ -27,7 +27,6 @@ readonly class JobQueueRenderer
 	) {
 	}
 
-
 	/**
 	 * Prefix shared by every cron-displayable `tcms` command — the absolute
 	 * PHP binary + the absolute path to the `tcms` executable, with an
@@ -104,7 +103,6 @@ readonly class JobQueueRenderer
 			$this->cronTokens->tokenOrCreate()
 		);
 	}
-
 
 	/**
 	 * Get pending jobs info for display.

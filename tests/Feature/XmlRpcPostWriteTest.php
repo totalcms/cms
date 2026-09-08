@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/XmlRpcTestHelpers.php';
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 
@@ -16,7 +17,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 	enableXmlRpc();
 	$this->app->getContainer()
-		->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)
+		->get(CollectionFetcher::class)
 		->fetchOrCreateReserved('blog');
 });
 

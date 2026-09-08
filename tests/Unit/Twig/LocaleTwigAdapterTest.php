@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Property\Data\LocalizedtextData;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Support\Config;
@@ -293,7 +294,7 @@ describe('LocalizedtextData REST serialization shape', function (): void {
 		// the contract is "always return the full multi-locale object" —
 		// no server-side resolution to a single locale in 3.5. This test
 		// is the contract guard.
-		$data = new TotalCMS\Domain\Property\Data\LocalizedtextData([
+		$data = new LocalizedtextData([
 			'en_US' => 'Welcome',
 			'de'    => 'Willkommen',
 			'ar'    => 'أهلا بك',
@@ -317,7 +318,7 @@ describe('LocalizedtextData REST serialization shape', function (): void {
 		// A locale that's been authored as empty should round-trip as empty —
 		// downstream callers may treat "" differently from "key absent",
 		// and the REST shape must distinguish them.
-		$data = new TotalCMS\Domain\Property\Data\LocalizedtextData([
+		$data = new LocalizedtextData([
 			'en_US' => 'Welcome',
 			'de'    => '',
 			'ar'    => '',

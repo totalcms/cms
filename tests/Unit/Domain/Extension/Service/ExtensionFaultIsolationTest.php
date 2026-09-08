@@ -8,8 +8,10 @@ use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Support\Config;
+use Twig\TwigFunction;
 
 describe('Extension fault isolation', function (): void {
 	test('broken extension boot does not prevent other extensions from loading', function (): void {
@@ -32,7 +34,7 @@ describe('Extension fault isolation', function (): void {
 		$settingsStorage->method('fileExists')->willReturn(false);
 		$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-		$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
+		$manifestValidator = new ManifestValidator(test()->createMock(EditionFeatureService::class));
 		$discovery         = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 		$container         = test()->createMock(ContainerInterface::class);
 		$container->method('has')->willReturn(false);
@@ -65,7 +67,7 @@ describe('Extension fault isolation', function (): void {
 
 		// hello-world's Twig functions should still be available
 		$twigFunctions = $manager->getAllTwigFunctions();
-		$names         = array_map(fn (Twig\TwigFunction $fn): string => $fn->getName(), $twigFunctions);
+		$names         = array_map(fn (TwigFunction $fn): string => $fn->getName(), $twigFunctions);
 		expect($names)->toContain('hello_world');
 	});
 
@@ -91,7 +93,7 @@ describe('Extension fault isolation', function (): void {
 		$settingsStorage = test()->createMock(StorageFilesystemAdapter::class);
 		$settingsStorage->method('fileExists')->willReturn(false);
 
-		$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
+		$manifestValidator = new ManifestValidator(test()->createMock(EditionFeatureService::class));
 		$discovery         = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 		$container         = test()->createMock(ContainerInterface::class);
 		$container->method('has')->willReturn(false);
@@ -145,7 +147,7 @@ describe('Extension fault isolation', function (): void {
 		$settingsStorage = test()->createMock(StorageFilesystemAdapter::class);
 		$settingsStorage->method('fileExists')->willReturn(false);
 
-		$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
+		$manifestValidator = new ManifestValidator(test()->createMock(EditionFeatureService::class));
 		$discovery         = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 		$container         = test()->createMock(ContainerInterface::class);
 		$container->method('has')->willReturn(false);

@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Support\Config;
 
 /**
@@ -77,7 +79,7 @@ function removeMcpPromptFixture(): void
  * Initialize an MCP admin session and return the Mcp-Session-Id header.
  * Returns empty string when MCP is unavailable (non-Pro, disabled, auth gate).
  */
-function mcpPromptAdminInit(Slim\App $app): string
+function mcpPromptAdminInit(App $app): string
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -112,7 +114,7 @@ function mcpPromptAdminInit(Slim\App $app): string
  * Requires $config->mcp['publicAccess'] = true before calling.
  * Returns empty string when MCP is unavailable.
  */
-function mcpPromptPublicInit(Slim\App $app): string
+function mcpPromptPublicInit(App $app): string
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -147,10 +149,10 @@ function mcpPromptPublicInit(Slim\App $app): string
  * @param array<string,mixed> $payload
  */
 function mcpPromptAdminRequest(
-	Slim\App $app,
+	App $app,
 	array $payload,
 	string $sessionId,
-): Psr\Http\Message\ResponseInterface {
+): ResponseInterface {
 	$factory = new Psr17Factory();
 	$request = $factory
 		->createServerRequest('POST', '/mcp')
@@ -171,10 +173,10 @@ function mcpPromptAdminRequest(
  * @param array<string,mixed> $payload
  */
 function mcpPromptPublicRequest(
-	Slim\App $app,
+	App $app,
 	array $payload,
 	string $sessionId,
-): Psr\Http\Message\ResponseInterface {
+): ResponseInterface {
 	$factory = new Psr17Factory();
 	$request = $factory
 		->createServerRequest('POST', '/mcp')

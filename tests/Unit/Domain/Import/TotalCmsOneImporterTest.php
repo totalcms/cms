@@ -2,6 +2,8 @@
 
 namespace Tests\Unit\Domain\Import;
 
+use Illuminate\Support\Collection;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -17,12 +19,12 @@ use TotalCMS\Factory\LoggerFactory;
 final class TotalCmsOneImporterTest extends TestCase
 {
 	private TotalCmsOneImporter $importer;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
-	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
-	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
-	private \PHPUnit\Framework\MockObject\MockObject $logger;
+	private MockObject $collectionFetcher;
+	private MockObject $collectionFactory;
+	private MockObject $collectionRepository;
+	private MockObject $indexReader;
+	private MockObject $jobQueuer;
+	private MockObject $logger;
 	private string $testDataPath;
 
 	protected function setUp(): void
@@ -87,7 +89,7 @@ final class TotalCmsOneImporterTest extends TestCase
 		$collection->id = 'test-id';
 
 		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function (array $data) use ($collection): \PHPUnit\Framework\MockObject\MockObject {
+			->willReturnCallback(function (array $data) use ($collection): MockObject {
 				$collection->id = $data['id'];
 
 				return $collection;
@@ -154,7 +156,7 @@ final class TotalCmsOneImporterTest extends TestCase
 		mkdir($blogDir, 0777, true);
 
 		$index          = $this->createMock(IndexData::class);
-		$index->objects = new \Illuminate\Support\Collection(['post1']);
+		$index->objects = new Collection(['post1']);
 
 		$this->setupCollectionMocking(['myblog']);
 
@@ -173,7 +175,7 @@ final class TotalCmsOneImporterTest extends TestCase
 		mkdir($blogDir, 0777, true);
 
 		$index          = $this->createMock(IndexData::class);
-		$index->objects = new \Illuminate\Support\Collection([]);
+		$index->objects = new Collection([]);
 
 		$this->setupCollectionMocking(['myblog']);
 
@@ -203,7 +205,7 @@ final class TotalCmsOneImporterTest extends TestCase
 		$this->collectionFetcher->method('fetchCollection')->willReturn($collectionData);
 
 		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function (array $data) use ($collectionData): \PHPUnit\Framework\MockObject\MockObject {
+			->willReturnCallback(function (array $data) use ($collectionData): MockObject {
 				if (isset($data['url'])) {
 					$this->assertEquals('/blog/', $data['url']);
 					$this->assertTrue($data['prettyUrl']);
@@ -517,7 +519,7 @@ final class TotalCmsOneImporterTest extends TestCase
 		$this->collectionFetcher->method('fetchCollection')->willReturn($collectionData);
 
 		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function (array $data) use ($collectionData): \PHPUnit\Framework\MockObject\MockObject {
+			->willReturnCallback(function (array $data) use ($collectionData): MockObject {
 				if (isset($data['url']) && str_contains((string)$data['url'], '?permalink=')) {
 					$this->assertFalse($data['prettyUrl']);
 				}

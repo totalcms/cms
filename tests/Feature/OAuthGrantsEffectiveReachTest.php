@@ -1,6 +1,7 @@
 <?php
 
 use Odan\Session\PhpSession;
+use Slim\App;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
@@ -39,7 +40,7 @@ beforeEach(function (): void {
 	$session->set(SessionKeys::AUTH_COLLECTION, 'auth');
 });
 
-function seedOauthGrantForReachTest(Slim\App $app, string $userId, array $scopes): void
+function seedOauthGrantForReachTest(App $app, string $userId, array $scopes): void
 {
 	$clients = $app->getContainer()->get(OAuthClientRepository::class);
 	$grants  = $app->getContainer()->get(OAuthGrantRepository::class);

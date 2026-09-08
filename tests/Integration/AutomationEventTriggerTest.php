@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Automation\Service\AutomationQueue;
+use TotalCMS\Domain\Automation\Service\AutomationRunner;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -88,8 +90,8 @@ it('runs the drained event handler with $ctx->event populated end-to-end', funct
 	// Dispatch (save an order) → enqueue → drain → run.
 	$container->get(ObjectSaver::class)->saveObject('orders', ['id' => 'o9', 'total' => 99]);
 
-	$runner = $container->get(TotalCMS\Domain\Automation\Service\AutomationRunner::class);
-	$container->get(TotalCMS\Domain\Automation\Service\AutomationQueue::class)->drain(function (array $job) use ($runner): void {
+	$runner = $container->get(AutomationRunner::class);
+	$container->get(AutomationQueue::class)->drain(function (array $job) use ($runner): void {
 		$runner->run((string)$job['id'], $job['trigger'], $job['args'], null, $job['event']);
 	});
 

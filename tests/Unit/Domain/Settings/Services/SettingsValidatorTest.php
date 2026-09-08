@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Settings\Services;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 use TotalCMS\Domain\Settings\Services\SettingsValidator;
@@ -11,7 +12,7 @@ use TotalCMS\Domain\Settings\Services\SettingsValidator;
 final class SettingsValidatorTest extends TestCase
 {
 	private SettingsValidator $validator;
-	private \PHPUnit\Framework\MockObject\MockObject $settingsRepository;
+	private MockObject $settingsRepository;
 
 	protected function setUp(): void
 	{

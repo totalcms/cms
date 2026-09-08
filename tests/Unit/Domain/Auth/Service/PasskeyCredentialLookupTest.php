@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Auth\Service;
 
+use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\PasskeyService;
@@ -49,7 +50,7 @@ final class PasskeyCredentialLookupTest extends TestCase
 		$config->dashboard = ['title' => 'Test CMS'];
 
 		$this->service = new PasskeyService(
-			$this->createMock(\Odan\Session\SessionInterface::class),
+			$this->createMock(SessionInterface::class),
 			$config,
 			$this->objectFetcher,
 			$this->objectPatcher,

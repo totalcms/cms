@@ -5,6 +5,7 @@ declare(strict_types=1);
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\patch;
 

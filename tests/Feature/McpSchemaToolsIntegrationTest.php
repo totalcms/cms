@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Support\Config;
 
 /**
@@ -116,7 +119,7 @@ function removePartsFixture(): void
  * Initialize an MCP session with an admin API key.
  * Returns empty string when MCP is unavailable.
  */
-function schemaTestAdminInit(Slim\App $app): string
+function schemaTestAdminInit(App $app): string
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -151,7 +154,7 @@ function schemaTestAdminInit(Slim\App $app): string
  * Requires $config->mcp['publicAccess'] = true before calling.
  * Returns empty string when MCP is unavailable or publicAccess is off.
  */
-function schemaTestPublicInit(Slim\App $app): string
+function schemaTestPublicInit(App $app): string
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -187,10 +190,10 @@ function schemaTestPublicInit(Slim\App $app): string
  * @param array<string,mixed> $payload
  */
 function schemaTestAdminRequest(
-	Slim\App $app,
+	App $app,
 	array $payload,
 	string $sessionId,
-): Psr\Http\Message\ResponseInterface {
+): ResponseInterface {
 	$factory = new Psr17Factory();
 	$request = $factory
 		->createServerRequest('POST', '/mcp')
@@ -211,10 +214,10 @@ function schemaTestAdminRequest(
  * @param array<string,mixed> $payload
  */
 function schemaTestPublicRequest(
-	Slim\App $app,
+	App $app,
 	array $payload,
 	string $sessionId,
-): Psr\Http\Message\ResponseInterface {
+): ResponseInterface {
 	$factory = new Psr17Factory();
 	$request = $factory
 		->createServerRequest('POST', '/mcp')
@@ -528,8 +531,8 @@ it('public persona cannot call find_listings when collection access is admin', f
 	// The CacheManager persists collections_list in the filesystem cache between
 	// test requests in the same Pest run — a direct clear is more reliable than
 	// deleting the entire cache dir (which may race with createCacheDir()).
-	/** @var TotalCMS\Domain\Cache\CacheManager $cacheManager */
-	$cacheManager = $this->app->getContainer()->get(TotalCMS\Domain\Cache\CacheManager::class);
+	/** @var CacheManager $cacheManager */
+	$cacheManager = $this->app->getContainer()->get(CacheManager::class);
 	$cacheManager->clearComputedData('collections_list');
 
 	// Re-bootstrap the app so the container's CollectionRepository picks up
@@ -692,8 +695,8 @@ it('schema-vs-schema collision: find_active defined in two collections is absent
 	// invalidate so the registrar sees the new fixture + the edited listings meta.
 	// Without this, APCu-backed caches on CI return stale state and the
 	// schema-vs-schema collision is silently undetectable.
-	/** @var TotalCMS\Domain\Cache\CacheManager $cacheManager */
-	$cacheManager = $this->app->getContainer()->get(TotalCMS\Domain\Cache\CacheManager::class);
+	/** @var CacheManager $cacheManager */
+	$cacheManager = $this->app->getContainer()->get(CacheManager::class);
 	$cacheManager->clearComputedData('collections_list');
 
 	// Re-bootstrap so SchemaToolRegistrar sees both collections.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Update;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Update\Service\UpdateDownloader;
 use TotalCMS\Support\Config;
@@ -13,8 +14,8 @@ use TotalCMS\Support\HttpResponse;
 final class UpdateDownloaderTest extends TestCase
 {
 	private string $tmpDir;
-	private \PHPUnit\Framework\MockObject\MockObject $httpClient;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
+	private MockObject $httpClient;
+	private MockObject $config;
 
 	protected function setUp(): void
 	{

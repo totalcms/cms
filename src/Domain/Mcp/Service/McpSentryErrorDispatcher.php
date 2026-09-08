@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Mcp\Service;
 use Mcp\Event\ErrorEvent;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Sentry\State\Scope;
+
 use function Sentry\captureException;
 use function Sentry\withScope;
 

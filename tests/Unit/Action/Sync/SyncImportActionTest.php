@@ -3,6 +3,7 @@
 namespace Tests\Unit\Action\Sync;
 
 use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -17,10 +18,10 @@ use TotalCMS\Support\OperationResult;
 
 final class SyncImportActionTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $jumpStartImporter;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $jumpStartImporter;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

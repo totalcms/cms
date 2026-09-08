@@ -496,7 +496,7 @@ readonly class ObjectTools
 	{
 		$attempted = [];
 		foreach ($schema->properties as $name => $property) {
-			if (!self::isVideoProperty($property)) {
+			if (!$this->isVideoProperty($property)) {
 				continue;
 			}
 
@@ -585,7 +585,7 @@ readonly class ObjectTools
 	 * `PropertyDefinition::extractSchemaRef()` also recognize) — mirror both
 	 * so this guard doesn't miss a property the save pipeline treats as video.
 	 */
-	private static function isVideoProperty(mixed $property): bool
+	private function isVideoProperty(mixed $property): bool
 	{
 		return is_array($property)
 			&& (($property['field'] ?? '') === 'video' || ($property['type'] ?? '') === 'video');
@@ -626,7 +626,7 @@ readonly class ObjectTools
 	{
 		$videoFields = [];
 		foreach ($schema->properties as $name => $property) {
-			if (self::isVideoProperty($property)) {
+			if ($this->isVideoProperty($property)) {
 				$videoFields[] = (string)$name;
 			}
 		}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Admin;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -17,12 +18,12 @@ use TotalCMS\Renderer\JsonRenderer;
 final class UpdateActionTest extends TestCase
 {
 	private UpdateAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $updateChecker;
-	private \PHPUnit\Framework\MockObject\MockObject $updateDownloader;
-	private \PHPUnit\Framework\MockObject\MockObject $updateApplier;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $renderer;
+	private MockObject $updateChecker;
+	private MockObject $updateDownloader;
+	private MockObject $updateApplier;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

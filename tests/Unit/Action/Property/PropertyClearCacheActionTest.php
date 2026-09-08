@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Property;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,10 +13,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class PropertyClearCacheActionTest extends TestCase
 {
 	private PropertyClearCacheAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $service;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $service;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

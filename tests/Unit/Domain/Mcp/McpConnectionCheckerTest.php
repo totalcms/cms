@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Mcp\Data\McpCheckResult;
 use TotalCMS\Domain\Mcp\Service\McpConnectionChecker;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
@@ -70,7 +71,7 @@ function checkerConfig(string $api = '', bool $publicAccess = false): Config
 	return $config;
 }
 
-function resultById(array $results, string $id): TotalCMS\Domain\Mcp\Data\McpCheckResult
+function resultById(array $results, string $id): McpCheckResult
 {
 	foreach ($results as $result) {
 		if ($result->id === $id) {

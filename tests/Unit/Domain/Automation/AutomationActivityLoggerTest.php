@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Automation;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
 use TotalCMS\Domain\Automation\Service\AutomationActivityLogger;
 
 final class AutomationActivityLoggerTest extends TestCase
@@ -12,7 +13,7 @@ final class AutomationActivityLoggerTest extends TestCase
 	public function testLogsStructuredFailedRunAtWarningLevel(): void
 	{
 		$records = [];
-		$logger  = new class($records) extends \Psr\Log\AbstractLogger {
+		$logger  = new class($records) extends AbstractLogger {
 			/** @param array<int,array<string,mixed>> $records */
 			public function __construct(private array &$records)
 			{

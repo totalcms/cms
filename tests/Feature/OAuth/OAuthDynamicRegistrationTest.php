@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Support\Config;
 
@@ -40,7 +41,7 @@ beforeEach(function (): void {
  *
  * @param array<string,mixed> $payload
  */
-function buildRegisterRequest(array $payload): Psr\Http\Message\ServerRequestInterface
+function buildRegisterRequest(array $payload): ServerRequestInterface
 {
 	$factory = new Psr17Factory();
 	$body    = json_encode($payload);

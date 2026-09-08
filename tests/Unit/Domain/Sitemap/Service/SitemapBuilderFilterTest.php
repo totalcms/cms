@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Sitemap\Service;
 
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -23,10 +24,10 @@ final class SitemapBuilderFilterTest extends TestCase
 {
 	private SitemapBuilder $sitemapBuilder;
 	private IndexFilter $mockIndexFilter;
-	private \PHPUnit\Framework\MockObject\MockObject $mockIndexReader;
-	private \PHPUnit\Framework\MockObject\MockObject $mockCollectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectUrlBuilder;
-	private \PHPUnit\Framework\MockObject\MockObject $mockConfig;
+	private MockObject $mockIndexReader;
+	private MockObject $mockCollectionFetcher;
+	private MockObject $mockObjectUrlBuilder;
+	private MockObject $mockConfig;
 
 	protected function setUp(): void
 	{

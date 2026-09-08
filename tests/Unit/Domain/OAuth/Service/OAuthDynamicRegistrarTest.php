@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\OAuth\Service;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\OAuth\Data\OAuthScopeData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthClientCreator;
@@ -96,7 +97,7 @@ final class OAuthDynamicRegistrarTest extends TestCase
 	private function fullRegistryScopeString(): string
 	{
 		return implode(' ', array_map(
-			static fn (\TotalCMS\Domain\OAuth\Data\OAuthScopeData $s): string => $s->identifier,
+			static fn (OAuthScopeData $s): string => $s->identifier,
 			$this->scopes->all(),
 		));
 	}

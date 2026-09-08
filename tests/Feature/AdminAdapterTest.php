@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Cache\CacheManager;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Template\Service\TemplateSaver;

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TotalCMS\Action\OAuth;
 
 use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
-use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

@@ -24,7 +24,7 @@ class VideoData extends PropertyData implements \Stringable
 	 * The stored keys, in stored order. `poster` is deliberately last and is
 	 * only written when an image was actually uploaded. (CSV carries only the
 	 * URL — see ObjectExporter — so this list is documentation and a guard for
-	 * tests, not a column list.)
+	 * tests, not a column list.).
 	 *
 	 * @var list<string>
 	 */
@@ -47,7 +47,7 @@ class VideoData extends PropertyData implements \Stringable
 	 */
 	public function __construct(mixed $value = null, public array $settings = [])
 	{
-		$video = self::normalize($value);
+		$video = $this->normalize($value);
 
 		// Unknown keys — including the legacy card `id` that older records
 		// carry — are simply not read.
@@ -68,7 +68,7 @@ class VideoData extends PropertyData implements \Stringable
 	 *
 	 * @return array<string,mixed>
 	 */
-	private static function normalize(mixed $value): array
+	private function normalize(mixed $value): array
 	{
 		if (is_string($value)) {
 			$trimmed = trim($value);

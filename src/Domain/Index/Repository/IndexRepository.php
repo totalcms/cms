@@ -253,6 +253,6 @@ class IndexRepository extends StorageRepository
 			}
 		}
 
-		return array_map('strval', array_keys($ids));
+		return array_map(strval(...), array_keys($ids));
 	}
 }

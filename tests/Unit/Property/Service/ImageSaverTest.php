@@ -4,27 +4,31 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Property\Service;
 
+use Monolog\Level;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
+use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Traits\LoggerAwareTrait;
 
 class ImageSaverTest extends TestCase
 {
 	private ImageSaver $imageSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $mockStorage;
-	private \PHPUnit\Framework\MockObject\MockObject $mockPropFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectPatcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectFetcher;
+	private MockObject $mockStorage;
+	private MockObject $mockPropFetcher;
+	private MockObject $mockObjectSaver;
+	private MockObject $mockObjectPatcher;
+	private MockObject $mockObjectFetcher;
 	private LoggerFactory $loggerFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $mockLogger;
+	private MockObject $mockLogger;
 
 	protected function setUp(): void
 	{
@@ -36,7 +40,7 @@ class ImageSaverTest extends TestCase
 		$this->mockLogger        = $this->createMock(LoggerInterface::class);
 
 		// Create LoggerFactory in test mode with mock logger
-		$this->loggerFactory = new LoggerFactory(['test' => $this->mockLogger, 'level' => \Monolog\Level::Debug]);
+		$this->loggerFactory = new LoggerFactory(['test' => $this->mockLogger, 'level' => Level::Debug]);
 
 		$this->imageSaver = new ImageSaver(
 			$this->mockStorage,
@@ -111,7 +115,7 @@ class ImageSaverTest extends TestCase
 	public function testInheritsFromFileSaver(): void
 	{
 		// Test that ImageSaver properly extends FileSaver
-		$this->assertInstanceOf(\TotalCMS\Domain\Property\Service\FileSaver::class, $this->imageSaver);
+		$this->assertInstanceOf(FileSaver::class, $this->imageSaver);
 	}
 
 	public function testHasLoggerFactoryInjected(): void
@@ -131,7 +135,7 @@ class ImageSaverTest extends TestCase
 		// Test that the class inherits LoggerAwareTrait from FileSaver
 		$reflection = new \ReflectionClass($this->imageSaver);
 		$allTraits  = $this->getAllTraitsFromClass($reflection);
-		$this->assertContains(\TotalCMS\Traits\LoggerAwareTrait::class, $allTraits);
+		$this->assertContains(LoggerAwareTrait::class, $allTraits);
 	}
 
 	private function getAllTraitsFromClass(\ReflectionClass $class): array

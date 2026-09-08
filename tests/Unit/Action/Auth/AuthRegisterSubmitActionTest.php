@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Auth;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\NullLogger;
 use Slim\Exception\HttpForbiddenException;
 use TotalCMS\Action\Auth\AuthRegisterSubmitAction;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
@@ -24,6 +26,7 @@ use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\OperationResult;
@@ -32,15 +35,15 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
 final class AuthRegisterSubmitActionTest extends TestCase
 {
 	private AuthRegisterSubmitAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $objectSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $loginService;
-	private \PHPUnit\Framework\MockObject\MockObject $sessionLogin;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $verificationService;
-	private \PHPUnit\Framework\MockObject\MockObject $emailService;
-	private \PHPUnit\Framework\MockObject\MockObject $emailSender;
-	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
+	private MockObject $renderer;
+	private MockObject $objectSaver;
+	private MockObject $loginService;
+	private MockObject $sessionLogin;
+	private MockObject $collectionFetcher;
+	private MockObject $verificationService;
+	private MockObject $emailService;
+	private MockObject $emailSender;
+	private MockObject $twigEngine;
 	private Config $config;
 
 	protected function setUp(): void
@@ -76,8 +79,8 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		);
 		$schemaFetcher = $this->createMock(SchemaFetcher::class);
 		$schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
-		$policyLoggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
-		$policyLoggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
+		$policyLoggerFactory = $this->createMock(LoggerFactory::class);
+		$policyLoggerFactory->method('channelLogger')->willReturn(new NullLogger());
 		$authFieldPolicy = new AuthFieldPolicy(
 			$schemaFetcher,
 			$this->createMock(UserValidationService::class),

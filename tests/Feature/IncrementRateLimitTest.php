@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Middleware\Security\IncrementRateLimitMiddleware;
 
 use function TotalCMS\Slim\Pest\post;
 
@@ -16,8 +19,8 @@ beforeEach(function (): void {
 	}
 	$this->setUpApp(bootstrap());
 	$container = $this->app->getContainer();
-	$container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)->fetchOrCreateReserved('number');
-	$container->get(TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('number', ['id' => 'likes', 'number' => 0]);
+	$container->get(CollectionFetcher::class)->fetchOrCreateReserved('number');
+	$container->get(ObjectSaver::class)->saveObject('number', ['id' => 'likes', 'number' => 0]);
 });
 
 it('increments and reports the remaining budget', function (): void {
@@ -28,7 +31,7 @@ it('increments and reports the remaining budget', function (): void {
 });
 
 it('returns 429 once the per-minute budget is spent', function (): void {
-	$limit = TotalCMS\Middleware\Security\IncrementRateLimitMiddleware::LIMIT_PER_MINUTE;
+	$limit = IncrementRateLimitMiddleware::LIMIT_PER_MINUTE;
 	for ($i = 0; $i < $limit; $i++) {
 		post('/api/collections/number/likes/number/increment')->assertOk();
 	}

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Export;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -11,8 +12,8 @@ use TotalCMS\Action\Export\ExportJumpStartDemoAction;
 final class ExportJumpStartDemoActionTest extends TestCase
 {
 	private ExportJumpStartDemoAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

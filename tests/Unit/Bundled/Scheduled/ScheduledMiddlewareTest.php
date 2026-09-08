@@ -6,6 +6,7 @@ namespace Tests\Unit\Bundled\Scheduled;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Bundled\Scheduled\ScheduledMiddleware;
 use TotalCMS\Domain\Builder\Data\PageData;
 
@@ -293,7 +294,7 @@ final class ScheduledMiddlewareTest extends TestCase
 		return new PageData(['id' => $id, 'data' => $data]);
 	}
 
-	private function request(): \Psr\Http\Message\ServerRequestInterface
+	private function request(): ServerRequestInterface
 	{
 		return $this->psr17->createServerRequest('GET', '/sale');
 	}

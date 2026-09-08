@@ -2,7 +2,9 @@
 
 namespace Tests\Unit\Domain\Import;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -19,10 +21,10 @@ use TotalCMS\Support\HttpResponse;
  */
 final class RssImporterSkipExistingTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
-	private \PHPUnit\Framework\MockObject\MockObject $httpClient;
+	private MockObject $collectionFetcher;
+	private MockObject $objectFetcher;
+	private MockObject $jobQueuer;
+	private MockObject $httpClient;
 
 	protected function setUp(): void
 	{
@@ -37,7 +39,7 @@ final class RssImporterSkipExistingTest extends TestCase
 	private function importer(): RssImporter
 	{
 		$loggerFactory = $this->createMock(LoggerFactory::class);
-		$loggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
+		$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
 
 		return new RssImporter(
 			$this->collectionFetcher,

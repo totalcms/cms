@@ -6,12 +6,12 @@ namespace TotalCMS\Action\Automation;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpInternalServerErrorException;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Automation\Service\AutomationGuard;
 use TotalCMS\Domain\Automation\Service\AutomationQueue;
 use TotalCMS\Domain\Automation\Service\AutomationRunner;
 use TotalCMS\Middleware\Automation\AutomationWebhookMiddleware;
-use Slim\Exception\HttpInternalServerErrorException;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\RawRenderer;
 
@@ -67,7 +67,7 @@ final readonly class AutomationWebhookAction
 			// guarded message the JSON branch would carry.
 			if ($request->getHeaderLine('HX-Request') === 'true') {
 				if ($record->status !== 'success') {
-					throw new HttpInternalServerErrorException($request, (string)($exception ?? 'Automation handler failed.'));
+					throw new HttpInternalServerErrorException($request, $exception ?? 'Automation handler failed.');
 				}
 				if (is_string($record->return)) {
 					return $this->rawRenderer->render($response->withHeader('Content-Type', 'text/html'), $record->return);

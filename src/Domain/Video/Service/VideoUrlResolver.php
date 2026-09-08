@@ -21,15 +21,11 @@ use TotalCMS\Domain\Video\Provider\YouTubeProvider;
  * Resolves a raw video URL to a VideoInfo by asking each configured
  * provider, in order, whether it recognizes the URL. Pure — no I/O.
  */
-final class VideoUrlResolver
+final readonly class VideoUrlResolver
 {
-	/** @var list<VideoProvider> */
-	private array $providers;
-
 	/** @param list<VideoProvider> $providers */
-	public function __construct(array $providers = [])
+	public function __construct(private array $providers = [])
 	{
-		$this->providers = $providers;
 	}
 
 	public function resolve(string $url): VideoInfo

@@ -39,9 +39,9 @@ final class AtomicJsonStore
 	}
 
 	/**
-	 * @return array<string,mixed>
-	 *
 	 * @throws \RuntimeException under CorruptPolicy::Throw
+	 *
+	 * @return array<string,mixed>
 	 */
 	public function load(string $path, CorruptPolicy $policy): array
 	{

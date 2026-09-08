@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Auth;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\AuthTokenService;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Factory\LoggerFactory;
@@ -12,7 +14,7 @@ use TotalCMS\Factory\LoggerFactory;
 final class AuthTokenServiceTest extends TestCase
 {
 	private AuthTokenService $service;
-	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
+	private MockObject $cacheManager;
 
 	protected function setUp(): void
 	{
@@ -21,7 +23,7 @@ final class AuthTokenServiceTest extends TestCase
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn(
-			$this->createMock(\Psr\Log\LoggerInterface::class)
+			$this->createMock(LoggerInterface::class)
 		);
 
 		$this->service = new AuthTokenService($this->cacheManager, $loggerFactory);

@@ -4,6 +4,7 @@ namespace Tests\Security;
 
 use Odan\Session\PhpSession;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -24,10 +25,10 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 	private CSRFProtectionMiddleware $middleware;
 	private CSRFTokenManager $csrfManager;
 	private PhpSession $session;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $handler;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
-	private \PHPUnit\Framework\MockObject\MockObject $apiKeyAuthenticator;
+	private MockObject $request;
+	private MockObject $handler;
+	private MockObject $response;
+	private MockObject $apiKeyAuthenticator;
 
 	protected function setUp(): void
 	{

@@ -33,11 +33,11 @@ final class VideoMetadataFetcherTest extends TestCase
 		);
 
 		$fetcher = new VideoMetadataFetcher($http, $logger);
-		$result = $fetcher->fetch($info);
+		$result  = $fetcher->fetch($info);
 
 		$this->assertSame([
-			'thumbnail' => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg',
-			'title' => '',
+			'thumbnail'   => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg',
+			'title'       => '',
 			'aspectRatio' => '16:9',
 		], $result);
 	}
@@ -52,10 +52,10 @@ final class VideoMetadataFetcherTest extends TestCase
 		$response = $this->createMock(HttpResponse::class);
 		$response->expects($this->once())->method('isSuccess')->willReturn(true);
 		$response->expects($this->once())->method('json')->willReturn([
-			'type' => 'video',
-			'title' => 'weaversspace-intro',
-			'width' => 1920,
-			'height' => 1080,
+			'type'          => 'video',
+			'title'         => 'weaversspace-intro',
+			'width'         => 1920,
+			'height'        => 1080,
 			'thumbnail_url' => 'https://media.weaversspace.com/file/w_300,h_200,c_fill/weaversspace/play/weaversspace-intro-z.jpg',
 		]);
 
@@ -75,8 +75,8 @@ final class VideoMetadataFetcherTest extends TestCase
 		$result = (new VideoMetadataFetcher($http, $logger))->fetch($info);
 
 		$this->assertSame([
-			'thumbnail' => 'https://media.weaversspace.com/file/w_1280/weaversspace/play/weaversspace-intro-z.jpg',
-			'title' => 'weaversspace-intro',
+			'thumbnail'   => 'https://media.weaversspace.com/file/w_1280/weaversspace/play/weaversspace-intro-z.jpg',
+			'title'       => 'weaversspace-intro',
 			'aspectRatio' => '16:9',
 		], $result);
 	}
@@ -91,9 +91,9 @@ final class VideoMetadataFetcherTest extends TestCase
 		$response->expects($this->once())->method('isSuccess')->willReturn(true);
 		$response->expects($this->once())->method('json')->willReturn([
 			'thumbnail_url' => 'https://i.example.com/x.jpg',
-			'title' => '  My Video ',
-			'width' => 1280,
-			'height' => 720,
+			'title'         => '  My Video ',
+			'width'         => 1280,
+			'height'        => 720,
 		]);
 
 		$http = $this->createMock(HttpClientInterface::class);
@@ -119,11 +119,11 @@ final class VideoMetadataFetcherTest extends TestCase
 		);
 
 		$fetcher = new VideoMetadataFetcher($http, $logger);
-		$result = $fetcher->fetch($info);
+		$result  = $fetcher->fetch($info);
 
 		$this->assertSame([
-			'thumbnail' => 'https://i.example.com/x.jpg',
-			'title' => 'My Video',
+			'thumbnail'   => 'https://i.example.com/x.jpg',
+			'title'       => 'My Video',
 			'aspectRatio' => '16:9',
 		], $result);
 	}
@@ -137,9 +137,9 @@ final class VideoMetadataFetcherTest extends TestCase
 		$response->expects($this->once())->method('isSuccess')->willReturn(true);
 		$response->expects($this->once())->method('json')->willReturn([
 			'thumbnail_url' => 'https://example.com/thumb.jpg',
-			'title' => 'Video',
-			'width' => 1080,
-			'height' => 1920,
+			'title'         => 'Video',
+			'width'         => 1080,
+			'height'        => 1920,
 		]);
 
 		$http = $this->createMock(HttpClientInterface::class);
@@ -160,11 +160,11 @@ final class VideoMetadataFetcherTest extends TestCase
 		);
 
 		$fetcher = new VideoMetadataFetcher($http, $logger);
-		$result = $fetcher->fetch($info);
+		$result  = $fetcher->fetch($info);
 
 		$this->assertSame([
-			'thumbnail' => 'https://example.com/thumb.jpg',
-			'title' => 'Video',
+			'thumbnail'   => 'https://example.com/thumb.jpg',
+			'title'       => 'Video',
 			'aspectRatio' => '9:16',
 		], $result);
 	}
@@ -194,11 +194,11 @@ final class VideoMetadataFetcherTest extends TestCase
 		);
 
 		$fetcher = new VideoMetadataFetcher($http, $logger);
-		$result = $fetcher->fetch($info);
+		$result  = $fetcher->fetch($info);
 
 		$this->assertSame([
-			'thumbnail' => 'https://example.com/thumb.jpg',
-			'title' => '',
+			'thumbnail'   => 'https://example.com/thumb.jpg',
+			'title'       => '',
 			'aspectRatio' => '16:9',
 		], $result);
 	}
@@ -230,11 +230,11 @@ final class VideoMetadataFetcherTest extends TestCase
 		);
 
 		$fetcher = new VideoMetadataFetcher($http, $logger);
-		$result = $fetcher->fetch($info);
+		$result  = $fetcher->fetch($info);
 
 		$this->assertSame([
-			'thumbnail' => 'https://example.com/thumb.jpg',
-			'title' => '',
+			'thumbnail'   => 'https://example.com/thumb.jpg',
+			'title'       => '',
 			'aspectRatio' => '16:9',
 		], $result);
 	}
@@ -268,11 +268,11 @@ final class VideoMetadataFetcherTest extends TestCase
 		);
 
 		$fetcher = new VideoMetadataFetcher($http, $logger);
-		$result = $fetcher->fetch($info);
+		$result  = $fetcher->fetch($info);
 
 		$this->assertSame([
-			'thumbnail' => 'https://example.com/thumb.jpg',
-			'title' => '',
+			'thumbnail'   => 'https://example.com/thumb.jpg',
+			'title'       => '',
 			'aspectRatio' => '16:9',
 		], $result);
 	}
@@ -286,9 +286,9 @@ final class VideoMetadataFetcherTest extends TestCase
 		$response->expects($this->once())->method('isSuccess')->willReturn(true);
 		$response->expects($this->once())->method('json')->willReturn([
 			'thumbnail_url' => 'javascript:alert(1)',
-			'title' => 'Video',
-			'width' => 1280,
-			'height' => 720,
+			'title'         => 'Video',
+			'width'         => 1280,
+			'height'        => 720,
 		]);
 
 		$http = $this->createMock(HttpClientInterface::class);
@@ -309,11 +309,11 @@ final class VideoMetadataFetcherTest extends TestCase
 		);
 
 		$fetcher = new VideoMetadataFetcher($http, $logger);
-		$result = $fetcher->fetch($info);
+		$result  = $fetcher->fetch($info);
 
 		$this->assertSame([
-			'thumbnail' => '',
-			'title' => 'Video',
+			'thumbnail'   => '',
+			'title'       => 'Video',
 			'aspectRatio' => '16:9',
 		], $result);
 	}
@@ -324,13 +324,13 @@ final class VideoMetadataFetcherTest extends TestCase
 	public function testFetchTruncatesMultibyteTitle(): void
 	{
 		$longTitle = str_repeat('é', 250);
-		$response = $this->createMock(HttpResponse::class);
+		$response  = $this->createMock(HttpResponse::class);
 		$response->expects($this->once())->method('isSuccess')->willReturn(true);
 		$response->expects($this->once())->method('json')->willReturn([
 			'thumbnail_url' => 'https://example.com/thumb.jpg',
-			'title' => $longTitle,
-			'width' => 1280,
-			'height' => 720,
+			'title'         => $longTitle,
+			'width'         => 1280,
+			'height'        => 720,
 		]);
 
 		$http = $this->createMock(HttpClientInterface::class);
@@ -350,7 +350,7 @@ final class VideoMetadataFetcherTest extends TestCase
 		);
 
 		$fetcher = new VideoMetadataFetcher($http, $logger);
-		$result = $fetcher->fetch($info);
+		$result  = $fetcher->fetch($info);
 
 		// Title should be exactly 200 characters long and valid UTF-8
 		$this->assertSame(200, mb_strlen($result['title']));
@@ -369,9 +369,9 @@ final class VideoMetadataFetcherTest extends TestCase
 		$response->expects($this->once())->method('isSuccess')->willReturn(true);
 		$response->expects($this->once())->method('json')->willReturn([
 			'thumbnail_url' => 'https://example.com/thumb.jpg',
-			'title' => 'Video',
-			'width' => '1080',
-			'height' => '1920',
+			'title'         => 'Video',
+			'width'         => '1080',
+			'height'        => '1920',
 		]);
 
 		$http = $this->createMock(HttpClientInterface::class);
@@ -391,7 +391,7 @@ final class VideoMetadataFetcherTest extends TestCase
 		);
 
 		$fetcher = new VideoMetadataFetcher($http, $logger);
-		$result = $fetcher->fetch($info);
+		$result  = $fetcher->fetch($info);
 
 		$this->assertSame('9:16', $result['aspectRatio']);
 	}
@@ -407,9 +407,9 @@ final class VideoMetadataFetcherTest extends TestCase
 		$response->expects($this->once())->method('isSuccess')->willReturn(true);
 		$response->expects($this->once())->method('json')->willReturn([
 			'thumbnail_url' => 'https://example.com/thumb.jpg',
-			'title' => 'Video',
-			'width' => 'not-a-number',
-			'height' => '0',
+			'title'         => 'Video',
+			'width'         => 'not-a-number',
+			'height'        => '0',
 		]);
 
 		$http = $this->createMock(HttpClientInterface::class);
@@ -429,7 +429,7 @@ final class VideoMetadataFetcherTest extends TestCase
 		);
 
 		$fetcher = new VideoMetadataFetcher($http, $logger);
-		$result = $fetcher->fetch($info);
+		$result  = $fetcher->fetch($info);
 
 		$this->assertSame('16:9', $result['aspectRatio']);
 	}
@@ -463,11 +463,11 @@ final class VideoMetadataFetcherTest extends TestCase
 		);
 
 		$fetcher = new VideoMetadataFetcher($http, $logger);
-		$result = $fetcher->fetch($info);
+		$result  = $fetcher->fetch($info);
 
 		$this->assertSame([
-			'thumbnail' => 'https://example.com/thumb.jpg',
-			'title' => '',
+			'thumbnail'   => 'https://example.com/thumb.jpg',
+			'title'       => '',
 			'aspectRatio' => '16:9',
 		], $result);
 	}

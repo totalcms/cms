@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Property\Repository;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -14,7 +15,7 @@ use TotalCMS\Domain\Storage\StorageAdapterInterface;
 class PropertyRepositoryTest extends TestCase
 {
 	private PropertyRepository $propertyRepository;
-	private \PHPUnit\Framework\MockObject\MockObject $mockFilesystem;
+	private MockObject $mockFilesystem;
 
 	protected function setUp(): void
 	{

@@ -7,6 +7,7 @@ namespace Tests\Unit\Action\Object\Support;
 use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\NullLogger;
 use Slim\Exception\HttpForbiddenException;
 use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
@@ -16,6 +17,7 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
@@ -50,8 +52,8 @@ final class PrivilegedFieldGuardTest extends TestCase
 		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->auth = ['enable' => true, 'collection' => 'auth'];
 
-		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
-		$loggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
 
 		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher, $config, $loggerFactory);
 	}

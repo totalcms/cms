@@ -1,5 +1,7 @@
 <?php
 
+use DI\ContainerBuilder;
+
 /**
  * Total CMS Diagnostic Script.
  *
@@ -322,7 +324,7 @@ try {
 		// Load container definitions
 		$containerPath = $configDir . '/container.php';
 		if (file_exists($containerPath)) {
-			$containerBuilder = new DI\ContainerBuilder();
+			$containerBuilder = new ContainerBuilder();
 			$containerBuilder->addDefinitions($containerPath);
 
 			// Try to build the container

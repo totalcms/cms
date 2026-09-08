@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\ApiKey;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
@@ -15,9 +16,9 @@ use TotalCMS\Support\Config;
 final class ApiKeyAuthenticatorTest extends TestCase
 {
 	private ApiKeyAuthenticator $authenticator;
-	private \PHPUnit\Framework\MockObject\MockObject $apiKeyFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private MockObject $apiKeyFetcher;
+	private MockObject $config;
+	private MockObject $request;
 
 	protected function setUp(): void
 	{

@@ -29,7 +29,7 @@ final class AtomicJsonStoreTest extends TestCase
 		mkdir($this->root . '/.system', 0755, true);
 		$storage = new StorageFilesystemAdapter(new Filesystem(new LocalFilesystemAdapter($this->root)));
 		$logs    = &$this->logs;
-		$logger  = new class ($logs) extends AbstractLogger {
+		$logger  = new class($logs) extends AbstractLogger {
 			/** @param list<array{level:string,message:string}> $logs */
 			public function __construct(private array &$logs)
 			{

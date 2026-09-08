@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
@@ -43,7 +45,7 @@ beforeEach(function (): void {
  *
  * @return array{privateKey: string, publicKey: string, tmpDir: string}
  */
-function restSetupKeys(Slim\App $app): array
+function restSetupKeys(App $app): array
 {
 	$tmpDir = sys_get_temp_dir() . '/oauth-rest-test-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
@@ -89,7 +91,7 @@ function restSetupKeys(Slim\App $app): array
  * @param list<string> $scopes
  */
 function restCreateClient(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $secret,
 	array $redirectUris,
@@ -119,7 +121,7 @@ function restCreateClient(
  * @return array{access_token: string, refresh_token: string}
  */
 function restIssueToken(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $clientSecret,
 	array $scopes,
@@ -201,12 +203,12 @@ function restIssueToken(
  * @param array<string,mixed>|null $body
  */
 function restApiCall(
-	Slim\App $app,
+	App $app,
 	string $method,
 	string $path,
 	string $accessToken,
 	?array $body = null,
-): Psr\Http\Message\ResponseInterface {
+): ResponseInterface {
 	$factory = new Psr17Factory();
 	$request = $factory->createServerRequest($method, $path)
 		->withHeader('Authorization', 'Bearer ' . $accessToken);
@@ -257,11 +259,11 @@ function restSeedCollection(string $collectionId): void
  * POST /oauth/token with a refresh_token grant and return the full response.
  */
 function restDoRefresh(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $clientSecret,
 	string $refreshToken,
-): Psr\Http\Message\ResponseInterface {
+): ResponseInterface {
 	$factory = new Psr17Factory();
 
 	return $app->handle(

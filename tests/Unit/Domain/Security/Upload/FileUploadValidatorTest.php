@@ -1,5 +1,6 @@
 <?php
 
+use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 
@@ -217,7 +218,7 @@ describe('FileUploadValidator', function (): void {
 			}
 
 			// Required interface methods (unused in tests)
-			public function getStream(): Psr\Http\Message\StreamInterface
+			public function getStream(): StreamInterface
 			{
 				throw new Exception('Not implemented');
 			}

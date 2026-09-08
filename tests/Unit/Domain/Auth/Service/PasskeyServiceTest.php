@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Auth\Service;
 use Odan\Session\SessionInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\PasskeyService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -38,7 +39,7 @@ final class PasskeyServiceTest extends TestCase
 		// Mock logger factory chain
 		$this->loggerFactory->method('addFileHandler')->willReturnSelf();
 		$this->loggerFactory->method('createLogger')->willReturn(
-			$this->createMock(\Psr\Log\LoggerInterface::class)
+			$this->createMock(LoggerInterface::class)
 		);
 
 		// Configure config mock

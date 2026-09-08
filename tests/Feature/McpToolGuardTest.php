@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Mcp\Exception\ToolCallException;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
@@ -47,7 +49,7 @@ beforeEach(function (): void {
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────────
 
-function mcpGuardSetupOAuthKeys(Slim\App $app): void
+function mcpGuardSetupOAuthKeys(App $app): void
 {
 	$tmpDir = sys_get_temp_dir() . '/oauth-mcp-guard-test-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
@@ -106,7 +108,7 @@ function mcpGuardSeedUser(string $fixtureId): void
  * through the REAL mcp/sdk reflection-based dispatch (CallToolHandler →
  * ReferenceHandler), not a stand-in.
  */
-function mcpGuardRegisterTool(Slim\App $app, string $name, ?ToolRequirement $requires, string $access = 'authenticated'): void
+function mcpGuardRegisterTool(App $app, string $name, ?ToolRequirement $requires, string $access = 'authenticated'): void
 {
 	/** @var ToolRegistry $registry */
 	$registry = $app->getContainer()->get(ToolRegistry::class);
@@ -140,7 +142,7 @@ function mcpGuardRegisterTool(Slim\App $app, string $name, ?ToolRequirement $req
  *
  * @param list<string> $scopes
  */
-function mcpGuardIssueToken(Slim\App $app, string $clientId, string $clientSecret, array $scopes, string $userId): string
+function mcpGuardIssueToken(App $app, string $clientId, string $clientSecret, array $scopes, string $userId): string
 {
 	$client = new OAuthClientData(
 		id: $clientId,
@@ -213,7 +215,7 @@ function mcpGuardIssueToken(Slim\App $app, string $clientId, string $clientSecre
 	return (string)($payload['access_token'] ?? '');
 }
 
-function mcpGuardInitSession(Slim\App $app, string $accessToken): string
+function mcpGuardInitSession(App $app, string $accessToken): string
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -246,7 +248,7 @@ function mcpGuardInitSession(Slim\App $app, string $accessToken): string
 /**
  * @param array<string,mixed> $payload
  */
-function mcpGuardRequest(Slim\App $app, string $accessToken, array $payload, string $sessionId): Psr\Http\Message\ResponseInterface
+function mcpGuardRequest(App $app, string $accessToken, array $payload, string $sessionId): ResponseInterface
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -273,7 +275,7 @@ function mcpGuardRequest(Slim\App $app, string $accessToken, array $payload, str
  * @param list<string>         $scopes
  * @param array<string,mixed>  $arguments
  */
-function mcpGuardCallTool(Slim\App $app, string $userId, array $scopes, string $toolName, array $arguments): ?Psr\Http\Message\ResponseInterface
+function mcpGuardCallTool(App $app, string $userId, array $scopes, string $toolName, array $arguments): ?ResponseInterface
 {
 	mcpGuardSetupOAuthKeys($app);
 
@@ -303,7 +305,7 @@ function mcpGuardCallTool(Slim\App $app, string $userId, array $scopes, string $
  * Extracts the tools/call result text (content[0].text) from a JSON-RPC
  * response body, or null if the shape doesn't match.
  */
-function mcpGuardResultText(Psr\Http\Message\ResponseInterface $response): ?string
+function mcpGuardResultText(ResponseInterface $response): ?string
 {
 	$body = json_decode((string)$response->getBody(), true);
 

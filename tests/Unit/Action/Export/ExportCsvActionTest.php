@@ -4,6 +4,7 @@ namespace Tests\Unit\Action\Export;
 
 use Odan\Session\FlashInterface;
 use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,10 +15,10 @@ use TotalCMS\Domain\Object\Service\ObjectExporter;
 final class ExportCsvActionTest extends TestCase
 {
 	private ExportCsvAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $objectExporter;
-	private \PHPUnit\Framework\MockObject\MockObject $session;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $objectExporter;
+	private MockObject $session;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

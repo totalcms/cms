@@ -2,14 +2,20 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Export\Service\ObjectZipper;
+use TotalCMS\Domain\Index\Repository\IndexRepository;
+use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
+use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+
 use function TotalCMS\Slim\Pest\get;
 
 /**
@@ -27,7 +33,7 @@ beforeEach(function (): void {
 	$this->saver   = $c->get(ObjectSaver::class);
 	$this->fetcher = $c->get(ObjectFetcher::class);
 	$this->repo    = $c->get(ObjectRepository::class);
-	$this->post    = ['id' => 'hello', 'title' => 'Hello', 'draft' => true, 'tags' => ['a', 'b'], 'content' => "<p>Body</p>"];
+	$this->post    = ['id' => 'hello', 'title' => 'Hello', 'draft' => true, 'tags' => ['a', 'b'], 'content' => '<p>Body</p>'];
 });
 
 it('writes {id}.md with frontmatter and the content body', function (): void {
@@ -36,13 +42,13 @@ it('writes {id}.md with frontmatter and the content body', function (): void {
 	$file = collectionPath('docs') . 'hello.md';
 	expect(file_exists($file))->toBeTrue()->and(file_exists(collectionPath('docs') . 'hello.json'))->toBeFalse();
 	$raw = (string)file_get_contents($file);
-	expect($raw)->toStartWith("---\n")->toContain("title: Hello")->toContain("draft: true")->toEndWith("---\n\n<p>Body</p>\n");
+	expect($raw)->toStartWith("---\n")->toContain('title: Hello')->toContain('draft: true')->toEndWith("---\n\n<p>Body</p>\n");
 	expect($raw)->not->toContain('content:');
 });
 
 it('reads back the same object, typed by the schema', function (): void {
 	$this->saver->saveObject('docs', $this->post);
-	$this->app->getContainer()->get(\TotalCMS\Domain\Cache\CacheManager::class)->clearAllCaches();
+	$this->app->getContainer()->get(CacheManager::class)->clearAllCaches();
 
 	$object = $this->fetcher->fetchObject('docs', 'hello')->toArray();
 	expect($object['title'])->toBe('Hello')->and($object['draft'])->toBeTrue()->and($object['tags'])->toBe(['a', 'b'])->and($object['content'])->toBe('<p>Body</p>');
@@ -135,13 +141,13 @@ it('aborts a save rather than truncating the file when the object cannot be enco
 	// only the title is what makes this save fail.
 	$data          = $this->fetcher->fetchObjectFromDisk('posts', 'hello')->toArray();
 	$data['title'] = "\xB1\x31";
-	$bad           = $this->app->getContainer()->get(\TotalCMS\Domain\Object\Service\ObjectFactory::class)
+	$bad           = $this->app->getContainer()->get(ObjectFactory::class)
 		->generateObject('posts', $data);
 
 	// Whichever layer catches it first (schema validation re-encodes to JSON
 	// too, and fails the same way) — the point is that SOMETHING throws
 	// before a single byte is written, so the file on disk is never touched.
-	expect(fn () => $this->repo->saveObject('posts', $bad))->toThrow(\Exception::class);
+	expect(fn () => $this->repo->saveObject('posts', $bad))->toThrow(Exception::class);
 	expect((string)file_get_contents(collectionPath('posts') . 'hello.json'))->toBe($original);
 });
 
@@ -156,11 +162,11 @@ it('indexes both extensions once each and skips dot files and an unparseable md'
 	file_put_contents(collectionPath('docs') . 'broken.md', "---\nid: [\n---\n");
 	file_put_contents(collectionPath('docs') . '.hidden.md', "---\nid: hidden\n---\n");
 
-	$ids = $this->app->getContainer()->get(\TotalCMS\Domain\Index\Repository\IndexRepository::class)->fetchObjectIdsFromDisk('docs');
+	$ids = $this->app->getContainer()->get(IndexRepository::class)->fetchObjectIdsFromDisk('docs');
 	sort($ids);
 	expect($ids)->toBe(['broken', 'hello']);
 
-	$indexBuilder = $this->app->getContainer()->get(\TotalCMS\Domain\Index\Service\IndexBuilder::class);
+	$indexBuilder = $this->app->getContainer()->get(IndexBuilder::class);
 	$index        = $indexBuilder->buildIndex('docs');
 	expect($index->objects->pluck('id')->all())->toBe(['hello']); // broken skipped, logged, build succeeds
 	expect($indexBuilder->lastSkippedIds())->toBe(['broken']);
@@ -181,7 +187,7 @@ it('a plain buildIndex() does not evict a warmed object — callers on the ordin
 		"---\nid: hello\ntitle: Edited By Hand\ndraft: true\ntags:\n  - a\n  - b\n---\n\n<p>Body</p>\n",
 	);
 
-	$this->app->getContainer()->get(\TotalCMS\Domain\Index\Service\IndexBuilder::class)->buildIndex('docs');
+	$this->app->getContainer()->get(IndexBuilder::class)->buildIndex('docs');
 
 	// Still the warmed (stale) value — buildIndex() alone doesn't touch the cache.
 	expect($this->fetcher->fetchObject('docs', 'hello')->toArray()['title'])->toBe('Hello');
@@ -198,7 +204,7 @@ it('ObjectFetcher::clearCollectionCache() after a rebuild is what makes a hand-e
 		"---\nid: hello\ntitle: Edited By Hand\ndraft: true\ntags:\n  - a\n  - b\n---\n\n<p>Body</p>\n",
 	);
 
-	$this->app->getContainer()->get(\TotalCMS\Domain\Index\Service\IndexBuilder::class)->buildIndex('docs');
+	$this->app->getContainer()->get(IndexBuilder::class)->buildIndex('docs');
 	// This is the step RepairIndexCommand and IndexBuildAction each take
 	// right after buildIndex() — buildIndex() itself no longer does it.
 	$this->fetcher->clearCollectionCache('docs');
@@ -209,8 +215,8 @@ it('ObjectFetcher::clearCollectionCache() after a rebuild is what makes a hand-e
 it('zips and backs up the markdown file', function (): void {
 	$this->saver->saveObject('docs', $this->post);
 
-	$zipPath = $this->app->getContainer()->get(\TotalCMS\Domain\Export\Service\ObjectZipper::class)->createObjectZip('docs', 'hello');
-	$zip = new ZipArchive();
+	$zipPath = $this->app->getContainer()->get(ObjectZipper::class)->createObjectZip('docs', 'hello');
+	$zip     = new ZipArchive();
 	$zip->open($zipPath);
 	expect($zip->locateName('hello.md'))->not->toBeFalse()->and($zip->locateName('hello.json'))->toBeFalse();
 	$zip->close();
@@ -227,7 +233,7 @@ it('always identifies an object by its file name, not an id: line in hand-edited
 	expect($this->fetcher->fetchObjectFromDisk('docs', 'hand')->id)->toBe('hand');
 	expect($this->fetcher->fetchObjectFromDisk('docs', 'other')->id)->toBe('other');
 
-	$index = $this->app->getContainer()->get(\TotalCMS\Domain\Index\Service\IndexBuilder::class)->buildIndex('docs');
+	$index = $this->app->getContainer()->get(IndexBuilder::class)->buildIndex('docs');
 	$ids   = $index->objects->pluck('id')->all();
 	sort($ids);
 	expect($ids)->toBe(['hand', 'other']);
@@ -237,12 +243,12 @@ it('keeps a numeric filename id a string through disk enumeration and index buil
 	file_put_contents(collectionPath('docs') . '1.md', "---\nid: '1'\ntitle: One\n---\n\nBody\n");
 	file_put_contents(collectionPath('docs') . '2.json', json_encode(['id' => '2', 'title' => 'Two']));
 
-	$ids = $this->app->getContainer()->get(\TotalCMS\Domain\Index\Repository\IndexRepository::class)->fetchObjectIdsFromDisk('docs');
+	$ids = $this->app->getContainer()->get(IndexRepository::class)->fetchObjectIdsFromDisk('docs');
 	sort($ids);
 	expect($ids)->toBe(['1', '2']);
 	expect(array_map('gettype', $ids))->toBe(['string', 'string']);
 
-	$index = $this->app->getContainer()->get(\TotalCMS\Domain\Index\Service\IndexBuilder::class)->buildIndex('docs');
+	$index = $this->app->getContainer()->get(IndexBuilder::class)->buildIndex('docs');
 	$entry = $index->objects->first(fn (array $o): bool => $o['id'] === '1');
 	expect($entry)->not->toBeNull();
 	expect($entry['id'])->toBeString();

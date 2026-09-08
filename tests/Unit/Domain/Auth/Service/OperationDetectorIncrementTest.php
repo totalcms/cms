@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Http\Message\ServerRequestInterface;
 use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Psr7\Factory\ServerRequestFactory;
@@ -14,7 +15,7 @@ use TotalCMS\Domain\Auth\Service\OperationDetector;
  * public they are the narrower `increment` operation, so a collection can
  * open likes without opening PUT/PATCH.
  */
-function routedRequest(string $routeName): \Psr\Http\Message\ServerRequestInterface
+function routedRequest(string $routeName): ServerRequestInterface
 {
 	$route = test()->createMock(RouteInterface::class);
 	$route->method('getName')->willReturn($routeName);

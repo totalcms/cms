@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Property\Deck;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -9,14 +10,15 @@ use TotalCMS\Action\Property\Deck\DeckItemUpdateAction;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\DeckItemUpdater;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class DeckItemUpdateActionTest extends TestCase
 {
 	private DeckItemUpdateAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $deckItemUpdater;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $deckItemUpdater;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -162,7 +164,7 @@ final class DeckItemUpdateActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('jsonItem')
-			->with($this->response, $objectData, $this->isInstanceOf(\TotalCMS\Transformer\ObjectMetaTransformer::class))
+			->with($this->response, $objectData, $this->isInstanceOf(ObjectMetaTransformer::class))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, $args);

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\OAuth\Adapter;
 
 use League\OAuth2\Server\Entities\RefreshTokenEntityInterface;
-use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
 use League\OAuth2\Server\Entities\ScopeEntityInterface;
+use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthReplayDetector;

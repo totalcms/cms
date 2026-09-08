@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Middleware;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,11 +16,11 @@ use TotalCMS\Support\Config;
 
 final class SetupCheckMiddlewareTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $app;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
-	private \PHPUnit\Framework\MockObject\MockObject $redirectRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $setupState;
-	private \PHPUnit\Framework\MockObject\MockObject $handler;
+	private MockObject $app;
+	private MockObject $config;
+	private MockObject $redirectRenderer;
+	private MockObject $setupState;
+	private MockObject $handler;
 	private SetupCheckMiddleware $middleware;
 
 	protected function setUp(): void

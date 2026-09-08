@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\Playground\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -11,7 +12,7 @@ use TotalCMS\Domain\Playground\Service\PlaygroundFetcher;
 final class PlaygroundFetcherTest extends TestCase
 {
 	private PlaygroundFetcher $fetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
+	private MockObject $objectFetcher;
 
 	protected function setUp(): void
 	{

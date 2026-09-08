@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Mailer;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,10 +17,10 @@ use TotalCMS\Support\OperationResult;
 final class SendEmailActionTest extends TestCase
 {
 	private SendEmailAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $emailService;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $emailService;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

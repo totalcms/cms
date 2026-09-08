@@ -1,5 +1,7 @@
 <?php
 
+use TotalCMS\Slim\Test\TestResponse;
+
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\post;
 
@@ -34,8 +36,8 @@ describe('AuthLogoutAction Feature Tests', function (): void {
 	it('handles ANY HTTP method due to route configuration', function (): void {
 		// Test various HTTP methods that should all work per route config
 		$methods = [
-			fn (): TotalCMS\Slim\Test\TestResponse => get('/admin/logout'),
-			fn (): TotalCMS\Slim\Test\TestResponse => post('/admin/logout'),
+			fn (): TestResponse => get('/admin/logout'),
+			fn (): TestResponse => post('/admin/logout'),
 		];
 
 		foreach ($methods as $methodCall) {

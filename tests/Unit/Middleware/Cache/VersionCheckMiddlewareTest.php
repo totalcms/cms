@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Middleware\Cache;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,9 +13,9 @@ use TotalCMS\Middleware\Cache\VersionCheckMiddleware;
 final class VersionCheckMiddlewareTest extends TestCase
 {
 	private VersionCheckMiddleware $middleware;
-	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $handler;
+	private MockObject $cacheManager;
+	private MockObject $request;
+	private MockObject $handler;
 
 	protected function setUp(): void
 	{

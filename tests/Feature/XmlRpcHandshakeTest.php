@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth;
 
 require_once __DIR__ . '/XmlRpcTestHelpers.php';
 
@@ -13,7 +17,7 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 	enableXmlRpc();
 	xmlRpcTestApp()->getContainer()
-		->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)
+		->get(CollectionFetcher::class)
 		->fetchOrCreateReserved('blog');
 });
 
@@ -48,10 +52,10 @@ it('faults on getUsersBlogs without a valid key', function (): void {
 
 it('lists the blogs a key is scoped to, and only those', function (): void {
 	$container = xmlRpcTestApp()->getContainer();
-	$container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)->fetchOrCreateReserved('blog');
+	$container->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
 
 	// A second blog collection the key is NOT scoped to must not appear.
-	$container->get(TotalCMS\Domain\Collection\Service\CollectionSaver::class)
+	$container->get(CollectionSaver::class)
 		->saveCollection(['id' => 'news', 'name' => 'News', 'schema' => 'blog']);
 
 	$key  = xmlRpcKey(['blog']);
@@ -96,7 +100,7 @@ it('refuses a key that lacks the collection grant', function (): void {
 	// fault rather than silently reporting no blogs — the confusing failure
 	// the key UI is meant to prevent.
 	$key = xmlRpcTestApp()->getContainer()
-		->get(TotalCMS\Domain\ApiKey\Service\ApiKeyCreator::class)
+		->get(ApiKeyCreator::class)
 		->createApiKey('endpoint only', ['methods' => ['GET'], 'paths' => ['/xmlrpc.php']])
 		->key;
 
@@ -114,7 +118,7 @@ it('refuses a key that lacks the collection grant', function (): void {
 
 it('faults both getUsersBlogs methods for a key scoped to no blog collection, naming the fix', function (): void {
 	$key = xmlRpcTestApp()->getContainer()
-		->get(TotalCMS\Domain\ApiKey\Service\ApiKeyCreator::class)
+		->get(ApiKeyCreator::class)
 		->createApiKey('endpoint only', ['methods' => ['GET'], 'paths' => ['/xmlrpc.php']])
 		->key;
 
@@ -142,7 +146,7 @@ it('lists exactly one blog for a key granted a single /collections/{id} path', f
 	$container = xmlRpcTestApp()->getContainer();
 
 	// A second blog collection the key is NOT scoped to must not appear.
-	$container->get(TotalCMS\Domain\Collection\Service\CollectionSaver::class)
+	$container->get(CollectionSaver::class)
 		->saveCollection(['id' => 'news', 'name' => 'News', 'schema' => 'blog']);
 
 	$key  = xmlRpcKey(['blog']);
@@ -159,13 +163,13 @@ it('lists exactly one blog for a key granted a single /collections/{id} path', f
 it('lists every blog collection for a key granted /collections', function (): void {
 	$container = xmlRpcTestApp()->getContainer();
 
-	$container->get(TotalCMS\Domain\Collection\Service\CollectionSaver::class)
+	$container->get(CollectionSaver::class)
 		->saveCollection(['id' => 'news', 'name' => 'News', 'schema' => 'blog']);
 
-	$key = $container->get(TotalCMS\Domain\ApiKey\Service\ApiKeyCreator::class)
+	$key = $container->get(ApiKeyCreator::class)
 		->createApiKey('all collections', [
 			'methods' => ['GET', 'POST', 'PUT', 'DELETE'],
-			'paths'   => [TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth::SCOPE_PATH, '/collections'],
+			'paths'   => [XmlRpcAuth::SCOPE_PATH, '/collections'],
 		])
 		->key;
 

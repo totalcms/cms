@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Import;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Import\AlloyImporter;
+use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -19,12 +22,12 @@ use TotalCMS\Factory\LoggerFactory;
 class AlloyImporterTest extends TestCase
 {
 	private AlloyImporter $alloyImporter;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
-	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
-	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $logger;
+	private MockObject $collectionFetcher;
+	private MockObject $collectionFactory;
+	private MockObject $collectionRepository;
+	private MockObject $jobQueuer;
+	private MockObject $loggerFactory;
+	private MockObject $logger;
 	private string $tempDir;
 
 	protected function setUp(): void
@@ -134,10 +137,10 @@ class AlloyImporterTest extends TestCase
 
 		$queued = [];
 		$this->jobQueuer->method('queueImport')
-			->willReturnCallback(function (string $collection, array $data) use (&$queued): \TotalCMS\Domain\JobQueue\Data\JobData {
+			->willReturnCallback(function (string $collection, array $data) use (&$queued): JobData {
 				$queued[] = ['collection' => $collection, 'data' => $data];
 
-				return new \TotalCMS\Domain\JobQueue\Data\JobData();
+				return new JobData();
 			});
 
 		$this->alloyImporter->import([
@@ -297,7 +300,7 @@ class AlloyImporterTest extends TestCase
 		$fetcher->method('collectionExists')->willReturnOnConsecutiveCalls(false, true, true, true, true);
 
 		$this->collectionFactory->expects($this->atLeastOnce())->method('generateCollection')
-			->willReturn(new \TotalCMS\Domain\Collection\Data\CollectionData());
+			->willReturn(new CollectionData());
 		$this->collectionRepository->expects($this->atLeastOnce())->method('saveCollection');
 
 		$importer = new AlloyImporter(

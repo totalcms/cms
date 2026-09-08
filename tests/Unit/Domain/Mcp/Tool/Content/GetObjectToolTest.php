@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Mcp\Tool\Content;
 
 use Illuminate\Support\Collection;
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -22,10 +23,10 @@ use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 
 final class GetObjectToolTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $objects;
-	private \PHPUnit\Framework\MockObject\MockObject $collections;
-	private \PHPUnit\Framework\MockObject\MockObject $urls;
-	private \PHPUnit\Framework\MockObject\MockObject $resolver;
+	private MockObject $objects;
+	private MockObject $collections;
+	private MockObject $urls;
+	private MockObject $resolver;
 	private PersonaContext $persona;
 	private GetObjectTool $tool;
 

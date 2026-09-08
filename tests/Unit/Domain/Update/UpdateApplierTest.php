@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Update;
 
+use Monolog\Level;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Update\Service\MaintenanceMode;
@@ -276,7 +277,7 @@ final class UpdateApplierTest extends TestCase
 		return new UpdateApplier(
 			$maintenance ?? $this->createMock(MaintenanceMode::class),
 			$this->createMock(CacheManager::class),
-			new LoggerFactory(['path' => $this->tmpDir . '/logs', 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['path' => $this->tmpDir . '/logs', 'level' => Level::Debug]),
 			$config,
 			$appRoot,
 		);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Import;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -12,12 +13,13 @@ use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\HttpResponse;
 
 class WordpressImporterTest extends TestCase
 {
 	private WordpressImporter $importer;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
+	private MockObject $collectionFetcher;
+	private MockObject $jobQueuer;
 	private string $sampleXml;
 
 	protected function setUp(): void
@@ -37,7 +39,7 @@ class WordpressImporterTest extends TestCase
 		$this->jobQueuer->method('queueImport')->willReturn($jobDataStub);
 
 		$httpClient = $this->createMock(HttpClientInterface::class);
-		$httpClient->method('request')->willReturn(new \TotalCMS\Support\HttpResponse(200, 'fake-image-data'));
+		$httpClient->method('request')->willReturn(new HttpResponse(200, 'fake-image-data'));
 
 		$this->importer = new WordpressImporter(
 			$this->collectionFetcher,

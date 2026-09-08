@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Template\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
@@ -15,8 +17,8 @@ use TotalCMS\Domain\Template\Service\TemplateSnapshotService;
 
 final class TemplateSaverTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
-	private \PHPUnit\Framework\MockObject\MockObject $snapshots;
+	private MockObject $storage;
+	private MockObject $snapshots;
 	private EventDispatcher $events;
 
 	protected function setUp(): void
@@ -25,7 +27,7 @@ final class TemplateSaverTest extends TestCase
 		$this->snapshots = $this->createMock(TemplateSnapshotService::class);
 		// EventDispatcher is final; a real one with a NullLogger is a harmless
 		// no-op (no listeners registered).
-		$this->events    = new EventDispatcher(new \Psr\Log\NullLogger());
+		$this->events    = new EventDispatcher(new NullLogger());
 	}
 
 	private function makeSaver(bool $locked): TemplateSaver

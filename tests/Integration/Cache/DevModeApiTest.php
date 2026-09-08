@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Cache;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use Slim\Psr7\Factory\RequestFactory;
 use Slim\Psr7\Factory\ResponseFactory;
 use TotalCMS\Action\Cache\DevModeDisableAction;
@@ -18,7 +19,9 @@ use TotalCMS\Domain\Cache\Service\FilesystemService;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\ImageWorks\Service\WatermarkCleanupService;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -75,7 +78,7 @@ final class DevModeApiTest extends TestCase
 		$apcuService               = new APCuService($config);
 		$watermarkCleanupService   = $this->createMock(WatermarkCleanupService::class);
 
-		$mockLoggerFactoryForCache = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$mockLoggerFactoryForCache = $this->createMock(LoggerFactory::class);
 		$invalidationSignal        = new CacheInvalidationSignal($config);
 		$this->cacheManager        = new CacheManager(
 			$filesystemService,
@@ -86,7 +89,7 @@ final class DevModeApiTest extends TestCase
 			$watermarkCleanupService,
 			$this->devModeManager,
 			$invalidationSignal,
-			new \TotalCMS\Domain\Event\Service\EventDispatcher(new \Psr\Log\NullLogger()),
+			new EventDispatcher(new NullLogger()),
 			$config,
 			$mockLoggerFactoryForCache
 		);

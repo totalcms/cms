@@ -6,6 +6,7 @@ namespace Tests\Unit\Action\Setup;
 
 use Odan\Session\FlashInterface;
 use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -18,11 +19,11 @@ use TotalCMS\Renderer\RedirectRenderer;
 final class LicenseVerifySubmitActionTest extends TestCase
 {
 	private LicenseVerifySubmitAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $licenseValidator;
-	private \PHPUnit\Framework\MockObject\MockObject $session;
-	private \PHPUnit\Framework\MockObject\MockObject $redirectRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $translator;
-	private \PHPUnit\Framework\MockObject\MockObject $flash;
+	private MockObject $licenseValidator;
+	private MockObject $session;
+	private MockObject $redirectRenderer;
+	private MockObject $translator;
+	private MockObject $flash;
 
 	protected function setUp(): void
 	{

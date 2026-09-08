@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\Feed\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -14,11 +15,11 @@ use TotalCMS\Support\Config;
 
 final class RssBuilderTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $indexFilter;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectUrlBuilder;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
+	private MockObject $indexFilter;
+	private MockObject $collectionFetcher;
+	private MockObject $objectUrlBuilder;
+	private MockObject $schemaFetcher;
+	private MockObject $config;
 	private RssBuilder $builder;
 
 	protected function setUp(): void

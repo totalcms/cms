@@ -6,6 +6,7 @@ namespace Tests\Unit\Bundled\GeoRedirect;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Bundled\GeoRedirect\GeoRedirectMiddleware;
 use TotalCMS\Domain\Builder\Data\PageData;
 
@@ -272,7 +273,7 @@ final class GeoRedirectMiddlewareTest extends TestCase
 		return new PageData(['id' => $id, 'data' => $data]);
 	}
 
-	private function requestWithCountry(string $country): \Psr\Http\Message\ServerRequestInterface
+	private function requestWithCountry(string $country): ServerRequestInterface
 	{
 		return $this->psr17->createServerRequest('GET', '/about')
 			->withHeader('CF-IPCountry', $country);

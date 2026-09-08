@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Collection;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,10 +15,10 @@ use TotalCMS\Transformer\CollectionMetaTransformer;
 final class CollectionListActionTest extends TestCase
 {
 	private CollectionListAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionListService;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $renderer;
+	private MockObject $collectionListService;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

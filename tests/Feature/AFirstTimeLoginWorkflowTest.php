@@ -6,6 +6,7 @@ use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Support\Config;
 
 beforeAll(function (): void {
 	// The fresh-installation state this whole file needs. It used to be created
@@ -72,7 +73,7 @@ describe('First Time Login Workflow', function (): void {
 		$container         = $this->app->getContainer();
 		$collectionFetcher = $container->get(CollectionFetcher::class);
 		$firstLoginChecker = $container->get(FirstLoginChecker::class);
-		$config            = $container->get(TotalCMS\Support\Config::class);
+		$config            = $container->get(Config::class);
 		$authCollection    = $config->auth['collection'];
 
 		// Check for new installation - this should trigger auth collection creation
@@ -89,7 +90,7 @@ describe('First Time Login Workflow', function (): void {
 		$container    = $this->app->getContainer();
 		$loginService = $container->get(LoginService::class);
 		$indexReader  = $container->get(IndexReader::class);
-		$config       = $container->get(TotalCMS\Support\Config::class);
+		$config       = $container->get(Config::class);
 
 		$email    = 'admin@test.com';
 		$password = 'secure-password-123';
@@ -122,7 +123,7 @@ describe('First Time Login Workflow', function (): void {
 		$loginService      = $container->get(LoginService::class);
 		$firstLoginChecker = $container->get(FirstLoginChecker::class);
 		$indexReader       = $container->get(IndexReader::class);
-		$config            = $container->get(TotalCMS\Support\Config::class);
+		$config            = $container->get(Config::class);
 		$authCollection    = $config->auth['collection'];
 
 		$email    = 'admin@test.com';

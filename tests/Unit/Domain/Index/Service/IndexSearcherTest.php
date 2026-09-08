@@ -3,6 +3,7 @@
 namespace Tests\Unit\Domain\Index\Service;
 
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -17,7 +18,7 @@ use TotalCMS\Domain\Query\Service\ObjectSearcher;
 final class IndexSearcherTest extends TestCase
 {
 	private IndexSearcher $searcher;
-	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
+	private MockObject $indexReader;
 
 	protected function setUp(): void
 	{

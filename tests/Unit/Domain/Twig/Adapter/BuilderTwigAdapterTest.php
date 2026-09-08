@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\Twig\Adapter;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\BuilderOrderService;
@@ -13,10 +14,10 @@ use TotalCMS\Support\Config;
 final class BuilderTwigAdapterTest extends TestCase
 {
 	private BuilderTwigAdapter $adapter;
-	private \PHPUnit\Framework\MockObject\MockObject $builderConfig;
-	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
-	private \PHPUnit\Framework\MockObject\MockObject $orderService;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
+	private MockObject $builderConfig;
+	private MockObject $indexReader;
+	private MockObject $orderService;
+	private MockObject $config;
 
 	protected function setUp(): void
 	{

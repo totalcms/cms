@@ -15,6 +15,7 @@ use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Middleware\PageRouterMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\RawRenderer;
+
 use function Sentry\captureException;
 
 /**

@@ -29,6 +29,7 @@ use Symfony\Component\Console\Exception\ExceptionInterface;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Support\Version;
+
 use function Sentry\captureException;
 use function Sentry\configureScope;
 use function Sentry\init;

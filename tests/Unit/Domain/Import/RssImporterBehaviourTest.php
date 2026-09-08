@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Import;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Import\RssImporter;
+use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Factory\LoggerFactory;
@@ -25,10 +27,10 @@ use TotalCMS\Support\HttpResponse;
  */
 final class RssImporterBehaviourTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
-	private \PHPUnit\Framework\MockObject\MockObject $httpClient;
+	private MockObject $collectionFetcher;
+	private MockObject $objectFetcher;
+	private MockObject $jobQueuer;
+	private MockObject $httpClient;
 
 	protected function setUp(): void
 	{
@@ -72,10 +74,10 @@ final class RssImporterBehaviourTest extends TestCase
 	{
 		$queued = [];
 		$this->jobQueuer->method('queueImport')
-			->willReturnCallback(function (string $collection, array $data) use (&$queued): \TotalCMS\Domain\JobQueue\Data\JobData {
+			->willReturnCallback(function (string $collection, array $data) use (&$queued): JobData {
 				$queued[] = $data;
 
-				return new \TotalCMS\Domain\JobQueue\Data\JobData();
+				return new JobData();
 			});
 
 		$run();

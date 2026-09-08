@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Cache;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
@@ -43,7 +44,7 @@ final class CacheManagerKeyScopeTest extends TestCase
 	{
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('channelLogger')
-			->willReturn($this->createMock(\Psr\Log\LoggerInterface::class));
+			->willReturn($this->createMock(LoggerInterface::class));
 
 		return new CacheManager(
 			$filesystem ?? $this->createMock(FilesystemService::class),
@@ -54,7 +55,7 @@ final class CacheManagerKeyScopeTest extends TestCase
 			$this->createMock(WatermarkCleanupService::class),
 			$this->createMock(DevModeManager::class),
 			$this->createMock(CacheInvalidationSignal::class),
-			new EventDispatcher($this->createMock(\Psr\Log\LoggerInterface::class)),
+			new EventDispatcher($this->createMock(LoggerInterface::class)),
 			$config,
 			$loggerFactory,
 		);

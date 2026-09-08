@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use TotalCMS\Domain\Schema\Service\SchemaSaver;
+
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
@@ -42,7 +44,7 @@ function validSchemaData(): array
 it('tests schema saving service directly', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$schemaData = validSchemaData();
 
@@ -75,7 +77,7 @@ it('tests schema saving service directly', function (): void {
 it('handles schema with missing required fields', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$invalidSchema = [
 		'description' => 'Missing required id field',
@@ -90,7 +92,7 @@ it('handles schema with missing required fields', function (): void {
 it('handles schema with invalid id format', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$invalidSchema       = validSchemaData();
 	$invalidSchema['id'] = 'Invalid ID With Spaces!@#';
@@ -102,7 +104,7 @@ it('handles schema with invalid id format', function (): void {
 it('handles reserved schema id conflicts', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$reservedSchema       = validSchemaData();
 	$reservedSchema['id'] = 'blog'; // This should be a reserved schema
@@ -114,7 +116,7 @@ it('handles reserved schema id conflicts', function (): void {
 it('handles duplicate schema imports gracefully', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$schemaData       = validSchemaData();
 	$schemaData['id'] = 'duplicate-test';
@@ -137,7 +139,7 @@ it('handles duplicate schema imports gracefully', function (): void {
 it('handles schema with complex nested properties', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$complexSchema = [
 		'id'          => 'complex-schema-test',
@@ -199,7 +201,7 @@ it('handles schema with complex nested properties', function (): void {
 it('handles schema with $ref properties', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$schemaWithRefs = [
 		'id'          => 'ref-schema-test',
@@ -238,7 +240,7 @@ it('handles schema with $ref properties', function (): void {
 it('handles various field types correctly', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$fieldTypesSchema = [
 		'id'          => 'field-types-test',
@@ -293,7 +295,7 @@ it('handles various field types correctly', function (): void {
 it('validates that saved schema contains proper JSON schema structure', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$schemaData = validSchemaData();
 
@@ -319,7 +321,7 @@ it('validates that saved schema contains proper JSON schema structure', function
 it('can save schema via direct service call with malformed data', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	// Test with null data
 	expect(fn () => $schemaSaver->saveSchema(null))
@@ -341,7 +343,7 @@ it('can save schema via direct service call with malformed data', function (): v
 it('rejects formgrid authored as an array', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$schemaData             = validSchemaData();
 	$schemaData['id']       = 'formgrid-array-test';
@@ -354,7 +356,7 @@ it('rejects formgrid authored as an array', function (): void {
 it('rejects unmappable field types as invalid input instead of crashing', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$schemaData                = validSchemaData();
 	$schemaData['id']          = 'bad-type-test';
@@ -367,7 +369,7 @@ it('rejects unmappable field types as invalid input instead of crashing', functi
 it('validates schema properties correctly', function (): void {
 	$app         = bootstrap();
 	$container   = $app->getContainer();
-	$schemaSaver = $container->get(\TotalCMS\Domain\Schema\Service\SchemaSaver::class);
+	$schemaSaver = $container->get(SchemaSaver::class);
 
 	$schemaWithInvalidProperties = [
 		'id'          => 'invalid-props-test',

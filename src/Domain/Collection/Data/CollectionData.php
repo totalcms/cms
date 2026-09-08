@@ -47,7 +47,7 @@ class CollectionData
 	public const FORMAT_JSON     = 'json';
 	public const FORMAT_MARKDOWN = 'markdown';
 	/** @var list<string> */
-	public const FORMATS = [self::FORMAT_JSON, self::FORMAT_MARKDOWN];
+	public const FORMATS                  = [self::FORMAT_JSON, self::FORMAT_MARKDOWN];
 	public bool $requireEmailVerification = false;     // when true, public registration creates inactive users + sends a verification email
 	public int $count                     = 0;                    // total number of objects created in this collection
 	public int $totalObjects              = -1;                // current number of objects (-1 = not calculated yet)

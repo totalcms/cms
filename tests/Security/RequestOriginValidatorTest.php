@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use TotalCMS\Domain\Security\CSRF\OriginVerdict;
 use TotalCMS\Domain\Security\CSRF\RequestOriginValidator;
@@ -21,7 +22,7 @@ function originValidator(string $domain = 'example.com'): RequestOriginValidator
 	return new RequestOriginValidator($config);
 }
 
-function originRequest(string $uri = 'https://example.com/api/collections/blog/post-1'): Psr\Http\Message\ServerRequestInterface
+function originRequest(string $uri = 'https://example.com/api/collections/blog/post-1'): ServerRequestInterface
 {
 	return (new ServerRequestFactory())->createServerRequest('POST', $uri);
 }

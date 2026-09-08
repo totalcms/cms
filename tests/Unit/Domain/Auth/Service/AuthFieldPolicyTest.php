@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Auth\Service;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -16,7 +18,7 @@ use TotalCMS\Support\Config;
 
 final class AuthFieldPolicyTest extends TestCase
 {
-	private \Psr\Log\LoggerInterface $logger;
+	private LoggerInterface $logger;
 
 	protected function setUp(): void
 	{
@@ -68,9 +70,9 @@ final class AuthFieldPolicyTest extends TestCase
 	}
 
 	/** Collects log records so tests can assert on the audit trail. */
-	private function makeLogger(): \Psr\Log\LoggerInterface
+	private function makeLogger(): LoggerInterface
 	{
-		return new class extends \Psr\Log\AbstractLogger {
+		return new class extends AbstractLogger {
 			/** @var list<array{level:mixed,message:string,context:array<string,mixed>}> */
 			public array $records = [];
 

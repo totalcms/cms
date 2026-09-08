@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
 use Illuminate\Support\Collection;
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -24,14 +25,14 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class ObjectToolsTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $saver;
-	private \PHPUnit\Framework\MockObject\MockObject $updater;
-	private \PHPUnit\Framework\MockObject\MockObject $patcher;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $personaContext;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaResolver;
+	private MockObject $saver;
+	private MockObject $updater;
+	private MockObject $patcher;
+	private MockObject $schemaFetcher;
+	private MockObject $objectFetcher;
+	private MockObject $collectionFetcher;
+	private MockObject $personaContext;
+	private MockObject $schemaResolver;
 	private ObjectTools $tool;
 
 	// Final review fix (Critical #1/#1b) test knobs. schemaResolver/

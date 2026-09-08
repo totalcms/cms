@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Action\Admin\OAuth;
 
 use Odan\Session\PhpSession;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\NullLogger;
@@ -27,7 +28,7 @@ final class OAuthClientCreateActionTest extends TestCase
 	private OAuthClientCreateAction $action;
 	private OAuthClientRepository $clients;
 	private PhpSession $session;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private MockObject $request;
 	private string $clientsTmpFile;
 
 	protected function setUp(): void

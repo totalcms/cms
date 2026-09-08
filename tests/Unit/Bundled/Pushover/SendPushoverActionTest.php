@@ -7,6 +7,7 @@ namespace Tests\Unit\Bundled\Pushover;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Bundled\Pushover\PushoverService;
 use TotalCMS\Bundled\Pushover\SendPushoverAction;
@@ -235,7 +236,7 @@ final class SendPushoverActionTest extends TestCase
 	/**
 	 * @param array<string,mixed> $body
 	 */
-	private function buildRequest(array $body, string $remoteAddr = '127.0.0.1'): \Psr\Http\Message\ServerRequestInterface
+	private function buildRequest(array $body, string $remoteAddr = '127.0.0.1'): ServerRequestInterface
 	{
 		return $this->psr17->createServerRequest('POST', '/ext/totalcms/pushover/send', ['REMOTE_ADDR' => $remoteAddr])
 			->withParsedBody($body);

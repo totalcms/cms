@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Export;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,10 +16,10 @@ use TotalCMS\Domain\Export\Service\ObjectZipper;
 final class ExportZipActionTest extends TestCase
 {
 	private ExportZipAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionZipper;
-	private \PHPUnit\Framework\MockObject\MockObject $objectZipper;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $collectionZipper;
+	private MockObject $objectZipper;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

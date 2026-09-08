@@ -256,7 +256,7 @@ final readonly class PodcastTags
 		$plain = is_array($parts) && !isset($parts['query']) && !isset($parts['fragment']);
 		// Laminas only checks the last three characters, which an ImageWorks
 		// URL like `…/imageworks?w=3000&f=jpg` satisfies while Apple rejects it.
-		if (!$plain || !(str_ends_with($path, '.jpg') || str_ends_with($path, '.png'))) {
+		if (!$plain || !str_ends_with($path, '.jpg') && !str_ends_with($path, '.png')) {
 			throw $this->error(
 				"{$where} must be an absolute URL ending in .jpg or .png with no query string — Apple requires a 1400–3000px square JPEG or PNG. "
 				. 'An ImageWorks URL with parameters is not accepted; point at the stored file or a resized copy with a plain path.',

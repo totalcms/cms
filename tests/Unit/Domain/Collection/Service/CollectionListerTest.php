@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\Collection\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
@@ -10,7 +11,7 @@ use TotalCMS\Domain\Collection\Service\CollectionLister;
 final class CollectionListerTest extends TestCase
 {
 	private CollectionLister $lister;
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
+	private MockObject $storage;
 
 	protected function setUp(): void
 	{

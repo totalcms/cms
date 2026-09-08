@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\Builder\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -10,8 +11,8 @@ use TotalCMS\Support\Config;
 final class BuilderConfigServiceTest extends TestCase
 {
 	private BuilderConfigService $service;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private MockObject $config;
+	private MockObject $collectionFetcher;
 
 	protected function setUp(): void
 	{

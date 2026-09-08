@@ -12,8 +12,10 @@ use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Support\Config;
+use Twig\AbstractTwigCallable;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
@@ -39,7 +41,7 @@ function guardManagerWithContext(): array
 	$settingsStorage->method('fileExists')->willReturn(false);
 	$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-	$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
+	$manifestValidator = new ManifestValidator(test()->createMock(EditionFeatureService::class));
 	$discovery         = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 	$container         = test()->createMock(ContainerInterface::class);
 	$container->method('has')->willReturn(false);
@@ -187,7 +189,7 @@ describe('ExtensionManager guard wrapping', function (): void {
 
 		// is_safe lives on the protected $options property in Twig 4 — read it the
 		// same way the guard rebuild does to prove the flag is preserved verbatim.
-		$optionsProp = new ReflectionProperty(Twig\AbstractTwigCallable::class, 'options');
+		$optionsProp = new ReflectionProperty(AbstractTwigCallable::class, 'options');
 		$options     = $optionsProp->getValue($fn);
 		expect($options['is_safe'])->toBe(['html']);
 	});

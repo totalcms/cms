@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 
 use function TotalCMS\Slim\Pest\patch;
 use function TotalCMS\Slim\Pest\post;
@@ -25,7 +26,7 @@ beforeEach(function (): void {
 	file_put_contents($templateDir . 'thanks.twig', '<p class="thanks">Saved {{ object.title }} in {{ collection }}</p>');
 
 	$this->setUpApp(bootstrap());
-	$this->app->getContainer()->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)->fetchOrCreateReserved('blog');
+	$this->app->getContainer()->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
 });
 
 $fields = ['id' => 'hello', 'title' => 'Hello', 'created' => '2026-08-01T12:00:00+00:00', 'updated' => '2026-08-01T12:00:00+00:00'];

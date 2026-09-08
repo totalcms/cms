@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Import;
 
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
@@ -22,9 +23,9 @@ use TotalCMS\Factory\LoggerFactory;
 final class DeckCsvImporterTest extends TestCase
 {
 	private DeckCsvImporter $importer;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
+	private MockObject $objectFetcher;
+	private MockObject $objectUpdater;
+	private MockObject $schemaFetcher;
 
 	protected function setUp(): void
 	{

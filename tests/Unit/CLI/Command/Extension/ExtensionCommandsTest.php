@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\CLI\Command\Extension;
 
 use DI\Container;
+use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -17,6 +18,7 @@ use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Support\Config;
 use TotalCMS\TotalCMS;
@@ -37,14 +39,14 @@ function createTestDependencies(): array
 	$config          = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->datadir = $fixturesDir;
 
-	$manifestValidator = new ManifestValidator(test()->createMock(\TotalCMS\Domain\License\Service\EditionFeatureService::class));
+	$manifestValidator = new ManifestValidator(test()->createMock(EditionFeatureService::class));
 	$discovery         = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 
 	$settingsStorage = test()->createMock(StorageFilesystemAdapter::class);
 	$settingsStorage->method('fileExists')->willReturn(false);
 	$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-	$mockContainer = test()->createMock(\Psr\Container\ContainerInterface::class);
+	$mockContainer = test()->createMock(ContainerInterface::class);
 	$mockContainer->method('has')->willReturn(false);
 
 	$manager = new ExtensionManager(

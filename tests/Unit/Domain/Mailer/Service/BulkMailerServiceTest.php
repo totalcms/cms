@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mailer\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Index\Service\IndexFilter;
@@ -22,13 +23,13 @@ use TotalCMS\Factory\LoggerFactory;
 final class BulkMailerServiceTest extends TestCase
 {
 	private BulkMailerService $service;
-	private \PHPUnit\Framework\MockObject\MockObject $mailerFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $indexFilter;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
-	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
-	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
-	private \PHPUnit\Framework\MockObject\MockObject $logger;
+	private MockObject $mailerFetcher;
+	private MockObject $indexFilter;
+	private MockObject $objectFetcher;
+	private MockObject $jobQueuer;
+	private MockObject $editionFeatures;
+	private MockObject $twigEngine;
+	private MockObject $logger;
 
 	protected function setUp(): void
 	{

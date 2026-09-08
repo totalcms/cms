@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Export;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -13,9 +14,9 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 final class ExportSchemaActionTest extends TestCase
 {
 	private ExportSchemaAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $schemaFetcher;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

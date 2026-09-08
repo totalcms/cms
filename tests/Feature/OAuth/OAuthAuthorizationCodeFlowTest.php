@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use Slim\App;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
@@ -44,7 +45,7 @@ beforeEach(function (): void {
  *
  * @return array{privateKey: string, publicKey: string, tmpDir: string}
  */
-function setupOAuthKeys(Slim\App $app): array
+function setupOAuthKeys(App $app): array
 {
 	$tmpDir = sys_get_temp_dir() . '/oauth-test-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
@@ -90,7 +91,7 @@ function setupOAuthKeys(Slim\App $app): array
  * @param list<string> $scopes
  */
 function createTestClient(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $secret,
 	array $redirectUris,
@@ -118,7 +119,7 @@ function createTestClient(
  * Call this again before each subsequent handle() to reopen the session so
  * the stored oauth_authorize_request stash survives from GET → POST.
  */
-function seedSessionUser(Slim\App $app, string $userId): PhpSession
+function seedSessionUser(App $app, string $userId): PhpSession
 {
 	/** @var PhpSession $session */
 	$session = $app->getContainer()->get(PhpSession::class);
@@ -135,7 +136,7 @@ function seedSessionUser(Slim\App $app, string $userId): PhpSession
  * All previously stored session data (oauth_authorize_request stash) will
  * be accessible again once the session is restarted with the same ID.
  */
-function reopenSession(Slim\App $app): PhpSession
+function reopenSession(App $app): PhpSession
 {
 	/** @var PhpSession $session */
 	$session = $app->getContainer()->get(PhpSession::class);
@@ -151,7 +152,7 @@ function reopenSession(Slim\App $app): PhpSession
  * to /oauth/authorize because CSRFProtectionMiddleware sits on that route.
  * The session must already be started (call seedSessionUser/reopenSession first).
  */
-function mintCsrfToken(Slim\App $app): string
+function mintCsrfToken(App $app): string
 {
 	/** @var CSRFTokenManager $csrf */
 	$csrf = $app->getContainer()->get(CSRFTokenManager::class);

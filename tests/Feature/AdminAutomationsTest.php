@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
 use TotalCMS\Action\Admin\AdminAutomationsAction;
@@ -42,7 +43,7 @@ function saveAdminAutomation(object $container, string $id, string $handler, boo
 	]);
 }
 
-function adminRequest(string $method, string $path): Psr\Http\Message\ServerRequestInterface
+function adminRequest(string $method, string $path): ServerRequestInterface
 {
 	return (new ServerRequestFactory())->createServerRequest($method, $path);
 }

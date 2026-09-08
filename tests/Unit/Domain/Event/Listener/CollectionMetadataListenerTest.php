@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Event\Listener;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -16,8 +17,8 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 final class CollectionMetadataListenerTest extends TestCase
 {
 	private EventDispatcher $dispatcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
+	private MockObject $collectionSaver;
+	private MockObject $collectionFetcher;
 
 	protected function setUp(): void
 	{

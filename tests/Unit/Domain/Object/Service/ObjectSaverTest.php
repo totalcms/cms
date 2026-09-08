@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Object\Service;
 
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
@@ -20,10 +22,10 @@ use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 final class ObjectSaverTest extends TestCase
 {
 	private ObjectSaver $saver;
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
-	private \PHPUnit\Framework\MockObject\MockObject $factory;
-	private \PHPUnit\Framework\MockObject\MockObject $propertyProcessor;
-	private \PHPUnit\Framework\MockObject\MockObject $dateFieldResetter;
+	private MockObject $storage;
+	private MockObject $factory;
+	private MockObject $propertyProcessor;
+	private MockObject $dateFieldResetter;
 	private EventDispatcher $eventDispatcher;
 
 	/** @var array<string,mixed>|null */
@@ -36,7 +38,7 @@ final class ObjectSaverTest extends TestCase
 		$this->factory           = $this->createMock(ObjectFactory::class);
 		$this->propertyProcessor = $this->createMock(PropertyDataProcessorInterface::class);
 		$this->dateFieldResetter = $this->createMock(DateFieldResetter::class);
-		$this->eventDispatcher   = new EventDispatcher(new \Psr\Log\NullLogger());
+		$this->eventDispatcher   = new EventDispatcher(new NullLogger());
 
 		// Capture dispatched events
 		$this->eventDispatcher->listen('object.created', function (array $payload): void {

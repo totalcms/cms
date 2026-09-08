@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Setup;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,9 +15,9 @@ use TotalCMS\Renderer\RedirectRenderer;
 
 final class ErrorMonitoringSetupSubmitActionTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $settingsSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $setupState;
-	private \PHPUnit\Framework\MockObject\MockObject $redirectRenderer;
+	private MockObject $settingsSaver;
+	private MockObject $setupState;
+	private MockObject $redirectRenderer;
 	private ErrorMonitoringSetupSubmitAction $action;
 
 	protected function setUp(): void

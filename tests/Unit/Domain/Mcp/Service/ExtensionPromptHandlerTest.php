@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Mcp\Exception\PromptGetException;
 use Mcp\Server\ClientGateway;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Prompt\Handler\ExtensionPromptHandler;
@@ -100,7 +101,7 @@ it('refuses a caller whose persona cannot access the prompt', function (): void 
 	);
 
 	expect(fn () => $handler->get(['goal' => 'anything'], promptHandlerGateway()))
-		->toThrow(Mcp\Exception\PromptGetException::class);
+		->toThrow(PromptGetException::class);
 
 	// The guard must fire BEFORE the extension handler runs, not after.
 	expect($received->args)->toBeNull();

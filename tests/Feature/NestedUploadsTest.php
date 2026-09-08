@@ -36,7 +36,7 @@ beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
 	restoreFixtures();
 	$this->setUpApp(bootstrap());
-	$c = $this->app->getContainer();
+	$c       = $this->app->getContainer();
 	$schemas = $c->get(SchemaSaver::class);
 	$schemas->saveSchema(['id' => 'widget-card', 'type' => 'object', 'properties' => [
 		'id'    => ['$ref' => 'https://www.totalcms.co/schemas/properties/slug.json', 'field' => 'id'],
@@ -265,9 +265,9 @@ test('repair:files rebuilds a blanked image, file and video poster inside a {con
 	$this->app->getContainer()->get(ObjectUpdater::class)->updateObject('widgets', 'w1', $object);
 	expect(nestedValue(widget(), "{$prefix}/photo")['name'] ?? '')->toBe('');
 
-	$report = $this->app->getContainer()->get(CollectionFileRepairService::class)->apply('widgets', new RepairFilters());
+	$report  = $this->app->getContainer()->get(CollectionFileRepairService::class)->apply('widgets', new RepairFilters());
 	$applied = array_map(fn ($c) => $c->subpath, array_filter($report->candidates, fn ($c) => $c->applied === true));
-	$sub = str_contains($prefix, '/') ? substr($prefix, strpos($prefix, '/') + 1) . '/' : '';
+	$sub     = str_contains($prefix, '/') ? substr($prefix, strpos($prefix, '/') + 1) . '/' : '';
 	expect($applied)->toContain("{$sub}photo", "{$sub}doc", "{$sub}promo/poster");
 
 	$after = widget();

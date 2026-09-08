@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ServerRequestInterface;
+use Slim\App;
 use TotalCMS\Support\Config;
 
 beforeAll(function (): void {
@@ -21,7 +23,7 @@ beforeEach(function (): void {
  * Build a PSR-7 request with the given method, route, and optional Origin
  * header. Mirrors the pattern used by McpResourcesTest / McpSubscriptionsTest.
  */
-function corsRequest(string $method, string $path, ?string $origin = null): Psr\Http\Message\ServerRequestInterface
+function corsRequest(string $method, string $path, ?string $origin = null): ServerRequestInterface
 {
 	$request = (new Psr17Factory())->createServerRequest($method, $path);
 	if ($origin !== null) {
@@ -34,7 +36,7 @@ function corsRequest(string $method, string $path, ?string $origin = null): Psr\
 	return $request;
 }
 
-function setMcpAllowedOrigins(Slim\App $app, array $origins): void
+function setMcpAllowedOrigins(App $app, array $origins): void
 {
 	$app->getContainer()->get(Config::class)->mcp['allowedOrigins'] = $origins;
 }

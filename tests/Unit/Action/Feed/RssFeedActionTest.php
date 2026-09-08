@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Feed;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -13,10 +14,10 @@ use TotalCMS\Renderer\XmlRenderer;
 final class RssFeedActionTest extends TestCase
 {
 	private RssFeedAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $rssBuilder;
-	private \PHPUnit\Framework\MockObject\MockObject $xmlRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $rssBuilder;
+	private MockObject $xmlRenderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

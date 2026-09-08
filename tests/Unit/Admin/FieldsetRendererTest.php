@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Admin\FieldsetRenderer;
+use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormGridBuilder;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -160,7 +161,7 @@ describe('TotalForm fieldContent with formgrid fieldset', function (): void {
 		// Build real FormField stubs that produce identifiable HTML
 		$fields = [];
 		foreach (['title', 'email', 'phone'] as $name) {
-			$mock = test()->getMockBuilder(TotalCMS\Domain\Admin\FormField\FormField::class)
+			$mock = test()->getMockBuilder(FormField::class)
 				->disableOriginalConstructor()
 				->onlyMethods(['build'])
 				->getMock();

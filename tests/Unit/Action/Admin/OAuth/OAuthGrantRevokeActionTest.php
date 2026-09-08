@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Admin\OAuth;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Psr7\Response;
 use TotalCMS\Action\Admin\OAuth\OAuthGrantRevokeAction;
 use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
@@ -17,7 +19,7 @@ final class OAuthGrantRevokeActionTest extends TestCase
 	private OAuthGrantRevokeAction $action;
 	private OAuthGrantRepository $grants;
 	private JsonRenderer $jsonRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
+	private MockObject $request;
 	private string $grantsTmpFile;
 
 	protected function setUp(): void
@@ -55,7 +57,7 @@ final class OAuthGrantRevokeActionTest extends TestCase
 
 	private function makeSlimResponse(): ResponseInterface
 	{
-		return new \Slim\Psr7\Response();
+		return new Response();
 	}
 
 	public function testRevokesGrantSuccessfullyAndReturns200(): void

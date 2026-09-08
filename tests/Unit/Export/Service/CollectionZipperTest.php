@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Export\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Export\Service\CollectionZipper;
 use TotalCMS\Support\Config;
@@ -11,7 +12,7 @@ use TotalCMS\Support\Config;
 final class CollectionZipperTest extends TestCase
 {
 	private CollectionZipper $collectionZipper;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
+	private MockObject $config;
 	private string $tempDir;
 
 	protected function setUp(): void

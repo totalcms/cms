@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\ImageWorks;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\ImageWorks\Service\TextWatermarkFactory;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -15,10 +16,10 @@ use TotalCMS\Support\Config;
 class TextWatermarkFactoryTest extends TestCase
 {
 	private TextWatermarkFactory $textWatermarkFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $mockFilesystem;
+	private MockObject $mockFilesystem;
 	private Config $mockConfig;
-	private \PHPUnit\Framework\MockObject\MockObject $mockEditionFeatures;
-	private \PHPUnit\Framework\MockObject\MockObject $mockLoggerFactory;
+	private MockObject $mockEditionFeatures;
+	private MockObject $mockLoggerFactory;
 
 	protected function setUp(): void
 	{

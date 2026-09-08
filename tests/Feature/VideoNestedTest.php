@@ -28,7 +28,7 @@ beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
 	restoreFixtures();
 	$this->setUpApp(bootstrap());
-	$c = $this->app->getContainer();
+	$c       = $this->app->getContainer();
 	$schemas = $c->get(SchemaSaver::class);
 	$schemas->saveSchema(['id' => 'hero-card', 'type' => 'object', 'properties' => [
 		'id'      => ['$ref' => 'https://www.totalcms.co/schemas/properties/slug.json', 'field' => 'id'],
@@ -36,9 +36,9 @@ beforeEach(function (): void {
 		'promo'   => ['type' => 'video', 'field' => 'video', 'label' => 'Promo'],
 	]]);
 	$schemas->saveSchema(['id' => 'reels', 'type' => 'object', 'properties' => [
-		'id'    => ['$ref' => 'https://www.totalcms.co/schemas/properties/slug.json', 'field' => 'id'],
-		'title' => ['type' => 'string', 'field' => 'text'],
-		'hero'  => ['$ref' => 'https://www.totalcms.co/schemas/properties/card.json', 'field' => 'card', 'schemaref' => 'https://www.totalcms.co/schemas/custom/hero-card.json'],
+		'id'     => ['$ref' => 'https://www.totalcms.co/schemas/properties/slug.json', 'field' => 'id'],
+		'title'  => ['type' => 'string', 'field' => 'text'],
+		'hero'   => ['$ref' => 'https://www.totalcms.co/schemas/properties/card.json', 'field' => 'card', 'schemaref' => 'https://www.totalcms.co/schemas/custom/hero-card.json'],
 		'slides' => ['$ref' => 'https://www.totalcms.co/schemas/properties/deck.json', 'field' => 'deck', 'schemaref' => 'https://www.totalcms.co/schemas/custom/hero-card.json'],
 	], 'index' => ['id', 'title']]);
 	$c->get(CollectionSaver::class)->saveCollection(['id' => 'reels', 'name' => 'Reels', 'schema' => 'reels']);
@@ -72,7 +72,7 @@ it('resolves the provider of a video inside a card and inside a deck item on sav
 });
 
 it('accepts a bare URL string for a nested video, as CSV import and API clients send', function (): void {
-	$object = reelObject();
+	$object                  = reelObject();
 	$object['hero']['promo'] = 'https://youtu.be/abc123XYZ_-';
 	$this->saver->saveObject('reels', $object);
 

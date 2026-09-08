@@ -9,6 +9,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 
 /**
@@ -81,7 +82,7 @@ readonly class CollectionFormatConverter
 				continue;
 			}
 			$object = $this->objects->fetchObjectFromDisk($collectionId, $id);
-			if ($object === null) {
+			if (!$object instanceof ObjectData) {
 				$failed[$id] = 'read';
 				$this->logger->error('collection:convert could not read an object; left as is', ['collection' => $collectionId, 'id' => $id, 'reason' => 'read']);
 				continue;

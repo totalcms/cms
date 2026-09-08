@@ -3,6 +3,7 @@
 namespace Tests\Unit\Middleware;
 
 use Odan\Session\SessionManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,8 +13,8 @@ use TotalCMS\Middleware\LazySessionStartMiddleware;
 
 final class LazySessionStartMiddlewareTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $session;
-	private \PHPUnit\Framework\MockObject\MockObject $handler;
+	private MockObject $session;
+	private MockObject $handler;
 	private LazySessionStartMiddleware $middleware;
 
 	protected function setUp(): void

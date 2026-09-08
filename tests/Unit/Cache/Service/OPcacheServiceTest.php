@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Cache\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Cache\Service\CacheInterface;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 
 final class OPcacheServiceTest extends TestCase
@@ -208,7 +209,7 @@ final class OPcacheServiceTest extends TestCase
 
 	public function testImplementsCacheInterface(): void
 	{
-		$this->assertInstanceOf(\TotalCMS\Domain\Cache\Service\CacheInterface::class, $this->opcacheService);
+		$this->assertInstanceOf(CacheInterface::class, $this->opcacheService);
 	}
 
 	public function testHasRequiredMethods(): void

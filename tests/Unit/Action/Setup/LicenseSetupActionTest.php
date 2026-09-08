@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Action\Setup;
 
 use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -17,10 +18,10 @@ use TotalCMS\Renderer\TwigRenderer;
 
 final class LicenseSetupActionTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $twigRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $licenseValidator;
-	private \PHPUnit\Framework\MockObject\MockObject $setupState;
-	private \PHPUnit\Framework\MockObject\MockObject $session;
+	private MockObject $twigRenderer;
+	private MockObject $licenseValidator;
+	private MockObject $setupState;
+	private MockObject $session;
 	private LicenseSetupAction $action;
 
 	protected function setUp(): void

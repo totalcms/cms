@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Setup;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Settings\Services\DataDirectoryManager;
@@ -22,11 +23,11 @@ final class DataPathInstallerTest extends TestCase
 	private Config $config;
 	private DataPathInstaller $installer;
 
-	/** @var \PHPUnit\Framework\MockObject\MockObject&InstallationSettingsSaver */
-	private \PHPUnit\Framework\MockObject\MockObject $settingsSaver;
+	/** @var MockObject&InstallationSettingsSaver */
+	private MockObject $settingsSaver;
 
-	/** @var \PHPUnit\Framework\MockObject\MockObject&CacheManager */
-	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
+	/** @var MockObject&CacheManager */
+	private MockObject $cacheManager;
 
 	protected function setUp(): void
 	{

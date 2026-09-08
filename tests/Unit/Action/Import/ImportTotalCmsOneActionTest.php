@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Import;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,10 +13,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ImportTotalCmsOneActionTest extends TestCase
 {
 	private ImportTotalCmsOneAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $importer;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $importer;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 	private string $testDataPath;
 	private string $originalDocRoot;
 

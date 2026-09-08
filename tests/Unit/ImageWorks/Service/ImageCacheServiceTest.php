@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\ImageWorks\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
@@ -12,8 +13,8 @@ use TotalCMS\Support\Config;
 class ImageCacheServiceTest extends TestCase
 {
 	private ImageCacheService $service;
-	private \PHPUnit\Framework\MockObject\MockObject $mockConfig;
-	private \PHPUnit\Framework\MockObject\MockObject $mockCacheManager;
+	private MockObject $mockConfig;
+	private MockObject $mockCacheManager;
 	private string $testDataDir;
 
 	protected function setUp(): void

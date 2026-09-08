@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Cache;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
@@ -26,8 +28,8 @@ use TotalCMS\Support\Config;
  */
 final class CacheManagerClearDataOpcacheTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $opcacheService;
-	private \PHPUnit\Framework\MockObject\MockObject $filesystemService;
+	private MockObject $opcacheService;
+	private MockObject $filesystemService;
 	private CacheManager $cacheManager;
 
 	protected function setUp(): void
@@ -51,7 +53,7 @@ final class CacheManagerClearDataOpcacheTest extends TestCase
 		$apcu->method('isAvailable')->willReturn(false);
 
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
-		$loggerFactory->method('createLogger')->willReturn($this->createMock(\Psr\Log\LoggerInterface::class));
+		$loggerFactory->method('createLogger')->willReturn($this->createMock(LoggerInterface::class));
 
 		$this->cacheManager = new CacheManager(
 			$this->filesystemService,
@@ -62,7 +64,7 @@ final class CacheManagerClearDataOpcacheTest extends TestCase
 			$this->createMock(WatermarkCleanupService::class),
 			$this->createMock(DevModeManager::class),
 			$this->createMock(CacheInvalidationSignal::class),
-			new EventDispatcher($this->createMock(\Psr\Log\LoggerInterface::class)),
+			new EventDispatcher($this->createMock(LoggerInterface::class)),
 			$config,
 			$loggerFactory,
 		);

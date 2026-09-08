@@ -3,6 +3,7 @@
 namespace Tests\Unit\Domain\Index\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Query\Service\ObjectFilter;
@@ -22,7 +23,7 @@ final class IndexFilterTest extends TestCase
 
 	public function testFetchFilteredIndexLoadsAndFilters(): void
 	{
-		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+		$indexData = new IndexData([
 			['id' => '1', 'published' => true, 'draft' => false],
 			['id' => '2', 'published' => true, 'draft' => true],
 			['id' => '3', 'published' => false, 'draft' => false],
@@ -43,7 +44,7 @@ final class IndexFilterTest extends TestCase
 
 	public function testFetchFilteredIndexWithNoFiltersReturnsAll(): void
 	{
-		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+		$indexData = new IndexData([
 			['id' => '1', 'title' => 'Post 1'],
 			['id' => '2', 'title' => 'Post 2'],
 		]);
@@ -59,7 +60,7 @@ final class IndexFilterTest extends TestCase
 
 	public function testFetchFilteredIndexDataReturnsIndexData(): void
 	{
-		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+		$indexData = new IndexData([
 			['id' => '1', 'published' => true],
 			['id' => '2', 'published' => false],
 			['id' => '3', 'published' => true],
@@ -71,7 +72,7 @@ final class IndexFilterTest extends TestCase
 
 		$result = $this->filter->fetchFilteredIndexData('blog', ['include' => 'published:true']);
 
-		$this->assertInstanceOf(\TotalCMS\Domain\Index\Data\IndexData::class, $result);
+		$this->assertInstanceOf(IndexData::class, $result);
 		$this->assertCount(2, $result->objects);
 		$this->assertSame('1', $result->objects[0]['id']);
 		$this->assertSame('3', $result->objects[1]['id']);
@@ -427,7 +428,7 @@ final class IndexFilterTest extends TestCase
 
 	public function testFetchFilteredIndexWithSortAscending(): void
 	{
-		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+		$indexData = new IndexData([
 			['id' => '2', 'title' => 'Banana'],
 			['id' => '1', 'title' => 'Apple'],
 			['id' => '3', 'title' => 'Cherry'],
@@ -446,7 +447,7 @@ final class IndexFilterTest extends TestCase
 
 	public function testFetchFilteredIndexWithSortDescending(): void
 	{
-		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+		$indexData = new IndexData([
 			['id' => '2', 'title' => 'Banana'],
 			['id' => '1', 'title' => 'Apple'],
 			['id' => '3', 'title' => 'Cherry'],
@@ -465,7 +466,7 @@ final class IndexFilterTest extends TestCase
 
 	public function testFetchFilteredIndexDataWithSort(): void
 	{
-		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+		$indexData = new IndexData([
 			['id' => '3', 'title' => 'Cherry'],
 			['id' => '1', 'title' => 'Apple'],
 			['id' => '2', 'title' => 'Banana'],
@@ -484,7 +485,7 @@ final class IndexFilterTest extends TestCase
 
 	public function testFetchFilteredIndexWithFilterAndSort(): void
 	{
-		$indexData = new \TotalCMS\Domain\Index\Data\IndexData([
+		$indexData = new IndexData([
 			['id' => '1', 'title' => 'Cherry', 'published' => true],
 			['id' => '2', 'title' => 'Apple', 'published' => false],
 			['id' => '3', 'title' => 'Banana', 'published' => true],

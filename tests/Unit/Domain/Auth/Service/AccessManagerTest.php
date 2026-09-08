@@ -3,6 +3,7 @@
 namespace Tests\Unit\Domain\Auth\Service;
 
 use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\AccessManager;
@@ -15,10 +16,10 @@ use TotalCMS\Support\Config;
 final class AccessManagerTest extends TestCase
 {
 	private AccessManager $accessManager;
-	private \PHPUnit\Framework\MockObject\MockObject $session;
+	private MockObject $session;
 	private Config $config;
-	private \PHPUnit\Framework\MockObject\MockObject $userValidator;
-	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
+	private MockObject $userValidator;
+	private MockObject $loggerFactory;
 
 	protected function setUp(): void
 	{

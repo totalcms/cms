@@ -2,8 +2,24 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Automation\Service\AutomationLoader;
+use TotalCMS\Domain\Automation\Service\AutomationQueue;
+use TotalCMS\Domain\Automation\Service\AutomationRunner;
+use TotalCMS\Domain\Automation\Service\AutomationStateStore;
+use TotalCMS\Domain\Automation\Service\ScheduleTicker;
+use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderFrontendInstaller;
+use TotalCMS\Domain\Builder\Service\StarterService;
+use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
+use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Migration\Service\MigrationRunner;
+use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
+use TotalCMS\Domain\Repair\Service\CollectionFileRepairService;
 use TotalCMS\Domain\Search\Job\ReindexJob;
+use TotalCMS\Support\Config;
 use TotalCMS\TotalCMS;
 
 beforeEach(function (): void {
@@ -76,22 +92,22 @@ it('resolves services CLI commands fetch directly from the container', function 
 	$container = $this->app->getContainer();
 
 	$services = [
-		\TotalCMS\Domain\Automation\Service\AutomationQueue::class,
-		\TotalCMS\Domain\Automation\Service\AutomationLoader::class,
-		\TotalCMS\Domain\Automation\Service\AutomationRunner::class,
-		\TotalCMS\Domain\Automation\Service\AutomationStateStore::class,
-		\TotalCMS\Domain\Automation\Service\ScheduleTicker::class,
-		\TotalCMS\Domain\Builder\Service\BuilderConfigService::class,
-		\TotalCMS\Domain\Builder\Service\BuilderFrontendInstaller::class,
-		\TotalCMS\Domain\Builder\Service\StarterService::class,
-		\TotalCMS\Domain\Repair\Service\CollectionFileRepairService::class,
-		\TotalCMS\Domain\Extension\Service\ExtensionDiscovery::class,
-		\TotalCMS\Domain\Extension\Service\ExtensionManager::class,
-		\TotalCMS\Domain\Extension\Repository\ExtensionStateRepository::class,
-		\TotalCMS\Domain\Migration\Service\MigrationRunner::class,
-		\TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository::class,
-		\TotalCMS\Domain\License\Service\EditionFeatureService::class,
-		\TotalCMS\Support\Config::class,
+		AutomationQueue::class,
+		AutomationLoader::class,
+		AutomationRunner::class,
+		AutomationStateStore::class,
+		ScheduleTicker::class,
+		BuilderConfigService::class,
+		BuilderFrontendInstaller::class,
+		StarterService::class,
+		CollectionFileRepairService::class,
+		ExtensionDiscovery::class,
+		ExtensionManager::class,
+		ExtensionStateRepository::class,
+		MigrationRunner::class,
+		OAuthGrantRepository::class,
+		EditionFeatureService::class,
+		Config::class,
 	];
 
 	$failures = [];

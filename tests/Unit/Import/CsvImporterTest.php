@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Import;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Import\CsvImporter;
@@ -19,12 +21,12 @@ use TotalCMS\Factory\LoggerFactory;
 final class CsvImporterTest extends TestCase
 {
 	private CsvImporter $csvImporter;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectImporter;
-	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
-	private \PHPUnit\Framework\MockObject\MockObject $logger;
-	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
+	private MockObject $collectionFetcher;
+	private MockObject $objectFetcher;
+	private MockObject $objectImporter;
+	private MockObject $jobQueuer;
+	private MockObject $logger;
+	private MockObject $loggerFactory;
 
 	protected function setUp(): void
 	{
@@ -44,7 +46,7 @@ final class CsvImporterTest extends TestCase
 			$this->collectionFetcher,
 			$this->objectFetcher,
 			$this->objectImporter,
-			new EventDispatcher(new \Psr\Log\NullLogger()),
+			new EventDispatcher(new NullLogger()),
 			$this->jobQueuer,
 			$this->loggerFactory
 		);

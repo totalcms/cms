@@ -1,6 +1,7 @@
 <?php
 
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFunctions;
+use Twig\TwigFunction;
 
 describe('TotalCMSTwigFunctions', function (): void {
 	// -------------------------
@@ -14,13 +15,13 @@ describe('TotalCMSTwigFunctions', function (): void {
 		expect(count($functions))->toBeGreaterThan(0);
 
 		foreach ($functions as $function) {
-			expect($function)->toBeInstanceOf(Twig\TwigFunction::class);
+			expect($function)->toBeInstanceOf(TwigFunction::class);
 		}
 	});
 
 	test('TotalCMSTwigFunctions → includes all custom functions in function list', function (): void {
 		$functions     = TotalCMSTwigFunctions::getFunctions();
-		$functionNames = array_map(fn (Twig\TwigFunction $function): string => $function->getName(), $functions);
+		$functionNames = array_map(fn (TwigFunction $function): string => $function->getName(), $functions);
 
 		foreach (TotalCMSTwigFunctions::$customFunctions as $customFunction) {
 			expect($functionNames)->toContain($customFunction);
@@ -29,7 +30,7 @@ describe('TotalCMSTwigFunctions', function (): void {
 
 	test('TotalCMSTwigFunctions → includes all PHP functions in function list', function (): void {
 		$functions     = TotalCMSTwigFunctions::getFunctions();
-		$functionNames = array_map(fn (Twig\TwigFunction $function): string => $function->getName(), $functions);
+		$functionNames = array_map(fn (TwigFunction $function): string => $function->getName(), $functions);
 
 		foreach (TotalCMSTwigFunctions::$phpFunctions as $phpFunction) {
 			expect($functionNames)->toContain($phpFunction);

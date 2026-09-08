@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Auth\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupManager;
 use TotalCMS\Domain\Auth\Service\FirstLoginChecker;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
 
 final class FirstLoginCheckerTest extends TestCase
 {
 	private FirstLoginChecker $checker;
-	private \PHPUnit\Framework\MockObject\MockObject $objectSaver;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
-	private \PHPUnit\Framework\MockObject\MockObject $accessGroupManager;
+	private MockObject $objectSaver;
+	private MockObject $collectionFetcher;
+	private MockObject $indexReader;
+	private MockObject $accessGroupManager;
 	private Config $config;
 
 	protected function setUp(): void
@@ -50,7 +52,7 @@ final class FirstLoginCheckerTest extends TestCase
 			->willReturnCallback(function (string $collection, array $data) use (&$captured) {
 				$captured = $data;
 
-				return $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+				return $this->createMock(ObjectData::class);
 			});
 
 		$this->checker->createFirstUser('a@b.com', 'password123', 'Joe Workman');
@@ -67,7 +69,7 @@ final class FirstLoginCheckerTest extends TestCase
 			->willReturnCallback(function (string $collection, array $data) use (&$captured) {
 				$captured = $data;
 
-				return $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+				return $this->createMock(ObjectData::class);
 			});
 
 		$this->checker->createFirstUser('a@b.com', 'password123');
@@ -83,7 +85,7 @@ final class FirstLoginCheckerTest extends TestCase
 			->willReturnCallback(function (string $collection, array $data) use (&$captured) {
 				$captured = $data;
 
-				return $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+				return $this->createMock(ObjectData::class);
 			});
 
 		$this->checker->createFirstUser('a@b.com', 'password123', '   ');
@@ -102,7 +104,7 @@ final class FirstLoginCheckerTest extends TestCase
 			->willReturnCallback(function (string $collection, array $data) use (&$captured) {
 				$captured = $data;
 
-				return $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+				return $this->createMock(ObjectData::class);
 			});
 
 		$this->checker->createFirstUser('a@b.com', 'password123', 'Joe Workman');

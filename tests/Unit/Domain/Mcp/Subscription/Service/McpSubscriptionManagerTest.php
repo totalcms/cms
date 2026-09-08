@@ -9,6 +9,7 @@ use Mcp\Server\Protocol;
 use Mcp\Server\Session\SessionInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
 use Symfony\Component\Uid\Uuid;
 use TotalCMS\Domain\Mcp\Subscription\Service\McpSubscriptionManager;
 use TotalCMS\Domain\Mcp\Subscription\Service\SubscriptionIndex;
@@ -264,7 +265,7 @@ final class McpSubscriptionManagerTest extends TestCase
 /**
  * Minimal PSR-3 logger that records every call for assertion.
  */
-final class TestRecordingLogger extends \Psr\Log\AbstractLogger
+final class TestRecordingLogger extends AbstractLogger
 {
 	/** @var list<array{level: string, message: string, context: array<string,mixed>}> */
 	public array $records = [];

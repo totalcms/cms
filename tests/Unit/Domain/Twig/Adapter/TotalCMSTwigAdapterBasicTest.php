@@ -5,13 +5,45 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
+use TotalCMS\Domain\Automation\Service\AutomationLoader;
+use TotalCMS\Domain\Automation\Service\AutomationRunReader;
+use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
+use TotalCMS\Domain\Cache\CacheReporter;
+use TotalCMS\Domain\Cache\CacheSizingAdvisor;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Cron\Service\CronTokenProvider;
+use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
+use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
+use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\JobQueue\Repository\JobRepository;
+use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
-use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
+use TotalCMS\Domain\Twig\Service\GridRenderer;
+use TotalCMS\Domain\Twig\Service\HtmxRenderer;
+use TotalCMS\Domain\Twig\Service\JobQueueRenderer;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
+use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
 
 final class TotalCMSTwigAdapterBasicTest extends TestCase
@@ -144,10 +176,10 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testLoginUrlGeneration(): void
 	{
-		$adapter = $this->createPartialMock(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class, []);
+		$adapter = $this->createPartialMock(AuthTwigAdapter::class, []);
 
 		// Inject config with api
-		$reflection  = new \ReflectionClass(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class);
+		$reflection  = new \ReflectionClass(AuthTwigAdapter::class);
 		$configProp  = $reflection->getProperty('config');
 		$config      = $this->createMock(Config::class);
 		$config->api = '';
@@ -197,13 +229,13 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 			'smtp'       => [],
 			'mailer'     => [],
 		]);
-		$jobRepository = new \TotalCMS\Domain\JobQueue\Repository\JobRepository($config);
-		$jobManager    = new \TotalCMS\Domain\JobQueue\Service\JobManager($jobRepository);
+		$jobRepository = new JobRepository($config);
+		$jobManager    = new JobManager($jobRepository);
 		$jobManager->clearQueue();
 
-		$adapter = $this->createPartialMock(\TotalCMS\Domain\Twig\Service\JobQueueRenderer::class, []);
+		$adapter = $this->createPartialMock(JobQueueRenderer::class, []);
 
-		$reflection = new \ReflectionClass(\TotalCMS\Domain\Twig\Service\JobQueueRenderer::class);
+		$reflection = new \ReflectionClass(JobQueueRenderer::class);
 		$property   = $reflection->getProperty('jobManager');
 		$property->setValue($adapter, $jobManager);
 
@@ -236,13 +268,13 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 			'smtp'       => [],
 			'mailer'     => [],
 		]);
-		$jobRepository = new \TotalCMS\Domain\JobQueue\Repository\JobRepository($config);
-		$jobManager    = new \TotalCMS\Domain\JobQueue\Service\JobManager($jobRepository);
+		$jobRepository = new JobRepository($config);
+		$jobManager    = new JobManager($jobRepository);
 		$jobManager->clearQueue();
 
-		$adapter = $this->createPartialMock(\TotalCMS\Domain\Twig\Service\JobQueueRenderer::class, []);
+		$adapter = $this->createPartialMock(JobQueueRenderer::class, []);
 
-		$reflection = new \ReflectionClass(\TotalCMS\Domain\Twig\Service\JobQueueRenderer::class);
+		$reflection = new \ReflectionClass(JobQueueRenderer::class);
 		$property   = $reflection->getProperty('jobManager');
 		$property->setValue($adapter, $jobManager);
 
@@ -359,33 +391,33 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 		$adapter = buildAdminTwigAdapter(
 			$config,
-			$this->createMock(\TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaLister::class),
-			$this->createMock(\TotalCMS\Domain\Template\Service\TemplateLister::class),
-			$this->createMock(\TotalCMS\Domain\JobQueue\Service\JobManager::class),
-			$this->createMock(\TotalCMS\Domain\Cache\Service\DevModeManager::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionEditionService::class),
-			$this->createMock(\TotalCMS\Domain\Cache\CacheReporter::class),
-			$this->createMock(\TotalCMS\Domain\License\Service\LicenseStatus::class),
-			$this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class),
-			$this->createMock(\TotalCMS\Infrastructure\Diagnostics\ServerChecker::class),
-			$this->createMock(\TotalCMS\Infrastructure\Diagnostics\LogAnalyzer::class),
-			$this->createMock(\TotalCMS\Domain\ImageWorks\Service\ImageCacheService::class),
-			$this->createMock(\TotalCMS\Domain\Cache\CacheSizingAdvisor::class),
-			$this->createMock(\TotalCMS\Domain\Update\Service\UpdateChecker::class),
-			$this->createMock(\TotalCMS\Domain\Builder\Service\BuilderConfigService::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			$this->createMock(\TotalCMS\Domain\Builder\Service\BuilderTemplatePaths::class),
-			$this->createMock(\TotalCMS\Domain\JobQueue\Service\JobQueueHealth::class),
+			$this->createMock(AuthTwigAdapter::class),
+			$this->createMock(CollectionLister::class),
+			$this->createMock(SchemaLister::class),
+			$this->createMock(TemplateLister::class),
+			$this->createMock(JobManager::class),
+			$this->createMock(DevModeManager::class),
+			$this->createMock(CollectionEditionService::class),
+			$this->createMock(CacheReporter::class),
+			$this->createMock(LicenseStatus::class),
+			$this->createMock(IndexReader::class),
+			$this->createMock(ServerChecker::class),
+			$this->createMock(LogAnalyzer::class),
+			$this->createMock(ImageCacheService::class),
+			$this->createMock(CacheSizingAdvisor::class),
+			$this->createMock(UpdateChecker::class),
+			$this->createMock(BuilderConfigService::class),
+			$this->createMock(CollectionFetcher::class),
+			$this->createMock(BuilderTemplatePaths::class),
+			$this->createMock(JobQueueHealth::class),
 			$this->createMock(TranslationService::class),
-			$this->createMock(\TotalCMS\Domain\License\Service\EditionFeatureService::class),
-			(new \ReflectionClass(\TotalCMS\Domain\Automation\Service\AutomationLoader::class))->newInstanceWithoutConstructor(),
-			(new \ReflectionClass(\TotalCMS\Domain\Automation\Service\AutomationRunReader::class))->newInstanceWithoutConstructor(),
-			(new \ReflectionClass(\TotalCMS\Domain\Extension\Repository\ExtensionStateRepository::class))->newInstanceWithoutConstructor(),
+			$this->createMock(EditionFeatureService::class),
+			(new \ReflectionClass(AutomationLoader::class))->newInstanceWithoutConstructor(),
+			(new \ReflectionClass(AutomationRunReader::class))->newInstanceWithoutConstructor(),
+			(new \ReflectionClass(ExtensionStateRepository::class))->newInstanceWithoutConstructor(),
 			// final readonly, so it cannot be doubled — this adapter only needs it
 			// for cronUrl(), which these tests do not exercise.
-			(new \ReflectionClass(\TotalCMS\Domain\Cron\Service\CronTokenProvider::class))->newInstanceWithoutConstructor(),
+			(new \ReflectionClass(CronTokenProvider::class))->newInstanceWithoutConstructor(),
 		);
 
 		// Mock $_SERVER for test
@@ -452,18 +484,18 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testDepotAccessor(): void
 	{
-		$mockObject = $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+		$mockObject = $this->createMock(ObjectData::class);
 		$mockObject->method('toArray')->willReturn([
 			'id'    => 'test-id',
 			'depot' => [['name' => 'file.pdf']],
 		]);
 
-		$objectFetcher = $this->createMock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class);
+		$objectFetcher = $this->createMock(ObjectFetcher::class);
 		$objectFetcher->method('fetchObject')->willReturn($mockObject);
 
-		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
-		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
 		$config      = $this->createMock(Config::class);
 		$config->api = '';
@@ -476,19 +508,19 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testPaginationMethods(): void
 	{
-		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
+		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
-		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
 		$adapter = buildRenderTwigAdapter(
-			$this->createMock(\TotalCMS\Domain\Twig\Service\HtmxRenderer::class),
+			$this->createMock(HtmxRenderer::class),
 			$this->createMock(Config::class),
 			$this->createMock(DataTwigAdapter::class),
 			$this->createMock(MediaTwigAdapter::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class),
-			$this->createMock(\TotalCMS\Domain\Collection\Service\CollectionLister::class),
-			$this->createMock(\TotalCMS\Domain\Schema\Service\SchemaFetcher::class),
-			$this->createMock(\TotalCMS\Domain\Twig\Service\GridRenderer::class),
+			$this->createMock(CollectionFetcher::class),
+			$this->createMock(CollectionLister::class),
+			$this->createMock(SchemaFetcher::class),
+			$this->createMock(GridRenderer::class),
 			$loggerFactory,
 		);
 

@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Builder\Service;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Builder\Data\StarterManifest;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Builder\Service\StarterService;
@@ -92,7 +93,7 @@ final class StarterServiceTest extends TestCase
 		$starters = $this->service->listStarters();
 
 		$this->assertCount(2, $starters);
-		$names = array_map(static fn (\TotalCMS\Domain\Builder\Data\StarterManifest $s): string => $s->name, $starters);
+		$names = array_map(static fn (StarterManifest $s): string => $s->name, $starters);
 		$this->assertContains('Blog', $names);
 		$this->assertContains('Portfolio', $names);
 	}

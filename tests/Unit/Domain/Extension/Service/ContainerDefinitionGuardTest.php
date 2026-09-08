@@ -2,13 +2,16 @@
 
 declare(strict_types=1);
 
+use DI\Container;
 use Psr\Log\AbstractLogger;
+use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
 use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Support\Config;
 
@@ -22,7 +25,7 @@ use TotalCMS\Support\Config;
  * with a warning, and the extension itself still loads.
  */
 
-/** @return array{0: ExtensionManager, 1: DI\Container, 2: object} */
+/** @return array{0: ExtensionManager, 1: Container, 2: object} */
 function containerGuardSetup(): array
 {
 	$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
@@ -42,7 +45,7 @@ function containerGuardSetup(): array
 	$settingsStorage->method('fileExists')->willReturn(false);
 	$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-	$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
+	$manifestValidator = new ManifestValidator(test()->createMock(EditionFeatureService::class));
 
 	$logger = new class extends AbstractLogger {
 		/** @var list<array{level: mixed, message: string}> */
@@ -56,7 +59,7 @@ function containerGuardSetup(): array
 
 	// Real PHP-DI container so the definition-apply path actually runs.
 	// 'core.protected-entry' stands in for an explicitly defined core entry.
-	$container = new DI\Container();
+	$container = new Container();
 	$container->set('core.protected-entry', (object)['source' => 'core']);
 
 	$discovery = new ExtensionDiscovery($config, $manifestValidator, $logger);
@@ -106,7 +109,7 @@ describe('Container definition override guard', function (): void {
 		$reflection = new ReflectionMethod($manager, 'isProtectedServiceId');
 
 		expect($reflection->invoke($manager, 'TotalCMS\\Bundled\\Pushover\\PushoverService', []))->toBeFalse()
-			->and($reflection->invoke($manager, TotalCMS\Domain\Auth\Service\LoginService::class, []))->toBeTrue()
+			->and($reflection->invoke($manager, LoginService::class, []))->toBeTrue()
 			->and($reflection->invoke($manager, 'Acme\\Anything\\Service', []))->toBeFalse()
 			->and($reflection->invoke($manager, 'Acme\\Anything\\Service', ['Acme\\Anything\\Service' => 0]))->toBeTrue();
 	});

@@ -9,6 +9,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 use TotalCMS\CLI\Command\PushCommand;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
+use TotalCMS\Domain\Sync\Data\SyncableCollections;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Support\OperationResult;
 use TotalCMS\TotalCMS;
@@ -278,7 +279,7 @@ it('offers every feature flag', function (string $flag): void {
 	$command = new PushCommand($this->totalcms);
 
 	expect($command->getDefinition()->hasOption($flag))->toBeTrue();
-})->with(array_keys(\TotalCMS\Domain\Sync\Data\SyncableCollections::FEATURE_FLAGS));
+})->with(array_keys(SyncableCollections::FEATURE_FLAGS));
 
 it('parses a bare --objects collection as all objects', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);

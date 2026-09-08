@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Container\ContainerInterface;
 use Slim\App;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 
@@ -28,7 +29,7 @@ use TotalCMS\Domain\Auth\Service\OperationDetector;
  * otherwise add it to EXEMPT here.
  */
 test('every named route is mapped in OperationDetector or explicitly exempt', function (): void {
-	/** @var App<Psr\Container\ContainerInterface> $app */
+	/** @var App<ContainerInterface> $app */
 	$app = bootstrap();
 
 	$routeNames = [];

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/XmlRpcTestHelpers.php';
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 
@@ -26,8 +28,8 @@ beforeEach(function (): void {
 	enableXmlRpc();
 
 	$container = $this->app->getContainer();
-	$container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)->fetchOrCreateReserved('blog');
-	$container->get(TotalCMS\Domain\Collection\Service\CollectionSaver::class)
+	$container->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
+	$container->get(CollectionSaver::class)
 		->saveCollection(['id' => 'news', 'name' => 'News', 'schema' => 'blog']);
 });
 

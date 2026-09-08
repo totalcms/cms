@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Tool\Content;
 
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Mcp\Tool\Content\GetObjectTool;
 use TotalCMS\Domain\Mcp\Tool\Content\GetResourceTool;
@@ -12,7 +13,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class GetResourceToolTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $getObject;
+	private MockObject $getObject;
 	private GetResourceTool $tool;
 
 	protected function setUp(): void

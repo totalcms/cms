@@ -12,8 +12,10 @@ use TotalCMS\Domain\Extension\Service\ExtensionDependencySorter;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionGuard;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\Extension\Service\ExtensionProfiler;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Support\Config;
 
@@ -93,7 +95,7 @@ function quarantineCache(array &$store): CacheManager
  *
  * @return array{0: ExtensionManager, 1: ExtensionStateRepository}
  */
-function quarantineManager(ExtensionStateRepository $stateRepo, ExtensionGuard $guard, ?TotalCMS\Domain\Extension\Service\ExtensionProfiler $profiler = null): array
+function quarantineManager(ExtensionStateRepository $stateRepo, ExtensionGuard $guard, ?ExtensionProfiler $profiler = null): array
 {
 	$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->datadir = dirname(__DIR__, 4) . '/fixtures';
@@ -102,7 +104,7 @@ function quarantineManager(ExtensionStateRepository $stateRepo, ExtensionGuard $
 	$settingsStorage->method('fileExists')->willReturn(false);
 	$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-	$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
+	$manifestValidator = new ManifestValidator(test()->createMock(EditionFeatureService::class));
 	$discovery         = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 	$container         = test()->createMock(ContainerInterface::class);
 	$container->method('has')->willReturn(false);
@@ -132,13 +134,13 @@ function quarantineGuard(ExtensionStateRepository $stateRepo, CacheManager $cach
 }
 
 /** Build a profiler that reads/writes the shared $cache, so metricsFor() can be exercised. */
-function quarantineProfiler(CacheManager $cache): TotalCMS\Domain\Extension\Service\ExtensionProfiler
+function quarantineProfiler(CacheManager $cache): ExtensionProfiler
 {
 	$config      = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->env = 'dev';
 	$env         = new EnvironmentResolver($config, false);
 
-	return new TotalCMS\Domain\Extension\Service\ExtensionProfiler($env, $cache, 0, new NullLogger());
+	return new ExtensionProfiler($env, $cache, 0, new NullLogger());
 }
 
 describe('ExtensionManager quarantine enforcement', function (): void {

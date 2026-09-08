@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mailer\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Mailer\Data\MailerData;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
@@ -13,7 +14,7 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 final class MailerFetcherTest extends TestCase
 {
 	private MailerFetcher $fetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectRepository;
+	private MockObject $objectRepository;
 
 	protected function setUp(): void
 	{

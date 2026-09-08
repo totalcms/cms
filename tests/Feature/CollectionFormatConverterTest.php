@@ -44,8 +44,8 @@ it('dry run writes nothing', function (): void {
 
 it('is a no-op when already in that format and rejects an unknown one', function (): void {
 	expect($this->converter->convert('posts', 'json')->converted)->toBe(0);
-	expect(fn () => $this->converter->convert('posts', 'toml'))->toThrow(\DomainException::class);
-	expect(fn () => $this->converter->convert('nope', 'markdown'))->toThrow(\UnexpectedValueException::class);
+	expect(fn () => $this->converter->convert('posts', 'toml'))->toThrow(DomainException::class);
+	expect(fn () => $this->converter->convert('nope', 'markdown'))->toThrow(UnexpectedValueException::class);
 });
 
 it('reports an object it could not read, converts the rest, and leaves the collection readable', function (): void {

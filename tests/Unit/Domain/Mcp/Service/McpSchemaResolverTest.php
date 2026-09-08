@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
@@ -15,8 +16,8 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class McpSchemaResolverTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionRepository;
+	private MockObject $schemaFetcher;
+	private MockObject $collectionRepository;
 	private McpSchemaResolver $resolver;
 
 	protected function setUp(): void

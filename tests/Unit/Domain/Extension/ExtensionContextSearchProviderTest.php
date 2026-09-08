@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\ExtensionContext;
@@ -18,7 +19,7 @@ function makeTestExtensionContext(string $extensionPath = '/path/to/extension'):
 		'version' => '1.0.0',
 	]);
 
-	$container = test()->createMock(Psr\Container\ContainerInterface::class);
+	$container = test()->createMock(ContainerInterface::class);
 	$storage   = test()->createMock(StorageFilesystemAdapter::class);
 	$storage->method('fileExists')->willReturn(false);
 	$settings = new ExtensionSettingsManager($storage);

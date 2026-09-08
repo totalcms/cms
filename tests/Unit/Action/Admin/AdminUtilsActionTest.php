@@ -2,21 +2,33 @@
 
 namespace Tests\Unit\Action\Admin;
 
+use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
+use Slim\Interfaces\RouteParserInterface;
+use Slim\Routing\Route;
+use Slim\Routing\RoutingResults;
 use TotalCMS\Action\Admin\AdminUtilsAction;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyFetcher;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Builder\Service\BuilderInstaller;
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\OAuth\Data\OAuthClientData;
+use TotalCMS\Domain\OAuth\Data\OAuthGrantData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
@@ -25,6 +37,8 @@ use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
+use TotalCMS\Domain\Update\Service\UpdateApplier;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Domain\Visualizer\Service\VisualizerService;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
@@ -32,33 +46,33 @@ use TotalCMS\Support\Config;
 final class AdminUtilsActionTest extends TestCase
 {
 	private AdminUtilsAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
-	private \PHPUnit\Framework\MockObject\MockObject $twigLintService;
-	private \PHPUnit\Framework\MockObject\MockObject $apiKeyFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $accessGroupLister;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionLister;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $indexReader;
-	private \PHPUnit\Framework\MockObject\MockObject $builderInstaller;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaLister;
-	private \PHPUnit\Framework\MockObject\MockObject $rssImporter;
-	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
-	private \PHPUnit\Framework\MockObject\MockObject $settingsFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $templateLister;
-	private \PHPUnit\Framework\MockObject\MockObject $updateChecker;
-	private \PHPUnit\Framework\MockObject\MockObject $extensionManager;
+	private MockObject $renderer;
+	private MockObject $twigEngine;
+	private MockObject $twigLintService;
+	private MockObject $apiKeyFetcher;
+	private MockObject $accessGroupLister;
+	private MockObject $collectionLister;
+	private MockObject $collectionFetcher;
+	private MockObject $indexReader;
+	private MockObject $builderInstaller;
+	private MockObject $schemaLister;
+	private MockObject $rssImporter;
+	private MockObject $editionFeatures;
+	private MockObject $settingsFetcher;
+	private MockObject $templateLister;
+	private MockObject $updateChecker;
+	private MockObject $extensionManager;
 	private OAuthClientRepository $oauthClientRepository;
 	private OAuthGrantRepository $oauthGrantRepository;
 	private OAuthScopeRegistry $oauthScopeRegistry;
 	private string $oauthClientsTmpFile;
 	private string $oauthGrantsTmpFile;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
-	private \PHPUnit\Framework\MockObject\MockObject $visualizerService;
-	private \Odan\Session\SessionInterface&\PHPUnit\Framework\MockObject\MockObject $session;
-	private \PHPUnit\Framework\MockObject\MockObject $accessControlService;
-	private \PHPUnit\Framework\MockObject\MockObject $mcpSchemaResolver;
+	private MockObject $request;
+	private MockObject $response;
+	private MockObject $visualizerService;
+	private \Odan\Session\SessionInterface&MockObject $session;
+	private MockObject $accessControlService;
+	private MockObject $mcpSchemaResolver;
 	private Config $config;
 
 	protected function setUp(): void
@@ -77,8 +91,8 @@ final class AdminUtilsActionTest extends TestCase
 		$this->editionFeatures       = $this->createMock(EditionFeatureService::class);
 		$this->settingsFetcher       = $this->createMock(SettingsFetcher::class);
 		$this->templateLister        = $this->createMock(TemplateLister::class);
-		$this->updateChecker         = $this->createMock(\TotalCMS\Domain\Update\Service\UpdateChecker::class);
-		$this->extensionManager      = $this->createMock(\TotalCMS\Domain\Extension\Service\ExtensionManager::class);
+		$this->updateChecker         = $this->createMock(UpdateChecker::class);
+		$this->extensionManager      = $this->createMock(ExtensionManager::class);
 		// OAuth repositories + scope registry are all final classes (can't be
 		// doubled). Use real instances pointed at empty tmp files — the tests
 		// here exercise the action's plumbing, not OAuth data shape.
@@ -90,7 +104,7 @@ final class AdminUtilsActionTest extends TestCase
 		$this->request               = $this->createMock(ServerRequestInterface::class);
 		$this->response              = $this->createMock(ResponseInterface::class);
 		$this->visualizerService     = $this->createMock(VisualizerService::class);
-		$this->session               = $this->createMock(\Odan\Session\SessionInterface::class);
+		$this->session               = $this->createMock(SessionInterface::class);
 		$this->accessControlService  = $this->createMock(AccessControlService::class);
 		$this->mcpSchemaResolver     = $this->createMock(McpSchemaResolver::class);
 		$this->config                = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
@@ -112,14 +126,14 @@ final class AdminUtilsActionTest extends TestCase
 			$this->settingsFetcher,
 			$this->templateLister,
 			$this->updateChecker,
-			$this->createMock(\TotalCMS\Domain\Update\Service\UpdateApplier::class),
+			$this->createMock(UpdateApplier::class),
 			$this->oauthClientRepository,
 			$this->oauthGrantRepository,
 			$this->oauthScopeRegistry,
 			$this->extensionManager,
 			$this->visualizerService,
 			$this->session,
-			$this->createMock(\TotalCMS\Domain\Builder\Service\BuilderTemplatePaths::class),
+			$this->createMock(BuilderTemplatePaths::class),
 			$this->accessControlService,
 			$this->mcpSchemaResolver,
 			$this->config,
@@ -141,18 +155,18 @@ final class AdminUtilsActionTest extends TestCase
 	 */
 	private function setupRoutingContext(?string $routeName = null): void
 	{
-		$routeParser    = $this->createMock(\Slim\Interfaces\RouteParserInterface::class);
-		$routingResults = $this->createMock(\Slim\Routing\RoutingResults::class);
+		$routeParser    = $this->createMock(RouteParserInterface::class);
+		$routingResults = $this->createMock(RoutingResults::class);
 		$route          = $routeName !== null
-			? $this->createMock(\Slim\Routing\Route::class)
+			? $this->createMock(Route::class)
 			: null;
 
-		if ($route instanceof \PHPUnit\Framework\MockObject\MockObject) {
+		if ($route instanceof MockObject) {
 			$route->method('getName')->willReturn($routeName);
 		}
 
 		$this->request->method('getAttribute')
-			->willReturnCallback(fn (string $name): \PHPUnit\Framework\MockObject\MockObject|string|null => match ($name) {
+			->willReturnCallback(fn (string $name): MockObject|string|null => match ($name) {
 				'__routeParser__'    => $routeParser,
 				'__routingResults__' => $routingResults,
 				'__basePath__'       => '',
@@ -420,7 +434,7 @@ final class AdminUtilsActionTest extends TestCase
 		$this->request->method('getQueryParams')->willReturn([]);
 
 		// Seed one static client and one dynamic client
-		$staticClient = new \TotalCMS\Domain\OAuth\Data\OAuthClientData(
+		$staticClient = new OAuthClientData(
 			id: 'static-1',
 			name: 'Static App',
 			secretHash: '$2y$12$hash1',
@@ -431,7 +445,7 @@ final class AdminUtilsActionTest extends TestCase
 			createdAt: '2026-01-01T00:00:00Z',
 			createdBy: 'admin',
 		);
-		$dynamicClient = new \TotalCMS\Domain\OAuth\Data\OAuthClientData(
+		$dynamicClient = new OAuthClientData(
 			id: 'dynamic-1',
 			name: 'Dynamic App',
 			secretHash: '$2y$12$hash2',
@@ -446,7 +460,7 @@ final class AdminUtilsActionTest extends TestCase
 		$this->oauthClientRepository->save($dynamicClient);
 
 		// Seed one grant per client
-		$grant1 = new \TotalCMS\Domain\OAuth\Data\OAuthGrantData(
+		$grant1 = new OAuthGrantData(
 			id: 'grant-1',
 			clientId: 'static-1',
 			userId: 'user@example.com',
@@ -455,7 +469,7 @@ final class AdminUtilsActionTest extends TestCase
 			issuedAt: '2026-01-01T00:00:00Z',
 			expiresAt: '2027-01-01T00:00:00Z',
 		);
-		$grant2 = new \TotalCMS\Domain\OAuth\Data\OAuthGrantData(
+		$grant2 = new OAuthGrantData(
 			id: 'grant-2',
 			clientId: 'dynamic-1',
 			userId: 'user@example.com',
@@ -555,7 +569,7 @@ final class AdminUtilsActionTest extends TestCase
 		$this->request->method('getQueryParams')->willReturn([]);
 
 		// Seed a client and a grant
-		$client = new \TotalCMS\Domain\OAuth\Data\OAuthClientData(
+		$client = new OAuthClientData(
 			id: 'client-xyz',
 			name: 'My OAuth App',
 			secretHash: '$2y$12$hash',
@@ -566,7 +580,7 @@ final class AdminUtilsActionTest extends TestCase
 			createdAt: '2026-01-01T00:00:00Z',
 			createdBy: 'admin',
 		);
-		$grant = new \TotalCMS\Domain\OAuth\Data\OAuthGrantData(
+		$grant = new OAuthGrantData(
 			id: 'grant-xyz',
 			clientId: 'client-xyz',
 			userId: 'user@example.com',
@@ -633,7 +647,7 @@ final class AdminUtilsActionTest extends TestCase
 		$this->request->method('getMethod')->willReturn('GET');
 		$this->request->method('getQueryParams')->willReturn([]);
 
-		$client = new \TotalCMS\Domain\OAuth\Data\OAuthClientData(
+		$client = new OAuthClientData(
 			id: 'client-reach',
 			name: 'Reach Test App',
 			secretHash: '$2y$12$hash',
@@ -644,7 +658,7 @@ final class AdminUtilsActionTest extends TestCase
 			createdAt: '2026-01-01T00:00:00Z',
 			createdBy: 'admin',
 		);
-		$grant = new \TotalCMS\Domain\OAuth\Data\OAuthGrantData(
+		$grant = new OAuthGrantData(
 			id: 'grant-reach',
 			clientId: 'client-reach',
 			userId: 'some-user',
@@ -656,18 +670,18 @@ final class AdminUtilsActionTest extends TestCase
 		$this->oauthClientRepository->save($client);
 		$this->oauthGrantRepository->save($grant);
 
-		$blog          = new \TotalCMS\Domain\Collection\Data\CollectionData();
+		$blog          = new CollectionData();
 		$blog->id      = 'blog';
 		$blog->schema  = 'blog';
 		$blog->name    = 'Blog';
-		$pages         = new \TotalCMS\Domain\Collection\Data\CollectionData();
+		$pages         = new CollectionData();
 		$pages->id     = 'pages';
 		$pages->schema = 'builder-page';
 		$pages->name   = 'Pages';
 
 		$this->collectionLister->method('listAllCollections')->willReturn([$blog, $pages]);
 		$this->mcpSchemaResolver->method('isAccessibleTo')
-			->willReturnCallback($mcpAccessible ?? static fn (\TotalCMS\Domain\Collection\Data\CollectionData $collection, string $persona): bool => false);
+			->willReturnCallback($mcpAccessible ?? static fn (CollectionData $collection, string $persona): bool => false);
 
 		$captured         = null;
 		$expectedResponse = $this->createMock(ResponseInterface::class);
@@ -689,7 +703,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testEffectiveReachListsOnlyTheirCollectionsForABloggerGrant(): void
 	{
-		$bloggerGroup = new \TotalCMS\Domain\AccessGroup\Data\AccessGroupData([
+		$bloggerGroup = new AccessGroupData([
 			'id'          => 'blogger',
 			'permissions' => [
 				'collections' => [
@@ -699,7 +713,7 @@ final class AdminUtilsActionTest extends TestCase
 				],
 			],
 		]);
-		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
+		$authority = new UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
 
 		$this->accessControlService->method('userExists')->willReturn(true);
 		$this->accessControlService->method('authorityFor')->willReturn($authority);
@@ -709,7 +723,7 @@ final class AdminUtilsActionTest extends TestCase
 		// counterpart test below, where the same group grant is NOT writable.
 		$reach = $this->effectiveReachForSingleGrant(
 			['cms:read', 'cms:write'],
-			static fn (\TotalCMS\Domain\Collection\Data\CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'authenticated',
+			static fn (CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'authenticated',
 		);
 
 		$this->assertFalse($reach['fullAdmin']);
@@ -727,7 +741,7 @@ final class AdminUtilsActionTest extends TestCase
 		// Every MCP write tool refuses this collection via
 		// ObjectTools::requireExposed(), so the page must not claim it's
 		// writable even though the access group grants create/update/delete.
-		$bloggerGroup = new \TotalCMS\Domain\AccessGroup\Data\AccessGroupData([
+		$bloggerGroup = new AccessGroupData([
 			'id'          => 'blogger',
 			'permissions' => [
 				'collections' => [
@@ -737,7 +751,7 @@ final class AdminUtilsActionTest extends TestCase
 				],
 			],
 		]);
-		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
+		$authority = new UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
 
 		$this->accessControlService->method('userExists')->willReturn(true);
 		$this->accessControlService->method('authorityFor')->willReturn($authority);
@@ -756,7 +770,7 @@ final class AdminUtilsActionTest extends TestCase
 		// Group grants full CRUD and the collection IS exposed to
 		// authenticated callers, but the grant itself only carries cms:read —
 		// the consent layer, not the group layer, is what's missing here.
-		$bloggerGroup = new \TotalCMS\Domain\AccessGroup\Data\AccessGroupData([
+		$bloggerGroup = new AccessGroupData([
 			'id'          => 'blogger',
 			'permissions' => [
 				'collections' => [
@@ -766,14 +780,14 @@ final class AdminUtilsActionTest extends TestCase
 				],
 			],
 		]);
-		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
+		$authority = new UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
 
 		$this->accessControlService->method('userExists')->willReturn(true);
 		$this->accessControlService->method('authorityFor')->willReturn($authority);
 
 		$reach = $this->effectiveReachForSingleGrant(
 			['cms:read'],
-			static fn (\TotalCMS\Domain\Collection\Data\CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'authenticated',
+			static fn (CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'authenticated',
 		);
 
 		$this->assertSame(['blog'], $reach['readable']);
@@ -787,14 +801,14 @@ final class AdminUtilsActionTest extends TestCase
 		// exposed mcp.access: 'public', so an authenticated caller must read
 		// it exactly like an anonymous one would (PersonaContext::
 		// canReadCollection()'s "authenticating must never subtract reach").
-		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: false, groups: []);
+		$authority = new UserAuthority(isAdmin: false, groups: []);
 
 		$this->accessControlService->method('userExists')->willReturn(true);
 		$this->accessControlService->method('authorityFor')->willReturn($authority);
 
 		$reach = $this->effectiveReachForSingleGrant(
 			['mcp:tools'],
-			static fn (\TotalCMS\Domain\Collection\Data\CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'public',
+			static fn (CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'public',
 		);
 
 		$this->assertFalse($reach['noAccess']);
@@ -804,7 +818,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testEffectiveReachShowsNoAccessWhenUserHasNoGroups(): void
 	{
-		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: false, groups: []);
+		$authority = new UserAuthority(isAdmin: false, groups: []);
 
 		$this->accessControlService->method('userExists')->willReturn(true);
 		$this->accessControlService->method('authorityFor')->willReturn($authority);
@@ -820,7 +834,7 @@ final class AdminUtilsActionTest extends TestCase
 
 	public function testEffectiveReachShowsFullAdministrativeAccessForAnAdminGrant(): void
 	{
-		$authority = new \TotalCMS\Domain\Auth\Data\UserAuthority(isAdmin: true, groups: []);
+		$authority = new UserAuthority(isAdmin: true, groups: []);
 
 		$this->accessControlService->method('userExists')->willReturn(true);
 		$this->accessControlService->method('authorityFor')->willReturn($authority);

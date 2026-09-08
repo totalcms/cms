@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Object\Service;
 
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
@@ -18,11 +21,11 @@ use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
 final class ObjectUpdaterTest extends TestCase
 {
 	private ObjectUpdater $updater;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $repository;
-	private \PHPUnit\Framework\MockObject\MockObject $factory;
-	private \PHPUnit\Framework\MockObject\MockObject $propertyProcessor;
-	private \TotalCMS\Domain\Event\Service\EventDispatcher $eventDispatcher;
+	private MockObject $objectFetcher;
+	private MockObject $repository;
+	private MockObject $factory;
+	private MockObject $propertyProcessor;
+	private EventDispatcher $eventDispatcher;
 
 	/** @var array<string,mixed>|null */
 	private ?array $dispatchedPayload = null;
@@ -33,7 +36,7 @@ final class ObjectUpdaterTest extends TestCase
 		$this->repository        = $this->createMock(ObjectRepository::class);
 		$this->factory           = $this->createMock(ObjectFactory::class);
 		$this->propertyProcessor = $this->createMock(PropertyDataProcessorInterface::class);
-		$this->eventDispatcher   = new \TotalCMS\Domain\Event\Service\EventDispatcher(new \Psr\Log\NullLogger());
+		$this->eventDispatcher   = new EventDispatcher(new NullLogger());
 
 		$this->eventDispatcher->listen('object.updated', function (array $payload): void {
 			$this->dispatchedPayload = $payload;

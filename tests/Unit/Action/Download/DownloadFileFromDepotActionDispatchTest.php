@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Action\Download;
 
 use Odan\Session\PhpSession;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -33,8 +34,8 @@ use TotalCMS\Support\Config;
  */
 final class DownloadFileFromDepotActionDispatchTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $depotFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $fileFetcher;
+	private MockObject $depotFetcher;
+	private MockObject $fileFetcher;
 	private DownloadFileFromDepotAction $action;
 
 	protected function setUp(): void

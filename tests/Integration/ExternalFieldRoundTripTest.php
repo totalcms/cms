@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Container\ContainerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -21,7 +22,7 @@ beforeEach(function (): void {
  * Create a `widgets` collection whose schema carries an external `handler`
  * code field — the contract this feature must support.
  */
-function createWidgetsCollection(Psr\Container\ContainerInterface $container): void
+function createWidgetsCollection(ContainerInterface $container): void
 {
 	$container->get(SchemaSaver::class)->saveSchema([
 		'id'          => 'widgets',

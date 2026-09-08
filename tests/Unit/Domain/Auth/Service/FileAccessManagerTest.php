@@ -3,6 +3,7 @@
 namespace Tests\Unit\Domain\Auth\Service;
 
 use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
@@ -20,12 +21,12 @@ use TotalCMS\Factory\LoggerFactory;
 final class FileAccessManagerTest extends TestCase
 {
 	private FileAccessManager $fileAccessManager;
-	private \PHPUnit\Framework\MockObject\MockObject $session;
-	private \PHPUnit\Framework\MockObject\MockObject $userValidator;
-	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $propertyFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $fileFetcher;
+	private MockObject $session;
+	private MockObject $userValidator;
+	private MockObject $loggerFactory;
+	private MockObject $propertyFetcher;
+	private MockObject $collectionFetcher;
+	private MockObject $fileFetcher;
 
 	protected function setUp(): void
 	{

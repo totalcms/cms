@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 
 use function TotalCMS\Slim\Pest\get;
 
@@ -23,8 +25,8 @@ beforeEach(function (): void {
 
 	$this->setUpApp(bootstrap());
 	$container = $this->app->getContainer();
-	$container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)->fetchOrCreateReserved('blog');
-	$container->get(TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('blog', [
+	$container->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
+	$container->get(ObjectSaver::class)->saveObject('blog', [
 		'id'      => 'hello',
 		'title'   => 'Hello World',
 		'date'    => '2026-08-01T12:00:00+00:00',

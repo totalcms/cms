@@ -8,6 +8,11 @@ use Mcp\Schema\Notification\ToolListChangedNotification;
 use Mcp\Schema\Wire\McpHeader;
 use Mcp\Server\Stateless\RequestMeta;
 use Mcp\Server\Subscription\NotificationBusInterface;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\postJson;
@@ -38,11 +43,11 @@ beforeEach(function (): void {
 	// never even consulted — the withholding test would pass for the wrong
 	// reason. `mcp.resource` is off unless set, exactly as for a real collection.
 	$container = $this->app->getContainer();
-	$blog      = $container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class)
+	$blog      = $container->get(CollectionFetcher::class)
 		->fetchOrCreateReserved('blog');
 	if ($blog !== null) {
 		$blog->mcp = array_merge(is_array($blog->mcp) ? $blog->mcp : [], ['resource' => true]);
-		$container->get(TotalCMS\Domain\Collection\Repository\CollectionRepository::class)->saveCollection($blog);
+		$container->get(CollectionRepository::class)->saveCollection($blog);
 	}
 
 	// An API key, so the persona is ADMIN. A collection's MCP resource is not
@@ -68,18 +73,18 @@ beforeEach(function (): void {
  * @param array<string,mixed> $params
  */
 function statelessRequest(
-	Slim\App $app,
+	App $app,
 	string $method,
 	array $params = [],
 	array $headerOverrides = [],
-): Psr\Http\Message\ResponseInterface {
+): ResponseInterface {
 	$params['_meta'] = [
 		RequestMeta::PROTOCOL_VERSION     => '2026-07-28',
 		RequestMeta::CLIENT_CAPABILITIES  => new stdClass(),
 		RequestMeta::CLIENT_INFO          => ['name' => 'pest-stateless', 'version' => '0.1'],
 	];
 
-	$request = (new Nyholm\Psr7\Factory\Psr17Factory())
+	$request = (new Psr17Factory())
 		->createServerRequest('POST', '/mcp')
 		->withHeader('Content-Type', 'application/json')
 		->withHeader('Accept', 'application/json, text/event-stream')
@@ -134,7 +139,7 @@ function deliveredResourceUris(string $stream): array
 	return $uris;
 }
 
-function statelessDecode(Psr\Http\Message\ResponseInterface $response): array
+function statelessDecode(ResponseInterface $response): array
 {
 	$raw = (string)$response->getBody();
 

@@ -172,7 +172,7 @@ final readonly class CollectionFileRepairService
 
 		if ($spec['kind'] === 'card') {
 			foreach ($children as $childKey => $type) {
-				$existing = $parent instanceof CardData ? self::descend($parent->card, $childKey) : null;
+				$existing = $parent instanceof CardData ? $this->descend($parent->card, $childKey) : null;
 				$this->repairNestedChild($report, $collection, $id, $property, $childKey, $type, $existing, $apply);
 			}
 
@@ -183,7 +183,7 @@ final readonly class CollectionFileRepairService
 			$item      = $parent instanceof DeckData ? $parent->getItem($itemId) : null;
 			$itemHasId = is_array($item) && ($item['id'] ?? '') !== '';
 			foreach ($children as $childKey => $type) {
-				$existing = is_array($item) ? self::descend($item, $childKey) : null;
+				$existing = is_array($item) ? $this->descend($item, $childKey) : null;
 				$this->repairNestedChild($report, $collection, $id, $property, $itemId . '/' . $childKey, $type, $existing, $apply, $itemId, $itemHasId);
 			}
 		}
@@ -195,7 +195,7 @@ final readonly class CollectionFileRepairService
 	 *
 	 * @param array<string,mixed> $raw
 	 */
-	private static function descend(array $raw, string $path): mixed
+	private function descend(array $raw, string $path): mixed
 	{
 		$cursor = $raw;
 		foreach (explode('/', $path) as $segment) {

@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Support\Config;
 
 const DNS_TEST_KEY = 'tcms_dns_rebinding_test_key_0000000000000';
@@ -37,7 +39,7 @@ beforeEach(function (): void {
  * Uses an absolute URI so the request's host (used by the DNS-rebinding allowlist)
  * is meaningful.
  */
-function dnsRebindingRequest(Slim\App $app, string $host, ?string $origin): Psr\Http\Message\ResponseInterface
+function dnsRebindingRequest(App $app, string $host, ?string $origin): ResponseInterface
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -66,7 +68,7 @@ function dnsRebindingRequest(Slim\App $app, string $host, ?string $origin): Psr\
 	return $app->handle($request);
 }
 
-function dnsSetAllowedOrigins(Slim\App $app, array $origins): void
+function dnsSetAllowedOrigins(App $app, array $origins): void
 {
 	$app->getContainer()->get(Config::class)->mcp['allowedOrigins'] = $origins;
 }
@@ -78,7 +80,7 @@ function dnsSetAllowedOrigins(Slim\App $app, array $origins): void
  * StreamableHttpTransport — and its DnsRebindingProtectionMiddleware — is
  * ever constructed for this branch.
  */
-function dnsRebindingGetStreamRequest(Slim\App $app, string $host, ?string $origin): Psr\Http\Message\ResponseInterface
+function dnsRebindingGetStreamRequest(App $app, string $host, ?string $origin): ResponseInterface
 {
 	$factory = new Psr17Factory();
 	$request = $factory

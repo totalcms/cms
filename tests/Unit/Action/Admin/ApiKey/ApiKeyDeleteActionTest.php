@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Admin\ApiKey;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,10 +13,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ApiKeyDeleteActionTest extends TestCase
 {
 	private ApiKeyDeleteAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $apiKeyDeleter;
-	private \PHPUnit\Framework\MockObject\MockObject $jsonRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $apiKeyDeleter;
+	private MockObject $jsonRenderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

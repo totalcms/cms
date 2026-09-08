@@ -220,7 +220,7 @@ final readonly class PodcastFeedMapper
 		$audio = $episode['audio'] ?? null;
 		if (is_array($audio) && ($audio['name'] ?? '') !== '') {
 			return [
-				'url'    => "{$this->config->api}/stream/{$episodesCollection}/" . (string)($episode['id'] ?? '') . '/audio',
+				'url'    => "{$this->config->api}/stream/{$episodesCollection}/" . ($episode['id'] ?? '') . '/audio',
 				'type'   => (string)($audio['mime'] ?? ''),
 				'length' => (int)($audio['size'] ?? 0),
 			];
@@ -273,10 +273,10 @@ final readonly class PodcastFeedMapper
 		$path = (string)(parse_url($url, PHP_URL_PATH) ?? '');
 
 		return match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
-			'srt'  => 'application/srt',
-			'vtt'  => 'text/vtt',
-			'json' => 'application/json',
-			'html' => 'text/html',
+			'srt'   => 'application/srt',
+			'vtt'   => 'text/vtt',
+			'json'  => 'application/json',
+			'html'  => 'text/html',
 			default => 'text/plain',
 		};
 	}

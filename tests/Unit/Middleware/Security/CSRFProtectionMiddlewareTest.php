@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Exception\HttpForbiddenException;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
@@ -104,7 +105,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 		$handler = $this->makeHandler(new Response());
 		$request = $this->makePostRequest('wrong-token-value');
 
-		$this->expectException(\Slim\Exception\HttpForbiddenException::class);
+		$this->expectException(HttpForbiddenException::class);
 
 		$this->middleware->process($request, $handler);
 	}
@@ -171,7 +172,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 			->createServerRequest('POST', '/admin/collections/blog/123')
 			->withHeader('X-API-Key', 'invalid-bogus-key');
 
-		$this->expectException(\Slim\Exception\HttpForbiddenException::class);
+		$this->expectException(HttpForbiddenException::class);
 
 		$middleware->process($request, $handler);
 	}
@@ -193,7 +194,7 @@ final class CSRFProtectionMiddlewareTest extends TestCase
 			->createServerRequest('POST', '/admin/collections/blog/objects')
 			->withHeader('Authorization', 'Bearer attacker-controlled-value');
 
-		$this->expectException(\Slim\Exception\HttpForbiddenException::class);
+		$this->expectException(HttpForbiddenException::class);
 
 		$middleware->process($request, $handler);
 	}

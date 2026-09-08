@@ -3,11 +3,16 @@
 declare(strict_types=1);
 
 use Odan\Session\PhpSession;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\NullLogger;
+use Slim\Exception\HttpForbiddenException;
+use Slim\Interfaces\RouteParserInterface;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
+use Slim\Routing\RouteContext;
+use Slim\Routing\RoutingResults;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
@@ -67,12 +72,12 @@ function csrfTestValidator(CSRFTokenManager $csrfManager): CSRFRequestValidator
  * public-collection check needs (RouteContext requires them; route itself
  * is null, so the check simply returns false).
  */
-function csrfTestRequest(string $method, string $uri): Psr\Http\Message\ServerRequestInterface
+function csrfTestRequest(string $method, string $uri): ServerRequestInterface
 {
 	return (new ServerRequestFactory())
 		->createServerRequest($method, $uri)
-		->withAttribute(Slim\Routing\RouteContext::ROUTE_PARSER, test()->createMock(Slim\Interfaces\RouteParserInterface::class))
-		->withAttribute(Slim\Routing\RouteContext::ROUTING_RESULTS, test()->createMock(Slim\Routing\RoutingResults::class));
+		->withAttribute(RouteContext::ROUTE_PARSER, test()->createMock(RouteParserInterface::class))
+		->withAttribute(RouteContext::ROUTING_RESULTS, test()->createMock(RoutingResults::class));
 }
 
 function csrfTestLoggerFactory(): LoggerFactory
@@ -202,7 +207,7 @@ it('AuthMiddleware rejects a session-authenticated POST without a CSRF token', f
 	$request    = csrfTestRequest('POST', '/api/passkeys/register');
 
 	$middleware->process($request, csrfTestHandler());
-})->throws(Slim\Exception\HttpForbiddenException::class);
+})->throws(HttpForbiddenException::class);
 
 it('AuthMiddleware allows a session-authenticated POST with the CSRF token field', function (): void {
 	$token = $this->csrfManager->generateToken();
@@ -306,7 +311,7 @@ it('AuthMiddleware rejects a cross-origin write carrying a valid token', functio
 		->withHeader('X-CSRF-Token', $token);
 
 	$middleware->process($request, csrfTestHandler());
-})->throws(Slim\Exception\HttpForbiddenException::class);
+})->throws(HttpForbiddenException::class);
 
 it('ignores X-Forwarded-Host when deciding what counts as same-origin', function (): void {
 	$this->csrfManager->generateToken();

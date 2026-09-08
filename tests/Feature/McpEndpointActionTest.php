@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use Mcp\Schema\Enum\ProtocolVersion;
+use Nyholm\Psr7\Factory\Psr17Factory;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Slim\Test\TestResponse;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\postJson;
@@ -124,7 +126,7 @@ describe('McpEndpointAction', function (): void {
 		// X-API-Key header. Slim test helpers don't support headers directly,
 		// so build via the app instance.
 		$app     = $this->app;
-		$request = (new Nyholm\Psr7\Factory\Psr17Factory())
+		$request = (new Psr17Factory())
 			->createServerRequest('POST', '/mcp')
 			->withHeader('Content-Type', 'application/json')
 			->withHeader('Accept', 'application/json, text/event-stream')
@@ -215,7 +217,7 @@ describe('McpEndpointAction', function (): void {
  * already flushed past it) — nesting a second buffer gives ob_flush()
  * somewhere to land that we can still read.
  */
-function triggerListeningStreamBody(TotalCMS\Slim\Test\TestResponse $response): string
+function triggerListeningStreamBody(TestResponse $response): string
 {
 	return drainStreamedBody($response);
 }

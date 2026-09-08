@@ -20,6 +20,7 @@ declare(strict_types=1);
  * signature/description from reflection with examples from docs.
  */
 
+use phpDocumentor\Reflection\DocBlock\Tags\Param;
 use phpDocumentor\Reflection\DocBlockFactory;
 use PhpParser\Modifiers;
 use PhpParser\Node;
@@ -635,7 +636,7 @@ function reflectManifestFields(): array
 		try {
 			$docBlock = DocBlockFactory::createInstance()->create($docComment->getText());
 			foreach ($docBlock->getTagsByName('param') as $tag) {
-				if ($tag instanceof phpDocumentor\Reflection\DocBlock\Tags\Param) {
+				if ($tag instanceof Param) {
 					$paramDocs[$tag->getVariableName()] = cleanDocblockText((string)$tag->getDescription());
 				}
 			}

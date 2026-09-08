@@ -1,6 +1,8 @@
 <?php
 
 use Psr\Container\ContainerInterface;
+use Psr\Log\NullLogger;
+use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
 use TotalCMS\Domain\Extension\Data\DashboardWidget;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
@@ -27,7 +29,7 @@ function createTestContext(string $extensionPath = '/path/to/extension'): Extens
 	$storage->method('fileExists')->willReturn(false);
 	$settings = new ExtensionSettingsManager($storage);
 
-	return new ExtensionContext($manifest, $extensionPath, $container, $settings, new Psr\Log\NullLogger());
+	return new ExtensionContext($manifest, $extensionPath, $container, $settings, new NullLogger());
 }
 
 describe('ExtensionContext', function (): void {
@@ -69,7 +71,7 @@ describe('ExtensionContext', function (): void {
 
 	test('registers and retrieves commands', function (): void {
 		$ctx = createTestContext();
-		$cmd = new Symfony\Component\Console\Command\Command('test:cmd');
+		$cmd = new Command('test:cmd');
 
 		$ctx->addCommand($cmd);
 
@@ -209,7 +211,7 @@ describe('ExtensionContext', function (): void {
 		$ctx = createTestContext();
 
 		$ctx->addTwigFunction(new TwigFunction('fn', fn (): string => ''));
-		$ctx->addCommand(new Symfony\Component\Console\Command\Command('test:cmd'));
+		$ctx->addCommand(new Command('test:cmd'));
 		$ctx->addEventListener('object.created', fn (): null => null);
 
 		$caps = $ctx->getCapabilities();
@@ -229,7 +231,7 @@ describe('ExtensionContext', function (): void {
 		$ctx->addTwigFunction(new TwigFunction('fn', fn (): string => ''));
 		$ctx->addTwigFilter(new TwigFilter('fl', fn (string $v): string => $v));
 		$ctx->addTwigGlobal('g', 'val');
-		$ctx->addCommand(new Symfony\Component\Console\Command\Command('cmd'));
+		$ctx->addCommand(new Command('cmd'));
 		$ctx->addRoutes(fn (): null => null);
 		$ctx->addPublicRoutes(fn (): null => null);
 		$ctx->addAdminRoutes(fn (): null => null);
@@ -315,7 +317,7 @@ describe('ExtensionContext', function (): void {
 		$manifest = ExtensionManifest::fromArray(['id' => 'v/x', 'name' => 'X', 'version' => '1.0.0']);
 		$storage  = test()->createMock(StorageFilesystemAdapter::class);
 		$storage->method('fileExists')->willReturn(false);
-		$ctx = new ExtensionContext($manifest, '/tmp', $container, new ExtensionSettingsManager($storage), new Psr\Log\NullLogger());
+		$ctx = new ExtensionContext($manifest, '/tmp', $container, new ExtensionSettingsManager($storage), new NullLogger());
 
 		$ctx->installSchema(['id' => 'demo', 'properties' => []]);
 	});
@@ -344,7 +346,7 @@ describe('ExtensionContext', function (): void {
 		$manifest = ExtensionManifest::fromArray(['id' => 'v/x', 'name' => 'X', 'version' => '1.0.0']);
 		$storage  = test()->createMock(StorageFilesystemAdapter::class);
 		$storage->method('fileExists')->willReturn(false);
-		$ctx = new ExtensionContext($manifest, '/tmp', $container, new ExtensionSettingsManager($storage), new Psr\Log\NullLogger());
+		$ctx = new ExtensionContext($manifest, '/tmp', $container, new ExtensionSettingsManager($storage), new NullLogger());
 
 		$ctx->installSchema(['id' => 'demo', 'properties' => []]);
 	});
@@ -369,7 +371,7 @@ describe('ExtensionContext', function (): void {
 		$manifest = ExtensionManifest::fromArray(['id' => 'v/x', 'name' => 'X', 'version' => '1.0.0']);
 		$storage  = test()->createMock(StorageFilesystemAdapter::class);
 		$storage->method('fileExists')->willReturn(false);
-		$ctx = new ExtensionContext($manifest, '/tmp', $container, new ExtensionSettingsManager($storage), new Psr\Log\NullLogger());
+		$ctx = new ExtensionContext($manifest, '/tmp', $container, new ExtensionSettingsManager($storage), new NullLogger());
 
 		$ctx->installSchema(['id' => 'demo', 'properties' => []]);
 	});

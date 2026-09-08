@@ -2,14 +2,17 @@
 
 namespace Tests\Unit\Domain\Import;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Import\JsonImporter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Factory\LoggerFactory;
@@ -17,19 +20,19 @@ use TotalCMS\Factory\LoggerFactory;
 final class JsonImporterTest extends TestCase
 {
 	private JsonImporter $importer;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectImporter;
+	private MockObject $collectionFetcher;
+	private MockObject $objectFetcher;
+	private MockObject $objectImporter;
 	private EventDispatcher $eventDispatcher;
-	private \PHPUnit\Framework\MockObject\MockObject $jobQueuer;
-	private \PHPUnit\Framework\MockObject\MockObject $logger;
+	private MockObject $jobQueuer;
+	private MockObject $logger;
 
 	protected function setUp(): void
 	{
 		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
 		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
 		$this->objectImporter    = $this->createMock(ObjectImporter::class);
-		$this->eventDispatcher   = new EventDispatcher(new \Psr\Log\NullLogger());
+		$this->eventDispatcher   = new EventDispatcher(new NullLogger());
 		$this->jobQueuer         = $this->createMock(JobQueuer::class);
 		$this->logger            = $this->createMock(LoggerInterface::class);
 
@@ -224,11 +227,11 @@ final class JsonImporterTest extends TestCase
 		$this->collectionFetcher->method('collectionExists')->willReturn(true);
 		$this->objectFetcher->method('existsObject')->willReturn(false);
 
-		$objectData = $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+		$objectData = $this->createMock(ObjectData::class);
 
 		$this->objectImporter->expects($this->exactly(2))
 			->method('importObject')
-			->willReturnCallback(function ($collection, array $record) use ($objectData): \PHPUnit\Framework\MockObject\MockObject {
+			->willReturnCallback(function ($collection, array $record) use ($objectData): MockObject {
 				if ($record['id'] === 'error') {
 					throw new \Exception('Import failed');
 				}
@@ -279,7 +282,7 @@ final class JsonImporterTest extends TestCase
 		$this->collectionFetcher->method('collectionExists')->willReturn(true);
 		$this->objectFetcher->method('existsObject')->willReturn(false);
 
-		$objectData = $this->createMock(\TotalCMS\Domain\Object\Data\ObjectData::class);
+		$objectData = $this->createMock(ObjectData::class);
 		$this->objectImporter->method('importObject')
 			->willReturnCallback(function ($collection, array $record) use ($objectData) {
 				if ($record['id'] === 'error') {

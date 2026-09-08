@@ -8,8 +8,11 @@ use League\Flysystem\FilesystemOperator;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Automation\Service\AutomationLoader;
 use TotalCMS\Domain\Automation\Service\AutomationRunReader;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Index\Data\IndexData;
+use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Twig\Service\DashboardRenderer;
 
@@ -76,16 +79,16 @@ final class AdminTwigAdapterDashboardAutomationsTest extends TestCase
 		// logic running while completely controlling its data.
 
 		// Build a CollectionFetcher stub that says 'automations' exists.
-		$colFetcher = (new \ReflectionClass(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class))
+		$colFetcher = (new \ReflectionClass(CollectionFetcher::class))
 			->newInstanceWithoutConstructor();
 
 		// We need collectionExists() to return true for 'automations'.
 		// CollectionFetcher is not final — we can mock it.
-		$colFetcherMock = $this->createMock(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
+		$colFetcherMock = $this->createMock(CollectionFetcher::class);
 		$colFetcherMock->method('collectionExists')->with('automations')->willReturn(count($objects) > 0);
 
 		// Build an IndexReader that returns our ids via fetchIndex.
-		$indexReaderMock = $this->createMock(\TotalCMS\Domain\Index\Service\IndexReader::class);
+		$indexReaderMock = $this->createMock(IndexReader::class);
 
 		$rows = array_map(
 			static fn (ObjectData $o): array => ['id' => $o->id, 'enabled' => true],
@@ -97,7 +100,7 @@ final class AdminTwigAdapterDashboardAutomationsTest extends TestCase
 		$indexReaderMock->method('fetchIndex')->with('automations')->willReturn($indexData);
 
 		// Build an ObjectFetcher that maps ids back to our ObjectData stubs.
-		$objectFetcherMock = $this->createMock(\TotalCMS\Domain\Object\Service\ObjectFetcher::class);
+		$objectFetcherMock = $this->createMock(ObjectFetcher::class);
 		$byId              = [];
 		foreach ($objects as $obj) {
 			$byId[$obj->id] = $obj;

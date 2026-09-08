@@ -2,7 +2,9 @@
 
 namespace Tests\Unit\Domain\Cache;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
@@ -22,17 +24,17 @@ final class CacheManagerVersionCheckTest extends TestCase
 	private string $testCacheDir;
 	private string $appVersionFile;
 
-	private \PHPUnit\Framework\MockObject\MockObject $filesystemService;
-	private \PHPUnit\Framework\MockObject\MockObject $opcacheService;
-	private \PHPUnit\Framework\MockObject\MockObject $redisService;
-	private \PHPUnit\Framework\MockObject\MockObject $memcachedService;
-	private \PHPUnit\Framework\MockObject\MockObject $apcuService;
-	private \PHPUnit\Framework\MockObject\MockObject $watermarkCleanupService;
-	private \PHPUnit\Framework\MockObject\MockObject $devModeManager;
-	private \PHPUnit\Framework\MockObject\MockObject $invalidationSignal;
+	private MockObject $filesystemService;
+	private MockObject $opcacheService;
+	private MockObject $redisService;
+	private MockObject $memcachedService;
+	private MockObject $apcuService;
+	private MockObject $watermarkCleanupService;
+	private MockObject $devModeManager;
+	private MockObject $invalidationSignal;
 	private EventDispatcher $eventDispatcher;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
-	private \PHPUnit\Framework\MockObject\MockObject $loggerFactory;
+	private MockObject $config;
+	private MockObject $loggerFactory;
 
 	protected function setUp(): void
 	{
@@ -48,7 +50,7 @@ final class CacheManagerVersionCheckTest extends TestCase
 		$this->watermarkCleanupService = $this->createMock(WatermarkCleanupService::class);
 		$this->devModeManager          = $this->createMock(DevModeManager::class);
 		$this->invalidationSignal      = $this->createMock(CacheInvalidationSignal::class);
-		$this->eventDispatcher         = new EventDispatcher($this->createMock(\Psr\Log\LoggerInterface::class));
+		$this->eventDispatcher         = new EventDispatcher($this->createMock(LoggerInterface::class));
 		$this->config                  = $this->createMock(Config::class);
 		$this->loggerFactory           = $this->createMock(LoggerFactory::class);
 
@@ -70,7 +72,7 @@ final class CacheManagerVersionCheckTest extends TestCase
 
 		$this->loggerFactory->method('addFileHandler')->willReturnSelf();
 		$this->loggerFactory->method('createLogger')->willReturn(
-			$this->createMock(\Psr\Log\LoggerInterface::class)
+			$this->createMock(LoggerInterface::class)
 		);
 	}
 

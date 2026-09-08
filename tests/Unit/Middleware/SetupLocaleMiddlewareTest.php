@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Middleware;
 
 use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,9 +15,9 @@ use TotalCMS\Middleware\SetupLocaleMiddleware;
 
 final class SetupLocaleMiddlewareTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $session;
-	private \PHPUnit\Framework\MockObject\MockObject $translationService;
-	private \PHPUnit\Framework\MockObject\MockObject $handler;
+	private MockObject $session;
+	private MockObject $translationService;
+	private MockObject $handler;
 	private SetupLocaleMiddleware $middleware;
 
 	protected function setUp(): void

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
@@ -52,7 +54,7 @@ beforeEach(function (): void {
 /**
  * Generate an RSA key pair and configure $config->oauth to use them.
  */
-function groupRestSetupOAuthKeys(Slim\App $app): void
+function groupRestSetupOAuthKeys(App $app): void
 {
 	$tmpDir = sys_get_temp_dir() . '/oauth-group-rest-test-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
@@ -120,7 +122,7 @@ function groupRestSeedUser(string $fixtureId): void
  *
  * @param list<string> $scopes
  */
-function groupRestIssueToken(Slim\App $app, string $userId, array $scopes): string
+function groupRestIssueToken(App $app, string $userId, array $scopes): string
 {
 	$clientId     = 'group-rest-' . uniqid('', true);
 	$clientSecret = 'secret';
@@ -205,7 +207,7 @@ function groupRestIssueToken(Slim\App $app, string $userId, array $scopes): stri
  *
  * @param array<string,mixed> $body
  */
-function groupRestPostJson(Slim\App $app, string $path, string $accessToken, array $body): Psr\Http\Message\ResponseInterface
+function groupRestPostJson(App $app, string $path, string $accessToken, array $body): ResponseInterface
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -222,7 +224,7 @@ function groupRestPostJson(Slim\App $app, string $path, string $accessToken, arr
 /**
  * GET $path with a Bearer access token.
  */
-function groupRestGet(Slim\App $app, string $path, string $accessToken): Psr\Http\Message\ResponseInterface
+function groupRestGet(App $app, string $path, string $accessToken): ResponseInterface
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -237,7 +239,7 @@ function groupRestGet(Slim\App $app, string $path, string $accessToken): Psr\Htt
  *
  * @param array<string,mixed> $body
  */
-function groupRestPutJson(Slim\App $app, string $path, string $accessToken, array $body): Psr\Http\Message\ResponseInterface
+function groupRestPutJson(App $app, string $path, string $accessToken, array $body): ResponseInterface
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -254,7 +256,7 @@ function groupRestPutJson(Slim\App $app, string $path, string $accessToken, arra
 /**
  * DELETE $path with a Bearer access token.
  */
-function groupRestDelete(Slim\App $app, string $path, string $accessToken): Psr\Http\Message\ResponseInterface
+function groupRestDelete(App $app, string $path, string $accessToken): ResponseInterface
 {
 	$factory = new Psr17Factory();
 	$request = $factory

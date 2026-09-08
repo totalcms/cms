@@ -7,6 +7,8 @@ use Lcobucci\JWT\Token\Parser;
 use Lcobucci\JWT\Token\RegisteredClaims;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
@@ -46,7 +48,7 @@ beforeEach(function (): void {
  *
  * @return array{privateKey: string, publicKey: string, tmpDir: string}
  */
-function revokeSetupOAuthKeys(Slim\App $app): array
+function revokeSetupOAuthKeys(App $app): array
 {
 	$tmpDir = sys_get_temp_dir() . '/oauth-revoke-test-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
@@ -92,7 +94,7 @@ function revokeSetupOAuthKeys(Slim\App $app): array
  * @param list<string> $scopes
  */
 function revokeCreateTestClient(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $secret,
 	array $redirectUris = ['https://app.test/callback'],
@@ -120,7 +122,7 @@ function revokeCreateTestClient(
  * @return array{access_token: string, refresh_token: string}
  */
 function revokeIssueTokens(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $clientSecret,
 	string $redirectUri = 'https://app.test/callback',
@@ -206,7 +208,7 @@ function revokeIssueTokens(
  *
  * @param array<string,string> $params
  */
-function postRevoke(Slim\App $app, array $params): Psr\Http\Message\ResponseInterface
+function postRevoke(App $app, array $params): ResponseInterface
 {
 	$factory = new Psr17Factory();
 

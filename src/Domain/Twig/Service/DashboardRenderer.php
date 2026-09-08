@@ -14,7 +14,6 @@ use TotalCMS\Domain\JobQueue\Data\JobQueueHealthData;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
 use TotalCMS\Domain\License\Data\Edition;
-use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Data\LicenseStatusData;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
@@ -52,7 +51,6 @@ readonly class DashboardRenderer
 	) {
 	}
 
-
 	/**
 	 * Job-queue health for the dashboard + Job Queue Manager warning. Returns a
 	 * stalled flag (oldest waiting job past the threshold with no processor
@@ -62,7 +60,6 @@ readonly class DashboardRenderer
 	{
 		return $this->jobQueueHealth->status();
 	}
-
 
 	/**
 	 * Get dashboard statistics.

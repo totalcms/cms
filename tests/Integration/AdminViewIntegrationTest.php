@@ -1,5 +1,8 @@
 <?php
 
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use Twig\Error\RuntimeError;
+
 /**
  * Admin View Integration Test.
  *
@@ -21,7 +24,7 @@ beforeAll(function (): void {
 	$container = $app->getContainer();
 
 	// Get the collection saver service to create collections
-	$collectionSaver = $container->get(TotalCMS\Domain\Collection\Service\CollectionSaver::class);
+	$collectionSaver = $container->get(CollectionSaver::class);
 
 	// Create blog collection
 	$collectionSaver->saveCollection([
@@ -78,7 +81,7 @@ function assertNoAdminErrors($response, string $path): void
 			'must not be accessed before initialization'           => "Uninitialized property error on {$path}",
 			'Call to undefined method'                             => "Undefined method call on {$path}",
 			'Class \''                                             => "Class not found error on {$path}",
-			Twig\Error\RuntimeError::class                         => "Twig runtime error on {$path}",
+			RuntimeError::class                                    => "Twig runtime error on {$path}",
 			'An exception has been thrown during the rendering'    => "Template rendering error on {$path}",
 			'Unknown function'                                     => "Twig unknown function on {$path}",
 			'Unknown filter'                                       => "Twig unknown filter on {$path}",

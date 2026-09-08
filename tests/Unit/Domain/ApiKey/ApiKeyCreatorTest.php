@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\ApiKey;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
@@ -9,7 +10,7 @@ use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
 final class ApiKeyCreatorTest extends TestCase
 {
 	private ApiKeyCreator $apiKeyCreator;
-	private \PHPUnit\Framework\MockObject\MockObject $repository;
+	private MockObject $repository;
 
 	protected function setUp(): void
 	{

@@ -296,7 +296,6 @@ readonly class AdminTwigAdapter
 		return $this->builderTemplates->builderRouteForCollection($collectionId);
 	}
 
-
 	/**
 	 * Build an HTMX-powered quick action button.
 	 *
@@ -511,7 +510,6 @@ NGINX;
 
 		return ltrim($start, '/');
 	}
-
 
 	/**
 	 * Get collections that are inaccessible due to edition restrictions.

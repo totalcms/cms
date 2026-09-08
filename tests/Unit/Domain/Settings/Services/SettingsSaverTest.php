@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\Settings\Services;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
@@ -12,10 +13,10 @@ use TotalCMS\Domain\Settings\Services\SettingsValidator;
 final class SettingsSaverTest extends TestCase
 {
 	private SettingsSaver $saver;
-	private \PHPUnit\Framework\MockObject\MockObject $fetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $validator;
-	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
-	private \PHPUnit\Framework\MockObject\MockObject $settingsRepository;
+	private MockObject $fetcher;
+	private MockObject $validator;
+	private MockObject $cacheManager;
+	private MockObject $settingsRepository;
 
 	protected function setUp(): void
 	{

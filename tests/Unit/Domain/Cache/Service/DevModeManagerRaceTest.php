@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Log\NullLogger;
 use Tests\Fakes\DevModeRaceStreamWrapper;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -22,7 +23,7 @@ beforeEach(function (): void {
 	$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->datadir = 'devmoderace://data';
 
-	$this->manager = new DevModeManager(new EventDispatcher(new Psr\Log\NullLogger()), $config);
+	$this->manager = new DevModeManager(new EventDispatcher(new NullLogger()), $config);
 });
 
 afterEach(function (): void {

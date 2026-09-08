@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Psr7\Factory\ServerRequestFactory;
@@ -22,7 +23,7 @@ function fragmentRenderer(bool $canTemplates): FragmentRenderer
 	return new FragmentRenderer((new ReflectionClass(TwigEngine::class))->newInstanceWithoutConstructor(), $editions);
 }
 
-function fragmentRequest(array $query = [], array $headers = []): \Psr\Http\Message\ServerRequestInterface
+function fragmentRequest(array $query = [], array $headers = []): ServerRequestInterface
 {
 	$request = (new ServerRequestFactory())->createServerRequest('GET', '/api/collections/blog/x')->withQueryParams($query);
 	foreach ($headers as $name => $value) {

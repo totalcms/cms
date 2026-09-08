@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use League\Flysystem\UnableToCreateDirectory;
 use TotalCMS\Domain\Extension\ExtensionStorage;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 
@@ -108,7 +109,7 @@ describe('ExtensionStorage', function (): void {
 
 		try {
 			expect(fn () => $this->storage->write('secret', 'x'))
-				->toThrow(League\Flysystem\UnableToCreateDirectory::class);
+				->toThrow(UnableToCreateDirectory::class);
 		} finally {
 			restore_error_handler();
 		}

@@ -180,7 +180,7 @@ class MediaTwigAdapter
 
 		if ($hasPoster) {
 			$posterOptions             = $options;
-			$posterOptions['property'] = (string)$options['property'] . '.poster';
+			$posterOptions['property'] = $options['property'] . '.poster';
 
 			return $this->imagePath($idOrObject, $imageworks, $posterOptions);
 		}

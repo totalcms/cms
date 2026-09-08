@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Mcp\Capability\Discovery\SchemaValidator;
+use Slim\App;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -84,7 +85,7 @@ afterEach(function (): void {
  *
  * @return list<McpToolDefinition>
  */
-function inputSchemaTestToolsFor(Slim\App $app, McpPersona $persona): array
+function inputSchemaTestToolsFor(App $app, McpPersona $persona): array
 {
 	/** @var Config $config */
 	$config = $app->getContainer()->get(Config::class);

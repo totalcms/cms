@@ -4,6 +4,7 @@ namespace Tests\Unit\Domain\Twig\Adapter;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
@@ -37,7 +38,7 @@ final class RenderTwigAdapterTest extends TestCase
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
-		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
 		$this->adapter = buildRenderTwigAdapter(
 			$this->htmxRenderer,
@@ -104,7 +105,7 @@ final class RenderTwigAdapterTest extends TestCase
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
-		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
 		return buildRenderTwigAdapter(
 			$this->htmxRenderer,
@@ -403,7 +404,7 @@ final class RenderTwigAdapterTest extends TestCase
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
-		$loggerFactory->method('createLogger')->willReturn(new \Psr\Log\NullLogger());
+		$loggerFactory->method('createLogger')->willReturn(new NullLogger());
 
 		return buildRenderTwigAdapter(
 			$htmxRenderer,

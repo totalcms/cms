@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Property\File;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,10 +13,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class FileMoveActionTest extends TestCase
 {
 	private FileMoveAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $mover;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $mover;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

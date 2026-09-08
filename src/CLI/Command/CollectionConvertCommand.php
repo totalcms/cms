@@ -41,7 +41,7 @@ class CollectionConvertCommand extends BaseCommand
 
 		try {
 			$report = $this->totalcms->container()->get(CollectionFormatConverter::class)->convert($collection, $to, $dryRun);
-		} catch (\DomainException | \UnexpectedValueException $e) {
+		} catch (\DomainException|\UnexpectedValueException $e) {
 			return $this->outputError($input, $output, $e->getMessage());
 		}
 

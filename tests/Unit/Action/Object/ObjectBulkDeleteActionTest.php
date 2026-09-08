@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Object;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,10 +13,10 @@ use TotalCMS\Renderer\JsonRenderer;
 
 final class ObjectBulkDeleteActionTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $bulk;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $bulk;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 	private ObjectBulkDeleteAction $action;
 
 	protected function setUp(): void

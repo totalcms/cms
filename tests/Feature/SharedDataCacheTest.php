@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\Service\APCuService;
 use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
@@ -51,7 +52,7 @@ final class SharedDataCacheTest extends TestCase
 
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('channelLogger')
-			->willReturn($this->createMock(\Psr\Log\LoggerInterface::class));
+			->willReturn($this->createMock(LoggerInterface::class));
 
 		// Filesystem is the only live backend: it is always present, so the test
 		// behaves the same whether or not APCu/Redis exist on the test machine.
@@ -71,7 +72,7 @@ final class SharedDataCacheTest extends TestCase
 			$this->createMock(WatermarkCleanupService::class),
 			$this->createMock(DevModeManager::class),
 			$this->createMock(CacheInvalidationSignal::class),
-			new EventDispatcher($this->createMock(\Psr\Log\LoggerInterface::class)),
+			new EventDispatcher($this->createMock(LoggerInterface::class)),
 			$config,
 			$loggerFactory,
 		);

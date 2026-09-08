@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Mcp\Tool\SavedQuery;
 use Mcp\Capability\Registry;
 use Mcp\Capability\Registry\ReferenceHandler;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\Content\TextContent;
 use Mcp\Schema\JsonRpc\Error;
 use Mcp\Schema\JsonRpc\Response;
 use Mcp\Schema\Request\CallToolRequest;
@@ -18,6 +19,7 @@ use Mcp\Server\Session\Session;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
@@ -51,7 +53,7 @@ final class SavedQueryToolTest extends TestCase
 			'access' => 'public', 'description' => null, 'resource' => true, 'titleProperty' => '',
 		]);
 
-		$ctx = new PersonaContext($this->createStub(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class), $schemaResolver);
+		$ctx = new PersonaContext($this->createStub(CollectionFetcher::class), $schemaResolver);
 		$ctx->set($persona);
 
 		return $ctx;
@@ -273,7 +275,7 @@ final class SavedQueryToolTest extends TestCase
 		// instead of structuredContent.
 		$this->assertCount(1, $result->content);
 		$textContent = $result->content[0];
-		$this->assertInstanceOf(\Mcp\Schema\Content\TextContent::class, $textContent);
+		$this->assertInstanceOf(TextContent::class, $textContent);
 		$decoded = json_decode($textContent->text, true);
 		$this->assertSame(['items', 'total', 'limit', 'offset', 'has_more'], array_keys($decoded));
 		$this->assertSame('austin-1', $decoded['items'][0]['id']);

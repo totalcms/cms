@@ -6,6 +6,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
+
 use function TotalCMS\Slim\Pest\post;
 use function TotalCMS\Slim\Pest\putJson;
 

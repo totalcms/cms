@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\Template\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Template\Exception\TemplatesLockedException;
@@ -11,8 +12,8 @@ use TotalCMS\Domain\Template\Service\TemplateRemover;
 final class TemplateRemoverTest extends TestCase
 {
 	private TemplateRemover $remover;
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
-	private \PHPUnit\Framework\MockObject\MockObject $paths;
+	private MockObject $storage;
+	private MockObject $paths;
 
 	protected function setUp(): void
 	{

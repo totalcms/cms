@@ -6,6 +6,7 @@ namespace Tests\Unit\Action\Setup;
 
 use Odan\Session\FlashInterface;
 use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -21,14 +22,14 @@ use TotalCMS\Support\Config;
 final class AccountSetupSubmitActionTest extends TestCase
 {
 	private AccountSetupSubmitAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $firstLoginChecker;
-	private \PHPUnit\Framework\MockObject\MockObject $loginService;
-	private \PHPUnit\Framework\MockObject\MockObject $sessionLogin;
-	private \PHPUnit\Framework\MockObject\MockObject $setupState;
-	private \PHPUnit\Framework\MockObject\MockObject $session;
-	private \PHPUnit\Framework\MockObject\MockObject $redirectRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $translator;
-	private \PHPUnit\Framework\MockObject\MockObject $flash;
+	private MockObject $firstLoginChecker;
+	private MockObject $loginService;
+	private MockObject $sessionLogin;
+	private MockObject $setupState;
+	private MockObject $session;
+	private MockObject $redirectRenderer;
+	private MockObject $translator;
+	private MockObject $flash;
 	private Config $config;
 
 	protected function setUp(): void

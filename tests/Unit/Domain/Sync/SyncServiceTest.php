@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Sync;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
+use TotalCMS\Domain\Sync\Service\SyncDiffService;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
@@ -17,10 +19,10 @@ use TotalCMS\Support\OperationResult;
 final class SyncServiceTest extends TestCase
 {
 	private SyncService $service;
-	private \PHPUnit\Framework\MockObject\MockObject $exporter;
-	private \PHPUnit\Framework\MockObject\MockObject $importer;
-	private \PHPUnit\Framework\MockObject\MockObject $httpClient;
-	private \PHPUnit\Framework\MockObject\MockObject $paths;
+	private MockObject $exporter;
+	private MockObject $importer;
+	private MockObject $httpClient;
+	private MockObject $paths;
 
 	protected function setUp(): void
 	{
@@ -36,7 +38,7 @@ final class SyncServiceTest extends TestCase
 			$this->importer,
 			$this->httpClient,
 			$this->paths,
-			new \TotalCMS\Domain\Sync\Service\SyncDiffService(),
+			new SyncDiffService(),
 		);
 	}
 
@@ -61,7 +63,7 @@ final class SyncServiceTest extends TestCase
 
 		$diff = $this->service->diff('https://example.com', 'key');
 
-		expect($diff['schemas']['products']['status'])->toBe(\TotalCMS\Domain\Sync\Service\SyncDiffService::DIFFERS);
+		expect($diff['schemas']['products']['status'])->toBe(SyncDiffService::DIFFERS);
 		expect($diff['schemas']['products']['newer'])->toBe('remote');
 		expect($diff['templates'])->toBe([]);
 		expect($diff['objects'])->toBe([]);
@@ -149,7 +151,7 @@ final class SyncServiceTest extends TestCase
 			->with(null, [], null)
 			->willReturn(new JumpStartData());
 
-		$service = new SyncService($exporter, $this->importer, $this->httpClient, $paths, new \TotalCMS\Domain\Sync\Service\SyncDiffService());
+		$service = new SyncService($exporter, $this->importer, $this->httpClient, $paths, new SyncDiffService());
 
 		// Caller asked for "all templates" (null) — git-management overrides it.
 		$service->push('https://example.com', 'key');

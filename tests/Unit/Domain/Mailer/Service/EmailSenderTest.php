@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mailer\Service;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -52,7 +53,7 @@ final class EmailSenderTest extends TestCase
 
 	private function createMockLoggerFactory(): LoggerFactory
 	{
-		$mockLogger = $this->createMock(\Psr\Log\LoggerInterface::class);
+		$mockLogger = $this->createMock(LoggerInterface::class);
 
 		$mockLoggerFactory = $this->createMock(LoggerFactory::class);
 		$mockLoggerFactory->method('addFileHandler')->willReturnSelf();

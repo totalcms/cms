@@ -17,6 +17,8 @@ declare(strict_types=1);
  * instance the guard times with is the one we flush + inspect.
  */
 
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\CacheManager;
@@ -32,6 +34,7 @@ use TotalCMS\Domain\Extension\Service\ExtensionProfiler;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
 use TotalCMS\Domain\Extension\Service\TwigExtensionRegistrar;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -98,7 +101,7 @@ function profilingStateRepo(): array
 	$tmpRoot = sys_get_temp_dir() . '/tcms-profiling-' . bin2hex(random_bytes(6));
 	mkdir($tmpRoot, 0777, true);
 
-	$flysystem = new League\Flysystem\Filesystem(new League\Flysystem\Local\LocalFilesystemAdapter($tmpRoot));
+	$flysystem = new Filesystem(new LocalFilesystemAdapter($tmpRoot));
 	$storage   = new StorageFilesystemAdapter($flysystem);
 
 	return [new ExtensionStateRepository($storage), $tmpRoot];
@@ -144,7 +147,7 @@ function profilingManager(
 	$settingsStorage->method('fileExists')->willReturn(false);
 	$settingsManager = new ExtensionSettingsManager($settingsStorage);
 
-	$manifestValidator = new ManifestValidator(test()->createMock(TotalCMS\Domain\License\Service\EditionFeatureService::class));
+	$manifestValidator = new ManifestValidator(test()->createMock(EditionFeatureService::class));
 	$discovery         = new ExtensionDiscovery($config, $manifestValidator, new NullLogger());
 	$container         = test()->createMock(ContainerInterface::class);
 	$container->method('has')->willReturn(false);

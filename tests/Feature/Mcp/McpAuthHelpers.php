@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
@@ -24,7 +26,7 @@ use TotalCMS\Support\Config;
  * The names are deliberately distinct from the helpers in the other MCP test
  * files, which are file-local by design.
  */
-function mcpAuthSetupOAuthKeys(Slim\App $app): array
+function mcpAuthSetupOAuthKeys(App $app): array
 {
 	$tmpDir = sys_get_temp_dir() . '/oauth-mcp-test-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
@@ -109,7 +111,7 @@ function mcpAuthSeedAccessGroups(): void
  *
  * @param list<string> $scopes
  */
-function mcpAuthIssueToken(Slim\App $app, string $clientId, string $clientSecret, array $scopes, string $userId = 'admin@example.test', string $collection = 'auth'): string
+function mcpAuthIssueToken(App $app, string $clientId, string $clientSecret, array $scopes, string $userId = 'admin@example.test', string $collection = 'auth'): string
 {
 	$client = new OAuthClientData(
 		id: $clientId,
@@ -190,7 +192,7 @@ function mcpAuthIssueToken(Slim\App $app, string $clientId, string $clientSecret
  * Initialize an MCP session using a Bearer access token.
  * Returns the Mcp-Session-Id or empty string when MCP is unavailable.
  */
-function mcpAuthInitSession(Slim\App $app, string $accessToken): string
+function mcpAuthInitSession(App $app, string $accessToken): string
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -227,11 +229,11 @@ function mcpAuthInitSession(Slim\App $app, string $accessToken): string
  * @param string              $sessionId Session ID from mcpAuthInitSession()
  */
 function mcpAuthRequest(
-	Slim\App $app,
+	App $app,
 	string $accessToken,
 	array $payload,
 	string $sessionId = '',
-): Psr\Http\Message\ResponseInterface {
+): ResponseInterface {
 	$factory = new Psr17Factory();
 	$request = $factory
 		->createServerRequest('POST', '/mcp')
@@ -254,7 +256,7 @@ function mcpAuthRequest(
  * (potentially malformed) token string.  Used for the invalid-token scenario
  * where we need raw header control without a valid session.
  */
-function mcpAuthRawBearerRequest(Slim\App $app, string $rawToken, string $method): Psr\Http\Message\ResponseInterface
+function mcpAuthRawBearerRequest(App $app, string $rawToken, string $method): ResponseInterface
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -284,7 +286,7 @@ function mcpAuthRawBearerRequest(Slim\App $app, string $rawToken, string $method
  * 'authenticated') so the same collection can exercise both the PUBLIC and
  * AUTHENTICATED regression cases in Task 9's draft-authority tests below.
  */
-function mcpAuthSetCollectionAccess(Slim\App $app, string $collectionId, string $access): void
+function mcpAuthSetCollectionAccess(App $app, string $collectionId, string $access): void
 {
 	$container  = $app->getContainer();
 	$collection = $container->get(CollectionFetcher::class)->fetchOrCreateReserved($collectionId);
@@ -307,7 +309,7 @@ function mcpAuthSetCollectionAccess(Slim\App $app, string $collectionId, string 
  *
  * @param array<string,mixed> $payload
  */
-function mcpAuthPublicRequest(Slim\App $app, array $payload, string $sessionId = ''): Psr\Http\Message\ResponseInterface
+function mcpAuthPublicRequest(App $app, array $payload, string $sessionId = ''): ResponseInterface
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -334,7 +336,7 @@ function mcpAuthPublicRequest(Slim\App $app, array $payload, string $sessionId =
  * is unavailable (edition/config gate) — same skip-safe contract as
  * mcpAuthInitSession().
  */
-function mcpAuthPublicInitSession(Slim\App $app): string
+function mcpAuthPublicInitSession(App $app): string
 {
 	$init = mcpAuthPublicRequest($app, [
 		'jsonrpc' => '2.0',
@@ -375,7 +377,7 @@ function mcpAuthPublicInitSession(Slim\App $app): string
  *
  * @return list<array<string,mixed>>
  */
-function mcpAuthStructuredItems(Psr\Http\Message\ResponseInterface $response): array
+function mcpAuthStructuredItems(ResponseInterface $response): array
 {
 	$body  = json_decode((string)$response->getBody(), true);
 	$items = $body['result']['structuredContent']['items'] ?? null;
@@ -393,7 +395,7 @@ function mcpAuthStructuredItems(Psr\Http\Message\ResponseInterface $response): a
  *
  * @param list<string> $scopes
  */
-function mcpAuthConsentPageBody(Slim\App $app, array $scopes, string $userId): ?string
+function mcpAuthConsentPageBody(App $app, array $scopes, string $userId): ?string
 {
 	$clientId = 'mcp-auth-consent-' . uniqid('', true);
 	$client   = new OAuthClientData(
@@ -441,7 +443,7 @@ function mcpAuthConsentPageBody(Slim\App $app, array $scopes, string $userId): ?
  *
  * @return list<string>|null Tool names, or null when the env can't run OAuth
  */
-function mcpAuthListToolsFor(Slim\App $app, string $userId, array $scopes): ?array
+function mcpAuthListToolsFor(App $app, string $userId, array $scopes): ?array
 {
 	$clientId = 'mcp-auth-elevation-' . uniqid('', true);
 	$token    = mcpAuthIssueToken($app, $clientId, 'secret', $scopes, $userId);
@@ -471,7 +473,7 @@ function mcpAuthListToolsFor(Slim\App $app, string $userId, array $scopes): ?arr
  * described above. Call before issuing a token in every Scenario 16 test
  * that builds a fresh MCP server against an otherwise-empty cmsDataDir.
  */
-function mcpAuthEnsureDataviewsCollection(Slim\App $app): void
+function mcpAuthEnsureDataviewsCollection(App $app): void
 {
 	$app->getContainer()->get(CollectionFetcher::class)->fetchOrCreateReserved('dataviews');
 }
@@ -489,7 +491,7 @@ function mcpAuthEnsureDataviewsCollection(Slim\App $app): void
  *
  * @return list<array<string,mixed>>
  */
-function mcpAuthResourceReadItems(Psr\Http\Message\ResponseInterface $response): array
+function mcpAuthResourceReadItems(ResponseInterface $response): array
 {
 	$body    = json_decode((string)$response->getBody(), true);
 	$payload = json_decode((string)($body['result']['contents'][0]['text'] ?? ''), true);

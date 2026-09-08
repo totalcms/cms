@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Symfony\Component\Console\Tester\CommandTester;
 use TotalCMS\CLI\Command\AutomationsProcessCommand;
+use TotalCMS\Domain\Automation\Service\AutomationQueue;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
@@ -37,7 +38,7 @@ it('drains a queued async run on the next tick', function (): void {
 		'triggers' => ['t0' => ['id' => 't0', 'type' => 'webhook', 'auth' => 'none']],
 		'handler'  => "<?php\n\nreturn function (\$ctx) { return \$ctx->args; };\n",
 	]);
-	$container->get(\TotalCMS\Domain\Automation\Service\AutomationQueue::class)
+	$container->get(AutomationQueue::class)
 		->enqueue('queued', ['type' => 'webhook'], ['hello' => 'world']);
 
 	$tester = new CommandTester(makeAutomationsCommand($container));

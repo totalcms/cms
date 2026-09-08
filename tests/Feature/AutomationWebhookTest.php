@@ -5,6 +5,7 @@ declare(strict_types=1);
 use TotalCMS\Domain\ApiKey\Service\ApiKeyCreator;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\post;
 use function TotalCMS\Slim\Pest\postJson;
@@ -70,7 +71,7 @@ it('hides handler error detail in a sync webhook in production', function (): vo
 	// Flip to a true production request: the public caller must not see the
 	// message or stack trace, only a generic failure. The app is rebuilt per
 	// test (beforeEach), so this mutation does not leak.
-	$this->app->getContainer()->get(TotalCMS\Support\Config::class)->env = 'prod';
+	$this->app->getContainer()->get(Config::class)->env = 'prod';
 
 	saveWebhookAutomation($this->app->getContainer(), 'boom-prod', 'none', true, "<?php\n\nreturn function (\$ctx) { throw new \\RuntimeException('secret path /var/www leaked'); };\n");
 
@@ -192,4 +193,3 @@ it('renders a failing sync webhook as an error fragment for an htmx request', fu
 	expect($response->getHeaderLine('Content-Type'))->toContain('text/html');
 	expect((string)$response->getBody())->toContain('cms-error-500');
 });
-

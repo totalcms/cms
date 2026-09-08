@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Storage\Exception\CorruptedStorageFileException;
 
 /**
  * A hand-edited or badly-imported schema file that is not valid JSON.
@@ -44,11 +45,11 @@ it('leaves every other schema usable', function (): void {
 
 it('names the file and the reason when the schema is actually fetched', function (): void {
 	expect(fn () => $this->fetcher->fetchRawSchema('camps'))
-		->toThrow(TotalCMS\Domain\Storage\Exception\CorruptedStorageFileException::class);
+		->toThrow(CorruptedStorageFileException::class);
 
 	try {
 		$this->fetcher->fetchRawSchema('camps');
-	} catch (TotalCMS\Domain\Storage\Exception\CorruptedStorageFileException $e) {
+	} catch (CorruptedStorageFileException $e) {
 		expect($e->getMessage())->toContain('camps');
 		expect($e->getMessage())->toContain('not valid JSON');
 		// Exception::getFile() must still be the PHP file that raised it.

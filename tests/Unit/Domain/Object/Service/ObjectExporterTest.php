@@ -13,6 +13,7 @@ use TotalCMS\Domain\Object\Service\ObjectExporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\LocalizedtextData;
+use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Data\StringData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -117,7 +118,7 @@ function objectExporterMapObjects(MockObject $fetcher, array $map): void
 }
 
 /**
- * @param array<string,\TotalCMS\Domain\Property\Data\PropertyData> $properties
+ * @param array<string,PropertyData> $properties
  */
 function objectExporterObject(string $id, array $properties): ObjectData
 {

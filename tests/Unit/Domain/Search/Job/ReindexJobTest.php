@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Search\Job;
 
+use Monolog\Level;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\JobQueue\Data\JobData;
@@ -23,7 +24,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			new SearchProviderRegistry(),
 			$this->createMock(ObjectFetcher::class),
-			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'text']),
 		);
 
@@ -38,7 +39,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			new SearchProviderRegistry(),
 			$this->createMock(ObjectFetcher::class),
-			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia']),
 		);
 
@@ -74,7 +75,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			$registry,
 			$fetcher,
-			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia'])
 		);
 
@@ -106,7 +107,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			$registry,
 			$fetcher,
-			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia'])
 		);
 
@@ -132,7 +133,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			$registry,
 			$this->createMock(ObjectFetcher::class),
-			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia'])
 		);
 
@@ -159,7 +160,7 @@ final class ReindexJobTest extends TestCase
 		$job = new ReindexJob(
 			$registry,
 			$fetcher,
-			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia'])
 		);
 

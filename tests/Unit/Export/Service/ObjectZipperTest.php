@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Export\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Export\Service\ObjectZipper;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -12,7 +13,7 @@ use TotalCMS\Support\Config;
 final class ObjectZipperTest extends TestCase
 {
 	private ObjectZipper $objectZipper;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
+	private MockObject $config;
 	private string $tempDir;
 
 	protected function setUp(): void
@@ -26,7 +27,7 @@ final class ObjectZipperTest extends TestCase
 		// Stand-in for the real repository's format resolution: whichever of
 		// {collection}/{id}.json / .md actually exists on disk, .json preferred.
 		$tempDir  = $this->tempDir;
-		$objects = $this->createMock(ObjectRepository::class);
+		$objects  = $this->createMock(ObjectRepository::class);
 		$objects->method('objectPath')->willReturnCallback(function (string $collection, string $id) use ($tempDir): ?string {
 			foreach (['.json', '.md'] as $ext) {
 				$path = sprintf('%s/%s%s', $collection, $id, $ext);

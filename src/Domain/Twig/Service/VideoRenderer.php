@@ -89,10 +89,10 @@ class VideoRenderer
 
 		$info = (new VideoUrlResolver(VideoUrlResolver::defaultProviders()))->resolve($url);
 
-		$title       = (string)($value['title'] ?? '');
+		$title            = (string)($value['title'] ?? '');
 		$posterImageworks = is_array($options['imageworks']) ? $options['imageworks'] : [];
-		$storedRatio = (string)($value['aspectRatio'] ?? '');
-		$aspectRatio = $storedRatio !== '' ? $storedRatio : $info->aspectRatio;
+		$storedRatio      = (string)($value['aspectRatio'] ?? '');
+		$aspectRatio      = $storedRatio !== '' ? $storedRatio : $info->aspectRatio;
 
 		if ($info->provider === 'file') {
 			$posterUrl = (string)$options['poster'] !== '' ? (string)$options['poster'] : $this->media->videoPoster($idOrObject, $posterImageworks, $options);

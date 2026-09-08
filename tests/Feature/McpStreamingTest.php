@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Support\Config;
 
@@ -79,7 +81,7 @@ beforeEach(function (): void {
  * Initialize an MCP admin session and return the session ID.
  * Returns empty string when MCP is unavailable.
  */
-function streamingMcpInit(Slim\App $app): string
+function streamingMcpInit(App $app): string
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -148,10 +150,10 @@ function streamingToolCallPayload(
  * @param array<string,mixed> $payload
  */
 function streamingMcpRequest(
-	Slim\App $app,
+	App $app,
 	array $payload,
 	string $sessionId,
-): Psr\Http\Message\ResponseInterface {
+): ResponseInterface {
 	$factory = new Psr17Factory();
 	$request = $factory
 		->createServerRequest('POST', '/mcp')
@@ -175,7 +177,7 @@ function streamingMcpRequest(
  * output — but callers should not rely on the return value for assertions.
  * Use session-file reads or disk-artifact checks for content verification.
  */
-function triggerSseBody(Psr\Http\Message\ResponseInterface $response): void
+function triggerSseBody(ResponseInterface $response): void
 {
 	ob_start();
 	// Call __toString() explicitly (not a `(string)` cast) for its side effect:

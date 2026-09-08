@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Export;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,9 +16,9 @@ use TotalCMS\Support\Config;
 final class ExportJumpStartSyncModeTest extends TestCase
 {
 	private ExportJumpStartAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $jumpStartExporter;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $jumpStartExporter;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

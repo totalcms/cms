@@ -3,6 +3,7 @@
 namespace Tests\Unit\Middleware;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -25,12 +26,12 @@ use TotalCMS\Support\Config;
 
 final class EditionMiddlewareTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
-	private \PHPUnit\Framework\MockObject\MockObject $twigRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $jsonRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $responseFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $handler;
+	private MockObject $editionFeatures;
+	private MockObject $twigRenderer;
+	private MockObject $jsonRenderer;
+	private MockObject $responseFactory;
+	private MockObject $request;
+	private MockObject $handler;
 	private Config $config;
 
 	protected function setUp(): void

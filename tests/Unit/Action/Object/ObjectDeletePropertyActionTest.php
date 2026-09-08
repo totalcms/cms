@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Object;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -9,14 +10,15 @@ use TotalCMS\Action\Object\ObjectDeletePropertyAction;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectRemover;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class ObjectDeletePropertyActionTest extends TestCase
 {
 	private ObjectDeletePropertyAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $objectRemover;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $objectRemover;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -87,7 +89,7 @@ final class ObjectDeletePropertyActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('jsonItem')
-			->with($this->response, $objectData, $this->isInstanceOf(\TotalCMS\Transformer\ObjectMetaTransformer::class))
+			->with($this->response, $objectData, $this->isInstanceOf(ObjectMetaTransformer::class))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, $args);

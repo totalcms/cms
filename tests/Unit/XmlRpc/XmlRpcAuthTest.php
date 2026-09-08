@@ -5,8 +5,11 @@ declare(strict_types=1);
 use Tests\Unit\XmlRpc\Stubs\XmlRpcAuthStubApiKeyFetcher;
 use Tests\Unit\XmlRpc\Stubs\XmlRpcAuthStubUserValidationService;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth;
 use TotalCMS\Domain\XmlRpc\Transport\XmlRpcFault;
+use TotalCMS\Support\Config;
 
 function xmlRpcApiKey(array $scopes = ['methods' => ['GET', 'POST', 'PUT', 'DELETE'], 'paths' => ['/xmlrpc.php', '/collections/blog']]): ApiKeyData
 {
@@ -25,9 +28,9 @@ function xmlRpcApiKey(array $scopes = ['methods' => ['GET', 'POST', 'PUT', 'DELE
  * its real constructor pulls settings from disk, which unit tests should not
  * depend on.
  */
-function xmlRpcTestConfig(): TotalCMS\Support\Config
+function xmlRpcTestConfig(): Config
 {
-	$config       = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config       = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->auth = ['collection' => 'auth', 'loginWith' => 'both'];
 
 	return $config;
@@ -43,12 +46,12 @@ function xmlRpcTestConfig(): TotalCMS\Support\Config
  */
 function makeXmlRpcAuth(?ApiKeyData $validatedKey, bool $proEdition, ?array $user = null): XmlRpcAuth
 {
-	$editions = new class($proEdition) extends TotalCMS\Domain\License\Service\EditionFeatureService {
+	$editions = new class($proEdition) extends EditionFeatureService {
 		public function __construct(private bool $allowed)
 		{
 		}
 
-		public function can(TotalCMS\Domain\License\Data\EditionFeature $feature): bool
+		public function can(EditionFeature $feature): bool
 		{
 			return $this->allowed;
 		}

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Tool\Discovery;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
@@ -15,8 +17,8 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class ListCollectionsToolTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $collections;
-	private \PHPUnit\Framework\MockObject\MockObject $resolver;
+	private MockObject $collections;
+	private MockObject $resolver;
 	private PersonaContext $persona;
 	private ListCollectionsTool $tool;
 
@@ -42,7 +44,7 @@ final class ListCollectionsToolTest extends TestCase
 				'titleProperty' => '',
 			],
 		);
-		$this->persona = new PersonaContext($this->createStub(\TotalCMS\Domain\Collection\Service\CollectionFetcher::class), $personaSchemaResolver);
+		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $personaSchemaResolver);
 
 		$this->tool = new ListCollectionsTool(
 			$this->collections,

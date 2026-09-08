@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Property\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -26,10 +27,10 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
  */
 class FileRemoverTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
-	private \PHPUnit\Framework\MockObject\MockObject $propFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectPatcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
+	private MockObject $storage;
+	private MockObject $propFetcher;
+	private MockObject $objectPatcher;
+	private MockObject $objectFetcher;
 
 	protected function setUp(): void
 	{

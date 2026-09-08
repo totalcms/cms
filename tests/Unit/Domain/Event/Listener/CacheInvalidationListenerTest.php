@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Event\Listener;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Cache\CacheManager;
@@ -16,7 +17,7 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 final class CacheInvalidationListenerTest extends TestCase
 {
 	private EventDispatcher $dispatcher;
-	private \PHPUnit\Framework\MockObject\MockObject $cacheManager;
+	private MockObject $cacheManager;
 
 	protected function setUp(): void
 	{

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\App;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
@@ -45,7 +46,7 @@ beforeEach(function (): void {
  *
  * @return array{privateKey: string, publicKey: string, tmpDir: string}
  */
-function mcpIntegrationSetupKeys(Slim\App $app): array
+function mcpIntegrationSetupKeys(App $app): array
 {
 	$tmpDir = sys_get_temp_dir() . '/oauth-mcp-integration-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
@@ -100,7 +101,7 @@ function mcpIntegrationSetupKeys(Slim\App $app): array
  * @param list<string> $scopes
  */
 function mcpIntegrationCompleteAuthFlow(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $clientSecret,
 	string $redirectUri,
@@ -212,7 +213,7 @@ function mcpIntegrationMcpRequest(
  * Initialize an MCP session and return the Mcp-Session-Id header value, or
  * empty string when the MCP endpoint is unavailable (non-Pro / disabled).
  */
-function mcpIntegrationInitSession(Slim\App $app, string $accessToken): string
+function mcpIntegrationInitSession(App $app, string $accessToken): string
 {
 	$factory = new Psr17Factory();
 	$body    = $factory->createStream((string)json_encode([

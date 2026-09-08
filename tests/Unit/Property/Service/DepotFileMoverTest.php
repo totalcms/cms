@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Property\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -16,10 +17,10 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
 
 class DepotFileMoverTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $mockStorage;
-	private \PHPUnit\Framework\MockObject\MockObject $mockPropFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectPatcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectFetcher;
+	private MockObject $mockStorage;
+	private MockObject $mockPropFetcher;
+	private MockObject $mockObjectPatcher;
+	private MockObject $mockObjectFetcher;
 
 	protected function setUp(): void
 	{

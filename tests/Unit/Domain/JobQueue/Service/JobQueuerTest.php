@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\JobQueue\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
@@ -10,7 +11,7 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 final class JobQueuerTest extends TestCase
 {
 	private JobQueuer $jobQueuer;
-	private \PHPUnit\Framework\MockObject\MockObject $jobRepository;
+	private MockObject $jobRepository;
 
 	protected function setUp(): void
 	{

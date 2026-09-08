@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Admin\ApiKey;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -13,10 +14,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class ApiKeyCreateActionTest extends TestCase
 {
 	private ApiKeyCreateAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $apiKeyCreator;
-	private \PHPUnit\Framework\MockObject\MockObject $jsonRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $apiKeyCreator;
+	private MockObject $jsonRenderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

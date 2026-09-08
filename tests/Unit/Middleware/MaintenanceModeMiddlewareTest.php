@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Middleware;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,8 +13,8 @@ use TotalCMS\Middleware\MaintenanceModeMiddleware;
 
 final class MaintenanceModeMiddlewareTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $maintenanceMode;
-	private \PHPUnit\Framework\MockObject\MockObject $handler;
+	private MockObject $maintenanceMode;
+	private MockObject $handler;
 	private MaintenanceModeMiddleware $middleware;
 
 	protected function setUp(): void

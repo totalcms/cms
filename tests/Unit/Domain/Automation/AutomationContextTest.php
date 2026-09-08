@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Automation;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Automation\Data\AutomationContext;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Import\CsvImporter;
@@ -65,7 +66,7 @@ final class AutomationContextTest extends TestCase
 			syncService: $this->createMock(SyncService::class),
 			mailer: $this->createMock(EmailService::class),
 			config: $config,
-			logger: new \Psr\Log\NullLogger(),
+			logger: new NullLogger(),
 			trigger: ['type' => 'schedule', 'cron' => '0 1 * * *'],
 			args: ['foo' => 'bar'],
 		);

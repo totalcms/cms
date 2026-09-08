@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\OAuth\Adapter;
 
+use League\OAuth2\Server\Entities\ScopeEntityInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
@@ -21,7 +23,7 @@ final class LeagueScopeRepositoryTest extends TestCase
 	private string $tmpFile;
 	private OAuthClientRepository $clientRepo;
 	private OAuthScopeRegistry $registry;
-	private \PHPUnit\Framework\MockObject\MockObject $accessControl;
+	private MockObject $accessControl;
 	private Config $config;
 	private LeagueScopeRepository $adapter;
 
@@ -149,7 +151,7 @@ final class LeagueScopeRepositoryTest extends TestCase
 			'member-user',
 		);
 
-		$ids = array_map(static fn (LeagueScopeEntity|\League\OAuth2\Server\Entities\ScopeEntityInterface $s): string => $s->getIdentifier(), $result);
+		$ids = array_map(static fn (LeagueScopeEntity|ScopeEntityInterface $s): string => $s->getIdentifier(), $result);
 		sort($ids);
 		$this->assertSame(['cms:read', 'mcp:tools'], $ids);
 	}
@@ -181,7 +183,7 @@ final class LeagueScopeRepositoryTest extends TestCase
 			'schema-editor',
 		);
 
-		$ids = array_map(static fn (LeagueScopeEntity|\League\OAuth2\Server\Entities\ScopeEntityInterface $s): string => $s->getIdentifier(), $result);
+		$ids = array_map(static fn (LeagueScopeEntity|ScopeEntityInterface $s): string => $s->getIdentifier(), $result);
 		sort($ids);
 		$this->assertSame(['cms:admin', 'cms:read', 'mcp:tools'], $ids);
 	}

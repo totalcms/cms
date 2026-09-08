@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Template\Repository;
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
+use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Support\Config;
 
@@ -186,7 +187,7 @@ final class TemplateRepositoryTest extends TestCase
 
 	public function testSaveTemplateWritesToDataLayerWhenAdminFirst(): void
 	{
-		$template           = new \TotalCMS\Domain\Template\Data\TemplateData();
+		$template           = new TemplateData();
 		$template->id       = 'about';
 		$template->contents = '<h1>about</h1>';
 
@@ -200,7 +201,7 @@ final class TemplateRepositoryTest extends TestCase
 	{
 		mkdir($this->projectBuilder, 0755, true);
 		$repo               = $this->makeRepo();
-		$template           = new \TotalCMS\Domain\Template\Data\TemplateData();
+		$template           = new TemplateData();
 		$template->id       = 'about';
 		$template->contents = '<h1>project</h1>';
 

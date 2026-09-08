@@ -1,5 +1,8 @@
 <?php
 
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\postJson;
 
@@ -13,7 +16,7 @@ beforeEach(function (): void {
 	}
 	$this->setUpApp(bootstrap());
 	$container         = $this->app->getContainer();
-	$collectionFetcher = $container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
+	$collectionFetcher = $container->get(CollectionFetcher::class);
 	$collectionFetcher->fetchOrCreateReserved('blog');
 
 	// Seed here rather than inside the first test, so every test in this file
@@ -21,7 +24,7 @@ beforeEach(function (): void {
 	// `--filter=property` selects "sorts results by property ascending" without
 	// selecting whichever test created the posts, and the sort assertions then
 	// run against an empty collection. Guarded because a duplicate id throws.
-	$objectFetcher = $container->get(TotalCMS\Domain\Object\Service\ObjectFetcher::class);
+	$objectFetcher = $container->get(ObjectFetcher::class);
 	if (!$objectFetcher->existsObject('blog', 'test-post-1')) {
 		createBlogPosts(5);
 	}
@@ -295,7 +298,7 @@ it('returns CSV with Content-Disposition header', function (): void {
 it('handles query on empty collection', function (): void {
 	// Use a reserved collection type so it passes edition middleware
 	$container         = $this->app->getContainer();
-	$collectionFetcher = $container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
+	$collectionFetcher = $container->get(CollectionFetcher::class);
 	$collectionFetcher->fetchOrCreateReserved('text');
 
 	$response = get('/api/collections/text/query');

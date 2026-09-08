@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\OAuth\Repository\OAuthGrantRepository;
@@ -42,7 +44,7 @@ beforeEach(function (): void {
  *
  * @return array{privateKey: string, publicKey: string, tmpDir: string}
  */
-function refreshSetupKeys(Slim\App $app): array
+function refreshSetupKeys(App $app): array
 {
 	$tmpDir = sys_get_temp_dir() . '/oauth-refresh-test-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
@@ -88,7 +90,7 @@ function refreshSetupKeys(Slim\App $app): array
  * @param list<string> $scopes
  */
 function refreshCreateClient(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $secret,
 	array $redirectUris = ['https://app.test/callback'],
@@ -116,7 +118,7 @@ function refreshCreateClient(
  * @return array{access_token: string, refresh_token: string}
  */
 function refreshIssueToken(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $clientSecret,
 	string $redirectUri = 'https://app.test/callback',
@@ -194,11 +196,11 @@ function refreshIssueToken(
  * Call /oauth/token with a refresh_token grant and return the full response.
  */
 function doRefresh(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $clientSecret,
 	string $refreshToken,
-): Psr\Http\Message\ResponseInterface {
+): ResponseInterface {
 	$factory = new Psr17Factory();
 
 	return $app->handle(

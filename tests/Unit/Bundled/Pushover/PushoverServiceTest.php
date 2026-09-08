@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Bundled\Pushover;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -18,8 +19,8 @@ require_once dirname(__DIR__, 4) . '/resources/extensions/totalcms/pushover/Push
 final class PushoverServiceTest extends TestCase
 {
 	private PushoverService $service;
-	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
-	private \PHPUnit\Framework\MockObject\MockObject $logger;
+	private MockObject $twigEngine;
+	private MockObject $logger;
 
 	protected function setUp(): void
 	{
@@ -302,7 +303,7 @@ final class PushoverServiceTest extends TestCase
 		$this->assertIsBool($result->success);
 	}
 
-	private function buildServiceWith(\PHPUnit\Framework\MockObject\MockObject $imageGenerator): PushoverService
+	private function buildServiceWith(MockObject $imageGenerator): PushoverService
 	{
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('addFileHandler')->willReturnSelf();

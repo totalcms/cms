@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Property\Service;
 
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -14,7 +15,7 @@ use TotalCMS\Domain\Property\Service\PropertyFetcher;
 class PropertyFetcherTest extends TestCase
 {
 	private PropertyFetcher $propertyFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $mockObjectFetcher;
+	private MockObject $mockObjectFetcher;
 
 	protected function setUp(): void
 	{

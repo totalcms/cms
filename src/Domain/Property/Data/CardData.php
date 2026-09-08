@@ -27,7 +27,7 @@ class CardData extends PropertyData implements \Stringable
 	 */
 	public array $childTypes = [];
 
-	/** @var array<string,array<string,mixed>> Resolved settings per child, same keys as $childTypes. */
+	/** @var array<string,array<string,mixed>> Resolved settings per child, same keys as. */
 	public array $childSettings = [];
 
 	/**

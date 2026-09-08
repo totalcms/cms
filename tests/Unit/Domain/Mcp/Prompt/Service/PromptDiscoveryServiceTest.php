@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Prompt\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -16,8 +17,8 @@ use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 
 final class PromptDiscoveryServiceTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $indexFilter;
-	private \PHPUnit\Framework\MockObject\MockObject $collections;
+	private MockObject $indexFilter;
+	private MockObject $collections;
 	private PromptDiscoveryService $svc;
 
 	protected function setUp(): void

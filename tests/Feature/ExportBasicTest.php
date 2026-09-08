@@ -1,5 +1,11 @@
 <?php
 
+use TotalCMS\Domain\Property\Data\DeckData;
+use TotalCMS\Domain\Property\Data\FileData;
+use TotalCMS\Domain\Property\Data\GalleryData;
+use TotalCMS\Domain\Property\Data\ImageData;
+use TotalCMS\Domain\Property\Data\ListData;
+
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());
 });
@@ -46,18 +52,18 @@ it('checks ObjectExporter excludes deck properties in schema filtering', functio
 
 it('verifies PropertyData array handling', function (): void {
 	// Test that PropertyData classes work correctly with array inputs
-	$deckData = new TotalCMS\Domain\Property\Data\DeckData([], []);
+	$deckData = new DeckData([], []);
 	expect($deckData->count())->toBe(0);
 
-	$listData = new TotalCMS\Domain\Property\Data\ListData([], []);
+	$listData = new ListData([], []);
 	expect($listData->transform())->toBe([]);
 
-	$galleryData = new TotalCMS\Domain\Property\Data\GalleryData([], []);
+	$galleryData = new GalleryData([], []);
 	expect($galleryData->transform())->toBe([]);
 
-	$fileData = new TotalCMS\Domain\Property\Data\FileData([], []);
+	$fileData = new FileData([], []);
 	expect($fileData->name)->toBe('');
 
-	$imageData = new TotalCMS\Domain\Property\Data\ImageData([], []);
+	$imageData = new ImageData([], []);
 	expect($imageData->alt)->toBe('');
 });

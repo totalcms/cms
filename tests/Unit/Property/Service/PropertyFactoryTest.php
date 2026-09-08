@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Property\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\ColorData;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Property\Data\DeckData;
@@ -21,8 +23,8 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 class PropertyFactoryTest extends TestCase
 {
 	private PropertyFactory $propertyFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $deckCompatibilityChecker;
+	private MockObject $schemaFetcher;
+	private MockObject $deckCompatibilityChecker;
 
 	protected function setUp(): void
 	{
@@ -61,7 +63,7 @@ class PropertyFactoryTest extends TestCase
 
 		$property = $this->propertyFactory->generateProperty($definition, $value);
 
-		$this->assertInstanceOf(\TotalCMS\Domain\Property\Data\CardData::class, $property);
+		$this->assertInstanceOf(CardData::class, $property);
 		$transformed = $property->transform();
 		$this->assertFalse(array_is_list($transformed));
 		$this->assertArrayHasKey('image', $transformed);

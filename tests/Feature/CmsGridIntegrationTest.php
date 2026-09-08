@@ -4,6 +4,7 @@ use TotalCMS\Domain\Twig\Extension\CmsGridTokenParser;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
+use Twig\TwigFilter;
 
 beforeEach(function (): void {
 	$this->sampleObjects = [
@@ -200,7 +201,7 @@ test('price filter integration works', function (): void {
 	$twig->addTokenParser(new CmsGridTokenParser());
 
 	// Add the price filter
-	$twig->addFilter(new Twig\TwigFilter('price', TotalCMSTwigFilters::price(...)));
+	$twig->addFilter(new TwigFilter('price', TotalCMSTwigFilters::price(...)));
 
 	$result = $twig->render('test', ['products' => $products]);
 

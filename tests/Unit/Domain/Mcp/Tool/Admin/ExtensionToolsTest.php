@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Mcp\Tool\Admin\ExtensionTools;
@@ -11,7 +12,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 
 final class ExtensionToolsTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $extensionManager;
+	private MockObject $extensionManager;
 	private ExtensionTools $tool;
 
 	protected function setUp(): void

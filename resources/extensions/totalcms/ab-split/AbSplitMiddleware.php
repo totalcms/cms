@@ -7,6 +7,7 @@ namespace TotalCMS\Bundled\AbSplit;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
 use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\PageMiddleware\PageMiddlewareInterface;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -161,7 +162,7 @@ class AbSplitMiddleware implements PageMiddlewareInterface
 		header('Set-Cookie: ' . $cookie, replace: false);
 	}
 
-	private function stream(string $body): \Psr\Http\Message\StreamInterface
+	private function stream(string $body): StreamInterface
 	{
 		return (new Psr17Factory())->createStream($body);
 	}

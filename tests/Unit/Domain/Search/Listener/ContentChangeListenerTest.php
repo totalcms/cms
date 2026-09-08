@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Search\Listener;
 
+use Monolog\Level;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -32,7 +33,7 @@ final class ContentChangeListenerTest extends TestCase
 		$listener = new ContentChangeListener(
 			$registry,
 			$this->createMock(JobQueuer::class),
-			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
 		);
 
@@ -57,7 +58,7 @@ final class ContentChangeListenerTest extends TestCase
 		$listener = new ContentChangeListener(
 			$registry,
 			$this->createMock(JobQueuer::class),
-			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'text', 'indexOnSave' => true]),
 		);
 
@@ -76,7 +77,7 @@ final class ContentChangeListenerTest extends TestCase
 		$listener = new ContentChangeListener(
 			$registry,
 			$this->createMock(JobQueuer::class),
-			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => false]),
 		);
 
@@ -105,7 +106,7 @@ final class ContentChangeListenerTest extends TestCase
 		$listener = new ContentChangeListener(
 			$registry,
 			$jobs,
-			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
 		);
 
@@ -131,7 +132,7 @@ final class ContentChangeListenerTest extends TestCase
 		$listener = new ContentChangeListener(
 			$registry,
 			$this->createMock(JobQueuer::class),
-			new LoggerFactory(['test' => new NullLogger(), 'level' => \Monolog\Level::Debug]),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
 		);
 

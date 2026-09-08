@@ -24,7 +24,6 @@ class BuilderAssetRenderer
 	) {
 	}
 
-
 	/**
 	 * Resolve an asset URL with cache busting.
 	 *
@@ -71,7 +70,6 @@ class BuilderAssetRenderer
 
 		return '<link rel="preload" href="' . htmlspecialchars($url) . '" as="' . htmlspecialchars($as) . '"' . $crossorigin . '>';
 	}
-
 
 	// Private — Assets
 	// -------------------------

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\ImageWorks;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -13,10 +14,10 @@ use TotalCMS\Domain\Property\Service\UploadFetcher;
 final class ImageWorksUploadFetchActionTest extends TestCase
 {
 	private ImageWorksUploadFetchAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $imageGenerator;
-	private \PHPUnit\Framework\MockObject\MockObject $uploadFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $imageGenerator;
+	private MockObject $uploadFetcher;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

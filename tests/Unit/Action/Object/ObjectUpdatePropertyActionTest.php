@@ -3,9 +3,11 @@
 namespace Tests\Unit\Action\Object;
 
 use Odan\Session\SessionInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\NullLogger;
 use TotalCMS\Action\Object\ObjectUpdatePropertyAction;
 use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
@@ -15,16 +17,18 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
+use TotalCMS\Transformer\ObjectMetaTransformer;
 
 final class ObjectUpdatePropertyActionTest extends TestCase
 {
 	private ObjectUpdatePropertyAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $objectUpdater;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{
@@ -39,8 +43,8 @@ final class ObjectUpdatePropertyActionTest extends TestCase
 		$schemaFetcher->method('fetchSchemaForCollection')->willReturn(new SchemaData());
 		$config              = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->auth        = ['enable' => true, 'collection' => 'auth'];
-		$policyLoggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
-		$policyLoggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
+		$policyLoggerFactory = $this->createMock(LoggerFactory::class);
+		$policyLoggerFactory->method('channelLogger')->willReturn(new NullLogger());
 		$policy = new AuthFieldPolicy(
 			$schemaFetcher,
 			$this->createMock(UserValidationService::class),
@@ -149,7 +153,7 @@ final class ObjectUpdatePropertyActionTest extends TestCase
 
 		$this->renderer->expects($this->once())
 			->method('jsonItem')
-			->with($this->response, $objectData, $this->isInstanceOf(\TotalCMS\Transformer\ObjectMetaTransformer::class))
+			->with($this->response, $objectData, $this->isInstanceOf(ObjectMetaTransformer::class))
 			->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, $args);

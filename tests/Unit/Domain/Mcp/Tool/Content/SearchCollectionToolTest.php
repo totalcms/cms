@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Tool\Content;
 
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -24,12 +25,12 @@ use TotalCMS\Domain\Twig\Markdown\TiptapToMarkdownConverter;
 
 final class SearchCollectionToolTest extends TestCase
 {
-	/** @var \PHPUnit\Framework\MockObject\MockObject&SearchServiceInterface */
-	private \PHPUnit\Framework\MockObject\MockObject $searchService;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $collections;
-	private \PHPUnit\Framework\MockObject\MockObject $urls;
-	private \PHPUnit\Framework\MockObject\MockObject $resolver;
+	/** @var MockObject&SearchServiceInterface */
+	private MockObject $searchService;
+	private MockObject $objectFetcher;
+	private MockObject $collections;
+	private MockObject $urls;
+	private MockObject $resolver;
 	private PersonaContext $persona;
 	private SearchCollectionTool $tool;
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Admin;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,11 +15,11 @@ use TotalCMS\Renderer\TwigRenderer;
 final class AdminMailerActionTest extends TestCase
 {
 	private AdminMailerAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $renderer;
+	private MockObject $collectionFetcher;
+	private MockObject $objectFetcher;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

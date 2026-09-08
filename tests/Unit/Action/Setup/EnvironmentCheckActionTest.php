@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Setup;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,9 +16,9 @@ use TotalCMS\Renderer\TwigRenderer;
 
 final class EnvironmentCheckActionTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $twigRenderer;
-	private \PHPUnit\Framework\MockObject\MockObject $serverChecker;
-	private \PHPUnit\Framework\MockObject\MockObject $setupState;
+	private MockObject $twigRenderer;
+	private MockObject $serverChecker;
+	private MockObject $setupState;
 	private EnvironmentCheckAction $action;
 
 	protected function setUp(): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Cache\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Cache\Service\CacheInterface;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Support\Config;
 
@@ -434,7 +435,7 @@ final class MemcachedServiceTest extends TestCase
 
 	public function testImplementsCacheInterface(): void
 	{
-		$this->assertInstanceOf(\TotalCMS\Domain\Cache\Service\CacheInterface::class, $this->memcachedService);
+		$this->assertInstanceOf(CacheInterface::class, $this->memcachedService);
 	}
 
 	public function testHasRequiredMethods(): void

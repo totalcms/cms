@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Tests\Unit\Bundled;
 
 use DI\Container;
+use DI\ContainerBuilder;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Monolog\Level;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Bundled\AbSplit\AbSplitMiddleware;
@@ -77,15 +80,15 @@ final class BundledExtensionLifecycleTest extends TestCase
 		// only true for what we explicitly defined. Otherwise PHP-DI happily
 		// claims it `has()` any class with a defaultable constructor and then
 		// crashes when the manager actually calls `get()`.
-		$builder = new \DI\ContainerBuilder();
+		$builder = new ContainerBuilder();
 		$builder->useAutowiring(false);
 		$builder->useAttributes(false);
 		$builder->addDefinitions([
 			LoggerFactory::class          => new LoggerFactory([
-				'level' => \Monolog\Level::Debug,
+				'level' => Level::Debug,
 				'test'  => new NullLogger(),
 			]),
-			PageAuthMiddleware::class     => fn (): \PHPUnit\Framework\MockObject\MockObject => $this->createMock(PageAuthMiddleware::class),
+			PageAuthMiddleware::class     => fn (): MockObject => $this->createMock(PageAuthMiddleware::class),
 			PageMiddlewareRegistry::class => fn (Container $c): PageMiddlewareRegistry => new PageMiddlewareRegistry($c),
 		]);
 		$this->container = $builder->build();

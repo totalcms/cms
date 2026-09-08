@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mailer\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -19,12 +20,12 @@ use TotalCMS\Support\OperationResult;
 final class EmailServiceTest extends TestCase
 {
 	private EmailService $service;
-	private \PHPUnit\Framework\MockObject\MockObject $mailerFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $emailSender;
-	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
-	private \PHPUnit\Framework\MockObject\MockObject $config;
-	private \PHPUnit\Framework\MockObject\MockObject $editionFeatures;
-	private \PHPUnit\Framework\MockObject\MockObject $logger;
+	private MockObject $mailerFetcher;
+	private MockObject $emailSender;
+	private MockObject $twigEngine;
+	private MockObject $config;
+	private MockObject $editionFeatures;
+	private MockObject $logger;
 
 	protected function setUp(): void
 	{

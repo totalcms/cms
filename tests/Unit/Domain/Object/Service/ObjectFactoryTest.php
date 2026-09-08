@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Object\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\AutogenIdService;
@@ -18,10 +19,10 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 final class ObjectFactoryTest extends TestCase
 {
 	private ObjectFactory $factory;
-	private \PHPUnit\Framework\MockObject\MockObject $schemaFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $propertyFactory;
-	private \PHPUnit\Framework\MockObject\MockObject $autogenIdService;
-	private \PHPUnit\Framework\MockObject\MockObject $autogenService;
+	private MockObject $schemaFetcher;
+	private MockObject $propertyFactory;
+	private MockObject $autogenIdService;
+	private MockObject $autogenService;
 
 	protected function setUp(): void
 	{

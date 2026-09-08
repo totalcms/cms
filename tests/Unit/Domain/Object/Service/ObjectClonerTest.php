@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Object\Service;
 
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -15,8 +17,8 @@ use TotalCMS\Domain\Object\Service\ObjectCloner;
 final class ObjectClonerTest extends TestCase
 {
 	private ObjectCloner $cloner;
-	private \PHPUnit\Framework\MockObject\MockObject $storage;
-	private \PHPUnit\Framework\MockObject\MockObject $dateFieldResetter;
+	private MockObject $storage;
+	private MockObject $dateFieldResetter;
 	private EventDispatcher $eventDispatcher;
 
 	/** @var array<string,mixed>|null */
@@ -26,7 +28,7 @@ final class ObjectClonerTest extends TestCase
 	{
 		$this->storage           = $this->createMock(ObjectRepository::class);
 		$this->dateFieldResetter = $this->createMock(DateFieldResetter::class);
-		$this->eventDispatcher   = new EventDispatcher(new \Psr\Log\NullLogger());
+		$this->eventDispatcher   = new EventDispatcher(new NullLogger());
 
 		$this->eventDispatcher->listen('object.created', function (array $payload): void {
 			$this->dispatchedPayload = $payload;

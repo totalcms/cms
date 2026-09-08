@@ -3,6 +3,7 @@
 namespace Tests\Security;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -19,9 +20,9 @@ use TotalCMS\Renderer\TwigRenderer;
 #[CoversClass(StaticPublicAssetsAction::class)]
 final class PathTraversalProtectionTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
-	private \PHPUnit\Framework\MockObject\MockObject $uri;
+	private MockObject $request;
+	private MockObject $response;
+	private MockObject $uri;
 
 	protected function setUp(): void
 	{

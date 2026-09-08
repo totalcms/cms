@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Cache;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,10 +13,10 @@ use TotalCMS\Renderer\JsonRenderer;
 final class CollectionImageCacheDeleteActionTest extends TestCase
 {
 	private CollectionImageCacheDeleteAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $imageCacheService;
-	private \PHPUnit\Framework\MockObject\MockObject $renderer;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $imageCacheService;
+	private MockObject $renderer;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

@@ -32,8 +32,8 @@ final readonly class VideoMetadataFetcher
 		// No oEmbed endpoint — return info's values without making a request
 		if ($info->oembedEndpoint === null) {
 			return [
-				'thumbnail' => $info->thumbnail,
-				'title' => '',
+				'thumbnail'   => $info->thumbnail,
+				'title'       => '',
 				'aspectRatio' => $info->aspectRatio,
 			];
 		}
@@ -57,18 +57,21 @@ final readonly class VideoMetadataFetcher
 
 			if (!$response->isSuccess()) {
 				$this->logFailure('HTTP ' . $response->statusCode, $info);
+
 				return $this->fallbackResult($info);
 			}
 
 			$data = $response->json();
 			if (!is_array($data)) {
 				$this->logFailure('Response body is not JSON object', $info);
+
 				return $this->fallbackResult($info);
 			}
 
 			/** @var array<mixed> $data */
 			if (array_is_list($data)) {
 				$this->logFailure('Response body is not JSON object', $info);
+
 				return $this->fallbackResult($info);
 			}
 
@@ -76,17 +79,18 @@ final readonly class VideoMetadataFetcher
 			// oEmbed offers: Publitio, for one, returns a 300×200 centre crop where
 			// the provider can build the full-width poster. Providers with no
 			// derived thumbnail take oEmbed's as before.
-			$thumbnail = $info->thumbnail !== '' ? $info->thumbnail : $this->extractThumbnail($data);
-			$title = $this->extractTitle($data);
+			$thumbnail   = $info->thumbnail !== '' ? $info->thumbnail : $this->extractThumbnail($data);
+			$title       = $this->extractTitle($data);
 			$aspectRatio = $this->extractAspectRatio($data, $info);
 
 			return [
-				'thumbnail' => $thumbnail,
-				'title' => $title,
+				'thumbnail'   => $thumbnail,
+				'title'       => $title,
 				'aspectRatio' => $aspectRatio,
 			];
 		} catch (\Throwable $e) {
 			$this->logFailure($e->getMessage(), $info);
+
 			return $this->fallbackResult($info);
 		}
 	}
@@ -128,6 +132,7 @@ final readonly class VideoMetadataFetcher
 		}
 
 		$trimmed = trim($title);
+
 		return mb_substr($trimmed, 0, 200);
 	}
 
@@ -141,7 +146,7 @@ final readonly class VideoMetadataFetcher
 	 */
 	private function extractAspectRatio(array $data, VideoInfo $info): string
 	{
-		$width = $this->extractPositiveInt($data['width'] ?? null);
+		$width  = $this->extractPositiveInt($data['width'] ?? null);
 		$height = $this->extractPositiveInt($data['height'] ?? null);
 
 		if ($width === null || $height === null) {
@@ -149,8 +154,8 @@ final readonly class VideoMetadataFetcher
 		}
 
 		$gcd = $this->gcd($width, $height);
-		$w = (int)($width / $gcd);
-		$h = (int)($height / $gcd);
+		$w   = (int)($width / $gcd);
+		$h   = (int)($height / $gcd);
 
 		return "{$w}:{$h}";
 	}
@@ -182,9 +187,10 @@ final readonly class VideoMetadataFetcher
 	{
 		while ($b !== 0) {
 			$temp = $b;
-			$b = $a % $b;
-			$a = $temp;
+			$b    = $a % $b;
+			$a    = $temp;
 		}
+
 		return $a;
 	}
 
@@ -196,8 +202,8 @@ final readonly class VideoMetadataFetcher
 	private function fallbackResult(VideoInfo $info): array
 	{
 		return [
-			'thumbnail' => $info->thumbnail,
-			'title' => '',
+			'thumbnail'   => $info->thumbnail,
+			'title'       => '',
 			'aspectRatio' => $info->aspectRatio,
 		];
 	}
@@ -209,9 +215,9 @@ final readonly class VideoMetadataFetcher
 	{
 		$this->logger->info('Video metadata fetch failed', [
 			'provider' => $info->provider,
-			'videoId' => $info->videoId,
+			'videoId'  => $info->videoId,
 			'endpoint' => $info->oembedEndpoint,
-			'reason' => $reason,
+			'reason'   => $reason,
 		]);
 	}
 }

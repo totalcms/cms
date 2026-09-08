@@ -8,6 +8,7 @@ use Mcp\Schema\JsonRpc\Notification;
 use Mcp\Schema\Notification\ResourceUpdatedNotification;
 use Mcp\Server\Subscription\NotificationBusInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Mcp\Subscription\Service\BusResourceNotifier;
 use TotalCMS\Domain\Mcp\Subscription\Service\CompositeResourceNotifier;
 use TotalCMS\Domain\Mcp\Subscription\Service\ResourceNotifier;
@@ -116,7 +117,7 @@ final class ResourceNotifierCompositionTest extends TestCase
 		$session = $this->notifier(3);
 		$bus     = $this->notifier(1);
 
-		$total = (new CompositeResourceNotifier(new \Psr\Log\NullLogger(), $session, $bus))
+		$total = (new CompositeResourceNotifier(new NullLogger(), $session, $bus))
 			->notifyResourceChanged('tcms://blog/');
 
 		$this->assertSame(1, $session->calls);
@@ -129,7 +130,7 @@ final class ResourceNotifierCompositionTest extends TestCase
 		$broken  = $this->notifier(new \RuntimeException('era storage is down'));
 		$working = $this->notifier(2);
 
-		$composite = new CompositeResourceNotifier(new \Psr\Log\NullLogger(), $broken, $working);
+		$composite = new CompositeResourceNotifier(new NullLogger(), $broken, $working);
 
 		$total = $composite->notifyResourceChanged('tcms://blog/');
 

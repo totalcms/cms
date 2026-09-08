@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Action\Collection;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,9 +13,9 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 final class CollectionExistsActionTest extends TestCase
 {
 	private CollectionExistsAction $action;
-	private \PHPUnit\Framework\MockObject\MockObject $collectionFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $request;
-	private \PHPUnit\Framework\MockObject\MockObject $response;
+	private MockObject $collectionFetcher;
+	private MockObject $request;
+	private MockObject $response;
 
 	protected function setUp(): void
 	{

@@ -9,6 +9,8 @@ use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Token\Builder as JwtBuilder;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
@@ -46,7 +48,7 @@ beforeEach(function (): void {
  *
  * @return array{privateKey: string, publicKey: string, tmpDir: string}
  */
-function securitySetupKeys(Slim\App $app): array
+function securitySetupKeys(App $app): array
 {
 	$tmpDir = sys_get_temp_dir() . '/oauth-security-test-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
@@ -92,7 +94,7 @@ function securitySetupKeys(Slim\App $app): array
  * @param list<string> $scopes
  */
 function securityCreateClient(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $secret,
 	array $redirectUris = ['https://app.test/cb'],
@@ -118,7 +120,7 @@ function securityCreateClient(
 /**
  * Seed AUTH_USER into the session.
  */
-function securitySeedUser(Slim\App $app, string $userId = 'admin@example.test'): PhpSession
+function securitySeedUser(App $app, string $userId = 'admin@example.test'): PhpSession
 {
 	/** @var PhpSession $session */
 	$session = $app->getContainer()->get(PhpSession::class);
@@ -133,7 +135,7 @@ function securitySeedUser(Slim\App $app, string $userId = 'admin@example.test'):
 /**
  * Re-open the session after SessionStartMiddleware has closed it.
  */
-function securityReopenSession(Slim\App $app): PhpSession
+function securityReopenSession(App $app): PhpSession
 {
 	/** @var PhpSession $session */
 	$session = $app->getContainer()->get(PhpSession::class);
@@ -147,7 +149,7 @@ function securityReopenSession(Slim\App $app): PhpSession
 /**
  * Mint a CSRF token bound to the current session.
  */
-function securityMintCsrf(Slim\App $app): string
+function securityMintCsrf(App $app): string
 {
 	/** @var CSRFTokenManager $csrf */
 	$csrf = $app->getContainer()->get(CSRFTokenManager::class);
@@ -164,7 +166,7 @@ function securityMintCsrf(Slim\App $app): string
  * @return array{access_token: string, refresh_token: string, code: string}
  */
 function securityIssueToken(
-	Slim\App $app,
+	App $app,
 	string $clientId,
 	string $clientSecret,
 	string $redirectUri = 'https://app.test/cb',
@@ -239,7 +241,7 @@ function securityIssueToken(
 describe('OAuthSecurity — open-redirect protection (D4)', function (): void {
 	// Helper: send an authorize GET with the given redirect_uri and a valid
 	// client registered at 'https://app.test/cb'. Returns the response.
-	$authorizeWithUri = function (Slim\App $app, string $clientId, string $maliciousUri): Psr\Http\Message\ResponseInterface {
+	$authorizeWithUri = function (App $app, string $clientId, string $maliciousUri): ResponseInterface {
 		$factory = new Psr17Factory();
 
 		$codeVerifier  = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');

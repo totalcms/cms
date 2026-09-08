@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Mcp\Tool\Admin\TemplateTools;
@@ -15,9 +16,9 @@ use TotalCMS\Domain\Template\Service\TemplateLister;
 
 final class TemplateToolsTest extends TestCase
 {
-	private \PHPUnit\Framework\MockObject\MockObject $lister;
-	private \PHPUnit\Framework\MockObject\MockObject $fetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $paths;
+	private MockObject $lister;
+	private MockObject $fetcher;
+	private MockObject $paths;
 	private TemplateTools $tool;
 
 	// Knob read by the paths mock's willReturnCallback — set inside a test to

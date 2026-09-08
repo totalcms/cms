@@ -1,11 +1,81 @@
 <?php
 
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
+use Odan\Session\PhpSession;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Log\NullLogger;
+use Random\RandomException;
+use Slim\App;
+use Symfony\Component\Console\Application;
+use TotalCMS\Domain\Automation\Service\AutomationLoader;
+use TotalCMS\Domain\Automation\Service\AutomationRunReader;
+use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\BuilderOrderService;
+use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
+use TotalCMS\Domain\Cache\CacheManager;
+use TotalCMS\Domain\Cache\CacheReporter;
+use TotalCMS\Domain\Cache\CacheSizingAdvisor;
+use TotalCMS\Domain\Cache\Service\DevModeManager;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Cron\Service\CronTokenProvider;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
+use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
+use TotalCMS\Domain\Extension\Service\EnvironmentResolver;
+use TotalCMS\Domain\Extension\Service\ExtensionGuard;
+use TotalCMS\Domain\Extension\Service\ExtensionProfiler;
+use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
+use TotalCMS\Domain\Index\Service\IndexQueryService;
+use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\JobQueue\Service\JobManager;
+use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Schema\Service\SchemaLister;
+use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Security\CSRF\RequestOriginValidator;
+use TotalCMS\Domain\Security\Request\ClientIpResolver;
+use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
+use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Domain\Translation\TranslationService;
+use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
+use TotalCMS\Domain\Twig\Service\BuilderAssetRenderer;
+use TotalCMS\Domain\Twig\Service\BuilderNavigation;
+use TotalCMS\Domain\Twig\Service\BuilderTemplateRenderer;
+use TotalCMS\Domain\Twig\Service\CloneDialogRenderer;
+use TotalCMS\Domain\Twig\Service\DashboardRenderer;
+use TotalCMS\Domain\Twig\Service\DepotBrowserRenderer;
+use TotalCMS\Domain\Twig\Service\GalleryRenderer;
+use TotalCMS\Domain\Twig\Service\GridRenderer;
+use TotalCMS\Domain\Twig\Service\HtmxRenderer;
+use TotalCMS\Domain\Twig\Service\ImageRenderer;
+use TotalCMS\Domain\Twig\Service\JobQueueRenderer;
+use TotalCMS\Domain\Twig\Service\LoadMoreRenderer;
+use TotalCMS\Domain\Update\Service\UpdateChecker;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
+use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
+use TotalCMS\Slim\Test\TestResponse;
+use TotalCMS\Support\Config;
+use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\HttpResponse;
+
 $_SERVER['APP_ENV'] = 'test';
 
 require_once __DIR__ . '/worker-paths.php';
 
 // Ensure Symfony Console Resources directory exists (missing in some CI environments)
-$consoleResourcesDir = dirname((new ReflectionClass(Symfony\Component\Console\Application::class))->getFileName()) . '/Resources';
+$consoleResourcesDir = dirname((new ReflectionClass(Application::class))->getFileName()) . '/Resources';
 if (!is_dir($consoleResourcesDir)) {
 	@mkdir($consoleResourcesDir, 0755, true);
 }
@@ -264,29 +334,29 @@ function chmodReflectsPrivateMode(string $dir): bool
  * parameter names as that constructor had, so call sites only swap `new`.
  */
 function buildRenderTwigAdapter(
-	TotalCMS\Domain\Twig\Service\HtmxRenderer $htmxRenderer,
-	TotalCMS\Support\Config $config,
-	TotalCMS\Domain\Twig\Adapter\DataTwigAdapter $data,
-	TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter $media,
-	TotalCMS\Domain\Collection\Service\CollectionFetcher $collectionFetcher,
-	TotalCMS\Domain\Collection\Service\CollectionLister $collectionLister,
-	TotalCMS\Domain\Schema\Service\SchemaFetcher $schemaFetcher,
-	TotalCMS\Domain\Twig\Service\GridRenderer $grid,
-	TotalCMS\Factory\LoggerFactory $loggerFactory,
-	?TotalCMS\Domain\Twig\Service\DepotBrowserRenderer $depotBrowserRenderer = null,
-	?TotalCMS\Domain\Index\Service\IndexQueryService $indexQueryService = null,
-	?\Closure $dataViewQueryServiceFactory = null,
-	?\Closure $twigEngineFactory = null,
-): TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter {
-	return new TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter(
+	HtmxRenderer $htmxRenderer,
+	Config $config,
+	DataTwigAdapter $data,
+	MediaTwigAdapter $media,
+	CollectionFetcher $collectionFetcher,
+	CollectionLister $collectionLister,
+	SchemaFetcher $schemaFetcher,
+	GridRenderer $grid,
+	LoggerFactory $loggerFactory,
+	?DepotBrowserRenderer $depotBrowserRenderer = null,
+	?IndexQueryService $indexQueryService = null,
+	?Closure $dataViewQueryServiceFactory = null,
+	?Closure $twigEngineFactory = null,
+): RenderTwigAdapter {
+	return new RenderTwigAdapter(
 		$data,
 		$media,
 		$grid,
-		new TotalCMS\Domain\Twig\Service\LoadMoreRenderer($htmxRenderer, $config, $indexQueryService, $dataViewQueryServiceFactory, $twigEngineFactory),
-		new TotalCMS\Domain\Twig\Service\ImageRenderer($media, $data),
-		new TotalCMS\Domain\Twig\Service\GalleryRenderer($media, $data, $config, $loggerFactory),
-		new TotalCMS\Domain\Twig\Service\CloneDialogRenderer($config, $collectionFetcher, $schemaFetcher, $collectionLister),
-		$depotBrowserRenderer ?? new TotalCMS\Domain\Twig\Service\DepotBrowserRenderer(),
+		new LoadMoreRenderer($htmxRenderer, $config, $indexQueryService, $dataViewQueryServiceFactory, $twigEngineFactory),
+		new ImageRenderer($media, $data),
+		new GalleryRenderer($media, $data, $config, $loggerFactory),
+		new CloneDialogRenderer($config, $collectionFetcher, $schemaFetcher, $collectionLister),
+		$depotBrowserRenderer ?? new DepotBrowserRenderer(),
 	);
 }
 
@@ -298,34 +368,34 @@ function buildRenderTwigAdapter(
  * parameter names as that constructor had, so call sites only swap `new`.
  */
 function buildAdminTwigAdapter(
-	TotalCMS\Support\Config $config,
-	TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter $auth,
-	TotalCMS\Domain\Collection\Service\CollectionLister $collectionLister,
-	TotalCMS\Domain\Schema\Service\SchemaLister $schemaLister,
-	TotalCMS\Domain\Template\Service\TemplateLister $templateLister,
-	TotalCMS\Domain\JobQueue\Service\JobManager $jobManager,
-	TotalCMS\Domain\Cache\Service\DevModeManager $devModeManager,
-	TotalCMS\Domain\Collection\Service\CollectionEditionService $collectionEditionService,
-	TotalCMS\Domain\Cache\CacheReporter $cacheReporter,
-	TotalCMS\Domain\License\Service\LicenseStatus $licenseStatus,
-	TotalCMS\Domain\Index\Service\IndexReader $indexReader,
-	TotalCMS\Infrastructure\Diagnostics\ServerChecker $checker,
-	TotalCMS\Infrastructure\Diagnostics\LogAnalyzer $logAnalyzer,
-	TotalCMS\Domain\ImageWorks\Service\ImageCacheService $imageCacheService,
-	TotalCMS\Domain\Cache\CacheSizingAdvisor $cacheSizingAdvisor,
-	TotalCMS\Domain\Update\Service\UpdateChecker $updateChecker,
-	TotalCMS\Domain\Builder\Service\BuilderConfigService $builderConfig,
-	TotalCMS\Domain\Collection\Service\CollectionFetcher $collectionFetcher,
-	TotalCMS\Domain\Builder\Service\BuilderTemplatePaths $paths,
-	TotalCMS\Domain\JobQueue\Service\JobQueueHealth $jobQueueHealth,
-	TotalCMS\Domain\Translation\TranslationService $translator,
-	TotalCMS\Domain\License\Service\EditionFeatureService $editionFeatures,
-	TotalCMS\Domain\Automation\Service\AutomationLoader $automationLoader,
-	TotalCMS\Domain\Automation\Service\AutomationRunReader $automationRunReader,
-	TotalCMS\Domain\Extension\Repository\ExtensionStateRepository $extensionStateRepository,
-	TotalCMS\Domain\Cron\Service\CronTokenProvider $cronTokens,
-): TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter {
-	return new TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter(
+	Config $config,
+	AuthTwigAdapter $auth,
+	CollectionLister $collectionLister,
+	SchemaLister $schemaLister,
+	TemplateLister $templateLister,
+	JobManager $jobManager,
+	DevModeManager $devModeManager,
+	CollectionEditionService $collectionEditionService,
+	CacheReporter $cacheReporter,
+	LicenseStatus $licenseStatus,
+	IndexReader $indexReader,
+	ServerChecker $checker,
+	LogAnalyzer $logAnalyzer,
+	ImageCacheService $imageCacheService,
+	CacheSizingAdvisor $cacheSizingAdvisor,
+	UpdateChecker $updateChecker,
+	BuilderConfigService $builderConfig,
+	CollectionFetcher $collectionFetcher,
+	BuilderTemplatePaths $paths,
+	JobQueueHealth $jobQueueHealth,
+	TranslationService $translator,
+	EditionFeatureService $editionFeatures,
+	AutomationLoader $automationLoader,
+	AutomationRunReader $automationRunReader,
+	ExtensionStateRepository $extensionStateRepository,
+	CronTokenProvider $cronTokens,
+): AdminTwigAdapter {
+	return new AdminTwigAdapter(
 		$config,
 		$devModeManager,
 		$collectionEditionService,
@@ -337,9 +407,9 @@ function buildAdminTwigAdapter(
 		$cacheSizingAdvisor,
 		$translator,
 		$editionFeatures,
-		new TotalCMS\Domain\Twig\Service\DashboardRenderer($config, $auth, $collectionLister, $schemaLister, $templateLister, $jobManager, $cacheReporter, $licenseStatus, $indexReader, $updateChecker, $jobQueueHealth, $editionFeatures, $automationLoader, $automationRunReader, $extensionStateRepository),
-		new TotalCMS\Domain\Twig\Service\JobQueueRenderer($config, $jobManager, $cronTokens),
-		new TotalCMS\Domain\Twig\Service\BuilderTemplateRenderer($templateLister, $paths, $builderConfig, $indexReader, $collectionFetcher),
+		new DashboardRenderer($config, $auth, $collectionLister, $schemaLister, $templateLister, $jobManager, $cacheReporter, $licenseStatus, $indexReader, $updateChecker, $jobQueueHealth, $editionFeatures, $automationLoader, $automationRunReader, $extensionStateRepository),
+		new JobQueueRenderer($config, $jobManager, $cronTokens),
+		new BuilderTemplateRenderer($templateLister, $paths, $builderConfig, $indexReader, $collectionFetcher),
 	);
 }
 
@@ -348,42 +418,42 @@ function buildAdminTwigAdapter(
  * took (navigation and assets are now their own services).
  */
 function buildBuilderTwigAdapter(
-	TotalCMS\Domain\Builder\Service\BuilderConfigService $builderConfig,
-	TotalCMS\Domain\Index\Service\IndexReader $indexReader,
-	TotalCMS\Domain\Builder\Service\BuilderOrderService $orderService,
-	TotalCMS\Support\Config $config,
-): TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter {
-	return new TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter(
+	BuilderConfigService $builderConfig,
+	IndexReader $indexReader,
+	BuilderOrderService $orderService,
+	Config $config,
+): BuilderTwigAdapter {
+	return new BuilderTwigAdapter(
 		$builderConfig,
 		$indexReader,
 		$config,
-		new TotalCMS\Domain\Twig\Service\BuilderNavigation($builderConfig, $indexReader, $orderService),
-		new TotalCMS\Domain\Twig\Service\BuilderAssetRenderer($config),
+		new BuilderNavigation($builderConfig, $indexReader, $orderService),
+		new BuilderAssetRenderer($config),
 	);
 }
 
-function signInAs(Slim\App $app, string $userId, string $authCollection = ''): void
+function signInAs(App $app, string $userId, string $authCollection = ''): void
 {
-	/** @var TotalCMS\Support\Config $config */
-	$config         = $app->getContainer()->get(TotalCMS\Support\Config::class);
+	/** @var Config $config */
+	$config         = $app->getContainer()->get(Config::class);
 	$auth           = $config->auth;
 	$auth['enable'] = true;
 	$config->auth   = $auth;
 
-	/** @var Odan\Session\PhpSession $session */
-	$session = $app->getContainer()->get(Odan\Session\PhpSession::class);
+	/** @var PhpSession $session */
+	$session = $app->getContainer()->get(PhpSession::class);
 	if (!$session->isStarted()) {
 		$session->start();
 	}
-	$session->set(TotalCMS\Domain\Session\SessionKeys::AUTH_USER, $userId);
-	$session->set(TotalCMS\Domain\Session\SessionKeys::AUTH_COLLECTION, $authCollection);
+	$session->set(SessionKeys::AUTH_USER, $userId);
+	$session->set(SessionKeys::AUTH_COLLECTION, $authCollection);
 
 	// A session-authenticated API write must also carry the CSRF token — the
 	// browser sends it from TotalForm / the admin meta tag. Mint one into the
 	// same session and register it as a default header so the test exercises
 	// the authorization layer rather than stopping at CSRF.
-	/** @var TotalCMS\Domain\Security\CSRF\CSRFTokenManager $csrf */
-	$csrf = $app->getContainer()->get(TotalCMS\Domain\Security\CSRF\CSRFTokenManager::class);
+	/** @var CSRFTokenManager $csrf */
+	$csrf = $app->getContainer()->get(CSRFTokenManager::class);
 	TotalCMS\Slim\Pest\withHeader('X-CSRF-Token', $csrf->getToken());
 }
 
@@ -409,15 +479,15 @@ function restoreFixtures(): void
  * (NullLogger) and bumps the in-memory counter. This lets ExtensionManager
  * tests pass a genuine guard with a single inserted constructor argument.
  */
-function testExtensionGuard(): TotalCMS\Domain\Extension\Service\ExtensionGuard
+function testExtensionGuard(): ExtensionGuard
 {
-	$config      = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config      = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->env = 'dev';
-	$env         = new TotalCMS\Domain\Extension\Service\EnvironmentResolver($config, false);
+	$env         = new EnvironmentResolver($config, false);
 
 	// In-memory CacheManager subclass — overrides the two methods the guard's
 	// failure counter uses and skips the heavy 11-dependency parent constructor.
-	$cache = new class extends TotalCMS\Domain\Cache\CacheManager {
+	$cache = new class extends CacheManager {
 		/** @var array<string,mixed> */
 		private array $store = [];
 
@@ -459,15 +529,15 @@ function testExtensionGuard(): TotalCMS\Domain\Extension\Service\ExtensionGuard
 			}
 		});
 	}
-	$flysystem = new League\Flysystem\Filesystem(new League\Flysystem\Local\LocalFilesystemAdapter($tmpRoot));
-	$storage   = new TotalCMS\Domain\Storage\StorageFilesystemAdapter($flysystem);
-	$repo      = new TotalCMS\Domain\Extension\Repository\ExtensionStateRepository($storage);
+	$flysystem = new Filesystem(new LocalFilesystemAdapter($tmpRoot));
+	$storage   = new StorageFilesystemAdapter($flysystem);
+	$repo      = new ExtensionStateRepository($storage);
 
-	return new TotalCMS\Domain\Extension\Service\ExtensionGuard(
+	return new ExtensionGuard(
 		$env,
 		$cache,
 		$repo,
-		new Psr\Log\NullLogger(),
+		new NullLogger(),
 		testExtensionProfiler(),
 	);
 }
@@ -480,13 +550,13 @@ function testExtensionGuard(): TotalCMS\Domain\Extension\Service\ExtensionGuard
  * are real (not PHPUnit mocks) so this works from both Pest closures and
  * class-based TestCases — mirroring testExtensionGuard().
  */
-function testExtensionProfiler(): TotalCMS\Domain\Extension\Service\ExtensionProfiler
+function testExtensionProfiler(): ExtensionProfiler
 {
-	$config      = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config      = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->env = 'dev';
-	$env         = new TotalCMS\Domain\Extension\Service\EnvironmentResolver($config, false);
+	$env         = new EnvironmentResolver($config, false);
 
-	$cache = new class extends TotalCMS\Domain\Cache\CacheManager {
+	$cache = new class extends CacheManager {
 		/** @var array<string,mixed> */
 		private array $store = [];
 
@@ -513,11 +583,11 @@ function testExtensionProfiler(): TotalCMS\Domain\Extension\Service\ExtensionPro
 		}
 	};
 
-	return new TotalCMS\Domain\Extension\Service\ExtensionProfiler(
+	return new ExtensionProfiler(
 		$env,
 		$cache,
 		1,
-		new Psr\Log\NullLogger(),
+		new NullLogger(),
 	);
 }
 
@@ -553,12 +623,12 @@ function recursiveCopy(string $src, string $dst): void
  * for 'always'.
  */
 function testClientIpResolver(
-	string $trustProxyHeaders = TotalCMS\Domain\Security\Request\ClientIpResolver::TRUST_AUTO,
-): TotalCMS\Domain\Security\Request\ClientIpResolver {
-	$config                    = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	string $trustProxyHeaders = ClientIpResolver::TRUST_AUTO,
+): ClientIpResolver {
+	$config                    = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->trustProxyHeaders = $trustProxyHeaders;
 
-	return new TotalCMS\Domain\Security\Request\ClientIpResolver($config);
+	return new ClientIpResolver($config);
 }
 
 /**
@@ -579,7 +649,7 @@ function tcmsTestTempDir(string $prefix): string
 {
 	try {
 		$suffix = bin2hex(random_bytes(8));
-	} catch (Random\RandomException) {
+	} catch (RandomException) {
 		$suffix = bin2hex((string)getmypid()) . bin2hex((string)mt_rand());
 	}
 
@@ -621,17 +691,17 @@ function devModeDataDir(): string
  * global /tmp path (which collides across tenants on shared hosting). Pass the
  * same $datadir to two calls to exercise shared-file state across managers.
  */
-function devModeManager(string $datadir): TotalCMS\Domain\Cache\Service\DevModeManager
+function devModeManager(string $datadir): DevModeManager
 {
-	$config          = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->datadir = $datadir;
 
 	if (!is_dir($config->systemDir())) {
 		@mkdir($config->systemDir(), 0775, true);
 	}
 
-	return new TotalCMS\Domain\Cache\Service\DevModeManager(
-		new TotalCMS\Domain\Event\Service\EventDispatcher(new Psr\Log\NullLogger()),
+	return new DevModeManager(
+		new EventDispatcher(new NullLogger()),
 		$config,
 	);
 }
@@ -651,15 +721,15 @@ function devModeFile(string $datadir): string
  * Origin to exercise the same-origin path instead.
  */
 function csrfValidatorFor(
-	TotalCMS\Domain\Security\CSRF\CSRFTokenManager $manager,
+	CSRFTokenManager $manager,
 	string $domain = 'tests.local',
-): TotalCMS\Domain\Security\CSRF\CSRFRequestValidator {
-	$config         = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+): CSRFRequestValidator {
+	$config         = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->domain = $domain;
 
-	return new TotalCMS\Domain\Security\CSRF\CSRFRequestValidator(
+	return new CSRFRequestValidator(
 		$manager,
-		new TotalCMS\Domain\Security\CSRF\RequestOriginValidator($config),
+		new RequestOriginValidator($config),
 	);
 }
 
@@ -674,9 +744,9 @@ function csrfValidatorFor(
  * workers and the call fails with "undefined function".
  */
 function createMockHttpClient(
-	TotalCMS\Support\HttpResponse $response,
-): TotalCMS\Support\HttpClientInterface {
-	$client = test()->createMock(TotalCMS\Support\HttpClientInterface::class);
+	HttpResponse $response,
+): HttpClientInterface {
+	$client = test()->createMock(HttpClientInterface::class);
 	$client->method('request')->willReturn($response);
 
 	return $client;
@@ -702,7 +772,7 @@ function createMockHttpClient(
  * global declared inside one *Test.php is invisible to another under
  * `pest --parallel` where the two files can land in different workers.
  */
-function drainStreamedBody(Psr\Http\Message\ResponseInterface|TotalCMS\Slim\Test\TestResponse $response): string
+function drainStreamedBody(ResponseInterface|TestResponse $response): string
 {
 	ob_start();
 	ob_start();

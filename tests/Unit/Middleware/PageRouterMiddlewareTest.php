@@ -3,8 +3,10 @@
 namespace Tests\Unit\Middleware;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\NullLogger;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
@@ -13,16 +15,17 @@ use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Middleware\PageRouterMiddleware;
 
 final class PageRouterMiddlewareTest extends TestCase
 {
 	private PageRouterMiddleware $middleware;
-	private \PHPUnit\Framework\MockObject\MockObject $pageRouter;
-	private \PHPUnit\Framework\MockObject\MockObject $twigEngine;
-	private \PHPUnit\Framework\MockObject\MockObject $pageMiddlewareRunner;
-	private \PHPUnit\Framework\MockObject\MockObject $pageInspector;
-	private \PHPUnit\Framework\MockObject\MockObject $pageReloadInjector;
+	private MockObject $pageRouter;
+	private MockObject $twigEngine;
+	private MockObject $pageMiddlewareRunner;
+	private MockObject $pageInspector;
+	private MockObject $pageReloadInjector;
 
 	protected function setUp(): void
 	{
@@ -53,10 +56,10 @@ final class PageRouterMiddlewareTest extends TestCase
 		);
 	}
 
-	private function loggerFactory(): \TotalCMS\Factory\LoggerFactory
+	private function loggerFactory(): LoggerFactory
 	{
-		$loggerFactory = $this->createMock(\TotalCMS\Factory\LoggerFactory::class);
-		$loggerFactory->method('channelLogger')->willReturn(new \Psr\Log\NullLogger());
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
 
 		return $loggerFactory;
 	}

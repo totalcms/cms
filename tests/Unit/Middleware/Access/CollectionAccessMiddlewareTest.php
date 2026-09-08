@@ -10,6 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\AbstractLogger;
 use Psr\Log\NullLogger;
 use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
@@ -68,7 +69,7 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 
 		// Capture what the access channel is told when a request is refused.
 		$this->logged        = new \ArrayObject();
-		$this->accessLogger  = new class($this->logged) extends \Psr\Log\AbstractLogger {
+		$this->accessLogger  = new class($this->logged) extends AbstractLogger {
 			public function __construct(private \ArrayObject $sink)
 			{
 			}

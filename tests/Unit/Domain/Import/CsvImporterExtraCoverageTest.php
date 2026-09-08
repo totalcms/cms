@@ -6,6 +6,7 @@ use League\Csv\Reader;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Import\CsvImporter;
@@ -36,7 +37,7 @@ describe('CsvImporter extra coverage', function (): void {
 			$this->collectionFetcher,
 			$this->objectFetcher,
 			$this->objectImporter,
-			new EventDispatcher(new Psr\Log\NullLogger()),
+			new EventDispatcher(new NullLogger()),
 			$this->jobQueuer,
 			$loggerFactory,
 		);
@@ -227,7 +228,7 @@ describe('CsvImporter extra coverage', function (): void {
 			$this->collectionFetcher,
 			$this->objectFetcher,
 			$failingImporter,
-			new EventDispatcher(new Psr\Log\NullLogger()),
+			new EventDispatcher(new NullLogger()),
 			$this->jobQueuer,
 			$loggerFactory,
 		);

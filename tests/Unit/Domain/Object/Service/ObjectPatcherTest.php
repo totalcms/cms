@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Object\Service;
 
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -16,8 +17,8 @@ use TotalCMS\Domain\Property\Data\PropertyData;
 final class ObjectPatcherTest extends TestCase
 {
 	private ObjectPatcher $patcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectFetcher;
-	private \PHPUnit\Framework\MockObject\MockObject $objectUpdater;
+	private MockObject $objectFetcher;
+	private MockObject $objectUpdater;
 
 	protected function setUp(): void
 	{

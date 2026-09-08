@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Extension\Service;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use TotalCMS\Domain\Extension\Service\McpExtensionRegistrar;
+use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 
 /**
@@ -79,7 +80,7 @@ final class McpExtensionRegistrarResourcesTest extends TestCase
 	public function testRegisterResourcesBlocksCollisionWithCoreRegistration(): void
 	{
 		// Simulate a core registration: a tcms:// resource already in the registry.
-		$this->registry->register(new \TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition(
+		$this->registry->register(new McpResourceDefinition(
 			uri: 'tcms://blog/',
 			name: 'core-blog',
 			description: 'core',

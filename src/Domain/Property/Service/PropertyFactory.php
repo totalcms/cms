@@ -139,7 +139,7 @@ readonly class PropertyFactory
 				$processedDeckData[$itemId] = $processedItemData;
 			}
 
-			$deck = new DeckData($processedDeckData, $settings);
+			$deck                                     = new DeckData($processedDeckData, $settings);
 			[$deck->childTypes, $deck->childSettings] = $this->childTypesAndSettings($deckSchema);
 
 			return $deck;
@@ -200,7 +200,7 @@ readonly class PropertyFactory
 				$processed[$fieldName] = $propertyObject->transform();
 			}
 
-			$card = new CardData($processed, $settings);
+			$card                                     = new CardData($processed, $settings);
 			[$card->childTypes, $card->childSettings] = $this->childTypesAndSettings($cardSchema);
 
 			return $card;

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 
 beforeEach(function (): void {
@@ -29,8 +30,8 @@ describe('totalcms schema completeness', function (): void {
 		// Field-type aliases (e.g. multicheckbox → checklist) don't need their own
 		// demo entry — only canonical types must appear in the reference schema.
 		$expected = array_values(array_filter(
-			array_keys(TotalCMS\Domain\Admin\TotalForm::FIELD_DEFAULT_TYPE),
-			fn (string $type): bool => TotalCMS\Domain\Admin\TotalForm::canonicalFieldType($type) === $type,
+			array_keys(TotalForm::FIELD_DEFAULT_TYPE),
+			fn (string $type): bool => TotalForm::canonicalFieldType($type) === $type,
 		));
 		$used     = totalcmsUsedFields();
 		$missing  = array_values(array_diff($expected, $used));

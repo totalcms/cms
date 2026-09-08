@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface;
+use Slim\App;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Support\Config;
 
 beforeAll(function (): void {
@@ -20,11 +24,11 @@ beforeEach(function (): void {
 	// into resource exposure — `mcp.resource` is off unless set, so a collection
 	// under test has to ask for it exactly as a real one does.
 	$container         = $this->app->getContainer();
-	$collectionFetcher = $container->get(TotalCMS\Domain\Collection\Service\CollectionFetcher::class);
+	$collectionFetcher = $container->get(CollectionFetcher::class);
 	$blog              = $collectionFetcher->fetchOrCreateReserved('blog');
 	if ($blog !== null) {
 		$blog->mcp = array_merge(is_array($blog->mcp) ? $blog->mcp : [], ['resource' => true]);
-		$container->get(TotalCMS\Domain\Collection\Repository\CollectionRepository::class)->saveCollection($blog);
+		$container->get(CollectionRepository::class)->saveCollection($blog);
 	}
 
 	// Write a test API key to .system/apikeys.json so admin persona is resolved.
@@ -80,7 +84,7 @@ function mcpResourcePayload(string $method, array $params = []): array
  *
  * Returns empty string when MCP is unavailable (non-200 init response).
  */
-function mcpInitAdminSession(Slim\App $app): string
+function mcpInitAdminSession(App $app): string
 {
 	$factory = new Psr17Factory();
 	$request = $factory
@@ -122,10 +126,10 @@ function mcpInitAdminSession(Slim\App $app): string
  * @param string              $sessionId Session ID from mcpInitAdminSession()
  */
 function mcpAdminRequest(
-	Slim\App $app,
+	App $app,
 	array $payload,
 	string $sessionId,
-): Psr\Http\Message\ResponseInterface {
+): ResponseInterface {
 	$factory = new Psr17Factory();
 	$request = $factory
 		->createServerRequest('POST', '/mcp')

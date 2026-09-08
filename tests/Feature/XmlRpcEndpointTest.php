@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/XmlRpcTestHelpers.php';
 
 use Nyholm\Psr7\Factory\Psr17Factory;
+use TotalCMS\Support\Config;
 
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
@@ -26,7 +27,7 @@ it('returns 404 for every route when xmlrpc is disabled', function (): void {
 
 describe('with xmlrpc enabled', function (): void {
 	beforeEach(function (): void {
-		$config         = $this->app->getContainer()->get(TotalCMS\Support\Config::class);
+		$config         = $this->app->getContainer()->get(Config::class);
 		$config->xmlrpc = ['enable' => true, 'ratePerIp' => 0];
 	});
 

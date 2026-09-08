@@ -41,6 +41,10 @@ return (new PhpCsFixer\Config())
                 'sort_algorithm' => 'alpha',
                 'imports_order'  => ['class', 'const', 'function'],
             ],
+            // Import classes and namespaced functions instead of writing
+            // `\Fully\Qualified\Names` inline (rector emits those). Global
+            // classes (\Exception, \Throwable) are left as they are.
+            'fully_qualified_strict_types'        => ['import_symbols' => true],
             'single_line_throw' => false,
         ]
     )
