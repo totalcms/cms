@@ -129,6 +129,7 @@ return [
 					['title' => 'Cache Tag',            'path' => 'twig/cache-tag'],
 					['title' => 'Load More',            'path' => 'twig/load-more'],
 					['title' => 'HTMX Recipes',         'path' => 'twig/htmx'],
+					['title' => 'Twig Recipes',         'path' => 'twig/recipes'],
 				],
 			],
 			[

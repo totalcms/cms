@@ -2,6 +2,7 @@
 title: "HTMX Recipes"
 description: "Live search, faceted filtering, lazy sections, polling widgets, quick-view modals, zero-JavaScript forms, likes and boosted navigation — all from the Total CMS API and the htmx that already ships on every page."
 related:
+  - twig/recipes
   - twig/load-more
   - twig/render
   - forms/overview
