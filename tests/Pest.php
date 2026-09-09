@@ -43,7 +43,10 @@ use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
+use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\EditionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
@@ -394,6 +397,7 @@ function buildAdminTwigAdapter(
 	AutomationRunReader $automationRunReader,
 	ExtensionStateRepository $extensionStateRepository,
 	CronTokenProvider $cronTokens,
+	?AdminNavRegistry $nav = null,
 ): AdminTwigAdapter {
 	return new AdminTwigAdapter(
 		$config,
@@ -410,6 +414,9 @@ function buildAdminTwigAdapter(
 		new DashboardRenderer($config, $auth, $collectionLister, $schemaLister, $templateLister, $jobManager, $cacheReporter, $licenseStatus, $indexReader, $updateChecker, $jobQueueHealth, $editionFeatures, $automationLoader, $automationRunReader, $extensionStateRepository),
 		new JobQueueRenderer($config, $jobManager, $cronTokens),
 		new BuilderTemplateRenderer($templateLister, $paths, $builderConfig, $indexReader, $collectionFetcher),
+		// The adapter tests never render the rail, so a bare ExtensionManager
+		// (no constructor run) is enough to satisfy the registry's dependency.
+		$nav ?? new AdminNavRegistry($auth, new EditionTwigAdapter($editionFeatures), $translator, $config, (new ReflectionClass(ExtensionManager::class))->newInstanceWithoutConstructor()),
 	);
 }
 

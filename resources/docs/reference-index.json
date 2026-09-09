@@ -537,6 +537,20 @@
             "url": "https://docs.totalcms.co/admin/twig/"
         },
         {
+            "name": "cms.admin.navItems",
+            "signature": "navItems(): array",
+            "description": "Every sidebar entry the current user may see, rail order, More menu included \u2014 what the quick-nav index lists.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
+            "name": "cms.admin.navMenu",
+            "signature": "navMenu(): array",
+            "description": "The sidebar rail split by the `dashboard.moreMenu` setting. Usage in Twig: {% set navMenu = cms.admin.navMenu() %}",
+            "examples": [],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
             "name": "cms.admin.nginxRule",
             "signature": "nginxRule(string $url, string $collection = 'Collection'): string",
             "description": "Generate Nginx rewrite rules for pretty URLs.",

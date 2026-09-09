@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
@@ -90,6 +91,7 @@ readonly class TotalFormFactory
 		private DevModeManager $devModeManager,
 		private PageMiddlewareRegistry $pageMiddlewareRegistry,
 		private FormActionRegistry $formActionRegistry,
+		private AdminNavRegistry $navRegistry,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->api    = $this->config->api . '/api';
@@ -1543,6 +1545,7 @@ readonly class TotalFormFactory
 		$form->setTemplateLister($this->templateLister);
 		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
 		$form->setDataViewLister($this->dataViewLister);
+		$form->setNavRegistry($this->navRegistry);
 
 		return $form;
 	}

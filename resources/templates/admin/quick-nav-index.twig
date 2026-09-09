@@ -17,37 +17,11 @@
 <script>
 window.TCMS_QUICK_NAV = [
 {# ── Top-level nav items ── #}
-{% if cms.auth.canAccessCollectionsOperation('read') %}
-{"label":"{{ t('nav.collections') }}","section":"Navigation","path":"collections","keywords":"nav"},
-{% endif %}
-{% if cms.auth.canAccessSchemasOperation('read') %}
-{"label":"{{ t('nav.schemas') }}","section":"Navigation","path":"schemas","keywords":"nav"},
-{% endif %}
-{% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
-{"label":"{{ t('nav.dataviews') }}","section":"Navigation","path":"dataviews","keywords":"nav"},
-{% endif %}
-{% if cms.auth.canAccessBuilder() %}
-{"label":"Builder","section":"Navigation","path":"builder","keywords":"nav site pages templates"},
-{% endif %}
-{% if cms.auth.canAccessMailer() and cms.edition.can('mailer_actions') %}
-{"label":"{{ t('nav.mailer') }}","section":"Navigation","path":"mailer","keywords":"nav email"},
-{% endif %}
-{% if cms.auth.isAdmin() and cms.edition.can('automations') %}
-{"label":"Automations","section":"Navigation","path":"automations","keywords":"nav schedule cron webhook event jobs"},
-{% endif %}
-{% if cms.auth.canAccessPlayground() %}
-{"label":"{{ t('nav.playground') }}","section":"Navigation","path":"playground","keywords":"nav twig test"},
-{% endif %}
-{% if cms.auth.canAccessUtils() %}
-{"label":"{{ t('nav.utils') }}","section":"Navigation","path":"utils","keywords":"nav utilities tools"},
-{% endif %}
-{% if cms.auth.isAdmin() %}
-{"label":"{{ t('nav.extensions') }}","section":"Navigation","path":"extensions","keywords":"nav plugins"},
-{"label":"{{ t('nav.settings') }}","section":"Navigation","path":"settings","keywords":"nav config configuration"},
-{% endif %}
-{% if cms.auth.canAccessDocs() %}
-{"label":"{{ t('nav.docs') }}","section":"Navigation","path":"docs","keywords":"nav documentation help"},
-{% endif %}
+{# Same registry as the sidebar (AdminNavRegistry), so this list never drifts
+   from the rail. Items moved into the More menu are still listed here. #}
+{% for entry in cms.admin.navItems() %}
+{"label":"{{ entry.label | e('js') }}","section":"{{ entry.isExtension ? 'Extensions' : 'Navigation' }}","path":"{{ entry.slug | e('js') }}","keywords":"{{ entry.keywords | e('js') }}"},
+{% endfor %}
 
 {# ── Individual collections ── #}
 {% if cms.auth.canAccessCollectionsOperation('read') %}
@@ -158,13 +132,5 @@ window.TCMS_QUICK_NAV = [
 {% endfor %}
 {% endif %}
 
-{# ── Extension nav items ── #}
-{% if extensionNavItems is defined and extensionNavItems is iterable %}
-{% for item in extensionNavItems %}
-{% if (item.permission == 'any' and cms.auth.canAccessExtension(item.extensionId)) or (item.permission == 'admin' and cms.auth.isAdmin()) %}
-{"label":"{{ item.label | e('js') }}","section":"Extensions","path":"{{ item.url | e('js') }}","keywords":"extension plugin"},
-{% endif %}
-{% endfor %}
-{% endif %}
 ];
 </script>

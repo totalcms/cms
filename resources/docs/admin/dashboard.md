@@ -23,6 +23,10 @@ Located on the left side, the navigation menu provides quick access to:
 - **Tools** - Utilities like import/export, job queue
 - **Settings** - System configuration
 
+#### The More menu
+
+The sidebar has room for a dozen icons before it gets crowded, and extensions can add more. Under **Settings → Dashboard → More Menu**, check any sidebar items you rarely use. They leave the sidebar and move into a **More** (⋮) menu at its bottom, where they stay one click away rather than disappearing. Items added by extensions are listed there too. Nothing is locked: if you never use Automations or Site Builder, tuck them away; they are still reachable from More and from Quick Navigation.
+
 ### 2. Main Content Area
 The central area displays the current page content, forms, and data tables.
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
+use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
+use TotalCMS\Domain\Admin\Nav\NavEntry;
 use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
@@ -58,7 +60,31 @@ readonly class AdminTwigAdapter
 		private DashboardRenderer $dashboard,
 		private JobQueueRenderer $jobQueue,
 		private BuilderTemplateRenderer $builderTemplates,
+		private AdminNavRegistry $nav,
 	) {
+	}
+
+	/**
+	 * The sidebar rail split by the `dashboard.moreMenu` setting.
+	 *
+	 * Usage in Twig: {% set navMenu = cms.admin.navMenu() %}
+	 *
+	 * @return array{rail: list<NavEntry>, more: list<NavEntry>}
+	 */
+	public function navMenu(): array
+	{
+		return $this->nav->menu();
+	}
+
+	/**
+	 * Every sidebar entry the current user may see, rail order, More menu
+	 * included — what the quick-nav index lists.
+	 *
+	 * @return list<NavEntry>
+	 */
+	public function navItems(): array
+	{
+		return $this->nav->visible();
 	}
 
 	/**

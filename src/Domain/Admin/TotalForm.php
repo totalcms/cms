@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
@@ -706,6 +707,25 @@ class TotalForm implements \Stringable
 	public function setPageMiddlewareRegistry(PageMiddlewareRegistry $registry): void
 	{
 		$this->pageMiddlewareRegistry = $registry;
+	}
+
+	private ?AdminNavRegistry $navRegistry = null;
+
+	public function setNavRegistry(AdminNavRegistry $registry): void
+	{
+		$this->navRegistry = $registry;
+	}
+
+	/**
+	 * Every admin sidebar entry as `{value, label}` options.
+	 * Used for propertyOptions: "navItems" — the dashboard settings checklist
+	 * that moves rail items into the More menu.
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function adminNavItemList(): array
+	{
+		return $this->navRegistry?->options() ?? [];
 	}
 
 	public function setDataViewLister(DataViewLister $lister): void

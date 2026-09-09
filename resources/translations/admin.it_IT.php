@@ -15,6 +15,9 @@ return [
 	'nav.docs'           => 'Documentazione',
 	'nav.extensions'     => 'Estensioni',
 	'nav.license_status' => 'Stato licenza',
+	'nav.builder'        => 'Builder',
+	'nav.automations'    => 'Automazioni',
+	'nav.more'           => 'Altro',
 
 	// ── User Menu ───────────────────────────────────────────────────────────
 	'user.theme'         => 'Tema',

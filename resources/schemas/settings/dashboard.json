@@ -47,6 +47,20 @@
 			"label"   : "Full Width Object Forms",
 			"help"    : "When enabled, forms in the admin dashboard expand to fill the full available width instead of being capped at 800px.",
 			"default" : false
+		},
+		"moreMenu": {
+			"type"     : "array",
+			"items"    : { "type": "string" },
+			"field"    : "checklist",
+			"label"    : "More Menu",
+			"help"     : "Sidebar items you rarely use. Checked items leave the sidebar and move into the <strong>More</strong> (&#8942;) menu at the bottom of it, where they stay one click away. Items added by extensions are listed here too.",
+			"default"  : [],
+			"settings" : {
+				"fieldGrid"         : "250px",
+				"propertyOptions"   : "navItems",
+				"sortOptions"       : false,
+				"mergeStoredValues" : false
+			}
 		}
 	}
 }

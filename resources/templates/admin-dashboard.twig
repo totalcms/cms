@@ -1,3 +1,9 @@
+{# Sidebar entry helpers. `navActive` echoes "1" when the entry is the current
+   page (core entries match the page slug, extension entries the URL suffix);
+   `navLink` renders the anchor the rail and the More popover share. The
+   --action-icon custom property is what the popover's icon mask reads. #}
+{% macro navActive(entry, url) %}{% if entry.isExtension ? (url.path ends with entry.slug) : (url.page == entry.id) %}1{% endif %}{% endmacro %}
+{% macro navLink(entry, class) %}{% if entry.isExtension %}<a class="ext-nav{{ class ? ' ' ~ class }}" href="{{ entry.url }}" title="{{ entry.label }}"{% if entry.icon %} style="--ext-icon: url('data:image/svg+xml,{{ entry.icon|url_encode }}'); --action-icon: var(--ext-icon)"{% endif %}>{{ entry.label }}</a>{% else %}<a class="{{ entry.id }}{{ class ? ' ' ~ class }}" href="{{ entry.url }}" title="{{ entry.label }}" style="--action-icon: {{ entry.icon }}">{{ entry.label }}</a>{% endif %}{% endmacro %}
 <!doctype html>
 <html lang="{{ cms.locale.htmlLang() }}">
 <head>
@@ -73,68 +79,25 @@
                     <li class="menu-item">
                         <button class="quick-nav-trigger" type="button" title="Quick Navigation (&#x21E7;&#x2318;O)"></button>
                     </li>
-                    {% if cms.auth.canAccessCollectionsOperation('read') %}
-                    <li class="menu-item{% if url.page == 'collections' %} active{% endif %}">
-                        <a class="collections" href="collections" title="{{ t('nav.collections') }}">{{ t('nav.collections') }}</a>
+                    {# One registry drives the rail, the More menu and quick-nav — see AdminNavRegistry. #}
+                    {% set navMenu = cms.admin.navMenu() %}
+                    {% for entry in navMenu.rail %}
+                    <li class="menu-item{% if _self.navActive(entry, url) %} active{% endif %}">
+                        {{ _self.navLink(entry) }}
                     </li>
-                    {% endif %}
-                    {% if cms.auth.canAccessSchemasOperation('read') %}
-                    <li class="menu-item{% if url.page == 'schemas' %} active{% endif %}">
-                        <a class="schemas" href="schemas" title="{{ t('nav.schemas') }}">{{ t('nav.schemas') }}</a>
-                    </li>
-                    {% endif %}
-                    {% if cms.auth.canAccessDataViews() and cms.edition.can('data_views') %}
-                    <li class="menu-item{% if url.page == 'dataviews' %} active{% endif %}">
-                        <a class="dataviews" href="dataviews" title="{{ t('nav.dataviews') }}">{{ t('nav.dataviews') }}</a>
-                    </li>
-                    {% endif %}
-                    {% if cms.auth.canAccessBuilder() %}
-                    <li class="menu-item{% if url.page == 'builder' %} active{% endif %}">
-                        <a class="builder" href="builder" title="Builder">Builder</a>
-                    </li>
-                    {% endif %}
-                    {% if cms.auth.canAccessMailer() and cms.edition.can('mailer_actions') %}
-                    <li class="menu-item{% if url.page == 'mailer' %} active{% endif %}">
-                        <a class="mailer" href="mailer" title="{{ t('nav.mailer') }}">{{ t('nav.mailer') }}</a>
-                    </li>
-                    {% endif %}
-                    {% if cms.auth.isAdmin() and cms.edition.can('automations') %}
-                    <li class="menu-item{% if url.page == 'automations' %} active{% endif %}">
-                        <a class="automations" href="automations" title="Automations">Automations</a>
-                    </li>
-                    {% endif %}
-                    {% if cms.auth.canAccessPlayground() %}
-                    <li class="menu-item{% if url.page == 'playground' %} active{% endif %}">
-                        <a class="playground" href="playground" title="{{ t('nav.playground') }}">{{ t('nav.playground') }}</a>
-                    </li>
-                    {% endif %}
-                    {% if extensionNavItems is defined and extensionNavItems is iterable %}
-						{% for item in extensionNavItems %}
-							{% if (item.permission == 'any' and cms.auth.canAccessExtension(item.extensionId)) or (item.permission == 'admin' and cms.auth.isAdmin()) %}
-							<li class="menu-item{% if url.path ends with item.slug %} active{% endif %}">
-								<a class="ext-nav" href="{{ item.url }}" title="{{ item.label }}"
-									{% if item.icon %} style="--ext-icon: url('data:image/svg+xml,{{ item.icon|url_encode }}')"{% endif %}
-								>{{ item.label }}</a>
-							</li>
-							{% endif %}
-						{% endfor %}
-                    {% endif %}
-                    {% if cms.auth.canAccessUtils() %}
-                    <li class="menu-item{% if url.page == 'utils' %} active{% endif %}">
-                        <a class="utils" href="utils" title="{{ t('nav.utils') }}">{{ t('nav.utils') }}</a>
-                    </li>
-                    {% endif %}
-                    {% if cms.auth.isAdmin() %}
-                    <li class="menu-item{% if url.page == 'extensions' %} active{% endif %}">
-                        <a class="extensions" href="extensions" title="{{ t('nav.extensions') }}">{{ t('nav.extensions') }}</a>
-                    </li>
-                    <li class="menu-item{% if url.page == 'settings' %} active{% endif %}">
-                        <a class="settings" href="settings" title="{{ t('nav.settings') }}">{{ t('nav.settings') }}</a>
-                    </li>
-                    {% endif %}
-                    {% if cms.auth.canAccessDocs() %}
-                    <li class="menu-item{% if url.page == 'docs' %} active{% endif %}">
-                        <a class="docs" href="docs" title="{{ t('nav.docs') }}">{{ t('nav.docs') }}</a>
+                    {% endfor %}
+                    {% if navMenu.more is not empty %}
+                    {% set moreActive = false %}
+                    {% for entry in navMenu.more %}{% if _self.navActive(entry, url) %}{% set moreActive = true %}{% endif %}{% endfor %}
+                    <li class="menu-item nav-more-item{% if moreActive %} active{% endif %}">
+                        <button class="nav-more" type="button" popovertarget="nav-more" title="{{ t('nav.more') }}">{{ t('nav.more') }}</button>
+                        <nav popover id="nav-more">
+                            <ul>
+                                {% for entry in navMenu.more %}
+                                <li>{{ _self.navLink(entry, _self.navActive(entry, url) ? 'active' : '') }}</li>
+                                {% endfor %}
+                            </ul>
+                        </nav>
                     </li>
                     {% endif %}
                 </ul>

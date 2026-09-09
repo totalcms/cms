@@ -127,6 +127,52 @@ body {
 	.ext-nav {
 		mask-image : var(--ext-icon, var(--icon-puzzle));
 	}
+	// The three-dots button that opens the More menu — styled like the other
+	// rail icons (quick-nav-trigger is the button precedent).
+	.nav-more {
+		display          : block;
+		width            : 3rem;
+		height           : 3rem;
+		padding          : 0;
+		border           : none;
+		cursor           : pointer;
+		text-indent      : -9999px;
+		background-color : oklch(var(--totalform-nearblack));
+		mask-image       : var(--icon-dots);
+		mask-size        : 1.5rem;
+		mask-repeat      : no-repeat;
+		mask-position    : center;
+		rotate           : 90deg; // the dots icon is vertical; the rail reads better with a horizontal ellipsis
+		anchor-name      : --nav-more;
+	}
+	// The More popover lists demoted items with icon + label (the generic
+	// nav[popover] menu styling from forms/buttons.scss). It lives inside
+	// .menu, so undo the rail's icon-only anchor rules for it.
+	#nav-more {
+		// Fallback for browsers without anchor positioning: pinned near the
+		// bottom of the rail, like #user-actions.
+		bottom : 3rem;
+		left   : 4rem;
+		// Anchor positioning: open beside the button that toggled it, bottom
+		// edges aligned, so it follows the button wherever it sits in the rail.
+		position-anchor : --nav-more;
+		left            : anchor(right);
+		bottom          : anchor(bottom);
+		margin          : 0 0 0 0.5rem;
+
+		a {
+			width            : auto;
+			height           : auto;
+			text-indent      : 0;
+			mask-image       : none;
+			background-color : transparent;
+
+			&:hover,
+			&.active {
+				background-color : oklch(var(--totalform-nearwhite));
+			}
+		}
+	}
 }
 
 .dash-content {

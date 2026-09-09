@@ -559,6 +559,10 @@ class FormField
 			return $this->form->pageMiddlewareList();
 		}
 
+		if ($source === 'navItems') {
+			return $this->form->adminNavItemList();
+		}
+
 		if ($source === 'schemaProperties') {
 			return $this->form->schemaPropertyKeys();
 		}
