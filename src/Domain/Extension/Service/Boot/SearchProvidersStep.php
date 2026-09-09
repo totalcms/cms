@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Service\Boot;
 
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
 
@@ -16,14 +14,8 @@ use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
  * duplicate ids — wrap each call so one bad extension can't break the
  * rest of the drain.
  */
-final readonly class SearchProvidersStep implements ExtensionBootStep
+final readonly class SearchProvidersStep extends BootStep
 {
-	public function __construct(
-		private ContainerInterface $container,
-		private LoggerInterface $logger,
-	) {
-	}
-
 	public function wire(ExtensionManager $manager): void
 	{
 		if (!$this->container->has(SearchProviderRegistry::class)) {

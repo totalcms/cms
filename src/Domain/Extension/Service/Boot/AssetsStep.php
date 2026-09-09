@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Service\Boot;
 
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Service\CoreAdminAssetRegistrar;
@@ -16,15 +14,8 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
  * Wire core + extension admin and frontend assets into the CMS Twig
  * adapter, powering cms.adminAssetsHead/Body() and cms.assetsHead/Body().
  */
-final readonly class AssetsStep implements ExtensionBootStep
+final readonly class AssetsStep extends BootStep
 {
-	public function __construct(
-		private ContainerInterface $container,
-		// @phpstan-ignore property.onlyWritten
-		private LoggerInterface $logger,
-	) {
-	}
-
 	public function wire(ExtensionManager $manager): void
 	{
 		// Wire admin + frontend assets through the CMS adapter for the

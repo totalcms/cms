@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Service\Boot;
 
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\McpExtensionRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
@@ -18,14 +16,8 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  * by the time the first /mcp request lands — boot is the latest safe
  * moment since extensions populate their contexts during register().
  */
-final readonly class McpStep implements ExtensionBootStep
+final readonly class McpStep extends BootStep
 {
-	public function __construct(
-		private ContainerInterface $container,
-		private LoggerInterface $logger,
-	) {
-	}
-
 	public function wire(ExtensionManager $manager): void
 	{
 		if (!$this->container->has(ToolRegistry::class)) {

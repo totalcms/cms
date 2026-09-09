@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Service\Boot;
 
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\TwigExtensionRegistrar;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
@@ -16,14 +14,8 @@ use TotalCMS\Domain\Twig\Service\TwigEngine;
  * template namespaces, and admin nav/dashboard-widget globals into the
  * TwigEngine.
  */
-final readonly class TwigStep implements ExtensionBootStep
+final readonly class TwigStep extends BootStep
 {
-	public function __construct(
-		private ContainerInterface $container,
-		private LoggerInterface $logger,
-	) {
-	}
-
 	public function wire(ExtensionManager $manager): void
 	{
 		if (!$this->container->has(TwigEngine::class)) {

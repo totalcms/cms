@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Service\Boot;
 
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Automation\Service\AutomationRegistry;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 
@@ -14,15 +12,8 @@ use TotalCMS\Domain\Extension\Service\ExtensionManager;
  * join the schedule/event dispatch (read-only — handler is an in-memory
  * closure). Permission-gated inside getAllAutomations().
  */
-final readonly class AutomationsStep implements ExtensionBootStep
+final readonly class AutomationsStep extends BootStep
 {
-	public function __construct(
-		private ContainerInterface $container,
-		// @phpstan-ignore property.onlyWritten
-		private LoggerInterface $logger,
-	) {
-	}
-
 	public function wire(ExtensionManager $manager): void
 	{
 		if (!$this->container->has(AutomationRegistry::class)) {
