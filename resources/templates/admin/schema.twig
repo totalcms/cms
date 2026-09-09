@@ -11,7 +11,8 @@
 		{% for category, schemas in cms.schema.byCategory() %}
 			{% set schemas = schemas | filter(s => cms.auth.canAccessSchema(s.id, 'read')) %}
 			{% if schemas | length > 0 %}
-			<details id="category-{{ category | slug }}" open>
+			{# Internal holds the embedded sub-schemas (cards a schema references), so it starts collapsed — unless the schema being viewed is in it #}
+			<details id="category-{{ category | slug }}"{% if category != 'Internal' or (schemas | filter(s => s.id == url.schema) | length) > 0 %} open{% endif %}>
 				<summary>{{ category }}</summary>
 				<ul>
 				{% for schema in sortByKey(schemas) %}

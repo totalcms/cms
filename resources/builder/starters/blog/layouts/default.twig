@@ -3,8 +3,8 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>{% block title %}{{ cms.config('domain') }}{% endblock %}</title>
-	<meta name="description" content="{% block description %}{% endblock %}">
+	{# Title, description, canonical, Open Graph, Twitter and JSON-LD for this page — from the page's SEO card, then the page fields, then Settings → SEO. Override {% block seo %} on a page to pass a collection object instead. #}
+	{% block seo %}{{ cms.seo.head(page|default(null)) }}{% endblock %}
 	{# Core frontend CSS: styles the {% cmsgrid %} used on the blog index, any galleries embedded in posts, and the pagination controls on long post lists. Loaded before style.css so your design always wins the cascade. #}
 	{{ cms.assetsHead() }}
 	{# Site stylesheet at <docroot>/assets/style.css. Edit it directly — cms.builder.css adds an mtime cache-buster automatically. #}

@@ -1,0 +1,62 @@
+{#
+	The `<head>` SEO block rendered by `cms.seo.*`.
+
+	`parts` selects which slices are printed, so one template serves the whole
+	block and the granular accessors (`cms.seo.title()`, `cms.seo.og()`, …).
+
+	The Twig environment runs with autoescape OFF globally, so this template
+	turns it on for its own body: every value below is a raw string from
+	MetaPayload and MUST be escaped here. The only exception is `jsonld`, which
+	JsonLdBuilder already encodes with JSON_HEX_TAG — escaping it would corrupt
+	the JSON, so it is printed with `|raw`.
+#}
+{% autoescape 'html' %}
+{%- if 'title' in parts and meta.title != '' -%}
+<title>{{ meta.title }}</title>
+{% endif -%}
+{%- if 'description' in parts and meta.description != '' -%}
+<meta name="description" content="{{ meta.description }}">
+{% endif -%}
+{%- if 'robots' in parts and meta.robots != '' -%}
+<meta name="robots" content="{{ meta.robots }}">
+{% endif -%}
+{%- if 'canonical' in parts and meta.canonical != '' -%}
+<link rel="canonical" href="{{ meta.canonical }}">
+{% endif -%}
+{%- if 'og' in parts and settings.emitSocial -%}
+<meta property="og:type" content="{{ meta.ogType }}">
+<meta property="og:title" content="{{ meta.rawTitle != '' ? meta.rawTitle : meta.title }}">
+{% if meta.description != '' -%}
+<meta property="og:description" content="{{ meta.description }}">
+{% endif -%}
+{% if meta.canonical != '' -%}
+<meta property="og:url" content="{{ meta.canonical }}">
+{% endif -%}
+{% if meta.siteName != '' -%}
+<meta property="og:site_name" content="{{ meta.siteName }}">
+{% endif -%}
+{% if meta.ogImage != '' -%}
+<meta property="og:image" content="{{ meta.ogImage }}">
+{% endif -%}
+{% endif -%}
+{%- if 'twitter' in parts and settings.emitSocial -%}
+<meta name="twitter:card" content="{{ meta.twitterCard }}">
+{% if meta.twitterHandle != '' -%}
+<meta name="twitter:site" content="{{ meta.twitterHandle }}">
+{% endif -%}
+{% endif -%}
+{%- if 'verification' in parts -%}
+{% if meta.verification.google != '' -%}
+<meta name="google-site-verification" content="{{ meta.verification.google }}">
+{% endif -%}
+{% if meta.verification.bing != '' -%}
+<meta name="msvalidate.01" content="{{ meta.verification.bing }}">
+{% endif -%}
+{% if meta.verification.pinterest != '' -%}
+<meta name="p:domain_verify" content="{{ meta.verification.pinterest }}">
+{% endif -%}
+{% endif -%}
+{%- if 'jsonld' in parts -%}
+{{ jsonld|raw }}
+{% endif -%}
+{% endautoescape %}

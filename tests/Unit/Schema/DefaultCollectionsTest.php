@@ -33,6 +33,8 @@ final class DefaultCollectionsTest extends TestCase
 		'mcp-property'       => 'embedded sub-object, never standalone',
 		'mcp-tool'           => 'embedded in mcp-collection via schemaref',
 		'preset-item'        => 'embedded sub-object, never standalone',
+		'seo'                => 'embedded in builder-page (and opt-in schemas) via schemaref',
+		'seo-collection'     => 'embedded in collection via schemaref',
 		'sitemap-meta'       => 'embedded in collection via schemaref',
 		'blog-legacy'        => 'deprecated, superseded by blog',
 		'builder-page'       => 'provisioned by BuilderInstaller as builder-pages',

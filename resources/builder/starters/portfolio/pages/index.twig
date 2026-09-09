@@ -1,7 +1,5 @@
 {% extends 'layouts/default.twig' %}
 
-{% block title %}{{ cms.config('domain') }} — Portfolio{% endblock %}
-
 {% block content %}
 {% set readmeUrl = cms.builder.url('readme') %}
 {% if readmeUrl %}

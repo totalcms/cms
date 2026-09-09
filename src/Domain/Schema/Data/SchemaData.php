@@ -50,6 +50,9 @@ class SchemaData
 		'podcast',
 		'podcast-episode',
 		'preset-item',
+		'seo',
+		'seo-collection',
+		'seo-site',
 		'sitemap-meta',
 		'styledtext',
 		'svg',
@@ -101,12 +104,23 @@ class SchemaData
 		'mcp-prompt',
 		'number',
 		'playground',
+		'seo-site',
 		'styledtext',
 		'svg',
 		'text',
 		'toggle',
 		'url',
 		'video',
+	];
+
+	/**
+	 * Reserved collections that are provisioned with `singleton` on, so their
+	 * one record sits at the collection id.
+	 *
+	 * @var list<string>
+	 */
+	public const SINGLETON_COLLECTIONS = [
+		'seo-site',
 	];
 
 	/**

@@ -14,9 +14,10 @@ use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Query\Service\ObjectFilter;
+use TotalCMS\Domain\Seo\Data\SeoSettings;
+use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
 use TotalCMS\Domain\Sitemap\Exception\SitemapDisabledException;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
-use TotalCMS\Support\Config;
 
 /**
  * Tests that SitemapBuilder reads saved sitemap card settings as defaults
@@ -31,7 +32,7 @@ final class SitemapBuilderSettingsTest extends TestCase
 	private MockObject $mockIndexReader;
 	private MockObject $mockCollectionFetcher;
 	private MockObject $mockObjectUrlBuilder;
-	private MockObject $mockConfig;
+	private MockObject $mockSeoSettings;
 
 	protected function setUp(): void
 	{
@@ -39,9 +40,9 @@ final class SitemapBuilderSettingsTest extends TestCase
 		$this->indexFilter           = new IndexFilter($this->mockIndexReader, new ObjectFilter());
 		$this->mockCollectionFetcher = $this->createMock(CollectionFetcher::class);
 		$this->mockObjectUrlBuilder  = $this->createMock(ObjectUrlBuilder::class);
-		$this->mockConfig            = $this->createMock(Config::class);
+		$this->mockSeoSettings       = $this->createMock(SeoSettingsLoader::class);
 
-		$this->mockConfig->domain = 'example.com';
+		$this->mockSeoSettings->method('load')->willReturn(SeoSettings::fromArray([], 'example.com'));
 
 		$this->mockObjectUrlBuilder
 			->method('buildUrl')
@@ -52,7 +53,7 @@ final class SitemapBuilderSettingsTest extends TestCase
 			$this->indexFilter,
 			$this->mockCollectionFetcher,
 			$this->mockObjectUrlBuilder,
-			$this->mockConfig,
+			$this->mockSeoSettings,
 		);
 	}
 
@@ -158,6 +159,28 @@ final class SitemapBuilderSettingsTest extends TestCase
 
 		$xml = $this->builder->buildSitemap('blog');
 		expect($xml)->not->toContain('<changefreq>');
+	}
+
+	public function testUsesTheSeoBaseUrlWhenSet(): void
+	{
+		// The canonical tags read Site SEO → Base URL; the sitemap has to
+		// agree with them or the two disagree on `www.` vs the apex domain.
+		$seoSettings = $this->createMock(SeoSettingsLoader::class);
+		$seoSettings->method('load')->willReturn(SeoSettings::fromArray(['baseUrl' => 'https://www.example.com/'], 'example.com'));
+
+		$this->setupCollectionAndObjects(['enabled' => true], [['id' => 'post1']]);
+
+		$builder = new SitemapBuilder(
+			$this->indexFilter,
+			$this->mockCollectionFetcher,
+			$this->mockObjectUrlBuilder,
+			$seoSettings,
+		);
+
+		$xml = $builder->buildSitemap('blog');
+
+		expect($xml)->toContain('<loc>https://www.example.com/blog/post1</loc>');
+		expect($xml)->not->toContain('https://example.com/blog/post1');
 	}
 
 	/**

@@ -7,15 +7,16 @@ namespace TotalCMS\Domain\Sitemap\Service;
 use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Seo\Data\SeoFields;
+use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
 use TotalCMS\Domain\Sitemap\Data\Sitemap;
-use TotalCMS\Support\Config;
 
 readonly class PageSitemapBuilder
 {
 	public function __construct(
 		private BuilderConfigService $builderConfig,
 		private IndexReader $indexReader,
-		private Config $config,
+		private SeoSettingsLoader $seoSettings,
 	) {
 	}
 
@@ -30,6 +31,11 @@ readonly class PageSitemapBuilder
 
 		$dateProperty = $options['date'] ?? 'updated';
 		unset($options['date']);
+
+		// One base URL for the whole sitemap — the same Site SEO value the
+		// canonical tags use, so a `www.` (or apex) choice is made in one place.
+		// Falls back to `https://{domain}` exactly as the canonical tags do.
+		$baseUrl = $this->seoSettings->load()->baseUrl;
 
 		$index = $this->indexReader->fetchIndex($this->builderConfig->getPagesCollectionId());
 
@@ -47,7 +53,12 @@ readonly class PageSitemapBuilder
 				continue;
 			}
 
-			$url = 'https://' . $this->config->domain . $page->route;
+			// Noindex pages are removed from sitemaps so crawlers don't get contradictory signals.
+			if (SeoFields::fromArray($page->seo)->noindex) {
+				continue;
+			}
+
+			$url = $baseUrl . '/' . ltrim($page->route, '/');
 
 			$locOptions = $options;
 			if (!empty($object[$dateProperty])) {

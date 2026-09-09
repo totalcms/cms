@@ -2294,6 +2294,48 @@
             "url": "https://docs.totalcms.co/schemas/twig/"
         },
         {
+            "name": "cms.seo.canonical",
+            "signature": "canonical(mixed $subject = null, array $options = []): Markup",
+            "description": "Just the canonical link tag.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/site-builder/seo/"
+        },
+        {
+            "name": "cms.seo.head",
+            "signature": "head(mixed $subject = null, array $options = []): Markup",
+            "description": "The complete block: title, description, robots, canonical, Open Graph, Twitter, verification and JSON-LD.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/site-builder/seo/"
+        },
+        {
+            "name": "cms.seo.jsonld",
+            "signature": "jsonld(mixed $subject = null, array $options = []): Markup",
+            "description": "Just the JSON-LD `<script>`. Already breakout-safe, so it skips the template entirely.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/site-builder/seo/"
+        },
+        {
+            "name": "cms.seo.meta",
+            "signature": "meta(mixed $subject = null, array $options = []): Markup",
+            "description": "The non-social meta tags: description, robots and site verification.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/site-builder/seo/"
+        },
+        {
+            "name": "cms.seo.og",
+            "signature": "og(mixed $subject = null, array $options = []): Markup",
+            "description": "The Open Graph and Twitter card tags.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/site-builder/seo/"
+        },
+        {
+            "name": "cms.seo.title",
+            "signature": "title(mixed $subject = null, array $options = []): Markup",
+            "description": "Just `<title>`.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/site-builder/seo/"
+        },
+        {
             "name": "cms.utils.urlFilters",
             "signature": "urlFilters(array $options = []): array",
             "description": "Read URL query parameters and convert them into include/exclude/sort/search options.",

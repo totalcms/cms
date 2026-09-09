@@ -6,8 +6,8 @@ namespace TotalCMS\Domain\Sitemap\Service;
 
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
 use TotalCMS\Domain\Sitemap\Data\SitemapIndex;
-use TotalCMS\Support\Config;
 
 /**
  * Builds a sitemap index that lists every sitemap available on the site.
@@ -19,20 +19,24 @@ use TotalCMS\Support\Config;
  * Disabled collections are silently omitted — they don't get an entry in the
  * index and `/sitemap/{collection}` returns 404 for them. This keeps disabled
  * collections fully out of the public surface.
+ *
+ * The origin comes from Site SEO → Base URL, the same value the canonical tags
+ * and the per-collection sitemaps use, so the three can never disagree about
+ * `www.` vs the apex domain.
  */
 readonly class SitemapIndexBuilder
 {
 	public function __construct(
 		private CollectionLister $collectionLister,
 		private BuilderConfigService $builderConfig,
-		private Config $config,
+		private SeoSettingsLoader $seoSettings,
 	) {
 	}
 
 	public function buildIndex(): string
 	{
 		$index = new SitemapIndex();
-		$base  = $this->baseUrl();
+		$base  = $this->seoSettings->load()->baseUrl;
 
 		// Pages sitemap — included whenever the builder pages collection exists.
 		// Routed at `/sitemap/-pages` so it never collides with a user collection named "pages".
@@ -49,15 +53,5 @@ readonly class SitemapIndexBuilder
 		}
 
 		return $index->toXML();
-	}
-
-	private function baseUrl(): string
-	{
-		$domain = $this->config->domain;
-		if ($domain === '') {
-			return '';
-		}
-
-		return 'https://' . $domain;
 	}
 }

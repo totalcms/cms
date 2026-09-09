@@ -5,6 +5,7 @@
 	"type"        : "object",
 	"title"       : "MCP Schema-Defined Tool",
 	"description" : "A saved-query tool exposed on the MCP server, defined per collection. Stored as a deck item — the deck key matches the tool's id.",
+	"category"    : "Internal",
 	"formgrid"    : "id id\ndescription description\n---Query---\nparams params\nfilters filters\n---Result Shape---\nlimit offset\nformat format\nsort sort\ninclude include\nexclude exclude",
 	"index"       : ["id", "description"],
 	"required"    : ["id", "description"],

@@ -85,6 +85,8 @@ readonly class CollectionFactory
 			$collection->name = $defaults['name'];
 		}
 
+		$collection->singleton = in_array($collectionId, SchemaData::SINGLETON_COLLECTIONS, true);
+
 		return $collection;
 	}
 }

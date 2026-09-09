@@ -2,8 +2,10 @@
 
 {% set post = cms.collection.object('blog', params.id) %}
 
-{% block title %}{{ post.title ?? 'Post Not Found' }} — {{ cms.config('domain') }}{% endblock %}
-{% block description %}{{ post.summary | default('') | striptags | slice(0, 160) }}{% endblock %}
+{# This route renders one blog post, so the head describes the post, not the
+   page record — that is what gives the post its own title, canonical URL,
+   share image and Article JSON-LD. A missing post falls back to the page. #}
+{% block seo %}{{ post ? cms.seo.head(post, {collection: 'blog'}) : cms.seo.head(page|default(null)) }}{% endblock %}
 
 {% block content %}
 <section class="section">

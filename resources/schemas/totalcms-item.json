@@ -1,11 +1,12 @@
 {
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://www.totalcms.co/schemas/totalcms-item.json",
-	"id": "totalcms-item",
-	"type": "object",
-	"description": "Example item schema used by the card and deck fields in the `totalcms` reference schema. Demonstrates a representative subset of fields suitable for nesting inside a card or deck (no gallery/depot/folder and no nested decks, per card/deck restrictions).",
-	"formgrid": "title title\nkind active\nquantity price\nthumbnail thumbnail\ndescription description",
-	"properties": {
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/totalcms-item.json",
+	"id"          : "totalcms-item",
+	"type"        : "object",
+	"category"    : "Internal",
+	"description" : "Example item schema used by the card and deck fields in the `totalcms` reference schema. Demonstrates a representative subset of fields suitable for nesting inside a card or deck (no gallery/depot/folder and no nested decks, per card/deck restrictions).",
+	"formgrid"    : "title title\nkind active\nquantity price\nthumbnail thumbnail\ndescription description",
+	"properties"  : {
 		"id": {
 			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
 			"label": "Item ID",

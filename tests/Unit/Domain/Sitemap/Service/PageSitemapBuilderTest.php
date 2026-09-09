@@ -10,8 +10,9 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
+use TotalCMS\Domain\Seo\Data\SeoSettings;
+use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
 use TotalCMS\Domain\Sitemap\Service\PageSitemapBuilder;
-use TotalCMS\Support\Config;
 
 /**
  * Tests for the page sitemap builder.
@@ -24,23 +25,22 @@ final class PageSitemapBuilderTest extends TestCase
 	private PageSitemapBuilder $builder;
 	private MockObject $mockBuilderConfig;
 	private MockObject $mockIndexReader;
-	private MockObject $config;
+	private MockObject $mockSeoSettings;
 
 	protected function setUp(): void
 	{
 		$this->mockBuilderConfig = $this->createMock(BuilderConfigService::class);
 		$this->mockIndexReader   = $this->createMock(IndexReader::class);
-		$this->config            = $this->createMock(Config::class);
-
-		$this->config->domain = 'example.com';
+		$this->mockSeoSettings   = $this->createMock(SeoSettingsLoader::class);
 
 		$this->mockBuilderConfig->method('getPagesCollectionId')->willReturn('builder-pages');
 		$this->mockBuilderConfig->method('pagesCollectionExists')->willReturn(true);
+		$this->mockSeoSettings->method('load')->willReturn(SeoSettings::fromArray([], 'example.com'));
 
 		$this->builder = new PageSitemapBuilder(
 			$this->mockBuilderConfig,
 			$this->mockIndexReader,
-			$this->config,
+			$this->mockSeoSettings,
 		);
 	}
 
@@ -50,7 +50,7 @@ final class PageSitemapBuilderTest extends TestCase
 		$mockBuilderConfig->method('pagesCollectionExists')->willReturn(false);
 		$mockBuilderConfig->method('getPagesCollectionId')->willReturn('builder-pages');
 
-		$builder = new PageSitemapBuilder($mockBuilderConfig, $this->mockIndexReader, $this->config);
+		$builder = new PageSitemapBuilder($mockBuilderConfig, $this->mockIndexReader, $this->mockSeoSettings);
 
 		$xml = $builder->buildSitemap();
 
@@ -242,6 +242,19 @@ final class PageSitemapBuilderTest extends TestCase
 		expect($xml)->not->toContain('monthly');
 	}
 
+	public function testExcludesPagesWithSeoNoindex(): void
+	{
+		$this->setIndexObjects([
+			['id' => 'public',  'route' => '/public',  'draft' => false, 'sitemap' => true],
+			['id' => 'hidden',  'route' => '/hidden',  'draft' => false, 'sitemap' => true, 'seo' => ['noindex' => true]],
+		]);
+
+		$xml = $this->builder->buildSitemap();
+
+		expect($xml)->toContain('https://example.com/public');
+		expect($xml)->not->toContain('/hidden');
+	}
+
 	public function testDefaultsSitemapToTrueWhenFieldMissing(): void
 	{
 		// Older pages saved before the `sitemap` field existed should still be included.
@@ -252,6 +265,25 @@ final class PageSitemapBuilderTest extends TestCase
 		$xml = $this->builder->buildSitemap();
 
 		expect($xml)->toContain('https://example.com/legacy');
+	}
+
+	public function testUsesTheSeoBaseUrlWhenSet(): void
+	{
+		// The canonical tags read Site SEO → Base URL; the sitemap has to
+		// agree with them or the two disagree on `www.` vs the apex domain.
+		$seoSettings = $this->createMock(SeoSettingsLoader::class);
+		$seoSettings->method('load')->willReturn(SeoSettings::fromArray(['baseUrl' => 'https://www.example.com/'], 'example.com'));
+
+		$this->setIndexObjects([
+			['id' => 'about', 'route' => '/about', 'draft' => false, 'sitemap' => true],
+		]);
+
+		$builder = new PageSitemapBuilder($this->mockBuilderConfig, $this->mockIndexReader, $seoSettings);
+
+		$xml = $builder->buildSitemap();
+
+		expect($xml)->toContain('<loc>https://www.example.com/about</loc>');
+		expect($xml)->not->toContain('https://example.com/about');
 	}
 
 	/**

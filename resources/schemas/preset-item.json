@@ -4,6 +4,7 @@
 	"id"          : "preset-item",
 	"title"       : "Preset Item",
 	"description" : "A named preset of property settings",
+	"category"    : "Internal",
 	"type"        : "object",
 	"properties"  : {
 		"id": {

@@ -5,6 +5,7 @@
 	"type"        : "object",
 	"title"       : "Automation Trigger",
 	"description" : "One trigger for an automation. Stored as a deck item; the deck key is the trigger id.",
+	"category"    : "Internal",
 	"required"    : ["id", "type"],
 	"index"       : ["id", "type"],
 	"properties"  : {

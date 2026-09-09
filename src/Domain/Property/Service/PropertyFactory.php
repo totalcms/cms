@@ -170,15 +170,25 @@ readonly class PropertyFactory
 	 */
 	public function createCard(PropertyDefinition $definition, mixed $value, array $settings = [], string $propertyName = ''): CardData
 	{
-		// If no card data provided, return empty card
+		$schemaref    = $definition->schemaref;
+		$hasSchemaRef = !in_array($schemaref, [null, '', '0'], true);
+
+		// If no card data provided, return empty card — unless a schemaref is
+		// set, in which case treat the value as [] and fall through to the
+		// schema-driven processing below so the card still gets populated
+		// with each field's default (and the forced `id`). A schema-backed
+		// card property is declared `"type": "object"`; an empty PHP array
+		// serializes as JSON `[]`, which fails validation for callers that
+		// legitimately omit the property (e.g. builder-page's `seo` card).
 		if (empty($value) || !is_array($value)) {
-			return new CardData([], $settings);
+			if (!$hasSchemaRef) {
+				return new CardData([], $settings);
+			}
+			$value = [];
 		}
 
-		$schemaref = $definition->schemaref;
-
 		// If no schema reference, return card data as-is (no processing)
-		if (in_array($schemaref, [null, '', '0'], true)) {
+		if (!$hasSchemaRef) {
 			return new CardData($value, $settings);
 		}
 

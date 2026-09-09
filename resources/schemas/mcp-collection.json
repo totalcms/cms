@@ -4,6 +4,7 @@
 	"id"          : "mcp-collection",
 	"type"        : "object",
 	"description" : "Per-collection MCP server settings. Used as a card sub-schema on the collection meta. Controls whether the collection is exposed to AI agents via /mcp and how it appears to them.",
+	"category"    : "Internal",
 	"formgrid"    : "access\nsearchProvider\ntitleProperty\ndescription\nresource\ntools",
 	"required"    : ["id"],
 	"index"       : ["id"],

@@ -1,114 +1,115 @@
 {
- "$schema"     : "https://json-schema.org/draft/2020-12/schema",
- "$id"         : "https://www.totalcms.co/schemas/dataviews.json",
- "id"          : "dataviews",
- "type"        : "object",
- "description" : "A schema for a Total CMS Data View",
- "formgrid"    : "id .\nname name\ndescription description\ndependencies dependencies\nviewDependencies viewDependencies\ndefinition definition\n---MCP Server---\nmcp mcp\n---\nlastBuilt .",
- "properties"  : {
-        "id": {
-			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
-			"label"    : "View ID",
-			"field"    : "id",
-			"factory"  : "uid",
-			"settings" : {
-				"autogen" : "${name}"
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/dataviews.json",
+	"id": "dataviews",
+	"type": "object",
+	"category": "Internal",
+	"description": "A schema for a Total CMS Data View",
+	"formgrid": "id .\nname name\ndescription description\ndependencies dependencies\nviewDependencies viewDependencies\ndefinition definition\n---MCP Server---\nmcp mcp\n---\nlastBuilt .",
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"label": "View ID",
+			"field": "id",
+			"factory": "uid",
+			"settings": {
+				"autogen": "${name}"
 			}
-        },
-        "name": {
-			"type"    : "string",
-			"label"   : "Name",
-			"field"   : "text"
-        },
+		},
+		"name": {
+			"type": "string",
+			"label": "Name",
+			"field": "text"
+		},
 		"description": {
-			"type"     : "string",
-			"label"    : "Description",
-			"field"    : "textarea",
-			"settings" : {
-				"rows" : 3
+			"type": "string",
+			"label": "Description",
+			"field": "textarea",
+			"settings": {
+				"rows": 3
 			}
 		},
 		"dependencies": {
-			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
-			"label"    : "Collection Dependencies",
-			"help"     : "Collections this view depends on. The view will rebuild when these change.",
-			"field"    : "list",
-			"settings" : {
-				"propertyOptions" : "collectionIds"
+			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
+			"label": "Collection Dependencies",
+			"help": "Collections this view depends on. The view will rebuild when these change.",
+			"field": "list",
+			"settings": {
+				"propertyOptions": "collectionIds"
 			}
 		},
 		"viewDependencies": {
-			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
-			"label"    : "View Dependencies",
-			"help"     : "Other Data Views this view reads via <code>cms.view.get()</code>. Listing them here guarantees this view rebuilds <em>after</em> those views, and inherits their collection dependencies — so you don't have to re-list the collections those views already depend on.",
-			"field"    : "list",
-			"settings" : {
-				"propertyOptions" : "viewIds"
+			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
+			"label": "View Dependencies",
+			"help": "Other Data Views this view reads via <code>cms.view.get()</code>. Listing them here guarantees this view rebuilds <em>after</em> those views, and inherits their collection dependencies — so you don't have to re-list the collections those views already depend on.",
+			"field": "list",
+			"settings": {
+				"propertyOptions": "viewIds"
 			}
 		},
-        "definition": {
-			"type"     : "string",
-			"label"    : "Twig Definition",
-			"help"     : "Populate a <code>data</code> variable with the result you want stored.",
-			"field"    : "code",
-			"settings" : {
-				"mode"         : "twig",
-				"theme"        : "elegant",
-				"rows"         : 20,
-				"maxHeight"    : 600,
-				"lineNumbers"  : true,
-				"lineWrapping" : true,
-				"indentUnit"   : 2,
-				"tabSize"      : 2,
-				"foldGutter"   : true,
+		"definition": {
+			"type": "string",
+			"label": "Twig Definition",
+			"help": "Populate a <code>data</code> variable with the result you want stored.",
+			"field": "code",
+			"settings": {
+				"mode": "twig",
+				"theme": "elegant",
+				"rows": 20,
+				"maxHeight": 600,
+				"lineNumbers": true,
+				"lineWrapping": true,
+				"indentUnit": 2,
+				"tabSize": 2,
+				"foldGutter": true,
 				"matchBrackets": true,
 				"autoCloseTags": true
 			}
-        },
+		},
 		"mcp": {
-			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
-			"field"     : "card",
-			"schemaref" : "https://www.totalcms.co/schemas/mcp-collection.json"
+			"$ref": "https://www.totalcms.co/schemas/properties/card.json",
+			"field": "card",
+			"schemaref": "https://www.totalcms.co/schemas/mcp-collection.json"
 		},
 		"lastBuilt": {
-			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
-			"label"    : "Last Built",
-			"field"    : "datetime",
-			"settings" : {
-				"readonly" : true
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Last Built",
+			"field": "datetime",
+			"settings": {
+				"readonly": true
 			}
 		},
 		"lastError": {
-			"type"     : "string",
-			"label"    : "Last Error",
-			"field"    : "text",
-			"settings" : {
-				"hide" : true
+			"type": "string",
+			"label": "Last Error",
+			"field": "text",
+			"settings": {
+				"hide": true
 			}
 		},
 		"updated": {
-			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
-			"label"    : "Updated Date",
-			"help"     : "Last modified date",
-			"field"    : "datetime",
-			"settings" : {
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Updated Date",
+			"help": "Last modified date",
+			"field": "datetime",
+			"settings": {
 				"onUpdate": true,
 				"readonly": true
 			}
 		}
-    },
-    "required": [
-        "id",
-        "name",
-        "definition"
-    ],
-    "index": [
-        "id",
-        "name",
-        "description",
-        "dependencies",
-        "viewDependencies",
-        "lastBuilt",
-        "mcp"
-    ]
+	},
+	"required": [
+		"id",
+		"name",
+		"definition"
+	],
+	"index": [
+		"id",
+		"name",
+		"description",
+		"dependencies",
+		"viewDependencies",
+		"lastBuilt",
+		"mcp"
+	]
 }

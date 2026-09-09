@@ -152,6 +152,14 @@ use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
 use TotalCMS\Domain\Search\Service\SearchService;
 use TotalCMS\Domain\Search\Service\SearchServiceInterface;
 use TotalCMS\Domain\Search\Service\TextSearchProvider;
+use TotalCMS\Domain\Seo\Service\JsonLd\ArticleProvider;
+use TotalCMS\Domain\Seo\Service\JsonLd\BreadcrumbProvider;
+use TotalCMS\Domain\Seo\Service\JsonLd\OrganizationProvider;
+use TotalCMS\Domain\Seo\Service\JsonLd\WebPageProvider;
+use TotalCMS\Domain\Seo\Service\JsonLd\WebSiteProvider;
+use TotalCMS\Domain\Seo\Service\JsonLdBuilder;
+use TotalCMS\Domain\Seo\Service\MetaBuilder;
+use TotalCMS\Domain\Seo\Service\SeoContextFactory;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Storage\AtomicJsonStore;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
@@ -170,6 +178,7 @@ use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\SchemaTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\SeoTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\UtilsTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\ViewTwigAdapter;
@@ -503,6 +512,16 @@ return [
 		$container->get(DepotBrowserRenderer::class),
 	),
 
+	// Explicit because the TwigEngine dependency is a lazy factory: this adapter
+	// is reached through the engine's own `cms` global, so resolving the engine
+	// eagerly is a circular dependency. See the constructor's note.
+	SeoTwigAdapter::class => fn (ContainerInterface $container): SeoTwigAdapter => new SeoTwigAdapter(
+		$container->get(SeoContextFactory::class),
+		$container->get(MetaBuilder::class),
+		$container->get(JsonLdBuilder::class),
+		fn (): TwigEngine => $container->get(TwigEngine::class),
+	),
+
 	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(
 		$container->get(Config::class),
 		PathResolver::packageRoot() . '/resources/translations',
@@ -526,6 +545,7 @@ return [
 		$container->get(FeedTwigAdapter::class),
 		new LocaleTwigAdapter($container->get(TranslationService::class), $container->get(Config::class)),
 		new UtilsTwigAdapter(),
+		$container->get(SeoTwigAdapter::class),
 	),
 
 	// HttpClientInterface → GuzzleHttpClient. Interface binding (autowiring can't
@@ -546,6 +566,17 @@ return [
 	// autowiring can't resolve that. Same provider list EmbedBuilder builds
 	// for its own (unrelated) private resolver.
 	VideoUrlResolver::class => fn (): VideoUrlResolver => new VideoUrlResolver(VideoUrlResolver::defaultProviders()),
+
+	// Explicit because the constructor is variadic. The order is the order the
+	// nodes appear in the @graph, and it matters: the builder keeps the FIRST
+	// node for any repeated @id, and cross-references read best top-down.
+	JsonLdBuilder::class => fn (): JsonLdBuilder => new JsonLdBuilder(
+		new OrganizationProvider(),
+		new WebSiteProvider(),
+		new WebPageProvider(),
+		new BreadcrumbProvider(),
+		new ArticleProvider(),
+	),
 
 	JumpStartExporter::class => fn (ContainerInterface $container): JumpStartExporter => new JumpStartExporter(
 		$container->get(CollectionLister::class),

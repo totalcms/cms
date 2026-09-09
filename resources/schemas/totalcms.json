@@ -1,10 +1,11 @@
 {
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://www.totalcms.co/schemas/totalcms.json",
-	"id": "totalcms",
-	"type": "object",
-	"description": "Reference schema. Demonstrates every Total CMS field type and its settings in one place. This schema is registered and resolvable but cannot be used to create a collection — it exists purely as a living, validated example to copy from.",
-	"properties": {
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/totalcms.json",
+	"id"          : "totalcms",
+	"type"        : "object",
+	"category"    : "Internal",
+	"description" : "Reference schema. Demonstrates every Total CMS field type and its settings in one place. This schema is registered and resolvable but cannot be used to create a collection — it exists purely as a living, validated example to copy from.",
+	"properties"  : {
 		"id": {
 			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
 			"label": "ID",

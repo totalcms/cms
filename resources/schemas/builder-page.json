@@ -1,11 +1,12 @@
 {
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://www.totalcms.co/schemas/builder-page.json",
-	"id": "builder-page",
-	"type": "object",
-	"description": "A schema for a Site Builder page",
-	"formgrid": "draft .\ntitle title\ndescription description\nimage .\n---Routing---\nnav .\nroute template\nstatus redirectTo\n---Features---\nmiddleware middleware\naccessGroups accessGroups\n---Page Data---\ndata data\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---\nid id\nupdated created",
-	"properties": {
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/builder-page.json",
+	"id"          : "builder-page",
+	"type"        : "object",
+	"category"    : "Internal",
+	"description" : "A schema for a Site Builder page",
+	"formgrid"    : "draft .\ntitle title\ndescription description\nimage .\n---Routing---\nnav .\nroute template\nstatus redirectTo\n---Features---\nmiddleware middleware\naccessGroups accessGroups\n---Page Data---\ndata data\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---SEO---\nseo seo\n---\nid id\nupdated created",
+	"properties"  : {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"    : "Page ID",
@@ -216,6 +217,12 @@
 				"onCreate": true,
 				"readonly": true
 			}
+		},
+		"seo": {
+			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
+			"field"     : "card",
+			"schemaref" : "https://www.totalcms.co/schemas/seo.json",
+			"label"     : "SEO"
 		}
 	},
 	"required": [
@@ -236,6 +243,7 @@
 		"sitemap",
 		"changeFrequency",
 		"priority",
+		"seo",
 		"updated",
 		"created"
 	]

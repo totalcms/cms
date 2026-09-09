@@ -64,6 +64,7 @@ class TotalCMSTwigAdapter
 		public FeedTwigAdapter $feed,
 		public LocaleTwigAdapter $locale,
 		public UtilsTwigAdapter $utils,
+		public SeoTwigAdapter $seo,
 	) {
 		$this->logger     = $this->loggerFactory->channelLogger(LogChannel::Twig);
 		$this->env        = $this->config->env;

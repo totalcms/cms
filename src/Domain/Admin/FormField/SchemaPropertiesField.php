@@ -62,6 +62,16 @@ class SchemaPropertiesField extends PropertiesField
 			unset($options['deckref']);
 		}
 
+		// A schema `default` can be any JSON value (builder-page's `data` field defaults
+		// to `{}`), but the editor renders it in a text input, so present it as a string.
+		if (array_key_exists('default', $options) && !is_string($options['default'])) {
+			$options['default'] = match (true) {
+				$options['default'] === null    => '',
+				is_scalar($options['default'])  => var_export($options['default'], true),
+				default                         => (string)json_encode($options['default'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+			};
+		}
+
 		$extra   = SchemaField::filterExtraProperties($options);
 		$options = SchemaField::filterSchemaProperties($options);
 

@@ -5,9 +5,10 @@ namespace TotalCMS\Domain\Sitemap\Service;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
+use TotalCMS\Domain\Seo\Data\SeoFields;
+use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
 use TotalCMS\Domain\Sitemap\Data\Sitemap;
 use TotalCMS\Domain\Sitemap\Exception\SitemapDisabledException;
-use TotalCMS\Support\Config;
 
 readonly class SitemapBuilder
 {
@@ -15,7 +16,7 @@ readonly class SitemapBuilder
 		private IndexFilter $indexFilter,
 		private CollectionFetcher $collectionFetcher,
 		private ObjectUrlBuilder $objectUrlBuilder,
-		private Config $config,
+		private SeoSettingsLoader $seoSettings,
 	) {
 	}
 
@@ -53,6 +54,10 @@ readonly class SitemapBuilder
 		$dateProperty = $options['date'] ?? 'updated';
 		unset($options['date']);
 
+		// One base URL for the whole sitemap — the same Site SEO value the
+		// canonical tags use, so a `www.` (or apex) choice is made in one place.
+		$baseUrl = $this->seoSettings->load()->baseUrl;
+
 		// Fetch and filter the index
 		$objects = $this->indexFilter->fetchFilteredIndex($collection, $options);
 
@@ -66,8 +71,13 @@ readonly class SitemapBuilder
 				continue;
 			}
 
+			// Noindex pages are removed from sitemaps so crawlers don't get contradictory signals.
+			if (SeoFields::fromArray(is_array($object['seo'] ?? null) ? $object['seo'] : [])->noindex) {
+				continue;
+			}
+
 			if (!str_starts_with($url, 'http')) {
-				$url = 'https://' . $this->config->domain . $url;
+				$url = $baseUrl . '/' . ltrim($url, '/');
 			}
 
 			if (!empty($object[$dateProperty])) {

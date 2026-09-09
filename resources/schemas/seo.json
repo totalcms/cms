@@ -1,0 +1,75 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"$id"         : "https://www.totalcms.co/schemas/seo.json",
+	"id"          : "seo",
+	"type"        : "object",
+	"description" : "Per-object SEO overrides. Used as a card sub-schema on objects that opt in.",
+	"category" : "Internal",
+	"formgrid"    : "title title\ndescription description\nimage image\ncanonical canonical\nnoindex nofollow\njsonldType .",
+	"properties"  : {
+		"id": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
+			"label"    : "ID",
+			"help"     : "Reserved — required by the schema system but unused for cards.",
+			"field"    : "id",
+			"factory"  : "slug",
+			"settings" : {
+				"readonly" : true
+			}
+		},
+		"title": {
+			"type"    : "string",
+			"label"   : "Title",
+			"help"    : "Overrides the derived title. Supports placeholders such as ${title}, ${author} or ${card.headline} for any property of this record, and ${site} for the site name. The site title template still applies.",
+			"field"   : "text",
+			"default" : ""
+		},
+		"description": {
+			"type"    : "string",
+			"label"   : "Description",
+			"help"    : "Overrides the meta description for this object",
+			"field"   : "textarea",
+			"default" : ""
+		},
+		"image": {
+			"$ref"    : "https://www.totalcms.co/schemas/properties/image.json",
+			"label"   : "Social Image",
+			"help"    : "Social sharing image; 1200×630 recommended",
+			"field"   : "image"
+		},
+		"canonical": {
+			"type"    : "string",
+			"label"   : "Canonical URL",
+			"help"    : "Absolute URL. Leave empty to use this page's own URL",
+			"field"   : "url",
+			"default" : ""
+		},
+		"noindex": {
+			"type"    : "boolean",
+			"label"   : "No Index",
+			"help"    : "Ask search engines not to index this page; also removes it from sitemaps",
+			"field"   : "toggle",
+			"default" : false
+		},
+		"nofollow": {
+			"type"    : "boolean",
+			"label"   : "No Follow",
+			"help"    : "Ask search engines not to follow links from this page",
+			"field"   : "toggle",
+			"default" : false
+		},
+		"jsonldType": {
+			"type"    : "string",
+			"label"   : "Structured Data Type",
+			"help"    : "Overrides the collection default JSON-LD type for this object",
+			"field"   : "select",
+			"default" : "",
+			"options" : [
+				{"value": "",        "label": "Collection default"},
+				{"value": "article", "label": "Article"},
+				{"value": "none",    "label": "None"}
+			]
+		}
+	},
+	"required": []
+}

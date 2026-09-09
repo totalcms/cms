@@ -4,6 +4,7 @@
 	"id"          : "mcp-prompt",
 	"type"        : "object",
 	"title"       : "MCP Prompt",
+	"category"    : "Internal",
 	"description" : "A templated AI-agent workflow exposed via the MCP server's prompts/list and prompts/get endpoints.",
 	"formgrid"    : "id\ndescription\ntarget\naccess\nargs\nbody",
 	"required"    : ["id", "description", "body"],

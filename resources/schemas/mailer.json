@@ -2,7 +2,8 @@
 	"$schema"     : "https://json-schema.org/draft-07/schema",
 	"$id"         : "https://www.totalcms.co/schemas/mailer.json",
 	"id"          : "mailer",
-	"help" : "A schema for mailer email templates.",
+	"category"    : "Internal",
+	"description" : "A schema for mailer email templates.",
 	"type"        : "object",
 	"properties"  : {
 		"id": {

@@ -4,6 +4,7 @@
 	"id"          : "automations",
 	"type"        : "object",
 	"title"       : "Automation",
+	"category"    : "Internal",
 	"description" : "A user-authored, server-side automation fired by schedule, webhook, or event triggers.",
 	"formgrid"    : "enabled .\nname category\nid id\ndescription description\nerrorMailerId errorMailerId\ntriggers triggers\nhandler handler",
 	"required"    : ["id", "name"],

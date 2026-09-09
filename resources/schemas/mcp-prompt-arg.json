@@ -5,6 +5,7 @@
 	"type"        : "object",
 	"title"       : "MCP Prompt Argument",
 	"description" : "One argument declaration for an MCP prompt. Stored as a deck item; the deck key matches the argument name.",
+	"category"    : "Internal",
 	"formgrid"    : "id\ndescription\nrequired",
 	"required"    : ["id"],
 	"index"       : ["id"],

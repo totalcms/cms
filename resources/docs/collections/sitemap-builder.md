@@ -58,6 +58,14 @@ The leading `-` keeps it from colliding with a user collection literally named `
 
 Each builder page has its own sitemap controls in the page form: an **Include in Sitemap** toggle, a **Change Frequency** select, and a **Priority** number — analogous to the collection-level card but per page. Dynamic routes (containing `{` placeholders, e.g. `/blog/{id}`) are skipped automatically since they can't be enumerated from the route alone.
 
+## Excluding a Single Page or Object
+
+Both sitemaps skip any entry whose **SEO** card has **No Index** turned on — a builder page and a collection object alike. A crawler told `noindex` in the page head and handed the same URL in a sitemap is receiving two contradictory instructions, so Total CMS only ever sends one.
+
+This is separate from the **Include in Sitemap** toggle. That toggle keeps a record out of the sitemap without asking anyone not to index it; **No Index** does both. For collections other than the builder pages, the schema's `index` array must contain `seo` for the exclusion to take effect — the sitemap builders read the collection index, not the object files.
+
+See [SEO](docs/site-builder/seo) for the card and how to add it to your own schemas.
+
 ## Per-Object Sitemap
 
 Generate a sitemap for the objects in any opted-in collection:

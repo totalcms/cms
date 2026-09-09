@@ -138,11 +138,17 @@ readonly class SchemaTwigAdapter
 			$categories[$category][] = $schema;
 		}
 
-		$categories['Built-in Schemas'] = $reservedSchemas;
+		foreach ($reservedSchemas as $schema) {
+			$category = empty($schema['category']) ? 'Built-in Schemas' : trim(strval($schema['category']));
+			if (!array_key_exists($category, $categories)) {
+				$categories[$category] = [];
+			}
+			$categories[$category][] = $schema;
+		}
 
-		// Sort order: custom categories → Extension Schemas → Built-in Schemas
+		// Sort order: custom categories → Extension Schemas → Built-in Schemas → Internal
 		uksort($categories, function ($a, $b): int {
-			$order  = ['Built-in Schemas' => 3, 'Extension Schemas' => 2, 'Custom Schemas' => 1];
+			$order  = ['Built-in Schemas' => 3, 'Extension Schemas' => 2, 'Custom Schemas' => 1, 'Internal' => 4];
 			$aOrder = $order[$a] ?? 0;
 			$bOrder = $order[$b] ?? 0;
 

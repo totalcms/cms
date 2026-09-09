@@ -102,6 +102,7 @@ return [
 			['title' => 'Starter Templates',     'path' => 'site-builder/starters'],
 			['title' => 'Frontend Assets',       'path' => 'site-builder/frontend'],
 			['title' => 'Builder Twig Reference', 'path' => 'site-builder/twig'],
+			['title' => 'SEO',                    'path' => 'site-builder/seo'],
 		],
 	],
 	[

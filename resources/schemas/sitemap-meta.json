@@ -4,6 +4,7 @@
 	"id"          : "sitemap-meta",
 	"type"        : "object",
 	"description" : "Sitemap settings for a Total CMS collection. Used as a card sub-schema on the collection meta.",
+	"category"    : "Internal",
 	"formgrid"    : "enabled .\npriority priority\nfrequency date\nexclude include",
 	"properties"  : {
 		"id": {

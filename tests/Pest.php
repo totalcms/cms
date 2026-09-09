@@ -41,6 +41,9 @@ use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Security\CSRF\RequestOriginValidator;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
+use TotalCMS\Domain\Seo\Data\SeoContext;
+use TotalCMS\Domain\Seo\Data\SeoFields;
+use TotalCMS\Domain\Seo\Data\SeoSettings;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Template\Service\TemplateLister;
@@ -437,6 +440,32 @@ function buildBuilderTwigAdapter(
 		new BuilderNavigation($builderConfig, $indexReader, $orderService),
 		new BuilderAssetRenderer($config),
 	);
+}
+
+/**
+ * Build a `SeoContext` for MetaBuilder / JSON-LD tests without going through
+ * the factory. Every field has a sensible blog-shaped default; pass only the
+ * keys the case under test actually varies.
+ *
+ * @param array<string,mixed> $overrides
+ */
+function seoCtx(array $overrides = []): SeoContext
+{
+	$defaults = [
+		'kind'           => 'object',
+		'object'         => ['id' => 'hello', 'title' => 'Hello <World>', 'summary' => '<p>A summary &amp; more</p>', 'image' => ['name' => 'hero.jpg', 'size' => 10]],
+		'collectionId'   => 'blog',
+		'collectionMeta' => null,
+		'seoBlock'       => ['type' => 'article', 'title' => 'title', 'description' => 'summary', 'image' => 'image'],
+		'fields'         => SeoFields::fromArray([]),
+		'settings'       => SeoSettings::fromArray(['siteName' => 'Bistro', 'defaultDescription' => 'Site default', 'defaultImage' => 'https://cdn/x.jpg', 'twitterHandle' => 'bistro'], 'example.com'),
+		'siteName'       => 'Bistro',
+		'url'            => 'https://example.com/blog/hello',
+		'imageUrls'      => ['image' => 'https://example.com/imageworks/blog/hello/image.jpg', 'seo.image' => ''],
+	];
+	$d = array_merge($defaults, $overrides);
+
+	return new SeoContext($d['kind'], $d['object'], $d['collectionId'], $d['collectionMeta'], $d['seoBlock'], $d['fields'], $d['settings'], $d['siteName'], $d['url'], $d['imageUrls']);
 }
 
 function signInAs(App $app, string $userId, string $authCollection = ''): void

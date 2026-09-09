@@ -78,6 +78,9 @@ class CollectionData
 	/** @var array<string,mixed> */
 	public array $mcp = [];  // MCP card settings (access, description, resource). All editions; writes need Pro — see EditionFeature::MCP_SERVER.
 
+	/** @var array<string,mixed> */
+	public array $seo = [];  // SEO card settings (type, title, description, image — the JSON-LD type and which properties supply the title/description/image)
+
 	public function __construct()
 	{
 		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
@@ -150,6 +153,10 @@ class CollectionData
 
 		if ($this->mcp !== []) {
 			$collection['mcp'] = $this->mcp;
+		}
+
+		if ($this->seo !== []) {
+			$collection['seo'] = $this->seo;
 		}
 
 		return $collection;
@@ -242,6 +249,7 @@ class CollectionData
 			'image'        => ['labelPlural' => 'Images', 'labelSingular' => 'Image'],
 			'number'       => ['labelPlural' => 'Numbers', 'labelSingular' => 'Number'],
 			'builder-page' => ['labelPlural' => 'Pages', 'labelSingular' => 'Page'],
+			'seo-site'     => ['labelPlural' => 'Site SEO', 'labelSingular' => 'Site SEO', 'name' => 'Site SEO'],
 			'styledtext'   => ['labelPlural' => 'Content', 'labelSingular' => 'Styled Text'],
 			'svg'          => ['labelPlural' => 'SVGs', 'labelSingular' => 'SVG'],
 			'text'         => ['labelPlural' => 'Content', 'labelSingular' => 'Text'],

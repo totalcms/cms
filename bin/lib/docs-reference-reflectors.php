@@ -79,6 +79,7 @@ const TWIG_NAMESPACE_DOCS = [
 	'collection' => 'https://docs.totalcms.co/twig/collections/',
 	'admin'      => 'https://docs.totalcms.co/admin/twig/',
 	'builder'    => 'https://docs.totalcms.co/site-builder/twig/',
+	'seo'        => 'https://docs.totalcms.co/site-builder/seo/',
 	'locale'     => 'https://docs.totalcms.co/twig/locale/',
 	'utils'      => 'https://docs.totalcms.co/twig/utils/',
 ];

@@ -25,6 +25,9 @@ readonly class PageData
 	/** @var array<string,mixed> */
 	public array $data;
 
+	/** @var array<string,mixed> The seo card (title, description, image, canonical, noindex, nofollow, jsonldType) */
+	public array $seo;
+
 	/** @var list<string> Names of page-middleware to run before render */
 	public array $middleware;
 
@@ -53,6 +56,7 @@ readonly class PageData
 		$this->status          = $this->parseStatus($data['status'] ?? null);
 		$this->redirectTo      = (string)($data['redirectTo'] ?? '');
 		$this->data            = $this->parseData($data['data'] ?? null);
+		$this->seo             = is_array($data['seo'] ?? null) ? $data['seo'] : [];
 		$this->middleware      = $this->parseStringList($data['middleware'] ?? null);
 		$this->accessGroups    = $this->parseStringList($data['accessGroups'] ?? null);
 	}
@@ -159,6 +163,7 @@ readonly class PageData
 			'status'          => $this->status,
 			'redirectTo'      => $this->redirectTo,
 			'data'            => $this->data,
+			'seo'             => $this->seo,
 			'middleware'      => $this->middleware,
 			'accessGroups'    => $this->accessGroups,
 		];

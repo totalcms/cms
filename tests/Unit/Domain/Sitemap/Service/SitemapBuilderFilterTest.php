@@ -14,8 +14,9 @@ use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Query\Service\ObjectFilter;
+use TotalCMS\Domain\Seo\Data\SeoSettings;
+use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
-use TotalCMS\Support\Config;
 
 /**
  * Test sitemap filtering functionality.
@@ -27,7 +28,7 @@ final class SitemapBuilderFilterTest extends TestCase
 	private MockObject $mockIndexReader;
 	private MockObject $mockCollectionFetcher;
 	private MockObject $mockObjectUrlBuilder;
-	private MockObject $mockConfig;
+	private MockObject $mockSeoSettings;
 
 	protected function setUp(): void
 	{
@@ -36,17 +37,16 @@ final class SitemapBuilderFilterTest extends TestCase
 		$this->mockIndexFilter       = new IndexFilter($mockIndexReader, new ObjectFilter());
 		$this->mockCollectionFetcher = $this->createMock(CollectionFetcher::class);
 		$this->mockObjectUrlBuilder  = $this->createMock(ObjectUrlBuilder::class);
-		$this->mockConfig            = $this->createMock(Config::class);
+		$this->mockSeoSettings       = $this->createMock(SeoSettingsLoader::class);
+
+		$this->mockSeoSettings->method('load')->willReturn(SeoSettings::fromArray([], 'example.com'));
 
 		$this->sitemapBuilder = new SitemapBuilder(
 			$this->mockIndexFilter,
 			$this->mockCollectionFetcher,
 			$this->mockObjectUrlBuilder,
-			$this->mockConfig
+			$this->mockSeoSettings
 		);
-
-		// Mock config domain
-		$this->mockConfig->domain = 'example.com';
 
 		// Mock ObjectUrlBuilder to return simple URL based on object id
 		$this->mockObjectUrlBuilder
@@ -241,6 +241,21 @@ final class SitemapBuilderFilterTest extends TestCase
 		expect($result)->not->toContain('post2'); // Boolean false
 		expect($result)->not->toContain('post3'); // String 'true' != boolean true
 		expect($result)->not->toContain('post4'); // String 'false' != boolean true
+	}
+
+	public function testNoindexSeoObjectExcludedFromSitemap(): void
+	{
+		$this->setupMocksWithTestData([
+			['id' => 'post1', 'title' => 'Post 1'], // No seo key at all — must be included
+			['id' => 'post2', 'title' => 'Post 2', 'seo' => ['noindex' => true]],
+			['id' => 'post3', 'title' => 'Post 3', 'seo' => ['noindex' => false]],
+		]);
+
+		$result = $this->sitemapBuilder->buildSitemap('blog', []);
+
+		expect($result)->toContain('post1'); // Included (no seo key)
+		expect($result)->not->toContain('post2'); // Excluded (seo.noindex: true)
+		expect($result)->toContain('post3'); // Included (seo.noindex: false)
 	}
 
 	public function testLegacyFilterParameterStillWorks(): void
