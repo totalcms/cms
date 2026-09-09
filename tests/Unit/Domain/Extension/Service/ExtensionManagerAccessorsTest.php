@@ -60,8 +60,8 @@ function accessorContext(ExtensionManager $manager, string $id, string $path, ca
 	$settings  = (new ReflectionProperty(ExtensionManager::class, 'settingsManager'))->getValue($manager);
 	$ctx       = new ExtensionContext(ExtensionManifest::fromArray(['id' => $id, 'name' => $id]), $path, $container, $settings, new NullLogger());
 	$register($ctx);
-	$prop     = new ReflectionProperty(ExtensionManager::class, 'contexts');
-	$contexts = $prop->getValue($manager);
+	$prop          = new ReflectionProperty(ExtensionManager::class, 'contexts');
+	$contexts      = $prop->getValue($manager);
 	$contexts[$id] = $ctx;
 	$prop->setValue($manager, $contexts);
 }

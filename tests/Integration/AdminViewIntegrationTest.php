@@ -15,7 +15,6 @@ use function TotalCMS\Slim\Pest\get;
 beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());
 
-
 	// Create minimal collections programmatically (much faster than jumpstart import)
 
 	$app       = bootstrap();
@@ -44,7 +43,6 @@ beforeAll(function (): void {
 		'name'   => 'Feed',
 		'schema' => 'feed',
 	]);
-
 });
 
 beforeEach(function (): void {

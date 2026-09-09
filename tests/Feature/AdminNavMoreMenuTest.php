@@ -5,6 +5,7 @@ declare(strict_types=1);
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use TotalCMS\Domain\Admin\Nav\NavEntry;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
@@ -70,7 +71,7 @@ test('the container wires the registry to the extension manager, so extension na
 	// ever show. Pin the wiring.
 	$property = new ReflectionProperty(AdminNavRegistry::class, 'extensions');
 
-	expect($property->getValue($this->registry))->toBeInstanceOf(\TotalCMS\Domain\Extension\Service\ExtensionManager::class);
+	expect($property->getValue($this->registry))->toBeInstanceOf(ExtensionManager::class);
 });
 
 test('the registry splits visible items by the setting and ignores stale ids', function (): void {

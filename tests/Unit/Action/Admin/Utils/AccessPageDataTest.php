@@ -71,7 +71,7 @@ final class AccessPageDataTest extends TestCase
 
 	public function testAccessGroupsEditActionLoadsTheGroup(): void
 	{
-		$request = $this->createMock(ServerRequestInterface::class);
+		$request   = $this->createMock(ServerRequestInterface::class);
 		$groupData = new AccessGroup(['id' => 'editors']);
 		$this->accessGroupLister->method('findById')->with('editors')->willReturn($groupData);
 

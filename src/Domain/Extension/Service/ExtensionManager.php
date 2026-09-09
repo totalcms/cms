@@ -859,7 +859,7 @@ class ExtensionManager
 	public function getAllTwigGlobals(): array
 	{
 		$globals = [];
-		foreach ($this->permittedContexts('twig:functions') as $id => $context) {
+		foreach ($this->permittedContexts('twig:functions') as $context) {
 			$globals = array_merge($globals, $context->getRegisteredTwigGlobals());
 		}
 
@@ -870,7 +870,7 @@ class ExtensionManager
 	public function getAllCommands(): array
 	{
 		$commands = [];
-		foreach ($this->permittedContexts('cli:commands') as $id => $context) {
+		foreach ($this->permittedContexts('cli:commands') as $context) {
 			$commands = array_merge($commands, $context->getRegisteredCommands());
 		}
 
@@ -1033,7 +1033,7 @@ class ExtensionManager
 	public function getAllFieldTypes(): array
 	{
 		$types = [];
-		foreach ($this->permittedContexts('fields') as $id => $context) {
+		foreach ($this->permittedContexts('fields') as $context) {
 			$types = array_merge($types, $context->getRegisteredFieldTypes());
 		}
 
@@ -1044,7 +1044,7 @@ class ExtensionManager
 	public function getAllFieldDefaultTypes(): array
 	{
 		$types = [];
-		foreach ($this->permittedContexts('fields') as $id => $context) {
+		foreach ($this->permittedContexts('fields') as $context) {
 			$types = array_merge($types, $context->getRegisteredFieldDefaultTypes());
 		}
 

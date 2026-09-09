@@ -73,22 +73,44 @@ final class OAuthPageDataTest extends TestCase
 	public function testClientsPageBucketsStaticAndDynamicClientsWithActiveGrantCounts(): void
 	{
 		$this->oauthClientRepository->save(new OAuthClientData(
-			id: 'static-1', name: 'Static App', secretHash: 'h', redirectUris: ['https://a/cb'],
-			scopes: ['cms:read'], isDynamic: false, isConfidential: true,
-			createdAt: '2026-01-01T00:00:00Z', createdBy: 'admin',
+			id: 'static-1',
+			name: 'Static App',
+			secretHash: 'h',
+			redirectUris: ['https://a/cb'],
+			scopes: ['cms:read'],
+			isDynamic: false,
+			isConfidential: true,
+			createdAt: '2026-01-01T00:00:00Z',
+			createdBy: 'admin',
 		));
 		$this->oauthClientRepository->save(new OAuthClientData(
-			id: 'dyn-1', name: 'Dynamic App', secretHash: 'h', redirectUris: ['https://b/cb'],
-			scopes: ['cms:read'], isDynamic: true, isConfidential: false,
-			createdAt: '2026-01-01T00:00:00Z', createdBy: 'admin',
+			id: 'dyn-1',
+			name: 'Dynamic App',
+			secretHash: 'h',
+			redirectUris: ['https://b/cb'],
+			scopes: ['cms:read'],
+			isDynamic: true,
+			isConfidential: false,
+			createdAt: '2026-01-01T00:00:00Z',
+			createdBy: 'admin',
 		));
 		$this->oauthGrantRepository->save(new OAuthGrantData(
-			id: 'g-live', clientId: 'static-1', userId: 'u', scopes: ['cms:read'],
-			refreshTokenHash: 'h1', issuedAt: '2026-01-01T00:00:00Z', expiresAt: '2099-01-01T00:00:00Z',
+			id: 'g-live',
+			clientId: 'static-1',
+			userId: 'u',
+			scopes: ['cms:read'],
+			refreshTokenHash: 'h1',
+			issuedAt: '2026-01-01T00:00:00Z',
+			expiresAt: '2099-01-01T00:00:00Z',
 		));
 		$this->oauthGrantRepository->save(new OAuthGrantData(
-			id: 'g-expired', clientId: 'static-1', userId: 'u', scopes: ['cms:read'],
-			refreshTokenHash: 'h2', issuedAt: '2020-01-01T00:00:00Z', expiresAt: '2020-02-01T00:00:00Z',
+			id: 'g-expired',
+			clientId: 'static-1',
+			userId: 'u',
+			scopes: ['cms:read'],
+			refreshTokenHash: 'h2',
+			issuedAt: '2020-01-01T00:00:00Z',
+			expiresAt: '2020-02-01T00:00:00Z',
 		));
 
 		$data = $this->builder->build($this->request, 'oauth-clients', '');
@@ -111,17 +133,33 @@ final class OAuthPageDataTest extends TestCase
 	public function testGrantsPageJoinsGrantsToClientNamesNewestFirst(): void
 	{
 		$this->oauthClientRepository->save(new OAuthClientData(
-			id: 'client-xyz', name: 'My OAuth App', secretHash: 'h', redirectUris: ['https://a/cb'],
-			scopes: ['cms:read'], isDynamic: false, isConfidential: true,
-			createdAt: '2026-01-01T00:00:00Z', createdBy: 'admin',
+			id: 'client-xyz',
+			name: 'My OAuth App',
+			secretHash: 'h',
+			redirectUris: ['https://a/cb'],
+			scopes: ['cms:read'],
+			isDynamic: false,
+			isConfidential: true,
+			createdAt: '2026-01-01T00:00:00Z',
+			createdBy: 'admin',
 		));
 		$this->oauthGrantRepository->save(new OAuthGrantData(
-			id: 'old', clientId: 'client-xyz', userId: 'u@example.com', scopes: ['cms:read'],
-			refreshTokenHash: 'h1', issuedAt: '2026-01-01T00:00:00Z', expiresAt: '2027-01-01T00:00:00Z',
+			id: 'old',
+			clientId: 'client-xyz',
+			userId: 'u@example.com',
+			scopes: ['cms:read'],
+			refreshTokenHash: 'h1',
+			issuedAt: '2026-01-01T00:00:00Z',
+			expiresAt: '2027-01-01T00:00:00Z',
 		));
 		$this->oauthGrantRepository->save(new OAuthGrantData(
-			id: 'new', clientId: 'unknown-client', userId: 'u@example.com', scopes: ['cms:read'],
-			refreshTokenHash: 'h2', issuedAt: '2026-06-01T00:00:00Z', expiresAt: '2027-06-01T00:00:00Z',
+			id: 'new',
+			clientId: 'unknown-client',
+			userId: 'u@example.com',
+			scopes: ['cms:read'],
+			refreshTokenHash: 'h2',
+			issuedAt: '2026-06-01T00:00:00Z',
+			expiresAt: '2027-06-01T00:00:00Z',
 		));
 		$this->collectionLister->method('listAllCollections')->willReturn([]);
 		$this->accessControlService->method('userExists')->willReturn(false);
@@ -161,20 +199,31 @@ final class OAuthPageDataTest extends TestCase
 	 * callback: fn(CollectionData $c, string $persona): bool.
 	 *
 	 * @param  list<string>                                    $scopes
-	 * @param  null|callable(CollectionData,string):bool        $isAccessibleTo
+	 * @param  callable(CollectionData,string):bool|null        $isAccessibleTo
 	 *
 	 * @return array<string,mixed> the effectiveReach block of the single seeded grant
 	 */
 	private function effectiveReachForSingleGrant(array $scopes, ?callable $isAccessibleTo = null): array
 	{
 		$this->oauthClientRepository->save(new OAuthClientData(
-			id: 'reach-client', name: 'Reach', secretHash: 'h', redirectUris: ['https://a/cb'],
-			scopes: $scopes, isDynamic: false, isConfidential: true,
-			createdAt: '2026-01-01T00:00:00Z', createdBy: 'admin',
+			id: 'reach-client',
+			name: 'Reach',
+			secretHash: 'h',
+			redirectUris: ['https://a/cb'],
+			scopes: $scopes,
+			isDynamic: false,
+			isConfidential: true,
+			createdAt: '2026-01-01T00:00:00Z',
+			createdBy: 'admin',
 		));
 		$this->oauthGrantRepository->save(new OAuthGrantData(
-			id: 'reach-grant', clientId: 'reach-client', userId: 'user-id', scopes: $scopes,
-			refreshTokenHash: 'h', issuedAt: '2026-01-01T00:00:00Z', expiresAt: '2099-01-01T00:00:00Z',
+			id: 'reach-grant',
+			clientId: 'reach-client',
+			userId: 'user-id',
+			scopes: $scopes,
+			refreshTokenHash: 'h',
+			issuedAt: '2026-01-01T00:00:00Z',
+			expiresAt: '2099-01-01T00:00:00Z',
 		));
 
 		$blog          = new CollectionData();

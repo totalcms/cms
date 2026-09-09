@@ -7,6 +7,7 @@ namespace TotalCMS\Action\Admin;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Action\Admin\Utils\UtilsPageData;
 use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -91,7 +92,7 @@ readonly class AdminUtilsAction
 		}
 
 		$builder  = $this->pageData->for($page);
-		$pageData = $builder !== null ? $builder->build($request, $page, $action) : [];
+		$pageData = $builder instanceof UtilsPageData ? $builder->build($request, $page, $action) : [];
 
 		/** @var array<string,mixed> $pageData */
 		return $this->twigRenderer->template($response, 'admin/utils.twig', array_merge(

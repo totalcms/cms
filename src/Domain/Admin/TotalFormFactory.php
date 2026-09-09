@@ -2,13 +2,13 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use Odan\Session\PhpSession;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
+use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;

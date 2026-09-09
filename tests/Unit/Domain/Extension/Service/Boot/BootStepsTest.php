@@ -8,7 +8,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
-use ReflectionProperty;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Automation\Service\AutomationRegistry;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
@@ -63,16 +62,16 @@ final class BootStepsTest extends TestCase
 		// registers 'wiring' into them; under the parallel suite (sharded by
 		// file) a leaked entry would survive into whatever other test file
 		// lands in the same worker next, so snapshot and restore.
-		$this->savedExtensionFieldTypes        = (new ReflectionProperty(TotalForm::class, 'extensionFieldTypes'))->getValue();
-		$this->savedExtensionFieldDefaultTypes = (new ReflectionProperty(TotalForm::class, 'extensionFieldDefaultTypes'))->getValue();
+		$this->savedExtensionFieldTypes        = (new \ReflectionProperty(TotalForm::class, 'extensionFieldTypes'))->getValue();
+		$this->savedExtensionFieldDefaultTypes = (new \ReflectionProperty(TotalForm::class, 'extensionFieldDefaultTypes'))->getValue();
 
 		$this->manager = $this->createMock(ExtensionManager::class);
 	}
 
 	protected function tearDown(): void
 	{
-		(new ReflectionProperty(TotalForm::class, 'extensionFieldTypes'))->setValue(null, $this->savedExtensionFieldTypes);
-		(new ReflectionProperty(TotalForm::class, 'extensionFieldDefaultTypes'))->setValue(null, $this->savedExtensionFieldDefaultTypes);
+		(new \ReflectionProperty(TotalForm::class, 'extensionFieldTypes'))->setValue(null, $this->savedExtensionFieldTypes);
+		(new \ReflectionProperty(TotalForm::class, 'extensionFieldDefaultTypes'))->setValue(null, $this->savedExtensionFieldDefaultTypes);
 	}
 
 	/** @param array<class-string,object> $services */

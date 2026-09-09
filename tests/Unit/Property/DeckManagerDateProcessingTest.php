@@ -21,7 +21,6 @@ it('DateData converts date field from HTML datetime-local to ISO format', functi
 	// Should be ISO 8601 format with timezone
 	expect($transformedValue)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
 	expect($transformedValue)->not()->toBe($htmlDateValue);
-
 });
 
 // Test that DateData processes datetime fields correctly
@@ -41,7 +40,6 @@ it('DateData converts datetime field from HTML datetime-local to ISO format', fu
 	// Should be ISO 8601 format
 	expect($transformedValue)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
 	expect($transformedValue)->not()->toBe($htmlDatetimeValue);
-
 });
 
 // Test DateData cleanDate with different formats

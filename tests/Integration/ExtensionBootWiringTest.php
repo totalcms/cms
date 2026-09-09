@@ -184,16 +184,22 @@ function bootWiringContext(ContainerInterface $container, string $extPath, Exten
 {
 	$ctx = new ExtensionContext($manifest, $extPath, $container, $settings, new NullLogger());
 
-	$ctx->addRoutes(function ($r): void { $r->get('/wiring-ping', fn () => 'pong'); });
-	$ctx->addPublicRoutes(function ($r): void { $r->get('/wiring-public', fn () => 'pong'); });
-	$ctx->addAdminRoutes(function ($r): void { $r->get('/wiring-admin', fn () => 'pong'); });
+	$ctx->addRoutes(function ($r): void {
+		$r->get('/wiring-ping', fn () => 'pong');
+	});
+	$ctx->addPublicRoutes(function ($r): void {
+		$r->get('/wiring-public', fn () => 'pong');
+	});
+	$ctx->addAdminRoutes(function ($r): void {
+		$r->get('/wiring-admin', fn () => 'pong');
+	});
 	$ctx->addTwigFunction(new TwigFunction('wiring_fn', fn (): string => 'wired'));
 	$ctx->addTwigFilter(new TwigFilter('wiring_filter', fn (string $v): string => strtoupper($v)));
 	$ctx->addTwigGlobal('wiringGlobal', 'global-wired');
 	$ctx->addCommand(new Command('wiring:cmd'));
 	$ctx->addAdminNavItem(new AdminNavItem(label: 'Wiring', icon: 'plug', url: 'wiring'));
 	$ctx->addDashboardWidget(new DashboardWidget(id: 'wiring-widget', label: 'Wiring', template: 'w.twig'));
-	$ctx->addFieldType('wiringfield', \stdClass::class);
+	$ctx->addFieldType('wiringfield', stdClass::class);
 	$ctx->addEventListener('wiring.event', static fn () => null);
 	$ctx->addAutomation('wiring-auto', 'Wiring automation', [['type' => 'schedule', 'cron' => '0 6 * * *']], static fn () => null);
 	$ctx->addPageMiddleware('wiring-middleware', 'Test\\Wiring\\Middleware');
@@ -202,12 +208,33 @@ function bootWiringContext(ContainerInterface $container, string $extPath, Exten
 	$ctx->registerMcpResource('wiring://thing', 'A wiring resource', static fn () => 'x');
 	$ctx->registerMcpResourceTemplate('wiring://items/{id}', 'A wiring template', static fn () => 'x');
 	$ctx->registerSearchProvider(new class implements SearchProvider {
-		public function id(): string { return 'wiring-search'; }
-		public function label(): string { return 'Wiring search'; }
-		public function search(SearchQuery $query): array { return []; }
-		public function index(string $collection, string $id, array $data): void {}
-		public function delete(string $collection, string $id): void {}
-		public function isAvailable(): bool { return true; }
+		public function id(): string
+		{
+			return 'wiring-search';
+		}
+
+		public function label(): string
+		{
+			return 'Wiring search';
+		}
+
+		public function search(SearchQuery $query): array
+		{
+			return [];
+		}
+
+		public function index(string $collection, string $id, array $data): void
+		{
+		}
+
+		public function delete(string $collection, string $id): void
+		{
+		}
+
+		public function isAvailable(): bool
+		{
+			return true;
+		}
 	});
 	$ctx->addAdminAsset('css', 'wiring-admin.css');
 	$ctx->addFrontendAsset('css', 'wiring-front.css');
@@ -223,9 +250,18 @@ test('bootAll wires every extension point into its core registry, and runs boot(
 
 	$test      = $this;
 	$extension = new class($test) implements ExtensionInterface {
-		public function __construct(private object $test) {}
-		public function register(ExtensionContext $context): void {}
-		public function boot(ExtensionContext $context): void { $this->test->bootCalled = true; }
+		public function __construct(private object $test)
+		{
+		}
+
+		public function register(ExtensionContext $context): void
+		{
+		}
+
+		public function boot(ExtensionContext $context): void
+		{
+			$this->test->bootCalled = true;
+		}
 	};
 
 	(new ReflectionProperty(ExtensionManager::class, 'contexts'))->setValue($manager, ['test/wiring' => $context]);

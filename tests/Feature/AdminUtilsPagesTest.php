@@ -203,7 +203,7 @@ test('POST import-rss analyzes the feed through RssImporter and shows the result
 
 test('POST import-rss shows the importer error when analysis fails', function (): void {
 	$importer = $this->createMock(RssImporter::class);
-	$importer->method('analyze')->willThrowException(new \RuntimeException('Feed unreachable (stub)'));
+	$importer->method('analyze')->willThrowException(new RuntimeException('Feed unreachable (stub)'));
 	$this->app->getContainer()->set(RssImporter::class, $importer);
 
 	$token    = $this->app->getContainer()->get(CSRFTokenManager::class)->generateToken();

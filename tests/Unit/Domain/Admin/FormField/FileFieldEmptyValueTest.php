@@ -13,7 +13,7 @@ use TotalCMS\Domain\Admin\TotalForm;
  */
 describe('FileField with no file', function (): void {
 	beforeEach(function (): void {
-		$self = $this;
+		$self           = $this;
 		$this->captured = [];
 
 		$this->form             = $this->createMock(TotalForm::class);
