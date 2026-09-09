@@ -532,6 +532,29 @@ Within each helper, output ordering is:
 2. Preload hints (`<link rel="preload">` / `<link rel="modulepreload">`) — always emitted in the head regardless of the asset's own `position`.
 3. Script tags last.
 
+## Which admin surface?
+
+An extension has three ways to put something in front of an operator, and a
+fourth place for data that is not the operator's at all. Choosing the wrong
+one is the most common design mistake in a first extension.
+
+| Put it in… | When it is… | Examples |
+|---|---|---|
+| **Settings** (`settings_schema`) | configuration read at boot, changed rarely, with no screen of its own | API keys, feature toggles, default values, a webhook URL |
+| **An admin page** (`addAdminNavItem` + `addAdminRoutes`) | operational or per-item work that needs its own tables, forms or actions | a report, a review queue, a sync log with a retry button, anything an operator visits repeatedly |
+| **A dashboard widget** (`addDashboardWidget`) | a read-only glance at status | a score, a count, the last run time, a warning |
+| **A collection** (`installSchema` + a collection) | content that editors manage, or records that accumulate | redirects, testimonials, form submissions, audit entries |
+
+Two tests settle most cases. If an operator would change the value once and
+forget it, it is a setting. If the value has a lifecycle, a list, or a
+history, it is not a setting: it is a page over a collection. Settings are
+stored in a single JSON file per extension and rendered as one form, so a
+list that grows there becomes unmanageable quickly.
+
+Settings and pages are not exclusive. An extension that syncs with a
+service keeps its credentials in settings, shows its sync history on an
+admin page, and surfaces the last failure as a widget.
+
 ## Settings
 
 Read per-extension settings. Settings are stored in `tcms-data/.system/extension-settings/`.

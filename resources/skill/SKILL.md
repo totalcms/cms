@@ -1,6 +1,6 @@
 ---
 name: totalcms
-description: Use when building, editing, or managing a Total CMS (T3) site — creating Site Builder pages, working with collections, schemas, or objects, using the tcms CLI, or setting up the frontend/Vite pipeline. Covers the local build workflow end to end.
+description: Use when building, editing, or managing a Total CMS (T3) site — Site Builder pages and SEO, collections, schemas and field choice, objects and imports, forms and public registration, access groups, automations, Data Views, search, feeds, the MCP server, the tcms CLI, the frontend/Vite pipeline, push/pull to production, or writing a T3 extension. Covers the local build workflow end to end.
 ---
 
 # Building a Total CMS (T3) site
@@ -19,8 +19,10 @@ You do **not** need to memorize field options or Twig signatures — they ship o
 
 - **On-disk docs (always present):** `vendor/totalcms/cms/resources/docs/<section>/`
   (`menu.php` is the table of contents, `search-index.json` a prebuilt index).
-  Sections include `site-builder/`, `collections/`, `schemas/`, `fields/`, `twig/`,
-  `forms/`, `apis/`, `extensions/`, `operations/`. Grep or read these for the long tail.
+  Sections: `get-started/`, `collections/`, `schemas/`, `fields/`, `site-builder/`,
+  `twig/`, `forms/`, `automations/`, `admin/`, `notifications/`, `auth/`, `apis/`,
+  `mcp/`, `extensions/`, `operations/`. `references/features.md` maps every feature
+  to its page. Grep or read these for the long tail.
 - **MCP docs server (fastest lookup):** when the official docs connector
   (`https://totalcms.co/mcp`) is connected — it ships alongside this skill in
   the Total CMS plugin — use `docs_search` to find pages, `docs_get` to read
@@ -44,7 +46,10 @@ Prefer looking things up over guessing; training data is often stale on exact si
    directory exists (git-managed mode: it wins over `tcms-data/`, and the admin's
    template editor is read-only), otherwise `tcms-data/builder/`. Twig global is `cms`;
    builder helpers are `cms.builder.nav()`, `cms.builder.url(id, params)`,
-   `cms.builder.css/js/asset()`. See `references/site-builder.md`.
+   `cms.builder.css/js/asset()`. The layout's `<head>` carries
+   `{% block seo %}{{ cms.seo.head(page|default(null)) }}{% endblock %}` — it emits
+   title, description, canonical, Open Graph and JSON-LD, so a layout must not also
+   hand-write `<title>` or `<meta name="description">`. See `references/site-builder.md`.
 4. **Add a page record.** A page is an object in the `builder-pages` collection.
    Create it one of these ways:
    - `echo '{"id":"about","title":"About","route":"/about","template":"pages/page.twig"}' | vendor/bin/tcms object:create builder-pages -` (one object, file or stdin), or
@@ -62,6 +67,14 @@ Prefer looking things up over guessing; training data is often stale on exact si
 
 ## Writing schemas and content by hand
 
+**Before writing any schema, read the reference schema** —
+`vendor/bin/tcms schema:get totalcms --json` — and copy property definitions from it.
+It demonstrates every field type with the settings and help text that go with it.
+Pick fields by the shape of the value (`date`, `toggle`, `select`, `number`, `image`…);
+`text` is the last resort. Write every `help` and `description` as a brief to a
+writer who cannot see the site — agents read them through MCP. Rules, the
+five meanings of "category", and the SEO card: `references/data-model.md`.
+
 The admin enforces these for you. They only bite when you author JSON directly —
 JumpStart files, imports, the API — which is exactly what an agent tends to do.
 
@@ -77,9 +90,10 @@ JumpStart files, imports, the API — which is exactly what an agent tends to do
 
 See `vendor/totalcms/cms/resources/docs/fields/deck.md` for the full shape.
 
-**After editing any schema JSON in place, run `vendor/bin/tcms schema:lint <id>`**
-— imports validate on the way in, but in-place edits are never re-checked, and
-the linter also flags properties missing the help text AI agents rely on.
+**Schema work is done when `vendor/bin/tcms schema:lint <id> --strict` is clean** —
+zero errors, zero warnings. Imports validate on the way in, but in-place edits are
+never re-checked, and the linter flags every property missing the help text AI
+agents rely on. Fill descriptions in on the first pass, not as a follow-up.
 
 ## Working against a live site
 
@@ -101,7 +115,9 @@ Two rules prevent the two worst mistakes:
 | running any `tcms` command / scripting with `--json` | `references/cli.md` |
 | editing builder templates, routes, or page records | `references/site-builder.md` |
 | setting up or building frontend assets | `references/frontend.md` |
-| modeling data — collections, schemas, objects | `references/data-model.md` |
+| modeling data — collections, schemas, field choice, descriptions | `references/data-model.md` |
+| wondering whether T3 already does something (SEO, forms, automations, search, feeds, auth…) | `references/features.md` |
+| writing or reviewing an extension | `references/extensions.md` |
 | reading/writing content via the site's MCP server | `references/mcp-content.md` |
 | launching, syncing with production (`push`/`pull`) | `references/going-live.md` |
 | needing an exact field option / Twig signature | `vendor/totalcms/cms/resources/docs/<section>/` (or MCP) |

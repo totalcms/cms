@@ -9,27 +9,27 @@
 		"id": {
 			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
 			"label": "ID",
-			"help": "id field. URL-safe slug. Here it auto-generates from the title.",
+			"help": "id field. URL-safe slug that names the object and appears in its URL. Every schema needs one. Here it auto-generates from the title.",
 			"field": "id",
 			"settings": { "autogen": "${title}" }
 		},
 		"title": {
 			"type": "string",
 			"label": "Title",
-			"help": "text field. The canonical single-line string input.",
+			"help": "text field. Single-line plain text. Use for: names, headlines, short labels. Reach for text only when no more specific field fits — email, url, phone, date, number, select and toggle each validate and render better.",
 			"field": "text"
 		},
 		"autogenText": {
 			"type": "string",
 			"label": "Autogen Text",
-			"help": "text field with the autogen setting — value is generated from other fields.",
+			"help": "text field with the autogen setting — value is generated from other fields. Use for: derived display strings you do not want editors to retype.",
 			"field": "text",
 			"settings": { "autogen": "${title} (${currentyear})" }
 		},
 		"validatedText": {
 			"type": "string",
 			"label": "Validated Text",
-			"help": "text field with property-level validation (pattern, minLength, maxLength).",
+			"help": "text field with property-level validation (pattern, minLength, maxLength). Use for: codes and identifiers with a known format, such as a SKU or a postcode.",
 			"field": "text",
 			"pattern": "^[A-Za-z ]+$",
 			"minLength": 3,
@@ -46,75 +46,75 @@
 		"textarea": {
 			"type": "string",
 			"label": "Textarea",
-			"help": "textarea field. Multi-line plain text.",
+			"help": "textarea field. Multi-line plain text, no formatting. Use for: summaries, excerpts, plain notes.",
 			"field": "textarea"
 		},
 		"styledtext": {
 			"type": "string",
 			"label": "Styled Text",
-			"help": "styledtext field. Rich text (Tiptap) editor.",
+			"help": "styledtext field. Rich text (Tiptap) editor storing HTML. Use for: article bodies and any content an editor formats with headings, links, lists or images.",
 			"field": "styledtext"
 		},
 		"code": {
 			"$ref": "https://www.totalcms.co/schemas/properties/code.json",
 			"label": "Code",
-			"help": "code field. CodeMirror editor for HTML/JS/CSS.",
+			"help": "code field. CodeMirror editor for HTML/JS/CSS. Use for: embed snippets, custom CSS and raw markup that must not pass through the rich text editor.",
 			"field": "code",
 			"settings": { "mode": "html", "rows": 8, "htmlclean": false }
 		},
 		"email": {
 			"$ref": "https://www.totalcms.co/schemas/properties/email.json",
 			"label": "Email",
-			"help": "email field.",
+			"help": "email field. Validated email address. Use for: any email address, never a text field.",
 			"field": "email"
 		},
 		"phone": {
 			"$ref": "https://www.totalcms.co/schemas/properties/phone.json",
 			"label": "Phone",
-			"help": "phone field.",
+			"help": "phone field. Telephone number with formatting. Use for: any phone number.",
 			"field": "phone"
 		},
 		"url": {
 			"$ref": "https://www.totalcms.co/schemas/properties/url.json",
 			"label": "URL",
-			"help": "url field.",
+			"help": "url field. Validated absolute URL. Use for: external links, social profiles, source links.",
 			"field": "url"
 		},
 		"svg": {
 			"$ref": "https://www.totalcms.co/schemas/properties/svg.json",
 			"label": "SVG",
-			"help": "svg field. Sanitized SVG markup.",
+			"help": "svg field. Sanitized SVG markup. Use for: logos and icons rendered inline.",
 			"field": "svg"
 		},
 		"time": {
 			"$ref": "https://www.totalcms.co/schemas/properties/time.json",
 			"label": "Time",
-			"help": "time field. 24-hour HH:MM.",
+			"help": "time field. 24-hour HH:MM. Use for: opening hours and start times that have no date.",
 			"field": "time"
 		},
 		"secret": {
 			"type": "string",
 			"label": "Secret",
-			"help": "secret field. Masked input for sensitive values.",
+			"help": "secret field. Masked input for sensitive values. Use for: API keys and tokens. Stripped from MCP responses unless mcp.expose is set.",
 			"field": "secret"
 		},
 		"json": {
 			"$ref": "https://www.totalcms.co/schemas/properties/json.json",
 			"label": "JSON",
-			"help": "json field. Arbitrary structured data.",
+			"help": "json field. Arbitrary structured data. Use for: free-form configuration an editor pastes. Prefer a card when the shape is known.",
 			"field": "json"
 		},
 		"hidden": {
 			"type": "string",
 			"label": "Hidden",
-			"help": "hidden field type. Stored, never rendered as a visible input.",
+			"help": "hidden field type. Stored, never rendered as a visible input. Use for: values set by code, imports or autogen.",
 			"field": "hidden",
 			"default": ""
 		},
 		"radio": {
 			"type": "string",
 			"label": "Radio",
-			"help": "radio field with static options.",
+			"help": "radio field with static options. Use for: one choice from two to five fixed values shown all at once.",
 			"field": "radio",
 			"options": ["one", "two", "three"],
 			"default": "one"
@@ -122,7 +122,7 @@
 		"select": {
 			"type": "string",
 			"label": "Select",
-			"help": "select field with static options.",
+			"help": "select field with static options. Use for: one choice from a fixed list (status, size, layout). For values editors grow over time, use a list field with propertyOptions instead.",
 			"field": "select",
 			"options": ["alpha", "beta", "gamma"],
 			"default": "alpha"
@@ -130,14 +130,14 @@
 		"checkbox": {
 			"type": "boolean",
 			"label": "Checkbox",
-			"help": "checkbox field.",
+			"help": "checkbox field. Boolean. Use for: consent-style yes/no inside forms. For flags, toggle is the usual choice.",
 			"field": "checkbox",
 			"default": false
 		},
 		"toggle": {
 			"type": "boolean",
 			"label": "Toggle",
-			"help": "toggle field. Drives the conditional field below.",
+			"help": "toggle field. Boolean switch. Use for: flags such as featured, draft, published, in stock. Here it drives the conditional field below.",
 			"field": "toggle",
 			"default": false
 		},
@@ -154,14 +154,14 @@
 		"number": {
 			"type": "number",
 			"label": "Number",
-			"help": "number field.",
+			"help": "number field. Integer or decimal. Use for: quantities, counts, ratings, sort order. Never store a number in a text field.",
 			"field": "number",
 			"default": 0
 		},
 		"price": {
 			"type": "number",
 			"label": "Price",
-			"help": "price field. Locale-aware currency input.",
+			"help": "price field. Locale-aware currency input. Use for: money.",
 			"field": "price"
 		},
 		"calcNumber": {
@@ -174,7 +174,7 @@
 		"range": {
 			"type": "number",
 			"label": "Range",
-			"help": "range field. Slider with min/max/step.",
+			"help": "range field. Slider with min/max/step. Use for: bounded values such as a percentage or a 1 to 10 rating.",
 			"field": "range",
 			"settings": { "min": 0, "max": 100, "step": 5 },
 			"default": 50
@@ -182,107 +182,115 @@
 		"date": {
 			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
 			"label": "Date",
-			"help": "date field.",
+			"help": "date field. Calendar date. Use for: publish dates, event dates, deadlines. Enables the date filters and sorting in Twig and the API.",
 			"field": "date"
 		},
 		"datetime": {
 			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
 			"label": "Datetime",
-			"help": "datetime field. Here set read-only and auto-updated on save.",
+			"help": "datetime field. Date and time. Here set read-only and auto-updated on save. Use for: timestamps and scheduled moments.",
 			"field": "datetime",
 			"settings": { "readonly": true, "onUpdate": true }
 		},
 		"list": {
 			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
 			"label": "List",
-			"help": "list field. A simple array of strings (tags/categories).",
-			"field": "list"
+			"help": "list field. A simple array of strings. Use for: tags, categories and keywords that editors add freely. propertyOptions offers the values already used in the collection, which is how blog categories work.",
+			"field": "list",
+			"settings": { "propertyOptions": true }
 		},
 		"multicheckbox": {
 			"type": "array",
 			"label": "Checklist",
-			"help": "checklist field. Multiple selections via checkboxes.",
+			"help": "checklist field. Multiple selections from static options via checkboxes. Use for: several picks from a short fixed set (amenities, features).",
 			"field": "checklist",
 			"options": ["red", "green", "blue"]
 		},
 		"multiselect": {
 			"type": "array",
 			"label": "Multi Select",
-			"help": "multiselect field. Multiple selections via a dropdown.",
+			"help": "multiselect field. Multiple selections from static options via a dropdown. Use for: several picks from a long fixed set.",
 			"field": "multiselect",
 			"options": ["north", "south", "east", "west"]
 		},
 		"color": {
 			"$ref": "https://www.totalcms.co/schemas/properties/color.json",
 			"label": "Color",
-			"help": "color field. Stored in hex + OKLCH.",
+			"help": "color field. Stored in hex + OKLCH. Use for: brand and theme colors.",
 			"field": "color"
 		},
 		"image": {
 			"$ref": "https://www.totalcms.co/schemas/properties/image.json",
 			"label": "Image",
-			"help": "image field.",
+			"help": "image field. A single uploaded image with ImageWorks resizing. Use for: hero, thumbnail, photo, logo. Never store an image path in a text field.",
 			"field": "image"
 		},
 		"video": {
 			"type": "video",
 			"label": "Video",
-			"help": "video field. An external video URL plus provider metadata derived on save, and an optional uploaded poster image. Top-level only in Phase 1.",
+			"help": "video field. An external video URL plus provider metadata derived on save, and an optional uploaded poster image. Use for: hosted video (YouTube, Vimeo and others) referenced by URL. Top-level only in Phase 1.",
 			"field": "video"
 		},
 		"gallery": {
 			"$ref": "https://www.totalcms.co/schemas/properties/gallery.json",
 			"label": "Gallery",
-			"help": "gallery field. An array of image objects.",
+			"help": "gallery field. An array of image objects. Use for: several images on one object.",
 			"field": "gallery"
 		},
 		"file": {
 			"$ref": "https://www.totalcms.co/schemas/properties/file.json",
 			"label": "File",
-			"help": "file field. A single uploaded file.",
+			"help": "file field. A single uploaded file. Use for: a PDF, download or attachment.",
 			"field": "file"
 		},
 		"depot": {
 			"$ref": "https://www.totalcms.co/schemas/properties/depot.json",
 			"label": "Depot",
-			"help": "depot field. A managed set of files and folders.",
+			"help": "depot field. A managed set of files and folders. Use for: document libraries and download areas.",
 			"field": "depot"
 		},
 		"password": {
 			"$ref": "https://www.totalcms.co/schemas/properties/password.json",
 			"label": "Password",
-			"help": "password field. Stored as an encrypted hash.",
+			"help": "password field. Stored as an encrypted hash. Use for: login credentials on user schemas only.",
 			"field": "password"
 		},
 		"localizedtext": {
 			"$ref": "https://www.totalcms.co/schemas/properties/localizedtext.json",
 			"label": "Localized Text",
-			"help": "localizedtext field. Locale-keyed single-line text (Pro).",
+			"help": "localizedtext field. Locale-keyed single-line text (Pro). Use for: short strings translated per locale.",
 			"field": "localizedtext"
 		},
 		"localizedtextarea": {
 			"$ref": "https://www.totalcms.co/schemas/properties/localizedtext.json",
 			"label": "Localized Textarea",
-			"help": "localizedtextarea field. Locale-keyed multi-line text (Pro).",
+			"help": "localizedtextarea field. Locale-keyed multi-line text (Pro). Use for: plain text translated per locale.",
 			"field": "localizedtextarea"
 		},
 		"localizedstyledtext": {
 			"$ref": "https://www.totalcms.co/schemas/properties/localizedtext.json",
 			"label": "Localized Styled Text",
-			"help": "localizedstyledtext field. Locale-keyed rich text (Pro).",
+			"help": "localizedstyledtext field. Locale-keyed rich text (Pro). Use for: formatted content translated per locale.",
 			"field": "localizedstyledtext"
+		},
+		"seo": {
+			"$ref": "https://www.totalcms.co/schemas/properties/card.json",
+			"label": "SEO",
+			"help": "card field referencing the reserved seo schema. Use for: any schema whose objects render as public pages. Give it a full-width formgrid row (seo seo) and add seo to the index so noindex is honoured by the sitemaps.",
+			"field": "card",
+			"schemaref": "https://www.totalcms.co/schemas/seo.json"
 		},
 		"card": {
 			"$ref": "https://www.totalcms.co/schemas/properties/card.json",
 			"label": "Card",
-			"help": "card field. A single nested object whose shape comes from totalcms-item.",
+			"help": "card field. A single nested object whose shape comes from totalcms-item. Use for: a fixed group of related fields (address, hero, author block).",
 			"field": "card",
 			"schemaref": "https://www.totalcms.co/schemas/totalcms-item.json"
 		},
 		"deck": {
 			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
 			"label": "Deck",
-			"help": "deck field. A list of nested objects whose shape comes from totalcms-item.",
+			"help": "deck field. A list of nested objects whose shape comes from totalcms-item. Use for: repeating structured items (features, FAQs, team members, line items).",
 			"field": "deck",
 			"schemaref": "https://www.totalcms.co/schemas/totalcms-item.json",
 			"settings": { "deckItemLabel": "${title}" },
@@ -293,7 +301,7 @@
 		"deckTable": {
 			"$ref": "https://www.totalcms.co/schemas/properties/deck.json",
 			"label": "Deck Table",
-			"help": "deckTable field. Same as a deck but rendered as an editable table.",
+			"help": "deckTable field. Same as a deck but rendered as an editable table. Use for: repeating rows with a few short fields.",
 			"field": "deckTable",
 			"schemaref": "https://www.totalcms.co/schemas/totalcms-item.json",
 			"settings": { "deckItemLabel": "${title}" },
@@ -303,5 +311,5 @@
 		}
 	},
 	"required": ["id", "title"],
-	"index": ["id", "title", "select", "toggle", "number"]
+	"index": ["id", "title", "select", "toggle", "number", "seo"]
 }

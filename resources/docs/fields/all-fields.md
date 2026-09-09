@@ -554,12 +554,8 @@ For full details and examples, see [Schema Validation](docs/schemas/validation).
 
 ## Reference Schema: `totalcms`
 
-Total CMS ships a builtin **reference schema** named `totalcms` that demonstrates every field
-type and its settings in a single valid schema file. It lives at
-`resources/schemas/totalcms.json`, with a companion `resources/schemas/totalcms-item.json`
-backing its `card` and `deck` examples.
-
-The schema is registered and resolvable (you can open it in the schema editor and it is visible
-to schema tooling), but it is **reference-only** — you cannot create a collection from it. Use it
-as a copy-paste catalog when authoring your own schemas: find the field type you want, copy the
-property definition, and adapt it.
+Total CMS ships a reserved schema named `totalcms` that demonstrates every field type and
+its settings in one valid file, with `totalcms-item` backing its `card` and `deck`
+examples. Read it with `tcms schema:get totalcms --json` and copy from it. Which field to
+choose for a given value, and how to read the reference schema, is covered in
+[Choosing a Field](docs/fields/choosing-a-field).

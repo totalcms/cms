@@ -35,12 +35,15 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 - `collection:query <id>` — query with filters + pagination
 - `collection:export <id>` — export to JSON, CSV, or ZIP
 - `collection:import <id> <file>` — import objects from JSON or CSV
+- `collection:convert <id> --to=markdown` — switch a collection's object storage format (`--dry-run` first)
 
 ### Objects
 - `object:list <collection>` — list object IDs
 - `object:get <collection> <id>` — fetch one object
 - `object:create <collection> <file>` — create ONE object from JSON (`-` for stdin);
   refuses arrays (use `collection:import`) and existing ids
+- `object:patch <collection> <id> <file>` — merge changes into ONE existing object
+  (`-` for stdin); omitted fields keep their values — the safe way to edit
 - `object:export <collection> <id>` — export one object as JSON or ZIP (with assets)
 - `object:delete <collection> <id>` — delete one object (updates the index)
 
@@ -49,6 +52,8 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 - `schema:get <id>` — schema details
 - `schema:export <id> <file>` — export a schema to JSON
 - `schema:import <file>` — import a schema from JSON
+- `schema:get totalcms --json` — the reference schema: every field type with settings
+  and help text, to copy from
 - `schema:lint [id]` — validate stored schemas WITHOUT saving; run after editing
   schema JSON in place. Errors = structural breakage, warnings = missing
   help text (which feeds the MCP tool catalog). `--strict` fails on warnings.
@@ -66,6 +71,12 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 
 ### Extensions
 - `extension:list` / `extension:enable <id>` / `extension:disable <id>` / `extension:remove <id>`
+
+### MCP and OAuth
+- `mcp:status` — MCP server status: enabled, edition, tool counts per persona
+- `mcp:test <tool> --params='{"collection":"blog"}' [--persona=public]` — invoke an MCP tool locally and print the result
+- `oauth:setup` — generate the OAuth signing key pair (once per site)
+- `oauth:gc` — prune expired grants and stale self-registered clients
 
 ### Maintenance
 - `repair:index <collection>` — rebuild `.index.json` + count from objects on disk

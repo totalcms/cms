@@ -58,6 +58,7 @@ return [
 			[
 				'title' => 'Field Types',
 				'sub'   => [
+					['title' => 'Choosing a Field',      'path' => 'fields/choosing-a-field'],
 					['title' => 'All Fields',            'path' => 'fields/all-fields'],
 					['title' => 'Card',                  'path' => 'fields/card'],
 					['title' => 'Code Editor',           'path' => 'fields/code-editor'],

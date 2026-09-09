@@ -1,14 +1,15 @@
 ---
 title: "Twig Recipes"
-description: "Ready-to-paste Twig patterns for Total CMS: render stored content as Twig, archives, tag clouds, related posts, prev/next, scheduled publishing, calendars, JSON-LD, Open Graph, obfuscated contact details, daily picks, fragment caching, member-only blocks and signed links."
+description: "Ready-to-paste Twig patterns for Total CMS: render stored content as Twig, archives, tag clouds, related posts, prev/next, scheduled publishing, calendars, SEO heads for detail pages, extra JSON-LD types, obfuscated contact details, daily picks, fragment caching, member-only blocks and signed links."
 related:
   - twig/htmx
   - twig/filters
   - twig/functions
   - twig/collection-filtering
   - twig/cache-tag
+  - site-builder/seo
 audience: intermediate
-updated: 2026-09-08
+updated: 2026-09-09
 ---
 
 # Twig Recipes
@@ -401,59 +402,80 @@ emit two padding cells when the month starts on a Monday.
 `readtime` assumes 180 words per minute; pass a number to change it.
 Strip tags first when the field is rich text, or markup inflates the count.
 
-### JSON-LD structured data
+### The `<head>` for a collection detail page
 
-Build the object as a Twig map and hand it to `json_encode`. The output goes
-inside a `<script>`, so it must be `|raw`, and `json_encode` has already made
-it safe for that context:
-
-```twig
-{% set ld = {
-  '@context': 'https://schema.org',
-  '@type': 'BlogPosting',
-  headline: post.title,
-  datePublished: post.date|date('c'),
-  dateModified: (post.updated|default(post.date))|date('c'),
-  author: {'@type': 'Person', name: post.author},
-  image: 'https://' ~ cms.domain ~ cms.media.imagePath(post, {w: 1200}, {collection: 'blog', property: 'image'}),
-  mainEntityOfPage: 'https://' ~ cms.domain ~ cms.collection.objectUrl('blog', post)
-} %}
-
-<script type="application/ld+json">{{ ld|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }}</script>
-```
-
-Swap `BlogPosting` for `Product`, `Event` or `LocalBusiness` and fill in
-the properties that type expects. Validate the result with a rich-results
-testing tool the first time.
-
-### Open Graph and meta tags with a fallback image
-
-One partial that any page can include. Objects without an image fall back
-to a site-wide default so link previews never come up blank:
+Core SEO writes the head for you. A layout carries one call, and a detail
+page overrides the block to describe the object it renders rather than the
+page record that routes to it:
 
 ```twig
-{# partials/meta.twig — expects `title`, `description`, and optionally `object` + `collection` #}
-{% set url   = 'https://' ~ cms.domain ~ cms.currentUrl %}
-{% set image = '' %}
-{% if object is defined and imageExists(object.image|default('')) %}
-  {% set image = cms.media.imagePath(object, {w: 1200, h: 630, fit: 'crop'}, {collection: collection, property: 'image'}) %}
-{% endif %}
-{% set image = 'https://' ~ cms.domain ~ (image ?: '/assets/og-default.png') %}
-
-<title>{{ title }} | {{ cms.siteName }}</title>
-<meta name="description" content="{{ description|striptags|truncate(160) }}">
-<link rel="canonical" href="{{ url }}">
-<meta property="og:type" content="{{ object is defined ? 'article' : 'website' }}">
-<meta property="og:title" content="{{ title }}">
-<meta property="og:description" content="{{ description|striptags|truncate(200) }}">
-<meta property="og:url" content="{{ url }}">
-<meta property="og:image" content="{{ image }}">
-<meta name="twitter:card" content="summary_large_image">
+{# layouts/default.twig #}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% block seo %}{{ cms.seo.head(page|default(null)) }}{% endblock %}
+  {{ cms.assetsHead() }}
+</head>
 ```
 
 ```twig
-{% include 'partials/meta.twig' with {title: post.title, description: post.excerpt, object: post, collection: 'blog'} %}
+{# pages/blog/post.twig #}
+{% extends 'layouts/default.twig' %}
+{% set post = cms.collection.object('blog', params.id) %}
+
+{% block seo %}{{ post ? cms.seo.head(post, {collection: 'blog'}) : cms.seo.head(page|default(null)) }}{% endblock %}
 ```
+
+That gives the post its own title, meta description, canonical, Open Graph
+and Twitter tags, and an Article node in the JSON-LD graph. Values come
+from the object's SEO card, then the collection's field mapping, then the
+Site SEO record, so nothing on the object is required for it to work.
+
+- **Always pass `collection`.** An object array does not know where it came
+  from, and without it the mapping, the URL and the image cannot resolve.
+- **Set the collection's URL first.** No URL means no canonical, no
+  `og:url` and no Article node. The reserved `blog` collection ships
+  without one.
+- **Delete any `<title>` or description meta the layout wrote by hand**, or
+  the page ships two of each.
+- The pieces are available separately as `cms.seo.title()`, `meta()`,
+  `og()`, `canonical()` and `jsonld()` when a layout places them itself.
+
+Full reference: [SEO](docs/site-builder/seo).
+
+### JSON-LD for types core does not emit
+
+Core emits Organization, WebSite, WebPage, BreadcrumbList and Article. A
+product, event, recipe or FAQ page wants its own node. Keep `cms.seo.head()`
+for everything it covers and add a second `<script>` for the extra type,
+built as a Twig map and handed to `json_encode`:
+
+```twig
+{% block seo %}
+  {{ cms.seo.head(product, {collection: 'products'}) }}
+  {% set ld = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: product.summary|striptags,
+    image: 'https://' ~ cms.domain ~ cms.media.imagePath(product, {w: 1200}, {collection: 'products', property: 'image'}),
+    sku: product.sku,
+    offers: {
+      '@type': 'Offer',
+      price: product.price,
+      priceCurrency: 'USD',
+      availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      url: 'https://' ~ cms.domain ~ cms.collection.objectUrl('products', product)
+    }
+  } %}
+  <script type="application/ld+json">{{ ld|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }}</script>
+{% endblock %}
+```
+
+The output goes inside a `<script>`, so it must be `|raw`; `json_encode`
+has already made it safe for that context. Swap `Product` for `Event`,
+`Recipe` or `FAQPage` and fill in the properties that type expects, then
+validate the page once at validator.schema.org.
 
 ### Contact details that bots cannot harvest
 

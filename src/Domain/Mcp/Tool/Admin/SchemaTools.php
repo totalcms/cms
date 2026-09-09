@@ -436,11 +436,18 @@ readonly class SchemaTools
 				],
 				'properties' => [
 					'type'        => 'object',
-					'description' => 'Object of property definitions. Each key is the property name; each value is the property config (field, type, label, help, settings, etc.).',
+					'description' => 'Object of property definitions. Each key is the property name; each value is the property config (field, type, label, help, settings, etc.). Choose `field` by the shape of the value — date, toggle, select, number, price, email, url, image, list, card, deck — and use `text` only when nothing more specific fits. Every property needs `help`: it is the description other AI agents read in describe_collection, so say what the value is for and what a good one looks like. Call get_schema with id "totalcms" for a validated example of every field type.',
 					'examples'    => [
 						[
-							'title' => ['field' => 'text', 'label' => 'Title'],
-							'body'  => ['field' => 'styledtext', 'label' => 'Body'],
+							'id'         => ['field' => 'id', 'label' => 'ID', 'help' => 'URL slug, generated from the title.', 'settings' => ['autogen' => '${title}']],
+							'title'      => ['field' => 'text', 'label' => 'Title', 'help' => 'Headline shown in listings and as the page title. Sentence case, under 70 characters.'],
+							'publish'    => ['field' => 'date', 'label' => 'Publish Date', 'help' => 'The date the post goes live. Future dates schedule it.'],
+							'featured'   => ['field' => 'toggle', 'label' => 'Featured', 'help' => 'Pins the post to the top of the listing.'],
+							'status'     => ['field' => 'select', 'label' => 'Status', 'help' => 'Editorial state. Only published posts render.', 'options' => ['draft', 'review', 'published']],
+							'categories' => ['field' => 'list', 'label' => 'Categories', 'help' => 'Editorial sections, usually one. Pick from existing values; add new ones sparingly.', 'settings' => ['propertyOptions' => true]],
+							'image'      => ['field' => 'image', 'label' => 'Hero Image', 'help' => 'Landscape, at least 1200px wide. Used on cards and as the social share image.'],
+							'summary'    => ['field' => 'textarea', 'label' => 'Summary', 'help' => 'One or two plain sentences for listing cards and the meta description. Under 160 characters.'],
+							'body'       => ['field' => 'styledtext', 'label' => 'Body', 'help' => 'The full article.'],
 						],
 					],
 				],
