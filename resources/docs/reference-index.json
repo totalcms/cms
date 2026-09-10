@@ -622,6 +622,13 @@
             "url": "https://docs.totalcms.co/admin/twig/"
         },
         {
+            "name": "cms.adminAccentStyle",
+            "signature": "adminAccentStyle(): string",
+            "description": "The `<style>` that applies the dashboard accent setting to `--totalform-accent`, the variable the admin stylesheets read. It follows the stylesheets so the `:root` override wins the cascade, and it is part of the head helper so a customer admin page picks up the configured accent as the dashboard does. Nothing is emitted when no accent is set.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/totalcms/"
+        },
+        {
             "name": "cms.adminAssetsBody",
             "signature": "adminAssetsBody(): string",
             "description": "Render admin asset tags for the document body. Usage in Twig: {{ cms.adminAssetsBody() }}",
