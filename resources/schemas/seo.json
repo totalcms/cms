@@ -5,7 +5,7 @@
 	"type"        : "object",
 	"description" : "Per-object SEO overrides. Used as a card sub-schema on objects that opt in.",
 	"category" : "Internal",
-	"formgrid"    : "title socialTitle\ndescription description\nimage image\ncanonical canonical\nnoindex nofollow\njsonldType .",
+	"formgrid"    : "title socialTitle\njsonldType canonical\ndescription description\nnoindex nofollow\nimage image",
 	"properties"  : {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",

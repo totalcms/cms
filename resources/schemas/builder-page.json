@@ -5,7 +5,7 @@
 	"type"        : "object",
 	"category"    : "Internal",
 	"description" : "A schema for a Site Builder page",
-	"formgrid"    : "draft .\ntitle title\n---Routing---\nnav .\nroute template\nstatus redirectTo\n---Features---\nmiddleware middleware\naccessGroups accessGroups\n---Page Data---\ndata data\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---SEO---\nseo seo\n---\nid id\nupdated created",
+	"formgrid"    : "draft .\ntitle title\n---Routing---\nnav .\nroute template\nstatus redirectTo\n---SEO---\nseo seo\n---Sitemap---\nsitemap .\nchangeFrequency priority\n---Features---\nmiddleware middleware\naccessGroups accessGroups\n---Page Data---\ndata data\n---\nid id\nupdated created",
 	"properties"  : {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",

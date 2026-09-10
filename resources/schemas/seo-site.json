@@ -5,13 +5,14 @@
 	"type"        : "object",
 	"category"    : "Internal",
 	"description" : "Site-wide SEO defaults used by cms.seo.head(): site name, base URL, title template, default description and social image, organization and verification tags. One record per site.",
-	"formgrid"    : "siteName baseUrl\ntitleTemplate titleSeparator\ndefaultDescription defaultDescription\ndefaultImage twitterHandle\n---Organization---\norganizationName organizationLogo\nsameAs sameAs\n---Verification---\ngoogleVerification bingVerification\npinterestVerification .\n---Output---\nemitJsonLd emitSocial",
+	"formgrid"    : "siteName baseUrl\ntitleTemplate titleSeparator\ndefaultDescription defaultDescription\n---Social Sharing---\ndefaultImage defaultImage\ntwitterHandle .\n---Organization---\norganizationName sameAs\norganizationLogo sameAs\n---Verification---\ngoogleVerification bingVerification\npinterestVerification .\n---Output---\nemitJsonLd emitSocial\n---\nupdated created",
 	"properties"  : {
 		"id": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"   : "Site SEO ID",
 			"help"    : "A unique ID for this record. For a Single Object Collection this is the collection id.",
 			"field"   : "id",
+			"default" : "seo-site",
 			"factory" : "slug"
 		},
 		"siteName": {
