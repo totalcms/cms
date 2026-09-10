@@ -108,6 +108,13 @@ describe('MetaBuilder', function (): void {
 		expect($p->title)->toBe('Bistro');
 	});
 
+	test('description: only a mapped property is capped — card and site default pass through verbatim', function () use ($b): void {
+		$long = str_repeat('word ', 60); // 300 characters
+		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['description' => $long])]))->description)->toBe(trim($long));
+		expect($b->build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'description' => '', 'image' => ''], 'settings' => SeoSettings::fromArray(['defaultDescription' => $long], 'x')]))->description)->toBe(trim($long));
+		expect(mb_strlen($b->build(seoCtx(['object' => ['id' => 'x', 'title' => 't', 'summary' => $long]]))->description))->toBeLessThanOrEqual(160);
+	});
+
 	test('image: card → mapped field → site default, and the twitter card follows', function () use ($b): void {
 		expect($b->build(seoCtx())->ogImage)->toBe('https://example.com/imageworks/blog/hello/image.jpg');
 		$p = $b->build(seoCtx(['imageUrls' => ['image' => '', 'seo.image' => 'https://example.com/imageworks/blog/hello/seo.image.jpg'], 'fields' => SeoFields::fromArray(['image' => ['name' => 'c.jpg', 'size' => 5]])]));

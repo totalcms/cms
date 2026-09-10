@@ -51,14 +51,20 @@ class MetaBuilder
 
 		// Description: the seo card, then the collection's mapped property
 		// (stripped to plain text), then the site default.
+		// A description someone wrote — on the card or as the site default — is
+		// emitted as written: search engines index the whole tag even though
+		// they display only part of it. The cap applies only to a description
+		// derived from a mapped property, which may be a full summary or body.
 		$description = $f->description;
 		if ($description === '' && $ctx->seoBlock['description'] !== '') {
-			$description = $this->plainText($this->scalarString($ctx->object[$ctx->seoBlock['description']] ?? null));
+			$description = $this->truncate(
+				$this->plainText($this->scalarString($ctx->object[$ctx->seoBlock['description']] ?? null)),
+				self::DESCRIPTION_LENGTH,
+			);
 		}
 		if ($description === '') {
 			$description = $s->defaultDescription;
 		}
-		$description = $this->truncate($description, self::DESCRIPTION_LENGTH);
 
 		// Image: the seo card's own image, then the collection's mapped image
 		// property, then the site default. Both card and mapped URLs were

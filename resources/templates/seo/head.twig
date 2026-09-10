@@ -48,10 +48,14 @@
 {% endif -%}
 {%- if 'twitter' in parts and settings.emitSocial -%}
 <meta name="twitter:card" content="{{ meta.twitterCard }}">
-{#- Twitter falls back to og:title on its own, so this prints only when the
-    card carries a share title. #}
-{% if meta.socialTitle != '' -%}
-<meta name="twitter:title" content="{{ meta.socialTitle }}">
+{#- Twitter would fall back to the og: tags, but not every scraper does, so the
+    title, description and image are declared explicitly as well. #}
+<meta name="twitter:title" content="{{ meta.socialTitle != '' ? meta.socialTitle : (meta.rawTitle != '' ? meta.rawTitle : meta.title) }}">
+{% if meta.description != '' -%}
+<meta name="twitter:description" content="{{ meta.description }}">
+{% endif -%}
+{% if meta.ogImage != '' -%}
+<meta name="twitter:image" content="{{ meta.ogImage }}">
 {% endif -%}
 {% if meta.twitterHandle != '' -%}
 <meta name="twitter:site" content="{{ meta.twitterHandle }}">

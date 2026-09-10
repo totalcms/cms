@@ -89,17 +89,20 @@ it('drops the canonical link on a noindex page but keeps og:url', function (): v
 });
 
 it('uses socialTitle for the share cards only', function (): void {
-	$page = ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/x.twig', 'seo' => ['socialTitle' => 'Share Me']];
+	$page = ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/x.twig', 'seo' => ['socialTitle' => 'Share Me', 'description' => 'Card copy']];
 	$html = ($this->render)('{{ cms.seo.head(page) }}', ['page' => $page]);
 
 	expect($html)->toContain('<meta property="og:title" content="Share Me">')
 		->toContain('<meta name="twitter:title" content="Share Me">')
+		->toContain('<meta name="twitter:description" content="Card copy">')
 		->toContain('<title>About | Bistro</title>');
 
-	// With no social title there is no twitter:title at all and og:title stays
-	// the raw page title.
+	// With no social title both share titles fall back to the raw page title,
+	// and the description and image are declared for Twitter explicitly too.
 	$plain = ($this->render)('{{ cms.seo.head(page) }}', ['page' => ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/x.twig']]);
-	expect($plain)->toContain('<meta property="og:title" content="About">')->not->toContain('twitter:title');
+	expect($plain)->toContain('<meta property="og:title" content="About">')
+		->toContain('<meta name="twitter:title" content="About">')
+		->toContain('<meta name="twitter:image" content="https://');
 });
 
 it('takes a builder page description from the SEO card only', function (): void {
