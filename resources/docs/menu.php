@@ -38,6 +38,7 @@ return [
 			['title' => 'Form Settings',       'path' => 'collections/form-settings'],
 			['title' => 'Data Views',          'path' => 'collections/data-views'],
 			['title' => 'Importing Data',      'path' => 'collections/import'],
+			['title' => 'Migrating from another CMS', 'path' => 'collections/migrate'],
 			['title' => 'Exporting Data',      'path' => 'collections/export'],
 			['title' => 'Sitemap Builder',     'path' => 'collections/sitemap-builder'],
 			['title' => 'Podcasts',            'path' => 'collections/podcast'],
@@ -132,6 +133,7 @@ return [
 					['title' => 'Load More',            'path' => 'twig/load-more'],
 					['title' => 'HTMX Recipes',         'path' => 'twig/htmx'],
 					['title' => 'Twig Recipes',         'path' => 'twig/recipes'],
+					['title' => 'Twig Playground',      'path' => 'twig/playground'],
 				],
 			],
 			[

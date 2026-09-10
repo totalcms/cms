@@ -16,7 +16,7 @@ updated: 2026-08-27
 
 Every Total CMS site is an MCP server out of the box. Point Claude Code, Claude Desktop, ChatGPT, or any conformant MCP client at `https://your-site/mcp` and an AI agent can query your collections, fetch objects, search content, and (with an API key) manage schemas and collections.
 
-The MCP server is **Pro+ edition only** and shipped with Total CMS 3.5.
+The MCP server ships with Total CMS 3.5 and is available on **Standard and Pro** (Lite does not include it). Reading works on both; the personas that write to the site depend on Pro credentials — see [Editions](#editions-reading-everywhere-writing-on-pro).
 
 ---
 
@@ -79,7 +79,7 @@ This is launch semantics for the AUTHENTICATED tier, not a migration: MCP had no
 
 ## Enabling the MCP server
 
-1. **Check your edition.** MCP requires Pro or higher. Trial counts as Pro for testing.
+1. **Check your edition.** MCP requires Standard or Pro. Trial counts as Pro for testing, which also unlocks the API-key and OAuth personas.
 2. **Verify it's enabled.** In **Admin → Settings → MCP Server**, `Enabled` should be checked (default true on fresh install).
 3. **Confirm with the CLI:**
    ```bash
