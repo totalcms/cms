@@ -41,10 +41,8 @@
 	<link rel="stylesheet" href="{{ cms.api }}/assets/admin.css?v={{ cms.version }}"/>
 	<link rel="stylesheet" href="{{ cms.api }}/assets/content.css?v={{ cms.version }}"/>
 
-	{% set accentColor = cms.config('dashboard', 'accent') %}
-	{% if accentColor %}
-	<style>:root{--totalform-accent:{{ accentColor | hexToColor | oklch(100, false) }};}</style>
-	{% endif %}
+	{# The dashboard accent (--totalform-accent), the same rule cms.adminAssetsHead() emits after its stylesheets. #}
+	{{ cms.adminAccentStyle() }}
 
 	{% block head %}{% endblock %}
 	{% if cms.edition.can('whitelabel_pro') %}

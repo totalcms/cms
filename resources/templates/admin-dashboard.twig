@@ -54,10 +54,6 @@
 		{{ include('whitelabel/admin-head.twig', ignore_missing = true) }}
 	{% endif %}
 
-	{% set accentColor = cms.config('dashboard', 'accent') %}
-	{% if accentColor %}
-	<style>:root{--totalform-accent:{{ accentColor | hexToColor | oklch(100, false) }};}</style>
-	{% endif %}
 </head>
 <body{% if cms.config('dashboard', 'fullWidthForms') %} class="full-width-forms"{% endif %}>
 
@@ -175,10 +171,7 @@
     {% endblock %}
 
 	{% include 'admin/quick-nav-index.twig' %}
-	<script>window.TCMS_TRANSLATIONS = {{ cms.locale.jsTranslations()|json_encode|raw }};</script>
-	<script>window.TCMS_CONFIG = {
-		confirmCountdown: {{ cms.config('dashboard', 'confirmCountdown')|json_encode|raw }}
-	};</script>
+	{# TCMS_TRANSLATIONS and TCMS_CONFIG ride inside adminAssetsBody(), ahead of the scripts that read them. #}
 	{{ cms.adminAssetsBody() }}
 
 	{% block bodyBelow %}{% endblock %}

@@ -8,6 +8,7 @@ use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
+use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 use TotalCMS\Domain\Twig\Service\AssetRenderer;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -358,16 +359,62 @@ class TotalCMSTwigAdapter
 	 */
 	public function adminAssetsHead(): string
 	{
-		return AssetRenderer::head($this->adminAssetsList);
+		return AssetRenderer::head($this->adminAssetsList) . $this->adminAccentStyle();
+	}
+
+	/**
+	 * The `<style>` that applies the dashboard accent setting to
+	 * `--totalform-accent`, the variable the admin stylesheets read. It follows
+	 * the stylesheets so the `:root` override wins the cascade, and it is part
+	 * of the head helper so a customer admin page picks up the configured
+	 * accent as the dashboard does. Nothing is emitted when no accent is set.
+	 *
+	 * Public because admin-layout.twig (login, setup, OAuth consent) writes its
+	 * own asset tags and asks for just this rule: {{ cms.adminAccentStyle() }}
+	 */
+	public function adminAccentStyle(): string
+	{
+		$accent = $this->config('dashboard', 'accent');
+		if (!is_string($accent) || $accent === '') {
+			return '';
+		}
+
+		$oklch = TotalCMSTwigFilters::oklch(TotalCMSTwigFilters::hexToColor($accent), 100, false);
+
+		return '<style>:root{--totalform-accent:' . $oklch . ";}</style>\n";
 	}
 
 	/**
 	 * Render admin asset tags for the document body.
 	 *
 	 * Usage in Twig: {{ cms.adminAssetsBody() }}
+	 *
+	 * The admin scripts read two globals — the JS translation catalog and the
+	 * dashboard settings the browser needs — so those are emitted here, ahead
+	 * of the script tags, rather than left for each template to remember. A
+	 * customer admin page that calls this helper gets working translations and
+	 * the configured confirm countdown, not the English keys and the
+	 * hard-coded fallback.
 	 */
 	public function adminAssetsBody(): string
 	{
-		return AssetRenderer::body($this->adminAssetsList);
+		return $this->adminGlobalsScript() . AssetRenderer::body($this->adminAssetsList);
+	}
+
+	/**
+	 * The inline `<script>` that defines `window.TCMS_TRANSLATIONS` and
+	 * `window.TCMS_CONFIG` for the admin bundle. Admin-only: `assetsBody()`
+	 * never emits it, because the catalog is per-user and the config is the
+	 * dashboard's. Encoded with the HEX flags so a `</script>` inside a
+	 * translated string cannot end the element early.
+	 */
+	private function adminGlobalsScript(): string
+	{
+		$flags = JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+
+		$translations = json_encode($this->locale->jsTranslations(), $flags);
+		$config       = json_encode(['confirmCountdown' => $this->config('dashboard', 'confirmCountdown')], $flags);
+
+		return '<script>window.TCMS_TRANSLATIONS = ' . $translations . ';window.TCMS_CONFIG = ' . $config . ";</script>\n";
 	}
 }

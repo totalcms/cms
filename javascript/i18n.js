@@ -1,14 +1,14 @@
 /**
  * Translation helper for Total CMS admin JavaScript.
  *
- * Reads from window.TCMS_TRANSLATIONS (injected by admin-dashboard.twig).
- * Supports simple {param} replacement for parameterized strings.
+ * Reads from window.TCMS_TRANSLATIONS, which cms.adminAssetsBody() emits ahead
+ * of the admin scripts. Supports simple {param} replacement for parameterized
+ * strings.
  *
- * window.TCMS_TRANSLATIONS is injected by admin-dashboard.twig, so it is absent
- * on pages that pull the admin bundle in on their own (cms.adminAssetsHead() on
- * a customer page, a public form built by cms.form.builder()). Pass `fallback`
- * for strings that must stay readable there — without one, a missing catalog
- * renders the raw key.
+ * The catalog is absent on pages that load pieces of the admin bundle without
+ * that helper (a public form built by cms.form.builder(), for one). Pass
+ * `fallback` for strings that must stay readable there — without one, a
+ * missing catalog renders the raw key.
  *
  * @param {string} key - Translation key (e.g., 'confirm.delete_image')
  * @param {Object<string, string|number>} [params] - Optional parameters for replacement
