@@ -47,6 +47,7 @@ use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
 use TotalCMS\Domain\Builder\EventListener\ReloadPulseListener;
 use TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware;
 use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
+use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\FragmentCache;
@@ -124,6 +125,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\McpToolsValidator;
 use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Migration\Migration\BuilderPageSeoFieldsMigration;
 use TotalCMS\Domain\Migration\Migration\EnsureAutomationsCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\EnsureMcpPromptCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
@@ -141,6 +143,7 @@ use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFileCodec;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Service\ExternalFieldStore;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
@@ -773,12 +776,25 @@ return [
 	// Migrations — generic one-shot data/layout migrations. The runner has a
 	// custom logger handler (migrations.log) and an array literal of registered
 	// migrations, so the factory stays. The migrations themselves and the
-	// state repo are autowired.
+	// state repo are autowired, except where one needs a channel logger.
+	BuilderPageSeoFieldsMigration::class => fn (ContainerInterface $container): BuilderPageSeoFieldsMigration => new BuilderPageSeoFieldsMigration(
+		$container->get(BuilderConfigService::class),
+		$container->get(IndexReader::class),
+		$container->get(IndexBuilder::class),
+		$container->get(ObjectRepository::class),
+		$container->get(ObjectFileCodec::class),
+		$container->get(ObjectFetcher::class),
+		$container->get(ObjectUpdater::class),
+		$container->get(Config::class),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),
+	),
+
 	MigrationRunner::class => fn (ContainerInterface $container): MigrationRunner => new MigrationRunner(
 		[
 			$container->get(LegacyTemplatesMigration::class),
 			$container->get(EnsureMcpPromptCollectionMigration::class),
 			$container->get(EnsureAutomationsCollectionMigration::class),
+			$container->get(BuilderPageSeoFieldsMigration::class),
 		],
 		$container->get(MigrationStateRepository::class),
 		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),

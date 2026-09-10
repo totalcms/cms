@@ -107,6 +107,7 @@ class CliApplication
 		// Collection commands
 		$app->addCommand(new Command\CollectionListCommand($totalcms));
 		$app->addCommand(new Command\CollectionGetCommand($totalcms));
+		$app->addCommand(new Command\CollectionCreateCommand($totalcms));
 		$app->addCommand(new Command\CollectionQueryCommand($totalcms));
 		$app->addCommand(new Command\CollectionExportCommand($totalcms));
 		$app->addCommand(new Command\CollectionImportCommand($totalcms));

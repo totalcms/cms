@@ -213,34 +213,35 @@ This is a text with footnote[^1].
 ### Documentation Template
 
 ```twig
-{# documentation.twig #}
+{# documentation.twig — `doc` is an object from a docs collection, not a
+   Site Builder page (whose description lives on its SEO card) #}
 {% extends "layouts/docs.twig" %}
 
 {% block content %}
 <div class="documentation">
-    {% if page.toc %}
+    {% if doc.toc %}
         <aside class="table-of-contents">
-            {{ page.toc|markdown }}
+            {{ doc.toc|markdown }}
         </aside>
     {% endif %}
 
     <main class="doc-content">
-        <h1>{{ page.title }}</h1>
-        
-        {% if page.description %}
+        <h1>{{ doc.title }}</h1>
+
+        {% if doc.description %}
             <div class="description">
-                {{ page.description|markdown }}
+                {{ doc.description|markdown }}
             </div>
         {% endif %}
 
         <div class="content">
-            {{ page.content|markdown }}
+            {{ doc.content|markdown }}
         </div>
 
-        {% if page.code_examples %}
+        {% if doc.code_examples %}
             <section class="examples">
                 <h2>Examples</h2>
-                {{ page.code_examples|markdown }}
+                {{ doc.code_examples|markdown }}
             </section>
         {% endif %}
     </main>

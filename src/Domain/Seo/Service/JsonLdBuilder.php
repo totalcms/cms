@@ -30,27 +30,45 @@ class JsonLdBuilder
 	/**
 	 * The merged, de-duplicated `@graph` list.
 	 *
+	 * `$extra` is whatever the template passed as `options.jsonld`. It lands
+	 * after every provider node, so a template node carrying an `@id` a
+	 * provider already emitted loses the dedupe — the core description of an
+	 * entity wins, and a template referencing `{base}/#organization` links to
+	 * the real node instead of replacing it.
+	 *
+	 * @param list<array<string,mixed>> $extra
+	 *
 	 * @return list<array<string,mixed>>
 	 */
-	public function graph(SeoContext $ctx, MetaPayload $meta): array
+	public function graph(SeoContext $ctx, MetaPayload $meta, array $extra = []): array
 	{
-		$graph = [];
-		$seen  = [];
+		$nodes = [];
 
 		foreach ($this->providers as $provider) {
 			foreach ($provider->nodes($ctx, $meta) as $node) {
-				$id = $node['@id'] ?? null;
-
-				// Nodes without an @id can't be compared, so they pass through.
-				if (is_string($id) && $id !== '') {
-					if (isset($seen[$id])) {
-						continue;
-					}
-					$seen[$id] = true;
-				}
-
-				$graph[] = $node;
+				$nodes[] = $node;
 			}
+		}
+
+		foreach ($extra as $node) {
+			$nodes[] = $node;
+		}
+
+		$graph = [];
+		$seen  = [];
+
+		foreach ($nodes as $node) {
+			$id = $node['@id'] ?? null;
+
+			// Nodes without an @id can't be compared, so they pass through.
+			if (is_string($id) && $id !== '') {
+				if (isset($seen[$id])) {
+					continue;
+				}
+				$seen[$id] = true;
+			}
+
+			$graph[] = $node;
 		}
 
 		return $graph;
@@ -61,15 +79,18 @@ class JsonLdBuilder
 	 * switched off or there is nothing to say.
 	 *
 	 * JSON_HEX_TAG is what keeps a `</script>` inside any value from closing
-	 * the tag early, so the output is safe to print unescaped.
+	 * the tag early, so the output is safe to print unescaped. Template-supplied
+	 * nodes go through this same encode — they are never interpolated.
+	 *
+	 * @param list<array<string,mixed>> $extra
 	 */
-	public function script(SeoContext $ctx, MetaPayload $meta): string
+	public function script(SeoContext $ctx, MetaPayload $meta, array $extra = []): string
 	{
 		if (!$ctx->settings->emitJsonLd) {
 			return '';
 		}
 
-		$graph = $this->graph($ctx, $meta);
+		$graph = $this->graph($ctx, $meta, $extra);
 		if ($graph === []) {
 			return '';
 		}

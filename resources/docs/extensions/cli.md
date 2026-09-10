@@ -172,6 +172,28 @@ tcms collection:get blog --json
 |----------|----------|-------------|
 | `id` | Yes | Collection ID |
 
+### `collection:create`
+
+Create one collection. When the ID is a reserved collection (`seo-site`, `automations`, `podcast`, …) leave `--schema` off — the collection is provisioned with its shipped name and singleton flag, exactly as **Project Setup → Setup Default Collections** would, but for that one collection only. That is the point of this command on an existing site: `tcms collection:create seo-site` provisions just that collection, where Setup Default Collections would create every default. Any other ID is a custom collection and needs `--schema`.
+
+```bash
+tcms collection:create seo-site
+tcms collection:create recipes --schema=blog --name="Recipes"
+tcms collection:create about --schema=text --singleton --json
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `id` | Yes | Collection ID |
+
+| Option | Description |
+|--------|-------------|
+| `--schema` | Schema ID — required unless the collection ID is a reserved collection |
+| `--name` | Display name (defaults to the collection ID). Ignored for a reserved collection — it keeps its shipped name |
+| `--singleton` | Create as a single-object collection. Ignored for a reserved collection — its shipped singleton setting wins |
+
+Exits `1` when the collection already exists, when a non-reserved ID is given without `--schema`, or when the schema is unknown or is a reference schema (`totalcms`, `totalcms-item`).
+
 ### `collection:query`
 
 Query a collection's index with filtering, searching, sorting, and pagination.

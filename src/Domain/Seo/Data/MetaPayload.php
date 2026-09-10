@@ -13,18 +13,22 @@ final readonly class MetaPayload
 {
 	/**
 	 * @param string $rawTitle The title before the site title template is applied
+	 * @param string $socialTitle The card's own share title, or `''` to use $rawTitle
 	 * @param string $robots `''`, `noindex`, `nofollow` or `noindex, nofollow`
 	 * @param string $ogImage Absolute URL, or `''` when there is no image
+	 * @param string $ogImageAlt The alt of that image, or `''` when it has none (or there is no image)
 	 * @param array{google:string,bing:string,pinterest:string} $verification
 	 */
 	public function __construct(
 		public string $title,
 		public string $rawTitle,
+		public string $socialTitle,
 		public string $description,
 		public string $canonical,
 		public string $robots,
 		public string $ogType,
 		public string $ogImage,
+		public string $ogImageAlt,
 		public string $twitterCard,
 		public string $siteName,
 		public string $twitterHandle,

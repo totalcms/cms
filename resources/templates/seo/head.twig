@@ -20,12 +20,15 @@
 {%- if 'robots' in parts and meta.robots != '' -%}
 <meta name="robots" content="{{ meta.robots }}">
 {% endif -%}
-{%- if 'canonical' in parts and meta.canonical != '' -%}
+{#- A noindex page has no canonical to declare: pointing at itself while asking
+    to be dropped from the index is a mixed signal. og:url below still prints —
+    it is an identity, not an indexing instruction. -#}
+{%- if 'canonical' in parts and meta.canonical != '' and not meta.noindex -%}
 <link rel="canonical" href="{{ meta.canonical }}">
 {% endif -%}
 {%- if 'og' in parts and settings.emitSocial -%}
 <meta property="og:type" content="{{ meta.ogType }}">
-<meta property="og:title" content="{{ meta.rawTitle != '' ? meta.rawTitle : meta.title }}">
+<meta property="og:title" content="{{ meta.socialTitle != '' ? meta.socialTitle : (meta.rawTitle != '' ? meta.rawTitle : meta.title) }}">
 {% if meta.description != '' -%}
 <meta property="og:description" content="{{ meta.description }}">
 {% endif -%}
@@ -38,11 +41,24 @@
 {% if meta.ogImage != '' -%}
 <meta property="og:image" content="{{ meta.ogImage }}">
 {% endif -%}
+{#- The alt describes whichever image won; an image with none simply omits it. #}
+{% if meta.ogImageAlt != '' -%}
+<meta property="og:image:alt" content="{{ meta.ogImageAlt }}">
+{% endif -%}
 {% endif -%}
 {%- if 'twitter' in parts and settings.emitSocial -%}
 <meta name="twitter:card" content="{{ meta.twitterCard }}">
+{#- Twitter falls back to og:title on its own, so this prints only when the
+    card carries a share title. #}
+{% if meta.socialTitle != '' -%}
+<meta name="twitter:title" content="{{ meta.socialTitle }}">
+{% endif -%}
 {% if meta.twitterHandle != '' -%}
 <meta name="twitter:site" content="{{ meta.twitterHandle }}">
+{% endif -%}
+{#- Twitter reads og:image, but not og:image:alt — the alt needs its own tag. #}
+{% if meta.ogImageAlt != '' -%}
+<meta name="twitter:image:alt" content="{{ meta.ogImageAlt }}">
 {% endif -%}
 {% endif -%}
 {%- if 'verification' in parts -%}

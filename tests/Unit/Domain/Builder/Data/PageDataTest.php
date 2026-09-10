@@ -16,7 +16,7 @@ final class PageDataTest extends TestCase
 			'title'       => 'About Us',
 			'route'       => '/about',
 			'template'    => 'about',
-			'description' => 'About our company',
+			'seo'         => ['description' => 'About our company'],
 			'draft'       => true,
 			'nav'         => false,
 		]);
@@ -25,7 +25,8 @@ final class PageDataTest extends TestCase
 		$this->assertSame('About Us', $page->title);
 		$this->assertSame('/about', $page->route);
 		$this->assertSame('about', $page->template);
-		$this->assertSame('About our company', $page->description);
+		// Description and social image live on the seo card, not on the page.
+		$this->assertSame(['description' => 'About our company'], $page->seo);
 		$this->assertTrue($page->draft);
 		$this->assertFalse($page->nav);
 	}
@@ -38,7 +39,7 @@ final class PageDataTest extends TestCase
 		$this->assertSame('', $page->title);
 		$this->assertSame('', $page->route);
 		$this->assertSame('', $page->template);
-		$this->assertSame('', $page->description);
+		$this->assertSame([], $page->seo);
 		$this->assertFalse($page->draft);
 		$this->assertTrue($page->nav);
 		$this->assertSame(200, $page->status);
@@ -130,12 +131,14 @@ final class PageDataTest extends TestCase
 			'title'           => 'Home',
 			'route'           => '/',
 			'template'        => 'index',
-			'description'     => 'Welcome',
-			'image'           => [
-				'name'   => 'hero.jpg',
-				'link'   => 'home/hero.jpg',
-				'width'  => 1920,
-				'height' => 1080,
+			'seo'             => [
+				'description' => 'Welcome',
+				'image'       => [
+					'name'   => 'hero.jpg',
+					'link'   => 'home/hero.jpg',
+					'width'  => 1920,
+					'height' => 1080,
+				],
 			],
 			'draft'           => false,
 			'nav'             => true,
@@ -153,12 +156,15 @@ final class PageDataTest extends TestCase
 		$this->assertSame('home', $out['id']);
 		$this->assertSame('Home', $out['title']);
 		$this->assertSame(['hero' => 'Welcome'], $out['data']);
-		// Image is wrapped as ImageData and then transformed back — exact array
-		// shape includes all the typed defaults, so just spot-check the inputs.
-		$this->assertSame('hero.jpg', $out['image']['name']);
-		$this->assertSame('home/hero.jpg', $out['image']['link']);
-		$this->assertSame(1920, $out['image']['width']);
-		$this->assertSame(1080, $out['image']['height']);
+		// The seo card passes through verbatim — PageData does not re-type it,
+		// so the card's image keeps exactly the shape it was given.
+		$this->assertSame('Welcome', $out['seo']['description']);
+		$this->assertSame('hero.jpg', $out['seo']['image']['name']);
+		$this->assertSame('home/hero.jpg', $out['seo']['image']['link']);
+		$this->assertSame(1920, $out['seo']['image']['width']);
+		$this->assertSame(1080, $out['seo']['image']['height']);
+		$this->assertArrayNotHasKey('description', $out);
+		$this->assertArrayNotHasKey('image', $out);
 	}
 
 	public function testToArrayRoundTrip(): void

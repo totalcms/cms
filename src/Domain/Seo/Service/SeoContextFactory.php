@@ -29,8 +29,11 @@ readonly class SeoContextFactory
 	/** The default mapping for `blog`-schema collections. */
 	private const ARTICLE_BLOCK = ['type' => 'article', 'title' => 'title', 'description' => 'summary', 'image' => 'image'];
 
-	/** Site Builder pages carry their own `title`, `description` and `image` fields. */
-	private const PAGE_BLOCK = ['type' => '', 'title' => 'title', 'description' => 'description', 'image' => 'image'];
+	/**
+	 * Site Builder pages carry a `title`; their description and social image
+	 * live on the `seo` card only, so there is nothing else to map.
+	 */
+	private const PAGE_BLOCK = ['type' => '', 'title' => 'title', 'description' => '', 'image' => ''];
 
 	/**
 	 * Per-schema default mappings, keyed by schema id. Each reserved schema that
@@ -69,7 +72,7 @@ readonly class SeoContextFactory
 		$siteName = $settings->siteName;
 
 		if (!is_array($subject)) {
-			return new SeoContext('none', [], '', null, self::EMPTY_BLOCK, SeoFields::fromArray([]), $settings, $siteName, '', []);
+			return new SeoContext('none', [], '', null, self::EMPTY_BLOCK, SeoFields::fromArray([]), $settings, $siteName, '', [], []);
 		}
 
 		/** @var array<string,mixed> $subject */
@@ -113,6 +116,7 @@ readonly class SeoContextFactory
 			$siteName,
 			$url,
 			$this->imageUrls($page, $this->builderConfig->getPagesCollectionId(), self::PAGE_BLOCK, $fields, $settings),
+			$this->imageAlts($page, self::PAGE_BLOCK, $fields),
 		);
 	}
 
@@ -137,6 +141,7 @@ readonly class SeoContextFactory
 			$siteName,
 			$this->objectUrl($meta, $object, $settings),
 			$this->imageUrls($object, $collectionId, $block, $fields, $settings),
+			$this->imageAlts($object, $block, $fields),
 		);
 	}
 
@@ -213,6 +218,35 @@ readonly class SeoContextFactory
 		}
 
 		return $urls;
+	}
+
+	/**
+	 * The alt text of those same two images, under the same keys, so a builder
+	 * can describe whichever image it ends up choosing. Only an image that
+	 * actually exists contributes a key — an alt left behind on a cleared image
+	 * property must not describe the image that wins instead.
+	 *
+	 * @param array<string,mixed> $object
+	 * @param array{type:string,title:string,description:string,image:string} $block
+	 *
+	 * @return array<string,string>
+	 */
+	private function imageAlts(array $object, array $block, SeoFields $fields): array
+	{
+		$alts = [];
+
+		if ($block['image'] !== '') {
+			$image = $object[$block['image']] ?? null;
+			if (is_array($image) && trim((string)($image['name'] ?? '')) !== '') {
+				$alts[$block['image']] = trim((string)($image['alt'] ?? ''));
+			}
+		}
+
+		if ($fields->hasImage()) {
+			$alts['seo.image'] = trim((string)($fields->image['alt'] ?? ''));
+		}
+
+		return $alts;
 	}
 
 	/** @param array<string,mixed> $object */

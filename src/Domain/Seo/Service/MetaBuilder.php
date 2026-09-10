@@ -21,6 +21,18 @@ class MetaBuilder
 	/** Maximum description length before truncation, in characters. */
 	private const DESCRIPTION_LENGTH = 160;
 
+	/**
+	 * Arms the markdown strip. Deliberately narrow: it looks for markdown
+	 * *shapes*, never a bare punctuation mark, because a description that is
+	 * plain prose must come back byte-identical. A lone `!` or `[` is not
+	 * evidence of markdown — "Wow! 100%" and "Price: $5 * 3" are sentences.
+	 *
+	 * Alternatives, in order: an image, a link, inline code, a strong wrapper,
+	 * an emphasis opener at a word boundary (so `2 * 2` and `my_var` are out),
+	 * and the four block markers at the start of a line.
+	 */
+	private const MARKDOWN_MARKERS = '/!\[|\[[^\]]+\]\(|`|\*\*|__|(?<!\w)[*_](?=\S)|^\s{0,3}(?:#{1,6}\s|>\s?|[-+*]\s|\d+\.\s)/m';
+
 	public function build(SeoContext $ctx): MetaPayload
 	{
 		$f = $ctx->fields;
@@ -50,16 +62,25 @@ class MetaBuilder
 
 		// Image: the seo card's own image, then the collection's mapped image
 		// property, then the site default. Both card and mapped URLs were
-		// resolved by the factory.
-		$image = '';
+		// resolved by the factory. The alt is read in the same branches, so it
+		// always describes the image that actually won rather than a runner-up.
+		$image    = '';
+		$imageAlt = '';
 		if ($f->hasImage()) {
-			$image = $ctx->imageUrls['seo.image'] ?? '';
+			$image    = $ctx->imageUrls['seo.image'] ?? '';
+			$imageAlt = $ctx->imageAlts['seo.image'] ?? '';
 		}
 		if ($image === '' && $ctx->seoBlock['image'] !== '') {
-			$image = $ctx->imageUrls[$ctx->seoBlock['image']] ?? '';
+			$image    = $ctx->imageUrls[$ctx->seoBlock['image']] ?? '';
+			$imageAlt = $ctx->imageAlts[$ctx->seoBlock['image']] ?? '';
 		}
 		if ($image === '') {
-			$image = $s->defaultImage;
+			$image    = $s->defaultImage;
+			$imageAlt = $s->defaultImageAlt;
+		}
+		// No image at all: an alt describing nothing is worse than no alt.
+		if ($image === '') {
+			$imageAlt = '';
 		}
 
 		$canonical = $f->canonical !== '' ? $f->canonical : $ctx->url;
@@ -69,11 +90,13 @@ class MetaBuilder
 		return new MetaPayload(
 			title: $title,
 			rawTitle: $rawTitle,
+			socialTitle: $f->socialTitle,
 			description: $description,
 			canonical: $canonical,
 			robots: $robots,
 			ogType: $ogType,
 			ogImage: $image,
+			ogImageAlt: $imageAlt,
 			twitterCard: $image !== '' ? 'summary_large_image' : 'summary',
 			siteName: $ctx->siteName,
 			twitterHandle: $s->twitterHandle,
@@ -152,10 +175,55 @@ class MetaBuilder
 		return is_scalar($value) ? trim((string)$value) : '';
 	}
 
-	/** Flatten markup and entities to a single line of plain text. */
+	/** Flatten markup, markdown and entities to a single line of plain text. */
 	private function plainText(string $html): string
 	{
-		return trim((string)preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+		$text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+		// A mapped property is as often markdown as HTML, and strip_tags leaves
+		// markdown untouched — a description reading `**Bold** and [a](url)`
+		// helps nobody. Only pay for the strip when a marker actually survived.
+		if (preg_match(self::MARKDOWN_MARKERS, $text) === 1) {
+			$text = $this->stripMarkdown($text);
+		}
+
+		return trim(preg_replace('/\s+/', ' ', $text) ?? $text);
+	}
+
+	/**
+	 * Drop the common inline and block markdown markers, keeping the text they
+	 * wrap. A regex pass by design: this builds one meta tag, and a full parser
+	 * would buy correctness on constructs a 160-character description will
+	 * never contain.
+	 *
+	 * Order matters — images before links (an image is a link with a bang),
+	 * code before emphasis (so `*` inside a code span is already gone), strong
+	 * before emphasis (so `**` is not eaten one asterisk at a time).
+	 *
+	 * The emphasis wrappers require a non-space immediately inside them, and
+	 * the underscore forms a word boundary outside them, so `2 * 2` keeps its
+	 * asterisks and `my_var` keeps its underscore. A real `__x__` wrapper does
+	 * strip — `__init__` reads as strong markdown and nothing in a description
+	 * tells the two apart.
+	 */
+	private function stripMarkdown(string $text): string
+	{
+		$replacements = [
+			'/!\[([^\]]*)\]\([^)]*\)/'             => '$1', // ![alt](url)
+			'/\[([^\]]+)\]\([^)]*\)/'              => '$1', // [text](url)
+			'/`([^`]*)`/'                          => '$1', // `code`
+			'/\*\*(?!\s)(.+?)(?<!\s)\*\*/'         => '$1', // **strong**
+			'/(?<!\w)__(?!\s)(.+?)(?<!\s)__(?!\w)/' => '$1', // __strong__
+			'/\*(?!\s)(.+?)(?<!\s)\*/'             => '$1', // *emphasis*
+			'/(?<!\w)_(?!\s)(.+?)(?<!\s)_(?!\w)/'  => '$1', // _emphasis_
+			'/^\s{0,3}#{1,6}\s+/m'                 => '',   // # heading
+			'/^\s*(?:[-+*]|\d+\.)\s+/m'            => '',   // - item, 1. item
+			'/^\s*>\s?/m'                          => '',   // > blockquote
+		];
+
+		// A catastrophic backtrack or a bad subject returns null; the original
+		// text is a far better description than the empty string a cast gives.
+		return preg_replace(array_keys($replacements), array_values($replacements), $text) ?? $text;
 	}
 
 	/**

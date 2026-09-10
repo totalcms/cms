@@ -462,10 +462,11 @@ function seoCtx(array $overrides = []): SeoContext
 		'siteName'       => 'Bistro',
 		'url'            => 'https://example.com/blog/hello',
 		'imageUrls'      => ['image' => 'https://example.com/imageworks/blog/hello/image.jpg', 'seo.image' => ''],
+		'imageAlts'      => ['image' => 'Hero alt', 'seo.image' => ''],
 	];
 	$d = array_merge($defaults, $overrides);
 
-	return new SeoContext($d['kind'], $d['object'], $d['collectionId'], $d['collectionMeta'], $d['seoBlock'], $d['fields'], $d['settings'], $d['siteName'], $d['url'], $d['imageUrls']);
+	return new SeoContext($d['kind'], $d['object'], $d['collectionId'], $d['collectionMeta'], $d['seoBlock'], $d['fields'], $d['settings'], $d['siteName'], $d['url'], $d['imageUrls'], $d['imageAlts']);
 }
 
 function signInAs(App $app, string $userId, string $authCollection = ''): void

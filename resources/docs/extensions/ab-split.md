@@ -32,7 +32,7 @@ Set inside the page's **Page Data** JSON field. Both keys are read from `page.da
 
 ## What variant B sees
 
-The alternate template is rendered with the **same `page` context** as the original — so `page.title`, `page.image`, `page.description`, `page.data.*`, etc. all work. Only the template body differs. URL parameters are passed as `params` (matching the normal page render).
+The alternate template is rendered with the **same `page` context** as the original — so `page.title`, `page.seo.*`, `page.data.*`, etc. all work. Only the template body differs. URL parameters are passed as `params` (matching the normal page render).
 
 This means you can keep all your meta tags, social previews, and SEO bits in a shared layout and only swap the body content per variant.
 

@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\Data;
 
-use TotalCMS\Domain\Property\Data\ImageData;
-
 readonly class PageData
 {
 	public string $id;
 	public string $title;
 	public string $route;
 	public string $template;
-	public string $description;
-	public ImageData $image;
 	public bool $draft;
 	public bool $nav;
 	public bool $sitemap;
@@ -46,8 +42,6 @@ readonly class PageData
 		$this->title           = (string)($data['title'] ?? '');
 		$this->route           = (string)($data['route'] ?? '');
 		$this->template        = (string)($data['template'] ?? '');
-		$this->description     = (string)($data['description'] ?? '');
-		$this->image           = new ImageData(is_array($data['image'] ?? null) ? $data['image'] : []);
 		$this->draft           = (bool)($data['draft'] ?? false);
 		$this->nav             = (bool)($data['nav'] ?? true);
 		$this->sitemap         = (bool)($data['sitemap'] ?? true);
@@ -153,8 +147,6 @@ readonly class PageData
 			'title'           => $this->title,
 			'route'           => $this->route,
 			'template'        => $this->template,
-			'description'     => $this->description,
-			'image'           => $this->image->transform(),
 			'draft'           => $this->draft,
 			'nav'             => $this->nav,
 			'sitemap'         => $this->sitemap,

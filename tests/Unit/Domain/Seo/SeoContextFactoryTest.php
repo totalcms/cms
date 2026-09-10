@@ -92,7 +92,25 @@ final class SeoContextFactoryTest extends TestCase
 		$this->assertSame('page', $ctx->kind);
 		$this->assertSame('https://example.com/about', $ctx->url);
 		$this->assertTrue($ctx->fields->noindex);
-		$this->assertSame(['type' => '', 'title' => 'title', 'description' => 'description', 'image' => 'image'], $ctx->seoBlock);
+		$this->assertSame(['type' => '', 'title' => 'title', 'description' => '', 'image' => ''], $ctx->seoBlock);
+	}
+
+	public function testPageDescriptionAndImageComeOnlyFromTheCard(): void
+	{
+		// Legacy top-level values (pre-3.5.1 records, or a hand-built array) are
+		// not mapped any more — the SEO card is the only page-level source.
+		$ctx = $this->factory->make([
+			'id'          => 'about',
+			'route'       => '/about',
+			'template'    => 'pages/about.twig',
+			'description' => 'Legacy description',
+			'image'       => ['name' => 'hero.jpg', 'size' => 10, 'alt' => 'Legacy alt'],
+		]);
+
+		$this->assertSame('', $ctx->seoBlock['description']);
+		$this->assertSame('', $ctx->seoBlock['image']);
+		$this->assertSame([], $ctx->imageUrls);
+		$this->assertSame([], $ctx->imageAlts);
 	}
 
 	public function testTemplatedPageRouteHasNoCanonicalUrl(): void
@@ -118,6 +136,32 @@ final class SeoContextFactoryTest extends TestCase
 		$this->assertSame('blog', $ctx->collectionId);
 		$this->assertSame(['type' => 'article', 'title' => 'title', 'description' => 'summary', 'image' => 'image'], $ctx->seoBlock);
 		$this->assertSame('https://example.com/blog/hello', $ctx->url);
+	}
+
+	public function testResolvesTheAltOfTheMappedAndCardImages(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->blogCollection());
+		$this->urlBuilder->method('buildUrl')->willReturn('/blog/hello');
+
+		$ctx = $this->factory->make([
+			'id'    => 'hello',
+			'image' => ['name' => 'hero.jpg', 'size' => 10, 'alt' => 'Hero alt'],
+			'seo'   => ['image' => ['name' => 'card.jpg', 'size' => 10, 'alt' => 'Card alt']],
+		], ['collection' => 'blog']);
+
+		$this->assertSame(['image' => 'Hero alt', 'seo.image' => 'Card alt'], $ctx->imageAlts);
+	}
+
+	public function testAnImagePropertyWithoutAnImageContributesNoAlt(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->blogCollection());
+		$this->urlBuilder->method('buildUrl')->willReturn('/blog/hello');
+
+		// The property is mapped but holds no image, and the card has none —
+		// neither key exists rather than mapping to an empty alt.
+		$ctx = $this->factory->make(['id' => 'hello', 'image' => ['name' => '', 'size' => 0, 'alt' => 'Orphan']], ['collection' => 'blog']);
+
+		$this->assertSame([], $ctx->imageAlts);
 	}
 
 	public function testLegacyBlogObjectGetsTheArticleDefaultBlock(): void

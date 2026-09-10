@@ -5,7 +5,7 @@
 	"type"        : "object",
 	"description" : "Per-object SEO overrides. Used as a card sub-schema on objects that opt in.",
 	"category" : "Internal",
-	"formgrid"    : "title title\ndescription description\nimage image\ncanonical canonical\nnoindex nofollow\njsonldType .",
+	"formgrid"    : "title socialTitle\ndescription description\nimage image\ncanonical canonical\nnoindex nofollow\njsonldType .",
 	"properties"  : {
 		"id": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -21,6 +21,13 @@
 			"type"    : "string",
 			"label"   : "Title",
 			"help"    : "Overrides the derived title. Supports placeholders such as ${title}, ${author} or ${card.headline} for any property of this record, and ${site} for the site name. The site title template still applies.",
+			"field"   : "text",
+			"default" : ""
+		},
+		"socialTitle": {
+			"type"    : "string",
+			"label"   : "Social Title",
+			"help"    : "Short title for share cards (og:title / twitter:title). Leave empty to use the page title.",
 			"field"   : "text",
 			"default" : ""
 		},

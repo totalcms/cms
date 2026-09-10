@@ -10,6 +10,7 @@ final readonly class SeoFields
 	/** @param array<string,mixed> $image */
 	public function __construct(
 		public string $title,
+		public string $socialTitle,
 		public string $description,
 		public array $image,
 		public string $canonical,
@@ -27,6 +28,7 @@ final readonly class SeoFields
 
 		return new self(
 			title: $str('title'),
+			socialTitle: $str('socialTitle'),
 			description: $str('description'),
 			image: is_array($seo['image'] ?? null) ? $seo['image'] : [],
 			canonical: $str('canonical'),

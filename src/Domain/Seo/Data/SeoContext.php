@@ -24,6 +24,7 @@ final readonly class SeoContext
 	 * @param string $siteName SEO site name → General `siteName` → domain
 	 * @param string $url Absolute URL of the object/page; `''` when it cannot be resolved
 	 * @param array<string,string> $imageUrls Absolute ImageWorks URLs keyed by property path (mapped field + `seo.image`)
+	 * @param array<string,string> $imageAlts The alt text of those same images, under the same keys; a key is absent when the property holds no image
 	 */
 	public function __construct(
 		public string $kind,
@@ -36,6 +37,7 @@ final readonly class SeoContext
 		public string $siteName,
 		public string $url,
 		public array $imageUrls,
+		public array $imageAlts,
 	) {
 	}
 }

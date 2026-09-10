@@ -2301,6 +2301,13 @@
             "url": "https://docs.totalcms.co/site-builder/seo/"
         },
         {
+            "name": "cms.seo.data",
+            "signature": "data(mixed $subject = null, array $options = []): array",
+            "description": "The same values `head()` prints, as a plain array \u2014 for a template that needs one of them on its own (a share button's title, a preview card) or wants to build its own tags:",
+            "examples": [],
+            "url": "https://docs.totalcms.co/site-builder/seo/"
+        },
+        {
             "name": "cms.seo.head",
             "signature": "head(mixed $subject = null, array $options = []): Markup",
             "description": "The complete block: title, description, robots, canonical, Open Graph, Twitter, verification and JSON-LD.",
@@ -4139,6 +4146,36 @@
             "options": [],
             "examples": [
                 "tcms collection:get blog\ntcms collection:get blog --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "collection:create",
+            "description": "Create one collection. When the ID is a reserved collection (`seo-site`, `automations`, `podcast`, \u2026) leave `--schema` off \u2014 the collection is provisioned with its shipped name and singleton flag, exactly as **Project Setup \u2192 Setup Default Collections** would, but for that one collection only. That is the point of this command on an existing site: `tcms collection:create seo-site` provisions just that collection, where Setup Default Collections would create every default. Any other ID is a custom collection and needs `--schema`.",
+            "arguments": [
+                {
+                    "name": "id",
+                    "required": true,
+                    "description": "Collection ID"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--schema",
+                    "description": "Schema ID \u2014 required unless the collection ID is a reserved collection"
+                },
+                {
+                    "name": "--name",
+                    "description": "Display name (defaults to the collection ID). Ignored for a reserved collection \u2014 it keeps its shipped name"
+                },
+                {
+                    "name": "--singleton",
+                    "description": "Create as a single-object collection. Ignored for a reserved collection \u2014 its shipped singleton setting wins"
+                }
+            ],
+            "examples": [
+                "tcms collection:create seo-site\ntcms collection:create recipes --schema=blog --name=\"Recipes\"\ntcms collection:create about --schema=text --singleton --json"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"

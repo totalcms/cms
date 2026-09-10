@@ -50,4 +50,40 @@ describe('JsonLdBuilder', function (): void {
 		$ctx = seoCtx(['settings' => SeoSettings::fromArray(['emitJsonLd' => false], 'x')]);
 		expect((new JsonLdBuilder(new WebSiteProvider()))->script($ctx, (new MetaBuilder())->build($ctx)))->toBe('');
 	});
+
+	test('extra nodes are appended after the providers', function (): void {
+		$ctx     = seoCtx();
+		$builder = new JsonLdBuilder(new OrganizationProvider(), new WebSiteProvider(), new WebPageProvider());
+		$graph   = $builder->graph($ctx, (new MetaBuilder())->build($ctx), [
+			['@type' => 'FAQPage', '@id' => 'https://example.com/blog/hello#faq', 'mainEntity' => []],
+		]);
+
+		expect(array_column($graph, '@type'))->toBe(['Organization', 'WebSite', 'WebPage', 'FAQPage']);
+		expect($graph[3]['@id'])->toBe('https://example.com/blog/hello#faq');
+	});
+
+	test('an extra node reusing a provider @id is dropped', function (): void {
+		$ctx     = seoCtx();
+		$builder = new JsonLdBuilder(new WebPageProvider());
+		$graph   = $builder->graph($ctx, (new MetaBuilder())->build($ctx), [
+			['@type' => 'FAQPage', '@id' => 'https://example.com/blog/hello#webpage'],
+			['@type' => 'FAQPage', '@id' => 'https://example.com/blog/hello#faq'],
+		]);
+
+		expect(array_column($graph, '@type'))->toBe(['WebPage', 'FAQPage']);
+		expect(array_column($graph, '@id'))->toBe(['https://example.com/blog/hello#webpage', 'https://example.com/blog/hello#faq']);
+	});
+
+	test('a breakout attempt inside an extra node is encoded, not interpolated', function (): void {
+		$ctx    = seoCtx();
+		$script = (new JsonLdBuilder(new WebPageProvider()))->script($ctx, (new MetaBuilder())->build($ctx), [
+			['@type' => 'FAQPage', 'name' => '</script><script>alert(1)</script>'],
+		]);
+
+		expect($script)->toStartWith('<script type="application/ld+json">')
+			->toEndWith('</script>')
+			->toContain('"FAQPage"')
+			->not->toContain('</script><script>');
+		expect(substr_count($script, '</script>'))->toBe(1);
+	});
 });

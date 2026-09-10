@@ -33,12 +33,6 @@ return function (App $app): void {
 	$app->add(DevModeMiddleware::class);
 	$app->add(BundleMiddleware::class);
 	$app->add(MaintenanceModeMiddleware::class);
-	// One-shot data/layout migrations (e.g. legacy `tcms-data/templates/` →
-	// `tcms-data/builder/` for pre-3.5 upgrades). Runs once per process via a
-	// static flag; the ledger ensures each migration applies at most once per
-	// install. Placed near MaintenanceMode because both are install-state
-	// concerns that run before public/admin routing decisions.
-	$app->add(MigrationMiddleware::class);
 	$app->add(RobotsTagMiddleware::class);
 	$app->add(LicenseValidationMiddleware::class);
 	$app->add(ValidationExceptionMiddleware::class);
@@ -74,6 +68,19 @@ return function (App $app): void {
 	// have dropped. The signal file survived, so `tcms cache:clear` appeared to
 	// do nothing on the front end until someone happened to load /admin.
 	$app->add(CacheInvalidationMiddleware::class);
+
+	// One-shot data/layout migrations (e.g. legacy `tcms-data/templates/` →
+	// `tcms-data/builder/` for pre-3.5 upgrades, builder-page SEO fields for
+	// pre-3.5.3 ones). Runs once per process via a static flag; the ledger
+	// ensures each migration applies at most once per install.
+	//
+	// Like CacheInvalidationMiddleware above, this MUST wrap
+	// PageRouterMiddleware. Registered inside the routing layer it only ran for
+	// requests Slim could route — admin and API. A Site Builder page has no Slim
+	// route, so RoutingMiddleware threw a 404 that unwound outward before this
+	// middleware was reached: a site whose visitors only ever hit builder pages
+	// never migrated until an operator happened to load /admin.
+	$app->add(MigrationMiddleware::class);
 
 	// Impersonation banner: inject a "Return to your account" bar into HTML
 	// responses while a super-admin is impersonating another user. Placed

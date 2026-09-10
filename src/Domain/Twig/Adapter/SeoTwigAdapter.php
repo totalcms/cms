@@ -62,7 +62,7 @@ final readonly class SeoTwigAdapter
 	{
 		[$ctx, $meta] = $this->resolve($subject, $options);
 
-		$jsonld = $this->jsonLdBuilder->script($ctx, $meta);
+		$jsonld = $this->jsonLdBuilder->script($ctx, $meta, self::extraNodes($options));
 		$parts  = self::ALL_PARTS;
 
 		// Only ask for the JSON-LD slice when there is a script to print —
@@ -124,7 +124,74 @@ final readonly class SeoTwigAdapter
 	{
 		[$ctx, $meta] = $this->resolve($subject, $options);
 
-		return new Markup($this->jsonLdBuilder->script($ctx, $meta), 'UTF-8');
+		return new Markup($this->jsonLdBuilder->script($ctx, $meta, self::extraNodes($options)), 'UTF-8');
+	}
+
+	/**
+	 * The same values `head()` prints, as a plain array — for a template that
+	 * needs one of them on its own (a share button's title, a preview card) or
+	 * wants to build its own tags:
+	 *
+	 *     {% set seo = cms.seo.data(page) %}
+	 *     <img src="{{ seo.ogImage }}" alt="{{ seo.ogImageAlt }}">
+	 *
+	 * Every `MetaPayload` field appears under its own name, plus `site` for the
+	 * Site SEO record's own values. Not markup — nothing here is escaped, so a
+	 * template printing one of these escapes it as usual.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function data(mixed $subject = null, array $options = []): array
+	{
+		[$ctx, $meta] = $this->resolve($subject, $options);
+		$settings     = $ctx->settings;
+
+		return array_merge(get_object_vars($meta), [
+			'site' => [
+				'name'             => $settings->siteName,
+				'baseUrl'          => $settings->baseUrl,
+				'defaultImage'     => $settings->defaultImage,
+				'defaultImageAlt'  => $settings->defaultImageAlt,
+				'organizationName' => $settings->organizationName,
+				'organizationLogo' => $settings->organizationLogo,
+				'sameAs'           => $settings->sameAs,
+			],
+		]);
+	}
+
+	/**
+	 * `options.jsonld` as the builder wants it: a list of node arrays. The
+	 * option arrives from a template, so anything that cannot be a node is
+	 * dropped rather than allowed to reach `json_encode`: a scalar would land
+	 * in the `@graph` as a bare string, and a list-shaped entry — the easy
+	 * mistake of wrapping one node in an extra `[...]` — would encode as a
+	 * nested JSON array, which is not a node either. An empty array stays: it
+	 * is ambiguous in PHP, and the builder ignores a node with no `@type`.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	private static function extraNodes(array $options): array
+	{
+		$extra = $options['jsonld'] ?? null;
+		if (!is_array($extra)) {
+			return [];
+		}
+
+		$nodes = [];
+		foreach ($extra as $node) {
+			if (!is_array($node) || (array_is_list($node) && $node !== [])) {
+				continue;
+			}
+
+			/** @var array<string,mixed> $node */
+			$nodes[] = $node;
+		}
+
+		return $nodes;
 	}
 
 	/**

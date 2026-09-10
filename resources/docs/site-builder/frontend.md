@@ -266,7 +266,7 @@ A complete layout using all asset functions:
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{{ page.title }}{% endblock %}</title>
-    <meta name="description" content="{{ page.description }}">
+    <meta name="description" content="{{ page.seo.description }}">
 
     {# Total CMS core assets first, so your own CSS can override them #}
     {{ cms.assetsHead() }}

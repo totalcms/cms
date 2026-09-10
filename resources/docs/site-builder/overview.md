@@ -15,7 +15,7 @@ The Site Builder lets you build a complete frontend website within Total CMS. Pa
 
 ## How It Works
 
-1. **Page objects** live in the `builder-pages` collection — each defines a URL route, a template, and metadata (title, description, image, status, etc.)
+1. **Page objects** live in the `builder-pages` collection — each defines a URL route, a template, and metadata (title, status, SEO card, etc.)
 2. **Templates** live in `tcms-data/builder/` — layouts, page templates, partials, and macros
 3. **A routing middleware** matches incoming URLs against page routes and collection URL patterns
 4. **Page data is passed to templates automatically** — available as `page` and `params` in Twig (or `object` and `params` for collection-URL matches)
@@ -63,7 +63,7 @@ Base HTML structure. Page templates extend layouts via Twig's `{% extends %}` ta
 <html lang="en">
 <head>
     <title>{% block title %}{{ page.title }}{% endblock %}</title>
-    <meta name="description" content="{{ page.description }}">
+    <meta name="description" content="{{ page.seo.description }}">
 </head>
 <body>
     {% include 'partials/nav.twig' %}
@@ -103,13 +103,13 @@ When a builder page route matches, the template receives:
 The full page object from the collection:
 
 ```twig
-{{ page.title }}        {# Page Title #}
-{{ page.description }}  {# Meta description #}
-{{ page.route }}        {# URL pattern #}
-{{ page.template }}     {# Template name #}
-{{ page.image }}        {# Page image (used for og:image / hero) #}
-{{ page.status }}       {# HTTP status code #}
-{{ page.data.hero }}    {# Custom JSON data — see Page Data #}
+{{ page.title }}            {# Page Title #}
+{{ page.route }}            {# URL pattern #}
+{{ page.template }}         {# Template name #}
+{{ page.status }}           {# HTTP status code #}
+{{ page.seo.description }}  {# Meta description (SEO card) #}
+{{ page.seo.image.alt }}    {# Social image alt (SEO card) #}
+{{ page.data.hero }}        {# Custom JSON data — see Page Data #}
 ```
 
 ### `params`
@@ -171,17 +171,20 @@ The `data` field is a free-form JSON blob attached to a page, exposed to the tem
 
 The `data` field is **not indexed** — it's only available when the full page is rendered. Editing happens in the admin's JSON editor on the page form.
 
-## Page Image
+## Page Description and Image
 
-The `image` field stores an image used for `og:image` social previews and as a hero image when the template renders one. It's a standard image-property field with shape transforms — same as any image field in T3.
+A page's description and social image live on its **SEO card** (`page.seo.description` and `page.seo.image`) — there are no separate top-level `description` and `image` fields. Sites upgrading from an earlier release get a one-time migration that copies both values (and the image's files) onto the card automatically.
+
+`page.seo.image` is a standard image-property field with shape transforms — same as any image field in T3. Because it is nested inside the card, `imagePath()` needs the dotted property path:
 
 ```twig
-<meta property="og:image" content="{{ cms.media.imagePath(page, {w:1200, h:630}) }}">
-
-{% if page.image.filename %}
-<img src="{{ cms.media.imagePath(page, {w:1920, h:1080}) }}" alt="{{ page.title }}">
+{% set hero = cms.media.imagePath(page, {w:1920, h:1080}, {collection: 'builder-pages', property: 'seo.image'}) %}
+{% if hero %}
+<img src="{{ hero }}" alt="{{ page.seo.image.alt ?: page.title }}">
 {% endif %}
 ```
+
+For the social tags themselves, let `cms.seo.head(page)` do the work — it resolves the card image, falls back to the site default, and emits `og:image` with its alt. See [SEO](site-builder/seo).
 
 ## HTTP Status Codes
 
@@ -371,8 +374,6 @@ Page metadata is stored in the `builder-pages` collection using the `builder-pag
 | `title` | text | Page title |
 | `route` | text | URL pattern (e.g., `/about` or `/products/{id}`) |
 | `template` | text | Page template name from `builder/pages/` (required) |
-| `description` | textarea | Meta description |
-| `image` | image | Page image — used for `og:image` and hero images |
 | `data` | JSON | Free-form JSON exposed as `page.data.*` |
 | `status` | select | HTTP status code returned (200, 301, 302, 404, 410, 451, 503) |
 | `redirectTo` | text | Destination for 301/302 redirects |
@@ -383,6 +384,7 @@ Page metadata is stored in the `builder-pages` collection using the `builder-pag
 | `sitemap` | toggle | Include in `sitemap.xml` (default: true) |
 | `changeFrequency` | select | Sitemap change frequency hint |
 | `priority` | number | Sitemap priority (0.0 to 1.0) |
+| `seo` | card | SEO card — page description, social image and title, canonical, noindex/nofollow |
 
 > Hierarchy and ordering are stored separately in `tcms-data/{collection}/.order.json`, not as fields on the page record. See [Page Order](#page-order).
 
@@ -569,7 +571,7 @@ The [llms.txt](https://llmstxt.org/) standard tells AI crawlers how to navigate 
 ## Pages
 
 {% for p in cms.builder.nav() %}
-- [{{ p.title }}]({{ p.route }}): {{ p.description }}
+- [{{ p.title }}]({{ p.route }}): {{ p.seo.description }}
 {% endfor %}
 ```
 

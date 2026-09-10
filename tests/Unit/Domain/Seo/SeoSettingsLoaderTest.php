@@ -116,6 +116,28 @@ final class SeoSettingsLoaderTest extends TestCase
 		$this->assertSame('', $settings->organizationLogo);
 	}
 
+	public function testTheDefaultImageAltComesOffTheRawImageObject(): void
+	{
+		// The alt is stored on the image object the path resolution replaces
+		// with a URL string, so the loader has to capture it first.
+		$settings = $this->loader(
+			true,
+			['defaultImage' => ['name' => 'a.jpg', 'size' => 1, 'alt' => 'Site alt']],
+			[],
+			true,
+		)->load();
+
+		$this->assertSame('Site alt', $settings->defaultImageAlt);
+	}
+
+	public function testTheDefaultImageAltIsEmptyWhenTheImageCarriesNone(): void
+	{
+		$settings = $this->loader(true, ['defaultImage' => ['name' => 'a.jpg', 'size' => 1]], [], true)->load();
+
+		$this->assertSame('', $settings->defaultImageAlt);
+		$this->assertSame('', $this->loader(false, null)->load()->defaultImageAlt);
+	}
+
 	public function testTheLogoGetsItsOwnUncroppedTransform(): void
 	{
 		// A logo cropped to 1.91:1 is a mangled logo — Google's Organization

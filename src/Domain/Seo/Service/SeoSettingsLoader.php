@@ -51,6 +51,10 @@ class SeoSettingsLoader
 		$domain = $this->config->domain;
 
 		// Images are stored as image objects; SeoSettings wants absolute URLs.
+		// The share image's alt travels with the image object, so read it before
+		// the path resolution below replaces that object with a URL string.
+		$record['defaultImageAlt'] = $this->imageAlt($record['defaultImage'] ?? null);
+
 		// Resolve the ImageWorks paths first — that also replaces the arrays with
 		// strings — then build the settings to learn the site's base URL, and
 		// rebuild with each path absolutized against it.
@@ -90,6 +94,16 @@ class SeoSettingsLoader
 			// The collection exists but holds no record yet.
 			return [];
 		}
+	}
+
+	/**
+	 * The `alt` off a raw image object, or `''` when the property holds no
+	 * image object at all. An image with no alt is the same as no alt — the
+	 * `og:image:alt` tag is simply omitted.
+	 */
+	private function imageAlt(mixed $image): string
+	{
+		return is_array($image) ? trim((string)($image['alt'] ?? '')) : '';
 	}
 
 	/**

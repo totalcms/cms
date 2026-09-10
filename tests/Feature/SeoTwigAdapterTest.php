@@ -30,7 +30,7 @@ beforeEach(function (): void {
 		'siteName'           => 'Bistro',
 		'twitterHandle'      => 'bistro',
 		'googleVerification' => 'g123',
-		'defaultImage'       => ['name' => 'share.jpg', 'size' => 10],
+		'defaultImage'       => ['name' => 'share.jpg', 'size' => 10, 'alt' => 'Share alt'],
 	]);
 
 	$this->render = fn (string $template, array $vars = []): string => $container->get(TwigEngine::class)->renderString($template, $vars);
@@ -70,9 +70,78 @@ it('renders site defaults with no subject and honours noindex', function (): voi
 		->toContain('/imageworks/seo-site/seo-site/defaultImage.jpg')
 		->toContain('w=1200');
 
+	// The alt saved on the image object travels with it into both share cards.
+	expect($html)->toContain('<meta property="og:image:alt" content="Share alt">')
+		->toContain('<meta name="twitter:image:alt" content="Share alt">');
+
 	$page = ['id' => 'secret', 'title' => 'Secret', 'route' => '/secret', 'template' => 'pages/x.twig', 'seo' => ['noindex' => true, 'nofollow' => true]];
 	expect(($this->render)('{{ cms.seo.head(page) }}', ['page' => $page]))
 		->toContain('<meta name="robots" content="noindex, nofollow">');
+});
+
+it('drops the canonical link on a noindex page but keeps og:url', function (): void {
+	$page = ['id' => 'secret', 'title' => 'Secret', 'route' => '/secret', 'template' => 'pages/x.twig', 'seo' => ['noindex' => true]];
+	$html = ($this->render)('{{ cms.seo.head(page) }}', ['page' => $page]);
+
+	expect($html)->not->toContain('rel="canonical"');
+	expect($html)->toContain('<meta name="robots" content="noindex">')
+		->toContain('<meta property="og:url" content="https://');
+});
+
+it('uses socialTitle for the share cards only', function (): void {
+	$page = ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/x.twig', 'seo' => ['socialTitle' => 'Share Me']];
+	$html = ($this->render)('{{ cms.seo.head(page) }}', ['page' => $page]);
+
+	expect($html)->toContain('<meta property="og:title" content="Share Me">')
+		->toContain('<meta name="twitter:title" content="Share Me">')
+		->toContain('<title>About | Bistro</title>');
+
+	// With no social title there is no twitter:title at all and og:title stays
+	// the raw page title.
+	$plain = ($this->render)('{{ cms.seo.head(page) }}', ['page' => ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/x.twig']]);
+	expect($plain)->toContain('<meta property="og:title" content="About">')->not->toContain('twitter:title');
+});
+
+it('takes a builder page description from the SEO card only', function (): void {
+	$card = ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/x.twig', 'seo' => ['description' => 'From the card']];
+	expect(($this->render)('{{ cms.seo.head(page) }}', ['page' => $card]))
+		->toContain('<meta name="description" content="From the card">');
+
+	// The page schema no longer carries a top-level description — a legacy
+	// value passed in from a template is not a source for the meta tag.
+	$legacy = ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/x.twig', 'description' => 'Legacy value'];
+	expect(($this->render)('{{ cms.seo.head(page) }}', ['page' => $legacy]))
+		->not->toContain('Legacy value');
+});
+
+it('merges template-supplied JSON-LD nodes into the one graph', function (): void {
+	$page = ['id' => 'faq', 'title' => 'FAQ', 'route' => '/faq', 'template' => 'pages/x.twig'];
+	$html = ($this->render)("{{ cms.seo.head(page, {jsonld: [{'@type': 'FAQPage', 'mainEntity': []}]}) }}", ['page' => $page]);
+
+	expect(substr_count($html, '<script type="application/ld+json">'))->toBe(1);
+	expect($html)->toContain('"FAQPage"')->toContain('"WebPage"');
+
+	// The same nodes reach the granular method, and an entry that isn't a node
+	// is dropped instead of landing in the graph as a bare string. A
+	// list-shaped entry — one node wrapped in an extra pair of brackets — goes
+	// the same way: it would encode as a nested JSON array, not a node.
+	$only = ($this->render)("{{ cms.seo.jsonld(page, {jsonld: [{'@type': 'FAQPage'}, 'nope', [{'@type': 'Sneaky'}]]}) }}", ['page' => $page]);
+	expect($only)->toContain('"FAQPage"')
+		->not->toContain('nope')
+		->not->toContain('Sneaky');
+});
+
+it('exposes the resolved meta values as data', function (): void {
+	$page = ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/x.twig'];
+	$out  = ($this->render)('{% set d = cms.seo.data(page) %}{{ d.title }}|{{ d.site.name }}|{{ d.ogImage }}', ['page' => $page]);
+
+	// The title carries the site's own separator, so match the whole render
+	// rather than splitting on it.
+	expect($out)->toStartWith('About | Bistro|Bistro|https://')
+		->toContain('/imageworks/seo-site/seo-site/defaultImage.jpg');
+
+	$more = ($this->render)('{% set d = cms.seo.data(page) %}{{ d.noindex ? "yes" : "no" }}|{{ d.site.defaultImageAlt }}|{{ d.ogImageAlt }}', ['page' => $page]);
+	expect($more)->toBe('no|Share alt|Share alt');
 });
 
 it('granular methods return only their slice', function (): void {
