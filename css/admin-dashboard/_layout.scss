@@ -159,6 +159,22 @@ body {
 		left            : anchor(right);
 		bottom          : anchor(bottom);
 		margin          : 0 0 0 0.5rem;
+		// Keep the whole menu on screen. `top` bounds the box between the
+		// viewport top and the button, so a list that does not fit there
+		// overflows its inset-modified containing block and the fallbacks
+		// below take over. `height: auto` undoes the popover UA `fit-content`
+		// (which Chrome sizes to content regardless) and `align-self: end`
+		// keeps a short list hugging the button instead of floating up.
+		top        : 1rem;
+		height     : auto;
+		align-self : end;
+		overflow-y : auto;
+		// Tried in order, first that fits wins: above the button (this rule),
+		// below it (flip-block mirrors the insets and the alignment), and
+		// finally --nav-more-span, which uses the whole viewport height and
+		// centers on the button. The last option always applies, and it
+		// scrolls when the list is taller than the viewport itself.
+		position-try-fallbacks : flip-block, --nav-more-span;
 
 		a {
 			width            : auto;
@@ -173,6 +189,19 @@ body {
 			}
 		}
 	}
+}
+
+// Last resort for the More menu (see #nav-more): bounded by the viewport
+// top and bottom, centered on the button and shifted inward when centering
+// would overflow (anchor-center is safe with respect to the containing
+// block). `max-height: stretch` caps it at the viewport so it scrolls
+// rather than overflows.
+@position-try --nav-more-span {
+	top        : 1rem;
+	bottom     : 1rem;
+	align-self : anchor-center;
+	max-height : -webkit-fill-available;
+	max-height : stretch;
 }
 
 .dash-content {
