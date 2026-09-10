@@ -28,7 +28,7 @@ final class SeoSettingsLoaderTest extends TestCase
 	 * @param array<string,mixed>      $general       the General settings section
 	 * @param bool                     $resolveImages whether the media adapter returns a path
 	 */
-	private function loader(bool $collectionExists, ?array $record, array $general = [], bool $resolveImages = false): SeoSettingsLoader
+	private function loader(bool $collectionExists, ?array $record, array $general = [], bool $resolveImages = false, string $url = 'https://example.com'): SeoSettingsLoader
 	{
 		$collections = $this->createMock(CollectionFetcher::class);
 		$collections->method('collectionExists')->with('seo-site')->willReturn($collectionExists);
@@ -68,6 +68,7 @@ final class SeoSettingsLoaderTest extends TestCase
 		/** @var Config $config */
 		$config         = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->domain = 'example.com';
+		$config->url    = $url;
 
 		return new SeoSettingsLoader($collections, $objects, $media, $settings, $config);
 	}
@@ -89,6 +90,31 @@ final class SeoSettingsLoaderTest extends TestCase
 
 		$this->assertSame('General Name', $settings->siteName);
 		$this->assertSame('https://example.com', $settings->baseUrl);
+	}
+
+	public function testTheBaseUrlFallbackKeepsTheRequestScheme(): void
+	{
+		// A local site over plain http must not claim https canonicals: the
+		// fallback takes the scheme the config detected. The host is the
+		// configured domain, not the detected one — `config->url` is built
+		// before a site's `domain` override lands, so only its scheme is trusted.
+		$settings = $this->loader(false, null, [], false, 'http://detected.local')->load();
+
+		$this->assertSame('http://example.com', $settings->baseUrl);
+	}
+
+	public function testTheBaseUrlFallbackAssumesHttpsWithoutARequest(): void
+	{
+		$settings = $this->loader(false, null, [], false, '')->load();
+
+		$this->assertSame('https://example.com', $settings->baseUrl);
+	}
+
+	public function testASavedBaseUrlStillWinsOverTheRequest(): void
+	{
+		$settings = $this->loader(true, ['baseUrl' => 'https://www.bistro.test'], [], false, 'http://totalcms.local')->load();
+
+		$this->assertSame('https://www.bistro.test', $settings->baseUrl);
 	}
 
 	public function testFallsBackToTheDomainWhenNothingNamesTheSite(): void

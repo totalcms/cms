@@ -42,7 +42,7 @@ it('renders the whole head for a collection object', function (): void {
 
 	expect($html)->toContain('<title>Hello &amp; Welcome | Bistro</title>')
 		->toContain('<meta name="description" content="Sum mary">')
-		->toContain('<link rel="canonical" href="https://')
+		->toContain('<link rel="canonical" href="http://totalcms.test/')
 		->toContain('/hello')
 		->toContain('<meta property="og:type" content="article">')
 		->toContain('<meta name="twitter:site" content="@bistro">')
@@ -66,7 +66,7 @@ it('renders site defaults with no subject and honours noindex', function (): voi
 	// The uploaded default social image survives the whole chain: saved on the
 	// `seo-site` record, resolved to an absolute ImageWorks URL by the loader,
 	// and emitted as og:image at Open Graph's 1200×630.
-	expect($html)->toContain('<meta property="og:image" content="https://')
+	expect($html)->toContain('<meta property="og:image" content="http://totalcms.test/')
 		->toContain('/imageworks/seo-site/seo-site/defaultImage.jpg')
 		->toContain('w=1200');
 
@@ -85,7 +85,7 @@ it('drops the canonical link on a noindex page but keeps og:url', function (): v
 
 	expect($html)->not->toContain('rel="canonical"');
 	expect($html)->toContain('<meta name="robots" content="noindex">')
-		->toContain('<meta property="og:url" content="https://');
+		->toContain('<meta property="og:url" content="http://totalcms.test/');
 });
 
 it('uses socialTitle for the share cards only', function (): void {
@@ -102,7 +102,7 @@ it('uses socialTitle for the share cards only', function (): void {
 	$plain = ($this->render)('{{ cms.seo.head(page) }}', ['page' => ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/x.twig']]);
 	expect($plain)->toContain('<meta property="og:title" content="About">')
 		->toContain('<meta name="twitter:title" content="About">')
-		->toContain('<meta name="twitter:image" content="https://');
+		->toContain('<meta name="twitter:image" content="http://totalcms.test/');
 });
 
 it('takes a builder page description from the SEO card only', function (): void {
@@ -140,7 +140,7 @@ it('exposes the resolved meta values as data', function (): void {
 
 	// The title carries the site's own separator, so match the whole render
 	// rather than splitting on it.
-	expect($out)->toStartWith('About | Bistro|Bistro|https://')
+	expect($out)->toStartWith('About | Bistro|Bistro|http://totalcms.test/')
 		->toContain('/imageworks/seo-site/seo-site/defaultImage.jpg');
 
 	$more = ($this->render)('{% set d = cms.seo.data(page) %}{{ d.noindex ? "yes" : "no" }}|{{ d.site.defaultImageAlt }}|{{ d.ogImageAlt }}', ['page' => $page]);

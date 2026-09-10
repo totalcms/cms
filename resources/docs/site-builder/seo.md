@@ -85,7 +85,7 @@ A few rules the chain applies on top:
 - **`og:type`.** Decided by the collection mapping alone. The SEO card's **Structured Data Type** does **not** change `og:type` — it only adds or removes the `Article` node in the JSON-LD. An object switched to Article on its card keeps `og:type: website` unless its collection is mapped to Article too.
 - **Twitter card.** `summary_large_image` when an image resolved, `summary` when none did.
 - **Robots.** The `<meta name="robots">` tag is emitted only when noindex or nofollow is on. No tag is the same as `index, follow`, and it is quieter.
-- **Canonical.** Built from the Base URL setting (falling back to `https://{your domain}`). A Site Builder page whose route contains a `{placeholder}` gets no canonical — a route pattern is not an address. A collection object gets one only when the collection has its **URL** set. A record with **No Index** on gets none either — see [Sitemaps and `noindex`](#sitemaps-and-noindex).
+- **Canonical.** Built from the Base URL setting (falling back to the request's scheme on the site's domain). A Site Builder page whose route contains a `{placeholder}` gets no canonical — a route pattern is not an address. A collection object gets one only when the collection has its **URL** set. A record with **No Index** on gets none either — see [Sitemaps and `noindex`](#sitemaps-and-noindex).
 
 ## The SEO Card
 
@@ -231,7 +231,7 @@ tcms collection:create seo-site
 | Setting | Notes |
 |---|---|
 | **Site Name** | Used in titles, `og:site_name` and the WebSite / Organization JSON-LD. Leave it empty and Total CMS falls back to the General settings site name, then your domain. |
-| **Base URL** | The absolute origin for canonical URLs and JSON-LD ids, e.g. `https://example.com`. Defaults to this site's domain, and `https://` is assumed if you omit the scheme. The sitemaps use this same value. |
+| **Base URL** | The absolute origin for canonical URLs and JSON-LD ids, e.g. `https://example.com`. Defaults to the request's scheme on the site's domain (`https` when there is no request, as on the CLI); set it explicitly when a proxy hides TLS from PHP or to pin a `www`/apex choice. If you set it without a scheme, `https://` is assumed. The sitemaps use this same value. |
 | **Title Template** | `{title}` and `{site}` are replaced. Default: `{title} \| {site}` |
 | **Title Separator** | Replaces the literal `\|` in the template, so a theme can use `–` or `·` without rewriting the template. |
 | **Default Description** | Used when a record has no description of its own. |
@@ -244,7 +244,7 @@ tcms collection:create seo-site
 | **Emit JSON-LD** | Off suppresses the `<script type="application/ld+json">` block entirely. |
 | **Emit Open Graph and Twitter tags** | Off suppresses both sets of social tags. |
 
-A site that has never opened this record still gets a full head: every value falls back to its default, the site name to the General settings name and then the domain, and the base URL to `https://{your domain}`. Nothing has to be filled in for `cms.seo.head()` to work.
+A site that has never opened this record still gets a full head: every value falls back to its default, the site name to the General settings name and then the domain, and the base URL to the request's scheme on the site's domain. Nothing has to be filled in for `cms.seo.head()` to work.
 
 The properties above are the ones the SEO output reads, and they are the whole list. `seo-site` is a *reserved* schema, so you cannot save over it — but you can present it differently, and you can add to it.
 

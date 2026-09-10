@@ -50,6 +50,14 @@ class SeoSettingsLoader
 		$record = $this->record();
 		$domain = $this->config->domain;
 
+		// With no Base URL saved, canonicals follow the request: the scheme the
+		// config detected (or https when there is no request, as on the CLI)
+		// on the configured domain — the domain rather than `config->url`,
+		// because `url` is computed from the detected host before a site's own
+		// `domain` override is merged in, and the two can disagree.
+		$scheme = parse_url($this->config->url, PHP_URL_SCHEME);
+		$origin = (is_string($scheme) && $scheme !== '' ? $scheme : 'https') . '://' . $domain;
+
 		// Images are stored as image objects; SeoSettings wants absolute URLs.
 		// The share image's alt travels with the image object, so read it before
 		// the path resolution below replaces that object with a URL string.
@@ -61,11 +69,11 @@ class SeoSettingsLoader
 		$record['defaultImage']     = $this->imagePath($record, 'defaultImage', SeoSettings::OG_IMAGE);
 		$record['organizationLogo'] = $this->imagePath($record, 'organizationLogo', SeoSettings::LOGO_IMAGE);
 
-		$settings                   = SeoSettings::fromArray($record, $domain);
+		$settings                   = SeoSettings::fromArray($record, $origin);
 		$record['defaultImage']     = $settings->absolute($record['defaultImage']);
 		$record['organizationLogo'] = $settings->absolute($record['organizationLogo']);
 
-		$settings = SeoSettings::fromArray($record, $domain);
+		$settings = SeoSettings::fromArray($record, $origin);
 
 		// Site SEO name → General settings site name → the site domain.
 		if ($settings->siteName === '') {
