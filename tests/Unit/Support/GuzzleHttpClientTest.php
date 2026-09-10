@@ -1,5 +1,12 @@
 <?php
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Promise\Create;
+use GuzzleHttp\Promise\PromiseInterface;
+use Psr\Http\Message\RequestInterface;
 use TotalCMS\Support\GuzzleHttpClient;
 use TotalCMS\Support\HttpResponse;
 
@@ -54,4 +61,16 @@ describe('GuzzleHttpClient', function (): void {
 
 		expect($response->statusCode)->toBe(404);
 	})->skip(getenv('CI') !== false, 'Skipped in CI - requires network');
+
+	test('surfaces the size-limit message that Guzzle 8 wraps under a progress-event failure', function (): void {
+		$handler = new MockHandler([
+			static fn (RequestInterface $request): PromiseInterface => Create::rejectionFor(
+				new RequestException('An error was encountered during the progress event', $request, 0, new RuntimeException('Download exceeds maximum size limit')),
+			),
+		]);
+		$client = new GuzzleHttpClient(new Client(['handler' => HandlerStack::create($handler)]));
+
+		expect(fn () => $client->request('GET', 'https://example.test/big.zip', ['max_bytes' => 10]))
+			->toThrow(RuntimeException::class, 'Download exceeds maximum size limit');
+	});
 });

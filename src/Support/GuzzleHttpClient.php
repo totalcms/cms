@@ -87,6 +87,16 @@ class GuzzleHttpClient implements HttpClientInterface
 		try {
 			$response = $this->client->request($method, $url, $guzzleOptions);
 		} catch (GuzzleException $e) {
+			// Guzzle 8 no longer lets a progress callback's exception escape the
+			// cURL handler: it is wrapped in a RequestException whose message is
+			// the generic "An error was encountered during the progress event".
+			// Surface our own size-limit message instead so callers (and users)
+			// still see why the download stopped.
+			$cause = $e->getPrevious();
+			if ($cause instanceof \RuntimeException && !$cause instanceof GuzzleException) {
+				throw new \RuntimeException('HTTP request failed: ' . $cause->getMessage(), 0, $e);
+			}
+
 			throw new \RuntimeException('HTTP request failed: ' . $e->getMessage(), 0, $e);
 		}
 

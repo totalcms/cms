@@ -51,7 +51,7 @@
     "fakerphp/faker": "^1.23",
     "fig/http-message-util": "^1.1",
     "firebase/php-jwt": "^7.0",
-    "guzzlehttp/guzzle": "^7",
+    "guzzlehttp/guzzle": "^8",
     "illuminate/collections": "^11.45 || ^12.0",
     "laminas/laminas-feed": "^2.26",
     "league/commonmark": "^2.7",
