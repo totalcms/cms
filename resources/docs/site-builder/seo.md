@@ -240,6 +240,7 @@ tcms collection:create seo-site
 | **Organization Name** | The publishing entity in the JSON-LD. Falls back to the site name. |
 | **Organization Logo** | An image **upload** too. Any aspect ratio, at least 112×112 — it is never cropped or upscaled, only bounded, and served through ImageWorks at up to 600px wide. |
 | **Social Profiles** | One absolute URL per line — X, Instagram, LinkedIn, GitHub. Emitted as `Organization.sameAs`. |
+| **Contact Email** / **Contact URL** | A public address and the page people should use to reach you (a support or contact page). Emitted as `Organization.email` and a `customer support` `ContactPoint` — a trust signal search engines and AI answer engines weigh. Leave both empty and nothing is emitted. |
 | **Google / Bing / Pinterest Verification** | The `content` value each service gives you, not the whole tag. They become `google-site-verification`, `msvalidate.01` and `p:domain_verify`. |
 | **Emit JSON-LD** | Off suppresses the `<script type="application/ld+json">` block entirely. |
 | **Emit Open Graph and Twitter tags** | Off suppresses both sets of social tags. |
@@ -438,7 +439,7 @@ Everything `head()` prints is in there, under its own name:
 | `twitterCard` | `summary_large_image` or `summary` |
 | `siteName`, `twitterHandle` | As resolved for the tags |
 | `verification` | `{google, bing, pinterest}` |
-| `site` | The Site SEO record's own values: `name`, `baseUrl`, `defaultImage`, `defaultImageAlt`, `organizationName`, `organizationLogo`, `sameAs` |
+| `site` | The Site SEO record's own values: `name`, `baseUrl`, `defaultImage`, `defaultImageAlt`, `organizationName`, `organizationLogo`, `sameAs`, `contactEmail`, `contactUrl` |
 
 **Escape them yourself.** These are plain, unescaped strings — not the `Markup` the other `cms.seo.*` methods return — and Total CMS runs Twig with autoescaping **off**, so a bare `{{ seo.ogImageAlt }}` puts whatever an operator typed into your page verbatim. Add `|e` wherever a value lands in markup, as in the example above. That difference is the whole point of the split: `cms.seo.head()` escapes every value inside its own `{% autoescape 'html' %}` block because it is building the tags itself, and `data()` cannot — it does not know whether you are about to drop the string into an attribute, a URL, or a JSON literal, each of which needs a different escape (`|e`, `|url_encode`, `|json_encode`).
 

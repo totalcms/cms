@@ -49,6 +49,21 @@ final class OrganizationProvider implements JsonLdProvider
 			$node['sameAs'] = $ctx->settings->sameAs;
 		}
 
+		// A way to reach the organization is a trust signal search engines and
+		// AI answer engines weigh; `email` on the Organization itself plus a
+		// customer-support ContactPoint is the shape both read.
+		if ($ctx->settings->contactEmail !== '' || $ctx->settings->contactUrl !== '') {
+			$point = ['@type' => 'ContactPoint', 'contactType' => 'customer support'];
+			if ($ctx->settings->contactEmail !== '') {
+				$node['email']  = $ctx->settings->contactEmail;
+				$point['email'] = $ctx->settings->contactEmail;
+			}
+			if ($ctx->settings->contactUrl !== '') {
+				$point['url'] = $ctx->settings->contactUrl;
+			}
+			$node['contactPoint'] = [$point];
+		}
+
 		return [$node];
 	}
 

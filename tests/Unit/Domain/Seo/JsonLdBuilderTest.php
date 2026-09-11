@@ -35,6 +35,20 @@ describe('JsonLdBuilder', function (): void {
 		expect($byType['BreadcrumbList']['itemListElement'])->toHaveCount(2);
 	});
 
+	test('a contact email and URL become Organization.email and a support ContactPoint', function () use ($build): void {
+		$graph = $build(seoCtx(['settings' => SeoSettings::fromArray(['siteName' => 'Bistro', 'contactEmail' => 'hello@bistro.test', 'contactUrl' => 'https://bistro.test/support'], 'example.com')]));
+		$org   = array_values(array_filter($graph, fn (array $n): bool => $n['@type'] === 'Organization'))[0];
+
+		expect($org['email'])->toBe('hello@bistro.test')
+			->and($org['contactPoint'])->toBe([['@type' => 'ContactPoint', 'contactType' => 'customer support', 'email' => 'hello@bistro.test', 'url' => 'https://bistro.test/support']]);
+	});
+
+	test('no contact fields means no email and no ContactPoint on the Organization', function () use ($build): void {
+		$org = array_values(array_filter($build(seoCtx()), fn (array $n): bool => $n['@type'] === 'Organization'))[0];
+
+		expect($org)->not->toHaveKey('email')->not->toHaveKey('contactPoint');
+	});
+
 	test('no context yields Organization and WebSite only', function () use ($build): void {
 		expect(array_column($build(seoCtx(['kind' => 'none', 'object' => [], 'url' => ''])), '@type'))->toBe(['Organization', 'WebSite']);
 	});

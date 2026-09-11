@@ -1,127 +1,145 @@
 {
-	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
-	"$id"         : "https://www.totalcms.co/schemas/seo-site.json",
-	"id"          : "seo-site",
-	"type"        : "object",
-	"category"    : "Internal",
-	"description" : "Site-wide SEO defaults used by cms.seo.head(): site name, base URL, title template, default description and social image, organization and verification tags. One record per site.",
-	"formgrid"    : "siteName baseUrl\ntitleTemplate titleSeparator\ndefaultDescription defaultDescription\n---Social Sharing---\ndefaultImage defaultImage\ntwitterHandle .\n---Organization---\norganizationName sameAs\norganizationLogo sameAs\n---Verification---\ngoogleVerification bingVerification\npinterestVerification .\n---Output---\nemitJsonLd emitSocial\n---\nupdated created",
-	"properties"  : {
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/seo-site.json",
+	"id": "seo-site",
+	"type": "object",
+	"category": "Internal",
+	"description": "Site-wide SEO defaults used by cms.seo.head(): site name, base URL, title template, default description and social image, organization and verification tags. One record per site.",
+	"formgrid": "siteName baseUrl\ntitleTemplate titleSeparator\ndefaultDescription defaultDescription\n---Social Sharing---\ndefaultImage defaultImage\ntwitterHandle .\n---Organization---\norganizationName sameAs\norganizationLogo sameAs\ncontactEmail contactUrl\n---Verification---\ngoogleVerification bingVerification\npinterestVerification .\n---Output---\nemitJsonLd emitSocial\n---\nupdated created",
+	"properties": {
 		"id": {
-			"$ref"    : "https://www.totalcms.co/schemas/properties/slug.json",
-			"label"   : "Site SEO ID",
-			"help"    : "A unique ID for this record. For a Single Object Collection this is the collection id.",
-			"field"   : "id",
-			"default" : "seo-site",
-			"factory" : "slug"
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"label": "Site SEO ID",
+			"help": "A unique ID for this record. For a Single Object Collection this is the collection id.",
+			"field": "id",
+			"default": "seo-site",
+			"factory": "slug"
 		},
 		"siteName": {
-			"type"  : "string",
-			"field" : "text",
-			"label" : "Site Name",
-			"help"  : "Used in titles, og:site_name and the WebSite / Organization JSON-LD. Falls back to the General settings site name."
+			"type": "string",
+			"field": "text",
+			"label": "Site Name",
+			"help": "Used in titles, og:site_name and the WebSite / Organization JSON-LD. Falls back to the General settings site name."
 		},
 		"baseUrl": {
-			"type"        : "string",
-			"field"       : "url",
-			"label"       : "Base URL",
-			"help"        : "Absolute origin for canonical URLs and JSON-LD ids, e.g. https://example.com. Defaults to this site's domain.",
-			"placeholder" : "https://example.com"
+			"type": "string",
+			"field": "url",
+			"label": "Base URL",
+			"help": "Absolute origin for canonical URLs and JSON-LD ids, e.g. https://example.com. Defaults to this site's domain.",
+			"placeholder": "https://example.com"
 		},
 		"titleTemplate": {
-			"type"    : "string",
-			"field"   : "text",
-			"label"   : "Title Template",
-			"help"    : "{title} and {site} are replaced. Default: {title} | {site}",
-			"default" : "{title} | {site}"
+			"type": "string",
+			"field": "text",
+			"label": "Title Template",
+			"help": "{title} and {site} are replaced. Default: {title} | {site}",
+			"default": "{title} | {site}"
 		},
 		"titleSeparator": {
-			"type"    : "string",
-			"field"   : "text",
-			"label"   : "Title Separator",
-			"help"    : "Replaces the literal | in the template so themes can use – or ·.",
-			"default" : "|"
+			"type": "string",
+			"field": "text",
+			"label": "Title Separator",
+			"help": "Replaces the literal | in the template so themes can use – or ·.",
+			"default": "|"
 		},
 		"defaultDescription": {
-			"type"  : "string",
-			"field" : "textarea",
-			"label" : "Default Description",
-			"help"  : "Used when a page or object has no description of its own."
+			"type": "string",
+			"field": "textarea",
+			"label": "Default Description",
+			"help": "Used when a page or object has no description of its own."
 		},
 		"defaultImage": {
-			"$ref"  : "https://www.totalcms.co/schemas/properties/image.json",
-			"field" : "image",
-			"label" : "Default Social Image",
-			"help"  : "Social sharing image used when nothing more specific resolves (1200×630 recommended)"
+			"$ref": "https://www.totalcms.co/schemas/properties/image.json",
+			"field": "image",
+			"label": "Default Social Image",
+			"help": "Social sharing image used when nothing more specific resolves (1200×630 recommended)"
 		},
 		"twitterHandle": {
-			"type"  : "string",
-			"field" : "text",
-			"label" : "Twitter / X Handle",
-			"help"  : "With or without the leading @."
+			"type": "string",
+			"field": "text",
+			"label": "Twitter / X Handle",
+			"help": "With or without the leading @."
 		},
 		"organizationName": {
-			"type"  : "string",
-			"field" : "text",
-			"label" : "Organization Name"
+			"type": "string",
+			"field": "text",
+			"label": "Organization Name"
 		},
 		"organizationLogo": {
-			"$ref"  : "https://www.totalcms.co/schemas/properties/image.json",
-			"field" : "image",
-			"label" : "Organization Logo",
-			"help"  : "Square logo for the Organization structured data, at least 112×112"
+			"$ref": "https://www.totalcms.co/schemas/properties/image.json",
+			"field": "image",
+			"label": "Organization Logo",
+			"help": "Square logo for the Organization structured data, at least 112×112"
 		},
 		"sameAs": {
-			"type"  : "string",
-			"field" : "textarea",
-			"label" : "Social Profiles",
-			"help"  : "One absolute URL per line (X, Instagram, LinkedIn, GitHub…). Emitted as Organization.sameAs."
+			"type": "string",
+			"field": "textarea",
+			"label": "Social Profiles",
+			"help": "One absolute URL per line (X, Instagram, LinkedIn, GitHub…). Emitted as Organization.sameAs."
+		},
+		"contactEmail": {
+			"type": "string",
+			"field": "email",
+			"label": "Contact Email",
+			"help": "A public address for the organization. Emitted as Organization.email and a customer-support ContactPoint in the JSON-LD."
+		},
+		"contactUrl": {
+			"type": "string",
+			"field": "url",
+			"label": "Contact URL",
+			"help": "The page people should use to reach you — a support or contact page. Emitted on the ContactPoint."
 		},
 		"googleVerification": {
-			"type"  : "string",
-			"field" : "text",
-			"label" : "Google Verification",
-			"help"  : "The content value of google-site-verification."
+			"type": "string",
+			"field": "text",
+			"label": "Google Verification",
+			"help": "The content value of google-site-verification."
 		},
 		"bingVerification": {
-			"type"  : "string",
-			"field" : "text",
-			"label" : "Bing Verification",
-			"help"  : "The content value of msvalidate.01."
+			"type": "string",
+			"field": "text",
+			"label": "Bing Verification",
+			"help": "The content value of msvalidate.01."
 		},
 		"pinterestVerification": {
-			"type"  : "string",
-			"field" : "text",
-			"label" : "Pinterest Verification",
-			"help"  : "The content value of p:domain_verify."
+			"type": "string",
+			"field": "text",
+			"label": "Pinterest Verification",
+			"help": "The content value of p:domain_verify."
 		},
 		"emitJsonLd": {
-			"type"    : "boolean",
-			"field"   : "toggle",
-			"label"   : "Emit JSON-LD",
-			"default" : true
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Emit JSON-LD",
+			"default": true
 		},
 		"emitSocial": {
-			"type"    : "boolean",
-			"field"   : "toggle",
-			"label"   : "Emit Open Graph and Twitter tags",
-			"default" : true
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Emit Open Graph and Twitter tags",
+			"default": true
 		},
 		"created": {
-			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
-			"label"    : "Date Created",
-			"help"     : "The date this record was created",
-			"field"    : "hidden",
-			"factory"  : "iso8601",
-			"settings" : { "onCreate" : true, "readonly" : true }
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Date Created",
+			"help": "The date this record was created",
+			"field": "hidden",
+			"factory": "iso8601",
+			"settings": {
+				"onCreate": true,
+				"readonly": true
+			}
 		},
 		"updated": {
-			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
-			"label"    : "Date Updated",
-			"help"     : "The date this record was last updated",
-			"field"    : "hidden",
-			"factory"  : "iso8601",
-			"settings" : { "onUpdate" : true, "readonly" : true }
+			"$ref": "https://www.totalcms.co/schemas/properties/date.json",
+			"label": "Date Updated",
+			"help": "The date this record was last updated",
+			"field": "hidden",
+			"factory": "iso8601",
+			"settings": {
+				"onUpdate": true,
+				"readonly": true
+			}
 		}
 	},
 	"required": [

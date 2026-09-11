@@ -157,6 +157,8 @@ final readonly class SeoTwigAdapter
 				'organizationName' => $settings->organizationName,
 				'organizationLogo' => $settings->organizationLogo,
 				'sameAs'           => $settings->sameAs,
+				'contactEmail'     => $settings->contactEmail,
+				'contactUrl'       => $settings->contactUrl,
 			],
 		]);
 	}
