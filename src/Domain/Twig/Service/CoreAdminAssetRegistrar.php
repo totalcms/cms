@@ -34,12 +34,12 @@ use TotalCMS\Domain\Twig\Data\FrontendAsset;
 final class CoreAdminAssetRegistrar extends CoreAssetRegistrar
 {
 	protected const ASSETS = [
-		['path' => 'content-bundled.css', 'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
-		['path' => 'icons.css',           'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
-		['path' => 'admin.css',           'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
-		['path' => 'htmx.min.js',         'type' => 'js',  'position' => 'body', 'module' => false, 'preload' => true],
-		['path' => 'content.js',          'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
-		['path' => 'admin.js',            'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
+		['name' => 'content', 'path' => 'content-bundled.css', 'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
+		['name' => 'icons',   'path' => 'icons.css',           'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
+		['name' => 'admin',   'path' => 'admin.css',           'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
+		['name' => 'htmx',    'path' => 'htmx.min.js',         'type' => 'js',  'position' => 'body', 'module' => false, 'preload' => true],
+		['name' => 'content', 'path' => 'content.js',          'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
+		['name' => 'admin',   'path' => 'admin.js',            'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
 	];
 
 	/**

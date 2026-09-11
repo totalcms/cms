@@ -423,6 +423,16 @@ $settings['presets'] = [
 	'definitions' => '',
 ];
 
+// Core frontend assets that cms.assetsHead() / cms.assetsBody() emit on public
+// pages. A site that never renders a feature's markup can leave its files out
+// by name; a stylesheet and a script for the same feature share one name, so
+// `gallery` drops both files and the script's preload hint. Names: icons,
+// content (the mailto decoder and styled-text styles — keep it), cms-grid,
+// gallery, pagination, htmx. Extension assets are never affected.
+$settings['frontendAssets'] = [
+	'except' => [],
+];
+
 $settings['dashboard'] = [
 	'pagination'        => 50, // Default pagination for dashboard tables
 	'title'             => 'Total CMS Admin', // Browser title for admin dashboard pages

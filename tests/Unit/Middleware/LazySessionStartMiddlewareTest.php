@@ -51,6 +51,48 @@ final class LazySessionStartMiddlewareTest extends TestCase
 		$this->middleware->process($this->createRequest('/mysite/imageworks/photo.png'), $this->handler);
 	}
 
+	/**
+	 * @dataProvider assetPaths
+	 */
+	public function testSkipsSessionForStaticAssets(string $path): void
+	{
+		// A started session sets PHPSESSID on the response, and a CDN will not
+		// cache a response carrying Set-Cookie — so the immutable assets were
+		// hitting the origin on every first visit.
+		$response = $this->createMock(ResponseInterface::class);
+		$this->handler->expects($this->once())->method('handle')->willReturn($response);
+
+		$this->session->expects($this->never())->method('start');
+		$this->session->expects($this->never())->method('save');
+
+		$this->assertSame($response, $this->middleware->process($this->createRequest($path), $this->handler));
+	}
+
+	/** @return array<string,array{string}> */
+	public static function assetPaths(): array
+	{
+		return [
+			'core asset'              => ['/api/assets/content.css'],
+			'core asset, sub-path'    => ['/mysite/api/assets/icons.css'],
+			'nested core asset'       => ['/api/assets/build/site.css'],
+			'extension asset'         => ['/api/ext/totalcms/docs/assets/docs.js'],
+		];
+	}
+
+	public function testStartsSessionForOtherApiPaths(): void
+	{
+		// Only the asset routes are sessionless; the rest of the API keeps its
+		// session (CSRF tokens, login state).
+		$response = $this->createMock(ResponseInterface::class);
+		$this->handler->expects($this->once())->method('handle')->willReturn($response);
+
+		$this->session->method('isStarted')->willReturn(false);
+		$this->session->expects($this->once())->method('start');
+		$this->session->expects($this->once())->method('save');
+
+		$this->middleware->process($this->createRequest('/api/collections/blog'), $this->handler);
+	}
+
 	public function testStartsAndSavesSessionForNormalPath(): void
 	{
 		$response = $this->createMock(ResponseInterface::class);

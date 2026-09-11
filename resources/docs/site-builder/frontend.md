@@ -255,6 +255,18 @@ Leave them out and nothing errors — `{% cmsgrid %}` renders unstyled, gallerie
 
 Put `cms.assetsHead()` before your own stylesheet so your rules override the defaults.
 
+### Leaving out what you do not use
+
+The core set covers every feature Total CMS can render, but a given site rarely uses all of it. A marketing site with no `{% cmsgrid %}`, no rendered galleries, no pagination and no CMS icons still loads their stylesheets on every page. Name the features you never render in `tcms.php` and the helpers skip their files:
+
+```php
+$settings['frontendAssets'] = [
+	'except' => ['icons', 'cms-grid', 'gallery', 'pagination', 'htmx'],
+];
+```
+
+Names are features, not filenames: `gallery` drops both `gallery.css` and `gallery.js` (and the script's preload hint), so you never ship half a pair. The names are `icons`, `content`, `cms-grid`, `gallery`, `pagination` and `htmx`. Keep `content` — it carries the styled-text styles and the decoder behind the `mailto` filter. Extension assets are never affected, and a name that does not exist is ignored. This is an exclude list on purpose: enable an extension with frontend assets, or upgrade to a version that adds a core asset, and it still arrives.
+
 ## Layout Template Example
 
 A complete layout using all asset functions:

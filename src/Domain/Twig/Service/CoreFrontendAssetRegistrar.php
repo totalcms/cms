@@ -15,23 +15,27 @@ use TotalCMS\Domain\Twig\Data\FrontendAsset;
  * These are the assets historically hardcoded into the Stacks template.
  * Centralizing them here means we can ship new core assets without asking
  * customers to update their templates.
+ *
+ * A site that uses none of a feature's markup can leave its files out with
+ * `$settings['frontendAssets']['except']` (names as in ASSETS); the boot
+ * step passes that list to register(). Extension assets are never affected.
  */
 final class CoreFrontendAssetRegistrar extends CoreAssetRegistrar
 {
 	protected const ASSETS = [
-		['path' => 'icons.css',      'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
-		['path' => 'content.css',    'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
-		['path' => 'cms-grid.css',   'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
-		['path' => 'gallery.css',    'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
-		['path' => 'pagination.css', 'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
-		['path' => 'content.js',     'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
-		['path' => 'gallery.js',     'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
+		['name' => 'icons',      'path' => 'icons.css',      'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
+		['name' => 'content',    'path' => 'content.css',    'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
+		['name' => 'cms-grid',   'path' => 'cms-grid.css',   'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
+		['name' => 'gallery',    'path' => 'gallery.css',    'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
+		['name' => 'pagination', 'path' => 'pagination.css', 'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
+		['name' => 'content',    'path' => 'content.js',     'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
+		['name' => 'gallery',    'path' => 'gallery.js',     'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
 		// htmx is the bundled UMD build — it must load as a classic script so
 		// the top-level `window.htmx` side effect actually reaches `window`.
 		// Loading it as `type="module"` puts the binding in module scope and
 		// leaves the global undefined, breaking any code that calls htmx as a
 		// global (e.g. `htmx.ajax(...)` in admin-table.js).
-		['path' => 'htmx.min.js',    'type' => 'js',  'position' => 'body', 'module' => false, 'preload' => true],
+		['name' => 'htmx',       'path' => 'htmx.min.js',    'type' => 'js',  'position' => 'body', 'module' => false, 'preload' => true],
 	];
 
 	/**

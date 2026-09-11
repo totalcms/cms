@@ -54,9 +54,18 @@ final readonly class LazySessionStartMiddleware implements MiddlewareInterface
 	 * regex so it still holds when the app is installed under a sub-path
 	 * (this middleware runs outside BasePathMiddleware, so the path may carry
 	 * a base-path prefix).
+	 *
+	 * Static assets are on the list for a second reason besides the lock: a
+	 * started session sets the PHPSESSID cookie on the response, and a CDN
+	 * never caches a response that carries Set-Cookie. Every core stylesheet
+	 * and script behind `/api/assets/` (and every extension asset behind
+	 * `/api/ext/{vendor}/{name}/assets/`) was reaching the origin on each
+	 * first visit despite its one-year immutable cache header.
 	 */
 	private function isSessionlessPath(string $path): bool
 	{
-		return preg_match('#(^|/)imageworks/#', $path) === 1;
+		return preg_match('#(^|/)imageworks/#', $path) === 1
+			|| preg_match('#(^|/)api/assets/#', $path) === 1
+			|| preg_match('#(^|/)api/ext/[^/]+/[^/]+/assets/#', $path) === 1;
 	}
 }

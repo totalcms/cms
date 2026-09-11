@@ -5,6 +5,7 @@ declare(strict_types=1);
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
 use TotalCMS\Domain\Twig\Service\CoreAdminAssetRegistrar;
+use TotalCMS\Domain\Twig\Service\AssetRenderer;
 use TotalCMS\Domain\Twig\Service\CoreFrontendAssetRegistrar;
 use TotalCMS\Support\Config;
 
@@ -82,6 +83,28 @@ test('CoreFrontendAssetRegistrar produces FrontendAsset instances with /assets/ 
 		expect($asset->type)->toBeIn(['css', 'js']);
 		expect($asset->position)->toBeIn(['head', 'body']);
 	}
+});
+
+test('CoreFrontendAssetRegistrar leaves out every file of an excluded feature', function (): void {
+	$adapter = makeAdapter('/api');
+
+	(new CoreFrontendAssetRegistrar())->register($adapter, ['gallery', 'htmx']);
+
+	$urls = array_map(fn ($a) => $a->url, readList($adapter, 'frontendAssetsList'));
+	$joined = implode(' ', $urls);
+
+	// Both halves of the gallery pair go, and htmx with its preload hint.
+	expect($joined)->not->toContain('gallery.css')->not->toContain('gallery.js')->not->toContain('htmx.min.js')
+		->and($joined)->toContain('content.css')->toContain('content.js')->toContain('icons.css')
+		->and(AssetRenderer::head(readList($adapter, 'frontendAssetsList')))->not->toContain('htmx');
+});
+
+test('CoreFrontendAssetRegistrar ignores unknown names in the except list', function (): void {
+	$adapter = makeAdapter('/api');
+
+	(new CoreFrontendAssetRegistrar())->register($adapter, ['not-a-feature']);
+
+	expect(readList($adapter, 'frontendAssetsList'))->toHaveCount(count((new ReflectionClassConstant(CoreFrontendAssetRegistrar::class, 'ASSETS'))->getValue()));
 });
 
 // ===== CoreAdminAssetRegistrar =====

@@ -50,6 +50,9 @@ class Config
 	public array $htmlclean = [];
 	/** @var array<string,mixed> */
 	public array $dashboard = [];
+
+	/** @var array<string,mixed> Core frontend assets a site leaves out of cms.assetsHead()/assetsBody() — `except` is a list of feature names; validated where it is read. */
+	public array $frontendAssets = [];
 	/** @var array<string,mixed> */
 	public array $smtp = [];
 	/** @var array<string,mixed> */
@@ -86,6 +89,7 @@ class Config
 		$this->trustProxyHeaders  = (string)($settings['trustProxyHeaders'] ?? 'auto');
 		$this->template           = $settings['template'];
 		$this->dashboard          = $settings['dashboard'];
+		$this->frontendAssets     = is_array($settings['frontendAssets'] ?? null) ? $settings['frontendAssets'] : [];
 		$this->datadir            = $settings['datadir'];
 		$this->tmpdir             = $settings['tmpdir'];
 		$this->cachedir           = $settings['cachedir'];

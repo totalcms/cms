@@ -19,18 +19,30 @@ use TotalCMS\Support\PathResolver;
 abstract class CoreAssetRegistrar
 {
 	/**
-	 * The assets this registrar contributes, in render order.
+	 * The assets this registrar contributes, in render order. `name` is the
+	 * feature the file belongs to — a stylesheet and a script for the same
+	 * feature share one name, so excluding `gallery` drops both files (and
+	 * the script's preload hint), never one half of a pair.
 	 *
-	 * @var list<array{path: string, type: 'css'|'js', position: 'head'|'body', module: bool, preload: bool}>
+	 * @var list<array{name: string, path: string, type: 'css'|'js', position: 'head'|'body', module: bool, preload: bool}>
 	 */
 	protected const ASSETS = [];
 
-	public function register(TotalCMSTwigAdapter $adapter): void
+	/**
+	 * @param list<string> $except Feature names to leave out (see `name` in ASSETS).
+	 *                             Unknown names are ignored, so a stale entry in
+	 *                             a site's config never breaks the render.
+	 */
+	public function register(TotalCMSTwigAdapter $adapter, array $except = []): void
 	{
 		$assetsDir = PathResolver::packageRoot() . '/public/assets';
 
 		$records = [];
 		foreach (static::ASSETS as $asset) {
+			if (in_array($asset['name'], $except, true)) {
+				continue;
+			}
+
 			$assetPath = $assetsDir . '/' . $asset['path'];
 			$mtime     = is_file($assetPath) ? filemtime($assetPath) : false;
 			$query     = $mtime !== false ? '?v=' . $mtime : '';
