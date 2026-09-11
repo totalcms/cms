@@ -9,7 +9,6 @@ use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Service\CoreAdminAssetRegistrar;
 use TotalCMS\Domain\Twig\Service\CoreFrontendAssetRegistrar;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
-use TotalCMS\Support\Config;
 
 /**
  * Wire core + extension admin and frontend assets into the CMS Twig
@@ -27,11 +26,11 @@ final readonly class AssetsStep extends BootStep
 		/** @var TotalCMSTwigAdapter $cmsAdapter */
 		$cmsAdapter = $this->container->get(TotalCMSTwigAdapter::class);
 
-		// Core T3 assets first so they render before extension assets. A site
-		// can leave core frontend features it never renders out of the page
-		// (`frontendAssets.except` in tcms.php); the admin set is not tunable.
+		// Core T3 assets first so they render before extension assets. Leaving
+		// core frontend features out of a page happens at render time
+		// (`frontendAssets.except` in tcms.php, or the helpers' options).
 		(new CoreAdminAssetRegistrar())->register($cmsAdapter);
-		(new CoreFrontendAssetRegistrar())->register($cmsAdapter, $this->frontendAssetsExcept());
+		(new CoreFrontendAssetRegistrar())->register($cmsAdapter);
 
 		$adminAssets = $manager->getAllAdminAssets();
 		if ($adminAssets !== []) {
@@ -42,19 +41,5 @@ final readonly class AssetsStep extends BootStep
 		if ($frontendAssets !== []) {
 			$cmsAdapter->addFrontendAssets($frontendAssets);
 		}
-	}
-
-	/** @return list<string> */
-	private function frontendAssetsExcept(): array
-	{
-		if (!$this->container->has(Config::class)) {
-			return [];
-		}
-
-		/** @var Config $config */
-		$config = $this->container->get(Config::class);
-		$except = $config->frontendAssets['except'] ?? [];
-
-		return is_array($except) ? array_values(array_filter($except, 'is_string')) : [];
 	}
 }

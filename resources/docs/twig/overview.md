@@ -91,7 +91,7 @@ Total CMS ships stylesheets and scripts that its own Twig output depends on — 
 </html>
 ```
 
-`cms.assetsHead()` emits the core stylesheets and preload hints. `cms.assetsBody()` emits the core scripts, which belong at the end of the body. Both also render any assets registered by [extensions](docs/extensions/extension-points), so an extension that ships CSS or JS works without you changing your layout.
+`cms.assetsHead()` emits the core stylesheets and preload hints. `cms.assetsBody()` emits the core scripts, which belong at the end of the body. Both also render any assets registered by [extensions](docs/extensions/extension-points), so an extension that ships CSS or JS works without you changing your layout. A site that never renders a core feature can leave its files out — site-wide with the `frontendAssets.except` setting, or per page with `cms.assetsHead({except: ['gallery']})` and the same on the body call; see [Frontend Assets](docs/site-builder/frontend).
 
 Order matters in the head: put `cms.assetsHead()` **before** your own stylesheet so your rules override the defaults rather than the other way round.
 

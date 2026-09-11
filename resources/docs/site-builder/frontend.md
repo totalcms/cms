@@ -267,6 +267,16 @@ $settings['frontendAssets'] = [
 
 Names are features, not filenames: `gallery` drops both `gallery.css` and `gallery.js` (and the script's preload hint), so you never ship half a pair. The names are `icons`, `content`, `cms-grid`, `gallery`, `pagination` and `htmx`. Keep `content` — it carries the styled-text styles and the decoder behind the `mailto` filter. Extension assets are never affected, and a name that does not exist is ignored. This is an exclude list on purpose: enable an extension with frontend assets, or upgrade to a version that adds a core asset, and it still arrives.
 
+The same names work per call, for a Stacks site where the layout is written page by page and there is no config file to edit:
+
+```twig
+{{ cms.assetsHead({except: ['icons', 'gallery', 'htmx']}) }}
+…
+{{ cms.assetsBody({except: ['icons', 'gallery', 'htmx']}) }}
+```
+
+A call's `except` adds to the site setting. Give `assetsHead()` and `assetsBody()` the same list — a feature can be a stylesheet in the head and a script in the body, and the two calls do not know about each other.
+
 ## Layout Template Example
 
 A complete layout using all asset functions:

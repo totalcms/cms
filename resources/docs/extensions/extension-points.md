@@ -527,7 +527,7 @@ Extension assets are merged with Total CMS core assets and emitted by these Twig
 
 `cms.adminAssetsHead()` also emits the dashboard accent setting as a `--totalform-accent` rule after its stylesheets, so the admin styles on your page use the configured brand colour (`cms.adminAccentStyle()` returns just that rule for a layout that writes its own tags). `cms.adminAssetsBody()` also defines `window.TCMS_TRANSLATIONS` (the JS translation catalog for the current user's locale) and `window.TCMS_CONFIG` (the dashboard settings the admin scripts read, such as `confirmCountdown`) ahead of the script tags, so an admin page you build yourself gets the same globals the dashboard has. The public `cms.assetsBody()` never emits them.
 
-For the admin interface there's nothing to do — core admin templates already call the helpers. For public pages, your theme template needs to call `cms.assetsHead()` / `cms.assetsBody()` for extension frontend assets to render. A site can leave core frontend features it never renders out of those helpers with `$settings['frontendAssets']['except']` (see [Frontend Assets](docs/site-builder/frontend)); extension assets always render.
+For the admin interface there's nothing to do — core admin templates already call the helpers. For public pages, your theme template needs to call `cms.assetsHead()` / `cms.assetsBody()` for extension frontend assets to render. A site can leave core frontend features it never renders out of those helpers, site-wide with `$settings['frontendAssets']['except']` or per call with `{except: [...]}` (see [Frontend Assets](docs/site-builder/frontend)); extension assets always render.
 
 Within each helper, output ordering is:
 1. Stylesheets first.

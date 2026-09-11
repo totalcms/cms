@@ -85,26 +85,56 @@ test('CoreFrontendAssetRegistrar produces FrontendAsset instances with /assets/ 
 	}
 });
 
-test('CoreFrontendAssetRegistrar leaves out every file of an excluded feature', function (): void {
-	$adapter = makeAdapter('/api');
+// ===== Leaving core features out: frontendAssets.except + per-call options =====
 
-	(new CoreFrontendAssetRegistrar())->register($adapter, ['gallery', 'htmx']);
+function withExcept(TotalCMSTwigAdapter $adapter, array $except): TotalCMSTwigAdapter
+{
+	$config = (new ReflectionClass(TotalCMSTwigAdapter::class))->getProperty('config')->getValue($adapter);
+	$config->frontendAssets = ['except' => $except];
 
-	$urls = array_map(fn ($a) => $a->url, readList($adapter, 'frontendAssetsList'));
-	$joined = implode(' ', $urls);
+	return $adapter;
+}
 
-	// Both halves of the gallery pair go, and htmx with its preload hint.
-	expect($joined)->not->toContain('gallery.css')->not->toContain('gallery.js')->not->toContain('htmx.min.js')
-		->and($joined)->toContain('content.css')->toContain('content.js')->toContain('icons.css')
-		->and(AssetRenderer::head(readList($adapter, 'frontendAssetsList')))->not->toContain('htmx');
+test('the site setting leaves out every file of an excluded feature, preload hint included', function (): void {
+	$adapter = withExcept(makeAdapter('/api'), ['gallery', 'htmx']);
+	(new CoreFrontendAssetRegistrar())->register($adapter);
+
+	$head = $adapter->assetsHead();
+	$body = $adapter->assetsBody();
+
+	// Both halves of the gallery pair go, and htmx with its modulepreload/preload hint.
+	expect($head)->not->toContain('gallery.css')->not->toContain('htmx')->not->toContain('gallery.js')
+		->and($body)->not->toContain('gallery.js')->not->toContain('htmx.min.js')
+		->and($head)->toContain('content.css')->toContain('icons.css')
+		->and($body)->toContain('content.js');
 });
 
-test('CoreFrontendAssetRegistrar ignores unknown names in the except list', function (): void {
-	$adapter = makeAdapter('/api');
+test('a call can leave out more than the site setting does', function (): void {
+	$adapter = withExcept(makeAdapter('/api'), ['htmx']);
+	(new CoreFrontendAssetRegistrar())->register($adapter);
 
-	(new CoreFrontendAssetRegistrar())->register($adapter, ['not-a-feature']);
+	expect($adapter->assetsHead(['except' => ['icons']]))->not->toContain('icons.css')->not->toContain('htmx')
+		->and($adapter->assetsHead())->toContain('icons.css');
+});
 
-	expect(readList($adapter, 'frontendAssetsList'))->toHaveCount(count((new ReflectionClassConstant(CoreFrontendAssetRegistrar::class, 'ASSETS'))->getValue()));
+test('extension assets carry no name and are never filtered', function (): void {
+	$adapter = withExcept(makeAdapter('/api'), ['gallery', 'icons', 'content', 'htmx', 'cms-grid', 'pagination']);
+	(new CoreFrontendAssetRegistrar())->register($adapter);
+	$adapter->addFrontendAssets([new FrontendAsset(type: 'css', url: '/ext/acme/thing/assets/thing.css', position: 'head')]);
+
+	$head = $adapter->assetsHead(['except' => ['anything']]);
+
+	expect($head)->toContain('thing.css')->not->toContain('/assets/content.css');
+});
+
+test('unknown names in the except list are ignored', function (): void {
+	$adapter = withExcept(makeAdapter('/api'), ['not-a-feature']);
+	(new CoreFrontendAssetRegistrar())->register($adapter);
+
+	$expected = count((new ReflectionClassConstant(CoreFrontendAssetRegistrar::class, 'ASSETS'))->getValue());
+	$emitted  = substr_count($adapter->assetsHead(), '<link rel="stylesheet"') + substr_count($adapter->assetsBody(), '<script');
+
+	expect($emitted)->toBe($expected);
 });
 
 // ===== CoreAdminAssetRegistrar =====

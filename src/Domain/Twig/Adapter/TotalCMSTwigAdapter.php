@@ -294,17 +294,51 @@ class TotalCMSTwigAdapter
 			position: $asset->position,
 			module: $asset->module,
 			preload: $asset->preload,
+			name: $asset->name,
 		);
+	}
+
+	/**
+	 * The frontend assets a page gets: every registered record minus the core
+	 * features left out for this render. The site-wide `frontendAssets.except`
+	 * setting is the default and a call's `except` adds to it, so a Stacks
+	 * page that carries no config file can decide for itself. Names match
+	 * core assets only: extension assets carry no name and always render.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @return list<FrontendAsset>
+	 */
+	private function frontendAssets(array $options): array
+	{
+		$names = static fn (mixed $list): array => is_array($list) ? array_values(array_filter($list, 'is_string')) : [];
+
+		$except = array_merge($names($this->config->frontendAssets['except'] ?? []), $names($options['except'] ?? []));
+
+		if ($except === []) {
+			return $this->frontendAssetsList;
+		}
+
+		return array_values(array_filter(
+			$this->frontendAssetsList,
+			static fn (FrontendAsset $asset): bool => $asset->name === '' || !in_array($asset->name, $except, true),
+		));
 	}
 
 	/**
 	 * Render frontend asset tags for the document head.
 	 *
 	 * Usage in Twig: {{ cms.assetsHead() }}
+	 *
+	 * Options: `except` — core feature names to leave out on this page, on
+	 * top of the site's `frontendAssets.except` setting. Pass the same option
+	 * to assetsBody() — a feature can be a stylesheet here and a script there.
+	 *
+	 * @param array<string,mixed> $options
 	 */
-	public function assetsHead(): string
+	public function assetsHead(array $options = []): string
 	{
-		return AssetRenderer::head($this->frontendAssetsList) . $this->xmlrpcDiscoveryTag();
+		return AssetRenderer::head($this->frontendAssets($options)) . $this->xmlrpcDiscoveryTag();
 	}
 
 	/**
@@ -346,10 +380,15 @@ class TotalCMSTwigAdapter
 	 * Render frontend asset tags for the document body.
 	 *
 	 * Usage in Twig: {{ cms.assetsBody() }}
+	 *
+	 * Takes the same `except` option as assetsHead(); pass both calls the
+	 * same list so a feature's stylesheet and script stay together.
+	 *
+	 * @param array<string,mixed> $options
 	 */
-	public function assetsBody(): string
+	public function assetsBody(array $options = []): string
 	{
-		return AssetRenderer::body($this->frontendAssetsList);
+		return AssetRenderer::body($this->frontendAssets($options));
 	}
 
 	/**

@@ -17,8 +17,9 @@ use TotalCMS\Domain\Twig\Data\FrontendAsset;
  * customers to update their templates.
  *
  * A site that uses none of a feature's markup can leave its files out with
- * `$settings['frontendAssets']['except']` (names as in ASSETS); the boot
- * step passes that list to register(). Extension assets are never affected.
+ * `$settings['frontendAssets']['except']` or per call with
+ * `cms.assetsHead({except: [...]})` (names as in ASSETS); the adapter
+ * filters at render time. Extension assets are never affected.
  */
 final class CoreFrontendAssetRegistrar extends CoreAssetRegistrar
 {
