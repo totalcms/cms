@@ -644,14 +644,14 @@
         },
         {
             "name": "cms.assetsBody",
-            "signature": "assetsBody(): string",
+            "signature": "assetsBody(array $options = []): string",
             "description": "Render frontend asset tags for the document body. Usage in Twig: {{ cms.assetsBody() }}",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/totalcms/"
         },
         {
             "name": "cms.assetsHead",
-            "signature": "assetsHead(): string",
+            "signature": "assetsHead(array $options = []): string",
             "description": "Render frontend asset tags for the document head. Usage in Twig: {{ cms.assetsHead() }}",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/totalcms/"

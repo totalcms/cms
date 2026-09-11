@@ -20,6 +20,29 @@ All form functionality in Total CMS is accessed through the `cms.form` object:
 
 **Note:** The old method of importing form macros (`{% import "totalform.twig" as form %}`) is deprecated. Always use `cms.form` for accessing form functionality.
 
+## What a public form needs
+
+`cms.form.*` renders the form's markup on the server, but validation, file uploads, the save request and the post-save actions come from Total CMS's form script — and today that script ships inside the **admin** bundle. A form on a public page (a signup form, a contact form, a member profile) therefore needs the admin asset helpers in its layout, not just the frontend ones:
+
+```twig
+<head>
+    {{ cms.assetsHead() }}        {# core frontend assets #}
+    {{ cms.adminAssetsHead() }}   {# form styles, icons — no dashboard reset #}
+    …
+</head>
+<body>
+    …
+    {{ cms.form.builder('members', {register: true}) }}
+    …
+    {{ cms.assetsBody() }}
+    {{ cms.adminAssetsBody() }}   {# the form script, plus the globals it reads #}
+</body>
+```
+
+`adminAssetsHead()` deliberately leaves out the dashboard's global reset, so it does not restyle the rest of your page; `adminAssetsBody()` also defines the translation catalog and settings the script reads. The CSRF token travels in the hidden field every form carries, so no `<meta>` tag is needed on a public page.
+
+Be aware of the weight: the admin bundle is large (the script alone is around 580 KB compressed) because it carries every field editor the dashboard can show. For a page whose only interactive element is a short form that is a lot, and a dedicated, much smaller forms bundle is planned for a future release. Until then, the alternatives are the [zero-JavaScript form pattern](docs/twig/htmx) built on the API, or a hand-written form posting to the same endpoints.
+
 ## Default Field Arguments
 
 ```
