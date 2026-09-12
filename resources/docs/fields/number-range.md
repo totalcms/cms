@@ -29,6 +29,9 @@ helpful", download counts — without opening anything else on the object:
 }
 ```
 
+Give the property `"type": "integer"` instead when only whole numbers make sense — a count, a sort order, a page size. The number field renders the same either way; the difference is validation, where `integer` rejects `2.5`, and the schema page, which shows the same number icon for both.
+
+
 With `publicIncrement` set, unauthenticated callers may `POST` to the field's
 `/increment` and `/decrement` routes; every other write still needs
 authentication or the collection's `publicOperations`. Anonymous counter

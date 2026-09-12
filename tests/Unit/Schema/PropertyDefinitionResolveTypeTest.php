@@ -85,4 +85,15 @@ final class PropertyDefinitionResolveTypeTest extends TestCase
 		]);
 		expect($prop->resolveType())->toBe('text');
 	}
+
+	public function testIntegerIsAResolvedTypeInItsOwnRight(): void
+	{
+		// JSON Schema's whole-number type; recognised so the schema editor's
+		// dropdown and the schema page's icons know it rather than fall through.
+		$prop = PropertyDefinition::fromArray([
+			'type'  => 'integer',
+			'field' => 'number',
+		]);
+		expect($prop->resolveType())->toBe('integer');
+	}
 }

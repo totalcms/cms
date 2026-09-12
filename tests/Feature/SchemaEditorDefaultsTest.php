@@ -23,3 +23,9 @@ it('renders the builder-page schema editor although its data field defaults to a
 
 	expect($html)->toContain('Page Data')->toContain('SEO');
 });
+
+it('offers integer in the property type dropdown, so the MCP tool schema edits cleanly', function (): void {
+	$html = $this->app->getContainer()->get(TotalFormFactory::class)->schema(['id' => 'mcp-tool']);
+
+	expect($html)->toMatch('/<option[^>]*value="integer"/')->toContain('Limit');
+});

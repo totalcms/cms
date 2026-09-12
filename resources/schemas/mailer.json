@@ -119,7 +119,7 @@
 			}
 		},
 		"bodyHtml": {
-			"type"        : "string",
+			"$ref"        : "https://www.totalcms.co/schemas/properties/code.json",
 			"label"       : "Body (HTML)",
 			"field"       : "code",
 			"placeholder" : "<p>Hello {{ data.name }},</p>\n<p>Thank you for contacting us.</p>",

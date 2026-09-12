@@ -176,6 +176,7 @@ class SchemaData
 		'file',
 		'gallery',
 		'image',
+		'integer',
 		'json',
 		'list',
 		'localizedtext',

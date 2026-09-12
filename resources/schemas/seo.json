@@ -45,7 +45,7 @@
 			"field"   : "image"
 		},
 		"canonical": {
-			"type"    : "string",
+			"$ref"    : "https://www.totalcms.co/schemas/properties/url.json",
 			"label"   : "Canonical URL",
 			"help"    : "Absolute URL. Leave empty to use this page's own URL",
 			"field"   : "url",

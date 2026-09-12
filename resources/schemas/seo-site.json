@@ -22,7 +22,7 @@
 			"help": "Used in titles, og:site_name and the WebSite / Organization JSON-LD. Falls back to the General settings site name."
 		},
 		"baseUrl": {
-			"type": "string",
+			"$ref": "https://www.totalcms.co/schemas/properties/url.json",
 			"field": "url",
 			"label": "Base URL",
 			"help": "Absolute origin for canonical URLs and JSON-LD ids, e.g. https://example.com. Defaults to this site's domain.",
@@ -78,13 +78,13 @@
 			"help": "One absolute URL per line (X, Instagram, LinkedIn, GitHub…). Emitted as Organization.sameAs."
 		},
 		"contactEmail": {
-			"type": "string",
+			"$ref": "https://www.totalcms.co/schemas/properties/email.json",
 			"field": "email",
 			"label": "Contact Email",
 			"help": "A public address for the organization. Emitted as Organization.email and a customer-support ContactPoint in the JSON-LD."
 		},
 		"contactUrl": {
-			"type": "string",
+			"$ref": "https://www.totalcms.co/schemas/properties/url.json",
 			"field": "url",
 			"label": "Contact URL",
 			"help": "The page people should use to reach you — a support or contact page. Emitted on the ContactPoint."

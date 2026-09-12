@@ -48,7 +48,7 @@
 			}
 		},
 		"definition": {
-			"type": "string",
+			"$ref": "https://www.totalcms.co/schemas/properties/code.json",
 			"label": "Twig Definition",
 			"help": "Populate a <code>data</code> variable with the result you want stored.",
 			"field": "code",

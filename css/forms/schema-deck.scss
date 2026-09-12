@@ -319,7 +319,8 @@
 .list-type {
 	--schema-type-icon : var(--icon-list);
 }
-.number-type {
+.number-type,
+.integer-type {
 	--schema-type-icon : var(--icon-number);
 }
 .password-type {
@@ -465,7 +466,8 @@
 .number-field {
 	--schema-icon : var(--icon-number);
 
-	&.number-type:after {
+	&.number-type:after,
+	&.integer-type:after {
 		display : none;
 	}
 }
@@ -501,28 +503,41 @@
 .checklist-field {
 	--schema-icon : var(--icon-checks);
 
-	&.list-type:after {
+	// `list` is the property-type name for an array of strings; a property
+	// declared with a plain `type: array` stores the same shape and resolves
+	// to `array`. Both are this field's natural type — no type icon.
+	&.list-type:after,
+	&.array-type:after {
 		display : none;
 	}
 }
 .multiselect-field {
 	--schema-icon : var(--icon-select-multi);
 
-	&.list-type:after {
+	// `list` is the property-type name for an array of strings; a property
+	// declared with a plain `type: array` stores the same shape and resolves
+	// to `array`. Both are this field's natural type — no type icon.
+	&.list-type:after,
+	&.array-type:after {
 		display : none;
 	}
 }
 .list-field {
 	--schema-icon : var(--icon-list);
 
-	&.list-type:after {
+	// `list` is the property-type name for an array of strings; a property
+	// declared with a plain `type: array` stores the same shape and resolves
+	// to `array`. Both are this field's natural type — no type icon.
+	&.list-type:after,
+	&.array-type:after {
 		display : none;
 	}
 }
 .range-field {
 	--schema-icon : var(--icon-range);
 
-	&.number-type:after {
+	&.number-type:after,
+	&.integer-type:after {
 		display : none;
 	}
 }
@@ -605,4 +620,11 @@
 }
 .json-field {
 	--schema-icon : var(--icon-json);
+
+	// A JSON field's type is the field itself; the type icon would only ever
+	// be the question-mark fallback (`json`) or a redundant object mark.
+	&.json-type:after,
+	&.object-type:after {
+		display : none;
+	}
 }
