@@ -438,6 +438,7 @@ $settings['dashboard'] = [
 	'title'             => 'Total CMS Admin', // Browser title for admin dashboard pages
 	'confirmCountdown'  => 3, // Seconds the confirm button stays disabled in destructive dialogs (0 = no countdown)
 	'moreMenu'          => [], // Sidebar item ids moved into the More (⋮) menu, e.g. ['automations', 'ext:vendor/name:ext/vendor/name']
+	'inlineEditing'     => true, // Master switch for inline (in place) editing; off hides the pencil and refuses inline saves for everyone
 	// 'accent'            => '#4d91e2', // Dashboard accent color
 	// 'keepIdOnDuplicate' => false, // Keep ID when duplicating objects (default: false - ID is cleared)
 ];

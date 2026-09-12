@@ -3,6 +3,7 @@
 declare(strict_types=1);
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
 
@@ -39,4 +40,21 @@ it('renders cell values and an inline-edit trigger on supported columns', functi
 	// The id column is identity, never inline-editable.
 	expect($html)->not->toContain('cell/id/edit');
 	expect($html)->not->toContain('cell/updated/edit'); // readonly system timestamp
+});
+
+it('renders no inline-edit trigger when the master switch is off', function (): void {
+	$config                     = $this->app->getContainer()->get(Config::class);
+	$dashboard                  = $config->dashboard;
+	$dashboard['inlineEditing'] = false;
+	$config->dashboard          = $dashboard;
+
+	$response = get('/api/collections/blog/query?format=table&_collection=blog&limit=5');
+
+	$response->assertOk();
+	$html = (string)$response->getBody();
+
+	// The cells still render — only the pencil is gone.
+	expect($html)->toContain('Hello World');
+	expect($html)->not->toContain('class="inline-edit-trigger"');
+	expect($html)->not->toContain('/cell/title/edit');
 });

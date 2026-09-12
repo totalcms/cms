@@ -890,6 +890,7 @@ return [
 	'access_groups.feature_playground'     => 'Playground Twig',
 	'access_groups.feature_dataviews'      => 'Viste dati',
 	'access_groups.feature_builder'        => 'Site Builder',
+	'access_groups.feature_inline_edit'    => 'Modifica in linea',
 	'access_groups.utils_access'           => 'Livello di accesso alle utilità',
 	'access_groups.specific_utils'         => 'Utilità specifiche',
 	'access_groups.select_utils'           => 'Seleziona a quali utilità può accedere questo gruppo.',

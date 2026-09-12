@@ -82,6 +82,15 @@ cards, code) do not offer it: open the object to edit those. A field the
 current user's access group cannot change is refused the same way it is on
 the object form.
 
+Two things decide whether a user gets the pencil at all. **Settings →
+Dashboard → Inline Editing** is the site-wide master switch: turn it off and
+the pencil disappears from every collection table for everyone, super admins
+included, and an inline save is refused even if something asks for one
+directly. With it on, the **Inline Editing** permission on the user's access
+group decides who may use it, and the user must still have `update` rights on
+that collection. Groups saved before the permission existed keep inline
+editing, so nothing changes until you turn something off.
+
 ### Form Builder
 
 The form system automatically generates input forms based on your schemas:

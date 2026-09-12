@@ -48,6 +48,7 @@ class AccessGroupRepository extends StorageRepository
 			'playground' => true,
 			'dataviews'  => true,
 			'docs'       => true,
+			'inlineEdit' => true,
 			'utils'      => [
 				'all'     => true,
 				'allowed' => [],
@@ -89,6 +90,7 @@ class AccessGroupRepository extends StorageRepository
 			'playground' => false,
 			'dataviews'  => false,
 			'docs'       => true,
+			'inlineEdit' => true,
 			'utils'      => [
 				'all'     => false,
 				'allowed' => ['jumpstart', 'project-setup', 'image-batcher'],
@@ -130,6 +132,7 @@ class AccessGroupRepository extends StorageRepository
 			'playground' => false,
 			'dataviews'  => false,
 			'docs'       => true,
+			'inlineEdit' => false,
 			'utils'      => [
 				'all'     => false,
 				'allowed' => [],
@@ -171,6 +174,7 @@ class AccessGroupRepository extends StorageRepository
 			'playground' => false,
 			'dataviews'  => false,
 			'docs'       => true,
+			'inlineEdit' => false,
 			'utils'      => [
 				'all'     => false,
 				'allowed' => [],

@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Admin;
 
+use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
+use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
 use TotalCMS\Domain\Admin\InlineEditable;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\RawRenderer;
 
@@ -48,6 +52,8 @@ readonly class AdminCellAction
 		private PrivilegedFieldGuard $guard,
 		private PropertyMetaResolver $propertyMeta,
 		private TotalFormFactory $forms,
+		private AccessControlService $accessControl,
+		private PhpSession $session,
 	) {
 	}
 
@@ -73,9 +79,25 @@ readonly class AdminCellAction
 		$isEdit    = str_ends_with($request->getUri()->getPath(), '/edit');
 		$isPatch   = $request->getMethod() === 'PATCH';
 
-		$editable = InlineEditable::allows($meta);
-		if (($isEdit || $isPatch) && !$editable) {
-			throw new HttpBadRequestException($request, sprintf("'%s' (%s) cannot be edited inline.", $property, $fieldType !== '' ? $fieldType : 'unknown field type'));
+		// May this user inline-edit this collection at all? The master switch,
+		// the `inlineEdit` group permission, and collection update rights —
+		// asked once, here and in AdminTableRenderer. Only the two editing
+		// legs are gated: the display cell is the same read the table already
+		// did, so it stays available and the pencil simply never appears.
+		$mayInlineEdit = $this->accessControl->canInlineEdit(
+			(string)($this->session->get(SessionKeys::AUTH_USER) ?? ''),
+			$collection,
+		);
+
+		$editable = InlineEditable::allows($meta) && $mayInlineEdit;
+		if ($isEdit || $isPatch) {
+			if (!$mayInlineEdit) {
+				throw new HttpForbiddenException($request, 'Inline editing is not available for this collection.');
+			}
+
+			if (!$editable) {
+				throw new HttpBadRequestException($request, sprintf("'%s' (%s) cannot be edited inline.", $property, $fieldType !== '' ? $fieldType : 'unknown field type'));
+			}
 		}
 
 		if ($isPatch) {

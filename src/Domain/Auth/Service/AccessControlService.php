@@ -10,6 +10,7 @@ use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Support\Config;
 
 /**
  * Service for checking user access permissions based on assigned access groups.
@@ -20,6 +21,7 @@ readonly class AccessControlService
 		private UserValidationService $userValidation,
 		private AccessGroupLister $accessGroupLister,
 		private PhpSession $session,
+		private Config $config,
 	) {
 	}
 
@@ -329,6 +331,83 @@ readonly class AccessControlService
 	}
 
 	/**
+	 * May this user edit records of this collection in place?
+	 *
+	 * One question, one answer, no notion of surface — the collection table's
+	 * pencil and a future live-site editor both ask exactly this. True only
+	 * when all three hold:
+	 *
+	 *   1. the `dashboard.inlineEditing` master switch is on;
+	 *   2. the user is a super admin, or one of their groups grants `inlineEdit`;
+	 *   3. the user can `update` that collection.
+	 *
+	 * Being a super admin short-circuits (2) only. The master switch is a kill
+	 * switch — it applies to admins too — and (3) is the ordinary write check
+	 * inline editing must never be a way around.
+	 */
+	public function canInlineEdit(string $userId, string $collection): bool
+	{
+		if (!$this->inlineEditingEnabled()) {
+			return false;
+		}
+
+		// With auth off there are no users to have groups, and every other
+		// access check short-circuits the same way (see BaseAccessMiddleware).
+		if (!$this->config->authEnabled()) {
+			return true;
+		}
+
+		if (!$this->groupsGrantInlineEdit($userId)) {
+			return false;
+		}
+
+		return $this->canAccessCollection($userId, $collection, 'update');
+	}
+
+	/**
+	 * Condition 2 on its own: super admin, or a group that grants `inlineEdit`.
+	 */
+	private function groupsGrantInlineEdit(string $userId): bool
+	{
+		// Admin users have full access
+		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
+			return true;
+		}
+
+		// Get user's access groups
+		$groups = $this->getUserAccessGroups($userId);
+		if ($groups === []) {
+			return false;
+		}
+
+		// Check each group - return true on first match
+		foreach ($groups as $group) {
+			if ($this->groupCanInlineEdit($group)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * The `dashboard.inlineEditing` master switch. Absent (a site whose
+	 * config predates the setting) means on.
+	 */
+	private function inlineEditingEnabled(): bool
+	{
+		return ($this->config->dashboard['inlineEditing'] ?? true) === true;
+	}
+
+	/**
+	 * Check if a single group grants inline editing.
+	 */
+	private function groupCanInlineEdit(AccessGroupData $group): bool
+	{
+		return $group->allowsInlineEdit();
+	}
+
+	/**
 	 * Check if user can access docs.
 	 */
 	public function canAccessDocs(string $userId): bool
@@ -475,7 +554,7 @@ readonly class AccessControlService
 	public function authorityFor(OAuthUserRef $ref): UserAuthority
 	{
 		if ($this->userValidation->isSuperAdmin($ref->userId, $ref->collection)) {
-			return new UserAuthority(isAdmin: true, groups: []);
+			return new UserAuthority(isAdmin: true, groups: [], inlineEditingEnabled: $this->inlineEditingEnabled());
 		}
 
 		try {
@@ -484,7 +563,7 @@ readonly class AccessControlService
 			return UserAuthority::denied();
 		}
 
-		return new UserAuthority(isAdmin: false, groups: $groups);
+		return new UserAuthority(isAdmin: false, groups: $groups, inlineEditingEnabled: $this->inlineEditingEnabled());
 	}
 
 	/**

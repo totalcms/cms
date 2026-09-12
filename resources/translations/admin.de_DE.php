@@ -890,6 +890,7 @@ return [
 	'access_groups.feature_playground'     => 'Twig Playground',
 	'access_groups.feature_dataviews'      => 'Data Views',
 	'access_groups.feature_builder'        => 'Site Builder',
+	'access_groups.feature_inline_edit'    => 'Inline-Bearbeitung',
 	'access_groups.utils_access'           => 'Werkzeuge-Zugriffsebene',
 	'access_groups.specific_utils'         => 'Bestimmte Werkzeuge',
 	'access_groups.select_utils'           => 'Wählen Sie, auf welche Werkzeuge diese Gruppe zugreifen kann.',

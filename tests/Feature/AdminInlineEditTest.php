@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\AccessGroup\Repository\AccessGroupRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\get;
 use function TotalCMS\Slim\Pest\patch;
@@ -77,4 +80,41 @@ it('returns 404 for an unknown property or object', function (): void {
 
 it('rejects a patch without data for the property', function (): void {
 	patch('/admin/collections/blog/hello/cell/title', ['data' => json_encode(['summary' => 'x'])])->assertBadRequest();
+});
+
+it('refuses both editing legs when the inline-editing master switch is off', function (): void {
+	$config                     = $this->app->getContainer()->get(Config::class);
+	$dashboard                  = $config->dashboard;
+	$dashboard['inlineEditing'] = false;
+	$config->dashboard          = $dashboard;
+
+	get('/admin/collections/blog/hello/cell/title/edit')->assertForbidden();
+	patch('/admin/collections/blog/hello/cell/title', ['data' => json_encode(['title' => 'Nope'])])->assertForbidden();
+
+	// The value is untouched, and the read-only display cell still renders —
+	// it is the same read the table already did, minus the pencil.
+	$object = $this->app->getContainer()->get(ObjectFetcher::class)->fetchObject('blog', 'hello')->toArray();
+	expect($object['title'])->toBe('Hello');
+
+	$response = get('/admin/collections/blog/hello/cell/title');
+	$response->assertOk();
+	expect((string)$response->getBody())->toContain('Hello')->not->toContain('inline-edit-trigger');
+});
+
+it('refuses inline editing for a group whose inlineEdit permission is off', function (): void {
+	$repo  = $this->app->getContainer()->get(AccessGroupRepository::class);
+	$group = $repo->findById('blogger');
+	expect($group)->not->toBeNull();
+
+	$permissions               = $group->permissions;
+	$permissions['inlineEdit'] = false;
+	$repo->save(new AccessGroupData([
+		'id'          => 'blogger',
+		'description' => $group->description,
+		'operations'  => $group->operations,
+		'permissions' => $permissions,
+	]));
+
+	get('/admin/collections/blog/hello/cell/title/edit')->assertForbidden();
+	patch('/admin/collections/blog/hello/cell/title', ['data' => json_encode(['title' => 'Nope'])])->assertForbidden();
 });

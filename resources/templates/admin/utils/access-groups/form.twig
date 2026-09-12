@@ -184,14 +184,17 @@
 						group.permissions.docs ? ["docs"] : []
 					)|merge(
 						group.permissions.builder ?? group.permissions.templates ? ["builder"] : []
+					)|merge(
+						group.permissions.inlineEdit ?? true ? ["inlineEdit"] : []
 					)
-				) : ["docs", "mailer", "playground", "dataviews", "builder"],
+				) : ["docs", "mailer", "playground", "dataviews", "builder", "inlineEdit"],
 				options  : [
 					{value: "builder", label: t('access_groups.feature_builder')},
 					{value: "docs", label: t('access_groups.feature_docs')},
 					{value: "mailer", label: t('access_groups.feature_mailer')},
 					{value: "playground", label: t('access_groups.feature_playground')},
 					{value: "dataviews", label: t('access_groups.feature_dataviews')},
+					{value: "inlineEdit", label: t('access_groups.feature_inline_edit')},
 				],
 				settings : {
 					toggleAll    : false,
@@ -376,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			.map(cb => cb.value);
 
 		// Create hidden inputs for each simple permission
-		['templates', 'mailer', 'playground', 'dataviews', 'docs'].forEach(function(perm) {
+		['templates', 'mailer', 'playground', 'dataviews', 'docs', 'inlineEdit'].forEach(function(perm) {
 			const existingInput = form.querySelector(`input[name="${perm}"]`);
 			if (existingInput) {
 				existingInput.remove();

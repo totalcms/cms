@@ -48,6 +48,13 @@
 			"help"    : "When enabled, forms in the admin dashboard expand to fill the full available width instead of being capped at 800px.",
 			"default" : false
 		},
+		"inlineEditing": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Inline Editing",
+			"help"    : "Master switch for editing values in place. Turning it off hides the pencil in every collection table and refuses inline saves for everyone, regardless of access groups. When it is on, access groups decide who may use it.",
+			"default" : true
+		},
 		"moreMenu": {
 			"type"     : "array",
 			"items"    : { "type": "string" },

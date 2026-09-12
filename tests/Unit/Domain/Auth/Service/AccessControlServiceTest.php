@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\AccessGroup\Repository\AccessGroupRepository;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
+use TotalCMS\Support\Config;
 
 beforeEach(function (): void {
 	// Use container to get properly configured service
@@ -357,5 +360,80 @@ describe('AccessControlService - Collection Metadata Operations', function (): v
 	it('allows viewer only read operation on metadata', function (): void {
 		expect($this->accessControl->canAccessCollectionsMetaOperation('viewer-user-test-com', 'read'))->toBeTrue();
 		expect($this->accessControl->canAccessCollectionsMetaOperation('viewer-user-test-com', 'update'))->toBeFalse();
+	});
+});
+
+describe('AccessControlService - Inline Editing', function (): void {
+	beforeEach(function (): void {
+		// One container for the whole case: bootstrap() builds a fresh app each
+		// call, so the service and the Config it reads must come from the same
+		// one or mutating the config here would not reach the service.
+		$container           = bootstrap()->getContainer();
+		$this->accessControl = $container->get(AccessControlService::class);
+		$this->config        = $container->get(Config::class);
+		$this->groupRepo     = $container->get(AccessGroupRepository::class);
+		$this->savedAuth     = $this->config->auth;
+		$this->savedDash     = $this->config->dashboard;
+		$this->savedGroup    = $this->groupRepo->findById('blogger');
+
+		// The rest of the suite runs with auth disabled, which short-circuits
+		// every access check. Inline editing is a permission question, so turn
+		// auth on for these cases and put it back afterwards.
+		$auth               = $this->config->auth;
+		$auth['enable']     = true;
+		$this->config->auth = $auth;
+	});
+
+	afterEach(function (): void {
+		$this->config->auth      = $this->savedAuth;
+		$this->config->dashboard = $this->savedDash;
+		if ($this->savedGroup instanceof AccessGroupData) {
+			$this->groupRepo->save($this->savedGroup);
+		}
+	});
+
+	it('denies everyone, super admin included, when the master switch is off', function (): void {
+		$dashboard                  = $this->config->dashboard;
+		$dashboard['inlineEditing'] = false;
+		$this->config->dashboard    = $dashboard;
+
+		expect($this->accessControl->canInlineEdit('admin', 'blog'))->toBeFalse();
+		expect($this->accessControl->canInlineEdit('blogger-user-test-com', 'blog'))->toBeFalse();
+	});
+
+	it('grants a legacy group saved before the permission existed', function (): void {
+		// The blogger fixture has no `inlineEdit` key at all — the upgrade
+		// must be silent, so a missing key reads as granted.
+		expect($this->savedGroup->permissions)->not->toHaveKey('inlineEdit');
+		expect($this->accessControl->canInlineEdit('blogger-user-test-com', 'blog'))->toBeTrue();
+	});
+
+	it('denies a group that does not grant inline editing', function (): void {
+		$permissions               = $this->savedGroup->permissions;
+		$permissions['inlineEdit'] = false;
+		$this->groupRepo->save(new AccessGroupData([
+			'id'          => 'blogger',
+			'description' => $this->savedGroup->description,
+			'operations'  => $this->savedGroup->operations,
+			'permissions' => $permissions,
+		]));
+
+		expect($this->accessControl->canInlineEdit('blogger-user-test-com', 'blog'))->toBeFalse();
+	});
+
+	it('denies a permitted group that cannot update the collection', function (): void {
+		// viewer is read-only everywhere, and its legacy permissions grant
+		// inline editing — the collection update check is what stops it.
+		expect($this->accessControl->canAccessCollection('viewer-user-test-com', 'blog', 'update'))->toBeFalse();
+		expect($this->accessControl->canInlineEdit('viewer-user-test-com', 'blog'))->toBeFalse();
+	});
+
+	it('grants when the switch, the permission and collection update all hold', function (): void {
+		expect($this->accessControl->canInlineEdit('editor-user-test-com', 'blog'))->toBeTrue();
+		expect($this->accessControl->canInlineEdit('admin', 'blog'))->toBeTrue();
+	});
+
+	it('denies a collection the group cannot reach at all', function (): void {
+		expect($this->accessControl->canInlineEdit('blogger-user-test-com', 'products'))->toBeFalse();
 	});
 });

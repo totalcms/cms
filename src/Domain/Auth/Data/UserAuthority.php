@@ -21,11 +21,20 @@ final class UserAuthority
 	private array $memo = [];
 
 	/**
+	 * $inlineEditingEnabled is the `dashboard.inlineEditing` master switch,
+	 * handed over at construction rather than read here: this object is a
+	 * pure permission snapshot with no container, and threading Config in
+	 * would give every can*() check a dependency only one of them needs.
+	 * AccessControlService::authorityFor() — the only place that builds a
+	 * real authority — supplies it; the default keeps hand-built authorities
+	 * (tests, UserAuthority::denied()) behaving as before.
+	 *
 	 * @param list<AccessGroupData> $groups
 	 */
 	public function __construct(
 		public readonly bool $isAdmin,
 		private readonly array $groups,
+		private readonly bool $inlineEditingEnabled = true,
 	) {
 	}
 
@@ -196,6 +205,37 @@ final class UserAuthority
 	public function canPlayground(): bool
 	{
 		return $this->remember('playground', fn (): bool => $this->groupGrantsBooleanPermission('playground'));
+	}
+
+	/**
+	 * May this authority edit records of $collection in place? Mirrors
+	 * AccessControlService::canInlineEdit(): the master switch, then the
+	 * `inlineEdit` group permission (super admins short-circuit that one
+	 * only), then the ordinary collection `update` check.
+	 */
+	public function canInlineEdit(string $collection): bool
+	{
+		return $this->remember("inlineEdit:$collection", function () use ($collection): bool {
+			if (!$this->inlineEditingEnabled) {
+				return false;
+			}
+
+			if (!$this->isAdmin) {
+				$granted = false;
+				foreach ($this->groups as $group) {
+					if ($group->allowsInlineEdit()) {
+						$granted = true;
+						break;
+					}
+				}
+
+				if (!$granted) {
+					return false;
+				}
+			}
+
+			return $this->canCollection('update', $collection);
+		});
 	}
 
 	/**

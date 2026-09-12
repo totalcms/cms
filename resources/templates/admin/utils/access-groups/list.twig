@@ -123,6 +123,7 @@
 							{% if group.permissions.playground %}<span class="dash-badge success">{{ t('access_groups.feature_playground') }}</span>{% endif %}
 							{% if group.permissions.dataviews %}<span class="dash-badge success">{{ t('access_groups.feature_dataviews') }}</span>{% endif %}
 							{% if group.permissions.docs %}<span class="dash-badge success">{{ t('access_groups.feature_docs') }}</span>{% endif %}
+							{% if group.permissions.inlineEdit ?? true %}<span class="dash-badge success">{{ t('access_groups.feature_inline_edit') }}</span>{% endif %}
 
 							{% if group.permissions.utils.all %}
 								<span class="dash-badge success">{{ t('access_groups.all_utils') }}</span>

@@ -890,6 +890,7 @@ return [
 	'access_groups.feature_playground'     => 'Twig Playground',
 	'access_groups.feature_dataviews'      => 'Data Views',
 	'access_groups.feature_builder'        => 'Site Builder',
+	'access_groups.feature_inline_edit'    => 'Inline bewerken',
 	'access_groups.utils_access'           => 'Toegangsniveau voor hulpmiddelen',
 	'access_groups.specific_utils'         => 'Specifieke hulpmiddelen',
 	'access_groups.select_utils'           => 'Selecteer welke hulpmiddelen deze groep kan benaderen.',

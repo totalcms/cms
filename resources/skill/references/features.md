@@ -51,7 +51,7 @@
 | Form builder (`cms.form.builder()` and per-field helpers) | `forms/overview.md`, `forms/builder.md`, `forms/patterns.md` | Forms post to the same API the admin uses; `publicOperations` on the collection decides what anonymous visitors may do. |
 | Public registration | `forms/options.md` | Opt-in per collection via `auth.publicRegistration`; registrants are auto-logged-in, so gate with CAPTCHA/verification when groups reach protected content. |
 | Auth in Twig, login/logout, member content | `auth/twig.md`, `auth/auth.md` | `cms.auth.userLoggedIn('members')`, `cms.auth.login('members')`, `cms.auth.userHasAccess(group, collection)`. |
-| Access groups | `auth/access-groups.md` | Grantable resources include collections, utils, data views, builder and extensions. |
+| Access groups | `auth/access-groups.md` | Grantable resources include collections, utils, data views, builder and extensions; the `inlineEdit` boolean decides who may edit values in place from the collection table (with **Settings → Dashboard → Inline Editing** as the site-wide switch). |
 | Passkeys | `auth/twig.md` | Edition-gated; `cms.auth.passkeyManager()` renders the enrolment UI. |
 | Mailer (transactional + bulk) | `notifications/mailer.md` | Bulk mail is edition-gated; templates are Twig rendered with `renderString`. |
 

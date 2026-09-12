@@ -60,6 +60,7 @@ readonly class AccessGroupData
 			'playground' => true,
 			'dataviews'  => false,
 			'docs'       => true,
+			'inlineEdit' => true,
 			'utils'      => [
 				'all'     => false,
 				'allowed' => [],
@@ -160,6 +161,21 @@ readonly class AccessGroupData
 		$permissionKey = $routeToPermission[$util] ?? $util;
 
 		return $all || in_array($permissionKey, $allowed);
+	}
+
+	/**
+	 * Check if this group grants inline (in place) editing.
+	 *
+	 * The single home for the `inlineEdit` fallback: groups saved before the
+	 * permission existed have no key at all, and inline editing was available
+	 * to every dashboard user until now — so a missing key reads as granted
+	 * and the upgrade is silent. Once the group is re-saved, the stored value
+	 * wins. AccessControlService and UserAuthority both delegate here rather
+	 * than repeating the `?? true`.
+	 */
+	public function allowsInlineEdit(): bool
+	{
+		return ($this->permissions['inlineEdit'] ?? true) === true;
 	}
 
 	/**

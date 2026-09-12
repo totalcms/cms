@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Admin;
 
+use Odan\Session\PhpSession;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Query\Data\QueryResult;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 
 /**
@@ -25,6 +28,8 @@ readonly class AdminTableRenderer
 		private CollectionFetcher $collectionFetcher,
 		private SchemaFetcher $schemaFetcher,
 		private ObjectUrlBuilder $objectUrlBuilder,
+		private AccessControlService $accessControl,
+		private PhpSession $session,
 	) {
 	}
 
@@ -55,13 +60,20 @@ readonly class AdminTableRenderer
 		$labelSingular = $collectionData->labelSingular !== '' ? $collectionData->labelSingular : 'Object';
 		$collectionUrl = $collectionData->url;
 
+		// A column carries the inline-edit pencil only when the field type
+		// supports it AND this user may inline-edit this collection at all —
+		// the same question AdminCellAction enforces on the round trip, so the
+		// pencil is never shown for an edit that would come back 403.
+		$currentUserId     = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+		$userMayInlineEdit = $this->accessControl->canInlineEdit($currentUserId, $collection);
+
 		// Build columns array from schema index
 		$columns = [];
 		foreach ($schemaData->index as $property) {
 			$columns[] = [
 				'name'     => $property,
 				'type'     => $this->getPropertyType($schemaData, $property),
-				'editable' => InlineEditable::allows($schemaData->properties[$property] ?? []),
+				'editable' => InlineEditable::allows($schemaData->properties[$property] ?? []) && $userMayInlineEdit,
 			];
 		}
 

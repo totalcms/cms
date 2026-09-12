@@ -81,7 +81,7 @@ readonly class AccessGroupSaveAction
 	 */
 	private function buildPermissions(array $data): array
 	{
-		// Parse permissions-simple field (contains builder, mailer, playground, dataviews, docs)
+		// Parse permissions-simple field (contains builder, mailer, playground, dataviews, docs, inlineEdit)
 		$simplePermissions = isset($data['permissions-simple']) ? (array)$data['permissions-simple'] : [];
 
 		// Collections permissions
@@ -113,6 +113,7 @@ readonly class AccessGroupSaveAction
 			'playground' => in_array('playground', $simplePermissions),
 			'dataviews'  => in_array('dataviews', $simplePermissions),
 			'docs'       => in_array('docs', $simplePermissions),
+			'inlineEdit' => in_array('inlineEdit', $simplePermissions),
 			'utils'      => [
 				'all'     => $utilsAll,
 				'allowed' => $utilsAll ? [] : ($data['utils-allowed'] ?? []),
