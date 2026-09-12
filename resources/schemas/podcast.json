@@ -33,7 +33,10 @@
 			"label"   : "Author",
 			"help"    : "The person or organisation credited as the show's author. Required by Apple.",
 			"field"   : "text",
-			"factory" : "name"
+			"factory" : "name",
+			"settings" : {
+				"propertyOptions": true
+			}
 		},
 		"ownerEmail": {
 			"$ref"    : "https://www.totalcms.co/schemas/properties/email.json",
