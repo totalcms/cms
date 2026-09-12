@@ -1,13 +1,42 @@
+{#- Remembers which sidebar groups (<details id="…">) are open, per admin
+    section, in localStorage.
+
+    The scope is the first path segment after the dashboard base — "schemas",
+    "docs", "collections" — so the list page and every detail page under it
+    share one memory. It used to be the first three URL segments, which made
+    /admin/schemas and /admin/schemas/blog different pages: collapse a group,
+    open a schema, and everything reopened (and the reverse under a sub-path
+    install, where three segments happened to be the same for both).
+
+    Two rules on top of the memory:
+    - a group holding the current page's link (an `.active` item), or one the
+      server marked `data-server-open="true"`, always opens — a remembered
+      "closed" must never hide where you are;
+    - only a click on the group's own summary is recorded, so the programmatic
+      opens above never overwrite what the user chose.
+
+    Once the groups are settled the current page's link is scrolled into view,
+    so a long sidebar (schemas, docs) opens with your place visible. -#}
 <script>
-const sidebarDetails = Array.from(document.querySelectorAll(".dash-content-sidebar details"));
-const sidebarPage = location.pathname.replace(/\/+$/, '').split('/').filter(Boolean).slice(0, 3).join('-');
-sidebarDetails.forEach(details => {
-	const detailsId = details.getAttribute('id');
-	if (detailsId) {
-		const key    = `sidebar-details-${sidebarPage}-${detailsId}`;
+(() => {
+	const base = new URL(document.querySelector('base')?.href || '/', location.href).pathname.replace(/\/+$/, '');
+	const path = location.pathname.replace(/\/+$/, '');
+	const rel  = path.startsWith(base) ? path.slice(base.length) : path;
+	const scope = rel.split('/').filter(Boolean)[0] || 'dashboard';
+
+	document.querySelectorAll('.dash-content-sidebar details[id]').forEach(details => {
+		const key   = `sidebar-details-${scope}-${details.id}`;
 		const saved = localStorage.getItem(key);
+
 		if (saved !== null) details.open = (saved === 'true');
-		details.addEventListener('toggle', () => localStorage.setItem(key, details.open));
-	}
-});
+		if (details.dataset.serverOpen === 'true' || details.querySelector('.active')) details.open = true;
+
+		details.querySelector(':scope > summary')?.addEventListener('click', () => {
+			// The click runs before the browser flips `open`; read it after.
+			setTimeout(() => localStorage.setItem(key, String(details.open)), 0);
+		});
+	});
+
+	document.querySelector('.dash-content-sidebar .active')?.scrollIntoView?.({ block: 'center' });
+})();
 </script>
