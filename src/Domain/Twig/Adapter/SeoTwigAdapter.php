@@ -62,7 +62,7 @@ final readonly class SeoTwigAdapter
 	{
 		[$ctx, $meta] = $this->resolve($subject, $options);
 
-		$jsonld = $this->jsonLdBuilder->script($ctx, $meta, self::extraNodes($options));
+		$jsonld = $this->jsonLdBuilder->script($ctx, $meta, $this->extraNodes($options));
 		$parts  = self::ALL_PARTS;
 
 		// Only ask for the JSON-LD slice when there is a script to print —
@@ -124,7 +124,7 @@ final readonly class SeoTwigAdapter
 	{
 		[$ctx, $meta] = $this->resolve($subject, $options);
 
-		return new Markup($this->jsonLdBuilder->script($ctx, $meta, self::extraNodes($options)), 'UTF-8');
+		return new Markup($this->jsonLdBuilder->script($ctx, $meta, $this->extraNodes($options)), 'UTF-8');
 	}
 
 	/**
@@ -170,13 +170,13 @@ final readonly class SeoTwigAdapter
 	 * in the `@graph` as a bare string, and a list-shaped entry — the easy
 	 * mistake of wrapping one node in an extra `[...]` — would encode as a
 	 * nested JSON array, which is not a node either. An empty array stays: it
-	 * is ambiguous in PHP, and the builder ignores a node with no `@type`.
+	 * is ambiguous in PHP, and the builder ignores a node without a JSON-LD type.
 	 *
 	 * @param array<string,mixed> $options
 	 *
 	 * @return list<array<string,mixed>>
 	 */
-	private static function extraNodes(array $options): array
+	private function extraNodes(array $options): array
 	{
 		$extra = $options['jsonld'] ?? null;
 		if (!is_array($extra)) {

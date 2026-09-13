@@ -20,7 +20,7 @@ use TotalCMS\Domain\Seo\Service\JsonLd\JsonLdProvider;
 class JsonLdBuilder
 {
 	/** @var list<JsonLdProvider> */
-	private array $providers;
+	private readonly array $providers;
 
 	public function __construct(JsonLdProvider ...$providers)
 	{

@@ -26,7 +26,7 @@ beforeEach(function (): void {
 
 	$app = new Application();
 	$app->add(new CollectionCreateCommand($totalcms));
-	$this->tester = new CommandTester($app->find('collection:create'));
+	$this->tester  = new CommandTester($app->find('collection:create'));
 	$this->fetcher = $container->get(CollectionFetcher::class);
 });
 

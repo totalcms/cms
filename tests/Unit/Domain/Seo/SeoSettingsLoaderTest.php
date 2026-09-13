@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Seo;
 
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -66,7 +65,7 @@ final class SeoSettingsLoaderTest extends TestCase
 
 		// Config has a heavy constructor — build the shell and inject.
 		/** @var Config $config */
-		$config         = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config         = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->domain = 'example.com';
 		$config->url    = $url;
 

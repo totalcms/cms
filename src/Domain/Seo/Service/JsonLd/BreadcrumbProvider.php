@@ -69,7 +69,7 @@ final class BreadcrumbProvider implements JsonLdProvider
 	private function collectionUrl(SeoContext $ctx): string
 	{
 		$collection = $ctx->collectionMeta;
-		if ($ctx->kind !== 'object' || $collection === null) {
+		if ($ctx->kind !== 'object' || !$collection instanceof CollectionData) {
 			return '';
 		}
 
@@ -89,7 +89,7 @@ final class BreadcrumbProvider implements JsonLdProvider
 	private function collectionLabel(SeoContext $ctx): string
 	{
 		$collection = $ctx->collectionMeta;
-		if ($collection === null) {
+		if (!$collection instanceof CollectionData) {
 			return $ctx->collectionId;
 		}
 		if ($collection->labelPlural !== '') {

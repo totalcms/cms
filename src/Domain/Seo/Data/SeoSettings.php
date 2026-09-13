@@ -70,13 +70,13 @@ final readonly class SeoSettings
 	/** @param array<string,mixed> $data */
 	public static function fromArray(array $data, string $fallbackDomain): self
 	{
-		$str = static fn (string $key): string => trim((string)($data[$key] ?? ''));
+		$str     = static fn (string $key): string => trim((string)($data[$key] ?? ''));
 		$baseUrl = rtrim($str('baseUrl') !== '' ? $str('baseUrl') : $fallbackDomain, '/');
 		if (!preg_match('#^https?://#i', $baseUrl)) {
 			$baseUrl = 'https://' . $baseUrl;
 		}
 		$handle = ltrim($str('twitterHandle'), '@');
-		$sameAs = array_values(array_filter(array_map('trim', preg_split('/\R/', $str('sameAs')) ?: []), static fn (string $u): bool => $u !== ''));
+		$sameAs = array_values(array_filter(array_map(trim(...), preg_split('/\R/', $str('sameAs')) ?: []), static fn (string $u): bool => $u !== ''));
 
 		return new self(
 			siteName: $str('siteName'),

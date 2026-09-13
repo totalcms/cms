@@ -26,9 +26,9 @@ final class McpInstructions
 		$parts = [self::orientation(), self::reading(), self::lookup()];
 
 		$parts[] = match ($persona) {
-			McpPersona::PUBLIC_ => 'This connection can only read. Writing and the admin tools (schemas, collections, cache) need an API key or an OAuth token; tell the user so rather than trying.',
+			McpPersona::PUBLIC_       => 'This connection can only read. Writing and the admin tools (schemas, collections, cache) need an API key or an OAuth token; tell the user so rather than trying.',
 			McpPersona::AUTHENTICATED => 'This connection writes within the approving user\'s scopes and access groups; a refused write means the user is not allowed it, not that the tool is broken. ' . self::writing(),
-			McpPersona::ADMIN => self::writing() . ' ' . self::modelling(),
+			McpPersona::ADMIN         => self::writing() . ' ' . self::modelling(),
 		};
 
 		return implode(' ', $parts);

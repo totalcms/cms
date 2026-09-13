@@ -222,7 +222,7 @@ readonly class SeoContextFactory
 	 */
 	private function resolveBlock(?CollectionData $meta): array
 	{
-		if ($meta === null) {
+		if (!$meta instanceof CollectionData) {
 			return self::EMPTY_BLOCK;
 		}
 
@@ -247,7 +247,7 @@ readonly class SeoContextFactory
 	/** @param array<string,mixed> $object */
 	private function objectUrl(?CollectionData $meta, array $object, SeoSettings $settings): string
 	{
-		if ($meta === null) {
+		if (!$meta instanceof CollectionData) {
 			return '';
 		}
 

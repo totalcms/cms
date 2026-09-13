@@ -43,7 +43,7 @@ class SeoSettingsLoader
 
 	public function load(): SeoSettings
 	{
-		if ($this->loaded !== null) {
+		if ($this->loaded instanceof SeoSettings) {
 			return $this->loaded;
 		}
 

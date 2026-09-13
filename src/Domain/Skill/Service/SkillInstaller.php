@@ -253,7 +253,7 @@ class SkillInstaller
 
 		@file_put_contents(
 			$target . '/' . self::MANIFEST,
-			(string)json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n",
+			json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n",
 		);
 
 		$skill    = $target . '/SKILL.md';
@@ -329,7 +329,7 @@ class SkillInstaller
 	 */
 	private function withoutMetadata(array $front): array
 	{
-		$kept    = [];
+		$kept     = [];
 		$dropping = false;
 
 		foreach ($front as $line) {

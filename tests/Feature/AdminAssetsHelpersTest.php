@@ -3,8 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
-
-use function TotalCMS\Slim\Pest\get;
+use TotalCMS\Support\Config;
 
 /**
  * `cms.adminAssetsBody()` owns the two globals the admin bundle reads —
@@ -14,7 +13,7 @@ use function TotalCMS\Slim\Pest\get;
  * admin-dashboard.twig only, so any other page calling the helpers loaded the
  * admin bundle without its inputs.
  */
-use TotalCMS\Support\Config;
+use function TotalCMS\Slim\Pest\get;
 
 beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {

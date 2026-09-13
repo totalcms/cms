@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 
@@ -111,7 +112,7 @@ class CollectionCreateCommand extends BaseCommand
 		}
 
 		$collection = $this->totalcms->collectionFetcher()->fetchOrCreateReserved($id);
-		if ($collection === null) {
+		if (!$collection instanceof CollectionData) {
 			$this->outputError($input, $output, "Failed to create reserved collection '{$id}'.");
 
 			return null;

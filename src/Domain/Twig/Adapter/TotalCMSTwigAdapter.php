@@ -311,7 +311,7 @@ class TotalCMSTwigAdapter
 	 */
 	private function frontendAssets(array $options): array
 	{
-		$names = static fn (mixed $list): array => is_array($list) ? array_values(array_filter($list, 'is_string')) : [];
+		$names = static fn (mixed $list): array => is_array($list) ? array_values(array_filter($list, is_string(...))) : [];
 
 		$except = array_merge($names($this->config->frontendAssets['except'] ?? []), $names($options['except'] ?? []));
 

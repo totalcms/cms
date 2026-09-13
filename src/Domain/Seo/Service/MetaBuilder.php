@@ -215,16 +215,16 @@ class MetaBuilder
 	private function stripMarkdown(string $text): string
 	{
 		$replacements = [
-			'/!\[([^\]]*)\]\([^)]*\)/'             => '$1', // ![alt](url)
-			'/\[([^\]]+)\]\([^)]*\)/'              => '$1', // [text](url)
-			'/`([^`]*)`/'                          => '$1', // `code`
-			'/\*\*(?!\s)(.+?)(?<!\s)\*\*/'         => '$1', // **strong**
+			'/!\[([^\]]*)\]\([^)]*\)/'              => '$1', // ![alt](url)
+			'/\[([^\]]+)\]\([^)]*\)/'               => '$1', // [text](url)
+			'/`([^`]*)`/'                           => '$1', // `code`
+			'/\*\*(?!\s)(.+?)(?<!\s)\*\*/'          => '$1', // **strong**
 			'/(?<!\w)__(?!\s)(.+?)(?<!\s)__(?!\w)/' => '$1', // __strong__
-			'/\*(?!\s)(.+?)(?<!\s)\*/'             => '$1', // *emphasis*
-			'/(?<!\w)_(?!\s)(.+?)(?<!\s)_(?!\w)/'  => '$1', // _emphasis_
-			'/^\s{0,3}#{1,6}\s+/m'                 => '',   // # heading
-			'/^\s*(?:[-+*]|\d+\.)\s+/m'            => '',   // - item, 1. item
-			'/^\s*>\s?/m'                          => '',   // > blockquote
+			'/\*(?!\s)(.+?)(?<!\s)\*/'              => '$1', // *emphasis*
+			'/(?<!\w)_(?!\s)(.+?)(?<!\s)_(?!\w)/'   => '$1', // _emphasis_
+			'/^\s{0,3}#{1,6}\s+/m'                  => '',   // # heading
+			'/^\s*(?:[-+*]|\d+\.)\s+/m'             => '',   // - item, 1. item
+			'/^\s*>\s?/m'                           => '',   // > blockquote
 		];
 
 		// A catastrophic backtrack or a bad subject returns null; the original

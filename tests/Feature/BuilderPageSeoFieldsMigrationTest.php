@@ -20,35 +20,6 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Support\Config;
 
-/**
- * Records what the migration logs. Named for this file so it can't collide
- * with the other recording loggers when paratest lands two files in one worker.
- *
- * @internal
- */
-final class MigrationRecordingLogger extends AbstractLogger
-{
-	/** @var list<array{level:string,message:string,context:array<string,mixed>}> */
-	public array $records = [];
-
-	/** @param array<string,mixed> $context */
-	public function log(mixed $level, string|\Stringable $message, array $context = []): void
-	{
-		$this->records[] = ['level' => (string)$level, 'message' => (string)$message, 'context' => $context];
-	}
-
-	public function hasWarning(string $fragment): bool
-	{
-		foreach ($this->records as $record) {
-			if ($record['level'] === 'warning' && str_contains($record['message'], $fragment)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-}
-
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
 	restoreFixtures();
@@ -188,7 +159,29 @@ it('leaves the page alone, warns, and throws for a retry when the image files ca
 	mkdir($files . '/seo', 0755, true);
 	file_put_contents($files . '/seo/image', 'not a directory');
 
-	$logger = new MigrationRecordingLogger();
+	// Records what the migration logs. Anonymous so it can't collide with the
+	// other recording loggers when paratest lands two files in one worker.
+	$logger = new class extends AbstractLogger {
+		/** @var list<array{level:string,message:string}> */
+		public array $records = [];
+
+		/** @param array<string,mixed> $context */
+		public function log(mixed $level, string|Stringable $message, array $context = []): void
+		{
+			$this->records[] = ['level' => (string)$level, 'message' => (string)$message];
+		}
+
+		public function hasWarning(string $fragment): bool
+		{
+			foreach ($this->records as $record) {
+				if ($record['level'] === 'warning' && str_contains($record['message'], $fragment)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+	};
 
 	// A failed MOVE is the one condition that throws: the runner leaves a
 	// throwing migration unrecorded, so the next request retries the page.

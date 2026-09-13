@@ -5,7 +5,6 @@ declare(strict_types=1);
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
 use TotalCMS\Domain\Twig\Service\CoreAdminAssetRegistrar;
-use TotalCMS\Domain\Twig\Service\AssetRenderer;
 use TotalCMS\Domain\Twig\Service\CoreFrontendAssetRegistrar;
 use TotalCMS\Support\Config;
 
@@ -89,7 +88,7 @@ test('CoreFrontendAssetRegistrar produces FrontendAsset instances with /assets/ 
 
 function withExcept(TotalCMSTwigAdapter $adapter, array $except): TotalCMSTwigAdapter
 {
-	$config = (new ReflectionClass(TotalCMSTwigAdapter::class))->getProperty('config')->getValue($adapter);
+	$config                 = (new ReflectionClass(TotalCMSTwigAdapter::class))->getProperty('config')->getValue($adapter);
 	$config->frontendAssets = ['except' => $except];
 
 	return $adapter;

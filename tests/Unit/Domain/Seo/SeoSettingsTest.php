@@ -19,11 +19,11 @@ describe('SeoSettings', function (): void {
 
 	test('normalises the values it is given', function (): void {
 		$s = SeoSettings::fromArray([
-			'siteName'          => ' Joe\'s Bistro ',
-			'baseUrl'           => 'https://joesbistro.com/',
-			'twitterHandle'     => 'joesbistro',
-			'sameAs'            => "https://x.com/joesbistro\n\nhttps://instagram.com/joesbistro",
-			'emitJsonLd'        => false,
+			'siteName'           => ' Joe\'s Bistro ',
+			'baseUrl'            => 'https://joesbistro.com/',
+			'twitterHandle'      => 'joesbistro',
+			'sameAs'             => "https://x.com/joesbistro\n\nhttps://instagram.com/joesbistro",
+			'emitJsonLd'         => false,
 			'googleVerification' => 'abc',
 		], 'ignored.test');
 		expect($s->siteName)->toBe("Joe's Bistro")
