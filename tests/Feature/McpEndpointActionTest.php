@@ -51,6 +51,17 @@ describe('McpEndpointAction', function (): void {
 		expect($response->getStatusCode())->toBeIn([200, 401, 403, 404]);
 	});
 
+	it('sends the persona-aware instructions in the initialize result', function (): void {
+		$response = postJson('/mcp', mcpInitializePayload());
+
+		if ($response->getStatusCode() !== 200) {
+			$this->markTestSkipped('MCP not served publicly in this environment.');
+		}
+
+		$body = json_decode((string)$response->getBody(), true);
+		expect($body['result']['instructions'] ?? '')->toContain('docs_lookup')->toContain('can only read');
+	});
+
 	it('returns JSON content-type for all gated responses', function (): void {
 		$response = postJson('/mcp', mcpInitializePayload());
 

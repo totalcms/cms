@@ -79,19 +79,10 @@ readonly class McpServerFactory
 				version: Version::number(),
 				description: 'Total CMS site exposed as an MCP server.',
 			)
-			->setInstructions(
-				'Total CMS site exposed via the Model Context Protocol. '
-				. 'Discovery: list_collections returns collections with their filterable fields. '
-				. 'Tools: query_collection / get_object / search_collection for collection content; '
-				. 'admin tools (list_schemas / get_schema / create_schema / update_schema / delete_schema, '
-				. 'list_templates / get_template, get_site_info, clear_cache) require an API key. '
-				. 'Site Builder templates are readable but not writable via MCP. '
-				. 'Resources: tcms://{collection}/ for collection summaries, tcms://{collection}/{id} for objects — '
-				. 'reachable via resources/read or the get_resource tool. '
-				. 'Drafts are hidden from anonymous callers. '
-				. 'search / fetch are provided for ChatGPT and deep-research clients: search(query) returns {id,title,url}; fetch(id) returns the full document. '
-				. 'Tool descriptions describe their inputs and outputs.'
-			)
+			// Persona-aware: a read-only connection is not told how to write. The
+			// text is the skill's judgment for clients that never install a skill —
+			// see McpInstructions.
+			->setInstructions(McpInstructions::for($persona))
 			->setSession($this->sessionStore)
 			->setLogger($this->logger)
 			// Bound how long a modern-era `subscriptions/listen` stream holds a

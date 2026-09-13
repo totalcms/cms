@@ -18,6 +18,10 @@ use TotalCMS\Support\PathResolver;
  * the project root so Claude Code (and other agents reading the files directly)
  * pick it up. Run automatically by the project skeleton's Composer hooks, and
  * available manually as `tcms skill:install`.
+ *
+ * The shipped source describes the Composer layout. On a zip install the copy is
+ * rewritten as it lands (`vendor/bin/tcms` becomes `php resources/bin/tcms`,
+ * `vendor/totalcms/cms/` drops away) so the skill's paths match the site.
  */
 class SkillInstallCommand extends BaseCommand
 {
@@ -34,7 +38,7 @@ class SkillInstallCommand extends BaseCommand
 		$source = PathResolver::packageRoot() . '/resources/skill';
 		$target = PathResolver::projectRoot() . '/.claude/skills/totalcms';
 
-		$result = (new SkillInstaller())->install($source, $target, true);
+		$result = (new SkillInstaller())->install($source, $target, true, PathResolver::isComposerInstall());
 
 		return $this->outputData($input, $output, $result);
 	}
@@ -60,6 +64,9 @@ class SkillInstallCommand extends BaseCommand
 			count($data['copied']),
 			$failed > 0 ? sprintf(', <error>%d failed</error>', $failed) : '',
 		));
+		$output->writeln(PathResolver::isComposerInstall()
+			? '  Paths written for the Composer layout (CLI: vendor/bin/tcms)'
+			: '  Paths rewritten for the zip layout (CLI: php resources/bin/tcms)');
 		$output->writeln('');
 	}
 }

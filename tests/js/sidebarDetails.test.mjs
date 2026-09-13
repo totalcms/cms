@@ -13,6 +13,18 @@ import { readFileSync } from 'node:fs';
 const template = readFileSync('resources/templates/admin/sidebar-details.twig', 'utf8');
 const script   = template.slice(template.indexOf('<script>') + '<script>'.length, template.indexOf('</script>'));
 
+// The script talks to `localStorage`. Under Node 22+ the runtime defines its
+// own global of that name (undefined without --localstorage-file) and it
+// shadows jsdom's, so the test hands the script an in-memory Storage instead
+// of relying on whichever global the runner exposes.
+const memory  = new Map();
+const storage = {
+	getItem    : key => (memory.has(key) ? memory.get(key) : null),
+	setItem    : (key, value) => memory.set(key, String(value)),
+	removeItem : key => memory.delete(key),
+	clear      : () => memory.clear(),
+};
+
 function mountSidebar({ path, base = '/admin/', groups }) {
 	window.history.pushState({}, '', path);
 	document.head.innerHTML = `<base href="${base}">`;
@@ -22,13 +34,13 @@ function mountSidebar({ path, base = '/admin/', groups }) {
 			<ul>${(g.items || []).map(i => `<li><a href="#"${i.active ? ' class="active"' : ''}>${i.label}</a></li>`).join('')}</ul>
 		</details>`).join('')}</nav></aside>`;
 
-	new Function(script)();
+	new Function('localStorage', script)(storage);
 }
 
 const settle = () => new Promise(resolve => setTimeout(resolve, 5));
 
 beforeEach(() => {
-	localStorage.clear();
+	storage.clear();
 	Element.prototype.scrollIntoView = vi.fn(); // jsdom does not implement it
 });
 
@@ -41,14 +53,14 @@ describe('sidebar group memory', () => {
 		if (details.open) details.open = false; // jsdom may not implement summary activation
 		await settle();
 
-		expect(localStorage.getItem('sidebar-details-schemas-category-internal')).toBe('false');
+		expect(storage.getItem('sidebar-details-schemas-category-internal')).toBe('false');
 
 		mountSidebar({ path: '/admin/schemas/blog', groups: [{ id: 'category-internal', open: true }] });
 		expect(document.getElementById('category-internal').open).toBe(false);
 	});
 
 	test('the scope is the section after the dashboard base, so a sub-path install behaves the same', () => {
-		localStorage.setItem('sidebar-details-docs-category-twig', 'false');
+		storage.setItem('sidebar-details-docs-category-twig', 'false');
 
 		mountSidebar({ path: '/mysite/admin/docs/twig/overview', base: '/mysite/admin/', groups: [{ id: 'category-twig', open: true }] });
 
@@ -56,7 +68,7 @@ describe('sidebar group memory', () => {
 	});
 
 	test('a remembered "closed" never hides the current page', () => {
-		localStorage.setItem('sidebar-details-schemas-category-internal', 'false');
+		storage.setItem('sidebar-details-schemas-category-internal', 'false');
 
 		mountSidebar({ path: '/admin/schemas/seo', groups: [
 			{ id: 'category-internal', open: true, items: [{ label: 'seo', active: true }] },
@@ -67,7 +79,7 @@ describe('sidebar group memory', () => {
 	});
 
 	test('a server-opened group opens regardless of memory', () => {
-		localStorage.setItem('sidebar-details-docs-category-forms', 'false');
+		storage.setItem('sidebar-details-docs-category-forms', 'false');
 
 		mountSidebar({ path: '/admin/docs/forms/builder', groups: [{ id: 'category-forms', serverOpen: true }] });
 
@@ -75,14 +87,14 @@ describe('sidebar group memory', () => {
 	});
 
 	test('programmatic opens are not recorded as the user\'s choice', async () => {
-		localStorage.setItem('sidebar-details-schemas-category-internal', 'false');
+		storage.setItem('sidebar-details-schemas-category-internal', 'false');
 
 		mountSidebar({ path: '/admin/schemas/seo', groups: [{ id: 'category-internal', items: [{ label: 'seo', active: true }] }] });
 		await settle();
 
 		// Forced open for the active page, but the memory still says closed.
 		expect(document.getElementById('category-internal').open).toBe(true);
-		expect(localStorage.getItem('sidebar-details-schemas-category-internal')).toBe('false');
+		expect(storage.getItem('sidebar-details-schemas-category-internal')).toBe('false');
 	});
 
 	test('the current page\'s link is scrolled into view once the groups are settled', () => {

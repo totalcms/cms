@@ -32,9 +32,9 @@ No MCP resource template ships for the docs corpus — only tools. `docs_search`
 
 These work on **Standard and Pro**. The extension ships with the package on every install, but its tools are served by the site's own MCP endpoint — which Lite does not include — so an agent can only reach them from Standard upwards.
 
-## The five workflow prompts
+## The eight workflow prompts
 
-Tools give an agent the ability to read the docs; they don't tell it when to bother. The same extension registers five MCP prompts that do:
+Tools give an agent the ability to read the docs; they don't tell it when to bother. The same extension registers eight MCP prompts that do:
 
 | Prompt | Arguments | What it does |
 |---|---|---|
@@ -43,6 +43,11 @@ Tools give an agent the ability to read the docs; they don't tell it when to bot
 | `tcms_explain_field` | `field_type` | Explain a schema field type from the reference index, with a copy-pasteable declaration and how to read the value in Twig. |
 | `tcms_twig_recipe` | `goal` | Find the right Twig function or filter and write a complete template, with signatures verified rather than guessed. |
 | `tcms_troubleshoot_mcp` | `symptom`, `site_url` (optional) | Diagnose an MCP connection failure, walking the known causes in the order they actually occur. |
+| `tcms_model_collection` | `content`, `edition` (optional) | Design a schema and collection for a kind of content: the right field type for every value, help text agents can read, timestamps, and the SEO card. Starts from the reserved `totalcms` reference schema. |
+| `tcms_write_content` | `collection`, `brief`, `id` (optional) | Create or edit an object safely — the schema's help text is the brief, patch rather than replace, respect each field's stored shape. |
+| `tcms_audit_seo` | `collection` (optional) | Audit the three SEO layers — Site SEO record, collection mapping and URL, the record's own card — and report what to fix in priority order. |
+
+The last three carry the judgment the terminal agent skill carries (`tcms skill:install`, see [CLI](docs/extensions/cli)) — for the many users who only ever reach Total CMS through an MCP client and will never install it.
 
 They're named `tcms_*` rather than `docs_*` deliberately. The tools are documentation operations; these are product workflows that *use* the documentation, and `tcms` is already this server's namespace (the `tcms://` resource URIs). The distinctive prefix also matters mechanically: a prompt in your `mcp-prompt` collection always wins over an extension-registered one of the same name, so a generic name like `explain_field` would let an operator's own prompt silently replace this one.
 

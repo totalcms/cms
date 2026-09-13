@@ -6,12 +6,58 @@ description: Use when building, editing, or managing a Total CMS (T3) site — S
 # Building a Total CMS (T3) site
 
 This project **is a website** built on Total CMS, a flat-file PHP CMS. There is
-**no database** — all content is JSON under `tcms-data/`. The CMS core is installed
-by Composer into `vendor/totalcms/cms/`; **never edit `vendor/`** (it is replaced on
-update). Configure via `config/tcms.php` (deep-merged — specify only keys you change).
+**no database** — all content is JSON under `tcms-data/`. Configure via
+`config/tcms.php` (deep-merged — specify only keys you change).
 
-The CLI is `vendor/bin/tcms`. Most commands accept `--json` for machine-readable
-output — prefer it when scripting. Run `vendor/bin/tcms list` to see everything.
+## Where things are
+
+T3 ships in two layouts. Check which one you are in before running anything.
+
+- **Composer install** — the default the rest of this skill assumes. CLI `vendor/bin/tcms`; CMS code and docs under `vendor/totalcms/cms/`; config `config/tcms.php` at the project root. **Never edit `vendor/`** — an update replaces it. <!-- composer-paths -->
+- **Zip install** — the CMS *is* the folder you are in (conventionally `tcms/`).
+  CLI `php resources/bin/tcms`, run from that folder; docs `resources/docs/`;
+  config `config/tcms.php` inside it; content in `../tcms-data/` beside it. An
+  update replaces the folder's `config/ public/ resources/ src/ vendor/`
+  wholesale, so **never add files inside them**.
+
+If this skill was installed by `skill:install` on a zip install, the paths
+throughout it are already rewritten for that layout.
+
+Most commands accept `--json` for machine-readable output — prefer it when
+scripting. Run `vendor/bin/tcms list` to see everything.
+
+## Write through the CLI, never to the files
+
+`tcms-data/` is a store, not an editing surface. It is tempting to create or
+edit the JSON files in it directly — it usually appears to work, which is what
+makes it dangerous. **Always go through the CLI (or the API/MCP), which is what
+the admin does:**
+
+| To… | Run |
+|---|---|
+| create an object | `vendor/bin/tcms object:create <collection> -` (JSON on stdin) |
+| change part of an object | `vendor/bin/tcms object:patch <collection> <id> -` |
+| load many objects | `vendor/bin/tcms collection:import <collection> file.json` |
+| add or change a schema | `vendor/bin/tcms schema:import schema.json`, then `schema:lint <id> --strict` |
+| create a collection | `vendor/bin/tcms collection:create …` |
+| seed structure + content together | `vendor/bin/tcms jumpstart:import file.json` |
+
+A save through the CLI validates the object against its schema, fills in what
+the schema derives (default types, autogen ids, `created`/`updated`
+timestamps, image and video metadata), updates the collection's `.index.json`
+and counts, and fires the events the rest of the system listens for (search
+indexing, automations, MCP change notifications). A file written by hand gets
+none of that: one bad comma takes the whole collection offline, an unindexed
+object is invisible to the admin tables, sitemaps and queries until
+`repair:index` runs, and timestamps and derived fields are simply missing.
+
+Reading the files is fine (`cat`, `jq`), though `object:get --json` is the
+same data validated. If you ever *must* touch a file — recovering data, say —
+validate the JSON, then run `vendor/bin/tcms repair:index <collection>` and,
+for a schema, `schema:lint <id> --strict`.
+
+This applies to **content and structure**. Templates under `builder/` and the
+config file `config/tcms.php` are files by design — edit those directly.
 
 ## Where to look things up
 
@@ -75,8 +121,11 @@ Pick fields by the shape of the value (`date`, `toggle`, `select`, `number`, `im
 writer who cannot see the site — agents read them through MCP. Rules, the
 five meanings of "category", and the SEO card: `references/data-model.md`.
 
-The admin enforces these for you. They only bite when you author JSON directly —
-JumpStart files, imports, the API — which is exactly what an agent tends to do.
+The admin enforces these for you. They only bite when you author JSON that the
+CLI then imports — JumpStart files, `collection:import` payloads, API bodies —
+which is exactly what an agent tends to write. (Authoring JSON *for the CLI to
+import* is fine; writing it straight into `tcms-data/` is not — see "Write
+through the CLI, never to the files" above.)
 
 - **Every schema must define an `id` property**, not just list `id` in `required`.
   A schema missing it fails with `The required properties (id) are missing`, which

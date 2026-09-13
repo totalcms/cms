@@ -64,6 +64,51 @@ it('overwrites an existing install when force is true', function (): void {
 	expect(file_get_contents($target . '/SKILL.md'))->toBe('new');
 });
 
+it('rewrites Composer paths in markdown for a zip install', function (): void {
+	$source = $this->tmp . '/source';
+	$target = $this->tmp . '/target';
+	mkdir($source, 0755, true);
+	file_put_contents($source . '/SKILL.md', implode("\n", [
+		'Run `vendor/bin/tcms builder:routes` to list pages.',
+		'Docs live at `vendor/totalcms/cms/resources/docs/fields/deck.md`.',
+		'Composer install — CLI `vendor/bin/tcms`, docs `vendor/totalcms/cms/`. ' . SkillInstaller::KEEP_MARKER,
+	]));
+	file_put_contents($source . '/logo.svg', '<svg>vendor/bin/tcms</svg>');
+
+	(new SkillInstaller())->install($source, $target, true, false);
+
+	$skill = (string)file_get_contents($target . '/SKILL.md');
+	expect($skill)->toContain('Run `php resources/bin/tcms builder:routes`');
+	expect($skill)->toContain('Docs live at `resources/docs/fields/deck.md`.');
+	expect($skill)->toContain('Composer install — CLI `vendor/bin/tcms`, docs `vendor/totalcms/cms/`.');
+
+	// Non-markdown files are copied byte for byte.
+	expect(file_get_contents($target . '/logo.svg'))->toBe('<svg>vendor/bin/tcms</svg>');
+});
+
+it('leaves Composer paths untouched for a Composer install', function (): void {
+	$source   = $this->tmp . '/source';
+	$target   = $this->tmp . '/target';
+	$contents = "Run `vendor/bin/tcms info`, read `vendor/totalcms/cms/resources/docs/`.\n";
+	mkdir($source, 0755, true);
+	file_put_contents($source . '/SKILL.md', $contents);
+
+	(new SkillInstaller())->install($source, $target, true, true);
+
+	expect(file_get_contents($target . '/SKILL.md'))->toBe($contents);
+});
+
+it('defaults to the Composer layout when no layout is given', function (): void {
+	$source = $this->tmp . '/source';
+	$target = $this->tmp . '/target';
+	mkdir($source, 0755, true);
+	file_put_contents($source . '/SKILL.md', 'Run `vendor/bin/tcms info`.');
+
+	(new SkillInstaller())->install($source, $target);
+
+	expect(file_get_contents($target . '/SKILL.md'))->toBe('Run `vendor/bin/tcms info`.');
+});
+
 it('reports not installed when the source is missing rather than throwing', function (): void {
 	$result = (new SkillInstaller())->install($this->tmp . '/does-not-exist', $this->tmp . '/target');
 
@@ -78,6 +123,38 @@ it('ships a valid SKILL.md with name and description frontmatter', function (): 
 	$head = implode("\n", array_slice(explode("\n", (string)file_get_contents($skill)), 0, 5));
 	expect($head)->toMatch('/^name:/m');
 	expect($head)->toMatch('/^description:/m');
+});
+
+it('rewrites the shipped skill source cleanly for a zip install', function (): void {
+	$target = $this->tmp . '/zip';
+
+	$result = (new SkillInstaller())->install(
+		PathResolver::packageRoot() . '/resources/skill',
+		$target,
+		true,
+		false,
+	);
+
+	expect($result['installed'])->toBeTrue();
+
+	foreach ($result['copied'] as $relative) {
+		if (!str_ends_with($relative, '.md')) {
+			continue;
+		}
+
+		$contents = (string)file_get_contents($target . '/' . $relative);
+		$lines    = array_filter(
+			explode("\n", $contents),
+			fn (string $line): bool => !str_contains($line, SkillInstaller::KEEP_MARKER),
+		);
+		$rewritten = implode("\n", $lines);
+
+		// Nothing may still point at the Composer layout...
+		expect($rewritten)->not->toContain('vendor/bin/tcms', "{$relative} still references vendor/bin/tcms");
+		expect($rewritten)->not->toContain('vendor/totalcms/cms', "{$relative} still references vendor/totalcms/cms");
+		// ...and the rewrite must not have left an empty `` code span behind.
+		expect($rewritten)->not->toContain('``', "{$relative} has an empty code span after the rewrite");
+	}
 });
 
 it('ships every reference file and links each from SKILL.md', function (): void {

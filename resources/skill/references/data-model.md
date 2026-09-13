@@ -7,7 +7,7 @@
 
 Three concepts:
 - **Schema** — the shape: which fields an object has and their types. JSON under
-  `tcms-data` / managed via `schema:*`. 38 reserved schemas (blog, image, gallery,
+  `tcms-data` / managed via `schema:*`. The reserved schemas (blog, image, gallery,
   builder-page, seo-site, automations, …) plus your own custom schemas.
 - **Collection** — a named bucket of objects bound to a schema (e.g. `blog` uses the
   `blog` schema). Managed via `collection:*`. Carries its own settings: URL, sort,
@@ -27,7 +27,7 @@ vendor/bin/tcms object:get blog my-post --json
 ## Create a schema
 
 **Start from the reference schema.** Total CMS ships a reserved schema named
-`totalcms` whose 44 properties demonstrate every built-in field type with its
+`totalcms` whose properties demonstrate every built-in field type with its
 settings, and whose help text says what each field is for. Read it first and
 copy property definitions from it instead of writing them from memory:
 
@@ -63,17 +63,65 @@ happen.
 | several of a fixed list | `checklist` | `list` |
 | tags / categories editors grow over time | `list` + `"settings": {"propertyOptions": true}` | `select` |
 | a count, rating, sort order | `number` | `text` |
+| a count that must be whole (page size, position) | `number` with `"type": "integer"` | `text` |
 | money | `price` | `number` |
 | an email / a URL / a phone | `email` / `url` / `phone` | `text` |
 | one image / several / a file / a file library | `image` / `gallery` / `file` / `depot` | a path in `text` |
 | a hosted video | `video` | `url` |
 | a fixed group of related fields (address, hero) | `card` | flat `addressLine1`, `addressCity`… |
 | repeating structured items (FAQs, team, line items) | `deck` (`deckTable` for short rows) | a `list`, a `json` |
-| an API key / token | `secret` | `text` |
+| an API key / token the site reuses | `secret` | `text`, `password` |
+| a password to verify, never to read back | `password` | `secret` |
+| an embed code, a Twig or HTML snippet, an automation handler | `code` with `"settings": {"mode": "twig"}` (or `html`, `css`, `javascript`, `php`) | `textarea`, `styledtext` |
+| free-form structured data a template reads (`page.data.*`) | `json` | `textarea`, a `deck` with one item |
+| an inline SVG (logo, icon) | `svg` | `image`, `code` |
+| a time of day | `time` | `text` |
 | a colour | `color` | `text` |
+| when it was created / last changed | `datetime` with `"settings": {"onCreate": true}` / `{"onUpdate": true}` (see below) | hand-set `date` |
 | SEO metadata for a public page | a `card` with `"schemaref": ".../schemas/seo.json"` | separate `metaTitle` text fields |
 
 Omit `type` when the field implies it — the saver fills it in from `field`.
+
+### Types: let the field decide, or use a property reference
+
+Every property has a `field` (the editor) and a `type` (the stored shape).
+Get the type one of three ways, in order of preference:
+
+1. **Omit it.** On save the type is filled from the field: `text`/`textarea`/
+   `select`/`styledtext` → `string`, `checkbox`/`toggle` → `boolean`,
+   `number`/`price`/`range` → `number`, `checklist`/`multiselect` → `array`,
+   and every other field → the type of the same name (`code` → `code`,
+   `json` → `json`, `url` → `url`, `list` → `list`, `image` → `image` …).
+2. **Use a property reference** when you want the shipped validation:
+   `"$ref": "https://www.totalcms.co/schemas/properties/<type>.json"` with
+   `<type>` one of `card code color date deck depot email file gallery image
+   json list localizedtext password phone slug svg time url video`. A ref
+   gives you the pattern for a URL, the format check for an email, and the
+   "empty is allowed" branch, and it resolves to the right type name.
+3. **Name the type** only when the field's default is wrong for the value:
+   `"type": "integer"` on a `number` field is the common case. The recognised
+   names are `array boolean card code color date deck depot email file gallery
+   image integer json list localizedtext number password phone slug string svg
+   time url video`.
+
+Do not hand-write `"type": "string"` on a `code`, `url`, `email`, `json` or
+`svg` field. It validates, but it is not what the saver would have chosen, the
+schema editor's type dropdown falls out of step, and the schema page draws a
+second (mismatched) type icon beside the field icon — that second icon is the
+tell that a field/type pair is off.
+
+**Timestamps are schema properties, not automatic.** A record gets `created`
+and `updated` only if the schema declares them (`datetime` fields with
+`onCreate` / `onUpdate` in `settings`, as the `builder-page` schema does).
+Without them a record seeded by JumpStart or the CLI has no dates at all — no
+sitemap `lastmod`, no `datePublished` / `dateModified` in the Article JSON-LD.
+Put `updated` in the `index` so the sitemap can read it.
+
+**Cards and decks need a full `formgrid` row** (`seo seo`, `address address`);
+a half cell collapses the card's own grid. **Deck item keys** are letters,
+digits and underscores — no hyphens — because items are read in Twig with dot
+notation (`faqs.q1`, not `faqs['q-1']`). The admin converts as you type; it
+only bites in data you write by hand (JumpStart, the API, imports).
 
 **"Category" means five different things.** Ask which before modelling it:
 
@@ -124,6 +172,10 @@ has a description — **before** reporting the schema as finished. Do this on
 the first pass; do not leave descriptions for a follow-up.
 
 ## Create / import content
+
+Always through the CLI (or the API/MCP) — never by writing files into
+`tcms-data/`. The CLI validates, fills derived fields and timestamps, updates
+the index and fires events; a hand-written file does none of that.
 
 One object — `object:create` (file path, or `-` for stdin):
 

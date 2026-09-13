@@ -77,6 +77,21 @@ This is launch semantics for the AUTHENTICATED tier, not a migration: MCP had no
 
 ---
 
+## What the agent is told on connect
+
+The initialize response carries `instructions`, and every MCP client keeps
+that text in context for the conversation. Total CMS uses it to hand the agent
+the judgment a human editor would bring: discover collections and read the
+schema's help text before acting, look things up with the `docs_*` tools
+instead of guessing, patch objects rather than replace them, respect field
+shapes, never invent ids, and — on an admin connection — how to model a
+schema well (start from the `totalcms` reference schema, help text on every
+property, the SEO card on anything that becomes a page). The text is
+persona-aware: a read-only connection is told it can only read and what
+writing needs, not how to write. Together with the `tcms_*` prompts this is
+the equivalent of the terminal agent skill for people who reach Total CMS
+only through claude.ai, Claude Desktop or ChatGPT.
+
 ## Enabling the MCP server
 
 1. **Check your edition.** MCP requires Standard or Pro. Trial counts as Pro for testing, which also unlocks the API-key and OAuth personas.

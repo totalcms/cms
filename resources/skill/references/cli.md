@@ -4,8 +4,18 @@
 > read the on-disk docs that ship with the package at
 > `vendor/totalcms/cms/resources/docs/` (or query the MCP server if connected).
 
+**Use these commands rather than editing `tcms-data/` files directly.** A CLI
+write validates against the schema, fills derived fields and timestamps,
+updates the collection index and fires events; a hand-written JSON file skips
+all of it and one bad comma takes the collection offline. `SKILL.md` → "Write
+through the CLI, never to the files".
+
+
 Binary: `vendor/bin/tcms`. Global flags: `--json` (machine-readable), `-n`
 (no-interaction), `-q` (quiet). Run `vendor/bin/tcms <command> --help` for any command.
+
+Zip installs have no `vendor/bin/` — run the CLI as `php resources/bin/tcms` from
+the app folder (conventionally `tcms/`).
 
 ## --json contract
 

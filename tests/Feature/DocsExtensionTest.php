@@ -259,7 +259,7 @@ it('docs_get returns real markdown for a known path, confirming resolution again
 // MCP prompts (tcms_*) — content lives in prompts.json
 // ──────────────────────────────────────────────────────────────────────────────
 
-it('registers the five tcms_ workflow prompts, following the tools access level', function (): void {
+it('registers the eight tcms_ workflow prompts, following the tools access level', function (): void {
 	['context' => $context] = docsExtensionRegister(publicTools: false);
 
 	$prompts = $context->getRegisteredMcpPrompts();
@@ -271,6 +271,9 @@ it('registers the five tcms_ workflow prompts, following the tools access level'
 		'tcms_explain_field',
 		'tcms_twig_recipe',
 		'tcms_troubleshoot_mcp',
+		'tcms_model_collection',
+		'tcms_write_content',
+		'tcms_audit_seo',
 	]);
 
 	// A prompt that tells an agent to call docs_lookup is useless to a caller

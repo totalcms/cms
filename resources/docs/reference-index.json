@@ -3206,7 +3206,7 @@
             "name": "number-range",
             "title": "Number and Range Fields",
             "description": "Configure number and range input fields in Total CMS with min, max, and step settings for precise numeric value control.",
-            "content": "number and range fields { \"min\" : 1, \"max\" : 10, \"step\" : 0.25 } public counters a number field can be opened to anonymous increments \u2014 likes, \"was this helpful\", download counts \u2014 without opening anything else on the object: { \"likes\": { \"type\" : \"number\", \"field\" : \"number\", \"default\" : 0, \"settings\" : { \"publicincrement\" : true } } } with publicincrement set, unauthenticated callers may post to the field's /increment and /decrement routes; every other write still needs authentication or the collection's publicoperations . anonymous counter writes are limited to 60 per minute per ip. treat the number as a soft signal, not a vote: anyone can call it. the htmx recipes docs/twig/htmx page shows the one-line like button.",
+            "content": "number and range fields { \"min\" : 1, \"max\" : 10, \"step\" : 0.25 } public counters a number field can be opened to anonymous increments \u2014 likes, \"was this helpful\", download counts \u2014 without opening anything else on the object: { \"likes\": { \"type\" : \"number\", \"field\" : \"number\", \"default\" : 0, \"settings\" : { \"publicincrement\" : true } } } give the property \"type\": \"integer\" instead when only whole numbers make sense \u2014 a count, a sort order, a page size. the number field renders the same either way; the difference is validation, where integer rejects 2.5 , and the schema page, which shows the same number icon for both. with publicincrement set, unauthenticated callers may post to the field's /increment and /decrement routes; every other write still needs authentication or the collection's publicoperations . anonymous counter writes are limited to 60 per minute per ip. treat the number as a soft signal, not a vote: anyone can call it. the htmx recipes docs/twig/htmx page shows the one-line like button.",
             "url": "https://docs.totalcms.co/fields/number-range/"
         },
         {
@@ -4898,6 +4898,18 @@
             ],
             "examples": [
                 "tcms extension:remove acme/seo-pro\ntcms extension:remove acme/seo-pro --force"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "skill:install",
+            "description": "Install or refresh the bundled Total CMS agent skill into `.claude/skills/totalcms/`, so Claude Code and other coding agents pick up the conventions that ship with your version of the CMS.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "tcms skill:install\ntcms skill:install --json",
+                "php resources/bin/tcms skill:install"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"

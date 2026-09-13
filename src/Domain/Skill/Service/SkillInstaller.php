@@ -17,15 +17,34 @@ namespace TotalCMS\Domain\Skill\Service;
  *
  * The skill is core-owned: install overwrites by default (like the shipped docs),
  * so customers always get the version matching their installed `totalcms/cms`.
+ *
+ * The shipped source is written for the Composer layout (`vendor/bin/tcms`,
+ * `vendor/totalcms/cms/resources/docs/`). Zip installs have neither: the CMS *is*
+ * the app folder, so the CLI is `php resources/bin/tcms` and the docs are
+ * `resources/docs/`. Passing `$composerInstall = false` rewrites those two path
+ * forms in every `.md` file as it is copied, so the installed skill always
+ * describes the layout it landed in. Lines carrying the KEEP_MARKER comment are
+ * copied verbatim — that is how the skill can document both layouts side by side.
  */
 class SkillInstaller
 {
+	/** Marks a line whose Composer paths must survive the zip rewrite. */
+	public const KEEP_MARKER = '<!-- composer-paths -->';
+
+	/** Composer-layout path forms rewritten for zip installs, in order. */
+	private const ZIP_REWRITES = [
+		'vendor/bin/tcms'       => 'php resources/bin/tcms',
+		'vendor/totalcms/cms/'  => '',
+	];
+
 	/**
 	 * Copy the skill tree from $source into $target.
 	 *
+	 * @param bool $composerInstall False rewrites Composer paths in `.md` files for the zip layout.
+	 *
 	 * @return array{installed: bool, source: string, target: string, copied: list<string>, failed: list<string>}
 	 */
-	public function install(string $source, string $target, bool $force = true): array
+	public function install(string $source, string $target, bool $force = true, bool $composerInstall = true): array
 	{
 		$source = rtrim($source, '/');
 		$target = rtrim($target, '/');
@@ -69,7 +88,7 @@ class SkillInstaller
 				continue;
 			}
 
-			if (!@copy($item->getPathname(), $dest)) {
+			if (!$this->copyFile($item->getPathname(), $dest, $composerInstall)) {
 				$failed[] = $relative;
 				continue;
 			}
@@ -82,5 +101,45 @@ class SkillInstaller
 		$result['failed']    = $failed;
 
 		return $result;
+	}
+
+	/**
+	 * Copy one file, rewriting markdown paths when the target is a zip install.
+	 */
+	private function copyFile(string $from, string $dest, bool $composerInstall): bool
+	{
+		if ($composerInstall || strtolower(pathinfo($from, PATHINFO_EXTENSION)) !== 'md') {
+			return @copy($from, $dest);
+		}
+
+		$contents = @file_get_contents($from);
+		if ($contents === false) {
+			return false;
+		}
+
+		return @file_put_contents($dest, $this->rewriteForZip($contents)) !== false;
+	}
+
+	/**
+	 * Swap Composer-layout paths for their zip-install equivalents, line by line
+	 * so KEEP_MARKER lines can document the Composer layout verbatim.
+	 */
+	private function rewriteForZip(string $contents): string
+	{
+		$lines = explode("\n", $contents);
+
+		foreach ($lines as $index => $line) {
+			if (str_contains($line, self::KEEP_MARKER)) {
+				continue;
+			}
+
+			$lines[$index] = str_replace(
+				array_keys(self::ZIP_REWRITES),
+				array_values(self::ZIP_REWRITES),
+				$line,
+			);
+		}
+
+		return implode("\n", $lines);
 	}
 }

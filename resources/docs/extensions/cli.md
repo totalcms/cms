@@ -884,3 +884,28 @@ tcms extension:remove acme/seo-pro --force
 | Option | Description |
 |--------|-------------|
 | `--force, -f` | Skip confirmation prompt |
+
+---
+
+## Agent Skill
+
+### `skill:install`
+
+Install or refresh the bundled Total CMS agent skill into `.claude/skills/totalcms/`, so Claude Code and other coding agents pick up the conventions that ship with your version of the CMS.
+
+```bash
+tcms skill:install
+tcms skill:install --json
+```
+
+Composer installs run this for you on every `composer install` and `composer update`, so the skill always matches the installed `totalcms/cms`.
+
+Zip installs run it by hand — once from the app folder after unpacking, and again after each update, since an update replaces `resources/`:
+
+```bash
+php resources/bin/tcms skill:install
+```
+
+The skill's paths are rewritten to match the layout it is installed into. Composer installs get `vendor/bin/tcms` and `vendor/totalcms/cms/resources/docs/`; zip installs get `php resources/bin/tcms` and `resources/docs/`.
+
+Installing overwrites the existing copy — the skill is core-owned, so keep local notes outside `.claude/skills/totalcms/`.
