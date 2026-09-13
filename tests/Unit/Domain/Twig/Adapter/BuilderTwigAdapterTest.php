@@ -5,7 +5,9 @@ namespace Tests\Unit\Domain\Twig\Adapter;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Builder\Service\BuilderOrderService;
+use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
@@ -18,6 +20,7 @@ final class BuilderTwigAdapterTest extends TestCase
 	private MockObject $indexReader;
 	private MockObject $orderService;
 	private MockObject $config;
+	private MockObject $router;
 
 	protected function setUp(): void
 	{
@@ -25,6 +28,7 @@ final class BuilderTwigAdapterTest extends TestCase
 		$this->indexReader   = $this->createMock(IndexReader::class);
 		$this->orderService  = $this->createMock(BuilderOrderService::class);
 		$this->config        = $this->createMock(Config::class);
+		$this->router        = $this->createMock(PageRouter::class);
 
 		$this->builderConfig->method('getPagesCollectionId')->willReturn('builder-pages');
 		$this->config->builder = ['assetsPath' => 'assets'];
@@ -36,6 +40,7 @@ final class BuilderTwigAdapterTest extends TestCase
 			$this->indexReader,
 			$this->orderService,
 			$this->config,
+			$this->router,
 		);
 	}
 
@@ -764,6 +769,7 @@ final class BuilderTwigAdapterTest extends TestCase
 			$this->indexReader,
 			$this->orderService,
 			$this->config,
+			$this->router,
 		);
 
 		$result = $adapter->asset('css/style.css');
@@ -773,5 +779,47 @@ final class BuilderTwigAdapterTest extends TestCase
 		$this->assertSame('/assets/js/app.d4e5f6.js', $result);
 
 		@unlink($dir . '/manifest.json');
+	}
+
+	// ---- page(): the current page for templates the router did not render ----
+
+	public function testPageReturnsTheBuilderPageRecordThatRoutesThePath(): void
+	{
+		$record = ['id' => 'about', 'route' => '/about', 'template' => 'about'];
+		$this->router->expects($this->once())->method('match')->with('/about')->willReturn(new RouteMatch('about', $record));
+
+		$this->assertSame($record, $this->adapter->page('/about'));
+	}
+
+	public function testPageDefaultsToTheCurrentRequestAndStripsTheBasePath(): void
+	{
+		// A sub-path install: the raw request URI carries /tcms, the router
+		// matches paths with it stripped, as Slim hands them over.
+		$this->config->api      = '/tcms';
+		$_SERVER['REQUEST_URI'] = '/tcms/about?ref=1';
+		$this->router->expects($this->once())->method('match')->with('/about?ref=1')->willReturn(new RouteMatch('about', ['id' => 'about']));
+
+		try {
+			$this->assertSame(['id' => 'about'], $this->adapter->page());
+		} finally {
+			unset($_SERVER['REQUEST_URI']);
+			$this->config->api = '';
+		}
+	}
+
+	public function testPageIsNullWhenNothingRoutesThePath(): void
+	{
+		$this->router->method('match')->willReturn(null);
+
+		$this->assertNull($this->adapter->page('/nowhere'));
+	}
+
+	public function testPageIsNullForACollectionUrlMatch(): void
+	{
+		// The caller of a collection page needs the object and its collection
+		// name; a page record is the wrong thing to hand back.
+		$this->router->method('match')->willReturn(new RouteMatch('blog', ['id' => 'hello'], [], 'blog'));
+
+		$this->assertNull($this->adapter->page('/blog/hello'));
 	}
 }

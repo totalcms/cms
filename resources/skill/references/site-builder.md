@@ -85,3 +85,14 @@ Full reference: `vendor/totalcms/cms/resources/docs/site-builder/seo.md`.
 ## Snapshots
 
 `vendor/bin/tcms builder:history` lists and restores prior versions of a builder template.
+
+## SEO on pages the router did not render
+
+`cms.seo.head(page|default(null))` only knows the page when the page router
+rendered the template. For a page served another way (Stacks, a hand-written
+front end) either keep a `builder-pages` record with the same route as an SEO
+carrier and call `cms.seo.head(cms.builder.page())`, or describe the page
+inline: `cms.seo.head({title: '…', description: '…', image: '/x.png', url: '/path'})`
+— an array with no `id` is treated as a page; `seo: {…}` inside it overrides
+like the SEO card. Details: `docs/site-builder/seo.md` → "Pages the router did
+not render".

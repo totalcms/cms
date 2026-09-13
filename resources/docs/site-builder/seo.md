@@ -412,6 +412,49 @@ The same call works for any collection — products, events, team members — on
 
 Calling `cms.seo.head()` with no arguments at all is legitimate — a 404 template, a search results page, anything with no record behind it. You get the site's title, default description and the WebSite / Organization JSON-LD.
 
+## Pages the router did not render
+
+`page` is in scope only for templates the page router renders. A page served
+some other way — a Stacks page that Apache answers before Total CMS routes
+anything, a hand-written PHP front end — has no `page` and, with the call
+above, gets the site defaults. Two ways to give it a real head:
+
+**Keep a page record and ask the router for it.** `cms.builder.page()` returns
+the builder page whose route matches the current request (or a path you pass),
+or null. A Stacks site keeps one `builder-pages` record per page with the same
+route, purely as an SEO carrier — the router never serves it, because Apache
+answers first — and the layout picks it up:
+
+```twig
+{{ cms.seo.head(cms.builder.page()) }}
+```
+
+The SEO card, the title placeholders and noindex all work as on any page, and
+the record is edited in the admin like any other. Only builder pages match; a
+collection URL returns null, because that template should pass its object.
+
+**Or describe the page in the template.** Hand `cms.seo.head()` a literal array
+and it is treated as a page:
+
+```twig
+{{ cms.seo.head({
+    title: 'Pricing',
+    description: 'What Total CMS costs, per domain, once.',
+    image: '/images/pricing-card.png',
+    imageAlt: 'The three plans side by side',
+    url: '/pricing'
+}) }}
+```
+
+`title` and `description` are the page's own values; an `seo` key carries the
+same fields as the SEO card and overrides them (`{seo: {title: '…', noindex:
+true}}`). `url` sets the canonical — absolute, or site-relative and the base
+URL is prepended; leave it out and the current request path is used. `image`
+may be a URL string here, since there is no record for ImageWorks to resolve
+against; it is emitted as given. This is the shape a Stacks stack would render
+from fields the designer fills in per page. An array with an `id` is never
+treated this way — that is a collection object and needs its collection name.
+
 ## Reusing the Values
 
 Sometimes the value is wanted in the body rather than the head — a share button that needs the title, a preview card that needs the image, a script tag of your own that needs the description. `cms.seo.data()` runs the same resolution and hands back a plain array instead of markup:

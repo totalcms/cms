@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Twig\Adapter;
 
+use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
+use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Twig\Service\BuilderAssetRenderer;
 use TotalCMS\Domain\Twig\Service\BuilderNavigation;
@@ -28,7 +30,49 @@ class BuilderTwigAdapter
 		private readonly Config $config,
 		private readonly BuilderNavigation $navigation,
 		private readonly BuilderAssetRenderer $assets,
+		private readonly PageRouter $router,
 	) {
+	}
+
+	/**
+	 * The builder page record that routes the given path — by default the
+	 * current request — or null when nothing does.
+	 *
+	 * The page router puts `page` in scope for templates it renders; a page
+	 * served some other way (a Stacks page Apache answers before Total CMS
+	 * routes anything, a hand-written PHP front end) has no `page` and no
+	 * way to ask. This is that way to ask:
+	 *
+	 *   {{ cms.seo.head(cms.builder.page()) }}
+	 *
+	 * A Stacks site keeps a builder-page record per page with the same route
+	 * purely as an SEO carrier — the router never serves it, because Apache
+	 * answers first — and the layout picks it up here. Only builder pages
+	 * match; a collection-URL match returns null, because that caller needs
+	 * the object and its collection name, not a page record.
+	 *
+	 * @return array<string,mixed>|null
+	 *
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 */
+	public function page(?string $path = null): ?array
+	{
+		$path ??= (string)($_SERVER['REQUEST_URI'] ?? '/');
+
+		// The router matches paths as Slim sees them, after the base path is
+		// stripped; a raw request URI on a sub-path install still carries it.
+		$base = rtrim($this->config->api, '/');
+		if ($base !== '' && str_starts_with($path, $base)) {
+			$path = substr($path, strlen($base));
+			$path = $path === '' ? '/' : $path;
+		}
+
+		$match = $this->router->match($path);
+		if (!$match instanceof RouteMatch || $match->collection !== null) {
+			return null;
+		}
+
+		return $match->pageData;
 	}
 
 	/**

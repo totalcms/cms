@@ -287,4 +287,59 @@ final class SeoContextFactoryTest extends TestCase
 		$this->assertSame(['type' => '', 'title' => '', 'description' => '', 'image' => ''], $ctx->seoBlock);
 		$this->assertSame('', $ctx->url);
 	}
+
+	// ---- ad-hoc subjects: templates the page router did not render ----
+
+	public function testAnArrayWithNoIdAndNoCollectionIsAnAdHocPage(): void
+	{
+		$ctx = $this->factory->make(['title' => 'Pricing', 'description' => 'What it costs.', 'url' => '/pricing']);
+
+		$this->assertSame('page', $ctx->kind);
+		$this->assertSame('https://example.com/pricing', $ctx->url);
+		$this->assertSame('title', $ctx->seoBlock['title']);
+		$this->assertSame('description', $ctx->seoBlock['description']);
+	}
+
+	public function testAdHocCanonicalFallsBackToTheCurrentRequestPath(): void
+	{
+		$_SERVER['REQUEST_URI'] = '/about?utm=x';
+
+		try {
+			$ctx = $this->factory->make(['title' => 'About']);
+			$this->assertSame('https://example.com/about', $ctx->url);
+		} finally {
+			unset($_SERVER['REQUEST_URI']);
+		}
+	}
+
+	public function testAdHocStringImageIsUsedAsGivenAndAbsolutized(): void
+	{
+		$ctx = $this->factory->make(['title' => 'Pricing', 'image' => '/img/pricing.jpg', 'imageAlt' => 'The plans']);
+
+		$this->assertSame('image', $ctx->seoBlock['image']);
+		$this->assertSame(['image' => 'https://example.com/img/pricing.jpg'], $ctx->imageUrls);
+		$this->assertSame(['image' => 'The plans'], $ctx->imageAlts);
+	}
+
+	public function testAdHocSeoCardStillOverridesAndItsStringImageWins(): void
+	{
+		$ctx = $this->factory->make([
+			'title' => 'Pricing',
+			'image' => '/img/pricing.jpg',
+			'seo'   => ['title' => 'Plans & pricing', 'noindex' => true, 'image' => 'https://cdn.example/share.png'],
+		]);
+
+		$this->assertSame('Plans & pricing', $ctx->fields->title);
+		$this->assertTrue($ctx->fields->noindex);
+		$this->assertSame(['image' => 'https://cdn.example/share.png'], $ctx->imageUrls);
+	}
+
+	public function testAnArrayWithAnIdIsStillACollectionObject(): void
+	{
+		// The ad-hoc branch must not swallow a real object passed without its
+		// collection name — that stays the object path (and its empty URL).
+		$ctx = $this->factory->make(['id' => 'hello', 'title' => 'Hello']);
+
+		$this->assertSame('object', $ctx->kind);
+	}
 }

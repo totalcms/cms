@@ -13,6 +13,7 @@ use TotalCMS\Domain\Automation\Service\AutomationLoader;
 use TotalCMS\Domain\Automation\Service\AutomationRunReader;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\BuilderOrderService;
+use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\CacheReporter;
@@ -432,6 +433,7 @@ function buildBuilderTwigAdapter(
 	IndexReader $indexReader,
 	BuilderOrderService $orderService,
 	Config $config,
+	PageRouter $router,
 ): BuilderTwigAdapter {
 	return new BuilderTwigAdapter(
 		$builderConfig,
@@ -439,6 +441,7 @@ function buildBuilderTwigAdapter(
 		$config,
 		new BuilderNavigation($builderConfig, $indexReader, $orderService),
 		new BuilderAssetRenderer($config),
+		$router,
 	);
 }
 

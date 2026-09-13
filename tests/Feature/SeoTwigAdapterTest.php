@@ -159,3 +159,12 @@ it('granular methods return only their slice', function (): void {
 		->not->toContain('<title>');
 });
 
+it('renders a full head for an ad-hoc array, the shape a Stacks page hands over', function (): void {
+	$html = ($this->render)("{{ cms.seo.head({title: 'Pricing', description: 'What it costs.', image: '/images/pricing.png', url: '/pricing'}) }}");
+
+	expect($html)->toContain('<title>Pricing | Bistro</title>')
+		->toContain('<link rel="canonical" href="http://totalcms.test/pricing">')
+		->toContain('content="What it costs."')
+		->toContain('og:image" content="http://totalcms.test/images/pricing.png"')
+		->toContain('"WebPage"');
+});

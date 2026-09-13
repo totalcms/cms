@@ -82,7 +82,74 @@ readonly class SeoContextFactory
 			return $this->pageContext($subject, $fields, $settings, $siteName);
 		}
 
+		if ($this->isAdHoc($subject, $options)) {
+			return $this->adHocContext($subject, $fields, $settings, $siteName);
+		}
+
 		return $this->objectContext($subject, $fields, $settings, $siteName, $options);
+	}
+
+	/**
+	 * A subject that is neither a page record nor a collection object: no
+	 * `id`, and no collection named by the call or the array. A template that
+	 * the page router did not render — a Stacks page, a hand-written PHP front
+	 * end — can hand over a literal array and get a page-shaped head:
+	 *
+	 *   {{ cms.seo.head({title: 'Pricing', description: '…', image: '/img/pricing.jpg'}) }}
+	 *   {{ cms.seo.head({seo: {title: '…', description: '…', noindex: true}}) }}
+	 *
+	 * Top-level `title` / `description` are the page's own values; an `seo`
+	 * card overrides them exactly as on a page record. `url` names the
+	 * canonical (absolute or site-relative); without it the current request
+	 * path is the canonical. `image` (or `seo.image`) may be a URL string —
+	 * there is no record for ImageWorks to resolve it against.
+	 *
+	 * @param array<string,mixed> $subject
+	 * @param array<string,mixed> $options
+	 */
+	private function isAdHoc(array $subject, array $options): bool
+	{
+		return !array_key_exists('id', $subject)
+			&& trim((string)($options['collection'] ?? $subject['_collection'] ?? '')) === '';
+	}
+
+	/**
+	 * @param array<string,mixed> $subject
+	 *
+	 * @SuppressWarnings("PHPMD.Superglobals")
+	 */
+	private function adHocContext(array $subject, SeoFields $fields, SeoSettings $settings, string $siteName): SeoContext
+	{
+		$url = trim((string)($subject['url'] ?? ''));
+		if ($url === '') {
+			$requestPath = parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+			$url         = is_string($requestPath) ? $requestPath : '';
+		}
+
+		// A string image is used as given; the block points `image` at itself
+		// so the meta builder picks it up by the same route a mapped property
+		// takes. The SEO card's own image wins when it is a string too.
+		$image = $subject['seo']['image'] ?? null;
+		if (!is_string($image) || $image === '') {
+			$image = $subject['image'] ?? null;
+		}
+		$imageUrls = is_string($image) && $image !== '' ? ['image' => $settings->absolute($image)] : [];
+		$imageAlt  = trim((string)($subject['seo']['imageAlt'] ?? $subject['imageAlt'] ?? ''));
+		$imageAlts = $imageUrls !== [] && $imageAlt !== '' ? ['image' => $imageAlt] : [];
+
+		return new SeoContext(
+			'page',
+			$subject,
+			'',
+			null,
+			['type' => '', 'title' => 'title', 'description' => 'description', 'image' => $imageUrls !== [] ? 'image' : ''],
+			$fields,
+			$settings,
+			$siteName,
+			$url === '' ? '' : $settings->absolute($url),
+			$imageUrls,
+			$imageAlts,
+		);
 	}
 
 	/**
