@@ -950,6 +950,13 @@
             "url": "https://docs.totalcms.co/site-builder/twig/"
         },
         {
+            "name": "cms.builder.page",
+            "signature": "page(?string $path = null): ?array",
+            "description": "The builder page record that routes the given path \u2014 by default the current request \u2014 or null when nothing does.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/site-builder/twig/"
+        },
+        {
             "name": "cms.builder.pagesTree",
             "signature": "pagesTree(?string $collection = null): array",
             "description": "Get every page as a nested tree \u2014 no draft/nav filtering. Intended for the admin sidebar where every page must be visible and editable.",
@@ -4909,7 +4916,8 @@
             "options": [],
             "examples": [
                 "tcms skill:install\ntcms skill:install --json",
-                "php resources/bin/tcms skill:install"
+                "php resources/bin/tcms skill:install",
+                "tcms skill:install --check\ntcms skill:install --check --json"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"

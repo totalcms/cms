@@ -9,6 +9,15 @@ This project **is a website** built on Total CMS, a flat-file PHP CMS. There is
 **no database** — all content is JSON under `tcms-data/`. Configure via
 `config/tcms.php` (deep-merged — specify only keys you change).
 
+## Is this copy current?
+
+This skill is a copy of the one shipped with the installed CMS, so it can fall
+behind. At the start of a session run `vendor/bin/tcms skill:install --check`.
+If it reports stale, run `vendor/bin/tcms skill:install` and then tell the user
+to start a new session — the text already loaded cannot replace itself. The
+stamp is a hash of the skill's own content, not the release number, so only real
+changes to the skill flag it.
+
 ## Where things are
 
 T3 ships in two layouts. Check which one you are in before running anything.

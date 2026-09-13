@@ -909,3 +909,39 @@ php resources/bin/tcms skill:install
 The skill's paths are rewritten to match the layout it is installed into. Composer installs get `vendor/bin/tcms` and `vendor/totalcms/cms/resources/docs/`; zip installs get `php resources/bin/tcms` and `resources/docs/`.
 
 Installing overwrites the existing copy — the skill is core-owned, so keep local notes outside `.claude/skills/totalcms/`.
+
+#### Checking whether the installed skill is stale
+
+An agent loads the skill text once, at the start of a session, so a copy that has fallen behind keeps steering the agent with old conventions. `--check` compares the installed copy against the shipped source and writes nothing:
+
+```bash
+tcms skill:install --check
+tcms skill:install --check --json
+```
+
+Freshness is a **content hash**, not a version number: the install stamps a sha256 of the shipped skill files into `.claude/skills/totalcms/.skill-manifest.json` and into `SKILL.md`'s frontmatter. A CMS release that does not touch the skill leaves the check passing, and editing one reference file flags exactly that file.
+
+Exit codes make it scriptable:
+
+| Exit | Meaning |
+|---|---|
+| `0` | The installed skill matches the shipped source |
+| `1` | Stale, or not installed at all |
+
+After re-installing, start a new agent session — the skill text already loaded cannot replace itself.
+
+Optionally, have Claude Code run the check for you at the start of every session with a `SessionStart` hook in `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "vendor/bin/tcms skill:install --check" }
+        ]
+      }
+    ]
+  }
+}
+```
