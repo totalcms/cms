@@ -9,6 +9,7 @@ use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
+use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
@@ -693,6 +694,58 @@ class TotalForm implements \Stringable
 			'value' => $c->id,
 			'label' => $c->name !== '' ? $c->name : $c->id,
 		], $collections));
+	}
+
+	/**
+	 * Collections that can serve as the Site Builder pages collection, as
+	 * {value, label} pairs. Used by the "pageCollections" propertyOptions
+	 * source behind the `builder.pagesCollection` setting.
+	 *
+	 * Only a collection whose schema IS `builder-page`, or inherits from it,
+	 * qualifies. The page router and the builder-page migrations treat every
+	 * object in the configured collection as a page, so offering the full
+	 * collection list here once let an operator point them at a 5,000-object
+	 * catalogue with no page fields at all.
+	 *
+	 * @return array<int,array{value: string, label: string}>
+	 */
+	public function pageCollectionOptions(): array
+	{
+		$options = [];
+
+		foreach ($this->collectionLister->listAllCollections() as $collection) {
+			if (!$this->schemaIsBuilderPage($collection->schema)) {
+				continue;
+			}
+
+			$options[] = [
+				'value' => $collection->id,
+				'label' => $collection->name !== '' ? $collection->name : $collection->id,
+			];
+		}
+
+		return $options;
+	}
+
+	/**
+	 * Inheritance is one level deep (see SchemaFetcher::resolveInheritance),
+	 * so the raw schema's own `inheritFrom` is the whole story. A schema that
+	 * cannot be read does not qualify — the collection would not work as a
+	 * pages collection either.
+	 */
+	private function schemaIsBuilderPage(string $schemaId): bool
+	{
+		if ($schemaId === BuilderConfigService::DEFAULT_SCHEMA_ID) {
+			return true;
+		}
+
+		try {
+			$schema = $this->schemaFetcher->fetchRawSchema($schemaId);
+		} catch (\Throwable) {
+			return false;
+		}
+
+		return in_array(BuilderConfigService::DEFAULT_SCHEMA_ID, $schema->inheritFrom, true);
 	}
 
 	protected ?TemplateLister $templateLister                  = null;

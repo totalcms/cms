@@ -498,6 +498,7 @@ class FormField
 	 * - true: fetch unique values from current collection for this property
 	 * - "collections": fetch unique category values from all collections
 	 * - "schemas": fetch unique category values from all schemas
+	 * - "pageCollections": collections whose schema is builder-page or inherits from it
 	 * - "locales": fetch locale codes from LocaleRegistry as {value, label} dicts.
 	 * - "podcastCategories": Apple's podcast taxonomy as optgroups (static).
 	 *
@@ -537,6 +538,10 @@ class FormField
 
 		if ($source === 'collectionIds') {
 			return $this->form->collectionIdListWithLabels();
+		}
+
+		if ($source === 'pageCollections') {
+			return $this->form->pageCollectionOptions();
 		}
 
 		if ($source === 'viewIds') {

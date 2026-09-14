@@ -23,6 +23,7 @@ Instead of `true` (scan the current collection), set `propertyOptions` to a name
 |--------|----------------|
 | `true` | Unique values of *this* field across the current collection's objects (the default). |
 | `"collectionIds"` | The IDs of all collections. |
+| `"pageCollections"` | Collections whose schema is `builder-page` or inherits from it — the only ones that can serve as the Site Builder pages collection. |
 | `"viewIds"` | The IDs of all Data Views. |
 | `"collectionsAndViews"` | Collections and Data Views together, grouped under two headings. Values are bare ids, so a consumer decides how to resolve an id carried by both. |
 | `"collections"` | Unique category names across all collections. |

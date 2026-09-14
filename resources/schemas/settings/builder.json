@@ -8,10 +8,10 @@
 			"type"        : "string",
 			"field"       : "select",
 			"label"       : "Pages Collection",
-			"help"        : "The collection used for page metadata. Change this if you use a custom schema that extends <code>builder-page</code>.",
+			"help"        : "The collection used for page metadata. Only collections whose schema is <code>builder-page</code>, or inherits from it, are offered — every object in this collection is served as a page.",
 			"placeholder" : "builder-pages",
 			"settings"    : {
-				"propertyOptions" : "collectionIds",
+				"propertyOptions" : "pageCollections",
 				"sortOptions"     : true
 			}
 		},
