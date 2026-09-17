@@ -12,8 +12,8 @@ namespace TotalCMS\Domain\Seo\Data;
 final readonly class MetaPayload
 {
 	/**
-	 * @param string $rawTitle The title before the site title template is applied
-	 * @param string $socialTitle The share-card title: the card's Social Title, else $rawTitle, through the site's social title template
+	 * @param string $rawTitle The title before the site title template is applied (the template shapes only a title derived from the object's own `title`)
+	 * @param string $socialTitle The share-card title: the card's Social Title, else $rawTitle; a derived title goes through the site's social title template
 	 * @param string $contentType `website`, `article` or `blogposting` — the record's card, else the collection, else `website`
 	 * @param string $ogType `website` or `article`, derived from $contentType
 	 * @param string $publishedTime The object's `date`, else `created`, for `article:published_time`; `''` when not an article

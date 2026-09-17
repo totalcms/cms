@@ -9,21 +9,34 @@ use TotalCMS\Domain\Seo\Service\MetaBuilder;
 describe('MetaBuilder', function (): void {
 	$b = new MetaBuilder();
 
-	test('title: card → object title → site; through the template', function () use ($b): void {
+	test('title: card → collection template → object title → site; only the object title goes through the site template', function () use ($b): void {
+		// The object's own title is the derived case: the site template shapes it.
 		expect($b->build(seoCtx())->title)->toBe('Hello <World> | Bistro');
-		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['title' => 'Custom'])]))->title)->toBe('Custom | Bistro');
 		expect($b->build(seoCtx(['kind' => 'none', 'object' => [], 'url' => '']))->title)->toBe('Bistro');
 		expect($b->build(seoCtx(['settings' => SeoSettings::fromArray(['titleTemplate' => '${site} – ${title}'], 'x'), 'siteName' => 'S']))->title)->toBe('S – Hello <World>');
+
+		// A title someone authored — on the card — is the whole <title>. The
+		// site template is the default shape, not a wrapper around every title.
+		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['title' => 'Custom'])]))->title)->toBe('Custom');
 	});
 
-	test('title: the collection template composes from the object and goes through the site template', function () use ($b): void {
+	test('title: the collection template composes from the object and is used verbatim, not merged with the site template', function () use ($b): void {
 		$obj   = ['id' => 'x', 'title' => 'Post', 'name' => 'Tony', 'author' => 'Joe'];
-		$block = ['type' => '', 'title' => '${title} | YETI Post', 'socialTitle' => '', 'description' => '', 'image' => ''];
+		$block = ['type' => '', 'title' => 'YETI - ${title}', 'socialTitle' => '', 'description' => '', 'image' => ''];
 		$p     = $b->build(seoCtx(['object' => $obj, 'seoBlock' => $block]));
-		expect($p->rawTitle)->toBe('Post | YETI Post')->and($p->title)->toBe('Post | YETI Post | Bistro');
+		expect($p->rawTitle)->toBe('YETI - Post')->and($p->title)->toBe('YETI - Post');
+
+		// The collection template can bring the site name in itself.
+		$site = ['type' => '', 'title' => '${title} | ${site} Blog', 'socialTitle' => '', 'description' => '', 'image' => ''];
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => $site]))->title)->toBe('Post | Bistro Blog');
 
 		// The card's own title still wins over the collection template.
-		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => $block, 'fields' => SeoFields::fromArray(['title' => 'Custom'])]))->rawTitle)->toBe('Custom');
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => $block, 'fields' => SeoFields::fromArray(['title' => 'Custom'])]))->title)->toBe('Custom');
+
+		// A collection template whose placeholders all come back empty falls
+		// through to the object's title, which then takes the site template.
+		$empty = ['type' => '', 'title' => 'YETI - ${nothing}', 'socialTitle' => '', 'description' => '', 'image' => ''];
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => $empty]))->title)->toBe('Post | Bistro');
 	});
 
 	test('socialTitle: card, then the collection social template, then the raw title', function () use ($b): void {
@@ -127,7 +140,7 @@ describe('MetaBuilder', function (): void {
 		}
 	});
 
-	test('socialTitle: the card, else the raw title; through the social template, never the title template', function () use ($b): void {
+	test('socialTitle: the card, else the raw title; the social template shapes only the derived title, never the title template', function () use ($b): void {
 		$p = $b->build(seoCtx(['fields' => SeoFields::fromArray(['socialTitle' => ' Short '])]));
 		expect($p->socialTitle)->toBe('Short')->and($p->title)->toBe('Hello <World> | Bistro')->and($p->rawTitle)->toBe('Hello <World>');
 
@@ -136,12 +149,18 @@ describe('MetaBuilder', function (): void {
 		expect($b->build(seoCtx())->socialTitle)->toBe('Hello <World>');
 
 		// A site-level Social Title Template structures share titles on its
-		// own, independent of <title>. The card's Social Title goes through
-		// it like the card's Title goes through the title template.
+		// own, independent of <title> — for the derived title. A Social Title
+		// someone typed on the card is used as typed, like the card's Title.
 		$settings = SeoSettings::fromArray(['socialTitleTemplate' => '${title} — from ${site}'], 'x');
 		$p        = $b->build(seoCtx(['settings' => $settings]));
 		expect($p->socialTitle)->toBe('Hello <World> — from Bistro')->and($p->title)->toBe('Hello <World> | Bistro');
-		expect($b->build(seoCtx(['settings' => $settings, 'fields' => SeoFields::fromArray(['socialTitle' => 'Short'])]))->socialTitle)->toBe('Short — from Bistro');
+		expect($b->build(seoCtx(['settings' => $settings, 'fields' => SeoFields::fromArray(['socialTitle' => 'Short'])]))->socialTitle)->toBe('Short');
+
+		// A title shaped by the card or the collection template is already
+		// authored: the share card carries it as is, with no social template.
+		$block = ['type' => '', 'title' => 'YETI - ${title}', 'socialTitle' => '', 'description' => '', 'image' => ''];
+		expect($b->build(seoCtx(['settings' => $settings, 'seoBlock' => $block]))->socialTitle)->toBe('YETI - Hello <World>');
+		expect($b->build(seoCtx(['settings' => $settings, 'fields' => SeoFields::fromArray(['title' => 'Custom'])]))->socialTitle)->toBe('Custom');
 
 		// No record behind the page: the share title collapses to the site
 		// name rather than a dangling template.

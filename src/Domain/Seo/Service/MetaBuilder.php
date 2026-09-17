@@ -40,25 +40,37 @@ class MetaBuilder
 		// Title: the seo card wins, then the collection's title template, then
 		// the object's own title, then the site. Card and collection are both
 		// `${property}` templates over the record.
+		//
+		// The site's title template (`${title} | ${site}`) is the DEFAULT
+		// shape: it applies only to the derived title — the object's own
+		// `title`. A title someone authored, on the card or as the collection
+		// template, is the whole <title>; wrapping it again would turn a
+		// collection's `YETI - ${title}` into `YETI - Post | Yeti Bros`. A
+		// template that wants the site name says `${site}` itself.
 		$rawTitle = $this->renderTemplate($f->title, $ctx);
 		if ($rawTitle === '') {
 			$rawTitle = $this->renderTemplate($ctx->seoBlock['title'], $ctx);
 		}
-		if ($rawTitle === '') {
+		$authored = $rawTitle !== '';
+		if (!$authored) {
 			$rawTitle = $this->scalarString($ctx->object['title'] ?? null);
 		}
-		$title = $this->applyTemplate($rawTitle, $ctx->siteName, $s->titleTemplate);
+		$title = $authored ? $rawTitle : $this->applyTemplate($rawTitle, $ctx->siteName, $s->titleTemplate);
 
 		// Share title: the card's Social Title, then the collection's social
-		// title template, else the raw title — through the site's social title
-		// template, `${title}` by default, so a share card carries the bare
-		// title while <title> carries the site suffix. A separate template
-		// because a share card and a browser tab want different shapes.
+		// title template, else the raw title. The site's social title template
+		// (`${title}` by default, so a share card carries the bare title while
+		// <title> carries the site suffix) shapes the derived title by the same
+		// rule: an authored title or social title is used as written. A
+		// separate template because a share card and a browser tab want
+		// different shapes.
 		$socialTitle = $this->renderTemplate($f->socialTitle, $ctx);
 		if ($socialTitle === '') {
 			$socialTitle = $this->renderTemplate($ctx->seoBlock['socialTitle'], $ctx);
 		}
-		$socialTitle = $this->applyTemplate($socialTitle !== '' ? $socialTitle : $rawTitle, $ctx->siteName, $s->socialTitleTemplate);
+		if ($socialTitle === '') {
+			$socialTitle = $authored ? $rawTitle : $this->applyTemplate($rawTitle, $ctx->siteName, $s->socialTitleTemplate);
+		}
 
 		// Description: the seo card, then the collection's mapped property
 		// (stripped to plain text), then the site default.
@@ -185,9 +197,9 @@ class MetaBuilder
 	}
 
 	/**
-	 * Render a site title template (`${title}` and `${site}`). A missing title
-	 * or site name collapses to whichever half exists rather than leaving a
-	 * dangling separator.
+	 * Render a site title template (`${title}` and `${site}`) over the derived
+	 * title. A missing title or site name collapses to whichever half exists
+	 * rather than leaving a dangling separator.
 	 */
 	private function applyTemplate(string $title, string $site, string $template): string
 	{
