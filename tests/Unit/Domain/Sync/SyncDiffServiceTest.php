@@ -36,6 +36,33 @@ describe('SyncDiffService', function (): void {
 		expect($diff['schemas']['blog']['newer'])->toBe('local');
 	});
 
+	test('an empty block and an empty default compare SAME', function (): void {
+		// The exporter sends absent-when-empty keys as `[]` (mirror semantics),
+		// the receiving saver normalised that into `mcp: {tools: []}`, and the
+		// next comparison hashed `[]` against `{tools: []}` — so a collection
+		// read "differs" right after the push that made the two sides equal.
+		// Empty means empty, whichever shape it takes.
+		$diff = $this->service->diff(
+			['collections' => ['custom' => [['id' => 'features', 'mcp' => [], 'sitemap' => ['enabled' => true]]]]],
+			['collections' => ['custom' => [['id' => 'features', 'mcp' => ['tools' => []], 'sitemap' => ['enabled' => true]]]]],
+		);
+		expect($diff['collections']['features']['status'])->toBe(SyncDiffService::SAME);
+
+		// Absent on one side, `[]` on the other: the same thing.
+		$diff = $this->service->diff(
+			['collections' => ['custom' => [['id' => 'features']]]],
+			['collections' => ['custom' => [['id' => 'features', 'mcp' => [], 'properties' => []]]]],
+		);
+		expect($diff['collections']['features']['status'])->toBe(SyncDiffService::SAME);
+
+		// A block with content still differs from an empty one.
+		$diff = $this->service->diff(
+			['collections' => ['custom' => [['id' => 'features', 'mcp' => []]]]],
+			['collections' => ['custom' => [['id' => 'features', 'mcp' => ['access' => 'public', 'tools' => []]]]]],
+		);
+		expect($diff['collections']['features']['status'])->toBe(SyncDiffService::DIFFERS);
+	});
+
 	test('key order does not masquerade as a content difference', function (): void {
 		$diff = $this->service->diff(
 			['schemas' => [['id' => 'a', 'properties' => ['x' => ['type' => 'string', 'label' => 'X']]]]],

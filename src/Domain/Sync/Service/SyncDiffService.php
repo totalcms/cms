@@ -58,6 +58,7 @@ final class SyncDiffService
 				$this->indexCollections($remote['collections'] ?? []),
 				fn (array $item): ?string => is_string($item['updated'] ?? null) && $item['updated'] !== '' ? $item['updated'] : null,
 				['updated'],
+				settings: true,
 			),
 			'templates' => $this->diffCategory(
 				$this->indexById($local['templates'] ?? []),
@@ -79,10 +80,12 @@ final class SyncDiffService
 	 * @param array<string,array<string,mixed>>       $remote
 	 * @param callable(array<string,mixed>): ?string  $timestampOf
 	 * @param list<string>                            $excludeFromHash keys ignored when comparing content
+	 * @param bool                                    $settings        the items are settings blocks, where an
+	 *                                                                 empty block and an absent one mean the same
 	 *
 	 * @return array<string,array{status:string,localUpdated:?string,remoteUpdated:?string,newer:?string}>
 	 */
-	private function diffCategory(array $local, array $remote, callable $timestampOf, array $excludeFromHash): array
+	private function diffCategory(array $local, array $remote, callable $timestampOf, array $excludeFromHash, bool $settings = false): array
 	{
 		$result = [];
 
@@ -98,7 +101,7 @@ final class SyncDiffService
 			} elseif ($remoteItem === null) {
 				$status = self::LOCAL_ONLY;
 			} else {
-				$status = $this->contentHash($localItem, $excludeFromHash) === $this->contentHash($remoteItem, $excludeFromHash)
+				$status = $this->contentHash($localItem, $excludeFromHash, $settings) === $this->contentHash($remoteItem, $excludeFromHash, $settings)
 					? self::SAME
 					: self::DIFFERS;
 			}
@@ -188,7 +191,7 @@ final class SyncDiffService
 	 * @param array<string,mixed> $item
 	 * @param list<string>        $exclude
 	 */
-	private function contentHash(array $item, array $exclude): string
+	private function contentHash(array $item, array $exclude, bool $settings = false): string
 	{
 		// The exclusion applies wherever the item keeps its payload: at the
 		// top level for schemas, inside `data` for objects.
@@ -199,9 +202,43 @@ final class SyncDiffService
 			}
 		}
 
+		if ($settings) {
+			$item = $this->withoutEmptyBranches($item);
+		}
 		$this->ksortRecursive($item);
 
 		return hash('sha256', (string)json_encode($item));
+	}
+
+	/**
+	 * Settings only. Drop keys whose value is null or empties out to nothing:
+	 * an absent block, an explicit `[]` and a block holding only empty lists
+	 * all say "nothing configured", and each side writes a different one of them:
+	 * the exporter sends absent-when-empty keys as `[]` so the importer can
+	 * clear them, and the receiving saver normalises an empty `mcp` into
+	 * `{tools: []}`. Hashing those shapes verbatim made a collection read
+	 * "differs" right after the push that made the two sides equal. Schemas
+	 * and objects are hashed verbatim: there an empty array can be a value
+	 * in its own right (a property with no options, a cleared list).
+	 *
+	 * @param array<mixed> $array
+	 *
+	 * @return array<mixed>
+	 */
+	private function withoutEmptyBranches(array $array): array
+	{
+		foreach ($array as $key => $value) {
+			if (is_array($value)) {
+				$value = $this->withoutEmptyBranches($value);
+			}
+			if ($value === null || $value === []) {
+				unset($array[$key]);
+			} else {
+				$array[$key] = $value;
+			}
+		}
+
+		return $array;
 	}
 
 	/** @param array<mixed> $array */

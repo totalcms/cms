@@ -103,7 +103,10 @@ readonly class CollectionSaver
 		// Ensure mcp.tools is an array — empty/missing/null submissions land as [].
 		// Validation happens upstream in the Action layer via ValidatesMcpToolsTrait;
 		// this normalises the canonical on-disk shape so reads never see a non-array.
-		if (isset($data['mcp']) && is_array($data['mcp'])) {
+		// An entirely empty block stays empty: `tcms push` sends "no MCP settings"
+		// as `mcp: []`, and growing that into `{tools: []}` here made every sync
+		// dry run afterwards report the collection as differing.
+		if (isset($data['mcp']) && is_array($data['mcp']) && $data['mcp'] !== []) {
 			$tools = $data['mcp']['tools'] ?? null;
 			if ($tools === null || $tools === '' || (is_string($tools) && trim($tools) === '')) {
 				$data['mcp']['tools'] = [];
@@ -207,7 +210,10 @@ readonly class CollectionSaver
 		// Ensure mcp.tools is an array — empty/missing/null submissions land as [].
 		// Validation happens upstream in the Action layer via ValidatesMcpToolsTrait;
 		// this normalises the canonical on-disk shape so reads never see a non-array.
-		if (isset($data['mcp']) && is_array($data['mcp'])) {
+		// An entirely empty block stays empty: `tcms push` sends "no MCP settings"
+		// as `mcp: []`, and growing that into `{tools: []}` here made every sync
+		// dry run afterwards report the collection as differing.
+		if (isset($data['mcp']) && is_array($data['mcp']) && $data['mcp'] !== []) {
 			$tools = $data['mcp']['tools'] ?? null;
 			if ($tools === null || $tools === '' || (is_string($tools) && trim($tools) === '')) {
 				$data['mcp']['tools'] = [];

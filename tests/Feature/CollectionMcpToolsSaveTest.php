@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\postJson;
@@ -97,6 +98,27 @@ it('round-trips a valid mcp.tools array through PUT and persists it', function (
 	expect($collection->mcp['tools'])->toHaveCount(1);
 	expect($collection->mcp['tools'][0]['name'])->toBe('find_featured');
 	expect($collection->mcp['tools'][0]['filters']['featured']['value'])->toBe(true);
+});
+
+it('leaves an empty mcp block empty instead of growing a tools list', function (): void {
+	// `tcms push` sends a collection with no MCP settings as `mcp: []`. The
+	// saver used to turn that into `{tools: []}`, which the next sync dry run
+	// then hashed against the sender's `[]` — a permanent "differs" that a
+	// push could never clear.
+	$base = ['id' => 'mcp-tools-empty'] + mcpToolsCollectionBase();
+	$id   = $base['id'];
+	postJson('/api/collections', $base)->assertOk();
+
+	// Through the saver directly, as the sync import does — the REST route
+	// rejects a bare `[]` for the card before the saver sees it.
+	$container = $this->app->getContainer();
+	/** @var CollectionSaver $saver */
+	$saver = $container->get(CollectionSaver::class);
+	$saver->updateCollection($id, $base + ['mcp' => []]);
+
+	/** @var CollectionRepository $repo */
+	$repo = $container->get(CollectionRepository::class);
+	expect($repo->fetchCollection($id)->mcp)->toBe([]);
 });
 
 it('rejects malformed JSON string in mcp.tools with a 400 response', function (): void {
