@@ -27,7 +27,7 @@ final readonly class SeoSettings
 
 	/**
 	 * @param list<string> $sameAs
-	 * @param array{google:string,bing:string,pinterest:string} $verification
+	 * @param string $metaTags Raw markup for the head, emitted as written after the SEO tags
 	 */
 	public function __construct(
 		public string $siteName,
@@ -43,7 +43,7 @@ final readonly class SeoSettings
 		public array $sameAs,
 		public string $contactEmail,
 		public string $contactUrl,
-		public array $verification,
+		public string $metaTags,
 		public bool $emitJsonLd,
 		public bool $emitSocial,
 	) {
@@ -92,7 +92,7 @@ final readonly class SeoSettings
 			sameAs: $sameAs,
 			contactEmail: $str('contactEmail'),
 			contactUrl: $str('contactUrl'),
-			verification: ['google' => $str('googleVerification'), 'bing' => $str('bingVerification'), 'pinterest' => $str('pinterestVerification')],
+			metaTags: $str('metaTags'),
 			emitJsonLd: !array_key_exists('emitJsonLd', $data) || filter_var($data['emitJsonLd'], FILTER_VALIDATE_BOOL),
 			emitSocial: !array_key_exists('emitSocial', $data) || filter_var($data['emitSocial'], FILTER_VALIDATE_BOOL),
 		);
@@ -118,7 +118,7 @@ final readonly class SeoSettings
 			sameAs: $this->sameAs,
 			contactEmail: $this->contactEmail,
 			contactUrl: $this->contactUrl,
-			verification: $this->verification,
+			metaTags: $this->metaTags,
 			emitJsonLd: $this->emitJsonLd,
 			emitSocial: $this->emitSocial,
 		);

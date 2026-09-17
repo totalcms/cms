@@ -6,9 +6,10 @@
 
 	The Twig environment runs with autoescape OFF globally, so this template
 	turns it on for its own body: every value below is a raw string from
-	MetaPayload and MUST be escaped here. The only exception is `jsonld`, which
+	MetaPayload and MUST be escaped here. Two exceptions: `jsonld`, which
 	JsonLdBuilder already encodes with JSON_HEX_TAG — escaping it would corrupt
-	the JSON, so it is printed with `|raw`.
+	the JSON — and `meta.metaTags`, which is markup the operator wrote to be
+	printed as is. Both go out with `|raw`.
 #}
 {% autoescape 'html' %}
 {%- if 'title' in parts and meta.title != '' -%}
@@ -65,16 +66,10 @@
 <meta name="twitter:image:alt" content="{{ meta.ogImageAlt }}">
 {% endif -%}
 {% endif -%}
-{%- if 'verification' in parts -%}
-{% if meta.verification.google != '' -%}
-<meta name="google-site-verification" content="{{ meta.verification.google }}">
-{% endif -%}
-{% if meta.verification.bing != '' -%}
-<meta name="msvalidate.01" content="{{ meta.verification.bing }}">
-{% endif -%}
-{% if meta.verification.pinterest != '' -%}
-<meta name="p:domain_verify" content="{{ meta.verification.pinterest }}">
-{% endif -%}
+{#- Meta Tags are the operator's own markup (a verification tag, a script),
+    pasted to be printed as written — the one other value that is not escaped. #}
+{%- if 'metaTags' in parts and meta.metaTags != '' -%}
+{{ meta.metaTags|raw }}
 {% endif -%}
 {%- if 'jsonld' in parts -%}
 {{ jsonld|raw }}

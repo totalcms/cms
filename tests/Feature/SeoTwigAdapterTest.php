@@ -30,7 +30,7 @@ beforeEach(function (): void {
 		'id'                 => 'seo-site',
 		'siteName'           => 'Bistro',
 		'twitterHandle'      => 'bistro',
-		'googleVerification' => 'g123',
+		'metaTags'           => '<meta name="google-site-verification" content="g123">' . "\n" . '<script src="/x.js"></script>',
 		'defaultImage'       => ['name' => 'share.jpg', 'size' => 10, 'alt' => 'Share alt'],
 	]);
 
@@ -47,7 +47,9 @@ it('renders the whole head for a collection object', function (): void {
 		->toContain('/hello')
 		->toContain('<meta property="og:type" content="article">')
 		->toContain('<meta name="twitter:site" content="@bistro">')
-		->toContain('<meta name="google-site-verification" content="g123">')
+		// Meta Tags are printed as pasted, unescaped — a verification tag, a
+		// script, whatever the operator needs in the head.
+		->toContain('<meta name="google-site-verification" content="g123">' . "\n" . '<script src="/x.js"></script>')
 		->toContain('"@type":"Article"')
 		->not->toContain('<meta name="robots"');
 
@@ -184,6 +186,7 @@ it('granular methods return only their slice', function (): void {
 	expect(($this->render)('{{ cms.seo.jsonld(page) }}', ['page' => $page]))->toStartWith('<script type="application/ld+json">');
 	expect(($this->render)('{{ cms.seo.meta(page) }}', ['page' => $page]))
 		->toContain('<meta name="google-site-verification" content="g123">')
+		->toContain('<script src="/x.js"></script>')
 		->not->toContain('<title>');
 });
 

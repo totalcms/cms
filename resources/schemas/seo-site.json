@@ -4,8 +4,8 @@
 	"id": "seo-site",
 	"type": "object",
 	"category": "Internal",
-	"description": "Site-wide SEO defaults used by cms.seo.head(): site name, base URL, title template, default description and social image, organization and verification tags. One record per site.",
-	"formgrid": "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultDescription\n---Social Sharing---\ndefaultImage twitterHandle\n---Organization---\norganizationName sameAs\ncontactEmail sameAs\ncontactUrl sameAs\norganizationLogo .\n---Verification---\ngoogleVerification bingVerification\npinterestVerification .\n---Output---\nemitJsonLd emitSocial\n---\nupdated created",
+	"description": "Site-wide SEO defaults used by cms.seo.head(): site name, base URL, title template, default description and social image, organization and extra meta tags. One record per site.",
+	"formgrid": "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultDescription\n---Social Sharing---\ndefaultImage twitterHandle\n---Organization---\norganizationName sameAs\ncontactEmail sameAs\ncontactUrl sameAs\norganizationLogo .\n---Meta Tags---\nmetaTags metaTags\n---Output---\nemitJsonLd emitSocial\n---\nupdated created",
 	"properties": {
 		"id": {
 			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
@@ -89,23 +89,12 @@
 			"label": "Contact URL",
 			"help": "The page people should use to reach you — a support or contact page. Emitted on the ContactPoint."
 		},
-		"googleVerification": {
-			"type": "string",
-			"field": "text",
-			"label": "Google Verification",
-			"help": "The content value of google-site-verification."
-		},
-		"bingVerification": {
-			"type": "string",
-			"field": "text",
-			"label": "Bing Verification",
-			"help": "The content value of msvalidate.01."
-		},
-		"pinterestVerification": {
-			"type": "string",
-			"field": "text",
-			"label": "Pinterest Verification",
-			"help": "The content value of p:domain_verify."
+		"metaTags": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/code.json",
+			"field"    : "code",
+			"label"    : "Meta Tags",
+			"help"     : "Printed in the <head> exactly as written, after the SEO tags, on every page that calls cms.seo.head() or cms.seo.meta(). Paste the verification tag Google, Bing or Pinterest give you, or any other meta, link or script tag the site needs.",
+			"settings" : { "mode": "html", "rows": 10, "minHeight" : 224, "htmlclean": false }
 		},
 		"emitJsonLd": {
 			"type": "boolean",

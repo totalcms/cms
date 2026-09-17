@@ -10,7 +10,7 @@ related:
 
 # SEO
 
-Total CMS writes the `<head>` for you. One call in your layout emits the title, meta description, canonical link, robots directives, Open Graph and Twitter card tags, search-engine verification tags and a JSON-LD `@graph` — for a Site Builder page, for a collection object, or for the site on its own.
+Total CMS writes the `<head>` for you. One call in your layout emits the title, meta description, canonical link, robots directives, Open Graph and Twitter card tags, your own meta tags (verification and the like) and a JSON-LD `@graph` — for a Site Builder page, for a collection object, or for the site on its own.
 
 Nothing is generated ahead of time and there is no build step. Every value is resolved at render time from three places, in order: the **SEO card** on the record, the **collection's field mapping**, then the **site defaults** on the [Site SEO record](#site-settings).
 
@@ -241,7 +241,7 @@ tcms collection:create seo-site
 | **Organization Logo** | An image **upload** too. Any aspect ratio, at least 112×112 — it is never cropped or upscaled, only bounded, and served through ImageWorks at up to 600px wide. |
 | **Social Profiles** | One absolute URL per line — X, Instagram, LinkedIn, GitHub. Emitted as `Organization.sameAs`. |
 | **Contact Email** / **Contact URL** | A public address and the page people should use to reach you (a support or contact page). Emitted as `Organization.email` and a `customer support` `ContactPoint` — a trust signal search engines and AI answer engines weigh. Leave both empty and nothing is emitted. |
-| **Google / Bing / Pinterest Verification** | The `content` value each service gives you, not the whole tag. They become `google-site-verification`, `msvalidate.01` and `p:domain_verify`. |
+| **Meta Tags** | Raw markup printed in the `<head>` exactly as written, after the SEO tags. Paste the verification tag a service gives you, or any other `meta`, `link` or `script` tag the site needs on every page — see [Meta Tags](#meta-tags). |
 | **Emit JSON-LD** | Off suppresses the `<script type="application/ld+json">` block entirely. |
 | **Emit Open Graph and Twitter tags** | Off suppresses both sets of social tags. |
 
@@ -264,7 +264,7 @@ Site-wide values of your own — a tagline, a phone number, a footer blurb — c
     "id": "myseo",
     "type": "object",
     "inheritFrom": ["seo-site"],
-    "formgrid": "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultDescription\ndefaultImage twitterHandle\n---Organization---\norganizationName organizationLogo\nsameAs sameAs\n---Verification---\ngoogleVerification bingVerification\npinterestVerification .\n---Output---\nemitJsonLd emitSocial\n---Site---\ntagline .",
+    "formgrid": "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultDescription\ndefaultImage twitterHandle\n---Organization---\norganizationName organizationLogo\nsameAs sameAs\n---Meta Tags---\nmetaTags metaTags\n---Output---\nemitJsonLd emitSocial\n---Site---\ntagline .",
     "properties": {
         "tagline": {
             "type": "string",
@@ -294,15 +294,16 @@ Either way the collection id stays `seo-site` — that is what the SEO output lo
 
 Core keeps reading only the fields it knows, so `cms.seo.head()` behaves exactly as before — your additions ride along on the same record.
 
-### Verification Tags
+### Meta Tags
 
-Paste only the token. Google hands you a whole tag:
+Search Console, Bing Webmaster Tools and Pinterest each verify a site by handing you a tag to put in the `<head>`. Paste it into **Meta Tags**, a code editor on the Site SEO record, as given:
 
 ```html
 <meta name="google-site-verification" content="AbC123_xyz" />
+<meta name="msvalidate.01" content="0123456789ABCDEF" />
 ```
 
-`AbC123_xyz` is what goes in the field. The tag is emitted on every page that calls `cms.seo.head()` or `cms.seo.meta()`.
+The field is not limited to verification. Anything the site needs in the head of every page goes here — a `link` to a webmention endpoint, an analytics `script`, a `meta` tag for a service Total CMS has never heard of. It is printed exactly as written, unescaped, after the SEO tags and before the JSON-LD, on every page that calls `cms.seo.head()` or `cms.seo.meta()`. Editing the Site SEO record is the same trust as editing a template, which is why nothing is filtered: the people who can reach it are the people you gave that access to.
 
 ## Structured Data
 
@@ -393,7 +394,7 @@ The same call works for any collection — products, events, team members — on
 |---|---|
 | `cms.seo.head(subject, options)` | Everything below, in document order |
 | `cms.seo.title(subject, options)` | `<title>` |
-| `cms.seo.meta(subject, options)` | `description`, `robots` and the verification tags |
+| `cms.seo.meta(subject, options)` | `description`, `robots` and the site's Meta Tags |
 | `cms.seo.og(subject, options)` | The Open Graph and Twitter card tags |
 | `cms.seo.canonical(subject, options)` | `<link rel="canonical">` |
 | `cms.seo.jsonld(subject, options)` | The `<script type="application/ld+json">` block |
@@ -490,7 +491,7 @@ Everything `head()` prints is in there, under its own name:
 | `ogImage` / `ogImageAlt` | The absolute image URL and its alt, each `''` when there is none |
 | `twitterCard` | `summary_large_image` or `summary` |
 | `siteName`, `twitterHandle` | As resolved for the tags |
-| `verification` | `{google, bing, pinterest}` |
+| `metaTags` | The Site SEO record's **Meta Tags**, raw |
 | `site` | The Site SEO record's own values: `name`, `baseUrl`, `defaultImage`, `defaultImageAlt`, `organizationName`, `organizationLogo`, `sameAs`, `contactEmail`, `contactUrl` |
 
 **Escape them yourself.** These are plain, unescaped strings — not the `Markup` the other `cms.seo.*` methods return — and Total CMS runs Twig with autoescaping **off**, so a bare `{{ seo.ogImageAlt }}` puts whatever an operator typed into your page verbatim. Add `|e` wherever a value lands in markup, as in the example above. That difference is the whole point of the split: `cms.seo.head()` escapes every value inside its own `{% autoescape 'html' %}` block because it is building the tags itself, and `data()` cannot — it does not know whether you are about to drop the string into an attribute, a URL, or a JSON literal, each of which needs a different escape (`|e`, `|url_encode`, `|json_encode`).
@@ -542,7 +543,7 @@ Core SEO covers the markup every site needs. It deliberately stops short of:
 
 - **A managed `robots.txt`** — it stays a Site Builder page you control, as above.
 - **hreflang and localized SEO** — a site serving several languages has to emit its own alternate links. Native internationalization is planned.
-- **Search Console / Bing Webmaster API integration** — verification tags are emitted; nothing is submitted or read back.
+- **Search Console / Bing Webmaster API integration** — their verification tags are pasted into Meta Tags; nothing is submitted or read back.
 - **Analysis and scoring** — no readability grade, keyword density, or per-page SEO report.
 - **More schema.org types** — Product, Event, FAQ, Recipe, LocalBusiness and the rest. Core generates none of them from your fields, though a template can write one itself and add it to the graph — see [Adding Your Own Structured Data](#adding-your-own-structured-data).
 - **404 and redirect management** beyond the Site Builder page `status` and `redirectTo` fields.

@@ -114,7 +114,7 @@ class MetaBuilder
 			twitterCard: $image !== '' ? 'summary_large_image' : 'summary',
 			siteName: $ctx->siteName,
 			twitterHandle: $s->twitterHandle,
-			verification: $s->verification,
+			metaTags: $s->metaTags,
 			noindex: $f->noindex,
 		);
 	}

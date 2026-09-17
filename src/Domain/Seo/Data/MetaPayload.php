@@ -17,7 +17,7 @@ final readonly class MetaPayload
 	 * @param string $robots `''`, `noindex`, `nofollow` or `noindex, nofollow`
 	 * @param string $ogImage Absolute URL, or `''` when there is no image
 	 * @param string $ogImageAlt The alt of that image, or `''` when it has none (or there is no image)
-	 * @param array{google:string,bing:string,pinterest:string} $verification
+	 * @param string $metaTags The Site SEO record's Meta Tags, raw markup printed as written
 	 */
 	public function __construct(
 		public string $title,
@@ -32,7 +32,7 @@ final readonly class MetaPayload
 		public string $twitterCard,
 		public string $siteName,
 		public string $twitterHandle,
-		public array $verification,
+		public string $metaTags,
 		public bool $noindex,
 	) {
 	}

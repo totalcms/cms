@@ -2324,7 +2324,7 @@
         {
             "name": "cms.seo.head",
             "signature": "head(mixed $subject = null, array $options = []): Markup",
-            "description": "The complete block: title, description, robots, canonical, Open Graph, Twitter, verification and JSON-LD.",
+            "description": "The complete block: title, description, robots, canonical, Open Graph, Twitter, the site's Meta Tags and JSON-LD.",
             "examples": [],
             "url": "https://docs.totalcms.co/site-builder/seo/"
         },
@@ -2338,7 +2338,7 @@
         {
             "name": "cms.seo.meta",
             "signature": "meta(mixed $subject = null, array $options = []): Markup",
-            "description": "The non-social meta tags: description, robots and site verification.",
+            "description": "The non-social meta tags: description, robots and the site's Meta Tags.",
             "examples": [],
             "url": "https://docs.totalcms.co/site-builder/seo/"
         },

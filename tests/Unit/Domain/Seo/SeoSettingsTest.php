@@ -14,7 +14,7 @@ describe('SeoSettings', function (): void {
 			->and($s->emitJsonLd)->toBeTrue()
 			->and($s->emitSocial)->toBeTrue()
 			->and($s->sameAs)->toBe([])
-			->and($s->verification)->toBe(['google' => '', 'bing' => '', 'pinterest' => '']);
+			->and($s->metaTags)->toBe('');
 	});
 
 	test('normalises the values it is given', function (): void {
@@ -24,15 +24,15 @@ describe('SeoSettings', function (): void {
 			'twitterHandle'      => 'joesbistro',
 			'sameAs'             => "https://x.com/joesbistro\n\nhttps://instagram.com/joesbistro",
 			'emitJsonLd'         => false,
-			'googleVerification' => 'abc',
+			'metaTags'           => "  <meta name=\"google-site-verification\" content=\"abc\">\n<script>x()</script>\n ",
 		], 'ignored.test');
 		expect($s->siteName)->toBe("Joe's Bistro")
 			->and($s->baseUrl)->toBe('https://joesbistro.com')
 			->and($s->twitterHandle)->toBe('@joesbistro')
 			->and($s->sameAs)->toBe(['https://x.com/joesbistro', 'https://instagram.com/joesbistro'])
 			->and($s->emitJsonLd)->toBeFalse()
-			->and($s->verification['google'])->toBe('abc')
-			->and($s->verification['bing'])->toBe('');
+			// Trimmed, otherwise verbatim: whatever an operator pastes is emitted as given.
+			->and($s->metaTags)->toBe("<meta name=\"google-site-verification\" content=\"abc\">\n<script>x()</script>");
 	});
 
 	test('a base URL without a scheme gets https', function (): void {
