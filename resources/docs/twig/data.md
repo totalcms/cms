@@ -140,13 +140,13 @@ Get SVG content. Default collection: `svg`, default property: `svg`.
 
 ## Colors
 
-### color() / colour()
+### color() / color()
 
 Get color data as an array with `hex` and `oklch` properties. `colour()` is a British spelling alias.
 
 ```twig
 {% set myColor = cms.data.color('brand') %}
-{% set myColor = cms.data.colour('brand') %}  {# Same thing #}
+{% set myColor = cms.data.color('brand') %}  {# Same thing #}
 
 {# Access color values #}
 {{ myColor.hex }}         {# #ff0000 #}

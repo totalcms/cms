@@ -115,7 +115,7 @@ final readonly class SeoTwigAdapter
 	}
 
 	/**
-	 * The icon links, the manifest link and the theme colour: the SVG icon,
+	 * The icon links, the manifest link and the theme color: the SVG icon,
 	 * the PNG icon set, the Apple touch icon, `rel=manifest` when a page owns
 	 * `/manifest.webmanifest`, and `theme-color`.
 	 *

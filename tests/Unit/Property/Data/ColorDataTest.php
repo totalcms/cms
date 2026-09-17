@@ -63,8 +63,8 @@ test('constructor with default argument defaults to black', function (): void {
 
 // ===== Empty state (opt-in via the `clearable` setting) =====
 
-test('a clearable colour with an empty value stays empty', function (): void {
-	// A native colour input can never be empty, so an optional colour used to
+test('a clearable color with an empty value stays empty', function (): void {
+	// A native color input can never be empty, so an optional color used to
 	// be stored as black. With `clearable` on, empty is a value of its own:
 	// no hex, no coordinates, and it serialises as '' (the empty.json branch).
 	$color = new ColorData('', ['clearable' => true]);
@@ -79,7 +79,7 @@ test('a clearable colour with an empty value stays empty', function (): void {
 	expect((new ColorData(settings: ['clearable' => true]))->isEmpty())->toBeTrue();
 });
 
-test('a clearable colour with a value behaves like any other colour', function (): void {
+test('a clearable color with a value behaves like any other color', function (): void {
 	$color = new ColorData('#ff0000', ['clearable' => true]);
 	expect($color->isEmpty())->toBeFalse()
 		->and($color->hex)->toBe('#ff0000')

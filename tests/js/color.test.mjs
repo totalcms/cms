@@ -1,9 +1,9 @@
 import ColorField from '../../javascript/totalform/color.js';
 
 // A native <input type="color"> always holds a value (#000000 by default), so
-// an optional colour had no way to be empty. The `clearable` setting adds one:
+// an optional color had no way to be empty. The `clearable` setting adds one:
 // a clear button marks the field empty, getValue() sends '' instead of a hex,
-// and picking a colour again un-marks it. Off by default — a field that never
+// and picking a color again un-marks it. Off by default — a field that never
 // asked for it behaves exactly as before.
 function mount(settings = {}, { empty = false, value = '#ff0000' } = {}) {
 	document.body.innerHTML = '';
@@ -25,7 +25,7 @@ describe('ColorField', () => {
 		expect(mount({ clearable: true }, { empty: true }).getValue()).toBe('');
 	});
 
-	test('the clear button empties a clearable field and picking a colour fills it again', () => {
+	test('the clear button empties a clearable field and picking a color fills it again', () => {
 		const field = mount({ clearable: true });
 		expect(field.getValue()).toEqual({ hex: '#ff0000' });
 

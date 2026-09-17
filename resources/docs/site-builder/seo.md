@@ -247,7 +247,7 @@ tcms collection:create seo-site
 | **Icon** | A square PNG **upload**, 512×512 or larger — the tab icon, the bookmark icon, the icon Google shows beside the site in results, and `/favicon.ico`. See [Icons](#icons). |
 | **Touch Icon** | A square PNG, 180×180 or larger, with a solid background, for iOS home screens. Leave it empty and the Icon is used. |
 | **Icon (SVG)** | An optional SVG **file** upload, served at `/favicon.svg` and listed ahead of the PNG. |
-| **Theme Color** | The colour of the browser chrome around the page on phones — usually the page background. Clear it and nothing is emitted. |
+| **Theme Color** | The color of the browser chrome around the page on phones — usually the page background. Clear it and nothing is emitted. |
 | **Meta Tags** | Raw markup printed in the `<head>` exactly as written, after the SEO tags. Paste the verification tag a service gives you, or any other `meta`, `link` or `script` tag the site needs on every page — see [Meta Tags](#meta-tags). |
 | **Emit JSON-LD** | Off suppresses the `<script type="application/ld+json">` block entirely. |
 | **Emit Open Graph and Twitter tags** | Off suppresses both sets of social tags. |
@@ -346,7 +346,7 @@ Every size is cut from that one upload by ImageWorks, so 512×512 or larger is t
 
 No page at that route means no link. A draft, a redirect, or a collection URL pattern that happens to swallow the path does not count.
 
-`cms.seo.icons()` prints just these tags — the icons, the manifest link and the theme colour — for a layout that places the pieces itself.
+`cms.seo.icons()` prints just these tags — the icons, the manifest link and the theme color — for a layout that places the pieces itself.
 
 ## Structured Data
 

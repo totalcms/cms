@@ -123,8 +123,8 @@ export default class DataVisualizer {
 		});
 	}
 
-	// Mermaid's erDiagram renders every relationship with one theme colour, so
-	// colour + dash each line by edge type to match the legend. The PHP renderer
+	// Mermaid's erDiagram renders every relationship with one theme color, so
+	// color + dash each line by edge type to match the legend. The PHP renderer
 	// emits the edge types in the same order as the relationship lines, and
 	// Mermaid draws `.relationshipLine` paths in that declaration order. Keep
 	// these styles in sync with the .visualizer-legend rules.
@@ -148,7 +148,7 @@ export default class DataVisualizer {
 		paths.forEach((path, i) => {
 			// erDiagram always draws cardinality end markers (the `||` bars); we
 			// don't model real cardinality, so strip them — type is shown by
-			// colour + dash. Inline style overrides Mermaid's marker attributes.
+			// color + dash. Inline style overrides Mermaid's marker attributes.
 			path.style.markerStart = 'none';
 			path.style.markerEnd   = 'none';
 

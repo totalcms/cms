@@ -76,7 +76,7 @@ happen.
 | free-form structured data a template reads (`page.data.*`) | `json` | `textarea`, a `deck` with one item |
 | an inline SVG (logo, icon) | `svg` | `image`, `code` |
 | a time of day | `time` | `text` |
-| a colour | `color` | `text` |
+| a color | `color` | `text` |
 | when it was created / last changed | `datetime` with `"settings": {"onCreate": true}` / `{"onUpdate": true}` (see below) | hand-set `date` |
 | SEO metadata for a public page | a `card` with `"schemaref": ".../schemas/seo.json"` | separate `metaTitle` text fields |
 

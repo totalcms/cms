@@ -40,7 +40,7 @@
 			height        : 0;
 			border-top    : 2px solid oklch(var(--totalform-border-color));
 		}
-		// Keep in sync with DataVisualizer.styleEdges() (colour + dash per type).
+		// Keep in sync with DataVisualizer.styleEdges() (color + dash per type).
 		&.rel-relational::before  { border-top-style : solid;  border-top-color : oklch(var(--totalform-accent)); }
 		&.rel-composition::before { border-top-style : dashed; border-top-color : oklch(var(--totalform-accent)); }
 		&.rel-inheritance::before { border-top-style : dotted; border-top-color : oklch(var(--totalform-darkgray)); }

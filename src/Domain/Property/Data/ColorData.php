@@ -21,7 +21,7 @@ class ColorData extends PropertyData implements \Stringable
 	/** @param string|array<string,mixed> $color */
 	public function __construct(string|array $color = '', public array $settings = [])
 	{
-		// A native colour input can never be empty, so an optional colour was
+		// A native color input can never be empty, so an optional color was
 		// always stored as black. With the `clearable` setting an empty value
 		// is a value of its own: no hex, no coordinates, serialised as ''.
 		// Off by default, so a field that never asked for it keeps its black.
@@ -232,13 +232,13 @@ class ColorData extends PropertyData implements \Stringable
 	}
 
 	/** @return array<string,mixed> */
-	/** Whether the field is allowed to hold no colour at all (the `clearable` setting). */
+	/** Whether the field is allowed to hold no color at all (the `clearable` setting). */
 	private function clearable(): bool
 	{
 		return filter_var($this->settings['clearable'] ?? false, FILTER_VALIDATE_BOOL);
 	}
 
-	/** True only for a clearable colour that holds nothing. */
+	/** True only for a clearable color that holds nothing. */
 	public function isEmpty(): bool
 	{
 		return $this->hex === '';

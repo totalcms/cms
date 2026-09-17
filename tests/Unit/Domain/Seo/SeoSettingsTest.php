@@ -35,7 +35,7 @@ describe('SeoSettings', function (): void {
 			->and($s->metaTags)->toBe("<meta name=\"google-site-verification\" content=\"abc\">\n<script>x()</script>");
 	});
 
-	test('icons and theme colour default to nothing', function (): void {
+	test('icons and theme color default to nothing', function (): void {
 		$s = SeoSettings::fromArray([], 'example.com');
 		expect($s->iconSvg)->toBe('')
 			->and($s->icon32)->toBe('')
@@ -47,13 +47,13 @@ describe('SeoSettings', function (): void {
 			->and($s->hasIcons())->toBeFalse()
 			->and($s->hasIconSlice())->toBeFalse();
 
-		// A manifest or a theme colour alone still gives the slice something to print.
+		// A manifest or a theme color alone still gives the slice something to print.
 		expect(SeoSettings::fromArray(['manifestUrl' => '/manifest.webmanifest'], 'x')->hasIconSlice())->toBeTrue();
 	});
 
-	test('reads the resolved icon URLs and the theme colour hex', function (): void {
+	test('reads the resolved icon URLs and the theme color hex', function (): void {
 		// The loader resolves the record's image/file properties to URLs under
-		// these keys before handing the array over; the colour field stores an
+		// these keys before handing the array over; the color field stores an
 		// object with the hex alongside its OKLCH coordinates.
 		$s = SeoSettings::fromArray([
 			'iconSvgUrl'   => '/favicon.svg',

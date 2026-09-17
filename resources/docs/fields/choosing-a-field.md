@@ -51,7 +51,7 @@ happen. Every one of those has a field built for it.
 | a bounded value, a percentage | `range` | `min`, `max`, `step`. |
 | a calendar date | `date` | Publish dates, event dates, deadlines. Enables date filters and sorting. |
 | a date and time, a timestamp | `datetime` | `onUpdate: true` for a last-modified stamp. |
-| a colour | `color` | Stored as hex and OKLCH. |
+| a color | `color` | Stored as hex and OKLCH. |
 | one image | `image` | Hero, thumbnail, photo. Resized through ImageWorks. |
 | several images | `gallery` | |
 | one downloadable file | `file` | |

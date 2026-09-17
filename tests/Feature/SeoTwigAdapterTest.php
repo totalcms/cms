@@ -199,15 +199,15 @@ it('emits no icon tags when the record has no icon', function (): void {
 	expect(($this->render)('{{ cms.seo.icons() }}'))->toBe('');
 });
 
-it('emits the icon set, the touch icon, the SVG first and the theme colour', function (): void {
+it('emits the icon set, the touch icon, the SVG first and the theme color', function (): void {
 	$container = $this->app->getContainer();
 	$container->get(ObjectUpdater::class)->updateObject('seo-site', 'seo-site', [
 		'id'         => 'seo-site',
 		'siteName'   => 'Bistro',
 		'icon'       => ['name' => 'icon.png', 'size' => 10],
 		'iconSvg'    => ['name' => 'icon.svg', 'size' => 10, 'mime' => 'image/svg+xml'],
-		// Pure red survives the hex → OKLCH → hex round trip the colour
-		// property applies on read; a mid-range colour can drift by one.
+		// Pure red survives the hex → OKLCH → hex round trip the color
+		// property applies on read; a mid-range color can drift by one.
 		'themeColor' => '#FF0000',
 	]);
 	$page = ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/about.twig'];

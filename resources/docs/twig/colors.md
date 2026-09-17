@@ -18,7 +18,7 @@ Use the [`cms.data`](twig/data) adapter. It returns the stored object, so you ca
 
 ```twig
 {% set brand = cms.data.color('brand') %}
-{# cms.data.colour('brand') is a British-spelling alias #}
+{# cms.data.color('brand') is a British-spelling alias #}
 
 {{ brand.hex }}        {# #1d9a6c #}
 {{ brand.oklch.l }}    {# lightness (0–100) #}

@@ -3,11 +3,11 @@ import TotalField from './totalfield';
 //-----------------------------------------------
 // Total CMS Color Field
 //
-// A native <input type="color"> always holds a colour (#000000 by default),
-// so an optional colour had no way to be empty. With the `clearable` setting
+// A native <input type="color"> always holds a color (#000000 by default),
+// so an optional color had no way to be empty. With the `clearable` setting
 // the container carries a `color-empty` mark: while it is on, getValue()
 // sends '' instead of a hex and CSS shows a checkerboard in place of the
-// swatch; picking a colour lifts it. Off by default — a
+// swatch; picking a color lifts it. Off by default — a
 // field that never asked for it behaves exactly as before.
 //-----------------------------------------------
 export default class ColorField extends TotalField {

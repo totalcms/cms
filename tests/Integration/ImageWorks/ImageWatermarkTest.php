@@ -102,7 +102,7 @@ function watermarkRun(
  * Percentage of sampled pixels that differ noticeably between two renders.
  *
  * "The bytes changed" is too weak a claim for a watermark: re-encoding alone
- * shifts bytes, and a mark drawn off-canvas or in a transparent colour would
+ * shifts bytes, and a mark drawn off-canvas or in a transparent color would
  * still pass. This measures whether anything is actually visible, and both
  * images come from the same run on the same machine, so it does not care which
  * libjpeg or GD build produced them.
@@ -176,7 +176,7 @@ describe('ImageWorks text watermarks', function (): void {
 		expect(watermarkPixelDiff($plain['body'], $marked['body']))->toBeGreaterThan(0.5);
 	});
 
-	it('honours position, colour and size', function (): void {
+	it('honours position, color and size', function (): void {
 		$out = watermarkRun($this->root, [
 			'w'             => 900,
 			'marktext'      => 'Total CMS',

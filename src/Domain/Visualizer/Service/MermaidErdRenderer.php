@@ -28,7 +28,7 @@ final class MermaidErdRenderer
 	/**
 	 * All relationships use the most neutral crow's-foot notation (plain bars,
 	 * no circles/feet). erDiagram always draws *some* end markers, and we don't
-	 * model real cardinality — edge type is conveyed by colour + dash on the
+	 * model real cardinality — edge type is conveyed by color + dash on the
 	 * frontend instead (see DataVisualizer.styleEdges).
 	 */
 	private const RELATION = '||--||';
@@ -70,7 +70,7 @@ final class MermaidErdRenderer
 
 	/**
 	 * Edge types in the same order the relationship lines were emitted — lets
-	 * the frontend colour/dash each rendered `.relationshipLine` path by type
+	 * the frontend color/dash each rendered `.relationshipLine` path by type
 	 * (Mermaid's erDiagram has no per-edge styling in the syntax).
 	 *
 	 * NOTE: This method returns an empty array until {@see render()} has been

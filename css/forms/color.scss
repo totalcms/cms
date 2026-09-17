@@ -37,7 +37,7 @@ input[type="color"] {
         box-shadow : none;
     }
 }
-// Clearable colour: the swatch sits beside a "no colour" button; while the
+// Clearable color: the swatch sits beside a "no color" button; while the
 // field is empty the swatch fades so the black the native input insists on
 // showing does not read as the value.
 .color-field.color-clearable {
@@ -70,7 +70,7 @@ input[type="color"] {
 
     // Empty: hide the swatch the native input insists on painting and let a
     // transparency checkerboard show through the circle instead, the way
-    // graphics tools portray "no colour".
+    // graphics tools portray "no color".
     &.color-empty {
         input[type="color"] {
             background-color : oklch(var(--totalform-nearwhite));

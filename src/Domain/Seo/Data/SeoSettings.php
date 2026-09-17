@@ -148,9 +148,9 @@ final readonly class SeoSettings
 	}
 
 	/**
-	 * A hex colour, lower-cased, from the colour field's `{hex, oklch}` object
+	 * A hex color, lower-cased, from the color field's `{hex, oklch}` object
 	 * or a plain string. The field is clearable, so '' means no tag. Anything
-	 * that is not a hex colour is dropped rather than printed.
+	 * that is not a hex color is dropped rather than printed.
 	 */
 	private static function hex(mixed $color): string
 	{

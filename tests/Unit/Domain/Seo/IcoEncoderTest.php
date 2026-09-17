@@ -22,7 +22,7 @@ describe('IcoEncoder', function (): void {
 
 		// ICONDIR: reserved 0, type 1 (icon), one image.
 		expect(substr($ico, 0, 6))->toBe(pack('vvv', 0, 1, 1));
-		// ICONDIRENTRY: width, height, colours, reserved, planes, bit depth, byte size, offset.
+		// ICONDIRENTRY: width, height, colors, reserved, planes, bit depth, byte size, offset.
 		expect(unpack('Cwidth/Cheight/Ccolors/Creserved/vplanes/vbits/Vsize/Voffset', substr($ico, 6, 16)))->toBe([
 			'width' => 32, 'height' => 32, 'colors' => 0, 'reserved' => 0, 'planes' => 1, 'bits' => 32, 'size' => strlen($source), 'offset' => 22,
 		]);

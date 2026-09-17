@@ -33,7 +33,7 @@
 | HTMX recipes (live search, facets, lazy sections, forms) | `twig/htmx.md` | Any collection query can return rendered HTML with `format=html&template=…`. |
 | `{% cache %}` fragment tag | `twig/cache-tag.md` | Tag with collection ids to auto-invalidate; bypassed for logged-in users unless `shared=true`. |
 | Template Designer (edit Twig blocks in the admin) | `twig/templates.md` | `{% templatedesigner %}` blocks sync between local and production. |
-| Colours (OKLCH manipulation) | `twig/colors.md` | Color fields store hex and OKLCH; filters adjust lightness/chroma/hue. |
+| Colors (OKLCH manipulation) | `twig/colors.md` | Color fields store hex and OKLCH; filters adjust lightness/chroma/hue. |
 | Barcodes and QR codes | `twig/barcodes.md`, `twig/qrcodes.md` | Edition-gated. |
 | Localization | `twig/locale.md`, `twig/localization.md` | Localized field types are Pro; full i18n routing is planned, not shipped. |
 

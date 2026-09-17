@@ -45,9 +45,9 @@ class ColorField extends FormField
 	}
 
 	/**
-	 * A native colour input always holds a colour, so a clearable field gets a
+	 * A native color input always holds a color, so a clearable field gets a
 	 * button that marks it empty; the JavaScript sends '' while the mark is on
-	 * and lifts it the moment a colour is picked. Off unless the schema asks.
+	 * and lifts it the moment a color is picked. Off unless the schema asks.
 	 */
 	public function buildFormField(): string
 	{
