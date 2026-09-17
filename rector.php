@@ -6,7 +6,6 @@ use Rector\Config\RectorConfig;
 use Rector\CodingStyle\Rector\ArrowFunction\ArrowFunctionDelegatingCallToFirstClassCallableRector;
 use Rector\DeadCode\Rector\Property\RemoveDefaultValueFromAssignedPropertyRector;
 use Rector\Php71\Rector\FuncCall\RemoveExtraParametersRector;
-use Rector\Php84\Rector\Param\ExplicitNullableParamTypeRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
 
@@ -83,9 +82,5 @@ return RectorConfig::configure()
 		SetList::DEAD_CODE,
 		SetList::TYPE_DECLARATION,
 		SetList::PRIVATIZATION,
-	])
-	->withRules([
-		// Add specific rules that are helpful for modern PHP
-		ExplicitNullableParamTypeRector::class,
 	])
 	->withPhpSets(php82: true);

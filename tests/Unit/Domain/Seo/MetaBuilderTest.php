@@ -37,7 +37,7 @@ describe('MetaBuilder', function (): void {
 	});
 
 	test('content type: card, then collection, then Web page; drives og:type and the article dates', function () use ($b): void {
-		$obj = ['id' => 'x', 'title' => 'Post', 'date' => '2026-01-02T00:00:00+00:00', 'created' => '2025-12-31T00:00:00+00:00', 'updated' => '2026-02-01T00:00:00+00:00'];
+		$obj   = ['id' => 'x', 'title' => 'Post', 'date' => '2026-01-02T00:00:00+00:00', 'created' => '2025-12-31T00:00:00+00:00', 'updated' => '2026-02-01T00:00:00+00:00'];
 		$block = fn (string $type): array => ['type' => $type, 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => ''];
 
 		$p = $b->build(seoCtx(['object' => $obj, 'seoBlock' => $block('')]));

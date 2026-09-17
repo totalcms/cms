@@ -7,7 +7,6 @@ namespace TotalCMS\Domain\Seo\Service;
 use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 use TotalCMS\Domain\Seo\Data\MetaPayload;
 use TotalCMS\Domain\Seo\Data\SeoContext;
-use TotalCMS\Domain\Seo\Data\SeoSettings;
 
 /**
  * Resolves the `<head>` meta values for a SeoContext.

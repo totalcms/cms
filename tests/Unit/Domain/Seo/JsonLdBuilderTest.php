@@ -58,8 +58,8 @@ describe('JsonLdBuilder', function (): void {
 		expect(array_column($build(seoCtx(['seoBlock' => $blog])), '@type'))->toContain('BlogPosting')->not->toContain('Article');
 
 		// A Site Builder page is a subject too: its card alone decides.
-		$page = seoCtx(['kind' => 'page', 'collectionId' => 'builder-pages', 'object' => ['id' => 'essay', 'title' => 'Essay', 'route' => '/essay', 'template' => 'page', 'created' => '2026-01-01T00:00:00+00:00'], 'seoBlock' => ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => ''], 'fields' => SeoFields::fromArray(['jsonldType' => 'article']), 'url' => 'https://example.com/essay']);
-		$graph = $build($page);
+		$page    = seoCtx(['kind' => 'page', 'collectionId' => 'builder-pages', 'object' => ['id' => 'essay', 'title' => 'Essay', 'route' => '/essay', 'template' => 'page', 'created' => '2026-01-01T00:00:00+00:00'], 'seoBlock' => ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => ''], 'fields' => SeoFields::fromArray(['jsonldType' => 'article']), 'url' => 'https://example.com/essay']);
+		$graph   = $build($page);
 		$article = array_values(array_filter($graph, fn (array $n): bool => $n['@type'] === 'Article'))[0] ?? null;
 		expect($article)->not->toBeNull()->and($article['headline'])->toBe('Essay')->and($article['datePublished'])->toBe('2026-01-01T00:00:00+00:00');
 	});

@@ -23,7 +23,7 @@ function buildPageCollectionsForm(array $collections, array $rawSchemas): TotalF
 	$fetcher = test()->createMock(SchemaFetcher::class);
 	$fetcher->method('fetchRawSchema')->willReturnCallback(function (string $id) use ($rawSchemas): SchemaData {
 		if (!isset($rawSchemas[$id])) {
-			throw new \RuntimeException("Schema not found: {$id}");
+			throw new RuntimeException("Schema not found: {$id}");
 		}
 
 		return $rawSchemas[$id];

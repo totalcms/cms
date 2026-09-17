@@ -136,7 +136,6 @@ function watermarkPixelDiff(string $a, string $b): float
 		}
 	}
 
-
 	return $total > 0 ? $changed / $total * 100 : 0.0;
 }
 beforeEach(function (): void {
