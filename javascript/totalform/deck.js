@@ -1,5 +1,5 @@
 import TotalField from "./totalfield";
-import DeckItem from "./deckItem";
+import DeckItem, { missingIdPropertyMessage } from "./deckItem";
 import TotalSortable from "./total-sortable";
 const slugify = require('slugify');
 
@@ -390,7 +390,7 @@ export default class DeckField extends TotalField {
             const itemId = item.getItemId();
 
 			if (itemId.length == 0) {
-				const errorMessage = "Item ID cannot be empty";
+				const errorMessage = item.hasIdInput() ? "Item ID cannot be empty" : missingIdPropertyMessage(this.schemaref);
 				this.error(errorMessage);
 				isValid = false;
 				return; // Skip this item for duplicate checking

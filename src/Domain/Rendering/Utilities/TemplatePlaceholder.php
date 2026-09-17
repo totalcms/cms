@@ -75,6 +75,13 @@ class TemplatePlaceholder
 			$value = $value[$segment];
 		}
 
+		// Toggles: a check mark or nothing — (string)true is "1", and the
+		// JavaScript side would otherwise print "true". Mirror of
+		// resolveLabelKey() in deckItem.js.
+		if (is_bool($value)) {
+			return $value ? "\u{2713}" : '';
+		}
+
 		return is_scalar($value) ? trim((string)$value) : '';
 	}
 }

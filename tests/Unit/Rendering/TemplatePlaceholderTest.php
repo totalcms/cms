@@ -84,6 +84,12 @@ describe('TemplatePlaceholder::resolvePath', function (): void {
 		expect(TemplatePlaceholder::resolvePath(['type' => 'webhook'], 'type'))->toBe('webhook');
 	});
 
+	test('renders a true toggle as a check mark and a false one as an empty string', function (): void {
+		// (string)true is "1", which is what deck labels printed for toggles.
+		expect(TemplatePlaceholder::resolvePath(['done' => true], 'done'))->toBe('✓');
+		expect(TemplatePlaceholder::resolvePath(['done' => false], 'done'))->toBe('');
+	});
+
 	test('walks into a card sub-field via dot notation', function (): void {
 		expect(TemplatePlaceholder::resolvePath(['card' => ['title' => 'My Title']], 'card.title'))
 			->toBe('My Title');

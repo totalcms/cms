@@ -1,6 +1,7 @@
 import TotalField from "./totalfield";
 import TotalSortable from "./total-sortable";
 import { collectScopedFieldValues } from "./fieldCollection.mjs";
+import { missingIdPropertyMessage } from "./deckItem";
 
 //-----------------------------------------------
 // Total CMS Deck Table Field
@@ -312,7 +313,7 @@ export default class DeckTableField extends TotalField {
             const itemId = idInput ? String(idInput.value) : '';
 
             if (itemId.length === 0) {
-                const errorMessage = 'Item ID cannot be empty';
+                const errorMessage = idInput ? 'Item ID cannot be empty' : missingIdPropertyMessage(this.schemaref);
                 this.error(errorMessage);
                 isValid = false;
                 continue;

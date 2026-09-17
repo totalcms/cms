@@ -4,6 +4,16 @@ import { collectScopedFieldValues } from "./fieldCollection.mjs";
 //-----------------------------------------------
 // Total CMS Deck Item
 //-----------------------------------------------
+
+// The error for a deck whose child schema defines no `id` property. Without
+// one the item form renders no id input, so the generic "Item ID cannot be
+// empty" sent authors hunting through their data for a blank value that was
+// never there. Name the schema instead so the fix is obvious.
+export function missingIdPropertyMessage(schemaref) {
+	const schemaId = String(schemaref || '').split('/').pop().replace(/\.json$/, '') || 'item';
+	return `Deck schema "${schemaId}" has no "id" property. Add an id property to the schema so its items can be keyed.`;
+}
+
 export default class DeckItem {
 
     constructor(container, fieldClass, deck) {
@@ -148,6 +158,10 @@ export default class DeckItem {
 		if (value === null || value === undefined || typeof value === 'object') {
 			return '';
 		}
+		// Toggles: a check mark or nothing, never the literal "true"/"false".
+		if (typeof value === 'boolean') {
+			return value ? '\u2713' : '';
+		}
 		return value;
 	}
 
@@ -165,6 +179,11 @@ export default class DeckItem {
 		const dialogIdField = this.dialog.dialog.querySelector("input[name='id']");
 		return dialogIdField ? String(dialogIdField.value) : '';
     }
+
+	// False when the child schema has no `id` property (no input to bind to).
+	hasIdInput() {
+		return this.dialog.dialog.querySelector("input[name='id']") !== null;
+	}
 
     getValue() {
         // Collect only this deck item's own top-level fields. Composite fields

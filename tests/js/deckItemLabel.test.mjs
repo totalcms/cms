@@ -23,6 +23,11 @@ describe('DeckItem.generateLabel', () => {
 	test('pads an oid token', () => {
 		expect(item({ id: 'sd' }).generateLabel('${oid-000}')).toBe('001');
 	});
+	test('renders a true toggle as a check mark and a false one as nothing', () => {
+		// `${label}${done}` used to print "Mockup web pagestrue".
+		expect(item({ label: 'Mockup', done: true, id: 'm' }).generateLabel('${label} ${done}')).toBe('Mockup ✓');
+		expect(item({ label: 'Mockup', done: false, id: 'm' }).generateLabel('${label} ${done}')).toBe('Mockup');
+	});
 	test('falls back to the item id when the pattern resolves to empty', () => {
 		expect(item({ id: 'sd' }).generateLabel('${missing}')).toBe('sd');
 	});
