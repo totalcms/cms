@@ -20,7 +20,7 @@ final readonly class SeoContext
 	 * @param 'page'|'object'|'none' $kind
 	 * @param array<string,mixed> $object The page record or collection object; `[]` for `none`
 	 * @param string $collectionId `''` for `none`
-	 * @param array{type:string,title:string,description:string,image:string} $seoBlock Collection-level property mapping
+	 * @param array{type:string,title:string,socialTitle:string,description:string,image:string} $seoBlock Collection-level mapping: content type, title/social title templates, description and image property names
 	 * @param string $siteName SEO site name → General `siteName` → domain
 	 * @param string $url Absolute URL of the object/page; `''` when it cannot be resolved
 	 * @param array<string,string> $imageUrls Absolute ImageWorks URLs keyed by property path (mapped field + `seo.image`)

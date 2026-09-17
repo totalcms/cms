@@ -13,13 +13,56 @@ describe('MetaBuilder', function (): void {
 		expect($b->build(seoCtx())->title)->toBe('Hello <World> | Bistro');
 		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['title' => 'Custom'])]))->title)->toBe('Custom | Bistro');
 		expect($b->build(seoCtx(['kind' => 'none', 'object' => [], 'url' => '']))->title)->toBe('Bistro');
-		expect($b->build(seoCtx(['settings' => SeoSettings::fromArray(['titleTemplate' => '{site} – {title}'], 'x'), 'siteName' => 'S']))->title)->toBe('S – Hello <World>');
+		expect($b->build(seoCtx(['settings' => SeoSettings::fromArray(['titleTemplate' => '${site} – ${title}'], 'x'), 'siteName' => 'S']))->title)->toBe('S – Hello <World>');
+	});
+
+	test('title: the collection template composes from the object and goes through the site template', function () use ($b): void {
+		$obj   = ['id' => 'x', 'title' => 'Post', 'name' => 'Tony', 'author' => 'Joe'];
+		$block = ['type' => '', 'title' => '${title} | YETI Post', 'socialTitle' => '', 'description' => '', 'image' => ''];
+		$p     = $b->build(seoCtx(['object' => $obj, 'seoBlock' => $block]));
+		expect($p->rawTitle)->toBe('Post | YETI Post')->and($p->title)->toBe('Post | YETI Post | Bistro');
+
+		// The card's own title still wins over the collection template.
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => $block, 'fields' => SeoFields::fromArray(['title' => 'Custom'])]))->rawTitle)->toBe('Custom');
+	});
+
+	test('socialTitle: card, then the collection social template, then the raw title', function () use ($b): void {
+		$obj   = ['id' => 'x', 'title' => 'Post', 'name' => 'Tony'];
+		$block = ['type' => '', 'title' => '', 'socialTitle' => 'Read: ${title}', 'description' => '', 'image' => ''];
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => $block]))->socialTitle)->toBe('Read: Post');
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => $block, 'fields' => SeoFields::fromArray(['socialTitle' => 'Short'])]))->socialTitle)->toBe('Short');
+		// A collection template whose placeholders all come back empty falls through.
+		$empty = ['type' => '', 'title' => '', 'socialTitle' => 'Read: ${nothing}', 'description' => '', 'image' => ''];
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => $empty]))->socialTitle)->toBe('Post');
+	});
+
+	test('content type: card, then collection, then Web page; drives og:type and the article dates', function () use ($b): void {
+		$obj = ['id' => 'x', 'title' => 'Post', 'date' => '2026-01-02T00:00:00+00:00', 'created' => '2025-12-31T00:00:00+00:00', 'updated' => '2026-02-01T00:00:00+00:00'];
+		$block = fn (string $type): array => ['type' => $type, 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => ''];
+
+		$p = $b->build(seoCtx(['object' => $obj, 'seoBlock' => $block('')]));
+		expect($p->contentType)->toBe('website')->and($p->ogType)->toBe('website')->and($p->publishedTime)->toBe('')->and($p->modifiedTime)->toBe('');
+
+		$p = $b->build(seoCtx(['object' => $obj, 'seoBlock' => $block('blogposting')]));
+		expect($p->contentType)->toBe('blogposting')->and($p->ogType)->toBe('article')
+			->and($p->publishedTime)->toBe('2026-01-02T00:00:00+00:00')->and($p->modifiedTime)->toBe('2026-02-01T00:00:00+00:00');
+
+		// The card overrides the collection in both directions.
+		$p = $b->build(seoCtx(['object' => $obj, 'seoBlock' => $block('blogposting'), 'fields' => SeoFields::fromArray(['jsonldType' => 'website'])]));
+		expect($p->contentType)->toBe('website')->and($p->ogType)->toBe('website');
+		$p = $b->build(seoCtx(['object' => $obj, 'seoBlock' => $block(''), 'fields' => SeoFields::fromArray(['jsonldType' => 'article'])]));
+		expect($p->contentType)->toBe('article')->and($p->ogType)->toBe('article');
+
+		// Published falls back to created; a value outside the list is ignored.
+		$p = $b->build(seoCtx(['object' => ['id' => 'x', 'title' => 'P', 'created' => '2025-12-31T00:00:00+00:00'], 'seoBlock' => $block('article')]));
+		expect($p->publishedTime)->toBe('2025-12-31T00:00:00+00:00');
+		expect($b->build(seoCtx(['seoBlock' => $block('none')]))->contentType)->toBe('website');
 	});
 
 	test('title: mapped property, then placeholders on the card', function () use ($b): void {
 		$obj = ['id' => 'x', 'title' => 'Fallback', 'name' => 'Mapped Name', 'author' => 'Joe'];
-		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => ['type' => '', 'title' => 'name', 'description' => '', 'image' => '']]))->rawTitle)->toBe('Mapped Name');
-		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => ['type' => '', 'title' => 'missing', 'description' => '', 'image' => '']]))->rawTitle)->toBe('Fallback');
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => ['type' => '', 'title' => '${name}', 'socialTitle' => '', 'description' => '', 'image' => '']]))->rawTitle)->toBe('Mapped Name');
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => ['type' => '', 'title' => '${missing}', 'socialTitle' => '', 'description' => '', 'image' => '']]))->rawTitle)->toBe('Fallback');
 		expect($b->build(seoCtx(['object' => $obj, 'fields' => SeoFields::fromArray(['title' => '${name} by ${author} – ${site}'])]))->rawTitle)->toBe('Mapped Name by Joe – Bistro');
 		expect($b->build(seoCtx(['object' => $obj, 'fields' => SeoFields::fromArray(['title' => '${nope}'])]))->rawTitle)->toBe('Fallback');
 		expect($b->build(seoCtx(['object' => ['id' => 'x', 'card' => ['headline' => 'Deep']], 'fields' => SeoFields::fromArray(['title' => '${card.headline}'])]))->rawTitle)->toBe('Deep');
@@ -40,7 +83,7 @@ describe('MetaBuilder', function (): void {
 	test('description: card → mapped field stripped of tags → site default', function () use ($b): void {
 		expect($b->build(seoCtx())->description)->toBe('A summary & more');
 		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['description' => 'Card'])]))->description)->toBe('Card');
-		expect($b->build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'description' => '', 'image' => '']]))->description)->toBe('Site default');
+		expect($b->build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => '']]))->description)->toBe('Site default');
 		$long = str_repeat('word ', 80);
 		expect(mb_strlen($b->build(seoCtx(['object' => ['id' => 'x', 'title' => 't', 'summary' => $long]]))->description))->toBeLessThanOrEqual(160);
 	});
@@ -95,7 +138,7 @@ describe('MetaBuilder', function (): void {
 		// A site-level Social Title Template structures share titles on its
 		// own, independent of <title>. The card's Social Title goes through
 		// it like the card's Title goes through the title template.
-		$settings = SeoSettings::fromArray(['socialTitleTemplate' => '{title} — from {site}'], 'x');
+		$settings = SeoSettings::fromArray(['socialTitleTemplate' => '${title} — from ${site}'], 'x');
 		$p        = $b->build(seoCtx(['settings' => $settings]));
 		expect($p->socialTitle)->toBe('Hello <World> — from Bistro')->and($p->title)->toBe('Hello <World> | Bistro');
 		expect($b->build(seoCtx(['settings' => $settings, 'fields' => SeoFields::fromArray(['socialTitle' => 'Short'])]))->socialTitle)->toBe('Short — from Bistro');
@@ -125,7 +168,7 @@ describe('MetaBuilder', function (): void {
 	test('description: only a mapped property is capped — card and site default pass through verbatim', function () use ($b): void {
 		$long = str_repeat('word ', 60); // 300 characters
 		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['description' => $long])]))->description)->toBe(trim($long));
-		expect($b->build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'description' => '', 'image' => ''], 'settings' => SeoSettings::fromArray(['defaultDescription' => $long], 'x')]))->description)->toBe(trim($long));
+		expect($b->build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => ''], 'settings' => SeoSettings::fromArray(['defaultDescription' => $long], 'x')]))->description)->toBe(trim($long));
 		expect(mb_strlen($b->build(seoCtx(['object' => ['id' => 'x', 'title' => 't', 'summary' => $long]]))->description))->toBeLessThanOrEqual(160);
 	});
 
@@ -171,9 +214,9 @@ describe('MetaBuilder', function (): void {
 		expect($p->canonical)->toBe('https://example.com/blog/hello')->and($p->robots)->toBe('')->and($p->ogType)->toBe('article')->and($p->noindex)->toBeFalse();
 		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['canonical' => 'https://other.test/x'])]))->canonical)->toBe('https://other.test/x');
 		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['noindex' => true, 'nofollow' => true])]))->robots)->toBe('noindex, nofollow');
-		expect($b->build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'description' => '', 'image' => '']]))->ogType)->toBe('website');
+		expect($b->build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => '']]))->ogType)->toBe('website');
 		// An explicit `website` on an otherwise-article context opts out.
-		expect($b->build(seoCtx(['seoBlock' => ['type' => 'website', 'title' => 'title', 'description' => 'summary', 'image' => 'image']]))->ogType)->toBe('website');
+		expect($b->build(seoCtx(['seoBlock' => ['type' => 'website', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'image']]))->ogType)->toBe('website');
 		expect($b->build(seoCtx(['kind' => 'none', 'object' => [], 'url' => '']))->canonical)->toBe('');
 	});
 });

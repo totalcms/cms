@@ -14,6 +14,10 @@ final readonly class MetaPayload
 	/**
 	 * @param string $rawTitle The title before the site title template is applied
 	 * @param string $socialTitle The share-card title: the card's Social Title, else $rawTitle, through the site's social title template
+	 * @param string $contentType `website`, `article` or `blogposting` — the record's card, else the collection, else `website`
+	 * @param string $ogType `website` or `article`, derived from $contentType
+	 * @param string $publishedTime The object's `date`, else `created`, for `article:published_time`; `''` when not an article
+	 * @param string $modifiedTime The object's `updated`, for `article:modified_time`; `''` when not an article
 	 * @param string $robots `''`, `noindex`, `nofollow` or `noindex, nofollow`
 	 * @param string $ogImage Absolute URL, or `''` when there is no image
 	 * @param string $ogImageAlt The alt of that image, or `''` when it has none (or there is no image)
@@ -26,7 +30,10 @@ final readonly class MetaPayload
 		public string $description,
 		public string $canonical,
 		public string $robots,
+		public string $contentType,
 		public string $ogType,
+		public string $publishedTime,
+		public string $modifiedTime,
 		public string $ogImage,
 		public string $ogImageAlt,
 		public string $twitterCard,

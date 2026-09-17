@@ -38,24 +38,28 @@ class MetaBuilder
 		$f = $ctx->fields;
 		$s = $ctx->settings;
 
-		// Title: the seo card wins, then the collection's mapped title property,
-		// then the object's own title, then the site.
-		$rawTitle = $this->cardTitle($ctx);
-		if ($rawTitle === '' && $ctx->seoBlock['title'] !== '') {
-			$rawTitle = $this->scalarString($ctx->object[$ctx->seoBlock['title']] ?? null);
+		// Title: the seo card wins, then the collection's title template, then
+		// the object's own title, then the site. Card and collection are both
+		// `${property}` templates over the record.
+		$rawTitle = $this->renderTemplate($f->title, $ctx);
+		if ($rawTitle === '') {
+			$rawTitle = $this->renderTemplate($ctx->seoBlock['title'], $ctx);
 		}
 		if ($rawTitle === '') {
 			$rawTitle = $this->scalarString($ctx->object['title'] ?? null);
 		}
 		$title = $this->applyTemplate($rawTitle, $ctx->siteName, $s->titleTemplate);
 
-		// Share title: the card's Social Title, else the raw title, through the
-		// site's social title template — `{title}` by default, so a share card
-		// carries the bare title while <title> carries the site suffix. A
-		// separate template because a share card and a browser tab want
-		// different shapes, and the card's own Social Title goes through it
-		// the same way the card's Title goes through the title template.
-		$socialTitle = $this->applyTemplate($f->socialTitle !== '' ? $f->socialTitle : $rawTitle, $ctx->siteName, $s->socialTitleTemplate);
+		// Share title: the card's Social Title, then the collection's social
+		// title template, else the raw title — through the site's social title
+		// template, `${title}` by default, so a share card carries the bare
+		// title while <title> carries the site suffix. A separate template
+		// because a share card and a browser tab want different shapes.
+		$socialTitle = $this->renderTemplate($f->socialTitle, $ctx);
+		if ($socialTitle === '') {
+			$socialTitle = $this->renderTemplate($ctx->seoBlock['socialTitle'], $ctx);
+		}
+		$socialTitle = $this->applyTemplate($socialTitle !== '' ? $socialTitle : $rawTitle, $ctx->siteName, $s->socialTitleTemplate);
 
 		// Description: the seo card, then the collection's mapped property
 		// (stripped to plain text), then the site default.
@@ -99,7 +103,14 @@ class MetaBuilder
 
 		$canonical = $f->canonical !== '' ? $f->canonical : $ctx->url;
 		$robots    = implode(', ', array_filter([$f->noindex ? 'noindex' : '', $f->nofollow ? 'nofollow' : '']));
-		$ogType    = $ctx->seoBlock['type'] === 'article' ? 'article' : 'website';
+
+		// Content type: the card, then the collection (which already carries
+		// the schema default), then a plain web page. One value decides both
+		// og:type and the JSON-LD node, so a page that is an article says so
+		// to social scrapers and search engines in the same breath.
+		$contentType = $this->contentType($f->jsonldType) ?? $this->contentType($ctx->seoBlock['type']) ?? 'website';
+		$isArticle   = $contentType !== 'website';
+		$published   = $this->dateString($ctx, 'date') !== '' ? $this->dateString($ctx, 'date') : $this->dateString($ctx, 'created');
 
 		return new MetaPayload(
 			title: $title,
@@ -108,7 +119,10 @@ class MetaBuilder
 			description: $description,
 			canonical: $canonical,
 			robots: $robots,
-			ogType: $ogType,
+			contentType: $contentType,
+			ogType: $isArticle ? 'article' : 'website',
+			publishedTime: $isArticle ? $published : '',
+			modifiedTime: $isArticle ? $this->dateString($ctx, 'updated') : '',
 			ogImage: $image,
 			ogImageAlt: $imageAlt,
 			twitterCard: $image !== '' ? 'summary_large_image' : 'summary',
@@ -119,8 +133,23 @@ class MetaBuilder
 		);
 	}
 
+	/** A card or collection content type; null for blank or a value outside the list. */
+	private function contentType(string $value): ?string
+	{
+		return in_array($value, ['website', 'article', 'blogposting'], true) ? $value : null;
+	}
+
+	/** A date-like property as the string it was stored as, or `''`. */
+	private function dateString(SeoContext $ctx, string $key): string
+	{
+		$value = $ctx->object[$key] ?? '';
+
+		return is_string($value) ? trim($value) : '';
+	}
+
 	/**
-	 * The `seo` card's own title, with `${placeholder}` support so one card
+	 * A `${placeholder}` title template over the record — the `seo` card's
+	 * own title, or the collection's title / social title template — so one
 	 * value can compose a title out of the record ("${name} — ${city}").
 	 *
 	 * Keys resolve against the record with the same dot-path walk decks and
@@ -135,10 +164,8 @@ class MetaBuilder
 	 * a real, if partial, title (`${name} — ${city}` with only a name renders
 	 * `Bistro —`, trimmed of trailing whitespace).
 	 */
-	private function cardTitle(SeoContext $ctx): string
+	private function renderTemplate(string $title, SeoContext $ctx): string
 	{
-		$title = $ctx->fields->title;
-
 		// No *complete* placeholder: a literal `${` with no closing brace is
 		// text, not a template, and must survive as the title it was typed as.
 		if (TemplatePlaceholder::extractKeys($title) === []) {
@@ -159,7 +186,7 @@ class MetaBuilder
 	}
 
 	/**
-	 * Render a site title template (`{title}` and `{site}`). A missing title
+	 * Render a site title template (`${title}` and `${site}`). A missing title
 	 * or site name collapses to whichever half exists rather than leaving a
 	 * dangling separator.
 	 */
@@ -172,7 +199,7 @@ class MetaBuilder
 			return $title;
 		}
 
-		return trim(str_replace(['{title}', '{site}'], [$title, $site], $template));
+		return trim(str_replace(['${title}', '${site}'], [$title, $site], $template));
 	}
 
 	/**

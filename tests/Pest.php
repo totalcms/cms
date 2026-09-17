@@ -459,7 +459,7 @@ function seoCtx(array $overrides = []): SeoContext
 		'object'         => ['id' => 'hello', 'title' => 'Hello <World>', 'summary' => '<p>A summary &amp; more</p>', 'image' => ['name' => 'hero.jpg', 'size' => 10]],
 		'collectionId'   => 'blog',
 		'collectionMeta' => null,
-		'seoBlock'       => ['type' => 'article', 'title' => 'title', 'description' => 'summary', 'image' => 'image'],
+		'seoBlock'       => ['type' => 'article', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'image'],
 		'fields'         => SeoFields::fromArray([]),
 		'settings'       => SeoSettings::fromArray(['siteName' => 'Bistro', 'defaultDescription' => 'Site default', 'defaultImage' => 'https://cdn/x.jpg', 'twitterHandle' => 'bistro'], 'example.com'),
 		'siteName'       => 'Bistro',

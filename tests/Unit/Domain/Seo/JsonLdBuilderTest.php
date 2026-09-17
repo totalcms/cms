@@ -29,7 +29,7 @@ describe('JsonLdBuilder', function (): void {
 	});
 
 	test('a website page has no Article and no breadcrumb beyond Home', function () use ($build): void {
-		$graph = $build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'description' => '', 'image' => '']]));
+		$graph = $build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => '']]));
 		expect(array_column($graph, '@type'))->not->toContain('Article');
 		$byType = array_column($graph, null, '@type');
 		expect($byType['BreadcrumbList']['itemListElement'])->toHaveCount(2);
@@ -53,8 +53,19 @@ describe('JsonLdBuilder', function (): void {
 		expect(array_column($build(seoCtx(['kind' => 'none', 'object' => [], 'url' => ''])), '@type'))->toBe(['Organization', 'WebSite']);
 	});
 
-	test('jsonldType none suppresses the Article, and the script cannot break out', function () use ($build): void {
-		$ctx = seoCtx(['fields' => SeoFields::fromArray(['jsonldType' => 'none', 'title' => '</script><script>alert(1)</script>'])]);
+	test('a blog post is a BlogPosting, and a page can opt into Article', function () use ($build): void {
+		$blog = ['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'image'];
+		expect(array_column($build(seoCtx(['seoBlock' => $blog])), '@type'))->toContain('BlogPosting')->not->toContain('Article');
+
+		// A Site Builder page is a subject too: its card alone decides.
+		$page = seoCtx(['kind' => 'page', 'collectionId' => 'builder-pages', 'object' => ['id' => 'essay', 'title' => 'Essay', 'route' => '/essay', 'template' => 'page', 'created' => '2026-01-01T00:00:00+00:00'], 'seoBlock' => ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => ''], 'fields' => SeoFields::fromArray(['jsonldType' => 'article']), 'url' => 'https://example.com/essay']);
+		$graph = $build($page);
+		$article = array_values(array_filter($graph, fn (array $n): bool => $n['@type'] === 'Article'))[0] ?? null;
+		expect($article)->not->toBeNull()->and($article['headline'])->toBe('Essay')->and($article['datePublished'])->toBe('2026-01-01T00:00:00+00:00');
+	});
+
+	test('jsonldType website suppresses the Article, and the script cannot break out', function () use ($build): void {
+		$ctx = seoCtx(['fields' => SeoFields::fromArray(['jsonldType' => 'website', 'title' => '</script><script>alert(1)</script>'])]);
 		expect(array_column($build($ctx), '@type'))->not->toContain('Article');
 		$script = (new JsonLdBuilder(new WebPageProvider()))->script($ctx, (new MetaBuilder())->build($ctx));
 		expect($script)->toStartWith('<script type="application/ld+json">')->not->toContain('</script><script>');

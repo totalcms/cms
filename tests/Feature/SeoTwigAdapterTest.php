@@ -46,11 +46,12 @@ it('renders the whole head for a collection object', function (): void {
 		->toContain('<link rel="canonical" href="http://totalcms.test/')
 		->toContain('/hello')
 		->toContain('<meta property="og:type" content="article">')
+		->toContain('<meta property="article:published_time" content="')
 		->toContain('<meta name="twitter:site" content="@bistro">')
 		// Meta Tags are printed as pasted, unescaped — a verification tag, a
 		// script, whatever the operator needs in the head.
 		->toContain('<meta name="google-site-verification" content="g123">' . "\n" . '<script src="/x.js"></script>')
-		->toContain('"@type":"Article"')
+		->toContain('"@type":"BlogPosting"')
 		->not->toContain('<meta name="robots"');
 
 	// Escaped exactly once: no double-escaping of the markup we emit, and the
@@ -83,7 +84,7 @@ it('gives a page the router did not render its head through cms.builder.page()',
 	expect($html)->toContain('<title>Hello &amp; Welcome | Bistro</title>')
 		->toContain('<meta name="description" content="Sum mary">')
 		->toContain('<meta property="og:type" content="article">')
-		->toContain('"@type":"Article"')
+		->toContain('"@type":"BlogPosting"')
 		->toContain('/blog/hello">');
 });
 

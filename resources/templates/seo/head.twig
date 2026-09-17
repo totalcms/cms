@@ -29,6 +29,12 @@
 {% endif -%}
 {%- if 'og' in parts and settings.emitSocial -%}
 <meta property="og:type" content="{{ meta.ogType }}">
+{% if meta.publishedTime != '' -%}
+<meta property="article:published_time" content="{{ meta.publishedTime }}">
+{% endif -%}
+{% if meta.modifiedTime != '' -%}
+<meta property="article:modified_time" content="{{ meta.modifiedTime }}">
+{% endif -%}
 <meta property="og:title" content="{{ meta.socialTitle }}">
 {% if meta.description != '' -%}
 <meta property="og:description" content="{{ meta.description }}">

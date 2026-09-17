@@ -8,11 +8,14 @@ use TotalCMS\Domain\Seo\Data\MetaPayload;
 use TotalCMS\Domain\Seo\Data\SeoContext;
 
 /**
- * An `Article` node for collection objects the site publishes as articles.
+ * An `Article` (or `BlogPosting`) node for a page or object whose resolved
+ * content type says it is one.
  *
- * The collection's SEO card decides this by default (`seo.type === 'article'`);
- * the object's own `jsonldType` overrides it in both directions — `article`
- * opts a one-off object in, `none` opts it out.
+ * MetaBuilder resolves the type — the record's card, then the collection
+ * (which carries the schema default: blog posts are BlogPostings), then a
+ * plain web page — so this provider only reads `MetaPayload::$contentType`.
+ * A Site Builder page qualifies the same way an object does: its card
+ * alone decides.
  */
 final class ArticleProvider implements JsonLdProvider
 {
@@ -22,12 +25,12 @@ final class ArticleProvider implements JsonLdProvider
 	/** @return list<array<string,mixed>> */
 	public function nodes(SeoContext $ctx, MetaPayload $meta): array
 	{
-		if (!$this->applies($ctx)) {
+		if (!$this->applies($ctx, $meta)) {
 			return [];
 		}
 
 		$node = [
-			'@type'            => 'Article',
+			'@type'            => $meta->contentType === 'blogposting' ? 'BlogPosting' : 'Article',
 			'@id'              => $ctx->url . '#article',
 			'headline'         => mb_substr($meta->rawTitle, 0, self::HEADLINE_LENGTH),
 			'isPartOf'         => ['@id' => WebPageProvider::id($ctx)],
@@ -59,21 +62,12 @@ final class ArticleProvider implements JsonLdProvider
 	}
 
 	/**
-	 * An article needs an object, a URL to anchor the `@id` to, and either the
-	 * collection's `article` type or an explicit per-object opt-in.
+	 * An article needs a WebPage to be part of (a page or object with a URL)
+	 * and an article content type.
 	 */
-	private function applies(SeoContext $ctx): bool
+	private function applies(SeoContext $ctx, MetaPayload $meta): bool
 	{
-		if ($ctx->kind !== 'object' || $ctx->url === '' || !WebPageProvider::applies($ctx)) {
-			return false;
-		}
-
-		$type = $ctx->fields->jsonldType;
-		if ($type === 'article') {
-			return true;
-		}
-
-		return $type !== 'none' && $ctx->seoBlock['type'] === 'article';
+		return WebPageProvider::applies($ctx) && $meta->contentType !== 'website';
 	}
 
 	private function str(SeoContext $ctx, string $key): string

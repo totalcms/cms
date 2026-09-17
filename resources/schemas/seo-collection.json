@@ -1,68 +1,85 @@
 {
-	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
-	"$id"         : "https://www.totalcms.co/schemas/seo-collection.json",
-	"id"          : "seo-collection",
-	"type"        : "object",
-	"description" : "SEO settings for a Total CMS collection. Used as a card sub-schema on the collection meta.",
-	"category" : "Internal",
-	"formgrid"    : "type type\n---\ntitle description\nimage .",
-	"properties"  : {
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/seo-collection.json",
+	"id": "seo-collection",
+	"type": "object",
+	"description": "SEO settings for a Total CMS collection. Used as a card sub-schema on the collection meta.",
+	"category": "Internal",
+	"formgrid": "title socialTitle\ndescription image\ntype .",
+	"properties": {
 		"id": {
-			"$ref"     : "https://www.totalcms.co/schemas/properties/slug.json",
-			"label"    : "ID",
-			"help"     : "Reserved — required by the schema system but unused for cards.",
-			"field"    : "id",
-			"factory"  : "slug",
-			"settings" : {
-				"readonly" : true
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"label": "ID",
+			"help": "Reserved — required by the schema system but unused for cards.",
+			"field": "id",
+			"factory": "slug",
+			"settings": {
+				"readonly": true
 			}
 		},
 		"type": {
-			"type"    : "string",
-			"label"   : "Structured Data Type",
-			"help"    : "Default JSON-LD type for objects in this collection",
-			"field"   : "select",
-			"default" : "",
-			"options" : [
-				{"value": "",        "label": "Schema default (Article for blog and feed schemas, Website otherwise)"},
-				{"value": "website", "label": "Website"},
-				{"value": "article", "label": "Article"}
+			"type": "string",
+			"label": "Structured Data Type",
+			"help": "What objects in this collection are, for og:type and the JSON-LD. Automatic uses the schema default: Blog post for blog and feed schemas, Web page otherwise.",
+			"field": "select",
+			"default": "",
+			"options": [
+				{
+					"value": "",
+					"label": "Automatic"
+				},
+				{
+					"value": "website",
+					"label": "Webpage"
+				},
+				{
+					"value": "article",
+					"label": "Article"
+				},
+				{
+					"value": "blogposting",
+					"label": "Blog post"
+				}
 			]
 		},
 		"title": {
-			"type"        : "string",
-			"label"       : "Title Property",
-			"help"        : "Which property supplies the title when the object has no SEO title. Leave empty to use the object's title.",
-			"field"       : "select",
-			"placeholder" : "Select a Property",
-			"default"     : "",
-			"settings"    : {
-				"propertyOptions" : "schemaProperties",
-				"sortOptions"     : true
-			}
+			"type": "string",
+			"label": "Title Template",
+			"help": "Composes the title from the object's properties: ${title} | Reviews, ${name} — ${city}. ${site} is the site name. Leave empty to use the object's title. The object's own SEO Title wins.",
+			"field": "text",
+			"default": "",
+			"placeholder": "${title}"
+		},
+		"socialTitle": {
+			"type": "string",
+			"label": "Social Title Template",
+			"help": "Composes og:title and twitter:title from the object's properties, independent of the Title Template. Leave empty to use the title. The object's own Social Title wins.",
+			"field": "text",
+			"default": "",
+			"placeholder": "${title}"
 		},
 		"description": {
-			"type"        : "string",
-			"label"       : "Description Property",
-			"help"        : "Which property supplies the meta description when the object has no SEO description",
-			"field"       : "select",
-			"placeholder" : "Select a Property",
-			"default"     : "",
-			"settings"    : {
-				"propertyOptions" : "schemaProperties",
-				"sortOptions"     : true
+			"type": "string",
+			"label": "Description Property",
+			"help": "Which property supplies the meta description when the object has no SEO description",
+			"field": "select",
+			"placeholder": "Select a Property",
+			"default": "",
+			"settings": {
+				"propertyOptions": "schemaProperties",
+				"sortOptions": true
 			}
 		},
 		"image": {
-			"type"        : "string",
-			"label"       : "Image Property",
-			"help"        : "Which image property supplies the social image",
-			"field"       : "select",
-			"placeholder" : "Select a Property",
-			"default"     : "",
-			"settings"    : {
-				"propertyOptions" : "schemaProperties",
-				"sortOptions"     : true
+			"type": "string",
+			"label": "Image Property",
+			"help": "Which image property supplies the social image",
+			"field": "select",
+			"placeholder": "Select a Property",
+			"default": "",
+			"settings": {
+				"propertyOptions": "schemaProperties",
+				"sortOptions": true
 			}
 		}
 	},

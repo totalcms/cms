@@ -23,17 +23,21 @@ use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
  */
 readonly class SeoContextFactory
 {
-	/** No collection mapping: every value falls through to the site defaults. */
-	private const EMPTY_BLOCK = ['type' => '', 'title' => '', 'description' => '', 'image' => ''];
+	/**
+	 * No collection mapping: every value falls through to the site defaults.
+	 * `title` and `socialTitle` are templates (`${property}`), empty meaning
+	 * the object's own title; `description` and `image` are property names.
+	 */
+	private const EMPTY_BLOCK = ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => ''];
 
-	/** The default mapping for `blog`-schema collections. */
-	private const ARTICLE_BLOCK = ['type' => 'article', 'title' => 'title', 'description' => 'summary', 'image' => 'image'];
+	/** The default mapping for `blog`-schema collections: a blog post is a BlogPosting. */
+	private const BLOG_BLOCK = ['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'image'];
 
 	/**
 	 * Site Builder pages carry a `title`; their description and social image
 	 * live on the `seo` card only, so there is nothing else to map.
 	 */
-	private const PAGE_BLOCK = ['type' => '', 'title' => 'title', 'description' => '', 'image' => ''];
+	private const PAGE_BLOCK = self::EMPTY_BLOCK;
 
 	/**
 	 * Per-schema default mappings, keyed by schema id. Each reserved schema that
@@ -42,15 +46,15 @@ readonly class SeoContextFactory
 	 * property named here exists in the matching `resources/schemas/*.json`.
 	 * A schema absent from the map falls back to EMPTY_BLOCK.
 	 *
-	 * @var array<string,array{type:string,title:string,description:string,image:string}>
+	 * @var array<string,array{type:string,title:string,socialTitle:string,description:string,image:string}>
 	 */
 	private const SCHEMA_BLOCKS = [
-		'blog'            => self::ARTICLE_BLOCK,
-		'blog-legacy'     => self::ARTICLE_BLOCK,
-		'feed'            => ['type' => 'article', 'title' => 'title', 'description' => 'content', 'image' => 'image'],
+		'blog'            => self::BLOG_BLOCK,
+		'blog-legacy'     => self::BLOG_BLOCK,
+		'feed'            => ['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => 'content', 'image' => 'image'],
 		// An episode is a media item, not an article — `website` is the right
 		// Open Graph type, and it keeps ArticleProvider out of the JSON-LD.
-		'podcast-episode' => ['type' => 'website', 'title' => 'title', 'description' => 'summary', 'image' => 'art'],
+		'podcast-episode' => ['type' => 'website', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'art'],
 	];
 
 	public function __construct(
@@ -142,7 +146,7 @@ readonly class SeoContextFactory
 			$subject,
 			'',
 			null,
-			['type' => '', 'title' => 'title', 'description' => 'description', 'image' => $imageUrls !== [] ? 'image' : ''],
+			['type' => '', 'title' => '', 'socialTitle' => '', 'description' => 'description', 'image' => $imageUrls !== [] ? 'image' : ''],
 			$fields,
 			$settings,
 			$siteName,
@@ -218,7 +222,7 @@ readonly class SeoContextFactory
 	 * collection that maps only `image` therefore keeps `article` / `title` /
 	 * `summary` for the keys it left alone.
 	 *
-	 * @return array{type:string,title:string,description:string,image:string}
+	 * @return array{type:string,title:string,socialTitle:string,description:string,image:string}
 	 */
 	private function resolveBlock(?CollectionData $meta): array
 	{
@@ -231,6 +235,7 @@ readonly class SeoContextFactory
 		return [
 			'type'        => $this->blockValue($meta, 'type', $default['type']),
 			'title'       => $this->blockValue($meta, 'title', $default['title']),
+			'socialTitle' => $this->blockValue($meta, 'socialTitle', $default['socialTitle']),
 			'description' => $this->blockValue($meta, 'description', $default['description']),
 			'image'       => $this->blockValue($meta, 'image', $default['image']),
 		];
@@ -268,7 +273,7 @@ readonly class SeoContextFactory
 	 * image. Doing it here keeps the Twig media adapter out of the builders.
 	 *
 	 * @param array<string,mixed> $object
-	 * @param array{type:string,title:string,description:string,image:string} $block
+	 * @param array{type:string,title:string,socialTitle:string,description:string,image:string} $block
 	 *
 	 * @return array<string,string>
 	 */
@@ -294,7 +299,7 @@ readonly class SeoContextFactory
 	 * property must not describe the image that wins instead.
 	 *
 	 * @param array<string,mixed> $object
-	 * @param array{type:string,title:string,description:string,image:string} $block
+	 * @param array{type:string,title:string,socialTitle:string,description:string,image:string} $block
 	 *
 	 * @return array<string,string>
 	 */

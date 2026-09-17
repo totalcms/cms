@@ -81,8 +81,8 @@ final readonly class SeoSettings
 		return new self(
 			siteName: $str('siteName'),
 			baseUrl: $baseUrl,
-			titleTemplate: $str('titleTemplate') !== '' ? $str('titleTemplate') : '{title} | {site}',
-			socialTitleTemplate: $str('socialTitleTemplate') !== '' ? $str('socialTitleTemplate') : '{title}',
+			titleTemplate: $str('titleTemplate') !== '' ? $str('titleTemplate') : '${title} | ${site}',
+			socialTitleTemplate: $str('socialTitleTemplate') !== '' ? $str('socialTitleTemplate') : '${title}',
 			defaultDescription: $str('defaultDescription'),
 			defaultImage: $str('defaultImage'),
 			defaultImageAlt: $str('defaultImageAlt'),

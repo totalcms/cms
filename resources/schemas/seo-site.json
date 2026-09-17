@@ -32,15 +32,15 @@
 			"type": "string",
 			"field": "text",
 			"label": "Title Template",
-			"help": "{title} and {site} are replaced. Default: {title} | {site}",
-			"default": "{title} | {site}"
+			"help": "Shapes <title>. ${title} and ${site} are replaced. Default: ${title} | ${site}",
+			"default": "${title} | ${site}"
 		},
 		"socialTitleTemplate": {
 			"type"    : "string",
 			"field"   : "text",
 			"label"   : "Social Title Template",
-			"help"    : "Shapes og:title and twitter:title, independent of the Title Template. {title} and {site} are replaced. Default: {title}",
-			"default" : "{title}"
+			"help"    : "Shapes og:title and twitter:title, independent of the Title Template. ${title} and ${site} are replaced. Default: ${title}",
+			"default" : "${title}"
 		},
 		"defaultDescription": {
 			"type": "string",
