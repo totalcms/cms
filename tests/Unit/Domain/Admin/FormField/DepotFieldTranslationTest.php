@@ -22,7 +22,6 @@ function translatorForLocale(string $locale): Closure
 	$configRc = new ReflectionClass(Config::class);
 	$config   = $configRc->newInstanceWithoutConstructor();
 	$localeP  = $configRc->getProperty('locale');
-	$localeP->setAccessible(true);
 	$localeP->setValue($config, $locale);
 
 	$service = new TranslationService($config, dirname(__DIR__, 5) . '/resources/translations');
@@ -37,7 +36,6 @@ function formWithTranslator(?Closure $translator): TotalForm
 	$form = $rc->newInstanceWithoutConstructor();
 
 	$prop = $rc->getProperty('translator');
-	$prop->setAccessible(true);
 	$prop->setValue($form, $translator);
 
 	return $form;

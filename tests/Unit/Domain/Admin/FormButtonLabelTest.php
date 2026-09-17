@@ -19,13 +19,11 @@ function makeFactoryForLocale(string $locale): TotalFormFactory
 	$configRc = new ReflectionClass(Config::class);
 	$config   = $configRc->newInstanceWithoutConstructor();
 	$localeP  = $configRc->getProperty('locale');
-	$localeP->setAccessible(true);
 	$localeP->setValue($config, $locale);
 
 	$factoryRc = new ReflectionClass(TotalFormFactory::class);
 	$factory   = $factoryRc->newInstanceWithoutConstructor();
 	$serviceP  = $factoryRc->getProperty('translationService');
-	$serviceP->setAccessible(true);
 	$serviceP->setValue($factory, new TranslationService(
 		$config,
 		dirname(__DIR__, 4) . '/resources/translations',
@@ -42,7 +40,6 @@ function makeFactoryForLocale(string $locale): TotalFormFactory
 function resolveButtons(TotalFormFactory $factory, array $options): array
 {
 	$method = new ReflectionMethod($factory, 'buttonLabels');
-	$method->setAccessible(true);
 
 	return $method->invoke($factory, $options);
 }

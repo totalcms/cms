@@ -50,7 +50,6 @@ function uploadTestJpeg(): string
 	ob_start();
 	imagejpeg($img);
 	$bytes = (string)ob_get_clean();
-	imagedestroy($img);
 
 	return $bytes;
 }

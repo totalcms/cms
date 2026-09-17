@@ -562,7 +562,6 @@ describe('McpToolGuard — call-time enforcement', function (): void {
 		);
 
 		$method = new ReflectionMethod(McpServerFactory::class, 'guardHandler');
-		$method->setAccessible(true);
 		/** @var Closure $guarded */
 		$guarded = $method->invoke($factory, $tool);
 
@@ -610,7 +609,6 @@ describe('McpToolGuard — call-time enforcement', function (): void {
 		);
 
 		$method = new ReflectionMethod(McpServerFactory::class, 'guardHandler');
-		$method->setAccessible(true);
 		/** @var Closure $guarded */
 		$guarded = $method->invoke($factory, $tool);
 

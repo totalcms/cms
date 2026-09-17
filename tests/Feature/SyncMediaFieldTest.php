@@ -37,7 +37,6 @@ beforeEach(function (): void {
 	ob_start();
 	imagejpeg($image);
 	$jpeg = (string)ob_get_clean();
-	imagedestroy($image);
 
 	$httpClient = test()->createMock(HttpClientInterface::class);
 	$httpClient->method('request')->willReturn(new HttpResponse(200, $jpeg));

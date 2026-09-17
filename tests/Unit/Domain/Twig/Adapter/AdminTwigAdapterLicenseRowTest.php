@@ -34,7 +34,6 @@ final class AdminTwigAdapterLicenseRowTest extends TestCase
 		(new \ReflectionClass($adapter))->getProperty('editionFeatures')->setValue($adapter, $editionFeatures);
 
 		$method = new \ReflectionMethod($adapter, 'dashboardLicenseStatus');
-		$method->setAccessible(true);
 
 		/** @var array<string,mixed> $row */
 		$row = $method->invoke($adapter, $status);

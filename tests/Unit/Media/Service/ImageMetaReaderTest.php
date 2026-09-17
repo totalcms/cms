@@ -311,7 +311,6 @@ final class ImageMetaReaderTest extends TestCase
 
 		// Save as JPEG
 		imagejpeg($image, $imagePath, 90);
-		imagedestroy($image);
 
 		return $imagePath;
 	}

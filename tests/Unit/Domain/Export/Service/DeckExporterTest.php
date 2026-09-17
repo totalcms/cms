@@ -81,7 +81,7 @@ final class DeckExporterTest extends TestCase
 			['note' => 'Third'],
 		]);
 
-		$rows = array_map('str_getcsv', array_filter(explode("\n", trim($csv))));
+		$rows = array_map(static fn (string $line): array => str_getcsv($line, escape: '\\'), array_filter(explode("\n", trim($csv))));
 
 		$this->assertSame(['title', 'subtitle', 'note'], $rows[0]);
 		// A row without a column gets an empty cell, so every row has the same
@@ -97,7 +97,7 @@ final class DeckExporterTest extends TestCase
 		// indistinguishable from a missing value, and the bug the card
 		// exporter had.
 		$csv  = $this->exporter->toCsv([['featured' => true, 'archived' => false]]);
-		$rows = array_map('str_getcsv', array_filter(explode("\n", trim($csv))));
+		$rows = array_map(static fn (string $line): array => str_getcsv($line, escape: '\\'), array_filter(explode("\n", trim($csv))));
 
 		$this->assertSame(['true', 'false'], $rows[1]);
 	}
@@ -105,7 +105,7 @@ final class DeckExporterTest extends TestCase
 	public function testCsvJsonEncodesANestedValue(): void
 	{
 		$csv  = $this->exporter->toCsv([['image' => ['file' => 'hero.jpg', 'alt' => 'Hero']]]);
-		$rows = array_map('str_getcsv', array_filter(explode("\n", trim($csv))));
+		$rows = array_map(static fn (string $line): array => str_getcsv($line, escape: '\\'), array_filter(explode("\n", trim($csv))));
 
 		$this->assertSame(['{"file":"hero.jpg","alt":"Hero"}'], $rows[1]);
 	}

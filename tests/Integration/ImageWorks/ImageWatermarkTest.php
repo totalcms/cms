@@ -136,8 +136,6 @@ function watermarkPixelDiff(string $a, string $b): float
 		}
 	}
 
-	imagedestroy($ia);
-	imagedestroy($ib);
 
 	return $total > 0 ? $changed / $total * 100 : 0.0;
 }
@@ -156,7 +154,6 @@ beforeEach(function (): void {
 	imagefilledrectangle($logo, 0, 107, 299, 119, $white);
 	imagestring($logo, 5, 60, 50, 'TOTAL CMS', $white);
 	imagepng($logo, $this->root . '/gallery/watermarks/gallery/logo.png');
-	imagedestroy($logo);
 
 	if (!is_dir(WATERMARK_REVIEW_DIR)) {
 		mkdir(WATERMARK_REVIEW_DIR, 0755, true);

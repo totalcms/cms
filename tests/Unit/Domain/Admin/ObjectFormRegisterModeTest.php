@@ -75,7 +75,6 @@ final class ObjectFormRegisterModeTest extends TestCase
 		foreach (array_merge($defaults, $properties) as $name => $value) {
 			$property = $this->findProperty($reflection, $name);
 			if ($property instanceof \ReflectionProperty) {
-				$property->setAccessible(true);
 				$property->setValue($form, $value);
 			}
 		}
@@ -97,7 +96,6 @@ final class ObjectFormRegisterModeTest extends TestCase
 	private function init(ObjectForm $form): void
 	{
 		$method = new \ReflectionMethod(ObjectForm::class, 'init');
-		$method->setAccessible(true);
 		$method->invoke($form);
 	}
 
@@ -105,7 +103,6 @@ final class ObjectFormRegisterModeTest extends TestCase
 	private function read(ObjectForm $form, string $name): mixed
 	{
 		$property = $this->findProperty(new \ReflectionClass(ObjectForm::class), $name);
-		$property->setAccessible(true);
 
 		return $property->getValue($form);
 	}
