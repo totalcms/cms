@@ -27,6 +27,28 @@
 {%- if 'canonical' in parts and meta.canonical != '' and not meta.noindex -%}
 <link rel="canonical" href="{{ meta.canonical }}">
 {% endif -%}
+{#- The icon set, all off the Site SEO record. The SVG goes first so a browser
+    that can use it does; the sizes let Android and Google pick theirs. -#}
+{%- if 'icons' in parts and settings.hasIconSlice() -%}
+{% if settings.iconSvg != '' -%}
+<link rel="icon" href="{{ settings.iconSvg }}" type="image/svg+xml">
+{% endif -%}
+{% if settings.icon32 != '' -%}
+<link rel="icon" href="{{ settings.icon32 }}" type="image/png" sizes="32x32">
+<link rel="icon" href="{{ settings.icon192 }}" type="image/png" sizes="192x192">
+<link rel="icon" href="{{ settings.icon512 }}" type="image/png" sizes="512x512">
+{% endif -%}
+{% if settings.touchIcon != '' -%}
+<link rel="apple-touch-icon" href="{{ settings.touchIcon }}" sizes="180x180">
+{% endif -%}
+{#- Linked only when a Site Builder page owns /manifest.webmanifest. #}
+{% if settings.manifest != '' -%}
+<link rel="manifest" href="{{ settings.manifest }}">
+{% endif -%}
+{% if settings.themeColor != '' -%}
+<meta name="theme-color" content="{{ settings.themeColor }}">
+{% endif -%}
+{% endif -%}
 {%- if 'og' in parts and settings.emitSocial -%}
 <meta property="og:type" content="{{ meta.ogType }}">
 {% if meta.publishedTime != '' -%}

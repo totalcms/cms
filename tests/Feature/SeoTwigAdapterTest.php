@@ -7,6 +7,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 
 beforeEach(function (): void {
@@ -189,6 +190,55 @@ it('granular methods return only their slice', function (): void {
 		->toContain('<meta name="google-site-verification" content="g123">')
 		->toContain('<script src="/x.js"></script>')
 		->not->toContain('<title>');
+});
+
+it('emits no icon tags when the record has no icon', function (): void {
+	$html = ($this->render)('{{ cms.seo.head() }}');
+
+	expect($html)->not->toContain('rel="icon"')->not->toContain('apple-touch-icon')->not->toContain('theme-color')->not->toContain('rel="manifest"');
+	expect(($this->render)('{{ cms.seo.icons() }}'))->toBe('');
+});
+
+it('emits the icon set, the touch icon, the SVG first and the theme colour', function (): void {
+	$container = $this->app->getContainer();
+	$container->get(ObjectUpdater::class)->updateObject('seo-site', 'seo-site', [
+		'id'         => 'seo-site',
+		'siteName'   => 'Bistro',
+		'icon'       => ['name' => 'icon.png', 'size' => 10],
+		'iconSvg'    => ['name' => 'icon.svg', 'size' => 10, 'mime' => 'image/svg+xml'],
+		'themeColor' => '#F17724',
+	]);
+	$page = ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/about.twig'];
+
+	$html = ($this->render)('{{ cms.seo.head(page) }}', ['page' => $page]);
+
+	expect($html)
+		->toContain('<link rel="icon" href="http://totalcms.test/favicon.svg" type="image/svg+xml">')
+		->toMatch('~<link rel="icon" href="http://totalcms\.test/imageworks/seo-site/seo-site/icon\.png[^"]*w=32[^"]*" type="image/png" sizes="32x32">~')
+		->toMatch('~sizes="192x192"~')
+		->toMatch('~sizes="512x512"~')
+		// No Touch Icon uploaded: the 180px touch icon is cut from the Icon.
+		->toMatch('~<link rel="apple-touch-icon" href="http://totalcms\.test/imageworks/seo-site/seo-site/icon\.png[^"]*w=180[^"]*" sizes="180x180">~')
+		->toContain('<meta name="theme-color" content="#f17724">');
+
+	// The SVG is listed before the PNGs so a browser that can use it does.
+	expect(strpos($html, 'favicon.svg'))->toBeLessThan((int)strpos($html, 'sizes="32x32"'));
+
+	// The slice prints only the icon tags.
+	$slice = ($this->render)('{{ cms.seo.icons(page) }}', ['page' => $page]);
+	expect($slice)->toStartWith('<link rel="icon"')->toContain('theme-color')->not->toContain('<title>')->not->toContain('og:');
+});
+
+it('links a web app manifest when a builder page owns /manifest.webmanifest', function (): void {
+	// The negative case — no page, no link — is asserted by the no-icon test
+	// above; the settings loader memoises per request, so this test creates
+	// the page before its first render rather than re-bootstrapping.
+	$container = $this->app->getContainer();
+	$container->get(BuilderInstaller::class)->ensurePagesCollection();
+	$container->get(ObjectSaver::class)->saveObject('builder-pages', ['id' => 'manifest', 'title' => 'Manifest', 'route' => '/manifest.webmanifest', 'template' => 'manifest']);
+
+	expect(($this->render)('{{ cms.seo.head() }}'))->toContain('<link rel="manifest" href="http://totalcms.test/manifest.webmanifest">');
+	expect(($this->render)('{{ cms.seo.icons() }}'))->toBe('<link rel="manifest" href="http://totalcms.test/manifest.webmanifest">');
 });
 
 it('renders a full head for an ad-hoc array, the shape a Stacks page hands over', function (): void {

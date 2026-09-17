@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Seo;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Builder\Data\RouteMatch;
+use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -27,7 +29,7 @@ final class SeoSettingsLoaderTest extends TestCase
 	 * @param array<string,mixed>      $general       the General settings section
 	 * @param bool                     $resolveImages whether the media adapter returns a path
 	 */
-	private function loader(bool $collectionExists, ?array $record, array $general = [], bool $resolveImages = false, string $url = 'https://example.com'): SeoSettingsLoader
+	private function loader(bool $collectionExists, ?array $record, array $general = [], bool $resolveImages = false, string $url = 'https://example.com', ?RouteMatch $manifestMatch = null): SeoSettingsLoader
 	{
 		$collections = $this->createMock(CollectionFetcher::class);
 		$collections->method('collectionExists')->with('seo-site')->willReturn($collectionExists);
@@ -53,6 +55,10 @@ final class SeoSettingsLoaderTest extends TestCase
 				$suffix = match ($transform) {
 					SeoSettings::OG_IMAGE   => '?w=1200&h=630&fit=crop-focalpoint',
 					SeoSettings::LOGO_IMAGE => '?w=600&fit=max',
+					SeoSettings::ICON_32    => '?w=32&h=32&fit=crop-focalpoint&fm=png',
+					SeoSettings::ICON_192   => '?w=192&h=192&fit=crop-focalpoint&fm=png',
+					SeoSettings::ICON_512   => '?w=512&h=512&fit=crop-focalpoint&fm=png',
+					SeoSettings::TOUCH_ICON => '?w=180&h=180&fit=crop-focalpoint&fm=png',
 					default                 => '?unexpected',
 				};
 
@@ -69,7 +75,24 @@ final class SeoSettingsLoaderTest extends TestCase
 		$config->domain = 'example.com';
 		$config->url    = $url;
 
-		return new SeoSettingsLoader($collections, $objects, $media, $settings, $config);
+		$pages = $this->createMock(PageRouter::class);
+		$pages->method('match')->with('/manifest.webmanifest')->willReturn($manifestMatch);
+
+		return new SeoSettingsLoader($collections, $objects, $media, $settings, $config, $pages);
+	}
+
+	public function testLinksTheManifestOnlyWhenABuilderPageOwnsItsRoute(): void
+	{
+		$page = new RouteMatch('pages/manifest.twig', ['id' => 'manifest', 'route' => '/manifest.webmanifest']);
+		$this->assertSame('https://example.com/manifest.webmanifest', $this->loader(false, null, [], false, 'https://example.com', $page)->load()->manifest);
+
+		// No page: no link. A collection URL pattern that swallows the path,
+		// or a page that redirects, is not a manifest either.
+		$this->assertSame('', $this->loader(false, null)->load()->manifest);
+		$collection = new RouteMatch('pages/blog.twig', ['id' => 'manifest.webmanifest'], [], 'blog');
+		$this->assertSame('', $this->loader(false, null, [], false, 'https://example.com', $collection)->load()->manifest);
+		$redirect = new RouteMatch('pages/manifest.twig', ['id' => 'manifest'], [], null, 301, '/elsewhere');
+		$this->assertSame('', $this->loader(false, null, [], false, 'https://example.com', $redirect)->load()->manifest);
 	}
 
 	public function testDefaultsWhenTheCollectionDoesNotExist(): void
@@ -139,6 +162,55 @@ final class SeoSettingsLoaderTest extends TestCase
 		$this->assertSame('https://www.bistro.test', $settings->baseUrl);
 		$this->assertSame('https://www.bistro.test/imageworks/seo-site/seo-site/defaultImage.jpg?w=1200&h=630&fit=crop-focalpoint', $settings->defaultImage);
 		$this->assertSame('', $settings->organizationLogo);
+	}
+
+	public function testResolvesTheIconSetFromOneUploadWithTheTouchIconFallingBackToIt(): void
+	{
+		// One square PNG feeds every size. With no Touch Icon of its own the
+		// 180px touch icon is cut from the Icon — silently, by design, so a site
+		// with one upload works and the field's help says why to add a second.
+		$settings = $this->loader(
+			true,
+			['baseUrl' => 'https://bistro.test', 'icon' => ['name' => 'icon.png', 'size' => 1]],
+			[],
+			true,
+		)->load();
+
+		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=32&h=32&fit=crop-focalpoint&fm=png', $settings->icon32);
+		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=192&h=192&fit=crop-focalpoint&fm=png', $settings->icon192);
+		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=512&h=512&fit=crop-focalpoint&fm=png', $settings->icon512);
+		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=180&h=180&fit=crop-focalpoint&fm=png', $settings->touchIcon);
+		$this->assertSame('', $settings->iconSvg);
+		$this->assertTrue($settings->hasIcons());
+	}
+
+	public function testAnUploadedTouchIconWinsAndAnSvgIsServedFromItsOwnRoute(): void
+	{
+		$settings = $this->loader(
+			true,
+			[
+				'baseUrl'   => 'https://bistro.test',
+				'icon'      => ['name' => 'icon.png', 'size' => 1],
+				'touchIcon' => ['name' => 'touch.png', 'size' => 1],
+				'iconSvg'   => ['name' => 'icon.svg', 'size' => 1],
+			],
+			[],
+			true,
+		)->load();
+
+		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/touchIcon.jpg?w=180&h=180&fit=crop-focalpoint&fm=png', $settings->touchIcon);
+		$this->assertSame('https://bistro.test/favicon.svg', $settings->iconSvg);
+	}
+
+	public function testATouchIconAloneEmitsNoIconSet(): void
+	{
+		// The Icon is the one that makes icons happen; a Touch Icon never
+		// feeds the tab icon or the .ico, so on its own it stays unused.
+		$settings = $this->loader(true, ['touchIcon' => ['name' => 'touch.png', 'size' => 1]], [], true)->load();
+
+		$this->assertSame('', $settings->icon32);
+		$this->assertSame('', $settings->touchIcon);
+		$this->assertFalse($settings->hasIcons());
 	}
 
 	public function testTheDefaultImageAltComesOffTheRawImageObject(): void

@@ -35,6 +35,44 @@ describe('SeoSettings', function (): void {
 			->and($s->metaTags)->toBe("<meta name=\"google-site-verification\" content=\"abc\">\n<script>x()</script>");
 	});
 
+	test('icons and theme colour default to nothing', function (): void {
+		$s = SeoSettings::fromArray([], 'example.com');
+		expect($s->iconSvg)->toBe('')
+			->and($s->icon32)->toBe('')
+			->and($s->icon192)->toBe('')
+			->and($s->icon512)->toBe('')
+			->and($s->touchIcon)->toBe('')
+			->and($s->themeColor)->toBe('')
+			->and($s->manifest)->toBe('')
+			->and($s->hasIcons())->toBeFalse()
+			->and($s->hasIconSlice())->toBeFalse();
+
+		// A manifest or a theme colour alone still gives the slice something to print.
+		expect(SeoSettings::fromArray(['manifestUrl' => '/manifest.webmanifest'], 'x')->hasIconSlice())->toBeTrue();
+	});
+
+	test('reads the resolved icon URLs and the theme colour hex', function (): void {
+		// The loader resolves the record's image/file properties to URLs under
+		// these keys before handing the array over; the colour field stores an
+		// object with the hex alongside its OKLCH coordinates.
+		$s = SeoSettings::fromArray([
+			'iconSvgUrl'   => '/favicon.svg',
+			'icon32'       => '/imageworks/seo-site/seo-site/icon.png?w=32',
+			'icon192'      => '/imageworks/seo-site/seo-site/icon.png?w=192',
+			'icon512'      => '/imageworks/seo-site/seo-site/icon.png?w=512',
+			'touchIcon180' => '/imageworks/seo-site/seo-site/touchIcon.png?w=180',
+			'themeColor'   => ['hex' => '#F17724', 'oklch' => ['l' => 70, 'c' => 0.19, 'h' => 50]],
+		], 'example.com');
+		expect($s->iconSvg)->toBe('/favicon.svg')
+			->and($s->icon32)->toContain('w=32')
+			->and($s->touchIcon)->toContain('touchIcon')
+			->and($s->themeColor)->toBe('#f17724')
+			->and($s->hasIcons())->toBeTrue();
+
+		expect(SeoSettings::fromArray(['themeColor' => '#ABC'], 'x')->themeColor)->toBe('#abc');
+		expect(SeoSettings::fromArray(['themeColor' => ['hex' => '']], 'x')->themeColor)->toBe('');
+	});
+
 	test('a base URL without a scheme gets https', function (): void {
 		expect(SeoSettings::fromArray(['baseUrl' => 'joesbistro.com'], 'x')->baseUrl)->toBe('https://joesbistro.com');
 	});

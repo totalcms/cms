@@ -2330,6 +2330,13 @@
             "url": "https://docs.totalcms.co/site-builder/seo/"
         },
         {
+            "name": "cms.seo.icons",
+            "signature": "icons(mixed $subject = null, array $options = []): Markup",
+            "description": "The icon links, the manifest link and the theme colour: the SVG icon, the PNG icon set, the Apple touch icon, `rel=manifest` when a page owns `/manifest.webmanifest`, and `theme-color`.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/site-builder/seo/"
+        },
+        {
             "name": "cms.seo.jsonld",
             "signature": "jsonld(mixed $subject = null, array $options = []): Markup",
             "description": "Just the JSON-LD `<script>`. Already breakout-safe, so it skips the template entirely.",

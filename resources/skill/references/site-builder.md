@@ -68,7 +68,12 @@ record's SEO card → the collection's field mapping → the Site SEO record. Ru
   `og:url` and no Article node. The reserved `blog` collection ships with none.
 - Site-wide values (site name, base URL, default image, verification tokens) live
   on the `seo-site` singleton collection, editable in the admin or via `object:patch`.
-- Granular pieces: `cms.seo.title()`, `meta()`, `og()`, `canonical()`, `jsonld()`.
+- Granular pieces: `cms.seo.title()`, `meta()`, `og()`, `canonical()`, `icons()`, `jsonld()`.
+- Favicons come from the Site SEO record too: one square PNG **Icon** (≥512) feeds the
+  32/192/512 icon links, the Apple touch icon and `/favicon.ico`; an optional
+  **Touch Icon** (solid background — iOS blackens transparency), an optional SVG
+  **file** at `/favicon.svg`, and a hex **Theme Color** for `meta theme-color`. A
+  builder page routed `/manifest.webmanifest` is linked as the web app manifest.
 
 Full reference: `vendor/totalcms/cms/resources/docs/site-builder/seo.md`.
 

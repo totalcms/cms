@@ -32,7 +32,7 @@ use Twig\Markup;
 final readonly class SeoTwigAdapter
 {
 	/** Everything `head()` prints, in document order. */
-	private const ALL_PARTS = ['title', 'description', 'robots', 'canonical', 'og', 'twitter', 'metaTags'];
+	private const ALL_PARTS = ['title', 'description', 'robots', 'canonical', 'icons', 'og', 'twitter', 'metaTags'];
 
 	/**
 	 * TwigEngine arrives as a factory, not an instance: this adapter hangs off
@@ -115,6 +115,18 @@ final readonly class SeoTwigAdapter
 	}
 
 	/**
+	 * The icon links, the manifest link and the theme colour: the SVG icon,
+	 * the PNG icon set, the Apple touch icon, `rel=manifest` when a page owns
+	 * `/manifest.webmanifest`, and `theme-color`.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function icons(mixed $subject = null, array $options = []): Markup
+	{
+		return $this->slice($subject, $options, ['icons']);
+	}
+
+	/**
 	 * Just the JSON-LD `<script>`. Already breakout-safe, so it skips the
 	 * template entirely.
 	 *
@@ -159,6 +171,11 @@ final readonly class SeoTwigAdapter
 				'sameAs'           => $settings->sameAs,
 				'contactEmail'     => $settings->contactEmail,
 				'contactUrl'       => $settings->contactUrl,
+				'iconSvg'          => $settings->iconSvg,
+				'icon'             => $settings->icon512,
+				'touchIcon'        => $settings->touchIcon,
+				'themeColor'       => $settings->themeColor,
+				'manifest'         => $settings->manifest,
 			],
 		]);
 	}

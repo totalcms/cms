@@ -106,6 +106,7 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'emergency-license-cache-clear',
 		'export-jumpstart',
 		'export-jumpstart-demo',
+		'favicon', // /favicon.ico + /favicon.svg — a public asset like the sitemaps and feeds
 		'filelinks',
 		'forgot-password',
 		'gallery-image-fetch',

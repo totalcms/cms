@@ -26,8 +26,26 @@ final readonly class SeoSettings
 	public const LOGO_IMAGE = ['w' => 600, 'fit' => 'max'];
 
 	/**
+	 * The icon set, all cut from the one square Icon upload: the classic 32px
+	 * tab icon (also wrapped as /favicon.ico), the 192 and 512 sizes Android
+	 * and Google's result pages read, and the 180px Apple touch icon — which
+	 * comes from the Touch Icon upload when there is one, since iOS paints
+	 * transparent pixels black and a tab icon is usually transparent. PNG is
+	 * forced: a favicon is one of the few places WebP is still not universal.
+	 */
+	public const ICON_32    = ['w' => 32, 'h' => 32, 'fit' => 'crop-focalpoint', 'fm' => 'png'];
+	public const ICON_192   = ['w' => 192, 'h' => 192, 'fit' => 'crop-focalpoint', 'fm' => 'png'];
+	public const ICON_512   = ['w' => 512, 'h' => 512, 'fit' => 'crop-focalpoint', 'fm' => 'png'];
+	public const TOUCH_ICON = ['w' => 180, 'h' => 180, 'fit' => 'crop-focalpoint', 'fm' => 'png'];
+
+	/**
 	 * @param list<string> $sameAs
 	 * @param string $metaTags Raw markup for the head, emitted as written after the SEO tags
+	 * @param string $iconSvg Absolute URL of the SVG icon (`/favicon.svg`), or `''`
+	 * @param string $icon32 Absolute ImageWorks URLs of the PNG icon set, or `''` when there is no Icon
+	 * @param string $touchIcon The 180px Apple touch icon: the Touch Icon upload, else the Icon, else `''`
+	 * @param string $themeColor Lower-case hex, or `''`
+	 * @param string $manifest Absolute URL of the web app manifest, when a Site Builder page routes `/manifest.webmanifest`; else `''`
 	 */
 	public function __construct(
 		public string $siteName,
@@ -46,7 +64,26 @@ final readonly class SeoSettings
 		public string $metaTags,
 		public bool $emitJsonLd,
 		public bool $emitSocial,
+		public string $iconSvg = '',
+		public string $icon32 = '',
+		public string $icon192 = '',
+		public string $icon512 = '',
+		public string $touchIcon = '',
+		public string $themeColor = '',
+		public string $manifest = '',
 	) {
+	}
+
+	/** Whether the head has any icon tag to print. The Icon is what makes that true. */
+	public function hasIcons(): bool
+	{
+		return $this->icon32 !== '' || $this->iconSvg !== '';
+	}
+
+	/** Whether the icons slice has anything at all to print. */
+	public function hasIconSlice(): bool
+	{
+		return $this->hasIcons() || $this->manifest !== '' || $this->themeColor !== '';
 	}
 
 	/**
@@ -95,7 +132,30 @@ final readonly class SeoSettings
 			metaTags: $str('metaTags'),
 			emitJsonLd: !array_key_exists('emitJsonLd', $data) || filter_var($data['emitJsonLd'], FILTER_VALIDATE_BOOL),
 			emitSocial: !array_key_exists('emitSocial', $data) || filter_var($data['emitSocial'], FILTER_VALIDATE_BOOL),
+			// The loader resolves the record's image and file properties to URLs
+			// under these keys; the raw record never carries them.
+			iconSvg: $str('iconSvgUrl'),
+			icon32: $str('icon32'),
+			icon192: $str('icon192'),
+			icon512: $str('icon512'),
+			touchIcon: $str('touchIcon180'),
+			themeColor: self::hex($data['themeColor'] ?? null),
+			manifest: $str('manifestUrl'),
 		);
+	}
+
+	/**
+	 * A hex colour, lower-cased. The field is plain text — a colour picker
+	 * input cannot be empty, and an optional colour must be able to be —
+	 * but a `{hex, oklch}` object is accepted too. Anything that is not a
+	 * hex colour is dropped rather than printed.
+	 */
+	private static function hex(mixed $color): string
+	{
+		$hex = is_array($color) ? ($color['hex'] ?? '') : $color;
+		$hex = strtolower(trim((string)$hex));
+
+		return preg_match('/^#([0-9a-f]{3}|[0-9a-f]{6})$/', $hex) === 1 ? $hex : '';
 	}
 
 	/**
@@ -121,6 +181,13 @@ final readonly class SeoSettings
 			metaTags: $this->metaTags,
 			emitJsonLd: $this->emitJsonLd,
 			emitSocial: $this->emitSocial,
+			iconSvg: $this->iconSvg,
+			icon32: $this->icon32,
+			icon192: $this->icon192,
+			icon512: $this->icon512,
+			touchIcon: $this->touchIcon,
+			themeColor: $this->themeColor,
+			manifest: $this->manifest,
 		);
 	}
 }

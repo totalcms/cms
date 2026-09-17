@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Seo\Service;
 
+use TotalCMS\Domain\Builder\Data\RouteMatch;
+use TotalCMS\Domain\Builder\Service\PageRouter;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Seo\Data\SeoSettings;
@@ -38,8 +40,12 @@ class SeoSettingsLoader
 		private readonly MediaTwigAdapter $media,
 		private readonly SettingsFetcher $settings,
 		private readonly Config $config,
+		private readonly PageRouter $pages,
 	) {
 	}
+
+	/** The route a Site Builder page must own for the head to link a web app manifest. */
+	public const MANIFEST_ROUTE = '/manifest.webmanifest';
 
 	public function load(): SeoSettings
 	{
@@ -69,9 +75,30 @@ class SeoSettingsLoader
 		$record['defaultImage']     = $this->imagePath($record, 'defaultImage', SeoSettings::OG_IMAGE);
 		$record['organizationLogo'] = $this->imagePath($record, 'organizationLogo', SeoSettings::LOGO_IMAGE);
 
-		$settings                   = SeoSettings::fromArray($record, $origin);
-		$record['defaultImage']     = $settings->absolute($record['defaultImage']);
-		$record['organizationLogo'] = $settings->absolute($record['organizationLogo']);
+		// The icon set hangs off the Icon alone: without it a Touch Icon or an
+		// SVG on its own emits nothing, so a half-configured record cannot
+		// produce a head that names a touch icon but no icon. The touch icon
+		// falls back to the Icon on purpose — one upload is enough to work,
+		// and the field's help says why to add a second (iOS and transparency).
+		$hasIcon                = $this->imagePath($record, 'icon', SeoSettings::ICON_32) !== '';
+		$record['icon32']       = $hasIcon ? $this->imagePath($record, 'icon', SeoSettings::ICON_32) : '';
+		$record['icon192']      = $hasIcon ? $this->imagePath($record, 'icon', SeoSettings::ICON_192) : '';
+		$record['icon512']      = $hasIcon ? $this->imagePath($record, 'icon', SeoSettings::ICON_512) : '';
+		$record['touchIcon180'] = $hasIcon ? ($this->imagePath($record, 'touchIcon', SeoSettings::TOUCH_ICON) ?: $this->imagePath($record, 'icon', SeoSettings::TOUCH_ICON)) : '';
+		// The SVG is served by the favicon route rather than the download
+		// route, which would hand it over as an attachment.
+		$record['iconSvgUrl'] = $hasIcon && $this->hasFile($record['iconSvg'] ?? null) ? '/favicon.svg' : '';
+
+		// A web app manifest is content, not a setting: a Site Builder page
+		// that routes /manifest.webmanifest is the manifest (the router serves
+		// it as application/manifest+json), and its existence is what the
+		// head links. No page, no tag.
+		$record['manifestUrl'] = $this->manifestPage() ? self::MANIFEST_ROUTE : '';
+
+		$settings = SeoSettings::fromArray($record, $origin);
+		foreach (['defaultImage', 'organizationLogo', 'icon32', 'icon192', 'icon512', 'touchIcon180', 'iconSvgUrl', 'manifestUrl'] as $key) {
+			$record[$key] = $settings->absolute((string)$record[$key]);
+		}
 
 		$settings = SeoSettings::fromArray($record, $origin);
 
@@ -102,6 +129,29 @@ class SeoSettingsLoader
 			// The collection exists but holds no record yet.
 			return [];
 		}
+	}
+
+	/**
+	 * Whether a published Site Builder page owns the manifest route. Only a
+	 * builder page counts — a collection URL pattern that happens to swallow
+	 * the path, a redirect, or a page answering with another status is not
+	 * a manifest.
+	 */
+	private function manifestPage(): bool
+	{
+		try {
+			$match = $this->pages->match(self::MANIFEST_ROUTE);
+		} catch (\Throwable) {
+			return false;
+		}
+
+		return $match instanceof RouteMatch && $match->collection === null && $match->status === 200 && $match->redirectTo === '';
+	}
+
+	/** Whether a raw file property holds an uploaded file. */
+	private function hasFile(mixed $file): bool
+	{
+		return is_array($file) && trim((string)($file['name'] ?? '')) !== '' && (int)($file['size'] ?? 0) > 0;
 	}
 
 	/**

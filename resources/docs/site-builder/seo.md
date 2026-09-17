@@ -10,7 +10,7 @@ related:
 
 # SEO
 
-Total CMS writes the `<head>` for you. One call in your layout emits the title, meta description, canonical link, robots directives, Open Graph and Twitter card tags, your own meta tags (verification and the like) and a JSON-LD `@graph` — for a Site Builder page, for a collection object, or for the site on its own.
+Total CMS writes the `<head>` for you. One call in your layout emits the title, meta description, canonical link, robots directives, the site's icons, Open Graph and Twitter card tags, your own meta tags (verification and the like) and a JSON-LD `@graph` — for a Site Builder page, for a collection object, or for the site on its own.
 
 Nothing is generated ahead of time and there is no build step. Every value is resolved at render time from three places, in order: the **SEO card** on the record, the **collection's field mapping**, then the **site defaults** on the [Site SEO record](#site-settings).
 
@@ -244,6 +244,10 @@ tcms collection:create seo-site
 | **Organization Logo** | An image **upload** too. Any aspect ratio, at least 112×112 — it is never cropped or upscaled, only bounded, and served through ImageWorks at up to 600px wide. |
 | **Social Profiles** | One absolute URL per line — X, Instagram, LinkedIn, GitHub. Emitted as `Organization.sameAs`. |
 | **Contact Email** / **Contact URL** | A public address and the page people should use to reach you (a support or contact page). Emitted as `Organization.email` and a `customer support` `ContactPoint` — a trust signal search engines and AI answer engines weigh. Leave both empty and nothing is emitted. |
+| **Icon** | A square PNG **upload**, 512×512 or larger — the tab icon, the bookmark icon, the icon Google shows beside the site in results, and `/favicon.ico`. See [Icons](#icons). |
+| **Touch Icon** | A square PNG, 180×180 or larger, with a solid background, for iOS home screens. Leave it empty and the Icon is used. |
+| **Icon (SVG)** | An optional SVG **file** upload, served at `/favicon.svg` and listed ahead of the PNG. |
+| **Theme Color** | A hex colour for the browser chrome around the page on phones. Empty emits nothing. |
 | **Meta Tags** | Raw markup printed in the `<head>` exactly as written, after the SEO tags. Paste the verification tag a service gives you, or any other `meta`, `link` or `script` tag the site needs on every page — see [Meta Tags](#meta-tags). |
 | **Emit JSON-LD** | Off suppresses the `<script type="application/ld+json">` block entirely. |
 | **Emit Open Graph and Twitter tags** | Off suppresses both sets of social tags. |
@@ -307,6 +311,42 @@ Search Console, Bing Webmaster Tools and Pinterest each verify a site by handing
 ```
 
 The field is not limited to verification. Anything the site needs in the head of every page goes here — a `link` to a webmention endpoint, an analytics `script`, a `meta` tag for a service Total CMS has never heard of. It is printed exactly as written, unescaped, after the SEO tags and before the JSON-LD, on every page that calls `cms.seo.head()` or `cms.seo.meta()`. Editing the Site SEO record is the same trust as editing a template, which is why nothing is filtered: the people who can reach it are the people you gave that access to.
+
+### Icons
+
+Upload one square PNG as **Icon** and `head()` prints the whole set on every page:
+
+```html
+<link rel="icon" href="https://example.com/imageworks/seo-site/seo-site/icon.png?w=32&h=32&fit=crop-focalpoint&fm=png" type="image/png" sizes="32x32">
+<link rel="icon" href="…?w=192&h=192…" type="image/png" sizes="192x192">
+<link rel="icon" href="…?w=512&h=512…" type="image/png" sizes="512x512">
+<link rel="apple-touch-icon" href="…?w=180&h=180…" sizes="180x180">
+```
+
+Every size is cut from that one upload by ImageWorks, so 512×512 or larger is the only requirement, and `/favicon.ico` — which browsers and crawlers request whether or not the head names an icon — is served from the same 32px image, wrapped as an ICO. Google shows the icon beside the site in search results and asks for a square image in a multiple of 48px; the 192 and 512 sizes cover that and Android's home screen. Without an Icon nothing is emitted and `/favicon.ico` is a 404, as it was before.
+
+**Touch Icon** exists because of transparency. A tab icon is usually transparent; iOS paints transparent pixels black on the home screen. Upload a second PNG with a solid background there and it takes the `apple-touch-icon` slot. Leave it empty and the Icon is used — a site with one upload works, and this is the field to fill when the home-screen icon comes out with a black square behind it. The Touch Icon feeds nothing else: never the tab icon, never `/favicon.ico`.
+
+**Icon (SVG)** is a `file` upload rather than an image, because the SVG is served as a file, at `/favicon.svg`, not embedded in the page. It is listed before the PNGs so a browser that can use it does; the rest fall back. It is optional and needs the PNG Icon alongside it — an SVG on its own emits nothing, since Safari, Google and the touch icon all want a raster.
+
+**Theme Color** is a hex value (`#f17724`) printed as `<meta name="theme-color">`, which tints the browser chrome around the page on phones. It is plain text rather than a colour picker on purpose: a picker cannot be empty, and an empty Theme Color means no tag.
+
+**A web app manifest is a page, not a setting.** Create a Site Builder page whose route is `/manifest.webmanifest` and give it a template that renders the JSON — the router already serves that extension as `application/manifest+json` — and `head()` adds `<link rel="manifest" href="/manifest.webmanifest">` on every page. The template can read the same values the head prints, so the manifest cannot disagree with it:
+
+```twig
+{%- set site = cms.seo.data().site -%}
+{
+    "name": {{ site.name|json_encode|raw }},
+    "icons": [{ "src": {{ site.icon|json_encode|raw }}, "sizes": "512x512", "type": "image/png" }],
+    "theme_color": {{ site.themeColor|json_encode|raw }},
+    "display": "standalone",
+    "start_url": "/"
+}
+```
+
+No page at that route means no link. A draft, a redirect, or a collection URL pattern that happens to swallow the path does not count.
+
+`cms.seo.icons()` prints just these tags — the icons, the manifest link and the theme colour — for a layout that places the pieces itself.
 
 ## Structured Data
 
@@ -400,6 +440,7 @@ The same call works for any collection — products, events, team members — on
 | `cms.seo.meta(subject, options)` | `description`, `robots` and the site's Meta Tags |
 | `cms.seo.og(subject, options)` | The Open Graph and Twitter card tags |
 | `cms.seo.canonical(subject, options)` | `<link rel="canonical">` |
+| `cms.seo.icons(subject, options)` | The icon links, the Apple touch icon, the manifest link and `theme-color` — see [Icons](#icons) |
 | `cms.seo.jsonld(subject, options)` | The `<script type="application/ld+json">` block |
 | `cms.seo.data(subject, options)` | Nothing — it returns the resolved values as an array instead of markup. See [Reusing the Values](#reusing-the-values) |
 

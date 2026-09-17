@@ -16,6 +16,7 @@ return function (App $app): void {
 	// get embedded in user-rendered HTML, so they live at stable, unprefixed
 	// paths rather than under `/api/...` (which is reserved for JSON endpoints).
 	(require __DIR__ . '/routes/public/sitemap.php')($app);
+	(require __DIR__ . '/routes/public/favicon.php')($app);
 	(require __DIR__ . '/routes/public/feed.php')($app);
 	(require __DIR__ . '/routes/public/imageworks.php')($app);
 	(require __DIR__ . '/routes/public/download.php')($app);
