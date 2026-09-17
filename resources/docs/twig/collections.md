@@ -60,7 +60,7 @@ Get the number of objects in a collection using cached metadata. This is much mo
 
 ### objects()
 
-Get all objects from a collection.
+Get all objects from a collection. Takes the collection id and nothing else — to narrow the result, pipe it through the [`filterCollection`](twig/collection-filtering) and sorting filters.
 
 ```twig
 {% for post in cms.collection.objects('blog') %}
@@ -71,9 +71,18 @@ Get all objects from a collection.
 {% endfor %}
 ```
 
+**`objects()` returns index data, not full records.** Each entry holds only the properties listed in the schema's [`index`](schemas/reference#index) array (plus `id`). A property that is not indexed is simply absent from every entry, so `post.body` on a non-indexed `body` prints nothing rather than erroring. Either add the property to the schema's `index`, or fetch the full record per object with `object()` when you need it:
+
+```twig
+{% for entry in cms.collection.objects('blog') %}
+    {% set post = cms.collection.object('blog', entry.id) %}
+    {{ post.body|raw }}
+{% endfor %}
+```
+
 ### object()
 
-Get a single object by collection and ID. Returns an empty array if not found.
+Get a single object by collection and ID. Returns the **full record** — every property, indexed or not — or an empty array if not found.
 
 ```twig
 {% set post = cms.collection.object('blog', 'my-post') %}

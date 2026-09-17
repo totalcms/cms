@@ -1047,7 +1047,7 @@
         {
             "name": "cms.collection.object",
             "signature": "object(string $collection, ?string $id): array",
-            "description": "Get a single object by collection and ID. Returns an empty array if not found.",
+            "description": "Get a single object by collection and ID. Returns the **full record** \u2014 every property, indexed or not \u2014 or an empty array if not found.",
             "examples": [
                 "{% set post = cms.collection.object('blog', 'my-post') %}\n{% if post %}\n    <h1>{{ post.title }}</h1>\n    {{ post.content|markdown }}\n{% endif %}"
             ],
@@ -1083,9 +1083,10 @@
         {
             "name": "cms.collection.objects",
             "signature": "objects(string $collection): array",
-            "description": "Get all objects from a collection.",
+            "description": "Get all objects from a collection. Takes the collection id and nothing else \u2014 to narrow the result, pipe it through the [`filterCollection`](twig/collection-filtering) and sorting filters.",
             "examples": [
-                "{% for post in cms.collection.objects('blog') %}\n    <article>\n        <h2>{{ post.title }}</h2>\n        <p>{{ post.excerpt }}</p>\n    </article>\n{% endfor %}"
+                "{% for post in cms.collection.objects('blog') %}\n    <article>\n        <h2>{{ post.title }}</h2>\n        <p>{{ post.excerpt }}</p>\n    </article>\n{% endfor %}",
+                "{% for entry in cms.collection.objects('blog') %}\n    {% set post = cms.collection.object('blog', entry.id) %}\n    {{ post.body|raw }}\n{% endfor %}"
             ],
             "url": "https://docs.totalcms.co/twig/collections/"
         },

@@ -37,8 +37,10 @@ $totalcms = new TotalCMS\TotalCMS();
         {{ cms.render.image('hero', {w: 1200, h: 400, fit: 'crop'}) }}
     </div>
 
-    <!-- List objects from a collection -->
-    {% set posts = cms.collection.objects('blog', {featured: true}) | slice(0, 3) %}
+    <!-- List objects from a collection (index data; filter with filterCollection) -->
+    {% set posts = cms.collection.objects('blog') | filterCollection([
+        {property: "featured", operator: "equal", value: true}
+    ]) | slice(0, 3) %}
     {% for post in posts %}
     <article>
         <h2>{{ post.title }}</h2>
@@ -146,8 +148,8 @@ $totalcms->startBuffer();
 {{ cms.render.gallery('id', {columns: 3}) }}
 
 <!-- Collection access -->
-{% set objects = cms.collection.objects('collection') %}
-{% set object = cms.collection.object('collection', 'id') %}
+{% set objects = cms.collection.objects('collection') %}  {# index data only #}
+{% set object = cms.collection.object('collection', 'id') %}  {# full record #}
 {% set values = cms.collection.property('collection', 'field') %}
 {{ cms.data('collection', 'id', 'field') }}
 
