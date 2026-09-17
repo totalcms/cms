@@ -48,8 +48,12 @@ input[type="color"] {
     }
 
     .color-clear {
+        display         : inline-flex;
+        align-items     : center;
+        justify-content : center;
         width           : 28px;
         height          : 28px;
+        padding         : 0;
         border-radius   : 50%;
         border          : 1px solid oklch(var(--totalform-border-color));
         background      : oklch(var(--totalform-nearwhite));
@@ -64,9 +68,24 @@ input[type="color"] {
         }
     }
 
+    // Empty: hide the swatch the native input insists on painting and let a
+    // transparency checkerboard show through the circle instead, the way
+    // graphics tools portray "no colour".
     &.color-empty {
         input[type="color"] {
-            opacity : 0.3;
+            background-color : oklch(var(--totalform-nearwhite));
+            background-image : repeating-conic-gradient(oklch(var(--totalform-border-color)) 0% 25%, transparent 0% 50%);
+            background-size  : 12px 12px;
+
+            // One rule per engine: a selector list with a pseudo-element the
+            // browser does not know is dropped whole, swatch and all.
+            &::-webkit-color-swatch {
+                opacity : 0;
+            }
+
+            &::-moz-color-swatch {
+                opacity : 0;
+            }
         }
 
         .color-clear {
