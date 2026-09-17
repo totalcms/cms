@@ -81,7 +81,7 @@
 			"$ref": "https://www.totalcms.co/schemas/properties/image.json",
 			"field": "image",
 			"label": "Touch Icon",
-			"help": "Square PNG, 180×180 or larger, with a solid background — iOS paints transparent pixels black. Leave empty to use the Icon."
+			"help": "Square PNG, 180×180 or larger, with a solid background. Leave empty and the Icon is used with the Theme Color painted behind it (black without one — what iOS does with transparency anyway)."
 		},
 		"iconSvg": {
 			"$ref": "https://www.totalcms.co/schemas/properties/file.json",

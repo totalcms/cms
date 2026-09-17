@@ -72,7 +72,7 @@ final readonly class FaviconAction
 			->withBody(Stream::create($ico));
 	}
 
-	/** The 180px touch icon, from the Touch Icon upload or the Icon, as the head links it. */
+	/** The 180px touch icon as the head links it: the Touch Icon upload, or the Icon over the Theme Color. */
 	private function touchIcon(ServerRequestInterface $request, ResponseInterface $response, SeoSettings $settings): ResponseInterface
 	{
 		if ($settings->touchIconProperty === '') {
@@ -80,7 +80,8 @@ final readonly class FaviconAction
 		}
 
 		try {
-			$image = $this->images->generateImage(self::RECORD, self::RECORD, $settings->touchIconProperty, SeoSettings::TOUCH_ICON, $request);
+			$transform = $settings->touchIconProperty === 'icon' ? SeoSettings::touchIconFromIcon($settings->themeColor) : SeoSettings::TOUCH_ICON;
+			$image     = $this->images->generateImage(self::RECORD, self::RECORD, $settings->touchIconProperty, $transform, $request);
 		} catch (\Exception $e) {
 			throw new HttpNotFoundException($request, 'Touch icon not found: ' . $e->getMessage());
 		}

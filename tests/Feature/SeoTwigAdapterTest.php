@@ -219,8 +219,9 @@ it('emits the icon set, the touch icon, the SVG first and the theme color', func
 		->toMatch('~<link rel="icon" href="http://totalcms\.test/imageworks/seo-site/seo-site/icon\.png[^"]*w=32[^"]*" type="image/png" sizes="32x32">~')
 		->toMatch('~sizes="192x192"~')
 		->toMatch('~sizes="512x512"~')
-		// No Touch Icon uploaded: the 180px touch icon is cut from the Icon.
-		->toMatch('~<link rel="apple-touch-icon" href="http://totalcms\.test/imageworks/seo-site/seo-site/icon\.png[^"]*w=180[^"]*" sizes="180x180">~')
+		// No Touch Icon uploaded: the 180px touch icon is cut from the Icon,
+		// over the theme color so iOS does not paint the transparency black.
+		->toMatch('~<link rel="apple-touch-icon" href="http://totalcms\.test/imageworks/seo-site/seo-site/icon\.png[^"]*w=180[^"]*bg=ff0000[^"]*" sizes="180x180">~')
 		->toContain('<meta name="theme-color" content="#ff0000">');
 
 	// The SVG is listed before the PNGs so a browser that can use it does.

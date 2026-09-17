@@ -52,14 +52,16 @@ final class SeoSettingsLoaderTest extends TestCase
 				if (!$resolveImages) {
 					return '';
 				}
-				$suffix = match ($transform) {
-					SeoSettings::OG_IMAGE   => '?w=1200&h=630&fit=crop-focalpoint',
-					SeoSettings::LOGO_IMAGE => '?w=600&fit=max',
-					SeoSettings::ICON_32    => '?w=32&h=32&fit=crop-focalpoint&fm=png',
-					SeoSettings::ICON_192   => '?w=192&h=192&fit=crop-focalpoint&fm=png',
-					SeoSettings::ICON_512   => '?w=512&h=512&fit=crop-focalpoint&fm=png',
-					SeoSettings::TOUCH_ICON => '?w=180&h=180&fit=crop-focalpoint&fm=png',
-					default                 => '?unexpected',
+				$suffix = match (true) {
+					$transform === SeoSettings::OG_IMAGE   => '?w=1200&h=630&fit=crop-focalpoint',
+					$transform === SeoSettings::LOGO_IMAGE => '?w=600&fit=max',
+					$transform === SeoSettings::ICON_32    => '?w=32&h=32&fit=crop-focalpoint&fm=png',
+					$transform === SeoSettings::ICON_192   => '?w=192&h=192&fit=crop-focalpoint&fm=png',
+					$transform === SeoSettings::ICON_512   => '?w=512&h=512&fit=crop-focalpoint&fm=png',
+					$transform === SeoSettings::TOUCH_ICON => '?w=180&h=180&fit=crop-focalpoint&fm=png',
+					// The Icon standing in for the touch icon carries a background.
+					isset($transform['bg']) && array_diff_key($transform, ['bg' => 1]) === SeoSettings::TOUCH_ICON => '?w=180&h=180&fit=crop-focalpoint&fm=png&bg=' . $transform['bg'],
+					default                                => '?unexpected',
 				};
 
 				return '/imageworks/seo-site/seo-site/' . (string)($options['property'] ?? '') . '.jpg' . $suffix;
@@ -179,10 +181,24 @@ final class SeoSettingsLoaderTest extends TestCase
 		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=32&h=32&fit=crop-focalpoint&fm=png', $settings->icon32);
 		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=192&h=192&fit=crop-focalpoint&fm=png', $settings->icon192);
 		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=512&h=512&fit=crop-focalpoint&fm=png', $settings->icon512);
-		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=180&h=180&fit=crop-focalpoint&fm=png', $settings->touchIcon);
+		// No Theme Color: the Icon stands in over black, as iOS would paint it.
+		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=180&h=180&fit=crop-focalpoint&fm=png&bg=000000', $settings->touchIcon);
 		$this->assertSame('', $settings->iconSvg);
 		$this->assertSame('icon', $settings->touchIconProperty);
 		$this->assertTrue($settings->hasIcons());
+	}
+
+	public function testTheIconStandingInForTheTouchIconIsPaintedOverTheThemeColor(): void
+	{
+		$settings = $this->loader(
+			true,
+			['baseUrl' => 'https://bistro.test', 'icon' => ['name' => 'icon.png', 'size' => 1], 'themeColor' => ['hex' => '#090E1B']],
+			[],
+			true,
+		)->load();
+
+		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=180&h=180&fit=crop-focalpoint&fm=png&bg=090e1b', $settings->touchIcon);
+		$this->assertSame('#090e1b', $settings->themeColor);
 	}
 
 	public function testAnUploadedTouchIconWinsAndAnSvgIsServedFromItsOwnRoute(): void

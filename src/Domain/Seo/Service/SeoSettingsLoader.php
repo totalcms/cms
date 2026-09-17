@@ -78,14 +78,15 @@ class SeoSettingsLoader
 		// The icon set hangs off the Icon alone: without it a Touch Icon or an
 		// SVG on its own emits nothing, so a half-configured record cannot
 		// produce a head that names a touch icon but no icon. The touch icon
-		// falls back to the Icon on purpose — one upload is enough to work,
-		// and the field's help says why to add a second (iOS and transparency).
+		// falls back to the Icon on purpose — one upload is enough to work —
+		// with the Theme Color painted behind it, since iOS would otherwise
+		// paint the transparent pixels black.
 		$hasIcon                = $this->imagePath($record, 'icon', SeoSettings::ICON_32) !== '';
 		$record['icon32']       = $hasIcon ? $this->imagePath($record, 'icon', SeoSettings::ICON_32) : '';
 		$record['icon192']      = $hasIcon ? $this->imagePath($record, 'icon', SeoSettings::ICON_192) : '';
 		$record['icon512']      = $hasIcon ? $this->imagePath($record, 'icon', SeoSettings::ICON_512) : '';
 		$touchUpload            = $hasIcon ? $this->imagePath($record, 'touchIcon', SeoSettings::TOUCH_ICON) : '';
-		$record['touchIcon180'] = $hasIcon ? ($touchUpload !== '' ? $touchUpload : $this->imagePath($record, 'icon', SeoSettings::TOUCH_ICON)) : '';
+		$record['touchIcon180'] = $hasIcon ? ($touchUpload !== '' ? $touchUpload : $this->imagePath($record, 'icon', SeoSettings::touchIconFromIcon($record['themeColor'] ?? null))) : '';
 		// The /apple-touch-icon.png route renders the same property the head links.
 		$record['touchIconProperty'] = !$hasIcon ? '' : ($touchUpload !== '' ? 'touchIcon' : 'icon');
 		// The SVG is served by the favicon route rather than the download

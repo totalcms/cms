@@ -39,6 +39,26 @@ final readonly class SeoSettings
 	public const TOUCH_ICON = ['w' => 180, 'h' => 180, 'fit' => 'crop-focalpoint', 'fm' => 'png'];
 
 	/**
+	 * The touch icon cut from the Icon when no Touch Icon was uploaded. iOS
+	 * paints transparent pixels black, so the Theme Color is painted behind
+	 * the icon first — the home-screen tile then matches the site's chrome —
+	 * and black is used when there is no Theme Color, which is what iOS would
+	 * have shown anyway, only now on purpose.
+	 *
+	 * @return array<string,int|string>
+	 */
+	public static function touchIconFromIcon(mixed $themeColor): array
+	{
+		$hex = self::hex($themeColor);
+		$hex = $hex === '' ? '000000' : ltrim($hex, '#');
+		if (strlen($hex) === 3) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+
+		return self::TOUCH_ICON + ['bg' => $hex];
+	}
+
+	/**
 	 * @param list<string> $sameAs
 	 * @param string $metaTags Raw markup for the head, emitted as written after the SEO tags
 	 * @param string $iconSvg Absolute URL of the SVG icon (`/favicon.svg`), or `''`

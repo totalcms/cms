@@ -27,14 +27,16 @@ describe('FaviconAction', function (): void {
 	// create PHPUnit mocks.
 	beforeEach(function () use ($factory): void {
 		$this->action = function (bool $hasIcon, ?string $pngBytes = null, ?string $svgBytes = null) use ($factory): FaviconAction {
-		$settings = SeoSettings::fromArray($hasIcon ? ['icon32' => '/imageworks/x.png', 'touchIconProperty' => 'touchIcon', 'iconSvgUrl' => $svgBytes !== null ? '/favicon.svg' : ''] : [], 'example.com');
+		// The touch icon is the Icon standing in, so the route must add the
+		// theme color as the background, exactly as the head's link does.
+		$settings = SeoSettings::fromArray($hasIcon ? ['icon32' => '/imageworks/x.png', 'touchIconProperty' => 'icon', 'themeColor' => '#090e1b', 'iconSvgUrl' => $svgBytes !== null ? '/favicon.svg' : ''] : [], 'example.com');
 		$loader   = $this->createMock(SeoSettingsLoader::class);
 		$loader->method('load')->willReturn($settings);
 
 		$images = $this->createMock(ImageGenerator::class);
 		$images->method('generateImage')->willReturnCallback(function (string $collection, string $id, string $property, array $params) use ($factory, $pngBytes) {
 			expect([$collection, $id])->toBe(['seo-site', 'seo-site']);
-			expect([$property, $params])->toBeIn([['icon', SeoSettings::ICON_32], ['touchIcon', SeoSettings::TOUCH_ICON]]);
+			expect([$property, $params])->toBeIn([['icon', SeoSettings::ICON_32], ['icon', SeoSettings::TOUCH_ICON + ['bg' => '090e1b']]]);
 
 			return $factory->createResponse(200)->withBody($factory->createStream((string)$pngBytes));
 		});

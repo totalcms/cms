@@ -73,6 +73,14 @@ describe('SeoSettings', function (): void {
 		expect(SeoSettings::fromArray(['themeColor' => ['hex' => '']], 'x')->themeColor)->toBe('');
 	});
 
+	test('the touch icon cut from the Icon carries the theme color as its background', function (): void {
+		expect(SeoSettings::touchIconFromIcon('#090E1B'))->toBe(SeoSettings::TOUCH_ICON + ['bg' => '090e1b']);
+		expect(SeoSettings::touchIconFromIcon(['hex' => '#abc']))->toBe(SeoSettings::TOUCH_ICON + ['bg' => 'aabbcc']);
+		// No theme color: black, which is what iOS paints behind transparency anyway.
+		expect(SeoSettings::touchIconFromIcon(''))->toBe(SeoSettings::TOUCH_ICON + ['bg' => '000000']);
+		expect(SeoSettings::touchIconFromIcon(null))->toBe(SeoSettings::TOUCH_ICON + ['bg' => '000000']);
+	});
+
 	test('a base URL without a scheme gets https', function (): void {
 		expect(SeoSettings::fromArray(['baseUrl' => 'joesbistro.com'], 'x')->baseUrl)->toBe('https://joesbistro.com');
 	});
