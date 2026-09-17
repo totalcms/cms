@@ -20,7 +20,7 @@
 		"title": {
 			"type": "string",
 			"label": "Title",
-			"help": "The page title. The site title template still applies.",
+			"help": "The page title, used as is. Leave empty to use the site title template.",
 			"field": "text",
 			"default": ""
 		},
