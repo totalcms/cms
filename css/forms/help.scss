@@ -169,7 +169,7 @@
     transition: opacity var(--help-animation-timing);
 }
 
-.help-on-focus .form-field:has(input:focus) > .help:not(:empty),
+.help-on-focus .form-field:focus-within > .help:not(:empty),
 .help-on-hover .form-field:not(.deck-field):hover > .help:not(:empty),
 .help-on-hover .form-field:not(.card-field):hover > .help:not(:empty) {
     opacity: 1 !important;
@@ -178,13 +178,16 @@
 // Hide the field's own label/legend when the help overlay is showing.
 // Radio + checklist use a <legend> inside a <fieldset>; everything
 // else uses a direct <label> child.
-.help-on-focus.help-label .form-field.radio-field:has(input:focus):has(.help:not(:empty)) legend,
-.help-on-focus.help-label .form-field.checklist-field:has(input:focus):has(.help:not(:empty)) legend,
+//
+// `:focus-within`, not `:has(input:focus)`: a textarea, a select, a
+// rich-text or code editor takes focus too, and each should show its help.
+.help-on-focus.help-label .form-field.radio-field:focus-within:has(.help:not(:empty)) legend,
+.help-on-focus.help-label .form-field.checklist-field:focus-within:has(.help:not(:empty)) legend,
 .help-on-hover.help-label .form-field.radio-field:has(.help:not(:empty)):hover legend,
 .help-on-hover.help-label .form-field.checklist-field:has(.help:not(:empty)):hover legend,
-.help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):not(.checklist-field):has(input:focus):has(.help:not(:empty)) > label,
+.help-on-focus.help-label .form-field:not(.check-field):not(.radio-field):not(.checklist-field):focus-within:has(.help:not(:empty)) > label,
 .help-on-hover.help-label .form-field:not(.check-field):not(.radio-field):not(.checklist-field):has(.help:not(:empty)):hover > label,
-.help-on-focus.help-label .form-field:has(input:focus):has(.help:not(:empty)) > .localized-stack > .localized-header > label,
+.help-on-focus.help-label .form-field:focus-within:has(.help:not(:empty)) > .localized-stack > .localized-header > label,
 .help-on-hover.help-label .form-field:has(.help:not(:empty)):hover > .localized-stack > .localized-header > label {
     opacity: 0;
 }
