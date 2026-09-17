@@ -58,7 +58,8 @@ class ColorField extends FormField
 
 		$label = $this->t('color.clear', 'No color');
 
-		return $field . HTMLUtils::element('button', '&times;', [
+		// No text glyph: the icon is a CSS mask, the label is for assistive tech.
+		return $field . HTMLUtils::element('button', '', [
 			'type'       => 'button',
 			'class'      => 'color-clear',
 			'title'      => $label,

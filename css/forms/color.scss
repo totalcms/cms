@@ -44,23 +44,36 @@ input[type="color"] {
     .form-group {
         display     : flex;
         align-items : center;
-        gap         : 0.75rem;
+        gap         : 0.25rem;
     }
 
+    // The admin's masked close icon rather than a text glyph: a character
+    // centres by its font metrics, a mask by its box.
     .color-clear {
         display         : inline-flex;
         align-items     : center;
         justify-content : center;
-        width           : 28px;
-        height          : 28px;
+		align-self	    : end;
+        width           : 1.5rem;
+        height          : 1.5rem;
         padding         : 0;
         border-radius   : 50%;
         border          : 1px solid oklch(var(--totalform-border-color));
         background      : oklch(var(--totalform-nearwhite));
         color           : oklch(var(--totalform-darkgray));
-        font-size       : 1.1rem;
-        line-height     : 1;
         cursor          : pointer;
+
+        &::before {
+            content          : "";
+            display          : block;
+            width            : 0.75rem;
+            height           : 0.75rem;
+            background-color : currentColor;
+            mask-image       : var(--icon-close);
+            mask-size        : contain;
+            mask-repeat      : no-repeat;
+            mask-position    : center;
+        }
 
         &:hover {
             color        : oklch(var(--totalform-accent));
