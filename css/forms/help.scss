@@ -77,8 +77,16 @@
 //------------------------------
 // Help Label Overlay
 //------------------------------
+// The overlay sits on the label row, one line tall, and grows UPWARD when
+// the text needs more: the last line stays where the label was, extra
+// lines stack above it over whatever precedes the field. It only shows
+// while the field is focused or hovered, so nothing in use is covered —
+// growing downward would sit on the input being typed in, and a single
+// clipped line hid the rest of the help entirely. `--help-line` is one
+// line box; the translate lifts the block by everything above that line.
 .help-label {
     .form-field .help {
+		--help-line         : 1.8em;
 		line-height         : 1.8;
 		margin              : 0;
 		position            : absolute;
@@ -86,18 +94,21 @@
 		left                : 0;
 		right               : 0;
 		z-index             : 10;
-		overflow            : hidden;
-		white-space         : nowrap;
-		text-overflow       : ellipsis;
-		background-position : left;
-		opacity             : 0;
 		width               : 100%;
+		padding-block       : 0.25rem 0;
+		translate           : 0 calc(-100% + var(--help-line));
+		border-radius       : var(--totalform-radius);
+		// The page background, not a panel tint: a one-line help then looks
+		// exactly as it always has, and only a wrapped one reads as a box.
+		background-color    : oklch(var(--totalform-white));
+		background-position : 0 calc(100% - (var(--help-line) - 1rem) / 2);
+		opacity             : 0;
     }
 	.image-field > .help {
 		text-align: center;
 	}
 	.checkbox-field > .help {
-        translate: 1.3rem 1rem;
+        translate: 1.3rem calc(-100% + var(--help-line) + 1rem);
     }
 }
 
