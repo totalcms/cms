@@ -39,11 +39,20 @@ final readonly class SeoSettings
 	public const TOUCH_ICON = ['w' => 180, 'h' => 180, 'fit' => 'crop-focalpoint', 'fm' => 'png'];
 
 	/**
+	 * The padding around the Icon when it stands in for the touch icon: a tab
+	 * icon is drawn to its edges, a home-screen tile is not. 20px of 180 is
+	 * the inset Apple's own tiles sit at.
+	 */
+	public const TOUCH_ICON_PADDING = 20;
+
+	/**
 	 * The touch icon cut from the Icon when no Touch Icon was uploaded. iOS
 	 * paints transparent pixels black, so the Theme Color is painted behind
 	 * the icon first — the home-screen tile then matches the site's chrome —
 	 * and black is used when there is no Theme Color, which is what iOS would
-	 * have shown anyway, only now on purpose.
+	 * have shown anyway, only now on purpose. The icon is rendered smaller and
+	 * the tile grown back to 180px with a border in the same colour, so the
+	 * mark does not run edge to edge.
 	 *
 	 * @return array<string,int|string>
 	 */
@@ -55,7 +64,16 @@ final readonly class SeoSettings
 			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
 		}
 
-		return self::TOUCH_ICON + ['bg' => $hex];
+		$inner = self::TOUCH_ICON['w'] - 2 * self::TOUCH_ICON_PADDING;
+
+		return [
+			'w'      => $inner,
+			'h'      => $inner,
+			'fit'    => 'crop-focalpoint',
+			'fm'     => 'png',
+			'bg'     => $hex,
+			'border' => self::TOUCH_ICON_PADDING . ",{$hex},expand",
+		];
 	}
 
 	/**

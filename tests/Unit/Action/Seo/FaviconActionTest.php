@@ -36,7 +36,7 @@ describe('FaviconAction', function (): void {
 		$images = $this->createMock(ImageGenerator::class);
 		$images->method('generateImage')->willReturnCallback(function (string $collection, string $id, string $property, array $params) use ($factory, $pngBytes) {
 			expect([$collection, $id])->toBe(['seo-site', 'seo-site']);
-			expect([$property, $params])->toBeIn([['icon', SeoSettings::ICON_32], ['icon', SeoSettings::TOUCH_ICON + ['bg' => '090e1b']]]);
+			expect([$property, $params])->toBeIn([['icon', SeoSettings::ICON_32], ['icon', SeoSettings::touchIconFromIcon('#090e1b')]]);
 
 			return $factory->createResponse(200)->withBody($factory->createStream((string)$pngBytes));
 		});

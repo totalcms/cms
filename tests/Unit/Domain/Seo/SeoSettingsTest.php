@@ -73,12 +73,15 @@ describe('SeoSettings', function (): void {
 		expect(SeoSettings::fromArray(['themeColor' => ['hex' => '']], 'x')->themeColor)->toBe('');
 	});
 
-	test('the touch icon cut from the Icon carries the theme color as its background', function (): void {
-		expect(SeoSettings::touchIconFromIcon('#090E1B'))->toBe(SeoSettings::TOUCH_ICON + ['bg' => '090e1b']);
-		expect(SeoSettings::touchIconFromIcon(['hex' => '#abc']))->toBe(SeoSettings::TOUCH_ICON + ['bg' => 'aabbcc']);
+	test('the touch icon cut from the Icon is inset on a theme-colored tile', function (): void {
+		// 140px of icon plus a 20px border in the same color on every side
+		// grows the canvas back to the 180px tile, with the mark inset.
+		$padded = static fn (string $hex): array => ['w' => 140, 'h' => 140, 'fit' => 'crop-focalpoint', 'fm' => 'png', 'bg' => $hex, 'border' => "20,{$hex},expand"];
+		expect(SeoSettings::touchIconFromIcon('#090E1B'))->toBe($padded('090e1b'));
+		expect(SeoSettings::touchIconFromIcon(['hex' => '#abc']))->toBe($padded('aabbcc'));
 		// No theme color: black, which is what iOS paints behind transparency anyway.
-		expect(SeoSettings::touchIconFromIcon(''))->toBe(SeoSettings::TOUCH_ICON + ['bg' => '000000']);
-		expect(SeoSettings::touchIconFromIcon(null))->toBe(SeoSettings::TOUCH_ICON + ['bg' => '000000']);
+		expect(SeoSettings::touchIconFromIcon(''))->toBe($padded('000000'));
+		expect(SeoSettings::touchIconFromIcon(null))->toBe($padded('000000'));
 	});
 
 	test('a base URL without a scheme gets https', function (): void {

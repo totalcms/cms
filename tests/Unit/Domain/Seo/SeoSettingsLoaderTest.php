@@ -59,8 +59,8 @@ final class SeoSettingsLoaderTest extends TestCase
 					$transform === SeoSettings::ICON_192   => '?w=192&h=192&fit=crop-focalpoint&fm=png',
 					$transform === SeoSettings::ICON_512   => '?w=512&h=512&fit=crop-focalpoint&fm=png',
 					$transform === SeoSettings::TOUCH_ICON => '?w=180&h=180&fit=crop-focalpoint&fm=png',
-					// The Icon standing in for the touch icon carries a background.
-					isset($transform['bg']) && array_diff_key($transform, ['bg' => 1]) === SeoSettings::TOUCH_ICON => '?w=180&h=180&fit=crop-focalpoint&fm=png&bg=' . $transform['bg'],
+					// The Icon standing in for the touch icon: inset on a colored tile.
+					isset($transform['bg'], $transform['border']) => '?w=140&h=140&fit=crop-focalpoint&fm=png&bg=' . $transform['bg'] . '&border=' . $transform['border'],
 					default                                => '?unexpected',
 				};
 
@@ -182,7 +182,7 @@ final class SeoSettingsLoaderTest extends TestCase
 		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=192&h=192&fit=crop-focalpoint&fm=png', $settings->icon192);
 		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=512&h=512&fit=crop-focalpoint&fm=png', $settings->icon512);
 		// No Theme Color: the Icon stands in over black, as iOS would paint it.
-		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=180&h=180&fit=crop-focalpoint&fm=png&bg=000000', $settings->touchIcon);
+		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=140&h=140&fit=crop-focalpoint&fm=png&bg=000000&border=20,000000,expand', $settings->touchIcon);
 		$this->assertSame('', $settings->iconSvg);
 		$this->assertSame('icon', $settings->touchIconProperty);
 		$this->assertTrue($settings->hasIcons());
@@ -197,7 +197,7 @@ final class SeoSettingsLoaderTest extends TestCase
 			true,
 		)->load();
 
-		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=180&h=180&fit=crop-focalpoint&fm=png&bg=090e1b', $settings->touchIcon);
+		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=140&h=140&fit=crop-focalpoint&fm=png&bg=090e1b&border=20,090e1b,expand', $settings->touchIcon);
 		$this->assertSame('#090e1b', $settings->themeColor);
 	}
 
