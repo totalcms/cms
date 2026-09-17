@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -55,6 +56,33 @@ it('renders the whole head for a collection object', function (): void {
 	expect($html)->not->toContain('&lt;')
 		->not->toContain('&amp;amp;');
 	expect(substr_count($html, 'Hello &amp; Welcome'))->toBeGreaterThan(0);
+});
+
+it('gives a page the router did not render its head through cms.builder.page()', function (): void {
+	// A Stacks site: Apache serves /blog/index.php itself, and the blog
+	// collection's pretty URL names the posts. Neither page reaches the page
+	// router, so the layout asks it what routes the request instead.
+	$container = $this->app->getContainer();
+	$container->get(CollectionSaver::class)->patchCollection('blog', ['prettyUrl' => true]);
+	$container->get(BuilderInstaller::class)->ensurePagesCollection();
+	// The carrier record has no template: nothing renders it.
+	$container->get(ObjectSaver::class)->saveObject('builder-pages', ['id' => 'blog', 'title' => 'Blog', 'route' => '/blog', 'seo' => ['description' => 'All the posts']]);
+
+	// The index page under its file spelling matches the /blog record, not
+	// /blog/{id} with "index.php" for an id.
+	$html = ($this->render)("{{ cms.seo.head(cms.builder.page('/blog/index.php')) }}");
+	expect($html)->toContain('<title>Blog | Bistro</title>')
+		->toContain('<meta name="description" content="All the posts">')
+		->toContain('<link rel="canonical" href="http://totalcms.test/blog">');
+
+	// A post page needs no record: the collection URL routes it to the
+	// object, and the object comes back knowing its collection.
+	$html = ($this->render)("{{ cms.seo.head(cms.builder.page('/blog/hello')) }}");
+	expect($html)->toContain('<title>Hello &amp; Welcome | Bistro</title>')
+		->toContain('<meta name="description" content="Sum mary">')
+		->toContain('<meta property="og:type" content="article">')
+		->toContain('"@type":"Article"')
+		->toContain('/blog/hello">');
 });
 
 it('renders site defaults with no subject and honours noindex', function (): void {

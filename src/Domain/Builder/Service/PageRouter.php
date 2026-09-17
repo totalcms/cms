@@ -26,12 +26,22 @@ readonly class PageRouter
 	/**
 	 * Match a request URI against builder page routes and collection URLs.
 	 */
-	public function match(string $requestUri): ?RouteMatch
+	/**
+	 * Resolve a request path to the builder page or collection object that
+	 * routes it.
+	 *
+	 * `$requireTemplate` is on for rendering: a page with no template has
+	 * nothing to render, so the middleware treats it as no page at all and
+	 * a collection URL underneath can still win. A lookup that only wants
+	 * the record (`cms.builder.page()`) turns it off — on a site the router
+	 * never serves, a page record is a metadata carrier and needs no template.
+	 */
+	public function match(string $requestUri, bool $requireTemplate = true): ?RouteMatch
 	{
 		$path = $this->normalizePath($requestUri);
 
 		// 1. Try builder page routes (highest priority)
-		$match = $this->matchBuilderPage($path);
+		$match = $this->matchBuilderPage($path, $requireTemplate);
 		if ($match instanceof RouteMatch) {
 			return $match;
 		}
@@ -79,7 +89,7 @@ readonly class PageRouter
 	 * Match against builder page objects.
 	 * Static routes first (exact match), then dynamic routes (pattern match).
 	 */
-	private function matchBuilderPage(string $path): ?RouteMatch
+	private function matchBuilderPage(string $path, bool $requireTemplate): ?RouteMatch
 	{
 		$collectionId = $this->builderConfig->getPagesCollectionId();
 
@@ -100,7 +110,7 @@ readonly class PageRouter
 				continue;
 			}
 
-			if ($page->route === '' || $page->template === '') {
+			if ($page->route === '' || ($requireTemplate && $page->template === '')) {
 				continue;
 			}
 
@@ -363,7 +373,9 @@ readonly class PageRouter
 	 */
 	private function buildPageMatch(PageData $page, array $params = []): RouteMatch
 	{
-		$templatePath = 'pages/' . $page->template . '.twig';
+		// A template-less page only reaches here from a non-rendering lookup;
+		// an empty template says so rather than pointing at `pages/.twig`.
+		$templatePath = $page->template === '' ? '' : 'pages/' . $page->template . '.twig';
 		$fullPage     = $this->hydratePage($page);
 
 		return new RouteMatch(
@@ -396,7 +408,13 @@ readonly class PageRouter
 	}
 
 	/**
-	 * Normalize a URL path: strip query string, trim trailing slash, ensure leading slash.
+	 * Normalize a URL path: strip query string, drop a trailing index file,
+	 * trim trailing slash, ensure leading slash.
+	 *
+	 * `/blog/index.php` and `/blog/` are the same address — the web server
+	 * serves the index file for the directory. Stripping it here means a
+	 * static route matches under either spelling, and a dynamic route such
+	 * as `/blog/{id}` cannot capture `index.php` as an id.
 	 */
 	private function normalizePath(string $uri): string
 	{
@@ -405,6 +423,7 @@ readonly class PageRouter
 			$path = '/';
 		}
 
+		$path = (string)preg_replace('#/index\.(?:php|html?)$#i', '/', $path);
 		$path = rtrim($path, '/');
 
 		if ($path === '') {

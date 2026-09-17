@@ -952,7 +952,7 @@
         {
             "name": "cms.builder.page",
             "signature": "page(?string $path = null): ?array",
-            "description": "The builder page record that routes the given path \u2014 by default the current request \u2014 or null when nothing does.",
+            "description": "The record that routes the given path \u2014 by default the current request \u2014 or null when nothing does: a builder page record, or for a collection URL the object itself with its collection under `_collection`.",
             "examples": [],
             "url": "https://docs.totalcms.co/site-builder/twig/"
         },

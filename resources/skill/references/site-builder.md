@@ -32,7 +32,7 @@ Live on the filesystem under `tcms-data/builder/`:
 | `id` | object id |
 | `title` | page title |
 | `route` | URL pattern; may contain `{id}`-style placeholders |
-| `template` | path under `pages/` to render (e.g. `pages/page.twig`) |
+| `template` | path under `pages/` to render (e.g. `pages/page.twig`); empty = SEO-only record on a URL Total CMS does not serve |
 | `description` | SEO meta description for the page |
 | `image` | page image used for `og:image` social previews and optional hero rendering |
 | `seo` | SEO card: title (with `${property}` placeholders), description, social image, canonical, noindex/nofollow, structured-data type. Empty = derive everything |
@@ -90,8 +90,10 @@ Full reference: `vendor/totalcms/cms/resources/docs/site-builder/seo.md`.
 
 `cms.seo.head(page|default(null))` only knows the page when the page router
 rendered the template. For a page served another way (Stacks, a hand-written
-front end) either keep a `builder-pages` record with the same route as an SEO
-carrier and call `cms.seo.head(cms.builder.page())`, or describe the page
+front end) either keep a template-less `builder-pages` record with the same
+route as an SEO carrier and call `cms.seo.head(cms.builder.page())` — on a
+collection URL (`/blog/{id}`) that call returns the object with `_collection`
+set, so the same line serves post pages with no record — or describe the page
 inline: `cms.seo.head({title: '…', description: '…', image: '/x.png', url: '/path'})`
 — an array with no `id` is treated as a page; `seo: {…}` inside it overrides
 like the SEO card. Details: `docs/site-builder/seo.md` → "Pages the router did

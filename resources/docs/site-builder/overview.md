@@ -373,7 +373,7 @@ Page metadata is stored in the `builder-pages` collection using the `builder-pag
 | `id` | slug | Page identifier (auto-generated from title) |
 | `title` | text | Page title |
 | `route` | text | URL pattern (e.g., `/about` or `/products/{id}`) |
-| `template` | text | Page template name from `builder/pages/` (required) |
+| `template` | text | Page template name from `builder/pages/`. Leave empty on a page Total CMS does not serve — the record then only carries SEO for [`cms.builder.page()`](docs/site-builder/seo#pages-the-router-did-not-render) |
 | `data` | JSON | Free-form JSON exposed as `page.data.*` |
 | `status` | select | HTTP status code returned (200, 301, 302, 404, 410, 451, 503) |
 | `redirectTo` | text | Destination for 301/302 redirects |

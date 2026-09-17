@@ -785,8 +785,10 @@ final class BuilderTwigAdapterTest extends TestCase
 
 	public function testPageReturnsTheBuilderPageRecordThatRoutesThePath(): void
 	{
-		$record = ['id' => 'about', 'route' => '/about', 'template' => 'about'];
-		$this->router->expects($this->once())->method('match')->with('/about')->willReturn(new RouteMatch('about', $record));
+		// The lookup does not require a template: on a site the router never
+		// serves, a page record is an SEO carrier and needs none.
+		$record = ['id' => 'about', 'route' => '/about', 'template' => ''];
+		$this->router->expects($this->once())->method('match')->with('/about', false)->willReturn(new RouteMatch('', $record));
 
 		$this->assertSame($record, $this->adapter->page('/about'));
 	}
@@ -814,12 +816,16 @@ final class BuilderTwigAdapterTest extends TestCase
 		$this->assertNull($this->adapter->page('/nowhere'));
 	}
 
-	public function testPageIsNullForACollectionUrlMatch(): void
+	public function testPageReturnsTheObjectAndItsCollectionForACollectionUrlMatch(): void
 	{
-		// The caller of a collection page needs the object and its collection
-		// name; a page record is the wrong thing to hand back.
-		$this->router->method('match')->willReturn(new RouteMatch('blog', ['id' => 'hello'], [], 'blog'));
+		// A collection URL routes to an object, not a page record. The object
+		// comes back carrying its collection under `_collection`, the key
+		// cms.seo.head() reads, so one call in a layout covers post pages too.
+		$this->router->method('match')->willReturn(new RouteMatch('pages/blog.twig', ['id' => 'hello', 'title' => 'Hello'], ['id' => 'hello'], 'blog'));
 
-		$this->assertNull($this->adapter->page('/blog/hello'));
+		$this->assertSame(
+			['id' => 'hello', 'title' => 'Hello', '_collection' => 'blog'],
+			$this->adapter->page('/blog/hello'),
+		);
 	}
 }

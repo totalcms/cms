@@ -420,18 +420,27 @@ anything, a hand-written PHP front end — has no `page` and, with the call
 above, gets the site defaults. Two ways to give it a real head:
 
 **Keep a page record and ask the router for it.** `cms.builder.page()` returns
-the builder page whose route matches the current request (or a path you pass),
-or null. A Stacks site keeps one `builder-pages` record per page with the same
-route, purely as an SEO carrier — the router never serves it, because Apache
-answers first — and the layout picks it up:
+whatever routes the current request (or a path you pass), or null. A Stacks
+site keeps one `builder-pages` record per page with the same route, purely as
+an SEO carrier — the router never serves it, because Apache answers first, so
+leave its **Page Template** empty — and the layout picks it up:
 
 ```twig
 {{ cms.seo.head(cms.builder.page()) }}
 ```
 
 The SEO card, the title placeholders and noindex all work as on any page, and
-the record is edited in the admin like any other. Only builder pages match; a
-collection URL returns null, because that template should pass its object.
+the record is edited in the admin like any other. `/blog/index.php` and
+`/blog/` are the same address to the router, so a record routed at `/blog`
+answers under either spelling.
+
+A post page needs no record. When the request matches a collection's **URL**
+(`/blog/{id}` with pretty URLs on), `cms.builder.page()` returns the object
+itself, tagged with its collection, and the same call emits the article head:
+the collection's [mapping](#collection-mapping) picks the title,
+description and image, and the canonical is the object's URL. Do not also keep
+a page record routed at `/blog/{id}` — a page record wins over a collection
+URL, and you would get the record's head instead of the post's.
 
 **Or describe the page in the template.** Hand `cms.seo.head()` a literal array
 and it is treated as a page:

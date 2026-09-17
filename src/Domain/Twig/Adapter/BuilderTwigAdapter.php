@@ -35,8 +35,9 @@ class BuilderTwigAdapter
 	}
 
 	/**
-	 * The builder page record that routes the given path — by default the
-	 * current request — or null when nothing does.
+	 * The record that routes the given path — by default the current request
+	 * — or null when nothing does: a builder page record, or for a collection
+	 * URL the object itself with its collection under `_collection`.
 	 *
 	 * The page router puts `page` in scope for templates it renders; a page
 	 * served some other way (a Stacks page Apache answers before Total CMS
@@ -47,9 +48,9 @@ class BuilderTwigAdapter
 	 *
 	 * A Stacks site keeps a builder-page record per page with the same route
 	 * purely as an SEO carrier — the router never serves it, because Apache
-	 * answers first — and the layout picks it up here. Only builder pages
-	 * match; a collection-URL match returns null, because that caller needs
-	 * the object and its collection name, not a page record.
+	 * answers first, and it needs no template — and the layout picks it up
+	 * here. A post page needs no record at all: the blog collection's URL
+	 * routes it, and the object comes back ready for cms.seo.head().
 	 *
 	 * @return array<string,mixed>|null
 	 *
@@ -67,9 +68,18 @@ class BuilderTwigAdapter
 			$path = $path === '' ? '/' : $path;
 		}
 
-		$match = $this->router->match($path);
-		if (!$match instanceof RouteMatch || $match->collection !== null) {
+		// No template required: on a site the router never serves (Stacks, a
+		// hand-written front end) a page record is an SEO carrier and has none.
+		$match = $this->router->match($path, requireTemplate: false);
+		if (!$match instanceof RouteMatch) {
 			return null;
+		}
+
+		// A collection URL routes to an object, not a page record. Hand it
+		// back tagged with its collection — the key cms.seo.head() reads — so
+		// the one call in a layout covers post pages as well as pages.
+		if ($match->collection !== null) {
+			return $match->pageData + ['_collection' => $match->collection];
 		}
 
 		return $match->pageData;

@@ -358,6 +358,33 @@ final class PageRouterTest extends TestCase
 		$this->assertNull($match);
 	}
 
+	public function testATemplatelessPageMatchesWhenNoTemplateIsRequired(): void
+	{
+		// A page with a route but no template is a metadata-only record: the
+		// router never renders it, but a lookup that only wants the record
+		// (cms.builder.page() on a Stacks site) still finds it.
+		$this->setupPagesCollection([
+			['id' => 'notemplate', 'title' => 'No Template', 'route' => '/notemplate', 'template' => '', 'layout' => 'default'],
+		]);
+
+		$match = $this->router->match('/notemplate', requireTemplate: false);
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame('', $match->template);
+		$this->assertSame('notemplate', $match->pageData['id']);
+	}
+
+	public function testATemplatelessPageStillYieldsToNothingWhenRendering(): void
+	{
+		// The default (rendering) lookup keeps skipping it, so a stray
+		// template-less page never shadows a collection URL for the middleware.
+		$this->setupPagesCollection([
+			['id' => 'notemplate', 'title' => 'No Template', 'route' => '/notemplate', 'template' => ''],
+		]);
+
+		$this->assertNull($this->router->match('/notemplate', requireTemplate: true));
+	}
+
 	// --- Dynamic Route Matching ---
 
 	public function testMatchesDynamicRoute(): void
@@ -436,6 +463,59 @@ final class PageRouterTest extends TestCase
 		$match = $this->router->match('/about/');
 
 		$this->assertInstanceOf(RouteMatch::class, $match);
+	}
+
+	public function testStripsAnIndexFileFromThePath(): void
+	{
+		// /blog/index.php and /blog/ are the same address — Apache serves the
+		// index file for the directory. A Stacks page asking which record
+		// routes it must get the same answer under either spelling.
+		$this->setupPagesCollection([
+			['id' => 'home', 'title' => 'Home', 'route' => '/', 'template' => 'home'],
+			['id' => 'blog', 'title' => 'Blog', 'route' => '/blog', 'template' => 'blog'],
+		]);
+
+		foreach (['/index.php', '/index.html', '/index.htm', '/index.php?ref=nav'] as $uri) {
+			$match = $this->router->match($uri);
+			$this->assertInstanceOf(RouteMatch::class, $match, $uri);
+			$this->assertSame('home', $match->pageData['id'], $uri);
+		}
+
+		foreach (['/blog/index.php', '/blog/index.html'] as $uri) {
+			$match = $this->router->match($uri);
+			$this->assertInstanceOf(RouteMatch::class, $match, $uri);
+			$this->assertSame('blog', $match->pageData['id'], $uri);
+		}
+	}
+
+	public function testAnIndexFileIsNotCapturedByADynamicRoute(): void
+	{
+		// Without the strip, /blog/index.php would match /blog/{id} with
+		// id = "index.php" and the blog index would wear a post's head.
+		$this->setupPagesCollection([
+			['id' => 'blog', 'title' => 'Blog', 'route' => '/blog', 'template' => 'blog'],
+			['id' => 'post', 'title' => 'Post', 'route' => '/blog/{id}', 'template' => 'post'],
+		]);
+
+		$match = $this->router->match('/blog/index.php');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame('blog', $match->pageData['id']);
+		$this->assertSame([], $match->params);
+	}
+
+	public function testAnIndexNamedObjectIsNotStripped(): void
+	{
+		// Only the file spellings are index files; a segment called `index`
+		// is an ordinary id.
+		$this->setupPagesCollection([
+			['id' => 'post', 'title' => 'Post', 'route' => '/blog/{id}', 'template' => 'post'],
+		]);
+
+		$match = $this->router->match('/blog/index');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertSame(['id' => 'index'], $match->params);
 	}
 
 	public function testStripsQueryString(): void

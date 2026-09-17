@@ -35,7 +35,7 @@
 		"template": {
 			"type"        : "string",
 			"label"       : "Page Template",
-			"help"        : "The page template to render. Multiple pages can share the same template. Create a template first under Site Builder if none are listed.",
+			"help"        : "The page template to render. Multiple pages can share the same template. Create a template first under Site Builder if none are listed. Leave it empty when Total CMS does not serve this URL (a Stacks or hand-built page): the record then only carries the page's SEO for cms.builder.page().",
 			"field"       : "select",
 			"default"     : "",
 			"placeholder" : "Select a template...",
@@ -214,7 +214,6 @@
 	"required": [
 		"id",
 		"title",
-		"template",
 		"updated",
 		"created"
 	],
