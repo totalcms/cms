@@ -28,7 +28,7 @@
 {% endif -%}
 {%- if 'og' in parts and settings.emitSocial -%}
 <meta property="og:type" content="{{ meta.ogType }}">
-<meta property="og:title" content="{{ meta.socialTitle != '' ? meta.socialTitle : (meta.rawTitle != '' ? meta.rawTitle : meta.title) }}">
+<meta property="og:title" content="{{ meta.socialTitle }}">
 {% if meta.description != '' -%}
 <meta property="og:description" content="{{ meta.description }}">
 {% endif -%}
@@ -50,7 +50,7 @@
 <meta name="twitter:card" content="{{ meta.twitterCard }}">
 {#- Twitter would fall back to the og: tags, but not every scraper does, so the
     title, description and image are declared explicitly as well. #}
-<meta name="twitter:title" content="{{ meta.socialTitle != '' ? meta.socialTitle : (meta.rawTitle != '' ? meta.rawTitle : meta.title) }}">
+<meta name="twitter:title" content="{{ meta.socialTitle }}">
 {% if meta.description != '' -%}
 <meta name="twitter:description" content="{{ meta.description }}">
 {% endif -%}

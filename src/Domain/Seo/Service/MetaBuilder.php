@@ -47,7 +47,15 @@ class MetaBuilder
 		if ($rawTitle === '') {
 			$rawTitle = $this->scalarString($ctx->object['title'] ?? null);
 		}
-		$title = $this->applyTemplate($rawTitle, $ctx->siteName, $s);
+		$title = $this->applyTemplate($rawTitle, $ctx->siteName, $s->titleTemplate);
+
+		// Share title: the card's Social Title, else the raw title, through the
+		// site's social title template — `{title}` by default, so a share card
+		// carries the bare title while <title> carries the site suffix. A
+		// separate template because a share card and a browser tab want
+		// different shapes, and the card's own Social Title goes through it
+		// the same way the card's Title goes through the title template.
+		$socialTitle = $this->applyTemplate($f->socialTitle !== '' ? $f->socialTitle : $rawTitle, $ctx->siteName, $s->socialTitleTemplate);
 
 		// Description: the seo card, then the collection's mapped property
 		// (stripped to plain text), then the site default.
@@ -96,7 +104,7 @@ class MetaBuilder
 		return new MetaPayload(
 			title: $title,
 			rawTitle: $rawTitle,
-			socialTitle: $f->socialTitle,
+			socialTitle: $socialTitle,
 			description: $description,
 			canonical: $canonical,
 			robots: $robots,
@@ -151,10 +159,11 @@ class MetaBuilder
 	}
 
 	/**
-	 * Render the site title template. A missing title or site name collapses
-	 * to whichever half exists rather than leaving a dangling separator.
+	 * Render a site title template (`{title}` and `{site}`). A missing title
+	 * or site name collapses to whichever half exists rather than leaving a
+	 * dangling separator.
 	 */
-	private function applyTemplate(string $title, string $site, SeoSettings $s): string
+	private function applyTemplate(string $title, string $site, string $template): string
 	{
 		if ($title === '') {
 			return $site;
@@ -162,10 +171,6 @@ class MetaBuilder
 		if ($site === '') {
 			return $title;
 		}
-
-		// The separator is configured independently of the template, so the
-		// literal `|` in the default template is the substitution point.
-		$template = str_replace('|', $s->titleSeparator, $s->titleTemplate);
 
 		return trim(str_replace(['{title}', '{site}'], [$title, $site], $template));
 	}

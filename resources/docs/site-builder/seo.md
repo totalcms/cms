@@ -80,7 +80,7 @@ A few rules the chain applies on top:
 
 - **Title template.** The resolved title is run through the site's title template, `{title} | {site}` by default. A record with no title collapses to the site name; a site with no name leaves the raw title. No dangling separator either way.
 - **Description.** A mapped property is as often markdown as it is HTML, so both are flattened: tags are stripped, entities decoded, then the markdown markers are removed — a link or an image keeps its text and loses its brackets and URL, `**bold**`, `_italic_` and `` `code` `` lose their wrappers, and a heading marker, a list bullet or a `>` at the start of a line goes. Ordinary prose comes back untouched: a lone `!`, a `$5 * 3` or a `my_var` is a sentence, not markdown, and is left alone. Whatever survives is then collapsed to single spaces. That cleanup and the 160-character cap are for mapped properties only, which may hold a whole summary or article body. A description written on the card, or the site default, is emitted exactly as written, however long: search engines index the whole tag even though they display only the first 150 characters or so.
-- **Social title.** `og:title` always prints: the card's **Social Title** when it has one, otherwise the record's own title before the site title template is applied — the bare `About`, not `About | Bistro` — falling back to the site name on a page with no record behind it. `twitter:title`, `twitter:description` and `twitter:image` are declared explicitly with the same values as their `og:` counterparts — most scrapers fall back to Open Graph, but not all of them. There is no collection mapping for the Social Title — it is a per-record override or nothing.
+- **Social title.** `og:title` always prints: the card's **Social Title** when it has one, otherwise the record's own title, run through the site's **Social Title Template** — `{title}` by default, so a share card carries the bare `About`, not `About | Bistro`. A share card and a browser tab want different shapes, which is why the template is separate from the title template; `{title} — {site}` on a blog gives every post a share title of its own structure without touching `<title>`. A page with no record behind it collapses to the site name. `twitter:title`, `twitter:description` and `twitter:image` are declared explicitly with the same values as their `og:` counterparts — most scrapers fall back to Open Graph, but not all of them. There is no collection mapping for the Social Title — it is a per-record override or nothing.
 - **Image alt.** When the winning image carries alt text, it is emitted as `og:image:alt` and `twitter:image:alt`. The alt is read from whichever image actually won — the card's, the mapped property's, or the Site SEO default image's — so it always describes the picture on the card. An image with no alt simply omits both tags.
 - **`og:type`.** Decided by the collection mapping alone. The SEO card's **Structured Data Type** does **not** change `og:type` — it only adds or removes the `Article` node in the JSON-LD. An object switched to Article on its card keeps `og:type: website` unless its collection is mapped to Article too.
 - **Twitter card.** `summary_large_image` when an image resolved, `summary` when none did.
@@ -94,7 +94,7 @@ Every Site Builder page has an **SEO** section on its edit form. It holds the pe
 | Field | What it does |
 |---|---|
 | **Title** | Replaces the derived title. Supports `${placeholder}` substitution — see [Placeholders in the Title](#placeholders-in-the-title) below. |
-| **Social Title** | A shorter, punchier title for share cards. It replaces `og:title` and `twitter:title` only — `<title>` is untouched, and it is never run through the site title template. Leave it empty and the share cards keep using the page title, exactly as before. |
+| **Social Title** | A shorter, punchier title for share cards. It replaces `og:title` and `twitter:title` only — `<title>` is untouched. It goes through the site's **Social Title Template** the way **Title** goes through the title template; never through the title template itself. Leave it empty and the share cards use the page title. |
 | **Description** | Replaces the meta description for this record. |
 | **Social Image** | The share image. 1200×630 is the recommendation; Total CMS crops to that ratio. |
 | **Canonical URL** | An absolute URL. Leave it empty to use this record's own URL — set it when the content is a duplicate of a page elsewhere. |
@@ -232,8 +232,8 @@ tcms collection:create seo-site
 |---|---|
 | **Site Name** | Used in titles, `og:site_name` and the WebSite / Organization JSON-LD. Leave it empty and Total CMS falls back to the General settings site name, then your domain. |
 | **Base URL** | The absolute origin for canonical URLs and JSON-LD ids, e.g. `https://example.com`. Defaults to the request's scheme on the site's domain (`https` when there is no request, as on the CLI); set it explicitly when a proxy hides TLS from PHP or to pin a `www`/apex choice. If you set it without a scheme, `https://` is assumed. The sitemaps use this same value. |
-| **Title Template** | `{title}` and `{site}` are replaced. Default: `{title} \| {site}` |
-| **Title Separator** | Replaces the literal `\|` in the template, so a theme can use `–` or `·` without rewriting the template. |
+| **Title Template** | Shapes `<title>`. `{title}` and `{site}` are replaced. Default: `{title} \| {site}` |
+| **Social Title Template** | Shapes `og:title` and `twitter:title`, independent of the Title Template. Same placeholders. Default: `{title}` — a share card carries the bare title. |
 | **Default Description** | Used when a record has no description of its own. |
 | **Default Social Image** | An image **upload**, not a URL. The fallback share image, served through ImageWorks at 1200×630 and emitted as an absolute URL. |
 | **Twitter / X Handle** | With or without the `@`. Emitted as `twitter:site`. |
@@ -264,7 +264,7 @@ Site-wide values of your own — a tagline, a phone number, a footer blurb — c
     "id": "myseo",
     "type": "object",
     "inheritFrom": ["seo-site"],
-    "formgrid": "siteName baseUrl\ntitleTemplate titleSeparator\ndefaultDescription defaultDescription\ndefaultImage twitterHandle\n---Organization---\norganizationName organizationLogo\nsameAs sameAs\n---Verification---\ngoogleVerification bingVerification\npinterestVerification .\n---Output---\nemitJsonLd emitSocial\n---Site---\ntagline .",
+    "formgrid": "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultDescription\ndefaultImage twitterHandle\n---Organization---\norganizationName organizationLogo\nsameAs sameAs\n---Verification---\ngoogleVerification bingVerification\npinterestVerification .\n---Output---\nemitJsonLd emitSocial\n---Site---\ntagline .",
     "properties": {
         "tagline": {
             "type": "string",
@@ -472,7 +472,7 @@ Sometimes the value is wanted in the body rather than the head — a share butto
 {% set seo = cms.seo.data(page) %}
 
 <img src="{{ seo.ogImage|e }}" alt="{{ seo.ogImageAlt|e }}">
-<a href="https://x.com/intent/post?text={{ seo.socialTitle|default(seo.rawTitle)|url_encode }}">Share</a>
+<a href="https://x.com/intent/post?text={{ seo.socialTitle|url_encode }}">Share</a>
 ```
 
 Everything `head()` prints is in there, under its own name:
@@ -481,7 +481,7 @@ Everything `head()` prints is in there, under its own name:
 |---|---|
 | `title` | The final `<title>`, after the site title template |
 | `rawTitle` | The record's title before the template — the bare `About`, not `About \| Bistro` |
-| `socialTitle` | The card's **Social Title**, or `''` |
+| `socialTitle` | The share-card title: the card's **Social Title** or `rawTitle`, through the Social Title Template |
 | `description` | The resolved description (a mapped property is cleaned and capped at 160 characters; card and site-default text is verbatim) |
 | `canonical` | The canonical URL, even on a noindex record where the tag is not printed |
 | `robots` | `''`, `noindex`, `nofollow` or `noindex, nofollow` |

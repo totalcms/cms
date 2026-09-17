@@ -10,7 +10,7 @@ describe('SeoSettings', function (): void {
 		expect($s->siteName)->toBe('')
 			->and($s->baseUrl)->toBe('https://example.com')
 			->and($s->titleTemplate)->toBe('{title} | {site}')
-			->and($s->titleSeparator)->toBe('|')
+			->and($s->socialTitleTemplate)->toBe('{title}')
 			->and($s->emitJsonLd)->toBeTrue()
 			->and($s->emitSocial)->toBeTrue()
 			->and($s->sameAs)->toBe([])

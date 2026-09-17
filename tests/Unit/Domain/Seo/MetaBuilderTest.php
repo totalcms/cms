@@ -14,7 +14,6 @@ describe('MetaBuilder', function (): void {
 		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['title' => 'Custom'])]))->title)->toBe('Custom | Bistro');
 		expect($b->build(seoCtx(['kind' => 'none', 'object' => [], 'url' => '']))->title)->toBe('Bistro');
 		expect($b->build(seoCtx(['settings' => SeoSettings::fromArray(['titleTemplate' => '{site} – {title}'], 'x'), 'siteName' => 'S']))->title)->toBe('S – Hello <World>');
-		expect($b->build(seoCtx(['settings' => SeoSettings::fromArray(['titleSeparator' => '·'], 'x')]))->title)->toBe('Hello <World> · Bistro');
 	});
 
 	test('title: mapped property, then placeholders on the card', function () use ($b): void {
@@ -85,10 +84,25 @@ describe('MetaBuilder', function (): void {
 		}
 	});
 
-	test('socialTitle rides the card through to the payload without touching the title', function () use ($b): void {
+	test('socialTitle: the card, else the raw title; through the social template, never the title template', function () use ($b): void {
 		$p = $b->build(seoCtx(['fields' => SeoFields::fromArray(['socialTitle' => ' Short '])]));
 		expect($p->socialTitle)->toBe('Short')->and($p->title)->toBe('Hello <World> | Bistro')->and($p->rawTitle)->toBe('Hello <World>');
-		expect($b->build(seoCtx())->socialTitle)->toBe('');
+
+		// The default social template is the bare `{title}`: no site suffix
+		// on a share card, exactly what a card with no Social Title got before.
+		expect($b->build(seoCtx())->socialTitle)->toBe('Hello <World>');
+
+		// A site-level Social Title Template structures share titles on its
+		// own, independent of <title>. The card's Social Title goes through
+		// it like the card's Title goes through the title template.
+		$settings = SeoSettings::fromArray(['socialTitleTemplate' => '{title} — from {site}'], 'x');
+		$p        = $b->build(seoCtx(['settings' => $settings]));
+		expect($p->socialTitle)->toBe('Hello <World> — from Bistro')->and($p->title)->toBe('Hello <World> | Bistro');
+		expect($b->build(seoCtx(['settings' => $settings, 'fields' => SeoFields::fromArray(['socialTitle' => 'Short'])]))->socialTitle)->toBe('Short — from Bistro');
+
+		// No record behind the page: the share title collapses to the site
+		// name rather than a dangling template.
+		expect($b->build(seoCtx(['settings' => $settings, 'kind' => 'none', 'object' => [], 'url' => '']))->socialTitle)->toBe('Bistro');
 	});
 
 	test('noindex leaves the canonical on the payload — the template decides whether to print it', function () use ($b): void {

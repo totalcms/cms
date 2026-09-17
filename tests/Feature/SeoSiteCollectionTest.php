@@ -26,7 +26,7 @@ it('provisions seo-site as a singleton collection named Site SEO', function (): 
 		->and($collection->schema)->toBe('seo-site');
 
 	$props = array_keys($c->get(SchemaFetcher::class)->fetchSchema('seo-site')->properties);
-	expect($props)->toContain('siteName', 'baseUrl', 'titleTemplate', 'titleSeparator', 'defaultDescription', 'defaultImage', 'twitterHandle', 'organizationName', 'organizationLogo', 'sameAs', 'googleVerification', 'bingVerification', 'pinterestVerification', 'emitJsonLd', 'emitSocial');
+	expect($props)->toContain('siteName', 'baseUrl', 'titleTemplate', 'socialTitleTemplate', 'defaultDescription', 'defaultImage', 'twitterHandle', 'organizationName', 'organizationLogo', 'sameAs', 'googleVerification', 'bingVerification', 'pinterestVerification', 'emitJsonLd', 'emitSocial');
 });
 
 it('stores the site record at the collection id with image fields', function (): void {
@@ -54,7 +54,7 @@ it('lets a site extend site SEO with an inheriting schema', function (): void {
 		'type'        => 'object',
 		'description' => 'Site SEO with a tagline.',
 		'inheritFrom' => ['seo-site'],
-		'formgrid'    => "siteName baseUrl\ntitleTemplate titleSeparator\ndefaultDescription defaultDescription\ndefaultImage twitterHandle\n---Organization---\norganizationName organizationLogo\nsameAs sameAs\n---Verification---\ngoogleVerification bingVerification\npinterestVerification .\n---Output---\nemitJsonLd emitSocial\n---Site---\ntagline .",
+		'formgrid'    => "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultDescription\ndefaultImage twitterHandle\n---Organization---\norganizationName organizationLogo\nsameAs sameAs\n---Verification---\ngoogleVerification bingVerification\npinterestVerification .\n---Output---\nemitJsonLd emitSocial\n---Site---\ntagline .",
 		'properties'  => [
 			'tagline' => ['type' => 'string', 'field' => 'text', 'label' => 'Tagline'],
 		],
