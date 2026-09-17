@@ -21,6 +21,17 @@ class ColorData extends PropertyData implements \Stringable
 	/** @param string|array<string,mixed> $color */
 	public function __construct(string|array $color = '', public array $settings = [])
 	{
+		// A native colour input can never be empty, so an optional colour was
+		// always stored as black. With the `clearable` setting an empty value
+		// is a value of its own: no hex, no coordinates, serialised as ''.
+		// Off by default, so a field that never asked for it keeps its black.
+		if ($this->clearable() && (is_string($color) ? trim($color) === '' : trim((string)($color['hex'] ?? '')) === '' && !isset($color['oklch']))) {
+			$this->hex   = '';
+			$this->oklch = [];
+
+			return;
+		}
+
 		if (is_string($color)) {
 			// Handle empty string with default black color
 			if ($color === '') {
@@ -221,8 +232,25 @@ class ColorData extends PropertyData implements \Stringable
 	}
 
 	/** @return array<string,mixed> */
-	public function transform(): array
+	/** Whether the field is allowed to hold no colour at all (the `clearable` setting). */
+	private function clearable(): bool
 	{
+		return filter_var($this->settings['clearable'] ?? false, FILTER_VALIDATE_BOOL);
+	}
+
+	/** True only for a clearable colour that holds nothing. */
+	public function isEmpty(): bool
+	{
+		return $this->hex === '';
+	}
+
+	/** @return array<string,mixed>|string The stored shape, or '' when empty (the schema's empty branch) */
+	public function transform(): array|string
+	{
+		if ($this->isEmpty()) {
+			return '';
+		}
+
 		return [
 			'hex'   => $this->hex,
 			'oklch' => $this->oklch,
@@ -231,6 +259,10 @@ class ColorData extends PropertyData implements \Stringable
 
 	public function __toString(): string
 	{
+		if ($this->isEmpty()) {
+			return '';
+		}
+
 		return sprintf('oklch(%s%% %s %s)', $this->oklch['l'], $this->oklch['c'], $this->oklch['h']);
 	}
 }

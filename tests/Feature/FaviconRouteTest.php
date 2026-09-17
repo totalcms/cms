@@ -13,9 +13,11 @@ beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
 });
 
-it('answers /favicon.ico and /favicon.svg with 404 when no icon is configured', function (): void {
+it('answers /favicon.ico, /favicon.svg and /apple-touch-icon.png with 404 when no icon is configured', function (): void {
 	expect(get('/favicon.ico')->getStatusCode())->toBe(404);
 	expect(get('/favicon.svg')->getStatusCode())->toBe(404);
+	expect(get('/apple-touch-icon.png')->getStatusCode())->toBe(404);
+	expect(get('/apple-touch-icon-precomposed.png')->getStatusCode())->toBe(404);
 });
 
 it('does not claim other favicon-looking paths', function (): void {

@@ -1452,6 +1452,9 @@ return [
 	'oauth.error.title'                   => 'Autorisatiefout',
 	'oauth.error.return'                  => 'Terug naar {site}',
 
+	// ── Color Field ─────────────────────────────────────────────────────────
+	'color.clear'                   => 'Geen kleur',
+
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.filter_placeholder'      => 'Bestanden filteren...',
 	'depot.preview'                 => 'Voorbeeld',

@@ -181,6 +181,7 @@ final class SeoSettingsLoaderTest extends TestCase
 		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=512&h=512&fit=crop-focalpoint&fm=png', $settings->icon512);
 		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/icon.jpg?w=180&h=180&fit=crop-focalpoint&fm=png', $settings->touchIcon);
 		$this->assertSame('', $settings->iconSvg);
+		$this->assertSame('icon', $settings->touchIconProperty);
 		$this->assertTrue($settings->hasIcons());
 	}
 
@@ -200,6 +201,7 @@ final class SeoSettingsLoaderTest extends TestCase
 
 		$this->assertSame('https://bistro.test/imageworks/seo-site/seo-site/touchIcon.jpg?w=180&h=180&fit=crop-focalpoint&fm=png', $settings->touchIcon);
 		$this->assertSame('https://bistro.test/favicon.svg', $settings->iconSvg);
+		$this->assertSame('touchIcon', $settings->touchIconProperty);
 	}
 
 	public function testATouchIconAloneEmitsNoIconSet(): void
@@ -210,6 +212,7 @@ final class SeoSettingsLoaderTest extends TestCase
 
 		$this->assertSame('', $settings->icon32);
 		$this->assertSame('', $settings->touchIcon);
+		$this->assertSame('', $settings->touchIconProperty);
 		$this->assertFalse($settings->hasIcons());
 	}
 

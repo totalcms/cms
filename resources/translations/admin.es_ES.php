@@ -1452,6 +1452,9 @@ return [
 	'oauth.error.title'                   => 'Error de autorización',
 	'oauth.error.return'                  => 'Volver a {site}',
 
+	// ── Color Field ─────────────────────────────────────────────────────────
+	'color.clear'                   => 'Sin color',
+
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.filter_placeholder'      => 'Filtrar archivos...',
 	'depot.preview'                 => 'Vista previa',

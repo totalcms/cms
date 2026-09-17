@@ -206,7 +206,9 @@ it('emits the icon set, the touch icon, the SVG first and the theme colour', fun
 		'siteName'   => 'Bistro',
 		'icon'       => ['name' => 'icon.png', 'size' => 10],
 		'iconSvg'    => ['name' => 'icon.svg', 'size' => 10, 'mime' => 'image/svg+xml'],
-		'themeColor' => '#F17724',
+		// Pure red survives the hex → OKLCH → hex round trip the colour
+		// property applies on read; a mid-range colour can drift by one.
+		'themeColor' => '#FF0000',
 	]);
 	$page = ['id' => 'about', 'title' => 'About', 'route' => '/about', 'template' => 'pages/about.twig'];
 
@@ -219,7 +221,7 @@ it('emits the icon set, the touch icon, the SVG first and the theme colour', fun
 		->toMatch('~sizes="512x512"~')
 		// No Touch Icon uploaded: the 180px touch icon is cut from the Icon.
 		->toMatch('~<link rel="apple-touch-icon" href="http://totalcms\.test/imageworks/seo-site/seo-site/icon\.png[^"]*w=180[^"]*" sizes="180x180">~')
-		->toContain('<meta name="theme-color" content="#f17724">');
+		->toContain('<meta name="theme-color" content="#ff0000">');
 
 	// The SVG is listed before the PNGs so a browser that can use it does.
 	expect(strpos($html, 'favicon.svg'))->toBeLessThan((int)strpos($html, 'sizes="32x32"'));

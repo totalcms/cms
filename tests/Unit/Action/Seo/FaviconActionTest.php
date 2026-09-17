@@ -27,13 +27,14 @@ describe('FaviconAction', function (): void {
 	// create PHPUnit mocks.
 	beforeEach(function () use ($factory): void {
 		$this->action = function (bool $hasIcon, ?string $pngBytes = null, ?string $svgBytes = null) use ($factory): FaviconAction {
-		$settings = SeoSettings::fromArray($hasIcon ? ['icon32' => '/imageworks/x.png', 'iconSvgUrl' => $svgBytes !== null ? '/favicon.svg' : ''] : [], 'example.com');
+		$settings = SeoSettings::fromArray($hasIcon ? ['icon32' => '/imageworks/x.png', 'touchIconProperty' => 'touchIcon', 'iconSvgUrl' => $svgBytes !== null ? '/favicon.svg' : ''] : [], 'example.com');
 		$loader   = $this->createMock(SeoSettingsLoader::class);
 		$loader->method('load')->willReturn($settings);
 
 		$images = $this->createMock(ImageGenerator::class);
 		$images->method('generateImage')->willReturnCallback(function (string $collection, string $id, string $property, array $params) use ($factory, $pngBytes) {
-			expect([$collection, $id, $property, $params])->toBe(['seo-site', 'seo-site', 'icon', SeoSettings::ICON_32]);
+			expect([$collection, $id])->toBe(['seo-site', 'seo-site']);
+			expect([$property, $params])->toBeIn([['icon', SeoSettings::ICON_32], ['touchIcon', SeoSettings::TOUCH_ICON]]);
 
 			return $factory->createResponse(200)->withBody($factory->createStream((string)$pngBytes));
 		});
@@ -62,6 +63,17 @@ describe('FaviconAction', function (): void {
 			->and(substr((string)$response->getBody(), 22))->toBe($source);
 	});
 
+	test('serves the touch icon as a PNG from the property the head links', function () use ($factory, $png): void {
+		$source   = $png();
+		$request  = $factory->createServerRequest('GET', '/apple-touch-icon.png');
+		$response = (($this->action)(true, $source))($request, $factory->createResponse(), ['format' => 'png']);
+
+		expect($response->getStatusCode())->toBe(200)
+			->and($response->getHeaderLine('Content-Type'))->toBe('image/png')
+			->and($response->getHeaderLine('Cache-Control'))->toBe('public, max-age=86400')
+			->and((string)$response->getBody())->toBe($source);
+	});
+
 	test('serves the SVG inline', function () use ($factory, $png): void {
 		$request  = $factory->createServerRequest('GET', '/favicon.svg');
 		$response = (($this->action)(true, $png(), '<svg xmlns="http://www.w3.org/2000/svg"/>'))($request, $factory->createResponse(), ['format' => 'svg']);
@@ -76,5 +88,6 @@ describe('FaviconAction', function (): void {
 		$request = $factory->createServerRequest('GET', '/favicon.ico');
 		expect(fn () => (($this->action)(false))($request, $factory->createResponse(), ['format' => 'ico']))->toThrow(HttpNotFoundException::class);
 		expect(fn () => (($this->action)(true, $png()))($request, $factory->createResponse(), ['format' => 'svg']))->toThrow(HttpNotFoundException::class);
+		expect(fn () => (($this->action)(false))($request, $factory->createResponse(), ['format' => 'png']))->toThrow(HttpNotFoundException::class);
 	});
 });

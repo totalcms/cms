@@ -84,7 +84,10 @@ class SeoSettingsLoader
 		$record['icon32']       = $hasIcon ? $this->imagePath($record, 'icon', SeoSettings::ICON_32) : '';
 		$record['icon192']      = $hasIcon ? $this->imagePath($record, 'icon', SeoSettings::ICON_192) : '';
 		$record['icon512']      = $hasIcon ? $this->imagePath($record, 'icon', SeoSettings::ICON_512) : '';
-		$record['touchIcon180'] = $hasIcon ? ($this->imagePath($record, 'touchIcon', SeoSettings::TOUCH_ICON) ?: $this->imagePath($record, 'icon', SeoSettings::TOUCH_ICON)) : '';
+		$touchUpload            = $hasIcon ? $this->imagePath($record, 'touchIcon', SeoSettings::TOUCH_ICON) : '';
+		$record['touchIcon180'] = $hasIcon ? ($touchUpload !== '' ? $touchUpload : $this->imagePath($record, 'icon', SeoSettings::TOUCH_ICON)) : '';
+		// The /apple-touch-icon.png route renders the same property the head links.
+		$record['touchIconProperty'] = !$hasIcon ? '' : ($touchUpload !== '' ? 'touchIcon' : 'icon');
 		// The SVG is served by the favicon route rather than the download
 		// route, which would hand it over as an attachment.
 		$record['iconSvgUrl'] = $hasIcon && $this->hasFile($record['iconSvg'] ?? null) ? '/favicon.svg' : '';

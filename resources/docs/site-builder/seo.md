@@ -247,7 +247,7 @@ tcms collection:create seo-site
 | **Icon** | A square PNG **upload**, 512×512 or larger — the tab icon, the bookmark icon, the icon Google shows beside the site in results, and `/favicon.ico`. See [Icons](#icons). |
 | **Touch Icon** | A square PNG, 180×180 or larger, with a solid background, for iOS home screens. Leave it empty and the Icon is used. |
 | **Icon (SVG)** | An optional SVG **file** upload, served at `/favicon.svg` and listed ahead of the PNG. |
-| **Theme Color** | A hex colour for the browser chrome around the page on phones. Empty emits nothing. |
+| **Theme Color** | The colour of the browser chrome around the page on phones — usually the page background. Clear it and nothing is emitted. |
 | **Meta Tags** | Raw markup printed in the `<head>` exactly as written, after the SEO tags. Paste the verification tag a service gives you, or any other `meta`, `link` or `script` tag the site needs on every page — see [Meta Tags](#meta-tags). |
 | **Emit JSON-LD** | Off suppresses the `<script type="application/ld+json">` block entirely. |
 | **Emit Open Graph and Twitter tags** | Off suppresses both sets of social tags. |
@@ -325,11 +325,11 @@ Upload one square PNG as **Icon** and `head()` prints the whole set on every pag
 
 Every size is cut from that one upload by ImageWorks, so 512×512 or larger is the only requirement, and `/favicon.ico` — which browsers and crawlers request whether or not the head names an icon — is served from the same 32px image, wrapped as an ICO. Google shows the icon beside the site in search results and asks for a square image in a multiple of 48px; the 192 and 512 sizes cover that and Android's home screen. Without an Icon nothing is emitted and `/favicon.ico` is a 404, as it was before.
 
-**Touch Icon** exists because of transparency. A tab icon is usually transparent; iOS paints transparent pixels black on the home screen. Upload a second PNG with a solid background there and it takes the `apple-touch-icon` slot. Leave it empty and the Icon is used — a site with one upload works, and this is the field to fill when the home-screen icon comes out with a black square behind it. The Touch Icon feeds nothing else: never the tab icon, never `/favicon.ico`.
+**Touch Icon** exists because of transparency. A tab icon is usually transparent; iOS paints transparent pixels black on the home screen. Upload a second PNG with a solid background there and it takes the `apple-touch-icon` slot. Leave it empty and the Icon is used — a site with one upload works, and this is the field to fill when the home-screen icon comes out with a black square behind it. The Touch Icon feeds nothing else: never the tab icon, never `/favicon.ico`. It is also served at `/apple-touch-icon.png`, the root path iOS requests on any page whose head has no touch-icon link — a page that never calls `head()`.
 
 **Icon (SVG)** is a `file` upload rather than an image, because the SVG is served as a file, at `/favicon.svg`, not embedded in the page. It is listed before the PNGs so a browser that can use it does; the rest fall back. It is optional and needs the PNG Icon alongside it — an SVG on its own emits nothing, since Safari, Google and the touch icon all want a raster.
 
-**Theme Color** is a hex value (`#f17724`) printed as `<meta name="theme-color">`, which tints the browser chrome around the page on phones. It is plain text rather than a colour picker on purpose: a picker cannot be empty, and an empty Theme Color means no tag.
+**Theme Color** is printed as `<meta name="theme-color">`, which tints the browser chrome around the page on phones — pick the page background, not the accent, so the chrome disappears into the page. The field is clearable: press **No color** and no tag is emitted.
 
 **A web app manifest is a page, not a setting.** Create a Site Builder page whose route is `/manifest.webmanifest` and give it a template that renders the JSON — the router already serves that extension as `application/manifest+json` — and `head()` adds `<link rel="manifest" href="/manifest.webmanifest">` on every page. The template can read the same values the head prints, so the manifest cannot disagree with it:
 

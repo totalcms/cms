@@ -61,6 +61,36 @@ test('constructor with default argument defaults to black', function (): void {
 	expect($color->hex)->toBe('#000000');
 });
 
+// ===== Empty state (opt-in via the `clearable` setting) =====
+
+test('a clearable colour with an empty value stays empty', function (): void {
+	// A native colour input can never be empty, so an optional colour used to
+	// be stored as black. With `clearable` on, empty is a value of its own:
+	// no hex, no coordinates, and it serialises as '' (the empty.json branch).
+	$color = new ColorData('', ['clearable' => true]);
+	expect($color->isEmpty())->toBeTrue()
+		->and($color->hex)->toBe('')
+		->and($color->oklch)->toBe([])
+		->and($color->transform())->toBe('')
+		->and((string)$color)->toBe('');
+
+	// The form sends the wrapper object with an empty hex when cleared.
+	expect((new ColorData(['hex' => ''], ['clearable' => true]))->isEmpty())->toBeTrue();
+	expect((new ColorData(settings: ['clearable' => true]))->isEmpty())->toBeTrue();
+});
+
+test('a clearable colour with a value behaves like any other colour', function (): void {
+	$color = new ColorData('#ff0000', ['clearable' => true]);
+	expect($color->isEmpty())->toBeFalse()
+		->and($color->hex)->toBe('#ff0000')
+		->and($color->transform())->toHaveKeys(['hex', 'oklch']);
+});
+
+test('without the setting an empty value is still black', function (): void {
+	expect((new ColorData('', ['clearable' => false]))->hex)->toBe('#000000');
+	expect((new ColorData(''))->isEmpty())->toBeFalse();
+});
+
 test('constructor throws InvalidArgumentException for unparseable strings', function (): void {
 	expect(fn (): ColorData => new ColorData('totally-not-a-color'))
 		->toThrow(InvalidArgumentException::class, 'Invalid color format');

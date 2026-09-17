@@ -1452,6 +1452,9 @@ return [
 	'oauth.error.title'                   => 'Authorisation error',
 	'oauth.error.return'                  => 'Return to {site}',
 
+	// ── Color Field ─────────────────────────────────────────────────────────
+	'color.clear'                   => 'No colour',
+
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.filter_placeholder'      => 'Filter files...',
 	'depot.preview'                 => 'Preview',

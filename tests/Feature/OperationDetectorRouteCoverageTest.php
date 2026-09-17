@@ -82,6 +82,7 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'api-docs',
 		'apikey-create',
 		'apikey-delete',
+		'apple-touch-icon', // /apple-touch-icon.png — a public asset like /favicon.ico
 		'applenews-feed',
 		'automation-webhook',
 		'cache-delete',

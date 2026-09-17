@@ -90,14 +90,12 @@
 			"help": "Optional vector icon, served as /favicon.svg and listed before the PNG so browsers that can use it do."
 		},
 		"themeColor": {
-			"type": "string",
-			"field": "text",
+			"$ref": "https://www.totalcms.co/schemas/properties/color.json",
+			"field": "color",
 			"label": "Theme Color",
-			"help": "Hex colour for the browser chrome around the page on phones (meta theme-color). Leave empty to emit none.",
-			"placeholder": "#f17724",
-			"default": "",
+			"help": "Tints the browser chrome around the page on phones (meta theme-color). Clear it to emit none.",
 			"settings": {
-				"pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+				"clearable": true
 			}
 		},
 		"sameAs": {

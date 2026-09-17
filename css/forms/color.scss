@@ -37,3 +37,41 @@ input[type="color"] {
         box-shadow : none;
     }
 }
+// Clearable colour: the swatch sits beside a "no colour" button; while the
+// field is empty the swatch fades so the black the native input insists on
+// showing does not read as the value.
+.color-field.color-clearable {
+    .form-group {
+        display     : flex;
+        align-items : center;
+        gap         : 0.75rem;
+    }
+
+    .color-clear {
+        width           : 28px;
+        height          : 28px;
+        border-radius   : 50%;
+        border          : 1px solid oklch(var(--totalform-border-color));
+        background      : oklch(var(--totalform-nearwhite));
+        color           : oklch(var(--totalform-darkgray));
+        font-size       : 1.1rem;
+        line-height     : 1;
+        cursor          : pointer;
+
+        &:hover {
+            color        : oklch(var(--totalform-accent));
+            border-color : oklch(var(--totalform-accent));
+        }
+    }
+
+    &.color-empty {
+        input[type="color"] {
+            opacity : 0.3;
+        }
+
+        .color-clear {
+            opacity        : 0.4;
+            pointer-events : none;
+        }
+    }
+}

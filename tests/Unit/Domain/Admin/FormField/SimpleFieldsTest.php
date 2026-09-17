@@ -32,6 +32,23 @@ describe('Simple form fields', function (): void {
 		expect($ref->getValue($field))->toBeNull();
 	});
 
+	test('ColorField → a clearable field renders a clear button and marks an empty value', function (): void {
+		$this->form->method('t')->willReturnCallback(static fn (string $key, string $default = ''): string => $default);
+
+		$empty = (new ColorField(form: $this->form, name: 'accent', value: '', settings: ['clearable' => true]))->build();
+		expect($empty)->toContain('class="form-field color-field  color-clearable color-empty"')
+			->toContain('<button type="button" class="color-clear"')
+			->toContain('No color');
+
+		$set = (new ColorField(form: $this->form, name: 'accent', value: ['hex' => '#ff0000'], settings: ['clearable' => true]))->build();
+		expect($set)->toContain('color-clearable')->not->toContain('color-empty');
+	});
+
+	test('ColorField → without the setting there is no clear button', function (): void {
+		$html = (new ColorField(form: $this->form, name: 'accent', value: ''))->build();
+		expect($html)->not->toContain('color-clear')->not->toContain('color-clearable');
+	});
+
 	test('ColorField → array value is reduced to its hex key', function (): void {
 		$field = new ColorField(
 			form : $this->form,

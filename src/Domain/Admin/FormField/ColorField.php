@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Admin\FormField;
 
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+
 class ColorField extends FormField
 {
 	protected string $defaultInputType = 'color';
@@ -40,5 +42,50 @@ class ColorField extends FormField
 		$attributes = array_filter($attributes, fn ($x): bool => !is_null($x));
 
 		return $attributes;
+	}
+
+	/**
+	 * A native colour input always holds a colour, so a clearable field gets a
+	 * button that marks it empty; the JavaScript sends '' while the mark is on
+	 * and lifts it the moment a colour is picked. Off unless the schema asks.
+	 */
+	public function buildFormField(): string
+	{
+		$field = parent::buildFormField();
+		if (!$this->clearable()) {
+			return $field;
+		}
+
+		$label = $this->t('color.clear', 'No color');
+
+		return $field . HTMLUtils::element('button', '&times;', [
+			'type'       => 'button',
+			'class'      => 'color-clear',
+			'title'      => $label,
+			'aria-label' => $label,
+		]);
+	}
+
+	/**
+	 * @param array<string,string> $extraStyles
+	 * @param list<string>         $extraClasses
+	 *
+	 * @return array<string,string>
+	 */
+	protected function buildFieldAttributes(array $extraStyles = [], array $extraClasses = []): array
+	{
+		if ($this->clearable()) {
+			$extraClasses[] = 'color-clearable';
+			if ($this->value === null) {
+				$extraClasses[] = 'color-empty';
+			}
+		}
+
+		return parent::buildFieldAttributes($extraStyles, $extraClasses);
+	}
+
+	private function clearable(): bool
+	{
+		return filter_var($this->settings['clearable'] ?? false, FILTER_VALIDATE_BOOL);
 	}
 }

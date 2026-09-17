@@ -46,6 +46,7 @@ final readonly class SeoSettings
 	 * @param string $touchIcon The 180px Apple touch icon: the Touch Icon upload, else the Icon, else `''`
 	 * @param string $themeColor Lower-case hex, or `''`
 	 * @param string $manifest Absolute URL of the web app manifest, when a Site Builder page routes `/manifest.webmanifest`; else `''`
+	 * @param string $touchIconProperty The record property the touch icon is cut from: `touchIcon` when uploaded, else `icon`, else `''`
 	 */
 	public function __construct(
 		public string $siteName,
@@ -71,6 +72,7 @@ final readonly class SeoSettings
 		public string $touchIcon = '',
 		public string $themeColor = '',
 		public string $manifest = '',
+		public string $touchIconProperty = '',
 	) {
 	}
 
@@ -141,14 +143,14 @@ final readonly class SeoSettings
 			touchIcon: $str('touchIcon180'),
 			themeColor: self::hex($data['themeColor'] ?? null),
 			manifest: $str('manifestUrl'),
+			touchIconProperty: $str('touchIconProperty'),
 		);
 	}
 
 	/**
-	 * A hex colour, lower-cased. The field is plain text — a colour picker
-	 * input cannot be empty, and an optional colour must be able to be —
-	 * but a `{hex, oklch}` object is accepted too. Anything that is not a
-	 * hex colour is dropped rather than printed.
+	 * A hex colour, lower-cased, from the colour field's `{hex, oklch}` object
+	 * or a plain string. The field is clearable, so '' means no tag. Anything
+	 * that is not a hex colour is dropped rather than printed.
 	 */
 	private static function hex(mixed $color): string
 	{
@@ -188,6 +190,7 @@ final readonly class SeoSettings
 			touchIcon: $this->touchIcon,
 			themeColor: $this->themeColor,
 			manifest: $this->manifest,
+			touchIconProperty: $this->touchIconProperty,
 		);
 	}
 }

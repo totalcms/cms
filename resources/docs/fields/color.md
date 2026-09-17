@@ -33,8 +33,9 @@ All optional.
 
 | Setting | Purpose | Default |
 |---|---|---|
-| `default` | Starting color for new objects (any accepted format) | empty → `#000000` |
+| `default` | Starting color for new objects (any accepted format) | empty → `#000000` (or empty, with `clearable`) |
 | `options` | Preset swatches offered alongside the picker (see below) | none |
+| `clearable` | Let the field hold no colour at all. Adds a **No color** button beside the swatch; a cleared field stores `''` instead of a colour, and `object.color.hex` is empty. A colour picker can never be empty on its own, which is why an optional colour was stored as black without this. | `false` |
 
 ```json
 {
