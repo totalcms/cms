@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Admin\FormField\ColorField;
+use TotalCMS\Domain\Admin\FormField\ListField;
 use TotalCMS\Domain\Admin\FormField\PriceField;
 use TotalCMS\Domain\Admin\FormField\RangeField;
 use TotalCMS\Domain\Admin\FormField\StyledtextField;
@@ -21,6 +22,30 @@ describe('Simple form fields', function (): void {
 		$this->form     = $this->createMock(TotalForm::class);
 		$this->form->id = '';
 		$this->form->method('isEditMode')->willReturn(false);
+	});
+
+	// --- ListField with grouped options ---
+
+	test('ListField → a grouped option source renders its optgroups on a new record', function (): void {
+		// `propertyOptions: podcastCategories` returns a grouped map (parent =>
+		// options) for <optgroup>s. The selected-first reorder only knew flat
+		// lists and dropped every group — and it ran for a new record too,
+		// because an empty string is not an empty array — so the podcast
+		// show's Categories picker came up with nothing to choose from.
+		$html = (new ListField(form: $this->form, name: 'categories', value: '', settings: ['propertyOptions' => 'podcastCategories']))->build();
+
+		expect($html)->toContain('<optgroup label="Arts">')
+			->toContain('<option value="Arts &gt; Books"')
+			->toContain('<optgroup label="Technology">');
+		expect(substr_count($html, '<option'))->toBeGreaterThan(100);
+	});
+
+	test('ListField → grouped options keep their groups when values are selected', function (): void {
+		$html = (new ListField(form: $this->form, name: 'categories', value: ['Technology', 'Arts > Books'], settings: ['propertyOptions' => 'podcastCategories']))->build();
+
+		expect($html)->toContain('<optgroup label="Arts">')
+			->toMatch('~<option value="Technology"[^>]*selected~')
+			->toMatch('~<option value="Arts &gt; Books"[^>]*selected~');
 	});
 
 	// --- ColorField ---

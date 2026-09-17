@@ -59,7 +59,7 @@ describe('Podcast schemas', function (): void {
 	});
 
 	test('the show schema requires what Apple requires', function (): void {
-		expect(podcastSchema('podcast')['required'])->toContain('author', 'ownerEmail', 'cover', 'categories', 'description', 'feedUrl');
+		expect(podcastSchema('podcast')['required'])->toContain('author', 'ownerEmail', 'cover', 'categories', 'description');
 	});
 
 	test('the episode index carries every field the feed mapper reads', function (): void {

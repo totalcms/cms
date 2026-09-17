@@ -41,9 +41,19 @@ class Extension implements ExtensionInterface
 			$context->get(Config::class),
 		);
 
+		// A page rendering the feed is the feed's address, so the request path is
+		// the default `self`; the option overrides it, and outside a request (CLI,
+		// tests) the route the extension serves the show at is used.
 		$context->addTwigFunction(new TwigFunction(
 			'podcast_feed',
-			static fn (string $show = 'podcast', array $options = []): Markup => new Markup($feed->render($show, $options), 'UTF-8'),
+			static function (string $show = 'podcast', array $options = []) use ($feed): Markup {
+				$path = parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+				if (trim((string)($options['self'] ?? '')) === '' && is_string($path) && $path !== '') {
+					$options['self'] = $path;
+				}
+
+				return new Markup($feed->render($show, $options), 'UTF-8');
+			},
 			['is_safe' => ['html']],
 		));
 

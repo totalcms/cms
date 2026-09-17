@@ -21,14 +21,27 @@ final readonly class PodcastFeed
 	) {
 	}
 
+	/** The address the extension serves a show's feed at, site-relative. */
+	public static function routePath(string $showCollection): string
+	{
+		return '/api/ext/totalcms/podcast/feed' . ($showCollection === 'podcast' ? '' : '/' . $showCollection);
+	}
+
 	/**
 	 * @param string              $showCollection the singleton collection holding the show record
-	 * @param array<string,mixed> $options        link, language, copyright, self, now — see PodcastFeedMapper
+	 * @param array<string,mixed> $options        link, language, copyright, now, and `self` — the feed's own
+	 *                                            address, which apps re-fetch with and the Podcast Index GUID
+	 *                                            derives from. Defaults to the route the extension serves the
+	 *                                            show at; a page rendering the feed passes its own URL.
 	 *
 	 * @throws \DomainException when the show has no record or names no episodes collection
 	 */
 	public function render(string $showCollection, array $options = []): string
 	{
+		if (trim((string)($options['self'] ?? '')) === '') {
+			$options['self'] = self::routePath($showCollection);
+		}
+
 		$show = $this->collections->object($showCollection, $showCollection);
 		if ($show === []) {
 			throw new \DomainException(sprintf(

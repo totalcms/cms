@@ -29,7 +29,6 @@ function podcastShow(array $overrides = []): array
 		'description' => '<p>About <b>the</b> show</p>',
 		'author'      => 'Joe Workman',
 		'ownerEmail'  => 'joe@example.com',
-		'feedUrl'     => 'https://example.com/show.xml',
 		'cover'       => ['name' => 'cover.png', 'mime' => 'image/png'],
 		'categories'  => ['Technology', 'Business > Entrepreneurship'],
 		'explicit'    => false,
@@ -68,12 +67,12 @@ function mapPodcast(array $show, array $episodes, array $options = []): array
 
 describe('PodcastFeedMapper meta', function (): void {
 	test('maps the show onto the feed meta and podcast block', function (): void {
-		$meta = mapPodcast(podcastShow(), [])['meta'];
+		$meta = mapPodcast(podcastShow(), [], ['self' => '/feeds/show.xml'])['meta'];
 
 		expect($meta['title'])->toBe('The Show');
 		expect($meta['description'])->toBe('About the show');
 		expect($meta['link'])->toBe('/');
-		expect($meta['self'])->toBe('https://example.com/show.xml');
+		expect($meta['self'])->toBe('/feeds/show.xml');
 		expect($meta['podcast']['author'])->toBe('Joe Workman');
 		expect($meta['podcast']['owner'])->toBe(['name' => 'Joe Workman', 'email' => 'joe@example.com']);
 		expect($meta['podcast']['image'])->toBe('/tcms/imageworks/podcast/podcast/cover.png');
@@ -83,11 +82,14 @@ describe('PodcastFeedMapper meta', function (): void {
 		expect($meta['podcast'])->not->toHaveKeys(['funding', 'locked', 'newFeedUrl', 'guid']);
 	});
 
-	test('falls back to /podcast.xml when the show has no feed url', function (): void {
+	test('the address comes from the caller, never the show', function (): void {
+		// The extension knows where it serves the feed and a page knows its
+		// own URL, so the show record carries no feed address of its own.
 		$show = podcastShow();
-		unset($show['feedUrl']);
+		$show = podcastShow();
 
-		expect(mapPodcast($show, [])['meta']['self'])->toBe('/podcast.xml');
+		expect(mapPodcast($show, [], ['self' => '/api/ext/totalcms/podcast/feed'])['meta']['self'])->toBe('/api/ext/totalcms/podcast/feed');
+		expect(mapPodcast($show, [])['meta']['self'])->toBe('');
 	});
 
 	test('honours self, link, language and copyright options', function (): void {

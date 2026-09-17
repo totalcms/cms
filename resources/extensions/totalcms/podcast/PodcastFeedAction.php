@@ -30,7 +30,8 @@ final readonly class PodcastFeedAction
 		}
 
 		try {
-			$xml = $this->feed->render($show);
+			// The request is the feed's address: FeedWriter makes the path absolute on the site's origin.
+			$xml = $this->feed->render($show, ['self' => $request->getUri()->getPath()]);
 		} catch (\DomainException $e) {
 			$response->getBody()->write($e->getMessage());
 

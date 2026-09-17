@@ -93,7 +93,7 @@ final readonly class PodcastFeedMapper
 			// The show record owns its feed URL: apps re-fetch with it and the
 			// Podcast Index guid derives from it, so it must not drift with a
 			// template edit. An explicit option still wins for odd setups.
-			'self'        => (string)($options['self'] ?? (($show['feedUrl'] ?? '') !== '' ? $show['feedUrl'] : '/podcast.xml')),
+			'self'        => (string)($options['self'] ?? ''),
 			'description' => $this->text((string)($show['description'] ?? '')),
 			'podcast'     => $podcast,
 		];

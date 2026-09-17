@@ -4,7 +4,7 @@
 	"id": "podcast",
 	"type": "object",
 	"description": "A podcast show — the channel-level details Apple Podcasts, Spotify and the open directories read. Create the collection as a Single Object Collection; episodes live in a separate collection built from the podcast-episode schema.",
-	"formgrid": "id id\ntitle episodes\nfeedUrl feedUrl\nauthor ownerEmail\ndescription description\ncover cover\ncategories categories\nexplicit type\n---Optional---\nfundingUrl fundingTitle\nlocked newFeedUrl\nguid guid\nupdated created",
+	"formgrid": "id id\ntitle episodes\nauthor ownerEmail\ndescription description\ncover cover\ncategories categories\nexplicit type\n---Optional---\nfundingUrl fundingTitle\nlocked newFeedUrl\nguid guid\nupdated created",
 	"properties": {
 		"id": {
 			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
@@ -65,12 +65,6 @@
 			"help": "Square artwork between 1400×1400 and 3000×3000 pixels, JPG or PNG. Apple rejects anything else. Required.",
 			"field": "image",
 			"factory": "imageShapes(3000,3000)"
-		},
-		"feedUrl": {
-			"$ref": "https://www.totalcms.co/schemas/properties/url.json",
-			"label": "Feed URL",
-			"help": "The public URL of this show's feed, e.g. https://example.com/podcast.xml. Apps re-fetch with it and the show's permanent identifier is derived from it — set it once and do not change it.",
-			"field": "url"
 		},
 		"categories": {
 			"$ref": "https://www.totalcms.co/schemas/properties/list.json",
@@ -136,7 +130,7 @@
 		"guid": {
 			"type": "string",
 			"label": "Podcast GUID",
-			"help": "Leave blank unless you are migrating a show that already has a Podcast Index GUID. When blank it is derived from the feed URL and must then never change.",
+			"help": "Leave blank unless you are migrating a show that already has a Podcast Index GUID. When blank it is derived from the feed's address — the extension's route, or the page that renders podcast_feed() — and must then never change: copy it here before moving the feed.",
 			"field": "text"
 		},
 		"created": {
@@ -169,7 +163,6 @@
 		"description",
 		"author",
 		"ownerEmail",
-		"feedUrl",
 		"cover",
 		"categories",
 		"created",
@@ -182,7 +175,6 @@
 		"description",
 		"author",
 		"ownerEmail",
-		"feedUrl",
 		"cover",
 		"categories",
 		"explicit",

@@ -22,7 +22,13 @@ class ListField extends MultiselectField
 	{
 		parent::buildOptions($options);
 
-		if ($this->value !== []) {
+		// Grouped options (string key => array of options, rendered as
+		// <optgroup>s) are left in group order: hoisting the selected entries
+		// out of their groups would break the groups, and the old reorder saw
+		// no `value` key on a group and dropped every one of them — the podcast
+		// show's Categories picker came up empty for any show that had saved
+		// categories. Selection state still renders inside the groups.
+		if ($this->value !== [] && !self::hasGroupedOptions($this->options)) {
 			// Reorder options to put selected values first, maintaining their order from $this->value
 			$valueOptions     = [];
 			$remainingOptions = [];
@@ -62,5 +68,17 @@ class ListField extends MultiselectField
 		$selected = is_array($this->value) ? $this->value : (string)($this->value ?? '');
 
 		return $options . HTMLUtils::options($this->options, $selected);
+	}
+
+	/** @param array<mixed> $options */
+	private static function hasGroupedOptions(array $options): bool
+	{
+		foreach ($options as $key => $option) {
+			if (is_string($key) && is_array($option) && !isset($option['value'])) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

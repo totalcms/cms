@@ -48,9 +48,6 @@ save a show the directories would reject:
   JPG or PNG. Upload the real file at that size; the feed serves it as-is.
 - **Categories** come from Apple's list. Choose up to three. The first one is
   the primary category that directories show.
-- **Feed URL** is the public address of the feed you are about to publish,
-  for example `https://example.com/podcast.xml`. Apps re-fetch with it, and
-  the show's permanent identifier is derived from it. Set it once.
 - **Owner email** is where Apple and Spotify send ownership notices. It goes
   in the feed but is never shown in apps.
 - **Explicit** must be answered either way.
@@ -95,8 +92,7 @@ The feed is already published. The extension serves it, as `application/rss+xml`
 
 That address reads the show in the collection named `podcast`. Any other show
 is served by its collection id at `/api/ext/totalcms/podcast/feed/{show}`.
-Put the address in the show's **Feed URL** field, hand it to the directories,
-and you are done — no page, no template, and it works the same on a Stacks
+Hand that address to the directories and you are done — no page, no template, and it works the same on a Stacks
 site as on Site Builder. A show with no record, or one that names no episodes
 collection, answers 404 with a message that says which, rather than an empty
 feed the directories would reject.
@@ -110,10 +106,10 @@ page. In Site Builder, add a page at `/podcast.xml` whose template is:
 
 The argument is the show collection and defaults to `podcast`; the episodes
 come from the show record. Options: `link` (your site's home page, default
-`/`), `language` (for example `en-US`), `copyright`, and `self` to override
-the feed URL for one rendering. The page must be served as XML — the router
-does that for a `.xml` route — and the show's **Feed URL** should then be
-that page's address.
+`/`), `language` (for example `en-US`), `copyright`, and `self` to name a
+different address for one rendering. The page must be served as XML — the
+router does that for a `.xml` route. The page's own URL becomes the feed's
+address: apps re-fetch with it and the show's identifier derives from it.
 
 Either way the feed is the show's details, the episodes newest first, an
 enclosure for each audio file, and the iTunes and Podcast Index tags the
@@ -135,10 +131,12 @@ the Podcast Index. Most other apps read from those three.
 ## Moving hosts or feed URLs
 
 Podcast apps identify your show by a permanent GUID, which Total CMS derives
-from the show's **Feed URL** field. If you ever change that field, copy the
-existing GUID from your feed into the show's **Podcast GUID** field first,
-so the identifier survives, and set **New feed URL** so apps follow you.
-Change the GUID and every listener's app sees a brand-new show.
+from the feed's address — the extension's route, or the page that renders
+`podcast_feed()`. Moving the feed, including from the route to a page of your
+own, changes that address. Before you do, copy the existing GUID from your
+feed into the show's **Podcast GUID** field so the identifier survives, and
+set **New feed URL** so apps follow you. Change the GUID and every listener's
+app sees a brand-new show.
 
 Episode IDs work the same way: the ID is the item's identity in the feed.
 Change it and the episode is re-announced as new.

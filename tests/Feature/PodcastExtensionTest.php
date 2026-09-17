@@ -53,7 +53,6 @@ beforeEach(function (): void {
 		'description' => 'About the show',
 		'author'      => 'Joe Workman',
 		'ownerEmail'  => 'joe@example.com',
-		'feedUrl'     => 'https://example.com/podcast.xml',
 		'cover'       => ['name' => 'cover.png', 'mime' => 'image/png', 'alt' => 'Cover', 'exif' => ['nodata' => ''], 'featured' => false, 'focalpoint' => ['x' => 50, 'y' => 50], 'link' => '', 'tags' => []],
 		'categories'  => ['Technology', 'Business > Entrepreneurship'],
 		'explicit'    => false,
@@ -81,9 +80,13 @@ beforeEach(function (): void {
 	$this->render = fn (string $template): string => $container->get(TwigEngine::class)->renderString($template, []);
 });
 
-function assertPodcastFeed(string $xml): void
+function assertPodcastFeed(string $xml, string $selfPath = '/api/ext/totalcms/podcast/feed'): void
 {
-	expect($xml)->toContain('href="https://example.com/podcast.xml"');
+	// The feed's own address is where it is served: the route by default, and
+	// the page's URL when a page renders it. The GUID derives from it. The
+	// writer makes the path absolute on the site's origin; the path is what
+	// this asserts.
+	expect($xml)->toMatch('~<atom:link rel="self"[^>]*href="https?://totalcms\.test' . preg_quote($selfPath, '~') . '"~');
 	expect($xml)->toContain('<itunes:author>Joe Workman</itunes:author>');
 	expect($xml)->toContain('<itunes:email>joe@example.com</itunes:email>');
 	expect($xml)->toContain('/imageworks/podcast/podcast/cover.png"');
@@ -118,13 +121,16 @@ it('serves any show by its collection at /feed/{show}', function (): void {
 	$response = get('/api/ext/totalcms/podcast/feed/podcast');
 
 	expect($response->getStatusCode())->toBe(200);
-	assertPodcastFeed((string)$response->getBody());
+	assertPodcastFeed((string)$response->getBody(), '/api/ext/totalcms/podcast/feed/podcast');
 });
 
 it('renders the same feed from podcast_feed() in a template', function (): void {
+	// Outside a request there is no page URL, so the route stands in as the address.
 	$xml = ($this->render)('{{ podcast_feed() }}');
 	assertPodcastFeed($xml);
 	expect(($this->render)("{{ podcast_feed('podcast') }}"))->toBe($xml);
+	// A page rendering the feed passes its own address through `self`.
+	assertPodcastFeed(($this->render)("{{ podcast_feed('podcast', {self: '/podcast.xml'}) }}"), '/podcast.xml');
 });
 
 it('is a 404 that names the show when the show has no record', function (): void {
