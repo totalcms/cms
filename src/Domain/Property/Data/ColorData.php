@@ -56,7 +56,21 @@ class ColorData extends PropertyData implements \Stringable
 			return;
 		}
 
-		// If OKLCH values are provided, use them to generate hex (preserving color space)
+		// A stored color carries both. The hex is the source of truth: it is
+		// what was typed or picked, exact to the channel, while the OKLCH
+		// coordinates are rounded to three decimals for display and cannot
+		// always land back on the same 8-bit value — rebuilding the hex from
+		// them shifted #F17724 to #f17723 on every read. The coordinates are
+		// kept as stored; they still describe the color to display precision.
+		$hex = trim((string)($color['hex'] ?? ''));
+		if ($hex !== '' && isset($color['oklch']) && is_array($color['oklch'])) {
+			$this->hex   = $hex;
+			$this->oklch = $color['oklch'];
+
+			return;
+		}
+
+		// Only OKLCH given (a color authored in that space): derive the hex once.
 		if (isset($color['oklch']) && is_array($color['oklch'])) {
 			$this->oklch = $color['oklch'];
 			$this->hex   = self::oklchToHex($this->oklch);
@@ -65,7 +79,7 @@ class ColorData extends PropertyData implements \Stringable
 		}
 
 		// Fallback to hex-first approach
-		$this->hex   = $color['hex'] ?? '#000000';
+		$this->hex   = $hex !== '' ? $hex : '#000000';
 		$this->oklch = self::hexToOklch($this->hex);
 	}
 

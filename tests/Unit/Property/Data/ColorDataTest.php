@@ -61,6 +61,25 @@ test('constructor with default argument defaults to black', function (): void {
 	expect($color->hex)->toBe('#000000');
 });
 
+// ===== Round trip through storage =====
+
+test('a stored hex survives being read back unchanged', function (): void {
+	// A save writes hex plus OKLCH rounded to three decimals. The read used to
+	// rebuild the hex from those rounded coordinates, which landed one channel
+	// step off for some colors: #F17724 came back as #f17723 and a brand color
+	// typed into the admin was not the color that rendered. When both are
+	// stored, the hex is the source of truth; the coordinates describe it.
+	foreach (['#F17724', '#1d9a6c', '#5f3dc4', '#ff0000', '#090e1b', '#abc'] as $hex) {
+		$stored = (new ColorData($hex))->transform();
+		expect((new ColorData($stored))->hex)->toBe($hex, "round trip of {$hex}");
+	}
+});
+
+test('a stored hex is kept even when the coordinates disagree with it', function (): void {
+	$color = new ColorData(['hex' => '#ff0000', 'oklch' => ['l' => 0, 'c' => 0, 'h' => 0]]);
+	expect($color->hex)->toBe('#ff0000')->and($color->oklch)->toBe(['l' => 0, 'c' => 0, 'h' => 0]);
+});
+
 // ===== Empty state (opt-in via the `clearable` setting) =====
 
 test('a clearable color with an empty value stays empty', function (): void {
