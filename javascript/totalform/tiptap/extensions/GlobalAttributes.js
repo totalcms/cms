@@ -26,6 +26,9 @@ const BLOCK_TYPES = [
 	'tableRow',
 	'tableCell',
 	'tableHeader',
+	'figure',
+	'image',
+	'horizontalRule',
 ];
 
 // The marks that wrap arbitrary inline HTML. Deliberately not bold/italic and
@@ -75,6 +78,7 @@ const GlobalAttributes = Extension.create({
 				attributes: {
 					class: passthrough('class'),
 					id: passthrough('id'),
+					style: passthrough('style'),
 					dataAttrs,
 				},
 			},
@@ -87,6 +91,14 @@ const GlobalAttributes = Extension.create({
 					title: passthrough('title'),
 					dataAttrs,
 				},
+			},
+			// The link mark declares class but not style, so an inline style
+			// on <a> was dropped (customer report, 2026-09-16). Spans are not
+			// listed: textStyle already parses span[style], and a second
+			// carrier would duplicate the declaration on every save.
+			{
+				types: ['link'],
+				attributes: { style: passthrough('style') },
 			},
 		];
 	},

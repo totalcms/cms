@@ -331,7 +331,10 @@ const ImageUpload = Image.extend({
 	},
 
 	renderHTML({ HTMLAttributes }) {
-		const classes = [];
+		// Authored classes first, then the editor's own. The ste-img-* tokens
+		// are regenerated from float/size each render, so strip stale ones
+		// from the authored set to keep the round trip stable.
+		const classes = String(HTMLAttributes.class || '').split(/\s+/).filter((c) => c && !c.startsWith('ste-img--'));
 		if (HTMLAttributes['data-float']) classes.push(`ste-img--float-${HTMLAttributes['data-float']}`);
 		if (HTMLAttributes['data-size']) classes.push(`ste-img--${HTMLAttributes['data-size']}`);
 

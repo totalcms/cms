@@ -7,6 +7,17 @@
 
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
+import { ListItem } from '@tiptap/extension-list';
+
+// Tiptap's list item is `paragraph block*`: the first child must be a
+// paragraph. Hand-authored steps that open with a heading, a figure or a
+// classed <div> did not fit, so the parser emptied the item, pushed its
+// content out after the list and re-wrapped the following items in a stray
+// <ul> (customer report, 2026-09-16). Any block may lead now; bare text still
+// wraps in a paragraph, and cleanHTML() still unwraps a lone one.
+export const BlockListItem = ListItem.extend({
+	content: 'block+',
+});
 
 export const BULLET_STYLES = [
 	{ value: '',              label: 'Disc',   icon: 'unordered-list' },

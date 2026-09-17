@@ -7,6 +7,33 @@ description: "Configure the Tiptap rich text editor in Total CMS with toolbar op
 
 The styled text field provides a rich text editor powered by Tiptap. It supports a wide range of settings for customizing the editor's appearance, toolbar, and behavior.
 
+## Not a Generic HTML Editor
+
+Styled text is a structured editor, not an HTML pass-through. It parses the stored HTML into a document model of the elements it knows, and writes that model back out on save. Anything the model does not describe is normalized or dropped, **and the save reports success either way** — there is no warning. If you hand-author HTML into a styled text field and then open the record in the admin, expect the markup to come back changed.
+
+What survives a load-and-save:
+
+- Headings, paragraphs, lists, blockquotes, code blocks, tables, images, figures, links, horizontal rules, hard breaks, and the inline formatting the toolbar offers
+- `class`, `id`, `style` and `data-*` attributes on those blocks, and on links and styled spans
+- Block wrappers such as `section`, `aside`, `article`, `nav`, `header`, `footer`, `details`, `summary` and any `div` with a class or id — kept with their element name and attributes, and shown in the editor as a labelled block whose contents you can edit
+- Inline elements such as `kbd`, `abbr`, `cite`, `mark`, `time`, `small` and `button`, with their attributes
+- Text inside a wrapper is normalized into paragraphs, so `<summary>Q</summary>` comes back as `<summary><p>Q</p></summary>`
+- Inline `<svg>`, kept verbatim
+- A list item may begin with any block — a heading, a figure or a wrapper — not only a paragraph
+
+What changes:
+
+- Presentational tags are normalized: `<b>` becomes `<strong>`, `<i>` becomes `<em>`
+- A list item holding a single paragraph is unwrapped to bare text
+- A `<figure>` with an image gains `data-type="figure-image"` and an `ste-figure` class alongside your own classes; an image gains `ste-img--*` classes when it has a float or size
+- Style declarations are reserialized by the browser (`color:red` becomes `color: red;`)
+- A `<p>` containing only an image is split into an empty paragraph and a block image
+- Attributes on `<strong>`, `<em>`, `<u>`, `<s>`, `<code>` and the other toolbar marks are dropped
+
+What is dropped: any element not listed above (`iframe`, `object`, `canvas`, `form` controls, `script`, `style`, custom elements), a `div` without a class or id (its contents are kept), and `<a>` attributes other than `href`, `target`, `rel`, `class`, `style`, `title` and `data-*`.
+
+For content you author by hand and want stored byte-for-byte, use a [code editor](fields/code-editor) field with `"mode": "html"` and render it with the `raw` filter. Keep styled text for content editors will actually edit in the toolbar.
+
 ## Editor Height
 
 Control the editor's height with these settings:

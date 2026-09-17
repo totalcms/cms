@@ -32,6 +32,9 @@ const InlineClass = Mark.create({
 		return [
 			{
 				tag: 'span[class]',
+				// Not consuming: a span carrying both a class and a style the
+				// editor does not model needs inlineStyle to see it too.
+				consuming: false,
 				getAttrs: (element) => {
 					const className = element.getAttribute('class');
 					// Only match spans with classes (not ProseMirror internal spans)

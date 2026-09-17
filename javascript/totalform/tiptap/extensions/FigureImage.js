@@ -76,8 +76,12 @@ const FigureImage = Node.create({
 		if (floatVal) figureAttrs['data-float'] = floatVal;
 		if (size) figureAttrs['data-size'] = size;
 
-		// Build class string
-		const classes = ['ste-figure'];
+		// Authored classes first (templates style them), then the editor's
+		// own. The ste-* tokens are regenerated from float/size each render,
+		// so strip stale ones from the authored set to keep the round trip
+		// stable.
+		const classes = String(rest.class || '').split(/\s+/).filter((c) => c && !c.startsWith('ste-figure'));
+		classes.push('ste-figure');
 		if (floatVal) classes.push(`ste-figure--${floatVal}`);
 		if (size) classes.push(`ste-figure--${size}`);
 		figureAttrs.class = classes.join(' ');

@@ -17,6 +17,9 @@ const RawHTML = Node.create({
 		return {
 			tagName: {
 				default: 'div',
+				// Without this every wrapper rendered back as a <div>: a
+				// <section> or <aside> lost its element on the first save.
+				parseHTML: (element) => element.tagName.toLowerCase(),
 			},
 			htmlAttrs: {
 				default: '{}',

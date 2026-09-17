@@ -41,7 +41,8 @@ import InlineElement from './extensions/InlineElement.js';
 import AnchorId from './extensions/AnchorId.js';
 import Indent from './extensions/Indent.js';
 import GlobalAttributes from './extensions/GlobalAttributes.js';
-import { StyledBulletList, StyledOrderedList } from './extensions/ListStyle.js';
+import { StyledBulletList, StyledOrderedList, BlockListItem } from './extensions/ListStyle.js';
+import { SvgInline, SvgBlock } from './extensions/SvgNode.js';
 
 import TiptapToolbar from './TiptapToolbar.js';
 import TiptapCodeView from './TiptapCodeView.js';
@@ -154,9 +155,11 @@ export default class TiptapEditor {
 				underline: false,
 				bulletList: false,
 				orderedList: false,
+				listItem: false,
 			}),
 			StyledBulletList,
 			StyledOrderedList,
+			BlockListItem,
 			Underline,
 			TextAlign.configure({
 				types: ['heading', 'paragraph'],
@@ -198,6 +201,8 @@ export default class TiptapEditor {
 			Superscript,
 			Subscript,
 			RawHTML,
+			SvgInline,
+			SvgBlock,
 			GlobalAttributes,
 			InlineClass,
 		InlineStyle,
