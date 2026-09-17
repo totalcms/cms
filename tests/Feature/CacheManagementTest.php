@@ -279,9 +279,12 @@ describe('Cache Reporter', function (): void {
 		// Should have cache version
 		expect($stats['cache_version'])->toBeString();
 
-		// Should have available backends
+		// Should list the enabled backends only: config/local.test.php turns
+		// Redis and Memcached off so no test reaches a shared network cache.
 		expect($stats['available_backends'])->toBeArray();
-		expect($stats['available_backends'])->toHaveKeys(['filesystem', 'opcache', 'redis', 'memcached']);
+		expect($stats['available_backends'])->toHaveKeys(['filesystem', 'opcache']);
+		expect($stats['available_backends'])->not->toHaveKey('redis');
+		expect($stats['available_backends'])->not->toHaveKey('memcached');
 
 		// Services should be an array
 		expect($stats['services'])->toBeArray();

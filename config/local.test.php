@@ -38,8 +38,11 @@ $settings['logger']['path']   = $settings['root'] . '/logs';
 $settings['sentry']           = false;
 $settings['auth']['enable']   = false;
 
-// $settings['cache'] = [
-// 	'filesystem' =>  false,
-// 	'redis' =>  false,
-// 	'memcached' =>  false,
-// ];
+// Never reach a network cache from a test. Redis and Memcached are one shared
+// store: every parallel worker sees the same keys, and the keys outlive the
+// run. Both showed up as real failures — a worker served another worker's
+// seo-site record, and a reserved schema edited on disk kept validating as
+// the hour-old copy Redis still held. APCu is per process and the filesystem
+// cache is per worker (tests/worker-paths.php), so those stay on.
+$settings['cache']['redis']     = false;
+$settings['cache']['memcached'] = false;
