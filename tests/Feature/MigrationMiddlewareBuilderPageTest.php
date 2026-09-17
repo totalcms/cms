@@ -36,7 +36,7 @@ beforeEach(function (): void {
 	@mkdir(cmsDataDir() . 'builder/pages', 0755, true);
 	file_put_contents(templatePath('about', 'pages'), '<h1>{{ page.title }}</h1>');
 
-	// A pre-3.5.3 page written straight to disk: the saver would run it through
+	// A pre-3.6 page written straight to disk: the saver would run it through
 	// the migrated schema and drop the very key the migration exists to move.
 	file_put_contents(objectPath('builder-pages', 'about'), json_encode([
 		'id'          => 'about',

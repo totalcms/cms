@@ -16,7 +16,7 @@ use TotalCMS\Domain\Video\Data\VideoInfo;
  * key set is fixed by this class, not by a user-editable sub-schema, so there
  * is no card and no card `id`. The stored shape is documented by
  * `resources/schemas/properties/video.json` and in
- * docs/planning/3.5.x/video-field.md ("Stored shape").
+ * docs/planning/done/video-field.md ("Stored shape").
  */
 class VideoData extends PropertyData implements \Stringable
 {

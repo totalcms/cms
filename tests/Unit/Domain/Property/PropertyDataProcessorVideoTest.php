@@ -18,7 +18,7 @@ use TotalCMS\Support\HttpResponse;
 
 /**
  * PropertyDataProcessor's video branch (save pipeline, spec
- * "Save pipeline" in docs/planning/3.5.x/video-field.md).
+ * "Save pipeline" in docs/planning/done/video-field.md).
  *
  * VideoUrlResolver and VideoMetadataFetcher are both `final`, so they can't
  * be doubled directly (PHPUnit refuses to mock final classes). Instead we

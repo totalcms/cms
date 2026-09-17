@@ -71,7 +71,7 @@ return function (App $app): void {
 
 	// One-shot data/layout migrations (e.g. legacy `tcms-data/templates/` →
 	// `tcms-data/builder/` for pre-3.5 upgrades, builder-page SEO fields for
-	// pre-3.5.3 ones). Runs once per process via a static flag; the ledger
+	// pre-3.6 ones). Runs once per process via a static flag; the ledger
 	// ensures each migration applies at most once per install.
 	//
 	// Like CacheInvalidationMiddleware above, this MUST wrap

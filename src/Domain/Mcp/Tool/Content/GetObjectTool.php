@@ -222,7 +222,7 @@ readonly class GetObjectTool
 					'type'        => 'string',
 					'enum'        => ['markdown', 'html', 'text'],
 					'default'     => 'markdown',
-					'description' => 'Rendered format for content fields. Accepted now for forward-compat; full conversion ships with the Tiptap→markdown converter in 3.5.x.',
+					'description' => 'Rendered format for content fields. Accepted now for forward-compat; full conversion ships with the Tiptap→markdown converter in a later release.',
 				],
 				'locale' => [
 					'type'        => 'string',

@@ -1,7 +1,7 @@
 ---
 title: "SEO"
 description: "One Twig call emits the title, description, canonical, robots, Open Graph, Twitter and JSON-LD for any Site Builder page or collection object."
-since: "3.5.3"
+since: "3.6.0"
 related:
   - collections/sitemap-builder
   - site-builder/twig

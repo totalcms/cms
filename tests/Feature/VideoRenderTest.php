@@ -7,7 +7,7 @@ use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 
 /**
  * cms.render.video() / cms.media.videoPoster() — Twig rendering for the
- * `video` field (docs/planning/3.5.x/video-field.md, "Twig"). Objects are
+ * `video` field (docs/planning/done/video-field.md, "Twig"). Objects are
  * passed directly as arrays (the same "pass object directly" idiom
  * cms.render.image() supports), so no schema/collection/disk setup is
  * needed — these are pure functions of the stored video shape.
