@@ -17,7 +17,8 @@
 | Data Views (saved, materialised cross-collection queries) | `collections/data-views.md` | Pro+ edition **and** per-user access groups; both gates must pass. Twig: `cms.view.get(id)`. |
 | Search (built-in text or Algolia) | `operations/search.md` | With `indexOnSave` on, every save hits the provider — turn it off during bulk imports, then `search:reindex`. |
 | Sitemaps | `collections/sitemap-builder.md` | `/sitemap.xml` is an index; per-collection sitemaps read the collection index, so `seo` must be indexed for noindex to apply. |
-| RSS / Atom / podcast feeds | `twig/feeds.md`, `collections/podcast.md` | `cms.feed.rss()`, `cms.feed.atom()`, `cms.feed.podcast()`. |
+| RSS / Atom feeds | `twig/feeds.md` | `cms.feed.rss()`, `cms.feed.atom()`; a `podcast` block on either adds the iTunes / Podcast Index tags. |
+| Podcasts (bundled extension) | `collections/podcast.md`, `extensions/podcast.md` | Enable `totalcms/podcast`; `podcast` + `podcast-episode` schemas, the show names its episodes collection; feed at `/api/ext/totalcms/podcast/feed[/{show}]` or `podcast_feed(show)` in Twig. |
 
 ## Rendering
 

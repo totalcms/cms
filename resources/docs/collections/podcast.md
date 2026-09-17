@@ -10,22 +10,31 @@ updated: 2026-09-06
 
 # Podcasts
 
-Total CMS ships two schemas and one Twig call that together give you a podcast
-feed the directories accept: `podcast` for the show, `podcast-episode` for the
-episodes, and `cms.feed.podcast()` to turn them into RSS. Standard edition and
-above. There is no admin screen for the feed itself; the collections are the
-editor, and the feed is a page.
+Podcasting ships as the bundled **Podcast** extension: two schemas, `podcast`
+for the show and `podcast-episode` for the episodes, a feed the directories
+accept at an address of its own, and a `podcast_feed()` Twig function for
+sites that want the feed on a page. Standard edition and above. There is no
+admin screen for the feed itself; the collections are the editor.
+
+## 0. Enable the extension
+
+Go to **Admin → Extensions**, find **Podcast**, click **Enable** (or run
+`tcms extension:enable totalcms/podcast`). The two schemas appear in the
+schema list the moment it is on.
 
 ## 1. Create the two collections
 
+**The episodes.** Create a collection from the `podcast-episode` schema. Call
+it `episodes`, or anything you like. Give it a URL (for example `/episodes/`)
+if episodes have their own pages; the feed links each episode to it.
+
 **The show.** Create a collection from the `podcast` schema and tick **Single
 Object Collection** in its settings. A show has exactly one record, so
-opening the collection opens the record. Call the collection `podcast`.
-
-**The episodes.** Create a second collection from the `podcast-episode` schema.
-Call it `episodes`, or anything you like — you name it in the feed call. Give
-it a URL (for example `/episodes/`) if episodes have their own pages; the feed
-links each episode to it.
+opening the collection opens the record. Call the collection `podcast` — that
+name is what the default feed address serves — and in the record pick the
+**Episodes Collection** you just made. A show owns exactly one episodes
+collection, which is what lets a site host several shows: each is its own
+singleton collection naming its own episodes, and each has its own feed.
 
 Neither collection is created for you by **Setup Default Collections**. That
 is deliberate: most sites do not have a podcast.
@@ -78,28 +87,39 @@ feed when the date arrives.
 
 ## 4. Publish the feed
 
-Make a page whose entire content is the feed. In Site Builder, add a page at
-`/podcast.xml` whose template is:
+The feed is already published. The extension serves it, as `application/rss+xml`, at:
 
-```twig
-{{ cms.feed.podcast('podcast', 'episodes') }}
+```
+/api/ext/totalcms/podcast/feed
 ```
 
-The first argument is the show collection, the second the episodes
-collection. The feed's own address comes from the show's **Feed URL** field,
-so make sure the page you create matches it. Options: `link` (your site's
-home page, default `/`), `language` (for example `en-US`), `copyright`, and
-`self` if you need to override the feed URL for one rendering.
+That address reads the show in the collection named `podcast`. Any other show
+is served by its collection id at `/api/ext/totalcms/podcast/feed/{show}`.
+Put the address in the show's **Feed URL** field, hand it to the directories,
+and you are done — no page, no template, and it works the same on a Stacks
+site as on Site Builder. A show with no record, or one that names no episodes
+collection, answers 404 with a message that says which, rather than an empty
+feed the directories would reject.
 
-The page should be served as XML. In Site Builder set the page's content type
-to `application/rss+xml`; in a Stacks project use a PHP page that sets the
-header before calling the CMS.
+If you would rather the feed live at an address of your own, render it on a
+page. In Site Builder, add a page at `/podcast.xml` whose template is:
 
-That is the whole feed: the show's details, the episodes newest first, an
+```twig
+{{ podcast_feed() }}
+```
+
+The argument is the show collection and defaults to `podcast`; the episodes
+come from the show record. Options: `link` (your site's home page, default
+`/`), `language` (for example `en-US`), `copyright`, and `self` to override
+the feed URL for one rendering. The page must be served as XML — the router
+does that for a `.xml` route — and the show's **Feed URL** should then be
+that page's address.
+
+Either way the feed is the show's details, the episodes newest first, an
 enclosure for each audio file, and the iTunes and Podcast Index tags the
 directories read. If you would rather build the feed by hand from your own
-schema, [Feeds](docs/twig/feeds) shows the `podcast` block that this call
-fills in for you.
+schema, [Feeds](docs/twig/feeds) shows the `podcast` block that this fills
+in for you.
 
 ## 5. Validate and submit
 

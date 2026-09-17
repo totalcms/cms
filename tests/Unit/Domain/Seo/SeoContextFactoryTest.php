@@ -185,18 +185,6 @@ final class SeoContextFactoryTest extends TestCase
 		$this->assertSame(['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => 'content', 'image' => 'image'], $ctx->seoBlock);
 	}
 
-	public function testPodcastEpisodeIsAWebsiteWithItsArtAsTheImage(): void
-	{
-		// An episode is a media item, not an article: `website` keeps it out of
-		// the Article JSON-LD, and its share image is the episode `art`.
-		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection('episodes', 'podcast-episode'));
-		$this->urlBuilder->method('buildUrl')->willReturn('/episodes/hello');
-
-		$ctx = $this->factory->make(['id' => 'hello'], ['collection' => 'episodes']);
-
-		$this->assertSame(['type' => 'website', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'art'], $ctx->seoBlock);
-	}
-
 	public function testExplicitCollectionSeoBlockOverridesTheDefault(): void
 	{
 		$this->collectionFetcher->method('fetchCollection')->willReturn(

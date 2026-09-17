@@ -12,7 +12,6 @@ enum EditionFeature: string
 	// Schema features
 	case BLOG_SCHEMA    = 'blog_schema';
 	case DEPOT_SCHEMA   = 'depot_schema';
-	case PODCAST_SCHEMA = 'podcast_schema';
 	case CUSTOM_SCHEMAS = 'custom_schemas';
 
 	// Watermark features
@@ -63,7 +62,6 @@ enum EditionFeature: string
 		return match ($this) {
 			self::BLOG_SCHEMA            => 'Blog Schema',
 			self::DEPOT_SCHEMA           => 'Depot Schema',
-			self::PODCAST_SCHEMA         => 'Podcast Schema',
 			self::CUSTOM_SCHEMAS         => 'Custom Schemas',
 			self::IMAGE_WATERMARKS       => 'Image Watermarks',
 			self::TEXT_WATERMARKS        => 'Text Watermarks',
@@ -100,7 +98,6 @@ enum EditionFeature: string
 			// Standard features
 			self::BLOG_SCHEMA,
 			self::DEPOT_SCHEMA,
-			self::PODCAST_SCHEMA,
 			self::IMAGE_WATERMARKS,
 			self::MAILER_ACTIONS,
 			self::QR_CODES,

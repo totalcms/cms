@@ -1,0 +1,23 @@
+{
+    "id": "totalcms/podcast",
+    "name": "Podcast",
+    "description": "Host a podcast from two collections. Ships the <code>podcast</code> (show) and <code>podcast-episode</code> schemas, a feed the directories accept at <code>/api/ext/totalcms/podcast/feed</code> — no page or template needed — and a <code>podcast_feed()</code> Twig function for sites that want the feed on a page of their own. One show per collection; a site can host several.",
+    "icon": "icon.png",
+    "requires": {
+        "totalcms": ">=3.5.2",
+        "php": ">=8.2"
+    },
+    "min_edition": "standard",
+    "entrypoint": "Extension.php",
+    "author": {
+        "name": "Total CMS",
+        "url": "https://totalcms.co"
+    },
+    "license": "proprietary",
+    "links": [
+        {
+            "label": "Documentation",
+            "url": "docs/collections/podcast"
+        }
+    ]
+}

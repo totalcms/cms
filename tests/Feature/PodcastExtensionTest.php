@@ -5,20 +5,28 @@ declare(strict_types=1);
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Twig\Adapter\FeedTwigAdapter;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
+
+use function TotalCMS\Slim\Pest\get;
 
 /**
- * cms.feed.podcast() end to end: a singleton show collection from the podcast
- * schema, an episodes collection from podcast-episode, one call, one valid
- * feed. The mapper's rules are unit-tested; this proves the wiring — schema
- * validation accepts the shapes, the singleton id resolves, index rows carry
- * what the mapper reads, and the writer renders the result.
+ * The bundled podcast extension end to end: its two schemas back a singleton
+ * show collection and an episodes collection the show names, and the same
+ * feed comes out of the public route and of `podcast_feed()`. The mapper's
+ * rules are unit-tested; this proves the wiring — the extension loads, its
+ * schemas resolve, the show's episodes setting is honoured, the route serves
+ * RSS and the Twig function renders it.
  */
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
 	}
+	// Enable the bundled extension before the app boots: the state file is
+	// what ExtensionManager reads, and an enabled state with no permissions
+	// recorded permits every capability.
+	@mkdir(cmsDataDir() . '.system', 0755, true);
+	file_put_contents(cmsDataDir() . '.system/extensions.json', json_encode(['totalcms/podcast' => ['enabled' => true]]));
 	$this->setUpApp(bootstrap());
 	$container = $this->app->getContainer();
 	$saver     = $container->get(CollectionSaver::class);
@@ -41,6 +49,7 @@ beforeEach(function (): void {
 	$objects->saveObject('podcast', [
 		'id'          => 'podcast',
 		'title'       => 'The Show',
+		'episodes'    => 'episodes',
 		'description' => 'About the show',
 		'author'      => 'Joe Workman',
 		'ownerEmail'  => 'joe@example.com',
@@ -69,14 +78,12 @@ beforeEach(function (): void {
 		]);
 	}
 
-	$this->feed = $container->get(FeedTwigAdapter::class);
+	$this->render = fn (string $template): string => $container->get(TwigEngine::class)->renderString($template, []);
 });
 
-it('renders a podcast feed from the two collections in one call', function (): void {
-	$xml = (string)$this->feed->podcast('podcast', 'episodes');
-
+function assertPodcastFeed(string $xml): void
+{
 	expect($xml)->toContain('href="https://example.com/podcast.xml"');
-
 	expect($xml)->toContain('<itunes:author>Joe Workman</itunes:author>');
 	expect($xml)->toContain('<itunes:email>joe@example.com</itunes:email>');
 	expect($xml)->toContain('/imageworks/podcast/podcast/cover.png"');
@@ -96,8 +103,41 @@ it('renders a podcast feed from the two collections in one call', function (): v
 	expect((string)$feed->channel->item[0]->enclosure['length'])->toBe('4242');
 	expect($xml)->toContain('<itunes:duration>1800</itunes:duration>');
 	expect($xml)->toContain('<itunes:episode>2</itunes:episode>');
+}
+
+it('serves the feed at the public route, with no page involved', function (): void {
+	$response = get('/api/ext/totalcms/podcast/feed');
+
+	expect($response->getStatusCode())->toBe(200);
+	expect($response->getHeaderLine('Content-Type'))->toStartWith('application/rss+xml');
+	expect($response->getHeaderLine('Cache-Control'))->toBe('public, max-age=300');
+	assertPodcastFeed((string)$response->getBody());
 });
 
-it('names the missing show when the singleton has no record', function (): void {
-	$this->feed->podcast('nope', 'episodes');
-})->throws(DomainException::class, "'nope'");
+it('serves any show by its collection at /feed/{show}', function (): void {
+	$response = get('/api/ext/totalcms/podcast/feed/podcast');
+
+	expect($response->getStatusCode())->toBe(200);
+	assertPodcastFeed((string)$response->getBody());
+});
+
+it('renders the same feed from podcast_feed() in a template', function (): void {
+	$xml = ($this->render)('{{ podcast_feed() }}');
+	assertPodcastFeed($xml);
+	expect(($this->render)("{{ podcast_feed('podcast') }}"))->toBe($xml);
+});
+
+it('is a 404 that names the show when the show has no record', function (): void {
+	$response = get('/api/ext/totalcms/podcast/feed/nope');
+
+	expect($response->getStatusCode())->toBe(404);
+	expect((string)$response->getBody())->toContain("'nope'");
+});
+
+it('renders nothing, rather than breaking the page, for a show without a record', function (): void {
+	// Extension Twig functions run fault-isolated: the DomainException the
+	// feed throws is logged to the extensions channel and the call renders
+	// empty, so a broken feed cannot take a page down with it. The message
+	// itself is covered by the route (a 404) and by PodcastFeedTest.
+	expect(($this->render)("{{ podcast_feed('nope') }}"))->toBe('');
+});

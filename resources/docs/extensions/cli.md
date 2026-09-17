@@ -174,7 +174,7 @@ tcms collection:get blog --json
 
 ### `collection:create`
 
-Create one collection. When the ID is a reserved collection (`seo-site`, `automations`, `podcast`, …) leave `--schema` off — the collection is provisioned with its shipped name and singleton flag, exactly as **Project Setup → Setup Default Collections** would, but for that one collection only. That is the point of this command on an existing site: `tcms collection:create seo-site` provisions just that collection, where Setup Default Collections would create every default. Any other ID is a custom collection and needs `--schema`.
+Create one collection. When the ID is a reserved collection (`seo-site`, `automations`, `mailer`, …) leave `--schema` off — the collection is provisioned with its shipped name and singleton flag, exactly as **Project Setup → Setup Default Collections** would, but for that one collection only. That is the point of this command on an existing site: `tcms collection:create seo-site` provisions just that collection, where Setup Default Collections would create every default. Any other ID is a custom collection and needs `--schema`.
 
 ```bash
 tcms collection:create seo-site

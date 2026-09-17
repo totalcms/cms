@@ -46,7 +46,6 @@ readonly class CollectionEditionService
 	 *
 	 * - Blog/blog-legacy schemas require BLOG_SCHEMA feature (Standard+)
 	 * - Depot schema requires DEPOT_SCHEMA feature (Standard+)
-	 * - Podcast / podcast-episode schemas require PODCAST_SCHEMA feature (Standard+)
 	 * - Custom schemas require CUSTOM_SCHEMAS feature (Pro)
 	 * - All other reserved schemas are always accessible
 	 */
@@ -62,10 +61,6 @@ readonly class CollectionEditionService
 			return $this->editionFeatures->can(EditionFeature::DEPOT_SCHEMA);
 		}
 
-		// Check podcast schemas (Standard+)
-		if ($schemaId === 'podcast' || $schemaId === 'podcast-episode') {
-			return $this->editionFeatures->can(EditionFeature::PODCAST_SCHEMA);
-		}
 
 		// Check custom schemas (Pro)
 		if ($this->schemaFetcher->isCustomSchema($schemaId)) {

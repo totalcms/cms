@@ -714,10 +714,24 @@ class TotalForm implements \Stringable
 	 */
 	public function pageCollectionOptions(): array
 	{
+		return $this->collectionsUsingSchema(BuilderConfigService::DEFAULT_SCHEMA_ID);
+	}
+
+	/**
+	 * `propertyOptions: "schemaCollections:<id>"` — the collections whose
+	 * schema is `<id>` or inherits from it, as `{value, label}` options. The
+	 * picker a schema uses to point at a sibling collection: the podcast
+	 * show naming its episodes collection, a pages setting naming a pages
+	 * collection.
+	 *
+	 * @return list<array{value:string,label:string}>
+	 */
+	public function collectionsUsingSchema(string $schemaId): array
+	{
 		$options = [];
 
 		foreach ($this->collectionLister->listAllCollections() as $collection) {
-			if (!$this->schemaIsBuilderPage($collection->schema)) {
+			if (!$this->schemaIsOrInherits($collection->schema, $schemaId)) {
 				continue;
 			}
 
@@ -736,9 +750,9 @@ class TotalForm implements \Stringable
 	 * cannot be read does not qualify — the collection would not work as a
 	 * pages collection either.
 	 */
-	private function schemaIsBuilderPage(string $schemaId): bool
+	private function schemaIsOrInherits(string $schemaId, string $target): bool
 	{
-		if ($schemaId === BuilderConfigService::DEFAULT_SCHEMA_ID) {
+		if ($schemaId === $target) {
 			return true;
 		}
 
@@ -748,7 +762,7 @@ class TotalForm implements \Stringable
 			return false;
 		}
 
-		return in_array(BuilderConfigService::DEFAULT_SCHEMA_ID, $schema->inheritFrom, true);
+		return in_array($target, $schema->inheritFrom, true);
 	}
 
 	protected ?TemplateLister $templateLister                  = null;

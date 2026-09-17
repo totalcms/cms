@@ -209,7 +209,6 @@ You do not have to configure anything for a blog — or for any other schema Tot
 | Any collection using the `blog` schema | `blogposting` | `summary` | `image` |
 | Any collection using the `blog-legacy` schema | `blogposting` | `summary` | `image` |
 | Any collection using the `feed` schema | `blogposting` | `content` | `image` |
-| Any collection using the `podcast-episode` schema | `website` | `summary` | `art` |
 | The Site Builder pages collection | `website` | *(none — the card)* | *(none — the card)* |
 | Everything else | `website` | *(none)* | *(none)* |
 

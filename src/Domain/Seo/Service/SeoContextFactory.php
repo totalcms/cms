@@ -52,9 +52,6 @@ readonly class SeoContextFactory
 		'blog'            => self::BLOG_BLOCK,
 		'blog-legacy'     => self::BLOG_BLOCK,
 		'feed'            => ['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => 'content', 'image' => 'image'],
-		// An episode is a media item, not an article — `website` is the right
-		// Open Graph type, and it keeps ArticleProvider out of the JSON-LD.
-		'podcast-episode' => ['type' => 'website', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'art'],
 	];
 
 	public function __construct(

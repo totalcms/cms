@@ -499,6 +499,7 @@ class FormField
 	 * - "collections": fetch unique category values from all collections
 	 * - "schemas": fetch unique category values from all schemas
 	 * - "pageCollections": collections whose schema is builder-page or inherits from it
+	 * - "schemaCollections:<id>": collections whose schema is <id> or inherits from it
 	 * - "locales": fetch locale codes from LocaleRegistry as {value, label} dicts.
 	 * - "podcastCategories": Apple's podcast taxonomy as optgroups (static).
 	 *
@@ -542,6 +543,10 @@ class FormField
 
 		if ($source === 'pageCollections') {
 			return $this->form->pageCollectionOptions();
+		}
+
+		if (is_string($source) && str_starts_with($source, 'schemaCollections:')) {
+			return $this->form->collectionsUsingSchema(substr($source, strlen('schemaCollections:')));
 		}
 
 		if ($source === 'viewIds') {

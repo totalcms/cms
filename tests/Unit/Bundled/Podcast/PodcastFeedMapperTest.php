@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Domain\Feed\Service\PodcastFeedMapper;
+use TotalCMS\Bundled\Podcast\PodcastFeedMapper;
+
+require_once dirname(__DIR__, 4) . '/resources/extensions/totalcms/podcast/PodcastFeedMapper.php';
 use TotalCMS\Support\Config;
 
 /**

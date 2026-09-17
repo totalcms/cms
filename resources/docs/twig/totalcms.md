@@ -18,7 +18,7 @@ The Total CMS Twig Adapter provides access to all CMS data and functionality thr
 | `cms.collection.*` | Collection listing, objects, search, URLs, navigation | [Collections Reference](docs/twig/collections) |
 | `cms.data.*` | Typed data access (text, toggle, date, color, etc.) | [Data Reference](docs/twig/data) |
 | `cms.edition.*` | Edition detection and feature gating | [Edition Reference](docs/twig/edition) |
-| `cms.feed.*` | RSS, Atom and podcast feed generation | [Feeds Reference](docs/twig/feeds) |
+| `cms.feed.*` | RSS and Atom feed generation (podcasts: the bundled [Podcast extension](docs/extensions/podcast)) | [Feeds Reference](docs/twig/feeds) |
 | `cms.locale.*` | Localization and translations | [Locale Reference](docs/twig/locale) |
 | `cms.media.*` | Image paths, gallery paths, downloads, streaming | [Media Reference](docs/twig/media) |
 | `cms.qrcode.*` | QR code generation | [QR Code Reference](docs/twig/qrcodes) |

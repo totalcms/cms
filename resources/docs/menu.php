@@ -255,6 +255,7 @@ return [
 					['title' => 'Algolia Search',   'path' => 'extensions/algolia-search'],
 					['title' => 'Geo Redirect',     'path' => 'extensions/geo-redirect'],
 					['title' => 'Maintenance',      'path' => 'extensions/maintenance'],
+					['title' => 'Podcast',          'path' => 'extensions/podcast'],
 					['title' => 'Protect',          'path' => 'extensions/protect'],
 					['title' => 'Pushover',         'path' => 'extensions/pushover'],
 					['title' => 'Scheduled',        'path' => 'extensions/scheduled'],
