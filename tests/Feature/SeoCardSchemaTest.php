@@ -17,7 +17,7 @@ beforeEach(function (): void {
 
 it('ships seo and seo-collection as reserved embedded schemas', function (): void {
 	$fetcher = $this->app->getContainer()->get(SchemaFetcher::class);
-	expect(array_keys($fetcher->fetchSchema('seo')->properties))->toContain('title', 'description', 'image', 'canonical', 'noindex', 'nofollow', 'jsonldType');
+	expect(array_keys($fetcher->fetchSchema('seo')->properties))->toContain('title', 'description', 'image', 'noindex', 'nofollow', 'jsonldType');
 	expect(array_keys($fetcher->fetchSchema('seo-collection')->properties))->toContain('type', 'description', 'image');
 	expect($fetcher->fetchSchema('builder-page')->properties['seo']['schemaref'] ?? '')->toEndWith('/seo.json');
 });

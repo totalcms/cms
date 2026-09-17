@@ -207,8 +207,7 @@
 		"seo": {
 			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
 			"field"     : "card",
-			"schemaref" : "https://www.totalcms.co/schemas/seo.json",
-			"label"     : "SEO"
+			"schemaref" : "https://www.totalcms.co/schemas/seo.json"
 		}
 	},
 	"required": [

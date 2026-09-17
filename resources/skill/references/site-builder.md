@@ -35,7 +35,7 @@ Live on the filesystem under `tcms-data/builder/`:
 | `template` | path under `pages/` to render (e.g. `pages/page.twig`); empty = SEO-only record on a URL Total CMS does not serve |
 | `description` | SEO meta description for the page |
 | `image` | page image used for `og:image` social previews and optional hero rendering |
-| `seo` | SEO card: title (with `${property}` placeholders), description, social image, canonical, noindex/nofollow, structured-data type. Empty = derive everything |
+| `seo` | SEO card: title (with `${property}` placeholders), description, social image, noindex/nofollow, structured-data type. Empty = derive everything |
 | `draft` | hide from routing when true |
 | `nav` | include in `cms.builder.nav()` output (defaults to on) |
 | `data` | free-form JSON, exposed in the template as `page.data.*` |

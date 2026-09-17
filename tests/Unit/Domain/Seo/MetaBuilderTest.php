@@ -231,7 +231,6 @@ describe('MetaBuilder', function (): void {
 	test('canonical, robots and og:type', function () use ($b): void {
 		$p = $b->build(seoCtx());
 		expect($p->canonical)->toBe('https://example.com/blog/hello')->and($p->robots)->toBe('')->and($p->ogType)->toBe('article')->and($p->noindex)->toBeFalse();
-		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['canonical' => 'https://other.test/x'])]))->canonical)->toBe('https://other.test/x');
 		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['noindex' => true, 'nofollow' => true])]))->robots)->toBe('noindex, nofollow');
 		expect($b->build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => '']]))->ogType)->toBe('website');
 		// An explicit `website` on an otherwise-article context opts out.

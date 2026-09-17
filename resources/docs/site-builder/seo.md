@@ -72,7 +72,7 @@ Every value falls through the same three-step chain. The first non-empty one win
 | **Title** | `seo.title` | the collection's Title Template, then the record's own `title` | Site Name |
 | **Description** | `seo.description` | the mapped property, stripped to plain text | Default Description |
 | **Social image** | `seo.image` | the mapped image property | Default Social Image |
-| **Canonical** | `seo.canonical` | the record's own absolute URL | *(omitted)* |
+| **Canonical** | — | the record's own absolute URL | *(omitted)* |
 | **Robots** | `seo.noindex` / `seo.nofollow` | — | *(omitted)* |
 | **`og:type`** | — | `article` when the collection's type is Article | `website` |
 
@@ -85,7 +85,7 @@ A few rules the chain applies on top:
 - **`og:type`.** Decided by the **Structured Data Type**: the record's card, then the collection's setting, then Webpage. `Article` and `Blog post` emit `og:type: article` together with `article:published_time` (the object's `date`, else `created`) and `article:modified_time` (`updated`); `Webpage` emits `website`. The same value decides the JSON-LD node, so a page that is an article says so to social scrapers and search engines in the same breath.
 - **Twitter card.** `summary_large_image` when an image resolved, `summary` when none did.
 - **Robots.** The `<meta name="robots">` tag is emitted only when noindex or nofollow is on. No tag is the same as `index, follow`, and it is quieter.
-- **Canonical.** Built from the Base URL setting (falling back to the request's scheme on the site's domain). A Site Builder page whose route contains a `{placeholder}` gets no canonical — a route pattern is not an address. A collection object gets one only when the collection has its **URL** set. A record with **No Index** on gets none either — see [Sitemaps and `noindex`](#sitemaps-and-noindex).
+- **Canonical.** Built from the Base URL setting (falling back to the request's scheme on the site's domain). A Site Builder page whose route contains a `{placeholder}` gets no canonical — a route pattern is not an address. A collection object gets one only when the collection has its **URL** set. A record with **No Index** on gets none either — see [Sitemaps and `noindex`](#sitemaps-and-noindex). There is no per-record canonical field: a page's canonical is its own address, and a duplicate of another page is better kept out of the index with **No Index**. Syndicated content that must point at an original elsewhere is the one exception, and a template handles it by passing the [ad-hoc shape](#pages-the-router-did-not-render) with `url` set.
 
 ## The SEO Card
 
@@ -97,7 +97,6 @@ Every Site Builder page has an **SEO** section on its edit form. It holds the pe
 | **Social Title** | A shorter, punchier title for share cards. It replaces `og:title` and `twitter:title` only — `<title>` is untouched. It is used as written — neither site template applies to it. Leave it empty and the share cards use the page title. |
 | **Description** | Replaces the meta description for this record. |
 | **Social Image** | The share image. 1200×630 is the recommendation; Total CMS crops to that ratio. |
-| **Canonical URL** | An absolute URL. Leave it empty to use this record's own URL — set it when the content is a duplicate of a page elsewhere. |
 | **No Index** | Asks crawlers not to index this page. **Also removes it from the sitemaps.** |
 | **No Follow** | Asks crawlers not to follow the links on this page. |
 | **Structured Data Type** | `Automatic`, `Webpage`, `Article` or `Blog post`. For an object, Automatic is the collection's Structured Data Type; for a Site Builder page it is Webpage, because a page has no collection setting behind it. The other three override that for this one record, on `og:type` and in the JSON-LD alike: Article and Blog post add the matching node and the `article:` dates, Webpage opts a record out of a blog collection's default. |
@@ -526,7 +525,7 @@ A page or object whose SEO card has **No Index** on is dropped from the sitemap 
 
 The **Include in Sitemap** toggle is unchanged and independent. Off keeps a record out of the sitemap without asking anyone not to index it; **No Index** does both.
 
-**A noindexed page also gets no `<link rel="canonical">`.** Declaring a canonical URL is telling a crawler "this is the address to index"; asking not to be indexed at the same time is a mixed signal, and the two together are a documented way to have the directive ignored. So `head()` and `cms.seo.canonical()` both drop the tag when **No Index** is on — including the case where the card names an explicit **Canonical URL**. `og:url` still prints: it is an identity for a share card, not an instruction to a search engine.
+**A noindexed page also gets no `<link rel="canonical">`.** Declaring a canonical URL is telling a crawler "this is the address to index"; asking not to be indexed at the same time is a mixed signal, and the two together are a documented way to have the directive ignored. So `head()` and `cms.seo.canonical()` both drop the tag when **No Index** is on. `og:url` still prints: it is an identity for a share card, not an instruction to a search engine.
 
 For collections other than the Site Builder pages, remember the [index requirement](#adding-the-card-to-your-own-schema) — the sitemap builder reads the collection index, so `seo` must be in the schema's `index` array. See [Sitemaps](docs/collections/sitemap-builder).
 

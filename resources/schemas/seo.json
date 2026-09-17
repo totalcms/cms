@@ -5,7 +5,7 @@
 	"type": "object",
 	"description": "Per-object SEO overrides. Used as a card sub-schema on objects that opt in.",
 	"category": "Internal",
-	"formgrid": "title socialTitle\njsonldType canonical\ndescription description\nnoindex nofollow\nimage image",
+	"formgrid": "jsonldType jsonldType noindex nofollow\ntitle title socialTitle socialTitle\ndescription description description description\nimage image image image",
 	"properties": {
 		"id": {
 			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
@@ -43,13 +43,6 @@
 			"label": "Social Image",
 			"help": "Social sharing image; 1200×630 recommended",
 			"field": "image"
-		},
-		"canonical": {
-			"$ref": "https://www.totalcms.co/schemas/properties/url.json",
-			"label": "Canonical URL",
-			"help": "Absolute URL. Leave empty to use this page's own URL",
-			"field": "url",
-			"default": ""
 		},
 		"noindex": {
 			"type": "boolean",

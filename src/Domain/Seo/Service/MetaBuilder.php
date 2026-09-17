@@ -112,7 +112,7 @@ class MetaBuilder
 			$imageAlt = '';
 		}
 
-		$canonical = $f->canonical !== '' ? $f->canonical : $ctx->url;
+		$canonical = $ctx->url;
 		$robots    = implode(', ', array_filter([$f->noindex ? 'noindex' : '', $f->nofollow ? 'nofollow' : '']));
 
 		// Content type: the card, then the collection (which already carries
