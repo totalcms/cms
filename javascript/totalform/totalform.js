@@ -122,7 +122,11 @@ export default class TotalForm {
 		// Signal that all fields are initialized and form is ready
 		this.form.dispatchEvent(new CustomEvent('totalform:ready'));
 
-		if (this.isObjectForm() && !this.isEditMode()) {
+		// A new object gets the cursor in its first field. A singleton's first
+		// visit is technically the new-object form, but it is a settings record
+		// (Site SEO, Site Settings) — jumping into the first field there, with
+		// help-on-focus swapping its label for help text, reads as noise.
+		if (this.isObjectForm() && !this.isEditMode() && !this.form.dataset.singleton) {
 			this.focusFirstInput();
 		}
 

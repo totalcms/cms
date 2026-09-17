@@ -564,6 +564,9 @@ class TotalForm implements \Stringable
 			'data-schema'           => $this->schema,
 			'data-collection'       => $this->collection === '' ? null : $this->collection,
 			'data-collection-count' => $this->collectionData instanceof CollectionData ? $this->collectionData->count : null,
+			// A singleton's first visit is the new-object form, but it reads as
+			// settings, not data entry — TotalForm leaves the cursor alone.
+			'data-singleton'        => $this->collectionData instanceof CollectionData && $this->collectionData->singleton ? 'true' : null,
 			'data-method'           => $this->method,
 			'data-api'              => $this->api,
 			'data-route'            => $this->route,

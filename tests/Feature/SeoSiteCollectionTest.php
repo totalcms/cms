@@ -10,6 +10,8 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
 
+use function TotalCMS\Slim\Pest\get;
+
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
 	restoreFixtures();
@@ -27,6 +29,30 @@ it('provisions seo-site as a singleton collection named Site SEO', function (): 
 
 	$props = array_keys($c->get(SchemaFetcher::class)->fetchSchema('seo-site')->properties);
 	expect($props)->toContain('siteName', 'baseUrl', 'titleTemplate', 'socialTitleTemplate', 'defaultDescription', 'defaultImage', 'twitterHandle', 'organizationName', 'organizationLogo', 'sameAs', 'metaTags', 'emitJsonLd', 'emitSocial');
+});
+
+it('marks the singleton form so the cursor is not dropped into its first field', function (): void {
+	$c = $this->app->getContainer();
+	$c->get(CollectionFetcher::class)->fetchOrCreateReserved('seo-site');
+	$c->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
+
+	// The fixture blogger cannot reach a reserved collection; promote them
+	// on disk (the super-admin check reads the record file, not the index).
+	$file           = cmsDataDir() . 'auth/blogger-user-test-com.json';
+	$user           = json_decode((string)file_get_contents($file), true);
+	$user['groups'] = ['admin'];
+	file_put_contents($file, json_encode($user));
+	signInAs($this->app, 'blogger-user-test-com', 'auth');
+
+	// A singleton's first visit is the new-object form, but it is a settings
+	// record: TotalForm reads data-singleton and skips its first-field focus.
+	$singleton = get('/admin/collections/seo-site/add');
+	$singleton->assertOk();
+	expect((string)$singleton->getBody())->toContain('data-singleton="true"');
+
+	$ordinary = get('/admin/collections/blog/add');
+	$ordinary->assertOk();
+	expect((string)$ordinary->getBody())->toContain('class="totalform')->not->toContain('data-singleton');
 });
 
 it('stores the site record at the collection id with image fields', function (): void {
