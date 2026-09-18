@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\FormField\SelectField;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -12,68 +13,14 @@ use TotalCMS\Domain\Schema\Data\SchemaData;
  */
 class CollectionForm extends TotalForm
 {
-	/**
-	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
-	 *
-	 * @param array<int,array<string,mixed>> $newActions
-	 * @param array<int,array<string,mixed>> $editActions
-	 * @param array<int,array<string,mixed>> $deleteActions
-	 */
-	public function __construct(
-		FormServices $services,
-		public string $api,
-		public string $collection = '',
-		public string $id          = '',
-		protected string $method      = 'POST',
-		protected string $class       = '',
-		protected string $buildError  = '',
-		protected string $helpStyle   = '',
-		protected string $save        = '',
-		protected string $delete      = '',
-		protected string $formType    = '',
-		protected string $schema      = '',
-		protected string $route       = '',
-		protected array $newActions    = [
-			[
-				'action' => 'redirect-object',
-				'link'   => '?id=',
-			],
-		],
-		protected array $editActions   = [],
-		protected array $deleteActions = [],
-		protected bool $autosave    = false,
-		protected bool $helpOnHover = false,
-		protected bool $helpOnFocus = false,
-		protected bool $hideID      = false,
-		protected bool $useFormGrid = true,
-		protected bool $addOnly     = false,
-	) {
-		parent::__construct(
-			services: $services,
-			api: $api,
-			collection: $collection,
-			id: $id,
-			method: $method,
-			class: $class,
-			buildError: $buildError,
-			helpStyle: $helpStyle,
-			save: $save,
-			delete: $delete,
-			formType: $formType,
-			schema: $schema,
-			route: $route,
-			newActions: $newActions,
-			editActions: $editActions,
-			deleteActions: $deleteActions,
-			data: [],
-			autosave: $autosave,
-			helpOnHover: $helpOnHover,
-			helpOnFocus: $helpOnFocus,
-			hideID: $hideID,
-			useFormGrid: $useFormGrid,
-			addOnly: $addOnly,
-		);
+	public function __construct(FormServices $services, FormOptions $options)
+	{
+		// A new collection lands on its own edit page; nothing pre-fills the form.
+		if ($options->newActions === []) {
+			$options = $options->with(newActions: [['action' => 'redirect-object', 'link' => '?id=']]);
+		}
+
+		parent::__construct($services, $options->with(data: []));
 	}
 
 	protected function init(): void

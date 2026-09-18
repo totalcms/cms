@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -15,7 +16,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * every form it makes.
  */
 it('builds a form from one services object and the per-form options', function (): void {
-	$form = new TotalForm(services: formServices(), api: '/api', collection: 'things');
+	$form = new TotalForm(formServices(), new FormOptions(api: '/api', collection: 'things'));
 
 	expect($form->collection)->toBe('things')
 		->and($form->api)->toBe('/api');
@@ -24,7 +25,7 @@ it('builds a form from one services object and the per-form options', function (
 it('exposes the collaborators a field asks the form for', function (): void {
 	$schemaFetcher = (new ReflectionClass(SchemaFetcher::class))->newInstanceWithoutConstructor();
 	$services      = formServices(['schemaFetcher' => $schemaFetcher, 'logger' => new NullLogger()]);
-	$form          = new TotalForm(services: $services, api: '/api', collection: 'things');
+	$form          = new TotalForm($services, new FormOptions(api: '/api', collection: 'things'));
 
 	expect($form->getSchemaFetcher())->toBe($schemaFetcher)
 		->and($form->services())->toBe($services)
@@ -32,7 +33,7 @@ it('exposes the collaborators a field asks the form for', function (): void {
 });
 
 it('defaults the optional listers to null so a bare form still answers with empty lists', function (): void {
-	$form = new TotalForm(services: formServices(), api: '/api', collection: 'things');
+	$form = new TotalForm(formServices(), new FormOptions(api: '/api', collection: 'things'));
 
 	expect($form->viewIdList())->toBe([])
 		->and($form->layoutListForBuilder())->toBe([])

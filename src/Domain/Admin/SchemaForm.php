@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
@@ -15,66 +16,12 @@ class SchemaForm extends TotalForm
 	public bool $reserved = false;
 	public SchemaData $schemaObjectData;
 
-	/**
-	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
-	 *
-	 * @param array<int,array<string,mixed>> $newActions
-	 * @param array<int,array<string,mixed>> $deleteActions
-	 * @param array<int,array<string,mixed>> $editActions
-	 * @param array<string,mixed>  $data
-	 */
 	public function __construct(
 		FormServices $services,
+		FormOptions $options,
 		protected SchemaFactory $schemaFactory,
-		public string $api,
-		public string $collection = '',
-		public string $id          = '',
-		protected string $method      = 'POST',
-		protected string $class       = '',
-		protected string $buildError  = '',
-		protected string $helpStyle   = '',
-		protected string $save        = '',
-		protected string $delete      = '',
-		protected string $formType    = '',
-		protected string $schema      = '',
-		protected string $route       = '',
-		protected array $newActions    = [],
-		protected array $editActions   = [],
-		protected array $deleteActions = [],
-		protected array $data         = [],
-		protected bool $autosave      = false,
-		protected bool $helpOnHover   = false,
-		protected bool $helpOnFocus   = false,
-		protected bool $hideID        = false,
-		protected bool $useFormGrid   = true,
-		protected bool $addOnly       = false,
 	) {
-		parent::__construct(
-			services: $services,
-			api: $api,
-			collection: $collection,
-			id: $id,
-			method: $method,
-			class: $class,
-			buildError: $buildError,
-			helpStyle: $helpStyle,
-			save: $save,
-			delete: $delete,
-			formType: $formType,
-			schema: $schema,
-			route: $route,
-			newActions: $newActions,
-			editActions: $editActions,
-			deleteActions: $deleteActions,
-			data: $data,
-			autosave: $autosave,
-			helpOnHover: $helpOnHover,
-			helpOnFocus: $helpOnFocus,
-			hideID: $hideID,
-			useFormGrid: $useFormGrid,
-			addOnly: $addOnly,
-		);
+		parent::__construct($services, $options);
 	}
 
 	protected function init(): void

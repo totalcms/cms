@@ -3,9 +3,10 @@
 namespace TotalCMS\Domain\Admin;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Admin\Form\FormOptionSources;
-use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
+use TotalCMS\Domain\Admin\Form\FormOptionSources;
+use TotalCMS\Domain\Admin\Form\FormOptions;
+use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -299,60 +300,75 @@ class TotalForm implements \Stringable
 	 * @param array<int,array<string,mixed>> $deleteActions Array of action objects
 	 * @param array<string,mixed> $data Duplicate data for prefilling form
 	 */
+	// The per-form options, copied onto the form because init() and the
+	// subclasses adjust several of them (id, addOnly, api, method, route …).
+	public string $api;
+	public string $collection;
+	public string $id;
+	protected string $method;
+	protected string $class;
+	protected string $buildError;
+	protected string $helpStyle;
+	protected string $save;
+	protected string $delete;
+	protected string $formType;
+	protected string $schema;
+	protected string $route;
+	/** @var array<int,array<string,mixed>> */
+	protected array $newActions;
+	/** @var array<int,array<string,mixed>> */
+	protected array $editActions;
+	/** @var array<int,array<string,mixed>> */
+	protected array $deleteActions;
+	/** @var array<string,mixed> */
+	protected array $data;
+	protected bool $autosave;
+	protected bool $helpOnHover;
+	protected bool $helpOnFocus;
+	protected bool $hideID;
+	protected bool $useFormGrid;
+	protected bool $addOnly;
+	protected bool $register;
+	protected ?FormActionRegistry $formActionRegistry;
+	protected ?\Closure $translator;
+	protected string $formgrid;
+	protected bool $fieldIcons;
+
 	public function __construct(
 		// Everything a form shares with every other form. Built once by
 		// TotalFormFactory; a test builds one from stubs (formServices()).
 		protected FormServices $services,
-		public string $api,
-		public string $collection             = '',
-		public string $id                     = '',
-		protected string $method                 = 'POST',
-		protected string $class                  = '',
-		protected string $buildError             = '',
-		protected string $helpStyle              = '',
-		protected string $save                   = '',
-		protected string $delete                 = '',
-		protected string $formType               = '',
-		protected string $schema                 = '',
-		protected string $route                  = '',
-		protected array $newActions              = [],
-		protected array $editActions             = [],
-		protected array $deleteActions           = [],
-		protected array $data                    = [],
-		protected bool $autosave                 = false,
-		protected bool $helpOnHover              = false,
-		protected bool $helpOnFocus              = false,
-		protected bool $hideID                   = false,
-		protected bool $useFormGrid              = true,
-		protected bool $addOnly                  = false,
-		// Public-registration form mode. When true, the form's action is
-		// retargeted to POST /admin/register/{collection} — the
-		// allow-listed registration endpoint that creates the user AND
-		// auto-logs them in. Implies `addOnly` because the registration
-		// route only handles POST (no PUT/edit path exists).
-		protected bool $register                 = false,
-		protected ?FormActionRegistry $formActionRegistry = null,
-		// Admin-catalog translator, supplied by TotalFormFactory as
-		// TranslationService::trans(...). Optional: TotalForm is also built
-		// directly (tests, extensions), and those callers fall back to the
-		// English default passed at each call site.
-		protected ?\Closure $translator = null,
-		// Formgrid for a form built from pre-rendered field HTML rather than a
-		// SchemaData — settings sections are the case: TotalFormFactory::settings()
-		// renders each field itself and hands the markup to build(), so there is no
-		// SchemaData to carry a layout. Ignored when $schemaData is present, which
-		// stays the source of truth for schema-driven forms.
-		//
-		// After every positional parameter on purpose: CollectionForm, SchemaForm
-		// and TemplateForm call parent::__construct() positionally, so a new
-		// parameter anywhere earlier silently shifts their arguments. Add new
-		// options below this line only.
-		protected string $formgrid = '',
-		// Render the icon slot (`.form-group-icon`) beside each field. Off for
-		// forms whose fields live somewhere the icon has no room — one field
-		// swapped into a table cell. A field's own `icon` option still wins.
-		protected bool $fieldIcons = true,
+		// Everything that varies per form.
+		FormOptions $options,
 	) {
+		$this->api = $options->api;
+		$this->collection = $options->collection;
+		$this->id = $options->id;
+		$this->method = $options->method;
+		$this->class = $options->class;
+		$this->buildError = $options->buildError;
+		$this->helpStyle = $options->helpStyle;
+		$this->save = $options->save;
+		$this->delete = $options->delete;
+		$this->formType = $options->formType;
+		$this->schema = $options->schema;
+		$this->route = $options->route;
+		$this->newActions = $options->newActions;
+		$this->editActions = $options->editActions;
+		$this->deleteActions = $options->deleteActions;
+		$this->data = $options->data;
+		$this->autosave = $options->autosave;
+		$this->helpOnHover = $options->helpOnHover;
+		$this->helpOnFocus = $options->helpOnFocus;
+		$this->hideID = $options->hideID;
+		$this->useFormGrid = $options->useFormGrid;
+		$this->addOnly = $options->addOnly;
+		$this->register = $options->register;
+		$this->formActionRegistry = $options->formActionRegistry;
+		$this->translator = $options->translator;
+		$this->formgrid = $options->formgrid;
+		$this->fieldIcons = $options->fieldIcons;
+
 		$this->init();
 		$this->initClass();
 	}

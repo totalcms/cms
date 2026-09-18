@@ -1,6 +1,7 @@
 <?php
 
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\ObjectForm;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
@@ -97,12 +98,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			'file'  => ['src' => '/uploads/document.pdf', 'name' => 'document.pdf'],
 		];
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'test-collection',
-			data: $duplicateData
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'test-collection', data: $duplicateData));
 
 		// Use reflection to access the private duplicateData property
 		$reflection             = new ReflectionClass($form);
@@ -125,12 +121,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			'image' => ['src' => '/uploads/photo.jpg', 'alt' => 'Photo'],
 		];
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'test-collection',
-			data: $duplicateData
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'test-collection', data: $duplicateData));
 
 		$reflection             = new ReflectionClass($form);
 		$duplicateDataProperty  = $reflection->getProperty('duplicateData');
@@ -147,12 +138,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			'depot' => ['files' => ['/depot/file1.pdf', '/depot/file2.pdf']],
 		];
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'test-collection',
-			data: $duplicateData
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'test-collection', data: $duplicateData));
 
 		$reflection             = new ReflectionClass($form);
 		$duplicateDataProperty  = $reflection->getProperty('duplicateData');
@@ -168,12 +154,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			'gallery' => ['images' => ['/gallery/img1.jpg', '/gallery/img2.jpg']],
 		];
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'test-collection',
-			data: $duplicateData
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'test-collection', data: $duplicateData));
 
 		$reflection             = new ReflectionClass($form);
 		$duplicateDataProperty  = $reflection->getProperty('duplicateData');
@@ -190,12 +171,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			'svg'   => $svgContent,
 		];
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'test-collection',
-			data: $duplicateData
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'test-collection', data: $duplicateData));
 
 		$reflection             = new ReflectionClass($form);
 		$duplicateDataProperty  = $reflection->getProperty('duplicateData');
@@ -216,12 +192,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			'boolean'     => true,
 		];
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'test-collection',
-			data: $duplicateData
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'test-collection', data: $duplicateData));
 
 		$reflection             = new ReflectionClass($form);
 		$duplicateDataProperty  = $reflection->getProperty('duplicateData');
@@ -253,12 +224,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			'description' => 'Keep this',
 		];
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'test-collection',
-			data: $duplicateData
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'test-collection', data: $duplicateData));
 
 		$reflection             = new ReflectionClass($form);
 		$duplicateDataProperty  = $reflection->getProperty('duplicateData');
@@ -282,12 +248,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 			'title' => 'Test Title',
 		];
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'test-collection',
-			data: $duplicateData
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'test-collection', data: $duplicateData));
 
 		$reflection             = new ReflectionClass($form);
 		$duplicateDataProperty  = $reflection->getProperty('duplicateData');
@@ -298,12 +259,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 	});
 
 	test('handles empty data array gracefully', function (): void {
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'test-collection',
-			data: []
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'test-collection', data: []));
 
 		$reflection             = new ReflectionClass($form);
 		$duplicateDataProperty  = $reflection->getProperty('duplicateData');
@@ -324,13 +280,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 		// Simulate editing mode by having an existing object
 		$this->objectFetcher->method('existsObject')->willReturn(false);
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'test-collection',
-			id: 'existing-object-id', // Explicitly set ID for editing
-			data: $duplicateData
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'test-collection', id: 'existing-object-id', data: $duplicateData));
 
 		$reflection             = new ReflectionClass($form);
 		$duplicateDataProperty  = $reflection->getProperty('duplicateData');

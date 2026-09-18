@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
@@ -18,72 +19,18 @@ class TemplateForm extends TotalForm
 
 	// TODO: Refactor to only use services that it needs. May need to refactor TotalForm first.
 
-	/**
-	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
-	 *
-	 * @param array<int,array<string,mixed>> $newActions
-	 * @param array<int,array<string,mixed>> $deleteActions
-	 * @param array<int,array<string,mixed>> $editActions
-	 * @param array<string,mixed>  $data
-	 */
 	public function __construct(
 		FormServices $services,
+		FormOptions $options,
 		protected TemplateRepository $templateRepository,
-		public string $api,
-		public string $path         = '',
-		public string $collection   = '',
-		public string $id           = '',
-		protected string $method      = 'POST',
-		protected string $class       = '',
-		protected string $buildError  = '',
-		protected string $helpStyle   = '',
-		protected string $save        = '',
-		protected string $delete      = '',
-		protected string $formType    = '',
-		protected string $schema      = '',
-		protected string $route       = '',
-		protected array $newActions    = [
-			[
-				'action' => 'redirect-object',
-				'link'   => 'builder/',
-			],
-		],
-		protected array $editActions   = [],
-		protected array $deleteActions = [],
-		protected array $data         = [],
-		protected bool $autosave      = false,
-		protected bool $helpOnHover   = false,
-		protected bool $helpOnFocus   = false,
-		protected bool $hideID        = false,
-		protected bool $useFormGrid   = true,
-		protected bool $addOnly       = false,
+		public string $path = '',
 	) {
-		parent::__construct(
-			services: $services,
-			api: $api,
-			collection: $collection,
-			id: $id,
-			method: $method,
-			class: $class,
-			buildError: $buildError,
-			helpStyle: $helpStyle,
-			save: $save,
-			delete: $delete,
-			formType: $formType,
-			schema: $schema,
-			route: $route,
-			newActions: $newActions,
-			editActions: $editActions,
-			deleteActions: $deleteActions,
-			data: [],
-			autosave: $autosave,
-			helpOnHover: $helpOnHover,
-			helpOnFocus: $helpOnFocus,
-			hideID: $hideID,
-			useFormGrid: $useFormGrid,
-			addOnly: $addOnly,
-		);
+		// A new template lands in the builder; nothing pre-fills the form.
+		if ($options->newActions === []) {
+			$options = $options->with(newActions: [['action' => 'redirect-object', 'link' => 'builder/']]);
+		}
+
+		parent::__construct($services, $options->with(data: []));
 	}
 
 	protected function init(): void

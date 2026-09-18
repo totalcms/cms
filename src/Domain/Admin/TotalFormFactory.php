@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Admin;
 
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
@@ -108,12 +109,11 @@ readonly class TotalFormFactory
 		$options = array_merge($this->buttonLabels($options), [
 			'route'                    => $route,
 			'api'                      => $api,
-			'services'                 => $this->services,
 			'formActionRegistry'       => $this->formActionRegistry,
 			'translator'               => $this->translationService->trans(...),
 		]);
 
-		$form = new TotalForm(...$options);
+		$form = new TotalForm($this->services, FormOptions::fromArray($options));
 
 		return $form->build($content);
 	}
@@ -409,11 +409,9 @@ readonly class TotalFormFactory
 		], $this->buttonLabels($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
-			'services'                 => $this->services,
-			'schemaFactory'            => $this->schemaFactory,
 		]);
 
-		$form = new SchemaForm(...$options);
+		$form = new SchemaForm($this->services, FormOptions::fromArray($options), $this->schemaFactory);
 
 		return $form->autoBuild();
 	}
@@ -428,11 +426,12 @@ readonly class TotalFormFactory
 		], $this->buttonLabels($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
-			'services'                 => $this->services,
-			'templateRepository'       => $this->templateRepository,
 		]);
 
-		$form = new TemplateForm(...$options);
+		$path = (string)$options['path'];
+		unset($options['path']);
+
+		$form = new TemplateForm($this->services, FormOptions::fromArray($options), $this->templateRepository, $path);
 
 		return $form->autoBuild();
 	}
@@ -669,10 +668,9 @@ readonly class TotalFormFactory
 		], $this->buttonLabels($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
-			'services'                 => $this->services,
 		]);
 
-		$form = new CollectionForm(...$options);
+		$form = new CollectionForm($this->services, FormOptions::fromArray($options));
 
 		return $form->autoBuild();
 	}
@@ -684,10 +682,9 @@ readonly class TotalFormFactory
 			// These options cannot be overridden
 			'collection'               => $collection,
 			'api'                      => $this->api,
-			'services'                 => $this->services,
 		]);
 
-		$form = new ObjectForm(...$options);
+		$form = new ObjectForm($this->services, FormOptions::fromArray($options));
 
 		return $form;
 	}
@@ -702,13 +699,14 @@ readonly class TotalFormFactory
 		$options = array_merge($this->buttonLabels($options), [
 			// These options cannot be overridden
 			'collection'               => $collection,
-			'property'                 => $property,
 			'id'                       => $options['id'] ?? '',
 			'api'                      => $this->api,
-			'services'                 => $this->services,
 		]);
 
-		$form = new DeckItemForm(...$options);
+		$itemId = (string)($options['itemId'] ?? '');
+		unset($options['itemId'], $options['property']);
+
+		$form = new DeckItemForm($this->services, FormOptions::fromArray($options), $property, $itemId);
 
 		return $form;
 	}
@@ -1393,11 +1391,7 @@ readonly class TotalFormFactory
 		// This is a dummy form to satisfy the type hinting in the field method.
 		// It will not be used, but it is required to create a FormField instance.
 		// Use empty collection string to prevent fetching/creating any collection
-		$form = new ObjectForm(
-			services: $this->services,
-			api                      : $this->api,
-			collection               : '',
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: $this->api));
 
 		return $form;
 	}

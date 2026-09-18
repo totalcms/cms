@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
@@ -20,64 +21,17 @@ class DeckItemForm extends TotalForm
 	/** @var array<string,mixed> */
 	protected array $itemData = [];
 
-	/**
-	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-	 * @SuppressWarnings("PHPMD.ExcessiveParameterList")
-	 *
-	 * @param array<int,array<string,mixed>> $newActions Array of action objects
-	 * @param array<int,array<string,mixed>> $editActions Array of action objects
-	 * @param array<int,array<string,mixed>> $deleteActions Array of action objects
-	 */
 	public function __construct(
 		FormServices $services,
-		string $api,
-		string $collection             = '',
-		string $id                     = '',
-		protected string $property     = '',
-		protected string $itemId       = '',
-		string $method                 = 'POST',
-		string $class                  = '',
-		string $buildError             = '',
-		string $helpStyle              = '',
-		string $save                   = '',
-		string $delete                 = '',
-		string $formType               = 'deck',
-		string $schema                 = '',
-		string $route                  = '',
-		array $newActions              = [],
-		array $editActions             = [],
-		array $deleteActions           = [],
-		bool $autosave                 = false,
-		bool $helpOnHover              = false,
-		bool $helpOnFocus              = false,
-		bool $hideID                   = false,
-		bool $useFormGrid              = true,
-		bool $addOnly                  = false,
+		FormOptions $options,
+		protected string $property = '',
+		protected string $itemId = '',
 	) {
-		parent::__construct(
-			services: $services,
-			api               : $api,
-			collection        : $collection,
-			id                : $id,
-			method            : $method,
-			class             : $class,
-			buildError        : $buildError,
-			helpStyle         : $helpStyle,
-			save              : $save,
-			delete            : $delete,
-			formType          : $formType,
-			schema            : $schema,
-			route             : $route,
-			newActions        : $newActions,
-			editActions       : $editActions,
-			deleteActions     : $deleteActions,
-			autosave          : $autosave,
-			helpOnHover       : $helpOnHover,
-			helpOnFocus       : $helpOnFocus,
-			hideID            : $hideID,
-			useFormGrid       : $useFormGrid,
-			addOnly           : $addOnly,
-		);
+		if ($options->formType === '') {
+			$options = $options->with(formType: 'deck');
+		}
+
+		parent::__construct($services, $options->with(data: []));
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

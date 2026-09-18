@@ -1,6 +1,7 @@
 <?php
 
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\ObjectForm;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -72,12 +73,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'users',
-			addOnly: false  // Regular form behavior
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'users', addOnly: false));
 
 		// Access the protected id property using reflection
 		$reflection = new ReflectionClass($form);
@@ -94,12 +90,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'users',
-			addOnly: true  // Security: Add only mode
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'users', addOnly: true));
 
 		// Access the protected id property using reflection
 		$reflection = new ReflectionClass($form);
@@ -113,13 +104,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'users',
-			id: 'explicit-id-789',  // Explicitly passed ID
-			addOnly: true
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'users', id: 'explicit-id-789', addOnly: true));
 
 		// Access the protected id property using reflection
 		$reflection = new ReflectionClass($form);
@@ -135,12 +120,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'users',
-			addOnly: true
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'users', addOnly: true));
 
 		// Access the protected route and method properties using reflection
 		$reflection = new ReflectionClass($form);
@@ -160,12 +140,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
 
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'users',
-			addOnly: false  // Regular form
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'users', addOnly: false));
 
 		// Access the protected route and method properties using reflection
 		$reflection = new ReflectionClass($form);
@@ -181,12 +156,7 @@ describe('Form AddOnly Security Feature', function (): void {
 
 	test('addOnly defaults to false for backwards compatibility', function (): void {
 		// Create form without specifying addOnly parameter
-		$form = new ObjectForm(
-			services: $this->services,
-			api: '/api',
-			collection: 'users'
-			// No addOnly parameter - should default to false
-		);
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'users'));
 
 		// Access the protected addOnly property using reflection
 		$reflection      = new ReflectionClass($form);

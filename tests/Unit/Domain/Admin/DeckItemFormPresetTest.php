@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\DeckItemForm;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
@@ -87,14 +88,7 @@ describe('DeckItemForm preset resolution', function (): void {
 
 	function buildDeckItemForm(object $ctx): DeckItemForm
 	{
-		$form = new DeckItemForm(
-			services: $ctx->services,
-			api                     : '/api',
-			collection              : 'blog-pro',
-			id                      : 'post-1',
-			property                : 'comments',
-			itemId                  : 'c-1',
-		);
+		$form = new DeckItemForm($ctx->services, new FormOptions(api: '/api', collection: 'blog-pro', id: 'post-1'), property: 'comments', itemId: 'c-1');
 
 		// Force the swapped-in deck schema and schemaref so we can test in isolation.
 		$ref = new ReflectionClass($form);
