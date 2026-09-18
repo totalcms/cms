@@ -60,16 +60,18 @@ final class ObjectFormRegisterModeTest extends TestCase
 		$schemaFetcher->method('fetchSchema')->willReturn(new SchemaData());
 
 		$defaults = [
-			'register'          => false,
-			'addOnly'           => false,
-			'id'                => '',
-			'collection'        => 'members',
-			'method'            => 'POST',
-			'data'              => [],
-			'config'            => $config,
-			'objectFetcher'     => $objectFetcher,
-			'collectionFetcher' => $collectionFetcher,
-			'schemaFetcher'     => $schemaFetcher,
+			'register'   => false,
+			'addOnly'    => false,
+			'id'         => '',
+			'collection' => 'members',
+			'method'     => 'POST',
+			'data'       => [],
+			'services'   => formServices([
+				'config'            => $config,
+				'objectFetcher'     => $objectFetcher,
+				'collectionFetcher' => $collectionFetcher,
+				'schemaFetcher'     => $schemaFetcher,
+			]),
 		];
 
 		foreach (array_merge($defaults, $properties) as $name => $value) {

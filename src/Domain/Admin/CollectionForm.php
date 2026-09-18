@@ -2,23 +2,10 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\FormField\SelectField;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionEditionService;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\DataView\Service\DataViewFilter;
-use TotalCMS\Domain\Index\Service\IndexFilter;
-use TotalCMS\Domain\Index\Service\IndexReader;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
-use TotalCMS\Support\Config;
 
 /**
  * Total Form Builder.
@@ -34,20 +21,7 @@ class CollectionForm extends TotalForm
 	 * @param array<int,array<string,mixed>> $deleteActions
 	 */
 	public function __construct(
-		protected ObjectFetcher $objectFetcher,
-		protected CollectionFetcher $collectionFetcher,
-		protected CollectionLister $collectionLister,
-		protected IndexReader $collectionReader,
-		protected IndexFilter $indexFilter,
-		protected SchemaFetcher $schemaFetcher,
-		protected SchemaLister $schemaLister,
-		protected AccessGroupLister $accessGroupLister,
-		protected CollectionEditionService $collectionEditionService,
-		protected EditionFeatureService $editionFeatures,
-		protected DataViewFilter $dataViewFilter,
-		protected CSRFTokenManager $csrfManager,
-		protected Config $config,
-		protected PropertyMetaResolver $metaResolver,
+		FormServices $services,
 		public string $api,
 		public string $collection = '',
 		public string $id          = '',
@@ -76,42 +50,29 @@ class CollectionForm extends TotalForm
 		protected bool $addOnly     = false,
 	) {
 		parent::__construct(
-			$objectFetcher,
-			$collectionFetcher,
-			$collectionLister,
-			$collectionReader,
-			$indexFilter,
-			$schemaFetcher,
-			$schemaLister,
-			$accessGroupLister,
-			$collectionEditionService,
-			$editionFeatures,
-			$dataViewFilter,
-			$csrfManager,
-			$config,
-			$metaResolver,
-			$api,
-			$collection,
-			$id,
-			$method,
-			$class,
-			$buildError,
-			$helpStyle,
-			$save,
-			$delete,
-			$formType,
-			$schema,
-			$route,
-			$newActions,
-			$editActions,
-			$deleteActions,
-			[], // data
-			$autosave,
-			$helpOnHover,
-			$helpOnFocus,
-			$hideID,
-			$useFormGrid,
-			$addOnly,
+			services: $services,
+			api: $api,
+			collection: $collection,
+			id: $id,
+			method: $method,
+			class: $class,
+			buildError: $buildError,
+			helpStyle: $helpStyle,
+			save: $save,
+			delete: $delete,
+			formType: $formType,
+			schema: $schema,
+			route: $route,
+			newActions: $newActions,
+			editActions: $editActions,
+			deleteActions: $deleteActions,
+			data: [],
+			autosave: $autosave,
+			helpOnHover: $helpOnHover,
+			helpOnFocus: $helpOnFocus,
+			hideID: $hideID,
+			useFormGrid: $useFormGrid,
+			addOnly: $addOnly,
 		);
 	}
 
@@ -128,7 +89,7 @@ class CollectionForm extends TotalForm
 		}
 		$this->formType   = 'collection';
 		$this->schema     = 'collection';
-		$this->schemaData = $this->schemaFetcher->fetchSchema($this->schema);
+		$this->schemaData = $this->services->schemaFetcher->fetchSchema($this->schema);
 	}
 
 	public function getCollectionSchema(): ?SchemaData
@@ -138,12 +99,12 @@ class CollectionForm extends TotalForm
 			return null;
 		}
 
-		return $this->schemaFetcher->fetchSchema($schema);
+		return $this->services->schemaFetcher->fetchSchema($schema);
 	}
 
 	private function initCollectionData(): void
 	{
-		$collectionData = $this->collectionFetcher->fetchCollection($this->id);
+		$collectionData = $this->services->collectionFetcher->fetchCollection($this->id);
 
 		if (is_null($collectionData)) {
 			$this->buildError = "Collection {$this->id} not found for TotalForm";
@@ -175,7 +136,7 @@ class CollectionForm extends TotalForm
 		}
 		$sortField = $this->fields['sortBy'];
 		if ($this->collectionData instanceof CollectionData && $sortField instanceof SelectField) {
-			$schema     = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
+			$schema     = $this->services->schemaFetcher->fetchSchema($this->collectionData->schema);
 			$properties = $schema->properties;
 			$options    = count($properties) > 0 ? array_keys($properties) : ['id'];
 			$sortField->setOptions($options);
@@ -187,7 +148,7 @@ class CollectionForm extends TotalForm
 	/** @return array<string> */
 	private function reservedSchemas(): array
 	{
-		$schemas = $this->schemaLister->listReservedSchemas();
+		$schemas = $this->services->schemaLister->listReservedSchemas();
 		$schemas = array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
 		$ignore  = ['collection', 'schema'];
 
@@ -199,17 +160,17 @@ class CollectionForm extends TotalForm
 		// Filter out schemas not accessible for current edition
 		$schemas = array_filter($schemas, fn (string $schema): bool => !in_array($schema, $ignore));
 
-		return array_filter($schemas, $this->collectionEditionService->isSchemaAccessible(...));
+		return array_filter($schemas, $this->services->collectionEditionService->isSchemaAccessible(...));
 	}
 
 	/** @return array<string> */
 	private function customSchemas(): array
 	{
-		$schemas   = $this->schemaLister->listCustomSchemas();
+		$schemas   = $this->services->schemaLister->listCustomSchemas();
 		$schemaIds = array_map(fn (SchemaData $schema): string => $schema->id, $schemas);
 
 		// Filter out custom schemas not accessible for current edition (Pro only)
-		$schemaIds = array_filter($schemaIds, $this->collectionEditionService->isSchemaAccessible(...));
+		$schemaIds = array_filter($schemaIds, $this->services->collectionEditionService->isSchemaAccessible(...));
 
 		// Sort alphabetically
 		sort($schemaIds);

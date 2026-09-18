@@ -8,6 +8,8 @@ use Psr\Log\NullLogger;
 use Random\RandomException;
 use Slim\App;
 use Symfony\Component\Console\Application;
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use TotalCMS\Domain\Automation\Service\AutomationLoader;
 use TotalCMS\Domain\Automation\Service\AutomationRunReader;
@@ -36,6 +38,10 @@ use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
+use TotalCMS\Domain\Index\Service\IndexFilter;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
@@ -154,6 +160,38 @@ function bootstrap()
 	session_id('');
 
 	return require __DIR__ . '/../config/bootstrap.php';
+}
+
+/**
+ * A FormServices for unit tests: every collaborator a bare instance built
+ * without its constructor, so a form can be constructed and its option and
+ * routing logic exercised without touching disk. Pass the mocks a test
+ * actually needs as `$overrides`, keyed by constructor parameter name.
+ *
+ * @param array<string,mixed> $overrides
+ */
+function formServices(array $overrides = []): FormServices
+{
+	$bare = static fn (string $class): object => (new ReflectionClass($class))->newInstanceWithoutConstructor();
+
+	$args = [
+		'objectFetcher'            => $bare(ObjectFetcher::class),
+		'collectionFetcher'        => $bare(CollectionFetcher::class),
+		'collectionLister'         => $bare(CollectionLister::class),
+		'collectionReader'         => $bare(IndexReader::class),
+		'indexFilter'              => $bare(IndexFilter::class),
+		'schemaFetcher'            => $bare(SchemaFetcher::class),
+		'schemaLister'             => $bare(SchemaLister::class),
+		'accessGroupLister'        => $bare(AccessGroupLister::class),
+		'collectionEditionService' => $bare(CollectionEditionService::class),
+		'editionFeatures'          => $bare(EditionFeatureService::class),
+		'dataViewFilter'           => $bare(DataViewFilter::class),
+		'csrfManager'              => $bare(CSRFTokenManager::class),
+		'config'                   => $bare(Config::class),
+		'metaResolver'             => $bare(PropertyMetaResolver::class),
+	];
+
+	return new FormServices(...array_merge($args, $overrides));
 }
 
 function testDataDir(): string

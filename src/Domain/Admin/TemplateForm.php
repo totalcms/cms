@@ -2,25 +2,12 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
-use TotalCMS\Domain\Collection\Service\CollectionEditionService;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\DataView\Service\DataViewFilter;
-use TotalCMS\Domain\Index\Service\IndexFilter;
-use TotalCMS\Domain\Index\Service\IndexReader;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Data\TemplatePath;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Template\Service\TemplateFactory;
-use TotalCMS\Support\Config;
 
 /**
  * Total Form Builder for Templates.
@@ -41,21 +28,8 @@ class TemplateForm extends TotalForm
 	 * @param array<string,mixed>  $data
 	 */
 	public function __construct(
-		protected ObjectFetcher $objectFetcher,
-		protected CollectionFetcher $collectionFetcher,
-		protected CollectionLister $collectionLister,
-		protected IndexReader $collectionReader,
-		protected IndexFilter $indexFilter,
-		protected SchemaFetcher $schemaFetcher,
-		public SchemaLister $schemaLister,
-		protected AccessGroupLister $accessGroupLister,
-		protected CollectionEditionService $collectionEditionService,
-		protected EditionFeatureService $editionFeatures,
+		FormServices $services,
 		protected TemplateRepository $templateRepository,
-		protected DataViewFilter $dataViewFilter,
-		protected CSRFTokenManager $csrfManager,
-		protected Config $config,
-		protected PropertyMetaResolver $metaResolver,
 		public string $api,
 		public string $path         = '',
 		public string $collection   = '',
@@ -86,42 +60,29 @@ class TemplateForm extends TotalForm
 		protected bool $addOnly       = false,
 	) {
 		parent::__construct(
-			$objectFetcher,
-			$collectionFetcher,
-			$collectionLister,
-			$collectionReader,
-			$indexFilter,
-			$schemaFetcher,
-			$schemaLister,
-			$accessGroupLister,
-			$collectionEditionService,
-			$editionFeatures,
-			$dataViewFilter,
-			$csrfManager,
-			$config,
-			$metaResolver,
-			$api,
-			$collection,
-			$id,
-			$method,
-			$class,
-			$buildError,
-			$helpStyle,
-			$save,
-			$delete,
-			$formType,
-			$schema,
-			$route,
-			$newActions,
-			$editActions,
-			$deleteActions,
-			[], // data
-			$autosave,
-			$helpOnHover,
-			$helpOnFocus,
-			$hideID,
-			$useFormGrid,
-			$addOnly,
+			services: $services,
+			api: $api,
+			collection: $collection,
+			id: $id,
+			method: $method,
+			class: $class,
+			buildError: $buildError,
+			helpStyle: $helpStyle,
+			save: $save,
+			delete: $delete,
+			formType: $formType,
+			schema: $schema,
+			route: $route,
+			newActions: $newActions,
+			editActions: $editActions,
+			deleteActions: $deleteActions,
+			data: [],
+			autosave: $autosave,
+			helpOnHover: $helpOnHover,
+			helpOnFocus: $helpOnFocus,
+			hideID: $hideID,
+			useFormGrid: $useFormGrid,
+			addOnly: $addOnly,
 		);
 	}
 
@@ -153,7 +114,7 @@ class TemplateForm extends TotalForm
 
 		$this->formType   = 'template';
 		$this->schema     = 'template';
-		$this->schemaData = $this->schemaFetcher->fetchSchema($this->schema);
+		$this->schemaData = $this->services->schemaFetcher->fetchSchema($this->schema);
 	}
 
 	/**

@@ -19,7 +19,7 @@ final class ViewIdListTest extends TestCase
 		]);
 
 		$form = (new \ReflectionClass(TotalForm::class))->newInstanceWithoutConstructor();
-		$form->setDataViewLister($lister);
+		(new \ReflectionProperty(TotalForm::class, 'services'))->setValue($form, formServices(['dataViewLister' => $lister]));
 
 		$this->assertSame(['sales-summary', 'top-products'], $form->viewIdList());
 	}
@@ -27,6 +27,7 @@ final class ViewIdListTest extends TestCase
 	public function testViewIdListReturnsEmptyWhenListerMissing(): void
 	{
 		$form = (new \ReflectionClass(TotalForm::class))->newInstanceWithoutConstructor();
+		(new \ReflectionProperty(TotalForm::class, 'services'))->setValue($form, formServices());
 		$this->assertSame([], $form->viewIdList());
 	}
 }

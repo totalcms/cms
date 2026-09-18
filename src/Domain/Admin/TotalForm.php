@@ -4,38 +4,27 @@ namespace TotalCMS\Domain\Admin;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
-use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
-use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionEditionService;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Extension\Data\FormAction;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\Feed\Service\PodcastCategories;
 use TotalCMS\Domain\Index\Service\IndexFilter;
-use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Locale\LocaleRegistry;
 use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Template\Service\TemplateLister;
-use TotalCMS\Support\Config;
 
 /**
  * Total Form Builder.
@@ -319,20 +308,9 @@ class TotalForm implements \Stringable
 	 * @param array<string,mixed> $data Duplicate data for prefilling form
 	 */
 	public function __construct(
-		protected ObjectFetcher $objectFetcher,
-		protected CollectionFetcher $collectionFetcher,
-		protected CollectionLister $collectionLister,
-		protected IndexReader $collectionReader,
-		protected IndexFilter $indexFilter,
-		protected SchemaFetcher $schemaFetcher,
-		protected SchemaLister $schemaLister,
-		protected AccessGroupLister $accessGroupLister,
-		protected CollectionEditionService $collectionEditionService,
-		protected EditionFeatureService $editionFeatures,
-		protected DataViewFilter $dataViewFilter,
-		protected CSRFTokenManager $csrfManager,
-		protected Config $config,
-		protected PropertyMetaResolver $metaResolver,
+		// Everything a form shares with every other form. Built once by
+		// TotalFormFactory; a test builds one from stubs (formServices()).
+		protected FormServices $services,
 		public string $api,
 		public string $collection             = '',
 		public string $id                     = '',
@@ -418,32 +396,25 @@ class TotalForm implements \Stringable
 		}
 	}
 
+	public function services(): FormServices
+	{
+		return $this->services;
+	}
+
 	public function getSchemaFetcher(): SchemaFetcher
 	{
-		return $this->schemaFetcher;
+		return $this->services->schemaFetcher;
 	}
 
 	public function getMetaResolver(): PropertyMetaResolver
 	{
-		return $this->metaResolver;
+		return $this->services->metaResolver;
 	}
 
-	/**
-	 * Optional structured logger. TotalFormFactory injects this via
-	 * setLogger() after construction so the existing (already large)
-	 * constructor surface doesn't grow; the eventual FormContext
-	 * refactor will fold this into a single context argument.
-	 */
-	private ?LoggerInterface $logger = null;
-
-	public function setLogger(LoggerInterface $logger): void
+	/** The TotalForm log channel; a NullLogger when nothing was injected. */
+	public function logger(): LoggerInterface
 	{
-		$this->logger = $logger;
-	}
-
-	public function logger(): ?LoggerInterface
-	{
-		return $this->logger;
+		return $this->services->logger;
 	}
 
 	protected function initClass(): void
@@ -485,10 +456,10 @@ class TotalForm implements \Stringable
 			$actionType = $action['action'] ?? '';
 
 			return match ($actionType) {
-				'mailer'   => $this->editionFeatures->can(EditionFeature::MAILER_ACTIONS),
-				'webhook'  => $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS),
+				'mailer'   => $this->services->editionFeatures->can(EditionFeature::MAILER_ACTIONS),
+				'webhook'  => $this->services->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS),
 				default    => $this->formActionRegistry?->get($actionType) instanceof FormAction
-					? $this->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS)
+					? $this->services->editionFeatures->can(EditionFeature::WEBHOOK_ACTIONS)
 					: true,
 			};
 		}));
@@ -598,7 +569,7 @@ class TotalForm implements \Stringable
 		// Add CSRF token if manager is available and method requires protection
 		$csrfField = '';
 		if (in_array(strtoupper($this->method), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
-			$csrfField = $this->csrfManager->getTokenField();
+			$csrfField = $this->services->csrfManager->getTokenField();
 		}
 
 		$content  = $this->buildError() . $csrfField . $sectionHtml . $content;
@@ -641,7 +612,7 @@ class TotalForm implements \Stringable
 			$collection = $this->collection;
 		}
 
-		$collection = $this->collectionReader->fetchIndex($collection);
+		$collection = $this->services->collectionReader->fetchIndex($collection);
 
 		// array_filter removes any empty values
 		return array_filter($collection->objects->pluck($property)->flatten()->unique()->toArray());
@@ -655,7 +626,7 @@ class TotalForm implements \Stringable
 	 */
 	public function categoryListForCollections(): array
 	{
-		return $this->collectionLister->listCategories();
+		return $this->services->collectionLister->listCategories();
 	}
 
 	/**
@@ -666,7 +637,7 @@ class TotalForm implements \Stringable
 	 */
 	public function categoryListForSchemas(): array
 	{
-		return $this->schemaLister->listCategories();
+		return $this->services->schemaLister->listCategories();
 	}
 
 	/**
@@ -677,7 +648,7 @@ class TotalForm implements \Stringable
 	 */
 	public function collectionIdList(): array
 	{
-		$collections = $this->collectionLister->listAllCollections();
+		$collections = $this->services->collectionLister->listAllCollections();
 
 		return array_map(fn (CollectionData $c): string => $c->id, $collections);
 	}
@@ -691,7 +662,7 @@ class TotalForm implements \Stringable
 	 */
 	public function collectionIdListWithLabels(): array
 	{
-		$collections = $this->collectionLister->listAllCollections();
+		$collections = $this->services->collectionLister->listAllCollections();
 
 		return array_values(array_map(fn (CollectionData $c): array => [
 			'value' => $c->id,
@@ -730,7 +701,7 @@ class TotalForm implements \Stringable
 	{
 		$options = [];
 
-		foreach ($this->collectionLister->listAllCollections() as $collection) {
+		foreach ($this->services->collectionLister->listAllCollections() as $collection) {
 			if (!$this->schemaIsOrInherits($collection->schema, $schemaId)) {
 				continue;
 			}
@@ -757,7 +728,7 @@ class TotalForm implements \Stringable
 		}
 
 		try {
-			$schema = $this->schemaFetcher->fetchRawSchema($schemaId);
+			$schema = $this->services->schemaFetcher->fetchRawSchema($schemaId);
 		} catch (\Throwable) {
 			return false;
 		}
@@ -765,26 +736,10 @@ class TotalForm implements \Stringable
 		return in_array($target, $schema->inheritFrom, true);
 	}
 
-	protected ?TemplateLister $templateLister                  = null;
-	protected ?PageMiddlewareRegistry $pageMiddlewareRegistry  = null;
-	protected ?DataViewLister $dataViewLister                  = null;
 
-	public function setTemplateLister(TemplateLister $lister): void
-	{
-		$this->templateLister = $lister;
-	}
 
-	public function setPageMiddlewareRegistry(PageMiddlewareRegistry $registry): void
-	{
-		$this->pageMiddlewareRegistry = $registry;
-	}
 
-	private ?AdminNavRegistry $navRegistry = null;
 
-	public function setNavRegistry(AdminNavRegistry $registry): void
-	{
-		$this->navRegistry = $registry;
-	}
 
 	/**
 	 * Every admin sidebar entry as `{value, label}` options.
@@ -795,13 +750,9 @@ class TotalForm implements \Stringable
 	 */
 	public function adminNavItemList(): array
 	{
-		return $this->navRegistry?->options() ?? [];
+		return $this->services->navRegistry?->options() ?? [];
 	}
 
-	public function setDataViewLister(DataViewLister $lister): void
-	{
-		$this->dataViewLister = $lister;
-	}
 
 	/**
 	 * View IDs for propertyOptions: "viewIds".
@@ -810,12 +761,12 @@ class TotalForm implements \Stringable
 	 */
 	public function viewIdList(): array
 	{
-		if (!$this->dataViewLister instanceof DataViewLister) {
+		if (!$this->services->dataViewLister instanceof DataViewLister) {
 			return [];
 		}
 
 		$ids = [];
-		foreach ($this->dataViewLister->listViews() as $view) {
+		foreach ($this->services->dataViewLister->listViews() as $view) {
 			if (is_array($view) && isset($view['id']) && is_string($view['id'])) {
 				$ids[] = $view['id'];
 			}
@@ -831,12 +782,12 @@ class TotalForm implements \Stringable
 	 */
 	public function viewIdListWithLabels(): array
 	{
-		if (!$this->dataViewLister instanceof DataViewLister) {
+		if (!$this->services->dataViewLister instanceof DataViewLister) {
 			return [];
 		}
 
 		$views = [];
-		foreach ($this->dataViewLister->listViews() as $view) {
+		foreach ($this->services->dataViewLister->listViews() as $view) {
 			if (!is_array($view) || !isset($view['id']) || !is_string($view['id'])) {
 				continue;
 			}
@@ -920,11 +871,11 @@ class TotalForm implements \Stringable
 	 */
 	public function layoutListForBuilder(): array
 	{
-		if (!$this->templateLister instanceof TemplateLister) {
+		if (!$this->services->templateLister instanceof TemplateLister) {
 			return [];
 		}
 
-		return $this->templateLister->listBuilderTemplates('layouts', true);
+		return $this->services->templateLister->listBuilderTemplates('layouts', true);
 	}
 
 	/**
@@ -935,11 +886,11 @@ class TotalForm implements \Stringable
 	 */
 	public function pageListForBuilder(): array
 	{
-		if (!$this->templateLister instanceof TemplateLister) {
+		if (!$this->services->templateLister instanceof TemplateLister) {
 			return [];
 		}
 
-		return $this->templateLister->listBuilderTemplates('pages', true);
+		return $this->services->templateLister->listBuilderTemplates('pages', true);
 	}
 
 	/**
@@ -951,11 +902,11 @@ class TotalForm implements \Stringable
 	 */
 	public function pageMiddlewareList(): array
 	{
-		if (!$this->pageMiddlewareRegistry instanceof PageMiddlewareRegistry) {
+		if (!$this->services->pageMiddlewareRegistry instanceof PageMiddlewareRegistry) {
 			return [];
 		}
 
-		return $this->pageMiddlewareRegistry->availableNames();
+		return $this->services->pageMiddlewareRegistry->availableNames();
 	}
 
 	/**
@@ -975,21 +926,21 @@ class TotalForm implements \Stringable
 	{
 		try {
 			if ($collection !== '') {
-				$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+				$schema = $this->services->schemaFetcher->fetchSchemaForCollection($collection);
 
 				return array_keys($schema->properties);
 			}
 
 			// CollectionForm path: schema name lives on the loaded CollectionData
 			if ($this->collectionData instanceof CollectionData && $this->collectionData->schema !== '') {
-				$schema = $this->schemaFetcher->fetchSchema($this->collectionData->schema);
+				$schema = $this->services->schemaFetcher->fetchSchema($this->collectionData->schema);
 
 				return array_keys($schema->properties);
 			}
 
 			// ObjectForm path: collection name on the form itself
 			if ($this->collection !== '') {
-				$schema = $this->schemaFetcher->fetchSchemaForCollection($this->collection);
+				$schema = $this->services->schemaFetcher->fetchSchemaForCollection($this->collection);
 
 				return array_keys($schema->properties);
 			}
@@ -1017,10 +968,10 @@ class TotalForm implements \Stringable
 
 		// If filters are provided, use IndexFilter to get filtered objects
 		if ($filters !== []) {
-			$objects = $this->indexFilter->fetchFilteredIndex($collection, $filters);
+			$objects = $this->services->indexFilter->fetchFilteredIndex($collection, $filters);
 		} else {
 			// No filters, fetch all objects
-			$index   = $this->collectionReader->fetchIndex($collection);
+			$index   = $this->services->collectionReader->fetchIndex($collection);
 			$objects = $index->objects->toArray();
 		}
 
@@ -1040,7 +991,7 @@ class TotalForm implements \Stringable
 	 */
 	public function propertiesForView(array $properties, string $viewId, array $filters = []): array
 	{
-		$data = $this->dataViewFilter->fetchFilteredViewData($viewId, $filters);
+		$data = $this->services->dataViewFilter->fetchFilteredViewData($viewId, $filters);
 
 		/** @phpstan-ignore-next-line argument.templateType */
 		return array_map(fn ($item) => collect($item)->only($properties)->toArray(), $data);
@@ -1053,7 +1004,7 @@ class TotalForm implements \Stringable
 	 */
 	public function accessGroupOptionsForField(): array
 	{
-		$groups = $this->accessGroupLister->listAll();
+		$groups = $this->services->accessGroupLister->listAll();
 
 		return array_map(fn (AccessGroupData $group): array => [
 			'value' => $group->id,
@@ -1261,7 +1212,7 @@ class TotalForm implements \Stringable
 			$collection = $this->collection;
 		}
 
-		$index = $this->collectionReader->fetchIndex($collection);
+		$index = $this->services->collectionReader->fetchIndex($collection);
 
 		return self::extractMediaTags($index->objects->all(), $field, $type);
 	}
@@ -1302,7 +1253,7 @@ class TotalForm implements \Stringable
 	 */
 	public function baseApi(): string
 	{
-		return $this->config->api;
+		return $this->services->config->api;
 	}
 
 	/**
@@ -1315,12 +1266,12 @@ class TotalForm implements \Stringable
 	 */
 	public function getLocales(): array
 	{
-		return $this->config->i18n['available'];
+		return $this->services->config->i18n['available'];
 	}
 
 	public function getDefaultLocale(): string
 	{
-		return $this->config->i18n['default'];
+		return $this->services->config->i18n['default'];
 	}
 
 	/**
@@ -1462,7 +1413,7 @@ class TotalForm implements \Stringable
 			return [];
 		}
 		$schema     = $this->collectionData->schema;
-		$schemaData = $this->schemaFetcher->fetchSchema($schema);
+		$schemaData = $this->services->schemaFetcher->fetchSchema($schema);
 		$properties = $schemaData->properties;
 		foreach ($properties as $property => $options) {
 			$properties[$property] = self::filterFieldProperties($options);

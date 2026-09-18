@@ -2,23 +2,10 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
-use TotalCMS\Domain\Collection\Service\CollectionEditionService;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\DataView\Service\DataViewFilter;
-use TotalCMS\Domain\Index\Service\IndexFilter;
-use TotalCMS\Domain\Index\Service\IndexReader;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
+use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
-use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
-use TotalCMS\Support\Config;
 
 /**
  * Total Form Builder.
@@ -38,21 +25,8 @@ class SchemaForm extends TotalForm
 	 * @param array<string,mixed>  $data
 	 */
 	public function __construct(
-		protected ObjectFetcher $objectFetcher,
-		protected CollectionFetcher $collectionFetcher,
-		protected CollectionLister $collectionLister,
-		protected IndexReader $collectionReader,
-		protected IndexFilter $indexFilter,
-		protected SchemaFetcher $schemaFetcher,
-		public SchemaLister $schemaLister,
-		protected AccessGroupLister $accessGroupLister,
-		protected CollectionEditionService $collectionEditionService,
-		protected EditionFeatureService $editionFeatures,
+		FormServices $services,
 		protected SchemaFactory $schemaFactory,
-		protected DataViewFilter $dataViewFilter,
-		protected CSRFTokenManager $csrfManager,
-		protected Config $config,
-		protected PropertyMetaResolver $metaResolver,
 		public string $api,
 		public string $collection = '',
 		public string $id          = '',
@@ -77,42 +51,29 @@ class SchemaForm extends TotalForm
 		protected bool $addOnly       = false,
 	) {
 		parent::__construct(
-			$objectFetcher,
-			$collectionFetcher,
-			$collectionLister,
-			$collectionReader,
-			$indexFilter,
-			$schemaFetcher,
-			$schemaLister,
-			$accessGroupLister,
-			$collectionEditionService,
-			$editionFeatures,
-			$dataViewFilter,
-			$csrfManager,
-			$config,
-			$metaResolver,
-			$api,
-			$collection,
-			$id,
-			$method,
-			$class,
-			$buildError,
-			$helpStyle,
-			$save,
-			$delete,
-			$formType,
-			$schema,
-			$route,
-			$newActions,
-			$editActions,
-			$deleteActions,
-			$data,
-			$autosave,
-			$helpOnHover,
-			$helpOnFocus,
-			$hideID,
-			$useFormGrid,
-			$addOnly,
+			services: $services,
+			api: $api,
+			collection: $collection,
+			id: $id,
+			method: $method,
+			class: $class,
+			buildError: $buildError,
+			helpStyle: $helpStyle,
+			save: $save,
+			delete: $delete,
+			formType: $formType,
+			schema: $schema,
+			route: $route,
+			newActions: $newActions,
+			editActions: $editActions,
+			deleteActions: $deleteActions,
+			data: $data,
+			autosave: $autosave,
+			helpOnHover: $helpOnHover,
+			helpOnFocus: $helpOnFocus,
+			hideID: $hideID,
+			useFormGrid: $useFormGrid,
+			addOnly: $addOnly,
 		);
 	}
 
@@ -128,7 +89,7 @@ class SchemaForm extends TotalForm
 			$this->reserved         = $this->isReservedSchema($this->id);
 			// This is the actual schema object data - fetch without flattening
 			// so we only see the schema's own properties in the editor
-			$this->schemaObjectData = $this->schemaFetcher->fetchRawSchema($this->id);
+			$this->schemaObjectData = $this->services->schemaFetcher->fetchRawSchema($this->id);
 		}
 		// Duplicate Schema
 		if ($this->id === '' && $this->data !== []) {
@@ -143,7 +104,7 @@ class SchemaForm extends TotalForm
 		$this->formType   = 'schema';
 		$this->schema     = 'schema';
 		// This is the schema for a schema object
-		$this->schemaData = $this->schemaFetcher->fetchSchema($this->schema);
+		$this->schemaData = $this->services->schemaFetcher->fetchSchema($this->schema);
 
 		if ($this->reserved) {
 			// Do not allow delete or save for reserved schemas
@@ -163,7 +124,7 @@ class SchemaForm extends TotalForm
 
 	private function isReservedSchema(string $id): bool
 	{
-		return $this->schemaLister->isReservedSchema($id);
+		return $this->services->schemaLister->isReservedSchema($id);
 	}
 
 	/**
@@ -185,7 +146,7 @@ class SchemaForm extends TotalForm
 		// Process each parent schema in order to collect all inherited property details
 		foreach ($this->schemaObjectData->inheritFrom as $parentId) {
 			try {
-				$parentSchema = $this->schemaFetcher->fetchRawSchema($parentId);
+				$parentSchema = $this->services->schemaFetcher->fetchRawSchema($parentId);
 
 				foreach ($parentSchema->properties as $propName => $propDef) {
 					// Only add if not already in own properties and not already inherited (first wins)
@@ -279,7 +240,7 @@ class SchemaForm extends TotalForm
 
 		if ($name === 'inheritFrom') {
 			// Get all available schemas (both reserved and custom) for inheritFrom field
-			$allSchemas = $this->schemaLister->listAllSchemas();
+			$allSchemas = $this->services->schemaLister->listAllSchemas();
 			$schemaIds  = array_map(fn (SchemaData $schema): string => $schema->id, $allSchemas);
 
 			// Remove 'schema' and 'collection' schemas and the current schema being edited

@@ -248,7 +248,7 @@ class SchemaField extends PropertyField
 			$deckChecker = new DeckCompatibilityChecker();
 
 			// Get all schemas directly from the form's public schemaLister
-			$schemas = $this->form->schemaLister->listAllSchemas();
+			$schemas = $this->form->services()->schemaLister->listAllSchemas();
 
 			foreach ($schemas as $schema) {
 				$schemaArray = $schema->toArray();

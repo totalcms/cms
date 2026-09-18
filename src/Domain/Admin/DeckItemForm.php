@@ -2,23 +2,12 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionEditionService;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\DataView\Service\DataViewFilter;
-use TotalCMS\Domain\Index\Service\IndexFilter;
-use TotalCMS\Domain\Index\Service\IndexReader;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
-use TotalCMS\Support\Config;
 
 /**
  * Deck Item Form Builder.
@@ -40,20 +29,7 @@ class DeckItemForm extends TotalForm
 	 * @param array<int,array<string,mixed>> $deleteActions Array of action objects
 	 */
 	public function __construct(
-		ObjectFetcher $objectFetcher,
-		CollectionFetcher $collectionFetcher,
-		CollectionLister $collectionLister,
-		IndexReader $collectionReader,
-		IndexFilter $indexFilter,
-		SchemaFetcher $schemaFetcher,
-		SchemaLister $schemaLister,
-		AccessGroupLister $accessGroupLister,
-		CollectionEditionService $collectionEditionService,
-		EditionFeatureService $editionFeatures,
-		DataViewFilter $dataViewFilter,
-		CSRFTokenManager $csrfManager,
-		Config $config,
-		PropertyMetaResolver $metaResolver,
+		FormServices $services,
 		string $api,
 		string $collection             = '',
 		string $id                     = '',
@@ -79,21 +55,8 @@ class DeckItemForm extends TotalForm
 		bool $addOnly                  = false,
 	) {
 		parent::__construct(
-			objectFetcher            : $objectFetcher,
-			collectionFetcher        : $collectionFetcher,
-			collectionLister         : $collectionLister,
-			collectionReader         : $collectionReader,
-			indexFilter              : $indexFilter,
-			schemaFetcher            : $schemaFetcher,
-			schemaLister             : $schemaLister,
-			accessGroupLister        : $accessGroupLister,
-			collectionEditionService : $collectionEditionService,
-			editionFeatures          : $editionFeatures,
-			dataViewFilter    : $dataViewFilter,
-			csrfManager       : $csrfManager,
-			config            : $config,
-			metaResolver      : $metaResolver,
-			api                      : $api,
+			services: $services,
+			api               : $api,
 			collection        : $collection,
 			id                : $id,
 			method            : $method,
@@ -134,7 +97,7 @@ class DeckItemForm extends TotalForm
 
 		// Replace schemaData with deck schema for all form operations
 		if ($this->schemaref !== '') {
-			$this->schemaData = $this->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->schemaref));
+			$this->schemaData = $this->services->schemaFetcher->fetchSchema(SchemaFetcher::extractSchemaId($this->schemaref));
 		}
 
 		if ($this->id === '' && isset($_GET['id'])) {
@@ -262,10 +225,10 @@ class DeckItemForm extends TotalForm
 
 		$propertySchema = $this->schemaData->properties[$property] ?? [];
 		$settings       = is_array($propertySchema['settings'] ?? null) ? $propertySchema['settings'] : [];
-		$settings       = $this->metaResolver->resolvePreset($settings);
+		$settings       = $this->services->metaResolver->resolvePreset($settings);
 
 		if ($settings === [] && !empty($propertySchema['field'])) {
-			return $this->metaResolver->resolveTypePreset((string)$propertySchema['field']);
+			return $this->services->metaResolver->resolveTypePreset((string)$propertySchema['field']);
 		}
 
 		return $settings;
@@ -310,7 +273,7 @@ class DeckItemForm extends TotalForm
 			return;
 		}
 
-		$object      = $this->objectFetcher->fetchObject($this->collection, $this->id);
+		$object      = $this->services->objectFetcher->fetchObject($this->collection, $this->id);
 		$objectArray = $object->toArray();
 		$deckData    = $objectArray[$this->property] ?? [];
 
@@ -324,7 +287,7 @@ class DeckItemForm extends TotalForm
 	 */
 	private function initCollectionData(): void
 	{
-		$collectionData = $this->collectionFetcher->fetchCollection($this->collection);
+		$collectionData = $this->services->collectionFetcher->fetchCollection($this->collection);
 
 		if (!$collectionData instanceof CollectionData) {
 			$this->buildError = "Collection {$this->collection} not found for DeckItemForm";
@@ -334,7 +297,7 @@ class DeckItemForm extends TotalForm
 
 		$this->collectionData = $collectionData;
 		$this->schema         = $this->collectionData->schema;
-		$this->schemaData     = $this->schemaFetcher->fetchSchema($this->schema);
+		$this->schemaData     = $this->services->schemaFetcher->fetchSchema($this->schema);
 	}
 
 	/**

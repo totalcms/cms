@@ -89,7 +89,7 @@ describe('TotalForm::mediaTagsForCollection', function (): void {
 		$reader->expects(test()->once())->method('fetchIndex')->with('photos')->willReturn($index);
 
 		$form = (new ReflectionClass(TotalForm::class))->newInstanceWithoutConstructor();
-		(new ReflectionProperty(TotalForm::class, 'collectionReader'))->setValue($form, $reader);
+		(new ReflectionProperty(TotalForm::class, 'services'))->setValue($form, formServices(['collectionReader' => $reader]));
 		(new ReflectionProperty(TotalForm::class, 'collection'))->setValue($form, 'photos');
 
 		expect($form->mediaTagsForCollection('myimage', 'image'))->toBe(['sky', 'sea', 'sand']);

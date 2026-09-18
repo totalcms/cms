@@ -71,6 +71,23 @@ describe('ObjectForm File Property Filtering', function (): void {
 		$this->schemaFetcher->method('fetchSchema')->willReturn($this->schemaData);
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collectionData);
 		$this->objectFetcher->method('existsObject')->willReturn(false);
+
+		$this->services = formServices([
+			'objectFetcher' => $this->objectFetcher,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionLister' => $this->collectionLister,
+			'collectionReader' => $this->indexReader,
+			'indexFilter' => $this->indexFilter,
+			'schemaFetcher' => $this->schemaFetcher,
+			'schemaLister' => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
+			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures' => $this->editionFeatures,
+			'csrfManager' => $this->csrfManager,
+			'config' => $this->config,
+			'metaResolver' => $this->metaResolver,
+			'dataViewFilter' => $this->dataViewFilter,
+		]);
 	});
 
 	test('filters out file property from duplicate data', function (): void {
@@ -81,20 +98,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 		];
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -122,20 +126,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 		];
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -157,20 +148,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 		];
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -191,20 +169,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 		];
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -226,20 +191,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 		];
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -265,20 +217,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 		];
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -315,20 +254,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 		];
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -357,20 +283,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 		];
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'test-collection',
 			data: $duplicateData
@@ -386,20 +299,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 
 	test('handles empty data array gracefully', function (): void {
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'test-collection',
 			data: []
@@ -425,20 +325,7 @@ describe('ObjectForm File Property Filtering', function (): void {
 		$this->objectFetcher->method('existsObject')->willReturn(false);
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'test-collection',
 			id: 'existing-object-id', // Explicitly set ID for editing

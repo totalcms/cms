@@ -3,46 +3,26 @@
 namespace TotalCMS\Domain\Admin;
 
 use Odan\Session\PhpSession;
-use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
-use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
-use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
-use TotalCMS\Domain\Collection\Service\CollectionEditionService;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\DataView\Service\DataViewFilter;
-use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
-use TotalCMS\Domain\Index\Service\IndexFilter;
-use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\License\Service\EditionFeatureService;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
-use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
-use TotalCMS\Factory\LogChannel;
-use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
 /**
@@ -62,44 +42,23 @@ readonly class TotalFormFactory
 	private string $api;
 
 	public function __construct(
-		private Config $config,
+		private FormServices $services,
 		private PhpSession $session,
-		private ObjectFetcher $objectFetcher,
-		private CollectionFetcher $collectionFetcher,
-		private CollectionLister $collectionLister,
-		private IndexReader $collectionReader,
-		private IndexFilter $indexFilter,
-		private SchemaFetcher $schemaFetcher,
-		private SchemaLister $schemaLister,
-		private AccessGroupLister $accessGroupLister,
-		private CollectionEditionService $collectionEditionService,
-		private EditionFeatureService $editionFeatures,
 		private SchemaFactory $schemaFactory,
 		private TemplateRepository $templateRepository,
-		private CSRFTokenManager $csrfManager,
 		private SettingsSchemaFetcher $settingsSchemaFetcher,
 		private SettingsFetcher $settingsFetcher,
 		private JobManager $jobManager,
-		private DataViewLister $dataViewLister,
-		private PropertyMetaResolver $metaResolver,
-		private DataViewFilter $dataViewFilter,
 		private TranslationService $translationService,
 		private ExtensionDiscovery $extensionDiscovery,
 		private ExtensionSettingsManager $extensionSettingsManager,
 		private ExtensionManager $extensionManager,
-		private TemplateLister $templateLister,
 		private DevModeManager $devModeManager,
-		private PageMiddlewareRegistry $pageMiddlewareRegistry,
 		private FormActionRegistry $formActionRegistry,
-		private AdminNavRegistry $navRegistry,
-		LoggerFactory $loggerFactory,
 	) {
-		$this->api    = $this->config->api . '/api';
-		$this->logger = $loggerFactory
-			->channelLogger(LogChannel::TotalForm);
+		$this->api = $this->services->config->api . '/api';
 	}
 
-	private LoggerInterface $logger;
 
 	/**
 	 * Create a report export form.
@@ -113,7 +72,7 @@ readonly class TotalFormFactory
 
 		$form = new ReportForm(
 			api              : $this->api,
-			collectionLister : $this->collectionLister,
+			collectionLister : $this->services->collectionLister,
 			translator       : $this->translationService->trans(...),
 			collection       : $collection,
 			include          : (string)($options['include'] ?? ''),
@@ -132,7 +91,7 @@ readonly class TotalFormFactory
 	{
 		$options['api']         = $this->api;
 		$options['route']       = $route;
-		$options['csrfManager'] = $this->csrfManager;
+		$options['csrfManager'] = $this->services->csrfManager;
 
 		// options: method, label, refresh
 
@@ -145,30 +104,16 @@ readonly class TotalFormFactory
 	public function totalform(string $route, string $content = '', array $options = []): string
 	{
 		// Admin routes (/admin/...) don't have the /api prefix
-		$api     = str_starts_with($route, '/admin') ? $this->config->api : $this->api;
+		$api     = str_starts_with($route, '/admin') ? $this->services->config->api : $this->api;
 		$options = array_merge($this->buttonLabels($options), [
 			'route'                    => $route,
 			'api'                      => $api,
-			'objectFetcher'            => $this->objectFetcher,
-			'collectionFetcher'        => $this->collectionFetcher,
-			'collectionLister'         => $this->collectionLister,
-			'collectionReader'         => $this->collectionReader,
-			'indexFilter'              => $this->indexFilter,
-			'schemaFetcher'            => $this->schemaFetcher,
-			'schemaLister'             => $this->schemaLister,
-			'accessGroupLister'        => $this->accessGroupLister,
-			'collectionEditionService' => $this->collectionEditionService,
-			'editionFeatures'          => $this->editionFeatures,
-			'dataViewFilter'           => $this->dataViewFilter,
-			'csrfManager'              => $this->csrfManager,
-			'config'                   => $this->config,
-			'metaResolver'             => $this->metaResolver,
+			'services'                 => $this->services,
 			'formActionRegistry'       => $this->formActionRegistry,
 			'translator'               => $this->translationService->trans(...),
 		]);
 
 		$form = new TotalForm(...$options);
-		$form->setLogger($this->logger);
 
 		return $form->build($content);
 	}
@@ -195,7 +140,7 @@ readonly class TotalFormFactory
 	{
 		$options['api']         = $this->api;
 		$options['collection']  = $collection;
-		$options['csrfManager'] = $this->csrfManager;
+		$options['csrfManager'] = $this->services->csrfManager;
 
 		$form = new FactoryForm(...$options);
 
@@ -209,15 +154,15 @@ readonly class TotalFormFactory
 	 */
 	public function loginForm(array $options = []): string
 	{
-		$options['api']          = $this->config->api;
+		$options['api']          = $this->services->config->api;
 		$options['session']      = $this->session;
-		$options['csrfManager']  = $this->csrfManager;
+		$options['csrfManager']  = $this->services->csrfManager;
 		// LoginForm resolves all labels/help from the admin translation domain
 		// (with empty label overrides falling through to localized defaults).
 		$options['translator'] = $this->translationService->trans(...);
-		$options['loginWith'] ??= $this->config->auth['loginWith'] ?? 'both';
-		$options['showPasskeys'] ??= $this->editionFeatures->can(EditionFeature::PASSKEYS)
-			&& ($this->config->auth['usePasskeys'] ?? true);
+		$options['loginWith'] ??= $this->services->config->auth['loginWith'] ?? 'both';
+		$options['showPasskeys'] ??= $this->services->editionFeatures->can(EditionFeature::PASSKEYS)
+			&& ($this->services->config->auth['usePasskeys'] ?? true);
 
 		$form = new LoginForm(...$options);
 
@@ -229,7 +174,7 @@ readonly class TotalFormFactory
 	{
 		$options['api']         = $this->api;
 		$options['collection']  = $collection;
-		$options['csrfManager'] = $this->csrfManager;
+		$options['csrfManager'] = $this->services->csrfManager;
 
 		$form = new ImportCollectionForm(...$options);
 
@@ -245,7 +190,7 @@ readonly class TotalFormFactory
 		$options['collection']     = $collection;
 		$options['objects']        = $objects;
 		$options['deckProperties'] = $deckProperties;
-		$options['csrfManager']    = $this->csrfManager;
+		$options['csrfManager']    = $this->services->csrfManager;
 
 		$form = new ImportDeckForm(...$options);
 
@@ -286,7 +231,7 @@ readonly class TotalFormFactory
 	{
 		$deckProperties = [];
 		try {
-			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
+			$schema = $this->services->schemaFetcher->fetchSchemaForCollection($collection);
 			foreach ($schema->properties as $propName => $propConfig) {
 				// Match only true deck properties — cards also carry a
 				// `schemaref`, so checking `extractSchemaRef !== null` (the
@@ -303,7 +248,7 @@ readonly class TotalFormFactory
 			return [[], []];
 		}
 
-		$index   = $this->collectionReader->fetchIndex($collection);
+		$index   = $this->services->collectionReader->fetchIndex($collection);
 		$objects = [];
 		foreach ($index->objects->all() as $object) {
 			$id        = (string)($object['id'] ?? '');
@@ -346,7 +291,7 @@ readonly class TotalFormFactory
 	public function importSchema(array $options = []): string
 	{
 		$options['api']         = $this->api;
-		$options['csrfManager'] = $this->csrfManager;
+		$options['csrfManager'] = $this->services->csrfManager;
 
 		$form = new ImportSchemaForm(...$options);
 
@@ -357,7 +302,7 @@ readonly class TotalFormFactory
 	public function importJumpStart(array $options = []): string
 	{
 		$options['api']         = $this->api;
-		$options['csrfManager'] = $this->csrfManager;
+		$options['csrfManager'] = $this->services->csrfManager;
 
 		$form = new ImportJumpStartForm(...$options);
 
@@ -411,7 +356,7 @@ readonly class TotalFormFactory
 	public function clearqueue(array $options = []): string
 	{
 		$options['api']         = $this->api;
-		$options['csrfManager'] = $this->csrfManager;
+		$options['csrfManager'] = $this->services->csrfManager;
 
 		$form = new JobQueueForm(...$options);
 
@@ -464,25 +409,11 @@ readonly class TotalFormFactory
 		], $this->buttonLabels($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
-			'objectFetcher'            => $this->objectFetcher,
-			'collectionFetcher'        => $this->collectionFetcher,
-			'collectionLister'         => $this->collectionLister,
-			'collectionReader'         => $this->collectionReader,
-			'indexFilter'              => $this->indexFilter,
-			'schemaFetcher'            => $this->schemaFetcher,
-			'schemaLister'             => $this->schemaLister,
-			'accessGroupLister'        => $this->accessGroupLister,
-			'collectionEditionService' => $this->collectionEditionService,
-			'editionFeatures'          => $this->editionFeatures,
+			'services'                 => $this->services,
 			'schemaFactory'            => $this->schemaFactory,
-			'dataViewFilter'           => $this->dataViewFilter,
-			'csrfManager'              => $this->csrfManager,
-			'config'                   => $this->config,
-			'metaResolver'             => $this->metaResolver,
 		]);
 
 		$form = new SchemaForm(...$options);
-		$form->setLogger($this->logger);
 
 		return $form->autoBuild();
 	}
@@ -497,27 +428,11 @@ readonly class TotalFormFactory
 		], $this->buttonLabels($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
-			'objectFetcher'            => $this->objectFetcher,
-			'collectionFetcher'        => $this->collectionFetcher,
-			'collectionLister'         => $this->collectionLister,
-			'collectionReader'         => $this->collectionReader,
-			'indexFilter'              => $this->indexFilter,
-			'schemaFetcher'            => $this->schemaFetcher,
-			'schemaLister'             => $this->schemaLister,
-			'accessGroupLister'        => $this->accessGroupLister,
-			'collectionEditionService' => $this->collectionEditionService,
-			'editionFeatures'          => $this->editionFeatures,
+			'services'                 => $this->services,
 			'templateRepository'       => $this->templateRepository,
-			'dataViewFilter'           => $this->dataViewFilter,
-			'csrfManager'              => $this->csrfManager,
-			'config'                   => $this->config,
-			'metaResolver'             => $this->metaResolver,
 		]);
 
 		$form = new TemplateForm(...$options);
-		$form->setTemplateLister($this->templateLister);
-		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
-		$form->setDataViewLister($this->dataViewLister);
 
 		return $form->autoBuild();
 	}
@@ -540,7 +455,7 @@ readonly class TotalFormFactory
 	/** @param array<string,mixed> $options */
 	public function dataviews(string $id = '', array $options = []): string
 	{
-		$this->dataViewLister->ensureCollection();
+		$this->services->dataViewLister?->ensureCollection();
 
 		$options = array_merge([
 			'save'        => true,
@@ -754,24 +669,10 @@ readonly class TotalFormFactory
 		], $this->buttonLabels($options), [
 			// These options cannot be overridden
 			'api'                      => $this->api,
-			'objectFetcher'            => $this->objectFetcher,
-			'collectionFetcher'        => $this->collectionFetcher,
-			'collectionLister'         => $this->collectionLister,
-			'collectionReader'         => $this->collectionReader,
-			'indexFilter'              => $this->indexFilter,
-			'schemaFetcher'            => $this->schemaFetcher,
-			'schemaLister'             => $this->schemaLister,
-			'accessGroupLister'        => $this->accessGroupLister,
-			'collectionEditionService' => $this->collectionEditionService,
-			'editionFeatures'          => $this->editionFeatures,
-			'dataViewFilter'           => $this->dataViewFilter,
-			'csrfManager'              => $this->csrfManager,
-			'config'                   => $this->config,
-			'metaResolver'             => $this->metaResolver,
+			'services'                 => $this->services,
 		]);
 
 		$form = new CollectionForm(...$options);
-		$form->setLogger($this->logger);
 
 		return $form->autoBuild();
 	}
@@ -783,27 +684,10 @@ readonly class TotalFormFactory
 			// These options cannot be overridden
 			'collection'               => $collection,
 			'api'                      => $this->api,
-			'collectionFetcher'        => $this->collectionFetcher,
-			'collectionLister'         => $this->collectionLister,
-			'collectionReader'         => $this->collectionReader,
-			'indexFilter'              => $this->indexFilter,
-			'objectFetcher'            => $this->objectFetcher,
-			'schemaFetcher'            => $this->schemaFetcher,
-			'schemaLister'             => $this->schemaLister,
-			'accessGroupLister'        => $this->accessGroupLister,
-			'collectionEditionService' => $this->collectionEditionService,
-			'editionFeatures'          => $this->editionFeatures,
-			'dataViewFilter'           => $this->dataViewFilter,
-			'csrfManager'              => $this->csrfManager,
-			'config'                   => $this->config,
-			'metaResolver'             => $this->metaResolver,
+			'services'                 => $this->services,
 		]);
 
 		$form = new ObjectForm(...$options);
-		$form->setLogger($this->logger);
-		$form->setTemplateLister($this->templateLister);
-		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
-		$form->setDataViewLister($this->dataViewLister);
 
 		return $form;
 	}
@@ -821,24 +705,10 @@ readonly class TotalFormFactory
 			'property'                 => $property,
 			'id'                       => $options['id'] ?? '',
 			'api'                      => $this->api,
-			'collectionFetcher'        => $this->collectionFetcher,
-			'collectionLister'         => $this->collectionLister,
-			'collectionReader'         => $this->collectionReader,
-			'indexFilter'              => $this->indexFilter,
-			'objectFetcher'            => $this->objectFetcher,
-			'schemaFetcher'            => $this->schemaFetcher,
-			'schemaLister'             => $this->schemaLister,
-			'accessGroupLister'        => $this->accessGroupLister,
-			'collectionEditionService' => $this->collectionEditionService,
-			'editionFeatures'          => $this->editionFeatures,
-			'dataViewFilter'           => $this->dataViewFilter,
-			'csrfManager'              => $this->csrfManager,
-			'config'                   => $this->config,
-			'metaResolver'             => $this->metaResolver,
+			'services'                 => $this->services,
 		]);
 
 		$form = new DeckItemForm(...$options);
-		$form->setLogger($this->logger);
 
 		return $form;
 	}
@@ -1524,32 +1394,10 @@ readonly class TotalFormFactory
 		// It will not be used, but it is required to create a FormField instance.
 		// Use empty collection string to prevent fetching/creating any collection
 		$form = new ObjectForm(
-			objectFetcher            : $this->objectFetcher,
-			collectionFetcher        : $this->collectionFetcher,
-			collectionLister         : $this->collectionLister,
-			collectionReader         : $this->collectionReader,
-			indexFilter              : $this->indexFilter,
-			schemaFetcher            : $this->schemaFetcher,
-			schemaLister             : $this->schemaLister,
-			accessGroupLister        : $this->accessGroupLister,
-			collectionEditionService : $this->collectionEditionService,
-			editionFeatures          : $this->editionFeatures,
-			dataViewFilter           : $this->dataViewFilter,
-			csrfManager              : $this->csrfManager,
-			config                   : $this->config,
-			metaResolver             : $this->metaResolver,
+			services: $this->services,
 			api                      : $this->api,
 			collection               : '',
 		);
-		$form->setLogger($this->logger);
-		// Wire the builder-aware option sources so fields rendered via field()
-		// (standalone fields, extension settings) can resolve the `pages`,
-		// `layouts`, and `pageMiddleware` propertyOptions sources — the real
-		// form builders set these too (see loginForm/collection form paths).
-		$form->setTemplateLister($this->templateLister);
-		$form->setPageMiddlewareRegistry($this->pageMiddlewareRegistry);
-		$form->setDataViewLister($this->dataViewLister);
-		$form->setNavRegistry($this->navRegistry);
 
 		return $form;
 	}

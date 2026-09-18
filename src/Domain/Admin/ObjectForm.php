@@ -30,16 +30,16 @@ class ObjectForm extends TotalForm
 		// config base, not under the API prefix — same convention as the
 		// admin-routed forms in TotalFormFactory::totalform().
 		if ($this->register) {
-			$this->api   = $this->config->api;
+			$this->api   = $this->services->config->api;
 			$this->route = "/admin/register/{$this->collection}";
 		}
 
-		$objectExists = $this->objectFetcher->existsObject($this->collection, $this->id);
+		$objectExists = $this->services->objectFetcher->existsObject($this->collection, $this->id);
 
 		// For addOnly forms, never load existing objects even if an ID is somehow present
 		if (!$this->addOnly && $this->id !== '' && $objectExists) {
 			// If the form is for editing an existing item, change the method to PUT
-			$this->objectData = $this->objectFetcher->fetchObject($this->collection, $this->id);
+			$this->objectData = $this->services->objectFetcher->fetchObject($this->collection, $this->id);
 			$this->route      = "/collections/{$this->collection}/{$this->id}";
 			if ($this->method === 'POST') {
 				$this->method = 'PUT';
@@ -53,7 +53,7 @@ class ObjectForm extends TotalForm
 			$this->duplicateData = $this->filterFileProperties($this->data);
 			$this->isDuplicate   = true;
 			// Blank out ID to allow autogen rules to work (unless keepIdOnDuplicate setting is enabled)
-			$keepId = $this->config->dashboard['keepIdOnDuplicate'] ?? false;
+			$keepId = $this->services->config->dashboard['keepIdOnDuplicate'] ?? false;
 			if (!$keepId) {
 				$this->duplicateData['id'] = '';
 			}
@@ -137,7 +137,7 @@ class ObjectForm extends TotalForm
 	/** @return array<string,mixed> */
 	private function fieldDefaults(string $property): array
 	{
-		$defaults = $this->metaResolver->resolve($this->collection, $property, $this->id);
+		$defaults = $this->services->metaResolver->resolve($this->collection, $property, $this->id);
 
 		// Handle schema reference for deck/card fields — move to settings after resolve
 		// This is a form-specific concern, not part of general resolution.
@@ -178,7 +178,7 @@ class ObjectForm extends TotalForm
 
 	private function initCollectionData(): void
 	{
-		$collectionData = $this->collectionFetcher->fetchCollection($this->collection);
+		$collectionData = $this->services->collectionFetcher->fetchCollection($this->collection);
 
 		if (is_null($collectionData)) {
 			$this->buildError = "Collection {$this->collection} not found for TotalForm";
@@ -188,7 +188,7 @@ class ObjectForm extends TotalForm
 
 		$this->collectionData = $collectionData;
 		$this->schema         = $this->collectionData->schema;
-		$this->schemaData     = $this->schemaFetcher->fetchSchema($this->schema);
+		$this->schemaData     = $this->services->schemaFetcher->fetchSchema($this->schema);
 	}
 
 	/**

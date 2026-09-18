@@ -37,6 +37,9 @@ use TotalCMS\Action\Admin\Utils\TwigDebuggerPageData;
 use TotalCMS\Action\Admin\Utils\UpdatePageData;
 use TotalCMS\Action\Admin\Utils\UtilsPageDataResolver;
 use TotalCMS\Action\Admin\Utils\VisualizerPageData;
+use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
+use TotalCMS\Domain\Admin\Form\FormServices;
+use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
@@ -53,10 +56,13 @@ use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Cache\FragmentCache;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionFormatConverter;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\DataView\Service\DataViewDependencyResolver;
+use TotalCMS\Domain\DataView\Service\DataViewFilter;
+use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Listener\CacheInvalidationListener;
@@ -83,6 +89,7 @@ use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener;
@@ -147,6 +154,7 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Service\ExternalFieldStore;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessor;
 use TotalCMS\Domain\Property\Service\PropertyDataProcessorInterface;
+use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Service\SchemaValidator;
@@ -155,6 +163,7 @@ use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
 use TotalCMS\Domain\Search\Service\SearchService;
 use TotalCMS\Domain\Search\Service\SearchServiceInterface;
 use TotalCMS\Domain\Search\Service\TextSearchProvider;
+use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Seo\Service\JsonLd\ArticleProvider;
 use TotalCMS\Domain\Seo\Service\JsonLd\BreadcrumbProvider;
 use TotalCMS\Domain\Seo\Service\JsonLd\OrganizationProvider;
@@ -528,6 +537,31 @@ return [
 	TranslationService::class => fn (ContainerInterface $container): TranslationService => new TranslationService(
 		$container->get(Config::class),
 		PathResolver::packageRoot() . '/resources/translations',
+	),
+
+	// Every form shares these; the factory builds one and hands it to each
+	// form it makes. The logger is the TotalForm channel, which autowiring
+	// cannot pick, so the definition is spelled out.
+	FormServices::class => fn (ContainerInterface $container): FormServices => new FormServices(
+		objectFetcher           : $container->get(ObjectFetcher::class),
+		collectionFetcher       : $container->get(CollectionFetcher::class),
+		collectionLister        : $container->get(CollectionLister::class),
+		collectionReader        : $container->get(IndexReader::class),
+		indexFilter             : $container->get(IndexFilter::class),
+		schemaFetcher           : $container->get(SchemaFetcher::class),
+		schemaLister            : $container->get(SchemaLister::class),
+		accessGroupLister       : $container->get(AccessGroupLister::class),
+		collectionEditionService: $container->get(CollectionEditionService::class),
+		editionFeatures         : $container->get(EditionFeatureService::class),
+		dataViewFilter          : $container->get(DataViewFilter::class),
+		csrfManager             : $container->get(CSRFTokenManager::class),
+		config                  : $container->get(Config::class),
+		metaResolver            : $container->get(PropertyMetaResolver::class),
+		logger                  : $container->get(LoggerFactory::class)->channelLogger(LogChannel::TotalForm),
+		templateLister          : $container->get(TemplateLister::class),
+		pageMiddlewareRegistry  : $container->get(PageMiddlewareRegistry::class),
+		navRegistry             : $container->get(AdminNavRegistry::class),
+		dataViewLister          : $container->get(DataViewLister::class),
 	),
 
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(

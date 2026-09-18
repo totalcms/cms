@@ -42,6 +42,23 @@ describe('Form AddOnly Security Feature', function (): void {
 		// Mock existing object
 		$this->existingObject = $this->createMock(ObjectData::class);
 		$this->existingObject->method('toArray')->willReturn(['id' => 'existing-123', 'name' => 'Existing Object']);
+
+		$this->services = formServices([
+			'objectFetcher' => $this->objectFetcher,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionLister' => $this->collectionLister,
+			'collectionReader' => $this->indexReader,
+			'indexFilter' => $this->indexFilter,
+			'schemaFetcher' => $this->schemaFetcher,
+			'schemaLister' => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
+			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures' => $this->editionFeatures,
+			'csrfManager' => $this->csrfManager,
+			'config' => $this->config,
+			'metaResolver' => $this->metaResolver,
+			'dataViewFilter' => $this->dataViewFilter,
+		]);
 	});
 
 	afterEach(function (): void {
@@ -56,20 +73,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'users',
 			addOnly: false  // Regular form behavior
@@ -91,20 +95,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'users',
 			addOnly: true  // Security: Add only mode
@@ -123,20 +114,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'users',
 			id: 'explicit-id-789',  // Explicitly passed ID
@@ -158,20 +136,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'users',
 			addOnly: true
@@ -196,20 +161,7 @@ describe('Form AddOnly Security Feature', function (): void {
 		$this->objectFetcher->method('fetchObject')->willReturn($this->existingObject);
 
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'users',
 			addOnly: false  // Regular form
@@ -230,20 +182,7 @@ describe('Form AddOnly Security Feature', function (): void {
 	test('addOnly defaults to false for backwards compatibility', function (): void {
 		// Create form without specifying addOnly parameter
 		$form = new ObjectForm(
-			objectFetcher: $this->objectFetcher,
-			collectionFetcher: $this->collectionFetcher,
-			collectionLister: $this->collectionLister,
-			collectionReader: $this->indexReader,
-			indexFilter: $this->indexFilter,
-			schemaFetcher: $this->schemaFetcher,
-			schemaLister: $this->schemaLister,
-			accessGroupLister: $this->accessGroupLister,
-			collectionEditionService: $this->collectionEditionService,
-			editionFeatures: $this->editionFeatures,
-			dataViewFilter: $this->dataViewFilter,
-			csrfManager: $this->csrfManager,
-			config: $this->config,
-			metaResolver: $this->metaResolver,
+			services: $this->services,
 			api: '/api',
 			collection: 'users'
 			// No addOnly parameter - should default to false

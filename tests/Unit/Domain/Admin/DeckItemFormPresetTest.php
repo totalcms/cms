@@ -66,25 +66,29 @@ describe('DeckItemForm preset resolution', function (): void {
 
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collectionData);
 		$this->schemaFetcher->method('fetchSchema')->willReturn($this->deckSchema);
+
+		$this->services = formServices([
+			'objectFetcher' => $this->objectFetcher,
+			'collectionFetcher' => $this->collectionFetcher,
+			'collectionLister' => $this->collectionLister,
+			'collectionReader' => $this->indexReader,
+			'indexFilter' => $this->indexFilter,
+			'schemaFetcher' => $this->schemaFetcher,
+			'schemaLister' => $this->schemaLister,
+			'accessGroupLister' => $this->accessGroupLister,
+			'collectionEditionService' => $this->collectionEditionService,
+			'editionFeatures' => $this->editionFeatures,
+			'dataViewFilter' => $this->dataViewFilter,
+			'csrfManager' => $this->csrfManager,
+			'config' => $this->config,
+			'metaResolver' => $this->metaResolver,
+		]);
 	});
 
 	function buildDeckItemForm(object $ctx): DeckItemForm
 	{
 		$form = new DeckItemForm(
-			objectFetcher           : $ctx->objectFetcher,
-			collectionFetcher       : $ctx->collectionFetcher,
-			collectionLister        : $ctx->collectionLister,
-			collectionReader        : $ctx->indexReader,
-			indexFilter             : $ctx->indexFilter,
-			schemaFetcher           : $ctx->schemaFetcher,
-			schemaLister            : $ctx->schemaLister,
-			accessGroupLister       : $ctx->accessGroupLister,
-			collectionEditionService: $ctx->collectionEditionService,
-			editionFeatures         : $ctx->editionFeatures,
-			dataViewFilter          : $ctx->dataViewFilter,
-			csrfManager             : $ctx->csrfManager,
-			config                  : $ctx->config,
-			metaResolver            : $ctx->metaResolver,
+			services: $ctx->services,
 			api                     : '/api',
 			collection              : 'blog-pro',
 			id                      : 'post-1',

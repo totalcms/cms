@@ -650,7 +650,7 @@ class FormField
 				$properties = $this->form->propertiesForCollection($propertiesToFetch, $collection, $filters);
 			}
 		} catch (\Throwable $e) {
-			$this->form->logger()?->warning('relationalOptions references missing source — rendering empty options', [
+			$this->form->logger()->warning('relationalOptions references missing source — rendering empty options', [
 				'field'      => $this->name,
 				'collection' => $collection,
 				'view'       => $view,
