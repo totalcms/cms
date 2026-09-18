@@ -1,0 +1,1 @@
+<form class="simple-form totalform " data-route="/contact" data-method="POST" data-api="/api" data-refresh="false" data-ajax="true"><input name="x"><div class="form-inline-fields"><button type="submit" class="button btn dash-button ">Submit</button></div></form>

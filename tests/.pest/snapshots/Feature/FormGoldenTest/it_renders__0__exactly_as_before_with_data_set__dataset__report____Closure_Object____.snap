@@ -1,0 +1,68 @@
+<div class="report-form"><input type="hidden" name="collection" value="blog" class="report-collection-input"/><div class="report-filters"><div class="report-filter-field include-filter-field"><label>Include Filter</label><input type="text" name="include" value placeholder="e.g. published:true,category:news" class="report-filter-input"/></div><div class="report-filter-field exclude-filter-field"><label>Exclude Filter</label><input type="text" name="exclude" value placeholder="e.g. draft:true" class="report-filter-input"/></div></div><div id="report-fields" class="report-fields" hx-get="/api/report/collections/blog/fields" hx-trigger="load" hx-swap="innerHTML"></div><div class="report-actions"><button type="button" class="dash-button button btn accent report-download-btn report-download-csv" data-format="csv">Download CSV</button><button type="button" class="dash-button button btn report-download-btn report-download-json" data-format="json">Download JSON</button></div></div><script>
+(function() {
+	const api = '/api';
+	const container = document.querySelector('.report-form');
+	if (!container) return;
+
+	const collectionInput = container.querySelector('.report-collection-input');
+	const fieldsContainer = container.querySelector('#report-fields');
+
+	// Load fields when collection changes (for select dropdown)
+	if (collectionInput && collectionInput.tagName === 'SELECT') {
+		collectionInput.addEventListener('change', function() {
+			const collection = this.value;
+			if (!collection) {
+				fieldsContainer.innerHTML = '<p class="report-fields-placeholder">Select a collection to see available fields.</p>';
+				return;
+			}
+			fetch(api + '/report/collections/' + encodeURIComponent(collection) + '/fields')
+				.then(r => r.text())
+				.then(html => { fieldsContainer.innerHTML = html; })
+				.catch(() => { fieldsContainer.innerHTML = '<p class="error">Failed to load fields.</p>'; });
+		});
+	}
+
+	// Toggle all checkboxes in a section
+	container.addEventListener('click', function(e) {
+		const toggle = e.target.closest('.report-toggle-all');
+		if (!toggle) return;
+		const grid = toggle.closest('h3').nextElementSibling;
+		if (!grid) return;
+		const boxes = Array.from(grid.querySelectorAll('input[name="fields[]"]')).filter(cb => cb.closest('label').offsetParent !== null);
+		const allChecked = boxes.every(cb => cb.checked);
+		boxes.forEach(cb => cb.checked = !allChecked);
+		toggle.textContent = allChecked ? '+' : '\u2212';
+		toggle.title = allChecked ? 'Select All' : 'Deselect All';
+	});
+
+	// Download buttons
+	container.querySelectorAll('.report-download-btn').forEach(btn => {
+		btn.addEventListener('click', function() {
+			const format = this.dataset.format;
+			const collection = collectionInput ? collectionInput.value : '';
+			if (!collection) {
+				alert('Please select a collection.');
+				return;
+			}
+
+			const checked = fieldsContainer.querySelectorAll('input[name="fields[]"]:checked');
+			if (checked.length === 0) {
+				alert('Please select at least one field.');
+				return;
+			}
+
+			const fields = Array.from(checked).map(cb => cb.value);
+			const params = new URLSearchParams();
+			params.set('fields', fields.join(','));
+
+			const includeInput = container.querySelector('[name="include"]');
+			const excludeInput = container.querySelector('[name="exclude"]');
+			if (includeInput && includeInput.value) params.set('include', includeInput.value);
+			if (excludeInput && excludeInput.value) params.set('exclude', excludeInput.value);
+
+			const url = api + '/report/collections/' + encodeURIComponent(collection) + '/' + format + '?' + params.toString();
+			window.location.href = url;
+		});
+	});
+})();
+</script>

@@ -1,0 +1,19 @@
+<style>
+#form-ID-container {
+	container-type: inline-size;
+}
+#form-ID {
+	grid-template-areas:
+		'id'
+		'status';
+	grid-template-columns: 1fr;
+}
+@container (min-width: 500px) {
+	#form-ID {
+		grid-template-areas:
+			'id'
+			'status';
+		grid-template-columns: repeat(1, 1fr);
+	}
+}
+</style><div id="form-ID-container"><form id="form-ID" class="totalform  formgrid" data-schema="toggle" data-collection="toggle" data-method="POST" data-api="/api" data-route="/collections/toggle"><div class="form-field id-field " data-type="id" style="--grid-area: id;"><label for="field-UID">Toggle ID</label><div class="form-group"><input type="text" id="field-UID" name="id" required aria-describedby="help-UID" autocomplete="off" data-1p-ignore data-lpignore="true" autocapitalize="off"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">A unique ID for this toggle. No spaces or special characters.</p></div><div class="form-field toggle-field " data-type="toggle" style="--grid-area: status;"><label for="field-UID">Toggle</label><div class="form-group"><div class="switch"><input id="field-UID" name="status" type="checkbox" aria-describedby="help-UID"/><label for="field-UID" aria-hidden="true">Toggle</label></div></div><p class="help" id="help-UID">Click to toggle the status.</p></div><div class="form-inline-fields"></div></form></div>

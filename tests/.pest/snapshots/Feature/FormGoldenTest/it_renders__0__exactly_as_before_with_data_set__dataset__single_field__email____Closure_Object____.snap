@@ -1,0 +1,1 @@
+<form class="totalform  custom-layout" data-collection="email" data-method="POST" data-api="/api" data-route="/collections/email" data-id="mytext"><p class="cms-twig-error">Collection email not found for TotalForm</p><div class="form-inline-fields"></div></form>

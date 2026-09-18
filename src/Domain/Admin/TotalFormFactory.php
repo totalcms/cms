@@ -386,7 +386,9 @@ readonly class TotalFormFactory
 
 		$stats = new JobQueueStats(...$options);
 
-		return $stats->tableByStatus($header);
+		// No header option means the table's own default heading; passing the
+		// null through was a TypeError.
+		return is_string($header) ? $stats->tableByStatus($header) : $stats->tableByStatus();
 	}
 
 	/** @param array<string,mixed> $options */
@@ -400,7 +402,9 @@ readonly class TotalFormFactory
 
 		$stats = new JobQueueStats(...$options);
 
-		return $stats->tableByType($header);
+		// No header option means the table's own default heading; passing the
+		// null through was a TypeError.
+		return is_string($header) ? $stats->tableByType($header) : $stats->tableByType();
 	}
 
 	/** @param array<string,mixed> $options */

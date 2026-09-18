@@ -1,0 +1,23 @@
+<style>
+#form-ID-container {
+	container-type: inline-size;
+}
+#form-ID {
+	grid-template-areas:
+		'category'
+		'id'
+		'template'
+		'designerEnabled'
+		'designerToken';
+	grid-template-columns: 1fr;
+}
+@container (min-width: 500px) {
+	#form-ID {
+		grid-template-areas:
+			'category id'
+			'template template'
+			'designerEnabled designerToken';
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+</style><div id="form-ID-container"><form id="form-ID" class="totalform  formgrid" data-form="template" data-schema="template" data-method="POST" data-api="/api" data-route="/templates" data-new-actions="[{&quot;action&quot;:&quot;redirect-object&quot;,&quot;link&quot;:&quot;builder\/&quot;}]"><div class="form-field select-field " data-type="select" style="--grid-area: category;"><label for="field-UID">Type</label><div class="form-group"><select id="field-UID" name="category" aria-describedby="help-UID"><option value="layouts">Layout</option><option value="pages">Page</option><option value="partials">Partial</option><option value="macros">Macro</option><option value="templates" selected>Template</option><option value="whitelabel">White Label</option></select><div class="form-group-icon"></div></div><p class="help" id="help-UID">The category determines where the template file is stored.</p></div><div class="form-field id-field " data-type="id" style="--grid-area: id;" data-settings="{&quot;allowCharacters&quot;:&quot;\/&quot;}"><label for="field-UID">ID</label><div class="form-group"><input type="text" id="field-UID" name="id" required placeholder="mytemplate" aria-describedby="help-UID" autocomplete="off" data-1p-ignore data-lpignore="true" autocapitalize="off"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">The unique identifier for this template. Use forward slashes for folders (e.g., 'pages/header' or 'grids/blog').</p></div><div class="form-field code-field " data-type="code" style="--grid-area: template;" data-settings="{&quot;mode&quot;:&quot;twig&quot;,&quot;theme&quot;:&quot;elegant&quot;,&quot;maxHeight&quot;:600,&quot;lineNumbers&quot;:true,&quot;lineWrapping&quot;:true,&quot;indentUnit&quot;:2,&quot;tabSize&quot;:2,&quot;foldGutter&quot;:true,&quot;matchBrackets&quot;:true,&quot;autoCloseTags&quot;:true}"><label for="field-UID">Template Code</label><div class="form-group"><textarea id="field-UID" name="template" rows="8" autocomplete="off" aria-describedby="help-UID" data-field-type="code" data-mode="twig" data-theme="elegant" data-max-height="600" data-editor-options="{&quot;autofocus&quot;:false,&quot;lineNumbers&quot;:true,&quot;lineWrapping&quot;:true,&quot;indentUnit&quot;:2,&quot;tabSize&quot;:2,&quot;foldGutter&quot;:true,&quot;matchBrackets&quot;:true,&quot;autoCloseTags&quot;:true,&quot;fullscreen&quot;:true}" class="code-editor-field"></textarea><div class="form-group-icon"></div></div><p class="help" id="help-UID">Type your template code here.</p></div><div class="form-field toggle-field  field-visible" data-type="toggle" style="--grid-area: designerEnabled;" data-settings="{&quot;visibility&quot;:{&quot;watch&quot;:&quot;category&quot;,&quot;value&quot;:&quot;templates&quot;,&quot;operator&quot;:&quot;==&quot;}}"><label for="field-UID">Template Designer</label><div class="form-group"><div class="switch"><input id="field-UID" name="designerEnabled" type="checkbox" aria-describedby="help-UID"/><label for="field-UID" aria-hidden="true">Template Designer</label></div></div><p class="help" id="help-UID">Enable the Template Designer to allow remote template updates from development tools like Stacks.</p></div><div class="form-field id-field  field-hidden" data-type="id" style="--grid-area: designerToken; display: none;" data-settings="{&quot;autogen&quot;:&quot;${uid-14}&quot;,&quot;readonly&quot;:true,&quot;visibility&quot;:{&quot;watch&quot;:&quot;designerEnabled&quot;,&quot;value&quot;:&quot;1&quot;,&quot;operator&quot;:&quot;==&quot;}}"><label for="field-UID">Designer Token</label><div class="form-group"><input type="text" id="field-UID" name="designerToken" aria-describedby="help-UID" autocomplete="off" data-1p-ignore data-lpignore="true" autocapitalize="off"/><div class="form-group-icon"></div></div><p class="help" id="help-UID">A unique token required for remote template updates. Share this with your development tool.</p></div><div class="form-inline-fields"></div></form></div>

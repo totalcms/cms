@@ -1,0 +1,1 @@
+<form class="simple-form totalform jobqueue-clear-form" data-route="/jobqueue" data-method="DELETE" data-api="/api" data-refresh="true" data-ajax="true"><div class="form-inline-fields"><button type="submit" class="button btn dash-button ">Clear Job Queue</button></div></form>

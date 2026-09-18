@@ -1,0 +1,1 @@
+<div class="jobqueue-stats-wrapper"><h4>Job Queue by Status</h4><table class="jobqueue-stats jobqueue-by-status cms-colors"><tr class="pending"><td>Pending</td><td>0</td></tr><tr class="in-progress"><td>In-Progress</td><td>0</td></tr><tr class="failed"><td>Failed</td><td>0</td></tr><tr class="total"><td>Total</td><td>0</td></tr></table></div>
