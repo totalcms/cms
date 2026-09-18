@@ -312,6 +312,39 @@ Once registered, the field type can be used in schemas:
 }
 ```
 
+### The JavaScript side
+
+The PHP class renders the field's HTML. What happens in the browser — reading
+the value for a save, marking the form unsaved, validation, uploads — is a
+JavaScript class, and the admin bundle builds one for every field from its
+`data-type`. A type the bundle does not know falls back to the plain text
+field behaviour, so a field that needs more registers its own class:
+
+```js
+// assets/scripts/admin.js — registered with $context->addAdminAsset('js', 'scripts/admin.js')
+const { TotalField, registerFieldType } = window.TotalCMS;
+
+class ColorPickerField extends TotalField {
+	getValue() {
+		return this.input.value.toLowerCase();
+	}
+}
+
+registerFieldType('colorpicker', ColorPickerField);
+```
+
+`window.TotalCMS` carries `TotalForm`, `TotalField` and `registerFieldType`.
+Register at the module's top level: core admin scripts render before
+extension admin scripts, and module scripts run in document order, so the
+surface exists by the time your module runs and the registry is consulted
+when each form is built. Keep the script at its default `body` position — a
+`head` script runs before the core bundle and finds nothing to register with.
+A core type name (`text`, `image`, …) cannot be replaced; the built-in class
+wins before the registry is asked. `TotalField` is the base every core field
+extends: `this.container` is the field's wrapper, `this.input` its control,
+`getValue()` / `setValue()` / `clearValue()` / `validate()` are the methods a
+subclass overrides, and `this.changed()` marks the form unsaved.
+
 ## Event Listeners
 
 Subscribe to content events. See [Events](docs/extensions/events) for the full event reference.

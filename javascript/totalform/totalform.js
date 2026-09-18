@@ -419,11 +419,40 @@ export default class TotalForm {
 			case "schemaProperties":
 				return new SchemaPropertiesField(field,settings);
 
-            default:
+            default: {
+				const ctor = TotalForm.fieldTypes[field.dataset.type];
+				if (ctor) return new ctor(field, settings);
                 console.warn("Unknown field",field);
 				return new TotalField(field, settings);
+			}
         }
     }
+
+	//-------------------------
+	// Extension field types
+	//
+	// The JavaScript half of addFieldType(): an extension registers a class
+	// for its type name and the factory above builds it for any data-type
+	// the switch does not know, so the field takes part in unsaved-state
+	// tracking, generateData() and the deferred action chain like a core
+	// field. A core type name is never overridden — the switch wins before
+	// the registry is asked. Reached by extensions through
+	// window.TotalCMS.registerFieldType (see admin.js).
+	//-------------------------
+	static fieldTypes = {};
+
+	static registerFieldType(type, ctor) {
+		if (typeof type !== 'string' || type === '') {
+			throw new TypeError('registerFieldType: the type name must be a non-empty string');
+		}
+		if (typeof ctor !== 'function') {
+			throw new TypeError(`registerFieldType('${type}'): expected a class extending TotalField`);
+		}
+		if (TotalForm.fieldTypes[type]) {
+			console.warn(`Field type "${type}" registered twice; the later registration wins`);
+		}
+		TotalForm.fieldTypes[type] = ctor;
+	}
 
     //-------------------------
     // Submit functions
