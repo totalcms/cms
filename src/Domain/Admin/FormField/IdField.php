@@ -34,6 +34,6 @@ class IdField extends FormField
 		$attributes['autocomplete']   = 'off';
 		$attributes['autocapitalize'] = 'off';
 
-		return $attributes;
+		return $this->withExtraAttributes($attributes);
 	}
 }

@@ -198,6 +198,6 @@ class DeckTableField extends FormField
 			$attributes['data-deck-label-pattern'] = $this->deckItemLabel;
 		}
 
-		return $attributes;
+		return $this->withExtraAttributes($attributes);
 	}
 }

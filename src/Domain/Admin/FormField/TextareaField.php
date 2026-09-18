@@ -31,7 +31,7 @@ class TextareaField extends FormField
 		// Remove null values from the attributes array
 		$attributes = array_filter($attributes, fn (?string $x): bool => !is_null($x));
 
-		return $attributes;
+		return $this->withExtraAttributes($attributes);
 	}
 
 	public function buildFormField(): string

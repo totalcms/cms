@@ -32,6 +32,7 @@ This keeps core lean for sites that don't need a particular feature, while still
 | `totalcms/protect` | Gate a page behind a numeric passcode. Visitors enter a code to unlock — cookie remembers them for 7 days. For client previews and soft launches. | [Protect →](docs/extensions/protect) |
 | `totalcms/pushover` | Send push notifications via Pushover when forms are submitted. Supports Twig templates, image attachments, and delivery groups. Pro edition. | [Pushover →](docs/extensions/pushover) |
 | `totalcms/scheduled` | Time-window gating. Only renders a page between configured start/end timestamps. For holiday campaigns, embargoed announcements, and time-limited sales. | [Scheduled →](docs/extensions/scheduled) |
+| `totalcms/webmcp` | Make your forms and public collections callable by a browser AI agent inside the visitor's own session (Chrome 149+ origin trial). `webmcp_form()` annotates a form; listed collections are offered through `search_content`/`get_content` read tools (collection as an enum; visitors see public-read ones, a signed-in operator all). Experimental, off by default. | [WebMCP →](docs/extensions/webmcp) |
 
 ## How to enable / disable
 

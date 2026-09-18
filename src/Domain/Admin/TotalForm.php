@@ -333,6 +333,8 @@ class TotalForm implements \Stringable
 	protected ?\Closure $translator;
 	protected string $formgrid;
 	protected bool $fieldIcons;
+	/** @var array<string,string> */
+	protected array $attributes;
 
 	public function __construct(
 		// Everything a form shares with every other form. Built once by
@@ -368,6 +370,7 @@ class TotalForm implements \Stringable
 		$this->translator = $options->translator;
 		$this->formgrid = $options->formgrid;
 		$this->fieldIcons = $options->fieldIcons;
+		$this->attributes = $options->attributes;
 
 		$this->init();
 		$this->initClass();
@@ -495,12 +498,26 @@ class TotalForm implements \Stringable
 		return $this->formType;
 	}
 
-	public function autoBuild(string $content = ''): string
+	/**
+	 * Build the form with every field its schema declares.
+	 *
+	 * `$fieldOptions` are per-property options for those fields, keyed by
+	 * property — what a caller would pass to addField() if it were adding
+	 * the fields itself. An extension annotating every control (WebMCP's
+	 * toolparamdescription) is the case.
+	 *
+	 * @param array<string,array<string,mixed>> $fieldOptions
+	 */
+	public function autoBuild(string $content = '', array $fieldOptions = []): string
 	{
+		$this->autoFieldOptions = $fieldOptions;
 		$this->addFieldsFromSchema();
 
 		return $this->build($content);
 	}
+
+	/** @var array<string,array<string,mixed>> */
+	private array $autoFieldOptions = [];
 
 	protected function buildError(): string
 	{
@@ -601,7 +618,9 @@ class TotalForm implements \Stringable
 			'class' => 'form-inline-fields',
 		]);
 
-		$form = HTMLUtils::element('form', $content, $attributes);
+		// Caller-supplied attributes ride along, but never over core's own and
+		// never as an event handler.
+		$form = HTMLUtils::element('form', $content, array_merge(self::extraAttributes($this->attributes), $attributes));
 
 		// Wrap in container div for container queries (formgrid responsive layout)
 		if ($formId !== null) {
@@ -1105,6 +1124,10 @@ class TotalForm implements \Stringable
 			return;
 		}
 
+		if (isset($this->autoFieldOptions[$name])) {
+			$options = array_replace_recursive($this->autoFieldOptions[$name], $options);
+		}
+
 		$this->fields[$name] = $this->createDynamicField($name, $options);
 	}
 
@@ -1290,6 +1313,30 @@ class TotalForm implements \Stringable
 		}
 
 		return $properties;
+	}
+
+	/**
+	 * Filter caller-supplied HTML attributes: a plain attribute name, a scalar
+	 * (or null, for a boolean attribute) value, and never an event handler.
+	 * Shared by the form tag and, through FormField, every field control.
+	 *
+	 * @param array<mixed> $attributes
+	 * @return array<string,string>
+	 */
+	public static function extraAttributes(array $attributes): array
+	{
+		$clean = [];
+		foreach ($attributes as $name => $value) {
+			if (!is_string($name) || !preg_match('/^[a-z][a-z0-9-]*$/i', $name) || str_starts_with(strtolower($name), 'on')) {
+				continue;
+			}
+			if ($value !== null && !is_scalar($value)) {
+				continue;
+			}
+			$clean[$name] = $value === null || $value === true ? '' : (string)$value;
+		}
+
+		return $clean;
 	}
 
 	public function __toString(): string

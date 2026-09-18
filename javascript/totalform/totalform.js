@@ -467,7 +467,7 @@ export default class TotalForm {
 			// If a field is in focus on submit, a change event is triggered
 			if (this.isProcessing()) return;
 			this.unsaved();
-			if (this.autosave) this.save();
+			if (this.autosave) this.save().catch(() => {});
 		});
 		this.form.addEventListener("field-error", e => this.error(e.detail.message, e.detail.field));
     }
@@ -674,14 +674,19 @@ export default class TotalForm {
 		// or generateData() on dead nodes.
 		this.fields = this.fields.filter(field => this.form.contains(field.container));
 
+		// save() returns its outcome: resolved with the API response, rejected
+		// with the reason. The admin never awaited it; the WebMCP bridge answers
+		// an agent's submit with it. Every side effect below is unchanged.
 		if (!this.validate()) {
 			this.validated = false;
-			this.error('Please fix validation errors before saving.');
-			return;
+			const message = 'Please fix validation errors before saving.';
+			this.error(message);
+			return Promise.reject(new Error(message));
 		}
 		if (this.isError()) {
-			this.error('Error in form, cannot save.');
-			return;
+			const message = 'Error in form, cannot save.';
+			this.error(message);
+			return Promise.reject(new Error(message));
 		}
 		this.validated = true;
 
@@ -701,14 +706,14 @@ export default class TotalForm {
 			data = this.generateData();
 		} catch (error) {
 			this.error(`Cannot save: ${error.message}`);
-			return;
+			return Promise.reject(error);
 		}
 
 		this.closeDialog();
         this.processing();
-        this.api.postAPI(this.route, data, this.method)
-            .then(response => this.afterSave(response))
-            .catch(error => this.error(error));
+        return this.api.postAPI(this.route, data, this.method)
+            .then(response => { this.afterSave(response); return response; })
+            .catch(error => { this.error(error); throw error; });
     }
 
     async delete() {

@@ -37,7 +37,7 @@ class PasswordField extends FormField
 			$attributes['data-bwignore']  = 'true';
 		}
 
-		return $attributes;
+		return $this->withExtraAttributes($attributes);
 	}
 
 	public function build(): string

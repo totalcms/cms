@@ -128,7 +128,7 @@ export default class TotalFormManager {
 				if (!form.classList.contains("no-status-banner")) {
 					this.startProcessing();
 				}
-				totalform.save();
+				totalform.save().catch(() => {});
 			});
 		};
 
@@ -176,7 +176,7 @@ export default class TotalFormManager {
 		const showBanner = this.unsaved.some(form => !form.form.classList.contains("no-status-banner"));
 		if (showBanner) this.startProcessing();
 
-		this.unsaved.forEach(form => form.save());
+		this.unsaved.forEach(form => form.save().catch(() => {}));
 	}
 
 	delayProcessing(callback) {

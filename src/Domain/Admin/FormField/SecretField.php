@@ -22,6 +22,6 @@ class SecretField extends FormField
 		$attributes['data-lpignore']  = 'true';
 		$attributes['autocomplete']   = 'off';
 
-		return $attributes;
+		return $this->withExtraAttributes($attributes);
 	}
 }

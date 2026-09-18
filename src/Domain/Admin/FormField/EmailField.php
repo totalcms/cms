@@ -15,6 +15,6 @@ class EmailField extends FormField
 		$attributes                   = parent::formFieldAttributes();
 		$attributes['autocapitalize'] = 'off';
 
-		return $attributes;
+		return $this->withExtraAttributes($attributes);
 	}
 }

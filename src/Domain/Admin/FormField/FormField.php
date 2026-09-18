@@ -245,8 +245,11 @@ class FormField
 			'style'     => $style,
 		];
 
-		if ($this->settings !== []) {
-			$json = json_encode($this->settings);
+		// `attributes` went onto the control itself; the browser-side field
+		// reads the rest of the settings from this attribute.
+		$settings = array_diff_key($this->settings, ['attributes' => true]);
+		if ($settings !== []) {
+			$json = json_encode($settings);
 			if ($json) {
 				$attributes['data-settings'] = $json;
 			}
@@ -419,7 +422,31 @@ class FormField
 		// Remove null values from the attributes array
 		$attributes = array_filter($attributes, fn ($x): bool => !is_null($x));
 
-		return $attributes;
+		return $this->withExtraAttributes($attributes);
+	}
+
+	/**
+	 * `settings.attributes`: extra attributes on the control for what the
+	 * schema cannot say (WebMCP's toolparamdescription is the first user).
+	 * Only names the field has not set itself — name, type and value stay
+	 * the field's — and never an event handler. Every formFieldAttributes()
+	 * override returns through here.
+	 *
+	 * @param array<string,string|null> $attributes
+	 * @return array<string,string>
+	 */
+	protected function withExtraAttributes(array $attributes): array
+	{
+		$extra = $this->settings['attributes'] ?? [];
+		if (is_array($extra)) {
+			foreach (TotalForm::extraAttributes($extra) as $name => $value) {
+				if (!array_key_exists($name, $attributes)) {
+					$attributes[$name] = $value;
+				}
+			}
+		}
+
+		return array_filter($attributes, static fn (?string $value): bool => $value !== null);
 	}
 
 	public function getValue(): mixed

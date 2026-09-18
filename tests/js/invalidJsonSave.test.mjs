@@ -79,7 +79,8 @@ describe('TotalForm.save with a field that throws while collecting its value', (
 	test('reports the error instead of hanging', () => {
 		const form = formWithFields([field({ property: 'properties', throws: badJson() })]);
 
-		expect(() => form.save()).not.toThrow();
+		// save() now hands the failure back as a rejection as well as reporting it.
+		expect(() => form.save().catch(() => {})).not.toThrow();
 		expect(form.errors.join(' ')).toMatch(/Bad escaped character|JSON/i);
 	});
 
@@ -88,7 +89,7 @@ describe('TotalForm.save with a field that throws while collecting its value', (
 		// so a stuck "processing" is a dead form, not just a stuck spinner.
 		const form = formWithFields([field({ property: 'properties', throws: badJson() })]);
 
-		form.save();
+		form.save().catch(() => {});
 
 		expect(form.state).not.toBe('processing');
 	});
@@ -96,7 +97,7 @@ describe('TotalForm.save with a field that throws while collecting its value', (
 	test('sends no request', () => {
 		const form = formWithFields([field({ property: 'properties', throws: badJson() })]);
 
-		form.save();
+		form.save().catch(() => {});
 
 		expect(form.posted).toBeNull();
 	});
@@ -104,7 +105,7 @@ describe('TotalForm.save with a field that throws while collecting its value', (
 	test('leaves the dialog open so the offending property stays reachable', () => {
 		const form = formWithFields([field({ property: 'properties', throws: badJson() })]);
 
-		form.save();
+		form.save().catch(() => {});
 
 		expect(form.dialogClosed).toBe(false);
 	});
@@ -114,7 +115,7 @@ describe('TotalForm.save with a field that throws while collecting its value', (
 		// the false branch resets the banner and says nothing.
 		const form = formWithFields([field({ property: 'properties', throws: badJson() })]);
 
-		form.save();
+		form.save().catch(() => {});
 
 		expect(form.validatedAtError).toBe(true);
 	});
@@ -122,7 +123,7 @@ describe('TotalForm.save with a field that throws while collecting its value', (
 	test('a form with no throwing field still posts normally', () => {
 		const form = formWithFields([field({ property: 'title', value: 'Hello' })]);
 
-		form.save();
+		form.save().catch(() => {});
 
 		expect(form.posted).toEqual({
 			route: '/schemas/blog',

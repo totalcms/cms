@@ -80,7 +80,7 @@ class PriceField extends FormField
 		// Whole-currency → digit-only keypad; otherwise a decimal keypad (cents).
 		$attributes['inputmode'] = (int)($this->settings['decimals'] ?? 2) === 0 ? 'numeric' : 'decimal';
 
-		return $attributes;
+		return $this->withExtraAttributes($attributes);
 	}
 
 	public function createFormGroup(string $content): string

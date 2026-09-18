@@ -1,0 +1,55 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "WebMCP",
+	"description": "Forms rendered with webmcp_form() and the collections listed here become callable by a browser AI agent inside the visitor's own session. Experimental: Chrome 149+ with the origin trial, and the spec is still moving.",
+	"type": "object",
+	"properties": {
+		"declarativeForms": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Agent-callable forms",
+			"help": "Annotate forms rendered with webmcp_form() so an agent can fill and submit them. Off, the same templates render plain forms.",
+			"default": true
+		},
+		"readTools": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Read tools",
+			"help": "Register search_content and get_content tools over the collections below, so an agent on the page can look content up.",
+			"default": true
+		},
+		"readCollections": {
+			"type": "array",
+			"field": "list",
+			"label": "Collections exposed as read tools",
+			"help": "A visitor's agent sees only those that allow public read (Collection → Public Operations); yours, while signed in, sees them all. Responses are marked untrusted content for the agent.",
+			"settings": {
+				"propertyOptions": "collectionIds"
+			},
+			"default": []
+		},
+		"adminTools": {
+			"type": "boolean",
+			"field": "toggle",
+			"label": "Read tools in the admin dashboard",
+			"help": "Also load the read tools on dashboard pages, for an agent in your own browser. Forms in the admin are never annotated. Off by default.",
+			"default": false
+		},
+		"maxResults": {
+			"type": "number",
+			"field": "number",
+			"label": "Search results per call",
+			"help": "The most objects a search tool returns to the agent in one call.",
+			"default": 10,
+			"min": 1,
+			"max": 50
+		},
+		"originTrialToken": {
+			"type": "string",
+			"field": "textarea",
+			"label": "Chrome origin-trial token",
+			"help": "Register this site's origin for the WebMCP origin trial at developer.chrome.com/origintrials and paste the token. It is emitted as a meta tag so visitors on Chrome 149+ get the API without a flag. Leave empty while testing with chrome://flags/#enable-webmcp-testing.",
+			"default": ""
+		}
+	}
+}

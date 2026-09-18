@@ -5724,6 +5724,13 @@
                     "description": "Time-window gating. Only renders a page between configured start and end timestamps. For holiday campaigns, embargoed announcements, and time-limited sales.",
                     "version": "",
                     "url": "https://docs.totalcms.co/extensions/scheduled/"
+                },
+                {
+                    "id": "totalcms/webmcp",
+                    "name": "WebMCP",
+                    "description": "Make your forms and public collections callable by browser AI agents through the WebMCP origin trial in Chrome 149+. Experimental: the spec is still moving, and this extension tracks it.",
+                    "version": "",
+                    "url": "https://docs.totalcms.co/extensions/webmcp/"
                 }
             ],
             "cli": [
@@ -5772,6 +5779,10 @@
                 {
                     "label": "Scheduled",
                     "url": "https://docs.totalcms.co/extensions/scheduled/"
+                },
+                {
+                    "label": "WebMCP",
+                    "url": "https://docs.totalcms.co/extensions/webmcp/"
                 }
             ]
         },

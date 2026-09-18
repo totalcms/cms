@@ -55,7 +55,7 @@ class CodeField extends TextareaField
 
 		$attributes['data-editor-options'] = json_encode($editorOptions);
 
-		return $attributes;
+		return $this->withExtraAttributes($attributes);
 	}
 
 	public function buildFormField(): string

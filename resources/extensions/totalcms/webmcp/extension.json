@@ -1,0 +1,24 @@
+{
+	"id"          : "totalcms/webmcp",
+	"name"        : "WebMCP",
+	"description" : "Make your forms and public collections callable by browser AI agents through the WebMCP origin trial in Chrome 149+. Experimental: the spec is still moving, and this extension tracks it.",
+	"icon"        : "icon.png",
+	"hidden"      : false,
+	"requires"    : {
+		"totalcms" : ">=3.5.2",
+		"php"      : ">=8.2"
+	},
+	"entrypoint"       : "Extension.php",
+	"settings_schema"  : "settings.json",
+	"author"     : {
+		"name" : "Total CMS",
+		"url"  : "https://totalcms.co"
+	},
+	"license" : "proprietary",
+	"links"   : [
+		{
+			"label" : "Documentation",
+			"url"   : "docs/extensions/webmcp"
+		}
+	]
+}

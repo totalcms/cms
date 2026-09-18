@@ -41,7 +41,7 @@ class ColorField extends FormField
 		// Remove null values from the attributes array
 		$attributes = array_filter($attributes, fn ($x): bool => !is_null($x));
 
-		return $attributes;
+		return $this->withExtraAttributes($attributes);
 	}
 
 	/**

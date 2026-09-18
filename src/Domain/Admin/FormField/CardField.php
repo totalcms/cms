@@ -89,7 +89,7 @@ class CardField extends FormField
 			$attributes['data-schemaref'] = $this->schemaref;
 		}
 
-		return $attributes;
+		return $this->withExtraAttributes($attributes);
 	}
 
 	/**

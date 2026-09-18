@@ -29,6 +29,7 @@ final readonly class FormOptions
 	 * @param array<int,array<string,mixed>> $editActions
 	 * @param array<int,array<string,mixed>> $deleteActions
 	 * @param array<string,mixed>            $data
+	 * @param array<string,string>           $attributes
 	 */
 	public function __construct(
 		public string $api,
@@ -71,6 +72,10 @@ final readonly class FormOptions
 		// forms whose fields live somewhere the icon has no room — one field
 		// swapped into a table cell. A field's own `icon` option still wins.
 		public bool $fieldIcons = true,
+		// Extra attributes on the <form> tag, for what the markup alone cannot
+		// say — WebMCP's tool attributes are the first user. Core's own
+		// attributes win on collision and event handlers are dropped.
+		public array $attributes = [],
 	) {
 	}
 
