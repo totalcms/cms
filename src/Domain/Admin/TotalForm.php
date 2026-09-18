@@ -3,28 +3,20 @@
 namespace TotalCMS\Domain\Admin;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Admin\Form\FormOptionSources;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
-use TotalCMS\Domain\Builder\Service\BuilderConfigService;
-use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\DataView\Service\DataViewLister;
-use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Extension\Data\FormAction;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
-use TotalCMS\Domain\Feed\Service\PodcastCategories;
-use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\Locale\LocaleRegistry;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Template\Service\TemplateLister;
 
 /**
  * Total Form Builder.
@@ -401,6 +393,18 @@ class TotalForm implements \Stringable
 		return $this->services;
 	}
 
+	private ?FormOptionSources $optionSources = null;
+
+	/**
+	 * The option lists fields ask for. The same-named methods on the form
+	 * delegate here, filling in the form's own collection where a caller
+	 * leaves it out; anything new should call this directly.
+	 */
+	public function optionSources(): FormOptionSources
+	{
+		return $this->optionSources ??= new FormOptionSources($this->services);
+	}
+
 	public function getSchemaFetcher(): SchemaFetcher
 	{
 		return $this->services->schemaFetcher;
@@ -608,14 +612,7 @@ class TotalForm implements \Stringable
 	/** @return array<string> */
 	public function propertyListForCollection(string $property, string $collection = ''): array
 	{
-		if ($collection === '') {
-			$collection = $this->collection;
-		}
-
-		$collection = $this->services->collectionReader->fetchIndex($collection);
-
-		// array_filter removes any empty values
-		return array_filter($collection->objects->pluck($property)->flatten()->unique()->toArray());
+		return $this->optionSources()->propertyListForCollection($property, $collection === '' ? $this->collection : $collection);
 	}
 
 	/**
@@ -626,7 +623,7 @@ class TotalForm implements \Stringable
 	 */
 	public function categoryListForCollections(): array
 	{
-		return $this->services->collectionLister->listCategories();
+		return $this->optionSources()->categoryListForCollections();
 	}
 
 	/**
@@ -637,7 +634,7 @@ class TotalForm implements \Stringable
 	 */
 	public function categoryListForSchemas(): array
 	{
-		return $this->services->schemaLister->listCategories();
+		return $this->optionSources()->categoryListForSchemas();
 	}
 
 	/**
@@ -648,9 +645,7 @@ class TotalForm implements \Stringable
 	 */
 	public function collectionIdList(): array
 	{
-		$collections = $this->services->collectionLister->listAllCollections();
-
-		return array_map(fn (CollectionData $c): string => $c->id, $collections);
+		return $this->optionSources()->collectionIdList();
 	}
 
 	/**
@@ -662,12 +657,7 @@ class TotalForm implements \Stringable
 	 */
 	public function collectionIdListWithLabels(): array
 	{
-		$collections = $this->services->collectionLister->listAllCollections();
-
-		return array_values(array_map(fn (CollectionData $c): array => [
-			'value' => $c->id,
-			'label' => $c->name !== '' ? $c->name : $c->id,
-		], $collections));
+		return $this->optionSources()->collectionIdListWithLabels();
 	}
 
 	/**
@@ -685,7 +675,7 @@ class TotalForm implements \Stringable
 	 */
 	public function pageCollectionOptions(): array
 	{
-		return $this->collectionsUsingSchema(BuilderConfigService::DEFAULT_SCHEMA_ID);
+		return $this->optionSources()->pageCollectionOptions();
 	}
 
 	/**
@@ -699,41 +689,7 @@ class TotalForm implements \Stringable
 	 */
 	public function collectionsUsingSchema(string $schemaId): array
 	{
-		$options = [];
-
-		foreach ($this->services->collectionLister->listAllCollections() as $collection) {
-			if (!$this->schemaIsOrInherits($collection->schema, $schemaId)) {
-				continue;
-			}
-
-			$options[] = [
-				'value' => $collection->id,
-				'label' => $collection->name !== '' ? $collection->name : $collection->id,
-			];
-		}
-
-		return $options;
-	}
-
-	/**
-	 * Inheritance is one level deep (see SchemaFetcher::resolveInheritance),
-	 * so the raw schema's own `inheritFrom` is the whole story. A schema that
-	 * cannot be read does not qualify — the collection would not work as a
-	 * pages collection either.
-	 */
-	private function schemaIsOrInherits(string $schemaId, string $target): bool
-	{
-		if ($schemaId === $target) {
-			return true;
-		}
-
-		try {
-			$schema = $this->services->schemaFetcher->fetchRawSchema($schemaId);
-		} catch (\Throwable) {
-			return false;
-		}
-
-		return in_array($target, $schema->inheritFrom, true);
+		return $this->optionSources()->collectionsUsingSchema($schemaId);
 	}
 
 
@@ -750,7 +706,7 @@ class TotalForm implements \Stringable
 	 */
 	public function adminNavItemList(): array
 	{
-		return $this->services->navRegistry?->options() ?? [];
+		return $this->optionSources()->adminNavItemList();
 	}
 
 
@@ -761,18 +717,7 @@ class TotalForm implements \Stringable
 	 */
 	public function viewIdList(): array
 	{
-		if (!$this->services->dataViewLister instanceof DataViewLister) {
-			return [];
-		}
-
-		$ids = [];
-		foreach ($this->services->dataViewLister->listViews() as $view) {
-			if (is_array($view) && isset($view['id']) && is_string($view['id'])) {
-				$ids[] = $view['id'];
-			}
-		}
-
-		return $ids;
+		return $this->optionSources()->viewIdList();
 	}
 
 	/**
@@ -782,20 +727,7 @@ class TotalForm implements \Stringable
 	 */
 	public function viewIdListWithLabels(): array
 	{
-		if (!$this->services->dataViewLister instanceof DataViewLister) {
-			return [];
-		}
-
-		$views = [];
-		foreach ($this->services->dataViewLister->listViews() as $view) {
-			if (!is_array($view) || !isset($view['id']) || !is_string($view['id'])) {
-				continue;
-			}
-			$name    = isset($view['name']) && is_string($view['name']) && $view['name'] !== '' ? $view['name'] : $view['id'];
-			$views[] = ['value' => $view['id'], 'label' => $name];
-		}
-
-		return $views;
+		return $this->optionSources()->viewIdListWithLabels();
 	}
 
 	/**
@@ -822,21 +754,7 @@ class TotalForm implements \Stringable
 	 */
 	public function collectionAndViewOptions(): array
 	{
-		$byLabel = (static fn (array $a, array $b): int => strnatcasecmp($a['label'], $b['label']));
-
-		$groups      = [];
-		$collections = $this->collectionIdListWithLabels();
-		if ($collections !== []) {
-			usort($collections, $byLabel);
-			$groups['Collections'] = $collections;
-		}
-		$views = $this->viewIdListWithLabels();
-		if ($views !== []) {
-			usort($views, $byLabel);
-			$groups['Data Views'] = $views;
-		}
-
-		return $groups;
+		return $this->optionSources()->collectionAndViewOptions();
 	}
 
 	/**
@@ -851,16 +769,7 @@ class TotalForm implements \Stringable
 	 */
 	public static function podcastCategoryOptions(): array
 	{
-		$groups = [];
-		foreach (PodcastCategories::TAXONOMY as $parent => $children) {
-			$options = [['value' => $parent, 'label' => $parent]];
-			foreach ($children as $child) {
-				$options[] = ['value' => $parent . ' > ' . $child, 'label' => $child];
-			}
-			$groups[$parent] = $options;
-		}
-
-		return $groups;
+		return FormOptionSources::podcastCategoryOptions();
 	}
 
 	/**
@@ -871,11 +780,7 @@ class TotalForm implements \Stringable
 	 */
 	public function layoutListForBuilder(): array
 	{
-		if (!$this->services->templateLister instanceof TemplateLister) {
-			return [];
-		}
-
-		return $this->services->templateLister->listBuilderTemplates('layouts', true);
+		return $this->optionSources()->layoutListForBuilder();
 	}
 
 	/**
@@ -886,11 +791,7 @@ class TotalForm implements \Stringable
 	 */
 	public function pageListForBuilder(): array
 	{
-		if (!$this->services->templateLister instanceof TemplateLister) {
-			return [];
-		}
-
-		return $this->services->templateLister->listBuilderTemplates('pages', true);
+		return $this->optionSources()->pageListForBuilder();
 	}
 
 	/**
@@ -902,11 +803,7 @@ class TotalForm implements \Stringable
 	 */
 	public function pageMiddlewareList(): array
 	{
-		if (!$this->services->pageMiddlewareRegistry instanceof PageMiddlewareRegistry) {
-			return [];
-		}
-
-		return $this->services->pageMiddlewareRegistry->availableNames();
+		return $this->optionSources()->pageMiddlewareList();
 	}
 
 	/**
@@ -924,31 +821,17 @@ class TotalForm implements \Stringable
 	 */
 	public function schemaPropertyKeys(string $collection = ''): array
 	{
-		try {
-			if ($collection !== '') {
-				$schema = $this->services->schemaFetcher->fetchSchemaForCollection($collection);
-
-				return array_keys($schema->properties);
-			}
-
-			// CollectionForm path: schema name lives on the loaded CollectionData
-			if ($this->collectionData instanceof CollectionData && $this->collectionData->schema !== '') {
-				$schema = $this->services->schemaFetcher->fetchSchema($this->collectionData->schema);
-
-				return array_keys($schema->properties);
-			}
-
-			// ObjectForm path: collection name on the form itself
-			if ($this->collection !== '') {
-				$schema = $this->services->schemaFetcher->fetchSchemaForCollection($this->collection);
-
-				return array_keys($schema->properties);
-			}
-		} catch (\Throwable) {
-			return [];
+		if ($collection !== '') {
+			return $this->optionSources()->schemaPropertyKeys($collection);
 		}
 
-		return [];
+		// CollectionForm path: schema name lives on the loaded CollectionData
+		if ($this->collectionData instanceof CollectionData && $this->collectionData->schema !== '') {
+			return $this->optionSources()->schemaPropertyKeys('', $this->collectionData->schema);
+		}
+
+		// ObjectForm path: collection name on the form itself
+		return $this->optionSources()->schemaPropertyKeys($this->collection);
 	}
 
 	/**
@@ -962,22 +845,7 @@ class TotalForm implements \Stringable
 	 */
 	public function propertiesForCollection(array $properties, string $collection = '', array $filters = []): array
 	{
-		if ($collection === '') {
-			$collection = $this->collection;
-		}
-
-		// If filters are provided, use IndexFilter to get filtered objects
-		if ($filters !== []) {
-			$objects = $this->services->indexFilter->fetchFilteredIndex($collection, $filters);
-		} else {
-			// No filters, fetch all objects
-			$index   = $this->services->collectionReader->fetchIndex($collection);
-			$objects = $index->objects->toArray();
-		}
-
-		// Extract only the requested properties from each object
-		/** @phpstan-ignore-next-line argument.templateType */
-		return array_map(fn ($item) => collect($item)->only($properties)->toArray(), $objects);
+		return $this->optionSources()->propertiesForCollection($properties, $collection === '' ? $this->collection : $collection, $filters);
 	}
 
 	/**
@@ -991,10 +859,7 @@ class TotalForm implements \Stringable
 	 */
 	public function propertiesForView(array $properties, string $viewId, array $filters = []): array
 	{
-		$data = $this->services->dataViewFilter->fetchFilteredViewData($viewId, $filters);
-
-		/** @phpstan-ignore-next-line argument.templateType */
-		return array_map(fn ($item) => collect($item)->only($properties)->toArray(), $data);
+		return $this->optionSources()->propertiesForView($properties, $viewId, $filters);
 	}
 
 	/**
@@ -1004,12 +869,7 @@ class TotalForm implements \Stringable
 	 */
 	public function accessGroupOptionsForField(): array
 	{
-		$groups = $this->services->accessGroupLister->listAll();
-
-		return array_map(fn (AccessGroupData $group): array => [
-			'value' => $group->id,
-			'label' => $group->id,
-		], $groups);
+		return $this->optionSources()->accessGroupOptionsForField();
 	}
 
 	/**
@@ -1208,13 +1068,7 @@ class TotalForm implements \Stringable
 	 */
 	public function mediaTagsForCollection(string $field, string $type, string $collection = ''): array
 	{
-		if ($collection === '') {
-			$collection = $this->collection;
-		}
-
-		$index = $this->services->collectionReader->fetchIndex($collection);
-
-		return self::extractMediaTags($index->objects->all(), $field, $type);
+		return $this->optionSources()->mediaTagsForCollection($field, $type, $collection === '' ? $this->collection : $collection);
 	}
 
 	/**
@@ -1266,12 +1120,12 @@ class TotalForm implements \Stringable
 	 */
 	public function getLocales(): array
 	{
-		return $this->services->config->i18n['available'];
+		return $this->optionSources()->getLocales();
 	}
 
 	public function getDefaultLocale(): string
 	{
-		return $this->services->config->i18n['default'];
+		return $this->optionSources()->getDefaultLocale();
 	}
 
 	/**
@@ -1282,7 +1136,7 @@ class TotalForm implements \Stringable
 	 */
 	public function localeList(): array
 	{
-		return LocaleRegistry::options();
+		return $this->optionSources()->localeList();
 	}
 
 	/**
@@ -1293,7 +1147,7 @@ class TotalForm implements \Stringable
 	 */
 	public function eventsList(): array
 	{
-		return CoreEvent::options();
+		return $this->optionSources()->eventsList();
 	}
 
 	/**
