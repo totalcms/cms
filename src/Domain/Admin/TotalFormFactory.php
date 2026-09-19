@@ -3,28 +3,26 @@
 namespace TotalCMS\Domain\Admin;
 
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Admin\Form\AdminForms;
 use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormServices;
+use TotalCMS\Domain\Admin\Form\PresetForms;
+use TotalCMS\Domain\Admin\Form\SettingsForms;
+use TotalCMS\Domain\Admin\Form\SingleFieldForms;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
-use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
-use TotalCMS\Domain\License\Data\EditionFeature;
-use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
-use TotalCMS\Domain\Schema\Data\PropertyDefinition;
-use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
 use TotalCMS\Domain\Translation\TranslationService;
-use TotalCMS\Support\PathResolver;
 
 /**
  * Total Form Builder.
@@ -34,58 +32,45 @@ use TotalCMS\Support\PathResolver;
  * @SuppressWarnings("PHPMD.TooManyMethods")
  * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  *
- * This class is a factory for creating TotalForm objects.
- * I cannot use Dependency Injection in a non-constructor, so I need to create a factory class
- * This encapsulates the creation of the TotalForm object without depencency injection here.
+ * The form runtime's entry point, and the `cms.form` surface in Twig.
+ *
+ * Holds the builders the runtime is about — object, collection, schema,
+ * template and deck item forms, a form around pre-rendered markup, one
+ * field — and the option handling they share. Everything else `cms.form`
+ * offers is a one-line delegation to a helper that owns it: AdminForms
+ * (the admin's own pages), SettingsForms, PresetForms (blog, feed, mailer …)
+ * and SingleFieldForms (the one-field forms, as a table).
  */
 readonly class TotalFormFactory
 {
 	private string $api;
+	private AdminForms $adminForms;
+	private SettingsForms $settingsForms;
+	private PresetForms $presetForms;
+	private SingleFieldForms $singleFields;
 
 	public function __construct(
 		private FormServices $services,
-		private PhpSession $session,
+		PhpSession $session,
 		private SchemaFactory $schemaFactory,
 		private TemplateRepository $templateRepository,
-		private SettingsSchemaFetcher $settingsSchemaFetcher,
-		private SettingsFetcher $settingsFetcher,
-		private JobManager $jobManager,
+		SettingsSchemaFetcher $settingsSchemaFetcher,
+		SettingsFetcher $settingsFetcher,
+		JobManager $jobManager,
 		private TranslationService $translationService,
-		private ExtensionDiscovery $extensionDiscovery,
-		private ExtensionSettingsManager $extensionSettingsManager,
-		private ExtensionManager $extensionManager,
-		private DevModeManager $devModeManager,
+		ExtensionDiscovery $extensionDiscovery,
+		ExtensionSettingsManager $extensionSettingsManager,
+		ExtensionManager $extensionManager,
+		DevModeManager $devModeManager,
 		private FormActionRegistry $formActionRegistry,
 	) {
-		$this->api = $this->services->config->api . '/api';
+		$this->api           = $this->services->config->api . '/api';
+		$this->adminForms    = new AdminForms($this, $services, $session, $jobManager, $translationService, $devModeManager);
+		$this->settingsForms = new SettingsForms($this, $settingsSchemaFetcher, $settingsFetcher, $translationService, $extensionDiscovery, $extensionSettingsManager, $extensionManager);
+		$this->presetForms   = new PresetForms($this, $services);
+		$this->singleFields  = new SingleFieldForms($this);
 	}
 
-
-	/**
-	 * Create a report export form.
-	 *
-	 * @param array<string,mixed> $options Options: include, exclude, includeOptions, excludeOptions, includeSelect, excludeSelect
-	 */
-	public function report(string $collection = '', array $options = []): string
-	{
-		$includeOptions = $options['includeOptions'] ?? [];
-		$excludeOptions = $options['excludeOptions'] ?? [];
-
-		$form = new ReportForm(
-			api              : $this->api,
-			collectionLister : $this->services->collectionLister,
-			translator       : $this->translationService->trans(...),
-			collection       : $collection,
-			include          : (string)($options['include'] ?? ''),
-			exclude          : (string)($options['exclude'] ?? ''),
-			includeOptions   : is_array($includeOptions) ? $includeOptions : [],
-			excludeOptions   : is_array($excludeOptions) ? $excludeOptions : [],
-			includeSelect    : (bool)($options['includeSelect'] ?? false),
-			excludeSelect    : (bool)($options['excludeSelect'] ?? false),
-		);
-
-		return $form->build();
-	}
 
 	/** @param array<string,mixed> $options */
 	public function simple(string $route, string $content = '', array $options = []): string
@@ -136,271 +121,6 @@ readonly class TotalFormFactory
 	}
 
 	/** @param array<string,mixed> $options */
-	public function factory(string $collection, array $options = []): string
-	{
-		$options['api']         = $this->api;
-		$options['collection']  = $collection;
-		$options['csrfManager'] = $this->services->csrfManager;
-
-		$form = new FactoryForm(...$options);
-
-		return $form->build();
-	}
-
-	/**
-	 * Create a login form.
-	 *
-	 * @param array<string,mixed> $options Options: collection, redirect, showForgotPassword, submitLabel, class, flashMessages, emailLabel, passwordLabel, rememberLabel, forgotPasswordLabel
-	 */
-	public function loginForm(array $options = []): string
-	{
-		$options['api']          = $this->services->config->api;
-		$options['session']      = $this->session;
-		$options['csrfManager']  = $this->services->csrfManager;
-		// LoginForm resolves all labels/help from the admin translation domain
-		// (with empty label overrides falling through to localized defaults).
-		$options['translator'] = $this->translationService->trans(...);
-		$options['loginWith'] ??= $this->services->config->auth['loginWith'] ?? 'both';
-		$options['showPasskeys'] ??= $this->services->editionFeatures->can(EditionFeature::PASSKEYS)
-			&& ($this->services->config->auth['usePasskeys'] ?? true);
-
-		$form = new LoginForm(...$options);
-
-		return $form->build();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function importCollection(string $collection, array $options = []): string
-	{
-		$options['api']         = $this->api;
-		$options['collection']  = $collection;
-		$options['csrfManager'] = $this->services->csrfManager;
-
-		$form = new ImportCollectionForm(...$options);
-
-		return $form->build();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function importDeck(string $collection, array $options = []): string
-	{
-		[$objects, $deckProperties] = $this->getDeckFormData($collection);
-
-		$options['api']            = $this->api;
-		$options['collection']     = $collection;
-		$options['objects']        = $objects;
-		$options['deckProperties'] = $deckProperties;
-		$options['csrfManager']    = $this->services->csrfManager;
-
-		$form = new ImportDeckForm(...$options);
-
-		return $form->build();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function exportDeck(string $collection, array $options = []): string
-	{
-		[$objects, $deckProperties] = $this->getDeckFormData($collection);
-
-		// Nothing to export — return empty so the caller (export.twig) can
-		// suppress the section entirely instead of rendering a useless form.
-		if ($deckProperties === []) {
-			return '';
-		}
-
-		$options['api']            = $this->api;
-		$options['collection']     = $collection;
-		$options['objects']        = $objects;
-		$options['deckProperties'] = $deckProperties;
-
-		$form = new ExportDeckForm(...$options);
-
-		return $form->build();
-	}
-
-	/**
-	 * Build the object list and deck property list for a collection.
-	 *
-	 * Returns `[[], []]` when the schema has no deck properties — the deck
-	 * export UI uses that as a signal to suppress the section entirely, and
-	 * we skip the per-object index walk that would otherwise run pointlessly.
-	 *
-	 * @return array{0: array<array{value:string,label:string}>, 1: array<array{value:string,label:string}>}
-	 */
-	private function getDeckFormData(string $collection): array
-	{
-		$deckProperties = [];
-		try {
-			$schema = $this->services->schemaFetcher->fetchSchemaForCollection($collection);
-			foreach ($schema->properties as $propName => $propConfig) {
-				// Match only true deck properties — cards also carry a
-				// `schemaref`, so checking `extractSchemaRef !== null` (the
-				// old behaviour) leaked card properties into this dropdown.
-				if (is_array($propConfig) && ($propConfig['$ref'] ?? null) === SchemaData::PROPERTY_TYPE_TO_REF['deck']) {
-					$deckProperties[] = ['value' => $propName, 'label' => $propName];
-				}
-			}
-		} catch (\Exception) {
-			// Schema lookup failed, leave empty
-		}
-
-		if ($deckProperties === []) {
-			return [[], []];
-		}
-
-		$index   = $this->services->collectionReader->fetchIndex($collection);
-		$objects = [];
-		foreach ($index->objects->all() as $object) {
-			$id        = (string)($object['id'] ?? '');
-			$title     = $this->indexLabelToString($object['title'] ?? $object['name'] ?? $id, $id);
-			$objects[] = ['value' => $id, 'label' => $title];
-		}
-
-		return [$objects, $deckProperties];
-	}
-
-	/**
-	 * Coerce an index-stored label value to a display string. Localized
-	 * fields store a locale-keyed dict — pick the default-locale value (or
-	 * the first non-empty locale, falling back to the object's ID) so
-	 * dropdowns and listings show something sensible without `(string)` on
-	 * an array triggering a warning.
-	 */
-	private function indexLabelToString(mixed $value, string $fallback): string
-	{
-		if (is_scalar($value)) {
-			return (string)$value;
-		}
-
-		if (is_array($value) && $value !== []) {
-			// Prefer the first non-empty entry — for localized values this
-			// gives the most reasonable display. The dict isn't ordered by
-			// locale preference at the storage layer; the data shape is
-			// transparent here, the caller just wants *some* string.
-			foreach ($value as $entry) {
-				if (is_scalar($entry) && (string)$entry !== '') {
-					return (string)$entry;
-				}
-			}
-		}
-
-		return $fallback;
-	}
-
-	/** @param array<string,mixed> $options */
-	public function importSchema(array $options = []): string
-	{
-		$options['api']         = $this->api;
-		$options['csrfManager'] = $this->services->csrfManager;
-
-		$form = new ImportSchemaForm(...$options);
-
-		return $form->build();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function importJumpStart(array $options = []): string
-	{
-		$options['api']         = $this->api;
-		$options['csrfManager'] = $this->services->csrfManager;
-
-		$form = new ImportJumpStartForm(...$options);
-
-		return $form->build();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function jobqueueStats(array $options = []): string
-	{
-		$options['api']        = $this->api;
-		$options['jobManager'] = $this->jobManager;
-
-		$stats = new JobQueueStats(...$options);
-
-		return $stats->allStats();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function jobqueueByStatus(array $options = []): string
-	{
-		$options['api']        = $this->api;
-		$options['jobManager'] = $this->jobManager;
-
-		$header = $options['header'] ?? null;
-		unset($options['header']);
-
-		$stats = new JobQueueStats(...$options);
-
-		// No header option means the table's own default heading; passing the
-		// null through was a TypeError.
-		return is_string($header) ? $stats->tableByStatus($header) : $stats->tableByStatus();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function jobqueueByType(array $options = []): string
-	{
-		$options['api']        = $this->api;
-		$options['jobManager'] = $this->jobManager;
-
-		$header = $options['header'] ?? null;
-		unset($options['header']);
-
-		$stats = new JobQueueStats(...$options);
-
-		// No header option means the table's own default heading; passing the
-		// null through was a TypeError.
-		return is_string($header) ? $stats->tableByType($header) : $stats->tableByType();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function clearqueue(array $options = []): string
-	{
-		$options['api']         = $this->api;
-		$options['csrfManager'] = $this->services->csrfManager;
-
-		$form = new JobQueueForm(...$options);
-
-		return $form->build();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function devmode(array $options = []): string
-	{
-		$devModeStatus = $this->devModeManager->getDevModeStatus();
-
-		$options = array_merge([
-			'form'  => $this->dummyForm(),
-			'field' => 'toggle',
-			'label' => 'Development Mode',
-			'help'  => $devModeStatus['enabled']
-				? sprintf('<strong>Development mode is active.</strong> Remaining time: <span id="devmode-countdown">%s</span>', $devModeStatus['remaining_formatted'])
-				: 'Development mode is disabled. Caching is active.',
-		], $options);
-
-		// Add JavaScript variable for remaining seconds
-		$jsVariable = sprintf(
-			'<script>globalThis.DEVMODE_REMAINING_SECONDS = %d;</script>',
-			$devModeStatus['remaining_seconds']
-		);
-
-		// Generate the field using the existing field system
-		$fieldHtml = $this->field('toggle', 'devmode', $options);
-
-		// Add the API endpoint attribute and checked state
-		$fieldHtml = str_replace(
-			'type="checkbox"',
-			sprintf(
-				'type="checkbox" %s data-api="%s"',
-				$devModeStatus['enabled'] ? 'checked' : '',
-				$this->api
-			),
-			$fieldHtml
-		);
-
-		return $jsVariable . $fieldHtml;
-	}
-
-	/** @param array<string,mixed> $options */
 	public function schema(array $options = []): string
 	{
 		$options = array_merge([
@@ -434,229 +154,6 @@ readonly class TotalFormFactory
 		$form = new TemplateForm($this->services, FormOptions::fromArray($options), $this->templateRepository, $path);
 
 		return $form->autoBuild();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function playground(string $id = '', array $options = []): string
-	{
-		$options = array_merge([
-			'save'        => true,
-			'delete'      => true,
-			'class'       => 'playground-form no-unsaved-warning',
-		], $options);
-		$options['id'] = $id;
-
-		$form = $this->builder('playground', $options);
-
-		return $form->autoBuild();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function dataviews(string $id = '', array $options = []): string
-	{
-		$this->services->dataViewLister?->ensureCollection();
-
-		$options = array_merge([
-			'save'        => true,
-			'delete'      => true,
-			'class'       => 'dataview-form help-on-hover help-box no-unsaved-warning',
-		], $options);
-		$options['id'] = $id;
-
-		$form = $this->builder('dataviews', $options);
-
-		return $form->autoBuild();
-	}
-
-	/** @param array<string,mixed> $options */
-	public function mailer(string $id = '', array $options = []): string
-	{
-		$options = array_merge([
-			'save'        => true,
-			'delete'      => true,
-			'class'       => 'help-on-hover help-box mailer-form formgrid',
-			'useFormGrid' => false,
-		], $options);
-		$options['id'] = $id;
-
-		$form = $this->builder('mailer', $options);
-
-		// Row: Active toggle + ID
-		$content  = $form->field('active');
-		$content .= $form->field('id');
-		$content .= $form->field('name');
-		$content .= $form->field('category');
-		$content .= $form->field('description');
-
-		$content .= HTMLUtils::inlineElement('hr', ['class' => 'form-grid-section-divider']);
-
-		$content .= $form->field('to');
-		$content .= $form->field('from');
-		$content .= $form->field('toName');
-		$content .= $form->field('fromName');
-		$content .= $form->field('replyTo');
-		$content .= $form->field('cc');
-		$content .= $form->field('bcc');
-
-		$content .= HTMLUtils::inlineElement('hr', ['class' => 'form-grid-section-divider']);
-
-		// Subject, Body HTML, Body Text (full width)
-		$content .= $form->field('subject');
-		$content .= $form->field('bodyHtml');
-		$content .= $form->field('bodyText');
-
-		$bulkSection = '';
-
-		if ($id !== '') {
-			$hiddenMailerId = HTMLUtils::inlineElement('input', [
-				'type' => 'hidden', 'name' => 'mailerId', 'value' => $id,
-			]);
-
-			$objectPickerScript = <<<SCRIPT
-			<script>
-			(function() {
-				let debounceTimer = null;
-				let cachedData = [];
-				const pickerInput = document.querySelector('select[name="bulkObjectIds[]"]');
-				const picker = pickerInput ? pickerInput.closest('.form-field') : null;
-				const previewInput = document.querySelector('select[name="bulkPreviewObjectId"]');
-				const previewField = previewInput ? previewInput.closest('.form-field') : null;
-				if (!picker) return;
-
-				function updateChoices(field, data) {
-					if (!field || !field.totalfield || !field.totalfield.choices) return;
-					const choices = field.totalfield.choices;
-					choices.clearStore();
-					if (data.length > 0) {
-						choices.setChoices(data, 'value', 'label', true);
-					}
-				}
-
-				function fetchObjects() {
-					const collection = document.querySelector('[name="bulkCollection"]');
-					const include = document.querySelector('[name="bulkInclude"]');
-					const exclude = document.querySelector('[name="bulkExclude"]');
-					if (!collection || !collection.value) return;
-
-					const params = new URLSearchParams({ bulkCollection: collection.value });
-					if (include && include.value) params.set('bulkInclude', include.value);
-					if (exclude && exclude.value) params.set('bulkExclude', exclude.value);
-
-					fetch('{$this->api}/action/mailer/bulk/objects?' + params.toString())
-						.then(r => r.json())
-						.then(data => {
-							cachedData = data;
-							updateChoices(picker, data);
-							updateChoices(previewField, data);
-						})
-						.catch(() => {});
-				}
-
-				function debouncedFetch() {
-					clearTimeout(debounceTimer);
-					debounceTimer = setTimeout(fetchObjects, 500);
-				}
-
-				const collectionEl = document.querySelector('[name="bulkCollection"]');
-				const includeEl = document.querySelector('[name="bulkInclude"]');
-				const excludeEl = document.querySelector('[name="bulkExclude"]');
-
-				if (collectionEl) collectionEl.addEventListener('change', fetchObjects);
-				if (includeEl) includeEl.addEventListener('input', debouncedFetch);
-				if (excludeEl) excludeEl.addEventListener('input', debouncedFetch);
-
-				// When the preview accordion opens, apply cached data
-				if (previewField) {
-					const details = previewField.closest('details');
-					if (details) {
-						details.addEventListener('toggle', () => {
-							if (details.open && cachedData.length > 0) {
-								updateChoices(previewField, cachedData);
-							}
-						});
-					}
-				}
-
-				if (collectionEl && collectionEl.value) fetchObjects();
-			})();
-			</script>
-			SCRIPT;
-
-			// Audience + Send combined accordion
-			$sendAttrs = array_merge(
-				HTMLUtils::htmxAttributes($this->api . '/action/mailer/bulk', 'post', [
-					'target'  => '#bulk-send-output',
-					'swap'    => 'innerHTML',
-					'confirm' => 'Are you sure you want to queue a bulk email send? This will send one email per matching object.',
-				]),
-				['class' => 'dash-button accent', 'id' => 'bulk-send-btn']
-			);
-			$sendAttrs['hx-include'] = '[name="mailerId"],[name="bulkCollection"],[name="bulkInclude"],[name="bulkExclude"],[name="bulkOverrideTo"],[name="bulkscheduledAt"],[name="bulkObjectIds[]"]';
-
-			$bulkSendFields = $form->field('bulkCollection') .
-				$form->field('bulkInclude') .
-				$form->field('bulkExclude') .
-				$form->field('bulkObjectIds[]', [
-					'field'       => 'list',
-					'label'       => 'Specific Objects',
-					'help'        => 'Select specific objects to override filters. Leave empty to use filters above.',
-					'placeholder' => 'Select objects...',
-					'settings'    => [
-						'addChoices'       => false,
-						'removeItemButton' => true,
-					],
-				]) .
-				HTMLUtils::inlineElement('hr', ['class' => 'bulk-divider']) .
-				$form->field('bulkOverrideTo', [
-					'field'       => 'email',
-					'label'       => 'Override To Email (for testing)',
-					'placeholder' => 'test@example.com',
-					'help'        => 'Override recipient email for testing. All emails will be sent to this address instead.',
-				]) .
-				$form->field('bulkscheduledAt', [
-					'field'       => 'datetime',
-					'label'       => 'Schedule',
-					'placeholder' => 'Enter a date and time to schedule this email',
-				]) .
-				HTMLUtils::element('button', 'Queue Bulk Send', $sendAttrs) .
-				'<div id="bulk-send-output" class="bulk-send-output"></div>';
-			$bulkSendDetails = HTMLUtils::details('Audience & Send', $bulkSendFields);
-
-			// Preview accordion
-			$previewAttrs = array_merge(
-				HTMLUtils::htmxAttributes($this->api . '/action/mailer/bulk/preview', 'post', [
-					'target' => '#bulk-preview-output',
-					'swap'   => 'innerHTML',
-				]),
-				['class' => 'dash-button', 'id' => 'bulk-preview-btn']
-			);
-			$previewAttrs['hx-include'] = '[name="mailerId"],[name="bulkPreviewObjectId"],[name="bulkCollection"]';
-
-			$bulkPreviewForm = $form->field('bulkPreviewObjectId', [
-				'field'       => 'list',
-				'label'       => 'Preview Object',
-				'placeholder' => 'Select an object to preview...',
-				'settings'    => [
-					'addChoices'       => false,
-					'removeItemButton' => true,
-					'maxItemCount'     => 1,
-				],
-			]) . HTMLUtils::element('button', 'Preview', $previewAttrs);
-			$bulkPreviewForm    = HTMLUtils::element('div', $bulkPreviewForm, ['class' => 'bulk-preview-form']);
-			$bulkPreviewOutput  = HTMLUtils::element('div', '', [
-				'id'    => 'bulk-preview-output',
-				'class' => 'bulk-preview-output',
-			]);
-			$bulkPreviewDetails = HTMLUtils::details('Preview', $bulkPreviewForm . $bulkPreviewOutput);
-
-			$bulkSection  = $hiddenMailerId;
-			$bulkSection .= HTMLUtils::element('h2', 'Bulk Send <span class="bulk-pro-badge">Pro</span>');
-			$bulkSection .= HTMLUtils::element('p', 'Send this email to every matching object in a collection.');
-			$bulkSection .= $bulkSendDetails . $bulkPreviewDetails . $objectPickerScript;
-			$bulkSection  = HTMLUtils::element('form', $bulkSection, ['class' => 'bulk-send-section totalform custom-layout help-on-hover help-box no-save no-unsaved-warning']);
-		}
-
-		return $form->build($content, $bulkSection);
 	}
 
 	/** @param array<string,mixed> $options */
@@ -724,40 +221,6 @@ readonly class TotalFormFactory
 	}
 
 	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	private function singleFieldFormBuilder(
-		string $id,
-		string $defaultCollection,
-		string $property,
-		string $field,
-		array $formSettings = [],
-		array $fieldSettings = [],
-	): string {
-		$formSettings = array_merge([
-			'collection' => $defaultCollection,
-			'hideID'     => true,
-			'id'         => $id,
-		], $formSettings);
-
-		$class                 = $formSettings['class'] ?? ' custom-layout';
-		$formSettings['class'] = $class;
-
-		$collection = $formSettings['collection'];
-		unset($formSettings['collection']);
-
-		$fieldSettings['field'] = $field;
-
-		$form = $this->builder($collection, $formSettings);
-
-		$form->addField('id');
-		$form->addField($property, $fieldSettings);
-
-		return $form->build();
-	}
-
-	/**
 	 * Resolve the `save` / `delete` button labels in a form options array.
 	 *
 	 * Pass `true` to get the button with its DEFAULT label — resolved from the
@@ -808,584 +271,6 @@ readonly class TotalFormFactory
 		return $button->build();
 	}
 
-	/**
-	 * Generate a settings form for a specific section.
-	 *
-	 * @param array<string,mixed> $options
-	 */
-	public function settings(string $section, array $options = []): string
-	{
-		// Load schema and data using injected services
-		$schema      = $this->settingsSchemaFetcher->getSchema($section);
-		$sectionData = $this->settingsFetcher->loadSection($section);
-		$defaults    = require PathResolver::packageRoot() . '/config/defaults.php';
-		$timezones   = $options['timezones'] ?? timezone_identifiers_list();
-
-		if ($schema === null || !isset($schema['properties']) || !is_array($schema['properties'])) {
-			return '<p class="error">Schema not found for this settings section.</p>';
-		}
-
-		$formfields = '';
-
-		foreach ($schema['properties'] as $fieldName => $fieldSchema) {
-			// Resolve field type: "field" takes precedence over "type"
-			$fieldType = $fieldSchema['field'] ?? $fieldSchema['type'] ?? 'text';
-
-			// Get current value with priority: sectionData > defaults > schema default > empty string
-			$currentValue = '';
-			if (isset($fieldSchema['default'])) {
-				$currentValue = $fieldSchema['default'];
-			}
-			// General settings are stored at top level in defaults, not under section keys
-			if ($section === 'general' && isset($defaults[$fieldName])) {
-				$currentValue = $defaults[$fieldName];
-			} elseif (isset($defaults[$section][$fieldName])) {
-				$currentValue = $defaults[$section][$fieldName];
-			}
-			if (isset($sectionData[$fieldName])) {
-				$currentValue = $sectionData[$fieldName];
-			}
-
-			// Special handling for JSON fields - convert arrays to JSON strings for display
-			if ($fieldType === 'json' && is_array($currentValue)) {
-				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-			}
-
-			// Build field options
-			$fieldSettings = [
-				'field'       => $fieldType,
-				'label'       => $fieldSchema['label'] ?? '',
-				'help'        => $fieldSchema['help'] ?? '',
-				'placeholder' => $fieldSchema['placeholder'] ?? '',
-				'value'       => $currentValue,
-				'required'    => $fieldSchema['required'] ?? false,
-				'min'         => $fieldSchema['min'] ?? null,
-				'max'         => $fieldSchema['max'] ?? null,
-				'settings'    => $fieldSchema['settings'] ?? [],
-			];
-
-			// Merge schema-reference keys into settings for fields that hydrate from another schema
-			if (in_array($fieldType, ['deck', 'deckTable', 'card'], true)) {
-				$schemaref = PropertyDefinition::extractSchemaRef($fieldSchema);
-				if ($schemaref !== null) {
-					$fieldSettings['settings']['schemaref'] = $schemaref;
-				}
-				if (isset($fieldSchema['deckItemLabel'])) {
-					$fieldSettings['settings']['deckItemLabel'] = $fieldSchema['deckItemLabel'];
-				}
-			}
-
-			// Special handling for select fields with options
-			if (isset($fieldSchema['options'])) {
-				$fieldSettings['options'] = $fieldSchema['options'];
-			}
-
-			// Special handling for timezone field
-			if (isset($fieldSchema['settings']['timezoneOptions']) && $fieldSchema['settings']['timezoneOptions']) {
-				$timezoneOptions = [];
-				foreach ($timezones as $tz) {
-					$timezoneOptions[] = ['value' => $tz, 'label' => $tz];
-				}
-				$fieldSettings['options'] = $timezoneOptions;
-			}
-
-			$formfields .= $this->field($fieldType, $fieldName, $fieldSettings);
-		}
-
-		return $this->totalform('/admin/settings/' . $section, $formfields, [
-			'method'      => 'POST',
-			'save'        => $this->translationService->trans('btn.save_settings'),
-			'class'       => 'help-on-hover help-box',
-			// Optional per-section layout. Absent from most settings schemas, in
-			// which case TotalForm renders one field per row exactly as before.
-			'formgrid'    => is_string($schema['formgrid'] ?? null) ? $schema['formgrid'] : '',
-		]);
-	}
-
-	/**
-	 * Generate a settings form for an extension.
-	 *
-	 * Includes auto-generated permission toggles for each detected capability,
-	 * followed by the extension's custom settings (if a settings schema exists).
-	 */
-	public function extensionSettings(string $extensionId): string
-	{
-		$formfields  = $this->buildPermissionToggles($extensionId);
-		$formfields .= $this->buildExtensionSettingsFields($extensionId, $formfields !== '');
-
-		if ($formfields === '') {
-			return '<p>This extension has no configurable settings.</p>';
-		}
-
-		return $this->totalform('/admin/extensions/' . $extensionId . '/settings', $formfields, [
-			'method' => 'POST',
-			'save'   => $this->translationService->trans('btn.save_settings'),
-			'class'  => 'help-on-hover help-box',
-		]);
-	}
-
-	private function buildPermissionToggles(string $extensionId): string
-	{
-		$permissions      = $this->extensionManager->getPermissions($extensionId);
-		$capabilityLabels = ExtensionContext::capabilityLabels();
-
-		if ($permissions === []) {
-			return '';
-		}
-
-		$toggles = '';
-		foreach ($permissions as $capability => $enabled) {
-			// Always-on infrastructure (e.g. container defs) isn't toggleable —
-			// disabling it would only leave the extension enabled-but-broken — so
-			// it's applied unconditionally and omitted from the permissions UI.
-			if (in_array($capability, ExtensionContext::ALWAYS_ON_CAPABILITIES, true)) {
-				continue;
-			}
-
-			$label    = $capabilityLabels[$capability] ?? $capability;
-			$toggles .= $this->field('toggle', 'perm_' . str_replace(':', '_', $capability), [
-				'field' => 'toggle',
-				'label' => $label,
-				'value' => $enabled,
-			]);
-		}
-
-		// Nothing left to toggle (e.g. an extension whose only capability is a
-		// container def) — render no Permissions section at all.
-		if ($toggles === '') {
-			return '';
-		}
-
-		return '<fieldset class="ext-permissions">'
-			. '<legend>Permissions</legend>'
-			. '<div class="ext-permissions-grid">' . $toggles . '</div>'
-			. '</fieldset>';
-	}
-
-	private function buildExtensionSettingsFields(string $extensionId, bool $hasPermissions): string
-	{
-		$schema = $this->loadExtensionSettingsSchema($extensionId);
-		if ($schema === null) {
-			return '';
-		}
-
-		$settings   = $this->extensionSettingsManager->getSettings($extensionId);
-		$formfields = '';
-
-		if ($hasPermissions) {
-			$formfields .= '<h3 style="margin:2rem 0 0.5rem;">Settings</h3>';
-		}
-
-		foreach ($schema as $fieldName => $fieldSchema) {
-			$fieldType    = $fieldSchema['field'] ?? $fieldSchema['type'] ?? 'text';
-			$currentValue = $settings[$fieldName] ?? $fieldSchema['default'] ?? '';
-
-			if ($fieldType === 'json' && is_array($currentValue)) {
-				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-			}
-
-			$fieldSettings = [
-				'field'       => $fieldType,
-				'label'       => $fieldSchema['label'] ?? '',
-				'help'        => $fieldSchema['help'] ?? '',
-				'placeholder' => $fieldSchema['placeholder'] ?? '',
-				'value'       => $currentValue,
-				'required'    => $fieldSchema['required'] ?? false,
-				'min'         => $fieldSchema['min'] ?? null,
-				'max'         => $fieldSchema['max'] ?? null,
-				'settings'    => $fieldSchema['settings'] ?? [],
-			];
-
-			if (isset($fieldSchema['options'])) {
-				$fieldSettings['options'] = $fieldSchema['options'];
-			}
-
-			$formfields .= $this->field($fieldType, $fieldName, $fieldSettings);
-		}
-
-		return $formfields;
-	}
-
-	/**
-	 * Load and validate the settings schema properties for an extension.
-	 *
-	 * @return array<string,array<string,mixed>>|null
-	 */
-	private function loadExtensionSettingsSchema(string $extensionId): ?array
-	{
-		$manifests = $this->extensionDiscovery->discover();
-		$manifest  = $manifests[$extensionId] ?? null;
-
-		if ($manifest === null || $manifest->settingsSchema === null) {
-			return null;
-		}
-
-		$extPath = $this->extensionDiscovery->getExtensionPath($extensionId);
-		if ($extPath === null) {
-			return null;
-		}
-
-		$schemaFile = $extPath . '/' . $manifest->settingsSchema;
-		if (!is_file($schemaFile)) {
-			return null;
-		}
-
-		$schemaJson = file_get_contents($schemaFile);
-		if ($schemaJson === false) {
-			return null;
-		}
-
-		$schema = json_decode($schemaJson, true);
-		if (!is_array($schema) || !isset($schema['properties']) || !is_array($schema['properties'])) {
-			return null;
-		}
-
-		return $schema['properties'];
-	}
-
-	/**
-	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
-	 * @SuppressWarnings("PHPMD.NPathComplexity")
-	 *
-	 * @param array<string,mixed> $options
-	 */
-	public function blog(array $options = []): string
-	{
-		$options = array_merge([
-			'collection' => 'blog',
-			'save'       => true,
-			'delete'     => true,
-			'fields'     => [],
-		], $options);
-
-		$class            = trim('custom-layout ' . ($options['class'] ?? ''));
-		$options['class'] = $class;
-
-		$fields = array_merge([
-			'date'       => true,
-			'summary'    => true,
-			'content'    => true,
-			'author'     => true,
-			'tags'       => true,
-			'featured'   => true,
-			'draft'      => true,
-			'image'      => true,
-			'categories' => false,
-			'extra'      => false,
-			'extra2'     => false,
-			'media'      => false,
-			'genre'      => false,
-			'labels'     => false,
-			'archived'   => false,
-			'gallery'    => false,
-		], $options['fields']);
-		// remove fields from options since it's not a valid option for TotalForm
-		unset($options['fields']);
-
-		$form = $this->builder($options['collection'], $options);
-
-		$col1  = $form->field('id');
-		$col1 .= $form->field('created', ['field' => 'hidden']);
-		$col1 .= $form->field('updated', ['field' => 'hidden']);
-		$col1 .= $form->field('title');
-		if ($fields['date']) {
-			$col1 .= $form->field('date');
-		}
-		if ($fields['media']) {
-			$col1 .= $form->field('media', ['field' => 'url']);
-		}
-		if ($fields['summary']) {
-			$col1 .= $form->field('summary', ['field' => 'styledtext']);
-		}
-		if ($fields['content']) {
-			$col1 .= $form->field('content', ['field' => 'styledtext']);
-		}
-		if ($fields['extra']) {
-			$col1 .= $form->field('extra', ['field' => 'styledtext']);
-		}
-		if ($fields['extra2']) {
-			$col1 .= $form->field('extra2', ['field' => 'styledtext']);
-		}
-
-		$col2 = '';
-		if ($fields['author']) {
-			$col2 .= $form->field('author');
-		}
-		if ($fields['genre']) {
-			$col2 .= $form->field('genre');
-		}
-		if ($fields['tags']) {
-			$col2 .= $form->field('tags', ['field' => 'list']);
-		}
-		if ($fields['categories']) {
-			$col2 .= $form->field('categories', ['field' => 'list']);
-		}
-		if ($fields['labels']) {
-			$col2 .= $form->field('labels', ['field' => 'list']);
-		}
-
-		$inline = '';
-		if ($fields['featured']) {
-			$inline .= $form->field('featured', ['field' => 'toggle', 'help' => false]);
-		}
-		if ($fields['draft']) {
-			$inline .= $form->field('draft', ['field' => 'toggle', 'help' => false]);
-		}
-		if ($fields['archived']) {
-			$inline .= $form->field('archived', ['field' => 'toggle', 'help' => false]);
-		}
-		$col2 .= $form->layoutInline($inline);
-
-		if ($fields['image']) {
-			$col2 .= $form->field('image');
-		}
-		if ($fields['gallery']) {
-			$col2 .= $form->field('gallery');
-		}
-
-		$layout = $form->layout2Columns($col1, $col2);
-
-		return $form->build($layout);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function checkbox(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		$formSettings['autosave'] = true;
-
-		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'checkbox', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function color(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'color', 'color', 'color', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function date(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'date', 'date', 'date', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function datetime(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'date', 'date', 'datetime', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function email(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'email', 'email', 'email', $formSettings, $fieldSettings);
-	}
-
-	/** @param array<string,mixed> $options */
-	public function feed(array $options = []): string
-	{
-		$options = array_merge([
-			'collection' => 'feed',
-			'save'       => true,
-			'delete'     => true,
-		], $options);
-
-		$class            = trim('custom-layout ' . ($options['class'] ?? ''));
-		$options['class'] = $class;
-
-		$form = $this->builder($options['collection'], $options);
-
-		$top = $form->field('id', ['class' => 'hidden-field']);
-		$top .= $form->field('created', ['field' => 'hidden']);
-		$top .= $form->field('updated', ['field' => 'hidden']);
-
-		$col1  = $form->field('title');
-		$col1 .= $form->field('content', ['field' => 'styledtext']);
-
-		$col2  = $form->field('image');
-		$col2 .= $form->field('featured', ['help' => false, 'field' => 'toggle']);
-
-		$layout = $form->layout2Columns($col1, $col2);
-
-		return $form->build($top . $layout);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function gallery(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'gallery', 'gallery', 'gallery', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function image(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'image', 'image', 'image', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function file(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'file', 'file', 'file', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function depot(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'depot', 'depot', 'depot', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function depotDrop(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		$formSettings = array_merge([
-			'collection' => 'depot',
-			'property'   => 'depot',
-		], $formSettings);
-
-		$property = $formSettings['property'];
-		unset($formSettings['property']);
-
-		// Mark the form as a DEDICATED depot-drop form. It has no save
-		// button — dropping files IS the edit — so DepotDropField runs the
-		// form's edit actions when an upload batch completes. The JS gates
-		// on this class: depot-drop fields inside regular forms must NOT
-		// fire edit actions on upload (the save flow already runs them;
-		// firing both ran every edit action twice per drop-and-save).
-		$formSettings['class'] = trim(($formSettings['class'] ?? 'custom-layout') . ' depot-drop-form');
-
-		return $this->singleFieldFormBuilder($id, $formSettings['collection'], $property, 'depotDrop', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function number(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'number', 'number', 'number', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function price(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'number', 'number', 'price', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function range(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'number', 'number', 'range', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function select(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'text', 'text', 'select', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function styledtext(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'styledtext', 'styledtext', 'styledtext', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function svg(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'svg', 'svg', 'svg', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function text(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'text', 'text', 'text', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function code(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'code', 'code', 'code', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function textarea(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'text', 'text', 'textarea', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function toggle(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		$formSettings['autosave'] = true;
-
-		return $this->singleFieldFormBuilder($id, 'toggle', 'status', 'toggle', $formSettings, $fieldSettings);
-	}
-
-	/**
-	 * @param array<string,mixed> $formSettings
-	 * @param array<string,mixed> $fieldSettings
-	 */
-	public function url(string $id, array $formSettings = [], array $fieldSettings = []): string
-	{
-		return $this->singleFieldFormBuilder($id, 'url', 'url', 'url', $formSettings, $fieldSettings);
-	}
-
 	private function dummyForm(): TotalForm
 	{
 		// This is a dummy form to satisfy the type hinting in the field method.
@@ -1424,5 +309,336 @@ readonly class TotalFormFactory
 		}
 
 		return $field->build();
+	}
+
+	/**
+	 * Create a report export form.
+	 *
+	 * @param array<string,mixed> $options Options: include, exclude, includeOptions, excludeOptions, includeSelect, excludeSelect
+	 */
+	public function report(string $collection = '', array $options = []): string
+	{
+		return $this->adminForms->report($collection, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function factory(string $collection, array $options = []): string
+	{
+		return $this->adminForms->factory($collection, $options);
+	}
+
+	/**
+	 * Create a login form.
+	 *
+	 * @param array<string,mixed> $options Options: collection, redirect, showForgotPassword, submitLabel, class, flashMessages, emailLabel, passwordLabel, rememberLabel, forgotPasswordLabel
+	 */
+	public function loginForm(array $options = []): string
+	{
+		return $this->adminForms->loginForm($options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function importCollection(string $collection, array $options = []): string
+	{
+		return $this->adminForms->importCollection($collection, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function importDeck(string $collection, array $options = []): string
+	{
+		return $this->adminForms->importDeck($collection, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function exportDeck(string $collection, array $options = []): string
+	{
+		return $this->adminForms->exportDeck($collection, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function importSchema(array $options = []): string
+	{
+		return $this->adminForms->importSchema($options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function importJumpStart(array $options = []): string
+	{
+		return $this->adminForms->importJumpStart($options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function jobqueueStats(array $options = []): string
+	{
+		return $this->adminForms->jobqueueStats($options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function jobqueueByStatus(array $options = []): string
+	{
+		return $this->adminForms->jobqueueByStatus($options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function jobqueueByType(array $options = []): string
+	{
+		return $this->adminForms->jobqueueByType($options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function clearqueue(array $options = []): string
+	{
+		return $this->adminForms->clearqueue($options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function devmode(array $options = []): string
+	{
+		return $this->adminForms->devmode($options);
+	}
+
+	/**
+	 * Generate a settings form for a specific section.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function settings(string $section, array $options = []): string
+	{
+		return $this->settingsForms->settings($section, $options);
+	}
+
+	/**
+	 * Generate a settings form for an extension.
+	 *
+	 * Includes auto-generated permission toggles for each detected capability,
+	 * followed by the extension's custom settings (if a settings schema exists).
+	 */
+	public function extensionSettings(string $extensionId): string
+	{
+		return $this->settingsForms->extensionSettings($extensionId);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function playground(string $id = '', array $options = []): string
+	{
+		return $this->presetForms->playground($id, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function dataviews(string $id = '', array $options = []): string
+	{
+		return $this->presetForms->dataviews($id, $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function mailer(string $id = '', array $options = []): string
+	{
+		return $this->presetForms->mailer($id, $options);
+	}
+
+	/**
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public function blog(array $options = []): string
+	{
+		return $this->presetForms->blog($options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function feed(array $options = []): string
+	{
+		return $this->presetForms->feed($options);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function checkbox(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('checkbox', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function color(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('color', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function date(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('date', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function datetime(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('datetime', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function email(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('email', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function gallery(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('gallery', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function image(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('image', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function file(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('file', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function depot(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('depot', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function depotDrop(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('depotDrop', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function number(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('number', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function price(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('price', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function range(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('range', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function select(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('select', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function styledtext(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('styledtext', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function svg(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('svg', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function text(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('text', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function code(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('code', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function textarea(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('textarea', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function toggle(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('toggle', $id, $formSettings, $fieldSettings);
+	}
+
+	/**
+	 * @param array<string,mixed> $formSettings
+	 * @param array<string,mixed> $fieldSettings
+	 */
+	public function url(string $id, array $formSettings = [], array $fieldSettings = []): string
+	{
+		return $this->singleFields->form('url', $id, $formSettings, $fieldSettings);
 	}
 }

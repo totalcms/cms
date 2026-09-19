@@ -11,7 +11,7 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
  * Golden HTML for every form the factory can build.
  *
  * The form runtime is being refactored (FormServices, FormOptionSources,
- * FormOptions — docs/planning/3.6/totalform-context-refactor.md) with one
+ * FormOptions — docs/planning/done/totalform-context-refactor.md) with one
  * promise: identical output. Every other form test asserts substrings, so a
  * refactor that dropped an attribute or reordered fields would pass them.
  * This file pins the whole rendered form instead.
