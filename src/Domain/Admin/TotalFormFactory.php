@@ -120,6 +120,28 @@ readonly class TotalFormFactory
 		);
 	}
 
+	/**
+	 * Wrap pre-rendered field HTML in a collapsible accordion group. Twig:
+	 *   {% set body %}{{ cms.form.field(...) }}{% endset %}
+	 *   {{ cms.form.accordion([
+	 *       { title: 'Content', content: body, formgrid: 'body body' },
+	 *       { title: 'SEO',     content: seo }
+	 *   ]) }}
+	 *
+	 * One panel renders closed; two or more open the first and link them, which
+	 * is the same rule the schema `>> <<` syntax follows.
+	 *
+	 * @param list<array{title?:string,content?:string,formgrid?:string}> $panels
+	 * @param array<string,mixed>                                         $options
+	 */
+	public function accordion(array $panels = [], array $options = []): string
+	{
+		return (new AccordionRenderer())->wrap(
+			$panels,
+			(string)($options['class'] ?? ''),
+		);
+	}
+
 	/** @param array<string,mixed> $options */
 	public function schema(array $options = []): string
 	{

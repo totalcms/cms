@@ -9,7 +9,7 @@
 | Feature | Doc | The one thing to know |
 |---|---|---|
 | Collections, settings (URL, sort, public ops, sitemap, SEO, MCP) | `collections/settings.md` | Set the collection **URL** before anything that links to objects — pretty URLs, canonicals, feeds and sitemaps all derive from it. |
-| Schemas, `formgrid`, `inheritFrom`, validation | `schemas/reference.md`, `schemas/formgrid.md`, `schemas/validation.md` | `formgrid` is not inherited; a child schema restates its own layout. |
+| Schemas, `formgrid`, `inheritFrom`, validation | `schemas/reference.md`, `schemas/formgrid.md`, `schemas/validation.md` | `formgrid` is not inherited; a child schema restates its own layout. `[[ ]]` is a fieldset; `>> … <<` is an accordion group (one panel closed, many first-open). |
 | Field types | `fields/choosing-a-field.md`, then `fields/<type>.md` | Copy definitions from the `totalcms` reference schema (`schema:get totalcms --json`). |
 | Markdown storage format | `collections/storage-format.md` | Per-collection `format: markdown`; `collection:convert` switches an existing one. |
 | Import (CSV, JSON, RSS, WordPress, Alloy, Total CMS 1) / export | `collections/import.md`, `collections/export.md` | Imports run as queued jobs; `jobs:process` drains them on a cron-less host. |

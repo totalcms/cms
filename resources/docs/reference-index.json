@@ -1397,6 +1397,13 @@
             "url": "https://docs.totalcms.co/twig/"
         },
         {
+            "name": "cms.form.accordion",
+            "signature": "accordion(array $panels = [], array $options = []): string",
+            "description": "Wrap pre-rendered field HTML in a collapsible accordion group. Twig: {% set body %}{{ cms.form.field(...) }}{% endset %} {{ cms.form.accordion([ { title: 'Content', content: body, formgrid: 'body body' }, { title: 'SEO', content: seo } ]) }}",
+            "examples": [],
+            "url": "https://docs.totalcms.co/forms/builder/"
+        },
+        {
             "name": "cms.form.blog",
             "signature": "blog(array $options = []): string",
             "description": "",

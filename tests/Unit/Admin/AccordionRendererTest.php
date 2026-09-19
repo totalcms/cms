@@ -248,3 +248,28 @@ describe('TotalForm fieldContent with a formgrid accordion', function (): void {
 		expect($fieldsetStart)->toBeGreaterThan($panelStart);
 	});
 });
+
+describe('TotalFormFactory::accordion', function (): void {
+	test('the factory seam produces the same markup as the renderer', function (): void {
+		$factory = (new ReflectionClass(TotalCMS\Domain\Admin\TotalFormFactory::class))->newInstanceWithoutConstructor();
+
+		$html = $factory->accordion([
+			['title' => 'Content', 'content' => '<p>body</p>', 'formgrid' => 'body body'],
+			['title' => 'SEO',     'content' => '<p>seo</p>'],
+		]);
+
+		expect($html)
+			->toContain('class="formgrid-accordion"')
+			->toContain('<summary>Content</summary>')
+			->toContain('<summary>SEO</summary>')
+			->toContain('data-open-first="true"');
+	});
+
+	test('the class option lands on the group wrapper', function (): void {
+		$factory = (new ReflectionClass(TotalCMS\Domain\Admin\TotalFormFactory::class))->newInstanceWithoutConstructor();
+
+		$html = $factory->accordion([['title' => 'One', 'content' => 'x']], ['class' => 'my-extra']);
+
+		expect($html)->toContain('class="formgrid-accordion my-extra"');
+	});
+});

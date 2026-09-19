@@ -129,6 +129,43 @@ Use `cms.form.fieldset()` to group fields inside a styled fieldset container. Ca
 
 This produces the same `.form-grid-fieldset` markup as the schema `[[ ]]` syntax.
 
+## Accordions
+
+Use `cms.form.accordion()` to group fields into collapsible panels. Capture each
+panel's fields with a `{% set %}` block and pass them as a list:
+
+```twig
+{% set content_fields %}
+  {{ cms.form.field("styledtext", "body", { label: "Body" }) }}
+{% endset %}
+
+{% set seo_fields %}
+  {{ cms.form.field("text", "seoTitle", { label: "SEO Title" }) }}
+{% endset %}
+
+{{ cms.form.accordion([
+    { title: "Content", content: content_fields, formgrid: "body body" },
+    { title: "SEO",     content: seo_fields }
+]) }}
+```
+
+### Accordion Options
+
+- **panels** (list): One object per panel.
+  - `title` (string, optional): The panel's summary text. Defaults to `Section N`.
+  - `content` (string): Pre-rendered field HTML (typically captured with `{% set %}`).
+  - `formgrid` (string, optional): Inner grid layout for that panel, using the same row syntax as schema `formgrid` definitions.
+- **options** (object, optional):
+  - `class` (string): Extra CSS classes to add to the group wrapper.
+
+### Open State
+
+A single panel renders closed. Two or more panels render with the first open and
+only one open at a time. This is the same rule the schema `>> <<` syntax follows,
+and it is derived from the number of panels — there is no option for it.
+
+This produces the same `.formgrid-accordion` markup as the schema `>> <<` syntax.
+
 ## Blog Form Options
 
 ```twig
