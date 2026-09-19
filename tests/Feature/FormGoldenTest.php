@@ -76,6 +76,13 @@ function goldenHtml(string $html): string
 	$html = (string)preg_replace('/\b(panel|fieldset)-[0-9a-f]{12}\b/', '$1-ID', $html);
 	$html = (string)preg_replace('/name="csrf_token" value="[^"]*"/', 'name="csrf_token" value="TOKEN"', $html);
 
+	// The timezone select renders one <option> per IANA zone, so its contents
+	// track whatever tzdata the running PHP was built against — a PHP, ICU or OS
+	// update silently rewrites the list (America/Coyhaique arrived in 2025a and
+	// broke this snapshot). Collapse the options so the field's presence and
+	// attributes stay under test without pinning an external database.
+	$html = (string)preg_replace('#(<select[^>]*name="timezone"[^>]*>).*?(</select>)#s', '$1TIMEZONES$2', $html);
+
 	// Records seeded in beforeEach carry the wall clock in their created,
 	// updated and upload dates.
 	$html = (string)preg_replace('/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?\b/', 'NOW', $html);
