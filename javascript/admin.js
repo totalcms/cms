@@ -1,5 +1,6 @@
 import TotalFormManager from './totalform/totalform-manager';
 import TotalForm from './totalform/totalform';
+import { allFieldTypes } from './totalform/field-types-all';
 import TotalCMS from './totalcms';
 import QuickAction from './quickaction';
 import SimpleForm from './totalform/simpleform';
@@ -26,20 +27,26 @@ import tcmsConfirm from './confirm-dialog';
 import QuickNav from './quick-nav';
 import './codemirror-bundle'; // Include CodeMirror functionality in admin
 
-// The JavaScript surface an extension builds on: subclass TotalField, register
-// the class for the field type its PHP side declared with addFieldType(), and
-// the form factory builds it. Core admin scripts render ahead of extension
-// admin scripts and module scripts run in document order, so a module's top
-// level can register. Distinct from `window.totalcms`, the options object.
-window.TotalCMS = Object.assign(window.TotalCMS ?? {}, {
-	TotalForm,
-	TotalField,
-	registerFieldType: (type, ctor) => TotalForm.registerFieldType(type, ctor),
-});
+// Every field class, up front: the dashboard builds each field synchronously.
+TotalForm.registerBuiltInFieldTypes(allFieldTypes);
 
 globalThis.TotalCMS = TotalCMS;
 globalThis.QuickAction = QuickAction;
 globalThis.JSONField = JSONField;
+
+// The JavaScript surface an extension builds on: subclass TotalField, register
+// the class for the field type its PHP side declared with addFieldType(), and
+// the form factory builds it. It hangs off the TotalCMS global the line above
+// publishes (assigning a fresh object there would be overwritten by it), and
+// forms.js publishes the same three names on a public page. Core admin
+// scripts render ahead of extension admin scripts and module scripts run in
+// document order, so a module's top level can register. Distinct from
+// `window.totalcms`, the options object.
+Object.assign(globalThis.TotalCMS, {
+	TotalForm,
+	TotalField,
+	registerFieldType: (type, ctor) => TotalForm.registerFieldType(type, ctor),
+});
 
 // Idempotency guard: a page can end up including this bundle twice with
 // DIFFERENT cache-buster query strings (e.g. a legacy hardcoded

@@ -2,45 +2,10 @@ import TotalCMS from '../totalcms';
 import TotalField from './totalfield';
 import TotalDispatcher from './dispatcher';
 import FieldVisibility from './field-visibility';
-import Identifier from './identifier';
 import tcmsConfirm from '../confirm-dialog';
 import { t } from '../i18n';
 import { csrfHeadersFor } from '../csrf';
-import Checkbox from './checkbox';
-import RadioField from './radio';
-import Textarea from './textarea';
-import NumberField from './number';
-import PriceField from './price';
-import ColorField from './color';
-import DateField from './date';
-import CardField from './card';
-import VideoField from './video';
-import DeckField from './deck';
-import DeckTableField from './deckTable';
-import PasswordField from './password';
-import SelectField from './select';
-import MultiSelectField from './multiselect';
-import ChecklistField from './checklist';
-import ListField from './list';
-import RangeSlider from './range';
-import StyledTextField from './styledtext';
-import LocalizedTextField from './localizedtext';
-import LocalizedStyledTextField from './localizedstyledtext';
-import SVGField from './svg';
-import ImageField from './image';
-import GalleryField from './gallery';
-import PropertiesField from './properties';
-import CustomPropertiesField from './customProperties';
-import SchemaPropertiesField from './schemaProperties';
-import JSONField from './json';
-import FileField from './file';
-import DepotField from './depot';
-import DepotDropField from './depot-drop';
-import CodeField from './code';
-import SecretField from './secret';
 
-// import Deck from './deck';
-// import MarkdownField from './markdown';
 
 //-----------------------------------------------
 // Total CMS Form constructor
@@ -52,6 +17,7 @@ export default class TotalForm {
         this.form = this.setForm(formRef);
 		formRef.totalform = this;
 		this.fields = []; // Initialize early to prevent undefined errors on disabled forms
+		this.pending = new Set(); // fields whose module is still loading (see loadField)
 
 		if (formRef.dataset.disabled !== undefined) {
 			return;
@@ -121,6 +87,7 @@ export default class TotalForm {
 
 		// Signal that all fields are initialized and form is ready
 		this.form.dispatchEvent(new CustomEvent('totalform:ready'));
+		if (this.pending.size === 0) this.form.dispatchEvent(new CustomEvent('totalform:loaded'));
 
 		// A new object gets the cursor in its first field. A singleton's first
 		// visit is technically the new-object form, but it is a settings record
@@ -299,134 +266,70 @@ export default class TotalForm {
     generateFieldObject(field) {
         const settings = JSON.parse(field.dataset.settings||"{}");
         settings.form = this;
+		const type  = field.dataset.type;
+		const entry = TotalForm.builtInFieldTypes[type] ?? TotalForm.fieldTypes[type];
 
-        switch (field.dataset.type) {
-			case "id":
-			case "slug":
-                return new Identifier(field, settings);
+		if (typeof entry === 'function') return new entry(field, settings);
+		if (entry && typeof entry.lazy === 'function') return this.loadField(entry, field, settings);
 
-			case "text":
-			case "time":
-            case "url":
-			case "hidden":
-			case "email":
-			case "phone":
-				return new TotalField(field, settings);
-
-			case "textarea":
-				return new Textarea(field, settings);
-
-            case "checkbox":
-            case "toggle":
-                return new Checkbox(field, settings);
-
-			case "checklist":
-			case "multicheckbox":
-				return new ChecklistField(field, settings);
-
-            case "radio":
-                return new RadioField(field, settings);
-
-            case "number":
-                return new NumberField(field, settings);
-
-            case "price":
-                return new PriceField(field, settings);
-
-            case "color":
-                return new ColorField(field, settings);
-
-            case "date":
-			case "datetime":
-                return new DateField(field, settings);
-
-            case "select":
-                return new SelectField(field, settings);
-
-            case "multiselect":
-                return new MultiSelectField(field, settings);
-
-            case "list":
-                return new ListField(field, settings);
-
-			case "password":
-				return new PasswordField(field, settings);
-
-			case "secret":
-				return new SecretField(field, settings);
-
-            case "range":
-                return new RangeSlider(field, settings);
-
-			case "styledtext":
-                return new StyledTextField(field, settings);
-
-			case "localizedtext":
-			case "localizedtextarea":
-				// Same JS class for both — getValue/setValue queries
-				// `input[data-locale], textarea[data-locale]` and works
-				// uniformly. The PHP FormField subclass decides the shape.
-				return new LocalizedTextField(field, settings);
-
-			case "localizedstyledtext":
-				return new LocalizedStyledTextField(field, settings);
-
-            case "svg":
-                return new SVGField(field, settings);
-
-			case "image":
-				return new ImageField(field,settings);
-
-			case "gallery":
-				return new GalleryField(field,settings);
-
-			case "json":
-				return new JSONField(field,settings);
-
-			case "file":
-				return new FileField(field,settings);
-
-			case "depot":
-				return new DepotField(field,settings);
-
-			case "depotDrop":
-				return new DepotDropField(field,settings);
-
-			case "code":
-				return new CodeField(field,settings);
-
-			case "card":
-				return new CardField(field, settings);
-
-			case "video":
-				return new VideoField(field, settings);
-
-			case "deck":
-                return new DeckField(field, settings);
-
-			case "deckTable":
-				return new DeckTableField(field, settings);
-
-			// case "markdown":
-            //     return new MarkdownField(field, settings);
-
-			case "properties":
-				return new PropertiesField(field,settings);
-
-			case "customProperties":
-				return new CustomPropertiesField(field,settings);
-
-			case "schemaProperties":
-				return new SchemaPropertiesField(field,settings);
-
-            default: {
-				const ctor = TotalForm.fieldTypes[field.dataset.type];
-				if (ctor) return new ctor(field, settings);
-                console.warn("Unknown field",field);
-				return new TotalField(field, settings);
-			}
-        }
+		console.warn("Unknown field", field);
+		return new TotalField(field, settings);
     }
+
+	//-------------------------
+	// Field classes
+	//
+	// TotalForm knows no field class but TotalField. The entry point fills
+	// the built-in registry: admin.js with every class (field-types-all.js,
+	// synchronous, as the dashboard always was), forms.js with the light
+	// classes plus a loader for each heavy one (field-types-lazy.js), so a
+	// public page downloads Tiptap or Dropzone only for a form that shows
+	// them. The built-in registry wins over an extension's registration of
+	// the same name.
+	//-------------------------
+	static builtInFieldTypes = {};
+
+	static registerBuiltInFieldTypes(types) {
+		TotalForm.builtInFieldTypes = { ...types };
+	}
+
+	// A field whose class is still loading. The element is marked so a
+	// re-scan neither builds it twice nor forgets it; when the module lands
+	// the field is built and adopted, and once nothing is pending the form
+	// announces totalform:loaded. A failed load is reported and the form
+	// carries on without that field.
+	loadField(entry, field, settings) {
+		if (field.__tcmsPending) return null;
+		entry.promise ??= entry.lazy();
+
+		const job = entry.promise
+			.then(module => this.adoptField(new (module.default ?? module)(field, settings)))
+			.catch(error => console.warn(`Failed to load field [${field.dataset.type}]:`, error))
+			.finally(() => {
+				delete field.__tcmsPending;
+				this.pending.delete(job);
+				if (this.pending.size === 0) this.form.dispatchEvent(new CustomEvent('totalform:loaded'));
+			});
+
+		field.__tcmsPending = job;
+		this.pending.add(job);
+		return null;
+	}
+
+	adoptField(totalfield) {
+		if (!totalfield.isSubField()) this.fields.push(totalfield);
+		if (totalfield.isDroplet()) this.droplets.push(totalfield);
+		if (this.visibility) {
+			this.visibility.fields = this.fields;
+			this.visibility.initialize();
+		}
+	}
+
+	// Resolves once every field whose module was still loading is in.
+	whenReady() {
+		if (this.pending.size === 0) return Promise.resolve();
+		return Promise.all([...this.pending]).then(() => this.whenReady());
+	}
 
 	//-------------------------
 	// Extension field types
@@ -667,6 +570,9 @@ export default class TotalForm {
 	}
 
 	save() {
+		// A field whose module is still loading has no value yet: wait for it.
+		if (this.pending?.size > 0) return this.whenReady().then(() => this.save());
+
 		// Defensive prune: drop any fields whose container was detached from the
 		// DOM. refreshFields() handles the normal case, but external mutations
 		// (e.g. show/hide plugins that fire their event before the actual node

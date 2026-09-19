@@ -19,6 +19,7 @@ esbuild.build({
 		"javascript/admin.js",
 		"javascript/gallery.js",
 		"javascript/content.js",
+		"javascript/forms.js",
 		"javascript/filelinks.js",
 		"javascript/imageworks-builder.js",
 		"javascript/image-batcher.js",

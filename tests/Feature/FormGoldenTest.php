@@ -78,6 +78,8 @@ function goldenHtml(string $html): string
 	// Records seeded in beforeEach carry the wall clock in their created,
 	// updated and upload dates.
 	$html = (string)preg_replace('/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?\b/', 'NOW', $html);
+	// A date field with no value defaults to today.
+	$html = (string)preg_replace('/value="\d{4}-\d{2}-\d{2}"/', 'value="TODAY"', $html);
 
 	// Any other uniqid()-shaped token (deck and card items mint their own).
 	return (string)preg_replace('/\b[0-9a-f]{13}\b/', 'UID', $html);

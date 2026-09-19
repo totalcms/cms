@@ -31,6 +31,7 @@ class ShoutField extends TotalField {
 describe('TotalForm.registerFieldType', () => {
 	beforeEach(() => {
 		for (const key of Object.keys(TotalForm.fieldTypes)) delete TotalForm.fieldTypes[key];
+		TotalForm.registerBuiltInFieldTypes({ text: TotalField });
 		vi.restoreAllMocks();
 	});
 

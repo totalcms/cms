@@ -29,6 +29,11 @@ final class CoreFrontendAssetRegistrar extends CoreAssetRegistrar
 		['name' => 'cms-grid',   'path' => 'cms-grid.css',   'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
 		['name' => 'gallery',    'path' => 'gallery.css',    'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
 		['name' => 'pagination', 'path' => 'pagination.css', 'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
+		// The form runtime for a public page: cms.form.* markup, its styles
+		// and the script that saves it, without the admin bundle. One name
+		// for both files, so a site never ships half the pair.
+		['name' => 'forms',      'path' => 'forms.css',      'type' => 'css', 'position' => 'head', 'module' => false, 'preload' => false],
+		['name' => 'forms',      'path' => 'forms.js',       'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
 		['name' => 'content',    'path' => 'content.js',     'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
 		['name' => 'gallery',    'path' => 'gallery.js',     'type' => 'js',  'position' => 'body', 'module' => true,  'preload' => true],
 		// htmx is the bundled UMD build — it must load as a classic script so

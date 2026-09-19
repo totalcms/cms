@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Twig\Adapter\LocaleTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
 use TotalCMS\Domain\Twig\Service\CoreAdminAssetRegistrar;
@@ -43,6 +44,10 @@ function makeAdapter(string $api = '/api', ?string $base = null, bool $xmlrpcEna
 
 	$adminProp = $ref->getProperty('adminAssetsList');
 	$adminProp->setValue($adapter, []);
+
+	// assetsBody() emits the translation catalog ahead of the forms feature.
+	$localeProp = $ref->getProperty('locale');
+	$localeProp->setValue($adapter, test()->createMock(LocaleTwigAdapter::class));
 
 	return $adapter;
 }
@@ -131,7 +136,9 @@ test('unknown names in the except list are ignored', function (): void {
 	(new CoreFrontendAssetRegistrar())->register($adapter);
 
 	$expected = count((new ReflectionClassConstant(CoreFrontendAssetRegistrar::class, 'ASSETS'))->getValue());
-	$emitted  = substr_count($adapter->assetsHead(), '<link rel="stylesheet"') + substr_count($adapter->assetsBody(), '<script');
+	// Script tags with a src: the inline globals script the forms feature
+	// brings along is not an asset.
+	$emitted  = substr_count($adapter->assetsHead(), '<link rel="stylesheet"') + preg_match_all('/<script[^>]* src=/', $adapter->assetsBody());
 
 	expect($emitted)->toBe($expected);
 });

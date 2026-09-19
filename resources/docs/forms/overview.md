@@ -22,26 +22,26 @@ All form functionality in Total CMS is accessed through the `cms.form` object:
 
 ## What a public form needs
 
-`cms.form.*` renders the form's markup on the server, but validation, file uploads, the save request and the post-save actions come from Total CMS's form script — and today that script ships inside the **admin** bundle. A form on a public page (a signup form, a contact form, a member profile) therefore needs the admin asset helpers in its layout, not just the frontend ones:
+`cms.form.*` renders the form's markup on the server. Validation, file uploads, the save request and the post-save actions come from Total CMS's form script, which ships as the `forms` core frontend feature: a stylesheet and a small module that `cms.assetsHead()` and `cms.assetsBody()` already emit. A public form needs nothing beyond the two helpers every layout has:
 
 ```twig
 <head>
-    {{ cms.assetsHead() }}        {# core frontend assets #}
-    {{ cms.adminAssetsHead() }}   {# form styles, icons — no dashboard reset #}
+    {{ cms.assetsHead() }}        {# core frontend assets, forms.css among them #}
     …
 </head>
 <body>
     …
     {{ cms.form.builder('members', {register: true}) }}
     …
-    {{ cms.assetsBody() }}
-    {{ cms.adminAssetsBody() }}   {# the form script, plus the globals it reads #}
+    {{ cms.assetsBody() }}        {# forms.js, and the globals it reads #}
 </body>
 ```
 
-`adminAssetsHead()` deliberately leaves out the dashboard's global reset, so it does not restyle the rest of your page; `adminAssetsBody()` also defines the translation catalog and settings the script reads. The CSRF token travels in the hidden field every form carries, so no `<meta>` tag is needed on a public page.
+`forms.js` carries the form runtime and the light field classes a public form is made of — text, textarea, number, select, checkbox, toggle, radio, date, color, password. A heavier field (styled text, image and file uploads, code, lists, decks) loads its own module the first time a form on the page renders it, so a contact form never downloads the editor a blog post needs. The whole feature is under 50 KB compressed; the admin bundle it replaces on public pages is around 300 KB.
 
-Be aware of the weight: the admin bundle is large (the script alone is around 580 KB compressed) because it carries every field editor the dashboard can show. For a page whose only interactive element is a short form that is a lot, and a dedicated, much smaller forms bundle is planned for a future release. Until then, the alternatives are the [zero-JavaScript form pattern](docs/twig/htmx) built on the API, or a hand-written form posting to the same endpoints.
+The CSRF token travels in the hidden field every form carries, so no `<meta>` tag is needed. `cms.assetsBody()` defines the translation catalog and settings the script reads whenever the feature is on the page. A site with no public forms leaves the pair out with `forms` in `frontendAssets.except` (see [Frontend Assets](docs/site-builder/frontend)); a customer admin page that calls both the frontend and the admin helpers gets one form runtime, since `forms.js` stands down when `admin.js` is present.
+
+Before 3.6 a public form needed `cms.adminAssetsHead()` and `cms.adminAssetsBody()` in its layout. Those calls still work, and a page that keeps them keeps working; they are simply no longer needed for forms.
 
 ## Default Field Arguments
 

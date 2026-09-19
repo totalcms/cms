@@ -388,7 +388,20 @@ class TotalCMSTwigAdapter
 	 */
 	public function assetsBody(array $options = []): string
 	{
-		return AssetRenderer::body($this->frontendAssets($options));
+		$assets = $this->frontendAssets($options);
+
+		// The form runtime reads the same two globals the admin bundle does;
+		// they ride ahead of the scripts whenever the `forms` feature is on
+		// the page, and never otherwise.
+		$globals = '';
+		foreach ($assets as $asset) {
+			if ($asset->name === 'forms' && $asset->type === 'js') {
+				$globals = $this->globalsScript();
+				break;
+			}
+		}
+
+		return $globals . AssetRenderer::body($assets);
 	}
 
 	/**
@@ -437,17 +450,18 @@ class TotalCMSTwigAdapter
 	 */
 	public function adminAssetsBody(): string
 	{
-		return $this->adminGlobalsScript() . AssetRenderer::body($this->adminAssetsList);
+		return $this->globalsScript() . AssetRenderer::body($this->adminAssetsList);
 	}
 
 	/**
 	 * The inline `<script>` that defines `window.TCMS_TRANSLATIONS` and
-	 * `window.TCMS_CONFIG` for the admin bundle. Admin-only: `assetsBody()`
-	 * never emits it, because the catalog is per-user and the config is the
-	 * dashboard's. Encoded with the HEX flags so a `</script>` inside a
-	 * translated string cannot end the element early.
+	 * `window.TCMS_CONFIG`, which the form runtime reads: on every dashboard
+	 * page, and on a public page that carries the `forms` feature. The
+	 * catalog is the current locale's — a visitor's is the site's default.
+	 * Encoded with the HEX flags so a `</script>` inside a translated string
+	 * cannot end the element early.
 	 */
-	private function adminGlobalsScript(): string
+	private function globalsScript(): string
 	{
 		$flags = JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 

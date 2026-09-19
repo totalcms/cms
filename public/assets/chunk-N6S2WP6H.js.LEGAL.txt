@@ -1,0 +1,4 @@
+Bundled license information:
+
+choices.js/public/assets/scripts/choices.mjs:
+  /*! choices.js v11.0.4 | © 2025 Josh Johnson | https://github.com/jshjohnson/Choices#readme */

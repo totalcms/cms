@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../javascript/totalform/number.js"],
+  "sourcesContent": ["import TotalField from './totalfield';\n\n//-----------------------------------------------\n// Total CMS Number Field\n//-----------------------------------------------\nexport default class NumberField extends TotalField {\n\n    getValue() {\n        return parseFloat(this.input.value);\n    }\n\n    schema() {\n        return {\n            \"type\"  : \"number\",\n            \"field\" : \"number\"\n        };\n    }\n}\n"],
+  "mappings": "gFAKA,IAAqBA,EAArB,cAAyCC,CAAW,CALpD,MAKoD,CAAAC,EAAA,oBAEhD,UAAW,CACP,OAAO,WAAW,KAAK,MAAM,KAAK,CACtC,CAEA,QAAS,CACL,MAAO,CACH,KAAU,SACV,MAAU,QACd,CACJ,CACJ",
+  "names": ["NumberField", "TotalField", "__name"]
+}

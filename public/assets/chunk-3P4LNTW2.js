@@ -1,0 +1,2 @@
+import{a as n}from"./chunk-CW345KIZ.js";function r(){let t=document.querySelector('meta[name="csrf-token"]');if(t&&t.getAttribute("content"))return t.getAttribute("content");let e=document.querySelector('input[name="csrf_token"]');return e&&e.value?e.value:null}n(r,"getCsrfToken");function o(){let t=r();return t?{"X-CSRF-Token":t}:{}}n(o,"csrfHeaders");function c(t){let e;try{e=new URL(t,window.location.href)}catch{return{}}return e.origin===window.location.origin?o():{}}n(c,"csrfHeadersFor");export{r as a,o as b,c};
+//# sourceMappingURL=chunk-3P4LNTW2.js.map

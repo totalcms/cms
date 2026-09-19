@@ -242,7 +242,7 @@ rollupOptions: {
 
 ## Core Total CMS Assets
 
-Before your own assets, your layout needs the ones Total CMS ships. `cms.assetsHead()` and `cms.assetsBody()` emit the core stylesheets and scripts that T3's own Twig output depends on — grid layout, galleries, pagination, icons, htmx, and the decoder behind the [`mailto`](docs/twig/filters) filter — plus anything registered by [extensions](docs/extensions/extension-points).
+Before your own assets, your layout needs the ones Total CMS ships. `cms.assetsHead()` and `cms.assetsBody()` emit the core stylesheets and scripts that T3's own Twig output depends on — grid layout, galleries, pagination, icons, htmx, the form runtime behind `cms.form.*`, and the decoder behind the [`mailto`](docs/twig/filters) filter — plus anything registered by [extensions](docs/extensions/extension-points).
 
 ```twig
 {{ cms.assetsHead() }}   {# in <head>, before your own CSS #}
@@ -265,7 +265,7 @@ $settings['frontendAssets'] = [
 ];
 ```
 
-Names are features, not filenames: `gallery` drops both `gallery.css` and `gallery.js` (and the script's preload hint), so you never ship half a pair. The names are `icons`, `content`, `cms-grid`, `gallery`, `pagination` and `htmx`. Keep `content` — it carries the styled-text styles and the decoder behind the `mailto` filter. Extension assets are never affected, and a name that does not exist is ignored. This is an exclude list on purpose: enable an extension with frontend assets, or upgrade to a version that adds a core asset, and it still arrives.
+Names are features, not filenames: `gallery` drops both `gallery.css` and `gallery.js` (and the script's preload hint), so you never ship half a pair. The names are `icons`, `content`, `cms-grid`, `gallery`, `pagination`, `forms` and `htmx`. Keep `content` — it carries the styled-text styles and the decoder behind the `mailto` filter. `forms` is the stylesheet and script behind every `cms.form.*` form (see [What a public form needs](docs/forms/overview#what-a-public-form-needs)); leave it out only on a site with no public forms. Extension assets are never affected, and a name that does not exist is ignored. This is an exclude list on purpose: enable an extension with frontend assets, or upgrade to a version that adds a core asset, and it still arrives.
 
 The same names work per call, for a Stacks site where the layout is written page by page and there is no config file to edit:
 

@@ -1,0 +1,8 @@
+// forms.css — the form styles for a public page, without the dashboard.
+//
+// The `forms` core frontend feature: what cms.form.* markup needs to look
+// right on a page that does not load admin.css — the variables and the form
+// partials, nothing of the admin chrome and no global reset. Icons come from
+// icons.css, which is its own core feature and already on every public page.
+@use "variables";
+@use "forms/index";
