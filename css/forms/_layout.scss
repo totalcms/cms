@@ -32,6 +32,16 @@
 		box-shadow: inset 0 0 0 oklch(var(--totalform-shadow));
 	}
 
+	// A host page's own reset (Foundation, for one) puts a hard-coded
+	// background on `[type=text]:focus` at (0,2,0), which the base input
+	// rule ties on and the block above never contradicts. Restate the
+	// theme background at (0,3,1) so a focused field keeps it; readonly
+	// fields keep their own and the group icon is not touched.
+	input:not([readonly]):focus,
+	textarea:not([readonly]):focus {
+		background-color : oklch(var(--totalform-background));
+	}
+
     label, legend {
         display     : block;
         margin      : 0;
