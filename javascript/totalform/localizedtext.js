@@ -30,6 +30,7 @@ export default class LocalizedTextField extends TotalField {
 		});
 
 		this.bindTabSwitching();
+		this.trackTabsWidth();
 
 		// Cross-field locale sync — default on, opt-out via `settings.localeSync: false`.
 		// When enabled, clicking a tab on one localized field switches every other
@@ -40,6 +41,33 @@ export default class LocalizedTextField extends TotalField {
 
 		// Refresh stored value now that getValue() can read all locales.
 		this.storedValue = JSON.stringify(this.getValue());
+	}
+
+	// The help overlay shares the header row with the locale tabs and is opaque,
+	// so it has to stop short of them — and only the browser knows where they
+	// begin, since that depends on the configured locales and how wide their
+	// labels render. Publish the strip's width for the stylesheet to inset by,
+	// and keep it current: fonts load late, and the header wraps the tabs onto
+	// their own row when it is narrow, where there is nothing to avoid and the
+	// overlay may use the full width again.
+	trackTabsWidth() {
+		const tabs  = this.container.querySelector('.locale-tabs');
+		const label = this.container.querySelector('.localized-header > label');
+		if (!tabs || !label) return;
+
+		const publish = () => {
+			const sameRow = Math.abs(tabs.offsetTop - label.offsetTop) < 2;
+			const width   = sameRow ? Math.ceil(tabs.getBoundingClientRect().width) : 0;
+			this.container.style.setProperty('--locale-tabs-width', `${width}px`);
+		};
+
+		publish();
+
+		if (typeof ResizeObserver !== 'undefined') {
+			this.tabsObserver = new ResizeObserver(publish);
+			this.tabsObserver.observe(tabs);
+			this.tabsObserver.observe(this.container);
+		}
 	}
 
 	bindLocaleSync() {

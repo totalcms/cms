@@ -110,6 +110,23 @@
 	.checkbox-field > .help {
         translate: 1.3rem calc(-100% + var(--help-line) + 1rem);
     }
+	// A localized field's label row carries the locale tab strip as well as the
+	// label, and the overlay is opaque — at full width it paints straight over
+	// the tabs, which are how you tell which locale you are editing. So the
+	// overlay stops short of them and wraps earlier instead.
+	//
+	// How far short is not something CSS can work out: it depends on how many
+	// locales are configured and how wide their rendered labels are. The
+	// field's JS measures the strip and publishes `--locale-tabs-width`, and
+	// sets it to 0 when the header has wrapped the tabs onto a row of their
+	// own, where there is nothing on the label's row to avoid. The fallback is
+	// 0 too, so a field whose JS has not run yet is no worse than before.
+	.localizedtext-field > .help,
+	.localizedtextarea-field > .help,
+	.localizedstyledtext-field > .help {
+		width : auto;
+		right : calc(var(--locale-tabs-width, 0px) + 1rem);
+	}
 }
 
 //------------------------------
