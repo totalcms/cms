@@ -993,14 +993,15 @@
             "Section Dividers",
             "Section Headers",
             "Fieldsets",
+            "Accordions",
             "Three or More Columns",
             "Important Rules",
             "Real-World Examples",
             "Tips"
         ],
         "excerpt": "--- title: \"Form Grid Layout\" description: \"Arrange admin form fields in multi-column layouts using CSS Grid syntax with column spanning, dividers, and section headers in Total CMS schemas.\" --- Form ...",
-        "content": "--- title: \"form grid layout\" description: \"arrange admin form fields in multi-column layouts using css grid syntax with column spanning, dividers, and section headers in total cms schemas.\" --- form grid layout the formgrid setting in a schema controls how form fields are arranged in the admin dashboard. it uses css grid to create multi-column layouts, allowing you to organize fields in rows and columns. basic concept think of your form as a spreadsheet. each row in your formgrid definition becomes a row in your form, and each word in that row represents a column. fields are placed into named \"cells\" that you define. row 1: field1 field2 row 2: field3 field3",
-        "keywords": "form grid layout basic concept basic syntax spanning multiple columns empty cells section dividers section headers fieldsets three or more columns important rules real-world examples tips"
+        "content": "--- title: \"form grid layout\" description: \"arrange admin form fields in multi-column layouts using css grid syntax with column spanning, dividers, and section headers in total cms schemas.\" --- form grid layout the formgrid setting in a schema controls how form fields are arranged in the admin dashboard. it uses css grid to create multi-column layouts, allowing you to organize fields in rows and columns. basic concept think of your form as a spreadsheet. each row in your formgrid definition becomes a row in your form, and each word in that row represents a column. fields are placed into named \"cells\" that you define. row 1: field1 field2 row 2: field3 field3 > contact details first name last name --- mailing address street street city zip > always ends the panel it appears in and starts the next one, so there is no way to write a panel inside a panel. - a",
+        "keywords": "form grid layout basic concept basic syntax spanning multiple columns empty cells section dividers section headers fieldsets accordions three or more columns important rules real-world examples tips"
     },
     {
         "path": "forms/options",

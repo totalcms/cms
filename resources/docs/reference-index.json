@@ -3284,7 +3284,7 @@
             "name": "formgrid",
             "title": "Form Grid Layout",
             "description": "Arrange admin form fields in multi-column layouts using CSS Grid syntax with column spanning, dividers, and section headers in Total CMS schemas.",
-            "content": "form grid layout the formgrid setting in a schema controls how form fields are arranged in the admin dashboard. it uses css grid to create multi-column layouts, allowing you to organize fields in rows and columns. basic concept think of your form as a spreadsheet. each row in your formgrid definition becomes a row in your form, and each word in that row represents a column. fields are placed into named \"cells\" that you define. row 1: field1 field2 row 2: field3 field3",
+            "content": "form grid layout the formgrid setting in a schema controls how form fields are arranged in the admin dashboard. it uses css grid to create multi-column layouts, allowing you to organize fields in rows and columns. basic concept think of your form as a spreadsheet. each row in your formgrid definition becomes a row in your form, and each word in that row represents a column. fields are placed into named \"cells\" that you define. row 1: field1 field2 row 2: field3 field3 > contact details first name last name --- mailing address street street city zip > always ends the panel it appears in and starts the next one, so there is no way to write a panel inside a panel. - a",
             "url": "https://docs.totalcms.co/schemas/formgrid/"
         },
         {

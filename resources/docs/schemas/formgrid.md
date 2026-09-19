@@ -196,9 +196,130 @@ address address
 ```
 
 **Important notes:**
-- Fieldsets are one level deep — no nesting fieldsets inside other fieldsets
-- The reserved area prefix `formgrid-fieldset-N` should not be used as a field name
+- A fieldset may contain another fieldset, and may contain an accordion group. But the outer `[[` closes at the **first** `]]`, so anything written after an inner block belongs to the outer grid, not to the outer fieldset — put the nested block last
+- The reserved area prefixes `formgrid-fieldset-N` and `formgrid-accordion-N` should not be used as field names
 - If the legend is omitted (e.g. `[[` with nothing after it), the fieldset renders without a legend
+
+## Accordions
+
+Use `>>` to open a collapsible panel and `<<` to close the group. The text after
+`>>` is the panel title:
+
+```
+id id
+>> Advanced Options
+slug template
+<<
+```
+
+This creates:
+
+```
++------------------+------------------+
+|                 id                  |
++------------------+------------------+
+| > Advanced Options                  |  <- collapsed panel
++-------------------------------------+
+```
+
+### Linked Panels
+
+Consecutive `>>` panels before a `<<` form one accordion: the first panel opens,
+and opening any panel closes its siblings.
+
+```
+>> Content
+body body
+>> SEO
+seoTitle seoDescription
+>> Advanced
+slug template
+<<
+```
+
+This creates:
+
+```
++-------------------------------------+
+| v Content                           |  <- open
+| +---------------------------------+ |
+| |              body               | |
+| +---------------------------------+ |
++-------------------------------------+
+| > SEO                               |
++-------------------------------------+
+| > Advanced                          |
++-------------------------------------+
+```
+
+### One Panel or Many
+
+The `<<` is what defines the group, and the size of the group decides the
+starting state:
+
+- **One panel** in a group renders **closed**. Use this to tuck advanced or
+  rarely-touched fields out of the way.
+- **Two or more panels** render with the **first one open**, and only one panel
+  is open at a time.
+
+So two `<<`-terminated runs are two independent accordions, both closed, neither
+one's state affecting the other:
+
+```
+>> Section 1
+title title
+<<
+>> Section 2
+id id
+<<
+```
+
+### Panel Contents
+
+A panel's interior is laid out as its own mini-grid using the same row syntax.
+Dividers (`---`), headers (`--- My Header`) and fieldsets (`[[ ]]`) all work
+inside a panel:
+
+```
+>> Contact Details
+first_name last_name
+--- Mailing
+[[ Address
+street street
+city zip
+]]
+<<
+```
+
+**Important notes:**
+
+- Panels cannot nest. `>>` always ends the panel it appears in and starts the
+  next one, so there is no way to write a panel inside a panel.
+- A `<<` with no panel open is ignored.
+- Leaving off the closing `<<` is allowed - the group runs to the end of the
+  formgrid.
+- A `>>` with no title after it is titled `Section 1`, `Section 2`, and so on
+  within its group.
+- A required field inside a closed panel is safe. A failed save opens the panel
+  holding the first problem, and any panel containing an invalid field shows a
+  red header while it stays shut.
+
+### Fields Inside a Collapsed Panel
+
+Every field on a form is built when the page loads, including the fields in a
+panel that starts closed - and a collapsed panel does not render its contents,
+so a field built there cannot measure or read anything on screen. Most fields do
+not care. A few build a widget that does: a `list` field, for one, would end up
+with chips that show no text.
+
+Those fields rebuild themselves the first time their panel is opened, so you do
+not need to do anything. It happens once per panel; after that you may have been
+typing in it, and rebuilding would throw your edits away.
+
+If you are writing a custom field type whose JavaScript reads or measures the
+DOM while it is being constructed, override `reinit()` on your field class to
+rebuild that part. It is a no-op by default, and it is called only when the
+field's container actually becomes visible.
 
 ## Three or More Columns
 
