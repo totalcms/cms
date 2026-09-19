@@ -24,6 +24,15 @@ cd "$root" || exit 0
 [ -f bin/make-bundle.php ] || exit 0
 command -v php >/dev/null 2>&1 || exit 0
 
+# Golden snapshots (tests/.pest/snapshots) must be in git, or the golden
+# tests compare nothing: Pest recreates a missing one silently. Block a commit
+# that leaves one untracked or deleted-but-unstaged. See bin/check-snapshots.php.
+if [ -f bin/check-snapshots.php ] && ! php bin/check-snapshots.php; then
+	echo "pre-commit: golden snapshots out of step with git — commit blocked."
+	echo "  Use --no-verify only if you mean to commit without them."
+	exit 1
+fi
+
 if php bin/make-bundle.php --check >/dev/null 2>&1; then
 	exit 0
 fi

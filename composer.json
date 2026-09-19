@@ -194,10 +194,12 @@
       "@test:parallel",
       "@test:js"
     ],
+    "snapshots:check": "php bin/check-snapshots.php",
     "test:build": [
       "@stan",
       "@docs:validate",
       "@test",
+      "@snapshots:check",
       "@test:js"
     ],
     "quality": [

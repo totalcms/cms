@@ -246,6 +246,8 @@ fi
 
 run_step "JS tests"  '^ *Tests '            composer run test:js
 run_step_live "PHP tests" '^ *Tests:'       composer run test:parallel -- --colors=always
+# A golden test whose snapshot is not in git proves nothing (bin/check-snapshots.php).
+run_step "Golden snapshots" '.'             composer run snapshots:check
 
 echo
 print_success "All checks passed in $(elapsed)"
