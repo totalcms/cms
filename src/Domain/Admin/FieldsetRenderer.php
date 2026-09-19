@@ -25,21 +25,8 @@ class FieldsetRenderer
 			? ''
 			: HTMLUtils::element('legend', htmlspecialchars($legend, ENT_QUOTES, 'UTF-8'));
 
-		// Only build a nested `.formgrid` (with its scoped grid-template-areas) when
-		// the fieldset actually has an inner grid. Without one, wrapping in
-		// `.formgrid` would make `.formgrid > .form-field { grid-area: var(--grid-area) }`
-		// apply each field's `--grid-area` against an undefined template, throwing
-		// off the layout — so members go straight into the fieldset and flow normally.
-		if ($inner->hasGrid()) {
-			$gridId ??= 'fieldset-' . bin2hex(random_bytes(6));
-			$body   = $inner->toNestedStyleTag($gridId)
-				. HTMLUtils::element('div', $inner->buildGridSectionHtml() . $membersHtml, [
-					'id'    => $gridId,
-					'class' => 'formgrid',
-				]);
-		} else {
-			$body = $membersHtml;
-		}
+		$gridId ??= 'fieldset-' . bin2hex(random_bytes(6));
+		$body = $inner->renderNestedLayout($membersHtml, $gridId);
 
 		$attrs = ['class' => trim('form-grid-fieldset ' . $extraClass)];
 		if ($gridArea !== null) {

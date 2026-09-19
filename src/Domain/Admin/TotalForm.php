@@ -965,43 +965,129 @@ class TotalForm implements \Stringable
 			}
 		}
 
-		$content   = '';
-		$fieldsets = [];
+		$content = '';
+		$root    = null;
 
 		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
-			$gridBuilder = new FormGridBuilder($this->schemaData->formgrid);
-			$content .= $gridBuilder->buildGridSectionHtml();
-			$fieldsets   = $gridBuilder->getFieldsets();
+			$root = new FormGridBuilder($this->schemaData->formgrid);
+			$content .= $root->buildGridSectionHtml();
 		}
 
-		// Map: field name => owning fieldset index (members render inside, not flat).
-		$memberOf = [];
-		foreach ($fieldsets as $idx => $fs) {
-			foreach ($fs['fields'] as $name) {
-				$memberOf[$name] = $idx;
-			}
-		}
+		// Every field name mapped to the slot that owns it. Fields named in no
+		// container have no slot and render flat, exactly as they always have.
+		$memberOf = $root === null ? [] : self::slotMap($root, '');
 
-		/** @var array<int,string> $buckets */
-		$buckets = array_fill(0, count($fieldsets), '');
+		// Bucket in $this->fields order — NOT grid order — so member ordering
+		// inside a container is unchanged from before containers existed.
+		/** @var array<string,string> $buckets */
+		$buckets = [];
 		foreach ($this->fields as $name => $field) {
 			$html = $field->build();
 			if (isset($memberOf[$name])) {
-				$buckets[$memberOf[$name]] .= $html;
+				$slot           = $memberOf[$name];
+				$buckets[$slot] = ($buckets[$slot] ?? '') . $html;
 			} else {
 				$content .= $html; // flat outer field, as today
 			}
 		}
 
-		// Fieldsets are appended after the flat fields in DOM order; their visual
+		// Containers are appended after the flat fields in DOM order; their visual
 		// position comes from the outer grid-area, not source order (the same way
 		// section headers/dividers already render ahead of all fields).
-		$renderer = new FieldsetRenderer();
-		foreach ($fieldsets as $idx => $fs) {
-			$content .= $renderer->render($fs['legend'], $buckets[$idx], $fs['inner'], '', $fs['id']);
+		if ($root !== null) {
+			$content .= $this->renderContainers($root, '', $buckets);
 		}
 
 		return $content;
+	}
+
+	/**
+	 * Flatten the container tree to `fieldName => slot path`.
+	 *
+	 * A panel's own rows are mapped before recursing, and `+=` keeps the
+	 * left-hand key, so if an author names one field in both a panel and a
+	 * container nested inside it, the outer placement wins deterministically.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function slotMap(FormGridBuilder $grid, string $prefix): array
+	{
+		$map = [];
+
+		foreach ($grid->getContainers() as $ci => $container) {
+			$slot = $prefix === '' ? (string)$ci : $prefix . '/' . $ci;
+
+			if ($container['kind'] === 'accordion') {
+				/** @var list<array{title:string,inner:FormGridBuilder}> $panels */
+				$panels = $container['block']['panels'];
+				foreach ($panels as $pi => $panel) {
+					$panelSlot = $slot . ':' . $pi;
+					foreach ($panel['inner']->getFieldNames() as $name) {
+						$map[$name] = $panelSlot;
+					}
+					$map += self::slotMap($panel['inner'], $panelSlot);
+				}
+				continue;
+			}
+
+			/** @var FormGridBuilder $inner */
+			$inner = $container['block']['inner'];
+			foreach ($inner->getFieldNames() as $name) {
+				$map[$name] = $slot;
+			}
+			$map += self::slotMap($inner, $slot);
+		}
+
+		return $map;
+	}
+
+	/**
+	 * Render every container in a grid, depth first, pulling each one's members
+	 * from the pre-built buckets. A container's content is its own bucketed
+	 * fields followed by whatever containers are nested inside it.
+	 *
+	 * @param array<string,string> $buckets
+	 */
+	private function renderContainers(FormGridBuilder $grid, string $prefix, array $buckets): string
+	{
+		$html              = '';
+		$fieldsetRenderer  = new FieldsetRenderer();
+		$accordionRenderer = new AccordionRenderer();
+
+		foreach ($grid->getContainers() as $ci => $container) {
+			$slot = $prefix === '' ? (string)$ci : $prefix . '/' . $ci;
+
+			if ($container['kind'] === 'accordion') {
+				/** @var list<array{title:string,inner:FormGridBuilder}> $panels */
+				$panels = $container['block']['panels'];
+				$built  = [];
+				foreach ($panels as $pi => $panel) {
+					$panelSlot = $slot . ':' . $pi;
+					$built[]   = [
+						'title'   => $panel['title'],
+						'inner'   => $panel['inner'],
+						'members' => ($buckets[$panelSlot] ?? '')
+							. $this->renderContainers($panel['inner'], $panelSlot, $buckets),
+					];
+				}
+				$html .= $accordionRenderer->render($built, $container['id']);
+				continue;
+			}
+
+			/** @var string|null $legend */
+			$legend = $container['block']['legend'];
+			/** @var FormGridBuilder $inner */
+			$inner = $container['block']['inner'];
+			$html .= $fieldsetRenderer->render(
+				$legend,
+				($buckets[$slot] ?? '') . $this->renderContainers($inner, $slot, $buckets),
+				$inner,
+				'',
+				$container['id'],
+			);
+		}
+
+		return $html;
 	}
 
 	/**

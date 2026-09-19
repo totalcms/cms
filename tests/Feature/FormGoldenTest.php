@@ -73,6 +73,7 @@ function goldenHtml(string $html): string
 {
 	$html = (string)preg_replace('/\b(field|help|datalist)-[0-9a-f]{13,14}\b/', '$1-UID', $html);
 	$html = (string)preg_replace('/\b(form|formgrid)-[0-9a-f]{16}\b/', '$1-ID', $html);
+	$html = (string)preg_replace('/\b(panel|fieldset)-[0-9a-f]{12}\b/', '$1-ID', $html);
 	$html = (string)preg_replace('/name="csrf_token" value="[^"]*"/', 'name="csrf_token" value="TOKEN"', $html);
 
 	// Records seeded in beforeEach carry the wall clock in their created,

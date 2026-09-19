@@ -15,13 +15,17 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
  *   - ['type' => 'divider']
  *   - ['type' => 'header',   'title'  => string]
  *   - ['type' => 'fieldset', 'id'     => string, 'legend' => ?string, 'inner' => self]
+ *   - ['type' => 'accordion', 'id'    => string, 'panels' => list<array{title: string, inner: self}>]
  */
 class FormGridBuilder
 {
-	private const DIVIDER        = '---';
-	private const FIELDSET_OPEN  = '[[';
-	private const FIELDSET_CLOSE = ']]';
-	private const FIELDSET_AREA  = 'formgrid-fieldset-'; // reserved synthetic-area prefix
+	private const DIVIDER         = '---';
+	private const FIELDSET_OPEN   = '[[';
+	private const FIELDSET_CLOSE  = ']]';
+	private const FIELDSET_AREA   = 'formgrid-fieldset-'; // reserved synthetic-area prefix
+	private const ACCORDION_OPEN  = '>>';
+	private const ACCORDION_CLOSE = '<<';
+	private const ACCORDION_AREA  = 'formgrid-accordion-'; // reserved synthetic-area prefix
 
 	/** @var list<array<string,mixed>> */
 	private array $blocks = [];
@@ -61,10 +65,11 @@ class FormGridBuilder
 	 */
 	private function parseBlocks(array $lines): array
 	{
-		$blocks     = [];
-		$fieldsetNo = 0;
-		$i          = 0;
-		$count      = count($lines);
+		$blocks      = [];
+		$fieldsetNo  = 0;
+		$accordionNo = 0;
+		$i           = 0;
+		$count       = count($lines);
 
 		while ($i < $count) {
 			$line = $lines[$i];
@@ -91,6 +96,52 @@ class FormGridBuilder
 				continue;
 			}
 
+			// Accordion group: one or more `>> Title` panels, terminated by `<<`
+			// or by end-of-input. A panel ends where the next panel begins, so a
+			// panel can never contain a panel.
+			if (str_starts_with($line, self::ACCORDION_OPEN)) {
+				$accordionNo++;
+				$panels = [];
+
+				while ($i < $count && str_starts_with($lines[$i], self::ACCORDION_OPEN)) {
+					$title = trim(substr($lines[$i], strlen(self::ACCORDION_OPEN)));
+					$i++;
+
+					$body = [];
+					while ($i < $count
+						&& !str_starts_with($lines[$i], self::ACCORDION_OPEN)
+						&& !str_starts_with($lines[$i], self::ACCORDION_CLOSE)) {
+						$body[] = $lines[$i];
+						$i++;
+					}
+
+					$panels[] = [
+						'title' => $title === '' ? 'Section ' . (count($panels) + 1) : $title,
+						'inner' => new self(implode("\n", $body)),
+					];
+				}
+
+				// Consume the closing `<<` when there is one — falling off the end
+				// is lenient, matching the unterminated `[[` behaviour.
+				if ($i < $count && str_starts_with($lines[$i], self::ACCORDION_CLOSE)) {
+					$i++;
+				}
+
+				$blocks[] = [
+					'type'   => 'accordion',
+					'id'     => self::ACCORDION_AREA . $accordionNo,
+					'panels' => $panels,
+				];
+				continue;
+			}
+
+			// A `<<` with no group open is meaningless — drop it rather than let
+			// it become a row block that inflates the column count.
+			if (str_starts_with($line, self::ACCORDION_CLOSE)) {
+				$i++;
+				continue;
+			}
+
 			// Divider / header
 			$section = $this->classifySection($line);
 			if ($section !== null) {
@@ -111,23 +162,70 @@ class FormGridBuilder
 	// Public accessors (used by Task 3 + tests)
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Every container block in source order, whatever its kind. This is the one
+	 * accessor callers should reach for — it is what keeps fieldset and accordion
+	 * field-bucketing from forking into two near-identical code paths.
+	 *
+	 * @return list<array{id:string,kind:string,fields:list<string>,block:array<string,mixed>}>
+	 */
+	public function getContainers(): array
+	{
+		$out = [];
+
+		foreach ($this->blocks as $b) {
+			$type = (string)($b['type'] ?? '');
+
+			if ($type === 'fieldset') {
+				/** @var self $inner */
+				$inner = $b['inner'];
+				$out[] = [
+					'id'     => (string)$b['id'],
+					'kind'   => 'fieldset',
+					'fields' => $inner->getFieldNames(),
+					'block'  => $b,
+				];
+				continue;
+			}
+
+			if ($type === 'accordion') {
+				/** @var list<array{title:string,inner:self}> $panels */
+				$panels = $b['panels'];
+				$fields = [];
+				foreach ($panels as $panel) {
+					$fields = array_merge($fields, $panel['inner']->getFieldNames());
+				}
+				$out[] = [
+					'id'     => (string)$b['id'],
+					'kind'   => 'accordion',
+					'fields' => $fields,
+					'block'  => $b,
+				];
+			}
+		}
+
+		return $out;
+	}
+
 	/** @return list<array{id:string,legend:?string,fields:list<string>,inner:self}> */
 	public function getFieldsets(): array
 	{
 		$out = [];
-		foreach ($this->blocks as $b) {
-			if (($b['type'] ?? '') === 'fieldset') {
-				/** @var self $inner */
-				$inner = $b['inner'];
-				/** @var list<string> $fields */
-				$fields = $inner->getFieldNames();
-				$out[]  = [
-					'id'     => (string)$b['id'],
-					'legend' => $b['legend'],
-					'fields' => $fields,
-					'inner'  => $inner,
-				];
+
+		foreach ($this->getContainers() as $c) {
+			if ($c['kind'] !== 'fieldset') {
+				continue;
 			}
+			/** @var self $inner */
+			$inner = $c['block']['inner'];
+			/** @var string|null $legend */
+			$legend = $c['block']['legend'];
+			$out[]  = [
+				'id'     => $c['id'],
+				'legend' => $legend,
+				'fields' => $c['fields'],
+				'inner'  => $inner,
+			];
 		}
 
 		return $out;
@@ -265,6 +363,7 @@ HTML;
 					$gridLines[] = "section-header-$sectionCounter $extraColumns";
 					break;
 
+				case 'accordion':
 				case 'fieldset':
 					$id          = (string)($block['id'] ?? '');
 					$gridLines[] = implode(' ', array_fill(0, $columnCount, $id));
@@ -321,6 +420,7 @@ HTML;
 					$mobileAreas[] = "section-header-$sectionCounter";
 					break;
 
+				case 'accordion':
 				case 'fieldset':
 					$mobileAreas[] = (string)($block['id'] ?? '');
 					break;
@@ -487,6 +587,32 @@ HTML;
 	}
 
 	/**
+	 * Render container interior HTML inside a scoped nested grid.
+	 *
+	 * Only builds a nested `.formgrid` (with its scoped grid-template-areas) when
+	 * there actually is an inner grid. Without one, wrapping in `.formgrid` would
+	 * make `.formgrid > .form-field { grid-area: var(--grid-area) }` apply each
+	 * field's `--grid-area` against an undefined template, throwing off the
+	 * layout — so the content is returned to flow normally.
+	 *
+	 * Shared by FieldsetRenderer and AccordionRenderer so the two cannot drift.
+	 */
+	public function renderNestedLayout(string $content, ?string $gridId = null): string
+	{
+		if (!$this->hasGrid()) {
+			return $content;
+		}
+
+		$gridId ??= 'formgrid-' . bin2hex(random_bytes(8));
+
+		return $this->toNestedStyleTag($gridId)
+			. HTMLUtils::element('div', $this->buildGridSectionHtml() . $content, [
+				'id'    => $gridId,
+				'class' => 'formgrid',
+			]);
+	}
+
+	/**
 	 * Ensure all given field names are included in the grid layout.
 	 * Any missing fields are appended as full-width rows spanning all columns.
 	 *
@@ -495,10 +621,10 @@ HTML;
 	public function ensureFieldsIncluded(array $fieldNames): void
 	{
 		$existingFields = $this->getFieldNames();
-		// Fieldset members live in their fieldset's inner grid, not the outer grid —
-		// treat them as already included so they aren't appended as outer rows.
-		foreach ($this->getFieldsets() as $fs) {
-			$existingFields = array_merge($existingFields, $fs['fields']);
+		// Container members live in their container's inner grid, not the outer
+		// grid — treat them as already included so they aren't appended as rows.
+		foreach ($this->getContainers() as $container) {
+			$existingFields = array_merge($existingFields, $container['fields']);
 		}
 		$columnCount = max(1, $this->getColumnCount());
 

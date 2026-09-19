@@ -204,3 +204,31 @@ describe('FormGridBuilder', function (): void {
 			->not->toContain('repeat(0');
 	});
 });
+
+describe('FormGridBuilder accordion grid areas', function (): void {
+	test('an accordion group spans every column on desktop and takes one mobile row', function (): void {
+		$b     = new FormGridBuilder("id title\n>> Panel\na b\n<<");
+		$style = $b->toStyleTag('form-test');
+
+		expect($style)->toContain("'formgrid-accordion-1 formgrid-accordion-1'"); // desktop, 2 columns
+		expect($style)->toContain("'formgrid-accordion-1'");                      // mobile, 1 column
+	});
+
+	test('panel members are not appended as outer rows', function (): void {
+		$b = new FormGridBuilder("id title\n>> Panel\nemail phone\n<<");
+		$b->ensureFieldsIncluded(['id', 'title', 'email', 'phone']);
+
+		$style = $b->toStyleTag('form-test');
+
+		expect($style)->toContain("'id title'");
+		expect($style)->not->toContain("'email email'");
+		expect($style)->not->toContain("'phone phone'");
+	});
+
+	test('a field in neither the grid nor a panel is still appended', function (): void {
+		$b = new FormGridBuilder("id title\n>> Panel\nemail phone\n<<");
+		$b->ensureFieldsIncluded(['id', 'title', 'email', 'phone', 'notes']);
+
+		expect($b->toStyleTag('form-test'))->toContain("'notes notes'");
+	});
+});
