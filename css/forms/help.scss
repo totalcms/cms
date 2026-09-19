@@ -203,13 +203,30 @@
     opacity: 0;
 }
 
+// The image dialog opts OUT of the label overlay: a modal is a dense stack of
+// fields with no spare room above any of them, so its help sits inline under
+// the field and stays visible instead of floating over the neighbour.
+//
+// Opting out means undoing the overlay's geometry, not just its positioning.
+// `translate` moves a relatively positioned element exactly as it moves an
+// absolute one, so the lift that puts the overlay's last line on the label row
+// would otherwise ride each help block up over the input above it. The box the
+// overlay paints — its background, padding and radius — only reads as a box
+// because it floats over other content; inline it is a white slab behind
+// italic text. And the icon is nudged to the overlay's last line, which for
+// inline help belongs back on the first.
 .image-edit-dialog {
 	label {
 		opacity : 1!important;
 	}
 	.help {
-		opacity  : 1!important;
-		position : relative !important;
+		opacity             : 1!important;
+		position            : relative !important;
+		translate           : none !important;
+		padding-block       : 0 !important;
+		background-color    : transparent !important;
+		border-radius       : 0 !important;
+		background-position : 0 2px !important;
 	}
 }
 
