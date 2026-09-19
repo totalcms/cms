@@ -93,7 +93,7 @@ describe('MetaBuilder', function (): void {
 		expect($b->build(seoCtx(['object' => $obj, 'fields' => SeoFields::fromArray(['title' => 'Cost ${100'])]))->rawTitle)->toBe('Cost ${100');
 	});
 
-	test('description: card → mapped field stripped of tags → site default', function () use ($b): void {
+	test('description: card → collection template stripped of tags → site default', function () use ($b): void {
 		expect($b->build(seoCtx())->description)->toBe('A summary & more');
 		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['description' => 'Card'])]))->description)->toBe('Card');
 		expect($b->build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => '']]))->description)->toBe('Site default');
@@ -101,7 +101,7 @@ describe('MetaBuilder', function (): void {
 		expect(mb_strlen($b->build(seoCtx(['object' => ['id' => 'x', 'title' => 't', 'summary' => $long]]))->description))->toBeLessThanOrEqual(160);
 	});
 
-	test('description: markdown markers are stripped from a mapped property', function () use ($b): void {
+	test('description: markdown markers are stripped from the rendered template', function () use ($b): void {
 		$md = "**Bold** and [a link](https://x) plus `code`\n- item";
 		expect($b->build(seoCtx(['object' => ['id' => 'x', 'title' => 't', 'summary' => $md]]))->description)->toBe('Bold and a link plus code item');
 		// HTML keeps flattening exactly as it did before the markdown pass.
@@ -167,6 +167,69 @@ describe('MetaBuilder', function (): void {
 		expect($b->build(seoCtx(['settings' => $settings, 'kind' => 'none', 'object' => [], 'url' => '']))->socialTitle)->toBe('Bistro');
 	});
 
+	test('description template: composes from the record, and a bare property name still means that property', function () use ($b): void {
+		$obj = ['id' => 'x', 'title' => 't', 'summary' => 'A summary', 'city' => 'Austin', 'cuisine' => 'Tacos'];
+
+		// The point of a template over a select: more than one property, with
+		// text of your own between them.
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => ['description' => '${cuisine} in ${city}']]))->description)->toBe('Tacos in Austin');
+		// `${site}` resolves here as it does in a title template.
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => ['description' => '${cuisine} at ${site}']]))->description)->toBe('Tacos at Bistro');
+
+		// A single token with no placeholder is the property it names — what
+		// the select this field replaced stored, and what an operator types.
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => ['description' => 'summary']]))->description)->toBe('A summary');
+		// Including a dot path into a card.
+		$nested = ['id' => 'x', 'title' => 't', 'details' => ['intro' => 'From the card']];
+		expect($b->build(seoCtx(['object' => $nested, 'seoBlock' => ['description' => 'details.intro']]))->description)->toBe('From the card');
+
+		// A property the record does not carry falls through to the site
+		// default rather than printing its own name as the description.
+		expect($b->build(seoCtx(['object' => ['id' => 'x', 'title' => 't'], 'seoBlock' => ['description' => 'excerpt']]))->description)->toBe('Site default');
+		// Same for a template whose placeholders all come back empty.
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => ['description' => '${nothing}']]))->description)->toBe('Site default');
+
+		// Whitespace makes it literal text — one description for the whole
+		// collection, which a bare token could never express unambiguously.
+		expect($b->build(seoCtx(['object' => $obj, 'seoBlock' => ['description' => 'Recipes from Bistro']]))->description)->toBe('Recipes from Bistro');
+	});
+
+	test('socialDescription: card → collection template → site default → the description', function () use ($b): void {
+		// Nothing social anywhere: the share cards carry the description the
+		// rest of the head already carries, which is what they did before the
+		// field existed.
+		expect($b->build(seoCtx())->socialDescription)->toBe('A summary & more');
+
+		// The card's own Social Description wins over everything.
+		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['socialDescription' => ' Share me '])]))->socialDescription)->toBe('Share me');
+
+		// Then the collection's social description template, stripped and
+		// capped like the description template.
+		$obj = ['id' => 'x', 'title' => 't', 'summary' => 'The summary', 'blurb' => '<p>The <b>blurb</b></p>'];
+		$p   = $b->build(seoCtx(['object' => $obj, 'seoBlock' => ['socialDescription' => '${blurb}']]));
+		expect($p->socialDescription)->toBe('The blurb')->and($p->description)->toBe('The summary');
+
+		// Then the site's Default Social Description, and only then the
+		// description — a site default must not be shadowed by the mapped
+		// description the way the card's value is.
+		$settings = SeoSettings::fromArray(['siteName' => 'Bistro', 'defaultDescription' => 'Site default', 'defaultSocialDescription' => 'Site social'], 'example.com');
+		$p        = $b->build(seoCtx(['settings' => $settings]));
+		expect($p->socialDescription)->toBe('Site social')->and($p->description)->toBe('A summary & more');
+
+		// The card's Description is not a social description: it flows into
+		// the share cards only because nothing more specific was set.
+		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['description' => 'Card'])]))->socialDescription)->toBe('Card');
+	});
+
+	test('socialDescription: only the collection template is capped — card and site default pass through verbatim', function () use ($b): void {
+		$long = str_repeat('word ', 60); // 300 characters
+		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['socialDescription' => $long])]))->socialDescription)->toBe(trim($long));
+		$settings = SeoSettings::fromArray(['defaultSocialDescription' => $long], 'x');
+		expect($b->build(seoCtx(['settings' => $settings]))->socialDescription)->toBe(trim($long));
+		$obj = ['id' => 'x', 'title' => 't', 'blurb' => $long];
+		expect(mb_strlen($b->build(seoCtx(['object' => $obj, 'seoBlock' => ['socialDescription' => '${blurb}']]))->socialDescription))->toBeLessThanOrEqual(160);
+	});
+
 	test('noindex leaves the canonical on the payload — the template decides whether to print it', function () use ($b): void {
 		// og:url is still built from `canonical`, so dropping it here would take
 		// the Open Graph URL with it. The `<link>` is skipped in head.twig.
@@ -184,7 +247,7 @@ describe('MetaBuilder', function (): void {
 		expect($p->title)->toBe('Bistro');
 	});
 
-	test('description: only a mapped property is capped — card and site default pass through verbatim', function () use ($b): void {
+	test('description: only the collection template is capped — card and site default pass through verbatim', function () use ($b): void {
 		$long = str_repeat('word ', 60); // 300 characters
 		expect($b->build(seoCtx(['fields' => SeoFields::fromArray(['description' => $long])]))->description)->toBe(trim($long));
 		expect($b->build(seoCtx(['seoBlock' => ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => ''], 'settings' => SeoSettings::fromArray(['defaultDescription' => $long], 'x')]))->description)->toBe(trim($long));

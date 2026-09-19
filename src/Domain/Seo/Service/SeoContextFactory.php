@@ -25,13 +25,14 @@ readonly class SeoContextFactory
 {
 	/**
 	 * No collection mapping: every value falls through to the site defaults.
-	 * `title` and `socialTitle` are templates (`${property}`), empty meaning
-	 * the object's own title; `description` and `image` are property names.
+	 * `title`, `socialTitle`, `description` and `socialDescription` are all
+	 * templates (`${property}`), empty meaning the value falls through;
+	 * `image` is a property name.
 	 */
-	private const EMPTY_BLOCK = ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => ''];
+	private const EMPTY_BLOCK = ['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'socialDescription' => '', 'image' => ''];
 
 	/** The default mapping for `blog`-schema collections: a blog post is a BlogPosting. */
-	private const BLOG_BLOCK = ['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'image'];
+	private const BLOG_BLOCK = ['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => '${summary}', 'socialDescription' => '', 'image' => 'image'];
 
 	/**
 	 * Site Builder pages carry a `title`; their description and social image
@@ -46,12 +47,12 @@ readonly class SeoContextFactory
 	 * property named here exists in the matching `resources/schemas/*.json`.
 	 * A schema absent from the map falls back to EMPTY_BLOCK.
 	 *
-	 * @var array<string,array{type:string,title:string,socialTitle:string,description:string,image:string}>
+	 * @var array<string,array{type:string,title:string,socialTitle:string,description:string,socialDescription:string,image:string}>
 	 */
 	private const SCHEMA_BLOCKS = [
 		'blog'            => self::BLOG_BLOCK,
 		'blog-legacy'     => self::BLOG_BLOCK,
-		'feed'            => ['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => 'content', 'image' => 'image'],
+		'feed'            => ['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => '${content}', 'socialDescription' => '', 'image' => 'image'],
 	];
 
 	public function __construct(
@@ -99,8 +100,8 @@ readonly class SeoContextFactory
 	 *   {{ cms.seo.head({title: 'Pricing', description: '…', image: '/img/pricing.jpg'}) }}
 	 *   {{ cms.seo.head({seo: {title: '…', description: '…', noindex: true}}) }}
 	 *
-	 * Top-level `title` / `description` are the page's own values; an `seo`
-	 * card overrides them exactly as on a page record. `url` names the
+	 * Top-level `title` / `description` / `socialDescription` are the page's own
+	 * values; an `seo` card overrides them exactly as on a page record. `url` names the
 	 * canonical (absolute or site-relative); without it the current request
 	 * path is the canonical. `image` (or `seo.image`) may be a URL string —
 	 * there is no record for ImageWorks to resolve it against.
@@ -143,7 +144,7 @@ readonly class SeoContextFactory
 			$subject,
 			'',
 			null,
-			['type' => '', 'title' => '', 'socialTitle' => '', 'description' => 'description', 'image' => $imageUrls !== [] ? 'image' : ''],
+			['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '${description}', 'socialDescription' => '${socialDescription}', 'image' => $imageUrls !== [] ? 'image' : ''],
 			$fields,
 			$settings,
 			$siteName,
@@ -219,7 +220,7 @@ readonly class SeoContextFactory
 	 * collection that maps only `image` therefore keeps `article` / `title` /
 	 * `summary` for the keys it left alone.
 	 *
-	 * @return array{type:string,title:string,socialTitle:string,description:string,image:string}
+	 * @return array{type:string,title:string,socialTitle:string,description:string,socialDescription:string,image:string}
 	 */
 	private function resolveBlock(?CollectionData $meta): array
 	{
@@ -230,11 +231,12 @@ readonly class SeoContextFactory
 		$default = self::SCHEMA_BLOCKS[$meta->schema] ?? self::EMPTY_BLOCK;
 
 		return [
-			'type'        => $this->blockValue($meta, 'type', $default['type']),
-			'title'       => $this->blockValue($meta, 'title', $default['title']),
-			'socialTitle' => $this->blockValue($meta, 'socialTitle', $default['socialTitle']),
-			'description' => $this->blockValue($meta, 'description', $default['description']),
-			'image'       => $this->blockValue($meta, 'image', $default['image']),
+			'type'              => $this->blockValue($meta, 'type', $default['type']),
+			'title'             => $this->blockValue($meta, 'title', $default['title']),
+			'socialTitle'       => $this->blockValue($meta, 'socialTitle', $default['socialTitle']),
+			'description'       => $this->blockValue($meta, 'description', $default['description']),
+			'socialDescription' => $this->blockValue($meta, 'socialDescription', $default['socialDescription']),
+			'image'             => $this->blockValue($meta, 'image', $default['image']),
 		];
 	}
 
@@ -270,7 +272,7 @@ readonly class SeoContextFactory
 	 * image. Doing it here keeps the Twig media adapter out of the builders.
 	 *
 	 * @param array<string,mixed> $object
-	 * @param array{type:string,title:string,socialTitle:string,description:string,image:string} $block
+	 * @param array{type:string,title:string,socialTitle:string,description:string,socialDescription:string,image:string} $block
 	 *
 	 * @return array<string,string>
 	 */
@@ -296,7 +298,7 @@ readonly class SeoContextFactory
 	 * property must not describe the image that wins instead.
 	 *
 	 * @param array<string,mixed> $object
-	 * @param array{type:string,title:string,socialTitle:string,description:string,image:string} $block
+	 * @param array{type:string,title:string,socialTitle:string,description:string,socialDescription:string,image:string} $block
 	 *
 	 * @return array<string,string>
 	 */

@@ -72,21 +72,37 @@ class MetaBuilder
 			$socialTitle = $authored ? $rawTitle : $this->applyTemplate($rawTitle, $ctx->siteName, $s->socialTitleTemplate);
 		}
 
-		// Description: the seo card, then the collection's mapped property
-		// (stripped to plain text), then the site default.
+		// Description: the seo card, then the collection's description template
+		// (rendered over the record and stripped to plain text), then the site
+		// default.
 		// A description someone wrote — on the card or as the site default — is
 		// emitted as written: search engines index the whole tag even though
-		// they display only part of it. The cap applies only to a description
-		// derived from a mapped property, which may be a full summary or body.
+		// they display only part of it. The cap applies only to the collection
+		// template, which draws on properties that may hold a whole body.
 		$description = $f->description;
-		if ($description === '' && $ctx->seoBlock['description'] !== '') {
-			$description = $this->truncate(
-				$this->plainText($this->scalarString($ctx->object[$ctx->seoBlock['description']] ?? null)),
-				self::DESCRIPTION_LENGTH,
-			);
+		if ($description === '') {
+			$description = $this->renderDescription($ctx->seoBlock['description'], $ctx);
 		}
 		if ($description === '') {
 			$description = $s->defaultDescription;
+		}
+
+		// Share description: the card's Social Description, then the
+		// collection's social description template, then the site's Default
+		// Social Description, else the description resolved above. Separate
+		// from the description by the same logic as the social title: a share
+		// card and a search result want different copy, and a site that never
+		// fills any of these still gets `og:description` filled from the
+		// description it already has.
+		$socialDescription = $f->socialDescription;
+		if ($socialDescription === '') {
+			$socialDescription = $this->renderDescription($ctx->seoBlock['socialDescription'], $ctx);
+		}
+		if ($socialDescription === '') {
+			$socialDescription = $s->defaultSocialDescription;
+		}
+		if ($socialDescription === '') {
+			$socialDescription = $description;
 		}
 
 		// Image: the seo card's own image, then the collection's mapped image
@@ -128,6 +144,7 @@ class MetaBuilder
 			rawTitle: $rawTitle,
 			socialTitle: $socialTitle,
 			description: $description,
+			socialDescription: $socialDescription,
 			canonical: $canonical,
 			robots: $robots,
 			contentType: $contentType,
@@ -142,6 +159,36 @@ class MetaBuilder
 			metaTags: $s->metaTags,
 			noindex: $f->noindex,
 		);
+	}
+
+	/**
+	 * A collection's Description / Social Description Template, rendered over
+	 * the record, flattened to plain text and capped.
+	 *
+	 * The strip and the cap are for these templates only — never for a
+	 * description written on the card or as the site default — because a
+	 * template draws on the record's own properties, which may hold a whole
+	 * summary or article body.
+	 *
+	 * A single token with no placeholder IS a property: `summary` and
+	 * `${summary}` mean the same thing, so the field reads the way the
+	 * property select it replaced did, and a property the record does not
+	 * carry falls through instead of printing its own name as the
+	 * description. A value with whitespace is literal text — one description
+	 * for every object in the collection — which is why the test is the
+	 * shape of the value rather than the schema's property list.
+	 */
+	private function renderDescription(string $template, SeoContext $ctx): string
+	{
+		if ($template === '') {
+			return '';
+		}
+
+		if (TemplatePlaceholder::extractKeys($template) === [] && preg_match('/^\S+$/', $template) === 1) {
+			$template = '${' . $template . '}';
+		}
+
+		return $this->truncate($this->plainText($this->renderTemplate($template, $ctx)), self::DESCRIPTION_LENGTH);
 	}
 
 	/** A card or collection content type; null for blank or a value outside the list. */

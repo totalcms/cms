@@ -157,8 +157,8 @@ from the existing values; add a new one only for a genuinely new topic."
 Examples for every slot: `docs/mcp/agent-editing.md`, section "Writing for agents".
 
 Do not confuse these with a collection's general **Description** (admin
-dashboard), the SEO mapping's **Description Property** (which object property
-becomes the meta description), or a Site Builder page's `description` (its
+dashboard), the SEO mapping's **Description Template** (which composes the
+meta description from the object's properties), or a Site Builder page's `description` (its
 meta description). None of those reach an agent.
 
 ### Definition of done for schema work

@@ -11,6 +11,8 @@ describe('SeoSettings', function (): void {
 			->and($s->baseUrl)->toBe('https://example.com')
 			->and($s->titleTemplate)->toBe('${title} | ${site}')
 			->and($s->socialTitleTemplate)->toBe('${title}')
+			->and($s->defaultDescription)->toBe('')
+			->and($s->defaultSocialDescription)->toBe('')
 			->and($s->emitJsonLd)->toBeTrue()
 			->and($s->emitSocial)->toBeTrue()
 			->and($s->sameAs)->toBe([])

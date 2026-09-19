@@ -92,7 +92,7 @@ final class SeoContextFactoryTest extends TestCase
 		$this->assertSame('page', $ctx->kind);
 		$this->assertSame('https://example.com/about', $ctx->url);
 		$this->assertTrue($ctx->fields->noindex);
-		$this->assertSame(['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => ''], $ctx->seoBlock);
+		$this->assertSame(['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'socialDescription' => '', 'image' => ''], $ctx->seoBlock);
 	}
 
 	public function testPageDescriptionAndImageComeOnlyFromTheCard(): void
@@ -134,7 +134,7 @@ final class SeoContextFactoryTest extends TestCase
 
 		$this->assertSame('object', $ctx->kind);
 		$this->assertSame('blog', $ctx->collectionId);
-		$this->assertSame(['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'image'], $ctx->seoBlock);
+		$this->assertSame(['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => '${summary}', 'socialDescription' => '', 'image' => 'image'], $ctx->seoBlock);
 		$this->assertSame('https://example.com/blog/hello', $ctx->url);
 	}
 
@@ -171,7 +171,7 @@ final class SeoContextFactoryTest extends TestCase
 
 		$ctx = $this->factory->make(['id' => 'hello'], ['collection' => 'archive']);
 
-		$this->assertSame(['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'image'], $ctx->seoBlock);
+		$this->assertSame(['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => '${summary}', 'socialDescription' => '', 'image' => 'image'], $ctx->seoBlock);
 	}
 
 	public function testFeedObjectDescribesItselfFromContent(): void
@@ -182,19 +182,19 @@ final class SeoContextFactoryTest extends TestCase
 
 		$ctx = $this->factory->make(['id' => 'hello'], ['collection' => 'news']);
 
-		$this->assertSame(['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => 'content', 'image' => 'image'], $ctx->seoBlock);
+		$this->assertSame(['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => '${content}', 'socialDescription' => '', 'image' => 'image'], $ctx->seoBlock);
 	}
 
 	public function testExplicitCollectionSeoBlockOverridesTheDefault(): void
 	{
 		$this->collectionFetcher->method('fetchCollection')->willReturn(
-			$this->blogCollection(['type' => 'website', 'title' => '${name}', 'description' => 'excerpt', 'image' => 'cover']),
+			$this->blogCollection(['type' => 'website', 'title' => '${name}', 'description' => 'excerpt', 'socialDescription' => 'tagline', 'image' => 'cover']),
 		);
 		$this->urlBuilder->method('buildUrl')->willReturn('/blog/hello');
 
 		$ctx = $this->factory->make(['id' => 'hello'], ['collection' => 'blog']);
 
-		$this->assertSame(['type' => 'website', 'title' => '${name}', 'socialTitle' => '', 'description' => 'excerpt', 'image' => 'cover'], $ctx->seoBlock);
+		$this->assertSame(['type' => 'website', 'title' => '${name}', 'socialTitle' => '', 'description' => 'excerpt', 'socialDescription' => 'tagline', 'image' => 'cover'], $ctx->seoBlock);
 	}
 
 	public function testPartialBlogBlockMergesOverTheArticleDefault(): void
@@ -204,8 +204,8 @@ final class SeoContextFactoryTest extends TestCase
 
 		$ctx = $this->factory->make(['id' => 'hello'], ['collection' => 'blog']);
 
-		// Only `image` was mapped — the other two keep the article default.
-		$this->assertSame(['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'cover'], $ctx->seoBlock);
+		// Only `image` was mapped — the others keep the article default.
+		$this->assertSame(['type' => 'blogposting', 'title' => '', 'socialTitle' => '', 'description' => '${summary}', 'socialDescription' => '', 'image' => 'cover'], $ctx->seoBlock);
 	}
 
 	public function testMappedTitlePropertyMergesOverTheArticleDefault(): void
@@ -215,8 +215,8 @@ final class SeoContextFactoryTest extends TestCase
 
 		$ctx = $this->factory->make(['id' => 'hello'], ['collection' => 'blog']);
 
-		// Only `title` was mapped — the other three keep the article default.
-		$this->assertSame(['type' => 'blogposting', 'title' => '${name}', 'socialTitle' => '', 'description' => 'summary', 'image' => 'image'], $ctx->seoBlock);
+		// Only `title` was mapped — the others keep the article default.
+		$this->assertSame(['type' => 'blogposting', 'title' => '${name}', 'socialTitle' => '', 'description' => '${summary}', 'socialDescription' => '', 'image' => 'image'], $ctx->seoBlock);
 	}
 
 	public function testPartialBlockOnANonBlogCollectionLeavesTheOtherKeysEmpty(): void
@@ -228,7 +228,7 @@ final class SeoContextFactoryTest extends TestCase
 
 		$ctx = $this->factory->make(['id' => 'pie'], ['collection' => 'recipes']);
 
-		$this->assertSame(['type' => '', 'title' => '', 'socialTitle' => '', 'description' => 'intro', 'image' => ''], $ctx->seoBlock);
+		$this->assertSame(['type' => '', 'title' => '', 'socialTitle' => '', 'description' => 'intro', 'socialDescription' => '', 'image' => ''], $ctx->seoBlock);
 	}
 
 	public function testAbsoluteCollectionUrlIsNotPrefixedTwice(): void
@@ -272,7 +272,7 @@ final class SeoContextFactoryTest extends TestCase
 		$this->assertSame('object', $ctx->kind);
 		$this->assertSame('nope', $ctx->collectionId);
 		$this->assertNull($ctx->collectionMeta);
-		$this->assertSame(['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'image' => ''], $ctx->seoBlock);
+		$this->assertSame(['type' => '', 'title' => '', 'socialTitle' => '', 'description' => '', 'socialDescription' => '', 'image' => ''], $ctx->seoBlock);
 		$this->assertSame('', $ctx->url);
 	}
 
@@ -285,7 +285,8 @@ final class SeoContextFactoryTest extends TestCase
 		$this->assertSame('page', $ctx->kind);
 		$this->assertSame('https://example.com/pricing', $ctx->url);
 		$this->assertSame('', $ctx->seoBlock['title']);
-		$this->assertSame('description', $ctx->seoBlock['description']);
+		$this->assertSame('${description}', $ctx->seoBlock['description']);
+		$this->assertSame('${socialDescription}', $ctx->seoBlock['socialDescription']);
 	}
 
 	public function testAdHocCanonicalFallsBackToTheCurrentRequestPath(): void

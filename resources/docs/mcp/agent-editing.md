@@ -103,8 +103,8 @@ the editor-facing hint and the agent-facing one should differ.
 
 Do not confuse these with the other descriptions a collection carries. The
 collection's general **Description** is for the admin dashboard. The SEO
-mapping's **Description Property** names which object property becomes the
-meta description for crawlers. A Site Builder page's own `description` is
+mapping's **Description Template** composes the meta description crawlers
+read out of the object's properties. A Site Builder page's own `description` is
 its meta description. None of those reach an agent's tool catalog.
 
 ### What good looks like

@@ -5,7 +5,7 @@
 	"type": "object",
 	"description": "SEO settings for a Total CMS collection. Used as a card sub-schema on the collection meta.",
 	"category": "Internal",
-	"formgrid": "title socialTitle\ndescription image\ntype .",
+	"formgrid": "title socialTitle\ndescription socialDescription\nimage type",
 	"properties": {
 		"id": {
 			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
@@ -60,15 +60,19 @@
 		},
 		"description": {
 			"type": "string",
-			"label": "Description Property",
-			"help": "Which property supplies the meta description when the object has no SEO description",
-			"field": "select",
-			"placeholder": "Select a Property",
+			"label": "Description Template",
+			"help": "Composes the meta description from the object's properties: ${summary}, or ${cuisine} in ${city}. ${site} is the site name. A bare property name works on its own. Markup and markdown are stripped and the result is capped at 160 characters. The object's own SEO Description wins.",
+			"field": "text",
 			"default": "",
-			"settings": {
-				"propertyOptions": "schemaProperties",
-				"sortOptions": true
-			}
+			"placeholder": "${summary}"
+		},
+		"socialDescription": {
+			"type": "string",
+			"label": "Social Description Template",
+			"help": "Composes og:description and twitter:description from the object's properties, independent of the Description Template. Leave empty to use the description. The object's own Social Description wins.",
+			"field": "text",
+			"default": "",
+			"placeholder": "${summary}"
 		},
 		"image": {
 			"type": "string",

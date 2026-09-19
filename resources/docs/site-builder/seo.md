@@ -70,7 +70,8 @@ Every value falls through the same three-step chain. The first non-empty one win
 | Value | 1. SEO card on the record | 2. Collection mapping | 3. Site default |
 |---|---|---|---|
 | **Title** | `seo.title` | the collection's Title Template, then the record's own `title` | Site Name |
-| **Description** | `seo.description` | the mapped property, stripped to plain text | Default Description |
+| **Description** | `seo.description` | the collection's Description Template, stripped to plain text | Default Description |
+| **Social description** | `seo.socialDescription` | the collection's Social Description Template, stripped to plain text | Default Social Description, then the description |
 | **Social image** | `seo.image` | the mapped image property | Default Social Image |
 | **Canonical** | — | the record's own absolute URL | *(omitted)* |
 | **Robots** | `seo.noindex` / `seo.nofollow` | — | *(omitted)* |
@@ -79,8 +80,9 @@ Every value falls through the same three-step chain. The first non-empty one win
 A few rules the chain applies on top:
 
 - **Title template.** The site's title template, `${title} | ${site}` by default, is the *default shape* of a title: it applies when the title is the record's own `title`. A title someone authored — the card's **Title** or the collection's **Title Template** — is the whole `<title>`, used as written; a collection template that wants the site name says `${site}` itself (`${title} | ${site}`). Otherwise a blog whose template is `YETI - ${title}` would render `YETI - Post | Yeti Bros`. A record with no title collapses to the site name; a site with no name leaves the raw title. No dangling separator either way.
-- **Description.** A mapped property is as often markdown as it is HTML, so both are flattened: tags are stripped, entities decoded, then the markdown markers are removed — a link or an image keeps its text and loses its brackets and URL, `**bold**`, `_italic_` and `` `code` `` lose their wrappers, and a heading marker, a list bullet or a `>` at the start of a line goes. Ordinary prose comes back untouched: a lone `!`, a `$5 * 3` or a `my_var` is a sentence, not markdown, and is left alone. Whatever survives is then collapsed to single spaces. That cleanup and the 160-character cap are for mapped properties only, which may hold a whole summary or article body. A description written on the card, or the site default, is emitted exactly as written, however long: search engines index the whole tag even though they display only the first 150 characters or so.
+- **Description.** The collection's template renders over the record first — `${summary}`, or `${cuisine} in ${city}` to compose one out of several properties, with `${site}` for the site name and dot paths into cards. A single word with no `${}` is the property it names, so `summary` and `${summary}` mean the same thing; a value with a space in it is literal text, one description for every object in the collection. A template whose placeholders all come back empty falls through to the site default rather than emitting half a sentence. What it renders is as often markdown as it is HTML, so both are flattened: tags are stripped, entities decoded, then the markdown markers are removed — a link or an image keeps its text and loses its brackets and URL, `**bold**`, `_italic_` and `` `code` `` lose their wrappers, and a heading marker, a list bullet or a `>` at the start of a line goes. Ordinary prose comes back untouched: a lone `!`, a `$5 * 3` or a `my_var` is a sentence, not markdown, and is left alone. Whatever survives is then collapsed to single spaces. That cleanup and the 160-character cap are for the collection's templates only, which draw on properties that may hold a whole summary or article body. A description written on the card, or the site default, is emitted exactly as written, however long: search engines index the whole tag even though they display only the first 150 characters or so.
 - **Social title.** `og:title` always prints: the card's **Social Title** when it has one, otherwise the collection's **Social Title Template**, otherwise the title. The site's **Social Title Template** — `${title}` by default, so a share card carries the bare `About`, not `About | Bistro` — shapes it by the same rule as the title template: only when the title is the record's own `title`; an authored Title or Social Title is used as written. A share card and a browser tab want different shapes, which is why the template is separate from the title template; `${title} — ${site}` on a blog gives every post a share title of its own structure without touching `<title>`. A page with no record behind it collapses to the site name. `twitter:title`, `twitter:description` and `twitter:image` are declared explicitly with the same values as their `og:` counterparts — most scrapers fall back to Open Graph, but not all of them. A collection can shape it for every object with its own **Social Title Template**; the card's value wins over that.
+- **Social description.** `og:description` and `twitter:description` are the **Social Description** when there is one, and the description when there is not — so a site that never touches the field keeps exactly the tags it had before. The chain is the description's own: the card's **Social Description**, then the collection's **Social Description Template**, then the site's **Default Social Description**, then the resolved description. The collection template is rendered, stripped and capped like the Description Template; a value written on the card or as the site default is emitted as written. The meta description, the JSON-LD `description` and the RSS feeds are untouched by it — a share card sells the click, a search result describes the page, and the two want different copy.
 - **Image alt.** When the winning image carries alt text, it is emitted as `og:image:alt` and `twitter:image:alt`. The alt is read from whichever image actually won — the card's, the mapped property's, or the Site SEO default image's — so it always describes the picture on the card. An image with no alt simply omits both tags.
 - **`og:type`.** Decided by the **Structured Data Type**: the record's card, then the collection's setting, then Webpage. `Article` and `Blog post` emit `og:type: article` together with `article:published_time` (the object's `date`, else `created`) and `article:modified_time` (`updated`); `Webpage` emits `website`. The same value decides the JSON-LD node, so a page that is an article says so to social scrapers and search engines in the same breath.
 - **Twitter card.** `summary_large_image` when an image resolved, `summary` when none did.
@@ -96,6 +98,7 @@ Every Site Builder page has an **SEO** section on its edit form. It holds the pe
 | **Title** | Replaces the derived title and is used as written — the site's title template does not apply to it. Supports `${placeholder}` substitution — see [Placeholders in the Title](#placeholders-in-the-title) below. |
 | **Social Title** | A shorter, punchier title for share cards. It replaces `og:title` and `twitter:title` only — `<title>` is untouched. It is used as written — neither site template applies to it. Leave it empty and the share cards use the page title. |
 | **Description** | Replaces the meta description for this record. |
+| **Social Description** | A punchier description for share cards. It replaces `og:description` and `twitter:description` only — `<meta name="description">` and the JSON-LD are untouched. Leave it empty and the share cards use the description. |
 | **Social Image** | The share image. 1200×630 is the recommendation; Total CMS crops to that ratio. |
 | **No Index** | Asks crawlers not to index this page. **Also removes it from the sitemaps.** |
 | **No Follow** | Asks crawlers not to follow the links on this page. |
@@ -137,7 +140,7 @@ ${name} — ${city}
 
 on a record with `name: "Tony's"` and `city: "Austin"` gives `Tony's — Austin`, and that is the whole `<title>` — a card title is used as written, the site title template does not wrap it. Add `${site}` to the card if you want the site name: `${name} — ${city} | ${site}`.
 
-The same `${...}` syntax is the only one Total CMS uses for titles: the card's Title and Social Title, the collection's [Title Template and Social Title Template](#collection-mapping), and the Site SEO record's own templates, where `${title}` stands for the resolved title.
+The same `${...}` syntax is the only one Total CMS uses: the card's Title and Social Title, all four of the collection's [templates](#collection-mapping) — Title, Social Title, Description and Social Description — and the Site SEO record's own templates, where `${title}` stands for the resolved title.
 
 - Any property of the record works — `${title}`, `${author}` — and dot paths reach inside a card or a deck item: `${hero.headline}`.
 - `${site}` is the site name. It wins even on a record that has its own property called `site`.
@@ -185,7 +188,8 @@ Open **Collections → your collection → Settings** and fill in the **SEO** se
 | **Structured Data Type** | `Automatic`, `Webpage`, `Article` or `Blog post`. What the objects are, for `og:type` and the JSON-LD node. The schema default is `Blog post` for blog and feed schemas and `Webpage` for everything else; pick `Webpage` to opt a blog collection out, or `Article` / `Blog post` to bring a custom collection in. A record's own card can override it. |
 | **Title Template** | Composes the title from the object's properties, with the same `${property}` placeholders as the card: `${title} \| Reviews`, `${name} — ${city}`, `${site}` for the site name. The result is the whole `<title>` — the site's title template does not apply on top of it, so include `${site}` here if you want the site name. Leave it empty to use the object's own `title`, which does go through the site template. |
 | **Social Title Template** | The same, for `og:title` and `twitter:title`, independent of the Title Template. Leave it empty to use the title. |
-| **Description Property** | Which property supplies the meta description when an object has no SEO description. |
+| **Description Template** | Composes the meta description from the object's properties, with the same `${property}` placeholders as the titles: `${summary}`, `${cuisine} in ${city}`, `${site}` for the site name, dot paths into cards. A bare property name on its own is that property, so `summary` works as well as `${summary}`. Markup and markdown are stripped and the result is capped at 160 characters. Used when an object has no SEO description of its own. |
+| **Social Description Template** | The same, for `og:description` and `twitter:description`, independent of the Description Template. Leave it empty to use the description. |
 | **Image Property** | Which image property supplies the social image. |
 
 Saving writes the mapping into the collection's `.meta.json`:
@@ -195,7 +199,8 @@ Saving writes the mapping into the collection's `.meta.json`:
     "type": "blogposting",
     "title": "${title} | Reviews",
     "socialTitle": "",
-    "description": "summary",
+    "description": "${summary}",
+    "socialDescription": "",
     "image": "image"
 }
 ```
@@ -206,9 +211,9 @@ You do not have to configure anything for a blog — or for any other schema Tot
 
 | Collection | Type | Description | Image |
 |---|---|---|---|
-| Any collection using the `blog` schema | `blogposting` | `summary` | `image` |
-| Any collection using the `blog-legacy` schema | `blogposting` | `summary` | `image` |
-| Any collection using the `feed` schema | `blogposting` | `content` | `image` |
+| Any collection using the `blog` schema | `blogposting` | `${summary}` | `image` |
+| Any collection using the `blog-legacy` schema | `blogposting` | `${summary}` | `image` |
+| Any collection using the `feed` schema | `blogposting` | `${content}` | `image` |
 | The Site Builder pages collection | `website` | *(none — the card)* | *(none — the card)* |
 | Everything else | `website` | *(none)* | *(none)* |
 
@@ -237,6 +242,7 @@ tcms collection:create seo-site
 | **Title Template** | The default shape of `<title>`, for a title that is the record's own `title` — an SEO card Title or a collection Title Template is used as written instead. `${title}` is the title and `${site}` the site name. Default: `${title} \| ${site}` |
 | **Social Title Template** | The same for `og:title` and `twitter:title`, independent of the Title Template. Same placeholders, same rule: it shapes the derived title only. Default: `${title}` — a share card carries the bare title. |
 | **Default Description** | Used when a record has no description of its own. |
+| **Default Social Description** | The same for `og:description` and `twitter:description`, independent of the Default Description. Leave it empty and the share cards use whatever description resolved. |
 | **Default Social Image** | An image **upload**, not a URL. The fallback share image, served through ImageWorks at 1200×630 and emitted as an absolute URL. |
 | **Twitter / X Handle** | With or without the `@`. Emitted as `twitter:site`. |
 | **Organization Name** | The publishing entity in the JSON-LD. Falls back to the site name. |
@@ -270,7 +276,7 @@ Site-wide values of your own — a tagline, a phone number, a footer blurb — c
     "id": "myseo",
     "type": "object",
     "inheritFrom": ["seo-site"],
-    "formgrid": "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultDescription\ndefaultImage twitterHandle\n---Organization---\norganizationName organizationLogo\nsameAs sameAs\n---Meta Tags---\nmetaTags metaTags\n---Output---\nemitJsonLd emitSocial\n---Site---\ntagline .",
+    "formgrid": "siteName baseUrl\ntitleTemplate socialTitleTemplate\ndefaultDescription defaultDescription\n---Social Sharing---\ndefaultSocialDescription defaultSocialDescription\ndefaultImage twitterHandle\n---Organization---\norganizationName organizationLogo\nsameAs sameAs\n---Meta Tags---\nmetaTags metaTags\n---Output---\nemitJsonLd emitSocial\n---Site---\ntagline .",
     "properties": {
         "tagline": {
             "type": "string",
@@ -499,8 +505,8 @@ and it is treated as a page:
 }) }}
 ```
 
-`title` and `description` are the page's own values; an `seo` key carries the
-same fields as the SEO card and overrides them (`{seo: {title: '…', noindex:
+`title`, `description` and `socialDescription` are the page's own values; an
+`seo` key carries the same fields as the SEO card and overrides them (`{seo: {title: '…', noindex:
 true}}`). `url` sets the canonical — absolute, or site-relative and the base
 URL is prepended; leave it out and the current request path is used. `image`
 may be a URL string here, since there is no record for ImageWorks to resolve
@@ -526,7 +532,8 @@ Everything `head()` prints is in there, under its own name:
 | `title` | The final `<title>`, after the site title template |
 | `rawTitle` | The record's title before the template — the bare `About`, not `About \| Bistro` |
 | `socialTitle` | The share-card title: the card's **Social Title** or `rawTitle`, through the Social Title Template |
-| `description` | The resolved description (a mapped property is cleaned and capped at 160 characters; card and site-default text is verbatim) |
+| `description` | The resolved description (the collection's template is rendered, cleaned and capped at 160 characters; card and site-default text is verbatim) |
+| `socialDescription` | The share-card description: the card's **Social Description**, the collection's Social Description Template or the **Default Social Description**, else `description` |
 | `canonical` | The canonical URL, even on a noindex record where the tag is not printed |
 | `robots` | `''`, `noindex`, `nofollow` or `noindex, nofollow` |
 | `noindex` | The boolean on its own |

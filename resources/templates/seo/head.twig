@@ -58,8 +58,8 @@
 <meta property="article:modified_time" content="{{ meta.modifiedTime }}">
 {% endif -%}
 <meta property="og:title" content="{{ meta.socialTitle }}">
-{% if meta.description != '' -%}
-<meta property="og:description" content="{{ meta.description }}">
+{% if meta.socialDescription != '' -%}
+<meta property="og:description" content="{{ meta.socialDescription }}">
 {% endif -%}
 {% if meta.canonical != '' -%}
 <meta property="og:url" content="{{ meta.canonical }}">
@@ -80,8 +80,8 @@
 {#- Twitter would fall back to the og: tags, but not every scraper does, so the
     title, description and image are declared explicitly as well. #}
 <meta name="twitter:title" content="{{ meta.socialTitle }}">
-{% if meta.description != '' -%}
-<meta name="twitter:description" content="{{ meta.description }}">
+{% if meta.socialDescription != '' -%}
+<meta name="twitter:description" content="{{ meta.socialDescription }}">
 {% endif -%}
 {% if meta.ogImage != '' -%}
 <meta name="twitter:image" content="{{ meta.ogImage }}">

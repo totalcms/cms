@@ -5,7 +5,7 @@
 	"type": "object",
 	"description": "Per-object SEO overrides. Used as a card sub-schema on objects that opt in.",
 	"category": "Internal",
-	"formgrid": "jsonldType jsonldType noindex nofollow\ntitle title socialTitle socialTitle\ndescription description description description\nimage image image image",
+	"formgrid": "jsonldType jsonldType noindex nofollow\ntitle title socialTitle socialTitle\ndescription description socialDescription socialDescription\nimage image image image",
 	"properties": {
 		"id": {
 			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
@@ -35,6 +35,13 @@
 			"type": "string",
 			"label": "Description",
 			"help": "Overrides the meta description for this object",
+			"field": "textarea",
+			"default": ""
+		},
+		"socialDescription": {
+			"type": "string",
+			"label": "Social Description",
+			"help": "Description for share cards (og:description / twitter:description). Leave empty to use the description.",
 			"field": "textarea",
 			"default": ""
 		},

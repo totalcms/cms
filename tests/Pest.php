@@ -497,7 +497,7 @@ function seoCtx(array $overrides = []): SeoContext
 		'object'         => ['id' => 'hello', 'title' => 'Hello <World>', 'summary' => '<p>A summary &amp; more</p>', 'image' => ['name' => 'hero.jpg', 'size' => 10]],
 		'collectionId'   => 'blog',
 		'collectionMeta' => null,
-		'seoBlock'       => ['type' => 'article', 'title' => '', 'socialTitle' => '', 'description' => 'summary', 'image' => 'image'],
+		'seoBlock'       => ['type' => 'article', 'title' => '', 'socialTitle' => '', 'description' => '${summary}', 'socialDescription' => '', 'image' => 'image'],
 		'fields'         => SeoFields::fromArray([]),
 		'settings'       => SeoSettings::fromArray(['siteName' => 'Bistro', 'defaultDescription' => 'Site default', 'defaultImage' => 'https://cdn/x.jpg', 'twitterHandle' => 'bistro'], 'example.com'),
 		'siteName'       => 'Bistro',
@@ -507,7 +507,12 @@ function seoCtx(array $overrides = []): SeoContext
 	];
 	$d = array_merge($defaults, $overrides);
 
-	return new SeoContext($d['kind'], $d['object'], $d['collectionId'], $d['collectionMeta'], $d['seoBlock'], $d['fields'], $d['settings'], $d['siteName'], $d['url'], $d['imageUrls'], $d['imageAlts']);
+	// A case that varies the collection block spells out only the keys it cares
+	// about; the rest come from the default, so adding a key to the block does
+	// not mean editing every literal in the SEO tests.
+	$block = array_merge($defaults['seoBlock'], is_array($d['seoBlock']) ? $d['seoBlock'] : []);
+
+	return new SeoContext($d['kind'], $d['object'], $d['collectionId'], $d['collectionMeta'], $block, $d['fields'], $d['settings'], $d['siteName'], $d['url'], $d['imageUrls'], $d['imageAlts']);
 }
 
 function signInAs(App $app, string $userId, string $authCollection = ''): void
