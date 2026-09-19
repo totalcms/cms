@@ -481,6 +481,16 @@ export default class TotalField {
 		return !this.container.classList.contains('field-hidden');
 	}
 
+	// Rebuild anything that had to read or measure rendered DOM when this field
+	// was constructed. processFields() builds every field up front, including
+	// fields inside a collapsed container that is not rendered yet — Choices.js,
+	// for one, derives an empty label in that state. Containers that reveal
+	// fields later (an accordion panel, a dialog, a deck item) call this once,
+	// the first time the field actually becomes visible. A no-op for field types
+	// that do not care, which is most of them.
+	reinit() {
+	}
+
 	isHidden() {
 		return this.container.classList.contains('field-hidden');
 	}

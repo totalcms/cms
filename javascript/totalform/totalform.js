@@ -2,6 +2,7 @@ import TotalCMS from '../totalcms';
 import TotalField from './totalfield';
 import TotalDispatcher from './dispatcher';
 import FieldVisibility from './field-visibility';
+import FormAccordions from './accordions';
 import tcmsConfirm from '../confirm-dialog';
 import { t } from '../i18n';
 import { csrfHeadersFor } from '../csrf';
@@ -80,6 +81,7 @@ export default class TotalForm {
 
 		this.dispatcher = new TotalDispatcher(this.form);
 		this.visibility = new FieldVisibility(this.form, this.fields);
+		this.accordions = new FormAccordions(this.form);
 
         this.eventListeners();
         this.registerButtons();

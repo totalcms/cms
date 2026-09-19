@@ -41,6 +41,14 @@ export default class ListField extends MultiSelectField {
 		});
     }
 
+	reinit() {
+		if (!this.choices) return;
+		const value = this.getValue();
+		this.choices.destroy();
+		this.choices.init();
+		this.setValue(value);
+	}
+
 	initSortable() {
 		const list = this.container.querySelector('.choices__list');
 

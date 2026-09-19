@@ -50,3 +50,20 @@ details.cms-accordion {
 	}
 }
 
+//--------------------------------
+// Formgrid accordion groups
+//--------------------------------
+.formgrid-accordion {
+	display : grid;
+	gap     : 1rem;
+
+	> details.cms-accordion {
+		&:has(.form-field.unsaved) > summary {
+			border-color : oklch(var(--totalform-changed)) !important;
+		}
+		&:has(.form-field.error) > summary {
+			border-color : oklch(var(--totalform-error)) !important;
+		}
+	}
+}
+
