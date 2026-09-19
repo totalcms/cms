@@ -8,6 +8,7 @@ use TotalCMS\Domain\Video\Data\VideoInfo;
 use TotalCMS\Domain\Video\Provider\BunnyProvider;
 use TotalCMS\Domain\Video\Provider\CloudflareProvider;
 use TotalCMS\Domain\Video\Provider\DirectFileProvider;
+use TotalCMS\Domain\Video\Provider\JetStreamProvider;
 use TotalCMS\Domain\Video\Provider\LividProvider;
 use TotalCMS\Domain\Video\Provider\LoomProvider;
 use TotalCMS\Domain\Video\Provider\PublitioProvider;
@@ -74,6 +75,7 @@ final readonly class VideoUrlResolver
 			new LoomProvider(),
 			new WistiaProvider(),
 			new PublitioProvider(),
+			new JetStreamProvider(),
 			new DirectFileProvider(),
 			new UnknownProvider(),
 		];

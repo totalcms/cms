@@ -14,12 +14,17 @@ test('near misses are not claimed', function (): void {
 	// A Publitio direct-file link is a plain file, not the player page — the
 	// author picks native <video> vs the Publitio player by which link they paste.
 	expect($r->resolve('https://media.weaversspace.com/file/weaversspace/play/weaversspace-intro-z.mp4')->provider)->toBe('file');
+	// Jet-Stream needs both `account` and `file` — the bare player page, the
+	// marketing site and a half-formed URL are not assets.
+	expect($r->resolve('https://player.jet-stream.com/')->provider)->toBe('unknown');
+	expect($r->resolve('https://player.jet-stream.com/?account=demo')->provider)->toBe('unknown');
+	expect($r->resolve('https://jet-stream.com/products/player/')->provider)->toBe('unknown');
 });
 
 test('defaultProviders() orders YouTube first and Unknown last', function (): void {
 	$ids = array_map(static fn ($provider) => $provider->id(), VideoUrlResolver::defaultProviders());
 
-	expect($ids)->toBe(['youtube', 'vimeo', 'livid', 'bunny', 'cloudflare', 'loom', 'wistia', 'publitio', 'file', 'unknown']);
+	expect($ids)->toBe(['youtube', 'vimeo', 'livid', 'bunny', 'cloudflare', 'loom', 'wistia', 'publitio', 'jetstream', 'file', 'unknown']);
 });
 
 test('a resolver constructed with no providers always falls back to the empty unknown VideoInfo', function (): void {

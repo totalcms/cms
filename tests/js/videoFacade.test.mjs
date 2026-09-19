@@ -130,6 +130,18 @@ test('hovering a facade preconnects the player origin and its second-hop origins
     expect(document.head.querySelectorAll('link[rel=preconnect]').length).toBe(hrefs.length);
 });
 
+test('a Jet-Stream facade also preconnects the load balancer the player fetches its playlist and poster from', () => {
+    const { facade } = buildFacade();
+    facade.dataset.embed = 'https://player.jet-stream.com/?account=demo&file=clip.smil&type=streaming&service=wowza&output=player&autostart=1';
+    document.head.querySelectorAll('link[rel=preconnect]').forEach(l => l.remove());
+
+    warmFacade(facade);
+
+    const hrefs = Array.from(document.head.querySelectorAll('link[rel=preconnect]')).map(l => l.getAttribute('href'));
+    expect(hrefs).toContain('https://player.jet-stream.com');
+    expect(hrefs).toContain('https://takeoff.jetstre.am');
+});
+
 test('warming a facade with a non-http embed adds nothing', () => {
     const { facade } = buildFacade();
     facade.dataset.embed = 'javascript:alert(1)';

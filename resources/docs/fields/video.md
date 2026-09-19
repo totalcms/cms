@@ -1,6 +1,6 @@
 ---
 title: "Video"
-description: "Configure the video field in Total CMS: paste a URL from YouTube, Vimeo, Livid, Bunny, Cloudflare Stream, Loom, Wistia or Publitio (or a direct MP4/WebM link), and render it with cms.render.video()."
+description: "Configure the video field in Total CMS: paste a URL from YouTube, Vimeo, Livid, Bunny, Cloudflare Stream, Loom, Wistia, Publitio or Jet-Stream (or a direct MP4/WebM link), and render it with cms.render.video()."
 related:
   - fields/image-gallery
   - fields/file-depot
@@ -73,6 +73,7 @@ poster has actually been uploaded.
 | `loom` | `loom.com/share/{id}`, `loom.com/embed/{id}` | Fetched via Loom's oEmbed endpoint |
 | `wistia` | `{account}.wistia.com/medias/{id}`, `fast.wistia.net/embed/iframe/{id}` | Fetched via Wistia's oEmbed endpoint |
 | `publitio` | The player page — `media.publit.io/file/{path}.html` or the same path on your own Publitio domain, with or without `?player={id}` | Derived — the page's own full-width poster (`/file/w_1280/{path}.jpg`). Title and dimensions come from Publitio's oEmbed endpoint |
+| `jetstream` | The Privacy Player URL from the embed dialog's iframe — `player.jet-stream.com/?account={account}&file={file}&…` (legacy host `rrr.sz.xlcdn.com`), or the dialog's bare playlist URL on `takeoff.jetstre.am`, which is rewritten to the player | Derived from the `poster=` parameter when the URL carries one — enable the poster image in the embed dialog before copying. No oEmbed, so no title and the default 16:9 ratio |
 | `file` | A URL ending in `.mp4`, `.webm`, `.mov`, `.m4v` or `.ogv` (query string ignored) | None — rendered as a `<video>` element instead of an iframe |
 | `unknown` | Any other `http(s)` URL | None — rendered as a generic iframe, the author's URL unmodified |
 
@@ -84,6 +85,14 @@ mode the viewer clicks play once more after the poster. Paste the `.mp4` link
 instead of the `.html` one when you want a native `<video>` element — for an
 animated GIF you uploaded to Publitio that is the link to use, since its
 player page only shows a still image.
+
+Jet-Stream notes: the asset is identified by the `account` and `file` query
+parameters, so paste the whole URL, not just the host. Every other parameter
+(`type`, `service`, `sub`, `token`, …) is carried through to the player
+untouched; only `output` is forced to `player`, and any `autostart`, `repeat`
+or `mute` in the pasted URL is dropped in favor of the `autoplay`, `loop` and
+`muted` options on `cms.render.video()`, which map onto the same player
+parameters. Livestreams (`type=live`) work the same way.
 
 ## What is derived, and when
 
@@ -100,8 +109,9 @@ On save:
    fetch is retried when the URL changes, not on every subsequent save of the
    same URL. An API or MCP write that sends only `url` gets the same behavior
    for free.
-4. YouTube and Cloudflare thumbnails are derived without a request; every other
-   provider makes one oEmbed call. **A failed fetch (timeout, non-200,
+4. YouTube, Cloudflare and Jet-Stream thumbnails are derived without a request
+   (Jet-Stream has no oEmbed endpoint, so it makes no call at all and never
+   gets a title); every other provider makes one oEmbed call. **A failed fetch (timeout, non-200,
    malformed response) never blocks or fails the save** — the derived fields
    are simply left empty and the object saves.
 5. An uploaded `poster` goes through the same image processing (hashing,
@@ -216,7 +226,7 @@ The optional third argument is an ImageWorks parameter array (`{w: 800, fm: 'web
 applied to an uploaded poster, the same array `cms.render.image()` takes. It is
 ignored for a vendor thumbnail or a `poster` override, which are not served by T3.
 
-Hosted provider (YouTube, Vimeo, Livid, Bunny, Cloudflare, Loom, Wistia, Publitio) — by
+Hosted provider (YouTube, Vimeo, Livid, Bunny, Cloudflare, Loom, Wistia, Publitio, Jet-Stream) — by
 default a click-to-play facade: the poster (uploaded, else the vendor
 thumbnail) with a play button, and the iframe only loads on click. Pass
 `property` when the video sits on your own schema; leave both options out for

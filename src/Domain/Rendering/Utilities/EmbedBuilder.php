@@ -34,7 +34,7 @@ class EmbedBuilder
 			'vimeo'   => self::vimeo($url, $options),
 			'file'    => self::video($url, $options),
 			'unknown' => self::iframe($url),
-			// Livid, Bunny, Cloudflare, Loom, Wistia: a plain iframe on the
+			// Livid, Bunny, Cloudflare, Loom, Wistia, Publitio, Jet-Stream: a plain iframe on the
 			// resolved embed URL. embedQuery() defaults to '' until a later
 			// task adds per-provider playback options.
 			default => HTMLUtils::iframe($info->embedUrl, 'cms-video-embed'),

@@ -85,7 +85,7 @@ provider.
    Hosted providers render as a click-to-play facade (poster + play button) by default. #}
 {{ cms.render.video('intro') }}
 
-{# Hosted provider (YouTube, Vimeo, Livid, Bunny, Cloudflare, Loom, Wistia, Publitio) on your own schema #}
+{# Hosted provider (YouTube, Vimeo, Livid, Bunny, Cloudflare, Loom, Wistia, Publitio, Jet-Stream) on your own schema #}
 {{ cms.render.video(post, {property: 'promo'}) }}
 
 {# An eager iframe instead of the facade #}

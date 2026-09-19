@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Video\Provider\DirectFileProvider;
+use TotalCMS\Domain\Video\Provider\JetStreamProvider;
 use TotalCMS\Domain\Video\Provider\UnknownProvider;
 use TotalCMS\Domain\Video\Provider\VimeoProvider;
 use TotalCMS\Domain\Video\Provider\YouTubeProvider;
@@ -36,6 +37,17 @@ $cases = [
 	['https://www.loom.com/embed/abcdef', 'loom', 'abcdef', 'https://www.loom.com/embed/abcdef', '', 'https://www.loom.com/v1/oembed?url=https%3A%2F%2Fwww.loom.com%2Fembed%2Fabcdef'],
 	['https://acme.wistia.com/medias/abc123', 'wistia', 'abc123', 'https://fast.wistia.net/embed/iframe/abc123', '', 'https://fast.wistia.com/oembed?url=https%3A%2F%2Facme.wistia.com%2Fmedias%2Fabc123'],
 	['https://fast.wistia.net/embed/iframe/abc123', 'wistia', 'abc123', 'https://fast.wistia.net/embed/iframe/abc123', '', 'https://fast.wistia.com/oembed?url=https%3A%2F%2Ffast.wistia.net%2Fembed%2Fiframe%2Fabc123'],
+	// Jet-Stream: the asset is identified by `account` + `file` query params, not a path. The iframe src the embed
+	// dialog hands out is kept as-is apart from forcing `output=player`; a `poster=` param is turned into the same
+	// download URL the player itself builds for the poster image (verified against the demo account). No oEmbed.
+	['https://player.jet-stream.com/?account=demo&file=sintel-surround.smil&type=streaming&service=wowza&poster=sintel-surround.jpg&output=player', 'jetstream', 'demo/sintel-surround.smil', 'https://player.jet-stream.com/?account=demo&file=sintel-surround.smil&type=streaming&service=wowza&poster=sintel-surround.jpg&output=player', 'https://takeoff.jetstre.am/?account=demo&file=sintel-surround.jpg&type=download&service=apache&protocol=https&output=download', null],
+	['https://player.jet-stream.com/?account=demo&file=sintel-surround.smil&type=streaming&service=wowza&output=player', 'jetstream', 'demo/sintel-surround.smil', 'https://player.jet-stream.com/?account=demo&file=sintel-surround.smil&type=streaming&service=wowza&output=player', '', null],
+	// The dialog's "URL" output is the load balancer's HLS playlist, which cannot go in an iframe — it is rewritten
+	// to the player URL, dropping the playlist-only `protocol` param.
+	['https://takeoff.jetstre.am/?account=demo&file=sintel-surround.smil&type=streaming&service=wowza&protocol=https&output=playlist.m3u8', 'jetstream', 'demo/sintel-surround.smil', 'https://player.jet-stream.com/?account=demo&file=sintel-surround.smil&type=streaming&service=wowza&output=player', '', null],
+	// The legacy player host is normalized, and playback options baked into the pasted URL are stripped so the Twig
+	// options are the single source of truth (as for YouTube/Vimeo).
+	['https://rrr.sz.xlcdn.com/?account=demo&file=sintel-surround.smil&type=streaming&service=wowza&autostart=1&repeat=1&mute=1&output=player', 'jetstream', 'demo/sintel-surround.smil', 'https://player.jet-stream.com/?account=demo&file=sintel-surround.smil&type=streaming&service=wowza&output=player', '', null],
 	['https://cdn.example.com/clip.mp4?x=1', 'file', '', 'https://cdn.example.com/clip.mp4?x=1', '', null],
 	['https://cdn.example.com/clip.WEBM', 'file', '', 'https://cdn.example.com/clip.WEBM', '', null],
 	['https://cdn.example.com/clip.mov', 'file', '', 'https://cdn.example.com/clip.mov', '', null],
@@ -70,11 +82,19 @@ test('every default provider exposes a stable, non-empty id()', function (): voi
 
 test('AbstractVideoProvider default embedQuery() is empty for providers that do not override it', function (): void {
 	foreach (VideoUrlResolver::defaultProviders() as $provider) {
-		if ($provider instanceof YouTubeProvider || $provider instanceof VimeoProvider) {
+		if ($provider instanceof YouTubeProvider || $provider instanceof VimeoProvider || $provider instanceof JetStreamProvider) {
 			continue;
 		}
 		expect($provider->embedQuery(['autoplay' => 1, 'loop' => 1, 'muted' => 1]))->toBe('');
 	}
+});
+
+test('JetStreamProvider embedQuery maps autoplay/loop/muted onto the player\'s autostart/repeat/mute', function (): void {
+	$provider = new JetStreamProvider();
+
+	expect($provider->embedQuery([]))->toBe('');
+	expect($provider->embedQuery(['autoplay' => true]))->toBe('autostart=1');
+	expect($provider->embedQuery(['autoplay' => true, 'muted' => true, 'loop' => true]))->toBe('autostart=1&mute=1&repeat=1');
 });
 
 test('YouTubeProvider embedQuery builds autoplay/mute/loop+playlist', function (): void {

@@ -27,6 +27,9 @@ const EXTRA_ORIGINS = {
 	'www.youtube.com'         : ['https://www.google.com', 'https://i.ytimg.com'],
 	'player.vimeo.com'        : ['https://i.vimeocdn.com', 'https://f.vimeocdn.com'],
 	'fast.wistia.net'         : ['https://fast.wistia.com', 'https://embed-ssl.wistia.com'],
+	// The Privacy Player asks the load balancer for its playlist and poster,
+	// which then redirect to a per-session CDN edge that cannot be known ahead.
+	'player.jet-stream.com'   : ['https://takeoff.jetstre.am'],
 };
 
 const warmedOrigins = new Set();

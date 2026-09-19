@@ -44,6 +44,7 @@ $providerCases = [
 	'loom'       => ['https://www.loom.com/share/abcdef', 'https://www.loom.com/embed/abcdef'],
 	'wistia'     => ['https://acme.wistia.com/medias/abc123', 'https://fast.wistia.net/embed/iframe/abc123'],
 	'publitio'   => ['https://media.weaversspace.com/file/weaversspace/play/weaversspace-intro-z.html?player=wsplayer', 'https://media.weaversspace.com/file/weaversspace/play/weaversspace-intro-z.html?player=wsplayer'],
+	'jetstream'  => ['https://player.jet-stream.com/?account=demo&file=sintel-surround.smil&type=streaming&service=wowza&output=player', 'https://player.jet-stream.com/?account=demo&amp;file=sintel-surround.smil&amp;type=streaming&amp;service=wowza&amp;output=player'],
 ];
 
 test('each iframe provider renders an eager iframe with the embed url, title, and wrapper class', function (string $url, string $embedUrl): void {
@@ -293,6 +294,14 @@ test('autoplay: true builds the right query for Vimeo (autoplay=1)', function ()
 	$html = $this->render->video($object, ['property' => 'promo', 'autoplay' => true]);
 
 	expect($html)->toContain('src="https://player.vimeo.com/video/123456789?autoplay=1"');
+});
+
+test('autoplay: true builds the right query for Jet-Stream (autostart=1, appended to the existing query)', function (): void {
+	$object = videoObject(['url' => 'https://player.jet-stream.com/?account=demo&file=sintel-surround.smil&type=streaming&service=wowza&output=player']);
+
+	$html = $this->render->video($object, ['property' => 'promo', 'autoplay' => true, 'muted' => true]);
+
+	expect($html)->toContain('src="https://player.jet-stream.com/?account=demo&amp;file=sintel-surround.smil&amp;type=streaming&amp;service=wowza&amp;output=player&amp;autostart=1&amp;mute=1"');
 });
 
 test('an empty video property returns an empty string', function (): void {
