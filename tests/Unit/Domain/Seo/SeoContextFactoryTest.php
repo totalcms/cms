@@ -323,6 +323,72 @@ final class SeoContextFactoryTest extends TestCase
 		$this->assertSame(['image' => 'https://cdn.example/share.png'], $ctx->imageUrls);
 	}
 
+	// ---- a mapped gallery resolves to its first image ----
+
+	/** @return array<int,array<string,mixed>> */
+	private function galleryOfTwo(): array
+	{
+		return [
+			['name' => 'first.jpg', 'size' => 1200, 'alt' => 'The first shot'],
+			['name' => 'second.jpg', 'size' => 900, 'alt' => 'The second shot'],
+		];
+	}
+
+	public function testAMappedGalleryUsesItsFirstImageAndThatImagesAlt(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection('trips', 'trip', ['image' => 'photos']));
+		$this->urlBuilder->method('buildUrl')->willReturn('/trips/patagonia');
+		// imagePath() would find no `size` on the list and return '' — the
+		// gallery route is the one that has to be called.
+		$this->media->expects($this->once())->method('galleryPath')
+			->with($this->anything(), 'first', SeoSettings::OG_IMAGE, ['collection' => 'trips', 'property' => 'photos'])
+			->willReturn('/imageworks/trips/patagonia/photos/first');
+
+		$ctx = $this->factory->make(['id' => 'patagonia', 'photos' => $this->galleryOfTwo()], ['collection' => 'trips']);
+
+		$this->assertSame(['photos' => 'https://example.com/imageworks/trips/patagonia/photos/first'], $ctx->imageUrls);
+		$this->assertSame(['photos' => 'The first shot'], $ctx->imageAlts);
+	}
+
+	public function testAMappedImagePropertyStillTakesTheImageRoute(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->blogCollection(['image' => 'image']));
+		$this->urlBuilder->method('buildUrl')->willReturn('/blog/hello');
+		$this->media->expects($this->never())->method('galleryPath');
+
+		$ctx = $this->factory->make(
+			['id' => 'hello', 'image' => ['name' => 'hero.jpg', 'size' => 10, 'alt' => 'Hero alt']],
+			['collection' => 'blog'],
+		);
+
+		$this->assertSame(['image' => 'Hero alt'], $ctx->imageAlts);
+	}
+
+	public function testAListThatIsNotAGalleryIsNotTakenForOne(): void
+	{
+		// A deck is a list of arrays too. Without a name and a size on the
+		// first entry it is not an image, and the gallery route must not fire.
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection('trips', 'trip', ['image' => 'stops']));
+		$this->urlBuilder->method('buildUrl')->willReturn('/trips/patagonia');
+		$this->media->expects($this->never())->method('galleryPath');
+
+		$object = ['id' => 'patagonia', 'stops' => [['title' => 'Day one'], ['title' => 'Day two']]];
+		$ctx    = $this->factory->make($object, ['collection' => 'trips']);
+
+		$this->assertSame([], $ctx->imageAlts);
+	}
+
+	public function testAnEmptyGalleryFallsThroughInsteadOfPointingAtNothing(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection('trips', 'trip', ['image' => 'photos']));
+		$this->urlBuilder->method('buildUrl')->willReturn('/trips/patagonia');
+		$this->media->expects($this->never())->method('galleryPath');
+
+		$ctx = $this->factory->make(['id' => 'patagonia', 'photos' => []], ['collection' => 'trips']);
+
+		$this->assertSame([], $ctx->imageAlts);
+	}
+
 	public function testAnArrayWithAnIdIsStillACollectionObject(): void
 	{
 		// The ad-hoc branch must not swallow a real object passed without its

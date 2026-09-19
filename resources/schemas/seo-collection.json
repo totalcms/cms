@@ -77,7 +77,7 @@
 		"image": {
 			"type": "string",
 			"label": "Image Property",
-			"help": "Which image property supplies the social image",
+			"help": "Which property supplies the social image. A gallery works too — its first image is used.",
 			"field": "select",
 			"placeholder": "Select a Property",
 			"default": "",

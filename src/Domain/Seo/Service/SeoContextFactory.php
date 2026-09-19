@@ -307,7 +307,9 @@ readonly class SeoContextFactory
 		$alts = [];
 
 		if ($block['image'] !== '') {
-			$image = $object[$block['image']] ?? null;
+			// A mapped gallery is described by the image that actually wins,
+			// which is its first — not by the list, which has no alt of its own.
+			$image = $this->galleryFirstImage($object, $block['image']) ?? $object[$block['image']] ?? null;
 			if (is_array($image) && trim((string)($image['name'] ?? '')) !== '') {
 				$alts[$block['image']] = trim((string)($image['alt'] ?? ''));
 			}
@@ -327,8 +329,56 @@ readonly class SeoContextFactory
 			return '';
 		}
 
+		$options = ['collection' => $collectionId, 'property' => $property];
+
+		// A gallery is a list of images rather than an image, so imagePath()
+		// finds no `size` on it and returns nothing — and the mapping offers
+		// every property the schema has, so pointing it at a gallery is a
+		// choice someone can already make and get silence from. Take the first
+		// image: `first` is a real ImageWorks route with a deterministic cache
+		// token. `featured` and `random` are routes too, but both land on
+		// array_rand(), and a share image that changes between two scrapes is
+		// one no scraper can cache.
+		if ($this->galleryFirstImage($object, $property) !== null) {
+			return $settings->absolute($this->media->galleryPath($object, 'first', SeoSettings::OG_IMAGE, $options));
+		}
+
 		// imagePath() returns a root-relative path (the host is stripped when
 		// building the ImageWorks API URL) — social crawlers need it absolute.
-		return $settings->absolute($this->media->imagePath($object, SeoSettings::OG_IMAGE, ['collection' => $collectionId, 'property' => $property]));
+		return $settings->absolute($this->media->imagePath($object, SeoSettings::OG_IMAGE, $options));
+	}
+
+	/**
+	 * The first image of a gallery property, or null when the property is not
+	 * a gallery carrying at least one image.
+	 *
+	 * The test is the shape of the stored value, not the schema's field type:
+	 * the factory would otherwise fetch a schema on every render, and the same
+	 * check covers a page record and the ad-hoc array, which have no schema
+	 * behind them at all. A non-empty `name` and a `size` above zero are what
+	 * make an entry an image — the pair SeoFields::hasImage() reads — so a deck
+	 * that happens to be a list of arrays is not taken for a gallery.
+	 *
+	 * Top-level only: galleryPath() reads its `property` option as a plain key
+	 * and has no dot-path walk of its own, so a gallery nested in a card is
+	 * left to fall through to the rest of the chain.
+	 *
+	 * @param array<string,mixed> $object
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function galleryFirstImage(array $object, string $property): ?array
+	{
+		$value = $object[$property] ?? null;
+		if (!is_array($value) || $value === [] || !array_is_list($value)) {
+			return null;
+		}
+
+		$first = $value[0];
+		if (!is_array($first) || trim((string)($first['name'] ?? '')) === '' || (int)($first['size'] ?? 0) <= 0) {
+			return null;
+		}
+
+		return $first;
 	}
 }
