@@ -6,27 +6,23 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
-use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Settings\Services\SettingsValidator;
 
 final class SettingsSaverTest extends TestCase
 {
 	private SettingsSaver $saver;
-	private MockObject $fetcher;
 	private MockObject $validator;
 	private MockObject $cacheManager;
 	private MockObject $settingsRepository;
 
 	protected function setUp(): void
 	{
-		$this->fetcher             = $this->createMock(SettingsFetcher::class);
 		$this->validator           = $this->createMock(SettingsValidator::class);
 		$this->cacheManager        = $this->createMock(CacheManager::class);
 		$this->settingsRepository  = $this->createMock(SettingsRepository::class);
 
 		$this->saver = new SettingsSaver(
-			$this->fetcher,
 			$this->validator,
 			$this->cacheManager,
 			$this->settingsRepository
@@ -44,7 +40,7 @@ final class SettingsSaverTest extends TestCase
 			->with($section, $sectionData)
 			->willReturn($processedData);
 
-		$this->fetcher->method('loadSettings')->willReturn([
+		$this->settingsRepository->method('loadBase')->willReturn([
 			'smtp' => ['host' => 'old.example.com'],
 		]);
 
@@ -70,7 +66,7 @@ final class SettingsSaverTest extends TestCase
 		$newData = ['host' => 'new.example.com', 'port' => 587];
 
 		$this->validator->method('processSection')->willReturn($newData);
-		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
+		$this->settingsRepository->method('loadBase')->willReturn($existingSettings);
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
 
 		// Capture the merged settings that will be saved
@@ -94,7 +90,7 @@ final class SettingsSaverTest extends TestCase
 		$newData = ['sentry' => 'new-key', 'notfound' => '/404'];
 
 		$this->validator->method('processSection')->willReturn($newData);
-		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
+		$this->settingsRepository->method('loadBase')->willReturn($existingSettings);
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
 
 		// Verify general settings are merged at top level
@@ -113,7 +109,7 @@ final class SettingsSaverTest extends TestCase
 		$newData          = ['key1' => 'value1', 'key2' => 'value2'];
 
 		$this->validator->method('processSection')->willReturn($newData);
-		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
+		$this->settingsRepository->method('loadBase')->willReturn($existingSettings);
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
 
 		// Verify new section was created
@@ -151,7 +147,12 @@ final class SettingsSaverTest extends TestCase
 			'cache'  => ['enabled' => true],
 		];
 
-		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
+		$this->settingsRepository->method('loadBase')->willReturn($existingSettings);
+		// deleteSection() now asks the repository which keys the section owns
+		// (SettingsRepository::sectionKeys()) rather than unsetting the section
+		// name directly, so the mock must answer that call too or nothing gets
+		// removed and the assertion below would fail for the wrong reason.
+		$this->settingsRepository->method('sectionKeys')->willReturn(['smtp']);
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
 
 		// Verify section was removed
@@ -171,7 +172,7 @@ final class SettingsSaverTest extends TestCase
 			'cache'  => ['enabled' => true],
 		];
 
-		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
+		$this->settingsRepository->method('loadBase')->willReturn($existingSettings);
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
 		$this->settingsRepository->expects($this->once())->method('saveBase');
 
@@ -182,7 +183,7 @@ final class SettingsSaverTest extends TestCase
 	public function testClearsCacheAfterSaveSection(): void
 	{
 		$this->validator->method('processSection')->willReturn(['key' => 'value']);
-		$this->fetcher->method('loadSettings')->willReturn([]);
+		$this->settingsRepository->method('loadBase')->willReturn([]);
 		$this->settingsRepository->method('saveBase');
 
 		$this->cacheManager->expects($this->once())
@@ -203,7 +204,7 @@ final class SettingsSaverTest extends TestCase
 
 	public function testClearsCacheAfterDeleteSection(): void
 	{
-		$this->fetcher->method('loadSettings')->willReturn(['test' => ['key' => 'value']]);
+		$this->settingsRepository->method('loadBase')->willReturn(['test' => ['key' => 'value']]);
 		$this->settingsRepository->method('saveBase');
 
 		$this->cacheManager->expects($this->once())
@@ -232,7 +233,7 @@ final class SettingsSaverTest extends TestCase
 		];
 
 		$this->validator->method('processSection')->willReturn($newData);
-		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
+		$this->settingsRepository->method('loadBase')->willReturn($existingSettings);
 		$this->cacheManager->method('clearAllCaches');
 
 		// Verify deep merge preserved existing keys

@@ -15,7 +15,6 @@ use TotalCMS\Support\Config;
 readonly class SettingsSaver
 {
 	public function __construct(
-		private SettingsFetcher $settingsFetcher,
 		private SettingsValidator $settingsValidator,
 		private CacheManager $cacheManager,
 		private SettingsRepository $settingsRepository,
@@ -35,7 +34,14 @@ readonly class SettingsSaver
 		// Validate and process the section data
 		$sectionData = $this->settingsValidator->processSection($section, $sectionData);
 
-		$settings = $this->settingsFetcher->loadSettings();
+		// Which file owns this section decides which file we load, mutate and
+		// write back. Loading effective (merged) settings here would copy every
+		// shared value into whichever file we write — see the repository's
+		// class docblock.
+		$toOverlay = $this->settingsRepository->ownsSection($section);
+		$settings  = $toOverlay
+			? $this->settingsRepository->loadOverlay()
+			: $this->settingsRepository->loadBase();
 
 		// General settings are saved at the top level, not under 'general' key
 		if ($section === 'general') {
@@ -58,7 +64,7 @@ readonly class SettingsSaver
 			$settings[$section] = $sectionData;
 		}
 
-		$this->writeSettings($settings);
+		$this->writeSettings($settings, $toOverlay);
 		$this->cacheManager->clearAllCaches();
 
 		// Tool-surface-changing settings (mcp.publicAccess, mcp.toolPrefix,
@@ -71,39 +77,51 @@ readonly class SettingsSaver
 	}
 
 	/**
-	 * Save entire settings array.
+	 * Save the entire settings array to the shared file.
 	 *
 	 * @param array<string,mixed> $settings
 	 */
 	public function saveSettings(array $settings): void
 	{
-		$this->writeSettings($settings);
+		$this->writeSettings($settings, false);
 		$this->cacheManager->clearAllCaches();
 	}
 
 	/**
-	 * Delete a specific section from settings.
+	 * Delete a specific section from settings. Removes it from whichever file
+	 * owns it, by the same rule saveSection() routes by.
 	 */
 	public function deleteSection(string $section): void
 	{
-		$settings = $this->settingsFetcher->loadSettings();
-		unset($settings[$section]);
-		$this->writeSettings($settings);
+		$fromOverlay = $this->settingsRepository->ownsSection($section);
+		$settings    = $fromOverlay
+			? $this->settingsRepository->loadOverlay()
+			: $this->settingsRepository->loadBase();
+
+		foreach ($this->settingsRepository->sectionKeys($section) as $key) {
+			unset($settings[$key]);
+		}
+
+		$this->writeSettings($settings, $fromOverlay);
 		$this->cacheManager->clearAllCaches();
 	}
 
 	/**
-	 * Write settings to settings.json file in tcms-data/.system/.
+	 * Write settings to one of the two files in tcms-data/.system/.
 	 *
 	 * @param array<string,mixed> $settings
 	 */
-	private function writeSettings(array $settings): void
+	private function writeSettings(array $settings, bool $toOverlay = false): void
 	{
-		$this->settingsRepository->saveBase($settings);
+		if ($toOverlay) {
+			$this->settingsRepository->saveOverlay($settings);
+		} else {
+			$this->settingsRepository->saveBase($settings);
+		}
 
-		// Config::init() is memoized and settings.php reads settings.json, so the
+		// Config::init() is memoized and settings.php reads both files, so the
 		// memo is stale the moment we write. Drop it here — the single funnel for
-		// every settings.json write — to keep read-after-write within a request.
+		// every settings write — to keep read-after-write within a request.
 		Config::reset();
 	}
 
