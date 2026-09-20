@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Admin;
+namespace TotalCMS\Domain\Admin\Form\Layout;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 

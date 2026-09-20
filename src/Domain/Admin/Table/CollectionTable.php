@@ -1,7 +1,8 @@
 <?php
 
-namespace TotalCMS\Domain\Admin;
+namespace TotalCMS\Domain\Admin\Table;
 
+use TotalCMS\Domain\Admin\Form\Builder\SimpleForm;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;

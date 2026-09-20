@@ -1,9 +1,10 @@
 <?php
 
-namespace TotalCMS\Domain\Admin;
+namespace TotalCMS\Domain\Admin\Form\Builder;
 
 use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormServices;
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Template\Data\DesignerMetadata;
 use TotalCMS\Domain\Template\Data\TemplateData;
 use TotalCMS\Domain\Template\Data\TemplatePath;

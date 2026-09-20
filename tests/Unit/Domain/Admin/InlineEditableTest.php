@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Domain\Admin\InlineEditable;
+use TotalCMS\Domain\Admin\Table\InlineEditable;
 
 describe('InlineEditable', function (): void {
 	test('scalar and choice fields edit inline', function (): void {

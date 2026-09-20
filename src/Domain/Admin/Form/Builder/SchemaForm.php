@@ -1,9 +1,10 @@
 <?php
 
-namespace TotalCMS\Domain\Admin;
+namespace TotalCMS\Domain\Admin\Form\Builder;
 
 use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormServices;
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;

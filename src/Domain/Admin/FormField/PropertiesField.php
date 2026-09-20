@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use TotalCMS\Domain\Admin\CollectionForm;
+use TotalCMS\Domain\Admin\Form\Builder\CollectionForm;
 use TotalCMS\Domain\Admin\PropertyField\CustomPropertyField;
 use TotalCMS\Domain\Admin\PropertyField\PropertyField;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;

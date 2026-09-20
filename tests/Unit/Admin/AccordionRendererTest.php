@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Domain\Admin\AccordionRenderer;
-use TotalCMS\Domain\Admin\FormGridBuilder;
+use TotalCMS\Domain\Admin\Form\Layout\AccordionRenderer;
+use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 
 function accordionPanel(string $title, string $formgrid = '', string $members = ''): array
 {

@@ -11,7 +11,7 @@ use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
-use TotalCMS\Domain\Admin\AdminTableRenderer;
+use TotalCMS\Domain\Admin\Table\AdminTableRenderer;
 use TotalCMS\Domain\Query\Data\QueryResult;
 use TotalCMS\Domain\Rendering\Service\FragmentRenderer;
 use TotalCMS\Domain\Twig\Service\HtmxRenderer;

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Domain\Admin\CollectionForm;
-use TotalCMS\Domain\Admin\DeckItemForm;
+use TotalCMS\Domain\Admin\Form\Builder\CollectionForm;
+use TotalCMS\Domain\Admin\Form\Builder\DeckItemForm;
 use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Collection\Data\CollectionData;

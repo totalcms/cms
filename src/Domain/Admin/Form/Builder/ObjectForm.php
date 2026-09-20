@@ -1,7 +1,8 @@
 <?php
 
-namespace TotalCMS\Domain\Admin;
+namespace TotalCMS\Domain\Admin\Form\Builder;
 
+use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 

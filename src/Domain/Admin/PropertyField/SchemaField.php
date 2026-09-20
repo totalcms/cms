@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\PropertyField;
 
-use TotalCMS\Domain\Admin\SchemaForm;
+use TotalCMS\Domain\Admin\Form\Builder\SchemaForm;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Factory\Faker\FakerExamples;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;

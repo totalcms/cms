@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Domain\Admin\FormGridBuilder;
+use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 
 describe('FormGridBuilder parsing', function (): void {
 	test('--- is a divider, --- X and --- X --- are headers', function (): void {

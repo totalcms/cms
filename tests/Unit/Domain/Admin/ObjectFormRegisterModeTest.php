@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Admin;
 
 use PHPUnit\Framework\TestCase;
-use TotalCMS\Domain\Admin\ObjectForm;
+use TotalCMS\Domain\Admin\Form\Builder\ObjectForm;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;

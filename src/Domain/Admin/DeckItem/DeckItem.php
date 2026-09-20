@@ -2,7 +2,7 @@
 
 namespace TotalCMS\Domain\Admin\DeckItem;
 
-use TotalCMS\Domain\Admin\FormGridBuilder;
+use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;

@@ -4,7 +4,7 @@ namespace TotalCMS\Action\JobQueue;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Admin\JobQueueStats;
+use TotalCMS\Domain\Admin\Form\Builder\JobQueueStats;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Renderer\RawRenderer;
 use TotalCMS\Support\Config;

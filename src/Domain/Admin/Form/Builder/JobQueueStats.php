@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Domain\Admin;
+namespace TotalCMS\Domain\Admin\Form\Builder;
 
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;

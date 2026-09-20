@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\Form\FormOptions;
-use TotalCMS\Domain\Admin\ObjectForm;
+use TotalCMS\Domain\Admin\Form\Builder\ObjectForm;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;

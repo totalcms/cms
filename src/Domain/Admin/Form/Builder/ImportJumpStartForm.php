@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Admin;
+namespace TotalCMS\Domain\Admin\Form\Builder;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 
-readonly class ImportSchemaForm implements \Stringable
+readonly class ImportJumpStartForm implements \Stringable
 {
 	private SimpleForm $simpleform;
 
 	public function __construct(
 		private string $api,
-		private string $label = 'Import Schema',
+		private string $label = 'Import JumpStart Data',
 		private ?CSRFTokenManager $csrfManager = null,
 	) {
 		$this->simpleform = new SimpleForm(
 			api         : $this->api,
-			route       : '/import/schemas',
+			route       : '/import/jumpstart',
 			method      : 'POST',
 			label       : $this->label,
 			class       : 'import-form',
@@ -29,8 +29,8 @@ readonly class ImportSchemaForm implements \Stringable
 
 	private function fileField(): string
 	{
-		$label = HTMLUtils::element('label', 'Schema File', ['for' => 'schema']);
-		$file  = HTMLUtils::inlineElement('input', ['type'=>'file', 'name'=>'schema']);
+		$label = HTMLUtils::element('label', 'JumpStart JSON File', ['for' => 'jumpstart']);
+		$file  = HTMLUtils::inlineElement('input', ['type'=>'file', 'name'=>'jumpstart']);
 
 		return HTMLUtils::element('div', $label . $file);
 	}

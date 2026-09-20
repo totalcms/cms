@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Domain\Admin\FormGridBuilder;
+use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 
 /**
  * FormGridBuilder translates schema `formgrid` text into CSS grid layouts and

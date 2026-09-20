@@ -1,6 +1,6 @@
 <?php
 
-namespace TotalCMS\Domain\Admin;
+namespace TotalCMS\Domain\Admin\Form\Builder;
 
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;

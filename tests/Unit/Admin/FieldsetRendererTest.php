@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use TotalCMS\Domain\Admin\FieldsetRenderer;
+use TotalCMS\Domain\Admin\Form\Layout\FieldsetRenderer;
 use TotalCMS\Domain\Admin\FormField\FormField;
-use TotalCMS\Domain\Admin\FormGridBuilder;
+use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 

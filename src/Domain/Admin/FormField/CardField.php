@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use TotalCMS\Domain\Admin\FormGridBuilder;
+use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;

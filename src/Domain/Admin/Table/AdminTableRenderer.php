@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Admin;
+namespace TotalCMS\Domain\Admin\Table;
 
 use Odan\Session\PhpSession;
 use TotalCMS\Domain\Auth\Service\AccessControlService;

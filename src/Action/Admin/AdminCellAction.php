@@ -11,7 +11,7 @@ use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
-use TotalCMS\Domain\Admin\InlineEditable;
+use TotalCMS\Domain\Admin\Table\InlineEditable;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Object\Data\ObjectData;

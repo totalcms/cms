@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace TotalCMS\Domain\Admin;
+namespace TotalCMS\Domain\Admin\Table;
+
+use TotalCMS\Domain\Admin\TotalForm;
 
 /**
  * Which field types may be edited straight from the collection table.
