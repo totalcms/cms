@@ -181,7 +181,13 @@ final class FormOptionSources
 	 */
 	public function collectionAndViewOptions(): array
 	{
-		$byLabel = (static fn (array $a, array $b): int => strnatcasecmp($a['label'], $b['label']));
+		// Not strnatcasecmp: its case folding follows LC_CTYPE, so a collection
+		// or view named in a non-Latin script sorted differently depending on
+		// the server's locale. See FormField::compareLabels().
+		$byLabel = (static fn (array $a, array $b): int => strnatcmp(
+			mb_strtolower($a['label'], 'UTF-8'),
+			mb_strtolower($b['label'], 'UTF-8'),
+		));
 
 		$groups      = [];
 		$collections = $this->collectionIdListWithLabels();

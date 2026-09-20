@@ -814,10 +814,32 @@ class FormField
 			$labelA = is_array($a) ? (string)($a['label'] ?? $a['value'] ?? '') : (string)$a;
 			$labelB = is_array($b) ? (string)($b['label'] ?? $b['value'] ?? '') : (string)$b;
 
-			return strnatcasecmp($labelA, $labelB);
+			return self::compareLabels($labelA, $labelB);
 		});
 
 		return $options;
+	}
+
+	/**
+	 * Case-insensitive natural comparison of two option labels that gives the
+	 * same answer on every machine.
+	 *
+	 * `strnatcasecmp()` cannot: it folds case one byte at a time through the C
+	 * library, which consults LC_CTYPE. A UTF-8 locale applies Latin-1 case
+	 * folding to the lead bytes of multi-byte characters and a C/POSIX locale
+	 * does not, so any list with non-ASCII labels — the locale picker most
+	 * visibly — came out in a different order on a developer machine than on a
+	 * CI runner or a bare server. It also silently reordered itself if the
+	 * server's LANG ever changed.
+	 *
+	 * `mb_strtolower()` case-folds by Unicode rules rather than the locale, and
+	 * `strnatcmp()` does no folding of its own, so the pair is deterministic.
+	 * Ordering within a script is by code point, which is the same arbitrary-
+	 * but-stable answer strnatcasecmp gave under C.
+	 */
+	protected static function compareLabels(string $a, string $b): int
+	{
+		return strnatcmp(mb_strtolower($a, 'UTF-8'), mb_strtolower($b, 'UTF-8'));
 	}
 
 	/** @param array<mixed> $array */
