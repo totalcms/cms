@@ -66,7 +66,7 @@ readonly class TotalFormFactory
 	) {
 		$this->api           = $this->services->config->api . '/api';
 		$this->adminForms    = new AdminForms($this, $services, $session, $jobManager, $translationService, $devModeManager);
-		$this->settingsForms = new SettingsForms($this, $settingsSchemaFetcher, $settingsFetcher, $translationService, $extensionDiscovery, $extensionSettingsManager, $extensionManager);
+		$this->settingsForms = new SettingsForms($this, $settingsSchemaFetcher, $settingsFetcher, $translationService, $extensionDiscovery, $extensionSettingsManager, $extensionManager, $services->config);
 		$this->presetForms   = new PresetForms($this, $services);
 		$this->singleFields  = new SingleFieldForms($this);
 	}

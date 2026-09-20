@@ -13,7 +13,7 @@ use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Translation\TranslationService;
-use TotalCMS\Support\PathResolver;
+use TotalCMS\Support\Config;
 
 /**
  * Settings forms: a site settings section, and an extension's permission
@@ -33,6 +33,7 @@ final readonly class SettingsForms
 		private ExtensionDiscovery $extensionDiscovery,
 		private ExtensionSettingsManager $extensionSettingsManager,
 		private ExtensionManager $extensionManager,
+		private Config $config,
 	) {
 	}
 
@@ -46,7 +47,11 @@ final readonly class SettingsForms
 		// Load schema and data using injected services
 		$schema      = $this->settingsSchemaFetcher->getSchema($section);
 		$sectionData = $this->settingsFetcher->loadSection($section);
-		$defaults    = require PathResolver::packageRoot() . '/config/defaults.php';
+		// The EFFECTIVE configuration (defaults -> tcms.php -> settings.json),
+		// not the shipped defaults. Requiring defaults.php here skipped the
+		// merge, so anything set in tcms.php rendered as its default and was
+		// destroyed the first time an operator saved the form.
+		$defaults    = $this->config->mergedSettings();
 		$timezones   = $options['timezones'] ?? timezone_identifiers_list();
 
 		if ($schema === null || !isset($schema['properties']) || !is_array($schema['properties'])) {

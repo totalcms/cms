@@ -77,6 +77,9 @@ class Config
 	/** @var array<string,mixed> */
 	public array $xmlrpc = [];
 
+	/** @var array<string,mixed> The merged settings this Config was built from — see mergedSettings(). */
+	private array $rawSettings = [];
+
 	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
 	 *
@@ -84,6 +87,7 @@ class Config
 	 */
 	public function __construct(array $settings)
 	{
+		$this->rawSettings        = $settings;
 		$this->env                = $settings['env'] ?? 'prod';
 		$this->appEnv             = (string)($settings['appEnv'] ?? '');
 		$this->trustProxyHeaders  = (string)($settings['trustProxyHeaders'] ?? 'auto');
@@ -378,6 +382,27 @@ class Config
 		}
 
 		return new Config($settings);
+	}
+
+	/**
+	 * The merged settings array behind this Config: defaults.php, then
+	 * config/tcms.php, then settings.json — exactly as config/settings.php
+	 * assembled it, and BEFORE the per-property normalization the constructor
+	 * applies. That distinction matters: `i18n.available` is stored as a flat
+	 * list of locale codes here, whereas `$config->i18n['available']` has been
+	 * expanded into `[{code, label, dir}, ...]` by normalizeI18nSettings().
+	 *
+	 * Callers that must reflect what an operator actually configured — the
+	 * settings admin form — read this. Re-requiring defaults.php instead sees
+	 * neither tcms.php nor settings.json, which is how the settings form came
+	 * to display shipped defaults over live configuration and then overwrite
+	 * the latter on save.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function mergedSettings(): array
+	{
+		return $this->rawSettings;
 	}
 
 	/**
