@@ -111,3 +111,18 @@ it('never copies unrelated settings into the file it writes', function (): void 
 	expect(overlayFile())->not->toHaveKey('siteName');
 	expect(overlayFile())->not->toHaveKey('smtp');
 });
+
+it('deletes an owned section from the overlay and leaves the base intact', function (): void {
+	$saver = new SettingsSaver(
+		$this->diContainer->get(TotalCMS\Domain\Settings\Services\SettingsValidator::class),
+		$this->diContainer->get(TotalCMS\Domain\Cache\CacheManager::class),
+		$this->repo,
+	);
+
+	$saver->deleteSection('i18n');
+
+	// Gone from the file that owned it...
+	expect(overlayFile())->not->toHaveKey('i18n');
+	// ...and the shared value is untouched, so the other sites keep theirs.
+	expect(baseFile()['i18n']['available'])->toBe(['en_GB']);
+});
