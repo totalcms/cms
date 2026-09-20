@@ -31,10 +31,11 @@ beforeEach(function (): void {
 /**
  * A repository over the test datadir with $siteId applied.
  *
- * @param array<string,mixed> $base    written to settings.json; [] writes no file
- * @param array<string,mixed> $overlay written to settings-{siteId}.json; [] writes no file
+ * @param array<string,mixed> $base     written to settings.json; [] writes no file
+ * @param array<string,mixed> $overlay  written to settings-{siteId}.json; [] writes no file
+ * @param list<string>        $declared sections this install declares via `siteSettings`
  */
-function overlayRepo(array $base, array $overlay = [], string $siteId = 'italy'): SettingsRepository
+function overlayRepo(array $base, array $overlay = [], string $siteId = 'italy', array $declared = ['i18n', 'general', 'smtp']): SettingsRepository
 {
 	if ($base !== []) {
 		file_put_contents(cmsDataDir() . '.system/settings.json', (string)json_encode($base));
@@ -43,8 +44,9 @@ function overlayRepo(array $base, array $overlay = [], string $siteId = 'italy')
 		file_put_contents(cmsDataDir() . ".system/settings-{$siteId}.json", (string)json_encode($overlay));
 	}
 
-	$config         = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-	$config->siteId = $siteId;
+	$config               = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->siteId       = $siteId;
+	$config->siteSettings = $siteId === '' ? [] : $declared;
 
 	$c = test()->diContainer;
 
@@ -92,18 +94,20 @@ it('expands general into its schema keys and passes other sections through', fun
 	expect($general)->not->toContain('general');
 });
 
-it('reads ownership from the overlay, not the base', function (): void {
+it('answers ownership from the declaration, not from what the overlay file contains', function (): void {
 	$repo = overlayRepo(
 		['smtp' => ['host' => 'shared'], 'siteName' => 'Shared'],
 		['i18n' => ['default' => 'it_IT']],
+		declared: ['i18n'],
 	);
 
 	expect($repo->ownsSection('i18n'))->toBeTrue();
+	// smtp is not declared, even though nothing here says it isn't in the file.
 	expect($repo->ownsSection('smtp'))->toBeFalse();
 });
 
-it('owns general when any single general key is present', function (): void {
-	$repo = overlayRepo(['siteName' => 'Shared'], ['timezone' => 'Europe/Rome']);
+it('owns a declared general section', function (): void {
+	$repo = overlayRepo(['siteName' => 'Shared'], ['timezone' => 'Europe/Rome'], declared: ['general']);
 
 	expect($repo->ownsSection('general'))->toBeTrue();
 });

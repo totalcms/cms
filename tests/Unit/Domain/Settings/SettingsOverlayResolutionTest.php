@@ -22,10 +22,11 @@ use TotalCMS\Support\Config;
 /**
  * Resolve a real Config over temp settings files.
  *
- * @param  array<string,mixed> $base    contents of settings.json
- * @param  array<string,mixed> $overlay contents of settings-{siteId}.json; [] writes no file
+ * @param  array<string,mixed> $base     contents of settings.json
+ * @param  array<string,mixed> $overlay  contents of settings-{siteId}.json; [] writes no file
+ * @param  list<string>        $declared sections this install declares via `siteSettings`
  */
-function resolveWithOverlay(array $base, array $overlay, string $siteId = 'italy'): Config
+function resolveWithOverlay(array $base, array $overlay, string $siteId = 'italy', array $declared = []): Config
 {
 	$root = sys_get_temp_dir() . '/tcms-overlay-' . uniqid();
 	mkdir($root . '/data/.system', 0755, true);
@@ -36,7 +37,7 @@ function resolveWithOverlay(array $base, array $overlay, string $siteId = 'italy
 	}
 	file_put_contents($root . '/tcms.php', sprintf(
 		'<?php return %s;',
-		var_export(['datadir' => $root . '/data', 'siteId' => $siteId], true),
+		var_export(['datadir' => $root . '/data', 'siteId' => $siteId, 'siteSettings' => $declared], true),
 	));
 
 	$previousDocroot = $_SERVER['DOCUMENT_ROOT'] ?? null;
@@ -68,6 +69,7 @@ it('replaces a scalar the overlay declares and leaves the rest alone', function 
 	$config = resolveWithOverlay(
 		['siteName' => 'EU Organization', 'notfound' => '/404'],
 		['siteName' => 'Ministero della Cultura'],
+		declared: ['general'],
 	);
 
 	expect($config->siteName)->toBe('Ministero della Cultura');
@@ -78,6 +80,7 @@ it('replaces a whole bucket rather than merging into it', function (): void {
 	$config = resolveWithOverlay(
 		['i18n' => ['default' => 'en_GB', 'available' => ['en_GB', 'fr_FR']]],
 		['i18n' => ['default' => 'it_IT', 'available' => ['it_IT']]],
+		declared: ['i18n'],
 	);
 
 	expect($config->mergedSettings()['i18n'])->toBe(['default' => 'it_IT', 'available' => ['it_IT']]);
@@ -89,6 +92,7 @@ it('drops keys the overlay omits from a bucket it declares', function (): void {
 	$config = resolveWithOverlay(
 		['i18n' => ['default' => 'en_GB', 'available' => ['en_GB']]],
 		['i18n' => ['available' => ['it_IT']]],
+		declared: ['i18n'],
 	);
 
 	expect($config->mergedSettings()['i18n'])->toBe(['available' => ['it_IT']]);

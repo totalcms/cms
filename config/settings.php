@@ -2,6 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
+use TotalCMS\Domain\Settings\SettingsSections;
 use TotalCMS\Support\PathResolver;
 
 // Defaults
@@ -77,7 +78,14 @@ if ($siteId !== '' && preg_match('/^[a-z0-9-]+$/', $siteId) === 1) {
 		if ($overlayContent !== false) {
 			$overlaySettings = json_decode($overlayContent, true);
 			if (json_last_error() === JSON_ERROR_NONE && is_array($overlaySettings)) {
-				$settings = array_replace($settings, $overlaySettings);
+				// Only the sections this install declares are layered on, so a
+				// key left in the overlay after its section was undeclared is
+				// inert rather than read by something that no longer writes it.
+				$declaredSections = is_array($settings['siteSettings'] ?? null) ? $settings['siteSettings'] : [];
+				$settings         = array_replace(
+					$settings,
+					SettingsSections::filterDeclared($overlaySettings, array_values(array_map('strval', $declaredSections))),
+				);
 			}
 		}
 	}

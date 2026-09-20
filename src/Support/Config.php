@@ -19,6 +19,8 @@ class Config
 	public string $siteName   = '';
 	/** Identifies this install among several sharing one data folder; selects the settings overlay. */
 	public string $siteId     = '';
+	/** @var list<string> Settings sections this install owns — see `siteId`. */
+	public array $siteSettings = [];
 	public string $url        = '';
 	public string $api        = '';
 	public string $locale     = '';
@@ -173,6 +175,13 @@ class Config
 
 		$siteId         = (string)($settings['siteId'] ?? '');
 		$this->siteId   = preg_match('/^[a-z0-9-]+$/', $siteId) === 1 ? $siteId : '';
+
+		// Only meaningful alongside a valid siteId: without an overlay file to
+		// own anything in, a declaration has nothing to point at.
+		$declared           = is_array($settings['siteSettings'] ?? null) ? $settings['siteSettings'] : [];
+		$this->siteSettings = $this->siteId === ''
+			? []
+			: array_values(array_filter(array_map('strval', $declared), static fn (string $s): bool => $s !== ''));
 
 		$presets               = $settings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];

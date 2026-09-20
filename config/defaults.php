@@ -595,6 +595,16 @@ $settings['sync'] = [
 // which is the human-readable label.
 $settings['siteId'] = '';
 
+// Settings sections this install owns when several share one tcms-data folder.
+// Listed sections are read from, and written to, `.system/settings-{siteId}.json`;
+// everything else stays in the shared `.system/settings.json`. Section names are
+// the settings schema basenames — 'i18n', 'general', 'smtp', 'builder', ...
+// Ignored unless `siteId` is also set. Empty = this install owns nothing.
+//
+// Example:
+//   $settings['siteSettings'] = ['i18n', 'general'];
+$settings['siteSettings'] = [];
+
 // Search providers — Phase 5.
 // activeProvider: 'text' (built-in) or any registered provider id (e.g. 'algolia').
 // indexOnSave: when true, T3 pushes object.created/updated events to the active

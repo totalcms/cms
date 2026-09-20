@@ -19,3 +19,9 @@ parameters:
       path: config
     - message: '#Offset .+ does not exist on array#'
       path: config
+    # SettingsRepository's $schemaFetcher constructor parameter is kept
+    # deliberately unused: the container autowires it and existing Feature
+    # tests construct the repository positionally with it, even though
+    # sectionKeys() now delegates to the static SettingsSections helper.
+    - identifier: constructor.unusedParameter
+      path: src/Domain/Settings/Repository/SettingsRepository.php

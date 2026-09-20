@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Settings\Repository;
 
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
+use TotalCMS\Domain\Settings\SettingsSections;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
 use TotalCMS\Support\Config;
@@ -43,9 +44,15 @@ class SettingsRepository extends StorageRepository
 	 */
 	private ?array $sectionsCache = null;
 
+	/**
+	 * @param SettingsSchemaFetcher $schemaFetcher Unused here now that
+	 *        sectionKeys() delegates to SettingsSections — kept as a
+	 *        constructor parameter because the container wires it and
+	 *        existing tests construct the repository with it.
+	 */
 	public function __construct(
 		StorageAdapterInterface $filesystem,
-		private readonly SettingsSchemaFetcher $schemaFetcher,
+		SettingsSchemaFetcher $schemaFetcher,
 		private readonly Config $config,
 	) {
 		parent::__construct($filesystem);
@@ -76,7 +83,10 @@ class SettingsRepository extends StorageRepository
 	 */
 	public function load(): array
 	{
-		return array_replace($this->loadBase(), $this->loadOverlay());
+		return array_replace(
+			$this->loadBase(),
+			SettingsSections::filterDeclared($this->loadOverlay(), $this->config->siteSettings),
+		);
 	}
 
 	/**
@@ -124,26 +134,18 @@ class SettingsRepository extends StorageRepository
 	 */
 	public function sectionKeys(string $section): array
 	{
-		return $section === 'general'
-			? array_keys($this->schemaFetcher->getProperties('general'))
-			: [$section];
+		return SettingsSections::keysFor($section);
 	}
 
-	/** Does the overlay own this section? Any one of its keys is enough. */
+	/**
+	 * Does this install own the section? Answered by the `siteSettings`
+	 * declaration in its tcms.php, NOT by what the overlay file happens to
+	 * contain — a declared section is owned from boot, before anything has
+	 * been saved into it.
+	 */
 	public function ownsSection(string $section): bool
 	{
-		if (!$this->hasOverlay()) {
-			return false;
-		}
-
-		$overlay = $this->loadOverlay();
-		foreach ($this->sectionKeys($section) as $key) {
-			if (array_key_exists($key, $overlay)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->hasOverlay() && SettingsSections::isDeclared($section, $this->config->siteSettings);
 	}
 
 	/**
