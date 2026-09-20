@@ -274,7 +274,7 @@ return [
 			['title' => 'Impersonation',     'path' => 'operations/impersonation'],
 			['title' => 'Server Sizing',     'path' => 'operations/server-sizing'],
 			['title' => 'Filesystem',        'path' => 'operations/filesystem'],
-			['title' => 'Shared Data Folders', 'path' => 'operations/shared-data'],
+			['title' => 'Shared Data',       'path' => 'operations/shared-data'],
 			['title' => 'Sync',              'path' => 'operations/sync'],
 			['title' => 'Git-First Templates', 'path' => 'operations/git-first-templates'],
 			['title' => 'Cron URLs',         'path' => 'operations/cron-urls'],

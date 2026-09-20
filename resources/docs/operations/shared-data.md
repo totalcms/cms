@@ -1,5 +1,5 @@
 ---
-title: "Shared Data Folders"
+title: "Shared Data"
 description: "Run several Total CMS installs against one tcms-data folder: what they share, what stays per-install, caching, and per-site settings overlays."
 audience: advanced
 updated: 2026-09-20
@@ -9,7 +9,7 @@ related:
   - operations/sync
 ---
 
-# Shared Data Folders
+# Shared Data
 
 Several Total CMS installs can point at one `tcms-data` folder. A set of
 regional sites under one organization, a staging domain beside a live one, a
