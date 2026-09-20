@@ -32,6 +32,14 @@
 	--totalform-label-color  : var(--totalform-darkgray);
 	--totalform-help-color   : var(--totalform-darkgray);
 	--totalform-text-color   : var(--totalform-nearblack);
+	// Long-form prose (docs). Sits one step back from --totalform-text-color so
+	// a page of body copy reads as hierarchy rather than a wall of full-contrast
+	// text; headings keep --totalform-text-color. Unlike the other semantic
+	// tokens this one is redeclared per mode, because the grayscale ramp
+	// inverts and the two modes need different primitives to land at a similar
+	// contrast (~12:1 light, ~8:1 dark). --totalform-gray would be only 3.9:1
+	// on white, below WCAG AA, so light mode cannot use it.
+	--totalform-doc-text     : var(--totalform-darkgray);
 	--totalform-background   : var(--totalform-purewhite);
 	--totalform-icon-bg      : var(--totalform-nearwhite);
 	--totalform-icon-color   : var(--totalform-darkgray);
@@ -64,6 +72,7 @@
 		--totalform-nearblack  : 90% 0 0;
 		--totalform-black      : 100% 0 0;
 
+		--totalform-doc-text   : var(--totalform-gray);
 		--totalform-shadow     : 0% 0 0 / 0.5;
 	}
 }
@@ -80,6 +89,7 @@
 	--totalform-nearblack  : 90% 0 0;
 	--totalform-black      : 100% 0 0;
 
+	--totalform-doc-text   : var(--totalform-gray);
 	--totalform-shadow     : 0% 0 0 / 0.5;
 }
 

@@ -533,10 +533,36 @@ body {
 	}
 }
 
+// Documentation viewer (AdminDocsAction -> admin/docs.twig). This block, the
+// .doc-breadcrumb block below, the .docs-subgroup rules inside
+// .dash-content-sidebar, and the .doc-content rule in the max-width:768px
+// section are ALL of the docs styling — there is no separate docs stylesheet.
+// A css/docs.scss existed until 2026-09-20 but had been dead since the viewer
+// moved inside the dashboard layout; it was compiled, never loaded, and only
+// misled people grepping for these rules.
 .doc-content {
 	display      : block;
 	padding-left : 4rem;
 	anchor-name  : --doc-content;
+
+	// Long-form prose sits one step back from the headings, so a dense page
+	// reads as hierarchy instead of a wall of full-contrast text. Headings,
+	// links, inline code and table headers deliberately keep
+	// --totalform-text-color. See --totalform-doc-text in variables.scss for
+	// why it is redeclared per mode rather than resolving through a primitive.
+	p, li, td, blockquote, dd {
+		color : oklch(var(--totalform-doc-text));
+	}
+
+	// `.dash-main-content h1` styles the h1 as a muted page label, which is
+	// right for a dashboard screen and wrong for a document title — here the
+	// h1 has to lead the hierarchy. In dark mode it was actively inverted:
+	// mediumgray is 60% there, dimmer than doc-text at 70%, so the heading
+	// read quieter than the body under it. `&.dash-main-content` makes this
+	// (0,2,1) so it wins on specificity rather than on source order.
+	&.dash-main-content h1 {
+		color : oklch(var(--totalform-text-color));
+	}
 
 	> *:not(pre):not(div):not(table) {
 		max-width : 65ch;
@@ -546,7 +572,7 @@ body {
 	// globally — this rule only targets `code` that is NOT inside a `pre`.
 	:not(pre) > code {
 		background    : oklch(var(--totalform-nearwhite));
-		border        : 1px solid oklch(var(--totalform-border-color));
+		// border        : 1px solid oklch(var(--totalform-border-color));
 		padding       : 0.0625em 0.4em;
 		border-radius : 4px;
 		font-size     : 0.875em;
