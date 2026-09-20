@@ -39,6 +39,7 @@
 | Colors (OKLCH manipulation) | `twig/colors.md` | Color fields store hex and OKLCH; filters adjust lightness/chroma/hue. |
 | Barcodes and QR codes | `twig/barcodes.md`, `twig/qrcodes.md` | Edition-gated. |
 | Localization | `twig/locale.md`, `twig/localization.md` | Localized field types are Pro; full i18n routing is planned, not shipped. |
+| Shared data folder | `operations/shared-data-cache.md`, `operations/shared-data-settings.md` | Several installs on one tcms-data; `siteId` gives one its own settings overlay. |
 
 ## Site Builder
 

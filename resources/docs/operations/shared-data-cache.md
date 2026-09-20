@@ -1,18 +1,24 @@
 ---
-title: "Sharing One Data Folder"
+title: "Shared Data: Caching"
 description: "Run several Total CMS installs against one tcms-data folder without serving stale content."
 audience: advanced
 updated: 2026-08-05
 related:
+  - operations/shared-data
+  - operations/shared-data-settings
   - operations/filesystem
   - operations/deployment
 ---
 
-# Sharing One Data Folder
+# Shared Data: Caching
 
 Several Total CMS installs can point at a single `tcms-data` folder — a staging
 domain beside a live one, or a set of regional domains serving identical content.
 Every install then reads the same collections, objects, and schemas.
+
+For what else the installs share — and what to watch out for — see
+[Shared Data Folders](shared-data). To give each install its own value for
+some settings, see [Per-Site Settings](shared-data-settings).
 
 Caching needs one setting changed for this to work.
 
