@@ -20,7 +20,7 @@
 | RSS / Atom feeds | `twig/feeds.md` | `cms.feed.rss()`, `cms.feed.atom()`; a `podcast` block on either adds the iTunes / Podcast Index tags. |
 | Podcasts (bundled extension) | `collections/podcast.md`, `extensions/podcast.md` | Enable `totalcms/podcast`; `podcast` + `podcast-episode` schemas, the show names its episodes collection; feed at `/api/ext/totalcms/podcast/feed[/{show}]` or `podcast_feed(show)` in Twig. |
 | Public forms | `forms/overview.md` | `cms.form.*` on a public page needs only `cms.assetsHead()`/`assetsBody()`: the `forms` core frontend feature (forms.css + forms.js, <50 KB gz) carries the form runtime and light fields, heavy fields load on demand; `adminAssets*` helpers no longer needed for forms. |
-| WebMCP (bundled extension, experimental) | `extensions/webmcp.md` | Enable `totalcms/webmcp`; `webmcp_form(collection, {name, description, params, autosubmit})` renders an agent-callable form (declarative WebMCP attributes, Chrome 149+ origin trial); listed collections offered through `search_content`/`get_content` read tools (collection enum; visitors see public-read ones, a signed-in operator all). Never on registration/login/delete forms. |
+| WebMCP (bundled extension, experimental) | `extensions/webmcp.md` | Enable `totalcms/webmcp`; `webmcp_form(collection, {name, description, params, autosubmit})` renders an agent-callable form (declarative WebMCP attributes: `toolname`/`tooldescription` on the form, `toolparamtitle`/`toolparamdescription` from each field's label + help; Chrome 149+ origin trial); listed collections offered through `search_content`/`get_content` read tools (collection enum; visitors see public-read ones, a signed-in operator all). Never on registration/login/delete forms. |
 
 ## Rendering
 

@@ -25,7 +25,8 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  *                 Off by default, and never on a form that changes data
  *                 the operator cares about
  * - `params`      map of property → description, overriding the schema's
- *                 help text for that control
+ *                 help text for that control. A `{title, description}` pair
+ *                 overrides the label as well
  *
  * A registration form (`register: true`) is refused outright: public
  * registration auto-logs the new user in, and an agent-callable,
@@ -83,14 +84,35 @@ final readonly class WebMcpFormBuilder
 
 		$fieldOptions = [];
 		foreach ($this->schemas->fetchSchemaForCollection($collection)->properties as $property => $schema) {
-			$override    = $overrides[$property] ?? null;
-			$description = is_string($override)
-				? WebMcpAttributes::description($override)
-				: WebMcpAttributes::paramDescription(is_array($schema) ? $schema : []);
-			if ($description === '') {
+			$schema   = is_array($schema) ? $schema : [];
+			$override = $overrides[$property] ?? null;
+
+			// The label names the parameter, the help text explains it. A
+			// string override replaces the description; a map can replace
+			// either half.
+			$title       = WebMcpAttributes::paramTitle($schema);
+			$description = WebMcpAttributes::paramDescription($schema);
+
+			if (is_string($override)) {
+				$description = WebMcpAttributes::description($override);
+			} elseif (is_array($override)) {
+				if (is_string($override['title'] ?? null)) {
+					$title = WebMcpAttributes::description($override['title']);
+				}
+				if (is_string($override['description'] ?? null)) {
+					$description = WebMcpAttributes::description($override['description']);
+				}
+			}
+
+			$params = array_filter([
+				WebMcpAttributes::PARAM_TITLE       => $title,
+				WebMcpAttributes::PARAM_DESCRIPTION => $description,
+			], static fn (string $value): bool => $value !== '');
+
+			if ($params === []) {
 				continue;
 			}
-			$fieldOptions[$property] = ['settings' => ['attributes' => [WebMcpAttributes::PARAM_DESCRIPTION => $description]]];
+			$fieldOptions[$property] = ['settings' => ['attributes' => $params]];
 		}
 
 		return $this->forms->builder($collection, $formOptions)->autoBuild('', $fieldOptions);

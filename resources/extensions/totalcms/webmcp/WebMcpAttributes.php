@@ -16,12 +16,14 @@ namespace TotalCMS\Bundled\WebMcp;
  */
 final class WebMcpAttributes
 {
-	public const FORM_NAME        = 'toolname';
-	public const FORM_DESCRIPTION = 'tooldescription';
-	public const FORM_AUTOSUBMIT  = 'toolautosubmit';
+	public const FORM_NAME         = 'toolname';
+	public const FORM_DESCRIPTION  = 'tooldescription';
+	public const FORM_AUTOSUBMIT   = 'toolautosubmit';
+	public const PARAM_TITLE       = 'toolparamtitle';
 	public const PARAM_DESCRIPTION = 'toolparamdescription';
 
 	public const NAME_MAX_LENGTH        = 64;
+	public const TITLE_MAX_LENGTH       = 64;
 	public const DESCRIPTION_MAX_LENGTH = 200;
 
 	/**
@@ -51,20 +53,30 @@ final class WebMcpAttributes
 	}
 
 	/**
+	 * A parameter's title from its schema property: the label, which is the
+	 * name a person reading the form sees, shortened to 64 characters.
+	 *
+	 * @param array<string,mixed> $property
+	 */
+	public static function paramTitle(array $property): string
+	{
+		$label = $property['label'] ?? '';
+
+		return is_string($label) ? mb_substr(self::description($label), 0, self::TITLE_MAX_LENGTH) : '';
+	}
+
+	/**
 	 * A parameter's description from its schema property: the help text,
-	 * else the label, else nothing.
+	 * else nothing. The label is the title, not the description — a schema
+	 * with only a label says what the field is called, not what to put in
+	 * it, and repeating it in both attributes tells an agent nothing twice.
 	 *
 	 * @param array<string,mixed> $property
 	 */
 	public static function paramDescription(array $property): string
 	{
-		foreach (['help', 'label'] as $key) {
-			$text = $property[$key] ?? '';
-			if (is_string($text) && self::description($text) !== '') {
-				return self::description($text);
-			}
-		}
+		$help = $property['help'] ?? '';
 
-		return '';
+		return is_string($help) ? self::description($help) : '';
 	}
 }

@@ -39,10 +39,10 @@ This is `cms.form.builder('contact')` with the WebMCP attributes on the form tag
 |---|---|---|
 | `name` | `create_{collection}`, or `update_{collection}` with an `id` | The tool name the agent calls. Lower-cased, `a–z 0–9 _`, at most 64 characters |
 | `description` | "Create a new {singular label} in the {collection name} collection" | What the tool does, in the agent's words. Markup stripped, 200 characters |
-| `params` | the schema's `help`, else `label`, per property | Per-property descriptions, e.g. `{params: {mood: 'One word for how you feel'}}` |
+| `params` | title from the schema's `label`, description from its `help` | Per-property overrides: a string replaces the description, `{title: …, description: …}` replaces either, e.g. `{params: {mood: 'One word for how you feel'}}` |
 | `autosubmit` | `false` | Let the agent submit without the visitor confirming. See Security |
 
-Every other option passes through to `cms.form.builder()`, so `id`, `class`, `useFormGrid` and the rest work as they do there. The browser synthesizes the tool's input schema from the form itself: each control's `name` is a property, `required`, `type`, `min`, `max`, `step` and `pattern` become constraints, a `<select>` becomes an enum. The descriptions the extension adds are what the agent reads when it decides what to put where.
+Every other option passes through to `cms.form.builder()`, so `id`, `class`, `useFormGrid` and the rest work as they do there. The browser synthesizes the tool's input schema from the form itself: each control's `name` is a property, `required`, `type`, `min`, `max`, `step` and `pattern` become constraints, a `<select>` becomes an enum. On top of that the extension puts `toolparamtitle` and `toolparamdescription` on every control — the field's label and its help text, the same two strings a person filling the form reads. They are what the agent reads when it decides what to put where, so a schema whose fields carry real help text produces a better tool than one whose fields are bare. A field with no help gets a title and no description rather than its label twice.
 
 When an agent submits, the bundled script answers with the form's own save result: `{ok: true, id: "…", message: "Saved"}`, or `{ok: false, error: "…"}` when validation or the API refused it. The visitor sees the same status banner a human submit shows. While an agent is driving a form it carries a `webmcp-active` class, so you can style it.
 
