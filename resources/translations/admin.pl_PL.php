@@ -385,6 +385,8 @@ return [
 	'settings.smtp_test_ph'            => 'twoj@email.com',
 	'settings.smtp_test_help'          => 'Wprowadź adres e-mail, na który chcesz otrzymać wiadomość testową.',
 	'settings.smtp_test_btn'           => 'Wyślij testowy e-mail',
+	'settings.scope_site'              => 'Specyficzne dla witryny — zapisane w %file%',
+	'settings.scope_shared'            => 'Współdzielone przez wszystkie witryny używające tego folderu danych',
 	// ── Mailer ──────────────────────────────────────────────────────────────
 	'mailer.filter'                      => 'Filtruj e-maile',
 	'mailer.title'                       => 'Szablony e-mail',

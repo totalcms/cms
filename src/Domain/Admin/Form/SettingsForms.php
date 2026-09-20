@@ -10,6 +10,7 @@ use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
+use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Translation\TranslationService;
@@ -34,6 +35,7 @@ final readonly class SettingsForms
 		private ExtensionSettingsManager $extensionSettingsManager,
 		private ExtensionManager $extensionManager,
 		private Config $config,
+		private SettingsRepository $settingsRepository,
 	) {
 	}
 
@@ -125,7 +127,21 @@ final readonly class SettingsForms
 			$formfields .= $this->forms->field($fieldType, $fieldName, $fieldSettings);
 		}
 
-		return $this->forms->totalform('/admin/settings/' . $section, $formfields, [
+		// Which file a save lands in, stated on the page. Only meaningful when
+		// this install shares its data folder with others — a single-site
+		// install renders nothing here, which is what keeps every settings
+		// golden snapshot unchanged.
+		$scope = '';
+		if ($this->settingsRepository->hasOverlay()) {
+			$scope = $this->settingsRepository->ownsSection($section)
+				? $this->translationService->trans('settings.scope_site', [
+					'%file%' => $this->settingsRepository->overlayFilename(),
+				])
+				: $this->translationService->trans('settings.scope_shared');
+			$scope = '<p class="settings-scope">' . htmlspecialchars($scope, ENT_QUOTES, 'UTF-8') . '</p>';
+		}
+
+		return $this->forms->totalform('/admin/settings/' . $section, $scope . $formfields, [
 			'method'      => 'POST',
 			'save'        => $this->translationService->trans('btn.save_settings'),
 			'class'       => 'help-on-hover help-box',

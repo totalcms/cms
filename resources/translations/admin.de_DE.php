@@ -385,6 +385,8 @@ return [
 	'settings.smtp_test_ph'            => 'ihre@email.de',
 	'settings.smtp_test_help'          => 'Geben Sie die E-Mail-Adresse ein, an die Sie die Test-E-Mail erhalten möchten.',
 	'settings.smtp_test_btn'           => 'Test-E-Mail senden',
+	'settings.scope_site'              => 'Website-spezifisch — gespeichert in %file%',
+	'settings.scope_shared'            => 'Von allen Websites in diesem Datenordner gemeinsam genutzt',
 	// ── Mailer ──────────────────────────────────────────────────────────────
 	'mailer.filter'                      => 'E-Mails filtern',
 	'mailer.title'                       => 'E-Mail-Vorlagen',

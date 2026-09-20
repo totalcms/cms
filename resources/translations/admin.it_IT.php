@@ -385,6 +385,8 @@ return [
 	'settings.smtp_test_ph'            => 'tua@email.com',
 	'settings.smtp_test_help'          => 'Inserisci l\'indirizzo email a cui vuoi ricevere l\'email di test.',
 	'settings.smtp_test_btn'           => 'Invia email di test',
+	'settings.scope_site'              => 'Specifico del sito — salvato in %file%',
+	'settings.scope_shared'            => 'Condiviso da tutti i siti che usano questa cartella dati',
 	// ── Mailer ──────────────────────────────────────────────────────────────
 	'mailer.filter'                      => 'Filtra email',
 	'mailer.title'                       => 'Template email',

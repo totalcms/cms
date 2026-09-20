@@ -385,6 +385,8 @@ return [
 	'settings.smtp_test_ph'            => 'su@correo.com',
 	'settings.smtp_test_help'          => 'Introduzca la dirección de correo donde desea recibir el correo de prueba.',
 	'settings.smtp_test_btn'           => 'Enviar correo de prueba',
+	'settings.scope_site'              => 'Específico del sitio — guardado en %file%',
+	'settings.scope_shared'            => 'Compartido por todos los sitios que usan esta carpeta de datos',
 	// ── Mailer ──────────────────────────────────────────────────────────────
 	'mailer.filter'                      => 'Filtrar correos',
 	'mailer.title'                       => 'Plantillas de correo',

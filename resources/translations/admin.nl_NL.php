@@ -385,6 +385,8 @@ return [
 	'settings.smtp_test_ph'            => 'uw@email.nl',
 	'settings.smtp_test_help'          => 'Voer het e-mailadres in waar u de test-e-mail wilt ontvangen.',
 	'settings.smtp_test_btn'           => 'Test-e-mail verzenden',
+	'settings.scope_site'              => 'Sitespecifiek — opgeslagen in %file%',
+	'settings.scope_shared'            => 'Gedeeld door alle sites die deze datamap gebruiken',
 	// ── Mailer ──────────────────────────────────────────────────────────────
 	'mailer.filter'                      => 'E-mails filteren',
 	'mailer.title'                       => 'E-mailsjablonen',

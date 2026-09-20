@@ -385,6 +385,8 @@ return [
 	'settings.smtp_test_ph'            => 'your@email.com',
 	'settings.smtp_test_help'          => 'Enter the email address where you want to receive the test email.',
 	'settings.smtp_test_btn'           => 'Send Test Email',
+	'settings.scope_site'              => 'Site-specific — saved to %file%',
+	'settings.scope_shared'            => 'Shared by every site using this data folder',
 	// ── Mailer ──────────────────────────────────────────────────────────────
 	'mailer.filter'                      => 'Filter Emails',
 	'mailer.title'                       => 'Email Templates',

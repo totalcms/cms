@@ -27,6 +27,7 @@ use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\Schema\Service\SchemaFactory;
+use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Template\Repository\TemplateRepository;
@@ -71,10 +72,11 @@ readonly class TotalFormFactory
 		ExtensionManager $extensionManager,
 		DevModeManager $devModeManager,
 		private FormActionRegistry $formActionRegistry,
+		SettingsRepository $settingsRepository,
 	) {
 		$this->api           = $this->services->config->api . '/api';
 		$this->adminForms    = new AdminForms($this, $services, $session, $jobManager, $translationService, $devModeManager);
-		$this->settingsForms = new SettingsForms($this, $settingsSchemaFetcher, $settingsFetcher, $translationService, $extensionDiscovery, $extensionSettingsManager, $extensionManager, $services->config);
+		$this->settingsForms = new SettingsForms($this, $settingsSchemaFetcher, $settingsFetcher, $translationService, $extensionDiscovery, $extensionSettingsManager, $extensionManager, $services->config, $settingsRepository);
 		$this->presetForms   = new PresetForms($this, $services);
 		$this->singleFields  = new SingleFieldForms($this);
 	}
