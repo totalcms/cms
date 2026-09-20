@@ -39,7 +39,6 @@
 | Colors (OKLCH manipulation) | `twig/colors.md` | Color fields store hex and OKLCH; filters adjust lightness/chroma/hue. |
 | Barcodes and QR codes | `twig/barcodes.md`, `twig/qrcodes.md` | Edition-gated. |
 | Localization | `twig/locale.md`, `twig/localization.md` | Localized field types are Pro; full i18n routing is planned, not shipped. |
-| Shared data folder | `operations/shared-data-cache.md`, `operations/shared-data-settings.md` | Several installs on one tcms-data; `siteId` gives one its own settings overlay. |
 
 ## Site Builder
 
@@ -79,5 +78,6 @@
 | Configuration (`config/tcms.php`) | `operations/configuration.md` | Deep-merged: specify only the keys you change. |
 | Deployment, Apache/Nginx, cron URLs | `operations/deployment.md`, `operations/apache.md`, `operations/nginx.md`, `operations/cron-urls.md` | `tcms deploy` after each deploy: wipes the DI container, clears caches, runs migrations. |
 | Sync (`push`/`pull`) | `operations/sync.md` | See `references/going-live.md`. Only schemas, templates, pages, settings and objects of allow-listed collections travel. |
+| Shared data folder | `operations/shared-data-cache.md`, `operations/shared-data-settings.md` | Several installs on one tcms-data; `siteId` gives one its own settings overlay. |
 | Updates | `operations/updates.md` | `update:check` / `update:apply` / `update:rollback` for zip installs; Composer installs update via Composer. |
 | Security, impersonation, licences | `operations/security.md`, `operations/impersonation.md`, `operations/licenses.md` | Edition gating is enforced at the route level; a feature missing from the API is usually an edition, not a bug. |
