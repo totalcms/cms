@@ -53,6 +53,7 @@ final class LocaleRegistry
 		'af_ZA' => ['label' => 'Afrikaans',                'english' => 'Afrikaans (South Africa)', 'dir' => 'ltr'],
 		'ar'    => ['label' => 'العربية',                  'english' => 'Arabic',                  'dir' => 'rtl'],
 		'ar_SA' => ['label' => 'العربية (SA)',             'english' => 'Arabic (Saudi Arabia)',   'dir' => 'rtl'],
+		'bg_BG' => ['label' => 'Български',                'english' => 'Bulgarian (Bulgaria)',    'dir' => 'ltr'],
 		'bn_BD' => ['label' => 'বাংলা',                     'english' => 'Bengali (Bangladesh)',    'dir' => 'ltr'],
 		'cs_CZ' => ['label' => 'Čeština',                  'english' => 'Czech (Czechia)',         'dir' => 'ltr'],
 		'da_DK' => ['label' => 'Dansk',                    'english' => 'Danish (Denmark)',        'dir' => 'ltr'],
@@ -70,13 +71,16 @@ final class LocaleRegistry
 		'es'    => ['label' => 'Español',                  'english' => 'Spanish',                 'dir' => 'ltr'],
 		'es_ES' => ['label' => 'Español (ES)',             'english' => 'Spanish (Spain)',         'dir' => 'ltr'],
 		'es_MX' => ['label' => 'Español (MX)',             'english' => 'Spanish (Mexico)',        'dir' => 'ltr'],
+		'et_EE' => ['label' => 'Eesti',                    'english' => 'Estonian (Estonia)',      'dir' => 'ltr'],
 		'fa_IR' => ['label' => 'فارسی',                    'english' => 'Persian (Iran)',          'dir' => 'rtl'],
 		'fi_FI' => ['label' => 'Suomi',                    'english' => 'Finnish (Finland)',       'dir' => 'ltr'],
 		'fr'    => ['label' => 'Français',                 'english' => 'French',                  'dir' => 'ltr'],
 		'fr_CA' => ['label' => 'Français (CA)',            'english' => 'French (Canada)',         'dir' => 'ltr'],
 		'fr_FR' => ['label' => 'Français (FR)',            'english' => 'French (France)',         'dir' => 'ltr'],
+		'ga_IE' => ['label' => 'Gaeilge',                  'english' => 'Irish (Ireland)',         'dir' => 'ltr'],
 		'he_IL' => ['label' => 'עברית',                    'english' => 'Hebrew (Israel)',         'dir' => 'rtl'],
 		'hi_IN' => ['label' => 'हिन्दी',                     'english' => 'Hindi (India)',           'dir' => 'ltr'],
+		'hr_HR' => ['label' => 'Hrvatski',                 'english' => 'Croatian (Croatia)',      'dir' => 'ltr'],
 		'hu_HU' => ['label' => 'Magyar',                   'english' => 'Hungarian (Hungary)',     'dir' => 'ltr'],
 		'id_ID' => ['label' => 'Bahasa Indonesia',         'english' => 'Indonesian (Indonesia)',  'dir' => 'ltr'],
 		// `it` (bare) intentionally omitted — Italian-of-Italy is the universal
@@ -87,7 +91,10 @@ final class LocaleRegistry
 		'jv_ID' => ['label' => 'Basa Jawa',                'english' => 'Javanese (Indonesia)',    'dir' => 'ltr'],
 		'km_KH' => ['label' => 'ខ្មែរ',                      'english' => 'Khmer (Cambodia)',        'dir' => 'ltr'],
 		'ko_KR' => ['label' => '한국어',                    'english' => 'Korean (South Korea)',    'dir' => 'ltr'],
+		'lt_LT' => ['label' => 'Lietuvių',                 'english' => 'Lithuanian (Lithuania)',  'dir' => 'ltr'],
+		'lv_LV' => ['label' => 'Latviešu',                 'english' => 'Latvian (Latvia)',        'dir' => 'ltr'],
 		'ms_MY' => ['label' => 'Bahasa Melayu',            'english' => 'Malay (Malaysia)',        'dir' => 'ltr'],
+		'mt_MT' => ['label' => 'Malti',                    'english' => 'Maltese (Malta)',         'dir' => 'ltr'],
 		'nl_NL' => ['label' => 'Nederlands',               'english' => 'Dutch (Netherlands)',     'dir' => 'ltr'],
 		'no_NO' => ['label' => 'Norsk',                    'english' => 'Norwegian (Norway)',      'dir' => 'ltr'],
 		'pa_IN' => ['label' => 'ਪੰਜਾਬੀ',                     'english' => 'Punjabi (India)',         'dir' => 'ltr'],
@@ -97,6 +104,11 @@ final class LocaleRegistry
 		'pt_PT' => ['label' => 'Português (PT)',           'english' => 'Portuguese (Portugal)',   'dir' => 'ltr'],
 		'ro_RO' => ['label' => 'Română',                   'english' => 'Romanian (Romania)',      'dir' => 'ltr'],
 		'ru_RU' => ['label' => 'Русский',                 'english' => 'Russian (Russia)',        'dir' => 'ltr'],
+		// Slovak and Slovenian are different languages whose native names differ
+		// by one character cluster — `Slovenčina` vs `Sloven**šč**ina`. Neither
+		// is a typo of the other; LocaleRegistryTest pins both.
+		'sk_SK' => ['label' => 'Slovenčina',               'english' => 'Slovak (Slovakia)',       'dir' => 'ltr'],
+		'sl_SI' => ['label' => 'Slovenščina',              'english' => 'Slovenian (Slovenia)',    'dir' => 'ltr'],
 		// Serbian is the only language in this registry that genuinely needs a
 		// script subtag — speakers in Serbia routinely write the same language
 		// in both Latin and Cyrillic. `sr_RS` alone is ambiguous per BCP-47.

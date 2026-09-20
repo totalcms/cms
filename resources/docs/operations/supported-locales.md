@@ -26,11 +26,15 @@ The settings UI picker appends the full POSIX code in square brackets to every l
 
 ## Registry
 
+All 24 official languages of the European Union are covered, so an EU public-sector
+site can use any of them for content localization.
+
 | Code | Native name (UI) | English name | Direction |
 |------|------------------|--------------|-----------|
 | `af_ZA` | Afrikaans | Afrikaans (South Africa) | LTR |
 | `ar` | العربية | Arabic | RTL |
 | `ar_SA` | العربية (SA) | Arabic (Saudi Arabia) | RTL |
+| `bg_BG` | Български | Bulgarian (Bulgaria) | LTR |
 | `bn_BD` | বাংলা | Bengali (Bangladesh) | LTR |
 | `cs_CZ` | Čeština | Czech (Czechia) | LTR |
 | `da_DK` | Dansk | Danish (Denmark) | LTR |
@@ -48,13 +52,16 @@ The settings UI picker appends the full POSIX code in square brackets to every l
 | `es` | Español | Spanish | LTR |
 | `es_ES` | Español (ES) | Spanish (Spain) | LTR |
 | `es_MX` | Español (MX) | Spanish (Mexico) | LTR |
+| `et_EE` | Eesti | Estonian (Estonia) | LTR |
 | `fa_IR` | فارسی | Persian (Iran) | RTL |
 | `fi_FI` | Suomi | Finnish (Finland) | LTR |
 | `fr` | Français | French | LTR |
 | `fr_CA` | Français (CA) | French (Canada) | LTR |
 | `fr_FR` | Français (FR) | French (France) | LTR |
+| `ga_IE` | Gaeilge | Irish (Ireland) | LTR |
 | `he_IL` | עברית | Hebrew (Israel) | RTL |
 | `hi_IN` | हिन्दी | Hindi (India) | LTR |
+| `hr_HR` | Hrvatski | Croatian (Croatia) | LTR |
 | `hu_HU` | Magyar | Hungarian (Hungary) | LTR |
 | `id_ID` | Bahasa Indonesia | Indonesian (Indonesia) | LTR |
 | `it_IT` | Italiano | Italian (Italy) | LTR |
@@ -62,7 +69,10 @@ The settings UI picker appends the full POSIX code in square brackets to every l
 | `jv_ID` | Basa Jawa | Javanese (Indonesia) | LTR |
 | `km_KH` | ខ្មែរ | Khmer (Cambodia) | LTR |
 | `ko_KR` | 한국어 | Korean (South Korea) | LTR |
+| `lt_LT` | Lietuvių | Lithuanian (Lithuania) | LTR |
+| `lv_LV` | Latviešu | Latvian (Latvia) | LTR |
 | `ms_MY` | Bahasa Melayu | Malay (Malaysia) | LTR |
+| `mt_MT` | Malti | Maltese (Malta) | LTR |
 | `nl_NL` | Nederlands | Dutch (Netherlands) | LTR |
 | `no_NO` | Norsk | Norwegian (Norway) | LTR |
 | `pa_IN` | ਪੰਜਾਬੀ | Punjabi (India) | LTR |
@@ -72,6 +82,8 @@ The settings UI picker appends the full POSIX code in square brackets to every l
 | `pt_PT` | Português (PT) | Portuguese (Portugal) | LTR |
 | `ro_RO` | Română | Romanian (Romania) | LTR |
 | `ru_RU` | Русский | Russian (Russia) | LTR |
+| `sk_SK` | Slovenčina | Slovak (Slovakia) | LTR |
+| `sl_SI` | Slovenščina | Slovenian (Slovenia) | LTR |
 | `sr_Latn_RS` | Srpski (Latn) | Serbian (Latin, Serbia) | LTR |
 | `sr_Cyrl_RS` | Српски (Ћирилица) | Serbian (Cyrillic, Serbia) | LTR |
 | `sv_SE` | Svenska | Swedish (Sweden) | LTR |
