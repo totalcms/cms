@@ -24,7 +24,7 @@ class PullCommand extends BaseCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$sync = new SyncConfig($this->totalcms->config->datadir);
+		$sync = new SyncConfig($this->totalcms->config->sync);
 		if (!$sync->isConfigured()) {
 			return $this->outputError($input, $output, 'Sync not configured. Set the production URL and API key in Settings > Sync.');
 		}

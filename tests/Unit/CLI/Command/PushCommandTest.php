@@ -21,11 +21,14 @@ beforeEach(function (): void {
 
 	$this->tmpDir = sys_get_temp_dir() . '/tcms-push-test-' . uniqid();
 	mkdir($this->tmpDir . '/.system', 0755, true);
-	file_put_contents($this->tmpDir . '/.system/settings.json', (string)json_encode([
-		'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key'],
-	]));
 
-	$this->totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	// The remote comes from the resolved `sync` config bucket (defaults ->
+	// tcms.php -> settings.json), not from settings.json directly, so tests
+	// configure it here rather than by writing a file.
+	$this->totalcms->config = createTestConfig([
+		'datadir' => $this->tmpDir,
+		'sync'    => ['url' => 'https://production.example.com', 'key' => 'test-key'],
+	]);
 
 	$this->jumpstart = new JumpStartData('Test', 'Test export');
 	$this->jumpstart->addSchema(['id' => 'products', 'properties' => ['name' => ['type' => 'string']]]);
@@ -45,7 +48,6 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-	@unlink($this->tmpDir . '/.system/settings.json');
 	@rmdir($this->tmpDir . '/.system');
 	@rmdir($this->tmpDir);
 });
@@ -82,8 +84,7 @@ it('shows dry run JSON', function (): void {
 });
 
 it('errors when sync not configured', function (): void {
-	// Overwrite settings with no sync
-	file_put_contents($this->tmpDir . '/.system/settings.json', '{}');
+	$this->totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => []]);
 
 	$app     = new Application();
 	$command = new PushCommand($this->totalcms);
@@ -97,7 +98,7 @@ it('errors when sync not configured', function (): void {
 
 it('reports nothing to push when empty', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('push')->willReturn(OperationResult::success(
@@ -120,7 +121,7 @@ it('reports nothing to push when empty', function (): void {
 
 it('passes schema filter to exporter on dry-run', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	// syncableTemplateFilter must pass through (narrowing-only in production;
 	// the auto-stub would return null and widen [] back to "all"), and the
@@ -148,7 +149,7 @@ it('passes schema filter to exporter on dry-run', function (): void {
 
 it('passes template filter to exporter on dry-run', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	// See the schema-filter test above for why syncService is stubbed.
 	$syncService = $this->createMock(SyncService::class);
@@ -174,7 +175,7 @@ it('passes template filter to exporter on dry-run', function (): void {
 
 it('maps feature flags onto the collections filter', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	// A fresh totalcms/syncService/exporter mock trio, per the pattern above
 	// (e.g. "passes schema filter to exporter on dry-run") — re-stubbing
@@ -211,7 +212,7 @@ it('maps feature flags onto the collections filter', function (): void {
 
 it('narrows a feature flag to specific object ids', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
@@ -244,7 +245,7 @@ it('narrows a feature flag to specific object ids', function (): void {
 
 it('sends --collections to the collection SETTINGS filter', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
@@ -283,7 +284,7 @@ it('offers every feature flag', function (string $flag): void {
 
 it('parses a bare --objects collection as all objects', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
@@ -310,7 +311,7 @@ it('parses a bare --objects collection as all objects', function (): void {
 
 it('parses collection:id,id into an object id filter', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
@@ -337,7 +338,7 @@ it('parses collection:id,id into an object id filter', function (): void {
 
 it('accepts --objects more than once', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
@@ -388,7 +389,7 @@ it('refuses to seed binary-only collections with an explanation', function (): v
 
 it('widens a bare mention over a previous id list for the same collection', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
@@ -415,7 +416,7 @@ it('widens a bare mention over a previous id list for the same collection', func
 
 it('keeps a bare mention recorded first from being narrowed by a later id list', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
@@ -446,7 +447,7 @@ it('keeps a bare mention recorded first from being narrowed by a later id list',
 
 it('merges id lists for the same collection across repeats', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
@@ -473,7 +474,7 @@ it('merges id lists for the same collection across repeats', function (): void {
 
 it('passes the seed filter and overwrite=false to push() on a real push', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->expects($this->once())
@@ -503,7 +504,7 @@ it('passes the seed filter and overwrite=false to push() on a real push', functi
 
 it('passes overwrite=true to push() when --overwrite is given', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->expects($this->once())
@@ -539,7 +540,7 @@ it('refuses --objects --overwrite without --force in an interactive run', functi
 	// --overwrite` clobbered production with nothing asked of it, while the
 	// docs promised it would refuse.
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->expects($this->never())->method('push');
@@ -559,7 +560,7 @@ it('refuses --objects --overwrite without --force in an interactive run', functi
 
 it('lets --objects --overwrite through in an interactive run with --force', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->expects($this->once())
@@ -583,7 +584,7 @@ it('does not trip the guard when --overwrite is given without --objects', functi
 	// through /api/sync/import either way — so blocking a CI script that
 	// passes it defensively helps nobody.
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->expects($this->once())
@@ -614,7 +615,7 @@ it('does not trip the guard when --overwrite is given without --objects', functi
 
 it('refuses --overwrite in a non-interactive run without --force', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->expects($this->never())->method('push');
@@ -633,7 +634,7 @@ it('refuses --overwrite in a non-interactive run without --force', function (): 
 
 it('lets --overwrite through in a non-interactive run with --force', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->expects($this->once())
@@ -654,7 +655,7 @@ it('lets --overwrite through in a non-interactive run with --force', function ()
 
 it('lets --overwrite through in a non-interactive run with --dry-run', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$syncService = $this->createMock(SyncService::class);
 	$syncService->method('syncableTemplateFilter')->willReturnArgument(0);
@@ -680,7 +681,7 @@ it('lets --overwrite through in a non-interactive run with --dry-run', function 
 
 it('shows the seed manifest in dry-run output when the diff succeeds', function (): void {
 	$totalcms         = $this->createMock(TotalCMS::class);
-	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir]);
+	$totalcms->config = createTestConfig(['datadir' => $this->tmpDir, 'sync' => ['url' => 'https://production.example.com', 'key' => 'test-key']]);
 
 	$emptyDiff = ['schemas' => [], 'templates' => [], 'objects' => [], 'collections' => []];
 

@@ -8,16 +8,16 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Sync\Data\SyncableCollections;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Support\Config;
 
 readonly class SyncAction
 {
 	public function __construct(
 		private JsonRenderer $renderer,
-		private SettingsFetcher $settingsFetcher,
+		private Config $config,
 		private SyncService $syncService,
 		private CollectionFetcher $collectionFetcher,
 	) {
@@ -32,7 +32,8 @@ readonly class SyncAction
 		$action = $args['action'] ?? '';
 
 		// Validate sync is configured
-		$syncSettings = $this->settingsFetcher->loadSection('sync');
+		// Config, not SettingsFetcher — the remote may come from tcms.php.
+		$syncSettings = $this->config->sync;
 		$url          = trim((string)($syncSettings['url'] ?? ''));
 		$key          = trim((string)($syncSettings['key'] ?? ''));
 

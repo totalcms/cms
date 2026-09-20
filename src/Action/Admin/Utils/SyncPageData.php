@@ -13,9 +13,9 @@ use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Playground\Data\PlaygroundData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Sync\Data\SyncableCollections;
 use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Support\Config;
 
 /** The Sync utility's pickers: settings, schemas, templates, collections, seed objects. */
 final readonly class SyncPageData implements UtilsPageData
@@ -25,7 +25,7 @@ final readonly class SyncPageData implements UtilsPageData
 		private CollectionLister $collectionLister,
 		private CollectionFetcher $collectionFetcher,
 		private IndexReader $indexReader,
-		private SettingsFetcher $settingsFetcher,
+		private Config $config,
 		private SchemaLister $schemaLister,
 		private TemplateLister $templateLister,
 	) {
@@ -81,7 +81,10 @@ final readonly class SyncPageData implements UtilsPageData
 
 		return [
 			'syncData' => [
-				'settings'            => $this->settingsFetcher->loadSection('sync'),
+				// Config, not SettingsFetcher: the remote may be set in
+				// config/tcms.php (per-install) rather than settings.json,
+				// which installs sharing a data folder share.
+				'settings'            => $this->config->sync,
 				'schemas'             => $this->schemaLister->listCustomSchemas(),
 				'templates'           => $templatesGitManaged ? [] : $this->templateLister->listBuilderTemplates(null, true),
 				'templatesGitManaged' => $templatesGitManaged,

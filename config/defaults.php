@@ -573,6 +573,17 @@ $settings['xmlrpc'] = [
 	'ratePerIp' => 60,
 ];
 
+// `tcms push` / `tcms pull` remote. Normally set in Settings → Sync, which
+// writes settings.json. Set it here (or in config/tcms.php) instead when
+// several installs share one tcms-data folder: settings.json is shared, so a
+// remote configured there sends every site to the same server with the same
+// deploy key. A tcms.php value is per-install and keeps the key out of the
+// shared data folder.
+$settings['sync'] = [
+	'url' => '',
+	'key' => '',
+];
+
 // Search providers — Phase 5.
 // activeProvider: 'text' (built-in) or any registered provider id (e.g. 'algolia').
 // indexOnSave: when true, T3 pushes object.created/updated events to the active

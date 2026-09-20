@@ -10,16 +10,16 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Admin\SyncAction;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Support\Config;
 use TotalCMS\Support\OperationResult;
 
 final class SyncActionTest extends TestCase
 {
 	private SyncAction $action;
 	private MockObject $renderer;
-	private MockObject $settingsFetcher;
+	private Config $config;
 	private MockObject $syncService;
 	private MockObject $request;
 	private MockObject $response;
@@ -27,14 +27,16 @@ final class SyncActionTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->renderer        = $this->createMock(JsonRenderer::class);
-		$this->settingsFetcher = $this->createMock(SettingsFetcher::class);
+		// Config is a plain value holder, not an interface — build it without
+		// the constructor rather than mocking it.
+		$this->config          = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$this->syncService     = $this->createMock(SyncService::class);
 		$this->request         = $this->createMock(ServerRequestInterface::class);
 		$this->response        = $this->createMock(ResponseInterface::class);
 
 		$this->action = new SyncAction(
 			$this->renderer,
-			$this->settingsFetcher,
+			$this->config,
 			$this->syncService,
 			$this->createMock(CollectionFetcher::class),
 		);
@@ -44,9 +46,21 @@ final class SyncActionTest extends TestCase
 		$this->response->method('withStatus')->willReturn($this->response);
 	}
 
+	/**
+	 * Stand in for the resolved `sync` config bucket. SyncAction reads
+	 * Config::$sync rather than settings.json so a remote set in tcms.php is
+	 * honoured; Config is mutable, so assigning after construction is enough.
+	 *
+	 * @param array<string,mixed> $sync
+	 */
+	private function syncSettings(array $sync): void
+	{
+		$this->config->sync = $sync;
+	}
+
 	public function testReturnsErrorWhenSyncNotConfigured(): void
 	{
-		$this->settingsFetcher->method('loadSection')->with('sync')->willReturn([]);
+		$this->syncSettings([]);
 
 		$this->renderer->expects($this->once())
 			->method('json')
@@ -63,7 +77,7 @@ final class SyncActionTest extends TestCase
 
 	public function testReturnsErrorWhenUrlEmpty(): void
 	{
-		$this->settingsFetcher->method('loadSection')->willReturn(['url' => '', 'key' => 'some-key']);
+		$this->syncSettings(['url' => '', 'key' => 'some-key']);
 
 		$this->renderer->expects($this->once())
 			->method('json')
@@ -79,7 +93,7 @@ final class SyncActionTest extends TestCase
 
 	public function testPushDelegatesToSyncService(): void
 	{
-		$this->settingsFetcher->method('loadSection')->willReturn([
+		$this->syncSettings([
 			'url' => 'https://production.example.com',
 			'key' => 'api-key',
 		]);
@@ -106,7 +120,7 @@ final class SyncActionTest extends TestCase
 
 	public function testPullDelegatesToSyncService(): void
 	{
-		$this->settingsFetcher->method('loadSection')->willReturn([
+		$this->syncSettings([
 			'url' => 'https://production.example.com',
 			'key' => 'api-key',
 		]);
@@ -133,7 +147,7 @@ final class SyncActionTest extends TestCase
 
 	public function testPassesSchemaAndTemplateFilters(): void
 	{
-		$this->settingsFetcher->method('loadSection')->willReturn([
+		$this->syncSettings([
 			'url' => 'https://example.com',
 			'key' => 'key',
 		]);
@@ -153,7 +167,7 @@ final class SyncActionTest extends TestCase
 
 	public function testReturnsErrorForUnknownAction(): void
 	{
-		$this->settingsFetcher->method('loadSection')->willReturn([
+		$this->syncSettings([
 			'url' => 'https://example.com',
 			'key' => 'key',
 		]);
@@ -175,7 +189,7 @@ final class SyncActionTest extends TestCase
 
 	public function testReturns502OnSyncServiceFailure(): void
 	{
-		$this->settingsFetcher->method('loadSection')->willReturn([
+		$this->syncSettings([
 			'url' => 'https://example.com',
 			'key' => 'key',
 		]);
@@ -200,7 +214,7 @@ final class SyncActionTest extends TestCase
 
 	public function testSeedSelectionReachesPushAsAnAllOrNothingMap(): void
 	{
-		$this->settingsFetcher->method('loadSection')->willReturn([
+		$this->syncSettings([
 			'url' => 'https://production.example.com',
 			'key' => 'api-key',
 		]);
@@ -232,7 +246,7 @@ final class SyncActionTest extends TestCase
 	{
 		// Overwriting is CLI-only, behind --force. No form field, however
 		// crafted, may flip the 8th argument.
-		$this->settingsFetcher->method('loadSection')->willReturn([
+		$this->syncSettings([
 			'url' => 'https://production.example.com',
 			'key' => 'api-key',
 		]);
@@ -264,7 +278,7 @@ final class SyncActionTest extends TestCase
 	{
 		// A hand-crafted POST must not reach auth (never offered), the
 		// binary-only collections, or a collection that has its own section.
-		$this->settingsFetcher->method('loadSection')->willReturn([
+		$this->syncSettings([
 			'url' => 'https://production.example.com',
 			'key' => 'api-key',
 		]);
@@ -294,7 +308,7 @@ final class SyncActionTest extends TestCase
 	{
 		// Seeding is push-only. The section stays visible in the UI, so a
 		// pull can carry the field — it must be dropped, not forwarded.
-		$this->settingsFetcher->method('loadSection')->willReturn([
+		$this->syncSettings([
 			'url' => 'https://production.example.com',
 			'key' => 'api-key',
 		]);

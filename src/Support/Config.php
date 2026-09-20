@@ -76,6 +76,8 @@ class Config
 	public array $automations = [];
 	/** @var array<string,mixed> */
 	public array $xmlrpc = [];
+	/** @var array<string,mixed> `tcms push` / `tcms pull` remote — see SyncConfig. */
+	public array $sync = [];
 
 	/** @var array<string,mixed> The merged settings this Config was built from — see mergedSettings(). */
 	private array $rawSettings = [];
@@ -165,6 +167,7 @@ class Config
 		$this->search             = is_array($settings['search'] ?? null) ? $settings['search'] : [];
 		$this->automations        = is_array($settings['automations'] ?? null) ? $settings['automations'] : [];
 		$this->xmlrpc             = is_array($settings['xmlrpc'] ?? null) ? $settings['xmlrpc'] : [];
+		$this->sync               = is_array($settings['sync'] ?? null) ? $settings['sync'] : [];
 
 		$presets               = $settings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];

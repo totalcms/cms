@@ -16,8 +16,8 @@ use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Playground\Data\PlaygroundData;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
-use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Support\Config;
 
 final class SyncPageDataTest extends TestCase
 {
@@ -25,7 +25,7 @@ final class SyncPageDataTest extends TestCase
 	private MockObject $collectionLister;
 	private MockObject $collectionFetcher;
 	private MockObject $indexReader;
-	private MockObject $settingsFetcher;
+	private Config $config;
 	private MockObject $schemaLister;
 	private MockObject $templateLister;
 	private SyncPageData $builder;
@@ -36,7 +36,7 @@ final class SyncPageDataTest extends TestCase
 		$this->collectionLister  = $this->createMock(CollectionLister::class);
 		$this->collectionFetcher = $this->createMock(CollectionFetcher::class);
 		$this->indexReader       = $this->createMock(IndexReader::class);
-		$this->settingsFetcher   = $this->createMock(SettingsFetcher::class);
+		$this->config            = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$this->schemaLister      = $this->createMock(SchemaLister::class);
 		$this->templateLister    = $this->createMock(TemplateLister::class);
 		$this->builder           = new SyncPageData(
@@ -44,11 +44,10 @@ final class SyncPageDataTest extends TestCase
 			$this->collectionLister,
 			$this->collectionFetcher,
 			$this->indexReader,
-			$this->settingsFetcher,
+			$this->config,
 			$this->schemaLister,
 			$this->templateLister,
 		);
-		$this->settingsFetcher->method('loadSection')->willReturn([]);
 		$this->schemaLister->method('listCustomSchemas')->willReturn([]);
 	}
 

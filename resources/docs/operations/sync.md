@@ -107,6 +107,26 @@ On your **local** Total CMS instance:
 3. Paste the API key from step 1
 4. Save
 
+#### Configuring sync in `tcms.php` instead
+
+The Settings page writes to `settings.json` inside `tcms-data`. If several
+installs [share one data folder](shared-data-cache), they share that file — so
+every site would push to the same server with the same deploy key, and there
+would be no way to give one site its own remote.
+
+Set the remote in `config/tcms.php` instead. That file is per-install, so each
+site gets its own target and the key stays out of the shared data folder:
+
+```php
+$settings['sync'] = [
+	'url' => 'https://example.com/tcms',
+	'key' => 'your-api-key',
+];
+```
+
+`settings.json` still wins where it has a value, so leave Settings > Sync blank
+on installs configured this way.
+
 ## Using the Dashboard
 
 Go to **Utilities > Sync Manager** to push or pull using the admin interface.

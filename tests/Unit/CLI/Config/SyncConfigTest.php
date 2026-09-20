@@ -7,49 +7,29 @@ namespace Tests\Unit\CLI\Config;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\CLI\Config\SyncConfig;
 
+/**
+ * SyncConfig takes the resolved `sync` config bucket.
+ *
+ * It used to read tcms-data/.system/settings.json off disk itself, which
+ * skipped the merge in config/settings.php entirely — so `sync` could only
+ * ever come from settings.json and an operator could not set it in
+ * config/tcms.php. That matters for installs sharing one data folder: they
+ * share settings.json, so every site pushed to the same remote with the same
+ * deploy key and had no way to override it per site.
+ */
 final class SyncConfigTest extends TestCase
 {
-	private string $tmpDir;
-
-	protected function setUp(): void
+	public function testNotConfiguredWhenBucketEmpty(): void
 	{
-		$this->tmpDir = sys_get_temp_dir() . '/tcms-sync-test-' . uniqid();
-		mkdir($this->tmpDir . '/.system', 0755, true);
-	}
-
-	protected function tearDown(): void
-	{
-		$settingsFile = $this->tmpDir . '/.system/settings.json';
-		if (file_exists($settingsFile)) {
-			unlink($settingsFile);
-		}
-		@rmdir($this->tmpDir . '/.system');
-		@rmdir($this->tmpDir);
-	}
-
-	public function testNotConfiguredWhenNoSettingsFile(): void
-	{
-		$config = new SyncConfig($this->tmpDir);
+		$config = new SyncConfig([]);
 
 		expect($config->isConfigured())->toBeFalse();
 		expect($config->getRemote())->toBeNull();
 	}
 
-	public function testNotConfiguredWhenNoSyncSection(): void
+	public function testNotConfiguredWhenUrlAndKeyBlank(): void
 	{
-		$this->writeSettings(['smtp' => ['host' => 'localhost']]);
-
-		$config = new SyncConfig($this->tmpDir);
-
-		expect($config->isConfigured())->toBeFalse();
-		expect($config->getRemote())->toBeNull();
-	}
-
-	public function testNotConfiguredWhenSyncEmpty(): void
-	{
-		$this->writeSettings(['sync' => ['url' => '', 'key' => '']]);
-
-		$config = new SyncConfig($this->tmpDir);
+		$config = new SyncConfig(['url' => '', 'key' => '']);
 
 		expect($config->isConfigured())->toBeFalse();
 		expect($config->getRemote())->toBeNull();
@@ -57,30 +37,24 @@ final class SyncConfigTest extends TestCase
 
 	public function testNotConfiguredWhenMissingKey(): void
 	{
-		$this->writeSettings(['sync' => ['url' => 'https://example.com', 'key' => '']]);
-
-		$config = new SyncConfig($this->tmpDir);
+		$config = new SyncConfig(['url' => 'https://example.com', 'key' => '']);
 
 		expect($config->isConfigured())->toBeFalse();
 	}
 
 	public function testNotConfiguredWhenMissingUrl(): void
 	{
-		$this->writeSettings(['sync' => ['url' => '', 'key' => 'some-key']]);
-
-		$config = new SyncConfig($this->tmpDir);
+		$config = new SyncConfig(['url' => '', 'key' => 'some-key']);
 
 		expect($config->isConfigured())->toBeFalse();
 	}
 
 	public function testConfiguredWithValidUrlAndKey(): void
 	{
-		$this->writeSettings(['sync' => [
+		$config = new SyncConfig([
 			'url' => 'https://production.example.com',
 			'key' => 'api-key-123',
-		]]);
-
-		$config = new SyncConfig($this->tmpDir);
+		]);
 
 		expect($config->isConfigured())->toBeTrue();
 
@@ -92,35 +66,18 @@ final class SyncConfigTest extends TestCase
 
 	public function testTrimsTrailingSlashFromUrl(): void
 	{
-		$this->writeSettings(['sync' => [
-			'url' => 'https://example.com/tcms/',
-			'key' => 'key',
-		]]);
-
-		$config = new SyncConfig($this->tmpDir);
+		$config = new SyncConfig(['url' => 'https://example.com/tcms/', 'key' => 'key']);
 		$remote = $config->getRemote();
 
 		expect($remote['url'])->toBe('https://example.com/tcms');
 	}
 
-	public function testHandlesInvalidJsonGracefully(): void
+	public function testCoercesNonStringValues(): void
 	{
-		file_put_contents($this->tmpDir . '/.system/settings.json', 'not json');
-
-		$config = new SyncConfig($this->tmpDir);
+		// settings.json is operator-editable and the JSON field accepts
+		// anything, so neither value is guaranteed to arrive as a string.
+		$config = new SyncConfig(['url' => 123, 'key' => null]);
 
 		expect($config->isConfigured())->toBeFalse();
-		expect($config->getRemote())->toBeNull();
-	}
-
-	/**
-	 * @param array<string,mixed> $settings
-	 */
-	private function writeSettings(array $settings): void
-	{
-		file_put_contents(
-			$this->tmpDir . '/.system/settings.json',
-			(string)json_encode($settings, JSON_PRETTY_PRINT)
-		);
 	}
 }
