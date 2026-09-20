@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Settings\Repository;
 
-use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Settings\SettingsSections;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
@@ -44,15 +43,8 @@ class SettingsRepository extends StorageRepository
 	 */
 	private ?array $sectionsCache = null;
 
-	/**
-	 * @param SettingsSchemaFetcher $schemaFetcher Unused here now that
-	 *        sectionKeys() delegates to SettingsSections — kept as a
-	 *        constructor parameter because the container wires it and
-	 *        existing tests construct the repository with it.
-	 */
 	public function __construct(
 		StorageAdapterInterface $filesystem,
-		SettingsSchemaFetcher $schemaFetcher,
 		private readonly Config $config,
 	) {
 		parent::__construct($filesystem);

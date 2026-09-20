@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
-use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
 
@@ -52,7 +51,6 @@ function overlayRepo(array $base, array $overlay = [], string $siteId = 'italy',
 
 	return new SettingsRepository(
 		$c->get(StorageAdapterInterface::class),
-		$c->get(SettingsSchemaFetcher::class),
 		$config,
 	);
 }

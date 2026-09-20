@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 use TotalCMS\Domain\Settings\SettingsSections;
-use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
 
@@ -48,7 +47,6 @@ function declaredRepo(array $base, array $overlay, array $declared, string $site
 
 	return new SettingsRepository(
 		$c->get(StorageAdapterInterface::class),
-		$c->get(SettingsSchemaFetcher::class),
 		$config,
 	);
 }
