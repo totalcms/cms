@@ -99,7 +99,7 @@ readonly class SettingsSaver
 	 */
 	private function writeSettings(array $settings): void
 	{
-		$this->settingsRepository->save($settings);
+		$this->settingsRepository->saveBase($settings);
 
 		// Config::init() is memoized and settings.php reads settings.json, so the
 		// memo is stale the moment we write. Drop it here — the single funnel for

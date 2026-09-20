@@ -52,7 +52,7 @@ final class SettingsSaverTest extends TestCase
 			->method('clearAllCaches');
 
 		$this->settingsRepository->expects($this->once())
-			->method('save');
+			->method('saveBase');
 
 		$this->saver->saveSection($section, $sectionData);
 	}
@@ -75,7 +75,7 @@ final class SettingsSaverTest extends TestCase
 
 		// Capture the merged settings that will be saved
 		$this->settingsRepository->expects($this->once())
-			->method('save')
+			->method('saveBase')
 			->with($this->callback(fn ($settings): bool =>
 				// Verify deep merge occurred
 				$settings['smtp']['host'] === 'new.example.com'
@@ -99,7 +99,7 @@ final class SettingsSaverTest extends TestCase
 
 		// Verify general settings are merged at top level
 		$this->settingsRepository->expects($this->once())
-			->method('save')
+			->method('saveBase')
 			->with($this->callback(fn ($settings): bool => $settings['sentry'] === 'new-key'
 					   && $settings['timezone'] === 'UTC'
 					   && $settings['notfound'] === '/404'));
@@ -118,7 +118,7 @@ final class SettingsSaverTest extends TestCase
 
 		// Verify new section was created
 		$this->settingsRepository->expects($this->once())
-			->method('save')
+			->method('saveBase')
 			->with($this->callback(fn ($settings): bool => isset($settings['newsection'])
 					   && $settings['newsection'] === $newData));
 
@@ -137,7 +137,7 @@ final class SettingsSaverTest extends TestCase
 
 		// Verify exact settings were saved
 		$this->settingsRepository->expects($this->once())
-			->method('save')
+			->method('saveBase')
 			->with($settings);
 
 		$this->saver->saveSettings($settings);
@@ -156,7 +156,7 @@ final class SettingsSaverTest extends TestCase
 
 		// Verify section was removed
 		$this->settingsRepository->expects($this->once())
-			->method('save')
+			->method('saveBase')
 			->with($this->callback(fn ($settings): bool => !isset($settings['smtp'])
 					   && isset($settings['sentry'])
 					   && isset($settings['cache'])));
@@ -173,7 +173,7 @@ final class SettingsSaverTest extends TestCase
 
 		$this->fetcher->method('loadSettings')->willReturn($existingSettings);
 		$this->cacheManager->expects($this->once())->method('clearAllCaches');
-		$this->settingsRepository->expects($this->once())->method('save');
+		$this->settingsRepository->expects($this->once())->method('saveBase');
 
 		// Should not throw exception when deleting non-existent section
 		$this->saver->deleteSection('nonexistent');
@@ -183,7 +183,7 @@ final class SettingsSaverTest extends TestCase
 	{
 		$this->validator->method('processSection')->willReturn(['key' => 'value']);
 		$this->fetcher->method('loadSettings')->willReturn([]);
-		$this->settingsRepository->method('save');
+		$this->settingsRepository->method('saveBase');
 
 		$this->cacheManager->expects($this->once())
 			->method('clearAllCaches');
@@ -193,7 +193,7 @@ final class SettingsSaverTest extends TestCase
 
 	public function testClearsCacheAfterSaveSettings(): void
 	{
-		$this->settingsRepository->method('save');
+		$this->settingsRepository->method('saveBase');
 
 		$this->cacheManager->expects($this->once())
 			->method('clearAllCaches');
@@ -204,7 +204,7 @@ final class SettingsSaverTest extends TestCase
 	public function testClearsCacheAfterDeleteSection(): void
 	{
 		$this->fetcher->method('loadSettings')->willReturn(['test' => ['key' => 'value']]);
-		$this->settingsRepository->method('save');
+		$this->settingsRepository->method('saveBase');
 
 		$this->cacheManager->expects($this->once())
 			->method('clearAllCaches');
@@ -237,7 +237,7 @@ final class SettingsSaverTest extends TestCase
 
 		// Verify deep merge preserved existing keys
 		$this->settingsRepository->expects($this->once())
-			->method('save')
+			->method('saveBase')
 			->with($this->callback(fn ($settings): bool => $settings['cache']['redis']['host'] === '127.0.0.1'
 					   && $settings['cache']['redis']['port'] === 6379
 					   && $settings['cache']['redis']['database'] === 0
@@ -249,7 +249,7 @@ final class SettingsSaverTest extends TestCase
 	public function testHandlesEmptySettings(): void
 	{
 		$this->settingsRepository->expects($this->once())
-			->method('save')
+			->method('saveBase')
 			->with([]);
 
 		$this->saver->saveSettings([]);

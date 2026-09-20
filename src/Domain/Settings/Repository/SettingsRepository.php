@@ -4,11 +4,20 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Settings\Repository;
 
+use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
 
 /**
- * Repository for managing settings.json in tcms-data/.system/.
+ * Repository for the settings files in tcms-data/.system/.
+ *
+ * There are up to two: the shared `settings.json`, and — when this install
+ * sets `siteId` — a per-site `settings-{siteId}.json` layered over it.
+ * `load()` returns the effective merge and is the READ side; `loadBase()` and
+ * `loadOverlay()` stay unmerged and are the WRITE side, because a caller that
+ * writes back what it loaded must not write back the merge.
  *
  * Also exposes the canonical list of available settings sections, derived
  * from the schema files in `resources/schemas/settings/`. The repository
@@ -19,14 +28,13 @@ use TotalCMS\Support\PathResolver;
 class SettingsRepository extends StorageRepository
 {
 	private const SETTINGS_FILE = '.system/settings.json';
-	private const BACKUP_FILE   = '.system/settings.json.bak';
 
 	/**
-	 * Request-level cache for settings.
+	 * Request-level cache per file path.
 	 *
-	 * @var array<string,mixed>|null
+	 * @var array<string,array<string,mixed>>
 	 */
-	private ?array $requestCache = null;
+	private array $requestCache = [];
 
 	/**
 	 * Request-level cache for the section catalog.
@@ -35,72 +43,107 @@ class SettingsRepository extends StorageRepository
 	 */
 	private ?array $sectionsCache = null;
 
+	public function __construct(
+		StorageAdapterInterface $filesystem,
+		private readonly SettingsSchemaFetcher $schemaFetcher,
+		private readonly Config $config,
+	) {
+		parent::__construct($filesystem);
+	}
+
+	/** Is a per-site overlay configured for this install? */
+	public function hasOverlay(): bool
+	{
+		return $this->config->siteId !== '';
+	}
+
+	/** The overlay's basename for display, or '' when there is none. */
+	public function overlayFilename(): string
+	{
+		return $this->hasOverlay() ? 'settings-' . $this->config->siteId . '.json' : '';
+	}
+
+	private function overlayPath(): string
+	{
+		return '.system/settings-' . $this->config->siteId . '.json';
+	}
+
 	/**
-	 * Load all settings from settings.json.
+	 * Effective settings: the shared file with the overlay replacing whatever
+	 * top-level keys it declares. The READ side — see the class docblock.
 	 *
 	 * @return array<string,mixed>
 	 */
 	public function load(): array
 	{
-		if ($this->requestCache !== null) {
-			return $this->requestCache;
-		}
-
-		if (!$this->filesystem->fileExists(self::SETTINGS_FILE)) {
-			$this->requestCache = [];
-
-			return $this->requestCache;
-		}
-
-		$content = $this->filesystem->read(self::SETTINGS_FILE);
-		if ($content === '') {
-			$this->requestCache = [];
-
-			return $this->requestCache;
-		}
-
-		$settings = json_decode($content, true);
-		if (json_last_error() !== JSON_ERROR_NONE) {
-			$this->requestCache = [];
-
-			return $this->requestCache;
-		}
-
-		$this->requestCache = is_array($settings) ? $settings : [];
-
-		return $this->requestCache;
+		return array_replace($this->loadBase(), $this->loadOverlay());
 	}
 
 	/**
-	 * Save settings to settings.json.
+	 * The shared settings.json alone, unmerged.
 	 *
-	 * @param array<string,mixed> $settings
+	 * @return array<string,mixed>
 	 */
-	public function save(array $settings): void
+	public function loadBase(): array
 	{
-		// Write settings as JSON (Flysystem automatically creates parent directories)
-		$json = json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-		if ($json === false) {
-			throw new \RuntimeException('Failed to encode settings to JSON: ' . json_last_error_msg());
-		}
-
-		// Snapshot the previous file so an unexpected clobber is one rename away from recovery.
-		if ($this->filesystem->fileExists(self::SETTINGS_FILE)) {
-			$this->filesystem->write(self::BACKUP_FILE, $this->filesystem->read(self::SETTINGS_FILE));
-		}
-
-		$this->filesystem->write(self::SETTINGS_FILE, $json);
-
-		// Invalidate cache after write
-		$this->requestCache = null;
+		return $this->readFile(self::SETTINGS_FILE);
 	}
 
 	/**
-	 * Check if settings.json exists.
+	 * This install's overlay alone, unmerged. Empty when none is configured.
+	 *
+	 * @return array<string,mixed>
 	 */
-	public function exists(): bool
+	public function loadOverlay(): array
 	{
-		return $this->filesystem->fileExists(self::SETTINGS_FILE);
+		return $this->hasOverlay() ? $this->readFile($this->overlayPath()) : [];
+	}
+
+	/** @param array<string,mixed> $settings */
+	public function saveBase(array $settings): void
+	{
+		$this->writeFile(self::SETTINGS_FILE, $settings);
+	}
+
+	/** @param array<string,mixed> $settings */
+	public function saveOverlay(array $settings): void
+	{
+		if (!$this->hasOverlay()) {
+			throw new \RuntimeException('No settings overlay is configured for this install (siteId is empty).');
+		}
+
+		$this->writeFile($this->overlayPath(), $settings);
+	}
+
+	/**
+	 * The settings-array keys a section owns. General settings are stored at
+	 * the top level rather than under a `general` key, so the section maps to
+	 * whatever its schema declares — the same derivation SettingsFetcher uses.
+	 *
+	 * @return list<string>
+	 */
+	public function sectionKeys(string $section): array
+	{
+		return $section === 'general'
+			? array_keys($this->schemaFetcher->getProperties('general'))
+			: [$section];
+	}
+
+	/** Does the overlay own this section? Any one of its keys is enough. */
+	public function ownsSection(string $section): bool
+	{
+		if (!$this->hasOverlay()) {
+			return false;
+		}
+
+		$overlay = $this->loadOverlay();
+		foreach ($this->sectionKeys($section) as $key) {
+			if (array_key_exists($key, $overlay)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -138,5 +181,52 @@ class SettingsRepository extends StorageRepository
 		$this->sectionsCache = $sections;
 
 		return $this->sectionsCache;
+	}
+
+	/** @return array<string,mixed> */
+	private function readFile(string $path): array
+	{
+		if (isset($this->requestCache[$path])) {
+			return $this->requestCache[$path];
+		}
+
+		$this->requestCache[$path] = [];
+
+		if (!$this->filesystem->fileExists($path)) {
+			return $this->requestCache[$path];
+		}
+
+		$content = $this->filesystem->read($path);
+		if ($content === '') {
+			return $this->requestCache[$path];
+		}
+
+		$decoded = json_decode($content, true);
+		if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+			return $this->requestCache[$path];
+		}
+
+		$this->requestCache[$path] = $decoded;
+
+		return $this->requestCache[$path];
+	}
+
+	/** @param array<string,mixed> $settings */
+	private function writeFile(string $path, array $settings): void
+	{
+		$json = json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		if ($json === false) {
+			throw new \RuntimeException('Failed to encode settings to JSON: ' . json_last_error_msg());
+		}
+
+		// Snapshot the previous file so an unexpected clobber is one rename away
+		// from recovery. Each file keeps its own .bak.
+		if ($this->filesystem->fileExists($path)) {
+			$this->filesystem->write($path . '.bak', $this->filesystem->read($path));
+		}
+
+		$this->filesystem->write($path, $json);
+
+		unset($this->requestCache[$path]);
 	}
 }
