@@ -69,10 +69,4 @@ final class SettingsSections
 	{
 		return in_array($section, $declared, true);
 	}
-
-	/** Test seam: drop the memoized schema lookup. */
-	public static function reset(): void
-	{
-		self::$generalKeys = null;
-	}
 }

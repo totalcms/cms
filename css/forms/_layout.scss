@@ -86,6 +86,13 @@
 		grid-column : 1 / -1;
 		grid-row    : -1;
 	}
+
+	// SettingsForms prepends this outside the schema's own grid-template-areas,
+	// so it needs its own placement or it drops into the first empty cell.
+	> .settings-scope {
+		grid-column : 1 / -1;
+		grid-row    : 1;
+	}
 }
 
 // Fieldsets added via the formgrid `[[ ]]` syntax or cms.form.fieldset(). The

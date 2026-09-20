@@ -83,3 +83,11 @@ per site must be gated by collection, not by which domain the request hit.
 **Editing a Site Builder template needs every cache cleared.** Templates live
 in the shared folder but compile into each install's own `cache/`, so the
 others keep serving the old compile until their cache is cleared.
+
+**The setup wizard writes straight to the shared file.** An install that
+presets `datadir` in `tcms.php` and skips the wizard is unaffected — but if an
+operator instead joins a second (or later) install *through* the wizard's
+data-path step, it writes `siteName` and the default locale directly to
+`.system/settings.json`, bypassing `siteId`/`siteSettings` entirely. That
+overwrites the shared site name and default locale for every install on the
+folder.

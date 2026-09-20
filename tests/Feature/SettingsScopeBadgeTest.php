@@ -20,11 +20,12 @@ beforeEach(function (): void {
 });
 
 /**
- * SettingsForms wired to a repository that owns the `i18n` section.
+ * SettingsForms wired to a repository that owns the declared sections.
  *
- * @param array<string,mixed> $overlay contents of settings-italy.json
+ * @param array<string,mixed> $overlay  contents of settings-italy.json
+ * @param list<string>        $declared sections this install owns (defaults to `i18n`)
  */
-function settingsFormsWithOverlay(array $overlay): TotalCMS\Domain\Admin\Form\SettingsForms
+function settingsFormsWithOverlay(array $overlay, array $declared = ['i18n']): TotalCMS\Domain\Admin\Form\SettingsForms
 {
 	@mkdir(cmsDataDir() . '.system', 0755, true);
 	file_put_contents(cmsDataDir() . '.system/settings-italy.json', (string)json_encode($overlay));
@@ -35,7 +36,7 @@ function settingsFormsWithOverlay(array $overlay): TotalCMS\Domain\Admin\Form\Se
 	// Ownership comes from the declaration (Task 2b), not the overlay file:
 	// `i18n` is owned so its page reads "site-specific"; `smtp` is not, so its
 	// page reads "shared".
-	$config->siteSettings = ['i18n'];
+	$config->siteSettings = $declared;
 
 	// Two arguments: the schema-fetcher parameter was removed in 872f2eab9.
 	$repo = new TotalCMS\Domain\Settings\Repository\SettingsRepository(
@@ -69,6 +70,7 @@ it('marks an owned section site-specific and names the file', function (): void 
 
 	expect($html)->toContain('settings-scope');
 	expect($html)->toContain('settings-italy.json');
+	expect($html)->toContain('Site-specific');
 });
 
 it('marks an unowned section shared', function (): void {
@@ -78,4 +80,19 @@ it('marks an unowned section shared', function (): void {
 
 	expect($html)->toContain('settings-scope');
 	expect($html)->not->toContain('settings-italy.json');
+	expect($html)->toContain('Shared by every site');
+});
+
+it('marks an owned formgrid section site-specific too', function (): void {
+	// `general` declares a formgrid (unlike i18n/smtp above), which is exactly
+	// the layout that dropped the scope line into the wrong grid cell — see
+	// FIX 2. Nothing above would have caught that, since neither i18n nor smtp
+	// uses a formgrid.
+	$forms = settingsFormsWithOverlay(['siteName' => 'Ministero della Cultura'], ['general']);
+
+	$html = $forms->settings('general');
+
+	expect($html)->toContain('settings-scope');
+	expect($html)->toContain('settings-italy.json');
+	expect($html)->toContain('Site-specific');
 });

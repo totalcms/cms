@@ -107,6 +107,7 @@ it('ignores a siteId that is not a plain slug, even when its overlay exists', fu
 		['siteName' => 'EU Organization'],
 		['siteName' => 'Should Not Apply'],
 		'Italy',
+		declared: ['general'],
 	);
 
 	expect($config->siteName)->toBe('EU Organization');

@@ -8,3 +8,15 @@
 	// 	mask-image : var(--icon-save);
 	// }
 }
+
+// States which file (shared vs per-site overlay) a settings section saves
+// to. Only rendered on installs sharing a data folder — see SettingsForms.
+.settings-scope {
+	margin        : 0 0 1rem;
+	padding       : 0.5rem 0.75rem;
+	font-size     : 0.85rem;
+	color         : oklch(var(--totalform-darkgray));
+	background    : oklch(var(--totalform-nearwhite) / 0.5);
+	border        : 1px solid oklch(var(--totalform-border-color));
+	border-radius : var(--totalform-radius);
+}

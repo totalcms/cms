@@ -50,6 +50,14 @@ all eleven of its fields.
 
 Decide per section, not per field.
 
+One consequence of the whole-section swap: if the shared file's section
+carries a key its schema no longer declares, the settings form never posts
+it, so the first save of that section on this site leaves it out of the
+overlay — and from then on it is shadowed, not inherited, because the site
+reads its own overlay for the whole section. There is no CLI to seed the
+overlay first, so preserving such a key means copying it into the overlay
+file by hand before the first save.
+
 ## Changing what a site owns
 
 Edit `siteSettings` in that install's `config/tcms.php` and redeploy.
