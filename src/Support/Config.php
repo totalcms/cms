@@ -17,6 +17,8 @@ class Config
 	public string $cachedir   = '';
 	public string $domain     = '';
 	public string $siteName   = '';
+	/** Identifies this install among several sharing one data folder; selects the settings overlay. */
+	public string $siteId     = '';
 	public string $url        = '';
 	public string $api        = '';
 	public string $locale     = '';
@@ -168,6 +170,9 @@ class Config
 		$this->automations        = is_array($settings['automations'] ?? null) ? $settings['automations'] : [];
 		$this->xmlrpc             = is_array($settings['xmlrpc'] ?? null) ? $settings['xmlrpc'] : [];
 		$this->sync               = is_array($settings['sync'] ?? null) ? $settings['sync'] : [];
+
+		$siteId         = (string)($settings['siteId'] ?? '');
+		$this->siteId   = preg_match('/^[a-z0-9-]+$/', $siteId) === 1 ? $siteId : '';
 
 		$presets               = $settings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];

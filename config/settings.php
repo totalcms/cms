@@ -62,6 +62,27 @@ if (file_exists($settingsJsonFile)) {
 	}
 }
 
+// Per-site overlay for installs sharing one tcms-data folder. Merged AFTER
+// settings.json so a site can override what the shared file says, and before
+// the Sentry/APP_ENV blocks below so they see final values.
+//
+// array_replace, not a deep merge: each top-level key the overlay declares
+// replaces the base's value outright. A bucket is replaced whole, so an
+// overlay must list every key of a bucket it localizes.
+$siteId = (string)($settings['siteId'] ?? '');
+if ($siteId !== '' && preg_match('/^[a-z0-9-]+$/', $siteId) === 1) {
+	$overlayFile = $settings['datadir'] . '/.system/settings-' . $siteId . '.json';
+	if (file_exists($overlayFile)) {
+		$overlayContent = file_get_contents($overlayFile);
+		if ($overlayContent !== false) {
+			$overlaySettings = json_decode($overlayContent, true);
+			if (json_last_error() === JSON_ERROR_NONE && is_array($overlaySettings)) {
+				$settings = array_replace($settings, $overlaySettings);
+			}
+		}
+	}
+}
+
 // Air-gapped deployments: an offline license file signals a network-isolated
 // install — force error monitoring off so nothing (PHP SDK, CLI, browser
 // loader, MCP) ever attempts an outbound call, regardless of the UI toggle.

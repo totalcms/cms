@@ -584,6 +584,17 @@ $settings['sync'] = [
 	'key' => '',
 ];
 
+// Identifies this install among several sharing one tcms-data folder. When
+// set, settings are read from `.system/settings.json` and then
+// `.system/settings-{siteId}.json`, so each site can override the sections it
+// needs while the rest stay shared. Must be a plain slug ([a-z0-9-]); any
+// other value is ignored. Empty = single-site, nothing changes.
+//
+// This is the install's identity, not just a settings switch — but today the
+// settings overlay is the only thing keyed off it. Pairs with `siteName`,
+// which is the human-readable label.
+$settings['siteId'] = '';
+
 // Search providers — Phase 5.
 // activeProvider: 'text' (built-in) or any registered provider id (e.g. 'algolia').
 // indexOnSave: when true, T3 pushes object.created/updated events to the active
