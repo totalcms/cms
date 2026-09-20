@@ -24,7 +24,7 @@ use TotalCMS\Support\Config;
  *
  * @param  array<string,mixed> $base     contents of settings.json
  * @param  array<string,mixed> $overlay  contents of settings-{siteId}.json; [] writes no file
- * @param  list<string>        $declared sections this install declares via `siteSettings`
+ * @param  list<string>        $declared sections this install declares via `siteOverrides`
  */
 function resolveWithOverlay(array $base, array $overlay, string $siteId = 'italy', array $declared = []): Config
 {
@@ -37,7 +37,7 @@ function resolveWithOverlay(array $base, array $overlay, string $siteId = 'italy
 	}
 	file_put_contents($root . '/tcms.php', sprintf(
 		'<?php return %s;',
-		var_export(['datadir' => $root . '/data', 'siteId' => $siteId, 'siteSettings' => $declared], true),
+		var_export(['datadir' => $root . '/data', 'siteId' => $siteId, 'siteOverrides' => $declared], true),
 	));
 
 	$previousDocroot = $_SERVER['DOCUMENT_ROOT'] ?? null;

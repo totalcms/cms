@@ -11,7 +11,7 @@ use TotalCMS\Support\Config;
  * An install declares the sections it owns in config/tcms.php:
  *
  *   $settings['siteId']       = 'italy';
- *   $settings['siteSettings'] = ['i18n', 'general'];
+ *   $settings['siteOverrides'] = ['i18n', 'general'];
  *
  * The declaration governs BOTH directions. Only declared sections are layered
  * in from the overlay, so a key left behind after a section is undeclared is
@@ -39,9 +39,9 @@ function declaredRepo(array $base, array $overlay, array $declared, string $site
 		file_put_contents(cmsDataDir() . ".system/settings-{$siteId}.json", (string)json_encode($overlay));
 	}
 
-	$config               = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-	$config->siteId       = $siteId;
-	$config->siteSettings = $declared;
+	$config                = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->siteId        = $siteId;
+	$config->siteOverrides = $declared;
 
 	$c = test()->diContainer;
 
@@ -122,7 +122,7 @@ it('keeps loadOverlay() raw so a write does not drop undeclared keys', function 
 	]);
 });
 
-it('owns nothing when siteSettings is empty', function (): void {
+it('owns nothing when siteOverrides is empty', function (): void {
 	$repo = declaredRepo(['i18n' => ['default' => 'en_GB']], ['i18n' => ['default' => 'it_IT']], []);
 
 	expect($repo->ownsSection('i18n'))->toBeFalse();

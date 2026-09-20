@@ -110,7 +110,7 @@ On your **local** Total CMS instance:
 #### Configuring sync in `tcms.php` instead
 
 The Settings page writes to `settings.json` inside `tcms-data`. If several
-installs [share one data folder](shared-data-cache), they share that file — so
+installs [share one data folder](shared-data), they share that file — so
 every site would push to the same server with the same deploy key, and there
 would be no way to give one site its own remote.
 

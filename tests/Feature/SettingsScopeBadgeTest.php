@@ -30,13 +30,13 @@ function settingsFormsWithOverlay(array $overlay, array $declared = ['i18n']): T
 	@mkdir(cmsDataDir() . '.system', 0755, true);
 	file_put_contents(cmsDataDir() . '.system/settings-italy.json', (string)json_encode($overlay));
 
-	$c                    = test()->diContainer;
-	$config               = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
-	$config->siteId       = 'italy';
+	$c                     = test()->diContainer;
+	$config                = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config->siteId        = 'italy';
 	// Ownership comes from the declaration (Task 2b), not the overlay file:
 	// `i18n` is owned so its page reads "site-specific"; `smtp` is not, so its
 	// page reads "shared".
-	$config->siteSettings = $declared;
+	$config->siteOverrides = $declared;
 
 	// Two arguments: the schema-fetcher parameter was removed in 872f2eab9.
 	$repo = new TotalCMS\Domain\Settings\Repository\SettingsRepository(

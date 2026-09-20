@@ -8,7 +8,7 @@ use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 
 /**
  * Which settings-array keys a settings section owns, and how to reduce an
- * overlay to the sections an install declares in `siteSettings`.
+ * overlay to the sections an install declares in `siteOverrides`.
  *
  * Static because `config/settings.php` needs this answer during bootstrap —
  * before the container exists — and SettingsRepository needs the same answer

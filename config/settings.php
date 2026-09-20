@@ -81,7 +81,7 @@ if ($siteId !== '' && preg_match('/^[a-z0-9-]+$/', $siteId) === 1) {
 				// Only the sections this install declares are layered on, so a
 				// key left in the overlay after its section was undeclared is
 				// inert rather than read by something that no longer writes it.
-				$declaredSections = is_array($settings['siteSettings'] ?? null) ? $settings['siteSettings'] : [];
+				$declaredSections = is_array($settings['siteOverrides'] ?? null) ? $settings['siteOverrides'] : [];
 				$settings         = array_replace(
 					$settings,
 					SettingsSections::filterDeclared($overlaySettings, array_values(array_map('strval', $declaredSections))),

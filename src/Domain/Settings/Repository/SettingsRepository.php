@@ -77,7 +77,7 @@ class SettingsRepository extends StorageRepository
 	{
 		return array_replace(
 			$this->loadBase(),
-			SettingsSections::filterDeclared($this->loadOverlay(), $this->config->siteSettings),
+			SettingsSections::filterDeclared($this->loadOverlay(), $this->config->siteOverrides),
 		);
 	}
 
@@ -130,14 +130,14 @@ class SettingsRepository extends StorageRepository
 	}
 
 	/**
-	 * Does this install own the section? Answered by the `siteSettings`
+	 * Does this install own the section? Answered by the `siteOverrides`
 	 * declaration in its tcms.php, NOT by what the overlay file happens to
 	 * contain — a declared section is owned from boot, before anything has
 	 * been saved into it.
 	 */
 	public function ownsSection(string $section): bool
 	{
-		return $this->hasOverlay() && SettingsSections::isDeclared($section, $this->config->siteSettings);
+		return $this->hasOverlay() && SettingsSections::isDeclared($section, $this->config->siteOverrides);
 	}
 
 	/**

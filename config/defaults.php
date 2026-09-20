@@ -602,8 +602,8 @@ $settings['siteId'] = '';
 // Ignored unless `siteId` is also set. Empty = this install owns nothing.
 //
 // Example:
-//   $settings['siteSettings'] = ['i18n', 'general'];
-$settings['siteSettings'] = [];
+//   $settings['siteOverrides'] = ['i18n', 'general'];
+$settings['siteOverrides'] = [];
 
 // Search providers — Phase 5.
 // activeProvider: 'text' (built-in) or any registered provider id (e.g. 'algolia').

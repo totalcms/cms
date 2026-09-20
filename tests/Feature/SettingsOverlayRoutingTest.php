@@ -33,13 +33,13 @@ beforeEach(function (): void {
 	// The container's Config was built before these files existed and without
 	// a siteId; rebuild the repository around one that has it.
 	//
-	// siteSettings is what makes a section owned (Task 2b) — the overlay file's
+	// siteOverrides is what makes a section owned (Task 2b) — the overlay file's
 	// contents no longer decide it. `i18n` and `general` are owned here; `smtp`
 	// deliberately is not, so the unowned-section case has something to use.
-	$config               = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-	$config->siteId       = 'italy';
-	$config->siteSettings = ['i18n', 'general'];
-	$this->repo           = new SettingsRepository(
+	$config                = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->siteId        = 'italy';
+	$config->siteOverrides = ['i18n', 'general'];
+	$this->repo            = new SettingsRepository(
 		$this->diContainer->get(TotalCMS\Domain\Storage\StorageAdapterInterface::class),
 		$config,
 	);

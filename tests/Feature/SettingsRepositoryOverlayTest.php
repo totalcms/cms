@@ -32,7 +32,7 @@ beforeEach(function (): void {
  *
  * @param array<string,mixed> $base     written to settings.json; [] writes no file
  * @param array<string,mixed> $overlay  written to settings-{siteId}.json; [] writes no file
- * @param list<string>        $declared sections this install declares via `siteSettings`
+ * @param list<string>        $declared sections this install declares via `siteOverrides`
  */
 function overlayRepo(array $base, array $overlay = [], string $siteId = 'italy', array $declared = ['i18n', 'general', 'smtp']): SettingsRepository
 {
@@ -43,9 +43,9 @@ function overlayRepo(array $base, array $overlay = [], string $siteId = 'italy',
 		file_put_contents(cmsDataDir() . ".system/settings-{$siteId}.json", (string)json_encode($overlay));
 	}
 
-	$config               = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-	$config->siteId       = $siteId;
-	$config->siteSettings = $siteId === '' ? [] : $declared;
+	$config                = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->siteId        = $siteId;
+	$config->siteOverrides = $siteId === '' ? [] : $declared;
 
 	$c = test()->diContainer;
 
