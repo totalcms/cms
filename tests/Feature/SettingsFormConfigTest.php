@@ -7,6 +7,7 @@ use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\Settings\Repository\SettingsRepository;
 use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
 use TotalCMS\Domain\Translation\TranslationService;
@@ -60,6 +61,7 @@ function settingsFormsWith(array $overrides): SettingsForms
 		$container->get(ExtensionSettingsManager::class),
 		$container->get(ExtensionManager::class),
 		new Config($settings),
+		$container->get(SettingsRepository::class),
 	);
 }
 
