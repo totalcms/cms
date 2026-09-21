@@ -29,7 +29,7 @@
 | Twig: `cms` global, filters, functions | `twig/overview.md`, `twig/filters.md`, `twig/functions.md` | `cms.collection.objects()` — the bare `cms.objects()` is a deprecated proxy. |
 | Twig recipes (archives, related posts, prev/next, scheduling, calendars, signed links) | `twig/recipes.md` | `template_from_string` renders a stored text field as Twig. |
 | Collection filtering and sorting in Twig | `twig/collection-filtering.md` | `filterCollection` operators include date windows (`todayPlusDays`, `thisMonth`) and array logic. |
-| Core SEO | `site-builder/seo.md` | `{{ cms.seo.head(page) }}` in the layout, `cms.seo.head(post, {collection: 'blog'})` on detail pages, delete your own `<title>`/description. |
+| Core SEO | `site-builder/seo.md` | `{{ cms.seo.head(page) }}` in the layout, `cms.seo.head(post, {collection: 'blog'})` on detail pages, delete your own `<title>`/description. IndexNow (Bing/Yandex, not Google) is a toggle in the SEO Site Collection (`seo-site`), not a Settings group; it submits exactly what the sitemap lists, via the job queue. |
 | Images (ImageWorks resize, watermark, palette) | `twig/imageworks.md`, `twig/media.md` | `cms.render.image(object, {w: 800}, {collection: 'blog', property: 'image'})` — three arguments, never merged. `cms.render.picture()` takes the same three and emits a responsive `<picture>` (AVIF/WebP sources + srcset); pass `sizes` in the options for anything narrower than the viewport. |
 | Video field | `fields/video.md` | Store the URL; `cms.render.video()` renders any supported provider. |
 | Load More (progressive lists) | `twig/load-more.md` | Renders items through a template in `builder/templates/`; the API endpoint does the paging. |

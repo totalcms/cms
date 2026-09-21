@@ -19,6 +19,7 @@ use TotalCMS\Domain\Object\Service\ObjectExporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Domain\Search\Job\ReindexJob;
+use TotalCMS\Domain\Seo\IndexNow\IndexNowJob;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
@@ -62,6 +63,7 @@ function jobRunnerMocks(): array
 		'bulkMailerRepository' => test()->createMock(BulkMailerRepository::class),
 		'objectFetcher'        => test()->createMock(ObjectFetcher::class),
 		'searchReindexJob'     => test()->createMock(ReindexJob::class),
+		'indexNowJob'          => test()->createMock(IndexNowJob::class),
 	];
 }
 
@@ -88,6 +90,7 @@ function jobRunnerFrom(array $m, array $smtp = []): JobRunner
 		$m['bulkMailerRepository'],
 		$m['objectFetcher'],
 		$m['searchReindexJob'],
+		$m['indexNowJob'],
 		$config,
 		$loggerFactory,
 	);

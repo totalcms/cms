@@ -6,11 +6,15 @@ namespace TotalCMS\Domain\JobQueue\Service;
 
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
+use TotalCMS\Domain\Seo\IndexNow\IndexNowOutbox;
 
 readonly class JobManager
 {
 	public function __construct(
 		private JobRepository $jobRepository,
+		// Optional so the manager can still be built from the repository alone;
+		// the container always supplies it.
+		private ?IndexNowOutbox $indexNowOutbox = null,
 	) {
 	}
 
@@ -58,6 +62,13 @@ readonly class JobManager
 
 	public function clearQueue(): bool
 	{
+		// The IndexNow outbox is the payload of its pending job, so clearing
+		// the queue without it would only postpone those submissions until
+		// the next save queued a fresh job. Per-collection and failed-job
+		// clears leave it alone: the outbox is site-wide, and a failed job's
+		// URLs were never sent.
+		$this->indexNowOutbox?->clear();
+
 		return $this->jobRepository->clearQueue();
 	}
 

@@ -108,6 +108,7 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'export-jumpstart',
 		'export-jumpstart-demo',
 		'favicon', // /favicon.ico + /favicon.svg — a public asset like the sitemaps and feeds
+		'indexnow-key', // /{key}.txt — the IndexNow verification file, a public asset like /favicon.ico; the action 404s unless it is the configured key
 		'filelinks',
 		'forgot-password',
 		'gallery-image-fetch',

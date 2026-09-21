@@ -112,6 +112,10 @@ final readonly class SeoSettings
 		public string $themeColor = '',
 		public string $manifest = '',
 		public string $touchIconProperty = '',
+		/** Submit changed URLs to search engines through IndexNow (Bing, Yandex, Seznam, Naver — not Google). */
+		public bool $indexNowEnabled = false,
+		/** The site's IndexNow key, also served at /{key}.txt so engines can verify ownership. */
+		public string $indexNowKey = '',
 	) {
 	}
 
@@ -172,6 +176,8 @@ final readonly class SeoSettings
 			contactEmail: $str('contactEmail'),
 			contactUrl: $str('contactUrl'),
 			metaTags: $str('metaTags'),
+			indexNowEnabled: (bool)($data['indexNowEnabled'] ?? false),
+			indexNowKey: $str('indexNowKey'),
 			emitJsonLd: !array_key_exists('emitJsonLd', $data) || filter_var($data['emitJsonLd'], FILTER_VALIDATE_BOOL),
 			emitSocial: !array_key_exists('emitSocial', $data) || filter_var($data['emitSocial'], FILTER_VALIDATE_BOOL),
 			// The loader resolves the record's image and file properties to URLs
@@ -232,6 +238,8 @@ final readonly class SeoSettings
 			themeColor: $this->themeColor,
 			manifest: $this->manifest,
 			touchIconProperty: $this->touchIconProperty,
+			indexNowEnabled: $this->indexNowEnabled,
+			indexNowKey: $this->indexNowKey,
 		);
 	}
 }

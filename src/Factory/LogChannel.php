@@ -26,6 +26,7 @@ enum LogChannel: string
 	// ------------------------------------------------------------- App
 	case App               = 'totalcms';
 	case Backups           = 'backups';
+	case IndexNow          = 'indexnow';
 	case Cache             = 'cachemanager';
 	case DataViews         = 'dataviews';
 	case ViewBuilder       = 'viewbuilder';
@@ -113,6 +114,7 @@ enum LogChannel: string
 		return match ($this) {
 			self::App,
 			self::Backups,
+			self::IndexNow,
 			self::Cache,
 			self::DataViews,
 			self::ViewBuilder,

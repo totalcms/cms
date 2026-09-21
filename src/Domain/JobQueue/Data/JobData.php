@@ -32,6 +32,7 @@ class JobData
 	public const TYPE_VIEW_UPDATE    = 'view_update';
 	public const TYPE_EMAIL          = 'email';
 	public const TYPE_SEARCH_REINDEX = 'search.reindex';
+	public const TYPE_INDEXNOW       = 'indexnow.submit';
 	public const TYPE_LIST           = [
 		self::TYPE_IMPORT,
 		self::TYPE_EXPORT,
@@ -41,6 +42,7 @@ class JobData
 		self::TYPE_VIEW_UPDATE,
 		self::TYPE_EMAIL,
 		self::TYPE_SEARCH_REINDEX,
+		self::TYPE_INDEXNOW,
 	];
 
 	/** @return array<string,string|int> */

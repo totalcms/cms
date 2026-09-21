@@ -12,7 +12,7 @@ related:
 
 Total CMS writes the `<head>` for you. One call in your layout emits the title, meta description, canonical link, robots directives, the site's icons, Open Graph and Twitter card tags, your own meta tags (verification and the like) and a JSON-LD `@graph` — for a Site Builder page, for a collection object, or for the site on its own.
 
-Nothing is generated ahead of time and there is no build step. Every value is resolved at render time from three places, in order: the **SEO card** on the record, the **collection's field mapping**, then the **site defaults** on the [Site SEO record](#site-settings).
+Nothing is generated ahead of time and there is no build step. Every value is resolved at render time from three places, in order: the **SEO card** on the record, the **collection's field mapping**, then the **site defaults** on the [Site SEO record](#seo-site-collection).
 
 ## The One-Liner
 
@@ -223,7 +223,7 @@ A collection with no mapping still gets a title, a canonical, Open Graph tags an
 
 Site Builder pages are the one row with nothing to map for two of the three: a page has a `title` and an [SEO card](#builder-pages), and that is where its description and share image live. There is no second property for the mapping to point at.
 
-## Site Settings
+## SEO Site Collection
 
 Everything site-wide lives on one record in the **Site SEO** collection — a reserved single-object collection with the id `seo-site`. It is a collection rather than a settings panel so the two images are real uploads rather than URLs you paste, and so the record is readable in Twig like any other object.
 
@@ -587,13 +587,23 @@ Allow: /
 Sitemap: https://example.com/sitemap.xml
 ```
 
+## IndexNow
+
+A sitemap tells crawlers what exists; IndexNow tells them what just changed, the moment it changes. Turn on **Submit changes with IndexNow** in the **SEO Site Collection** (Collections → Seo Site — the record that also holds the base URL and favicons; it is not in the admin Settings groups) and every publish, edit and delete of a sitemap-listed URL is submitted to the IndexNow network — one submission reaches Bing, Yandex, Seznam and Naver. **Google does not take part**, so this is a complement to the sitemap, not a replacement for it.
+
+What is submitted is exactly what the sitemap would list, decided by the same rules: the collection's sitemap must be on, its include/exclude filters must admit the object, and the SEO card must not say **No Index**. A draft stays out for the same reason it stays out of the sitemap — the collection's `exclude` filter — and a post moved back to draft, noindexed or deleted is submitted too, so the engines recrawl and drop it quickly rather than at the next scheduled visit.
+
+Imports count too: a CSV or JSON import that publishes a hundred posts submits their hundred URLs together when it completes. Submissions are queued, never sent during a save, and coalesced: every URL that changes between two runs of [`tcms jobs:process`](docs/extensions/cli#jobs-process) — every minute under the standard cron — goes out as one request, up to the protocol's 10,000 URLs, and a record saved five times in that window is submitted once. A rate limit or outage puts the unsent URLs back for the next run; a rejected submission is logged once under `indexnow` and dropped. Clearing the job queue discards the pending submissions with it.
+
+The key the engines verify against is generated for you the first time the form is saved with the toggle on, and served at `/{key}.txt`. It is not an API key: IndexNow has no accounts, registration or vendor credentials. The key is a token this site made up, and hosting it at that address is the whole proof that the submissions come from here. If a submission is rejected, that file being unreachable is the usual reason — a rewrite rule or a static `.txt` handler in front of PHP.
+
 ## What Is Not Included
 
 Core SEO covers the markup every site needs. It deliberately stops short of:
 
 - **A managed `robots.txt`** — it stays a Site Builder page you control, as above.
 - **hreflang and localized SEO** — a site serving several languages has to emit its own alternate links. Native internationalization is planned.
-- **Search Console / Bing Webmaster API integration** — their verification tags are pasted into Meta Tags; nothing is submitted or read back.
+- **Search Console / Bing Webmaster API integration** — their verification tags are pasted into Meta Tags; nothing is read back. Changed URLs *are* pushed, through [IndexNow](#indexnow), but that is a notification, not an account integration.
 - **Analysis and scoring** — no readability grade, keyword density, or per-page SEO report.
 - **More schema.org types** — Product, Event, FAQ, Recipe, LocalBusiness and the rest. Core generates none of them from your fields, though a template can write one itself and add it to the graph — see [Adding Your Own Structured Data](#adding-your-own-structured-data).
 - **404 and redirect management** beyond the Site Builder page `status` and `redirectTo` fields.

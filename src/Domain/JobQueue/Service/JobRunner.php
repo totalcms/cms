@@ -17,6 +17,7 @@ use TotalCMS\Domain\Object\Service\ObjectExporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
 use TotalCMS\Domain\Search\Job\ReindexJob;
+use TotalCMS\Domain\Seo\IndexNow\IndexNowJob;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -42,6 +43,7 @@ readonly class JobRunner
 		private BulkMailerRepository $bulkMailerRepository,
 		private ObjectFetcher $objectFetcher,
 		private ReindexJob $searchReindexJob,
+		private IndexNowJob $indexNowJob,
 		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
@@ -231,6 +233,9 @@ readonly class JobRunner
 				break;
 			case JobData::TYPE_SEARCH_REINDEX:
 				$this->processSearchReindexJob($job);
+				break;
+			case JobData::TYPE_INDEXNOW:
+				$this->indexNowJob->run($job);
 				break;
 			default:
 				$error = 'Unknown job type: ' . $job->type;

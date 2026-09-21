@@ -166,6 +166,7 @@ use TotalCMS\Domain\Search\Service\SearchService;
 use TotalCMS\Domain\Search\Service\SearchServiceInterface;
 use TotalCMS\Domain\Search\Service\TextSearchProvider;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
+use TotalCMS\Domain\Seo\IndexNow\IndexNowListener;
 use TotalCMS\Domain\Seo\Service\JsonLd\ArticleProvider;
 use TotalCMS\Domain\Seo\Service\JsonLd\BreadcrumbProvider;
 use TotalCMS\Domain\Seo\Service\JsonLd\OrganizationProvider;
@@ -735,6 +736,21 @@ return [
 		// don't flood the store. Priority -50, same tier as search.
 		$dispatcher->listen('object.updated', $lazy(ObjectBackupListener::class, 'onObjectUpdated'), -50);
 		$dispatcher->listen('object.deleted', $lazy(ObjectBackupListener::class, 'onObjectDeleted'), -50);
+
+		// IndexNowListener — queues an IndexNow submission for the URL a save
+		// or delete affects, by the sitemap's own inclusion rules. Queued, not
+		// sent: a save never waits on a search engine. Off unless Site SEO
+		// enables it. Priority -40: after the index/metadata tier so the
+		// collection state it reads is current.
+		$dispatcher->listen('object.created', $lazy(IndexNowListener::class, 'onObjectSaved'), -40);
+		$dispatcher->listen('object.updated', $lazy(IndexNowListener::class, 'onObjectSaved'), -40);
+		$dispatcher->listen('object.deleted', $lazy(IndexNowListener::class, 'onObjectDeleted'), -40);
+		// Imports replace object.created/updated with import.created/updated for
+		// the collection mid-import; the listener buffers those and flushes on
+		// import.completed (and at a size cap, and at process end).
+		$dispatcher->listen('import.created', $lazy(IndexNowListener::class, 'onImportSaved'), -40);
+		$dispatcher->listen('import.updated', $lazy(IndexNowListener::class, 'onImportSaved'), -40);
+		$dispatcher->listen('import.completed', $lazy(IndexNowListener::class, 'onImportCompleted'), -40);
 
 		// PromptChangeListener — invalidates the PromptDiscoveryService in-memory
 		// cache whenever an mcp-prompt object changes so prompt edits go live
