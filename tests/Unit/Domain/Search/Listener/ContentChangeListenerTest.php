@@ -7,7 +7,10 @@ namespace Tests\Unit\Domain\Search\Listener;
 use Monolog\Level;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Search\Data\SearchQuery;
 use TotalCMS\Domain\Search\Listener\ContentChangeListener;
 use TotalCMS\Domain\Search\Service\SearchProvider;
@@ -37,15 +40,12 @@ final class ContentChangeListenerTest extends TestCase
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
 		);
 
-		$listener->onObjectSaved([
-			'collection' => 'blog',
-			'object_id'  => 'post-1',
-			'object'     => ['id' => 'post-1', 'title' => 'Hello'],
-		]);
+		$listener->onObjectSaved((new ObjectEventPayload('blog', 'post-1', new ObjectData('post-1', [])))->toArray());
 
 		$this->assertSame('blog', $called['c'] ?? null);
 		$this->assertSame('post-1', $called['id'] ?? null);
-		$this->assertSame(['id' => 'post-1', 'title' => 'Hello'], $called['data'] ?? null);
+		// The payload carries a live ObjectData; the provider must get its array form.
+		$this->assertSame(['id' => 'post-1'], $called['data'] ?? null);
 	}
 
 	public function testSkipsWhenActiveIsText(): void
@@ -62,7 +62,7 @@ final class ContentChangeListenerTest extends TestCase
 			$this->makeConfig(['activeProvider' => 'text', 'indexOnSave' => true]),
 		);
 
-		$listener->onObjectSaved(['collection' => 'blog', 'object_id' => 'post-1', 'object' => []]);
+		$listener->onObjectSaved((new ObjectEventPayload('blog', 'post-1', new ObjectData('post-1', [])))->toArray());
 
 		$this->assertTrue(true);
 	}
@@ -81,7 +81,7 @@ final class ContentChangeListenerTest extends TestCase
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => false]),
 		);
 
-		$listener->onObjectSaved(['collection' => 'blog', 'object_id' => 'post-1', 'object' => []]);
+		$listener->onObjectSaved((new ObjectEventPayload('blog', 'post-1', new ObjectData('post-1', [])))->toArray());
 
 		$this->assertTrue(true);
 	}
@@ -110,7 +110,7 @@ final class ContentChangeListenerTest extends TestCase
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
 		);
 
-		$listener->onObjectSaved(['collection' => 'blog', 'object_id' => 'post-1', 'object' => []]);
+		$listener->onObjectSaved((new ObjectEventPayload('blog', 'post-1', new ObjectData('post-1', [])))->toArray());
 	}
 
 	public function testRoutesObjectDeletedToProviderDelete(): void
@@ -136,10 +136,50 @@ final class ContentChangeListenerTest extends TestCase
 			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
 		);
 
-		$listener->onObjectDeleted(['collection' => 'blog', 'object_id' => 'post-1']);
+		$listener->onObjectDeleted((new ObjectEventPayload('blog', 'post-1'))->toArray());
 
 		$this->assertSame('blog', $deletedCollection);
 		$this->assertSame('post-1', $deletedId);
+	}
+
+	/**
+	 * The one test that cannot be fooled by a hand-built payload: dispatch a
+	 * real ObjectEventPayload through a real EventDispatcher, the shape the
+	 * container's registration delivers. This is how a key the payload does
+	 * not carry (`object_id`, formerly) showed up as "never pushes" only in
+	 * production.
+	 */
+	public function testPushesWhenDrivenByTheRealDispatcherAndPayload(): void
+	{
+		$seen     = [];
+		$provider = $this->makeProvider(
+			'algolia',
+			indexCallback: function (string $c, string $id, array $data) use (&$seen): void {
+				$seen[] = "index:$c/$id";
+			},
+			deleteCallback: function (string $c, string $id) use (&$seen): void {
+				$seen[] = "delete:$c/$id";
+			},
+		);
+		$registry = new SearchProviderRegistry();
+		$registry->register($provider);
+		$listener = new ContentChangeListener(
+			$registry,
+			$this->createMock(JobQueuer::class),
+			new LoggerFactory(['test' => new NullLogger(), 'level' => Level::Debug]),
+			$this->makeConfig(['activeProvider' => 'algolia', 'indexOnSave' => true]),
+		);
+
+		$dispatcher = new EventDispatcher(new NullLogger());
+		$dispatcher->listen('object.created', $listener->onObjectSaved(...));
+		$dispatcher->listen('object.updated', $listener->onObjectSaved(...));
+		$dispatcher->listen('object.deleted', $listener->onObjectDeleted(...));
+
+		$dispatcher->dispatch('object.created', new ObjectEventPayload('blog', 'post-1', new ObjectData('post-1', [])));
+		$dispatcher->dispatch('object.updated', new ObjectEventPayload('blog', 'post-1', new ObjectData('post-1', []), new ObjectData('post-1', [])));
+		$dispatcher->dispatch('object.deleted', new ObjectEventPayload('blog', 'post-1', null, new ObjectData('post-1', [])));
+
+		$this->assertSame(['index:blog/post-1', 'index:blog/post-1', 'delete:blog/post-1'], $seen);
 	}
 
 	private function makeProvider(

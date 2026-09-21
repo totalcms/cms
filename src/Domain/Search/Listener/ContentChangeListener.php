@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Search\Listener;
 use Monolog\Level;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Search\Service\SearchProvider;
 use TotalCMS\Domain\Search\Service\SearchProviderRegistry;
 use TotalCMS\Factory\LogChannel;
@@ -56,9 +57,14 @@ readonly class ContentChangeListener
 			return;
 		}
 
+		// ObjectEventPayload::toArray() carries the id as `id` and the record
+		// as a live ObjectData. This read `object_id` and cast the object with
+		// (array) — so the id was always '' and every save returned here
+		// before reaching the provider; indexOnSave had never pushed a thing.
 		$collection = (string)($payload['collection'] ?? '');
-		$objectId   = (string)($payload['object_id'] ?? '');
-		$object     = (array)($payload['object'] ?? []);
+		$objectId   = (string)($payload['id'] ?? '');
+		$object     = $payload['object'] ?? [];
+		$object     = $object instanceof ObjectData ? $object->toArray() : (array)$object;
 
 		if ($collection === '' || $objectId === '') {
 			return;
@@ -94,7 +100,7 @@ readonly class ContentChangeListener
 		}
 
 		$collection = (string)($payload['collection'] ?? '');
-		$objectId   = (string)($payload['object_id'] ?? '');
+		$objectId   = (string)($payload['id'] ?? '');
 
 		if ($collection === '' || $objectId === '') {
 			return;
