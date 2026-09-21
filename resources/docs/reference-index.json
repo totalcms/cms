@@ -2187,6 +2187,15 @@
             "url": "https://docs.totalcms.co/twig/render/"
         },
         {
+            "name": "cms.render.picture",
+            "signature": "picture(string|array|null $idOrObject, array $imageworks = [], array $options = []): string",
+            "description": "A responsive `<picture>` with per-format `<source>` srcsets and an `<img>` fallback. Same three arguments as image(); `widths`, `formats` and `sizes` ride in the options. All the work lives in ImageRenderer.",
+            "examples": [
+                "{# Defaults: 480/768/1024/1440/1920 candidates, AVIF + WebP sources, sizes=\"100vw\" #}\n{{ cms.render.picture('hero') }}\n\n{# An image that never spans the viewport \u2014 tell the browser, or it downloads for 100vw #}\n{{ cms.render.picture(post, {}, {sizes: '(min-width: 60em) 50vw, 100vw', collection: 'blog'}) }}\n\n{# Your own candidate widths and a single format #}\n{{ cms.render.picture(post, {}, {widths: [400, 800, 1200], formats: ['webp']}) }}\n\n{# The transforms apply to every candidate; w there is a ceiling, not a candidate #}\n{{ cms.render.picture(post, {w: 1200, h: 675, fit: 'crop-focalpoint', q: 75}) }}"
+            ],
+            "url": "https://docs.totalcms.co/twig/render/"
+        },
+        {
             "name": "cms.render.queryUrl",
             "signature": "queryUrl(string $collection, array $options = []): string",
             "description": "URL for an HTML fragment of a collection query \u2014 the endpoint behind loadMore(), exposed for hx-get on your own elements (live search, facets, lazy sections). Returns the raw URL; Twig's autoescape handles `&` inside attributes.",

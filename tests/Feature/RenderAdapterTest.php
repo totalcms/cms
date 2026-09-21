@@ -5,6 +5,7 @@ declare(strict_types=1);
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 
 use function TotalCMS\Slim\Pest\postUpload;
 
@@ -72,6 +73,109 @@ test('image() returns an empty string for an empty id or a missing object', func
 	expect($this->render->image(null))->toBe('')
 		->and($this->render->image(''))->toBe('')
 		->and($this->render->image('does-not-exist'))->toBe('');
+});
+
+// ─── picture() ───────────────────────────────────────────────────────────────
+
+test('picture() renders avif and webp sources plus a jpg fallback, each with a srcset of every default width up to the 1920 source', function (): void {
+	$html = $this->render->picture(imageObject(), [], ['class' => 'hero']);
+
+	expect($html)->toStartWith('<picture>')
+		->and($html)->toEndWith('</picture>')
+		->and($html)->toContain('<source type="image/avif" srcset="/imageworks/image/hero/image.avif?w=480')
+		->and($html)->toContain('<source type="image/webp" srcset="/imageworks/image/hero/image.webp?w=480')
+		->and($html)->toContain('<img src="/imageworks/image/hero/image.jpg?w=1920')
+		// Every default width is present, each described by its delivered width.
+		->and($html)->toContain('480w')->and($html)->toContain('768w')->and($html)->toContain('1024w')
+		->and($html)->toContain('1440w')->and($html)->toContain('1920w')
+		->and($html)->toContain('sizes="100vw"')
+		->and($html)->toContain('alt="Hero shot"')
+		->and($html)->toContain('width="1920"')
+		->and($html)->toContain('height="1080"')
+		->and($html)->toContain('loading="lazy"')
+		->and($html)->toContain('class="hero"')
+		// The fallback <img> carries its own srcset so no-<picture> browsers still get sizes.
+		->and(substr_count($html, 'srcset="'))->toBe(3)
+		->and(substr_count($html, '<source '))->toBe(2);
+});
+
+test('picture() never emits a candidate wider than the source, and adds the source width as the top candidate', function (): void {
+	// An 800px-wide image against the default width list: 1024/1440/1920 must
+	// go — Glide never upscales, so they would all deliver 800px and lie to
+	// the browser — and 800 itself joins as the largest candidate.
+	$html = $this->render->picture(imageObject(['width' => 800, 'height' => 600]));
+
+	expect($html)->toContain('?w=480')
+		->and($html)->toContain('?w=768')
+		->and($html)->toContain('?w=800')
+		->and($html)->toContain('800w')
+		->and($html)->not->toContain('?w=1024')
+		->and($html)->not->toContain('1024w')
+		->and($html)->not->toContain('?w=1920')
+		->and($html)->toContain('<img src="/imageworks/image/hero/image.jpg?w=800')
+		->and($html)->toContain('width="800"')
+		->and($html)->toContain('height="600"');
+});
+
+test('picture() honours explicit widths, formats and sizes, and a w in the transforms caps the largest candidate', function (): void {
+	$html = $this->render->picture(
+		imageObject(),
+		['w' => 1200, 'q' => 70],
+		['widths' => [400, 900, 1600], 'formats' => ['webp'], 'sizes' => '(min-width: 60em) 50vw, 100vw'],
+	);
+
+	expect(substr_count($html, '<source '))->toBe(1)
+		->and($html)->toContain('type="image/webp"')
+		->and($html)->not->toContain('image/avif')
+		->and($html)->toContain('sizes="(min-width: 60em) 50vw, 100vw"')
+		// With a base transform present `q` precedes `w` in the query string,
+		// so match the width parameter itself rather than a leading `?`.
+		->and($html)->toContain('w=400&amp;')
+		->and($html)->toContain('w=900&amp;')
+		// 1600 exceeds the caller's 1200 ceiling and is dropped; the ceiling is
+		// not itself added (it is a cap, not a candidate).
+		->and($html)->not->toContain('w=1600')
+		->and($html)->not->toContain('w=1200')
+		->and($html)->toContain('<img src="/imageworks/image/hero/image.jpg?q=70&amp;w=900')
+		// The base transform reaches every candidate.
+		->and(substr_count($html, 'q=70'))->toBeGreaterThanOrEqual(4);
+});
+
+test('picture() skips a <source> in the image\'s own format, wraps in the image\'s link, and returns nothing for an empty or missing image', function (): void {
+	$webp = $this->render->picture(imageObject(['name' => 'hero.webp', 'mime' => 'image/webp', 'link' => 'https://example.com/more']));
+
+	expect($webp)->toStartWith('<a href="https://example.com/more"><picture>')
+		->and(substr_count($webp, '<source '))->toBe(1)
+		->and($webp)->toContain('type="image/avif"')
+		->and($webp)->not->toContain('type="image/webp"')
+		->and($webp)->toContain('<img src="/imageworks/image/hero/image.webp?w=1920');
+
+	// A GIF gets no <source> at all — re-encoding would drop animation.
+	$gif = $this->render->picture(imageObject(['name' => 'loop.gif', 'mime' => 'image/gif']));
+	expect($gif)->not->toContain('<source ')
+		->and($gif)->toContain('<img src="/imageworks/image/hero/image.gif?w=1920');
+
+	expect($this->render->picture(null))->toBe('')
+		->and($this->render->picture(''))->toBe('')
+		->and($this->render->picture('does-not-exist'))->toBe('')
+		->and($this->render->picture(imageObject(['size' => 0])))->toBe('');
+});
+
+test('picture() is reachable from a template as cms.render.picture() with the same three-argument shape', function (): void {
+	// The cases above call the adapter directly. This one goes through the
+	// real engine so a rename, a __call collision or a missing sub-adapter
+	// registration would surface here rather than on a live site.
+	$html = $this->app->getContainer()->get(TwigEngine::class)->renderString(
+		"{{ cms.render.picture(hero, {q: 80}, {sizes: '50vw', class: 'from-twig'}) }}",
+		['hero' => imageObject()],
+	);
+
+	expect($html)->toStartWith('<picture>')
+		->and($html)->toContain('<source type="image/avif"')
+		->and($html)->toContain('sizes="50vw"')
+		->and($html)->toContain('q=80')
+		->and($html)->toContain('class="from-twig"')
+		->and($html)->toContain('1920w');
 });
 
 // ─── gallery() ───────────────────────────────────────────────────────────────

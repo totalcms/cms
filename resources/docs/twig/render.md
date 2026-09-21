@@ -60,6 +60,41 @@ Images stored inside a `card` or `deck` field are addressed through the `propert
 
 `cms.render.alt()` accepts the same `property: 'parent.child'` syntax. See [cms.media → Nested images](docs/twig/media#nested-images-cards-and-decks) for the underlying URL convention.
 
+### picture()
+
+Render a responsive `<picture>`: one `<source>` per modern format, each carrying a `srcset` of ImageWorks candidates, then an `<img>` fallback in the image's own format. The fallback carries the same `srcset`, so a browser that ignores `<picture>` still picks a sensible size.
+
+Same three arguments as `image()`: the object, then **ImageWorks transforms**, then collection/render context. The transforms are applied to every candidate in every `srcset` — the only thing that varies between candidates is `w`, which `picture()` sets itself.
+
+```twig
+{# Defaults: 480/768/1024/1440/1920 candidates, AVIF + WebP sources, sizes="100vw" #}
+{{ cms.render.picture('hero') }}
+
+{# An image that never spans the viewport — tell the browser, or it downloads for 100vw #}
+{{ cms.render.picture(post, {}, {sizes: '(min-width: 60em) 50vw, 100vw', collection: 'blog'}) }}
+
+{# Your own candidate widths and a single format #}
+{{ cms.render.picture(post, {}, {widths: [400, 800, 1200], formats: ['webp']}) }}
+
+{# The transforms apply to every candidate; w there is a ceiling, not a candidate #}
+{{ cms.render.picture(post, {w: 1200, h: 675, fit: 'crop-focalpoint', q: 75}) }}
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `idOrObject` | string\|array\|null | required | Object ID or full object data |
+| `imageworks` | array | `[]` | ImageWorks transforms applied to **every** candidate — `h`, `fit`, `q`, a preset `p`, and so on. Two keys behave differently from `image()`: `w` is a ceiling on the largest candidate rather than a candidate itself, and `fm` is ignored, because each `<source>` sets its own format from the `formats` option |
+| `options` | array | `[]` | The picture options below, plus the same context as `image()`: `collection` (default `'image'`), `property` (default `'image'`, dotted for card/deck-nested), `loading` (default `'lazy'`) and `class` |
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `widths` | int[] | `[480, 768, 1024, 1440, 1920]` | Candidate widths for every `srcset`. Any wider than the source are dropped and the source width joins as the largest — ImageWorks never upscales, so a wider candidate would deliver the source's own width and mis-report it |
+| `formats` | string[] | `['avif', 'webp']` | One `<source>` per format, in order, best first. A format equal to the image's own is skipped as redundant. Any of `jpg`, `png`, `webp`, `avif` |
+| `sizes` | string | `'100vw'` | The `sizes` attribute on every `<source>` and the `<img>`. `100vw` is what a browser assumes without it, so narrow it per call |
+| `collection`, `property`, `loading`, `class` | | as `image()` | Collection context, dotted nested `property`, lazy loading, extra class |
+
+Every `w` descriptor is the width ImageWorks will actually deliver for that candidate, after `h` and `fit` are applied — never the requested number. Two requested widths that clamp to one delivered width collapse into one candidate. A GIF gets no `<source>` children at all, since re-encoding to a still format would drop its animation. Change the defaults site-wide under `imageworks.picture` in `config/tcms.php`; see [Format & Quality](docs/twig/imageworks#format--quality) for the format list.
+
 ### alt()
 
 Get the alt text for an image. Falls back through alt text, EXIF data, then filename.

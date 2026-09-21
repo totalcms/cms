@@ -502,6 +502,7 @@ return [
 	ImageRenderer::class => fn (ContainerInterface $container): ImageRenderer => new ImageRenderer(
 		$container->get(MediaTwigAdapter::class),
 		$container->get(DataTwigAdapter::class),
+		$container->get(Config::class),
 	),
 	GalleryRenderer::class => fn (ContainerInterface $container): GalleryRenderer => new GalleryRenderer(
 		$container->get(MediaTwigAdapter::class),

@@ -349,6 +349,16 @@ $settings['imageworks'] = [
 			'fit' => 'crop-focalpoint',
 		],
 	],
+	// cms.render.picture() defaults. `widths` are the srcset candidates (any
+	// wider than the source image are dropped, and the source width joins as
+	// the top one); `formats` become <source> elements, best first; `sizes`
+	// is the attribute's value — 100vw is what a browser assumes without it,
+	// so narrow it per call for images that don't span the viewport.
+	'picture' => [
+		'widths'  => [480, 768, 1024, 1440, 1920],
+		'formats' => ['avif', 'webp'],
+		'sizes'   => '100vw',
+	],
 ];
 
 $settings['auth'] = [

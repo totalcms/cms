@@ -30,7 +30,7 @@
 | Twig recipes (archives, related posts, prev/next, scheduling, calendars, signed links) | `twig/recipes.md` | `template_from_string` renders a stored text field as Twig. |
 | Collection filtering and sorting in Twig | `twig/collection-filtering.md` | `filterCollection` operators include date windows (`todayPlusDays`, `thisMonth`) and array logic. |
 | Core SEO | `site-builder/seo.md` | `{{ cms.seo.head(page) }}` in the layout, `cms.seo.head(post, {collection: 'blog'})` on detail pages, delete your own `<title>`/description. |
-| Images (ImageWorks resize, watermark, palette) | `twig/imageworks.md`, `twig/media.md` | `cms.render.image(object, {w: 800}, {collection: 'blog', property: 'image'})` — three arguments, never merged. |
+| Images (ImageWorks resize, watermark, palette) | `twig/imageworks.md`, `twig/media.md` | `cms.render.image(object, {w: 800}, {collection: 'blog', property: 'image'})` — three arguments, never merged. `cms.render.picture()` takes the same three and emits a responsive `<picture>` (AVIF/WebP sources + srcset); pass `sizes` in the options for anything narrower than the viewport. |
 | Video field | `fields/video.md` | Store the URL; `cms.render.video()` renders any supported provider. |
 | Load More (progressive lists) | `twig/load-more.md` | Renders items through a template in `builder/templates/`; the API endpoint does the paging. |
 | HTMX recipes (live search, facets, lazy sections, forms) | `twig/htmx.md` | Any collection query can return rendered HTML with `format=html&template=…`. |
