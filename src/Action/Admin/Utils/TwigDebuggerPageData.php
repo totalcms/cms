@@ -6,6 +6,7 @@ namespace TotalCMS\Action\Admin\Utils;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Twig\Service\TwigLintService;
+use TotalCMS\Support\Config;
 
 /**
  * Twig Debugger: lint a file under the document root.
@@ -14,6 +15,7 @@ final readonly class TwigDebuggerPageData implements UtilsPageData
 {
 	public function __construct(
 		private TwigLintService $twigLintService,
+		private Config $config,
 	) {
 	}
 
@@ -40,50 +42,49 @@ final readonly class TwigDebuggerPageData implements UtilsPageData
 	}
 
 	/**
-	 * Lint a Twig file for syntax errors.
-	 *
-	 * @SuppressWarnings("PHPMD.Superglobals")
+	 * Lint a Twig file for syntax errors. The file must live under the
+	 * document root, resolved through Config (which always has one — it falls
+	 * back to <root>/public) rather than the raw $_SERVER value: an empty root
+	 * would make every path "inside" it, since every string starts with "".
 	 *
 	 * @return array<string,mixed>
 	 */
 	private function lintTwigFile(string $relativePath): array
 	{
-		// Construct full path from document root
-		$documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
-
-		// Clean the path - remove leading slashes for consistency
 		$relativePath = ltrim($relativePath, '/');
 
-		// Build absolute path
-		$absolutePath = $documentRoot . '/' . $relativePath;
+		// realpath('') is the working directory, so the empty case is checked first.
+		$documentRoot = $this->config->docroot === '' ? false : realpath($this->config->docroot);
 
-		// Security check: ensure the path is within document root
-		$realPath = realpath($absolutePath);
-
-		if ($realPath === false) {
-			return [
-				'success' => false,
-				'error'   => [
-					'message' => "File not found: {$relativePath}",
-					'line'    => 0,
-					'context' => '',
-				],
-				'file'    => $relativePath,
-			];
+		if ($documentRoot === false) {
+			return $this->lintError($relativePath, 'Access denied: no document root');
 		}
 
-		if (!str_starts_with($realPath, (string)$documentRoot)) {
-			return [
-				'success' => false,
-				'error'   => [
-					'message' => 'Access denied: path outside document root',
-					'line'    => 0,
-					'context' => '',
-				],
-				'file'    => $relativePath,
-			];
+		$realPath = realpath($documentRoot . '/' . $relativePath);
+
+		if ($realPath === false) {
+			return $this->lintError($relativePath, "File not found: {$relativePath}");
+		}
+
+		// The separator matters: /var/www-old must not pass for a root of /var/www.
+		if (!str_starts_with($realPath, rtrim($documentRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) {
+			return $this->lintError($relativePath, 'Access denied: path outside document root');
 		}
 
 		return $this->twigLintService->lintFile($realPath)->toArray();
+	}
+
+	/** @return array<string,mixed> */
+	private function lintError(string $relativePath, string $message): array
+	{
+		return [
+			'success' => false,
+			'error'   => [
+				'message' => $message,
+				'line'    => 0,
+				'context' => '',
+			],
+			'file'    => $relativePath,
+		];
 	}
 }
