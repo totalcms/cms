@@ -171,20 +171,11 @@ function setupHtmlOutput() {
 		readOnly: true,
 	});
 
-	// Set reasonable height with scrolling for long content
-	const lineHeight = outputEditor.defaultTextHeight();
-	const lineCount = outputEditor.lineCount();
-	const calculatedHeight = (lineCount * lineHeight) + 40;
-	const maxHeight = 500;
-	const minHeight = 200;
-
-	const finalHeight = Math.min(Math.max(calculatedHeight, minHeight), maxHeight);
-	outputContainer.style.height = finalHeight + 'px';
-
-	// Enable scrolling if content exceeds max height
-	if (calculatedHeight > maxHeight) {
-		outputContainer.style.maxHeight = maxHeight + 'px';
-	}
+	// Height is CSS's job: .html-output-editor .cm-editor is height:auto
+	// clamped to 200–500px with a scrolling .cm-scroller (twig-playground.scss).
+	// Sizing it from script as well pinned the container to a number measured
+	// before CodeMirror had laid anything out, and the editor could never
+	// grow past it.
 
 	// Force refresh after a moment
 	setTimeout(() => {

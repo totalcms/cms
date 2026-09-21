@@ -225,7 +225,25 @@ class TotalCMSEditorView {
 		this.view.destroy();
 	}
 
+	/**
+	 * The rendered height of one line, in px — callable straight after
+	 * construction, as CodeMirror 5's method of this name was.
+	 *
+	 * CM6's `view.defaultLineHeight` is a lazily *measured* value: its height
+	 * oracle starts at a placeholder 14 and only learns the real figure on the
+	 * first measure cycle, an animation frame after the view is mounted. Every
+	 * caller of this shim sizes something synchronously right after creating
+	 * the editor, so they were all working from the placeholder — about 70%
+	 * of the truth at the 14px / 1.4 theme. The content element's computed
+	 * line-height is available the instant the view is in the DOM, so read
+	 * that first and keep the oracle as the fallback for a detached view.
+	 */
 	defaultTextHeight() {
+		const computed = parseFloat(getComputedStyle(this.view.contentDOM).lineHeight);
+		if (Number.isFinite(computed) && computed > 0) {
+			return computed;
+		}
+
 		return this.view.defaultLineHeight;
 	}
 
