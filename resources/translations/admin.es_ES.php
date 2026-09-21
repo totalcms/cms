@@ -349,6 +349,8 @@ return [
 	'settings.general_desc'            => 'Configuración principal de la aplicación',
 	'settings.authentication'          => 'Autenticación',
 	'settings.authentication_desc'     => 'Configuración de autenticación de usuarios',
+	'settings.backups'                 => 'Copias de seguridad',
+	'settings.backups_desc'            => 'Historial para deshacer cada guardado y eliminación de objetos',
 	'settings.cache'                   => 'Caché',
 	'settings.cache_desc'              => 'Configuración del backend de caché',
 	'settings.dashboard'               => 'Panel de control',

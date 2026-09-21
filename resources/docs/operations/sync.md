@@ -277,7 +277,7 @@ tcms-data/.system/backups/objects/{collection}/{id}/{id}-{YYYYMMDD-HHMMSS}.json
 tcms-data/.system/backups/collections/{id}/{id}-{YYYYMMDD-HHMMSS}.json
 ```
 
-This happens on whichever side is receiving: production backs up on a push, your local instance backs up on a pull. Each schema and object keeps its ten most recent snapshots; re-syncing unchanged content does not stack duplicates. Restoring is a manual copy — find the snapshot you want and copy it back over the live file, then clear the cache.
+This happens on whichever side is receiving: production backs up on a push, your local instance backs up on a pull. Each schema and object keeps its ten most recent snapshots; re-syncing unchanged content does not stack duplicates. Objects restore with `tcms backup:list` and `tcms backup:restore` — see [Backups](backups). Schemas and collection settings are still a manual copy: find the snapshot you want, copy it back over the live file, then clear the cache.
 
 Backups only cover what sync overwrites. They are not a substitute for real backups of `tcms-data/`.
 

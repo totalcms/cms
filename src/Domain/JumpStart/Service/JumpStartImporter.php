@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\JumpStart\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\Backup\Service\BackupStore;
 use TotalCMS\Domain\Builder\Service\BuilderOrderService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -21,7 +22,6 @@ use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
-use TotalCMS\Domain\Sync\Service\SyncBackupService;
 use TotalCMS\Domain\Template\Service\TemplateSaver;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -60,7 +60,7 @@ class JumpStartImporter
 	 * Whether this import runs in sync/upsert mode. Mirrors the
 	 * $allowSystemCollections pattern: set per-call from importFromDefinition().
 	 * Upsert mode is what turns an import into a blind overwrite, so it is
-	 * also what gates the pre-overwrite backups (SyncBackupService) — a
+	 * also what gates the pre-overwrite backups (BackupStore) — a
 	 * starter-kit import never overwrites and needs no snapshots.
 	 */
 	private bool $upsert = false;
@@ -84,7 +84,7 @@ class JumpStartImporter
 		private readonly TemplateSaver $templateSaver,
 		private readonly FactoryImporter $factoryImporter,
 		private readonly EventDispatcher $eventDispatcher,
-		private readonly SyncBackupService $syncBackup,
+		private readonly BackupStore $syncBackup,
 		private readonly BuilderOrderService $orderService,
 		LoggerFactory $loggerFactory,
 	) {

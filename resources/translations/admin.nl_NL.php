@@ -349,6 +349,8 @@ return [
 	'settings.general_desc'            => 'Kerninstellingen van de applicatie',
 	'settings.authentication'          => 'Authenticatie',
 	'settings.authentication_desc'     => 'Instellingen voor gebruikersauthenticatie',
+	'settings.backups'                 => 'Back-ups',
+	'settings.backups_desc'            => 'Ongedaan-maakgeschiedenis voor elke objectopslag en -verwijdering',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Cache-backendconfiguratie',
 	'settings.dashboard'               => 'Dashboard',

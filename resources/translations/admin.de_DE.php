@@ -349,6 +349,8 @@ return [
 	'settings.general_desc'            => 'Grundlegende Anwendungseinstellungen',
 	'settings.authentication'          => 'Authentifizierung',
 	'settings.authentication_desc'     => 'Benutzer-Authentifizierungseinstellungen',
+	'settings.backups'                 => 'Backups',
+	'settings.backups_desc'            => 'Verlauf zum Rückgängigmachen für jedes Speichern und Löschen von Objekten',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Cache-Backend-Konfiguration',
 	'settings.dashboard'               => 'Dashboard',

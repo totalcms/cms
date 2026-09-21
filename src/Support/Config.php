@@ -80,6 +80,8 @@ class Config
 	public array $automations = [];
 	/** @var array<string,mixed> */
 	public array $xmlrpc = [];
+	/** @var array<string,mixed> Object snapshot history — see BackupStore. */
+	public array $backups = [];
 	/** @var array<string,mixed> `tcms push` / `tcms pull` remote — see SyncConfig. */
 	public array $sync = [];
 
@@ -167,6 +169,7 @@ class Config
 		$this->search             = is_array($this->rawSettings['search'] ?? null) ? $this->rawSettings['search'] : [];
 		$this->automations        = is_array($this->rawSettings['automations'] ?? null) ? $this->rawSettings['automations'] : [];
 		$this->xmlrpc             = is_array($this->rawSettings['xmlrpc'] ?? null) ? $this->rawSettings['xmlrpc'] : [];
+		$this->backups            = is_array($this->rawSettings['backups'] ?? null) ? $this->rawSettings['backups'] : [];
 		$this->sync               = is_array($this->rawSettings['sync'] ?? null) ? $this->rawSettings['sync'] : [];
 
 		$siteId         = (string)($this->rawSettings['siteId'] ?? '');

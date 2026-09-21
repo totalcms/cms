@@ -47,6 +47,7 @@ use TotalCMS\Domain\Auth\Service\ImpersonationService;
 use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
 use TotalCMS\Domain\Automation\Service\AutomationActivityLogger;
 use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
+use TotalCMS\Domain\Backup\Listener\ObjectBackupListener;
 use TotalCMS\Domain\Builder\EventListener\ReloadPulseListener;
 use TotalCMS\Domain\Builder\PageMiddleware\PageAuthMiddleware;
 use TotalCMS\Domain\Builder\Repository\BuilderOrderRepository;
@@ -724,6 +725,15 @@ return [
 		$dispatcher->listen('object.created', $lazy(ContentChangeListener::class, 'onObjectSaved'), -50);
 		$dispatcher->listen('object.updated', $lazy(ContentChangeListener::class, 'onObjectSaved'), -50);
 		$dispatcher->listen('object.deleted', $lazy(ContentChangeListener::class, 'onObjectDeleted'), -50);
+
+		// ObjectBackupListener — keeps each record's pre-save state on update
+		// and its final state on delete, in .system/backups/objects/. Reads
+		// `previous` off the payload (the file on disk is already the new
+		// version by now), so it is a pure listener with no write-path hook.
+		// Import-suspended object.updated never reaches it, so bulk imports
+		// don't flood the store. Priority -50, same tier as search.
+		$dispatcher->listen('object.updated', $lazy(ObjectBackupListener::class, 'onObjectUpdated'), -50);
+		$dispatcher->listen('object.deleted', $lazy(ObjectBackupListener::class, 'onObjectDeleted'), -50);
 
 		// PromptChangeListener — invalidates the PromptDiscoveryService in-memory
 		// cache whenever an mcp-prompt object changes so prompt edits go live

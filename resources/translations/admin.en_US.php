@@ -349,6 +349,8 @@ return [
 	'settings.general_desc'            => 'Core application settings',
 	'settings.authentication'          => 'Authentication',
 	'settings.authentication_desc'     => 'User authentication settings',
+	'settings.backups'                 => 'Backups',
+	'settings.backups_desc'            => 'Undo history for every object save and delete',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Cache backend configuration',
 	'settings.dashboard'               => 'Dashboard',

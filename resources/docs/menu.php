@@ -276,6 +276,7 @@ return [
 			['title' => 'Filesystem',        'path' => 'operations/filesystem'],
 			['title' => 'Shared Data',       'path' => 'operations/shared-data'],
 			['title' => 'Sync',              'path' => 'operations/sync'],
+			['title' => 'Backups',           'path' => 'operations/backups'],
 			['title' => 'Git-First Templates', 'path' => 'operations/git-first-templates'],
 			['title' => 'Cron URLs',         'path' => 'operations/cron-urls'],
 			['title' => 'Updates',           'path' => 'operations/updates'],

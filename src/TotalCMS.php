@@ -9,6 +9,8 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Backup\Service\BackupStore;
+use TotalCMS\Domain\Backup\Service\ObjectRestorer;
 use TotalCMS\Domain\Buffer\BufferController;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -338,6 +340,16 @@ class TotalCMS
 	public function objectRemover(): ObjectRemover
 	{
 		return $this->container->get(ObjectRemover::class);
+	}
+
+	public function backupStore(): BackupStore
+	{
+		return $this->container->get(BackupStore::class);
+	}
+
+	public function objectRestorer(): ObjectRestorer
+	{
+		return $this->container->get(ObjectRestorer::class);
 	}
 
 	/**

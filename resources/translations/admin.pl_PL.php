@@ -349,6 +349,8 @@ return [
 	'settings.general_desc'            => 'Podstawowe ustawienia aplikacji',
 	'settings.authentication'          => 'Uwierzytelnianie',
 	'settings.authentication_desc'     => 'Ustawienia uwierzytelniania użytkowników',
+	'settings.backups'                 => 'Kopie zapasowe',
+	'settings.backups_desc'            => 'Historia cofania każdego zapisu i usunięcia obiektu',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Konfiguracja backendów cache',
 	'settings.dashboard'               => 'Pulpit',

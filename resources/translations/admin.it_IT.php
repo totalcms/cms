@@ -349,6 +349,8 @@ return [
 	'settings.general_desc'            => 'Impostazioni principali dell\'applicazione',
 	'settings.authentication'          => 'Autenticazione',
 	'settings.authentication_desc'     => 'Impostazioni di autenticazione utente',
+	'settings.backups'                 => 'Backup',
+	'settings.backups_desc'            => 'Cronologia per annullare ogni salvataggio ed eliminazione di oggetti',
 	'settings.cache'                   => 'Cache',
 	'settings.cache_desc'              => 'Configurazione del backend della cache',
 	'settings.dashboard'               => 'Dashboard',

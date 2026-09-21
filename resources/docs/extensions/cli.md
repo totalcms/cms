@@ -740,6 +740,47 @@ tcms mcp:test query_collection --params='{"collection":"blog"}' --persona=public
 
 ---
 
+## Backup Commands
+
+Every object save keeps the version it replaced and every delete keeps the final state, under `tcms-data/.system/backups/objects/`. These two commands read that history back. See [Backups](../operations/backups) for what is kept and for how long.
+
+### `backup:list`
+
+List the snapshots kept for one object, newest first. The `Snapshot` column is the filename `backup:restore` takes. A deleted object still lists — its history survives the delete.
+
+```bash
+tcms backup:list blog my-post
+tcms backup:list blog my-post --json
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `collection` | Yes | Collection ID |
+| `id` | Yes | Object ID |
+
+### `backup:restore`
+
+Put a snapshot back as the live record. This is an ordinary save: the index rebuilds, listeners fire, and the state being replaced is snapshotted first — so a restore can itself be undone by restoring one entry back. Restoring a deleted object recreates it.
+
+```bash
+tcms backup:restore blog my-post my-post-20260919-091500.json
+tcms backup:restore blog my-post --latest
+tcms backup:restore blog my-post --latest --force
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `collection` | Yes | Collection ID |
+| `id` | Yes | Object ID |
+| `snapshot` | No | Snapshot filename from `backup:list` (omit with `--latest`) |
+
+| Option | Description |
+|--------|-------------|
+| `--latest` | Restore the newest snapshot |
+| `--force, -f` | Skip the confirmation prompt (required for non-interactive/CI use) |
+
+---
+
 ## Maintenance Commands
 
 ### `repair:index`

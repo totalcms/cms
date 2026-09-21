@@ -24,10 +24,16 @@ readonly class ObjectRemover
 
 	public function deleteObject(string $collection, string $id): bool
 	{
+		// Read the record before it goes so `object.deleted` can carry what was
+		// deleted. Without this every listener is blind to the content — the
+		// backup store, for one, has nothing to keep. Nullable fetch: deleting
+		// an already-missing object is not an error here.
+		$previous = $this->storage->fetchObject($collection, $id);
+
 		$status = $this->storage->deleteObject($collection, $id);
 
 		if ($status) {
-			$this->eventDispatcher->dispatch(CoreEvent::OBJECT_DELETED, new ObjectEventPayload($collection, $id));
+			$this->eventDispatcher->dispatch(CoreEvent::OBJECT_DELETED, new ObjectEventPayload($collection, $id, null, $previous));
 		}
 
 		return $status;

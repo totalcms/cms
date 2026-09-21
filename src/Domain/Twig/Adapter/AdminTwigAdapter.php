@@ -462,6 +462,7 @@ readonly class AdminTwigAdapter
 		$sections = [
 			'general'    => ['label' => $t('settings.general'),           'description' => $t('settings.general_desc')],
 			'auth'       => ['label' => $t('settings.authentication'),    'description' => $t('settings.authentication_desc')],
+			'backups'    => ['label' => $t('settings.backups'),           'description' => $t('settings.backups_desc')],
 			'cache'      => ['label' => $t('settings.cache'),             'description' => $t('settings.cache_desc')],
 			'dashboard'  => ['label' => $t('settings.dashboard'),         'description' => $t('settings.dashboard_desc')],
 			'extensions' => ['label' => $t('settings.extensions'),        'description' => $t('settings.extensions_desc')],

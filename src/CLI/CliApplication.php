@@ -78,6 +78,8 @@ class CliApplication
 		// Info & cache
 		$app->addCommand(new Command\InfoCommand($totalcms));
 		$app->addCommand(new Command\CacheClearCommand($totalcms));
+		$app->addCommand(new Command\BackupListCommand($totalcms));
+		$app->addCommand(new Command\BackupRestoreCommand($totalcms));
 		$app->addCommand(new Command\DeployCommand($totalcms));
 		$app->addCommand(new Command\JobsProcessCommand($totalcms));
 		$app->addCommand(new Command\AutomationsProcessCommand($totalcms));

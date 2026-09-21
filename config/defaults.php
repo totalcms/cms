@@ -573,6 +573,18 @@ $settings['xmlrpc'] = [
 	'ratePerIp' => 60,
 ];
 
+// Object snapshot history. Every save keeps the record's pre-save state and
+// every delete keeps its final state, under tcms-data/.system/backups/objects/.
+// Records only — never uploaded files or images. Sync's pre-overwrite
+// snapshots land in the same tree. `keep` is per object; `maxAgeDays` prunes
+// regardless of count (0 disables the age rule). Editable under Settings →
+// Backups; restore with `tcms backup:list` / `tcms backup:restore`.
+$settings['backups'] = [
+	'enable'     => true,
+	'keep'       => 10,
+	'maxAgeDays' => 30,
+];
+
 // `tcms push` / `tcms pull` remote. Normally set in Settings → Sync, which
 // writes settings.json. Set it here (or in config/tcms.php) instead when
 // several installs share one tcms-data folder: settings.json is shared, so a

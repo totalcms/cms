@@ -85,6 +85,35 @@ final class ObjectRemoverTest extends TestCase
 		expect($this->dispatchedPayload['id'])->toBe('test-id');
 	}
 
+	/**
+	 * Every other listener on `object.deleted` used to be blind to what was
+	 * deleted — the payload carried only the id. The backup store needs the
+	 * record itself, so the remover now reads it before the delete and
+	 * forwards it as `previous`.
+	 */
+	public function testDeleteObjectCarriesThePreviousStateOnTheEvent(): void
+	{
+		$record = new ObjectData('test-id', []);
+
+		$this->storage->method('fetchObject')->with('posts', 'test-id')->willReturn($record);
+		$this->storage->method('deleteObject')->willReturn(true);
+
+		$this->remover->deleteObject('posts', 'test-id');
+
+		expect($this->dispatchedPayload['previous'] ?? null)->toBe($record);
+	}
+
+	public function testDeleteOfAnUnreadableRecordStillDispatchesWithoutPrevious(): void
+	{
+		$this->storage->method('fetchObject')->willReturn(null);
+		$this->storage->method('deleteObject')->willReturn(true);
+
+		$this->remover->deleteObject('posts', 'test-id');
+
+		expect($this->dispatchedPayload)->not->toBeNull();
+		expect($this->dispatchedPayload)->not->toHaveKey('previous');
+	}
+
 	public function testDeleteObjectDoesNotDispatchEventOnFailure(): void
 	{
 		$this->storage->method('deleteObject')->willReturn(false);

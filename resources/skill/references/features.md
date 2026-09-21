@@ -77,6 +77,7 @@
 |---|---|---|
 | Configuration (`config/tcms.php`) | `operations/configuration.md` | Deep-merged: specify only the keys you change. |
 | Deployment, Apache/Nginx, cron URLs | `operations/deployment.md`, `operations/apache.md`, `operations/nginx.md`, `operations/cron-urls.md` | `tcms deploy` after each deploy: wipes the DI container, clears caches, runs migrations. |
+| Backups (object snapshot history) | `operations/backups.md` | On by default, tunable under Settings → Backups; keeps the pre-save state of every save and the final state of every delete, records only. `backup:list` / `backup:restore`. |
 | Sync (`push`/`pull`) | `operations/sync.md` | See `references/going-live.md`. Only schemas, templates, pages, settings and objects of allow-listed collections travel. |
 | Shared data folder | `operations/shared-data.md` | Several installs on one tcms-data; `siteId` gives one its own settings overlay. |
 | Updates | `operations/updates.md` | `update:check` / `update:apply` / `update:rollback` for zip installs; Composer installs update via Composer. |

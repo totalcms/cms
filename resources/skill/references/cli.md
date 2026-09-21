@@ -57,6 +57,13 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 - `object:export <collection> <id>` — export one object as JSON or ZIP (with assets)
 - `object:delete <collection> <id>` — delete one object (updates the index)
 
+### Backups
+Every save keeps the version it replaced; every delete keeps the final state
+(records only, never files). Restore is an ordinary save and is itself undoable.
+- `backup:list <collection> <id>` — snapshots for one object, newest first
+- `backup:restore <collection> <id> <snapshot>` — put one back (`--latest` for
+  the newest; `--force` to skip the prompt). Recreates a deleted object
+
 ### Schemas
 - `schema:list` — list all schemas
 - `schema:get <id>` — schema details

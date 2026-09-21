@@ -1,0 +1,35 @@
+{
+	"$schema"     : "https://json-schema.org/draft/2020-12/schema",
+	"title"       : "Backups",
+	"description" : "Every save keeps the version it replaced and every delete keeps the final state, so a bad edit or an accidental delete is one <code>tcms backup:restore</code> away. Records only — uploaded files and images are never copied, so the footprint stays the size of the JSON. Snapshots live in <code>tcms-data/.system/backups/</code> and survive application updates. This is an undo history, not a site backup: keep backing up <code>tcms-data/</code>.",
+	"type"        : "object",
+	"properties"  : {
+		"enable": {
+			"type"    : "boolean",
+			"field"   : "toggle",
+			"label"   : "Keep Object History",
+			"help"    : "Master switch. When off, saves and deletes write no snapshots. Existing snapshots are left in place and still restore. Sync's pre-overwrite snapshots are unaffected by this setting.",
+			"default" : true
+		},
+		"keep": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Snapshots per Object",
+			"help"        : "The newest snapshots each object keeps; older ones are pruned on the next save. Identical consecutive saves do not stack a duplicate. Raise this on a busy editorial site; it only costs the size of the record's JSON per snapshot.",
+			"placeholder" : "10",
+			"default"     : 10,
+			"min"         : 1,
+			"max"         : 100
+		},
+		"maxAgeDays": {
+			"type"        : "number",
+			"field"       : "number",
+			"label"       : "Maximum Age (days)",
+			"help"        : "Snapshots older than this are pruned regardless of the count above — one busy afternoon of edits would otherwise evict last week's version, the one you actually wanted. Set to <code>0</code> to keep snapshots until the count limit alone removes them.",
+			"placeholder" : "30",
+			"default"     : 30,
+			"min"         : 0,
+			"max"         : 3650
+		}
+	}
+}

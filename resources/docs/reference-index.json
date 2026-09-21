@@ -4784,6 +4784,64 @@
             "since": "3.5.0"
         },
         {
+            "name": "backup:list",
+            "description": "List the snapshots kept for one object, newest first. The `Snapshot` column is the filename `backup:restore` takes. A deleted object still lists \u2014 its history survives the delete.",
+            "arguments": [
+                {
+                    "name": "collection",
+                    "required": true,
+                    "description": "Collection ID"
+                },
+                {
+                    "name": "id",
+                    "required": true,
+                    "description": "Object ID"
+                }
+            ],
+            "options": [],
+            "examples": [
+                "tcms backup:list blog my-post\ntcms backup:list blog my-post --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "backup:restore",
+            "description": "Put a snapshot back as the live record. This is an ordinary save: the index rebuilds, listeners fire, and the state being replaced is snapshotted first \u2014 so a restore can itself be undone by restoring one entry back. Restoring a deleted object recreates it.",
+            "arguments": [
+                {
+                    "name": "collection",
+                    "required": true,
+                    "description": "Collection ID"
+                },
+                {
+                    "name": "id",
+                    "required": true,
+                    "description": "Object ID"
+                },
+                {
+                    "name": "snapshot",
+                    "required": false,
+                    "description": "Snapshot filename from `backup:list` (omit with `--latest`)"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--latest",
+                    "description": "Restore the newest snapshot"
+                },
+                {
+                    "name": "--force, -f",
+                    "description": "Skip the confirmation prompt (required for non-interactive/CI use)"
+                }
+            ],
+            "examples": [
+                "tcms backup:restore blog my-post my-post-20260919-091500.json\ntcms backup:restore blog my-post --latest\ntcms backup:restore blog my-post --latest --force"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
             "name": "repair:index",
             "description": "Rebuild a collection's `.index.json` and `totalObjects` count from the objects on disk. Use this when the index has drifted from the actual files \u2014 for example after an object's flat file was added or removed out-of-band. (`search:reindex` only touches the search provider; `repair:files` only rebuilds file/image metadata.)",
             "arguments": [
