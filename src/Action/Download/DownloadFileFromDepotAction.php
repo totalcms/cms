@@ -7,6 +7,7 @@ namespace TotalCMS\Action\Download;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Domain\Auth\Service\FileAccessManager;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DepotData;
@@ -70,13 +71,23 @@ class DownloadFileFromDepotAction extends DownloadAction
 			// (depot semantics) does not apply here. The base __invoke uses
 			// `$args['name']` to populate `$this->name`, so set it now.
 			$this->nestedSubpath = $sanitized;
-			$file                = $this->fileFetcher->fetchFile(
-				$args['collection'],
-				$args['id'],
-				$args['property'],
-				$sanitized,
-			);
-			$args['name']        = $file->name;
+
+			try {
+				$file = $this->fileFetcher->fetchFile(
+					$args['collection'],
+					$args['id'],
+					$args['property'],
+					$sanitized,
+				);
+			} catch (\RuntimeException $exception) {
+				// `directoryExists` is only a heuristic: a plain depot SUBFOLDER
+				// is also a real directory under the property, so browsing to
+				// one lands here with no FileData behind it. You cannot download
+				// a folder — that is a miss, not a server fault.
+				throw new HttpNotFoundException($request, $exception->getMessage(), $exception);
+			}
+
+			$args['name'] = $file->name;
 		} elseif (!isset($args['name']) && isset($args['path'])) {
 			// Depot fall-through: the route now uses `{path:.+}` instead of
 			// `{name}`, so populate `name` from `path` for the parent's __invoke.

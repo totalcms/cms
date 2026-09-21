@@ -267,8 +267,13 @@ readonly class SchemaSaver
 	{
 		// Convert property types to $ref when possible
 		foreach ($properties as $key => $options) {
-			if (isset($options['type']) && array_key_exists($options['type'], SchemaData::PROPERTY_TYPE_TO_REF)) {
-				$properties[$key]['$ref'] = SchemaData::PROPERTY_TYPE_TO_REF[$options['type']];
+			// `type` is a string for T3 property types, but JSON Schema also
+			// allows a list (`"type": ["string", "null"]`). Only a string can
+			// name one of our refs — anything else passes through untouched
+			// instead of blowing up array_key_exists() with a non-scalar key.
+			$type = $options['type'] ?? null;
+			if (is_string($type) && array_key_exists($type, SchemaData::PROPERTY_TYPE_TO_REF)) {
+				$properties[$key]['$ref'] = SchemaData::PROPERTY_TYPE_TO_REF[$type];
 				unset($properties[$key]['type']);
 			}
 		}

@@ -101,6 +101,7 @@ use TotalCMS\Domain\Mcp\Resource\Service\DataViewResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Service\McpSessionListener;
+use TotalCMS\Domain\Mcp\Service\ResilientSessionStore;
 use TotalCMS\Domain\Mcp\Subscription\Service\BusResourceNotifier;
 use TotalCMS\Domain\Mcp\Subscription\Service\CompositeResourceNotifier;
 use TotalCMS\Domain\Mcp\Subscription\Service\FileNotificationBus;
@@ -924,7 +925,15 @@ return [
 			@mkdir($dir, 0755, true);
 		}
 
-		return new McpFileSessionStore($dir, 3600);
+		// Wrapped so a corrupt session file is discarded instead of throwing a
+		// JsonException on every later request for that session — see
+		// ResilientSessionStore for the write race that produces them.
+		return new ResilientSessionStore(
+			new McpFileSessionStore($dir, 3600),
+			$dir,
+			$container->get(LoggerFactory::class)
+				->channelLogger(LogChannel::McpActivity, Level::Debug),
+		);
 	},
 
 	// McpToolsValidator needs an explicit definition so it gets a logger bound

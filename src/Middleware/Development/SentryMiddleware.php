@@ -235,6 +235,23 @@ class SentryMiddleware implements MiddlewareInterface
 			// the serializer is correctly refusing it, and the operator sees
 			// the message directly. T3's writers can't produce these shapes.
 			'Failed to denormalize attribute',
+			// A T3 class constant that exists in the source but not on disk —
+			// the caller file was updated and its collaborator was not. Same
+			// install-drift family as 'Call to undefined method' above.
+			'Undefined constant TotalCMS',
+			// EINTR from a directory scan. The OS interrupted the syscall (a
+			// signal arrived mid-scandir); it says nothing about the directory
+			// or our code, and the next request succeeds.
+			'Interrupted system call',
+			// Deck item names are read in Twig with dot notation, so hyphens
+			// can't work. The exception message tells the operator exactly what
+			// to rename — validation doing its job, not a fault.
+			'hyphens are not allowed because item names are read in Twig',
+			// A download URL pointed at a depot SUBFOLDER rather than a file.
+			// Correctly a 404; these are the pre-3.6 builds that still raised
+			// it as a RuntimeException from the fetcher.
+			'Nested file data missing at',
+			'Unable to locate nested file at',
 		],
 	];
 
@@ -356,6 +373,31 @@ class SentryMiddleware implements MiddlewareInterface
 		$file = $exception->getFile();
 		if (str_contains($file, '/tcms-data/extensions/') || str_contains($file, '\\tcms-data\\extensions\\')) {
 			return null;
+		}
+
+		// DI failures survive to here on the CLI by design (see WEB_ONLY_IGNORE):
+		// a wiring regression that hard-downs `jobs:process` is worth paging on.
+		// But the same exception is also what a HALF-COPIED install throws, and
+		// a local Stacks export mid-publish hits the CLI just as readily as a
+		// server does. The two are distinguishable: ask whether the class PHP
+		// says it can't find is actually loadable. If it isn't, the file simply
+		// is not on disk — the install is incomplete, and no change to T3 fixes
+		// it. If it IS loadable, the container genuinely failed to wire a class
+		// that exists, which is our bug, and it still reports.
+		if (preg_match("/No entry or class found for '([^']+)'/", $exception->getMessage(), $matches) === 1) {
+			$missing = $matches[1];
+			// class_exists() runs the autoloader, which on a corrupted install
+			// can itself fatal on an unparseable file. That answers the question
+			// too — the install is broken either way.
+			try {
+				$loadable = class_exists($missing) || interface_exists($missing);
+			} catch (\Throwable) {
+				$loadable = false;
+			}
+
+			if (str_starts_with($missing, 'TotalCMS\\') && !$loadable) {
+				return null;
+			}
 		}
 
 		// Belt-and-suspenders on `ignore_exceptions`. The Sentry SDK applies

@@ -34,8 +34,13 @@ readonly class ObjectPatcher
 	{
 		$object = $this->objectFetcher->fetchObject($collection, $id);
 
-		$objectData            = $object->toArray();
-		$objectData[$property] = array_merge($objectData[$property], $newData);
+		$objectData = $object->toArray();
+		// The property may be absent (never set on this object) or hold a
+		// scalar (a plain text field patched as if it were a card/deck). Treat
+		// either as an empty base so the patch creates the property rather than
+		// warning on the missing key and dying inside array_merge().
+		$existing              = $objectData[$property] ?? [];
+		$objectData[$property] = array_merge(is_array($existing) ? $existing : [], $newData);
 
 		return $this->objectUpdater->updateObject($collection, $id, $objectData);
 	}

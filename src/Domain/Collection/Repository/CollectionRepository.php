@@ -98,7 +98,12 @@ class CollectionRepository extends StorageRepository
 		// the same id twice and downstream registrars like the MCP resource
 		// registrar crash on the duplicate URI. Treat as not-found so the
 		// caller gets a clean miss and the stale directory is invisible.
-		if ($collectionData->id !== $collection) {
+		//
+		// `id` is a typed property with no default, so a collection.json that
+		// never carried one (hand-edited, truncated write) leaves it
+		// uninitialized and a bare read fatals. `isset()` covers that: a meta
+		// file too broken to name itself is the same clean miss.
+		if (!isset($collectionData->id) || $collectionData->id !== $collection) {
 			return null;
 		}
 

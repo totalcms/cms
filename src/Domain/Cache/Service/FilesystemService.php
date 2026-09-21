@@ -393,11 +393,10 @@ readonly class FilesystemService implements CacheInterface
 		}
 
 		if (!is_dir($dir)) {
-			try {
-				return unlink($dir);
-			} catch (\Exception) {
-				return false;
-			}
+			// `@` swallows the warning when another request (or an expiring
+			// entry) removed the file between file_exists() and here. A cache
+			// entry that is already gone is the outcome we wanted.
+			return @unlink($dir);
 		}
 
 		try {
@@ -424,10 +423,9 @@ readonly class FilesystemService implements CacheInterface
 			return true;
 		}
 
-		try {
-			return rmdir($dir);
-		} catch (\Exception) {
-			return false;
-		}
+		// Same race as above one level up: a concurrent clear can drop the
+		// directory, or refill it between our scandir() and this rmdir().
+		// Either way there is nothing to page an operator about.
+		return @rmdir($dir);
 	}
 }

@@ -126,6 +126,74 @@ final class ObjectPatcherTest extends TestCase
 		expect($result)->toBe($updatedObject);
 	}
 
+	/**
+	 * Regression cover for Sentry TOTAL-CMS-PT: `tcms object:patch` against a
+	 * property the object had never carried warned on the missing key and then
+	 * died inside array_merge(). Patching should create the property.
+	 */
+	public function testPatchObjectPropertyCreatesAnAbsentProperty(): void
+	{
+		$existingObject = $this->createMockObjectData([
+			'id'    => 'test-id',
+			'title' => 'Test Post',
+		]);
+
+		$expectedObjectData = [
+			'id'    => 'test-id',
+			'title' => 'Test Post',
+			'meta'  => ['author' => 'Jane Doe'],
+		];
+
+		$updatedObject = $this->createMockObjectData($expectedObjectData);
+
+		$this->objectFetcher
+			->expects($this->once())
+			->method('fetchObject')
+			->with('posts', 'test-id')
+			->willReturn($existingObject);
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', $expectedObjectData)
+			->willReturn($updatedObject);
+
+		$result = $this->patcher->patchObjectProperty('posts', 'test-id', 'meta', ['author' => 'Jane Doe']);
+
+		expect($result)->toBe($updatedObject);
+	}
+
+	/** A scalar already sitting in the slot is replaced, not merged into. */
+	public function testPatchObjectPropertyOverwritesAScalarProperty(): void
+	{
+		$existingObject = $this->createMockObjectData([
+			'id'   => 'test-id',
+			'meta' => 'just a string',
+		]);
+
+		$expectedObjectData = [
+			'id'   => 'test-id',
+			'meta' => ['author' => 'Jane Doe'],
+		];
+
+		$updatedObject = $this->createMockObjectData($expectedObjectData);
+
+		$this->objectFetcher
+			->expects($this->once())
+			->method('fetchObject')
+			->willReturn($existingObject);
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->with('posts', 'test-id', $expectedObjectData)
+			->willReturn($updatedObject);
+
+		$result = $this->patcher->patchObjectProperty('posts', 'test-id', 'meta', ['author' => 'Jane Doe']);
+
+		expect($result)->toBe($updatedObject);
+	}
+
 	public function testPatchObjectPropertyMetaWithRegularProperty(): void
 	{
 		// Mock a regular (non-depot) property
