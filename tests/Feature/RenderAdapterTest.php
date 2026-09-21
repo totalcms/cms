@@ -250,6 +250,19 @@ test('gallery() maxVisible and viewAllText become data attributes for the JS', f
 		->and($html)->toContain('data-view-all-text="See &lt;all&gt;"');
 });
 
+test('gallery() and galleryLauncher() hand zoomFromOrigin to lightGallery untouched', function (): void {
+	// The thumbnail-zoom animation stretches thumbnails cropped to another
+	// shape (lightGallery #1698); the documented way out is this setting, so
+	// it must survive the option scrubbing on both renderers.
+	foreach (['gallery', 'galleryLauncher'] as $method) {
+		$html = $this->render->{$method}(galleryObject(), ['w' => 300, 'h' => 300, 'fit' => 'crop'], [], ['zoomFromOrigin' => false]);
+
+		preg_match('/data-settings="([^"]+)"/', $html, $m);
+		$settings = json_decode(html_entity_decode($m[1]), true);
+		expect($settings)->toMatchArray(['zoomFromOrigin' => false], $method);
+	}
+});
+
 test('gallery() returns an empty string for nothing, an unknown id, and an object without images', function (): void {
 	expect($this->render->gallery(null))->toBe('')
 		->and($this->render->gallery('nope'))->toBe('')

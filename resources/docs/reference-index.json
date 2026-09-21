@@ -2063,7 +2063,8 @@
             "signature": "gallery(string|array|null $idOrObject, array $thumbSettings = [], array $fullSettings = [], array $options = []): string",
             "description": "Render a complete gallery grid with LightGallery lightbox support.",
             "examples": [
-                "{# Default gallery (300x200 thumbnails) #}\n{{ cms.render.gallery('vacation') }}\n\n{# Custom thumbnail size #}\n{{ cms.render.gallery('vacation', {w: 150, h: 150}) }}\n\n{# Thumbnail and full-size settings #}\n{{ cms.render.gallery('vacation', {w: 150}, {w: 1200}) }}\n\n{# With options #}\n{{ cms.render.gallery('vacation', {w: 200}, {}, {\n    maxVisible: 8,\n    viewAllText: 'Show all photos',\n    loop: true,\n    download: false,\n    captions: true,\n    gridCaptions: true,\n    sort: 'name',\n    class: 'my-gallery'\n}) }}"
+                "{# Default gallery (300x200 thumbnails) #}\n{{ cms.render.gallery('vacation') }}\n\n{# Custom thumbnail size #}\n{{ cms.render.gallery('vacation', {w: 150, h: 150}) }}\n\n{# Thumbnail and full-size settings #}\n{{ cms.render.gallery('vacation', {w: 150}, {w: 1200}) }}\n\n{# With options #}\n{{ cms.render.gallery('vacation', {w: 200}, {}, {\n    maxVisible: 8,\n    viewAllText: 'Show all photos',\n    loop: true,\n    download: false,\n    captions: true,\n    gridCaptions: true,\n    sort: 'name',\n    class: 'my-gallery'\n}) }}",
+                "{{ cms.render.gallery('vacation', {w: 300, h: 300, fit: 'crop'}, {}, {zoomFromOrigin: false}) }}"
             ],
             "url": "https://docs.totalcms.co/twig/render/"
         },

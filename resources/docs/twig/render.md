@@ -200,6 +200,15 @@ Render a complete gallery grid with LightGallery lightbox support.
 | `download` | bool | `true` | Show download button in lightbox |
 | `counter` | bool | `true` | Show image counter |
 | `plugins` | array | `['zoom','thumbnail','fullscreen']` | LightGallery plugins |
+| `zoomFromOrigin` | bool | `true` | Animate the lightbox open and close from the clicked thumbnail. Set `false` when thumbnails are cropped to a different shape than the originals — see below |
+
+Every option that is not one of Total CMS's own (`collection`, `property`, `captions`, `gridCaptions`, `sort`, `class`, `maxVisible`, `viewAllText`, `featuredOnly`) is passed straight through to [LightGallery's settings](https://www.lightgalleryjs.com/docs/settings/), so `loop`, `download`, `counter`, `zoomFromOrigin`, `speed`, `mode` and the rest all work as documented there.
+
+**Cropped thumbnails and the zoom animation.** LightGallery's opening animation grows the thumbnail into the full image. It assumes both have the same proportions: when the grid is square crops of landscape or portrait photos (`{w: 300, h: 300, fit: 'crop'}`), the thumbnail is stretched to the full image's shape during the zoom and snaps back once the image loads ([lightGallery #1698](https://github.com/sachinchoolur/lightGallery/issues/1698)). Turn the thumbnail zoom off for those galleries and the full image fades in instead:
+
+```twig
+{{ cms.render.gallery('vacation', {w: 300, h: 300, fit: 'crop'}, {}, {zoomFromOrigin: false}) }}
+```
 
 For caption templates and sorting details, see [totalcms.md](docs/twig/totalcms).
 
