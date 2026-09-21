@@ -2689,6 +2689,15 @@
             "url": "https://docs.totalcms.co/twig/filters/"
         },
         {
+            "name": "typography",
+            "signature": "typography(string $content, array $options = []): string",
+            "description": "Replaces the typewriter substitutes people type with the glyphs a typesetter uses: curly quotes in the site locale's style, real dashes, an ellipsis, `\u00d7` `\u00b1` `\u2260` `\u2192`, `\u00a9` `\u00ae` `\u2122`, inch and foot marks, and no-break spaces where a line break is a mistake \u2014 including between the last two words of every paragraph and heading, so no lone word ends up on its own line.",
+            "examples": [
+                "{{ post.body | typography }}\n{{ post.body | markdown | typography }}\n{{ post.title | typography }}\n\n{# House style: UK dashes, no widow control, fractions on #}\n{{ post.body | typography({dashes: 'en', widont: false, fractions: true}) }}\n\n{# Force a quote style regardless of the site locale #}\n{{ post.body | typography({quotes: 'de'}) }}"
+            ],
+            "url": "https://docs.totalcms.co/twig/filters/"
+        },
+        {
             "name": "hexToColor",
             "signature": "hexToColor(string $hex): array",
             "description": "Converts hex color to color array.",

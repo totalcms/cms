@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Twig\Extension;
 
 use Cake\Chronos\Chronos;
+use Cake\I18n\I18n;
 use PHP_CodeSniffer\Generators\HTML;
 use TotalCMS\Domain\Collection\Utilities\CollectionRefiner;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
@@ -12,6 +13,8 @@ use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
+use TotalCMS\Domain\Typography\Data\TypographyOptions;
+use TotalCMS\Domain\Typography\Service\Typographer;
 use Twig\TwigFilter;
 
 /**
@@ -118,6 +121,7 @@ class TotalCMSTwigFilters
 		'groupBy',
 		'countBy',
 		'toSeconds',
+		'typography',
 	];
 
 	/** @return array<TwigFilter> */
@@ -1032,6 +1036,32 @@ class TotalCMSTwigFilters
 	public static function print_r(mixed $variable): string
 	{
 		return TotalCMSTwigFunctions::print_r($variable);
+	}
+
+	// -------------------------
+	// Typography
+	// -------------------------
+
+	/**
+	 * Proper typography for prose: curly quotes in the site locale's style,
+	 * real dashes, an ellipsis, ×/±/©, no-break spaces where a line break is
+	 * a mistake. HTML-aware — code, pre and attributes are never touched — so
+	 * it runs on styledtext, `|markdown` output and plain strings alike.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	public static function typography(mixed $value, array $options = []): string
+	{
+		if ($value === null || $value === '') {
+			return '';
+		}
+
+		static $typographer = null;
+		$typographer ??= new Typographer();
+
+		$locale = extension_loaded('intl') ? I18n::getLocale() : 'en_US';
+
+		return $typographer->process((string)$value, TypographyOptions::fromArray($options, $locale));
 	}
 
 	// -------------------------

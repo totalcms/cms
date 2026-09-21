@@ -27,6 +27,7 @@
 | Feature | Doc | The one thing to know |
 |---|---|---|
 | Twig: `cms` global, filters, functions | `twig/overview.md`, `twig/filters.md`, `twig/functions.md` | `cms.collection.objects()` — the bare `cms.objects()` is a deprecated proxy. |
+| Typography filter (`\|typography`) | `twig/filters.md` § Typography | Curly quotes in the site locale, dashes, ellipsis, ×/±/©, no-break spaces, widow control; HTML-aware and idempotent. Filter *after* `\|markdown`. |
 | Twig recipes (archives, related posts, prev/next, scheduling, calendars, signed links) | `twig/recipes.md` | `template_from_string` renders a stored text field as Twig. |
 | Collection filtering and sorting in Twig | `twig/collection-filtering.md` | `filterCollection` operators include date windows (`todayPlusDays`, `thisMonth`) and array logic. |
 | Core SEO | `site-builder/seo.md` | `{{ cms.seo.head(page) }}` in the layout, `cms.seo.head(post, {collection: 'blog'})` on detail pages, delete your own `<title>`/description. IndexNow (Bing/Yandex, not Google) is a toggle in the SEO Site Collection (`seo-site`), not a Settings group; it submits exactly what the sitemap lists, via the job queue. |

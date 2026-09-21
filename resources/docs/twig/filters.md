@@ -527,6 +527,50 @@ Creates an obfuscated mailto link that protects email addresses from spam bots. 
 
 **Note:** the decoder lives in `content.js`, which is emitted by `{{ cms.assetsBody() }}`. If your layout doesn't call the [core asset helpers](docs/twig/overview), the address renders as plain text and never becomes a clickable link.
 
+### Typography
+
+#### `typography(string $content, array $options = []): string`
+Replaces the typewriter substitutes people type with the glyphs a typesetter uses: curly quotes in the site locale's style, real dashes, an ellipsis, `×` `±` `≠` `→`, `©` `®` `™`, inch and foot marks, and no-break spaces where a line break is a mistake — including between the last two words of every paragraph and heading, so no lone word ends up on its own line.
+
+The output is marked safe, so it needs no `|raw`. It is HTML-aware: only the text between tags is changed; attributes and the content of `code`, `pre`, `kbd`, `samp`, `script`, `style`, `textarea` and comments are never touched. That means it runs on styledtext, on `|markdown` output and on plain strings alike — and it is idempotent, so anything already typed properly (or filtered twice) passes through unchanged.
+
+```twig
+{{ post.body | typography }}
+{{ post.body | markdown | typography }}
+{{ post.title | typography }}
+
+{# House style: UK dashes, no widow control, fractions on #}
+{{ post.body | typography({dashes: 'en', widont: false, fractions: true}) }}
+
+{# Force a quote style regardless of the site locale #}
+{{ post.body | typography({quotes: 'de'}) }}
+```
+
+Filter **after** `|markdown`, never before it: the converted HTML marks code as `<code>` and `<pre>`, which the filter knows to skip.
+
+| Option | Default | What it does |
+|--------|---------|--------------|
+| `quotes` | site locale | Straight → curly in the locale's style: English “ ” ‘ ’, German „ “ ‚ ‘, Swiss German / Italian / Spanish / Russian « », French «&#8239;» with the narrow no-break space, Polish „ ”, Scandinavian ” ”. Apostrophes (`don't`, `'90s`, `Joe's`) are always ’. `false` leaves quotes alone |
+| `dashes` | `'em'` | `--`, `---` and a spaced hyphen between words → an unspaced em dash. `'en'` gives the UK style: `---` → em dash, `--` and a spaced hyphen → a spaced en dash. Digit ranges (`1990-2000`, `9-5`) → en dash in both; ISO dates, part numbers and hyphenated words are never touched. A hyphen before a number after a space or bracket → a real minus |
+| `ellipsis` | `true` | `...` → … |
+| `math` | `true` | `1024x768`, `4 x 4` → × (digits only, never `0x1F`); `+-` → ±; `!=` `<=` `>=` → ≠ ≤ ≥; `->` `<-` → → ← |
+| `symbols` | `true` | `(c)` `(r)` `(tm)` → © ® ™ |
+| `primes` | `true` | `'` and `"` after a digit → ′ ″ (5′10″, 24″) when no quote is open |
+| `nbsp` | `true` | `&nbsp;` between a number and its unit (10 kg, 25 %, 9 pm), after `Mr.` `Dr.` `No.` `pp.` and friends, after `§` and `№`; for French quote styles, the narrow no-break space before `?` `!` `;` `:` |
+| `widont` | `true` | Joins the last two words of every `p`, heading, `li`, `dt`, `dd` and `figcaption` with `&nbsp;`, when the block has three or more words |
+| `fractions` | `false` | `1/2` `1/4` `3/4` `1/3` `2/3` `1/8`… → ½ ¼ ¾ ⅓ ⅔ ⅛ (dates like `1/2/2026` are left alone) |
+| `ordinals` | `false` | `1st` → `1<sup>st</sup>` — changes markup, so off by default |
+| `wrap` | `false` | Hooks for CSS in the Typogrify tradition: `&` → `<span class="amp">&amp;</span>`, runs of three or more capitals → `<span class="caps">`, an opening quote at the start of a block → `<span class="dquo">` / `squo` for hanging punctuation — changes markup, so off by default |
+
+A misspelled option is an error, not a silent default.
+
+**Things to know:**
+
+- Prose that must keep a straight quote — a shell flag, a JSON snippet — has to be inline code. Markdown backticks and the editor's code mark both produce `<code>`, which the filter skips.
+- A measurement inside a quotation closes the quote: in `"It's 24" wide," he said` the `"` after `24` is read as the closing quote, because a double quote was open. Type the real glyph (`24″`) for that one; the filter leaves it alone.
+- `widont` can overflow a very narrow column when the last two words are long. Turn it off for sidebars and cards.
+- The change is render-time only. Stored content keeps the typed characters, so search, sync and exports carry `"` not `“`.
+
 ## Color Filters
 
 ### Color Conversion
