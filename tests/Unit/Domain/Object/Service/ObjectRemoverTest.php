@@ -459,4 +459,49 @@ final class ObjectRemoverTest extends TestCase
 
 		$this->remover->deleteNestedProperty('posts', 'test-id', 'mydeck', 'ghost/image');
 	}
+
+	/**
+	 * The record is written BEFORE the directory goes. A rejected save (schema
+	 * validation, uniqueness, a disk error) must leave the file in place —
+	 * otherwise the record still names a file that no longer exists, and the
+	 * file is unrecoverable. Reported against 3.5.2 with a styledtext property
+	 * over a maxLength added after the content was written.
+	 */
+	public function testDeleteObjectPropertyLeavesTheDirectoryWhenTheSaveIsRejected(): void
+	{
+		$mockObject = $this->createMock(ObjectData::class);
+		$mockObject->method('toArray')->willReturn(['id' => 'test-id', 'photo' => ['name' => 'hero.png']]);
+		$this->objectFetcher->method('fetchObject')->willReturn($mockObject);
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->willThrowException(new \DomainException('Schema Validation Failed. (/body) Maximum string length is 200, found 625'));
+
+		$this->propStorage
+			->expects($this->never())
+			->method('deleteDirectory');
+
+		$this->expectException(\DomainException::class);
+		$this->remover->deleteObjectProperty('posts', 'test-id', 'photo');
+	}
+
+	public function testDeleteNestedPropertyLeavesTheDirectoryWhenTheSaveIsRejected(): void
+	{
+		$mockObject = $this->createMock(ObjectData::class);
+		$mockObject->method('toArray')->willReturn(['id' => 'test-id', 'mycard' => ['id' => 'mycard', 'image' => ['name' => 'hero.png']]]);
+		$this->objectFetcher->method('fetchObject')->willReturn($mockObject);
+
+		$this->objectUpdater
+			->expects($this->once())
+			->method('updateObject')
+			->willThrowException(new \DomainException('Schema Validation Failed.'));
+
+		$this->propStorage
+			->expects($this->never())
+			->method('deleteDirectory');
+
+		$this->expectException(\DomainException::class);
+		$this->remover->deleteNestedProperty('posts', 'test-id', 'mycard', 'image');
+	}
 }

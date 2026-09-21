@@ -25,13 +25,17 @@ class DepotRemover extends FileRemover
 			throw new \RuntimeException('Expected instance of DepotData');
 		}
 
-		$this->storage->deleteDirectory($collection, $objectID, $property, $name, $subpath);
-		$this->storage->deleteFile($collection, $objectID, $property, $name, $subpath);
-
-		// Directly find or create the folder in the specified path and add the file
+		// Drop the entry from the depot tree and save the record BEFORE touching
+		// disk — a refused save (whole-object validation) must leave the file in
+		// place rather than a record that names a file that no longer exists.
 		$depotManager = new DepotPropertyManager($depot);
 		$depotManager->deleteFile($name, $subpath);
 
-		return $this->updateObject($collection, $objectID, $property, $depot->transform());
+		$updated = $this->updateObject($collection, $objectID, $property, $depot->transform());
+
+		$this->storage->deleteDirectory($collection, $objectID, $property, $name, $subpath);
+		$this->storage->deleteFile($collection, $objectID, $property, $name, $subpath);
+
+		return $updated;
 	}
 }

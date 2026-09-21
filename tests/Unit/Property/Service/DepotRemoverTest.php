@@ -152,6 +152,27 @@ class DepotRemoverTest extends TestCase
 		$this->assertTrue(true);
 	}
 
+	/**
+	 * The record is patched BEFORE anything is removed from disk, so a rejected
+	 * save leaves the depot file in place.
+	 */
+	public function testLeavesTheFileOnDiskWhenTheSaveIsRejected(): void
+	{
+		$this->mockPropFetcher->method('fetchProperty')->willReturn(new DepotData([
+			'files' => [['name' => 'delete-me.txt', 'mime' => 'text/plain', 'size' => 100]],
+		]));
+		$this->mockObjectFetcher->method('existsObject')->willReturn(true);
+		$this->mockObjectPatcher->expects($this->once())
+			->method('patchObject')
+			->willThrowException(new \DomainException('Schema Validation Failed.'));
+
+		$this->mockStorage->expects($this->never())->method('deleteFile');
+		$this->mockStorage->expects($this->never())->method('deleteDirectory');
+
+		$this->expectException(\DomainException::class);
+		$this->createRemover()->deleteFile('blog', 'post-1', 'files', 'delete-me.txt');
+	}
+
 	private function createRemover(): DepotRemover
 	{
 		return new DepotRemover(

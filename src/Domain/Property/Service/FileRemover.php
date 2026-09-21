@@ -45,8 +45,6 @@ class FileRemover
 			throw new \UnexpectedValueException("Object $objectID does not exist in $collection");
 		}
 
-		$this->storage->deleteFile($collection, $objectID, $property, $name);
-
 		$files = $this->fetchProperty($collection, $objectID, $property)->transform();
 
 		// This is the fallback remover for every property type without one of
@@ -57,10 +55,18 @@ class FileRemover
 		// "Cannot access offset of type string on string" — a 500 on every
 		// delete from a single-image or single-file property.
 		//
-		// There is no list to filter in the single-value case: the file that
-		// was just deleted IS the property, so removing it empties it.
+		// There is no list to filter in the single-value case: the file being
+		// deleted IS the property, so removing it empties it.
+		//
+		// Record first, disk second, in both branches. The save can be refused
+		// for a reason unrelated to this file (whole-object validation), and a
+		// file deleted ahead of a refused save is gone for good while the
+		// record still names it. A refused save now changes nothing.
 		if (!array_is_list($files)) {
-			return $this->updateObject($collection, $objectID, $property, []);
+			$updated = $this->updateObject($collection, $objectID, $property, []);
+			$this->storage->deleteFile($collection, $objectID, $property, $name);
+
+			return $updated;
 		}
 
 		foreach ($files as $key => $file) {
@@ -73,6 +79,9 @@ class FileRemover
 		// Reindex the array
 		$files = array_values($files);
 
-		return $this->updateObject($collection, $objectID, $property, $files);
+		$updated = $this->updateObject($collection, $objectID, $property, $files);
+		$this->storage->deleteFile($collection, $objectID, $property, $name);
+
+		return $updated;
 	}
 }

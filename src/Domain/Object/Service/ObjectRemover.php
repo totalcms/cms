@@ -46,9 +46,18 @@ readonly class ObjectRemover
 		$objectData            = $object->toArray();
 		$objectData[$property] = null;
 
+		// Record first, disk second. The save runs whole-object validation and
+		// can be refused for a reason unrelated to this property (a maxLength
+		// added after the content was written, say). Deleting the directory
+		// first left the record naming a file that no longer existed — and
+		// the file unrecoverable. A refused save now leaves everything as it
+		// was; a failed directory delete after a successful save leaves an
+		// orphan on disk, which nothing references and which is recoverable.
+		$updated = $this->objectUpdater->updateObject($collection, $id, $objectData);
+
 		$this->propStorage->deleteDirectory($collection, $id, $property);
 
-		return $this->objectUpdater->updateObject($collection, $id, $objectData);
+		return $updated;
 	}
 
 	/**
@@ -88,8 +97,11 @@ readonly class ObjectRemover
 			unset($cursor);
 		}
 
+		// Record first, disk second — see deleteObjectProperty().
+		$updated = $this->objectUpdater->updateObject($collection, $id, $objectData);
+
 		$this->propStorage->deleteDirectory($collection, $id, $parent, null, $path);
 
-		return $this->objectUpdater->updateObject($collection, $id, $objectData);
+		return $updated;
 	}
 }

@@ -75,6 +75,26 @@ class FileRemoverTest extends TestCase
 		$this->remover()->deleteFile('gallery', 'obj-1', 'photos', 'delete-me.png');
 	}
 
+	/**
+	 * The record is patched BEFORE the file goes, so a rejected save leaves the
+	 * file on disk instead of a record that names a file that no longer exists.
+	 */
+	public function testLeavesTheFileOnDiskWhenTheSaveIsRejected(): void
+	{
+		$this->propFetcher->method('fetchProperty')->willReturn(
+			new ImageData(['name' => 'upload-test.png', 'mime' => 'image/png', 'size' => 100])
+		);
+
+		$this->objectPatcher->expects($this->once())
+			->method('patchObject')
+			->willThrowException(new \DomainException('Schema Validation Failed.'));
+
+		$this->storage->expects($this->never())->method('deleteFile');
+
+		$this->expectException(\DomainException::class);
+		$this->remover()->deleteFile('faculty', 'arlene-hines', 'facultyPhoto', 'upload-test.png');
+	}
+
 	private function remover(): FileRemover
 	{
 		return new FileRemover($this->storage, $this->propFetcher, $this->objectPatcher, $this->objectFetcher);
