@@ -256,6 +256,7 @@ tcms collection:create seo-site
 | **Meta Tags** | Raw markup printed in the `<head>` exactly as written, after the SEO tags. Paste the verification tag a service gives you, or any other `meta`, `link` or `script` tag the site needs on every page — see [Meta Tags](#meta-tags). |
 | **Emit JSON-LD** | Off suppresses the `<script type="application/ld+json">` block entirely. |
 | **Emit Open Graph and Twitter tags** | Off suppresses both sets of social tags. |
+| **Emit generator tag** | On by default, prints `<meta name="generator" content="Total CMS">` — the tag Wappalyzer, BuiltWith and the CMS market-share surveys read to know what a site runs on. The name only, never a version number, so it tells a directory what it needs without telling a vulnerability scanner anything. Turn it off on a white-labeled site. |
 
 A site that has never opened this record still gets a full head: every value falls back to its default, the site name to the General settings name and then the domain, and the base URL to the request's scheme on the site's domain. Nothing has to be filled in for `cms.seo.head()` to work.
 
@@ -442,7 +443,7 @@ The same call works for any collection — products, events, team members — on
 |---|---|
 | `cms.seo.head(subject, options)` | Everything below, in document order |
 | `cms.seo.title(subject, options)` | `<title>` |
-| `cms.seo.meta(subject, options)` | `description`, `robots` and the site's Meta Tags |
+| `cms.seo.meta(subject, options)` | `description`, `robots`, `generator` and the site's Meta Tags |
 | `cms.seo.og(subject, options)` | The Open Graph and Twitter card tags |
 | `cms.seo.canonical(subject, options)` | `<link rel="canonical">` |
 | `cms.seo.icons(subject, options)` | The icon links, the Apple touch icon, the manifest link and `theme-color` — see [Icons](#icons) |

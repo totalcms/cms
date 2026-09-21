@@ -32,7 +32,7 @@ use Twig\Markup;
 final readonly class SeoTwigAdapter
 {
 	/** Everything `head()` prints, in document order. */
-	private const ALL_PARTS = ['title', 'description', 'robots', 'canonical', 'icons', 'og', 'twitter', 'metaTags'];
+	private const ALL_PARTS = ['title', 'description', 'robots', 'generator', 'canonical', 'icons', 'og', 'twitter', 'metaTags'];
 
 	/**
 	 * TwigEngine arrives as a factory, not an instance: this adapter hangs off
@@ -85,13 +85,13 @@ final readonly class SeoTwigAdapter
 	}
 
 	/**
-	 * The non-social meta tags: description, robots and the site's Meta Tags.
+	 * The non-social meta tags: description, robots, generator and the site's Meta Tags.
 	 *
 	 * @param array<string,mixed> $options
 	 */
 	public function meta(mixed $subject = null, array $options = []): Markup
 	{
-		return $this->slice($subject, $options, ['description', 'robots', 'metaTags']);
+		return $this->slice($subject, $options, ['description', 'robots', 'generator', 'metaTags']);
 	}
 
 	/**

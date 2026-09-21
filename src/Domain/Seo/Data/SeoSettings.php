@@ -116,6 +116,12 @@ final readonly class SeoSettings
 		public bool $indexNowEnabled = false,
 		/** The site's IndexNow key, also served at /{key}.txt so engines can verify ownership. */
 		public string $indexNowKey = '',
+		/**
+		 * Print `<meta name="generator" content="Total CMS">`. The name only,
+		 * never a version: the name is what the "built with" directories read,
+		 * a version is what a vulnerability scanner reads.
+		 */
+		public bool $emitGenerator = true,
 	) {
 	}
 
@@ -190,6 +196,7 @@ final readonly class SeoSettings
 			touchIconProperty: $str('touchIconProperty'),
 			indexNowEnabled: (bool)($data['indexNowEnabled'] ?? false),
 			indexNowKey: $str('indexNowKey'),
+			emitGenerator: !array_key_exists('emitGenerator', $data) || filter_var($data['emitGenerator'], FILTER_VALIDATE_BOOL),
 		);
 	}
 
@@ -240,6 +247,7 @@ final readonly class SeoSettings
 			touchIconProperty: $this->touchIconProperty,
 			indexNowEnabled: $this->indexNowEnabled,
 			indexNowKey: $this->indexNowKey,
+			emitGenerator: $this->emitGenerator,
 		);
 	}
 }

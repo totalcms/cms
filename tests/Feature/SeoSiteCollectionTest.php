@@ -28,7 +28,7 @@ it('provisions seo-site as a singleton collection named Site SEO', function (): 
 		->and($collection->schema)->toBe('seo-site');
 
 	$props = array_keys($c->get(SchemaFetcher::class)->fetchSchema('seo-site')->properties);
-	expect($props)->toContain('siteName', 'baseUrl', 'titleTemplate', 'socialTitleTemplate', 'defaultDescription', 'defaultImage', 'twitterHandle', 'organizationName', 'organizationLogo', 'sameAs', 'metaTags', 'emitJsonLd', 'emitSocial');
+	expect($props)->toContain('siteName', 'baseUrl', 'titleTemplate', 'socialTitleTemplate', 'defaultDescription', 'defaultImage', 'twitterHandle', 'organizationName', 'organizationLogo', 'sameAs', 'metaTags', 'emitJsonLd', 'emitSocial', 'emitGenerator');
 });
 
 it('marks the singleton form so the cursor is not dropped into its first field', function (): void {

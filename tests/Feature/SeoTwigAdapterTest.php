@@ -111,6 +111,28 @@ it('renders site defaults with no subject and honours noindex', function (): voi
 		->toContain('<meta name="robots" content="noindex, nofollow">');
 });
 
+it('names Total CMS as the generator, without a version, until the site turns it off', function (): void {
+	$tag = '<meta name="generator" content="Total CMS">';
+
+	// head() and meta() both carry it; the social slice does not.
+	expect(($this->render)('{{ cms.seo.head() }}'))->toContain($tag)
+		->and(($this->render)('{{ cms.seo.meta() }}'))->toContain($tag)
+		->and(($this->render)('{{ cms.seo.og() }}'))->not->toContain($tag);
+
+	// No version string: the name is what the "built with" directories read,
+	// a version is what a vulnerability scanner reads.
+	expect(($this->render)('{{ cms.seo.head() }}'))->not->toMatch('~content="Total CMS [0-9]~');
+});
+
+it('drops the generator tag when the site turns it off', function (): void {
+	// Before the first render: the settings loader memoizes the record for
+	// the life of the container, as it would for the life of a request.
+	$this->app->getContainer()->get(ObjectUpdater::class)->updateObject('seo-site', 'seo-site', ['id' => 'seo-site', 'emitGenerator' => false]);
+
+	expect(($this->render)('{{ cms.seo.head() }}'))->not->toContain('name="generator"')
+		->and(($this->render)('{{ cms.seo.meta() }}'))->not->toContain('name="generator"');
+});
+
 it('drops the canonical link on a noindex page but keeps og:url', function (): void {
 	$page = ['id' => 'secret', 'title' => 'Secret', 'route' => '/secret', 'template' => 'pages/x.twig', 'seo' => ['noindex' => true]];
 	$html = ($this->render)('{{ cms.seo.head(page) }}', ['page' => $page]);

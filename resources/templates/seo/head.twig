@@ -21,6 +21,10 @@
 {%- if 'robots' in parts and meta.robots != '' -%}
 <meta name="robots" content="{{ meta.robots }}">
 {% endif -%}
+{#- The name only, never a version — see SeoSettings::$emitGenerator. -#}
+{%- if 'generator' in parts and settings.emitGenerator -%}
+<meta name="generator" content="Total CMS">
+{% endif -%}
 {#- A noindex page has no canonical to declare: pointing at itself while asking
     to be dropped from the index is a mixed signal. og:url below still prints —
     it is an identity, not an indexing instruction. -#}

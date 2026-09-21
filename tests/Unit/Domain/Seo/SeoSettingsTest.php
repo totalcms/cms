@@ -15,6 +15,7 @@ describe('SeoSettings', function (): void {
 			->and($s->defaultSocialDescription)->toBe('')
 			->and($s->emitJsonLd)->toBeTrue()
 			->and($s->emitSocial)->toBeTrue()
+			->and($s->emitGenerator)->toBeTrue()
 			->and($s->sameAs)->toBe([])
 			->and($s->metaTags)->toBe('');
 	});
@@ -26,6 +27,7 @@ describe('SeoSettings', function (): void {
 			'twitterHandle'      => 'joesbistro',
 			'sameAs'             => "https://x.com/joesbistro\n\nhttps://instagram.com/joesbistro",
 			'emitJsonLd'         => false,
+			'emitGenerator'      => '0',
 			'metaTags'           => "  <meta name=\"google-site-verification\" content=\"abc\">\n<script>x()</script>\n ",
 		], 'ignored.test');
 		expect($s->siteName)->toBe("Joe's Bistro")
@@ -33,6 +35,7 @@ describe('SeoSettings', function (): void {
 			->and($s->twitterHandle)->toBe('@joesbistro')
 			->and($s->sameAs)->toBe(['https://x.com/joesbistro', 'https://instagram.com/joesbistro'])
 			->and($s->emitJsonLd)->toBeFalse()
+			->and($s->emitGenerator)->toBeFalse()
 			// Trimmed, otherwise verbatim: whatever an operator pastes is emitted as given.
 			->and($s->metaTags)->toBe("<meta name=\"google-site-verification\" content=\"abc\">\n<script>x()</script>");
 	});
