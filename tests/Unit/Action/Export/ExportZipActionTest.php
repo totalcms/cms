@@ -36,7 +36,7 @@ final class ExportZipActionTest extends TestCase
 
 	public function testExportsZipSuccessfully(): void
 	{
-		$zipPath = sys_get_temp_dir() . '/test-' . uniqid() . '.zip';
+		$zipPath = sys_get_temp_dir() . '/test-' . uniqid('', true) . '-' . getmypid() . '.zip';
 		file_put_contents($zipPath, 'test zip content');
 
 		$this->collectionZipper->expects($this->once())
@@ -67,7 +67,7 @@ final class ExportZipActionTest extends TestCase
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getQueryParams')->willReturn(['ids' => 'a, b']);
 
-		$zipPath = sys_get_temp_dir() . '/test-' . uniqid() . '.zip';
+		$zipPath = sys_get_temp_dir() . '/test-' . uniqid('', true) . '-' . getmypid() . '.zip';
 		file_put_contents($zipPath, 'zip');
 
 		// Ids are trimmed and passed through; the whole-collection path is skipped.
@@ -86,7 +86,7 @@ final class ExportZipActionTest extends TestCase
 
 	public function testSetsZipContentType(): void
 	{
-		$zipPath = sys_get_temp_dir() . '/test-' . uniqid() . '.zip';
+		$zipPath = sys_get_temp_dir() . '/test-' . uniqid('', true) . '-' . getmypid() . '.zip';
 		file_put_contents($zipPath, 'test');
 
 		$this->collectionZipper->method('createCollectionZip')->willReturn($zipPath);
@@ -102,7 +102,7 @@ final class ExportZipActionTest extends TestCase
 
 	public function testSetsContentDispositionWithFilename(): void
 	{
-		$zipPath = sys_get_temp_dir() . '/test-' . uniqid() . '.zip';
+		$zipPath = sys_get_temp_dir() . '/test-' . uniqid('', true) . '-' . getmypid() . '.zip';
 		file_put_contents($zipPath, 'test');
 
 		$this->collectionZipper->method('createCollectionZip')->willReturn($zipPath);
@@ -126,7 +126,7 @@ final class ExportZipActionTest extends TestCase
 
 	public function testSetsContentLengthHeader(): void
 	{
-		$zipPath = sys_get_temp_dir() . '/test-' . uniqid() . '.zip';
+		$zipPath = sys_get_temp_dir() . '/test-' . uniqid('', true) . '-' . getmypid() . '.zip';
 		$content = 'test zip content with some data';
 		file_put_contents($zipPath, $content);
 
@@ -255,7 +255,7 @@ final class ExportZipActionTest extends TestCase
 
 	public function testReturnsResponseWithZipBody(): void
 	{
-		$zipPath = sys_get_temp_dir() . '/test-' . uniqid() . '.zip';
+		$zipPath = sys_get_temp_dir() . '/test-' . uniqid('', true) . '-' . getmypid() . '.zip';
 		file_put_contents($zipPath, 'zip content');
 
 		$this->collectionZipper->method('createCollectionZip')->willReturn($zipPath);

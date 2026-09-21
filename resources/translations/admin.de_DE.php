@@ -39,6 +39,7 @@ return [
 	'btn.new'             => 'Neu',
 	'btn.done'            => 'Fertig',
 	'btn.cancel'          => 'Abbrechen',
+	'btn.discard'         => 'Änderungen verwerfen',
 	'btn.close'           => 'Schließen',
 	'btn.submit'          => 'Absenden',
 	'btn.back'            => 'Zurück',

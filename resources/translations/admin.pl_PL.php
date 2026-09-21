@@ -39,6 +39,7 @@ return [
 	'btn.new'             => 'Nowy',
 	'btn.done'            => 'Gotowe',
 	'btn.cancel'          => 'Anuluj',
+	'btn.discard'         => 'Odrzuć zmiany',
 	'btn.close'           => 'Zamknij',
 	'btn.submit'          => 'Wyślij',
 	'btn.back'            => 'Wstecz',

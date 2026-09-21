@@ -39,6 +39,7 @@ return [
 	'btn.new'             => 'Nieuw',
 	'btn.done'            => 'Gereed',
 	'btn.cancel'          => 'Annuleren',
+	'btn.discard'         => 'Wijzigingen negeren',
 	'btn.close'           => 'Sluiten',
 	'btn.submit'          => 'Verzenden',
 	'btn.back'            => 'Terug',

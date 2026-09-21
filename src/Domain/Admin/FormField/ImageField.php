@@ -167,9 +167,15 @@ class ImageField extends FormField
 
 	private function closeSection(): string
 	{
-		$button = HTMLUtils::button('Close', ['class' => 'close']);
+		// Save keeps the edits (the field autosaves on close); Discard puts
+		// every dialog field back to what it held when the dialog opened, so
+		// nothing is left unsaved for a later form save to sweep up. Escape
+		// discards too (the preview's onDismiss hook); a backdrop click
+		// saves, like Save.
+		$save    = HTMLUtils::button($this->t('btn.save', 'Save'), ['class' => 'close cms-button no-icon']);
+		$discard = HTMLUtils::button($this->t('btn.discard', 'Discard Changes'), ['class' => 'cancel cms-button transparent no-icon']);
 
-		return HTMLUtils::element('section', $button);
+		return HTMLUtils::element('section', $save . $discard, ['class' => 'dialog-actions']);
 	}
 
 	/** @param array<string,mixed> $imageData */

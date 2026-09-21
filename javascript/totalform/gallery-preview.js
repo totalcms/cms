@@ -48,6 +48,13 @@ export default class GalleryPreview {
 
 		this.setupDelete();
 		this.setupClearCache();
+		// Action-bar buttons are mouse targets, not fields: keep a click from
+		// moving focus into the image field, which in help-on-focus mode would
+		// show the field's help label as if the person had tabbed into it.
+		// mousedown is the moment focus is taken; preventing its default keeps
+		// the click and skips the focus. Keyboard users still Tab to the
+		// buttons, and for them the help is right to appear.
+		this.container.querySelector(".actionbar")?.addEventListener("mousedown", event => event.preventDefault());
 		this.setupFeaturedToggle();
 		this.setupDownload();
 	}
@@ -81,8 +88,9 @@ export default class GalleryPreview {
 		if (this.gallery.activePreview === this && this.gallery.sharedDialogFields) {
 			for (const field of this.gallery.sharedDialogFields) {
 				if (field.totalfield.property === 'featured') {
-					field.totalfield.setValue(featured);
-					field.totalfield.saved();
+					// Already persisted by the star's PATCH — reflect it as saved,
+					// so closing the dialog does not commit it as an edit.
+					field.totalfield.setSavedValue(featured);
 					break;
 				}
 			}

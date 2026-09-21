@@ -112,9 +112,25 @@ export default class GalleryField extends ImageField {
 		this.sharedDialogFields = wrapper.getElementsByClassName("form-field");
 
 		const dialogEl = wrapper.querySelector(".image-edit-dialog");
+		// Discard (the button or Escape): repopulate from the
+		// opening snapshot — populate marks every field saved, so the
+		// close-time commit finds nothing edited and the data store is
+		// untouched. The featured star is not a dialog edit (its PATCH
+		// already saved it), so a discard leaves it as it is.
+		const discardSharedDialog = () => {
+			if (this.sharedDialogSnapshot) {
+				this.populateSharedDialog(this.sharedDialogSnapshot);
+			}
+		};
+		dialogEl.querySelector(".cancel")?.addEventListener("click", event => {
+			event.preventDefault();
+			discardSharedDialog();
+			this.sharedDialog.close();
+		});
 		this.sharedDialog = new Dialog(dialogEl, {
 			open  : null,
 			close : ".close",
+			onDismiss : discardSharedDialog,
 			onOpen : () => {
 				if (!this.sharedDialogSetup) {
 					this.sharedDialogSetup = true;
@@ -290,6 +306,8 @@ export default class GalleryField extends ImageField {
 		this.activePreview = preview;
 		const name = preview.getImageName();
 		const imageData = this.imageDataStore.get(name) || {};
+		// Kept so Cancel can repopulate from exactly what the dialog opened with.
+		this.sharedDialogSnapshot = imageData;
 		this.populateSharedDialog(imageData);
 		dialog.open();
 	}

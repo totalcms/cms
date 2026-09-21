@@ -14,6 +14,10 @@ export default class Dialog  {
 			close      : ".close",
 			onOpen     : null,
 			onClose    : null,
+			// Escape. Runs before onClose, so a dialog whose close commits
+			// edits can throw them away first. A backdrop click is a plain
+			// close (it keeps them).
+			onDismiss  : null,
 			openOnLoad : false,
         };
 
@@ -42,6 +46,7 @@ export default class Dialog  {
 		// body scrolling is restored.
 		this.dialog.addEventListener('cancel', () => {
 			this.allowBodyScrolling();
+			this.dismissed();
 			if (this.options.onClose && typeof this.options.onClose === "function") {
 				this.options.onClose();
 			}
@@ -57,6 +62,12 @@ export default class Dialog  {
     isDomNode(node){
         return node && typeof node === "object" && "nodeType" in node && node.nodeType === 1;
     }
+
+	dismissed() {
+		if (this.options.onDismiss && typeof this.options.onDismiss === "function") {
+			this.options.onDismiss();
+		}
+	}
 
 	close() {
 		this.allowBodyScrolling();

@@ -347,6 +347,24 @@ export default class TotalField {
 		this.changed();
     }
 
+	/**
+	 * Set a value that is ALREADY on disk — after an action that persisted it
+	 * by its own request (the featured star's PATCH, say) — so the field shows
+	 * it without becoming dirty. setValue() is the user-edit path: it marks the
+	 * field unsaved and dispatches a change that a parent composite field turns
+	 * into its own changed(). Here the value lands, the baseline moves with it,
+	 * and nothing is dispatched.
+	 */
+	setSavedValue(value) {
+		this.silent = true;
+		try {
+			this.setValue(value);
+		} finally {
+			this.silent = false;
+		}
+		this.saved();
+	}
+
 	clearValue() {
 		this.setValue("");
 	}
@@ -375,6 +393,13 @@ export default class TotalField {
 		// (e.g. a field's native `change` firing on blur after a successful save).
 		const current = this.getValue();
 		if (this.valuesEqual(this.storedValue, current)) return;
+
+		// A setSavedValue() in progress: the value is already persisted, so
+		// it becomes the baseline and nobody is told — see setSavedValue().
+		if (this.silent) {
+			this.storedValue = current;
+			return;
+		}
 
 		// Value changed - update stored value and dispatch event
 		this.storedValue = current;
@@ -429,6 +454,10 @@ export default class TotalField {
 
 	saved() {
 		this.container.classList.remove("unsaved");
+		// What is on disk is what is here now: without moving the baseline, a
+		// stray change event after a save compares against the pre-save value
+		// and re-marks the field dirty for an edit nobody made.
+		this.storedValue = this.getValue();
 	}
 
 	error(message) {

@@ -37,11 +37,11 @@ setupActionBar() {
 		const image = this.container.querySelector(".dz-preview img");
 		edit.addEventListener("click", event => {
 			event.preventDefault();
-			this.editDialog.open();
+			this.openEditDialog();
 		});
 		image.addEventListener("click", event => {
 			event.preventDefault();
-			this.editDialog.open();
+			this.openEditDialog();
 		});
 		links.addEventListener("click", event => {
 			event.preventDefault();
@@ -49,6 +49,13 @@ setupActionBar() {
 		});
 		this.setupDelete();
 		this.setupClearCache();
+		// Action-bar buttons are mouse targets, not fields: keep a click from
+		// moving focus into the image field, which in help-on-focus mode would
+		// show the field's help label as if the person had tabbed into it.
+		// mousedown is the moment focus is taken; preventing its default keeps
+		// the click and skips the focus. Keyboard users still Tab to the
+		// buttons, and for them the help is right to appear.
+		this.container.querySelector(".actionbar")?.addEventListener("mousedown", event => event.preventDefault());
 		this.setupFeaturedToggle();
 		this.setupDownload();
 
@@ -77,7 +84,13 @@ setupActionBar() {
 	}
 
 	toggleFeaturedField() {
-		this.featuredField.totalfield.setValue(!this.isFeatured());
+		// The star's PATCH has already persisted the new value. Reflect it in
+		// the dialog's checkbox as SAVED — setValue() would mark the checkbox
+		// unsaved and its subfield-change would mark this whole image field
+		// unsaved (image.js turns subfield-change into changed()), leaving the
+		// form dirty over a change that is already on disk.
+		this.featuredField.totalfield.setSavedValue(!this.isFeatured());
+		this.totalfield.saved();
 	  	setTimeout(() => this.toggleFeaturedActionButton(), 0);
 	}
 
@@ -178,12 +191,56 @@ setupActionBar() {
 		});
 	}
 
+	/**
+	 * Open the edit dialog with a snapshot of every dialog field, so Cancel
+	 * has something to put back. Taken per open, not once: the dialog can be
+	 * opened, edited, closed (which autosaves) and opened again.
+	 */
+	openEditDialog() {
+		this.dialogSnapshot = new Map(Array.from(this.fields).map(field => [field, field.totalfield.getValue()]));
+		this.editDialog.open();
+	}
+
+	/**
+	 * Cancel: restore the snapshot as SAVED values — setSavedValue() moves the
+	 * value and its baseline without marking anything unsaved — so the
+	 * close-time autosave finds nothing to send, and a later form save has
+	 * nothing of the abandoned edit to sweep up. Restoring values does not
+	 * undo a reorder of the palette swatches; that is a drag, not a value.
+	 */
+	restoreDialogSnapshot() {
+		if (!this.dialogSnapshot) return;
+		for (const [field, value] of this.dialogSnapshot) {
+			field.totalfield.setSavedValue(value);
+		}
+		// The focal-point marker follows the fields through watch(), which
+		// the silent path deliberately skips — sync it from the restored values.
+		const focalPoint = this.editDialog.dialog.querySelector('.focal-point');
+		const x = this.editDialog.dialog.querySelector('.form-field:has([name=focalpoint-x])');
+		const y = this.editDialog.dialog.querySelector('.form-field:has([name=focalpoint-y])');
+		if (focalPoint && x && y) {
+			focalPoint.style.left = `${x.totalfield.getValue()}%`;
+			focalPoint.style.top  = `${y.totalfield.getValue()}%`;
+		}
+		this.totalfield.saved();
+	}
+
 	setupEditDialog() {
 		// process the form fields added in the edit dialog
 		this.form.processFields();
-		return new Dialog(this.container.querySelector(".image-edit-dialog"), {
+		const dialogEl = this.container.querySelector(".image-edit-dialog");
+		// Discard Changes and Escape put the fields back to their opening
+		// snapshot before the close-time autosave runs; Save and a backdrop
+		// click just close, which keeps them.
+		dialogEl.querySelector(".cancel")?.addEventListener("click", event => {
+			event.preventDefault();
+			this.restoreDialogSnapshot();
+			this.editDialog.close();
+		});
+		return new Dialog(dialogEl, {
 			open  : null,
 			close : ".close",
+			onDismiss : () => this.restoreDialogSnapshot(),
 			onOpen : () => {
 				if (this.dialogOpened) return;
 				this.dialogOpened = true;
