@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
-use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\Builder\DeckItemForm;
+use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -69,20 +69,20 @@ describe('DeckItemForm preset resolution', function (): void {
 		$this->schemaFetcher->method('fetchSchema')->willReturn($this->deckSchema);
 
 		$this->services = formServices([
-			'objectFetcher' => $this->objectFetcher,
-			'collectionFetcher' => $this->collectionFetcher,
-			'collectionLister' => $this->collectionLister,
-			'collectionReader' => $this->indexReader,
-			'indexFilter' => $this->indexFilter,
-			'schemaFetcher' => $this->schemaFetcher,
-			'schemaLister' => $this->schemaLister,
-			'accessGroupLister' => $this->accessGroupLister,
+			'objectFetcher'            => $this->objectFetcher,
+			'collectionFetcher'        => $this->collectionFetcher,
+			'collectionLister'         => $this->collectionLister,
+			'collectionReader'         => $this->indexReader,
+			'indexFilter'              => $this->indexFilter,
+			'schemaFetcher'            => $this->schemaFetcher,
+			'schemaLister'             => $this->schemaLister,
+			'accessGroupLister'        => $this->accessGroupLister,
 			'collectionEditionService' => $this->collectionEditionService,
-			'editionFeatures' => $this->editionFeatures,
-			'dataViewFilter' => $this->dataViewFilter,
-			'csrfManager' => $this->csrfManager,
-			'config' => $this->config,
-			'metaResolver' => $this->metaResolver,
+			'editionFeatures'          => $this->editionFeatures,
+			'dataViewFilter'           => $this->dataViewFilter,
+			'csrfManager'              => $this->csrfManager,
+			'config'                   => $this->config,
+			'metaResolver'             => $this->metaResolver,
 		]);
 	});
 

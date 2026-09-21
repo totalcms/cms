@@ -16,6 +16,7 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
+use TotalCMS\Support\Config;
 
 /**
  * The option lists a form hands its fields, as their own unit: every list
@@ -220,7 +221,7 @@ describe('static and config-backed lists', function (): void {
 	});
 
 	test('locales come from config, the locale and event catalogs from their registries', function (): void {
-		$config       = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+		$config       = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->i18n = ['default' => 'de', 'available' => ['de', 'en_US']];
 		$sources      = new FormOptionSources(formServices(['config' => $config]));
 

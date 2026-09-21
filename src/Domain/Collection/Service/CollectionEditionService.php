@@ -61,7 +61,6 @@ readonly class CollectionEditionService
 			return $this->editionFeatures->can(EditionFeature::DEPOT_SCHEMA);
 		}
 
-
 		// Check custom schemas (Pro)
 		if ($this->schemaFetcher->isCustomSchema($schemaId)) {
 			return $this->editionFeatures->can(EditionFeature::CUSTOM_SCHEMAS);

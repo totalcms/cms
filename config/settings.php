@@ -84,7 +84,7 @@ if ($siteId !== '' && preg_match('/^[a-z0-9-]+$/', $siteId) === 1) {
 				$declaredSections = is_array($settings['siteOverrides'] ?? null) ? $settings['siteOverrides'] : [];
 				$settings         = array_replace(
 					$settings,
-					SettingsSections::filterDeclared($overlaySettings, array_values(array_map('strval', $declaredSections))),
+					SettingsSections::filterDeclared($overlaySettings, array_values(array_map(strval(...), $declaredSections))),
 				);
 			}
 		}

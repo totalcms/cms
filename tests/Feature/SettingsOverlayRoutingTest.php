@@ -2,8 +2,13 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Settings\Repository\SettingsRepository;
+use TotalCMS\Domain\Settings\Services\SettingsFetcher;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
+use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
+use TotalCMS\Domain\Settings\Services\SettingsValidator;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Support\Config;
 
 /**
@@ -40,7 +45,7 @@ beforeEach(function (): void {
 	$config->siteId        = 'italy';
 	$config->siteOverrides = ['i18n', 'general'];
 	$this->repo            = new SettingsRepository(
-		$this->diContainer->get(TotalCMS\Domain\Storage\StorageAdapterInterface::class),
+		$this->diContainer->get(StorageAdapterInterface::class),
 		$config,
 	);
 });
@@ -57,8 +62,8 @@ function baseFile(): array
 
 it('writes an owned section to the overlay and leaves the base alone', function (): void {
 	$saver = new SettingsSaver(
-		$this->diContainer->get(TotalCMS\Domain\Settings\Services\SettingsValidator::class),
-		$this->diContainer->get(TotalCMS\Domain\Cache\CacheManager::class),
+		$this->diContainer->get(SettingsValidator::class),
+		$this->diContainer->get(CacheManager::class),
 		$this->repo,
 	);
 
@@ -70,8 +75,8 @@ it('writes an owned section to the overlay and leaves the base alone', function 
 
 it('writes an unowned section to the base and leaves the overlay alone', function (): void {
 	$saver = new SettingsSaver(
-		$this->diContainer->get(TotalCMS\Domain\Settings\Services\SettingsValidator::class),
-		$this->diContainer->get(TotalCMS\Domain\Cache\CacheManager::class),
+		$this->diContainer->get(SettingsValidator::class),
+		$this->diContainer->get(CacheManager::class),
 		$this->repo,
 	);
 
@@ -89,9 +94,9 @@ it('serves an overlaid siteName to readers that go through SettingsFetcher', fun
 		'siteName' => 'Ministero della Cultura',
 	]));
 
-	$fetcher = new TotalCMS\Domain\Settings\Services\SettingsFetcher(
+	$fetcher = new SettingsFetcher(
 		$this->repo,
-		$this->diContainer->get(TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher::class),
+		$this->diContainer->get(SettingsSchemaFetcher::class),
 	);
 
 	expect($fetcher->loadSection('general')['siteName'])->toBe('Ministero della Cultura');
@@ -101,8 +106,8 @@ it('never copies unrelated settings into the file it writes', function (): void 
 	// The corruption case. Saving the overlay-owned i18n section must not pull
 	// siteName or smtp — which live only in the base — into the overlay.
 	$saver = new SettingsSaver(
-		$this->diContainer->get(TotalCMS\Domain\Settings\Services\SettingsValidator::class),
-		$this->diContainer->get(TotalCMS\Domain\Cache\CacheManager::class),
+		$this->diContainer->get(SettingsValidator::class),
+		$this->diContainer->get(CacheManager::class),
 		$this->repo,
 	);
 
@@ -114,8 +119,8 @@ it('never copies unrelated settings into the file it writes', function (): void 
 
 it('deletes an owned section from the overlay and leaves the base intact', function (): void {
 	$saver = new SettingsSaver(
-		$this->diContainer->get(TotalCMS\Domain\Settings\Services\SettingsValidator::class),
-		$this->diContainer->get(TotalCMS\Domain\Cache\CacheManager::class),
+		$this->diContainer->get(SettingsValidator::class),
+		$this->diContainer->get(CacheManager::class),
 		$this->repo,
 	);
 

@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Bundled\WebMcp\WebMcpFormBuilder;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -69,7 +71,7 @@ it('renders a form annotated with the WebMCP tool attributes', function (): void
 it('titles each parameter from the schema label and describes it from the help', function (): void {
 	$html = ($this->render)("{{ webmcp_form('blog') }}");
 
-	$property = $this->schemas->fetchSchemaForCollection('blog')->properties['title'];
+	$property  = $this->schemas->fetchSchemaForCollection('blog')->properties['title'];
 	$attribute = fn (string $name, string $value): string => $name . '="' . htmlspecialchars($value, ENT_QUOTES) . '"';
 
 	expect(webmcpInput($html, 'title'))->toContain($attribute('toolparamdescription', (string)$property['help']))
@@ -122,7 +124,7 @@ it('adds autosubmit only when the call asks for it', function (): void {
 it('refuses to annotate a registration form', function (): void {
 	// Extension Twig functions are fault-isolated: a throw renders nothing.
 	// The builder itself must refuse, so the test reaches it directly.
-	$builder = $this->app->getContainer()->get(TotalCMS\Bundled\WebMcp\WebMcpFormBuilder::class);
+	$builder = $this->app->getContainer()->get(WebMcpFormBuilder::class);
 
 	expect(fn () => $builder->build('blog', ['register' => true]))->toThrow(DomainException::class, 'registration');
 });
@@ -143,7 +145,7 @@ it('never puts object data into a tool string', function (): void {
 	// attributes and never reach toolname / tooldescription / toolparamtitle
 	// / toolparamdescription.
 	$c = $this->app->getContainer();
-	$c->get(TotalCMS\Domain\Object\Service\ObjectSaver::class)->saveObject('notes', ['id' => 'n1', 'body' => 'INJECTED body', 'mood' => 'INJECTED mood']);
+	$c->get(ObjectSaver::class)->saveObject('notes', ['id' => 'n1', 'body' => 'INJECTED body', 'mood' => 'INJECTED mood']);
 
 	$html = ($this->render)("{{ webmcp_form('notes', {id: 'n1'}) }}");
 	preg_match_all('/tool(?:name|description|paramtitle|paramdescription)="([^"]*)"/', $html, $m);

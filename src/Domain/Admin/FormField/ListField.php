@@ -28,7 +28,7 @@ class ListField extends MultiselectField
 		// no `value` key on a group and dropped every one of them — the podcast
 		// show's Categories picker came up empty for any show that had saved
 		// categories. Selection state still renders inside the groups.
-		if ($this->value !== [] && !self::hasGroupedOptions($this->options)) {
+		if ($this->value !== [] && !$this->hasGroupedOptions($this->options)) {
 			// Reorder options to put selected values first, maintaining their order from $this->value
 			$valueOptions     = [];
 			$remainingOptions = [];
@@ -71,7 +71,7 @@ class ListField extends MultiselectField
 	}
 
 	/** @param array<mixed> $options */
-	private static function hasGroupedOptions(array $options): bool
+	private function hasGroupedOptions(array $options): bool
 	{
 		foreach ($options as $key => $option) {
 			if (is_string($key) && is_array($option) && !isset($option['value'])) {

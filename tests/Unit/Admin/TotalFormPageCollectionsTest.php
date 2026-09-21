@@ -30,7 +30,7 @@ function buildPageCollectionsForm(array $collections, array $rawSchemas): TotalF
 	});
 
 	$form = (new ReflectionClass(TotalForm::class))->newInstanceWithoutConstructor();
-	(new \ReflectionProperty(TotalForm::class, 'services'))->setValue($form, formServices(['collectionLister' => $lister, 'schemaFetcher' => $fetcher]));
+	(new ReflectionProperty(TotalForm::class, 'services'))->setValue($form, formServices(['collectionLister' => $lister, 'schemaFetcher' => $fetcher]));
 
 	return $form;
 }

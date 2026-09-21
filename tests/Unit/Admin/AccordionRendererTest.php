@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Admin\Form\Layout\AccordionRenderer;
 use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
+use TotalCMS\Domain\Admin\FormField\FormField;
+use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Schema\Data\SchemaData;
 
 function accordionPanel(string $title, string $formgrid = '', string $members = ''): array
 {
@@ -109,7 +113,7 @@ describe('AccordionRenderer::wrap', function (): void {
 
 describe('TotalForm fieldContent with a formgrid accordion', function (): void {
 	test('each field lands in its own panel, non-members stay outside', function (): void {
-		$schema             = new TotalCMS\Domain\Schema\Data\SchemaData();
+		$schema             = new SchemaData();
 		$schema->formgrid   = "title\n>> Content\nbody body\n>> SEO\nseoTitle seoTitle\n<<";
 		$schema->properties = [
 			'title'    => ['type' => 'text', 'label' => 'Title'],
@@ -117,23 +121,23 @@ describe('TotalForm fieldContent with a formgrid accordion', function (): void {
 			'seoTitle' => ['type' => 'text', 'label' => 'SEO Title'],
 		];
 
-		$form = (new ReflectionClass(TotalCMS\Domain\Admin\TotalForm::class))->newInstanceWithoutConstructor();
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'schemaData'))->setValue($form, $schema);
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'useFormGrid'))->setValue($form, true);
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'addOnly'))->setValue($form, false);
+		$form = (new ReflectionClass(TotalForm::class))->newInstanceWithoutConstructor();
+		(new ReflectionProperty(TotalForm::class, 'schemaData'))->setValue($form, $schema);
+		(new ReflectionProperty(TotalForm::class, 'useFormGrid'))->setValue($form, true);
+		(new ReflectionProperty(TotalForm::class, 'addOnly'))->setValue($form, false);
 
 		$fields = [];
 		foreach (['title', 'body', 'seoTitle'] as $name) {
-			$mock = test()->getMockBuilder(TotalCMS\Domain\Admin\FormField\FormField::class)
+			$mock = test()->getMockBuilder(FormField::class)
 				->disableOriginalConstructor()
 				->onlyMethods(['build'])
 				->getMock();
 			$mock->method('build')->willReturn("<div class=\"field-$name\">$name</div>");
 			$fields[$name] = $mock;
 		}
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'fields'))->setValue($form, $fields);
+		(new ReflectionProperty(TotalForm::class, 'fields'))->setValue($form, $fields);
 
-		$html = (new ReflectionMethod(TotalCMS\Domain\Admin\TotalForm::class, 'fieldContent'))->invoke($form);
+		$html = (new ReflectionMethod(TotalForm::class, 'fieldContent'))->invoke($form);
 
 		// Split the two panels apart and check each holds only its own field.
 		$panels = explode('<details', $html);
@@ -147,30 +151,30 @@ describe('TotalForm fieldContent with a formgrid accordion', function (): void {
 	});
 
 	test('a fieldset and an accordion in one formgrid both get their members', function (): void {
-		$schema             = new TotalCMS\Domain\Schema\Data\SchemaData();
+		$schema             = new SchemaData();
 		$schema->formgrid   = "[[ Contact\nemail email\n]]\n>> Advanced\nslug slug\n<<";
 		$schema->properties = [
 			'email' => ['type' => 'text', 'label' => 'Email'],
 			'slug'  => ['type' => 'text', 'label' => 'Slug'],
 		];
 
-		$form = (new ReflectionClass(TotalCMS\Domain\Admin\TotalForm::class))->newInstanceWithoutConstructor();
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'schemaData'))->setValue($form, $schema);
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'useFormGrid'))->setValue($form, true);
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'addOnly'))->setValue($form, false);
+		$form = (new ReflectionClass(TotalForm::class))->newInstanceWithoutConstructor();
+		(new ReflectionProperty(TotalForm::class, 'schemaData'))->setValue($form, $schema);
+		(new ReflectionProperty(TotalForm::class, 'useFormGrid'))->setValue($form, true);
+		(new ReflectionProperty(TotalForm::class, 'addOnly'))->setValue($form, false);
 
 		$fields = [];
 		foreach (['email', 'slug'] as $name) {
-			$mock = test()->getMockBuilder(TotalCMS\Domain\Admin\FormField\FormField::class)
+			$mock = test()->getMockBuilder(FormField::class)
 				->disableOriginalConstructor()
 				->onlyMethods(['build'])
 				->getMock();
 			$mock->method('build')->willReturn("<div class=\"field-$name\">$name</div>");
 			$fields[$name] = $mock;
 		}
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'fields'))->setValue($form, $fields);
+		(new ReflectionProperty(TotalForm::class, 'fields'))->setValue($form, $fields);
 
-		$html = (new ReflectionMethod(TotalCMS\Domain\Admin\TotalForm::class, 'fieldContent'))->invoke($form);
+		$html = (new ReflectionMethod(TotalForm::class, 'fieldContent'))->invoke($form);
 
 		// This fixture has exactly one fieldset, so spanning strpos()..strrpos()
 		// is safe; with two fieldsets the span would swallow everything between
@@ -193,7 +197,7 @@ describe('TotalForm fieldContent with a formgrid accordion', function (): void {
 	});
 
 	test('a fieldset inside a panel renders inside that panel', function (): void {
-		$schema             = new TotalCMS\Domain\Schema\Data\SchemaData();
+		$schema             = new SchemaData();
 		$schema->formgrid   = ">> Panel\nintro intro\n[[ Address\nstreet city\n]]\n<<";
 		$schema->properties = [
 			'intro'  => ['type' => 'text', 'label' => 'Intro'],
@@ -201,23 +205,23 @@ describe('TotalForm fieldContent with a formgrid accordion', function (): void {
 			'city'   => ['type' => 'text', 'label' => 'City'],
 		];
 
-		$form = (new ReflectionClass(TotalCMS\Domain\Admin\TotalForm::class))->newInstanceWithoutConstructor();
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'schemaData'))->setValue($form, $schema);
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'useFormGrid'))->setValue($form, true);
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'addOnly'))->setValue($form, false);
+		$form = (new ReflectionClass(TotalForm::class))->newInstanceWithoutConstructor();
+		(new ReflectionProperty(TotalForm::class, 'schemaData'))->setValue($form, $schema);
+		(new ReflectionProperty(TotalForm::class, 'useFormGrid'))->setValue($form, true);
+		(new ReflectionProperty(TotalForm::class, 'addOnly'))->setValue($form, false);
 
 		$fields = [];
 		foreach (['intro', 'street', 'city'] as $name) {
-			$mock = test()->getMockBuilder(TotalCMS\Domain\Admin\FormField\FormField::class)
+			$mock = test()->getMockBuilder(FormField::class)
 				->disableOriginalConstructor()
 				->onlyMethods(['build'])
 				->getMock();
 			$mock->method('build')->willReturn("<div class=\"field-$name\">$name</div>");
 			$fields[$name] = $mock;
 		}
-		(new ReflectionProperty(TotalCMS\Domain\Admin\TotalForm::class, 'fields'))->setValue($form, $fields);
+		(new ReflectionProperty(TotalForm::class, 'fields'))->setValue($form, $fields);
 
-		$html = (new ReflectionMethod(TotalCMS\Domain\Admin\TotalForm::class, 'fieldContent'))->invoke($form);
+		$html = (new ReflectionMethod(TotalForm::class, 'fieldContent'))->invoke($form);
 
 		// Nothing may escape to the top level — every field belongs to the panel.
 		$panelStart = (int)strpos($html, '<details');
@@ -251,7 +255,7 @@ describe('TotalForm fieldContent with a formgrid accordion', function (): void {
 
 describe('TotalFormFactory::accordion', function (): void {
 	test('the factory seam produces the same markup as the renderer', function (): void {
-		$factory = (new ReflectionClass(TotalCMS\Domain\Admin\TotalFormFactory::class))->newInstanceWithoutConstructor();
+		$factory = (new ReflectionClass(TotalFormFactory::class))->newInstanceWithoutConstructor();
 
 		$html = $factory->accordion([
 			['title' => 'Content', 'content' => '<p>body</p>', 'formgrid' => 'body body'],
@@ -266,7 +270,7 @@ describe('TotalFormFactory::accordion', function (): void {
 	});
 
 	test('the class option lands on the group wrapper', function (): void {
-		$factory = (new ReflectionClass(TotalCMS\Domain\Admin\TotalFormFactory::class))->newInstanceWithoutConstructor();
+		$factory = (new ReflectionClass(TotalFormFactory::class))->newInstanceWithoutConstructor();
 
 		$html = $factory->accordion([['title' => 'One', 'content' => 'x']], ['class' => 'my-extra']);
 

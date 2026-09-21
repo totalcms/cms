@@ -26,9 +26,9 @@ use TotalCMS\Domain\Template\Service\TemplateLister;
  * methods of the same names are thin pass-throughs that fill in the form's
  * own collection where a caller leaves it out.
  */
-final class FormOptionSources
+final readonly class FormOptionSources
 {
-	public function __construct(private readonly FormServices $services)
+	public function __construct(private FormServices $services)
 	{
 	}
 
@@ -281,6 +281,7 @@ final class FormOptionSources
 	 * @param array<string>        $properties Properties to fetch
 	 * @param string               $collection Collection name (defaults to current collection)
 	 * @param array<string,string> $filters    Optional include/exclude filters
+	 *
 	 * @return array<mixed>
 	 */
 	public function propertiesForCollection(array $properties, string $collection, array $filters = []): array
@@ -298,6 +299,7 @@ final class FormOptionSources
 	 * @param array<string>        $properties Properties to fetch
 	 * @param string               $viewId     DataView ID
 	 * @param array<string,string> $filters    Optional include/exclude filters
+	 *
 	 * @return array<mixed>
 	 */
 	public function propertiesForView(array $properties, string $viewId, array $filters = []): array

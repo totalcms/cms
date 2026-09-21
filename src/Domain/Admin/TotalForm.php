@@ -3,15 +3,15 @@
 namespace TotalCMS\Domain\Admin;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Admin\FormField\DeleteButton;
-use TotalCMS\Domain\Admin\FormField\FormField;
-use TotalCMS\Domain\Admin\FormField\SaveButton;
-use TotalCMS\Domain\Admin\Form\FormOptionSources;
 use TotalCMS\Domain\Admin\Form\FormOptions;
+use TotalCMS\Domain\Admin\Form\FormOptionSources;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\Form\Layout\AccordionRenderer;
 use TotalCMS\Domain\Admin\Form\Layout\FieldsetRenderer;
 use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
+use TotalCMS\Domain\Admin\FormField\DeleteButton;
+use TotalCMS\Domain\Admin\FormField\FormField;
+use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Extension\Data\FormAction;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
@@ -346,34 +346,34 @@ class TotalForm implements \Stringable
 		// Everything that varies per form.
 		FormOptions $options,
 	) {
-		$this->api = $options->api;
-		$this->collection = $options->collection;
-		$this->id = $options->id;
-		$this->method = $options->method;
-		$this->class = $options->class;
-		$this->buildError = $options->buildError;
-		$this->helpStyle = $options->helpStyle;
-		$this->save = $options->save;
-		$this->delete = $options->delete;
-		$this->formType = $options->formType;
-		$this->schema = $options->schema;
-		$this->route = $options->route;
-		$this->newActions = $options->newActions;
-		$this->editActions = $options->editActions;
-		$this->deleteActions = $options->deleteActions;
-		$this->data = $options->data;
-		$this->autosave = $options->autosave;
-		$this->helpOnHover = $options->helpOnHover;
-		$this->helpOnFocus = $options->helpOnFocus;
-		$this->hideID = $options->hideID;
-		$this->useFormGrid = $options->useFormGrid;
-		$this->addOnly = $options->addOnly;
-		$this->register = $options->register;
+		$this->api                = $options->api;
+		$this->collection         = $options->collection;
+		$this->id                 = $options->id;
+		$this->method             = $options->method;
+		$this->class              = $options->class;
+		$this->buildError         = $options->buildError;
+		$this->helpStyle          = $options->helpStyle;
+		$this->save               = $options->save;
+		$this->delete             = $options->delete;
+		$this->formType           = $options->formType;
+		$this->schema             = $options->schema;
+		$this->route              = $options->route;
+		$this->newActions         = $options->newActions;
+		$this->editActions        = $options->editActions;
+		$this->deleteActions      = $options->deleteActions;
+		$this->data               = $options->data;
+		$this->autosave           = $options->autosave;
+		$this->helpOnHover        = $options->helpOnHover;
+		$this->helpOnFocus        = $options->helpOnFocus;
+		$this->hideID             = $options->hideID;
+		$this->useFormGrid        = $options->useFormGrid;
+		$this->addOnly            = $options->addOnly;
+		$this->register           = $options->register;
 		$this->formActionRegistry = $options->formActionRegistry;
-		$this->translator = $options->translator;
-		$this->formgrid = $options->formgrid;
-		$this->fieldIcons = $options->fieldIcons;
-		$this->attributes = $options->attributes;
+		$this->translator         = $options->translator;
+		$this->formgrid           = $options->formgrid;
+		$this->fieldIcons         = $options->fieldIcons;
+		$this->attributes         = $options->attributes;
 
 		$this->init();
 		$this->initClass();
@@ -730,11 +730,6 @@ class TotalForm implements \Stringable
 		return $this->optionSources()->collectionsUsingSchema($schemaId);
 	}
 
-
-
-
-
-
 	/**
 	 * Every admin sidebar entry as `{value, label}` options.
 	 * Used for propertyOptions: "navItems" — the dashboard settings checklist
@@ -746,7 +741,6 @@ class TotalForm implements \Stringable
 	{
 		return $this->optionSources()->adminNavItemList();
 	}
-
 
 	/**
 	 * View IDs for propertyOptions: "viewIds".
@@ -978,7 +972,7 @@ class TotalForm implements \Stringable
 
 		// Every field name mapped to the slot that owns it. Fields named in no
 		// container have no slot and render flat, exactly as they always have.
-		$memberOf = $root === null ? [] : self::slotMap($root, '');
+		$memberOf = $root instanceof FormGridBuilder ? self::slotMap($root, '') : [];
 
 		// Bucket in $this->fields order — NOT grid order — so member ordering
 		// inside a container is unchanged from before containers existed.
@@ -997,7 +991,7 @@ class TotalForm implements \Stringable
 		// Containers are appended after the flat fields in DOM order; their visual
 		// position comes from the outer grid-area, not source order (the same way
 		// section headers/dividers already render ahead of all fields).
-		if ($root !== null) {
+		if ($root instanceof FormGridBuilder) {
 			$content .= $this->renderContainers($root, '', $buckets);
 		}
 
@@ -1410,6 +1404,7 @@ class TotalForm implements \Stringable
 	 * Shared by the form tag and, through FormField, every field control.
 	 *
 	 * @param array<mixed> $attributes
+	 *
 	 * @return array<string,string>
 	 */
 	public static function extraAttributes(array $attributes): array

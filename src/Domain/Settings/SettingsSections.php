@@ -35,7 +35,7 @@ final class SettingsSections
 		}
 
 		self::$generalKeys ??= array_map(
-			'strval',
+			strval(...),
 			array_keys((new SettingsSchemaFetcher())->getProperties('general')),
 		);
 

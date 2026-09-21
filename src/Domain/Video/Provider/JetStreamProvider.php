@@ -114,6 +114,6 @@ final class JetStreamProvider extends AbstractVideoProvider
 		}
 
 		/** @var array<string,string> $params */
-		return array_filter($params, 'is_string');
+		return array_filter($params, is_string(...));
 	}
 }

@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
-use TotalCMS\Domain\Admin\PropertyField\SchemaField;
 use TotalCMS\Domain\Admin\Form\Builder\SchemaForm;
+use TotalCMS\Domain\Admin\PropertyField\SchemaField;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 

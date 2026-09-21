@@ -20,7 +20,6 @@ declare(strict_types=1);
  * Runs after the PHP tests in bin/runtests.sh, in `composer test:build`
  * (CI), and in the pre-commit hook. Exit 0 = clean, 1 = something to commit.
  */
-
 $root = dirname(__DIR__);
 $dir  = 'tests/.pest/snapshots';
 
@@ -52,7 +51,7 @@ if ($untracked === [] && $deleted === []) {
 
 fwrite(STDERR, "\nGolden snapshots are out of step with git.\n\n");
 if ($untracked !== []) {
-	fwrite(STDERR, "  Created by a test run but not tracked (" . count($untracked) . "):\n");
+	fwrite(STDERR, '  Created by a test run but not tracked (' . count($untracked) . "):\n");
 	foreach (array_slice($untracked, 0, 10) as $path) {
 		fwrite(STDERR, "    $path\n");
 	}
@@ -63,7 +62,7 @@ if ($untracked !== []) {
 	fwrite(STDERR, "  the file, then `git add $dir`; or delete it with the case.\n\n");
 }
 if ($deleted !== []) {
-	fwrite(STDERR, "  Deleted but the deletion is not staged (" . count($deleted) . "):\n");
+	fwrite(STDERR, '  Deleted but the deletion is not staged (' . count($deleted) . "):\n");
 	foreach (array_slice($deleted, 0, 10) as $path) {
 		fwrite(STDERR, "    $path\n");
 	}

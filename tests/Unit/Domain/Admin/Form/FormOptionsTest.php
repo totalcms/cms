@@ -42,7 +42,7 @@ it('builds from the option arrays the factory assembles', function (): void {
 
 it('names an option nobody declared', function (): void {
 	expect(fn () => FormOptions::fromArray(['api' => '/api', 'colection' => 'blog']))
-		->toThrow(InvalidArgumentException::class, "colection");
+		->toThrow(InvalidArgumentException::class, 'colection');
 });
 
 it('copies itself with changes', function (): void {

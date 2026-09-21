@@ -433,6 +433,7 @@ class FormField
 	 * override returns through here.
 	 *
 	 * @param array<string,string|null> $attributes
+	 *
 	 * @return array<string,string>
 	 */
 	protected function withExtraAttributes(array $attributes): array

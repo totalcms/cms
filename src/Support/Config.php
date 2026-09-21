@@ -21,9 +21,9 @@ class Config
 	public string $siteId     = '';
 	/** @var list<string> Settings sections this install owns — see `siteId`. */
 	public array $siteOverrides = [];
-	public string $url        = '';
-	public string $api        = '';
-	public string $locale     = '';
+	public string $url          = '';
+	public string $api          = '';
+	public string $locale       = '';
 	/**
 	 * Internationalization config bucket.
 	 *
@@ -83,28 +83,24 @@ class Config
 	/** @var array<string,mixed> `tcms push` / `tcms pull` remote — see SyncConfig. */
 	public array $sync = [];
 
-	/** @var array<string,mixed> The merged settings this Config was built from — see mergedSettings(). */
-	private array $rawSettings = [];
-
 	/**
 	 * @SuppressWarnings("PHPMD.Superglobals")
 	 *
-	 * @param array<string,mixed> $settings
+	 * @param array<string, mixed> $rawSettings
 	 */
-	public function __construct(array $settings)
+	public function __construct(private array $rawSettings)
 	{
-		$this->rawSettings        = $settings;
-		$this->env                = $settings['env'] ?? 'prod';
-		$this->appEnv             = (string)($settings['appEnv'] ?? '');
-		$this->trustProxyHeaders  = (string)($settings['trustProxyHeaders'] ?? 'auto');
-		$this->template           = $settings['template'];
-		$this->dashboard          = $settings['dashboard'];
-		$this->frontendAssets     = is_array($settings['frontendAssets'] ?? null) ? $settings['frontendAssets'] : [];
-		$this->datadir            = $settings['datadir'];
-		$this->tmpdir             = $settings['tmpdir'];
-		$this->cachedir           = $settings['cachedir'];
-		$this->cache              = $settings['cache'];
-		$this->logger             = $settings['logger'];
+		$this->env                = $this->rawSettings['env'] ?? 'prod';
+		$this->appEnv             = (string)($this->rawSettings['appEnv'] ?? '');
+		$this->trustProxyHeaders  = (string)($this->rawSettings['trustProxyHeaders'] ?? 'auto');
+		$this->template           = $this->rawSettings['template'];
+		$this->dashboard          = $this->rawSettings['dashboard'];
+		$this->frontendAssets     = is_array($this->rawSettings['frontendAssets'] ?? null) ? $this->rawSettings['frontendAssets'] : [];
+		$this->datadir            = $this->rawSettings['datadir'];
+		$this->tmpdir             = $this->rawSettings['tmpdir'];
+		$this->cachedir           = $this->rawSettings['cachedir'];
+		$this->cache              = $this->rawSettings['cache'];
+		$this->logger             = $this->rawSettings['logger'];
 		// Layout-aware log directory, resolved AFTER the tcms.php merge so a
 		// datadir override is respected (defaults.php can't know the final
 		// datadir — see the logger block there). An explicit logger.path in
@@ -116,22 +112,22 @@ class Config
 				? PathResolver::projectRoot() . '/logs'
 				: $this->systemDir() . '/logs';
 		}
-		$this->sentry             = (bool)($settings['sentry'] ?? true);
-		$this->appLogLevel        = (string)($settings['appLogLevel'] ?? 'info');
-		$this->error              = $settings['error'];
-		$this->imageworks         = $settings['imageworks'];
-		$this->domain             = $settings['domain'];
-		$this->siteName           = (string)($settings['siteName'] ?? '');
-		$this->url                = $settings['url'];
-		$this->api                = $settings['api'];
-		$this->i18n               = $this->normalizeI18nSettings($settings);
+		$this->sentry             = (bool)($this->rawSettings['sentry'] ?? true);
+		$this->appLogLevel        = (string)($this->rawSettings['appLogLevel'] ?? 'info');
+		$this->error              = $this->rawSettings['error'];
+		$this->imageworks         = $this->rawSettings['imageworks'];
+		$this->domain             = $this->rawSettings['domain'];
+		$this->siteName           = (string)($this->rawSettings['siteName'] ?? '');
+		$this->url                = $this->rawSettings['url'];
+		$this->api                = $this->rawSettings['api'];
+		$this->i18n               = $this->normalizeI18nSettings($this->rawSettings);
 		// System locale always mirrors the i18n default (Settings →
 		// Internationalization → Default Locale), falling back to `en_US`.
 		// A top-level `$settings['locale']` is deliberately ignored — it was the
 		// storage key for the old General-settings locale field, and honouring
 		// it caused orphaned values to silently shadow the new i18n default.
 		$this->locale             = $this->i18n['default'] !== '' ? $this->i18n['default'] : 'en_US';
-		$this->session            = $settings['session'];
+		$this->session            = $this->rawSettings['session'];
 		// Session files under the data dir, resolved after the tcms.php merge
 		// for the same reason as the log path above. Two things this buys:
 		//
@@ -154,36 +150,36 @@ class Config
 		if (($this->session['save_path'] ?? '') === '') {
 			$this->session['save_path'] = $this->systemDir() . '/sessions';
 		}
-		$this->auth               = $settings['auth'];
-		$this->debug              = $settings['debug'];
-		$this->notfound           = $settings['notfound'];
-		$this->maxDownloadSize    = (int)($settings['maxDownloadSize'] ?? 2048);
-		$this->timezone           = $settings['timezone'] ?? date_default_timezone_get();
-		$this->docroot            = $settings['docroot'] ?? $_SERVER['DOCUMENT_ROOT'] ?? '';
-		$this->root               = (string)($settings['root'] ?? PathResolver::projectRoot());
-		$this->htmlclean          = is_array($settings['htmlclean'] ?? null) ? $settings['htmlclean'] : [];
-		$this->smtp               = is_array($settings['smtp'] ?? null) ? $settings['smtp'] : [];
-		$this->mailer             = is_array($settings['mailer'] ?? null) ? $settings['mailer'] : [];
-		$this->builder            = is_array($settings['builder'] ?? null) ? $settings['builder'] : [];
-		$this->extensions         = is_array($settings['extensions'] ?? null) ? $settings['extensions'] : [];
-		$this->mcp                = is_array($settings['mcp'] ?? null) ? $settings['mcp'] : [];
-		$this->oauth              = is_array($settings['oauth'] ?? null) ? $settings['oauth'] : [];
-		$this->search             = is_array($settings['search'] ?? null) ? $settings['search'] : [];
-		$this->automations        = is_array($settings['automations'] ?? null) ? $settings['automations'] : [];
-		$this->xmlrpc             = is_array($settings['xmlrpc'] ?? null) ? $settings['xmlrpc'] : [];
-		$this->sync               = is_array($settings['sync'] ?? null) ? $settings['sync'] : [];
+		$this->auth               = $this->rawSettings['auth'];
+		$this->debug              = $this->rawSettings['debug'];
+		$this->notfound           = $this->rawSettings['notfound'];
+		$this->maxDownloadSize    = (int)($this->rawSettings['maxDownloadSize'] ?? 2048);
+		$this->timezone           = $this->rawSettings['timezone'] ?? date_default_timezone_get();
+		$this->docroot            = $this->rawSettings['docroot'] ?? $_SERVER['DOCUMENT_ROOT'] ?? '';
+		$this->root               = (string)($this->rawSettings['root'] ?? PathResolver::projectRoot());
+		$this->htmlclean          = is_array($this->rawSettings['htmlclean'] ?? null) ? $this->rawSettings['htmlclean'] : [];
+		$this->smtp               = is_array($this->rawSettings['smtp'] ?? null) ? $this->rawSettings['smtp'] : [];
+		$this->mailer             = is_array($this->rawSettings['mailer'] ?? null) ? $this->rawSettings['mailer'] : [];
+		$this->builder            = is_array($this->rawSettings['builder'] ?? null) ? $this->rawSettings['builder'] : [];
+		$this->extensions         = is_array($this->rawSettings['extensions'] ?? null) ? $this->rawSettings['extensions'] : [];
+		$this->mcp                = is_array($this->rawSettings['mcp'] ?? null) ? $this->rawSettings['mcp'] : [];
+		$this->oauth              = is_array($this->rawSettings['oauth'] ?? null) ? $this->rawSettings['oauth'] : [];
+		$this->search             = is_array($this->rawSettings['search'] ?? null) ? $this->rawSettings['search'] : [];
+		$this->automations        = is_array($this->rawSettings['automations'] ?? null) ? $this->rawSettings['automations'] : [];
+		$this->xmlrpc             = is_array($this->rawSettings['xmlrpc'] ?? null) ? $this->rawSettings['xmlrpc'] : [];
+		$this->sync               = is_array($this->rawSettings['sync'] ?? null) ? $this->rawSettings['sync'] : [];
 
-		$siteId         = (string)($settings['siteId'] ?? '');
+		$siteId         = (string)($this->rawSettings['siteId'] ?? '');
 		$this->siteId   = preg_match('/^[a-z0-9-]+$/', $siteId) === 1 ? $siteId : '';
 
 		// Only meaningful alongside a valid siteId: without an overlay file to
 		// own anything in, a declaration has nothing to point at.
-		$declared            = is_array($settings['siteOverrides'] ?? null) ? $settings['siteOverrides'] : [];
+		$declared            = is_array($this->rawSettings['siteOverrides'] ?? null) ? $this->rawSettings['siteOverrides'] : [];
 		$this->siteOverrides = $this->siteId === ''
 			? []
-			: array_values(array_filter(array_map('strval', $declared), static fn (string $s): bool => $s !== ''));
+			: array_values(array_filter(array_map(strval(...), $declared), static fn (string $s): bool => $s !== ''));
 
-		$presets               = $settings['presets'] ?? [];
+		$presets               = $this->rawSettings['presets'] ?? [];
 		$this->presets         = is_array($presets['presetsettings'] ?? null) ? $presets['presetsettings'] : [];
 
 		date_default_timezone_set($this->timezone);

@@ -123,40 +123,40 @@ function goldenForms(): array
 	$cases['deck item new']  = [fn (TotalFormFactory $f): string => $f->deck('widgets', 'mydeck', ['id' => 'w1'])];
 	$cases['deck item edit'] = [fn (TotalFormFactory $f): string => $f->deck('widgets', 'mydeck', ['id' => 'w1', 'itemId' => 'one'])];
 
-	$cases['login']                 = [fn (TotalFormFactory $f): string => $f->loginForm()];
+	$cases['login']                  = [fn (TotalFormFactory $f): string => $f->loginForm()];
 	$cases['login without passkeys'] = [fn (TotalFormFactory $f): string => $f->loginForm(['showPasskeys' => false, 'showForgotPassword' => false])];
-	$cases['report']                = [fn (TotalFormFactory $f): string => $f->report('blog')];
-	$cases['factory']               = [fn (TotalFormFactory $f): string => $f->factory('blog')];
-	$cases['import collection']     = [fn (TotalFormFactory $f): string => $f->importCollection('blog')];
-	$cases['import deck']           = [fn (TotalFormFactory $f): string => $f->importDeck('widgets')];
-	$cases['export deck']           = [fn (TotalFormFactory $f): string => $f->exportDeck('widgets')];
-	$cases['import schema']         = [fn (TotalFormFactory $f): string => $f->importSchema()];
-	$cases['import jumpstart']      = [fn (TotalFormFactory $f): string => $f->importJumpStart()];
-	$cases['jobqueue stats']        = [fn (TotalFormFactory $f): string => $f->jobqueueStats()];
-	$cases['jobqueue by status']    = [fn (TotalFormFactory $f): string => $f->jobqueueByStatus()];
-	$cases['jobqueue by type']      = [fn (TotalFormFactory $f): string => $f->jobqueueByType()];
-	$cases['clear queue']           = [fn (TotalFormFactory $f): string => $f->clearqueue()];
-	$cases['devmode']               = [fn (TotalFormFactory $f): string => $f->devmode()];
-	$cases['playground']            = [fn (TotalFormFactory $f): string => $f->playground()];
-	$cases['dataviews']             = [fn (TotalFormFactory $f): string => $f->dataviews()];
-	$cases['mailer']                = [fn (TotalFormFactory $f): string => $f->mailer()];
-	$cases['blog']                  = [fn (TotalFormFactory $f): string => $f->blog()];
-	$cases['feed']                  = [fn (TotalFormFactory $f): string => $f->feed()];
-	$cases['simple']                = [fn (TotalFormFactory $f): string => $f->simple('/contact', '<input name="x">')];
-	$cases['totalform']             = [fn (TotalFormFactory $f): string => $f->totalform('/api/collection/blog', '<input name="x">')];
-	$cases['fieldset']              = [fn (TotalFormFactory $f): string => $f->fieldset('Legend', '<input name="x">')];
+	$cases['report']                 = [fn (TotalFormFactory $f): string => $f->report('blog')];
+	$cases['factory']                = [fn (TotalFormFactory $f): string => $f->factory('blog')];
+	$cases['import collection']      = [fn (TotalFormFactory $f): string => $f->importCollection('blog')];
+	$cases['import deck']            = [fn (TotalFormFactory $f): string => $f->importDeck('widgets')];
+	$cases['export deck']            = [fn (TotalFormFactory $f): string => $f->exportDeck('widgets')];
+	$cases['import schema']          = [fn (TotalFormFactory $f): string => $f->importSchema()];
+	$cases['import jumpstart']       = [fn (TotalFormFactory $f): string => $f->importJumpStart()];
+	$cases['jobqueue stats']         = [fn (TotalFormFactory $f): string => $f->jobqueueStats()];
+	$cases['jobqueue by status']     = [fn (TotalFormFactory $f): string => $f->jobqueueByStatus()];
+	$cases['jobqueue by type']       = [fn (TotalFormFactory $f): string => $f->jobqueueByType()];
+	$cases['clear queue']            = [fn (TotalFormFactory $f): string => $f->clearqueue()];
+	$cases['devmode']                = [fn (TotalFormFactory $f): string => $f->devmode()];
+	$cases['playground']             = [fn (TotalFormFactory $f): string => $f->playground()];
+	$cases['dataviews']              = [fn (TotalFormFactory $f): string => $f->dataviews()];
+	$cases['mailer']                 = [fn (TotalFormFactory $f): string => $f->mailer()];
+	$cases['blog']                   = [fn (TotalFormFactory $f): string => $f->blog()];
+	$cases['feed']                   = [fn (TotalFormFactory $f): string => $f->feed()];
+	$cases['simple']                 = [fn (TotalFormFactory $f): string => $f->simple('/contact', '<input name="x">')];
+	$cases['totalform']              = [fn (TotalFormFactory $f): string => $f->totalform('/api/collection/blog', '<input name="x">')];
+	$cases['fieldset']               = [fn (TotalFormFactory $f): string => $f->fieldset('Legend', '<input name="x">')];
 
 	foreach (glob(dirname(__DIR__, 2) . '/resources/schemas/settings/*.json') ?: [] as $file) {
-		$section = basename($file, '.json');
+		$section                     = basename($file, '.json');
 		$cases["settings: $section"] = [fn (TotalFormFactory $f): string => $f->settings($section)];
 	}
 
 	$single = [
 		'checkbox' => 'mytoggle', 'color' => 'mytext', 'date' => 'mydate', 'datetime' => 'mydate',
-		'email' => 'mytext', 'gallery' => 'mygallery', 'image' => 'myimage', 'file' => 'myfile',
-		'depot' => 'mydepot', 'depotDrop' => 'mydepot', 'number' => 'mynumber', 'price' => 'mynumber',
-		'range' => 'mynumber', 'select' => 'mytext', 'styledtext' => 'mystyledtext', 'svg' => 'mytext',
-		'text' => 'mytext', 'code' => 'mytext', 'textarea' => 'mytext', 'toggle' => 'mytoggle', 'url' => 'mytext',
+		'email'    => 'mytext', 'gallery' => 'mygallery', 'image' => 'myimage', 'file' => 'myfile',
+		'depot'    => 'mydepot', 'depotDrop' => 'mydepot', 'number' => 'mynumber', 'price' => 'mynumber',
+		'range'    => 'mynumber', 'select' => 'mytext', 'styledtext' => 'mystyledtext', 'svg' => 'mytext',
+		'text'     => 'mytext', 'code' => 'mytext', 'textarea' => 'mytext', 'toggle' => 'mytoggle', 'url' => 'mytext',
 	];
 	foreach ($single as $method => $id) {
 		$cases["single field: $method"] = [fn (TotalFormFactory $f): string => $f->$method($id)];

@@ -25,7 +25,7 @@ class SyncConfig
 	private string $key = '';
 
 	/**
-	 * @param array<string,mixed> $sync The resolved `sync` config bucket.
+	 * @param array<string,mixed> $sync the resolved `sync` config bucket
 	 */
 	public function __construct(array $sync)
 	{

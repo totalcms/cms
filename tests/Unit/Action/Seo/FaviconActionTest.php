@@ -27,28 +27,28 @@ describe('FaviconAction', function (): void {
 	// create PHPUnit mocks.
 	beforeEach(function () use ($factory): void {
 		$this->action = function (bool $hasIcon, ?string $pngBytes = null, ?string $svgBytes = null) use ($factory): FaviconAction {
-		// The touch icon is the Icon standing in, so the route must add the
-		// theme color as the background, exactly as the head's link does.
-		$settings = SeoSettings::fromArray($hasIcon ? ['icon32' => '/imageworks/x.png', 'touchIconProperty' => 'icon', 'themeColor' => '#090e1b', 'iconSvgUrl' => $svgBytes !== null ? '/favicon.svg' : ''] : [], 'example.com');
-		$loader   = $this->createMock(SeoSettingsLoader::class);
-		$loader->method('load')->willReturn($settings);
+			// The touch icon is the Icon standing in, so the route must add the
+			// theme color as the background, exactly as the head's link does.
+			$settings = SeoSettings::fromArray($hasIcon ? ['icon32' => '/imageworks/x.png', 'touchIconProperty' => 'icon', 'themeColor' => '#090e1b', 'iconSvgUrl' => $svgBytes !== null ? '/favicon.svg' : ''] : [], 'example.com');
+			$loader   = $this->createMock(SeoSettingsLoader::class);
+			$loader->method('load')->willReturn($settings);
 
-		$images = $this->createMock(ImageGenerator::class);
-		$images->method('generateImage')->willReturnCallback(function (string $collection, string $id, string $property, array $params) use ($factory, $pngBytes) {
-			expect([$collection, $id])->toBe(['seo-site', 'seo-site']);
-			expect([$property, $params])->toBeIn([['icon', SeoSettings::ICON_32], ['icon', SeoSettings::touchIconFromIcon('#090e1b')]]);
+			$images = $this->createMock(ImageGenerator::class);
+			$images->method('generateImage')->willReturnCallback(function (string $collection, string $id, string $property, array $params) use ($factory, $pngBytes) {
+				expect([$collection, $id])->toBe(['seo-site', 'seo-site']);
+				expect([$property, $params])->toBeIn([['icon', SeoSettings::ICON_32], ['icon', SeoSettings::touchIconFromIcon('#090e1b')]]);
 
-			return $factory->createResponse(200)->withBody($factory->createStream((string)$pngBytes));
-		});
+				return $factory->createResponse(200)->withBody($factory->createStream((string)$pngBytes));
+			});
 
-		$files = $this->createMock(FileFetcher::class);
-		$files->method('streamFile')->willReturnCallback(function () use ($svgBytes) {
-			$stream = fopen('php://memory', 'r+');
-			fwrite($stream, (string)$svgBytes);
-			rewind($stream);
+			$files = $this->createMock(FileFetcher::class);
+			$files->method('streamFile')->willReturnCallback(function () use ($svgBytes) {
+				$stream = fopen('php://memory', 'r+');
+				fwrite($stream, (string)$svgBytes);
+				rewind($stream);
 
-			return $stream;
-		});
+				return $stream;
+			});
 
 			return new FaviconAction($loader, $images, $files);
 		};

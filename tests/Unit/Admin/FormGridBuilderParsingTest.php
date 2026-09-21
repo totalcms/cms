@@ -75,7 +75,7 @@ describe('FormGridBuilder accordion parsing', function (): void {
 	});
 
 	test('a bare >> with no title falls back to Section N', function (): void {
-		$b = new FormGridBuilder(">>\na a\n>>\nb b\n<<");
+		$b      = new FormGridBuilder(">>\na a\n>>\nb b\n<<");
 		$panels = $b->getContainers()[0]['block']['panels'];
 
 		expect($panels[0]['title'])->toBe('Section 1');

@@ -3,9 +3,6 @@
 namespace TotalCMS\Domain\Admin;
 
 use Odan\Session\PhpSession;
-use TotalCMS\Domain\Admin\FormField\DeleteButton;
-use TotalCMS\Domain\Admin\FormField\FormField;
-use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Admin\Form\AdminForms;
 use TotalCMS\Domain\Admin\Form\Builder\CollectionForm;
 use TotalCMS\Domain\Admin\Form\Builder\DeckItemForm;
@@ -20,6 +17,9 @@ use TotalCMS\Domain\Admin\Form\Layout\FieldsetRenderer;
 use TotalCMS\Domain\Admin\Form\PresetForms;
 use TotalCMS\Domain\Admin\Form\SettingsForms;
 use TotalCMS\Domain\Admin\Form\SingleFieldForms;
+use TotalCMS\Domain\Admin\FormField\DeleteButton;
+use TotalCMS\Domain\Admin\FormField\FormField;
+use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
@@ -80,7 +80,6 @@ readonly class TotalFormFactory
 		$this->presetForms   = new PresetForms($this, $services);
 		$this->singleFields  = new SingleFieldForms($this);
 	}
-
 
 	/** @param array<string,mixed> $options */
 	public function simple(string $route, string $content = '', array $options = []): string
@@ -213,9 +212,7 @@ readonly class TotalFormFactory
 			'api'                      => $this->api,
 		]);
 
-		$form = new ObjectForm($this->services, FormOptions::fromArray($options));
-
-		return $form;
+		return new ObjectForm($this->services, FormOptions::fromArray($options));
 	}
 
 	/**
@@ -235,9 +232,7 @@ readonly class TotalFormFactory
 		$itemId = (string)($options['itemId'] ?? '');
 		unset($options['itemId'], $options['property']);
 
-		$form = new DeckItemForm($this->services, FormOptions::fromArray($options), $property, $itemId);
-
-		return $form;
+		return new DeckItemForm($this->services, FormOptions::fromArray($options), $property, $itemId);
 	}
 
 	/**

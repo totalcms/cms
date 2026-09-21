@@ -2,7 +2,17 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Admin\Form\SettingsForms;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
+use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\Settings\Repository\SettingsRepository;
+use TotalCMS\Domain\Settings\Services\SettingsFetcher;
+use TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher;
+use TotalCMS\Domain\Storage\StorageAdapterInterface;
+use TotalCMS\Domain\Translation\TranslationService;
+use TotalCMS\Support\Config;
 
 /**
  * Across 19 sites nobody remembers which sections are local and which are
@@ -25,13 +35,13 @@ beforeEach(function (): void {
  * @param array<string,mixed> $overlay  contents of settings-italy.json
  * @param list<string>        $declared sections this install owns (defaults to `i18n`)
  */
-function settingsFormsWithOverlay(array $overlay, array $declared = ['i18n']): TotalCMS\Domain\Admin\Form\SettingsForms
+function settingsFormsWithOverlay(array $overlay, array $declared = ['i18n']): SettingsForms
 {
 	@mkdir(cmsDataDir() . '.system', 0755, true);
 	file_put_contents(cmsDataDir() . '.system/settings-italy.json', (string)json_encode($overlay));
 
 	$c                     = test()->diContainer;
-	$config                = (new ReflectionClass(TotalCMS\Support\Config::class))->newInstanceWithoutConstructor();
+	$config                = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->siteId        = 'italy';
 	// Ownership comes from the declaration (Task 2b), not the overlay file:
 	// `i18n` is owned so its page reads "site-specific"; `smtp` is not, so its
@@ -39,20 +49,20 @@ function settingsFormsWithOverlay(array $overlay, array $declared = ['i18n']): T
 	$config->siteOverrides = $declared;
 
 	// Two arguments: the schema-fetcher parameter was removed in 872f2eab9.
-	$repo = new TotalCMS\Domain\Settings\Repository\SettingsRepository(
-		$c->get(TotalCMS\Domain\Storage\StorageAdapterInterface::class),
+	$repo = new SettingsRepository(
+		$c->get(StorageAdapterInterface::class),
 		$config,
 	);
 
-	return new TotalCMS\Domain\Admin\Form\SettingsForms(
+	return new SettingsForms(
 		$c->get(TotalFormFactory::class),
-		$c->get(TotalCMS\Domain\Settings\Services\SettingsSchemaFetcher::class),
-		$c->get(TotalCMS\Domain\Settings\Services\SettingsFetcher::class),
-		$c->get(TotalCMS\Domain\Translation\TranslationService::class),
-		$c->get(TotalCMS\Domain\Extension\Service\ExtensionDiscovery::class),
-		$c->get(TotalCMS\Domain\Extension\Service\ExtensionSettingsManager::class),
-		$c->get(TotalCMS\Domain\Extension\Service\ExtensionManager::class),
-		$c->get(TotalCMS\Support\Config::class),
+		$c->get(SettingsSchemaFetcher::class),
+		$c->get(SettingsFetcher::class),
+		$c->get(TranslationService::class),
+		$c->get(ExtensionDiscovery::class),
+		$c->get(ExtensionSettingsManager::class),
+		$c->get(ExtensionManager::class),
+		$c->get(Config::class),
 		$repo,
 	);
 }

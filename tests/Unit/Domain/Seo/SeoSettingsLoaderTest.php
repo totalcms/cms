@@ -61,7 +61,7 @@ final class SeoSettingsLoaderTest extends TestCase
 					$transform === SeoSettings::TOUCH_ICON => '?w=180&h=180&fit=crop-focalpoint&fm=png',
 					// The Icon standing in for the touch icon: inset on a colored tile.
 					isset($transform['bg'], $transform['border']) => '?w=140&h=140&fit=crop-focalpoint&fm=png&bg=' . $transform['bg'] . '&border=' . $transform['border'],
-					default                                => '?unexpected',
+					default                                       => '?unexpected',
 				};
 
 				return '/imageworks/seo-site/seo-site/' . (string)($options['property'] ?? '') . '.jpg' . $suffix;

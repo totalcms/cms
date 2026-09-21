@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Twig\Adapter\TotalCMSTwigAdapter;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\Config;
 
 /**
@@ -66,11 +68,11 @@ describe('the forms feature', function (): void {
 	test('a form on a public page renders with the helpers and nothing from the admin', function (): void {
 		$c = $this->app->getContainer();
 		try {
-			$c->get(TotalCMS\Domain\Collection\Service\CollectionSaver::class)->saveCollection(['id' => 'blog', 'name' => 'Blog', 'schema' => 'blog']);
+			$c->get(CollectionSaver::class)->saveCollection(['id' => 'blog', 'name' => 'Blog', 'schema' => 'blog']);
 		} catch (DomainException) {
 			// Another test in this worker already created it.
 		}
-		$html = $c->get(TotalCMS\Domain\Twig\Service\TwigEngine::class)->renderString(
+		$html = $c->get(TwigEngine::class)->renderString(
 			"{{ cms.assetsHead() }}{{ cms.form.builder('blog').autoBuild()|raw }}{{ cms.assetsBody() }}",
 			[],
 		);
