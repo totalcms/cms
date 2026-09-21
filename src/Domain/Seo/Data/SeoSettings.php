@@ -176,8 +176,6 @@ final readonly class SeoSettings
 			contactEmail: $str('contactEmail'),
 			contactUrl: $str('contactUrl'),
 			metaTags: $str('metaTags'),
-			indexNowEnabled: (bool)($data['indexNowEnabled'] ?? false),
-			indexNowKey: $str('indexNowKey'),
 			emitJsonLd: !array_key_exists('emitJsonLd', $data) || filter_var($data['emitJsonLd'], FILTER_VALIDATE_BOOL),
 			emitSocial: !array_key_exists('emitSocial', $data) || filter_var($data['emitSocial'], FILTER_VALIDATE_BOOL),
 			// The loader resolves the record's image and file properties to URLs
@@ -190,6 +188,8 @@ final readonly class SeoSettings
 			themeColor: self::hex($data['themeColor'] ?? null),
 			manifest: $str('manifestUrl'),
 			touchIconProperty: $str('touchIconProperty'),
+			indexNowEnabled: (bool)($data['indexNowEnabled'] ?? false),
+			indexNowKey: $str('indexNowKey'),
 		);
 	}
 

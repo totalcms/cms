@@ -171,7 +171,7 @@ class BackupStore
 
 		$entries = [];
 		foreach ($this->listNewestFirst($this->objectDir($collection, $id)) as $path) {
-			$parsed = self::parseName($path);
+			$parsed = $this->parseName($path);
 			if ($parsed === null) {
 				continue;
 			}
@@ -326,8 +326,8 @@ class BackupStore
 
 		$files = $this->filesystem->listFiles($backupDir);
 		usort($files, function (string $a, string $b): int {
-			[$tsA, $seqA] = self::parseName($a) ?? [-1, -1];
-			[$tsB, $seqB] = self::parseName($b) ?? [-1, -1];
+			[$tsA, $seqA] = $this->parseName($a) ?? [-1, -1];
+			[$tsB, $seqB] = $this->parseName($b) ?? [-1, -1];
 
 			return [$tsB, $seqB, $b] <=> [$tsA, $seqA, $a];
 		});
@@ -337,7 +337,7 @@ class BackupStore
 
 	private function timestampOf(string $path): int
 	{
-		$parsed = self::parseName($path);
+		$parsed = $this->parseName($path);
 
 		return $parsed === null ? PHP_INT_MAX : $parsed[0]; // unparseable — never age-pruned
 	}
@@ -351,7 +351,7 @@ class BackupStore
 	 *
 	 * @return array{int,int,string,\DateTimeImmutable}|null
 	 */
-	private static function parseName(string $path): ?array
+	private function parseName(string $path): ?array
 	{
 		if (preg_match('/-(\d{8})-(\d{6})(?:-(\d+))?\.(json|md)$/', basename($path), $m) !== 1) {
 			return null;

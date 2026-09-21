@@ -334,7 +334,7 @@ final class Typographer
 			// French: a narrow no-break space before ? ! ; and before a colon
 			// that ends a clause. Entities are matched first so their `;` is
 			// never mistaken for punctuation.
-			$s = (string)preg_replace_callback(
+			return (string)preg_replace_callback(
 				'/&[#\w]+;| ?[?!;]| ?:(?=\s|$)/',
 				function (array $m) use ($s): string {
 					[$match, $offset] = $m[0];
@@ -400,7 +400,7 @@ final class Typographer
 
 	private function wrap(string $s, ?string $previousTag, bool $atBlockStart): string
 	{
-		$previousTag = $previousTag ?? '';
+		$previousTag ??= '';
 
 		if (!str_contains($previousTag, 'class="amp"')) {
 			$s = str_replace('&amp;', '<span class="amp">&amp;</span>', $s);

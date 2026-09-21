@@ -69,7 +69,7 @@ readonly class IndexNowOutbox
 			return ['urls' => []];
 		}, CorruptPolicy::TreatAsEmpty, lock: true);
 
-		return array_values(array_filter($taken, 'is_string'));
+		return array_values(array_filter($taken, is_string(...)));
 	}
 
 	/**

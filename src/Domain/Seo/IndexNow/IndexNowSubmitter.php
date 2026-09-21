@@ -86,9 +86,7 @@ readonly class IndexNowSubmitter
 				static fn (array $m): string => strtolower($m[1]),
 				$url,
 			),
-			array_filter($urls, static function (string $url) use ($host): bool {
-				return $host !== '' && strcasecmp((string)parse_url($url, PHP_URL_HOST), $host) === 0;
-			}),
+			array_filter($urls, static fn (string $url): bool => $host !== '' && strcasecmp((string)parse_url($url, PHP_URL_HOST), $host) === 0),
 		)));
 
 		if ($urls === []) {

@@ -9,29 +9,29 @@ namespace TotalCMS\Domain\Typography\Data;
  * that is correct in ordinary prose in any language. The three rules that
  * change markup (fractions, ordinals, wrap) are off unless asked for.
  */
-final class TypographyOptions
+final readonly class TypographyOptions
 {
 	public const DASHES_EM = 'em';
 	public const DASHES_EN = 'en';
 
-	public readonly QuoteStyle $quoteStyle;
+	public QuoteStyle $quoteStyle;
 
 	public function __construct(
 		/** A locale code for the quote style, or false to leave quotes alone. */
-		public readonly string|false $quotes = 'en',
+		public string|false $quotes = 'en',
 		/** 'em' (unspaced em dash, US), 'en' (spaced en dash, UK), or false. */
-		public readonly string|false $dashes = self::DASHES_EM,
-		public readonly bool $ellipsis = true,
-		public readonly bool $math = true,
-		public readonly bool $symbols = true,
-		public readonly bool $primes = true,
-		public readonly bool $nbsp = true,
-		public readonly bool $widont = true,
-		public readonly bool $fractions = false,
-		public readonly bool $ordinals = false,
-		public readonly bool $wrap = false,
+		public string|false $dashes = self::DASHES_EM,
+		public bool $ellipsis = true,
+		public bool $math = true,
+		public bool $symbols = true,
+		public bool $primes = true,
+		public bool $nbsp = true,
+		public bool $widont = true,
+		public bool $fractions = false,
+		public bool $ordinals = false,
+		public bool $wrap = false,
 	) {
-		if ($dashes !== false && $dashes !== self::DASHES_EM && $dashes !== self::DASHES_EN) {
+		if (!in_array($dashes, [false, self::DASHES_EM, self::DASHES_EN], true)) {
 			throw new \InvalidArgumentException("typography: dashes must be 'em', 'en' or false, got '{$dashes}'");
 		}
 

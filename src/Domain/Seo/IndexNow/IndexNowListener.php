@@ -66,13 +66,13 @@ class IndexNowListener
 	/** @param array<string,mixed> $payload */
 	public function onObjectSaved(array $payload): void
 	{
-		$this->enqueue($this->urlsFor($payload, [$payload['object'] ?? null, $payload['previous'] ?? null]), (string)($payload['collection'] ?? ''));
+		$this->enqueue($this->urlsFor($payload, [$payload['object'] ?? null, $payload['previous'] ?? null]));
 	}
 
 	/** @param array<string,mixed> $payload */
 	public function onObjectDeleted(array $payload): void
 	{
-		$this->enqueue($this->urlsFor($payload, [$payload['previous'] ?? null]), (string)($payload['collection'] ?? ''));
+		$this->enqueue($this->urlsFor($payload, [$payload['previous'] ?? null]));
 	}
 
 	/**
@@ -148,7 +148,7 @@ class IndexNowListener
 	{
 		$urls = array_keys($this->pending[$collection] ?? []);
 		unset($this->pending[$collection]);
-		$this->enqueue($urls, $collection);
+		$this->enqueue($urls);
 	}
 
 	private function flushAll(): void
@@ -165,7 +165,7 @@ class IndexNowListener
 	 *
 	 * @param list<string> $urls
 	 */
-	private function enqueue(array $urls, string $collection): void
+	private function enqueue(array $urls): void
 	{
 		if ($urls === [] || !$this->submitter->isConfigured()) {
 			return;

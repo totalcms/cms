@@ -288,7 +288,7 @@ class ImageRenderer
 			return [];
 		}
 
-		return array_values(array_map(static fn (mixed $v): int => (int)$v, array_filter($value, 'is_numeric')));
+		return array_values(array_map(static fn (mixed $v): int => (int)$v, array_filter($value, is_numeric(...))));
 	}
 
 	/**
