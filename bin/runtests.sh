@@ -86,6 +86,32 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
+# ─── Run on the PHP version CI runs ──────────────────────────────────────────
+# The workflow pins one PHP; a newer local PHP passes tests CI fails, and the
+# other way round. When Homebrew has that exact minor, put it first on PATH so
+# every `php` and `composer` below uses it. Without it, a filtered run warns
+# and the full battery refuses — the point of the full battery is CI parity.
+CI_PHP=$(grep -m1 'php-version:' .github/workflows/build.yml | sed 's/.*php-version: *//; s/["'"'"' ]//g')
+LOCAL_PHP=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null)
+if [ -n "$CI_PHP" ] && [ "$LOCAL_PHP" != "$CI_PHP" ]; then
+	for dir in "/opt/homebrew/opt/php@$CI_PHP/bin" "/usr/local/opt/php@$CI_PHP/bin"; do
+		if [ -x "$dir/php" ]; then
+			export PATH="$dir:$PATH"
+			print_info "Using PHP $CI_PHP from $dir to match CI (your default php is $LOCAL_PHP)"
+			LOCAL_PHP="$CI_PHP"
+			break
+		fi
+	done
+	if [ "$LOCAL_PHP" != "$CI_PHP" ]; then
+		if [ -n "$FILTER" ]; then
+			print_warning "CI runs PHP $CI_PHP; this run uses $LOCAL_PHP (brew install php@$CI_PHP for parity)"
+		else
+			print_error "CI runs PHP $CI_PHP but only $LOCAL_PHP is available — brew install php@$CI_PHP, then rerun"
+			exit 1
+		fi
+	fi
+fi
+
 START=$(date +%s)
 STEP_OUT=""          # captured output of the most recent step
 REQUIRE_SUMMARY=""  # when set, a step producing no summary line fails with this message
@@ -236,6 +262,7 @@ if [ -n "$FILTER" ]; then
 fi
 
 # ─── Full battery, cheapest first ────────────────────────────────────────────
+run_step "PHP version"      'PHP [0-9]'     php -r 'echo "PHP ", PHP_VERSION, " (CI pins ", getenv("CI_PHP") ?: "'"$CI_PHP"'", ")\n";'
 run_step "Bundle integrity" 'Bundle check'  composer run bundle:check
 run_step "Static analysis"  '\[OK\]|error'  composer run stan
 run_step "Docs validation"  '^OK:|^ *OK:'   composer run docs:validate

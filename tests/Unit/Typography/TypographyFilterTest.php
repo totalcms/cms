@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
-use Twig\Node\Node;
+use Twig\Node\EmptyNode;
 use Twig\TwigFilter;
 
 /**
@@ -14,7 +14,7 @@ test('typography is registered as an HTML-safe filter', function (): void {
 	$filters = array_filter(TotalCMSTwigFilters::getFilters(), static fn (TwigFilter $f): bool => $f->getName() === 'typography');
 
 	expect($filters)->toHaveCount(1)
-		->and(array_values($filters)[0]->getSafe(new Node()))->toBe(['html']);
+		->and(array_values($filters)[0]->getSafe(new EmptyNode()))->toBe(['html']);
 });
 
 test('the filter applies the defaults and accepts the option hash', function (): void {

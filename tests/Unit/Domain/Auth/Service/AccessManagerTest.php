@@ -21,8 +21,30 @@ final class AccessManagerTest extends TestCase
 	private MockObject $userValidator;
 	private MockObject $loggerFactory;
 
+	/**
+	 * Three tests below set REQUEST_URI/HTTP_REFERER and used to leave them
+	 * behind. Under --parallel every later test file in the same worker then
+	 * saw a phantom "/admin/dashboard" request — the podcast feed's self
+	 * link, which reads the request path, failed on it whenever the files
+	 * landed together. Restore what was there.
+	 */
+	private array $savedServer = [];
+
+	protected function tearDown(): void
+	{
+		foreach (['REQUEST_URI', 'HTTP_REFERER'] as $key) {
+			if (array_key_exists($key, $this->savedServer)) {
+				$_SERVER[$key] = $this->savedServer[$key];
+			} else {
+				unset($_SERVER[$key]);
+			}
+		}
+		parent::tearDown();
+	}
+
 	protected function setUp(): void
 	{
+		$this->savedServer = array_intersect_key($_SERVER, ['REQUEST_URI' => 1, 'HTTP_REFERER' => 1]);
 		$this->session       = $this->createMock(SessionInterface::class);
 		$this->config        = $this->createTestConfig();
 		$this->userValidator = $this->createMock(UserValidationService::class);

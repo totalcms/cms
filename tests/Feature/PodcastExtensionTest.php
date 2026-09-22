@@ -22,6 +22,11 @@ beforeEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
 	}
+	// podcast_feed() takes the request path as the feed's own address. This
+	// file renders it outside any request, and asserts the route stands in —
+	// so no request path may be left over from another test in this worker.
+	$this->previousRequestUri = $_SERVER['REQUEST_URI'] ?? null;
+	unset($_SERVER['REQUEST_URI']);
 	// Enable the bundled extension before the app boots: the state file is
 	// what ExtensionManager reads, and an enabled state with no permissions
 	// recorded permits every capability.
@@ -78,6 +83,14 @@ beforeEach(function (): void {
 	}
 
 	$this->render = fn (string $template): string => $container->get(TwigEngine::class)->renderString($template, []);
+});
+
+afterEach(function (): void {
+	if ($this->previousRequestUri === null) {
+		unset($_SERVER['REQUEST_URI']);
+	} else {
+		$_SERVER['REQUEST_URI'] = $this->previousRequestUri;
+	}
 });
 
 function assertPodcastFeed(string $xml, string $selfPath = '/api/ext/totalcms/podcast/feed'): void
