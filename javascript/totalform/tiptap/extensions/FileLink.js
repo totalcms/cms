@@ -7,6 +7,7 @@
 import { getUploadUrl, getListUrl, uploadFileWithProgress, getCsrfToken } from '../upload.js';
 import tcmsConfirm from '../../../confirm-dialog';
 import { t } from '../../../i18n';
+import { apiErrorMessage, rejectNonOk } from '../../../api-error';
 
 /**
  * Creates a file upload dialog. Mounts and shows itself as a native <dialog>
@@ -223,8 +224,8 @@ function createFileDialog(editor, uploadConfig) {
 		const deleteUrl = `${listUrl}/${encodeURIComponent(filename)}`;
 
 		fetch(deleteUrl, { method: 'DELETE', headers: getCsrfToken() ? { 'X-CSRF-Token': getCsrfToken() } : {} })
+			.then(rejectNonOk)
 			.then(resp => {
-				if (!resp.ok) throw new Error(`Delete failed: ${resp.status}`);
 				row.remove();
 				if (fileListEl.children.length === 0) {
 					fileListEl.style.display = 'none';
@@ -238,7 +239,7 @@ function createFileDialog(editor, uploadConfig) {
 			})
 			.catch(err => {
 				console.error('Delete file error:', err);
-				alert(t("error.delete_file"));
+				alert(apiErrorMessage(err, "error.delete_file"));
 			});
 	}
 

@@ -2356,7 +2356,7 @@
         {
             "name": "cms.seo.meta",
             "signature": "meta(mixed $subject = null, array $options = []): Markup",
-            "description": "The non-social meta tags: description, robots and the site's Meta Tags.",
+            "description": "The non-social meta tags: description, robots, generator and the site's Meta Tags.",
             "examples": [],
             "url": "https://docs.totalcms.co/site-builder/seo/"
         },

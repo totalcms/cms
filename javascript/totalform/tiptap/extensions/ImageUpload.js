@@ -12,6 +12,7 @@ import { getUploadUrl, getListUrl, uploadFile, uploadFileWithProgress, validateF
 import tcmsConfirm from '../../../confirm-dialog';
 import { createImagePopoverPlugin } from './ImagePopover.js';
 import { t } from '../../../i18n';
+import { apiErrorMessage, rejectNonOk } from '../../../api-error';
 
 /**
  * Creates an image upload dialog with Upload and Images tabs. Mounts and shows
@@ -255,8 +256,8 @@ function createImageDialog(editor, uploadConfig) {
 		const deleteUrl = `${listUrl}/${encodeURIComponent(filename)}`;
 
 		fetch(deleteUrl, { method: 'DELETE', headers: getCsrfToken() ? { 'X-CSRF-Token': getCsrfToken() } : {} })
+			.then(rejectNonOk)
 			.then(resp => {
-				if (!resp.ok) throw new Error(`Delete failed: ${resp.status}`);
 				card.remove();
 				// Show empty message if no cards left
 				if (imageGrid.children.length === 0) {
@@ -270,7 +271,7 @@ function createImageDialog(editor, uploadConfig) {
 			})
 			.catch(err => {
 				console.error('Delete image error:', err);
-				alert(t("error.delete_image"));
+				alert(apiErrorMessage(err, "error.delete_image"));
 			});
 	}
 

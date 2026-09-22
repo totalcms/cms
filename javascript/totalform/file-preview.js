@@ -2,6 +2,7 @@ import Dialog from "./dialog";
 import Details from "./details";
 import tcmsConfirm from "../confirm-dialog";
 import { t } from "../i18n";
+import { apiErrorMessage } from "../api-error";
 
 //-----------------------------------------------
 // Total CMS File Droplet
@@ -113,7 +114,7 @@ export default class FilePreview {
 					this.container.remove();
 				}).catch(error => {
 					console.error("Failed to delete file", error);
-					alert(t("error.delete_file"));
+					alert(apiErrorMessage(error, "error.delete_file"));
 				});
 			});
 		}

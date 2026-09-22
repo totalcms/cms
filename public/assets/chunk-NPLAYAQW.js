@@ -1,0 +1,2 @@
+import{a as s}from"./chunk-2LL6R7CL.js";import{a as n}from"./chunk-CW345KIZ.js";function i(e,r,o={}){return e&&typeof e=="object"&&e.data!==void 0&&typeof e.message=="string"&&e.message!==""?e.message:s(r,o)}n(i,"apiErrorMessage");function f(e){return e?e.ok?Promise.resolve(e):e.json().then(r=>{let o=typeof r.error=="string"?r.error:r.error?.message||"Unknown error",t=new Error(o);throw t.data=r,t.status=e.status,t}):Promise.reject(new Error("No response received from server"))}n(f,"rejectNonOk");export{i as a,f as b};
+//# sourceMappingURL=chunk-NPLAYAQW.js.map

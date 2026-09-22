@@ -3,6 +3,7 @@ import Details from "./details";
 import TotalSortable from "./total-sortable";
 import tcmsConfirm from "../confirm-dialog";
 import { t } from "../i18n";
+import { apiErrorMessage } from "../api-error";
 
 //-----------------------------------------------
 // Total CMS Droplet
@@ -130,7 +131,7 @@ setupActionBar() {
 					this.toggleFeaturedField();
 				}).catch(error => {
 					console.error("Failed to update featured status", error);
-					alert(t("error.featured_update"));
+					alert(apiErrorMessage(error, "error.featured_update"));
 				});
 			});
 		}
@@ -150,7 +151,7 @@ setupActionBar() {
 					this.container.classList.toggle("cleared-cache");
 				}).catch(error => {
 					console.error("Failed to clear image cache", error);
-					alert(t("error.cache_clear"));
+					alert(apiErrorMessage(error, "error.cache_clear"));
 				});
 			});
 		}
@@ -172,7 +173,7 @@ setupActionBar() {
 					this.container.remove();
 				}).catch(error => {
 					console.error("Failed to delete image", error);
-					alert(t("error.delete_image"));
+					alert(apiErrorMessage(error, "error.delete_image"));
 				});
 			});
 		}

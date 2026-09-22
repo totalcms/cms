@@ -16,6 +16,7 @@
  *
 **/
 import { getCsrfToken as readCsrfToken } from "./csrf";
+import { rejectNonOk } from "./api-error";
 
 export default class TotalCMS {
 
@@ -169,21 +170,7 @@ export default class TotalCMS {
             mode    : this.options.cors ? "cors" : "same-origin",
             headers : new Headers(headers),
             body: JSON.stringify(data)
-        }).then(response => {
-			if (!response) {
-				throw new Error('No response received from server');
-			}
-			if (!response.ok) {
-				return response.json().then(json => {
-					// Handle both string errors and object errors with message property
-					const errorMessage = typeof json.error === 'string' ? json.error : (json.error?.message || 'Unknown error');
-					const error = new Error(errorMessage);
-					error.data = json;
-					throw error;
-				});
-			}
-			return response.json();
-        });
+        }).then(rejectNonOk).then(response => response.json());
     }
 
     postFileAPI(api, data, method = "POST") {
@@ -203,21 +190,7 @@ export default class TotalCMS {
             mode    : this.options.cors ? "cors" : "same-origin",
             headers : new Headers(headers),
             body: data
-        }).then(response => {
-			if (!response) {
-				throw new Error('No response received from server');
-			}
-			if (!response.ok) {
-				return response.json().then(json => {
-					// Handle both string errors and object errors with message property
-					const errorMessage = typeof json.error === 'string' ? json.error : (json.error?.message || 'Unknown error');
-					const error = new Error(errorMessage);
-					error.data = json;
-					throw error;
-				});
-			}
-			return response.json();
-        });
+        }).then(rejectNonOk).then(response => response.json());
     }
 
 	// Cached API fetch

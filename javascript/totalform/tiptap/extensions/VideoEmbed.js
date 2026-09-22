@@ -8,6 +8,7 @@ import Youtube from '@tiptap/extension-youtube';
 import { getUploadUrl, getListUrl, uploadFileWithProgress, getCsrfToken } from '../upload.js';
 import tcmsConfirm from '../../../confirm-dialog';
 import { t } from '../../../i18n';
+import { apiErrorMessage, rejectNonOk } from '../../../api-error';
 
 const AUDIO_EXTENSIONS = ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a', 'wma', 'opus'];
 
@@ -241,8 +242,8 @@ function createVideoDialog(editor, uploadConfig) {
 		const deleteUrl = `${listUrl}/${encodeURIComponent(filename)}`;
 
 		fetch(deleteUrl, { method: 'DELETE', headers: getCsrfToken() ? { 'X-CSRF-Token': getCsrfToken() } : {} })
+			.then(rejectNonOk)
 			.then(resp => {
-				if (!resp.ok) throw new Error(`Delete failed: ${resp.status}`);
 				row.remove();
 				if (fileList.children.length === 0) {
 					fileList.style.display = 'none';
@@ -255,7 +256,7 @@ function createVideoDialog(editor, uploadConfig) {
 			})
 			.catch(err => {
 				console.error('Delete error:', err);
-				alert(t("error.delete_label", {label}));
+				alert(apiErrorMessage(err, "error.delete_label", {label}));
 			});
 	}
 

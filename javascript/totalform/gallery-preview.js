@@ -1,5 +1,6 @@
 import tcmsConfirm from "../confirm-dialog";
 import { t } from "../i18n";
+import { apiErrorMessage } from "../api-error";
 
 //-----------------------------------------------
 // Gallery Preview — lightweight thumbnail preview
@@ -135,7 +136,7 @@ export default class GalleryPreview {
 				}).catch(error => {
 					this.tempToggleFeaturedActionButton();
 					console.error("Failed to update featured status", error);
-					alert(t("error.featured_update"));
+					alert(apiErrorMessage(error, "error.featured_update"));
 				});
 			});
 		}
@@ -152,7 +153,7 @@ export default class GalleryPreview {
 					this.container.classList.toggle("cleared-cache");
 				}).catch(error => {
 					console.error("Failed to clear image cache", error);
-					alert(t("error.cache_clear"));
+					alert(apiErrorMessage(error, "error.cache_clear"));
 				});
 			});
 		}
@@ -175,7 +176,7 @@ export default class GalleryPreview {
 					this.container.remove();
 				}).catch(error => {
 					console.error("Failed to delete image", error);
-					alert(t("error.delete_image"));
+					alert(apiErrorMessage(error, "error.delete_image"));
 				});
 			});
 		}
