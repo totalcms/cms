@@ -438,7 +438,7 @@ describe('McpAuthenticatedPersona', function (): void {
 			'active'   => true,
 			'name'     => 'Colliding Member',
 			'email'    => 'colliding-member@test.com',
-			'password' => password_hash('irrelevant', PASSWORD_BCRYPT),
+			'password' => password_hash('irrelevant', PASSWORD_BCRYPT, ['cost' => 4]),
 			'groups'   => ['member'],
 		]));
 

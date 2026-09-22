@@ -8,6 +8,7 @@ use Psr\Log\NullLogger;
 use Random\RandomException;
 use Slim\App;
 use Symfony\Component\Console\Application;
+use Tests\Fakes\OfflineHttpClient;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\Form\FormServices;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
@@ -159,7 +160,49 @@ function bootstrap()
 	$_SESSION = [];
 	session_id('');
 
-	return require __DIR__ . '/../config/bootstrap.php';
+	$app = require __DIR__ . '/../config/bootstrap.php';
+
+	// No test reaches the network. The container binds HttpClientInterface to
+	// Guzzle; swap in the offline fake before anything resolves it. A test that
+	// wants a canned response overrides this on its own container.
+	$container = $app->getContainer();
+	if ($container instanceof \DI\Container) {
+		$container->set(HttpClientInterface::class, new OfflineHttpClient());
+	}
+
+	return $app;
+}
+
+/**
+ * One RSA key pair per worker process for the OAuth suites.
+ *
+ * Nine helpers used to call openssl_pkey_new() in every test — ~90 key
+ * generations per run at 50–200ms each, all to sign tokens whose only
+ * requirement is that the public half verifies the private half. The pair is
+ * generated once and handed out to every test in the process; the helpers
+ * still write it to a fresh temp dir and point $config->oauth at that.
+ *
+ * @return array{privateKey: string, publicKey: string}
+ */
+function testOAuthKeyPair(): array
+{
+	static $pair = null;
+
+	if ($pair === null) {
+		$resource = openssl_pkey_new([
+			'private_key_bits' => 2048,
+			'private_key_type' => OPENSSL_KEYTYPE_RSA,
+		]);
+		assert($resource !== false);
+
+		openssl_pkey_export($resource, $privatePem);
+		$details = openssl_pkey_get_details($resource);
+		assert($details !== false);
+
+		$pair = ['privateKey' => (string)$privatePem, 'publicKey' => (string)$details['key']];
+	}
+
+	return $pair;
 }
 
 /**

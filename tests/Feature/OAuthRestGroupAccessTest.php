@@ -59,20 +59,12 @@ function groupRestSetupOAuthKeys(App $app): void
 	$tmpDir = sys_get_temp_dir() . '/oauth-group-rest-test-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
 
-	$resource = openssl_pkey_new([
-		'private_key_bits' => 2048,
-		'private_key_type' => OPENSSL_KEYTYPE_RSA,
-	]);
-	assert($resource !== false);
-
-	openssl_pkey_export($resource, $privatePem);
-	$details = openssl_pkey_get_details($resource);
-	assert($details !== false);
+	['privateKey' => $privatePem, 'publicKey' => $publicPem] = testOAuthKeyPair();
 
 	$privatePath = $tmpDir . '/private.key';
 	$publicPath  = $tmpDir . '/public.key';
 	file_put_contents($privatePath, $privatePem);
-	file_put_contents($publicPath, $details['key']);
+	file_put_contents($publicPath, $publicPem);
 	chmod($privatePath, 0600);
 
 	$config        = $app->getContainer()->get(Config::class);
@@ -130,7 +122,7 @@ function groupRestIssueToken(App $app, string $userId, array $scopes): string
 	$client = new OAuthClientData(
 		id: $clientId,
 		name: 'Group REST Access Test Client',
-		secretHash: password_hash($clientSecret, PASSWORD_BCRYPT),
+		secretHash: password_hash($clientSecret, PASSWORD_BCRYPT, ['cost' => 4]),
 		redirectUris: ['https://grouptest.test/cb'],
 		scopes: $scopes,
 		isDynamic: false,

@@ -53,20 +53,12 @@ function securitySetupKeys(App $app): array
 	$tmpDir = sys_get_temp_dir() . '/oauth-security-test-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
 
-	$resource = openssl_pkey_new([
-		'private_key_bits' => 2048,
-		'private_key_type' => OPENSSL_KEYTYPE_RSA,
-	]);
-	assert($resource !== false);
-
-	openssl_pkey_export($resource, $privatePem);
-	$details = openssl_pkey_get_details($resource);
-	assert($details !== false);
+	['privateKey' => $privatePem, 'publicKey' => $publicPem] = testOAuthKeyPair();
 
 	$privatePath = $tmpDir . '/private.key';
 	$publicPath  = $tmpDir . '/public.key';
 	file_put_contents($privatePath, $privatePem);
-	file_put_contents($publicPath, $details['key']);
+	file_put_contents($publicPath, $publicPem);
 	chmod($privatePath, 0600);
 
 	$config        = $app->getContainer()->get(Config::class);
@@ -82,7 +74,7 @@ function securitySetupKeys(App $app): array
 
 	return [
 		'privateKey' => $privatePem,
-		'publicKey'  => (string)$details['key'],
+		'publicKey'  => $publicPem,
 		'tmpDir'     => $tmpDir,
 	];
 }
@@ -104,7 +96,7 @@ function securityCreateClient(
 	$client = new OAuthClientData(
 		id: $clientId,
 		name: 'Security Test Client',
-		secretHash: $isConfidential ? password_hash($secret, PASSWORD_BCRYPT) : '',
+		secretHash: $isConfidential ? password_hash($secret, PASSWORD_BCRYPT, ['cost' => 4]) : '',
 		redirectUris: $redirectUris,
 		scopes: $scopes,
 		isDynamic: false,

@@ -27,12 +27,15 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
  * snapshot file and re-run; if it is not, that is the regression the file
  * exists to catch.
  */
-beforeEach(function (): void {
+// Every case is a read-only render, so the records are seeded once per file.
+// Seeding them before each of the ~90 cases cost ~0.3s apiece — this file
+// alone took 27s and, since paratest hands out whole files, set the floor for
+// the parallel run. Each case still boots a fresh app over the seeded data.
+beforeAll(function (): void {
 	recursiveDelete(cmsDataDir());
 	restoreFixtures();
-	$this->setUpApp(bootstrap());
 
-	$c       = $this->app->getContainer();
+	$c       = bootstrap()->getContainer();
 	$schemas = $c->get(SchemaSaver::class);
 
 	// The fixture folders are bare object folders; give each a collection
@@ -64,8 +67,11 @@ beforeEach(function (): void {
 		'mycard' => ['label' => 'Card label'],
 		'mydeck' => ['one' => ['id' => 'one', 'label' => 'Item label']],
 	]);
+});
 
-	$this->factory = $c->get(TotalFormFactory::class);
+beforeEach(function (): void {
+	$this->setUpApp(bootstrap());
+	$this->factory = $this->app->getContainer()->get(TotalFormFactory::class);
 });
 
 /** Replace the per-render randomness so two renders of one form compare equal. */

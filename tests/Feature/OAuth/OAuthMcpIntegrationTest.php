@@ -51,20 +51,12 @@ function mcpIntegrationSetupKeys(App $app): array
 	$tmpDir = sys_get_temp_dir() . '/oauth-mcp-integration-' . uniqid('', true);
 	mkdir($tmpDir, 0700, true);
 
-	$resource = openssl_pkey_new([
-		'private_key_bits' => 2048,
-		'private_key_type' => OPENSSL_KEYTYPE_RSA,
-	]);
-	assert($resource !== false);
-
-	openssl_pkey_export($resource, $privatePem);
-	$details = openssl_pkey_get_details($resource);
-	assert($details !== false);
+	['privateKey' => $privatePem, 'publicKey' => $publicPem] = testOAuthKeyPair();
 
 	$privatePath = $tmpDir . '/private.key';
 	$publicPath  = $tmpDir . '/public.key';
 	file_put_contents($privatePath, $privatePem);
-	file_put_contents($publicPath, $details['key']);
+	file_put_contents($publicPath, $publicPem);
 	chmod($privatePath, 0600);
 
 	/** @var Config $config */
@@ -81,7 +73,7 @@ function mcpIntegrationSetupKeys(App $app): array
 
 	return [
 		'privateKey' => $privatePem,
-		'publicKey'  => (string)$details['key'],
+		'publicKey'  => $publicPem,
 		'tmpDir'     => $tmpDir,
 	];
 }
