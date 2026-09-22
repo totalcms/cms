@@ -69,6 +69,8 @@ Each step has a `--skip-*` flag (`--skip-container`, `--skip-cache`, `--skip-mig
 
 `tcms deploy` is the recommended entry point for any deploy script.
 
+On a Composer install you rarely have to type it. `totalcms/cms` is a Composer plugin, and after every `composer update` it runs `tcms deploy` itself, so a version bump cannot leave the site on a stale compiled container or with migrations unapplied. It does not run after a plain `composer install` of an unchanged lockfile, which needs neither. The deploy script below still calls it explicitly — the command is idempotent, so running it twice is harmless — and the PHP-FPM reload stays yours: no CLI process can reach the workers' OPcache.
+
 ### Markdown Collections
 
 A collection stored in [markdown format](docs/collections/storage-format) is edited as plain `.md` files — often committed to the same git repository as the site's code. Those edits are invisible to Total CMS until the collection's index is rebuilt, so add one line to your deploy script for each markdown collection you keep in git:
