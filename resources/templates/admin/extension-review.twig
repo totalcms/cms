@@ -57,6 +57,22 @@
 		</article>
 		{% endif %}
 
+		{# The agent skill — instructions to an AI agent, installed into the
+		   project's .claude/skills/ while the extension is enabled. Neutral
+		   tone: shown so the operator reads what the agent will be told. #}
+		{% if skill %}
+		<article class="dash-card">
+			<h2 style="margin-top:0;">What this extension tells AI agents</h2>
+			<p style="margin:0 0 0.85rem; font-size:0.85rem; color:oklch(var(--totalform-darkgray));">
+				This extension ships an agent skill. While it is enabled, the files below are installed to <code>{{ skill.target }}</code> so Claude Code and other coding agents working in this project follow them. Read it as you would read instructions you were giving the agent yourself.
+			</p>
+			<p style="margin:0 0 0.85rem; font-size:0.85rem;">
+				{% for file in skill.files %}<code>{{ file|e }}</code>{% if not loop.last %} {% endif %}{% endfor %}
+			</p>
+			<pre class="ext-review-skill">{{ skill.contents|e }}</pre>
+		</article>
+		{% endif %}
+
 		{# Confirm / cancel #}
 		<footer style="display:flex; gap:0.5rem; margin-top:1rem;">
 			<form method="post" action="{{ cms.dashboard }}/extensions/{{ extensionId }}/enable" style="margin:0;">
@@ -107,6 +123,18 @@
 	}
 	.ext-review-table td {
 		overflow-wrap : anywhere;
+	}
+	.ext-review-skill {
+		margin        : 0;
+		padding       : 0.85rem;
+		max-height    : 24rem;
+		overflow      : auto;
+		white-space   : pre-wrap;
+		overflow-wrap : anywhere;
+		font-size     : 0.8rem;
+		background    : oklch(var(--totalform-nearwhite));
+		border        : 1px solid oklch(var(--totalform-border-color));
+		border-radius : var(--totalform-radius);
 	}
 </style>
 {% endblock %}

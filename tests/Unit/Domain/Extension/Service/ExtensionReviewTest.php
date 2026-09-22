@@ -83,6 +83,25 @@ describe('ExtensionManager::getEnableReview', function (): void {
 		expect($review['hasFlags'])->toBeFalse();
 	});
 
+	test('getEnableReview shows the agent skill an extension ships', function (): void {
+		// A skill is instructions to the agent, installed into the project's
+		// .claude/skills/ while the extension is enabled — the operator sees
+		// the text before consenting, next to the source-code findings.
+		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
+		$manager     = createReviewManager($fixturesDir);
+		$manager->discoverAndRegister();
+
+		$review = $manager->getEnableReview('test-vendor/skill-ext');
+
+		expect($review['skill'])->not->toBeNull();
+		expect($review['skill']['contents'])->toContain('Call `skill_ext_hello()` in Twig');
+		expect($review['skill']['files'])->toBe(['SKILL.md', 'references/notes.md']);
+		expect($review['skill']['target'])->toBe('.claude/skills/test-vendor-skill-ext/');
+
+		// A clean extension without one reports null, not an empty card.
+		expect($manager->getEnableReview('test-vendor/clean-ext')['skill'])->toBeNull();
+	});
+
 	test('getEnableReview returns empty for an unknown extension', function (): void {
 		$fixturesDir = dirname(__DIR__, 4) . '/fixtures';
 		$manager     = createReviewManager($fixturesDir);
@@ -96,6 +115,7 @@ describe('ExtensionManager::getEnableReview', function (): void {
 			'reviewNote'   => '',
 			'risky'        => [],
 			'hasFlags'     => false,
+			'skill'        => null,
 		]);
 	});
 

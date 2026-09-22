@@ -179,6 +179,9 @@ use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Storage\AtomicJsonStore;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
+use TotalCMS\Domain\Skill\Listener\ExtensionSkillListener;
+use TotalCMS\Domain\Skill\Service\ExtensionSkillSync;
+use TotalCMS\Domain\Skill\Service\SkillInstaller;
 use TotalCMS\Domain\Template\Service\TemplateFetcher;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
@@ -665,6 +668,11 @@ return [
 		$dispatcher->listen('collection.updated', $lazy(McpSessionListener::class, 'onToolSurfaceChange'), -100);
 		$dispatcher->listen('collection.deleted', $lazy(McpSessionListener::class, 'onToolSurfaceChange'), -100);
 
+		// ExtensionSkillListener — an enabled extension's agent skill lands in
+		// .claude/skills/ at once, a disabled one's is removed. Best effort.
+		$dispatcher->listen(CoreEvent::EXTENSION_ENABLED, $lazy(ExtensionSkillListener::class, 'onExtensionToggled'), -100);
+		$dispatcher->listen(CoreEvent::EXTENSION_DISABLED, $lazy(ExtensionSkillListener::class, 'onExtensionToggled'), -100);
+
 		// IndexBuildListener
 		$dispatcher->listen('object.created', $lazy(IndexBuildListener::class, 'onObjectCreated'), -100);
 		$dispatcher->listen('object.updated', $lazy(IndexBuildListener::class, 'onObjectUpdated'), -100);
@@ -786,6 +794,26 @@ return [
 		return new ExtensionDiscovery(
 			$container->get(Config::class),
 			$container->get(ManifestValidator::class),
+			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Extensions, $extLevel),
+		);
+	},
+
+	ExtensionSkillSync::class => function (ContainerInterface $container): ExtensionSkillSync {
+		$extLevel = LoggerFactory::resolveLevel((string)($container->get(Config::class)->extensions['logLevel'] ?? 'info'), Level::Info);
+
+		return new ExtensionSkillSync(
+			$container->get(ExtensionDiscovery::class),
+			$container->get(ExtensionStateRepository::class),
+			new SkillInstaller(),
+			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Extensions, $extLevel),
+		);
+	},
+
+	ExtensionSkillListener::class => function (ContainerInterface $container): ExtensionSkillListener {
+		$extLevel = LoggerFactory::resolveLevel((string)($container->get(Config::class)->extensions['logLevel'] ?? 'info'), Level::Info);
+
+		return new ExtensionSkillListener(
+			$container->get(ExtensionSkillSync::class),
 			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Extensions, $extLevel),
 		);
 	},

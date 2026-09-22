@@ -756,3 +756,24 @@ public function register(ExtensionContext $context): void
 Provider ids must be unique across all extensions + the built-in `text` provider. The registrar logs and skips collisions during boot. When `isAvailable()` returns false, SearchService silently falls back to text search. Throwing from `search()` also triggers the fallback. Throwing from `index()` or `delete()` enqueues a retry job.
 
 See the bundled [Algolia Search extension](docs/extensions/algolia-search) for a complete working example.
+
+## Agent Skill
+
+An extension can teach coding agents how to use it. Ship a `skill/` directory next to `extension.json`, in the layout the core skill uses:
+
+```
+acme/seo-pro/
+    extension.json
+    Extension.php
+    skill/
+        SKILL.md            # frontmatter (name, description) + the instructions
+        references/         # optional supporting files
+            twig.md
+```
+
+While the extension is enabled, `tcms skill:install` copies that directory to `.claude/skills/{vendor}-{name}/` in the project, next to the core skill in `.claude/skills/totalcms/`. Claude Code and other agents that read `.claude/skills/` then pick it up by its `description` line, the same way they pick up the core one. Enabling or disabling the extension in the admin or CLI installs or removes the folder at once; on a Composer install the plugin's post-update `skill:install` refreshes it with every `composer update`, and `skill:install --check` reports it stale exactly as it reports the core skill.
+
+The copy is stamped with a fingerprint of your source and with the extension id, so a later sync knows which folders are its own: a folder in `.claude/skills/` that the sync did not write — the operator's own skill, say, that happens to share the name — is never overwritten or removed.
+
+Write `SKILL.md` the way the core one is written: what the extension adds (Twig functions, CLI commands, settings, schemas), when to reach for each, and the mistakes an agent is likely to make. Paths such as `vendor/bin/tcms` are rewritten for zip installs on copy, so write for the Composer layout. There is no capability to declare and no permission toggle: the skill is text the agent reads, not code that runs. It is, though, instructions to an agent, which is why the [pre-enable review](docs/extensions/safety#the-pre-enable-review) shows the full `SKILL.md` to the operator before they consent — write it to be read by them too.
+

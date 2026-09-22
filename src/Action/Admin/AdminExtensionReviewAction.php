@@ -43,6 +43,7 @@ readonly class AdminExtensionReviewAction
 			'reviewNote'  => $review['reviewNote'],
 			'risky'       => $review['risky'],
 			'findings'    => $review['findings'],
+			'skill'       => $review['skill'],
 		]);
 	}
 }

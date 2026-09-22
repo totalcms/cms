@@ -52,11 +52,12 @@ class SkillInstaller
 	/**
 	 * Copy the skill tree from $source into $target.
 	 *
-	 * @param bool $composerInstall False rewrites Composer paths in `.md` files for the zip layout.
+	 * @param bool                $composerInstall False rewrites Composer paths in `.md` files for the zip layout.
+	 * @param array<string,mixed> $stampExtra      Extra keys for the sidecar manifest — an extension skill records its owner here
 	 *
 	 * @return array{installed: bool, source: string, target: string, copied: list<string>, failed: list<string>, hash: string}
 	 */
-	public function install(string $source, string $target, bool $force = true, bool $composerInstall = true): array
+	public function install(string $source, string $target, bool $force = true, bool $composerInstall = true, array $stampExtra = []): array
 	{
 		$source = rtrim($source, '/');
 		$target = rtrim($target, '/');
@@ -122,7 +123,7 @@ class SkillInstaller
 		$result['failed']    = $failed;
 		$result['hash']      = $fingerprint['hash'];
 
-		$this->stamp($target, $fingerprint, $composerInstall);
+		$this->stamp($target, $fingerprint, $composerInstall, $stampExtra);
 
 		return $result;
 	}
@@ -237,13 +238,14 @@ class SkillInstaller
 	 * Runs after the zip rewrite so the stamp survives it.
 	 *
 	 * @param array{hash: string, files: array<string,string>} $fingerprint
+	 * @param array<string,mixed>                              $extra
 	 */
-	private function stamp(string $target, array $fingerprint, bool $composerInstall): void
+	private function stamp(string $target, array $fingerprint, bool $composerInstall, array $extra = []): void
 	{
 		$layout  = $composerInstall ? 'composer' : 'zip';
 		$version = Version::number();
 
-		$manifest = [
+		$manifest = $extra + [
 			'hash'         => $fingerprint['hash'],
 			'files'        => $fingerprint['files'],
 			'installedFor' => $version,

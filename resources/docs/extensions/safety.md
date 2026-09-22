@@ -85,11 +85,12 @@ Container definitions (`container`) are deliberately **not** flagged: extensions
 
 Bundled extensions (the ones that ship with Total CMS) are exempt from the source scan — they version with core and ship reviewed in the package. Their capability list still shows. For extension developers: persisting files through the [storage API](docs/extensions/extension-points#file-storage) instead of raw `file_put_contents()` keeps your scan clean — the flag exists for unconstrained writes, not for state kept in the sanctioned per-extension directory.
 
-The review screen has up to three parts:
+The review screen has up to four parts:
 
 1. **From the developer** — a plain-language note (the extension's [`reviewNote`](docs/extensions/manifest)) explaining what it does and why it needs the access it asks for.
 2. **What this extension can access** — the sensitive capabilities, in neutral terms, with a reminder that you can disable individual features afterward.
 3. **Source-code patterns to review** — any high-risk calls the scan found, with file and line. These aren't proof of anything malicious — many legitimate extensions use them — but they're worth a look.
+4. **What this extension tells AI agents** — the full text of the [agent skill](docs/extensions/extension-points#agent-skill) it ships, if any. While the extension is enabled that text is installed into the project's `.claude/skills/` and read by coding agents working there, so read it as instructions you would be giving the agent yourself.
 
 From there you **Enable** (apply it) or **Cancel**. An extension that uses none of the sensitive capabilities and has clean code skips the review entirely.
 

@@ -16,6 +16,13 @@ load). It never touches the container directly — everything goes through
 afterwards and becomes a per-capability permission the operator can switch
 off, so register everything in `register()`.
 
+An extension can ship a skill of its own: a `skill/` directory beside the
+manifest (`SKILL.md` + optional `references/`), installed to
+`.claude/skills/{vendor}-{name}/` while the extension is enabled and refreshed
+by `tcms skill:install`. Write it the way this skill is written — what the
+extension adds and when to use each piece — for an agent that has never seen
+the extension. The operator reads it on the pre-enable review screen.
+
 ## Where does a thing go?
 
 The most common design mistake in a first extension is putting everything in

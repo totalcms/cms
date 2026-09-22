@@ -956,6 +956,8 @@ The skill's paths are rewritten to match the layout it is installed into. Compos
 
 Installing overwrites the existing copy — the skill is core-owned, so keep local notes outside `.claude/skills/totalcms/`.
 
+The same run installs the skill of every enabled extension that ships one (a `skill/` directory next to its manifest — see [Agent Skill](docs/extensions/extension-points#agent-skill)) into `.claude/skills/{vendor}-{name}/`, and removes the folder of any extension that has since been disabled or removed. Only folders the command wrote are ever touched. `--check` covers them too, and exits `1` when any is stale.
+
 #### Checking whether the installed skill is stale
 
 An agent loads the skill text once, at the start of a session, so a copy that has fallen behind keeps steering the agent with old conventions. `--check` compares the installed copy against the shipped source and writes nothing:

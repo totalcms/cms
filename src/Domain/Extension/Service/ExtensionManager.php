@@ -36,6 +36,7 @@ use TotalCMS\Domain\Extension\Service\Boot\SearchProvidersStep;
 use TotalCMS\Domain\Extension\Service\Boot\TwigStep;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Search\Service\SearchProvider;
+use TotalCMS\Domain\Skill\Service\ExtensionSkillSync;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
 use Twig\AbstractTwigCallable;
 use Twig\TwigFilter;
@@ -382,14 +383,15 @@ class ExtensionManager
 	 *   findings: list<array{pattern:string,file:string,line:int,snippet:string}>,
 	 *   reviewNote: string,
 	 *   risky: array<string,string>,
-	 *   hasFlags: bool
+	 *   hasFlags: bool,
+	 *   skill: array{target:string,contents:string,files:list<string>}|null
 	 * }
 	 */
 	public function getEnableReview(string $extensionId): array
 	{
 		$manifest = $this->discoveredManifests[$extensionId] ?? null;
 		if ($manifest === null) {
-			return ['capabilities' => [], 'findings' => [], 'reviewNote' => '', 'risky' => [], 'hasFlags' => false];
+			return ['capabilities' => [], 'findings' => [], 'reviewNote' => '', 'risky' => [], 'hasFlags' => false, 'skill' => null];
 		}
 
 		try {
@@ -423,6 +425,40 @@ class ExtensionManager
 			'reviewNote'   => $manifest->reviewNote,
 			'risky'        => $risky,
 			'hasFlags'     => $risky !== [] || $findings !== [],
+			'skill'        => $this->skillReview($extensionId, $extPath),
+		];
+	}
+
+	/**
+	 * The agent skill an extension ships, for the pre-enable review. A skill
+	 * is instructions to the agent, installed into the project's
+	 * `.claude/skills/` while the extension is enabled — so the operator
+	 * reads it before consenting, the way they read the source findings.
+	 *
+	 * @return array{target: string, contents: string, files: list<string>}|null
+	 */
+	private function skillReview(string $extensionId, ?string $extPath): ?array
+	{
+		$source = $extPath !== null ? $extPath . '/' . ExtensionSkillSync::SKILL_DIR : null;
+		if ($source === null || !is_file($source . '/SKILL.md')) {
+			return null;
+		}
+
+		$files    = [];
+		$iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS));
+		foreach ($iterator as $item) {
+			if ($item instanceof \SplFileInfo && $item->isFile()) {
+				$files[] = str_replace(DIRECTORY_SEPARATOR, '/', ltrim(substr($item->getPathname(), strlen($source)), DIRECTORY_SEPARATOR));
+			}
+		}
+		sort($files);
+		// SKILL.md first: it is the file the agent loads.
+		$files = array_values(array_unique(array_merge(['SKILL.md'], $files)));
+
+		return [
+			'target'   => '.claude/skills/' . ExtensionSkillSync::folderName($extensionId) . '/',
+			'contents' => (string)@file_get_contents($source . '/SKILL.md'),
+			'files'    => $files,
 		];
 	}
 

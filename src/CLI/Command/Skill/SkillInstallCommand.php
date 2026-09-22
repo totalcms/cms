@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Command\BaseCommand;
+use TotalCMS\Domain\Skill\Service\ExtensionSkillSync;
 use TotalCMS\Domain\Skill\Service\SkillInstaller;
 use TotalCMS\Support\PathResolver;
 
@@ -52,7 +53,16 @@ class SkillInstallCommand extends BaseCommand
 
 		$result = (new SkillInstaller())->install($source, $target, true, PathResolver::isComposerInstall());
 
+		// Enabled extensions that ship a skill land beside the core one, in
+		// their own folders; disabled or removed ones are swept.
+		$result['extensions'] = $this->sync()->sync(dirname($target), PathResolver::isComposerInstall());
+
 		return $this->outputData($input, $output, $result);
+	}
+
+	private function sync(): ExtensionSkillSync
+	{
+		return $this->totalcms->container()->get(ExtensionSkillSync::class);
 	}
 
 	/**
@@ -60,15 +70,25 @@ class SkillInstallCommand extends BaseCommand
 	 */
 	private function runCheck(InputInterface $input, OutputInterface $output, string $source, string $target): int
 	{
-		$check = (new SkillInstaller())->check($source, $target);
+		$check               = (new SkillInstaller())->check($source, $target);
+		$extensions          = $this->sync()->check(dirname($target));
+		$check['extensions'] = $extensions;
+		$staleExtensions     = array_values(array_filter($extensions, static fn (array $e): bool => !$e['current']));
 
 		if ($this->isJson($input)) {
 			$output->writeln((string)json_encode($check, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-			return $check['current'] ? Command::SUCCESS : Command::FAILURE;
+			return $check['current'] && $staleExtensions === [] ? Command::SUCCESS : Command::FAILURE;
 		}
 
 		$output->writeln('');
+
+		// Extension skills first, one line each, whatever the core skill's state.
+		foreach ($extensions as $ext) {
+			$output->writeln($ext['current']
+				? sprintf('<info>%s skill is current</info> (hash %s)', $ext['id'], $this->shortHash($ext['hash']))
+				: sprintf('<comment>%s skill is %s</comment>', $ext['id'], $ext['installed'] ? 'stale' : 'not installed'));
+		}
 
 		if ($check['current']) {
 			$output->writeln(sprintf(
@@ -77,6 +97,13 @@ class SkillInstallCommand extends BaseCommand
 				$check['installedFor'] ?? 'an unknown version',
 			));
 			$output->writeln('');
+
+			if ($staleExtensions !== []) {
+				$output->writeln(sprintf('  Run `%s skill:install` and start a new agent session so the fresh copy loads.', $this->cli()));
+				$output->writeln('');
+
+				return Command::FAILURE;
+			}
 
 			return Command::SUCCESS;
 		}
@@ -109,7 +136,7 @@ class SkillInstallCommand extends BaseCommand
 	}
 
 	/**
-	 * @param array{installed: bool, source: string, target: string, copied: list<string>, failed: list<string>, hash: string} $data
+	 * @param array{installed: bool, source: string, target: string, copied: list<string>, failed: list<string>, hash: string, extensions?: array{installed: list<array{id: string, target: string, hash: string, copied: int, failed: list<string>}>, removed: list<array{id: string, target: string}>, skipped: list<array{id: string, target: string, reason: string}>}} $data
 	 */
 	protected function renderHuman(InputInterface $input, OutputInterface $output, array $data): void
 	{
@@ -133,6 +160,24 @@ class SkillInstallCommand extends BaseCommand
 			? '  Paths written for the Composer layout (CLI: vendor/bin/tcms)'
 			: '  Paths rewritten for the zip layout (CLI: php resources/bin/tcms)');
 		$output->writeln(sprintf('  Content hash %s — check freshness with `%s skill:install --check`', $this->shortHash($data['hash']), $this->cli()));
+
+		$extensions = $data['extensions'] ?? ['installed' => [], 'removed' => [], 'skipped' => []];
+		foreach ($extensions['installed'] as $ext) {
+			$failed = count($ext['failed']);
+			$output->writeln(sprintf(
+				'<info>%s skill installed to %s</info> (%d file(s)%s)',
+				$ext['id'],
+				$ext['target'],
+				$ext['copied'],
+				$failed > 0 ? sprintf(', <error>%d failed</error>', $failed) : '',
+			));
+		}
+		foreach ($extensions['removed'] as $ext) {
+			$output->writeln(sprintf('<comment>%s skill removed from %s</comment> (extension no longer enabled)', $ext['id'], $ext['target']));
+		}
+		foreach ($extensions['skipped'] as $ext) {
+			$output->writeln(sprintf('<comment>%s skill skipped:</comment> %s exists and was not installed by Total CMS', $ext['id'], $ext['target']));
+		}
 		$output->writeln('');
 	}
 }
