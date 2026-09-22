@@ -335,7 +335,9 @@ class ImageField extends FormField
 			'placeholder' => 'Focal Length Not Found',
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['focalLength'] ?? '',
-			'step'        => '0.1',
+			// Whatever the camera reported: f/2.69, 4.25mm. A fixed step makes
+			// the browser refuse the value EXIF just wrote, on every save.
+			'step'        => 'any',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-aperture', [
@@ -344,7 +346,9 @@ class ImageField extends FormField
 			'placeholder' => 'Aperture Not Found',
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['aperture'] ?? '',
-			'step'        => '0.1',
+			// Whatever the camera reported: f/2.69, 4.25mm. A fixed step makes
+			// the browser refuse the value EXIF just wrote, on every save.
+			'step'        => 'any',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-iso', [
@@ -353,7 +357,9 @@ class ImageField extends FormField
 			'placeholder' => 'ISO Not Found',
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['iso'] ?? '',
-			'step'        => '0.1',
+			// Whatever the camera reported: f/2.69, 4.25mm. A fixed step makes
+			// the browser refuse the value EXIF just wrote, on every save.
+			'step'        => 'any',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-shutterSpeed', [

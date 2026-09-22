@@ -49,7 +49,8 @@ class FormField
 		protected int $rows           = 0,
 		protected ?int $min           = null,
 		protected ?int $max           = null,
-		protected ?float $step        = null,
+		/** A number, or `any` — the HTML value that lifts the precision limit, for values a camera wrote */
+		protected float|string|null $step = null,
 		protected bool $hide          = false,
 		// Dotted-path prefix when this field is rendered nested in a parent
 		// property. Card child: a single segment (`mycard`). Deck child: two
@@ -387,7 +388,7 @@ class FormField
 		}
 
 		$inputMode = match ($this->inputType) {
-			'number' => ($this->step !== null && $this->step < 1) ? 'decimal' : 'numeric',
+			'number' => ($this->step === 'any' || (is_numeric($this->step) && (float)$this->step < 1)) ? 'decimal' : 'numeric',
 			'tel'    => 'tel',
 			'url'    => 'url',
 			'email'  => 'email',
