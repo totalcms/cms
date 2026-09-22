@@ -92,8 +92,15 @@ class IndexBuilder
 			$index = $this->buildIndexStandard($collection, $objectIds, $indexProps);
 		}
 
-		// Reset totalObjects to match the authoritative count from disk
-		$this->collectionSaver->patchCollection($collection, ['totalObjects' => count($objectIds)]);
+		// Reset totalObjects to match the authoritative count from disk — but only
+		// when it is actually off. On object.created the metadata listener has
+		// already recorded the new object (it runs before this rebuild), and on
+		// update or delete the count is unchanged, so this write was pure cost:
+		// another collection.updated dispatch and cache scan per object save.
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
+		if (!$collectionData instanceof CollectionData || $collectionData->totalObjects !== count($objectIds)) {
+			$this->collectionSaver->patchCollection($collection, ['totalObjects' => count($objectIds)]);
+		}
 
 		return $index;
 	}

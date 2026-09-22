@@ -320,6 +320,40 @@ readonly class CollectionSaver
 	}
 
 	/**
+	 * Record newly created objects: bump the lifetime count (the OID counter)
+	 * and the current totalObjects in ONE write.
+	 *
+	 * incrementCount() followed by incrementTotalObjects() reads, writes and
+	 * dispatches collection.updated twice for what is a single change, and each
+	 * write also scans the filesystem cache to invalidate API responses. Every
+	 * object create paid for both.
+	 *
+	 * @throws \UnexpectedValueException
+	 */
+	public function incrementObjectCounts(string $collectionId, int $incrementBy = 1): CollectionData
+	{
+		$collection = $this->storage->fetchCollection($collectionId);
+
+		if (!$collection instanceof CollectionData) {
+			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
+		}
+
+		$collectionArray = $collection->toArray();
+
+		// Same rule as incrementCount(): an unset or zero count is seeded from
+		// the objects on disk (which already include the new ones).
+		if (!isset($collectionArray['count']) || $collectionArray['count'] === 0) {
+			$collectionArray['count'] = count($this->indexRepository->fetchObjectIds($collectionId));
+		} else {
+			$collectionArray['count'] += $incrementBy;
+		}
+
+		$collectionArray['totalObjects'] = ($collectionArray['totalObjects'] ?? 0) + $incrementBy;
+
+		return $this->updateCollection($collectionId, $collectionArray, $collection);
+	}
+
+	/**
 	 * Increment totalObjects for a collection.
 	 *
 	 * @throws \UnexpectedValueException

@@ -33,13 +33,11 @@ final class CollectionMetadataListenerTest extends TestCase
 	{
 		$this->collectionSaver
 			->expects($this->once())
-			->method('incrementCount')
+			->method('incrementObjectCounts')
 			->with('posts');
 
-		$this->collectionSaver
-			->expects($this->once())
-			->method('incrementTotalObjects')
-			->with('posts');
+		$this->collectionSaver->expects($this->never())->method('incrementCount');
+		$this->collectionSaver->expects($this->never())->method('incrementTotalObjects');
 
 		$this->dispatcher->dispatch('object.created', new ObjectEventPayload('posts', 'test-id'));
 	}

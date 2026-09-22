@@ -31,8 +31,7 @@ readonly class CollectionMetadataListener
 	{
 		$collection = (string)$payload['collection'];
 
-		$this->collectionSaver->incrementCount($collection);
-		$this->collectionSaver->incrementTotalObjects($collection);
+		$this->collectionSaver->incrementObjectCounts($collection);
 	}
 
 	/** @param array<string,mixed> $payload */

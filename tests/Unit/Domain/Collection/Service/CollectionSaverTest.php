@@ -319,6 +319,36 @@ final class CollectionSaverTest extends TestCase
 		expect($result->totalObjects)->toBe(15);
 	}
 
+	public function testIncrementObjectCountsBumpsBothCountersInOneWrite(): void
+	{
+		$collectionData               = new CollectionData();
+		$collectionData->id           = 'test-collection';
+		$collectionData->schema       = 'blog';
+		$collectionData->count        = 5;
+		$collectionData->totalObjects = 3;
+		$collectionData->lastUpdated  = '2025-01-01T00:00:00+00:00';
+
+		$this->repository
+			->method('fetchCollection')
+			->with('test-collection')
+			->willReturn($collectionData);
+
+		$this->repository
+			->expects($this->once())
+			->method('saveCollection')
+			->with($this->callback(function (CollectionData $collection): bool {
+				expect($collection->count)->toBe(7)
+					->and($collection->totalObjects)->toBe(5);
+
+				return true;
+			}));
+
+		$result = $this->saver->incrementObjectCounts('test-collection', 2);
+
+		expect($result->count)->toBe(7)
+			->and($result->totalObjects)->toBe(5);
+	}
+
 	public function testIncrementCountWithIncrementBy(): void
 	{
 		$collectionData               = new CollectionData();
