@@ -23,11 +23,28 @@ readonly class SchemaLister
 	 */
 	public function listAllSchemas(): array
 	{
-		return array_merge(
+		return $this->sortById(array_merge(
 			$this->listReservedSchemas(),
 			$this->listExtensionSchemas(),
 			$this->listCustomSchemas()
-		);
+		));
+	}
+
+	/**
+	 * Directory order is the filesystem's — alphabetical on APFS, hash order
+	 * on ext4 — so anything that lists schemas (the schema page, the
+	 * Inherit From picker, every select built from them) read differently on
+	 * a Mac and on Linux. One order, by id, everywhere.
+	 *
+	 * @param array<SchemaData> $schemas
+	 *
+	 * @return list<SchemaData>
+	 */
+	private function sortById(array $schemas): array
+	{
+		usort($schemas, static fn (SchemaData $a, SchemaData $b): int => strnatcmp(mb_strtolower($a->id), mb_strtolower($b->id)));
+
+		return $schemas;
 	}
 
 	/**

@@ -75,6 +75,13 @@ class CollectionRepository extends StorageRepository
 			$collections[] = $collection;
 		}
 
+		// Directory order is the filesystem's: alphabetical on APFS, hash order
+		// on ext4. Sort by id so the admin sidebar, cms.collection.list() and
+		// every grouped view read the same on every host — and so a test that
+		// passes on a Mac passes on CI. Cached in this order, so the cache
+		// path needs no sort of its own.
+		usort($collections, static fn (CollectionData $a, CollectionData $b): int => strnatcmp(mb_strtolower($a->id), mb_strtolower($b->id)));
+
 		// Always cache the result, even if empty
 		// This ensures consistent behavior and prevents null cache values
 		$collectionsArray = array_map(fn (CollectionData $collection): array => $collection->toArray(), $collections);
