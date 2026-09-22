@@ -32,6 +32,10 @@ Both answer `application/rss+xml` with five minutes of caching, and 404 with a m
 
 The first argument is the show collection, default `podcast`; the episodes collection comes from the show record. The page's own URL becomes the feed's address. Options are `link`, `language`, `copyright`, `now`, and `self` to name a different address. Render it as the whole content of a page whose route ends in `.xml` and the router serves it with the right type.
 
+## The agent skill
+
+The extension ships an [agent skill](docs/extensions/extension-points#agent-skill). While it is enabled, `tcms skill:install` puts it at `.claude/skills/totalcms-podcast/`, so Claude Code and other coding agents working in the project know the two collections, the feed addresses, `podcast_feed()` and the mistakes above without being told. Enabling in the admin installs it at once; disabling removes it.
+
 ## What it replaces
 
 Before 3.6 the two schemas were reserved schemas in core and the call was `cms.feed.podcast(show, episodes)`. Neither shipped in a release. The extension form keeps podcasting out of every install that does not need it, and doubles as the reference for shipping a whole content type as an extension.
