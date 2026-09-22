@@ -222,4 +222,3 @@ describe('DeckTableField nested path for upload cells', function (): void {
 		expect($calls['photo'])->not->toHaveKey('nestedPath');
 	});
 });
-

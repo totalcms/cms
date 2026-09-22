@@ -44,7 +44,7 @@ final class AccessManagerTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->savedServer = array_intersect_key($_SERVER, ['REQUEST_URI' => 1, 'HTTP_REFERER' => 1]);
+		$this->savedServer   = array_intersect_key($_SERVER, ['REQUEST_URI' => 1, 'HTTP_REFERER' => 1]);
 		$this->session       = $this->createMock(SessionInterface::class);
 		$this->config        = $this->createTestConfig();
 		$this->userValidator = $this->createMock(UserValidationService::class);

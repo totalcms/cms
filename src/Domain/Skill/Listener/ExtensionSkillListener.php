@@ -14,11 +14,11 @@ use TotalCMS\Support\PathResolver;
  * update` (which runs `skill:install`) to see the change. Best effort: a
  * project root the web process cannot write to is logged, never fatal.
  */
-final class ExtensionSkillListener
+final readonly class ExtensionSkillListener
 {
 	public function __construct(
-		private readonly ExtensionSkillSync $sync,
-		private readonly LoggerInterface $logger,
+		private ExtensionSkillSync $sync,
+		private LoggerInterface $logger,
 	) {
 	}
 

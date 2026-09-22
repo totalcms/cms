@@ -70,7 +70,7 @@ it('runs the real tcms binary from the project root with the deploy command', fu
 	$root = sys_get_temp_dir() . '/tcms-plugin-' . uniqid();
 	mkdir("$root/vendor/bin", 0777, true);
 	$log = "$root/calls.log";
-	file_put_contents("$root/vendor/bin/tcms", "<?php file_put_contents(" . var_export($log, true) . ", implode(' ', array_slice(\$argv, 1)) . '|' . getcwd()); echo 'Deploy cleanup complete.';");
+	file_put_contents("$root/vendor/bin/tcms", '<?php file_put_contents(' . var_export($log, true) . ", implode(' ', array_slice(\$argv, 1)) . '|' . getcwd()); echo 'Deploy cleanup complete.';");
 
 	$config = $this->createMock(Config::class);
 	$config->method('get')->willReturnCallback(fn (string $key): string => match ($key) {
@@ -99,4 +99,3 @@ it('runs the real tcms binary from the project root with the deploy command', fu
 		->and(implode("\n", $written))->toContain('Deploy cleanup complete.')
 		->and(end($written))->toContain('deploy cleanup complete');
 });
-

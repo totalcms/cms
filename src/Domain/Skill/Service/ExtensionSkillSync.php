@@ -34,16 +34,16 @@ use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
  * extension is installed, and enabling goes through the pre-enable review,
  * which shows the skill text next to the source-code findings.
  */
-final class ExtensionSkillSync
+final readonly class ExtensionSkillSync
 {
 	/** The directory inside an extension that holds its skill. */
 	public const SKILL_DIR = 'skill';
 
 	public function __construct(
-		private readonly ExtensionDiscovery $discovery,
-		private readonly ExtensionStateRepository $states,
-		private readonly SkillInstaller $installer,
-		private readonly LoggerInterface $logger,
+		private ExtensionDiscovery $discovery,
+		private ExtensionStateRepository $states,
+		private SkillInstaller $installer,
+		private LoggerInterface $logger,
 	) {
 	}
 

@@ -281,7 +281,7 @@ final class ExtensionDiscovery
 	 */
 	private function installedComposerExtensions(): array
 	{
-		if ($this->composerPackages !== null) {
+		if ($this->composerPackages instanceof \Closure) {
 			/** @var array<string,array{path:string,version:string}> */
 			return ($this->composerPackages)();
 		}
