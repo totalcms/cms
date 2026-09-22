@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
+use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
@@ -93,6 +94,21 @@ class FileRemoverTest extends TestCase
 
 		$this->expectException(\DomainException::class);
 		$this->remover()->deleteFile('faculty', 'arlene-hines', 'facultyPhoto', 'upload-test.png');
+	}
+
+	/**
+	 * A deck or card must never reach this remover: the single-value branch
+	 * would write the whole thing back as []. Refuse, touch nothing.
+	 */
+	public function testRefusesToTreatADeckAsASingleFile(): void
+	{
+		$this->propFetcher->method('fetchProperty')->willReturn(new DeckData(['one' => ['id' => 'one', 'label' => 'Item']]));
+
+		$this->objectPatcher->expects($this->never())->method('patchObject');
+		$this->storage->expects($this->never())->method('deleteFile');
+
+		$this->expectException(\UnexpectedValueException::class);
+		$this->remover()->deleteFile('widgets', 'w1', 'mydeck', 'one/photo');
 	}
 
 	private function remover(): FileRemover

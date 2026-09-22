@@ -5,6 +5,8 @@ namespace TotalCMS\Domain\Property\Service;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
+use TotalCMS\Domain\Property\Data\CardData;
+use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
@@ -45,7 +47,17 @@ class FileRemover
 			throw new \UnexpectedValueException("Object $objectID does not exist in $collection");
 		}
 
-		$files = $this->fetchProperty($collection, $objectID, $property)->transform();
+		$propertyData = $this->fetchProperty($collection, $objectID, $property);
+
+		// A card or deck never reaches this remover on purpose — its children
+		// are addressed as nested paths and cleared one at a time. Should one
+		// arrive here anyway, refusing beats the alternative: the single-value
+		// branch below would write the whole deck back as `[]`.
+		if ($propertyData instanceof CardData || $propertyData instanceof DeckData) {
+			throw new \UnexpectedValueException("Property '{$property}' is a " . ($propertyData instanceof DeckData ? 'deck' : 'card') . "; address its child as {$property}/{child}");
+		}
+
+		$files = $propertyData->transform();
 
 		// This is the fallback remover for every property type without one of
 		// its own, which is not just the gallery shape it was written for.

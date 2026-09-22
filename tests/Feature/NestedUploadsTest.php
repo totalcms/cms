@@ -197,6 +197,36 @@ test('deck item: a nested DELETE addressed at an item the deck does not hold lea
 		->and(nestedValue($object, 'mydeck/one/label'))->toBe('Item label');
 });
 
+// A nested path used to be recognized only by its directory existing on disk.
+// A child that was never uploaded has no directory, and one deleted from
+// another tab has just lost it — either way the request fell through to the
+// flat-file path, which treats the whole deck (or card) as a single-value
+// property and writes it back as `[]`. That wiped a deck table's rows while
+// its owner was editing it. The stored property's type decides now: a deck
+// or card is nested whatever the disk says.
+test('deck item: a nested DELETE at a child with no directory on disk clears the child, never the deck', function (): void {
+	expect(is_dir(objectFilesPath('widgets', 'w1') . '/mydeck/one/photo'))->toBeFalse();
+
+	expect(delete('/api/collections/widgets/w1/mydeck/one/photo')->getStatusCode())->toBe(200);
+	$object = widget();
+	expect(array_keys($object['mydeck']))->toBe(['one'])
+		->and(nestedValue($object, 'mydeck/one/label'))->toBe('Item label');
+});
+
+test('deck item: a nested PUT at a child with no directory on disk edits the child, never the deck', function (): void {
+	expect(putJson('/api/collections/widgets/w1/mydeck/one/photo', ['alt' => 'From another tab'])->getStatusCode())->toBe(200);
+	$object = widget();
+	expect(array_keys($object['mydeck']))->toBe(['one'])
+		->and(nestedValue($object, 'mydeck/one/photo')['alt'] ?? null)->toBe('From another tab')
+		->and(nestedValue($object, 'mydeck/one/label'))->toBe('Item label');
+});
+
+test('card: a nested DELETE at a child with no directory on disk clears the child, never the card', function (): void {
+	expect(delete('/api/collections/widgets/w1/mycard/photo')->getStatusCode())->toBe(200);
+	$object = widget();
+	expect(nestedValue($object, 'mycard/label'))->toBe('Card label');
+});
+
 test('deck item with an uppercase id: save keeps the id and normalizes the file child, and a nested upload + DELETE round-trips', function (): void {
 	// Deck keys may carry uppercase (a `${timestamp}` id, an API client). The
 	// item factory must not turn the id into a lowercase slug that no longer

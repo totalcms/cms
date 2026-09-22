@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Data\CardData;
+use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Repository\PropertyRepository;
 
@@ -50,13 +52,45 @@ readonly class FileFetcher
 	 * legacy flat gallery/depot filename at the same URL shape. An empty or null
 	 * subpath is not nested by definition.
 	 */
+	/**
+	 * Whether `{property}/{subpath}` addresses a child nested inside a card or
+	 * deck item, as opposed to a file inside a gallery or depot.
+	 *
+	 * The stored property's type decides: a card or deck is nested whatever
+	 * the disk says. The directory alone used to decide, and a child that had
+	 * never been uploaded — or whose directory another tab had just deleted —
+	 * fell through to the flat-file path, which treats the whole deck as one
+	 * single-value property and writes it back as `[]`. The directory check
+	 * stays as the answer for a property the record does not hold yet (a
+	 * stale upload directory, an id whose case differs on disk).
+	 */
 	public function isNestedDirectory(string $collection, string $id, string $property, ?string $subpath): bool
 	{
 		if ($subpath === null || $subpath === '') {
 			return false;
 		}
 
+		if ($this->isComposite($collection, $id, $property)) {
+			return true;
+		}
+
 		return $this->storage->directoryExists($collection, $id, $property, $subpath);
+	}
+
+	/**
+	 * Whether the stored property is a card or a deck — the two shapes whose
+	 * children live at nested paths. False when the object or property cannot
+	 * be read; the caller falls back to the directory check.
+	 */
+	private function isComposite(string $collection, string $id, string $property): bool
+	{
+		try {
+			$data = $this->propFetcher->fetchProperty($collection, $id, $property);
+		} catch (\Throwable) {
+			return false;
+		}
+
+		return $data instanceof CardData || $data instanceof DeckData;
 	}
 
 	public function fileSize(string $collection, string $id, string $property, ?string $subpath = null): int
