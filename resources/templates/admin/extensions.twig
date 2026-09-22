@@ -122,7 +122,15 @@
 
 	<div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:0; font-size:0.8rem; color:oklch(var(--totalform-darkgray));">
 		<span>{% if ext.author.name is defined and ext.author.name %}By {{ ext.author.name }}{% endif %}</span>
-		<span class="dash-badge muted sm">v{{ ext.version }}</span>
+		<span class="dash-badge-group">
+			{#- Where the files live, when it is not the operator's own upload:
+			    those three cannot be removed here — the package, Composer or
+			    source control owns them. #}
+			{% if ext.origin == 'bundled' %}<span class="dash-badge muted sm" title="Ships with Total CMS">Bundled</span>{% endif %}
+			{% if ext.origin == 'composer' %}<span class="dash-badge muted sm" title="Installed by Composer">Composer</span>{% endif %}
+			{% if ext.origin == 'project' %}<span class="dash-badge muted sm" title="Lives in the site's extensions/ directory">Project</span>{% endif %}
+			<span class="dash-badge muted sm">v{{ ext.version }}</span>
+		</span>
 	</div>
 
 	{% include 'admin/partials/extension-health.twig' with {

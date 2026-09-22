@@ -59,7 +59,35 @@ The directory is purely convention-based — if `extensions/` exists it is scann
 
 Project extensions can be disabled but not removed from the admin or CLI — they belong to source control, so removal happens there.
 
-If the same extension id exists in more than one location, the most specific copy wins: project over `tcms-data/extensions/` over bundled. A log entry is written whenever one copy shadows another.
+### Composer Extensions
+
+On a Composer install, an extension can be a Composer package:
+
+```bash
+composer require acme/seo-pro
+```
+
+That is the whole install. Total CMS asks Composer which installed packages have the type `totalcms-extension`, reads each one's `extension.json` from its directory under `vendor/`, and loads it like any other extension. Composer autoloads the package's classes, `composer update` moves it to new versions, and `composer remove` takes it out. Nothing is copied into `tcms-data/`.
+
+A Composer extension shows a **Composer** badge in the admin and reports the version Composer installed, not the one in its `extension.json`. It can be disabled but not removed from the admin or CLI, for the same reason as bundled and project extensions: the files belong to Composer. `tcms extension:remove` says so and names the `composer remove` command to run instead.
+
+An update that changes the extension's source is treated like any other extension update: it goes through the same [safety review](docs/extensions/safety), and one that introduces high-risk code patterns is disabled until an operator reviews it.
+
+**Publishing one.** An extension is a Composer package when its `composer.json` says so:
+
+```json
+{
+    "name": "acme/seo-pro",
+    "type": "totalcms-extension",
+    "license": "MIT",
+    "require": { "php": ">=8.2" },
+    "autoload": { "psr-4": { "Acme\\SeoPro\\": "src/" } }
+}
+```
+
+The `type` is what Total CMS looks for. The `autoload` block replaces the per-extension `vendor/autoload.php` a manually installed copy would carry: on a Composer install the project's own autoloader covers `src/`. The package name and the `id` in `extension.json` may differ; the id is what the admin, the CLI and the state files use. Publish it to Packagist, or to a private repository listed in the site's `composer.json`, and operators install it with `composer require`. The [extension-starter](https://github.com/totalcms/extension-starter) repo already ships this `composer.json` shape.
+
+If the same extension id exists in more than one location, the most specific copy wins: project over Composer over `tcms-data/extensions/` over bundled. A project copy is how a site patches a Composer-distributed extension without forking the package. A log entry is written whenever one copy shadows another.
 
 ## Quick Example
 
@@ -141,8 +169,10 @@ A broken extension cannot crash Total CMS. If an extension throws an exception d
 tcms extension:list                    # List all extensions
 tcms extension:enable vendor/name      # Enable an extension
 tcms extension:disable vendor/name     # Disable an extension
-tcms extension:remove vendor/name      # Remove extension files
+tcms extension:remove vendor/name      # Remove extension files (tcms-data/extensions only)
 ```
+
+`extension:list` shows where each extension came from — `bundled`, `composer`, `project` or `user` — and only a `user` extension (one in `tcms-data/extensions/`) can be removed here. The other three are owned by the package, by Composer, or by source control, and are removed there.
 
 ## Starter Template
 

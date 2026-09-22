@@ -39,6 +39,12 @@ final readonly class ExtensionManifest
 	 *                                                                and boots normally — it's just invisible to operators. Useful for
 	 *                                                                bundled page-middleware that's enabled/disabled per page, not
 	 *                                                                globally via the Extension Manager.
+	 * @param string                                  $composerPackage The Composer package name (`acme/thing`) when the extension
+	 *                                                                was installed by Composer as a package of type
+	 *                                                                `totalcms-extension` into `vendor/`. Empty otherwise. Such an
+	 *                                                                extension is code Composer owns: it can be disabled but not
+	 *                                                                removed here — `composer remove` does that. Set by
+	 *                                                                ExtensionDiscovery — not declared in the manifest JSON.
 	 * @param bool                                    $defaultEnabled Declared in the manifest JSON as `default_enabled`.
 	 *                                                                Only honoured for bundled extensions with no saved
 	 *                                                                state — see ExtensionStateRepository::isEnabled().
@@ -65,7 +71,26 @@ final readonly class ExtensionManifest
 		public string $reviewNote = '',
 		public bool $project = false,
 		public bool $defaultEnabled = false,
+		public string $composerPackage = '',
 	) {
+	}
+
+	/**
+	 * Where discovery found this extension: `bundled` (ships in the T3
+	 * package), `composer` (a `totalcms-extension` package in vendor/),
+	 * `project` (the site's own `extensions/` directory) or `user`
+	 * (`tcms-data/extensions/`). The three non-user origins cannot be
+	 * removed from the admin or CLI — the package, Composer, or source
+	 * control owns the files.
+	 */
+	public function origin(): string
+	{
+		return match (true) {
+			$this->bundled                => 'bundled',
+			$this->project                => 'project',
+			$this->composerPackage !== '' => 'composer',
+			default                       => 'user',
+		};
 	}
 
 	/**
@@ -166,6 +191,7 @@ final readonly class ExtensionManifest
 			reviewNote: $this->reviewNote,
 			project: $this->project,
 			defaultEnabled: $this->defaultEnabled,
+			composerPackage: $this->composerPackage,
 		);
 	}
 
@@ -195,6 +221,37 @@ final readonly class ExtensionManifest
 			reviewNote: $this->reviewNote,
 			project: $project,
 			defaultEnabled: $this->defaultEnabled,
+			composerPackage: $this->composerPackage,
+		);
+	}
+
+	/**
+	 * Return a copy naming the Composer package that installed it. Used by
+	 * ExtensionDiscovery for packages of type `totalcms-extension` found in
+	 * vendor/. Manifest JSON itself never declares it — it's derived from
+	 * what Composer reports as installed.
+	 */
+	public function withComposerPackage(string $composerPackage): self
+	{
+		return new self(
+			id: $this->id,
+			name: $this->name,
+			description: $this->description,
+			version: $this->version,
+			requires: $this->requires,
+			entrypoint: $this->entrypoint,
+			settingsSchema: $this->settingsSchema,
+			minEdition: $this->minEdition,
+			author: $this->author,
+			license: $this->license,
+			links: $this->links,
+			icon: $this->icon,
+			bundled: $this->bundled,
+			hidden: $this->hidden,
+			reviewNote: $this->reviewNote,
+			project: $this->project,
+			defaultEnabled: $this->defaultEnabled,
+			composerPackage: $composerPackage,
 		);
 	}
 
@@ -224,6 +281,7 @@ final readonly class ExtensionManifest
 			reviewNote: $this->reviewNote,
 			project: $this->project,
 			defaultEnabled: $this->defaultEnabled,
+			composerPackage: $this->composerPackage,
 		);
 	}
 

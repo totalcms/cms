@@ -64,6 +64,17 @@ class ExtensionRemoveCommand extends BaseCommand
 			);
 		}
 
+		// Composer installed it into vendor/ and Composer takes it out again —
+		// deleting the directory by hand leaves composer.json and the lockfile
+		// still requiring it, and the next `composer install` puts it back.
+		if ($manifest !== null && $manifest->composerPackage !== '') {
+			return $this->outputError(
+				$input,
+				$output,
+				"Extension '{$id}' is installed by Composer and cannot be removed here. Run `composer remove {$manifest->composerPackage}` instead, or use `tcms extension:disable {$id}` to turn it off.",
+			);
+		}
+
 		if (!$input->getOption('force') && !$this->isJson($input)) {
 			/** @var QuestionHelper $helper */
 			$helper   = $this->getHelper('question');

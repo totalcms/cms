@@ -6,7 +6,9 @@
 > [extension-starter](https://github.com/totalcms/extension-starter) repo
 > demonstrates every extension point and is the right thing to copy.
 
-An extension lives at `tcms-data/extensions/{vendor}/{name}/` with a
+An extension lives at `tcms-data/extensions/{vendor}/{name}/` (or, on a
+Composer install, is a `composer require`d package of type
+`totalcms-extension`, loaded from `vendor/`) with a
 `manifest.json` and a class exposing `register(ExtensionContext $context)`
 (during container build) and `boot(ExtensionContext $context)` (after routes
 load). It never touches the container directly — everything goes through

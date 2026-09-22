@@ -24,6 +24,9 @@ final class ExtensionDiscoveryTest extends TestCase
 	private string $userExtensionsDir;
 	private string $bundledExtensionsDir;
 	private string $projectExtensionsDir;
+	private string $composerVendorDir;
+	/** @var array<string,array{path:string,version:string}> what Composer says is installed with type totalcms-extension */
+	private array $composerPackages = [];
 	private ExtensionDiscovery $discovery;
 
 	protected function setUp(): void
@@ -32,6 +35,7 @@ final class ExtensionDiscoveryTest extends TestCase
 		$this->userExtensionsDir    = $this->tmpRoot . '/tcms-data/extensions';
 		$this->bundledExtensionsDir = $this->tmpRoot . '/resources/extensions';
 		$this->projectExtensionsDir = $this->tmpRoot . '/extensions';
+		$this->composerVendorDir    = $this->tmpRoot . '/vendor';
 		mkdir($this->userExtensionsDir, 0755, true);
 		mkdir($this->bundledExtensionsDir, 0755, true);
 		mkdir($this->projectExtensionsDir, 0755, true);
@@ -49,7 +53,15 @@ final class ExtensionDiscoveryTest extends TestCase
 		$validator       = new ManifestValidator($this->createMock(EditionFeatureService::class));
 		// The project dir is injected explicitly (rather than derived from
 		// PathResolver::projectRoot()) so the test stays hermetic.
-		$this->discovery = new ExtensionDiscovery($config, $validator, new NullLogger(), $this->projectExtensionsDir);
+		// The Composer source is injected as a closure standing in for
+		// Composer\InstalledVersions, so the test decides what is "installed".
+		$this->discovery = new ExtensionDiscovery(
+			$config,
+			$validator,
+			new NullLogger(),
+			$this->projectExtensionsDir,
+			composerPackages: fn (): array => $this->composerPackages,
+		);
 	}
 
 	protected function tearDown(): void
@@ -295,6 +307,96 @@ final class ExtensionDiscoveryTest extends TestCase
 	/**
 	 * @param array<string,mixed> $extra
 	 */
+	// -------------------------------------------------------------------------
+	// Composer-distributed extensions: `composer require acme/thing` installs a
+	// package of type `totalcms-extension` into vendor/. Discovery asks Composer
+	// which packages those are and reads extension.json from each install path.
+	// -------------------------------------------------------------------------
+
+	public function testFlagsComposerExtensionsAndReportsThePackageVersion(): void
+	{
+		$this->composerPackage('acme/thing', '2.3.1', ['id' => 'acme/thing', 'name' => 'Thing', 'version' => '0.0.1']);
+
+		$manifests = $this->discovery->discover();
+
+		$this->assertArrayHasKey('acme/thing', $manifests);
+		$manifest = $manifests['acme/thing'];
+		$this->assertSame('acme/thing', $manifest->composerPackage);
+		$this->assertSame('composer', $manifest->origin());
+		$this->assertFalse($manifest->bundled);
+		$this->assertFalse($manifest->project);
+		// Composer's version is the truth — the one `composer update` moves —
+		// so a stale version in extension.json cannot misreport it.
+		$this->assertSame('2.3.1', $manifest->version);
+	}
+
+	public function testComposerPackageNameMayDifferFromTheExtensionId(): void
+	{
+		$this->composerPackage('acme/totalcms-thing', '1.0.0', ['id' => 'acme/thing', 'name' => 'Thing']);
+
+		$manifests = $this->discovery->discover();
+
+		$this->assertArrayHasKey('acme/thing', $manifests);
+		$this->assertSame('acme/totalcms-thing', $manifests['acme/thing']->composerPackage);
+		$this->assertSame($this->composerVendorDir . '/acme/totalcms-thing', $this->discovery->getExtensionPath('acme/thing'));
+	}
+
+	public function testComposerPackageWithoutAManifestIsSkipped(): void
+	{
+		mkdir($this->composerVendorDir . '/acme/empty', 0755, true);
+		$this->composerPackages['acme/empty'] = ['path' => $this->composerVendorDir . '/acme/empty', 'version' => '1.0.0'];
+
+		$this->assertSame([], $this->discovery->discover());
+	}
+
+	public function testComposerOverridesUserInstalledOnIdCollision(): void
+	{
+		// The manual copy in tcms-data is the one that stops getting updates;
+		// the Composer copy wins so `composer update` keeps meaning something.
+		$this->writeManifest($this->userExtensionsDir, 'acme', 'thing', ['id' => 'acme/thing', 'name' => 'Manual Copy']);
+		$this->composerPackage('acme/thing', '1.2.0', ['id' => 'acme/thing', 'name' => 'Composer Copy']);
+
+		$winner = $this->discovery->discover()['acme/thing'];
+
+		$this->assertSame('Composer Copy', $winner->name);
+		$this->assertSame('composer', $winner->origin());
+	}
+
+	public function testComposerOverridesBundledOnIdCollision(): void
+	{
+		$this->writeManifest($this->bundledExtensionsDir, 'totalcms', 'podcast', ['id' => 'totalcms/podcast', 'name' => 'Bundled']);
+		$this->composerPackage('totalcms/podcast', '9.0.0', ['id' => 'totalcms/podcast', 'name' => 'Composer']);
+
+		$this->assertSame('Composer', $this->discovery->discover()['totalcms/podcast']->name);
+	}
+
+	public function testProjectOverridesComposerOnIdCollision(): void
+	{
+		// Site-owned code still wins: a project copy is how a site patches a
+		// Composer-distributed extension without forking the package.
+		$this->composerPackage('acme/thing', '1.2.0', ['id' => 'acme/thing', 'name' => 'Composer Copy']);
+		$this->writeManifest($this->projectExtensionsDir, 'acme', 'thing', ['id' => 'acme/thing', 'name' => 'Project Copy']);
+
+		$winner = $this->discovery->discover()['acme/thing'];
+
+		$this->assertSame('Project Copy', $winner->name);
+		$this->assertSame('project', $winner->origin());
+		$this->assertSame('', $winner->composerPackage);
+	}
+
+	/**
+	 * Register a Composer package of type totalcms-extension: its install
+	 * directory under vendor/ holding the manifest, and what Composer reports.
+	 *
+	 * @param array<string,mixed> $manifest
+	 */
+	private function composerPackage(string $package, string $version, array $manifest): void
+	{
+		[$vendor, $name] = explode('/', $package, 2);
+		$this->writeManifest($this->composerVendorDir, $vendor, $name, $manifest);
+		$this->composerPackages[$package] = ['path' => $this->composerVendorDir . '/' . $package, 'version' => $version];
+	}
+
 	private function writeManifest(string $base, string $vendor, string $name, array $extra): void
 	{
 		$dir = $base . '/' . $vendor . '/' . $name;

@@ -877,11 +877,14 @@ tcms extension:list --json
         "id": "acme/seo-pro",
         "name": "SEO Pro",
         "version": "1.2.0",
+        "source": "composer",
         "enabled": true,
         "error": null
     }
 ]
 ```
+
+`source` is where the extension was found: `bundled` (ships with Total CMS), `composer` (a `totalcms-extension` package in `vendor/`), `project` (the site's `extensions/` directory) or `user` (`tcms-data/extensions/`).
 
 ### `extension:enable`
 
@@ -917,6 +920,8 @@ Remove an extension's files. Extension data in `tcms-data` is preserved.
 tcms extension:remove acme/seo-pro
 tcms extension:remove acme/seo-pro --force
 ```
+
+Only an extension in `tcms-data/extensions/` can be removed this way. A bundled extension ships with Total CMS, a project extension belongs to source control, and a Composer extension is removed with `composer remove <package>`; the command refuses each and names the alternative. `extension:disable` works for all of them.
 
 | Argument | Required | Description |
 |----------|----------|-------------|

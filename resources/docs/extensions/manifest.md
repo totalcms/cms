@@ -205,9 +205,13 @@ uses.
 
 Being bundled is derived purely from where `ExtensionDiscovery` found the
 manifest — `resources/extensions/` inside the package, versus
-`tcms-data/extensions/` for anything installed afterwards. The manifest is
-never consulted for it, so an extension in `tcms-data/extensions/` declaring
-`"default_enabled": true` stays disabled until an operator says otherwise.
+`tcms-data/extensions/`, a `totalcms-extension` Composer package in `vendor/`,
+or the project's `extensions/` directory for anything installed afterwards.
+The manifest is never consulted for it, so an extension anywhere else
+declaring `"default_enabled": true` stays disabled until an operator says
+otherwise. The same goes for the other origin flags: an extension cannot
+declare itself a project or Composer extension, and a Composer extension's
+version is the one Composer installed, whatever `version` says here.
 
 A saved state record always wins over the default, in both directions:
 disabling a `default_enabled` extension sticks, and it will not quietly turn

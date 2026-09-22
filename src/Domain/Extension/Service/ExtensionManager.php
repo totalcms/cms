@@ -624,6 +624,7 @@ class ExtensionManager
 			'hasSettings'          => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
 			'icon'                 => $this->resolveIcon($id, $manifest),
 			'hidden'               => $manifest->hidden,
+			'origin'               => $manifest->origin(),
 		];
 	}
 

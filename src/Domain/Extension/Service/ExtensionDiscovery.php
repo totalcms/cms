@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Extension\Service;
 
+use Composer\InstalledVersions;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Support\Config;
@@ -11,11 +12,13 @@ use TotalCMS\Support\PathResolver;
 use TotalCMS\Support\Version;
 
 /**
- * Discovers extensions by scanning three roots:
+ * Discovers extensions from four sources:
  *
  *  1. the bundled path shipped in the T3 package (`resources/extensions/`)
  *  2. the user-installed path (`tcms-data/extensions/`)
- *  3. the project path (`extensions/` at the project root, next to tcms-data)
+ *  3. Composer: every installed package of type `totalcms-extension`, read
+ *     from its install path under `vendor/` (what `composer require` gives)
+ *  4. the project path (`extensions/` at the project root, next to tcms-data)
  *
  * The project root exists for site-specific extensions that live in the
  * site's own git repo: tcms-data is content (backed up, not versioned), while
@@ -27,8 +30,14 @@ use TotalCMS\Support\Version;
  * UI / CLI can hide destructive actions (neither can be "removed" — bundled
  * ships with the package, project belongs to source control).
  *
- * Conflict resolution: later roots win — project over user-installed over
- * bundled. User-over-bundled gives admins a deliberate override path for
+ * Composer packages need no installer and no autoload work: Composer already
+ * autoloads their classes and `composer update` moves them. The version
+ * Composer reports is the one that counts, so it replaces the manifest's.
+ * Ownership is Composer's — such an extension can be disabled but not
+ * removed here, the same rule as bundled and project.
+ *
+ * Conflict resolution: later sources win — project over Composer over
+ * user-installed over bundled. User-over-bundled gives admins a deliberate override path for
  * bundled extensions (e.g. patching a bug locally before the next release) —
  * same idea as a `node_modules` package shadowing a global one. Project-over-
  * user resolves a half-finished migration in favor of the source-controlled
@@ -46,6 +55,11 @@ final class ExtensionDiscovery
 	 * @param string|null $bundledExtensionsDir override for the bundled
 	 *                                          extensions directory (tests);
 	 *                                          defaults to `<packageRoot>/resources/extensions`
+	 * @param \Closure|null $composerPackages   override for what Composer reports
+	 *                                          as installed `totalcms-extension`
+	 *                                          packages (tests): returns
+	 *                                          `package name => [path, version]`;
+	 *                                          defaults to Composer\InstalledVersions
 	 */
 	public function __construct(
 		private readonly Config $config,
@@ -53,6 +67,7 @@ final class ExtensionDiscovery
 		private readonly LoggerInterface $logger,
 		private readonly ?string $projectExtensionsDir = null,
 		private readonly ?string $bundledExtensionsDir = null,
+		private readonly ?\Closure $composerPackages = null,
 	) {
 	}
 
@@ -68,12 +83,14 @@ final class ExtensionDiscovery
 		// Reset between calls so re-discovery in tests doesn't accumulate paths.
 		$this->discoveredPaths = [];
 
-		// Bundled first; user-installed overrides bundled; project overrides both.
-		$bundled = $this->scanPath($this->getBundledExtensionsDirectory(), bundled: true);
-		$user    = $this->scanPath($this->getExtensionsDirectory(), bundled: false);
-		$project = $this->scanPath($this->getProjectExtensionsDirectory(), bundled: false, project: true);
+		// Bundled first; user-installed overrides bundled; Composer overrides
+		// both; project overrides everything.
+		$bundled  = $this->scanPath($this->getBundledExtensionsDirectory(), bundled: true);
+		$user     = $this->scanPath($this->getExtensionsDirectory(), bundled: false);
+		$composer = $this->scanComposerPackages();
+		$project  = $this->scanPath($this->getProjectExtensionsDirectory(), bundled: false, project: true);
 
-		// Later roots win on collision. Log so no override goes unnoticed.
+		// Later sources win on collision. Log so no override goes unnoticed.
 		foreach (array_keys($user) as $id) {
 			if (isset($bundled[$id])) {
 				$this->logger->info(
@@ -81,8 +98,23 @@ final class ExtensionDiscovery
 				);
 			}
 		}
-		foreach (array_keys($project) as $id) {
+		foreach ($composer as $id => $manifest) {
 			if (isset($user[$id])) {
+				$this->logger->warning(
+					"Extension '{$id}' is installed by Composer ({$manifest->composerPackage}) but also present in tcms-data/extensions — the Composer copy will be loaded. Remove the tcms-data copy to silence this warning.",
+				);
+			} elseif (isset($bundled[$id])) {
+				$this->logger->info(
+					"Extension '{$id}' is bundled with Total CMS but also installed by Composer ({$manifest->composerPackage}) — the Composer copy will be loaded.",
+				);
+			}
+		}
+		foreach (array_keys($project) as $id) {
+			if (isset($composer[$id])) {
+				$this->logger->info(
+					"Extension '{$id}' is installed by Composer but also present in the project extensions directory — the project copy will be loaded.",
+				);
+			} elseif (isset($user[$id])) {
 				$this->logger->warning(
 					"Extension '{$id}' exists in both the project extensions directory and tcms-data/extensions — the project copy will be loaded. Remove the tcms-data copy to silence this warning.",
 				);
@@ -93,7 +125,7 @@ final class ExtensionDiscovery
 			}
 		}
 
-		return array_merge($bundled, $user, $project);
+		return array_merge($bundled, $user, $composer, $project);
 	}
 
 	/**
@@ -197,6 +229,80 @@ final class ExtensionDiscovery
 		}
 
 		return $manifests;
+	}
+
+	/**
+	 * Every installed Composer package of type `totalcms-extension`, read
+	 * from its install path. No directory layout to scan: Composer knows the
+	 * path, and the package's own composer.json chose the type.
+	 *
+	 * @return array<string,ExtensionManifest>
+	 */
+	private function scanComposerPackages(): array
+	{
+		$manifests = [];
+
+		foreach ($this->installedComposerExtensions() as $package => $installed) {
+			$extPath      = rtrim($installed['path'], '/');
+			$manifestFile = $extPath . '/extension.json';
+
+			if (!is_file($manifestFile)) {
+				$this->logger->warning("Composer package '{$package}' is of type totalcms-extension but has no extension.json at {$extPath} — skipped.");
+
+				continue;
+			}
+
+			$manifest = $this->loadManifest($manifestFile);
+			if (!$manifest instanceof ExtensionManifest) {
+				continue;
+			}
+
+			// Composer's version is what `composer update` moves; extension.json's
+			// is whatever the author last remembered to bump. Report the former.
+			$flagged = $manifest->withComposerPackage($package);
+			if ($installed['version'] !== '') {
+				$flagged = $flagged->withVersion(ltrim($installed['version'], 'v'));
+			}
+
+			$manifests[$flagged->id]             = $flagged;
+			$this->discoveredPaths[$flagged->id] = $extPath;
+		}
+
+		return $manifests;
+	}
+
+	/**
+	 * What Composer reports as installed with type `totalcms-extension`:
+	 * `package name => [path, version]`. Reads Composer\InstalledVersions,
+	 * which every Composer-built vendor/ ships (the zip dist's included); an
+	 * install without it simply has none.
+	 *
+	 * @return array<string,array{path:string,version:string}>
+	 */
+	private function installedComposerExtensions(): array
+	{
+		if ($this->composerPackages !== null) {
+			/** @var array<string,array{path:string,version:string}> */
+			return ($this->composerPackages)();
+		}
+
+		if (!class_exists(InstalledVersions::class)) {
+			return [];
+		}
+
+		$installed = [];
+		foreach (InstalledVersions::getInstalledPackagesByType('totalcms-extension') as $package) {
+			$path = InstalledVersions::getInstallPath($package);
+			if (!is_string($path) || !is_dir($path)) {
+				continue;
+			}
+			$installed[$package] = [
+				'path'    => realpath($path) ?: $path,
+				'version' => (string)(InstalledVersions::getPrettyVersion($package) ?? ''),
+			];
+		}
+
+		return $installed;
 	}
 
 	private function loadManifest(string $manifestFile): ?ExtensionManifest

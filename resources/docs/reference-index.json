@@ -4933,7 +4933,7 @@
             "options": [],
             "examples": [
                 "tcms extension:list\ntcms extension:list --json",
-                "[\n    {\n        \"id\": \"acme/seo-pro\",\n        \"name\": \"SEO Pro\",\n        \"version\": \"1.2.0\",\n        \"enabled\": true,\n        \"error\": null\n    }\n]"
+                "[\n    {\n        \"id\": \"acme/seo-pro\",\n        \"name\": \"SEO Pro\",\n        \"version\": \"1.2.0\",\n        \"source\": \"composer\",\n        \"enabled\": true,\n        \"error\": null\n    }\n]"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"
@@ -5653,6 +5653,11 @@
                 "field": "default_enabled",
                 "required": false,
                 "description": "Declared in the manifest JSON as `default_enabled`. Only honoured for bundled extensions with no saved state \u2014 see ExtensionStateRepository::isEnabled(). A third-party extension declaring this has no effect: bundled status is derived from discovery path, never from manifest JSON, so it cannot be self-declared."
+            },
+            {
+                "field": "composer_package",
+                "required": false,
+                "description": "The Composer package name (`acme/thing`) when the extension was installed by Composer as a package of type `totalcms-extension` into `vendor/`. Empty otherwise. Such an extension is code Composer owns: it can be disabled but not removed here \u2014 `composer remove` does that. Set by ExtensionDiscovery \u2014 not declared in the manifest JSON."
             }
         ],
         "editions": [

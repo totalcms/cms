@@ -39,6 +39,7 @@ class ExtensionListCommand extends BaseCommand
 				'id'      => $id,
 				'name'    => $manifest->name,
 				'version' => $manifest->version,
+				'source'  => $manifest->origin(),
 				'enabled' => $state !== null && $state->enabled,
 				'error'   => $state?->error,
 			];
@@ -66,11 +67,12 @@ class ExtensionListCommand extends BaseCommand
 			$rows[] = [
 				$ext['id'],
 				$ext['version'],
+				$ext['source'],
 				$status,
 				$ext['error'] ?? '',
 			];
 		}
 
-		TableHelper::renderList($output, ['ID', 'Version', 'Status', 'Error'], $rows);
+		TableHelper::renderList($output, ['ID', 'Version', 'Source', 'Status', 'Error'], $rows);
 	}
 }
