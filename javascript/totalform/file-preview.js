@@ -170,9 +170,14 @@ export default class FilePreview {
     }
 
 	clearValue() {
+		// Called after the file is gone from disk (the delete request has
+		// answered): clear as SAVED values. clearValue() on each sub-field
+		// would dispatch subfield-change and mark this field — and the row,
+		// item or card it sits in — unsaved over a change already persisted.
 		for (const field of this.fields) {
-			field.totalfield.clearValue();
+			field.totalfield.setSavedValue("");
 		}
+		this.totalfield.saved();
 	}
 
     setValue(file) {

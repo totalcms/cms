@@ -92,7 +92,10 @@
 		border-left : 3px solid oklch(var(--totalform-error));
 	}
 
-	input,select,.choices__inner {
+	// The row's own inputs lose their chrome; a field's edit dialog (an
+	// image's alt text and focal point, a file's details) keeps the full
+	// form styling — it is a form, not a cell.
+	:is(input, select, .choices__inner):not(dialog *) {
 		border     : none !important;
 		box-shadow : none !important;
 	}
@@ -136,8 +139,10 @@
 		flex    : 1;
 		padding : 0.25rem;
 
-		// Override form-field styles for inline display
-		.form-field {
+		// Override form-field styles for inline display — for the cell's own
+		// field only (the direct child). An image or file field nests a whole
+		// form inside its edit dialog, whose labels, help and inputs must stay.
+		> .form-field {
 			margin     : 0;
 			padding    : 0;
 			border     : none;
@@ -153,21 +158,21 @@
 			}
 
 			// Remove the form-group icon
-			.form-group-icon {
+			.form-group-icon:not(dialog *) {
 				display : none;
 			}
 		}
 
 		// Simplify input appearance
-		.form-group {
+		> .form-field > .form-group {
 			box-shadow : none;
 
-			input, select, textarea {
+			:is(input, select, textarea):not(dialog *) {
 				border-radius : var(--totalform-radius);
 				font-size     : 0.85rem;
 			}
 
-			.select-clear-button {
+			.select-clear-button:not(dialog *) {
 				right : 0;
 			}
 		}
@@ -223,4 +228,195 @@
 .deck-table-header-cell,
 .deck-table-cell {
 	min-width : 8rem;
+}
+
+//--------------------------------
+// Image and file columns
+//--------------------------------
+// An image or file cell renders the same markup as the top-level field — the
+// preview, the drop overlay, the action bar, the edit dialog — restyled to sit
+// in a row: a fixed square thumbnail, a small drop target shown only while the
+// cell is empty or a file is dragged over it, and on hover a 2×2 grid of the
+// four actions that make sense per row: edit, links, download, delete. The
+// edit dialog (alt text, focal point, file info) opens unchanged. Replacing a
+// file is a drop onto the cell, or delete then upload. Featured, reorder,
+// clear-cache and the upload button are hidden — a row is not the place.
+//
+// Every selector below walks the exact path to the thumbnail with child
+// combinators. The edit dialog sits inside the same preview wrapper and
+// holds a preview, an action bar and form fields of its own; a descendant
+// selector would restyle those too.
+.deck-table {
+	.deck-table-header-cell[data-field-type="image"],
+	.deck-table-header-cell[data-field-type="file"],
+	.deck-table-cell[data-field-type="image"],
+	.deck-table-cell[data-field-type="file"] {
+		flex      : 0 0 auto;
+		width     : 5.5rem;
+		min-width : 5.5rem;
+	}
+}
+
+.deck-table-row .deck-table-cell {
+	--deck-table-thumb : 3.5rem;
+
+	> .form-field[data-type="image"],
+	> .form-field[data-type="file"] {
+		display : block;
+
+		> .form-group {
+			position         : relative;
+			width            : var(--deck-table-thumb);
+			height           : var(--deck-table-thumb);
+			max-width        : none;
+			min-width        : 0;
+			margin           : 0 auto;
+			overflow         : hidden;
+			border           : 1px solid oklch(var(--totalform-border-color));
+			border-radius    : var(--totalform-radius);
+			background-color : oklch(var(--totalform-nearwhite));
+		}
+
+		// The file field's form-group is a flex row, so the preview would
+		// shrink to its content; both previews must fill the square.
+		> .form-group > .total-preview {
+			min-height : 0;
+			height     : 100%;
+			width      : 100%;
+			flex       : 1 1 100%;
+		}
+
+		// Pinned to the square rather than sized by percentages: the file
+		// preview's height came out short of its container otherwise.
+		> .form-group > .total-preview > * > .dz-preview {
+			position         : absolute;
+			inset            : 0;
+			min-height       : 0;
+			min-width        : 0;
+			width            : auto;
+			height           : auto;
+			border-width     : 0;
+			box-shadow       : none;
+			background-color : transparent;
+
+			// The action bar fills the square: a 2×2 grid, every cell centered.
+			> .actionbar {
+				--actionbar-icon-size : 15px;
+				inset                 : 0;
+				width                 : 100%;
+				height                : 100%;
+				padding               : 0.3rem;
+				gap                   : 0;
+				display               : grid;
+				grid-template-columns : 1fr 1fr;
+				grid-template-rows    : 1fr 1fr;
+				place-items           : center;
+				backdrop-filter       : blur(2px);
+
+				> button {
+					margin : 0;
+				}
+				> button.upload,
+				> button.featured,
+				> button.move,
+				> button.clear {
+					display : none;
+				}
+			}
+
+			// Upload progress fills the square as it does at the top level,
+			// without the percentage — there is no room for it.
+			> .dz-progress {
+				height          : 100%;
+				display         : flex;
+				align-items     : center;
+				justify-content : center;
+
+				.dz-upload-progress-label {
+					display : none;
+				}
+
+				// The done/error mark is sized to the bar's height at the top
+				// level; here the bar is the whole square.
+				> .dz-status {
+					width  : 1.25rem;
+					height : 1.25rem;
+					margin : 0;
+				}
+			}
+		}
+
+		> .form-group > .dz-overlay {
+			width  : 1.5rem;
+			height : 1.5rem;
+		}
+	}
+
+	// Image: the thumbnail fills the square, cropped, no featured star.
+	> .form-field[data-type="image"] {
+		> .form-group > .total-preview > .image-preview {
+			height          : 100%;
+			background-size : 40%;
+
+			> .dz-preview > img {
+				width      : 100%;
+				height     : 100%;
+				object-fit : cover;
+				margin     : 0;
+			}
+
+			&.featured::before {
+				display : none;
+			}
+		}
+	}
+
+	// File: a small type icon over a one-line, truncated filename, both
+	// centered in the square. The drop overlay shows only while the cell is
+	// empty (or a file is dragged over); at the top level it sits half-visible
+	// over the preview, which in a square this size would cover the name.
+	> .form-field[data-type="file"] {
+		> .form-group:has(> .total-preview > * > .dz-preview:not(.not-found)) > .dz-overlay {
+			opacity : 0;
+		}
+		&.dz-drag-hover > .form-group > .dz-overlay {
+			opacity : 0.9;
+		}
+
+		> .form-group > .total-preview > * > .dz-preview {
+			display         : flex;
+			flex-direction  : column;
+			align-items     : center;
+			justify-content : center;
+			gap             : 0.2rem;
+			padding         : 0.25rem;
+			box-sizing      : border-box;
+
+			// An empty cell shows the drop target, not a blank icon. The
+			// top-level rule that hides it loses to the flex above otherwise.
+			&.not-found {
+				display : none;
+			}
+
+			> .file-icon {
+				width         : 1.5rem;
+				height        : 1.5rem;
+				mask-size     : 1.5rem;
+				mask-position : center;
+				margin        : 0;
+				flex-shrink   : 0;
+			}
+
+			> p.filename {
+				width         : 100%;
+				margin        : 0;
+				font-size     : 0.6rem;
+				line-height   : 1.2;
+				text-align    : center;
+				overflow      : hidden;
+				text-overflow : ellipsis;
+				white-space   : nowrap;
+			}
+		}
+	}
 }

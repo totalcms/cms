@@ -1,4 +1,5 @@
 import TotalField from "./totalfield";
+import { regenerateIds } from "./regenerateIds.mjs";
 import TotalSortable from "./total-sortable";
 import { collectScopedFieldValues } from "./fieldCollection.mjs";
 import { missingIdPropertyMessage } from "./deckItem";
@@ -47,6 +48,9 @@ export default class DeckTableField extends TotalField {
             if (e.target === this.container) return;
             this.changed();
         });
+        // …and sub-field saves back down: a persisted delete, an autosaved
+        // dialog or a featured star should not leave this composite dirty.
+        this.listenForSubFieldSaves();
     }
 
     initOidCounter() {
@@ -76,42 +80,18 @@ export default class DeckTableField extends TotalField {
      * Regenerate unique IDs in a cloned element to prevent duplicate id/for collisions.
      */
     regenerateIds(element) {
-        const idMap = {};
-
-        element.querySelectorAll('[id]').forEach(el => {
-            const oldId = el.id;
-            const match = oldId.match(/^(field|help|datalist)-(.+)$/);
-            if (!match) return;
-
-            const prefix = match[1];
-            const oldUuid = match[2];
-
-            if (!idMap[oldUuid]) {
-                idMap[oldUuid] = Math.random().toString(36).substring(2, 15);
-            }
-
-            el.id = `${prefix}-${idMap[oldUuid]}`;
-        });
-
-        for (const [oldUuid, newUuid] of Object.entries(idMap)) {
-            element.querySelectorAll(`[for="field-${oldUuid}"]`).forEach(el => {
-                el.setAttribute('for', `field-${newUuid}`);
-            });
-            element.querySelectorAll(`[aria-describedby="help-${oldUuid}"]`).forEach(el => {
-                el.setAttribute('aria-describedby', `help-${newUuid}`);
-            });
-            element.querySelectorAll(`[list="datalist-${oldUuid}"]`).forEach(el => {
-                el.setAttribute('list', `datalist-${newUuid}`);
-            });
-        }
+        return regenerateIds(element);
     }
 
     initRow(row) {
         // Store reference on the DOM element
         row.deckTableRow = this;
 
-        // Setup action button listeners
-        const trash = row.querySelector('button.trash');
+        // Setup action button listeners. The row's own delete lives in the
+        // actions column at the END of the row; an image or file cell carries
+        // an action bar with a trash button of its own before it, so a bare
+        // `button.trash` would bind row removal to the image's delete.
+        const trash = row.querySelector(':scope > .deck-table-actions button.trash');
         trash?.addEventListener('click', () => this.removeRow(row));
 
         // Process fields in the row
@@ -150,6 +130,14 @@ export default class DeckTableField extends TotalField {
 
         const clone = this.template.content.cloneNode(true);
         this.regenerateIds(clone);
+
+        // Mark the row unsaved BEFORE its fields initialize: a nested image or
+        // file field reads this (TotalField.parentIsSaved) when it builds its
+        // dropzone, and starts with auto-processing off, so a drop into a row
+        // that does not exist on disk yet waits for the parent save — which is
+        // what gives the row its shape and id. Same lifecycle as DeckField.addItem;
+        // saved() clears `.unsaved` from descendants after the save.
+        clone.querySelector('.deck-table-row')?.classList.add('unsaved');
 
         this.tableBody.appendChild(clone);
 

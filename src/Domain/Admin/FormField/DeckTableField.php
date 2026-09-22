@@ -162,6 +162,13 @@ class DeckTableField extends FormField
 					$fieldConfig['value'] = '';
 				}
 
+				// Image/file cells render their saved preview from a dotted path
+				// into the item's folder (`slides.item-1`), as a deck item's dialog
+				// does — see DeckItem. The template row has no id yet, so none.
+				if ($itemId !== '') {
+					$fieldConfig['nestedPath'] = "{$this->name}.{$itemId}";
+				}
+
 				$cellLabel = $propertySchema['label'] ?? ucfirst($propertyName);
 				$fieldType = $propertySchema['field'] ?? 'text';
 				$fieldHtml = $this->form->field($propertyName, $fieldConfig);

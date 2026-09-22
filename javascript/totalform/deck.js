@@ -1,4 +1,5 @@
 import TotalField from "./totalfield";
+import { regenerateIds } from "./regenerateIds.mjs";
 import DeckItem, { missingIdPropertyMessage } from "./deckItem";
 import TotalSortable from "./total-sortable";
 const slugify = require('slugify');
@@ -49,6 +50,9 @@ export default class DeckField extends TotalField {
             if (e.target === this.container) return;
             this.changed();
         });
+        // …and sub-field saves back down: a persisted delete, an autosaved
+        // dialog or a featured star should not leave this composite dirty.
+        this.listenForSubFieldSaves();
     }
 
     initOidCounter() {
@@ -88,49 +92,7 @@ export default class DeckField extends TotalField {
      * Replaces field-{uuid}, help-{uuid}, and datalist-{uuid} with fresh unique values.
      */
     regenerateIds(element) {
-        const idMap = {};
-
-        // Find all elements with an id that matches our UUID patterns
-        element.querySelectorAll('[id]').forEach(el => {
-            const oldId = el.id;
-            const match = oldId.match(/^(field|help|datalist)-(.+)$/);
-            if (!match) return;
-
-            const prefix = match[1];
-            let oldUuid = match[2];
-            let suffix = '';
-
-            // PasswordField renders a confirm input with id `field-{uuid}-confirm`.
-            // Map it to the same new uuid as the main input so PasswordField.validate()
-            // can still resolve the confirm via `${input.id}-confirm` after cloning.
-            if (oldUuid.endsWith('-confirm')) {
-                suffix = '-confirm';
-                oldUuid = oldUuid.slice(0, -suffix.length);
-            }
-
-            // Reuse the same new UUID for all prefixes sharing the same old UUID
-            if (!idMap[oldUuid]) {
-                idMap[oldUuid] = Math.random().toString(36).substring(2, 15);
-            }
-
-            el.id = `${prefix}-${idMap[oldUuid]}${suffix}`;
-        });
-
-        // Update corresponding for, aria-describedby, and list attributes
-        for (const [oldUuid, newUuid] of Object.entries(idMap)) {
-            element.querySelectorAll(`[for="field-${oldUuid}"]`).forEach(el => {
-                el.setAttribute('for', `field-${newUuid}`);
-            });
-            element.querySelectorAll(`[for="field-${oldUuid}-confirm"]`).forEach(el => {
-                el.setAttribute('for', `field-${newUuid}-confirm`);
-            });
-            element.querySelectorAll(`[aria-describedby="help-${oldUuid}"]`).forEach(el => {
-                el.setAttribute('aria-describedby', `help-${newUuid}`);
-            });
-            element.querySelectorAll(`[list="datalist-${oldUuid}"]`).forEach(el => {
-                el.setAttribute('list', `datalist-${newUuid}`);
-            });
-        }
+        return regenerateIds(element);
     }
 
     updateAddButton() {

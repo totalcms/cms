@@ -58,7 +58,7 @@ happen. Every one of those has a field built for it.
 | a library of files and folders | `depot` | |
 | a hosted video | `video` | YouTube, Vimeo and others, by URL. |
 | a fixed group of related fields | `card` | Address, hero, author block. Shape comes from another schema. |
-| a repeating list of structured items | `deck` | Features, FAQs, team members. `deckTable` edits the same data as a grid. |
+| a repeating list of structured items | `deck` | Features, FAQs, team members. `deckTable` edits the same data as a grid, image and file columns included. |
 | text translated per locale | `localizedtext`, `localizedtextarea`, `localizedstyledtext` | Pro edition. |
 | search-engine metadata for a public page | `card` referencing `seo` | See [SEO](docs/site-builder/seo#adding-the-card-to-your-own-schema). Index it. |
 

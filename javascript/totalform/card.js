@@ -27,6 +27,9 @@ export default class CardField extends TotalField {
             if (e.target === this.container) return;
             this.onSubFieldChange(e);
         });
+        // …and sub-field saves back down: a persisted delete, an autosaved
+        // dialog or a featured star should not leave this composite dirty.
+        this.listenForSubFieldSaves();
 
         // Visibility lookups (`watch: enabled`) need to resolve against the card's
         // sub-fields, not the parent form's top-level fields. Defer until the form

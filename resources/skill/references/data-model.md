@@ -69,7 +69,7 @@ happen.
 | one image / several / a file / a file library | `image` / `gallery` / `file` / `depot` | a path in `text` |
 | a hosted video | `video` | `url` |
 | a fixed group of related fields (address, hero) | `card` | flat `addressLine1`, `addressCity`… |
-| repeating structured items (FAQs, team, line items) | `deck` (`deckTable` for short rows) | a `list`, a `json` |
+| repeating structured items (FAQs, team, line items) | `deck` (`deckTable` for short rows; image and file columns work there too) | a `list`, a `json` |
 | an API key / token the site reuses | `secret` | `text`, `password` |
 | a password to verify, never to read back | `password` | `secret` |
 | an embed code, a Twig or HTML snippet, an automation handler | `code` with `"settings": {"mode": "twig"}` (or `html`, `css`, `javascript`, `php`) | `textarea`, `styledtext` |

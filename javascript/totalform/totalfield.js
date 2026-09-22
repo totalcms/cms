@@ -278,14 +278,17 @@ export default class TotalField {
 		}
 
 		// Deck item ancestry — wins over card detection because deck items can host cards.
+		// A deck TABLE row is a deck item too (same storage, same API): its parent is
+		// data-type="deckTable" and its id input sits in a cell, not a dialog.
 		if (this.deckItem) {
-			const deckEl    = this.deckItem.parentElement?.closest('.form-field[data-type="deck"]');
+			const deckEl    = this.deckItem.parentElement?.closest('.form-field[data-type="deck"], .form-field[data-type="deckTable"]');
 			const deckField = deckEl?.totalfield;
 			// Read the item ID directly from the dialog's id input — this is more
 			// robust than going through `this.deckItem.deckitem.getItemId()` because
 			// the DeckItem JS instance may not have been constructed yet when sibling
 			// deck-items recursively trigger field processing during their setup.
-			const itemIdInput = this.deckItem.querySelector('dialog input[name="id"]');
+			const itemIdInput = this.deckItem.querySelector('dialog input[name="id"]')
+				?? this.deckItem.querySelector('input[name="id"]');
 			const itemId      = itemIdInput?.value ?? '';
 			if (!deckField?.property || !itemId) {
 				// Deck item has no ID typed yet. Returning null prevents the URL from
@@ -457,6 +460,37 @@ export default class TotalField {
 		// What is on disk is what is here now: without moving the baseline, a
 		// stray change event after a save compares against the pre-save value
 		// and re-marks the field dirty for an edit nobody made.
+		this.storedValue = this.getValue();
+
+		// Tell the composite this field sits in (a deck-table row, a deck item,
+		// a card). An image deleted, its info autosaved on dialog close, or a
+		// featured star all persist by their own request and end here — but
+		// the edits that led there had already marked the parent unsaved, and
+		// only the parent can decide whether anything below it still is.
+		if (this.isSubField()) {
+			this.dispatcher.dispatchEvent("subfield-saved", { field: this });
+		}
+	}
+
+	/**
+	 * For composite fields: react to a descendant announcing it is saved
+	 * (see saved()). Once nothing below is still unsaved, the composite is
+	 * clean too — drop the flag and move the baseline so the next edit is
+	 * compared against what is now on disk. A sibling with real edits keeps
+	 * its `.unsaved` class, which keeps the composite dirty. Bubbling runs
+	 * inner to outer, so a card holding a deck table sees the table clear
+	 * itself before deciding for itself.
+	 */
+	listenForSubFieldSaves() {
+		this.container.addEventListener("subfield-saved", e => {
+			if (e.target === this.container) return;
+			this.onSubFieldSaved();
+		});
+	}
+
+	onSubFieldSaved() {
+		if (this.container.querySelector(".unsaved")) return;
+		this.container.classList.remove("unsaved");
 		this.storedValue = this.getValue();
 	}
 

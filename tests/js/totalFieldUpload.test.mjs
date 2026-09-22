@@ -45,6 +45,29 @@ function deckItemEl(deckProperty, itemId) {
 	return item;
 }
 
+// A deck TABLE row is a deck item without a dialog: the id input sits directly
+// in the row's cells, and the parent field is data-type="deckTable".
+function deckTableRowEl(deckProperty, itemId) {
+	const deck = document.createElement('div');
+	deck.className = 'form-field';
+	deck.dataset.type = 'deckTable';
+	deck.totalfield = { property: deckProperty };
+	const body = document.createElement('div');
+	body.className = 'deck-table-body';
+	deck.appendChild(body);
+	const row = document.createElement('div');
+	row.className = 'deck-table-row';
+	body.appendChild(row);
+	const cell = document.createElement('div');
+	cell.className = 'deck-table-cell';
+	row.appendChild(cell);
+	const idInput = document.createElement('input');
+	idInput.name = 'id';
+	idInput.value = itemId;
+	cell.appendChild(idInput);
+	return row;
+}
+
 // A video field's poster sub-field: the poster extends the VIDEO's own upload
 // context by one segment (see totalfield.js), so wherever the video lives —
 // top level, card, deck item — the poster path is the video path + `/poster`.
@@ -125,6 +148,20 @@ describe('TotalField.getUploadContext', () => {
 		expect(field({ property: 'pic', deckItem: deckItemEl('mydeck', 'item7') }).getUploadContext()).toEqual({
 			collection: 'posts', id: 'p1', property: 'mydeck', subpath: 'item7/pic',
 		});
+	});
+
+	test('field inside a deck TABLE row → deck property, subpath is itemId/field', () => {
+		// Same storage and API as a deck item; the row has no dialog and the
+		// parent is a deckTable, neither of which may stop the path resolving.
+		expect(field({ property: 'pic', deckItem: deckTableRowEl('mydeck', 'item7') }).getUploadContext()).toEqual({
+			collection: 'posts', id: 'p1', property: 'mydeck', subpath: 'item7/pic',
+		});
+		expect(field({ property: 'pic', deckItem: deckTableRowEl('mydeck', 'item7') }).buildPropertyApi('/collections'))
+			.toBe('/collections/posts/p1/mydeck/item7/pic');
+	});
+
+	test('returns null for a deck TABLE row whose id is not typed yet', () => {
+		expect(field({ deckItem: deckTableRowEl('mydeck', '') }).getUploadContext()).toBeNull();
 	});
 
 	test('returns null without a form', () => {

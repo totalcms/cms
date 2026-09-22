@@ -82,6 +82,16 @@ are missing`) when the real problem is the schema:
 Use `"field": "deckTable"` instead of `"deck"` to render the same data as an editable
 table in the admin — a good fit for rows of short, uniform values.
 
+An `image` or `file` property in the item schema becomes a thumbnail column. A saved
+row shows the image (or the file's type icon and name) as a small square; an empty
+cell is a drop target; hovering shows edit, links, download and delete. To replace a
+file, drop a new one on the cell, or delete and upload. The edit dialog is the
+field's usual one, so alt text, focal point and file details live where they always
+do. Uploads into a row that has not been saved yet wait for the save, exactly as they
+do in a deck item, and a row deleted from the table has its files cleaned up when the
+form is saved. The data and the storage are identical to a `deck`: switching a field
+between the two renders the same records.
+
 ---
 
 # Deck Item Label
