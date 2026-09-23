@@ -7,7 +7,6 @@ namespace TotalCMS\Domain\Mcp\Tool\Admin;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -108,7 +107,6 @@ readonly class ObjectTools
 		private ObjectPatcher $patcher,
 		private SchemaFetcher $schemaFetcher,
 		private ObjectFetcher $objectFetcher,
-		private CollectionFetcher $collectionFetcher,
 		private PersonaContext $personaContext,
 		private McpSchemaResolver $schemaResolver,
 	) {
@@ -399,25 +397,11 @@ readonly class ObjectTools
 	 */
 	private function requireExposed(string $collection, string $toolName): CollectionData
 	{
-		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof CollectionData) {
-			throw new ToolCallException(sprintf(
-				'%s: collection "%s" not found. Use list_collections to discover available collections.',
-				$toolName,
-				$collection,
-			));
+		try {
+			return $this->personaContext->exposedCollection($collection, 'access');
+		} catch (ToolCallException $e) {
+			throw new ToolCallException($toolName . ': ' . lcfirst($e->getMessage()), $e->getCode(), $e);
 		}
-
-		$persona = $this->personaContext->current();
-		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value)) {
-			throw new ToolCallException(sprintf(
-				'%s: collection "%s" is not available to the current caller. Use list_collections to see what you can access.',
-				$toolName,
-				$collection,
-			));
-		}
-
-		return $collectionData;
 	}
 
 	/**

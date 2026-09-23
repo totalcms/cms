@@ -6,15 +6,12 @@ namespace TotalCMS\Domain\Mcp\Tool\Content;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
-use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
-use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -57,11 +54,8 @@ readonly class QueryCollectionTool
 {
 	public function __construct(
 		private IndexQueryService $indexQueryService,
-		private CollectionFetcher $collectionFetcher,
-		private ObjectUrlBuilder $urlBuilder,
 		private PersonaContext $personaContext,
-		private McpSchemaResolver $schemaResolver,
-		private ContentRenderer $contentRenderer,
+		private McpObjectShaper $shaper,
 		private CollectionQueryResultFormatter $resultFormatter,
 	) {
 	}
@@ -119,21 +113,7 @@ readonly class QueryCollectionTool
 		// is consumed below by ContentRenderer on styledtext properties.
 		unset($locale);
 
-		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof CollectionData) {
-			throw new ToolCallException(sprintf(
-				'Collection "%s" not found. Use list_collections to see available collections.',
-				$collection,
-			));
-		}
-
-		$persona = $this->personaContext->current();
-		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value)) {
-			throw new ToolCallException(sprintf(
-				'Collection "%s" is not available to the current caller. Use list_collections to see what you can query.',
-				$collection,
-			));
-		}
+		$collectionData = $this->personaContext->exposedCollection($collection);
 
 		if (!$this->personaContext->canReadDrafts($collection)) {
 			$exclude = $this->mergeExcludeRule($exclude, 'draft:true');
@@ -155,24 +135,10 @@ readonly class QueryCollectionTool
 			$params['exclude'] = $exclude;
 		}
 
-		$result      = $this->indexQueryService->query($collection, $params);
-		$nonExposed  = $this->schemaResolver->nonExposedProperties($collectionData);
-		$renderable  = $this->schemaResolver->renderableProperties($collectionData);
-		$items       = [];
+		$result = $this->indexQueryService->query($collection, $params);
+		$items  = [];
 		foreach ($result->items as $item) {
-			// Strip first so we don't bother rendering content we're about to
-			// drop anyway.
-			foreach ($nonExposed as $field) {
-				unset($item[$field]);
-			}
-			// Transform styledtext properties per the agent's chosen format.
-			foreach ($renderable as $field) {
-				if (isset($item[$field])) {
-					$item[$field] = $this->contentRenderer->render($item[$field], $format);
-				}
-			}
-			$item['url'] = $this->urlBuilder->buildUrl($collectionData, $item);
-			$items[]     = $item;
+			$items[] = $this->shaper->shape($item, $collectionData, $format);
 		}
 
 		return $this->resultFormatter->envelope($result, $items);
@@ -180,18 +146,7 @@ readonly class QueryCollectionTool
 
 	public function buildDescription(McpPersona $persona): string
 	{
-		// Task 10b fix round 1 (finding #1): the catalog must not advertise
-		// collections the caller's groups don't grant read on — same rule
-		// query_collection's own handler() enforces via canReadCollection().
-		$catalog = $this->schemaResolver->renderCatalog(
-			$persona,
-			McpSchemaResolver::DEFAULT_CATALOG_CAP,
-			fn (CollectionData $c): bool => $this->personaContext->canReadCollection($c->id, $c),
-		);
-
-		return $catalog === ''
-			? $this->baseDescription()
-			: $this->baseDescription() . "\n\n" . $catalog;
+		return $this->personaContext->catalogDescription($persona, $this->baseDescription());
 	}
 
 	private function baseDescription(): string

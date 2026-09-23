@@ -42,10 +42,12 @@ final class DescribeCollectionToolTest extends TestCase
 				'titleProperty' => '',
 			],
 		);
+		$personaSchemaResolver->method('isAccessibleTo')->willReturnCallback(
+			fn (CollectionData $c, string $p): bool => $this->resolver->isAccessibleTo($c, $p),
+		);
 		$this->persona = new PersonaContext($this->collections, $personaSchemaResolver);
 
 		$this->tool = new DescribeCollectionTool(
-			$this->collections,
 			$this->resolver,
 			$this->persona,
 		);

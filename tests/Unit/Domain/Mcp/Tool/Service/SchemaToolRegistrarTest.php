@@ -16,6 +16,7 @@ use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
@@ -69,6 +70,7 @@ final class SchemaToolRegistrarTest extends TestCase
 			IndexQueryService::class    => $this->createMock(IndexQueryService::class),
 			FilterValueResolver::class  => new FilterValueResolver(),
 			ContentRenderer::class      => $this->createMock(ContentRenderer::class),
+			McpObjectShaper::class      => new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			// This file never invokes a built tool's handler — only registration
 			// behavior — so PersonaContext's Task 10b constructor deps never
 			// matter; plain stubs satisfy the type.

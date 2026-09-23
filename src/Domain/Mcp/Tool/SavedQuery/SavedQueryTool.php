@@ -7,14 +7,13 @@ namespace TotalCMS\Domain\Mcp\Tool\SavedQuery;
 use Mcp\Exception\ToolCallException;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
-use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Exception\SavedQueryToolException;
 use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
@@ -71,10 +70,8 @@ final readonly class SavedQueryTool
 		public SavedQueryToolDefinition $definition,
 		private IndexQueryService $indexQueryService,
 		private FilterValueResolver $filterValueResolver,
-		private ContentRenderer $contentRenderer,
 		private PersonaContext $personaContext,
-		private ObjectUrlBuilder $objectUrlBuilder,
-		private McpSchemaResolver $schemaResolver,
+		private McpObjectShaper $shaper,
 		private CollectionRepository $collectionRepository,
 		private CollectionQueryResultFormatter $resultFormatter,
 	) {
@@ -115,27 +112,9 @@ final readonly class SavedQueryTool
 			$params   = $this->buildQueryParams($resolved);
 			$result   = $this->indexQueryService->query($this->definition->collectionName, $params);
 
-			$nonExposed = $this->schemaResolver->nonExposedProperties($collection);
-			$renderable = $this->schemaResolver->renderableProperties($collection);
-
 			$items = [];
 			foreach ($result->items as $object) {
-				// Strip non-exposed fields first.
-				foreach ($nonExposed as $field) {
-					unset($object[$field]);
-				}
-
-				// Render content fields per the agent's chosen format.
-				foreach ($renderable as $field) {
-					if (isset($object[$field])) {
-						$object[$field] = $this->contentRenderer->render($object[$field], $this->definition->format);
-					}
-				}
-
-				// Decorate with URL.
-				$object['url'] = $this->objectUrlBuilder->buildUrl($collection, $object);
-
-				$items[] = $object;
+				$items[] = $this->shaper->shape($object, $collection, $this->definition->format);
 			}
 
 			return $this->resultFormatter->envelope($result, $items);

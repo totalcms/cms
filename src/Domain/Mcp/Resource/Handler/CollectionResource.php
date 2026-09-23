@@ -7,10 +7,10 @@ namespace TotalCMS\Domain\Mcp\Resource\Handler;
 use Mcp\Exception\ToolCallException;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 
 /**
@@ -52,7 +52,7 @@ readonly class CollectionResource
 		private CollectionFetcher $collectionFetcher,
 		private IndexReader $indexReader,
 		private McpSchemaResolver $schemaResolver,
-		private ObjectUrlBuilder $urlBuilder,
+		private McpObjectShaper $shaper,
 		private PersonaContext $personaContext,
 	) {
 	}
@@ -120,13 +120,9 @@ readonly class CollectionResource
 		$total      = count($items);
 		$truncated  = $total > self::MAX_ITEMS;
 		$displayed  = array_slice($items, 0, self::MAX_ITEMS);
-		$nonExposed = $this->schemaResolver->nonExposedProperties($collectionData);
 
 		foreach ($displayed as $idx => $item) {
-			foreach ($nonExposed as $field) {
-				unset($item[$field]);
-			}
-			$item['url']       = $this->urlBuilder->buildUrl($collectionData, $item);
+			$item              = $this->shaper->shape($item, $collectionData, null);
 			$displayed[$idx]   = $item;
 		}
 

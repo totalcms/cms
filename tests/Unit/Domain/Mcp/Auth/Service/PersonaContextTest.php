@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Auth\Service;
 
+use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
@@ -318,5 +319,63 @@ final class PersonaContextTest extends TestCase
 		$adHoc->mcp    = ['access' => 'public'];
 
 		$this->assertTrue($context->isCollectionExposedPublic('not-in-fixture-map', $adHoc));
+	}
+
+	// ── The collection gate every content tool used to inline ────────────────
+
+	/** @param array<string,CollectionData> $collections */
+	private function gateContext(array $collections, McpPersona $persona, bool $accessible = true): PersonaContext
+	{
+		$fetcher = $this->createStub(CollectionFetcher::class);
+		$fetcher->method('fetchCollection')->willReturnCallback(static fn (string $id): ?CollectionData => $collections[$id] ?? null);
+		$resolver = $this->createStub(McpSchemaResolver::class);
+		$resolver->method('isAccessibleTo')->willReturn($accessible);
+		$resolver->method('renderCatalog')->willReturn('Available collections and filterable properties:');
+
+		$context = new PersonaContext($fetcher, $resolver);
+		$context->set($persona);
+
+		return $context;
+	}
+
+	public function testExposedCollectionReturnsTheRecordWhenTheCallerMayReachIt(): void
+	{
+		$blog = $this->registerCollection('blog', 'public');
+
+		$this->assertSame($blog, $this->gateContext(['blog' => $blog], McpPersona::PUBLIC_)->exposedCollection('blog'));
+	}
+
+	public function testExposedCollectionRefusesAnUnknownCollectionWithTheDiscoveryHint(): void
+	{
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('Collection "ghost" not found. Use list_collections to see available collections.');
+
+		$this->gateContext([], McpPersona::ADMIN)->exposedCollection('ghost');
+	}
+
+	public function testExposedCollectionRefusesOneTheCallerMayNotReachNamingWhatTheyCanDo(): void
+	{
+		$blog = $this->registerCollection('blog', 'admin');
+
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('Collection "blog" is not available to the current caller. Use list_collections to see what you can describe.');
+
+		$this->gateContext(['blog' => $blog], McpPersona::PUBLIC_, accessible: false)->exposedCollection('blog', 'describe');
+	}
+
+	public function testVisibleCollectionsKeepsOnlyExposedReadableOnes(): void
+	{
+		$blog  = $this->registerCollection('blog', 'public');
+		$notes = $this->registerCollection('notes', 'public');
+
+		$this->assertSame([$blog, $notes], $this->gateContext(['blog' => $blog, 'notes' => $notes], McpPersona::ADMIN)->visibleCollections([$blog, $notes]));
+		$this->assertSame([], $this->gateContext(['blog' => $blog], McpPersona::PUBLIC_, accessible: false)->visibleCollections([$blog]));
+	}
+
+	public function testCatalogDescriptionAppendsTheCatalogWhenThereIsOne(): void
+	{
+		$context = $this->gateContext([], McpPersona::ADMIN);
+
+		$this->assertSame("Base.\n\nAvailable collections and filterable properties:", $context->catalogDescription(McpPersona::ADMIN, 'Base.'));
 	}
 }

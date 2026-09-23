@@ -106,13 +106,7 @@ readonly class ListCollectionsTool
 	 */
 	public function handler(): array
 	{
-		$persona = $this->personaContext->current()->value;
-
-		$visible = array_values(array_filter(
-			$this->collections->listAllCollections(),
-			fn (CollectionData $c): bool => $this->schemaResolver->isAccessibleTo($c, $persona)
-				&& $this->personaContext->canReadCollection($c->id, $c),
-		));
+		$visible = $this->personaContext->visibleCollections($this->collections->listAllCollections());
 
 		// Stable alphabetical order — identical sites generate identical
 		// tools/call responses, which is friendlier to caching layers and

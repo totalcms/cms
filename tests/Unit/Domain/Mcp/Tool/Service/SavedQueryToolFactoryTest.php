@@ -13,6 +13,7 @@ use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\SavedQuery\SavedQueryTool;
@@ -30,6 +31,7 @@ final class SavedQueryToolFactoryTest extends TestCase
 			IndexQueryService::class        => $this->createMock(IndexQueryService::class),
 			FilterValueResolver::class      => new FilterValueResolver(),
 			ContentRenderer::class          => $this->createMock(ContentRenderer::class),
+			McpObjectShaper::class          => new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			// This file never invokes a built tool's ->handle() — only tests
 			// SavedQueryToolFactory's shaping — so PersonaContext's Task 10b
 			// constructor deps never matter; plain stubs satisfy the type.

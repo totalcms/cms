@@ -15,6 +15,7 @@ use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Content\QueryCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -45,14 +46,11 @@ final class QueryCollectionToolTest extends TestCase
 
 		$this->tool = new QueryCollectionTool(
 			$this->indexQuery,
-			$this->collections,
-			$this->urls,
 			$this->persona,
-			$this->resolver,
 			// Real ContentRenderer with the real converter — pure functions, no
 			// IO. Lets the rendering tests assert actual markdown output instead
 			// of mock contract.
-			new ContentRenderer(new TiptapToMarkdownConverter()),
+			new McpObjectShaper($this->resolver, new ContentRenderer(new TiptapToMarkdownConverter()), $this->urls),
 			new CollectionQueryResultFormatter(),
 		);
 	}

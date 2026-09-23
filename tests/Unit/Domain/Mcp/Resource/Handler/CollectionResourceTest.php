@@ -17,6 +17,8 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Resource\Handler\CollectionResource;
+use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 
 final class CollectionResourceTest extends TestCase
@@ -61,7 +63,7 @@ final class CollectionResourceTest extends TestCase
 			$this->collectionFetcher,
 			$this->indexReader,
 			$this->schemaResolver,
-			$this->urlBuilder,
+			new McpObjectShaper($this->schemaResolver, $this->createStub(ContentRenderer::class), $this->urlBuilder),
 			$this->personaContext,
 		);
 	}

@@ -70,6 +70,16 @@ final class ObjectToolsTest extends TestCase
 			->willReturnCallback(fn (): ?CollectionData => $this->collectionExists ? new CollectionData() : null);
 		$this->personaContext = $this->createMock(PersonaContext::class);
 		$this->personaContext->method('current')->willReturn(McpPersona::ADMIN);
+		$this->personaContext->method('exposedCollection')->willReturnCallback(function (string $collection, string $hint = 'query'): CollectionData {
+			if (!$this->collectionExists) {
+				throw new ToolCallException(sprintf('Collection "%s" not found. Use list_collections to see available collections.', $collection));
+			}
+			if (!$this->exposureAccessible) {
+				throw new ToolCallException(sprintf('Collection "%s" is not available to the current caller. Use list_collections to see what you can %s.', $collection, $hint));
+			}
+
+			return new CollectionData();
+		});
 		$this->schemaResolver = $this->createMock(McpSchemaResolver::class);
 		$this->schemaResolver->method('isAccessibleTo')
 			->willReturnCallback(fn (): bool => $this->exposureAccessible);
@@ -82,7 +92,6 @@ final class ObjectToolsTest extends TestCase
 			$this->patcher,
 			$this->schemaFetcher,
 			$this->objectFetcher,
-			$this->collectionFetcher,
 			$this->personaContext,
 			$this->schemaResolver,
 		);

@@ -79,11 +79,7 @@ readonly class SearchTool
 
 		$persona = $this->personaContext->current();
 
-		$visible = array_filter(
-			$this->collections->listAllCollections(),
-			fn (CollectionData $c): bool => $this->schemaResolver->isAccessibleTo($c, $persona->value)
-				&& $this->personaContext->canReadCollection($c->id, $c),
-		);
+		$visible = $this->personaContext->visibleCollections($this->collections->listAllCollections());
 
 		$results = [];
 

@@ -7,7 +7,6 @@ namespace TotalCMS\Domain\Mcp\Tool\Discovery;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -45,7 +44,6 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 readonly class DescribeCollectionTool
 {
 	public function __construct(
-		private CollectionFetcher $collectionFetcher,
 		private McpSchemaResolver $schemaResolver,
 		private PersonaContext $personaContext,
 	) {
@@ -111,17 +109,8 @@ readonly class DescribeCollectionTool
 	 */
 	public function handler(string $collection): array
 	{
-		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof CollectionData) {
-			throw new ToolCallException(sprintf(
-				'Collection "%s" not found. Use list_collections to see available collections.',
-				$collection,
-			));
-		}
-
-		$persona = $this->personaContext->current();
-		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value)
-			|| !$this->personaContext->canReadCollection($collection, $collectionData)) {
+		$collectionData = $this->personaContext->exposedCollection($collection, 'describe');
+		if (!$this->personaContext->canReadCollection($collection, $collectionData)) {
 			throw new ToolCallException(sprintf(
 				'Collection "%s" is not available to the current caller. Use list_collections to see what you can describe.',
 				$collection,

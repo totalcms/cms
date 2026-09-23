@@ -6,13 +6,10 @@ namespace TotalCMS\Domain\Mcp\Tool\Content;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
-use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
-use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -53,12 +50,9 @@ readonly class SearchCollectionTool
 
 	public function __construct(
 		private SearchServiceInterface $searchService,
-		private CollectionFetcher $collectionFetcher,
 		private ObjectFetcher $objectFetcher,
-		private ObjectUrlBuilder $urlBuilder,
 		private PersonaContext $personaContext,
-		private McpSchemaResolver $schemaResolver,
-		private ContentRenderer $contentRenderer,
+		private McpObjectShaper $shaper,
 	) {
 	}
 
@@ -126,21 +120,8 @@ readonly class SearchCollectionTool
 		// by ContentRenderer on styledtext properties.
 		unset($locale);
 
-		$collectionData = $this->collectionFetcher->fetchCollection($collection);
-		if (!$collectionData instanceof CollectionData) {
-			throw new ToolCallException(sprintf(
-				'Collection "%s" not found. Use list_collections to see available collections.',
-				$collection,
-			));
-		}
-
-		$persona = $this->personaContext->current();
-		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value)) {
-			throw new ToolCallException(sprintf(
-				'Collection "%s" is not available to the current caller. Use list_collections to see what you can query.',
-				$collection,
-			));
-		}
+		$collectionData = $this->personaContext->exposedCollection($collection);
+		$persona        = $this->personaContext->current();
 
 		if (trim($query) === '') {
 			throw new ToolCallException(
@@ -182,23 +163,12 @@ readonly class SearchCollectionTool
 			$matches[] = $this->objectFetcher->fetchObject($collection, $result->id)->toArray();
 		}
 
-		$nonExposed = $this->schemaResolver->nonExposedProperties($collectionData);
-		$renderable = $this->schemaResolver->renderableProperties($collectionData);
-		$shaped     = [];
+		$shaped = [];
 		foreach ($matches as $item) {
 			if (!$canReadDrafts && ($item['draft'] ?? false) === true) {
 				continue;
 			}
-			foreach ($nonExposed as $field) {
-				unset($item[$field]);
-			}
-			foreach ($renderable as $field) {
-				if (isset($item[$field])) {
-					$item[$field] = $this->contentRenderer->render($item[$field], $format);
-				}
-			}
-			$item['url'] = $this->urlBuilder->buildUrl($collectionData, $item);
-			$shaped[]    = $item;
+			$shaped[] = $this->shaper->shape($item, $collectionData, $format);
 		}
 
 		return [
@@ -211,18 +181,7 @@ readonly class SearchCollectionTool
 
 	public function buildDescription(McpPersona $persona): string
 	{
-		// Task 10b fix round 1 (finding #1): the catalog must not advertise
-		// collections the caller's groups don't grant read on — same rule
-		// this tool's own handler() enforces via canReadCollection().
-		$catalog = $this->schemaResolver->renderCatalog(
-			$persona,
-			McpSchemaResolver::DEFAULT_CATALOG_CAP,
-			fn (CollectionData $c): bool => $this->personaContext->canReadCollection($c->id, $c),
-		);
-
-		return $catalog === ''
-			? $this->baseDescription()
-			: $this->baseDescription() . "\n\n" . $catalog;
+		return $this->personaContext->catalogDescription($persona, $this->baseDescription());
 	}
 
 	private function baseDescription(): string

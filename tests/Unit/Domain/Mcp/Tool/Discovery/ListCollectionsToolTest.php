@@ -44,6 +44,9 @@ final class ListCollectionsToolTest extends TestCase
 				'titleProperty' => '',
 			],
 		);
+		$personaSchemaResolver->method('isAccessibleTo')->willReturnCallback(
+			fn (CollectionData $c, string $p): bool => $this->resolver->isAccessibleTo($c, $p),
+		);
 		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $personaSchemaResolver);
 
 		$this->tool = new ListCollectionsTool(

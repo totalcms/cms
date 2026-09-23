@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Auth\Service;
 
+use Mcp\Exception\ToolCallException;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -252,5 +253,80 @@ class PersonaContext
 	{
 		return $this->authority instanceof UserAuthority
 			&& $this->authority->canCollection('read', $collection);
+	}
+
+	// ─── Shared by every read tool ─────────────────────────────────────────
+
+	/**
+	 * The collection a tool was asked about, when the current caller may
+	 * reach it at all: it must exist, and its `mcp.access` must admit the
+	 * persona. Either failure is a ToolCallException that points the agent
+	 * at list_collections. Group-level read authority is a separate,
+	 * later check ({@see canReadCollection()}) because most tools want it to
+	 * fail as an opaque "not found".
+	 *
+	 * @param string $hint What the caller can list with list_collections: "query", "describe", "access".
+	 *
+	 * @throws ToolCallException
+	 */
+	public function exposedCollection(string $collection, string $hint = 'query'): CollectionData
+	{
+		$collectionData = $this->collectionFetcher->fetchCollection($collection);
+		if (!$collectionData instanceof CollectionData) {
+			throw new ToolCallException(sprintf(
+				'Collection "%s" not found. Use list_collections to see available collections.',
+				$collection,
+			));
+		}
+
+		if (!$this->schemaResolver->isAccessibleTo($collectionData, $this->current()->value)) {
+			throw new ToolCallException(sprintf(
+				'Collection "%s" is not available to the current caller. Use list_collections to see what you can %s.',
+				$collection,
+				$hint,
+			));
+		}
+
+		return $collectionData;
+	}
+
+	/**
+	 * The collections the current caller may both reach and read: exposed
+	 * at their `mcp.access` and granted by the caller's groups. What the
+	 * cross-collection tools iterate.
+	 *
+	 * @param iterable<CollectionData> $collections
+	 *
+	 * @return list<CollectionData>
+	 */
+	public function visibleCollections(iterable $collections): array
+	{
+		$persona = $this->current()->value;
+		$visible = [];
+
+		foreach ($collections as $collection) {
+			if ($this->schemaResolver->isAccessibleTo($collection, $persona) && $this->canReadCollection($collection->id, $collection)) {
+				$visible[] = $collection;
+			}
+		}
+
+		return $visible;
+	}
+
+	/**
+	 * A tool description with the collection catalog appended — only the
+	 * collections $persona's groups grant read on, the same rule the tool's
+	 * handler enforces, so the catalog never advertises what a call would
+	 * then refuse.
+	 */
+	public function catalogDescription(McpPersona $persona, string $baseDescription): string
+	{
+		$catalog = $this->schemaResolver->renderCatalog(
+			$persona,
+			McpSchemaResolver::DEFAULT_CATALOG_CAP,
+			fn (CollectionData $c): bool => $this->canReadCollection($c->id, $c),
+		);
+
+		return $catalog === '' ? $baseDescription : $baseDescription . "\n\n" . $catalog;
 	}
 }

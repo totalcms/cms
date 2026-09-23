@@ -14,6 +14,7 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Content\GetObjectTool;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -55,11 +56,8 @@ final class GetObjectToolTest extends TestCase
 
 		$this->tool = new GetObjectTool(
 			$this->objects,
-			$this->collections,
-			$this->urls,
 			$this->persona,
-			$this->resolver,
-			new ContentRenderer(new TiptapToMarkdownConverter()),
+			new McpObjectShaper($this->resolver, new ContentRenderer(new TiptapToMarkdownConverter()), $this->urls),
 		);
 	}
 

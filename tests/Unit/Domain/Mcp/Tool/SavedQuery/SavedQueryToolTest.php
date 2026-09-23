@@ -26,6 +26,7 @@ use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\SavedQuery\SavedQueryTool;
@@ -73,10 +74,8 @@ final class SavedQueryToolTest extends TestCase
 			definition: $def,
 			indexQueryService: $this->createMock(IndexQueryService::class),
 			filterValueResolver: new FilterValueResolver(),
-			contentRenderer: $this->createMock(ContentRenderer::class),
 			personaContext: $personaCtx,
-			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
-			schemaResolver: $this->createMock(McpSchemaResolver::class),
+			shaper: new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $this->createMock(CollectionRepository::class),
 			resultFormatter: new CollectionQueryResultFormatter(),
 		);
@@ -127,10 +126,8 @@ final class SavedQueryToolTest extends TestCase
 			definition: $def,
 			indexQueryService: $indexQuery,
 			filterValueResolver: new FilterValueResolver(),
-			contentRenderer: $this->createMock(ContentRenderer::class),
 			personaContext: $personaCtx,
-			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
-			schemaResolver: $schemaResolver,
+			shaper: new McpObjectShaper($schemaResolver, $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $collectionRepo,
 			resultFormatter: new CollectionQueryResultFormatter(),
 		);
@@ -166,10 +163,8 @@ final class SavedQueryToolTest extends TestCase
 			definition: $def,
 			indexQueryService: $this->createMock(IndexQueryService::class),
 			filterValueResolver: new FilterValueResolver(),
-			contentRenderer: $this->createMock(ContentRenderer::class),
 			personaContext: $this->makePersonaContext(McpPersona::ADMIN),
-			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
-			schemaResolver: $this->createMock(McpSchemaResolver::class),
+			shaper: new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $this->createMock(CollectionRepository::class),
 			resultFormatter: new CollectionQueryResultFormatter(),
 		);
@@ -196,10 +191,8 @@ final class SavedQueryToolTest extends TestCase
 			definition: $def,
 			indexQueryService: $this->createMock(IndexQueryService::class),
 			filterValueResolver: new FilterValueResolver(),
-			contentRenderer: $this->createMock(ContentRenderer::class),
 			personaContext: $personaCtx,
-			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
-			schemaResolver: $this->createMock(McpSchemaResolver::class),
+			shaper: new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $this->createMock(CollectionRepository::class),
 			resultFormatter: new CollectionQueryResultFormatter(),
 		);
@@ -275,10 +268,8 @@ final class SavedQueryToolTest extends TestCase
 			definition: $def,
 			indexQueryService: $indexQuery,
 			filterValueResolver: new FilterValueResolver(),
-			contentRenderer: $this->createMock(ContentRenderer::class),
 			personaContext: $personaCtx,
-			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
-			schemaResolver: $schemaResolver,
+			shaper: new McpObjectShaper($schemaResolver, $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $collectionRepo,
 			resultFormatter: new CollectionQueryResultFormatter(),
 		);
@@ -357,10 +348,8 @@ final class SavedQueryToolTest extends TestCase
 			definition: $def,
 			indexQueryService: $indexQuery,
 			filterValueResolver: new FilterValueResolver(),
-			contentRenderer: $this->createMock(ContentRenderer::class),
 			personaContext: $personaCtx,
-			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
-			schemaResolver: $schemaResolver,
+			shaper: new McpObjectShaper($schemaResolver, $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $collectionRepo,
 			resultFormatter: new CollectionQueryResultFormatter(),
 		);
@@ -401,10 +390,8 @@ final class SavedQueryToolTest extends TestCase
 			definition: $def,
 			indexQueryService: $this->createMock(IndexQueryService::class),
 			filterValueResolver: new FilterValueResolver(),
-			contentRenderer: $this->createMock(ContentRenderer::class),
 			personaContext: $personaCtx,
-			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
-			schemaResolver: $this->createMock(McpSchemaResolver::class),
+			shaper: new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
 			collectionRepository: $this->createMock(CollectionRepository::class),
 			resultFormatter: new CollectionQueryResultFormatter(),
 		);

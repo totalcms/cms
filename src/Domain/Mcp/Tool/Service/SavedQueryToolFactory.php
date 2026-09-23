@@ -6,12 +6,10 @@ namespace TotalCMS\Domain\Mcp\Tool\Service;
 
 use Psr\Container\ContainerInterface;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
-use TotalCMS\Domain\Mcp\Service\ContentRenderer;
-use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\SavedQuery\SavedQueryTool;
 
@@ -48,10 +46,8 @@ final readonly class SavedQueryToolFactory
 			definition: $definition,
 			indexQueryService: $this->container->get(IndexQueryService::class),
 			filterValueResolver: $this->container->get(FilterValueResolver::class),
-			contentRenderer: $this->container->get(ContentRenderer::class),
 			personaContext: $this->container->get(PersonaContext::class),
-			objectUrlBuilder: $this->container->get(ObjectUrlBuilder::class),
-			schemaResolver: $this->container->get(McpSchemaResolver::class),
+			shaper: $this->container->get(McpObjectShaper::class),
 			collectionRepository: $this->container->get(CollectionRepository::class),
 			resultFormatter: $this->container->get(CollectionQueryResultFormatter::class),
 		);

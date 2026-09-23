@@ -6,11 +6,9 @@ namespace TotalCMS\Domain\Mcp\Tool\Content;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
-use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -62,10 +60,8 @@ readonly class SearchCollectionsTool
 		private SearchServiceInterface $searchService,
 		private CollectionRepository $collections,
 		private ObjectFetcher $objectFetcher,
-		private ObjectUrlBuilder $urlBuilder,
 		private PersonaContext $personaContext,
-		private McpSchemaResolver $schemaResolver,
-		private ContentRenderer $contentRenderer,
+		private McpObjectShaper $shaper,
 	) {
 	}
 
@@ -137,11 +133,7 @@ readonly class SearchCollectionsTool
 
 		$persona = $this->personaContext->current();
 
-		$visible = array_filter(
-			$this->collections->listAllCollections(),
-			fn (CollectionData $c): bool => $this->schemaResolver->isAccessibleTo($c, $persona->value)
-				&& $this->personaContext->canReadCollection($c->id, $c),
-		);
+		$visible = $this->personaContext->visibleCollections($this->collections->listAllCollections());
 
 		$cappedLimit = max(1, min(self::LIMIT_CAP, $limit));
 		$aggregate   = [];
@@ -180,9 +172,6 @@ readonly class SearchCollectionsTool
 				continue;
 			}
 
-			$nonExposed = $this->schemaResolver->nonExposedProperties($collection);
-			$renderable = $this->schemaResolver->renderableProperties($collection);
-
 			foreach ($results as $result) {
 				if (!$this->objectFetcher->existsObject($collection->id, $result->id)) {
 					continue;
@@ -193,16 +182,8 @@ readonly class SearchCollectionsTool
 					continue;
 				}
 
-				foreach ($nonExposed as $field) {
-					unset($item[$field]);
-				}
-				foreach ($renderable as $field) {
-					if (isset($item[$field])) {
-						$item[$field] = $this->contentRenderer->render($item[$field], $format);
-					}
-				}
+				$item               = $this->shaper->shape($item, $collection, $format);
 				$item['collection'] = $collection->id;
-				$item['url']        = $this->urlBuilder->buildUrl($collection, $item);
 				$aggregate[]        = $item;
 
 				// Early exit once we've collected enough — avoids iterating
