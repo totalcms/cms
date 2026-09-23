@@ -9,7 +9,9 @@ use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
 /**
- * Service for creating zip files of a single object's data and assets.
+ * Service for creating zip files of one or more objects' data and assets.
+ * Each object lands at the zip root as its file (`{id}.json` or `{id}.md`)
+ * plus its `{id}/` assets folder.
  */
 readonly class ObjectZipper
 {
@@ -20,58 +22,21 @@ readonly class ObjectZipper
 	}
 
 	/**
-	 * Create a zip file of the object's file (`{id}.json` or `{id}.md`) and assets folder.
-	 *
-	 * @param string $collection The collection name
-	 * @param string $id         The object ID
-	 *
 	 * @throws \RuntimeException If zip creation fails or object not found
 	 *
 	 * @return string The path to the created zip file
 	 */
 	public function createObjectZip(string $collection, string $id): string
 	{
-		$datadir = $this->config->datadir;
-
-		// Paths
-		$objectFile = $this->objects->objectPath($collection, $id);
-		if ($objectFile === null) {
+		if ($this->objects->objectPath($collection, $id) === null) {
 			throw new \RuntimeException("Object not found: {$collection}/{$id}");
 		}
-		$assetsPath = PathUtils::buildPath(collection: $collection, filename: $id);
 
-		$fullObjectPath = PathUtils::absolutePath($datadir, $objectFile);
-
-		// Create temp zip
-		$tempZipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR .
-			'object-' . $collection . '-' . $id . '-' . uniqid('', true) . '.zip';
-
-		$zip    = new \ZipArchive();
-		$result = $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-
-		if ($result !== true) {
-			throw new \RuntimeException(sprintf('Failed to create zip file: %s (Error code: %d)', $tempZipPath, $result));
-		}
-
-		// Add the object's file
-		$zip->addFile($fullObjectPath, basename($objectFile));
-
-		// Add assets folder if exists and has non-cache contents
-		$fullAssetsPath = PathUtils::absolutePath($datadir, $assetsPath);
-		if (is_dir($fullAssetsPath) && $this->hasNonCacheContents($fullAssetsPath)) {
-			$this->addDirectoryToZip($zip, $fullAssetsPath, $id);
-		}
-
-		$zip->close();
-
-		return $tempZipPath;
+		return $this->zipObjects("object-{$collection}-{$id}", $collection, [$id]);
 	}
 
 	/**
-	 * Create a zip of several objects' files and asset folders. Each object
-	 * lands at the zip root as its file (`{id}.json` or `{id}.md`) plus its
-	 * `{id}/` assets folder, the same layout createObjectZip() produces for
-	 * a single object. Ids that no longer exist are skipped.
+	 * Ids that no longer exist are skipped.
 	 *
 	 * @param array<int,string> $ids
 	 *
@@ -81,19 +46,16 @@ readonly class ObjectZipper
 	 */
 	public function createObjectsZip(string $collection, array $ids): string
 	{
+		return $this->zipObjects("objects-{$collection}", $collection, $ids);
+	}
+
+	/** @param array<int,string> $ids */
+	private function zipObjects(string $stem, string $collection, array $ids): string
+	{
 		$datadir = $this->config->datadir;
+		$zip     = ZipBuilder::temp($stem);
+		$added   = 0;
 
-		$tempZipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR .
-			'objects-' . $collection . '-' . uniqid('', true) . '.zip';
-
-		$zip    = new \ZipArchive();
-		$result = $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-
-		if ($result !== true) {
-			throw new \RuntimeException(sprintf('Failed to create zip file: %s (Error code: %d)', $tempZipPath, $result));
-		}
-
-		$added = 0;
 		foreach ($ids as $id) {
 			$id = trim((string)$id);
 			if ($id === '') {
@@ -102,90 +64,25 @@ readonly class ObjectZipper
 
 			$objectFile = $this->objects->objectPath($collection, $id);
 			if ($objectFile === null) {
-				continue; // skip missing ids and move on
+				continue;
 			}
-			$fullObjectPath = PathUtils::absolutePath($datadir, $objectFile);
 
-			$zip->addFile($fullObjectPath, basename($objectFile));
+			$zip->addFile(PathUtils::absolutePath($datadir, $objectFile), basename($objectFile));
 
-			$assetsPath     = PathUtils::buildPath(collection: $collection, filename: $id);
-			$fullAssetsPath = PathUtils::absolutePath($datadir, $assetsPath);
-			if (is_dir($fullAssetsPath) && $this->hasNonCacheContents($fullAssetsPath)) {
-				$this->addDirectoryToZip($zip, $fullAssetsPath, $id);
+			$assetsPath = PathUtils::absolutePath($datadir, PathUtils::buildPath(collection: $collection, filename: $id));
+			if (is_dir($assetsPath) && ZipBuilder::hasNonCacheContents($assetsPath)) {
+				$zip->addTree($assetsPath, $id);
 			}
 
 			$added++;
 		}
 
 		if ($added === 0) {
-			$zip->close();
-			// ZipArchive doesn't write a file to disk when no entries were added,
-			// so only unlink if it actually exists.
-			if (file_exists($tempZipPath)) {
-				unlink($tempZipPath);
-			}
+			$zip->discard();
 			throw new \RuntimeException("No objects found to export in collection: {$collection}");
 		}
 
-		$zip->close();
-
-		return $tempZipPath;
-	}
-
-	/**
-	 * Check if a directory has any contents that are not .cache directories.
-	 */
-	private function hasNonCacheContents(string $path): bool
-	{
-		$iterator = new \DirectoryIterator($path);
-		foreach ($iterator as $file) {
-			if ($file->isDot()) {
-				continue;
-			}
-			// Skip .cache directories
-			if ($file->getFilename() === '.cache') {
-				continue;
-			}
-
-			return true;
-		}
-
-		return false;
-	}
-
-	/**
-	 * Recursively add directory contents to zip, excluding .cache folders.
-	 */
-	private function addDirectoryToZip(\ZipArchive $zip, string $realPath, string $zipPath): void
-	{
-		// Resolve to canonical path to match getRealPath() results
-		$canonicalPath = realpath($realPath);
-		if ($canonicalPath === false) {
-			return;
-		}
-
-		$iterator = new \RecursiveIteratorIterator(
-			new \RecursiveDirectoryIterator($canonicalPath, \RecursiveDirectoryIterator::SKIP_DOTS),
-			\RecursiveIteratorIterator::SELF_FIRST
-		);
-
-		foreach ($iterator as $file) {
-			$filePath     = $file->getRealPath();
-			$relativePath = substr((string)$filePath, strlen($canonicalPath) + 1);
-
-			// Skip .cache directories and their contents
-			if (str_contains($relativePath, '.cache')) {
-				continue;
-			}
-
-			$zipFilePath = $zipPath . DIRECTORY_SEPARATOR . $relativePath;
-
-			if ($file->isDir()) {
-				$zip->addEmptyDir($zipFilePath);
-			} elseif ($file->isFile()) {
-				$zip->addFile($filePath, $zipFilePath);
-			}
-		}
+		return $zip->close();
 	}
 
 	/**

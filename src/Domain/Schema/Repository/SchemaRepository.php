@@ -143,19 +143,11 @@ class SchemaRepository extends StorageRepository
 	 */
 	public function fetchDefaultSchema(string $id): ?SchemaData
 	{
-		// Try cache first (Redis preferred, long TTL since default schemas never change)
-		$cacheKey = "schema:{$id}";
-		$cached   = $this->cacheManager->getComputedData($cacheKey);
-
-		if ($cached !== null && is_array($cached)) {
-			try {
-				return $this->factory->generateSchema($cached);
-			} catch (\Exception) {
-				// Cache contains invalid data, fall through to filesystem
-			}
+		$cached = $this->cached($id);
+		if ($cached instanceof SchemaData) {
+			return $cached;
 		}
 
-		// Cache miss - load from filesystem
 		$schemaFile = self::defaultSchemaDir() . $id . self::FILE_EXT;
 		$contents   = null;
 
@@ -169,12 +161,7 @@ class SchemaRepository extends StorageRepository
 			return null;
 		}
 
-		$schema = $this->factory->generateSchemaFromJson($contents);
-
-		// Cache default schema for 1 hour (they never change during runtime)
-		$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), CacheManager::TTL_CUSTOM_SCHEMA);
-
-		return $schema;
+		return $this->remember($id, $this->factory->generateSchemaFromJson($contents));
 	}
 
 	/**
@@ -182,26 +169,39 @@ class SchemaRepository extends StorageRepository
 	 */
 	public function fetchCustomSchema(string $id): ?SchemaData
 	{
-		// Try cache first (Redis preferred, medium TTL since custom schemas change rarely)
-		$cacheKey = "schema:{$id}";
-		$cached   = $this->cacheManager->getComputedData($cacheKey);
-
-		if ($cached !== null && is_array($cached)) {
-			try {
-				return $this->factory->generateSchema($cached);
-			} catch (\Exception) {
-				// Cache contains invalid data, fall through to filesystem
-			}
+		$cached = $this->cached($id);
+		if ($cached instanceof SchemaData) {
+			return $cached;
 		}
 
-		// Cache miss - load from filesystem
-		$schemaFile = self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT;
-		$schema     = $this->fetchAndDeserialize($schemaFile, SchemaData::class);
+		$schema = $this->fetchAndDeserialize(self::CUSTOM_SCHEMA_DIR . $id . self::FILE_EXT, SchemaData::class);
 
-		// Cache custom schema (changes rarely but can be modified by users)
-		if ($schema !== null) {
-			$this->cacheManager->storeComputedData($cacheKey, $schema->toArray(), CacheManager::TTL_CUSTOM_SCHEMA);
+		return $schema instanceof SchemaData ? $this->remember($id, $schema) : null;
+	}
+
+	/**
+	 * The cached copy of a default or custom schema, or null on a miss. A
+	 * cache entry that no longer builds a schema reads as a miss so the file
+	 * is consulted.
+	 */
+	private function cached(string $id): ?SchemaData
+	{
+		$cached = $this->cacheManager->getComputedData("schema:{$id}");
+		if (!is_array($cached)) {
+			return null;
 		}
+
+		try {
+			return $this->factory->generateSchema($cached);
+		} catch (\Exception) {
+			return null;
+		}
+	}
+
+	/** Cache a freshly loaded schema. Default schemas never change at runtime; custom ones rarely. */
+	private function remember(string $id, SchemaData $schema): SchemaData
+	{
+		$this->cacheManager->storeComputedData("schema:{$id}", $schema->toArray(), CacheManager::TTL_CUSTOM_SCHEMA);
 
 		return $schema;
 	}
@@ -212,26 +212,33 @@ class SchemaRepository extends StorageRepository
 	public function fetchExtensionSchema(string $id): ?SchemaData
 	{
 		foreach ($this->extensionSchemaDirs as $dir) {
-			$file = $dir . '/' . $id . '.json';
-			if (is_file($file)) {
-				$json = file_get_contents($file);
-				if ($json === false) {
-					continue;
-				}
-				$data = json_decode($json, true);
-				if (!is_array($data)) {
-					continue;
-				}
-
-				try {
-					return $this->factory->generateSchema($data);
-				} catch (\Exception) {
-					continue;
-				}
+			$schema = $this->readExtensionSchema($dir . '/' . $id . '.json');
+			if ($schema instanceof SchemaData) {
+				return $schema;
 			}
 		}
 
 		return null;
+	}
+
+	/** An extension schema file, or null when it is missing, unreadable or invalid. */
+	private function readExtensionSchema(string $file): ?SchemaData
+	{
+		if (!is_file($file)) {
+			return null;
+		}
+
+		$json = file_get_contents($file);
+		$data = $json === false ? null : json_decode($json, true);
+		if (!is_array($data)) {
+			return null;
+		}
+
+		try {
+			return $this->factory->generateSchema($data);
+		} catch (\Exception) {
+			return null;
+		}
 	}
 
 	/**
@@ -249,19 +256,9 @@ class SchemaRepository extends StorageRepository
 				continue;
 			}
 			foreach ($files as $file) {
-				$json = file_get_contents($file);
-				if ($json === false) {
-					continue;
-				}
-				$data = json_decode($json, true);
-				if (!is_array($data)) {
-					continue;
-				}
-
-				try {
-					$schemas[] = $this->factory->generateSchema($data);
-				} catch (\Exception) {
-					// Skip invalid schemas
+				$schema = $this->readExtensionSchema($file);
+				if ($schema instanceof SchemaData) {
+					$schemas[] = $schema;
 				}
 			}
 		}
@@ -274,21 +271,15 @@ class SchemaRepository extends StorageRepository
 	 */
 	public function getSchema(string $id): SchemaData
 	{
-		$schema = $this->fetchDefaultSchema($id);
+		return $this->resolve($id) ?? throw new \DomainException(sprintf('Schema type does not exist: %s', $id));
+	}
 
-		if (!$schema instanceof SchemaData) {
-			$schema = $this->fetchExtensionSchema($id);
-		}
-
-		if (!$schema instanceof SchemaData) {
-			$schema = $this->fetchCustomSchema($id);
-		}
-
-		if (!$schema instanceof SchemaData) {
-			throw new \DomainException(sprintf('Schema type does not exist: %s', $id));
-		}
-
-		return $schema;
+	/** The resolution chain: default → extension → custom. */
+	private function resolve(string $id): ?SchemaData
+	{
+		return $this->fetchDefaultSchema($id)
+			?? $this->fetchExtensionSchema($id)
+			?? $this->fetchCustomSchema($id);
 	}
 
 	/**
@@ -302,20 +293,10 @@ class SchemaRepository extends StorageRepository
 	public function schemaExists(string $id): bool
 	{
 		try {
-			$schema = $this->fetchDefaultSchema($id);
-
-			if (!$schema instanceof SchemaData) {
-				$schema = $this->fetchExtensionSchema($id);
-			}
-
-			if (!$schema instanceof SchemaData) {
-				$schema = $this->fetchCustomSchema($id);
-			}
+			return $this->resolve($id) instanceof SchemaData;
 		} catch (CorruptedStorageFileException) {
 			return false;
 		}
-
-		return $schema instanceof SchemaData;
 	}
 
 	/** Whether the schema's stored file is present but cannot be decoded. */

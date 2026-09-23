@@ -42,7 +42,7 @@ readonly class AutogenService
 	{
 		$data = $this->prepareReplacementData($collection, $objectData);
 
-		return $this->replacePlaceholders($pattern, $data, $collection);
+		return self::renderPattern($pattern, $data, fn (): int => $this->getNextOid($collection));
 	}
 
 	/**
@@ -58,7 +58,7 @@ readonly class AutogenService
 	{
 		$data = self::prepareReplacementDataWithOid($objectData, $oidCount);
 
-		return self::replacePlaceholdersWithOid($pattern, $data, $oidCount);
+		return self::renderPattern($pattern, $data, fn (): int => $oidCount + 1);
 	}
 
 	/**
@@ -135,47 +135,20 @@ readonly class AutogenService
 	}
 
 	/**
-	 * Replace placeholders in the pattern.
+	 * Fill `${key}` placeholders from the object data. `${oid-000}` is the next
+	 * object id zero-padded to the placeholder's width; `${uid-N}` a random id
+	 * of N characters. Only the OID source differs between the two callers.
 	 *
 	 * @param array<string,mixed> $data
+	 * @param callable(): int     $nextOid
 	 */
-	private function replacePlaceholders(string $pattern, array $data, string $collection): string
+	private static function renderPattern(string $pattern, array $data, callable $nextOid): string
 	{
-		return TemplatePlaceholder::render($pattern, function (string $key) use ($data, $collection): string {
+		return TemplatePlaceholder::render($pattern, function (string $key) use ($data, $nextOid): string {
 			if (preg_match('/^oid-0+$/', $key)) {
-				$zeros         = substr($key, 4);
-				$paddingLength = strlen($zeros);
-				$oidValue      = $this->getNextOid($collection);
-
-				return str_pad((string)$oidValue, $paddingLength, '0', STR_PAD_LEFT);
+				return str_pad((string)$nextOid(), strlen(substr($key, 4)), '0', STR_PAD_LEFT);
 			}
 
-			// uid-N → a random id of N characters (bare ${uid} stays the default).
-			if (preg_match('/^uid-(\d+)$/', $key, $matches)) {
-				return AutogenIdService::generateUid((int)$matches[1]);
-			}
-
-			return (string)($data[$key] ?? '');
-		});
-	}
-
-	/**
-	 * Replace placeholders with explicit OID count.
-	 *
-	 * @param array<string,mixed> $data
-	 */
-	private static function replacePlaceholdersWithOid(string $pattern, array $data, int $oidCount): string
-	{
-		return TemplatePlaceholder::render($pattern, function (string $key) use ($data, $oidCount): string {
-			if (preg_match('/^oid-0+$/', $key)) {
-				$zeros         = substr($key, 4);
-				$paddingLength = strlen($zeros);
-				$oidValue      = $oidCount + 1;
-
-				return str_pad((string)$oidValue, $paddingLength, '0', STR_PAD_LEFT);
-			}
-
-			// uid-N → a random id of N characters (bare ${uid} stays the default).
 			if (preg_match('/^uid-(\d+)$/', $key, $matches)) {
 				return AutogenIdService::generateUid((int)$matches[1]);
 			}

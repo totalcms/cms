@@ -69,31 +69,7 @@ readonly class ObjectExporter
 	 */
 	public function exportAllObjectsForJson(string $collection): array
 	{
-		$objects   = [];
-		$objectIds = $this->storage->fetchObjectIds($collection);
-		$errors    = [];
-
-		foreach ($objectIds as $id) {
-			try {
-				$object    = $this->objectFetcher->fetchObject($collection, $id);
-				$objects[] = $object->toArray();
-			} catch (\Throwable $e) {
-				// Log the error with details for debugging
-				$this->logger->warning('Skipping object during JSON export due to data mismatch', [
-					'collection' => $collection,
-					'object_id'  => $id,
-					'error'      => $e->getMessage(),
-					'exception'  => $e::class,
-					'hint'       => 'This usually happens when the schema was modified after objects were created. Check if the stored data type matches the current schema.',
-				]);
-				$errors[] = $id;
-			}
-		}
-
-		return [
-			'data'   => $objects,
-			'errors' => $errors,
-		];
+		return $this->buildJsonExport($collection, $this->storage->fetchObjectIds($collection));
 	}
 
 	/**
@@ -107,14 +83,22 @@ readonly class ObjectExporter
 	 */
 	public function exportFilteredObjectsForJson(string $collection, array $options): array
 	{
-		$objectIds = $this->fetchFilteredObjectIds($collection, $options);
-		$objects   = [];
-		$errors    = [];
+		return $this->buildJsonExport($collection, $this->fetchFilteredObjectIds($collection, $options));
+	}
+
+	/**
+	 * @param array<string> $objectIds
+	 *
+	 * @return array{data: array<array<string,mixed>>, errors: array<string>}
+	 */
+	private function buildJsonExport(string $collection, array $objectIds): array
+	{
+		$objects = [];
+		$errors  = [];
 
 		foreach ($objectIds as $id) {
 			try {
-				$object    = $this->objectFetcher->fetchObject($collection, $id);
-				$objects[] = $object->toArray();
+				$objects[] = $this->objectFetcher->fetchObject($collection, $id)->toArray();
 			} catch (\Throwable $e) {
 				$this->logger->warning('Skipping object during JSON export due to data mismatch', [
 					'collection' => $collection,
@@ -127,10 +111,7 @@ readonly class ObjectExporter
 			}
 		}
 
-		return [
-			'data'   => $objects,
-			'errors' => $errors,
-		];
+		return ['data' => $objects, 'errors' => $errors];
 	}
 
 	/**

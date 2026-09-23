@@ -116,20 +116,8 @@ readonly class ObjectUpdater
 		$object     = $this->objectFetcher->fetchObject($collection, $id);
 		$objectData = $object->toArray();
 
-		$segments = $path === '' ? [] : explode('/', $path);
-		$cursor   =&$objectData[$parent];
-		if (!is_array($cursor)) {
-			$cursor = [];
-		}
-		$leaf = (string)array_pop($segments);
-		foreach ($segments as $segment) {
-			if (!isset($cursor[$segment]) || !is_array($cursor[$segment])) {
-				$cursor[$segment] = [];
-			}
-			$cursor =&$cursor[$segment];
-		}
-
-		$cursor[$leaf] = $newData;
+		$slot = &NestedPath::slot($objectData, $parent, $path);
+		$slot = $newData;
 
 		return $this->updateObject($collection, $id, $objectData);
 	}

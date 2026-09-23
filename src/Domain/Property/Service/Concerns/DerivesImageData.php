@@ -8,15 +8,18 @@ use TotalCMS\Domain\Media\Service\ImageMetaReader;
 use TotalCMS\Domain\Media\Service\ImagePaletteGenerator;
 
 /**
- * Derives full image metadata (file basics + palette + EXIF/dimensions) from a
- * file already in storage — mirroring ImageSaver::save() minus the upload move.
- * Used by ImageSaver and GallerySaver for the recovery rebuild path. Expects the
- * host class to extend FileSaver (provides $storage, $config, $settings, and
- * describeStoredFile()).
+ * Palette + EXIF (or bare dimensions) for an image file, per the saver's
+ * `extractPalette` / `extractExif` settings. Shared by the upload path
+ * (ImageSaver / GallerySaver::save()) and the recovery rebuild path
+ * (deriveImageData()). Expects the host class to extend FileSaver, which
+ * provides $storage, $config, $settings, getLogger() and describeStoredFile().
  */
 trait DerivesImageData
 {
 	/**
+	 * Full image data for a file already in storage — what save() would have
+	 * stored, minus the upload move.
+	 *
 	 * @param array{name:string,path:string} $file
 	 *
 	 * @return array<string,mixed>
@@ -26,12 +29,29 @@ trait DerivesImageData
 		$absPath  = $this->config->datadir . '/' . $file['path'];
 		$fileData = $this->describeStoredFile($collection, $id, $property, (string)$file['name'], $subpath);
 
-		$colorData = ['palette' => []];
+		return array_merge($fileData, $this->extractImageMetadata($absPath, [
+			'collection' => $collection,
+			'objectID'   => $id,
+			'property'   => $property,
+		]));
+	}
+
+	/**
+	 * A palette failure is logged and leaves the palette empty: it must never
+	 * fail an upload or a rebuild.
+	 *
+	 * @param array<string,string> $context Logged alongside a palette failure
+	 *
+	 * @return array<string,mixed> EXIF / dimension fields plus `palette`
+	 */
+	protected function extractImageMetadata(string $absPath, array $context): array
+	{
+		$palette = [];
 		if ($this->settings['extractPalette'] ?? true) {
 			try {
-				$colorData = ['palette' => ImagePaletteGenerator::getPalette($absPath)];
-			} catch (\RuntimeException) {
-				$colorData = ['palette' => []];
+				$palette = ImagePaletteGenerator::getPalette($absPath);
+			} catch (\RuntimeException $e) {
+				$this->getLogger()->warning('Palette generation failed', $context + ['file' => $absPath, 'error' => $e->getMessage()]);
 			}
 		}
 
@@ -41,9 +61,10 @@ trait DerivesImageData
 				ImageMetaReader::stripLocationData($metaData);
 			}
 		} else {
+			// Always extract basic image dimensions (width/height)
 			$metaData = ImageMetaReader::getBasicImageData($absPath);
 		}
 
-		return array_merge($fileData, $metaData, $colorData);
+		return array_merge($metaData, ['palette' => $palette]);
 	}
 }

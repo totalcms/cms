@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Property\Service;
 
-use TotalCMS\Domain\Media\Service\ImageMetaReader;
-use TotalCMS\Domain\Media\Service\ImagePaletteGenerator;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\GalleryData;
 use TotalCMS\Domain\Property\Data\ImageData;
@@ -61,37 +59,13 @@ class GallerySaver extends FileSaver
 
 		$fileData  = $this->storage->saveFile($collection, $objectID, $property, $filePath);
 
-		$colorData = ['palette' => []];
+		$metaData = $this->extractImageMetadata($filePath, [
+			'collection' => $collection,
+			'objectID'   => $objectID,
+			'property'   => $property,
+		]);
 
-		// Safely generate color palette - never let this break the upload
-		if ($this->settings['extractPalette'] ?? true) {
-			try {
-				$colorData = ['palette' => ImagePaletteGenerator::getPalette($filePath)];
-			} catch (\RuntimeException $e) {
-				// Log palette generation failures
-				$this->getLogger()->warning('Palette generation failed', [
-					'collection' => $collection,
-					'objectID'   => $objectID,
-					'property'   => $property,
-					'file'       => $filePath,
-					'error'      => $e->getMessage(),
-				]);
-				// Continue with empty palette - upload should not fail
-				$colorData = ['palette' => []];
-			}
-		}
-
-		if ($this->settings['extractExif'] ?? true) {
-			$metaData = ImageMetaReader::getMetaData($filePath);
-			if (!($this->config->imageworks['gatherLocation'] ?? true)) {
-				ImageMetaReader::stripLocationData($metaData);
-			}
-		} else {
-			// Always extract basic image dimensions (width/height)
-			$metaData = ImageMetaReader::getBasicImageData($filePath);
-		}
-
-		$newImage          = array_merge($fileData, $metaData, $colorData);
+		$newImage          = array_merge($fileData, $metaData);
 		$gallery->images[] = new ImageData($newImage);
 
 		return $this->updateObject($collection, $objectID, $property, $gallery);

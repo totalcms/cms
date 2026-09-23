@@ -70,23 +70,9 @@ readonly class ObjectPatcher
 		$object     = $this->objectFetcher->fetchObject($collection, $id);
 		$objectData = $object->toArray();
 
-		$segments = $path === '' ? [] : explode('/', $path);
-		// Walk to (but not including) the leaf, creating slots as we go. Then
-		// merge into the leaf so partial updates preserve sibling fields.
-		$cursor =&$objectData[$parent];
-		if (!is_array($cursor)) {
-			$cursor = [];
-		}
-		$leaf = (string)array_pop($segments);
-		foreach ($segments as $segment) {
-			if (!isset($cursor[$segment]) || !is_array($cursor[$segment])) {
-				$cursor[$segment] = [];
-			}
-			$cursor =&$cursor[$segment];
-		}
-
-		$existing      = isset($cursor[$leaf]) && is_array($cursor[$leaf]) ? $cursor[$leaf] : [];
-		$cursor[$leaf] = array_merge($existing, $newData);
+		// Merge into the leaf so partial updates preserve sibling fields.
+		$slot = &NestedPath::slot($objectData, $parent, $path);
+		$slot = array_merge(is_array($slot) ? $slot : [], $newData);
 
 		return $this->objectUpdater->updateObject($collection, $id, $objectData, $silent);
 	}

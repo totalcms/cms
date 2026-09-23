@@ -20,8 +20,6 @@ readonly class CollectionZipper
 	/**
 	 * Create a zip file of a collection's data folder.
 	 *
-	 * @param string $collection The collection name
-	 *
 	 * @throws \RuntimeException If zip creation fails
 	 *
 	 * @return string The path to the created zip file
@@ -34,56 +32,10 @@ readonly class CollectionZipper
 			throw new \RuntimeException(sprintf('Collection directory not found: %s', $collectionPath));
 		}
 
-		// Create temporary zip file
-		$tempZipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'collection-' . $collection . '-' . uniqid('', true) . '.zip';
+		$zip = ZipBuilder::temp('collection-' . $collection);
+		$zip->addTree($collectionPath, $collection);
 
-		$zip    = new \ZipArchive();
-		$result = $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-
-		if ($result !== true) {
-			throw new \RuntimeException(sprintf('Failed to create zip file: %s (Error code: %d)', $tempZipPath, $result));
-		}
-
-		$this->addDirectoryToZip($zip, $collectionPath, $collection);
-
-		$zip->close();
-
-		return $tempZipPath;
-	}
-
-	/**
-	 * Recursively add directory contents to zip, excluding .cache folders.
-	 */
-	private function addDirectoryToZip(\ZipArchive $zip, string $realPath, string $zipPath): void
-	{
-		// Resolve to canonical path to match getRealPath() results
-		$canonicalPath = realpath($realPath);
-		if ($canonicalPath === false) {
-			return;
-		}
-
-		$iterator = new \RecursiveIteratorIterator(
-			new \RecursiveDirectoryIterator($canonicalPath, \RecursiveDirectoryIterator::SKIP_DOTS),
-			\RecursiveIteratorIterator::SELF_FIRST
-		);
-
-		foreach ($iterator as $file) {
-			$filePath     = $file->getRealPath();
-			$relativePath = substr((string)$filePath, strlen($canonicalPath) + 1);
-
-			// Skip .cache directories and their contents
-			if (str_contains($relativePath, '.cache')) {
-				continue;
-			}
-
-			$zipFilePath = $zipPath . DIRECTORY_SEPARATOR . $relativePath;
-
-			if ($file->isDir()) {
-				$zip->addEmptyDir($zipFilePath);
-			} elseif ($file->isFile()) {
-				$zip->addFile($filePath, $zipFilePath);
-			}
-		}
+		return $zip->close();
 	}
 
 	/**
