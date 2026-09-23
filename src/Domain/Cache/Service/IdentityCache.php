@@ -17,13 +17,13 @@ use TotalCMS\Domain\License\Data\LicenseData;
  * so it goes to the first *installed* memory backend and always to disk, where
  * it survives memory eviction and restarts.
  */
-final class IdentityCache
+final readonly class IdentityCache
 {
 	public const PREFIX_PASSWORD_RESET = 'password_reset';
 
 	public function __construct(
-		private readonly CacheBackends $backends,
-		private readonly string $prefix,
+		private CacheBackends $backends,
+		private string $prefix,
 	) {
 	}
 

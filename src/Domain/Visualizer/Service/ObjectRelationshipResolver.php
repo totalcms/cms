@@ -42,10 +42,10 @@ readonly class ObjectRelationshipResolver
 	 */
 	public function resolve(string $collection, string $id): array
 	{
-		$relations  = $this->analyzer->relationsFor($collection);
-		$nodes      = [];
-		$edges      = [];
-		$truncated  = false;
+		$relations                 = $this->analyzer->relationsFor($collection);
+		$nodes                     = [];
+		$edges                     = [];
+		$truncated                 = false;
 		[$labelFor, $titlePropFor] = $this->labelResolvers();
 
 		$focalKey         = $this->nodeKey($collection, $id);
@@ -92,10 +92,10 @@ readonly class ObjectRelationshipResolver
 	 */
 	public function resolveCollection(string $collection): array
 	{
-		$relations  = $this->analyzer->relationsFor($collection);
-		$nodes      = [];
-		$edges      = [];
-		$truncated  = false;
+		$relations                 = $this->analyzer->relationsFor($collection);
+		$nodes                     = [];
+		$edges                     = [];
+		$truncated                 = false;
 		[$labelFor, $titlePropFor] = $this->labelResolvers();
 
 		try {

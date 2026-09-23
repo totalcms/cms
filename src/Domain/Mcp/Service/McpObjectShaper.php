@@ -25,7 +25,7 @@ final readonly class McpObjectShaper
 
 	/**
 	 * @param array<string,mixed> $object
-	 * @param string|null         $format `markdown`, `html` or `text`; null leaves content as stored.
+	 * @param string|null         $format `markdown`, `html` or `text`; null leaves content as stored
 	 *
 	 * @return array<string,mixed>
 	 */

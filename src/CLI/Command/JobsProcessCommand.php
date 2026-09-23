@@ -53,7 +53,7 @@ class JobsProcessCommand extends BaseCommand
 		}
 
 		$lock = ProcessLock::open(PathUtils::absolutePath($this->totalcms->config->systemDir(), '.processJobs.lock'));
-		if ($lock === null) {
+		if (!$lock instanceof ProcessLock) {
 			return $this->outputError($input, $output, 'Unable to open lock file.');
 		}
 		if (!$lock->acquire()) {

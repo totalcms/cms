@@ -71,6 +71,6 @@ abstract class StreamAction
 
 		$mtime = $record->uploadDate->date !== '' ? (int)strtotime($record->uploadDate->date) : 0;
 
-		return $this->streamRenderer->stream($request, $response, $record->mime, $record->download, $file->size(), fn () => $file->open(), $mtime);
+		return $this->streamRenderer->stream($request, $response, $record->mime, $record->download, $file->size(), fn (): mixed => $file->open(), $mtime);
 	}
 }

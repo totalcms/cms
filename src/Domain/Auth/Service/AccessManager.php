@@ -149,7 +149,7 @@ class AccessManager
 	private function getSessionData(): void
 	{
 		$user = SessionUser::fromSession($this->session);
-		if ($user === null) {
+		if (!$user instanceof SessionUser) {
 			return;
 		}
 
@@ -159,7 +159,7 @@ class AccessManager
 
 	public function sessionHasUser(): bool
 	{
-		return SessionUser::fromSession($this->session) !== null;
+		return SessionUser::fromSession($this->session) instanceof SessionUser;
 	}
 
 	/**

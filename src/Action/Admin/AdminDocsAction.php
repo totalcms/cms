@@ -34,7 +34,7 @@ readonly class AdminDocsAction
 		$resource = $this->loader->resolve($page);
 
 		if ($resource->is(DocsResource::JSON)) {
-			$response->getBody()->write((string)(file_get_contents($resource->path) ?: '{}'));
+			$response->getBody()->write(file_get_contents($resource->path) ?: '{}');
 
 			return $response->withHeader('Content-Type', $resource->mime);
 		}

@@ -29,9 +29,9 @@ final readonly class RemoteFileDownloader
 	 *   `prefix` names the temp file `{prefix}-{unique}.{ext}` instead of
 	 *   keeping the URL's own filename.
 	 *
-	 * @throws \RuntimeException When the download fails or exceeds the size cap.
+	 * @throws \RuntimeException when the download fails or exceeds the size cap
 	 *
-	 * @return string Absolute path of the downloaded file.
+	 * @return string absolute path of the downloaded file
 	 */
 	public function download(string $url, array $options = []): string
 	{

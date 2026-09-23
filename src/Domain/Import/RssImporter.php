@@ -75,7 +75,7 @@ class RssImporter
 	/**
 	 * @param array{draft?: bool, userAgent?: string, fieldMap?: array<string,string>} $options
 	 *
-	 * @return int Entries queued for import.
+	 * @return int entries queued for import
 	 */
 	public function import(string $feedUrl, string $collection, array $options = []): int
 	{

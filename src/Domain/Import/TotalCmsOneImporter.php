@@ -6,11 +6,11 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Import\Concerns\QueuesImports;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Domain\Import\Concerns\QueuesImports;
 
 class TotalCmsOneImporter
 {

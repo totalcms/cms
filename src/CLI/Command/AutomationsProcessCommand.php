@@ -28,7 +28,7 @@ class AutomationsProcessCommand extends BaseCommand
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
 		$lock = ProcessLock::open($this->totalcms->config->systemDir() . '/.processAutomations.lock');
-		if ($lock === null || !$lock->acquire()) {
+		if (!$lock instanceof ProcessLock || !$lock->acquire()) {
 			$output->writeln('Automations processor already running.');
 
 			return Command::SUCCESS;

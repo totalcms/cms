@@ -29,9 +29,9 @@ final readonly class UploadAccessPolicy
 	}
 
 	/**
-	 * @param string $settingKey The property setting that switches protection on.
+	 * @param string $settingKey the property setting that switches protection on
 	 *
-	 * @return string|null The reason the request is refused, or null when it may proceed.
+	 * @return string|null the reason the request is refused, or null when it may proceed
 	 */
 	public function denialFor(string $collection, string $property, string $settingKey): ?string
 	{
@@ -47,7 +47,7 @@ final readonly class UploadAccessPolicy
 		}
 
 		$user = SessionUser::fromSession($this->session);
-		if ($user === null) {
+		if (!$user instanceof SessionUser) {
 			return 'Authentication required';
 		}
 

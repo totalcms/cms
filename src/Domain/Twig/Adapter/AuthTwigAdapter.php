@@ -317,7 +317,7 @@ readonly class AuthTwigAdapter
 
 		$user = SessionUser::fromSession($this->session);
 
-		return $user !== null && $this->userValidation->isSuperAdmin($user->id, $user->collection);
+		return $user instanceof SessionUser && $this->userValidation->isSuperAdmin($user->id, $user->collection);
 	}
 
 	/**

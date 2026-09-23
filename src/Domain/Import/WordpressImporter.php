@@ -4,12 +4,12 @@ namespace TotalCMS\Domain\Import;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Import\Concerns\QueuesImports;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\RemoteFileDownloader;
-use TotalCMS\Domain\Import\Concerns\QueuesImports;
 
 class WordpressImporter
 {

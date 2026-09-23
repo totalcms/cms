@@ -13,9 +13,9 @@ use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
-use TotalCMS\Support\RemoteFileDownloader;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
+use TotalCMS\Support\RemoteFileDownloader;
 
 class WordpressImporterTest extends TestCase
 {

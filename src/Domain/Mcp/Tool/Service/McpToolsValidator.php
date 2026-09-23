@@ -37,7 +37,6 @@ final readonly class McpToolsValidator
 	) {
 	}
 
-
 	/**
 	 * Validate and normalise `mcp.tools`.
 	 *

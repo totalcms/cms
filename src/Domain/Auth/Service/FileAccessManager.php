@@ -66,7 +66,7 @@ class FileAccessManager
 
 	public function sessionHasUser(): bool
 	{
-		return SessionUser::fromSession($this->session) !== null;
+		return SessionUser::fromSession($this->session) instanceof SessionUser;
 	}
 
 	public function isProtectedByGroups(): bool
@@ -78,7 +78,7 @@ class FileAccessManager
 	public function userHasAccess(): bool
 	{
 		$user = SessionUser::fromSession($this->session);
-		if ($user === null) {
+		if (!$user instanceof SessionUser) {
 			return false;
 		}
 
@@ -124,7 +124,7 @@ class FileAccessManager
 	public function logDownload(string $collection, string $objectId, string $property, string $filename, ?string $subpath = null): void
 	{
 		$user = SessionUser::fromSession($this->session);
-		if ($user === null) {
+		if (!$user instanceof SessionUser) {
 			return;
 		}
 
@@ -148,6 +148,6 @@ class FileAccessManager
 	{
 		$user = SessionUser::fromSession($this->session);
 
-		return $user !== null && $this->userValidator->isSuperAdmin($user->id, $user->collection);
+		return $user instanceof SessionUser && $this->userValidator->isSuperAdmin($user->id, $user->collection);
 	}
 }

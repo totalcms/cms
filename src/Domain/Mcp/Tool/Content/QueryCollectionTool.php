@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Tool\Content;
 
-use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;

@@ -94,11 +94,11 @@ final class BasePathTest extends TestCase
 	public static function stripProvider(): array
 	{
 		return [
-			'root install'          => ['', '/admin/x', '/admin/x'],
-			'subfolder'             => ['/site', '/site/admin/x', '/admin/x'],
+			'root install'           => ['', '/admin/x', '/admin/x'],
+			'subfolder'              => ['/site', '/site/admin/x', '/admin/x'],
 			'the mount point itself' => ['/site', '/site', '/'],
 			'path outside the mount' => ['/site', '/other/admin/x', '/other/admin/x'],
-			'nested subfolder'      => ['/a/b', '/a/b/setup', '/setup'],
+			'nested subfolder'       => ['/a/b', '/a/b/setup', '/setup'],
 		];
 	}
 }

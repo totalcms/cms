@@ -12,9 +12,9 @@ final readonly class FeedEntry
 {
 	/**
 	 * @param list<string> $categories
-	 * @param string       $date       ISO 8601, or '' when the feed gave none.
-	 * @param string       $content    The full body ('' when the feed only had a summary).
-	 * @param string       $summary    The short form ('' when the feed only had a body).
+	 * @param string       $date       ISO 8601, or '' when the feed gave none
+	 * @param string       $content    the full body ('' when the feed only had a summary)
+	 * @param string       $summary    the short form ('' when the feed only had a body)
 	 */
 	public function __construct(
 		public string $title,

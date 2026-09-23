@@ -38,9 +38,9 @@ final readonly class DeckItemImporter
 
 	/**
 	 * @param array<string, array<string,mixed>> $items  id => item
-	 * @param bool                               $update Merge into items that already exist instead of skipping them.
+	 * @param bool                               $update merge into items that already exist instead of skipping them
 	 *
-	 * @throws \InvalidArgumentException When $property is not a deck.
+	 * @throws \InvalidArgumentException when $property is not a deck
 	 */
 	public function importItems(string $collection, string $objectId, string $property, array $items, bool $update, LoggerInterface $logger): int
 	{

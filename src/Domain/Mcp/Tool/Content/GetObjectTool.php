@@ -6,7 +6,6 @@ namespace TotalCMS\Domain\Mcp\Tool\Content;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
-use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpObjectShaper;

@@ -21,10 +21,10 @@ use TotalCMS\Domain\Property\Data\FileData;
 final readonly class PropertyFile
 {
 	/**
-	 * @param string      $name          The filename as the URL named it (depot) or as the nested record carries it.
-	 * @param string|null $subpath       Depot subfolder (the `?path=` query), depot entries only.
-	 * @param string|null $nestedSubpath The card/deck path under the property, nested files only.
-	 * @param bool        $missing       A nested path with no file record behind it (a depot subfolder that looked nested).
+	 * @param string      $name          the filename as the URL named it (depot) or as the nested record carries it
+	 * @param string|null $subpath       depot subfolder (the `?path=` query), depot entries only
+	 * @param string|null $nestedSubpath the card/deck path under the property, nested files only
+	 * @param bool        $missing       a nested path with no file record behind it (a depot subfolder that looked nested)
 	 */
 	public function __construct(
 		private FileFetcher $fileFetcher,

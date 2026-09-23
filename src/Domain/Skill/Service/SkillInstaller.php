@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Skill\Service;
 
-use TotalCMS\Support\Version;
 use TotalCMS\Infrastructure\Filesystem\FileUtils;
+use TotalCMS\Support\Version;
 
 /**
  * Installs (or refreshes) the bundled Total CMS agent skill into a project's

@@ -89,7 +89,7 @@ enum EditionFeature: string
 	/**
 	 * The sentence shown when this feature is gated off.
 	 *
-	 * @param Edition|null $currentEdition When given, the running edition is appended (dev environments).
+	 * @param Edition|null $currentEdition when given, the running edition is appended (dev environments)
 	 */
 	public function deniedMessage(?Edition $currentEdition = null): string
 	{

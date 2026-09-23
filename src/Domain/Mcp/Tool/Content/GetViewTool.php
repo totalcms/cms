@@ -68,7 +68,6 @@ readonly class GetViewTool
 		$view    = $this->fetchView($id);
 
 		$level  = McpAccessLevel::fromString((string)($view['mcp']['access'] ?? 'admin'));
-		$access = $level->value;
 		if (!$level->allows($persona)) {
 			throw new ToolCallException(sprintf(
 				'View "%s" is not accessible to the current caller. Use list_views to see what you can fetch.',

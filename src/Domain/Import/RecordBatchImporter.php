@@ -30,7 +30,7 @@ use TotalCMS\Domain\Property\Data\SlugData;
  */
 final class RecordBatchImporter
 {
-	private string $collection = '';
+	private string $collection      = '';
 	private ?string $lastSkipReason = null;
 
 	public function __construct(
@@ -43,8 +43,8 @@ final class RecordBatchImporter
 
 	/**
 	 * @param list<array<string,mixed>> $records
-	 * @param bool                      $update    Update existing objects instead of creating new ones.
-	 * @param bool                      $queueJobs Queue a job per record instead of writing directly.
+	 * @param bool                      $update    update existing objects instead of creating new ones
+	 * @param bool                      $queueJobs queue a job per record instead of writing directly
 	 */
 	public function import(string $collection, array $records, bool $update, bool $queueJobs, LoggerInterface $logger): ImportBatchResult
 	{

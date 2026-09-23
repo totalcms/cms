@@ -51,7 +51,7 @@ final readonly class CronJobsAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$lock = ProcessLock::open(PathUtils::absolutePath($this->config->datadir, self::LOCK_FILE));
-		if ($lock === null) {
+		if (!$lock instanceof ProcessLock) {
 			return $this->renderer->json($response, ['skipped' => 'no-lock-file'], 200);
 		}
 		if (!$lock->acquire()) {

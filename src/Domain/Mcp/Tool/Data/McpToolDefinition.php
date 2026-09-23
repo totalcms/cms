@@ -7,8 +7,8 @@ namespace TotalCMS\Domain\Mcp\Tool\Data;
 use Closure;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
-use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
 /**
  * Value object describing a single MCP tool.

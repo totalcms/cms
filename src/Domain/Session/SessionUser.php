@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Session;
 
 use Odan\Session\SessionInterface;
+use TotalCMS\Domain\Auth\Service\SessionLogin;
 
 /**
  * The user a session is logged in as: the AUTH_USER / AUTH_COLLECTION pair
- * that {@see \TotalCMS\Domain\Auth\Service\SessionLogin} writes. A session
+ * that {@see SessionLogin} writes. A session
  * without a user id is anonymous. The collection may be empty — the
  * validators treat that as the configured default auth collection.
  */

@@ -18,9 +18,9 @@ class ImageField extends UploadField
 	{
 		$imageData = is_array($this->value) ? $this->value : []; // Image data is stored in the value field
 
-		$api        = $this->form->baseApi();
-		$imageworks = ['w' => self::PREVIEW_WIDTH, 'h' => self::PREVIEW_HEIGHT, 'q' => self::PREVIEW_QUALITY];
-		$options    = ['collection' => $this->form->collection, 'property' => $this->propertyPath()];
+		$api          = $this->form->baseApi();
+		$imageworks   = ['w' => self::PREVIEW_WIDTH, 'h' => self::PREVIEW_HEIGHT, 'q' => self::PREVIEW_QUALITY];
+		$options      = ['collection' => $this->form->collection, 'property' => $this->propertyPath()];
 		$id           = $this->form->id;
 
 		$imagePath = MediaTwigAdapter::buildImageworksAPI($api, $id, $imageData, $imageworks, $options);

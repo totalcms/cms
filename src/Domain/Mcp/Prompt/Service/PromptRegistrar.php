@@ -8,8 +8,8 @@ use Mcp\Schema\Prompt;
 use Mcp\Server\Builder;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Handler\ExtensionPromptHandler;
 

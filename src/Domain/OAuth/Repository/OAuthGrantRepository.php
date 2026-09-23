@@ -70,7 +70,7 @@ final class OAuthGrantRepository extends JsonListRepository
 	 * Drop every grant whose `expires_at` has passed (or is missing or
 	 * unreadable). The file is written only when something was dropped.
 	 *
-	 * @return int Grants removed.
+	 * @return int grants removed
 	 */
 	public function pruneExpired(): int
 	{

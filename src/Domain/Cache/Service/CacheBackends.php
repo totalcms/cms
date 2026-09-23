@@ -14,13 +14,13 @@ namespace TotalCMS\Domain\Cache\Service;
  * config says — the license verdict, which would otherwise hit the license
  * server on every request.
  */
-final class CacheBackends
+final readonly class CacheBackends
 {
 	public function __construct(
-		private readonly APCuService $apcu,
-		private readonly RedisService $redis,
-		private readonly MemcachedService $memcached,
-		private readonly FilesystemService $filesystem,
+		private APCuService $apcu,
+		private RedisService $redis,
+		private MemcachedService $memcached,
+		private FilesystemService $filesystem,
 	) {
 	}
 

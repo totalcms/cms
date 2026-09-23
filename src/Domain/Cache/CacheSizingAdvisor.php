@@ -7,9 +7,9 @@ use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\RedisService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
-use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * Cache sizing advisor that analyzes CMS data sizes and provides

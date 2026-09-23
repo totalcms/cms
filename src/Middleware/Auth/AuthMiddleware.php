@@ -109,5 +109,4 @@ readonly class AuthMiddleware implements MiddlewareInterface
 	{
 		return $this->redirector->toRoute($request, 'denied');
 	}
-
 }

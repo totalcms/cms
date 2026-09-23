@@ -80,7 +80,7 @@ class PersistentLoginService
 	public function createPersistentToken(): ?string
 	{
 		$user = SessionUser::fromSession($this->session);
-		if ($user === null || $user->collection === '') {
+		if (!$user instanceof SessionUser || $user->collection === '') {
 			$this->logger->debug('Cannot create persistent token: no user or collection in session');
 
 			return null;

@@ -9,8 +9,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Infrastructure\Filesystem\FileUtils;
+use TotalCMS\Renderer\JsonRenderer;
 
 /**
  * Guards against the PHP `post_max_size` overflow.
@@ -84,5 +84,4 @@ readonly class PostMaxSizeMiddleware implements MiddlewareInterface
 
 		return $contentLength > $postMax && $_POST === [] && $_FILES === [];
 	}
-
 }

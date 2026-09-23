@@ -14,7 +14,6 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Property\Data\DeckData;
 use TotalCMS\Domain\Property\Data\StringData;
-use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 // Merging imported items into a deck — id resolution, skip-existing unless
@@ -55,7 +54,9 @@ final class DeckItemImporterTest extends TestCase
 			}));
 		$fired      = 0;
 		$dispatcher = new EventDispatcher(new NullLogger());
-		$dispatcher->listen(CoreEvent::IMPORT_UPDATED, function () use (&$fired): void { $fired++; });
+		$dispatcher->listen(CoreEvent::IMPORT_UPDATED, function () use (&$fired): void {
+			$fired++;
+		});
 
 		$importer = new DeckItemImporter($fetcher, $updater, $this->createMock(SchemaFetcher::class), $dispatcher);
 		$count    = $importer->importItems('widgets', 'w1', 'mydeck', ['one' => ['label' => 'New'], 'two' => ['label' => 'Two']], update: true, logger: new NullLogger());

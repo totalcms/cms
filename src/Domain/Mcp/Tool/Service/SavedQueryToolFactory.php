@@ -8,8 +8,8 @@ use Psr\Container\ContainerInterface;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
-use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
+use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\SavedQuery\SavedQueryTool;
 

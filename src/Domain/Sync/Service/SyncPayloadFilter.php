@@ -66,7 +66,7 @@ final class SyncPayloadFilter
 		$payload = $this->stripCollectionMeta($payload, PlaygroundData::COLLECTION_ID);
 
 		if ($collectionMetaFilter !== null) {
-			$payload = $this->filterCollectionMeta($payload, fn (string $id): bool => in_array($id, $collectionMetaFilter, true));
+			return $this->filterCollectionMeta($payload, fn (string $id): bool => in_array($id, $collectionMetaFilter, true));
 		}
 
 		return $payload;

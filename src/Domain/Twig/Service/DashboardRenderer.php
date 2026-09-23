@@ -21,8 +21,8 @@ use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
-use TotalCMS\Support\Config;
 use TotalCMS\Infrastructure\Filesystem\FileUtils;
+use TotalCMS\Support\Config;
 
 /**
  * The admin dashboard's data panels behind `cms.admin.dashboard*()`: stats,

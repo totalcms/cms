@@ -265,7 +265,7 @@ class PersonaContext
 	 * later check ({@see canReadCollection()}) because most tools want it to
 	 * fail as an opaque "not found".
 	 *
-	 * @param string $hint What the caller can list with list_collections: "query", "describe", "access".
+	 * @param string $hint what the caller can list with list_collections: "query", "describe", "access"
 	 *
 	 * @throws ToolCallException
 	 */

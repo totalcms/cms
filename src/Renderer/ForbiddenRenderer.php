@@ -45,7 +45,7 @@ final readonly class ForbiddenRenderer
 	}
 
 	/**
-	 * @param string|null $details Extra diagnostics shown on the admin page only (dev environments).
+	 * @param string|null $details extra diagnostics shown on the admin page only (dev environments)
 	 */
 	public function forbidden(ServerRequestInterface $request, string $message, ?string $details = null): ResponseInterface
 	{

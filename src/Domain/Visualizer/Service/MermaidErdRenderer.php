@@ -34,7 +34,7 @@ final class MermaidErdRenderer
 	 */
 	public function render(array $graph): string
 	{
-		$this->ids = new MermaidIdAllocator();
+		$this->ids       = new MermaidIdAllocator();
 		$this->edgeTypes = [];
 
 		$lines = ['erDiagram'];

@@ -1,5 +1,6 @@
 <?php
 
+use DI\Container;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Odan\Session\PhpSession;
@@ -168,7 +169,7 @@ function bootstrap()
 	// Guzzle; swap in the offline fake before anything resolves it. A test that
 	// wants a canned response overrides this on its own container.
 	$container = $app->getContainer();
-	if ($container instanceof \DI\Container) {
+	if ($container instanceof Container) {
 		$container->set(HttpClientInterface::class, new OfflineHttpClient());
 	}
 

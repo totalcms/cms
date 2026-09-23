@@ -90,7 +90,7 @@ abstract class JsonListRepository
 	 *
 	 * @param callable(array<string,mixed>): bool $keep
 	 *
-	 * @return int Records removed.
+	 * @return int records removed
 	 */
 	protected function removeWhere(callable $keep): int
 	{
@@ -107,7 +107,7 @@ abstract class JsonListRepository
 	}
 
 	/**
-	 * @param callable(list<array<string,mixed>>): (list<array<string,mixed>>|null) $fn Returns the new list, or null to leave the file alone.
+	 * @param callable(list<array<string,mixed>>): (list<array<string,mixed>>|null) $fn returns the new list, or null to leave the file alone
 	 */
 	private function write(callable $fn): void
 	{

@@ -6,7 +6,6 @@ namespace TotalCMS\Domain\Mcp\Tool\Discovery;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;

@@ -12,9 +12,9 @@ use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Media\Service\ImagickSupport;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Domain\Security\Request\CloudflareIpRanges;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
-use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * Run tests against the system to.

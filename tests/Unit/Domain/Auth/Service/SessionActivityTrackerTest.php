@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Auth\Service;
 
+use Odan\Session\FlashInterface;
 use Odan\Session\SessionInterface;
 use Odan\Session\SessionManagerInterface;
 use PHPUnit\Framework\TestCase;
@@ -27,23 +28,87 @@ final class SessionActivityTrackerTest extends TestCase
 			public array $data       = [];
 			public int $regenerated  = 0;
 			public int $destroyed    = 0;
-			public function get(string $key, mixed $default = null): mixed { return $this->data[$key] ?? $default; }
-			public function all(): array { return $this->data; }
-			public function set(string $key, mixed $value): void { $this->data[$key] = $value; }
-			public function setValues(array $values): void { $this->data = $values + $this->data; }
-			public function has(string $key): bool { return array_key_exists($key, $this->data); }
-			public function delete(string $key): void { unset($this->data[$key]); }
-			public function clear(): void { $this->data = []; }
-			public function getFlash(): \Odan\Session\FlashInterface { throw new \LogicException('not used'); }
-			public function start(): void {}
-			public function isStarted(): bool { return true; }
-			public function regenerateId(): void { $this->regenerated++; }
-			public function destroy(): void { $this->destroyed++; }
-			public function getId(): string { return 'id'; }
-			public function setId(string $id): void {}
-			public function getName(): string { return 'n'; }
-			public function setName(string $name): void {}
-			public function save(): void {}
+
+			public function get(string $key, mixed $default = null): mixed
+			{
+				return $this->data[$key] ?? $default;
+			}
+
+			public function all(): array
+			{
+				return $this->data;
+			}
+
+			public function set(string $key, mixed $value): void
+			{
+				$this->data[$key] = $value;
+			}
+
+			public function setValues(array $values): void
+			{
+				$this->data = $values + $this->data;
+			}
+
+			public function has(string $key): bool
+			{
+				return array_key_exists($key, $this->data);
+			}
+
+			public function delete(string $key): void
+			{
+				unset($this->data[$key]);
+			}
+
+			public function clear(): void
+			{
+				$this->data = [];
+			}
+
+			public function getFlash(): FlashInterface
+			{
+				throw new \LogicException('not used');
+			}
+
+			public function start(): void
+			{
+			}
+
+			public function isStarted(): bool
+			{
+				return true;
+			}
+
+			public function regenerateId(): void
+			{
+				$this->regenerated++;
+			}
+
+			public function destroy(): void
+			{
+				$this->destroyed++;
+			}
+
+			public function getId(): string
+			{
+				return 'id';
+			}
+
+			public function setId(string $id): void
+			{
+			}
+
+			public function getName(): string
+			{
+				return 'n';
+			}
+
+			public function setName(string $name): void
+			{
+			}
+
+			public function save(): void
+			{
+			}
 		};
 		if ($lastActivity !== null) {
 			$session->set(SessionKeys::LAST_ACTIVITY, $lastActivity);

@@ -5,11 +5,12 @@ namespace TotalCMS\Domain\Import;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Import\Concerns\QueuesImports;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
+use Webuni\FrontMatter\Document;
 use Webuni\FrontMatter\FrontMatter;
-use TotalCMS\Domain\Import\Concerns\QueuesImports;
 
 class AlloyImporter
 {
@@ -33,7 +34,7 @@ class AlloyImporter
 	/**
 	 * A Markdown file split into its front matter and document.
 	 *
-	 * @return array{0: \Webuni\FrontMatter\Document, 1: array<string,mixed>}
+	 * @return array{0: Document, 1: array<string,mixed>}
 	 */
 	private function readDocument(string $file): array
 	{

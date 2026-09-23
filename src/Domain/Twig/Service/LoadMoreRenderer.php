@@ -183,7 +183,7 @@ class LoadMoreRenderer
 		}
 
 		return ['format' => 'html', 'template' => $template]
-			+ self::passThrough($options, ['limit', 'offset', 'sort', 'include', 'exclude', 'search', 'mode']);
+			+ $this->passThrough($options, ['limit', 'offset', 'sort', 'include', 'exclude', 'search', 'mode']);
 	}
 
 	/**
@@ -194,7 +194,7 @@ class LoadMoreRenderer
 	 *
 	 * @return array<string,string>
 	 */
-	private static function passThrough(array $options, array $keys): array
+	private function passThrough(array $options, array $keys): array
 	{
 		$params = [];
 		foreach ($keys as $key) {
@@ -332,7 +332,7 @@ class LoadMoreRenderer
 			'target'   => $target,
 		];
 
-		$queryParams += self::passThrough($options, ['sort', 'include', 'exclude', 'search']);
+		$queryParams += $this->passThrough($options, ['sort', 'include', 'exclude', 'search']);
 
 		// Pass buttonLabel and buttonClass through so the OOB chain preserves them
 		if ($buttonLabel !== 'Load More') {
@@ -427,7 +427,7 @@ class LoadMoreRenderer
 	 */
 	private function buildLoadParams(array $options, int $limit): array
 	{
-		return ['limit' => (string)$limit, 'offset' => '0'] + self::passThrough($options, ['sort', 'include', 'exclude', 'search']);
+		return ['limit' => (string)$limit, 'offset' => '0'] + $this->passThrough($options, ['sort', 'include', 'exclude', 'search']);
 	}
 
 	/**
@@ -452,7 +452,7 @@ class LoadMoreRenderer
 			'limit'    => (string)$limit,
 		];
 
-		$queryParams += self::passThrough($options, ['sort', 'include', 'exclude', 'search']);
+		$queryParams += $this->passThrough($options, ['sort', 'include', 'exclude', 'search']);
 
 		// Pass trigger, buttonLabel, and buttonClass through so the chain preserves them
 		if ($trigger !== 'revealed') {

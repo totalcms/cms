@@ -6,7 +6,6 @@ namespace TotalCMS\Domain\Mcp\Tool\Compat;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;

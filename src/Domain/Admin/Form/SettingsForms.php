@@ -87,7 +87,7 @@ final readonly class SettingsForms
 			}
 
 			// Build field options
-			$fieldSettings = self::fieldSettingsFor($fieldType, $fieldSchema, $currentValue);
+			$fieldSettings = $this->fieldSettingsFor($fieldType, $fieldSchema, $currentValue);
 
 			// Merge schema-reference keys into settings for fields that hydrate from another schema
 			if (in_array($fieldType, ['deck', 'deckTable', 'card'], true)) {
@@ -99,7 +99,6 @@ final readonly class SettingsForms
 					$fieldSettings['settings']['deckItemLabel'] = $fieldSchema['deckItemLabel'];
 				}
 			}
-
 
 			// Special handling for timezone field
 			if (isset($fieldSchema['settings']['timezoneOptions']) && $fieldSchema['settings']['timezoneOptions']) {
@@ -219,8 +218,7 @@ final readonly class SettingsForms
 				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 			}
 
-			$fieldSettings = self::fieldSettingsFor($fieldType, $fieldSchema, $currentValue);
-
+			$fieldSettings = $this->fieldSettingsFor($fieldType, $fieldSchema, $currentValue);
 
 			$formfields .= $this->forms->field($fieldType, $fieldName, $fieldSettings);
 		}
@@ -236,7 +234,7 @@ final readonly class SettingsForms
 	 *
 	 * @return array<string,mixed>
 	 */
-	private static function fieldSettingsFor(string $fieldType, array $fieldSchema, mixed $currentValue): array
+	private function fieldSettingsFor(string $fieldType, array $fieldSchema, mixed $currentValue): array
 	{
 		$fieldSettings = [
 			'field'       => $fieldType,

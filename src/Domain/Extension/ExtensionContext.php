@@ -566,7 +566,7 @@ final class ExtensionContext
 		bool $preload  = false,
 		?string $version  = null,
 	): void {
-		$this->adminAssets[] = self::assetRecord($type, $path, $position, $module, $preload, $version);
+		$this->adminAssets[] = $this->assetRecord($type, $path, $position, $module, $preload, $version);
 	}
 
 	/**
@@ -592,7 +592,7 @@ final class ExtensionContext
 		bool $preload  = false,
 		?string $version  = null,
 	): void {
-		$this->frontendAssets[] = self::assetRecord($type, $path, $position, $module, $preload, $version);
+		$this->frontendAssets[] = $this->assetRecord($type, $path, $position, $module, $preload, $version);
 	}
 
 	/**
@@ -600,7 +600,7 @@ final class ExtensionContext
 	 *
 	 * @return array{type: string, path: string, position: string|null, module: bool, preload: bool, version: string|null}
 	 */
-	private static function assetRecord(string $type, string $path, ?string $position, bool $module, bool $preload, ?string $version): array
+	private function assetRecord(string $type, string $path, ?string $position, bool $module, bool $preload, ?string $version): array
 	{
 		return [
 			'type'     => $type,

@@ -11,9 +11,9 @@ use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Template\Service\TemplateMigrationService;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Support\OperationResult;
 use TotalCMS\Support\PathResolver;
-use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 readonly class StarterService
 {

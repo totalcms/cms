@@ -34,7 +34,7 @@ readonly class SyncTransport
 	 */
 	public function post(string $url, string $key, string $endpoint, JumpStartData $payload): array
 	{
-		$response = $this->httpClient->request('POST', self::base($url) . $endpoint, [
+		$response = $this->httpClient->request('POST', $this->base($url) . $endpoint, [
 			'headers' => array_merge($this->headers($key), ['Content-Type: application/json']),
 			'body'    => $payload->toJson(),
 			'timeout' => 60,
@@ -66,10 +66,10 @@ readonly class SyncTransport
 	public function fetchExport(string $url, string $key): array
 	{
 		$options  = ['headers' => $this->headers($key), 'timeout' => 60];
-		$response = $this->httpClient->request('GET', self::base($url) . self::EXPORT_ROUTE, $options);
+		$response = $this->httpClient->request('GET', $this->base($url) . self::EXPORT_ROUTE, $options);
 
 		if ($response->statusCode >= 400 && $response->statusCode < 500) {
-			$response = $this->httpClient->request('GET', self::base($url) . self::LEGACY_EXPORT_ROUTE, $options);
+			$response = $this->httpClient->request('GET', $this->base($url) . self::LEGACY_EXPORT_ROUTE, $options);
 		}
 
 		if ($response->statusCode >= 400) {
@@ -119,7 +119,7 @@ readonly class SyncTransport
 	}
 
 	/** A trailing slash on the configured URL must not produce `//api`. */
-	private static function base(string $url): string
+	private function base(string $url): string
 	{
 		return rtrim($url, '/');
 	}

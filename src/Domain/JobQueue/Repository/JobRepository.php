@@ -520,6 +520,7 @@ class JobRepository
 
 		return $jobs;
 	}
+
 	public function resetInProgressJobs(): int
 	{
 		$inProgressJobs = $this->fetchInProgressJobs();

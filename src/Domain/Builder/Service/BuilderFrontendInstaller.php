@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Builder\Service;
 
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Support\OperationResult;
 use TotalCMS\Support\PathResolver;
-use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * Installs a Vite-based frontend asset pipeline scaffold into a project's

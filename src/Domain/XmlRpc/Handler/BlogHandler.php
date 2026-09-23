@@ -167,7 +167,7 @@ readonly class BlogHandler implements MethodHandler
 	 */
 	public function getOptions(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authorize($params, 'GET');
+		$this->auth->authorize($params, 'GET');
 
 		$base = rtrim($this->config->api, '/');
 

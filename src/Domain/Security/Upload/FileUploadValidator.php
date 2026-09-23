@@ -288,5 +288,4 @@ class FileUploadValidator
 			default               => 'Unknown upload error',
 		};
 	}
-
 }

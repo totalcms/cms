@@ -288,7 +288,7 @@ readonly class FilesystemService implements CacheInterface
 			return false;
 		}
 
-		$segments = explode(':', $pattern, 3);
+		$segments  = explode(':', $pattern, 3);
 		$fixedType = count($segments) === 3 && !str_contains($segments[0] . $segments[1], '*');
 
 		if ($fixedType && $segments[2] === '*') {

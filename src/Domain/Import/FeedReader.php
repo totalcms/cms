@@ -24,7 +24,7 @@ final class FeedReader
 	}
 
 	/**
-	 * @return array<string,mixed>|null The decoded document when $raw is a JSON Feed.
+	 * @return array<string,mixed>|null the decoded document when $raw is a JSON Feed
 	 */
 	private function decodeJsonFeed(string $raw): ?array
 	{

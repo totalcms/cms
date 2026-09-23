@@ -21,15 +21,15 @@ final class UploadAccessPolicyTest extends TestCase
 {
 	private function policy(array $groups, array $settings, array $session, bool $superAdmin = false, bool $hasAccess = true): UploadAccessPolicy
 	{
-		$collection = new CollectionData();
+		$collection         = new CollectionData();
 		$collection->id     = 'members';
 		$collection->groups = $groups;
-		$collections = $this->createMock(CollectionFetcher::class);
+		$collections        = $this->createMock(CollectionFetcher::class);
 		$collections->method('fetchCollection')->willReturn($collection);
 
 		$schema             = new SchemaData();
 		$schema->properties = ['doc' => ['field' => 'file', 'settings' => $settings]];
-		$schemas = $this->createMock(SchemaFetcher::class);
+		$schemas            = $this->createMock(SchemaFetcher::class);
 		$schemas->method('fetchSchemaForCollection')->willReturn($schema);
 
 		$validator = $this->createMock(UserValidationService::class);

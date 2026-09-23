@@ -40,7 +40,7 @@ final readonly class FileStreamRenderer
 	}
 
 	/**
-	 * @param \Closure(): (resource|string) $open  Opens the file; called once, after the range is known.
+	 * @param \Closure(): (resource|string) $open  opens the file; called once, after the range is known
 	 * @param int|null                      $mtime Last modification time. When known, Last-Modified and an
 	 *                                             ETag are sent — Safari uses them to confirm the chunks it
 	 *                                             seeks through belong to one file revision, and abandons

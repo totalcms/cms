@@ -33,8 +33,8 @@ final readonly class PropertyFileResolver
 	}
 
 	/**
-	 * @param string      $rawPath      The `{path}` route argument, URL-encoded as it arrived.
-	 * @param string|null $depotSubpath The `?path=` query: the depot subfolder, when any.
+	 * @param string      $rawPath      the `{path}` route argument, URL-encoded as it arrived
+	 * @param string|null $depotSubpath the `?path=` query: the depot subfolder, when any
 	 */
 	public function depotOrNested(string $collection, string $id, string $property, string $rawPath, ?string $depotSubpath): PropertyFile
 	{

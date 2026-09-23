@@ -10,7 +10,6 @@ use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\XmlRpc\Service\BlogRegistry;
 use TotalCMS\Domain\XmlRpc\Service\PostMapper;
 use TotalCMS\Domain\XmlRpc\Service\XmlRpcAuth;
-use TotalCMS\Domain\XmlRpc\Transport\XmlRpcFault;
 
 /**
  * Read methods — what makes a client open showing your existing posts rather
