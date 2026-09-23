@@ -8,13 +8,10 @@ use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Service\AuthMailer;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
-use TotalCMS\Domain\Mailer\Service\EmailSender;
-use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Translation\TranslationService;
-use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Support\Config;
-use TotalCMS\Support\OperationResult;
 
 /**
  * Process a resend-verification request.
@@ -28,9 +25,7 @@ readonly class ResendVerificationSubmitAction
 {
 	public function __construct(
 		private EmailVerificationService $verificationService,
-		private EmailService $emailService,
-		private EmailSender $emailSender,
-		private TwigEngine $twigEngine,
+		private AuthMailer $mailer,
 		private Config $config,
 		private PhpSession $session,
 		private TranslationService $translator,
@@ -70,54 +65,12 @@ readonly class ResendVerificationSubmitAction
 		// returns a generic success WITHOUT a token, so this branch naturally
 		// skips email sending in those cases.
 		if ($result->success && isset($result->data['token'])) {
-			$this->sendVerificationEmail($email, $collection, (string)$result->data['token']);
+			$this->mailer->sendVerification($email, (string)$result->data['token'], $collection);
 		}
 
 		// Always show the same success message regardless of outcome.
 		$flash->add('success', $this->translator->trans('flash.resend_verification_sent'));
 
 		return $response->withStatus(302)->withHeader('Location', $url);
-	}
-
-	private function sendVerificationEmail(string $email, string $collection, string $token): void
-	{
-		$verifyUrl     = $this->config->url . $this->config->api . '/admin/verify-email/' . $token;
-		$expiryMinutes = (int)($this->config->auth['verificationTokenExpiry'] ?? 1440);
-
-		$mailerId = (string)($this->config->auth['verificationMailerId'] ?? '');
-
-		if ($mailerId !== '') {
-			$this->emailService->sendEmail($mailerId, [
-				'email'         => $email,
-				'name'          => '',
-				'verifyUrl'     => $verifyUrl,
-				'expiryMinutes' => $expiryMinutes,
-				'collection'    => $collection,
-			]);
-
-			return;
-		}
-
-		$this->sendDefaultVerificationEmail($email, $verifyUrl, $expiryMinutes);
-	}
-
-	private function sendDefaultVerificationEmail(string $email, string $verifyUrl, int $expiryMinutes): OperationResult
-	{
-		try {
-			$htmlBody = $this->twigEngine->render('email/verify-email.twig', [
-				'name'          => '',
-				'verifyUrl'     => $verifyUrl,
-				'expiryMinutes' => $expiryMinutes,
-			]);
-
-			return $this->emailSender->send([
-				'to'       => $email,
-				'toName'   => '',
-				'subject'  => 'Verify Your Email',
-				'bodyHtml' => $htmlBody,
-			]);
-		} catch (\Exception $e) {
-			return OperationResult::failure('Failed to send verification email: ' . $e->getMessage());
-		}
 	}
 }

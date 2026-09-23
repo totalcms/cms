@@ -9,18 +9,15 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpForbiddenException;
 use TotalCMS\Action\Object\ObjectSaveAction;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
+use TotalCMS\Domain\Auth\Service\AuthMailer;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Mailer\Service\EmailSender;
-use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
-use TotalCMS\Support\OperationResult;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 /**
@@ -67,9 +64,7 @@ readonly class AuthRegisterSubmitAction
 		private AuthFieldPolicy $authFieldPolicy,
 		private CollectionFetcher $collectionFetcher,
 		private EmailVerificationService $verificationService,
-		private EmailService $emailService,
-		private EmailSender $emailSender,
-		private TwigEngine $twigEngine,
+		private AuthMailer $mailer,
 		private Config $config,
 	) {
 	}
@@ -156,10 +151,9 @@ readonly class AuthRegisterSubmitAction
 	}
 
 	/**
-	 * Send a verification email. Failures are logged inside the service layer
-	 * and do not bubble up — the account exists either way, and the user can
-	 * be re-sent a link via the forgot-password flow (which works for inactive
-	 * accounts because it only validates the token, not the user state).
+	 * Send a verification email. Failures do not bubble up — the account
+	 * exists either way, and the user can be re-sent a link via the
+	 * resend-verification flow.
 	 */
 	private function sendVerificationEmail(string $email, string $collection, string $name): void
 	{
@@ -169,48 +163,6 @@ readonly class AuthRegisterSubmitAction
 			return;
 		}
 
-		$token = (string)$tokenResult->data['token'];
-		// Mirror the URL-building pattern in ForgotPasswordSubmitAction so the
-		// link is absolute and includes both the configured site URL and the
-		// API prefix the admin lives under.
-		$verifyUrl = $this->config->url . $this->config->api . '/admin/verify-email/' . $token;
-
-		$expiryMinutes = (int)($this->config->auth['verificationTokenExpiry'] ?? 1440);
-
-		$mailerId = (string)($this->config->auth['verificationMailerId'] ?? '');
-
-		if ($mailerId !== '') {
-			$this->emailService->sendEmail($mailerId, [
-				'email'         => $email,
-				'name'          => $name,
-				'verifyUrl'     => $verifyUrl,
-				'expiryMinutes' => $expiryMinutes,
-				'collection'    => $collection,
-			]);
-
-			return;
-		}
-
-		$this->sendDefaultVerificationEmail($email, $name, $verifyUrl, $expiryMinutes);
-	}
-
-	private function sendDefaultVerificationEmail(string $email, string $name, string $verifyUrl, int $expiryMinutes): OperationResult
-	{
-		try {
-			$htmlBody = $this->twigEngine->render('email/verify-email.twig', [
-				'name'          => $name,
-				'verifyUrl'     => $verifyUrl,
-				'expiryMinutes' => $expiryMinutes,
-			]);
-
-			return $this->emailSender->send([
-				'to'       => $email,
-				'toName'   => $name,
-				'subject'  => 'Verify Your Email',
-				'bodyHtml' => $htmlBody,
-			]);
-		} catch (\Exception $e) {
-			return OperationResult::failure('Failed to send verification email: ' . $e->getMessage());
-		}
+		$this->mailer->sendVerification($email, (string)$tokenResult->data['token'], $collection, $name);
 	}
 }

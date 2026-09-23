@@ -12,6 +12,7 @@ use Psr\Log\NullLogger;
 use Slim\Exception\HttpForbiddenException;
 use TotalCMS\Action\Auth\AuthRegisterSubmitAction;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
+use TotalCMS\Domain\Auth\Service\AuthMailer;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
@@ -97,9 +98,7 @@ final class AuthRegisterSubmitActionTest extends TestCase
 			$authFieldPolicy,
 			$this->collectionFetcher,
 			$this->verificationService,
-			$this->emailService,
-			$this->emailSender,
-			$this->twigEngine,
+			new AuthMailer($this->emailService, $this->emailSender, $this->twigEngine, $this->createMock(UserValidationService::class), $this->config),
 			$this->config,
 		);
 	}
