@@ -81,6 +81,16 @@ class OPcacheService implements CacheInterface
 		return opcache_reset();
 	}
 
+	/**
+	 * OPcache holds compiled bytecode, not keyed data, so no pattern can match
+	 * anything here. Never falls back to opcache_reset(): that is pool-wide
+	 * and would flush every co-located site for a data-key clear.
+	 */
+	public function clearByPattern(string $pattern): bool
+	{
+		return true;
+	}
+
 	public function getStats(): array
 	{
 		if (!$this->isAvailable()) {

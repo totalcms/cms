@@ -274,9 +274,13 @@ readonly class FilesystemService implements CacheInterface
 	}
 
 	/**
-	 * Clear cache entries by pattern.
-	 * Iterates cache files and deletes those whose stored key matches the pattern.
-	 * Pattern uses * as a wildcard (e.g., "prefix:api:*").
+	 * Clear cache entries by pattern (`*` is the wildcard, e.g. "ns:api:*").
+	 *
+	 * Files are sharded by `{namespace}:{type}` ({@see shardFor()}), so a
+	 * pattern with a fixed type only walks that shard, and a whole-type
+	 * pattern drops the shard directory without reading a single file. The
+	 * `api` type is cleared on every collection write, so this is the
+	 * difference between an rmdir and unserializing the entire cache.
 	 */
 	public function clearByPattern(string $pattern): bool
 	{
@@ -284,12 +288,24 @@ readonly class FilesystemService implements CacheInterface
 			return false;
 		}
 
+		$segments = explode(':', $pattern, 3);
+		$fixedType = count($segments) === 3 && !str_contains($segments[0] . $segments[1], '*');
+
+		if ($fixedType && $segments[2] === '*') {
+			return $this->deleteDirectory($this->cacheDir . '/' . $this->shardFor($pattern));
+		}
+
+		$dir = $fixedType ? $this->cacheDir . '/' . $this->shardFor($pattern) : $this->cacheDir;
+		if (!is_dir($dir)) {
+			return true;
+		}
+
 		try {
 			// Convert glob-style pattern to regex
-			$regex = '/^' . str_replace('\*', '.*', preg_quote($pattern, '/')) . '$/';
+			$regex = '/^' . str_replace('\\*', '.*', preg_quote($pattern, '/')) . '$/';
 
 			$iterator = new \RecursiveIteratorIterator(
-				new \RecursiveDirectoryIterator($this->cacheDir, \FilesystemIterator::SKIP_DOTS)
+				new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS)
 			);
 
 			foreach ($iterator as $file) {
@@ -371,9 +387,7 @@ readonly class FilesystemService implements CacheInterface
 
 	private function getFilePath(string $key): string
 	{
-		$hash   = hash('sha256', $key);
-		$subDir = substr($hash, 0, 2);
-		$dir    = $this->cacheDir . '/' . $subDir;
+		$dir = $this->cacheDir . '/' . $this->shardFor($key);
 
 		// `@` swallows the "File exists" warning from the check-then-mkdir race
 		// when a concurrent request creates the same shard dir first (TOCTOU).
@@ -383,7 +397,19 @@ readonly class FilesystemService implements CacheInterface
 			@mkdir($dir, 0755, true);
 		}
 
-		return $dir . '/' . $hash . '.cache';
+		return $dir . '/' . hash('sha256', $key) . '.cache';
+	}
+
+	/**
+	 * Shard directory for a key: its first two segments, `{namespace}:{type}`
+	 * (`abc123:api`, `abc123:computed`), hashed. Every key of one type lands
+	 * in one directory so {@see clearByPattern()} can scope its walk to it.
+	 */
+	private function shardFor(string $key): string
+	{
+		$type = implode(':', array_slice(explode(':', $key, 3), 0, 2));
+
+		return substr(hash('sha256', $type), 0, 16);
 	}
 
 	private function deleteDirectory(string $dir, bool $preserveRoot = false): bool

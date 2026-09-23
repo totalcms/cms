@@ -137,10 +137,17 @@ final class OPcacheServiceTest extends TestCase
 		$this->assertIsBool($result);
 	}
 
-	public function testDoesNotHaveClearByPatternMethod(): void
+	public function testClearByPatternIsANoOpThatNeverResetsThePool(): void
 	{
-		// OPcache doesn't support pattern-based clearing, so method doesn't exist
-		$this->assertFalse(method_exists($this->opcacheService, 'clearByPattern'));
+		// OPcache holds bytecode, not keyed data: nothing matches, and the
+		// pool-wide opcache_reset() must never be the fallback for a data clear.
+		$wasEnabled = $this->opcacheService->isAvailable() ? opcache_get_status(false) : false;
+
+		$this->assertTrue($this->opcacheService->clearByPattern('abc:api:*'));
+
+		if (is_array($wasEnabled)) {
+			$this->assertNotEmpty(opcache_get_status(false), 'pattern clear must leave the bytecode cache intact');
+		}
 	}
 
 	public function testGetStatsWhenNotAvailable(): void
@@ -246,8 +253,8 @@ final class OPcacheServiceTest extends TestCase
 		// 2. Delete works only with file paths
 		$this->assertFalse($this->opcacheService->delete('non_file_key'));
 
-		// 3. No pattern support - method doesn't exist
-		$this->assertFalse(method_exists($this->opcacheService, 'clearByPattern'));
+		// 3. Pattern clears are a no-op (bytecode has no keys to match)
+		$this->assertTrue($this->opcacheService->clearByPattern('any:pattern:*'));
 
 		// 4. isActive should equal isAvailable
 		$this->assertEquals($this->opcacheService->isAvailable(), $this->opcacheService->isActive());

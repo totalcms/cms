@@ -61,6 +61,13 @@ interface CacheInterface
 	public function clear(): bool;
 
 	/**
+	 * Delete every key matching a glob-style pattern (`*` is the wildcard).
+	 *
+	 * @return bool True on success
+	 */
+	public function clearByPattern(string $pattern): bool;
+
+	/**
 	 * Get cache statistics.
 	 *
 	 * @return array<string,mixed>

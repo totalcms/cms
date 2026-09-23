@@ -4,10 +4,12 @@ namespace TotalCMS\Domain\Cache;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Cache\Service\APCuService;
+use TotalCMS\Domain\Cache\Service\CacheBackends;
 use TotalCMS\Domain\Cache\Service\CacheInterface;
 use TotalCMS\Domain\Cache\Service\CacheInvalidationSignal;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Cache\Service\FilesystemService;
+use TotalCMS\Domain\Cache\Service\IdentityCache;
 use TotalCMS\Domain\Cache\Service\MemcachedService;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Cache\Service\RedisService;
@@ -32,7 +34,7 @@ class CacheManager
 	public const PREFIX_API_RESPONSE    = 'api';
 	public const PREFIX_SESSION         = 'session';
 	public const PREFIX_TEMPLATE        = 'template';
-	public const PREFIX_PASSWORD_RESET  = 'password_reset';
+	public const PREFIX_PASSWORD_RESET  = IdentityCache::PREFIX_PASSWORD_RESET;
 
 	// Array of all cache types for clearByType functionality
 	public const CACHE_TYPES = [
@@ -68,6 +70,10 @@ class CacheManager
 	 */
 	private readonly string $identityPrefix;
 	private readonly LoggerInterface $logger;
+	private readonly CacheBackends $backends;
+
+	/** License verdict + password reset tokens: per-domain, never devmode-skipped. */
+	private readonly IdentityCache $identity;
 
 	/** @var array<string,CacheInterface> Available cache services */
 	private array $cacheServices = [];
@@ -125,6 +131,9 @@ class CacheManager
 		$this->contentPrefix = $domainScoped
 			? $this->identityPrefix
 			: md5(realpath($this->config->datadir) ?: $this->config->datadir);
+
+		$this->backends = new CacheBackends($this->apcuService, $this->redisService, $this->memcachedService, $this->filesystemService);
+		$this->identity = new IdentityCache($this->backends, $this->identityPrefix);
 
 		$this->isCli = php_sapi_name() === 'cli';
 	}
@@ -299,10 +308,9 @@ class CacheManager
 		}
 
 		// L2: Network cache (survives restarts, larger capacity)
-		if ($this->redisService->isAvailable()) {
-			$stored = $this->redisService->set($key, $data, $ttl) || $stored;
-		} elseif ($this->memcachedService->isAvailable()) {
-			$stored = $this->memcachedService->set($key, $data, $ttl) || $stored;
+		$network = $this->backends->network();
+		if ($network instanceof CacheInterface) {
+			$stored = $network->set($key, $data, $ttl) || $stored;
 		}
 
 		// Fallback to filesystem cache only if no memory caches available
@@ -342,46 +350,22 @@ class CacheManager
 	 */
 	private function readFromBackends(string $key): mixed
 	{
-		$apcuAvailable = $this->apcuService->isAvailable();
-
-		// L1: Check APCu first (fastest, local memory)
-		if ($apcuAvailable) {
-			$result = $this->apcuService->get($key);
-			if ($result !== null) {
-				return $result;
+		foreach ($this->backends->memory() as $backend) {
+			$result = $backend->get($key);
+			if ($result === null) {
+				continue;
 			}
+
+			// A network-cache hit is promoted back to L1 so the next request is fast.
+			if ($backend !== $this->apcuService && $this->apcuService->isAvailable()) {
+				$this->apcuService->set($key, $result, self::DEFAULT_TTL);
+			}
+
+			return $result;
 		}
 
-		// L2: Check network caches (Redis, then Memcached)
-		// On hit, promote back to L1 (APCu) so subsequent requests are fast
-		if ($this->redisService->isAvailable()) {
-			$result = $this->redisService->get($key);
-			if ($result !== null) {
-				if ($apcuAvailable) {
-					$this->apcuService->set($key, $result, self::DEFAULT_TTL);
-				}
-
-				return $result;
-			}
-		}
-
-		if ($this->memcachedService->isAvailable()) {
-			$result = $this->memcachedService->get($key);
-			if ($result !== null) {
-				if ($apcuAvailable) {
-					$this->apcuService->set($key, $result, self::DEFAULT_TTL);
-				}
-
-				return $result;
-			}
-		}
-
-		// Check filesystem cache
 		if ($this->filesystemService->isAvailable()) {
-			$result = $this->filesystemService->get($key);
-			if ($result !== null) {
-				return $result;
-			}
+			return $this->filesystemService->get($key);
 		}
 
 		return null;
@@ -389,24 +373,7 @@ class CacheManager
 
 	public function clearData(string $key): bool
 	{
-		$success = true;
-
-		// Delete from all available cache backends
-		if ($this->apcuService->isAvailable()) {
-			$success &= $this->apcuService->delete($key);
-		}
-
-		if ($this->redisService->isAvailable()) {
-			$success &= $this->redisService->delete($key);
-		}
-
-		if ($this->memcachedService->isAvailable()) {
-			$success &= $this->memcachedService->delete($key);
-		}
-
-		if ($this->filesystemService->isAvailable()) {
-			$success &= $this->filesystemService->delete($key);
-		}
+		$success = $this->backends->deleteFrom($this->backends->available(), $key);
 
 		// Intentionally NOT touching OPcache here. OPcache caches compiled PHP
 		// bytecode, not this key/value data — filesystem entries are serialized
@@ -423,7 +390,7 @@ class CacheManager
 			$this->invalidationSignal->signal($this->stripDomainPrefix($key));
 		}
 
-		return (bool)$success;
+		return $success;
 	}
 
 	/**
@@ -569,40 +536,7 @@ class CacheManager
 	 */
 	public function clearByPatternAllBackends(string $pattern): bool
 	{
-		$success = true;
-
-		if ($this->apcuService->isAvailable()) {
-			$success &= $this->clearByPattern($this->apcuService, $pattern);
-		}
-
-		if ($this->redisService->isAvailable()) {
-			$success &= $this->clearByPattern($this->redisService, $pattern);
-		}
-
-		if ($this->memcachedService->isAvailable()) {
-			$success &= $this->clearByPattern($this->memcachedService, $pattern);
-		}
-
-		if ($this->filesystemService->isAvailable()) {
-			$success &= $this->clearByPattern($this->filesystemService, $pattern);
-		}
-
-		return (bool)$success;
-	}
-
-	/**
-	 * Clear cache entries by pattern for a specific cache service.
-	 */
-	private function clearByPattern(CacheInterface $service, string $pattern): bool
-	{
-		// Check if the service supports pattern-based clearing
-		if ($service instanceof RedisService || $service instanceof MemcachedService || $service instanceof FilesystemService || $service instanceof APCuService) {
-			return $service->clearByPattern($pattern);
-		}
-
-		// For other services, fallback to clearing everything
-		// This ensures cache is cleared when needed, though not optimal
-		return $service->clear();
+		return $this->backends->clearPattern($this->backends->available(), $pattern);
 	}
 
 	/**
@@ -640,226 +574,47 @@ class CacheManager
 	}
 
 	/**
-	 * Store license data - MANDATORY caching that cannot be disabled.
-	 * License data doesn't change frequently and hitting license server on every request is bad for performance.
-	 * This method bypasses all cache disabled settings to prevent rate limit cascades.
-	 *
-	 * IMPORTANT: License data is stored in BOTH memory cache AND filesystem.
-	 * Memory cache provides fast access, filesystem provides persistent backup
-	 * that survives memory cache eviction or server restarts.
+	 * License data is cached whatever the cache config says — see
+	 * {@see IdentityCache} for why. Stored in memory AND on disk.
 	 */
 	public function storeLicenseData(string $key, mixed $data, int $ttl = self::DEFAULT_TTL): bool
 	{
-		// License caching is MANDATORY - bypasses all cache disabled settings
-		// Use domain-specific key to prevent license data sharing between sites
-		$domainKey    = $this->createIdentityKey($key);
-		$memoryStored = false;
-
-		// Store as plain array to avoid unserialize(allowed_classes:false) issues
-		// which would turn LicenseData into __PHP_Incomplete_Class and break cache reads
-		$arrayData = $data instanceof LicenseData ? $data->toArray() : $data;
-
-		// Store in memory cache (fastest) - use isInstalled() to bypass config disabled checks
-		// Try each memory cache in priority order until one succeeds
-		if ($this->apcuService->isInstalled()) {
-			$memoryStored = $this->apcuService->set($domainKey, $arrayData, $ttl);
-		}
-
-		if (!$memoryStored && $this->redisService->isInstalled()) {
-			$memoryStored = $this->redisService->set($domainKey, $arrayData, $ttl);
-		}
-
-		if (!$memoryStored && $this->memcachedService->isInstalled()) {
-			$memoryStored = $this->memcachedService->set($domainKey, $arrayData, $ttl);
-		}
-
-		// ALWAYS store in filesystem as persistent backup, even when the user
-		// has disabled filesystem caching in config — license data has to
-		// survive memory eviction or restarts, and disabling caches in dev
-		// otherwise causes API calls on every request and rate-limit cascades.
-		// `setMandatory` bypasses the enabled flag but still respects writability.
-		$filesystemStored = $this->filesystemService->setMandatory($domainKey, $arrayData, $ttl);
-
-		// Success if stored in at least one location
-		return $memoryStored || $filesystemStored;
+		return $this->identity->storeLicense($key, $data, $ttl);
 	}
 
-	/**
-	 * Get license data - MANDATORY caching that cannot be disabled.
-	 * This method bypasses all cache disabled settings to prevent rate limit cascades.
-	 */
 	public function getLicenseData(string $key): ?LicenseData
 	{
-		// License caching is MANDATORY - bypasses all cache disabled settings
-		// Use domain-specific key to prevent license data sharing between sites
-		$domainKey = $this->createIdentityKey($key);
-		$result    = null;
-
-		// Check memory caches first (fastest)
-		// Use isInstalled() instead of isAvailable() to bypass config disabled checks
-		if ($this->apcuService->isInstalled()) {
-			$result = $this->apcuService->get($domainKey);
-		}
-
-		if ($result === null && $this->redisService->isInstalled()) {
-			$result = $this->redisService->get($domainKey);
-		}
-
-		if ($result === null && $this->memcachedService->isInstalled()) {
-			$result = $this->memcachedService->get($domainKey);
-		}
-
-		// Filesystem is ALWAYS checked as absolute fallback for license data,
-		// even when filesystem caching is disabled in config (see comment in
-		// storeLicenseData() for why). `getMandatory` bypasses the enabled flag.
-		$result ??= $this->filesystemService->getMandatory($domainKey);
-
-		// Reconstruct LicenseData from cached array
-		if (is_array($result) && isset($result['valid'], $result['domain'])) {
-			return LicenseData::fromArray($result);
-		}
-
-		// Handle legacy cached LicenseData objects (from before this fix)
-		if ($result instanceof LicenseData) {
-			return $result;
-		}
-
-		return null;
+		return $this->identity->getLicense($key);
 	}
 
-	/**
-	 * Clear license data - clears from all installed backends regardless of config.
-	 */
+	/** Clears every installed backend regardless of config, so no stale verdict survives on disk. */
 	public function clearLicenseData(string $key): bool
 	{
-		// Use domain-specific key to prevent license data sharing between sites
-		$domainKey = $this->createIdentityKey($key);
-		$success   = true;
-
-		// Delete from all installed cache backends (bypasses config disabled checks)
-		if ($this->apcuService->isInstalled()) {
-			$success &= $this->apcuService->delete($domainKey);
-		}
-
-		if ($this->redisService->isInstalled()) {
-			$success &= $this->redisService->delete($domainKey);
-		}
-
-		if ($this->memcachedService->isInstalled()) {
-			$success &= $this->memcachedService->delete($domainKey);
-		}
-
-		// Always clear from filesystem, even when filesystem caching is
-		// disabled — otherwise stale license data could persist on disk.
-		$success &= $this->filesystemService->deleteMandatory($domainKey);
-
-		return (bool)$success;
+		return $this->identity->clearLicense($key);
 	}
 
 	/**
-	 * Store password reset data - bypasses dev mode and cache clearing.
-	 * Similar to license data, password reset tokens should persist regardless of dev mode
-	 * and should NOT be cleared when users clear cache through the admin interface.
+	 * Password reset tokens live outside devmode and outside the customer-facing
+	 * cache clear, like the license.
 	 *
 	 * @param array<string,mixed> $data
 	 */
 	public function storePasswordResetData(string $key, array $data, int $ttl = self::TTL_PASSWORD_RESET): bool
 	{
-		// Always cache password reset data regardless of dev mode
-		// Use domain-specific key to prevent data sharing between sites
-		$domainKey = $this->createIdentityKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
-
-		// Priority: APCu > Redis > Memcached > Filesystem (single cache layer only)
-		if ($this->apcuService->isAvailable()) {
-			return $this->apcuService->set($domainKey, $data, $ttl);
-		}
-
-		if ($this->redisService->isAvailable()) {
-			return $this->redisService->set($domainKey, $data, $ttl);
-		}
-
-		if ($this->memcachedService->isAvailable()) {
-			return $this->memcachedService->set($domainKey, $data, $ttl);
-		}
-
-		// Fallback to filesystem cache only if no memory caches available
-		if ($this->filesystemService->isAvailable()) {
-			return $this->filesystemService->set($domainKey, $data, $ttl);
-		}
-
-		return false;
+		return $this->identity->storePasswordReset($key, $data, $ttl);
 	}
 
 	/**
-	 * Get password reset data - bypasses dev mode.
-	 *
 	 * @return array<string,mixed>|null
 	 */
 	public function getPasswordResetData(string $key): ?array
 	{
-		// Use domain-specific key to prevent data sharing between sites
-		$domainKey = $this->createIdentityKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
-
-		// Check memory caches first (fastest)
-		if ($this->apcuService->isAvailable()) {
-			$result = $this->apcuService->get($domainKey);
-			if ($result !== null) {
-				return $result;
-			}
-		}
-
-		if ($this->redisService->isAvailable()) {
-			$result = $this->redisService->get($domainKey);
-			if ($result !== null) {
-				return $result;
-			}
-		}
-
-		if ($this->memcachedService->isAvailable()) {
-			$result = $this->memcachedService->get($domainKey);
-			if ($result !== null) {
-				return $result;
-			}
-		}
-
-		// Check filesystem cache
-		if ($this->filesystemService->isAvailable()) {
-			$result = $this->filesystemService->get($domainKey);
-			if ($result !== null) {
-				return $result;
-			}
-		}
-
-		return null;
+		return $this->identity->getPasswordReset($key);
 	}
 
-	/**
-	 * Clear password reset data - bypasses dev mode.
-	 */
 	public function clearPasswordResetData(string $key): bool
 	{
-		// Use domain-specific key to prevent data sharing between sites
-		$domainKey = $this->createIdentityKey(self::PREFIX_PASSWORD_RESET . ':' . $key);
-		$success   = true;
-
-		// Delete from all available cache backends
-		if ($this->apcuService->isAvailable()) {
-			$success &= $this->apcuService->delete($domainKey);
-		}
-
-		if ($this->redisService->isAvailable()) {
-			$success &= $this->redisService->delete($domainKey);
-		}
-
-		if ($this->memcachedService->isAvailable()) {
-			$success &= $this->memcachedService->delete($domainKey);
-		}
-
-		if ($this->filesystemService->isAvailable()) {
-			$success &= $this->filesystemService->delete($domainKey);
-		}
-
-		return (bool)$success;
+		return $this->identity->clearPasswordReset($key);
 	}
 
 	/**
