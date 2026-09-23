@@ -124,32 +124,7 @@ class BulkMailerRepository
 	 */
 	public function fetchBatchStats(string $batchId): array
 	{
-		if (!$this->dbExists()) {
-			return ['total' => 0, 'sent' => 0, 'failed' => 0, 'skipped' => 0];
-		}
-
-		$sql = <<<SQL
-			SELECT status, COUNT(*) as count
-			FROM bulk_send_log
-			WHERE batchId = :batchId
-			GROUP BY status
-		SQL;
-
-		$stmt = $this->getDb()->prepare($sql);
-		$stmt->bindValue(':batchId', $batchId);
-		$stmt->execute();
-
-		$stats = ['total' => 0, 'sent' => 0, 'failed' => 0, 'skipped' => 0];
-		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-			$status = (string)($row['status'] ?? '');
-			$count  = intval($row['count'] ?? 0);
-			if (isset($stats[$status])) {
-				$stats[$status] = $count;
-			}
-			$stats['total'] += $count;
-		}
-
-		return $stats;
+		return $this->statusCounts('batchId', $batchId);
 	}
 
 	/**
@@ -212,22 +187,27 @@ class BulkMailerRepository
 	 */
 	public function fetchMailerStats(string $mailerId): array
 	{
+		return $this->statusCounts('mailerId', $mailerId);
+	}
+
+	/**
+	 * Sent / failed / skipped counts (and their total) for the rows where
+	 * `$column` equals `$value`. `$column` is one of this class's own column
+	 * names, never caller input.
+	 *
+	 * @return array{total:int,sent:int,failed:int,skipped:int}
+	 */
+	private function statusCounts(string $column, string $value): array
+	{
+		$stats = ['total' => 0, 'sent' => 0, 'failed' => 0, 'skipped' => 0];
 		if (!$this->dbExists()) {
-			return ['total' => 0, 'sent' => 0, 'failed' => 0, 'skipped' => 0];
+			return $stats;
 		}
 
-		$sql = <<<SQL
-			SELECT status, COUNT(*) as count
-			FROM bulk_send_log
-			WHERE mailerId = :mailerId
-			GROUP BY status
-		SQL;
-
-		$stmt = $this->getDb()->prepare($sql);
-		$stmt->bindValue(':mailerId', $mailerId);
+		$stmt = $this->getDb()->prepare("SELECT status, COUNT(*) as count FROM bulk_send_log WHERE {$column} = :value GROUP BY status");
+		$stmt->bindValue(':value', $value);
 		$stmt->execute();
 
-		$stats = ['total' => 0, 'sent' => 0, 'failed' => 0, 'skipped' => 0];
 		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 			$status = (string)($row['status'] ?? '');
 			$count  = intval($row['count'] ?? 0);

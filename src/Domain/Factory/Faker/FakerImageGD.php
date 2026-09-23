@@ -35,6 +35,30 @@ class FakerImageGD extends Base
 	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
 	 * @SuppressWarnings("PHPMD.NPathComplexity")
 	 */
+	/** A GD canvas filled with the background color. */
+	private static function canvas(int $width, int $height, string $bgColor): \GdImage
+	{
+		if (!function_exists('imagecreate')) {
+			throw new \RuntimeException('GD is not available on this PHP installation. Impossible to generate image.');
+		}
+
+		if ($width <= 0 || $height <= 0) {
+			throw new \InvalidArgumentException('Width and height must be greater than 0.');
+		}
+		$image = imagecreatetruecolor($width, $height);
+
+		if ($image === false) {
+			throw new \RuntimeException('Failed to create image with GD.');
+		}
+
+		$fill = imagecolorallocate($image, ...self::hex2rgb($bgColor));
+		if ($fill !== false) {
+			imagefill($image, 0, 0, $fill);
+		}
+
+		return $image;
+	}
+
 	public static function imageText(?string $dir = null, int $width = 640, int $height = 480, ?string $text = null, int $textSize = 200, ?string $textColor = null, string $bgColor = 'f8f8f8'): string
 	{
 		// Default to system temp dir
@@ -52,24 +76,7 @@ class FakerImageGD extends Base
 		$filename = uniqid('imageText-', true) . '.png';
 		$filepath = $dir . DIRECTORY_SEPARATOR . $filename;
 
-		if (!function_exists('imagecreate')) {
-			throw new \RuntimeException('GD is not available on this PHP installation. Impossible to generate image.');
-		}
-
-		if ($width <= 0 || $height <= 0) {
-			throw new \InvalidArgumentException('Width and height must be greater than 0.');
-		}
-		$image = imagecreatetruecolor($width, $height);
-
-		if ($image === false) {
-			throw new \RuntimeException('Failed to create image with GD.');
-		}
-
-		$bgRgb   = self::hex2rgb($bgColor);
-		$bgColor = imagecolorallocate($image, ...$bgRgb);
-		if ($bgColor !== false) {
-			imagefill($image, 0, 0, $bgColor);
-		}
+		$image = self::canvas($width, $height, $bgColor);
 
 		$textColor = self::hex2rgb($textColor);
 		$textColor = imagecolorallocate($image, ...$textColor);
@@ -142,24 +149,7 @@ class FakerImageGD extends Base
 		$filename = uniqid('imageShape-', true) . '.png';
 		$filepath = $dir . DIRECTORY_SEPARATOR . $filename;
 
-		if (!function_exists('imagecreate')) {
-			throw new \RuntimeException('GD is not available on this PHP installation. Impossible to generate image.');
-		}
-
-		if ($width <= 0 || $height <= 0) {
-			throw new \InvalidArgumentException('Width and height must be greater than 0.');
-		}
-		$image = imagecreatetruecolor($width, $height);
-
-		if ($image === false) {
-			throw new \RuntimeException('Failed to create image with GD.');
-		}
-
-		$bgRgb   = self::hex2rgb($bgColor);
-		$bgColor = imagecolorallocate($image, ...$bgRgb);
-		if ($bgColor !== false) {
-			imagefill($image, 0, 0, $bgColor);
-		}
+		$image = self::canvas($width, $height, $bgColor);
 
 		$rectCount = random_int(0, 1);
 		for ($i = 0; $i < $rectCount; $i++) {

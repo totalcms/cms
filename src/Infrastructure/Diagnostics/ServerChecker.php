@@ -14,6 +14,7 @@ use TotalCMS\Domain\Security\Request\ClientIpResolver;
 use TotalCMS\Domain\Security\Request\CloudflareIpRanges;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\Version;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * Run tests against the system to.
@@ -129,12 +130,12 @@ class ServerChecker
 
 	public function totalspace(): string
 	{
-		return $this->formatBytes(intval(disk_total_space(__DIR__)));
+		return FileUtils::formatBytes(intval(disk_total_space(__DIR__)), 2);
 	}
 
 	public function freespace(): string
 	{
-		return $this->formatBytes(intval(disk_free_space(__DIR__)));
+		return FileUtils::formatBytes(intval(disk_free_space(__DIR__)), 2);
 	}
 
 	public function cacheDirSize(): string
@@ -147,18 +148,7 @@ class ServerChecker
 			}
 		}
 
-		return $this->formatBytes($size);
-	}
-
-	private function formatBytes(int $bytes): string
-	{
-		$units     = ['B', 'KB', 'MB', 'GB', 'TB'];
-		$unitCount = count($units);
-		for ($i = 0; $bytes >= 1024 && $i < $unitCount - 1; $i++) {
-			$bytes /= 1024;
-		}
-
-		return round($bytes, 2) . ' ' . $units[$i];
+		return FileUtils::formatBytes($size, 2);
 	}
 
 	/** @return array<string,mixed> */
@@ -252,51 +242,55 @@ class ServerChecker
 	}
 
 	/**
-	 * Get description for an extension.
+	 * What each optional extension is, when to install it, and what it buys.
+	 * One row per extension so the three admin columns cannot drift apart.
 	 */
+	private const EXTENSIONS = [
+		'intl' => [
+			'Internationalization extension for locale-aware formatting of dates, numbers, and currencies',
+			'Recommended for multilingual sites or sites needing locale-aware date, number, and currency formatting',
+			'Low impact: Enables Twig intl filters (format_date, format_number, format_currency)',
+		],
+		'imagick' => [
+			'Advanced image processing library with support for 200+ image formats',
+			'Recommended for sites with heavy image processing, advanced image effects, or PDF generation needs',
+			'High impact for image operations, no impact if not used',
+		],
+		'opcache' => [
+			'PHP bytecode cache that dramatically improves performance',
+			'Recommended for all production sites - provides 2-5x performance improvement with no downsides',
+			'Very high impact: 2-5x faster page loads, 50% less memory usage',
+		],
+		'apcu' => [
+			'Fast in-memory user cache for single-server applications',
+			'Recommended for most sites - zero-config caching that works immediately on single-server setups',
+			'Medium-high impact: Much faster than filesystem cache, instant setup',
+		],
+		'redis' => [
+			'In-memory data structure store for caching and session storage',
+			'Recommended for high-traffic sites needing advanced caching, session clustering, or real-time features',
+			'Medium-high impact: Fast caching, improved session performance',
+		],
+		'memcached' => [
+			'High-performance, distributed memory object caching system',
+			'Recommended for high-traffic sites (1000+ daily visitors) or multi-server setups requiring shared caching',
+			'Medium impact: Faster template caching, reduced database load',
+		],
+	];
+
 	private function getExtensionDescription(string $extension): string
 	{
-		return match ($extension) {
-			'intl'      => 'Internationalization extension for locale-aware formatting of dates, numbers, and currencies',
-			'imagick'   => 'Advanced image processing library with support for 200+ image formats',
-			'opcache'   => 'PHP bytecode cache that dramatically improves performance',
-			'apcu'      => 'Fast in-memory user cache for single-server applications',
-			'redis'     => 'In-memory data structure store for caching and session storage',
-			'memcached' => 'High-performance, distributed memory object caching system',
-			default     => 'Optional PHP extension',
-		};
+		return self::EXTENSIONS[$extension][0] ?? 'Optional PHP extension';
 	}
 
-	/**
-	 * Get recommendation for when to use an extension.
-	 */
 	private function getExtensionRecommendation(string $extension): string
 	{
-		return match ($extension) {
-			'intl'      => 'Recommended for multilingual sites or sites needing locale-aware date, number, and currency formatting',
-			'imagick'   => 'Recommended for sites with heavy image processing, advanced image effects, or PDF generation needs',
-			'opcache'   => 'Recommended for all production sites - provides 2-5x performance improvement with no downsides',
-			'apcu'      => 'Recommended for most sites - zero-config caching that works immediately on single-server setups',
-			'redis'     => 'Recommended for high-traffic sites needing advanced caching, session clustering, or real-time features',
-			'memcached' => 'Recommended for high-traffic sites (1000+ daily visitors) or multi-server setups requiring shared caching',
-			default     => 'Check documentation for specific use cases',
-		};
+		return self::EXTENSIONS[$extension][1] ?? 'Check documentation for specific use cases';
 	}
 
-	/**
-	 * Get performance impact information for an extension.
-	 */
 	private function getExtensionPerformanceImpact(string $extension): string
 	{
-		return match ($extension) {
-			'intl'      => 'Low impact: Enables Twig intl filters (format_date, format_number, format_currency)',
-			'imagick'   => 'High impact for image operations, no impact if not used',
-			'opcache'   => 'Very high impact: 2-5x faster page loads, 50% less memory usage',
-			'apcu'      => 'Medium-high impact: Much faster than filesystem cache, instant setup',
-			'redis'     => 'Medium-high impact: Fast caching, improved session performance',
-			'memcached' => 'Medium impact: Faster template caching, reduced database load',
-			default     => 'Varies by usage',
-		};
+		return self::EXTENSIONS[$extension][2] ?? 'Varies by usage';
 	}
 
 	/**
@@ -330,16 +324,7 @@ class ServerChecker
 		$gcMaxlifetime     = (int)ini_get('session.gc_maxlifetime');
 		$configMaxlifetime = $this->config->session['gc_maxlifetime'] ?? 7200;
 
-		// Format as human-readable duration
-		$formatDuration = function (int $seconds): string {
-			$hours   = floor($seconds / 3600);
-			$minutes = floor(($seconds % 3600) / 60);
-			if ($hours > 0) {
-				return "{$hours}h {$minutes}m ({$seconds}s)";
-			}
-
-			return "{$minutes}m ({$seconds}s)";
-		};
+		$formatDuration = fn (int $seconds): string => $this->formatDuration($seconds) . " ({$seconds}s)";
 
 		$sessionInfo = [
 			'Session Timeout (Runtime)' => $formatDuration($gcMaxlifetime),

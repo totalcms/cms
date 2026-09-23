@@ -109,17 +109,31 @@ final readonly class CollectionFileRepairService
 
 	private function repairProperty(RepairReport $report, ObjectData $object, string $collection, string $id, string $property, string $type, bool $apply): void
 	{
-		$current = $object->properties->get($property);
-		if (!$this->isBlank($current)) {
+		if (!$this->isBlank($object->properties->get($property))) {
 			return; // has data — never overwrite
 		}
 
+		$this->repair($report, $collection, $id, $property, $type, null, $apply, function (PropertyData $rebuilt) use ($collection, $id, $property): void {
+			$this->objectPatcher->patchObject($collection, $id, [$property => $rebuilt->transform()], true);
+		});
+	}
+
+	/**
+	 * Rebuild one blank target from the files on disk and, when applying,
+	 * write it back through `$patch`. Shared by top-level properties and
+	 * nested children; only the blank check and the write differ.
+	 *
+	 * @param callable(PropertyData): void $patch
+	 */
+	private function repair(RepairReport $report, string $collection, string $id, string $property, string $type, ?string $subpath, bool $apply, callable $patch): void
+	{
 		try {
-			$saver   = $this->saverFactory->generateSaverService($collection, $property, $id);
-			$rebuilt = $saver->rebuildFromStorage($collection, $id, $property);
+			$saver   = $this->saverFactory->generateSaverService($collection, $property, $id, $subpath);
+			$rebuilt = $saver->rebuildFromStorage($collection, $id, $property, $subpath);
 		} catch (\Throwable $e) {
-			$candidate         = new RepairCandidate($id, $property, $type, 0);
-			$candidate->error  = $e->getMessage();
+			$candidate          = new RepairCandidate($id, $property, $type, 0);
+			$candidate->subpath = $subpath;
+			$candidate->error   = $e->getMessage();
 			$report->addCandidate($candidate);
 
 			return;
@@ -131,11 +145,12 @@ final readonly class CollectionFileRepairService
 			return;
 		}
 
-		$candidate = new RepairCandidate($id, $property, $type, $this->fileCount($rebuilt));
+		$candidate          = new RepairCandidate($id, $property, $type, $this->fileCount($rebuilt));
+		$candidate->subpath = $subpath;
 
 		if ($apply) {
 			try {
-				$this->objectPatcher->patchObject($collection, $id, [$property => $rebuilt->transform()], true);
+				$patch($rebuilt);
 				$candidate->applied = true;
 			} catch (\Throwable $e) {
 				$candidate->applied = false;
@@ -205,59 +220,21 @@ final readonly class CollectionFileRepairService
 		return $cursor;
 	}
 
-	/**
-	 * Rebuild and (on apply) write one nested file/image child.
-	 *
-	 * `$subpath` locates the files on disk and the child to rebuild. For a card
-	 * child the write targets that child leaf directly. For a deck child
-	 * (`$itemId` set) the write targets the *item* so a missing `id` — required
-	 * by the deck schema and absent when the item was rebuilt purely from disk —
-	 * can be backfilled alongside the child data.
-	 */
 	private function repairNestedChild(RepairReport $report, string $collection, string $id, string $property, string $subpath, string $type, mixed $existing, bool $apply, ?string $itemId = null, bool $itemHasId = true): void
 	{
 		if (!$this->isBlankRaw($existing)) {
 			return; // child already has data — never overwrite
 		}
 
-		try {
-			$saver   = $this->saverFactory->generateSaverService($collection, $property, $id, $subpath);
-			$rebuilt = $saver->rebuildFromStorage($collection, $id, $property, $subpath);
-		} catch (\Throwable $e) {
-			$candidate          = new RepairCandidate($id, $property, $type, 0);
-			$candidate->subpath = $subpath;
-			$candidate->error   = $e->getMessage();
-			$report->addCandidate($candidate);
-
-			return;
-		}
-
-		if (!$rebuilt instanceof PropertyData) {
-			$report->blankWithoutFiles++; // blank, but nothing on disk to rebuild from
-
-			return;
-		}
-
-		$candidate          = new RepairCandidate($id, $property, $type, $this->fileCount($rebuilt));
-		$candidate->subpath = $subpath;
-
-		if ($apply) {
-			try {
-				[$path, $data, $backfillItemId] = $this->nestedPatchTarget($subpath, $rebuilt, $itemId, $itemHasId);
-				$this->objectPatcher->patchNestedProperty($collection, $id, $property, $path, $data, true);
-				if ($backfillItemId !== null) {
-					// A deep child (a video's poster) was patched at its own leaf;
-					// the item's missing `id` still has to be backfilled separately.
-					$this->objectPatcher->patchNestedProperty($collection, $id, $property, $backfillItemId, ['id' => $backfillItemId], true);
-				}
-				$candidate->applied = true;
-			} catch (\Throwable $e) {
-				$candidate->applied = false;
-				$candidate->error   = $e->getMessage();
+		$this->repair($report, $collection, $id, $property, $type, $subpath, $apply, function (PropertyData $rebuilt) use ($collection, $id, $property, $subpath, $itemId, $itemHasId): void {
+			[$path, $data, $backfillItemId] = $this->nestedPatchTarget($subpath, $rebuilt, $itemId, $itemHasId);
+			$this->objectPatcher->patchNestedProperty($collection, $id, $property, $path, $data, true);
+			if ($backfillItemId !== null) {
+				// A deep child (a video's poster) was patched at its own leaf;
+				// the item's missing `id` still has to be backfilled separately.
+				$this->objectPatcher->patchNestedProperty($collection, $id, $property, $backfillItemId, ['id' => $backfillItemId], true);
 			}
-		}
-
-		$report->addCandidate($candidate);
+		});
 	}
 
 	/**
@@ -306,22 +283,8 @@ final readonly class CollectionFileRepairService
 	 */
 	private function nestedTargets(string $collection, RepairFilters $filters): array
 	{
-		try {
-			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
-		} catch (\Throwable) {
-			return [];
-		}
-
 		$targets = [];
-		foreach ($schema->properties as $name => $definition) {
-			if (!is_array($definition)) {
-				continue;
-			}
-			$field = (string)($definition['field'] ?? '');
-			if (!$filters->allowsProperty((string)$name)) {
-				continue;
-			}
-
+		foreach ($this->allowedFields($collection, $filters) as $name => [$field, $definition]) {
 			if ($field === 'video') {
 				$children = $filters->allowsType('image') ? self::VIDEO_CHILDREN : [];
 			} elseif (in_array($field, self::CONTAINER_FIELDS, true)) {
@@ -333,7 +296,7 @@ final readonly class CollectionFileRepairService
 			if ($children === []) {
 				continue;
 			}
-			$targets[(string)$name] = ['kind' => $field, 'children' => $children];
+			$targets[$name] = ['kind' => $field, 'children' => $children];
 		}
 
 		return $targets;
@@ -404,28 +367,39 @@ final readonly class CollectionFileRepairService
 	 */
 	private function targetProperties(string $collection, RepairFilters $filters): array
 	{
+		$targets = [];
+		foreach ($this->allowedFields($collection, $filters) as $name => [$field]) {
+			if (in_array($field, self::FILE_FIELDS, true) && $filters->allowsType($field)) {
+				$targets[$name] = $field;
+			}
+		}
+
+		return $targets;
+	}
+
+	/**
+	 * The collection schema's properties the filters allow, as
+	 * `name => [field type, definition]`. Empty when the schema cannot be read.
+	 *
+	 * @return array<string,array{0: string, 1: array<string,mixed>}>
+	 */
+	private function allowedFields(string $collection, RepairFilters $filters): array
+	{
 		try {
 			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 		} catch (\Throwable) {
 			return [];
 		}
 
-		$targets = [];
+		$fields = [];
 		foreach ($schema->properties as $name => $definition) {
-			if (!is_array($definition)) {
+			if (!is_array($definition) || !$filters->allowsProperty((string)$name)) {
 				continue;
 			}
-			$field = (string)($definition['field'] ?? '');
-			if (!in_array($field, self::FILE_FIELDS, true)) {
-				continue;
-			}
-			if (!$filters->allowsType($field) || !$filters->allowsProperty((string)$name)) {
-				continue;
-			}
-			$targets[(string)$name] = $field;
+			$fields[(string)$name] = [(string)($definition['field'] ?? ''), $definition];
 		}
 
-		return $targets;
+		return $fields;
 	}
 
 	private function isBlank(?PropertyData $property): bool

@@ -56,7 +56,7 @@ readonly class PostMaxSizeMiddleware implements MiddlewareInterface
 				$this->responseFactory->createResponse(413),
 				['error' => ['message' => sprintf(
 					'Upload is too large — this server accepts at most %s per request. Increase post_max_size and upload_max_filesize in php.ini.',
-					$this->formatBytes($postMax),
+					FileUtils::formatBytes($postMax, 1),
 				)]],
 			);
 		}
@@ -85,16 +85,4 @@ readonly class PostMaxSizeMiddleware implements MiddlewareInterface
 		return $contentLength > $postMax && $_POST === [] && $_FILES === [];
 	}
 
-	private function formatBytes(int $bytes): string
-	{
-		$units = ['B', 'KB', 'MB', 'GB'];
-		$value = (float)$bytes;
-		$i     = 0;
-		while ($value >= 1024 && $i < count($units) - 1) {
-			$value /= 1024;
-			$i++;
-		}
-
-		return rtrim(rtrim(number_format($value, 1), '0'), '.') . ' ' . $units[$i];
-	}
 }

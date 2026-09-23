@@ -10,12 +10,14 @@ use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Domain\Import\Concerns\QueuesImports;
 
 class TotalCmsOneImporter
 {
+	use QueuesImports;
+
 	private readonly LoggerInterface $logger;
 	private string $cmsDataPath;
-	private int $importCount = 0;
 
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
@@ -177,9 +179,7 @@ class TotalCmsOneImporter
 			}
 
 			// Queue the import job
-			$this->jobQueuer->queueImport($collectionId, $postData);
-			$this->importCount++;
-			$this->logger->info(sprintf('Queued blog post import: %s/%s', $collectionId, $postData['id']));
+			$this->queueObject($collectionId, $postData, sprintf('Queued blog post import: %s/%s', $collectionId, $postData['id']));
 		} catch (\Exception $e) {
 			$this->logger->error(sprintf('Error importing blog post %s: %s', $postFile, $e->getMessage()));
 		}
@@ -219,9 +219,7 @@ class TotalCmsOneImporter
 					'date' => date('c', (int)$timestamp),
 				];
 
-				$this->jobQueuer->queueImport('date', $data);
-				$this->importCount++;
-				$this->logger->info(sprintf('Queued date import: %s', $id));
+				$this->queueObject('date', $data, sprintf('Queued date import: %s', $id));
 			} catch (\Exception $e) {
 				$this->logger->error(sprintf('Error importing date %s: %s', $dateFile, $e->getMessage()));
 			}
@@ -255,9 +253,7 @@ class TotalCmsOneImporter
 				'depot' => $depotDir,
 			];
 
-			$this->jobQueuer->queueImport('depot', $data);
-			$this->importCount++;
-			$this->logger->info(sprintf('Queued depot import: %s', $id));
+			$this->queueObject('depot', $data, sprintf('Queued depot import: %s', $id));
 		}
 	}
 
@@ -307,9 +303,7 @@ class TotalCmsOneImporter
 						$data['image'] = $imageFile;
 					}
 
-					$this->jobQueuer->queueImport($feedId, $data);
-					$this->importCount++;
-					$this->logger->info(sprintf('Queued feed item import: %s/%s', $feedId, $id));
+					$this->queueObject($feedId, $data, sprintf('Queued feed item import: %s/%s', $feedId, $id));
 				} catch (\Exception $e) {
 					$this->logger->error(sprintf('Error importing feed item %s: %s', $feedFile, $e->getMessage()));
 				}
@@ -345,9 +339,7 @@ class TotalCmsOneImporter
 					'file' => $file,
 				];
 
-				$this->jobQueuer->queueImport('file', $data);
-				$this->importCount++;
-				$this->logger->info(sprintf('Queued file import: %s', $id));
+				$this->queueObject('file', $data, sprintf('Queued file import: %s', $id));
 			}
 		}
 	}
@@ -384,9 +376,7 @@ class TotalCmsOneImporter
 				'gallery' => $galleryDir,
 			];
 
-			$this->jobQueuer->queueImport('gallery', $data);
-			$this->importCount++;
-			$this->logger->info(sprintf('Queued gallery import: %s', $dirName));
+			$this->queueObject('gallery', $data, sprintf('Queued gallery import: %s', $dirName));
 		}
 	}
 
@@ -423,9 +413,7 @@ class TotalCmsOneImporter
 					'image' => $image,
 				];
 
-				$this->jobQueuer->queueImport('image', $data);
-				$this->importCount++;
-				$this->logger->info(sprintf('Queued image import: %s', $filename));
+				$this->queueObject('image', $data, sprintf('Queued image import: %s', $filename));
 			}
 		}
 	}
@@ -459,9 +447,7 @@ class TotalCmsOneImporter
 					'text' => $content,
 				];
 
-				$this->jobQueuer->queueImport('text', $data);
-				$this->importCount++;
-				$this->logger->info(sprintf('Queued text import: %s', $id));
+				$this->queueObject('text', $data, sprintf('Queued text import: %s', $id));
 			} catch (\Exception $e) {
 				$this->logger->error(sprintf('Error importing text %s: %s', $textFile, $e->getMessage()));
 			}
@@ -497,9 +483,7 @@ class TotalCmsOneImporter
 					'url' => $url,
 				];
 
-				$this->jobQueuer->queueImport('url', $data);
-				$this->importCount++;
-				$this->logger->info(sprintf('Queued video/url import: %s', $id));
+				$this->queueObject('url', $data, sprintf('Queued video/url import: %s', $id));
 			} catch (\Exception $e) {
 				$this->logger->error(sprintf('Error importing video %s: %s', $videoFile, $e->getMessage()));
 			}

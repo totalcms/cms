@@ -13,11 +13,7 @@ namespace TotalCMS\Domain\Visualizer\Service;
  */
 final class MermaidErdRenderer
 {
-	/** @var array<string,string> node id => mermaid entity id */
-	private array $entityIds = [];
-
-	/** @var array<string,bool> taken entity ids (collision guard) */
-	private array $taken = [];
+	private MermaidIdAllocator $ids;
 
 	/** @var list<string> edge types, in the order relationship lines are emitted */
 	private array $edgeTypes = [];
@@ -38,8 +34,7 @@ final class MermaidErdRenderer
 	 */
 	public function render(array $graph): string
 	{
-		$this->entityIds = [];
-		$this->taken     = [];
+		$this->ids = new MermaidIdAllocator();
 		$this->edgeTypes = [];
 
 		$lines = ['erDiagram'];
@@ -117,25 +112,7 @@ final class MermaidErdRenderer
 	/** Stable, unique, word-char entity id for a node id. */
 	private function entityId(string $nodeId): string
 	{
-		if (isset($this->entityIds[$nodeId])) {
-			return $this->entityIds[$nodeId];
-		}
-
-		$base = (string)preg_replace('/[^A-Za-z0-9_]/', '_', $nodeId);
-		if ($base === '' || ctype_digit($base[0])) {
-			$base = 'n_' . $base;
-		}
-
-		$id = $base;
-		$i  = 2;
-		while (isset($this->taken[$id])) {
-			$id = $base . '_' . $i++;
-		}
-
-		$this->taken[$id]          = true;
-		$this->entityIds[$nodeId]  = $id;
-
-		return $id;
+		return $this->ids->idFor($nodeId);
 	}
 
 	/** Edge label: the property name, or the edge type when there's no property. */

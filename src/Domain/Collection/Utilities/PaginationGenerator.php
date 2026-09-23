@@ -24,17 +24,7 @@ class PaginationGenerator
 			return '';
 		}
 
-		$prevPage = $currentPage === 1 ? $currentPage : $currentPage - 1;
-		$prevLink = HTMLUtils::element('a', $prevContent, [
-			'href'  => self::buildPageUrl($pageKey, $prevPage, $getData),
-			'class' => 'pagination-prev',
-		]);
-
-		$nextPage = $currentPage == $totalPages ? $currentPage : $currentPage + 1;
-		$nextLink = HTMLUtils::element('a', $nextContent, [
-			'href'  => self::buildPageUrl($pageKey, $nextPage, $getData),
-			'class' => 'pagination-next',
-		]);
+		[$prevLink, $nextLink] = self::prevNextLinks($currentPage, (int)$totalPages, $pageKey, $prevContent, $nextContent, $getData);
 
 		$currentPage = HTMLUtils::element('span', strval($currentPage), ['class' => 'pagination-current', 'contenteditable' => 'plaintext-only']);
 		$totalPages  = HTMLUtils::element('span', strval($totalPages), ['class' => 'pagination-total']);
@@ -62,17 +52,7 @@ class PaginationGenerator
 			return '';
 		}
 
-		$prevPage = $currentPage === 1 ? $currentPage : $currentPage - 1;
-		$prevLink = HTMLUtils::element('a', $prevContent, [
-			'href'  => self::buildPageUrl($pageKey, $prevPage, $getData),
-			'class' => 'pagination-prev',
-		]);
-
-		$nextPage = $currentPage == $totalPages ? $currentPage : $currentPage + 1;
-		$nextLink = HTMLUtils::element('a', $nextContent, [
-			'href'  => self::buildPageUrl($pageKey, $nextPage, $getData),
-			'class' => 'pagination-next',
-		]);
+		[$prevLink, $nextLink] = self::prevNextLinks($currentPage, (int)$totalPages, $pageKey, $prevContent, $nextContent, $getData);
 
 		$pages = '';
 
@@ -89,6 +69,30 @@ class PaginationGenerator
 		$pages = HTMLUtils::element('ul', $pages, ['class' => 'pagination-pages']);
 
 		return HTMLUtils::element('nav', $prevLink . $pages . $nextLink, ['class' => 'cms-pagination full']);
+	}
+
+	/**
+	 * The Previous / Next anchors; at either end they point at the current page.
+	 *
+	 * @param array<string,string> $getData
+	 *
+	 * @return array{0: string, 1: string}
+	 */
+	private static function prevNextLinks(int $currentPage, int $totalPages, string $pageKey, string $prevContent, string $nextContent, array $getData): array
+	{
+		$prevPage = $currentPage === 1 ? $currentPage : $currentPage - 1;
+		$prevLink = HTMLUtils::element('a', $prevContent, [
+			'href'  => self::buildPageUrl($pageKey, $prevPage, $getData),
+			'class' => 'pagination-prev',
+		]);
+
+		$nextPage = $currentPage === $totalPages ? $currentPage : $currentPage + 1;
+		$nextLink = HTMLUtils::element('a', $nextContent, [
+			'href'  => self::buildPageUrl($pageKey, $nextPage, $getData),
+			'class' => 'pagination-next',
+		]);
+
+		return [$prevLink, $nextLink];
 	}
 
 	/** @param array<string,string> $getData */

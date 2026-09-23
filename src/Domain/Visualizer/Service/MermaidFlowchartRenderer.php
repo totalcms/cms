@@ -14,19 +14,14 @@ namespace TotalCMS\Domain\Visualizer\Service;
  */
 final class MermaidFlowchartRenderer
 {
-	/** @var array<string,string> node key => mermaid node id */
-	private array $nodeIds = [];
-
-	/** @var array<string,bool> taken mermaid ids (collision guard) */
-	private array $taken = [];
+	private MermaidIdAllocator $ids;
 
 	/**
 	 * @param array{nodes:array<string,array<string,mixed>>,edges:list<array<string,mixed>>} $graph
 	 */
 	public function render(array $graph): string
 	{
-		$this->nodeIds = [];
-		$this->taken   = [];
+		$this->ids = new MermaidIdAllocator();
 
 		$lines = ['flowchart LR'];
 
@@ -73,25 +68,7 @@ final class MermaidFlowchartRenderer
 
 	private function nodeId(string $key): string
 	{
-		if (isset($this->nodeIds[$key])) {
-			return $this->nodeIds[$key];
-		}
-
-		$base = (string)preg_replace('/[^A-Za-z0-9_]/', '_', $key);
-		if ($base === '' || ctype_digit($base[0])) {
-			$base = 'n_' . $base;
-		}
-
-		$id = $base;
-		$i  = 2;
-		while (isset($this->taken[$id])) {
-			$id = $base . '_' . $i++;
-		}
-
-		$this->taken[$id]     = true;
-		$this->nodeIds[$key]  = $id;
-
-		return $id;
+		return $this->ids->idFor($key);
 	}
 
 	private function subgraphId(string $collection): string

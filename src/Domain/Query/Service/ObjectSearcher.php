@@ -177,24 +177,7 @@ readonly class ObjectSearcher
 	 */
 	private static function itemMatchesTerm(array $item, string $term): bool
 	{
-		foreach ($item as $value) {
-			if (empty($value)) {
-				continue;
-			}
-
-			if (is_array($value)) {
-				if (self::searchArrayValues($value, $term)) {
-					return true;
-				}
-			} elseif (is_scalar($value)) {
-				$pattern = '/\b' . preg_quote($term, '/') . '/i';
-				if (preg_match($pattern, (string)$value) === 1) {
-					return true;
-				}
-			}
-		}
-
-		return false;
+		return self::searchArrayValues($item, $term);
 	}
 
 	/**

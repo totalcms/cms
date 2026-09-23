@@ -9,6 +9,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * Cache sizing advisor that analyzes CMS data sizes and provides
@@ -121,13 +122,13 @@ readonly class CacheSizingAdvisor
 			'total_objects'       => $totalObjectCount,
 			'total_objects_human' => number_format($totalObjectCount),
 			'total_bytes'         => $totalBytes,
-			'total_bytes_human'   => $this->formatBytes($totalBytes),
+			'total_bytes_human'   => FileUtils::formatBytes($totalBytes, 1),
 			'object_bytes'        => $totalObjectBytes,
-			'object_bytes_human'  => $this->formatBytes($totalObjectBytes),
+			'object_bytes_human'  => FileUtils::formatBytes($totalObjectBytes, 1),
 			'index_bytes'         => $totalIndexBytes,
-			'index_bytes_human'   => $this->formatBytes($totalIndexBytes),
+			'index_bytes_human'   => FileUtils::formatBytes($totalIndexBytes, 1),
 			'meta_bytes'          => $totalMetaBytes,
-			'meta_bytes_human'    => $this->formatBytes($totalMetaBytes),
+			'meta_bytes_human'    => FileUtils::formatBytes($totalMetaBytes, 1),
 			'collection_count'    => $collectionCount,
 			'collections'         => $perCollection,
 		];
@@ -183,15 +184,15 @@ readonly class CacheSizingAdvisor
 			'schema'                     => $collection->schema,
 			'object_count'               => $objectCount,
 			'object_bytes'               => $objectBytes,
-			'object_bytes_human'         => $this->formatBytes($objectBytes),
+			'object_bytes_human'         => FileUtils::formatBytes($objectBytes, 1),
 			'index_bytes'                => $indexBytes,
-			'index_bytes_human'          => $this->formatBytes($indexBytes),
+			'index_bytes_human'          => FileUtils::formatBytes($indexBytes, 1),
 			'meta_bytes'                 => $metaBytes,
-			'meta_bytes_human'           => $this->formatBytes($metaBytes),
+			'meta_bytes_human'           => FileUtils::formatBytes($metaBytes, 1),
 			'avg_object_bytes'           => $avgObjectBytes,
-			'avg_object_bytes_human'     => $this->formatBytes($avgObjectBytes),
+			'avg_object_bytes_human'     => FileUtils::formatBytes($avgObjectBytes, 1),
 			'largest_object_bytes'       => $largestBytes,
-			'largest_object_bytes_human' => $this->formatBytes($largestBytes),
+			'largest_object_bytes_human' => FileUtils::formatBytes($largestBytes, 1),
 		];
 	}
 
@@ -242,10 +243,10 @@ readonly class CacheSizingAdvisor
 			'installed'                => $this->apcuService->isInstalled(),
 			'available'                => $this->apcuService->isAvailable(),
 			'recommended_bytes'        => $apcuRecommended,
-			'recommended_human'        => $this->formatBytes($apcuRecommended),
+			'recommended_human'        => FileUtils::formatBytes($apcuRecommended, 1),
 			'recommended_allocation'   => $this->formatAllocation($apcuAllocation),
 			'current_allocated_bytes'  => $apcuAllocated,
-			'current_allocated_human'  => $apcuAllocated > 0 ? $this->formatBytes($apcuAllocated) : 'N/A',
+			'current_allocated_human'  => $apcuAllocated > 0 ? FileUtils::formatBytes($apcuAllocated, 1) : 'N/A',
 			'sufficient'               => $apcuAllocated > 0 ? $apcuSufficient : null,
 			'entry_overhead'           => self::APCU_ENTRY_OVERHEAD,
 		];
@@ -265,7 +266,7 @@ readonly class CacheSizingAdvisor
 			'installed'              => $this->redisService->isInstalled(),
 			'available'              => $this->redisService->isAvailable(),
 			'recommended_bytes'      => $redisRecommended,
-			'recommended_human'      => $this->formatBytes($redisRecommended),
+			'recommended_human'      => FileUtils::formatBytes($redisRecommended, 1),
 			'recommended_allocation' => $this->formatAllocation($redisAllocation),
 			'entry_overhead'         => self::REDIS_ENTRY_OVERHEAD,
 		];
@@ -284,7 +285,7 @@ readonly class CacheSizingAdvisor
 			'installed'              => $this->memcachedService->isInstalled(),
 			'available'              => $this->memcachedService->isAvailable(),
 			'recommended_bytes'      => $memcachedRecommended,
-			'recommended_human'      => $this->formatBytes($memcachedRecommended),
+			'recommended_human'      => FileUtils::formatBytes($memcachedRecommended, 1),
 			'recommended_allocation' => $this->formatAllocation($memcachedAllocation),
 			'entry_overhead'         => self::MEMCACHED_ENTRY_OVERHEAD,
 		];
@@ -295,7 +296,7 @@ readonly class CacheSizingAdvisor
 			'estimated_entries'       => $estimatedEntries,
 			'estimated_entries_human' => number_format($estimatedEntries),
 			'base_memory'             => $baseMemory,
-			'base_memory_human'       => $this->formatBytes($baseMemory),
+			'base_memory_human'       => FileUtils::formatBytes($baseMemory, 1),
 			'backends'                => $backends,
 			'has_memory_cache'        => $hasMemoryCache,
 		];
@@ -361,27 +362,6 @@ readonly class CacheSizingAdvisor
 		}
 
 		return $examples;
-	}
-
-	/**
-	 * Format bytes into human-readable string.
-	 */
-	private function formatBytes(int $bytes): string
-	{
-		if ($bytes === 0) {
-			return '0 B';
-		}
-
-		$units = ['B', 'KB', 'MB', 'GB'];
-		$i     = 0;
-		$value = (float)$bytes;
-
-		while ($value >= 1024 && $i < count($units) - 1) {
-			$value /= 1024;
-			$i++;
-		}
-
-		return round($value, 1) . ' ' . $units[$i];
 	}
 
 	/**

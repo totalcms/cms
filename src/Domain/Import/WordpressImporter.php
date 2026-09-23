@@ -9,11 +9,13 @@ use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\RemoteFileDownloader;
+use TotalCMS\Domain\Import\Concerns\QueuesImports;
 
 class WordpressImporter
 {
+	use QueuesImports;
+
 	private readonly LoggerInterface $logger;
-	private int $importCount = 0;
 
 	/** @var array<string,string> Resolved WXR namespace URIs (populated per-document) */
 	private array $ns = [
@@ -286,9 +288,7 @@ class WordpressImporter
 				}
 			}
 
-			$this->jobQueuer->queueImport($collection, $data);
-			$this->importCount++;
-			$this->logger->info(sprintf('Queued WordPress post import: %s/%s', $collection, $slug));
+			$this->queueObject($collection, $data, sprintf('Queued WordPress post import: %s/%s', $collection, $slug));
 		} catch (\Exception $e) {
 			$title = (string)$item->title;
 			$this->logger->error(sprintf('Error importing WordPress post "%s": %s', $title, $e->getMessage()));

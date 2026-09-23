@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Twig\Service;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * Service for rendering public depot file browser components.
@@ -164,7 +165,7 @@ class DepotBrowserRenderer
 			$actions .= HTMLUtils::element('button', '', ['type' => 'button', 'class' => 'action-preview', 'title' => 'Preview']);
 		}
 		if ($size > 0) {
-			$actions .= HTMLUtils::element('span', $this->formatSize($size), ['class' => 'file-size']);
+			$actions .= HTMLUtils::element('span', FileUtils::formatBytes($size, 1), ['class' => 'file-size']);
 		}
 		$content .= HTMLUtils::element('span', $actions, ['class' => 'file-actions']);
 
@@ -308,18 +309,6 @@ class DepotBrowserRenderer
 		$content = HTMLUtils::element('div', '', ['class' => 'preview-content']);
 
 		return HTMLUtils::dialog($content, 'depot-browser-preview');
-	}
-
-	private function formatSize(int $bytes): string
-	{
-		if ($bytes <= 0) {
-			return '0 B';
-		}
-
-		$sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-		$i     = (int)floor(log($bytes) / log(1024));
-
-		return round($bytes / (1024 ** $i), 1) . ' ' . $sizes[$i];
 	}
 
 	private function humanizeFilename(string $filename): string

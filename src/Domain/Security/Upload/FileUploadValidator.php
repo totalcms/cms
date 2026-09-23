@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\Security\Upload;
 
 use Psr\Http\Message\UploadedFileInterface;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * Comprehensive file upload security validator.
@@ -120,8 +121,8 @@ class FileUploadValidator
 		if ($file->getSize() > $maxSize) {
 			$errors[] = sprintf(
 				'File size (%s) exceeds maximum allowed size (%s)',
-				$this->formatBytes($file->getSize()),
-				$this->formatBytes($maxSize)
+				FileUtils::formatBytes($file->getSize(), 2),
+				FileUtils::formatBytes($maxSize, 2)
 			);
 		}
 
@@ -262,7 +263,7 @@ class FileUploadValidator
 		foreach (self::ALLOWED_EXTENSIONS as $category => $extensions) {
 			$categories[$category] = [
 				'max_size'           => self::MAX_FILE_SIZES[$category],
-				'max_size_formatted' => $this->formatBytes(self::MAX_FILE_SIZES[$category]),
+				'max_size_formatted' => FileUtils::formatBytes(self::MAX_FILE_SIZES[$category], 2),
 				'extensions'         => $extensions,
 				'mime_types'         => self::ALLOWED_MIME_TYPES[$category],
 			];
@@ -288,18 +289,4 @@ class FileUploadValidator
 		};
 	}
 
-	/**
-	 * Format bytes into human-readable format.
-	 */
-	private function formatBytes(int $bytes): string
-	{
-		$units = ['B', 'KB', 'MB', 'GB'];
-		$bytes = max($bytes, 0);
-		$pow   = (int)floor(($bytes ? log($bytes) : 0) / log(1024));
-		$pow   = min($pow, count($units) - 1);
-
-		$bytes /= (1 << (10 * $pow));
-
-		return round($bytes, 2) . ' ' . $units[$pow];
-	}
 }

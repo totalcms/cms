@@ -99,4 +99,23 @@ class FileUtils
 			default => $number,
 		};
 	}
+
+	/**
+	 * A byte count as a short human string: `8 MB`, `1.5 GB`, `0 B`. Unlike
+	 * {@see fileSizeString()} (always one decimal, for listings), trailing
+	 * zeros are dropped — the form the admin's limits and diagnostics show.
+	 */
+	public static function formatBytes(int $bytes, int $precision = 1): string
+	{
+		$units = ['B', 'KB', 'MB', 'GB', 'TB'];
+		$value = (float)max($bytes, 0);
+		$unit  = 0;
+
+		while ($value >= 1024 && $unit < count($units) - 1) {
+			$value /= 1024;
+			$unit++;
+		}
+
+		return round($value, $precision) . ' ' . $units[$unit];
+	}
 }

@@ -46,25 +46,7 @@ readonly class ObjectRelationshipResolver
 		$nodes      = [];
 		$edges      = [];
 		$truncated  = false;
-		$indexCache = [];
-		$titleProps = [];
-
-		$titlePropFor = function (string $coll) use (&$titleProps): string {
-			if (!array_key_exists($coll, $titleProps)) {
-				$titleProps[$coll] = $this->titlePropertyFor($coll);
-			}
-
-			return $titleProps[$coll];
-		};
-
-		$labelFor = function (string $coll, string $objId) use (&$indexCache, $titlePropFor): string {
-			if (!array_key_exists($coll, $indexCache)) {
-				$indexCache[$coll] = $this->indexById($coll);
-			}
-			$entry = $indexCache[$coll][$objId] ?? null;
-
-			return is_array($entry) ? $this->label($entry, $titlePropFor($coll)) : $objId;
-		};
+		[$labelFor, $titlePropFor] = $this->labelResolvers();
 
 		$focalKey         = $this->nodeKey($collection, $id);
 		$nodes[$focalKey] = $this->node($collection, $id, $labelFor($collection, $id), true);
@@ -114,25 +96,7 @@ readonly class ObjectRelationshipResolver
 		$nodes      = [];
 		$edges      = [];
 		$truncated  = false;
-		$indexCache = [];
-		$titleProps = [];
-
-		$titlePropFor = function (string $coll) use (&$titleProps): string {
-			if (!array_key_exists($coll, $titleProps)) {
-				$titleProps[$coll] = $this->titlePropertyFor($coll);
-			}
-
-			return $titleProps[$coll];
-		};
-
-		$labelFor = function (string $coll, string $objId) use (&$indexCache, $titlePropFor): string {
-			if (!array_key_exists($coll, $indexCache)) {
-				$indexCache[$coll] = $this->indexById($coll);
-			}
-			$entry = $indexCache[$coll][$objId] ?? null;
-
-			return is_array($entry) ? $this->label($entry, $titlePropFor($coll)) : $objId;
-		};
+		[$labelFor, $titlePropFor] = $this->labelResolvers();
 
 		try {
 			$index = $this->indexReader->fetchIndex($collection);
@@ -202,6 +166,34 @@ readonly class ObjectRelationshipResolver
 		}
 
 		return ['nodes' => $nodes, 'edges' => $edges, 'truncated' => $truncated];
+	}
+
+	/**
+	 * The memoized lookups a diagram build needs: `(collection, id) => label`,
+	 * and `collection => title property`, each loading a collection's index
+	 * or title property once.
+	 *
+	 * @return array{0: \Closure(string, string): string, 1: \Closure(string): string}
+	 */
+	private function labelResolvers(): array
+	{
+		$indexCache = [];
+		$titleProps = [];
+
+		$titlePropFor = function (string $coll) use (&$titleProps): string {
+			$titleProps[$coll] ??= $this->titlePropertyFor($coll);
+
+			return $titleProps[$coll];
+		};
+
+		$labelFor = function (string $coll, string $objId) use (&$indexCache, $titlePropFor): string {
+			$indexCache[$coll] ??= $this->indexById($coll);
+			$entry = $indexCache[$coll][$objId] ?? null;
+
+			return is_array($entry) ? $this->label($entry, $titlePropFor($coll)) : $objId;
+		};
+
+		return [$labelFor, $titlePropFor];
 	}
 
 	/**

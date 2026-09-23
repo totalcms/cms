@@ -9,13 +9,15 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use Webuni\FrontMatter\FrontMatter;
+use TotalCMS\Domain\Import\Concerns\QueuesImports;
 
 class AlloyImporter
 {
+	use QueuesImports;
+
 	private readonly LoggerInterface $logger;
 	private readonly FrontMatter $frontMatterParser;
 	private readonly \Parsedown $markdownParser;
-	private int $importCount = 0;
 
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
@@ -26,6 +28,23 @@ class AlloyImporter
 		$this->logger            = $loggerFactory->channelLogger(LogChannel::AlloyImporter);
 		$this->frontMatterParser = new FrontMatter();
 		$this->markdownParser    = new \Parsedown();
+	}
+
+	/**
+	 * A Markdown file split into its front matter and document.
+	 *
+	 * @return array{0: \Webuni\FrontMatter\Document, 1: array<string,mixed>}
+	 */
+	private function readDocument(string $file): array
+	{
+		$content = file_get_contents($file);
+		if ($content === false) {
+			throw new \RuntimeException('Failed to read file: ' . $file);
+		}
+
+		$document = $this->frontMatterParser->parse($content);
+
+		return [$document, $document->getData()];
 	}
 
 	/**
@@ -131,12 +150,7 @@ class AlloyImporter
 		}
 
 		try {
-			$content = file_get_contents($file);
-			if ($content === false) {
-				throw new \RuntimeException('Failed to read file: ' . $file);
-			}
-			$document    = $this->frontMatterParser->parse($content);
-			$frontMatter = $document->getData();
+			[$document, $frontMatter] = $this->readDocument($file);
 
 			return [
 				'filename'  => $filename,
@@ -165,12 +179,7 @@ class AlloyImporter
 		$id       = $filename; // Use filename as ID
 
 		try {
-			$content = file_get_contents($file);
-			if ($content === false) {
-				throw new \RuntimeException('Failed to read file: ' . $file);
-			}
-			$document    = $this->frontMatterParser->parse($content);
-			$frontMatter = $document->getData();
+			[$document, $frontMatter] = $this->readDocument($file);
 
 			return [
 				'filename'       => $filename,
@@ -194,12 +203,7 @@ class AlloyImporter
 		$id       = $filename; // Use filename as ID
 
 		try {
-			$content = file_get_contents($file);
-			if ($content === false) {
-				throw new \RuntimeException('Failed to read file: ' . $file);
-			}
-			$document    = $this->frontMatterParser->parse($content);
-			$frontMatter = $document->getData();
+			[$document, $frontMatter] = $this->readDocument($file);
 
 			return [
 				'filename' => $filename,
@@ -253,12 +257,7 @@ class AlloyImporter
 				$id               = $filename;
 			}
 
-			$content = file_get_contents($file);
-			if ($content === false) {
-				throw new \RuntimeException('Failed to read file: ' . $file);
-			}
-			$document    = $this->frontMatterParser->parse($content);
-			$frontMatter = $document->getData();
+			[$document, $frontMatter] = $this->readDocument($file);
 
 			$data = [
 				'id'      => $id,
@@ -312,9 +311,7 @@ class AlloyImporter
 				}
 			}
 
-			$this->jobQueuer->queueImport($collectionId, $data);
-			$this->importCount++;
-			$this->logger->info(sprintf('Queued blog post import: %s/%s', $collectionId, $id));
+			$this->queueObject($collectionId, $data, sprintf('Queued blog post import: %s/%s', $collectionId, $id));
 		} catch (\Exception $e) {
 			$this->logger->error(sprintf('Error importing blog post %s: %s', $file, $e->getMessage()));
 		}
@@ -361,9 +358,7 @@ class AlloyImporter
 				'styledtext' => $this->markdownParser->text($document->getContent()),
 			];
 
-			$this->jobQueuer->queueImport($collectionId, $data);
-			$this->importCount++;
-			$this->logger->info(sprintf('Queued embed import: %s/%s', $collectionId, $id));
+			$this->queueObject($collectionId, $data, sprintf('Queued embed import: %s/%s', $collectionId, $id));
 		} catch (\Exception $e) {
 			$this->logger->error(sprintf('Error importing embed %s: %s', $file, $e->getMessage()));
 		}
@@ -393,12 +388,7 @@ class AlloyImporter
 			$filename = basename($file, '.md');
 			$id       = $filename; // Use filename as ID
 
-			$content = file_get_contents($file);
-			if ($content === false) {
-				throw new \RuntimeException('Failed to read file: ' . $file);
-			}
-			$document    = $this->frontMatterParser->parse($content);
-			$frontMatter = $document->getData();
+			[$document, $frontMatter] = $this->readDocument($file);
 
 			$type = $frontMatter['type'] ?? 'text';
 			$data = $frontMatter['data'] ?? '';
@@ -415,9 +405,7 @@ class AlloyImporter
 					'text' => $data,
 				];
 
-				$this->jobQueuer->queueImport($collectionId, $objectData);
-				$this->importCount++;
-				$this->logger->info(sprintf('Queued text droplet import: %s/%s', $collectionId, $id));
+				$this->queueObject($collectionId, $objectData, sprintf('Queued text droplet import: %s/%s', $collectionId, $id));
 			} elseif ($type === 'image') {
 				// Import as image object
 				$collectionId = 'image';
@@ -437,9 +425,7 @@ class AlloyImporter
 							'image' => $imagePath,
 						];
 
-						$this->jobQueuer->queueImport($collectionId, $objectData);
-						$this->importCount++;
-						$this->logger->info(sprintf('Queued image droplet import: %s/%s', $collectionId, $id));
+						$this->queueObject($collectionId, $objectData, sprintf('Queued image droplet import: %s/%s', $collectionId, $id));
 					} else {
 						$this->logger->warning(sprintf('Image not found for droplet %s: %s', $id, $imagePath));
 					}
