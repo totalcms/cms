@@ -11,6 +11,7 @@ use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\ProcessLock;
 
 /**
  * Drains the job queue over HTTP, for hosts whose cron can only fetch a URL.
@@ -49,16 +50,11 @@ final readonly class CronJobsAction
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
-		$lockPath = PathUtils::absolutePath($this->config->datadir, self::LOCK_FILE);
-		$lock     = @fopen($lockPath, 'c');
-
-		if ($lock === false) {
+		$lock = ProcessLock::open(PathUtils::absolutePath($this->config->datadir, self::LOCK_FILE));
+		if ($lock === null) {
 			return $this->renderer->json($response, ['skipped' => 'no-lock-file'], 200);
 		}
-
-		if (!flock($lock, LOCK_EX | LOCK_NB)) {
-			fclose($lock);
-
+		if (!$lock->acquire()) {
 			return $this->renderer->json($response, ['skipped' => 'already-running'], 200);
 		}
 
@@ -78,8 +74,7 @@ final readonly class CronJobsAction
 				'remaining'       => $this->jobRunner->hasPendingJobs(),
 			], 200);
 		} finally {
-			flock($lock, LOCK_UN);
-			fclose($lock);
+			$lock->release();
 		}
 	}
 

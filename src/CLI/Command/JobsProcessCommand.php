@@ -10,6 +10,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\Domain\JobQueue\Service\JobQueueDrainer;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
+use TotalCMS\Support\ProcessLock;
 
 /**
  * Process the job queue.
@@ -51,28 +52,15 @@ class JobsProcessCommand extends BaseCommand
 			ini_set('memory_limit', $memory);
 		}
 
-		// Lock file
-		$lockFilePath = PathUtils::absolutePath($this->totalcms->config->systemDir(), '.processJobs.lock');
-		$lockFile     = @fopen($lockFilePath, 'c');
-		if ($lockFile === false) {
+		$lock = ProcessLock::open(PathUtils::absolutePath($this->totalcms->config->systemDir(), '.processJobs.lock'));
+		if ($lock === null) {
 			return $this->outputError($input, $output, 'Unable to open lock file.');
 		}
-
-		if (!flock($lockFile, LOCK_EX | LOCK_NB)) {
-			fclose($lockFile);
-
+		if (!$lock->acquire()) {
 			return $this->outputError($input, $output, 'Job processor is already running.');
 		}
-
-		ftruncate($lockFile, 0);
-		fwrite($lockFile, (string)getmypid());
-
-		// Release lock on shutdown
-		register_shutdown_function(function () use ($lockFile, $lockFilePath): void {
-			flock($lockFile, LOCK_UN);
-			fclose($lockFile);
-			@unlink($lockFilePath);
-		});
+		$lock->stampPid();
+		$lock->releaseOnShutdown();
 
 		$verbose = $output->isVerbose();
 		$isJson  = $this->isJson($input);
