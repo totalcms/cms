@@ -30,7 +30,7 @@ final class LeagueScopeRepositoryTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->tmpFile       = sys_get_temp_dir() . '/oauth-clients-' . uniqid() . '.json';
-		$this->clientRepo    = new OAuthClientRepository($this->tmpFile);
+		$this->clientRepo    = new OAuthClientRepository(...jsonStoreArgs($this->tmpFile));
 		$this->registry      = new OAuthScopeRegistry();
 		$this->accessControl = $this->createMock(AccessControlService::class);
 		$this->config        = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();

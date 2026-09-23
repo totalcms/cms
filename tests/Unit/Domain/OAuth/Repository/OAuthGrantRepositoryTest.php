@@ -26,7 +26,7 @@ final class OAuthGrantRepositoryTest extends TestCase
 
 	public function testFindsGrantById(): void
 	{
-		$repo = new OAuthGrantRepository($this->tmpFile);
+		$repo = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 		$repo->save($this->makeGrant('g-1'));
 
 		$loaded = $repo->find('g-1');
@@ -36,13 +36,13 @@ final class OAuthGrantRepositoryTest extends TestCase
 
 	public function testFindReturnsNullForUnknown(): void
 	{
-		$repo = new OAuthGrantRepository($this->tmpFile);
+		$repo = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 		$this->assertNull($repo->find('not-there'));
 	}
 
 	public function testFindByRefreshTokenHash(): void
 	{
-		$repo = new OAuthGrantRepository($this->tmpFile);
+		$repo = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 		$repo->save($this->makeGrant('g-1', null, null, 'hash-abc'));
 		$repo->save($this->makeGrant('g-2', null, null, 'hash-xyz'));
 
@@ -55,7 +55,7 @@ final class OAuthGrantRepositoryTest extends TestCase
 
 	public function testFindByClientIdReturnsAllMatching(): void
 	{
-		$repo = new OAuthGrantRepository($this->tmpFile);
+		$repo = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 		$repo->save($this->makeGrant('g-1', 'client-A'));
 		$repo->save($this->makeGrant('g-2', 'client-A'));
 		$repo->save($this->makeGrant('g-3', 'client-B'));
@@ -70,7 +70,7 @@ final class OAuthGrantRepositoryTest extends TestCase
 
 	public function testListsAllGrants(): void
 	{
-		$repo = new OAuthGrantRepository($this->tmpFile);
+		$repo = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 		$repo->save($this->makeGrant('g-1'));
 		$repo->save($this->makeGrant('g-2'));
 		$repo->save($this->makeGrant('g-3'));
@@ -81,7 +81,7 @@ final class OAuthGrantRepositoryTest extends TestCase
 
 	public function testDeletesGrant(): void
 	{
-		$repo = new OAuthGrantRepository($this->tmpFile);
+		$repo = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 		$repo->save($this->makeGrant('g-1'));
 		$repo->save($this->makeGrant('g-2'));
 		$repo->delete('g-1');
@@ -92,7 +92,7 @@ final class OAuthGrantRepositoryTest extends TestCase
 
 	public function testDeleteByClientIdRemovesAllForClient(): void
 	{
-		$repo = new OAuthGrantRepository($this->tmpFile);
+		$repo = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 		$repo->save($this->makeGrant('g-1', 'client-A'));
 		$repo->save($this->makeGrant('g-2', 'client-A'));
 		$repo->save($this->makeGrant('g-3', 'client-B'));
@@ -107,7 +107,7 @@ final class OAuthGrantRepositoryTest extends TestCase
 
 	public function testPruneExpiredRemovesPastGrantsAndReturnsCount(): void
 	{
-		$repo = new OAuthGrantRepository($this->tmpFile);
+		$repo = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 
 		// Expired grant — 1 hour in the past
 		$repo->save($this->makeGrant('g-expired', null, '2000-01-01T00:00:00Z'));
@@ -127,7 +127,7 @@ final class OAuthGrantRepositoryTest extends TestCase
 
 	public function testPruneExpiredReturnsZeroWhenNothingExpired(): void
 	{
-		$repo   = new OAuthGrantRepository($this->tmpFile);
+		$repo   = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 		$future = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))
 			->modify('+1 hour')
 			->format(\DateTimeInterface::ATOM);
@@ -139,7 +139,7 @@ final class OAuthGrantRepositoryTest extends TestCase
 
 	public function testSaveUpdatesExistingGrant(): void
 	{
-		$repo = new OAuthGrantRepository($this->tmpFile);
+		$repo = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 		$repo->save($this->makeGrant('g-1', 'client-A', null, 'old-hash'));
 
 		$updated = new OAuthGrantData(
@@ -203,7 +203,7 @@ final class OAuthGrantRepositoryTest extends TestCase
 		});
 
 		try {
-			$repo = new OAuthGrantRepository($this->tmpFile);
+			$repo = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 			$this->assertSame([], $repo->all());
 		} finally {
 			restore_error_handler();

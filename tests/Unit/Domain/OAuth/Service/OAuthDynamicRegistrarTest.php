@@ -23,7 +23,7 @@ final class OAuthDynamicRegistrarTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->tmpFile   = sys_get_temp_dir() . '/oauth-dyn-clients-' . uniqid() . '.json';
-		$this->clients   = new OAuthClientRepository($this->tmpFile);
+		$this->clients   = new OAuthClientRepository(...jsonStoreArgs($this->tmpFile));
 		$this->scopes    = new OAuthScopeRegistry();
 		$creator         = new OAuthClientCreator($this->clients, $this->scopes, new OAuthActivityLogger(new NullLogger()));
 		$this->registrar = new OAuthDynamicRegistrar($creator, $this->scopes);

@@ -18,7 +18,7 @@ final class LeagueClientRepositoryTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->tmpFile = sys_get_temp_dir() . '/oauth-clients-' . uniqid() . '.json';
-		$this->repo    = new OAuthClientRepository($this->tmpFile);
+		$this->repo    = new OAuthClientRepository(...jsonStoreArgs($this->tmpFile));
 		$this->adapter = new LeagueClientRepository($this->repo);
 	}
 

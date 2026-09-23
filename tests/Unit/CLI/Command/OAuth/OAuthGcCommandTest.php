@@ -21,9 +21,9 @@ beforeEach(function (): void {
 	$this->grantsTmpFile   = $prefix . '-grants.json';
 	$this->clientsTmpFile  = $prefix . '-clients.json';
 	$this->gcMarkerFile    = $prefix . '-marker';
-	$this->grantRepository = new OAuthGrantRepository($this->grantsTmpFile);
+	$this->grantRepository = new OAuthGrantRepository(...jsonStoreArgs($this->grantsTmpFile));
 	$this->clientPruner    = new OAuthClientPruner(
-		new OAuthClientRepository($this->clientsTmpFile),
+		new OAuthClientRepository(...jsonStoreArgs($this->clientsTmpFile)),
 		$this->grantRepository,
 		$this->gcMarkerFile,
 	);

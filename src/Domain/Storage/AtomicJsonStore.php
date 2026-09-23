@@ -118,7 +118,13 @@ final class AtomicJsonStore
 				return false;
 			}
 
-			return $this->save($path, $fn($data), $secret);
+			$updated = $fn($data);
+			if ($updated === $data) {
+				// Nothing changed: leave the file (and its mtime) alone.
+				return true;
+			}
+
+			return $this->save($path, $updated, $secret);
 		} finally {
 			if (is_resource($handle)) {
 				flock($handle, LOCK_UN);

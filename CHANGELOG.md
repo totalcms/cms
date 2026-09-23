@@ -6,6 +6,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Security
 - **One permission engine.** `AccessControlService` carried a second, session-flavoured copy of every rule in `UserAuthority` (fourteen near-identical methods) and the two had drifted. The session methods now resolve the caller's `UserAuthority` and ask it, so a rule exists once. Two rules that only the session side had now apply to OAuth and MCP callers as well: the super-admin-only utils (`jumpstart`, `permission-matrix`) cannot be granted by an access group on any path, and per-extension access follows the group's `extensions` permission
+- **The OAuth client and grant files are written like the API-key file.** Both repositories hand-rolled their JSON store: no lock around a read-modify-write, an ignored write failure, and a file that no longer parsed was silently replaced on the next write. They now sit on `AtomicJsonStore` through a shared `JsonListRepository`: locked, atomic, private (0600), and a corrupt file is refused rather than overwritten. The access-groups file gets the same treatment
 - **The session lifecycle policy lives in `SessionActivityTracker`.** Activity tracking, id rotation every quarter of the lifetime, and idle expiry (with the remember-me exemption) were a private method duplicated in the two auth middlewares, untested; the tracker is shared and covered
 
 ### Added

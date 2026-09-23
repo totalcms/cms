@@ -23,8 +23,8 @@ final class OAuthClientPrunerTest extends TestCase
 		$this->tmpDir = sys_get_temp_dir() . '/oauth-pruner-test-' . uniqid('', true);
 		mkdir($this->tmpDir, 0700, true);
 
-		$this->clients = new OAuthClientRepository($this->tmpDir . '/oauth-clients.json');
-		$this->grants  = new OAuthGrantRepository($this->tmpDir . '/oauth-grants.json');
+		$this->clients = new OAuthClientRepository(...jsonStoreArgs($this->tmpDir . '/oauth-clients.json'));
+		$this->grants  = new OAuthGrantRepository(...jsonStoreArgs($this->tmpDir . '/oauth-grants.json'));
 		$this->pruner  = new OAuthClientPruner($this->clients, $this->grants, $this->tmpDir . '/.oauth-gc');
 	}
 

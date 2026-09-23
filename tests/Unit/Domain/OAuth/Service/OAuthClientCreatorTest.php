@@ -21,7 +21,7 @@ final class OAuthClientCreatorTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->tmpFile = sys_get_temp_dir() . '/oauth-clients-' . uniqid() . '.json';
-		$this->clients = new OAuthClientRepository($this->tmpFile);
+		$this->clients = new OAuthClientRepository(...jsonStoreArgs($this->tmpFile));
 		$this->scopes  = new OAuthScopeRegistry();
 		$this->creator = new OAuthClientCreator($this->clients, $this->scopes, new OAuthActivityLogger(new NullLogger()));
 	}

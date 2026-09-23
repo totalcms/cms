@@ -25,7 +25,7 @@ final class OAuthGrantRevokeActionTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->grantsTmpFile = sys_get_temp_dir() . '/oauth-grants-revoke-test-' . uniqid() . '.json';
-		$this->grants        = new OAuthGrantRepository($this->grantsTmpFile);
+		$this->grants        = new OAuthGrantRepository(...jsonStoreArgs($this->grantsTmpFile));
 		$this->jsonRenderer  = new JsonRenderer();
 		$this->request       = $this->createMock(ServerRequestInterface::class);
 

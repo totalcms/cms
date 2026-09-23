@@ -38,8 +38,8 @@ final class OAuthPageDataTest extends TestCase
 	{
 		$this->oauthClientsTmpFile   = sys_get_temp_dir() . '/oauth-clients-pagedata-test-' . uniqid() . '.json';
 		$this->oauthGrantsTmpFile    = sys_get_temp_dir() . '/oauth-grants-pagedata-test-' . uniqid() . '.json';
-		$this->oauthClientRepository = new OAuthClientRepository($this->oauthClientsTmpFile);
-		$this->oauthGrantRepository  = new OAuthGrantRepository($this->oauthGrantsTmpFile);
+		$this->oauthClientRepository = new OAuthClientRepository(...jsonStoreArgs($this->oauthClientsTmpFile));
+		$this->oauthGrantRepository  = new OAuthGrantRepository(...jsonStoreArgs($this->oauthGrantsTmpFile));
 		$this->oauthScopeRegistry    = new OAuthScopeRegistry();
 		$this->collectionLister      = $this->createMock(CollectionLister::class);
 		$this->accessControlService  = $this->createMock(AccessControlService::class);

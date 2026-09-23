@@ -33,8 +33,8 @@ final class OAuthClientDeleteActionTest extends TestCase
 	{
 		$this->clientsTmpFile = sys_get_temp_dir() . '/oauth-clients-delete-test-' . uniqid() . '.json';
 		$this->grantsTmpFile  = sys_get_temp_dir() . '/oauth-grants-delete-test-' . uniqid() . '.json';
-		$this->clients        = new OAuthClientRepository($this->clientsTmpFile);
-		$this->grants         = new OAuthGrantRepository($this->grantsTmpFile);
+		$this->clients        = new OAuthClientRepository(...jsonStoreArgs($this->clientsTmpFile));
+		$this->grants         = new OAuthGrantRepository(...jsonStoreArgs($this->grantsTmpFile));
 		$this->jsonRenderer   = new JsonRenderer();
 		$this->request        = $this->createMock(ServerRequestInterface::class);
 

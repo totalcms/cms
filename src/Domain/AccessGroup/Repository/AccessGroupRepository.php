@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\AccessGroup\Repository;
 
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Storage\AtomicJsonStore;
+use TotalCMS\Domain\Storage\CorruptPolicy;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
 
@@ -192,6 +194,7 @@ class AccessGroupRepository extends StorageRepository
 
 	public function __construct(
 		StorageAdapterInterface $filesystem,
+		private readonly AtomicJsonStore $store,
 	) {
 		parent::__construct($filesystem);
 	}
@@ -276,14 +279,6 @@ class AccessGroupRepository extends StorageRepository
 	 */
 	public function delete(string $id): bool
 	{
-		// Prevent deletion of protected groups
-		if ($id === 'admin') {
-			throw new \RuntimeException('Cannot delete the admin group');
-		}
-		if ($id === 'default') {
-			throw new \RuntimeException('Cannot delete the default group');
-		}
-
 		$data   = $this->readFile();
 		$groups = $data['groups'] ?? [];
 
@@ -360,7 +355,9 @@ class AccessGroupRepository extends StorageRepository
 	}
 
 	/**
-	 * Read the JSON file.
+	 * The file's contents, read once per request. A file that no longer parses
+	 * is treated as empty for this request and never written back — repairing
+	 * it is the operator's call.
 	 *
 	 * @return array<string,mixed>
 	 */
@@ -370,41 +367,19 @@ class AccessGroupRepository extends StorageRepository
 			return $this->requestCache;
 		}
 
-		if (!$this->filesystem->fileExists(self::FILE_PATH)) {
-			$this->requestCache = ['groups' => []];
+		$data = $this->store->load(self::FILE_PATH, CorruptPolicy::RefuseWrites);
 
-			return $this->requestCache;
-		}
-
-		$content = $this->filesystem->read(self::FILE_PATH);
-
-		if ($content === '') {
-			$this->requestCache = ['groups' => []];
-
-			return $this->requestCache;
-		}
-
-		$data = json_decode($content, true);
-
-		$this->requestCache = is_array($data) ? $data : ['groups' => []];
+		$this->requestCache = $data === [] ? ['groups' => []] : $data;
 
 		return $this->requestCache;
 	}
 
 	/**
-	 * Write to the JSON file.
-	 *
 	 * @param array<string,mixed> $data
 	 */
 	private function writeFile(array $data): void
 	{
-		$json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-
-		if ($json === false) {
-			throw new \RuntimeException('Failed to encode access groups to JSON: ' . json_last_error_msg());
-		}
-
-		$this->filesystem->write(self::FILE_PATH, $json);
+		$this->store->save(self::FILE_PATH, $data);
 
 		// Invalidate cache after write
 		$this->requestCache = null;

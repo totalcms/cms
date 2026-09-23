@@ -87,8 +87,8 @@ final class OAuthServerFactoryTest extends TestCase
 	{
 		$cache = $this->createMock(CacheManager::class);
 
-		$clientRepo  = new OAuthClientRepository($this->tmpDir . '/clients.json');
-		$grantRepo   = new OAuthGrantRepository($this->tmpDir . '/grants.json');
+		$clientRepo  = new OAuthClientRepository(...jsonStoreArgs($this->tmpDir . '/clients.json'));
+		$grantRepo   = new OAuthGrantRepository(...jsonStoreArgs($this->tmpDir . '/grants.json'));
 		$revocation  = new OAuthRevocationList($cache, 3600);
 		$scopeReg    = new OAuthScopeRegistry();
 

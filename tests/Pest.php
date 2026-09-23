@@ -53,6 +53,7 @@ use TotalCMS\Domain\Seo\Data\SeoContext;
 use TotalCMS\Domain\Seo\Data\SeoFields;
 use TotalCMS\Domain\Seo\Data\SeoSettings;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Storage\AtomicJsonStore;
 use TotalCMS\Domain\Storage\StorageFilesystemAdapter;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
@@ -922,4 +923,28 @@ function rssTestDownloader(HttpClientInterface $httpClient): RemoteFileDownloade
 	$config->maxDownloadSize = 2048;
 
 	return new RemoteFileDownloader($httpClient, $config);
+}
+
+/**
+ * Constructor arguments for a JsonListRepository backed by one absolute file
+ * path: an AtomicJsonStore rooted at the file's directory, and the file's
+ * name. Lets a test say `new OAuthGrantRepository(...jsonStoreArgs(...jsonStoreArgs($tmpFile)))`
+ * and go on reading and seeding that file directly.
+ *
+ * @return array{AtomicJsonStore, string}
+ */
+function jsonStoreArgs(string $absolutePath): array
+{
+	$dir = dirname($absolutePath);
+	if (!is_dir($dir)) {
+		mkdir($dir, 0700, true);
+	}
+
+	$store = new AtomicJsonStore(
+		new StorageFilesystemAdapter(new Filesystem(new LocalFilesystemAdapter($dir))),
+		$dir,
+		new NullLogger(),
+	);
+
+	return [$store, basename($absolutePath)];
 }

@@ -1144,11 +1144,13 @@ return [
 	// admin actions) autowires from constructor type hints.
 
 	OAuthClientRepository::class => fn (ContainerInterface $container): OAuthClientRepository => new OAuthClientRepository(
-		$container->get(Config::class)->datadir . '/.system/oauth-clients.json',
+		$container->get(AtomicJsonStore::class),
+		'.system/oauth-clients.json',
 	),
 
 	OAuthGrantRepository::class => fn (ContainerInterface $container): OAuthGrantRepository => new OAuthGrantRepository(
-		$container->get(Config::class)->datadir . '/.system/oauth-grants.json',
+		$container->get(AtomicJsonStore::class),
+		'.system/oauth-grants.json',
 	),
 
 	OAuthClientPruner::class => fn (ContainerInterface $container): OAuthClientPruner => new OAuthClientPruner(

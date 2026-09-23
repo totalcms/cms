@@ -83,17 +83,7 @@ readonly class AccessGroupData
 	 */
 	public function allowsCollection(string $operation, string $collection): bool
 	{
-		$permissions = $this->permissions['collections'] ?? [];
-		$all         = $permissions['all'] ?? false;
-		$allowed     = $permissions['allowed'] ?? [];
-
-		if (!$all && !in_array($collection, $allowed)) {
-			return false;
-		}
-
-		$operations = $permissions['operations'] ?? [];
-
-		return in_array($operation, $operations);
+		return $this->allowsTargeted('collections', $operation, $collection);
 	}
 
 	/**
@@ -101,17 +91,7 @@ readonly class AccessGroupData
 	 */
 	public function allowsCollectionMeta(string $operation, string $collection): bool
 	{
-		$permissions = $this->permissions['collectionsMeta'] ?? [];
-		$all         = $permissions['all'] ?? false;
-		$allowed     = $permissions['allowed'] ?? [];
-
-		if (!$all && !in_array($collection, $allowed)) {
-			return false;
-		}
-
-		$operations = $permissions['operations'] ?? [];
-
-		return in_array($operation, $operations);
+		return $this->allowsTargeted('collectionsMeta', $operation, $collection);
 	}
 
 	/**
@@ -119,17 +99,24 @@ readonly class AccessGroupData
 	 */
 	public function allowsSchema(string $operation, string $schema): bool
 	{
-		$permissions = $this->permissions['schemas'] ?? [];
+		return $this->allowsTargeted('schemas', $operation, $schema);
+	}
+
+	/**
+	 * The rule behind the three targeted permissions: the group must grant
+	 * the target (`all`, or listed in `allowed`) AND the operation.
+	 */
+	private function allowsTargeted(string $permissionKey, string $operation, string $target): bool
+	{
+		$permissions = $this->permissions[$permissionKey] ?? [];
 		$all         = $permissions['all'] ?? false;
 		$allowed     = $permissions['allowed'] ?? [];
 
-		if (!$all && !in_array($schema, $allowed)) {
+		if (!$all && !in_array($target, $allowed)) {
 			return false;
 		}
 
-		$operations = $permissions['operations'] ?? [];
-
-		return in_array($operation, $operations);
+		return in_array($operation, $permissions['operations'] ?? []);
 	}
 
 	/**

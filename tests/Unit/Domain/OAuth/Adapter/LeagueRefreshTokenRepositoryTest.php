@@ -26,7 +26,7 @@ final class LeagueRefreshTokenRepositoryTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->tmpFile   = sys_get_temp_dir() . '/oauth-grants-' . uniqid() . '.json';
-		$this->grantRepo = new OAuthGrantRepository($this->tmpFile);
+		$this->grantRepo = new OAuthGrantRepository(...jsonStoreArgs($this->tmpFile));
 
 		$cache          = $this->createMock(CacheManager::class);
 		$cache->method('storeComputedData')->willReturn(true);

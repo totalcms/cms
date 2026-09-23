@@ -34,7 +34,7 @@ final class OAuthClientCreateActionTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->clientsTmpFile = sys_get_temp_dir() . '/oauth-clients-create-test-' . uniqid() . '.json';
-		$this->clients        = new OAuthClientRepository($this->clientsTmpFile);
+		$this->clients        = new OAuthClientRepository(...jsonStoreArgs($this->clientsTmpFile));
 		$this->request        = $this->createMock(ServerRequestInterface::class);
 
 		// PhpSession: start only if not already active (tests may share process).

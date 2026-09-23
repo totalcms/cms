@@ -26,7 +26,7 @@ final class OAuthClientRepositoryTest extends TestCase
 
 	public function testFindsClientById(): void
 	{
-		$repo   = new OAuthClientRepository($this->tmpFile);
+		$repo   = new OAuthClientRepository(...jsonStoreArgs($this->tmpFile));
 		$client = $this->makeClient('c-1');
 		$repo->save($client);
 
@@ -37,13 +37,13 @@ final class OAuthClientRepositoryTest extends TestCase
 
 	public function testFindReturnsNullForUnknown(): void
 	{
-		$repo = new OAuthClientRepository($this->tmpFile);
+		$repo = new OAuthClientRepository(...jsonStoreArgs($this->tmpFile));
 		$this->assertNull($repo->find('not-there'));
 	}
 
 	public function testListsAllClients(): void
 	{
-		$repo = new OAuthClientRepository($this->tmpFile);
+		$repo = new OAuthClientRepository(...jsonStoreArgs($this->tmpFile));
 		$repo->save($this->makeClient('c-1'));
 		$repo->save($this->makeClient('c-2'));
 
@@ -53,7 +53,7 @@ final class OAuthClientRepositoryTest extends TestCase
 
 	public function testDeletesClient(): void
 	{
-		$repo = new OAuthClientRepository($this->tmpFile);
+		$repo = new OAuthClientRepository(...jsonStoreArgs($this->tmpFile));
 		$repo->save($this->makeClient('c-1'));
 		$repo->delete('c-1');
 
@@ -62,7 +62,7 @@ final class OAuthClientRepositoryTest extends TestCase
 
 	public function testSaveUpdatesExistingClient(): void
 	{
-		$repo = new OAuthClientRepository($this->tmpFile);
+		$repo = new OAuthClientRepository(...jsonStoreArgs($this->tmpFile));
 		$repo->save($this->makeClient('c-1'));
 
 		$updated = new OAuthClientData(
@@ -85,7 +85,7 @@ final class OAuthClientRepositoryTest extends TestCase
 
 	public function testDeleteNonExistentClientIsNoOp(): void
 	{
-		$repo = new OAuthClientRepository($this->tmpFile);
+		$repo = new OAuthClientRepository(...jsonStoreArgs($this->tmpFile));
 		$repo->save($this->makeClient('c-1'));
 		$repo->delete('does-not-exist');
 
@@ -135,7 +135,7 @@ final class OAuthClientRepositoryTest extends TestCase
 		});
 
 		try {
-			$repo = new OAuthClientRepository($this->tmpFile);
+			$repo = new OAuthClientRepository(...jsonStoreArgs($this->tmpFile));
 			$this->assertSame([], $repo->all());
 		} finally {
 			restore_error_handler();

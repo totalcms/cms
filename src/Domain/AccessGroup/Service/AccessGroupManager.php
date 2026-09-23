@@ -39,7 +39,15 @@ readonly class AccessGroupManager
 	 */
 	public function delete(string $id): bool
 	{
-		// Protection against deleting admin group is in the repository
+		// The two built-in groups every install relies on. Guarded here, next
+		// to the save() guard, so the rule set lives in one layer.
+		if ($id === 'admin') {
+			throw new \RuntimeException('Cannot delete the admin group');
+		}
+		if ($id === 'default') {
+			throw new \RuntimeException('Cannot delete the default group');
+		}
+
 		return $this->repository->delete($id);
 	}
 
