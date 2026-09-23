@@ -321,206 +321,85 @@ class JobRepository
 	}
 
 	/** @return array<string,int>  */
+	/**
+	 * Queued jobs per type, every type present (zero when none), keyed by a
+	 * display name.
+	 *
+	 * @return array<string,int>
+	 */
 	public function queueByType(): array
 	{
-		// Return zeros if database doesn't exist - don't create empty database
-		if (!$this->dbExists()) {
-			$results = [];
-			foreach (JobData::TYPE_LIST as $type) {
-				$results[ucwords(str_replace('_', ' ', $type))] = 0;
-			}
-			ksort($results);
-
-			return $results;
-		}
-
-		// Use a single query with GROUP BY for efficiency
-		$sql = <<<SQL
-			SELECT type, COUNT(*) as count
-			FROM jobqueue
-			GROUP BY type
-		SQL;
-
-		$stmt = $this->getDb()->query($sql);
-
-		// Initialize all type counts to 0
-		$counts = [];
-		foreach (JobData::TYPE_LIST as $type) {
-			$counts[$type] = 0;
-		}
-
-		if ($stmt) {
-			while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-				$type  = $row['type'] ?? '';
-				$count = intval($row['count'] ?? 0);
-				if (isset($counts[$type])) {
-					$counts[$type] = $count;
-				}
-			}
-		}
-
-		// Convert to display-friendly keys
-		$results = [];
-		foreach ($counts as $type => $count) {
-			$results[ucwords(str_replace('_', ' ', $type))] = $count;
-		}
-		ksort($results);
-
-		// $stmt  = $this->getDb()->query('SELECT COUNT(*) as total FROM jobqueue');
-		// $total = $stmt ? intval($stmt->fetchColumn()) : 0;
-		// $results['Total'] = $total;
-
-		return $results;
+		return $this->typeCounts(null);
 	}
 
-	/** @return array<string,int>  */
+	/**
+	 * Queued jobs per status plus a total, in display order.
+	 *
+	 * @return array{Pending: int, In-Progress: int, Failed: int, Total: int}
+	 */
 	public function queueByStatus(): array
 	{
-		// Return zeros if database doesn't exist - don't create empty database
-		if (!$this->dbExists()) {
-			return [
-				'Pending'     => 0,
-				'In-Progress' => 0,
-				'Failed'      => 0,
-				'Total'       => 0,
-			];
-		}
-
-		// Use a single query with GROUP BY for efficiency
-		$sql = <<<SQL
-			SELECT status, COUNT(*) as count
-			FROM jobqueue
-			GROUP BY status
-		SQL;
-
-		$stmt = $this->getDb()->query($sql);
-
-		// Initialize all status counts to 0
-		$counts = [
-			JobData::STATUS_PENDING     => 0,
-			JobData::STATUS_IN_PROGRESS => 0,
-			JobData::STATUS_FAILED      => 0,
-		];
-
-		$total = 0;
-		if ($stmt) {
-			while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-				$status = $row['status'] ?? '';
-				$count  = intval($row['count'] ?? 0);
-				if (isset($counts[$status])) {
-					$counts[$status] = $count;
-				}
-				$total += $count;
-			}
-		}
-
-		// Return in specific order with display-friendly keys
-		return [
-			'Pending'     => $counts[JobData::STATUS_PENDING],
-			'In-Progress' => $counts[JobData::STATUS_IN_PROGRESS],
-			'Failed'      => $counts[JobData::STATUS_FAILED],
-			'Total'       => $total,
-		];
+		return $this->statusCounts(null);
 	}
 
-	/** @return array<string,int>  */
+	/** @return array<string,int> */
 	public function queueByTypeForCollection(string $collection): array
 	{
-		// Return zeros if database doesn't exist - don't create empty database
-		if (!$this->dbExists()) {
-			$results = [];
-			foreach (JobData::TYPE_LIST as $type) {
-				$results[ucwords(str_replace('_', ' ', $type))] = 0;
-			}
-			ksort($results);
+		return $this->typeCounts($collection);
+	}
 
-			return $results;
-		}
+	/** @return array{Pending: int, In-Progress: int, Failed: int, Total: int} */
+	public function queueByStatusForCollection(string $collection): array
+	{
+		return $this->statusCounts($collection);
+	}
 
-		// Use a single query with GROUP BY for efficiency
-		$sql = <<<SQL
-			SELECT type, COUNT(*) as count
-			FROM jobqueue
-			WHERE collection = :collection
-			GROUP BY type
-		SQL;
+	public function clearQueue(): bool
+	{
+		return $this->deleteJobs(null);
+	}
 
-		$stmt = $this->getDb()->prepare($sql);
-		$stmt->bindValue(':collection', $collection);
-		$stmt->execute();
+	public function clearQueueForCollection(string $collection): bool
+	{
+		return $this->deleteJobs($collection);
+	}
 
-		// Initialize all type counts to 0
-		$counts = [];
-		foreach (JobData::TYPE_LIST as $type) {
-			$counts[$type] = 0;
-		}
-
-		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-			$type  = $row['type'] ?? '';
-			$count = intval($row['count'] ?? 0);
+	/** @return array<string,int> */
+	private function typeCounts(?string $collection): array
+	{
+		$counts = array_fill_keys(JobData::TYPE_LIST, 0);
+		foreach ($this->countBy('type', $collection) as $type => $count) {
 			if (isset($counts[$type])) {
 				$counts[$type] = $count;
 			}
 		}
 
-		// Convert to display-friendly keys
 		$results = [];
 		foreach ($counts as $type => $count) {
 			$results[ucwords(str_replace('_', ' ', $type))] = $count;
 		}
 		ksort($results);
 
-		// $stmt  = $this->getDb()->prepare('SELECT COUNT(*) as total FROM jobqueue WHERE collection = :collection');
-		// $stmt->bindValue(':collection', $collection);
-		// $total = $stmt ? intval($stmt->fetchColumn()) : 0;
-		// $results['Total'] = $total;
-
 		return $results;
 	}
 
-	/** @return array<string,int>  */
-	public function queueByStatusForCollection(string $collection): array
+	/** @return array{Pending: int, In-Progress: int, Failed: int, Total: int} */
+	private function statusCounts(?string $collection): array
 	{
-		// Return zeros if database doesn't exist - don't create empty database
-		if (!$this->dbExists()) {
-			return [
-				'Pending'     => 0,
-				'In-Progress' => 0,
-				'Failed'      => 0,
-				'Total'       => 0,
-			];
-		}
-
-		// Use a single query with GROUP BY for efficiency
-		$sql = <<<SQL
-			SELECT status, COUNT(*) as count
-			FROM jobqueue
-			WHERE collection = :collection
-			GROUP BY status
-		SQL;
-
-		$stmt = $this->getDb()->prepare($sql);
-		$stmt->bindValue(':collection', $collection);
-		$stmt->execute();
-
-		// Initialize all status counts to 0
 		$counts = [
 			JobData::STATUS_PENDING     => 0,
 			JobData::STATUS_IN_PROGRESS => 0,
 			JobData::STATUS_FAILED      => 0,
 		];
-
 		$total = 0;
-		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-			$status = $row['status'] ?? '';
-			$count  = intval($row['count'] ?? 0);
+
+		foreach ($this->countBy('status', $collection) as $status => $count) {
 			if (isset($counts[$status])) {
 				$counts[$status] = $count;
 			}
 			$total += $count;
 		}
 
-		// Return in specific order with display-friendly keys
 		return [
 			'Pending'     => $counts[JobData::STATUS_PENDING],
 			'In-Progress' => $counts[JobData::STATUS_IN_PROGRESS],
@@ -529,17 +408,40 @@ class JobRepository
 		];
 	}
 
-	public function clearQueue(): bool
+	/**
+	 * Row counts grouped by $column, optionally within one collection. Empty
+	 * when the database has not been created yet — asking must not create it.
+	 *
+	 * @return array<string,int>
+	 */
+	private function countBy(string $column, ?string $collection): array
 	{
-		$stmt = $this->getDb()->prepare('DELETE FROM jobqueue');
+		if (!$this->dbExists()) {
+			return [];
+		}
 
-		return $stmt->execute();
+		$sql = "SELECT {$column} AS k, COUNT(*) AS count FROM jobqueue" . ($collection !== null ? ' WHERE collection = :collection' : '') . " GROUP BY {$column}";
+
+		$stmt = $this->getDb()->prepare($sql);
+		if ($collection !== null) {
+			$stmt->bindValue(':collection', $collection);
+		}
+		$stmt->execute();
+
+		$counts = [];
+		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$counts[(string)($row['k'] ?? '')] = intval($row['count'] ?? 0);
+		}
+
+		return $counts;
 	}
 
-	public function clearQueueForCollection(string $collection): bool
+	private function deleteJobs(?string $collection): bool
 	{
-		$stmt = $this->getDb()->prepare('DELETE FROM jobqueue WHERE collection = :collection');
-		$stmt->bindValue(':collection', $collection);
+		$stmt = $this->getDb()->prepare('DELETE FROM jobqueue' . ($collection !== null ? ' WHERE collection = :collection' : ''));
+		if ($collection !== null) {
+			$stmt->bindValue(':collection', $collection);
+		}
 
 		return $stmt->execute();
 	}
@@ -568,73 +470,18 @@ class JobRepository
 		return $stmt->rowCount();
 	}
 
-	/**
-	 * Fetch all pending jobs.
-	 *
-	 * @return array<JobData>
-	 */
+	/** @return list<JobData> */
 	public function fetchPendingJobs(?int $limit = null): array
 	{
-		$sql = <<<SQL
-			SELECT * FROM jobqueue
-			WHERE status = :status
-			ORDER BY id DESC
-		SQL;
-
-		if ($limit !== null) {
-			$sql .= ' LIMIT :limit';
-		}
-
-		$stmt = $this->getDb()->prepare($sql);
-		$stmt->bindValue(':status', JobData::STATUS_PENDING);
-		if ($limit !== null) {
-			$stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
-		}
-		$stmt->execute();
-
-		$jobs = [];
-		while ($record = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-			$jobs[] = JobData::fromArray($record);
-		}
-
-		return $jobs;
+		return $this->fetchByStatus(JobData::STATUS_PENDING, $limit, 'DESC');
 	}
 
-	/**
-	 * Fetch all failed jobs.
-	 *
-	 * @return array<JobData>
-	 */
+	/** @return list<JobData> */
 	public function fetchFailedJobs(?int $limit = null): array
 	{
-		$sql = <<<SQL
-			SELECT * FROM jobqueue
-			WHERE status = :status
-			ORDER BY id DESC
-		SQL;
-
-		if ($limit !== null) {
-			$sql .= ' LIMIT :limit';
-		}
-
-		$stmt = $this->getDb()->prepare($sql);
-		$stmt->bindValue(':status', JobData::STATUS_FAILED);
-		if ($limit !== null) {
-			$stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
-		}
-		$stmt->execute();
-
-		$jobs = [];
-		while ($record = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-			$jobs[] = JobData::fromArray($record);
-		}
-
-		return $jobs;
+		return $this->fetchByStatus(JobData::STATUS_FAILED, $limit, 'DESC');
 	}
 
-	/**
-	 * Reset a job's status to pending for retry.
-	 */
 	public function resetJobStatus(JobData $job): JobData
 	{
 		$job->status    = JobData::STATUS_PENDING;
@@ -644,21 +491,26 @@ class JobRepository
 		return $this->updateJobStatus($job, JobData::STATUS_PENDING);
 	}
 
-	/**
-	 * Fetch all in-progress jobs (typically stuck jobs from crashed processes).
-	 *
-	 * @return array<JobData>
-	 */
+	/** @return list<JobData> */
 	public function fetchInProgressJobs(): array
 	{
-		$sql = <<<SQL
-			SELECT * FROM jobqueue
-			WHERE status = :status
-			ORDER BY id ASC
-		SQL;
+		return $this->fetchByStatus(JobData::STATUS_IN_PROGRESS, null, 'ASC');
+	}
+
+	/**
+	 * @param 'ASC'|'DESC' $order
+	 *
+	 * @return list<JobData>
+	 */
+	private function fetchByStatus(string $status, ?int $limit, string $order): array
+	{
+		$sql = "SELECT * FROM jobqueue WHERE status = :status ORDER BY id {$order}" . ($limit !== null ? ' LIMIT :limit' : '');
 
 		$stmt = $this->getDb()->prepare($sql);
-		$stmt->bindValue(':status', JobData::STATUS_IN_PROGRESS);
+		$stmt->bindValue(':status', $status);
+		if ($limit !== null) {
+			$stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+		}
 		$stmt->execute();
 
 		$jobs = [];
@@ -668,12 +520,6 @@ class JobRepository
 
 		return $jobs;
 	}
-
-	/**
-	 * Reset all in-progress jobs to pending (for recovery from crashed processes).
-	 *
-	 * @return int Number of jobs reset
-	 */
 	public function resetInProgressJobs(): int
 	{
 		$inProgressJobs = $this->fetchInProgressJobs();

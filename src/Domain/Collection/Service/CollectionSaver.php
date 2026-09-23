@@ -62,12 +62,8 @@ readonly class CollectionSaver
 		// Check edition requirements for schema-specific features
 		$this->validateSchemaEdition($data['schema'] ?? '');
 
+		$data           = $this->normalizeSubmittedData($data);
 		$data['format'] = $this->normalizeFormat($data['format'] ?? CollectionData::FORMAT_JSON);
-
-		// Normalize URL to path only (strip domain if present)
-		if (isset($data['url']) && $data['url'] !== '') {
-			$data['url'] = CollectionData::normalizeUrlToPath($data['url']);
-		}
 
 		$data['count'] = $this->initializeCount($data['id'], $data);
 
@@ -88,29 +84,6 @@ readonly class CollectionSaver
 		// carrying an authored value keeps it (the source's history).
 		if (!$preserveDates || !isset($data['updated']) || $data['updated'] === '') {
 			$data['updated'] = DateData::cleanDate();
-		}
-
-		// Ensure formSettings is an array (handle empty strings from form)
-		if (isset($data['formSettings']) && $data['formSettings'] === '') {
-			$data['formSettings'] = [];
-		}
-
-		// Ensure manualSort is an array (handle empty strings from form)
-		if (isset($data['manualSort']) && $data['manualSort'] === '') {
-			$data['manualSort'] = [];
-		}
-
-		// Ensure mcp.tools is an array — empty/missing/null submissions land as [].
-		// Validation happens upstream in the Action layer via ValidatesMcpToolsTrait;
-		// this normalises the canonical on-disk shape so reads never see a non-array.
-		// An entirely empty block stays empty: `tcms push` sends "no MCP settings"
-		// as `mcp: []`, and growing that into `{tools: []}` here made every sync
-		// dry run afterwards report the collection as differing.
-		if (isset($data['mcp']) && is_array($data['mcp']) && $data['mcp'] !== []) {
-			$tools = $data['mcp']['tools'] ?? null;
-			if ($tools === null || $tools === '' || (is_string($tools) && trim($tools) === '')) {
-				$data['mcp']['tools'] = [];
-			}
 		}
 
 		$collection = $this->factory->generateCollection($data);
@@ -145,11 +118,7 @@ readonly class CollectionSaver
 	 */
 	public function updateCollection(string $collectionId, array $data, ?CollectionData $existingCollection = null, bool $preserveDates = false): CollectionData
 	{
-		// Normalize URL to path only (strip domain if present)
-		if (isset($data['url']) && $data['url'] !== '') {
-			$data['url'] = CollectionData::normalizeUrlToPath($data['url']);
-		}
-
+		$data          = $this->normalizeSubmittedData($data);
 		$data['count'] = $this->initializeCount($collectionId, $data);
 
 		// lastUpdated (the CONTENT timestamp) restamps on every update — the
@@ -195,29 +164,6 @@ readonly class CollectionSaver
 		// Ensure count >= totalObjects (count is lifetime, totalObjects is current)
 		if ($data['count'] < $data['totalObjects']) {
 			$data['count'] = $data['totalObjects'];
-		}
-
-		// Ensure formSettings is an array (handle empty strings from form)
-		if (isset($data['formSettings']) && $data['formSettings'] === '') {
-			$data['formSettings'] = [];
-		}
-
-		// Ensure manualSort is an array (handle empty strings from form)
-		if (isset($data['manualSort']) && $data['manualSort'] === '') {
-			$data['manualSort'] = [];
-		}
-
-		// Ensure mcp.tools is an array — empty/missing/null submissions land as [].
-		// Validation happens upstream in the Action layer via ValidatesMcpToolsTrait;
-		// this normalises the canonical on-disk shape so reads never see a non-array.
-		// An entirely empty block stays empty: `tcms push` sends "no MCP settings"
-		// as `mcp: []`, and growing that into `{tools: []}` here made every sync
-		// dry run afterwards report the collection as differing.
-		if (isset($data['mcp']) && is_array($data['mcp']) && $data['mcp'] !== []) {
-			$tools = $data['mcp']['tools'] ?? null;
-			if ($tools === null || $tools === '' || (is_string($tools) && trim($tools) === '')) {
-				$data['mcp']['tools'] = [];
-			}
 		}
 
 		$collection = $this->factory->generateCollection($data);
@@ -274,142 +220,140 @@ readonly class CollectionSaver
 	}
 
 	/**
-	 * update Collection data.
+	 * Merge a partial set of fields into the stored record.
 	 *
-	 * @param array<string,mixed> $patch The collection data to patch
-	 *
-	 * @throws \UnexpectedValueException
+	 * @param array<string,mixed> $patch
 	 */
 	public function patchCollection(string $collectionId, array $patch): CollectionData
 	{
-		$collection = $this->storage->fetchCollection($collectionId);
-
-		if (!$collection instanceof CollectionData) {
-			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
-		}
-
-		$mergedCollection = array_merge($collection->toArray(), $patch);
-
-		return $this->updateCollection($collectionId, $mergedCollection);
+		return $this->mutateMetadata($collectionId, static function (array &$data) use ($patch): void {
+			$data = array_merge($data, $patch);
+		});
 	}
 
 	/**
-	 * Increment the object count for a collection.
-	 *
-	 * @throws \UnexpectedValueException
+	 * Bump the lifetime object counter (the OID counter). An unset or zero
+	 * count is seeded from the objects on disk instead.
 	 */
 	public function incrementCount(string $collectionId, int $incrementBy = 1): CollectionData
 	{
-		$collection = $this->storage->fetchCollection($collectionId);
-
-		if (!$collection instanceof CollectionData) {
-			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
-		}
-
-		$collectionArray = $collection->toArray();
-
-		// If count is not set or is 0, initialize it to current object count first
-		if (!isset($collectionArray['count']) || $collectionArray['count'] === 0) {
-			$objectIds                = $this->indexRepository->fetchObjectIds($collectionId);
-			$collectionArray['count'] = count($objectIds);
-		} else {
-			$collectionArray['count'] += $incrementBy;
-		}
-
-		return $this->updateCollection($collectionId, $collectionArray);
+		return $this->mutateMetadata($collectionId, function (array &$data) use ($collectionId, $incrementBy): void {
+			$data['count'] = $this->bumpedCount($collectionId, $data, $incrementBy);
+		});
 	}
 
 	/**
-	 * Record newly created objects: bump the lifetime count (the OID counter)
-	 * and the current totalObjects in ONE write.
-	 *
-	 * incrementCount() followed by incrementTotalObjects() reads, writes and
-	 * dispatches collection.updated twice for what is a single change, and each
-	 * write also scans the filesystem cache to invalidate API responses. Every
-	 * object create paid for both.
-	 *
-	 * @throws \UnexpectedValueException
+	 * Record newly created objects: bump the lifetime count and the current
+	 * totalObjects in ONE write. Object creation used to call incrementCount()
+	 * then incrementTotalObjects(), writing and dispatching twice.
 	 */
 	public function incrementObjectCounts(string $collectionId, int $incrementBy = 1): CollectionData
 	{
-		$collection = $this->storage->fetchCollection($collectionId);
-
-		if (!$collection instanceof CollectionData) {
-			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
-		}
-
-		$collectionArray = $collection->toArray();
-
-		// Same rule as incrementCount(): an unset or zero count is seeded from
-		// the objects on disk (which already include the new ones).
-		if (!isset($collectionArray['count']) || $collectionArray['count'] === 0) {
-			$collectionArray['count'] = count($this->indexRepository->fetchObjectIds($collectionId));
-		} else {
-			$collectionArray['count'] += $incrementBy;
-		}
-
-		$collectionArray['totalObjects'] = ($collectionArray['totalObjects'] ?? 0) + $incrementBy;
-
-		return $this->updateCollection($collectionId, $collectionArray, $collection);
+		return $this->mutateMetadata($collectionId, function (array &$data) use ($collectionId, $incrementBy): void {
+			$data['count']        = $this->bumpedCount($collectionId, $data, $incrementBy);
+			$data['totalObjects'] = ($data['totalObjects'] ?? 0) + $incrementBy;
+		});
 	}
 
-	/**
-	 * Increment totalObjects for a collection.
-	 *
-	 * @throws \UnexpectedValueException
-	 */
 	public function incrementTotalObjects(string $collectionId, int $incrementBy = 1): CollectionData
 	{
-		$collection = $this->storage->fetchCollection($collectionId);
-
-		if (!$collection instanceof CollectionData) {
-			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
-		}
-
-		$collectionArray                 = $collection->toArray();
-		$collectionArray['totalObjects'] = ($collectionArray['totalObjects'] ?? 0) + $incrementBy;
-
-		return $this->updateCollection($collectionId, $collectionArray, $collection);
+		return $this->mutateMetadata($collectionId, static function (array &$data) use ($incrementBy): void {
+			$data['totalObjects'] = ($data['totalObjects'] ?? 0) + $incrementBy;
+		});
 	}
 
-	/**
-	 * Decrement totalObjects for a collection.
-	 *
-	 * @throws \UnexpectedValueException
-	 */
 	public function decrementTotalObjects(string $collectionId): CollectionData
 	{
-		$collection = $this->storage->fetchCollection($collectionId);
-
-		if (!$collection instanceof CollectionData) {
-			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
-		}
-
-		$collectionArray                 = $collection->toArray();
-		$collectionArray['totalObjects'] = max(0, ($collectionArray['totalObjects'] ?? 0) - 1);
-
-		return $this->updateCollection($collectionId, $collectionArray, $collection);
+		return $this->mutateMetadata($collectionId, static function (array &$data): void {
+			$data['totalObjects'] = max(0, ($data['totalObjects'] ?? 0) - 1);
+		});
 	}
 
 	/**
-	 * Update lastUpdated timestamp for a collection (for updates/patches without count changes).
-	 *
-	 * @throws \UnexpectedValueException
+	 * Restamp the content timestamp; updateCollection() does that on every
+	 * write, so there is nothing to change in the record itself.
 	 */
 	public function updateLastUpdated(string $collectionId): CollectionData
 	{
+		return $this->mutateMetadata($collectionId, static function (array &$data): void {
+		});
+	}
+
+	/**
+	 * The one read-modify-write every metadata helper is: fetch the record,
+	 * let $mutate change the array, save it through updateCollection() so
+	 * the self-healing, timestamps and the collection.updated event apply.
+	 *
+	 * @param callable(array<string,mixed>&): void $mutate
+	 */
+	private function mutateMetadata(string $collectionId, callable $mutate): CollectionData
+	{
 		$collection = $this->storage->fetchCollection($collectionId);
 
 		if (!$collection instanceof CollectionData) {
 			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
 		}
 
-		$collectionArray = $collection->toArray();
+		$data = $collection->toArray();
+		$mutate($data);
 
-		return $this->updateCollection($collectionId, $collectionArray, $collection);
+		return $this->updateCollection($collectionId, $data, $collection);
 	}
 
-	/**	@param array<string,mixed> $data */
+	/**
+	 * The lifetime count after adding $incrementBy — unless the stored count
+	 * is unset or zero, in which case it is seeded from the objects on disk
+	 * (which already include the new ones).
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	private function bumpedCount(string $collectionId, array $data, int $incrementBy): int
+	{
+		if (!isset($data['count']) || $data['count'] === 0) {
+			return count($this->indexRepository->fetchObjectIds($collectionId));
+		}
+
+		return $data['count'] + $incrementBy;
+	}
+
+	/**
+	 * Coerce what a form or a sync sends into the on-disk shape: the URL as a
+	 * path, empty-string `formSettings` / `manualSort` as arrays, and an
+	 * empty `mcp.tools` as an array. An entirely empty `mcp` block stays
+	 * empty: `tcms push` sends "no MCP settings" as `mcp: []`, and growing
+	 * it into `{tools: []}` made every sync dry run report a difference.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function normalizeSubmittedData(array $data): array
+	{
+		if (isset($data['url']) && $data['url'] !== '') {
+			$data['url'] = CollectionData::normalizeUrlToPath($data['url']);
+		}
+
+		foreach (['formSettings', 'manualSort'] as $key) {
+			if (isset($data[$key]) && $data[$key] === '') {
+				$data[$key] = [];
+			}
+		}
+
+		if (isset($data['mcp']) && is_array($data['mcp']) && $data['mcp'] !== []) {
+			$tools = $data['mcp']['tools'] ?? null;
+			if ($tools === null || $tools === '' || (is_string($tools) && trim($tools) === '')) {
+				$data['mcp']['tools'] = [];
+			}
+		}
+
+		return $data;
+	}
+
+	/**
+	 * The stored count, or — when unset or zero — the number of objects on disk.
+	 *
+	 * @param array<string,mixed> $data
+	 */
 	private function initializeCount(string $collectionId, array $data): int
 	{
 		// Only initialize count if it's not set or is zero
