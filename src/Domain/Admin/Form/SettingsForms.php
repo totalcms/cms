@@ -87,17 +87,7 @@ final readonly class SettingsForms
 			}
 
 			// Build field options
-			$fieldSettings = [
-				'field'       => $fieldType,
-				'label'       => $fieldSchema['label'] ?? '',
-				'help'        => $fieldSchema['help'] ?? '',
-				'placeholder' => $fieldSchema['placeholder'] ?? '',
-				'value'       => $currentValue,
-				'required'    => $fieldSchema['required'] ?? false,
-				'min'         => $fieldSchema['min'] ?? null,
-				'max'         => $fieldSchema['max'] ?? null,
-				'settings'    => $fieldSchema['settings'] ?? [],
-			];
+			$fieldSettings = self::fieldSettingsFor($fieldType, $fieldSchema, $currentValue);
 
 			// Merge schema-reference keys into settings for fields that hydrate from another schema
 			if (in_array($fieldType, ['deck', 'deckTable', 'card'], true)) {
@@ -110,10 +100,6 @@ final readonly class SettingsForms
 				}
 			}
 
-			// Special handling for select fields with options
-			if (isset($fieldSchema['options'])) {
-				$fieldSettings['options'] = $fieldSchema['options'];
-			}
 
 			// Special handling for timezone field
 			if (isset($fieldSchema['settings']['timezoneOptions']) && $fieldSchema['settings']['timezoneOptions']) {
@@ -233,26 +219,42 @@ final readonly class SettingsForms
 				$currentValue = json_encode($currentValue, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 			}
 
-			$fieldSettings = [
-				'field'       => $fieldType,
-				'label'       => $fieldSchema['label'] ?? '',
-				'help'        => $fieldSchema['help'] ?? '',
-				'placeholder' => $fieldSchema['placeholder'] ?? '',
-				'value'       => $currentValue,
-				'required'    => $fieldSchema['required'] ?? false,
-				'min'         => $fieldSchema['min'] ?? null,
-				'max'         => $fieldSchema['max'] ?? null,
-				'settings'    => $fieldSchema['settings'] ?? [],
-			];
+			$fieldSettings = self::fieldSettingsFor($fieldType, $fieldSchema, $currentValue);
 
-			if (isset($fieldSchema['options'])) {
-				$fieldSettings['options'] = $fieldSchema['options'];
-			}
 
 			$formfields .= $this->forms->field($fieldType, $fieldName, $fieldSettings);
 		}
 
 		return $formfields;
+	}
+
+	/**
+	 * Field options from a settings-schema property: the common attributes plus
+	 * the select `options` when the schema declares any.
+	 *
+	 * @param array<string,mixed> $fieldSchema
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function fieldSettingsFor(string $fieldType, array $fieldSchema, mixed $currentValue): array
+	{
+		$fieldSettings = [
+			'field'       => $fieldType,
+			'label'       => $fieldSchema['label'] ?? '',
+			'help'        => $fieldSchema['help'] ?? '',
+			'placeholder' => $fieldSchema['placeholder'] ?? '',
+			'value'       => $currentValue,
+			'required'    => $fieldSchema['required'] ?? false,
+			'min'         => $fieldSchema['min'] ?? null,
+			'max'         => $fieldSchema['max'] ?? null,
+			'settings'    => $fieldSchema['settings'] ?? [],
+		];
+
+		if (isset($fieldSchema['options'])) {
+			$fieldSettings['options'] = $fieldSchema['options'];
+		}
+
+		return $fieldSettings;
 	}
 
 	/**

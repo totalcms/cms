@@ -311,71 +311,7 @@ class MediaTwigAdapter
 	 */
 	public function download(string|array $idOrObject, array $options = []): string
 	{
-		$collection = $options['collection'] ?? 'file';
-		$property   = $options['property'] ?? 'file';
-		$password   = $options['pwd'] ?? '';
-
-		$id = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
-		if ($id === '') {
-			return '';
-		}
-
-		// Dotted property (`mycard.file`, `mydeck.one.file`) becomes slash
-		// segments in the URL — the dispatch action walks the path and serves
-		// the nested file.
-		$propertyPath = str_replace('.', '/', (string)$property);
-
-		$url = "{$this->config->api}/download/{$collection}/{$id}/{$propertyPath}";
-
-		if (!empty($password) && !$this->isEncryptedPassword($password)) {
-			$password = Cipher::encrypt($password);
-		}
-
-		if (!empty($password)) {
-			$url .= '?pwd=' . urlencode((string)$password);
-		}
-
-		return $url;
-	}
-
-	/**
-	 * @param string|array<string,mixed> $idOrObject
-	 * @param array<string,mixed> $options
-	 */
-	public function depotDownload(string|array $idOrObject, string $name, array $options = []): string
-	{
-		$collection = $options['collection'] ?? 'depot';
-		$property   = $options['property'] ?? 'depot';
-		$path       = $options['path'] ?? '';
-		$password   = $options['pwd'] ?? '';
-
-		$id = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
-		if ($id === '') {
-			return '';
-		}
-
-		if (str_contains($name, '/')) {
-			$pathinfo = pathinfo($name);
-			$path     = $pathinfo['dirname'];
-			$name     = $pathinfo['basename'];
-		}
-
-		$url = "{$this->config->api}/download/{$collection}/{$id}/{$property}/" . urlencode($name);
-
-		if (!empty($password) && !$this->isEncryptedPassword($password)) {
-			$password = Cipher::encrypt($password);
-		}
-
-		$query = http_build_query(array_filter([
-			'path' => trim((string)$path, '/'),
-			'pwd'  => $password,
-		]));
-
-		if ($query !== '') {
-			$url .= "?$query";
-		}
-
-		return $url;
+		return $this->propertyFileUrl('download', $idOrObject, $options);
 	}
 
 	/**
@@ -384,29 +320,16 @@ class MediaTwigAdapter
 	 */
 	public function stream(string|array $idOrObject, array $options = []): string
 	{
-		$collection = $options['collection'] ?? 'file';
-		$property   = $options['property'] ?? 'file';
-		$password   = $options['pwd'] ?? '';
+		return $this->propertyFileUrl('stream', $idOrObject, $options);
+	}
 
-		$id = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
-		if ($id === '') {
-			return '';
-		}
-
-		// Dotted property → URL segments (see `download()` for the rationale).
-		$propertyPath = str_replace('.', '/', (string)$property);
-
-		$url = "{$this->config->api}/stream/{$collection}/{$id}/{$propertyPath}";
-
-		if (!empty($password) && !$this->isEncryptedPassword($password)) {
-			$password = Cipher::encrypt($password);
-		}
-
-		if (!empty($password)) {
-			$url .= '?pwd=' . urlencode((string)$password);
-		}
-
-		return $url;
+	/**
+	 * @param string|array<string,mixed> $idOrObject
+	 * @param array<string,mixed> $options
+	 */
+	public function depotDownload(string|array $idOrObject, string $name, array $options = []): string
+	{
+		return $this->depotFileUrl('download', $idOrObject, $name, $options);
 	}
 
 	/**
@@ -415,10 +338,51 @@ class MediaTwigAdapter
 	 */
 	public function depotStream(string|array $idOrObject, string $name, array $options = []): string
 	{
+		return $this->depotFileUrl('stream', $idOrObject, $name, $options);
+	}
+
+	/**
+	 * `/{route}/{collection}/{id}/{property}` for a file property, `route`
+	 * being `download` or `stream`. A dotted property (`mycard.file`,
+	 * `mydeck.one.file`) becomes slash segments — the dispatch action walks
+	 * the path and serves the nested file.
+	 *
+	 * @param string|array<string,mixed> $idOrObject
+	 * @param array<string,mixed> $options
+	 */
+	private function propertyFileUrl(string $route, string|array $idOrObject, array $options): string
+	{
+		$collection = $options['collection'] ?? 'file';
+		$property   = $options['property'] ?? 'file';
+
+		$id = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
+		if ($id === '') {
+			return '';
+		}
+
+		$propertyPath = str_replace('.', '/', (string)$property);
+		$url          = "{$this->config->api}/{$route}/{$collection}/{$id}/{$propertyPath}";
+
+		$password = $this->passwordParam($options['pwd'] ?? '');
+		if ($password !== '') {
+			$url .= '?pwd=' . urlencode($password);
+		}
+
+		return $url;
+	}
+
+	/**
+	 * `/{route}/{collection}/{id}/{property}/{name}?path=…` for a file in a
+	 * depot. A name with folders (`docs/a.pdf`) supplies the path itself.
+	 *
+	 * @param string|array<string,mixed> $idOrObject
+	 * @param array<string,mixed> $options
+	 */
+	private function depotFileUrl(string $route, string|array $idOrObject, string $name, array $options): string
+	{
 		$collection = $options['collection'] ?? 'depot';
 		$property   = $options['property'] ?? 'depot';
 		$path       = $options['path'] ?? '';
-		$password   = $options['pwd'] ?? '';
 
 		$id = is_array($idOrObject) ? ($idOrObject['id'] ?? '') : $idOrObject;
 		if ($id === '') {
@@ -431,22 +395,26 @@ class MediaTwigAdapter
 			$name     = $pathinfo['basename'];
 		}
 
-		$url = "{$this->config->api}/stream/{$collection}/{$id}/{$property}/" . urlencode($name);
-
-		if (!empty($password) && !$this->isEncryptedPassword($password)) {
-			$password = Cipher::encrypt($password);
-		}
+		$url = "{$this->config->api}/{$route}/{$collection}/{$id}/{$property}/" . urlencode($name);
 
 		$query = http_build_query(array_filter([
 			'path' => trim((string)$path, '/'),
-			'pwd'  => $password,
+			'pwd'  => $this->passwordParam($options['pwd'] ?? ''),
 		]));
 
-		if ($query !== '') {
-			$url .= "?$query";
+		return $query !== '' ? "{$url}?{$query}" : $url;
+	}
+
+	/** A download password as it travels in the URL: encrypted, or empty when none was given. */
+	private function passwordParam(mixed $password): string
+	{
+		if (empty($password)) {
+			return '';
 		}
 
-		return $url;
+		$password = (string)$password;
+
+		return $this->isEncryptedPassword($password) ? $password : Cipher::encrypt($password);
 	}
 
 	/**
@@ -519,22 +487,44 @@ class MediaTwigAdapter
 			return '';
 		}
 
-		$type = strtolower(pathinfo((string)$image['name'], PATHINFO_EXTENSION));
-		if (array_key_exists('fm', $imageworks)) {
-			$type = $imageworks['fm'];
-			unset($imageworks['fm']);
-		}
-		$type = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
-
-		$api .= "/imageworks/$collection/$id/$propertyPath.$type";
-
+		[$type, $imageworks] = self::imageType((string)$image['name'], $imageworks);
 		$imageworks['cache'] = self::resolveCacheToken($image);
 
-		unset($imageworks['datadir']);
-		unset($imageworks['route']);
+		return self::imageworksUrl($api . "/imageworks/$collection/$id/$propertyPath.$type", $imageworks);
+	}
+
+	/**
+	 * The output format for an ImageWorks URL: the `fm` parameter when given
+	 * (consumed from the parameters), else the source extension, falling back
+	 * to jpg for anything Glide cannot write.
+	 *
+	 * @param array<string,string|int> $imageworks
+	 *
+	 * @return array{0: string, 1: array<string,string|int>}
+	 */
+	private static function imageType(string $name, array $imageworks): array
+	{
+		$type = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+		if (array_key_exists('fm', $imageworks)) {
+			$type = (string)$imageworks['fm'];
+			unset($imageworks['fm']);
+		}
+
+		return [in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg', $imageworks];
+	}
+
+	/**
+	 * Append the ImageWorks parameters to a route, merging any query the base
+	 * API already carried (the Stacks preview server adds one). `datadir` and
+	 * `route` are internal and never reach the URL.
+	 *
+	 * @param array<string,string|int> $imageworks
+	 */
+	private static function imageworksUrl(string $api, array $imageworks): string
+	{
+		unset($imageworks['datadir'], $imageworks['route']);
 
 		$parsedUrl = parse_url($api);
-
 		if (!isset($parsedUrl['path'])) {
 			return '';
 		}
@@ -544,9 +534,7 @@ class MediaTwigAdapter
 			parse_str($parsedUrl['query'], $existingParams);
 		}
 
-		$imageworks = array_merge($existingParams, $imageworks);
-
-		return $parsedUrl['path'] . '?' . http_build_query($imageworks);
+		return $parsedUrl['path'] . '?' . http_build_query(array_merge($existingParams, $imageworks));
 	}
 
 	/**
@@ -599,36 +587,15 @@ class MediaTwigAdapter
 				return '';
 			}
 
-			$type = strtolower(pathinfo((string)$image['name'], PATHINFO_EXTENSION));
-			if (array_key_exists('fm', $imageworks)) {
-				$type = $imageworks['fm'];
-				unset($imageworks['fm']);
-			}
-			$type     = in_array($type, GlideFactory::IMG_TYPES) ? $type : 'jpg';
-			$basename = pathinfo($name)['filename'];
+			[$type, $imageworks] = self::imageType((string)$image['name'], $imageworks);
+			$basename            = pathinfo($name)['filename'];
 
 			$api = $baseapi . "/imageworks/$collection/$id/$property/$basename.$type";
 
 			$imageworks['cache'] = self::resolveCacheToken($image);
 		}
 
-		unset($imageworks['datadir']);
-		unset($imageworks['route']);
-
-		$parsedUrl = parse_url($api);
-
-		if (!isset($parsedUrl['path'])) {
-			return '';
-		}
-
-		$existingParams = [];
-		if (isset($parsedUrl['query'])) {
-			parse_str($parsedUrl['query'], $existingParams);
-		}
-
-		$imageworks = array_merge($existingParams, $imageworks);
-
-		return $parsedUrl['path'] . '?' . http_build_query($imageworks);
+		return self::imageworksUrl($api, $imageworks);
 	}
 
 	/**

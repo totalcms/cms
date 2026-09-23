@@ -74,16 +74,7 @@ class ObjectForm extends TotalForm
 		// Setup communication between the field and the form
 		$options['form'] = $this;
 
-		// For deck context fields, skip parent schema lookup - the DeckItem already
-		// provides complete field configuration from the deck schema
-		if (isset($options['deck_context']) && $options['deck_context'] === true) {
-			return $options;
-		}
-
-		// For sub-fields of composite properties (file, image, depot, gallery, etc.),
-		// skip parent schema lookup so sub-field names like `name`, `alt`, `tags` don't
-		// inherit settings/options from a top-level object property of the same name.
-		if (isset($options['subfield']) && $options['subfield'] === true) {
+		if (self::isCompositeChild($options)) {
 			return $options;
 		}
 
@@ -157,15 +148,6 @@ class ObjectForm extends TotalForm
 		}
 
 		return $defaults;
-	}
-
-	/** @return array<string,mixed> */
-	protected function fieldAttributeSettings(string $property): array
-	{
-		// Get the schema settings for a property
-		$schema = $this->schemaData->properties[$property]['settings'] ?? [];
-
-		return self::filterFieldAttributes($schema);
 	}
 
 	private function isRequired(string $property): bool

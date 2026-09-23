@@ -182,8 +182,22 @@ class LoadMoreRenderer
 			throw new \InvalidArgumentException("cms.render.{$helper}: the \"template\" option is required.");
 		}
 
-		$params = ['format' => 'html', 'template' => $template];
-		foreach (['limit', 'offset', 'sort', 'include', 'exclude', 'search', 'mode'] as $key) {
+		return ['format' => 'html', 'template' => $template]
+			+ self::passThrough($options, ['limit', 'offset', 'sort', 'include', 'exclude', 'search', 'mode']);
+	}
+
+	/**
+	 * The given option keys as query strings, skipping any that are unset or empty.
+	 *
+	 * @param array<string,mixed> $options
+	 * @param array<string>       $keys
+	 *
+	 * @return array<string,string>
+	 */
+	private static function passThrough(array $options, array $keys): array
+	{
+		$params = [];
+		foreach ($keys as $key) {
 			if (isset($options[$key]) && (string)$options[$key] !== '') {
 				$params[$key] = (string)$options[$key];
 			}
@@ -318,13 +332,7 @@ class LoadMoreRenderer
 			'target'   => $target,
 		];
 
-		// Add optional params
-		$optionalKeys = ['sort', 'include', 'exclude', 'search'];
-		foreach ($optionalKeys as $key) {
-			if (isset($options[$key]) && (string)$options[$key] !== '') {
-				$queryParams[$key] = (string)$options[$key];
-			}
-		}
+		$queryParams += self::passThrough($options, ['sort', 'include', 'exclude', 'search']);
 
 		// Pass buttonLabel and buttonClass through so the OOB chain preserves them
 		if ($buttonLabel !== 'Load More') {
@@ -419,15 +427,7 @@ class LoadMoreRenderer
 	 */
 	private function buildLoadParams(array $options, int $limit): array
 	{
-		$params       = ['limit' => (string)$limit, 'offset' => '0'];
-		$optionalKeys = ['sort', 'include', 'exclude', 'search'];
-		foreach ($optionalKeys as $key) {
-			if (isset($options[$key]) && (string)$options[$key] !== '') {
-				$params[$key] = (string)$options[$key];
-			}
-		}
-
-		return $params;
+		return ['limit' => (string)$limit, 'offset' => '0'] + self::passThrough($options, ['sort', 'include', 'exclude', 'search']);
 	}
 
 	/**
@@ -452,13 +452,7 @@ class LoadMoreRenderer
 			'limit'    => (string)$limit,
 		];
 
-		// Add optional params
-		$optionalKeys = ['sort', 'include', 'exclude', 'search'];
-		foreach ($optionalKeys as $key) {
-			if (isset($options[$key]) && (string)$options[$key] !== '') {
-				$queryParams[$key] = (string)$options[$key];
-			}
-		}
+		$queryParams += self::passThrough($options, ['sort', 'include', 'exclude', 'search']);
 
 		// Pass trigger, buttonLabel, and buttonClass through so the chain preserves them
 		if ($trigger !== 'revealed') {

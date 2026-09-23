@@ -7,7 +7,9 @@ use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 
 /**
- * Barcode Generator utility using tecnickcom/tc-lib-barcode.
+ * Renders barcodes as inline SVG (or an HTML wrapper around one). The named
+ * symbologies are `custom()` plus the format check that symbology imposes;
+ * the option handling lives once in {@see render()}.
  */
 class BarcodeGenerator
 {
@@ -20,8 +22,28 @@ class BarcodeGenerator
 	}
 
 	/**
-	 * Generate SVG barcode output.
+	 * @param array<string,mixed> $options `width`, `height`, `color`, `format` (`html` | `svg`)
 	 */
+	private function render(string $data, string $type, array $options): string
+	{
+		$width  = $options['width'] ?? -1;
+		$height = $options['height'] ?? -1;
+		$color  = $options['color'] ?? 'black';
+
+		if (($options['format'] ?? 'html') === 'svg') {
+			return $this->generateSVG($data, $type, $width, $height, $color);
+		}
+
+		return $this->generateHTML($data, $type, $width, $height, $color);
+	}
+
+	private function assertMatches(string $data, string $pattern, string $message): void
+	{
+		if (!preg_match($pattern, $data)) {
+			throw new \InvalidArgumentException($message);
+		}
+	}
+
 	private function generateSVG(string $data, string $type, int $width = -1, int $height = -1, string $color = 'black'): string
 	{
 		// Barcodes require Pro edition
@@ -42,9 +64,6 @@ class BarcodeGenerator
 		}
 	}
 
-	/**
-	 * Generate HTML output with embedded SVG.
-	 */
 	private function generateHTML(string $data, string $type, int $width = -1, int $height = -1, string $color = 'black'): string
 	{
 		$svg = $this->generateSVG($data, $type, $width, $height, $color);
@@ -57,206 +76,70 @@ class BarcodeGenerator
 		);
 	}
 
-	/**
-	 * Generate Code 128 barcode (most common, supports alphanumeric).
-	 *
-	 * @param array<string,mixed> $options
-	 */
+	/** @param array<string,mixed> $options */
 	public function code128(string $data, array $options = []): string
 	{
-		$width  = $options['width'] ?? -1;
-		$height = $options['height'] ?? -1;
-		$color  = $options['color'] ?? 'black';
-		$format = $options['format'] ?? 'html';
-
-		if ($format === 'svg') {
-			return $this->generateSVG($data, 'C128', $width, $height, $color);
-		}
-
-		return $this->generateHTML($data, 'C128', $width, $height, $color);
+		return $this->render($data, 'C128', $options);
 	}
 
-	/**
-	 * Generate Code 39 barcode (alphanumeric with some symbols).
-	 *
-	 * @param array<string,mixed> $options
-	 */
+	/** @param array<string,mixed> $options */
 	public function code39(string $data, array $options = []): string
 	{
-		$width  = $options['width'] ?? -1;
-		$height = $options['height'] ?? -1;
-		$color  = $options['color'] ?? 'black';
-		$format = $options['format'] ?? 'html';
-
-		if ($format === 'svg') {
-			return $this->generateSVG($data, 'C39', $width, $height, $color);
-		}
-
-		return $this->generateHTML($data, 'C39', $width, $height, $color);
+		return $this->render($data, 'C39', $options);
 	}
 
-	/**
-	 * Generate EAN-13 barcode (13-digit product codes).
-	 *
-	 * @param array<string,mixed> $options
-	 */
-	public function ean13(string $data, array $options = []): string
-	{
-		// Validate EAN-13 format (12 or 13 digits)
-		if (!preg_match('/^\d{12,13}$/', $data)) {
-			throw new \InvalidArgumentException('EAN-13 requires 12 or 13 digits');
-		}
-
-		$width  = $options['width'] ?? -1;
-		$height = $options['height'] ?? -1;
-		$color  = $options['color'] ?? 'black';
-		$format = $options['format'] ?? 'html';
-
-		if ($format === 'svg') {
-			return $this->generateSVG($data, 'EAN13', $width, $height, $color);
-		}
-
-		return $this->generateHTML($data, 'EAN13', $width, $height, $color);
-	}
-
-	/**
-	 * Generate EAN-8 barcode (8-digit product codes).
-	 *
-	 * @param array<string,mixed> $options
-	 */
-	public function ean8(string $data, array $options = []): string
-	{
-		// Validate EAN-8 format (7 or 8 digits)
-		if (!preg_match('/^\d{7,8}$/', $data)) {
-			throw new \InvalidArgumentException('EAN-8 requires 7 or 8 digits');
-		}
-
-		$width  = $options['width'] ?? -1;
-		$height = $options['height'] ?? -1;
-		$color  = $options['color'] ?? 'black';
-		$format = $options['format'] ?? 'html';
-
-		if ($format === 'svg') {
-			return $this->generateSVG($data, 'EAN8', $width, $height, $color);
-		}
-
-		return $this->generateHTML($data, 'EAN8', $width, $height, $color);
-	}
-
-	/**
-	 * Generate UPC-A barcode (12-digit product codes).
-	 *
-	 * @param array<string,mixed> $options
-	 */
-	public function upca(string $data, array $options = []): string
-	{
-		// Validate UPC-A format (11 or 12 digits)
-		if (!preg_match('/^\d{11,12}$/', $data)) {
-			throw new \InvalidArgumentException('UPC-A requires 11 or 12 digits');
-		}
-
-		$width  = $options['width'] ?? -1;
-		$height = $options['height'] ?? -1;
-		$color  = $options['color'] ?? 'black';
-		$format = $options['format'] ?? 'html';
-
-		if ($format === 'svg') {
-			return $this->generateSVG($data, 'UPCA', $width, $height, $color);
-		}
-
-		return $this->generateHTML($data, 'UPCA', $width, $height, $color);
-	}
-
-	/**
-	 * Generate UPC-E barcode (8-digit compressed UPC).
-	 *
-	 * @param array<string,mixed> $options
-	 */
-	public function upce(string $data, array $options = []): string
-	{
-		if (!preg_match('/^\d{6,8}$/', $data)) {
-			throw new \InvalidArgumentException('UPC-E requires 6, 7 or 8 digits');
-		}
-
-		$data = $this->upcePayload($data);
-
-		$width  = $options['width'] ?? -1;
-		$height = $options['height'] ?? -1;
-		$color  = $options['color'] ?? 'black';
-		$format = $options['format'] ?? 'html';
-
-		if ($format === 'svg') {
-			return $this->generateSVG($data, 'UPCE', $width, $height, $color);
-		}
-
-		return $this->generateHTML($data, 'UPCE', $width, $height, $color);
-	}
-
-	/**
-	 * Generate Code 93 barcode (alphanumeric).
-	 *
-	 * @param array<string,mixed> $options
-	 */
+	/** @param array<string,mixed> $options */
 	public function code93(string $data, array $options = []): string
 	{
-		$width  = $options['width'] ?? -1;
-		$height = $options['height'] ?? -1;
-		$color  = $options['color'] ?? 'black';
-		$format = $options['format'] ?? 'html';
-
-		if ($format === 'svg') {
-			return $this->generateSVG($data, 'C93', $width, $height, $color);
-		}
-
-		return $this->generateHTML($data, 'C93', $width, $height, $color);
+		return $this->render($data, 'C93', $options);
 	}
 
-	/**
-	 * Generate Interleaved 2 of 5 barcode (numeric only).
-	 *
-	 * @param array<string,mixed> $options
-	 */
+	/** @param array<string,mixed> $options */
+	public function ean13(string $data, array $options = []): string
+	{
+		$this->assertMatches($data, '/^\d{12,13}$/', 'EAN-13 requires 12 or 13 digits');
+
+		return $this->render($data, 'EAN13', $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function ean8(string $data, array $options = []): string
+	{
+		$this->assertMatches($data, '/^\d{7,8}$/', 'EAN-8 requires 7 or 8 digits');
+
+		return $this->render($data, 'EAN8', $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function upca(string $data, array $options = []): string
+	{
+		$this->assertMatches($data, '/^\d{11,12}$/', 'UPC-A requires 11 or 12 digits');
+
+		return $this->render($data, 'UPCA', $options);
+	}
+
+	/** @param array<string,mixed> $options */
+	public function upce(string $data, array $options = []): string
+	{
+		$this->assertMatches($data, '/^\d{6,8}$/', 'UPC-E requires 6, 7 or 8 digits');
+
+		return $this->render($this->upcePayload($data), 'UPCE', $options);
+	}
+
+	/** @param array<string,mixed> $options */
 	public function i25(string $data, array $options = []): string
 	{
-		// Validate numeric format
-		if (!preg_match('/^\d+$/', $data)) {
-			throw new \InvalidArgumentException('Interleaved 2 of 5 requires numeric data only');
-		}
+		$this->assertMatches($data, '/^\d+$/', 'Interleaved 2 of 5 requires numeric data only');
 
-		$width  = $options['width'] ?? -1;
-		$height = $options['height'] ?? -1;
-		$color  = $options['color'] ?? 'black';
-		$format = $options['format'] ?? 'html';
-
-		if ($format === 'svg') {
-			return $this->generateSVG($data, 'I25', $width, $height, $color);
-		}
-
-		return $this->generateHTML($data, 'I25', $width, $height, $color);
+		return $this->render($data, 'I25', $options);
 	}
 
 	/**
-	 * Reduce a UPC-E code to the 6-digit payload the encoder needs.
-	 *
-	 * UPC-E is written three ways: the bare 6-digit payload, 7 digits with
-	 * either the number-system prefix or the check digit, and the familiar
-	 * 8-digit display form `system + payload + check`. Only the payload
-	 * carries information — the prefix is 0 or 1 and the check digit is
-	 * derived — so every form reduces to the same six digits and the same
-	 * UPC-A expansion.
-	 *
-	 * This exists because tc-lib-barcode < 2.14 accepted the longer forms
-	 * and silently encoded the WRONG product: it zero-padded the input and
-	 * appended a check digit instead of decompressing, so `04252614`
-	 * encoded UPC-A 0000042526148 rather than the correct 0042100005264.
-	 * 2.14 added validation and rejects the longer forms outright. Rather
-	 * than break every caller that passes the 8-digit form, normalise it —
-	 * the same input now produces a barcode that actually scans as the
-	 * product it names.
-	 *
-	 * A 7-digit code is the only ambiguous case: a leading 0 or 1 is a
-	 * number-system prefix (nothing else is valid there), so anything else
-	 * means the trailing digit is the check digit.
+	 * The six data digits the encoder wants. An 8-digit code carries the
+	 * number system in front and the check digit behind; a 7-digit one has
+	 * only the number system (when it starts with 0 or 1) or only the check
+	 * digit; six digits are already the payload. The encoder recomputes the
+	 * check digit itself.
 	 */
 	private function upcePayload(string $data): string
 	{
@@ -267,54 +150,23 @@ class BarcodeGenerator
 		};
 	}
 
-	/**
-	 * Generate Codabar barcode (numeric; the encoder supplies start/stop).
-	 *
-	 * A, B, C and D are reserved as Codabar's start/stop characters and are
-	 * added by the encoder, so they must not appear in $data. Passing them
-	 * used to encode literally — 'A1234B' became AA1234BA, which does not
-	 * scan — and is now rejected.
-	 *
-	 * @param array<string,mixed> $options
-	 */
+	/** @param array<string,mixed> $options */
 	public function codabar(string $data, array $options = []): string
 	{
-		$width  = $options['width'] ?? -1;
-		$height = $options['height'] ?? -1;
-		$color  = $options['color'] ?? 'black';
-		$format = $options['format'] ?? 'html';
-
-		if ($format === 'svg') {
-			return $this->generateSVG($data, 'CODABAR', $width, $height, $color);
-		}
-
-		return $this->generateHTML($data, 'CODABAR', $width, $height, $color);
+		return $this->render($data, 'CODABAR', $options);
 	}
 
 	/**
-	 * Generate custom barcode with specific type.
+	 * Any symbology tc-lib-barcode supports — see {@see getSupportedTypes()}.
 	 *
 	 * @param array<string,mixed> $options
 	 */
 	public function custom(string $data, string $type, array $options = []): string
 	{
-		$width  = $options['width'] ?? -1;
-		$height = $options['height'] ?? -1;
-		$color  = $options['color'] ?? 'black';
-		$format = $options['format'] ?? 'html';
-
-		if ($format === 'svg') {
-			return $this->generateSVG($data, $type, $width, $height, $color);
-		}
-
-		return $this->generateHTML($data, $type, $width, $height, $color);
+		return $this->render($data, $type, $options);
 	}
 
-	/**
-	 * Get list of supported barcode types.
-	 *
-	 * @return array<string>
-	 */
+	/** @return array<string> */
 	public function getSupportedTypes(): array
 	{
 		return [

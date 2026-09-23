@@ -246,53 +246,32 @@ class FormGridBuilder
 	}
 
 	/**
-	 * Generate a <style> tag with mobile-first responsive grid CSS.
-	 * Uses container queries so the form responds to its available space,
-	 * not the viewport (useful when sidebar is open on tablets).
-	 *
-	 * Note: Container queries require styling descendants, not the container itself.
-	 * The wrapper div has container-type, and the form inside responds to it.
+	 * The <style> tag for a form grid: the form is its own container query
+	 * ancestor, then the grid rules.
 	 */
 	public function toStyleTag(string $formId): string
 	{
-		$desktopAreas = $this->getDesktopGridAreas();
-		$mobileAreas  = $this->getMobileGridAreas();
-
-		if ($desktopAreas === [] || $mobileAreas === []) {
+		$rules = $this->gridRules($formId);
+		if ($rules === '') {
 			return '';
 		}
 
-		$columnCount     = $this->getColumnCount();
-		$desktopAreasStr = $this->buildAreasString($desktopAreas, "\n\t\t\t");
-		$mobileAreasStr  = $this->buildAreasString($mobileAreas, "\n\t\t");
-
-		return <<<HTML
-<style>
-#$formId-container {
-	container-type: inline-size;
-}
-#$formId {
-	grid-template-areas:
-		$mobileAreasStr;
-	grid-template-columns: 1fr;
-}
-@container (min-width: 500px) {
-	#$formId {
-		grid-template-areas:
-			$desktopAreasStr;
-		grid-template-columns: repeat($columnCount, 1fr);
-	}
-}
-</style>
-HTML;
+		return "<style>\n#$formId-container {\n\tcontainer-type: inline-size;\n}\n" . $rules . '</style>';
 	}
 
 	/**
-	 * Generate a <style> tag for a nested fieldset grid — identical to toStyleTag()
-	 * but without the `#$gridId-container { container-type: inline-size }` block,
-	 * because the outer form already provides the container ancestor.
+	 * The <style> tag for a nested fieldset grid — the same rules without the
+	 * container block, because the outer form already provides the ancestor.
 	 */
 	public function toNestedStyleTag(string $gridId): string
+	{
+		$rules = $this->gridRules($gridId);
+
+		return $rules === '' ? '' : "<style>\n" . $rules . '</style>';
+	}
+
+	/** Grid areas for mobile, and for desktop from 500px up; empty when there is no layout. */
+	private function gridRules(string $gridId): string
 	{
 		$desktopAreas = $this->getDesktopGridAreas();
 		$mobileAreas  = $this->getMobileGridAreas();
@@ -305,8 +284,7 @@ HTML;
 		$desktopAreasStr = $this->buildAreasString($desktopAreas, "\n\t\t\t");
 		$mobileAreasStr  = $this->buildAreasString($mobileAreas, "\n\t\t");
 
-		return <<<HTML
-<style>
+		return <<<CSS
 #$gridId {
 	grid-template-areas:
 		$mobileAreasStr;
@@ -319,8 +297,8 @@ HTML;
 		grid-template-columns: repeat($columnCount, 1fr);
 	}
 }
-</style>
-HTML;
+
+CSS;
 	}
 
 	/**

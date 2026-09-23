@@ -43,6 +43,7 @@ use TotalCMS\Domain\Property\Service\DeckItemFetcher;
 use TotalCMS\Domain\Property\Service\DeckItemRemover;
 use TotalCMS\Domain\Property\Service\DeckItemSaver;
 use TotalCMS\Domain\Property\Service\DeckItemUpdater;
+use TotalCMS\Domain\Property\Service\FilePathResolver;
 use TotalCMS\Domain\Property\Service\FileSaver;
 use TotalCMS\Domain\Property\Service\ImageSaver;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
@@ -51,6 +52,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLinter;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
+use TotalCMS\Domain\Session\Service\SessionBootstrap;
 use TotalCMS\Domain\Sitemap\Service\SitemapBuilder;
 use TotalCMS\Domain\Sync\Service\SyncService;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
@@ -101,8 +103,9 @@ class TotalCMS
 		$sessionStarted       = false;
 
 		try {
-			// Handle any existing session conflicts before creating PhpSession
-			$preservedSessionData = $this->handleSessionConflict();
+			// Close a session the host page already opened before PhpSession starts
+			$sessionBootstrap     = $this->container->get(SessionBootstrap::class);
+			$preservedSessionData = $sessionBootstrap->resolveConflict($this->config->session['conflictStrategy'] ?? SessionBootstrap::PRESERVE);
 
 			$this->session = $this->container->get(PhpSession::class);
 			$this->access  = $this->container->get(AccessManager::class);
@@ -113,7 +116,7 @@ class TotalCMS
 				$sessionStarted = true;
 
 				if ($preservedSessionData !== []) {
-					$this->restorePreservedSessionData($preservedSessionData);
+					$sessionBootstrap->restore($this->session, $preservedSessionData);
 				}
 			}
 
@@ -143,58 +146,6 @@ class TotalCMS
 		if ($autoStartBuffer) {
 			$this->startBuffer();
 		}
-	}
-
-	/**
-	 * Handle existing session conflicts based on configuration strategy.
-	 *
-	 * @SuppressWarnings("PHPMD.Superglobals")
-	 *
-	 * @return array<string,mixed> Preserved session data (if any)
-	 */
-	private function handleSessionConflict(): array
-	{
-		if (session_status() !== PHP_SESSION_ACTIVE) {
-			// No conflict, proceed normally
-			return [];
-		}
-
-		$existingData = $_SESSION ?? [];
-		$strategy     = $this->config->session['conflictStrategy'] ?? 'preserve';
-
-		// Log the conflict for debugging
-		$this->logger->debug('Session conflict detected', [
-			'strategy'     => $strategy,
-			'existingKeys' => array_keys($existingData),
-		]);
-
-		// Always destroy existing session so PhpSession can start cleanly
-		session_destroy();
-
-		// Return data based on strategy
-		return match ($strategy) {
-			'preserve' => $existingData,
-			'replace'  => [],
-			default    => [],
-		};
-	}
-
-	/**
-	 * Restore preserved session data as-is.
-	 * External session data keeps its original keys.
-	 * Total CMS will use namespaced keys (e.g., 'totalcms.auth.user') to avoid conflicts.
-	 *
-	 * @param array<string,mixed> $preservedData
-	 */
-	private function restorePreservedSessionData(array $preservedData): void
-	{
-		foreach ($preservedData as $key => $value) {
-			$this->session->set($key, $value);
-		}
-
-		$this->logger->debug('Session data restored', [
-			'restoredKeys' => array_keys($preservedData),
-		]);
 	}
 
 	// ---------------------------------------------------------------------------------
@@ -741,26 +692,7 @@ class TotalCMS
 	 */
 	public function filePath(string $id, array $options = []): ?string
 	{
-		$collection = $options['collection'] ?? 'file';
-		$property   = $options['property'] ?? 'file';
-
-		try {
-			$fileFetcher = $this->container->get(Domain\Property\Service\FileFetcher::class);
-			$file        = $fileFetcher->fetchFile($collection, $id, $property);
-
-			$relativePath = Infrastructure\Filesystem\PathUtils::buildPath(
-				$collection,
-				$id,
-				$property,
-				$file->name
-			);
-
-			$dataDir = $this->config->datadir;
-
-			return $dataDir . '/' . $relativePath;
-		} catch (\Throwable) {
-			return null;
-		}
+		return $this->container->get(FilePathResolver::class)->filePath($id, $options);
 	}
 
 	/**
@@ -770,38 +702,6 @@ class TotalCMS
 	 */
 	public function depotPath(string $id, string $filePath, array $options = []): ?string
 	{
-		$collection = $options['collection'] ?? 'depot';
-		$property   = $options['property'] ?? 'depot';
-
-		// Handle full path in filePath parameter
-		$subpath  = '';
-		$filename = $filePath;
-		if (str_contains($filePath, '/')) {
-			$pathinfo = pathinfo($filePath);
-			$subpath  = $pathinfo['dirname'];
-			$filename = $pathinfo['basename'];
-		}
-
-		try {
-			$relativePath = Infrastructure\Filesystem\PathUtils::buildPath(
-				$collection,
-				$id,
-				$property,
-				$filename,
-				$subpath
-			);
-
-			$dataDir  = $this->config->datadir;
-			$fullPath = $dataDir . '/' . $relativePath;
-
-			// Check if file exists before returning path
-			if (file_exists($fullPath)) {
-				return $fullPath;
-			}
-
-			return null;
-		} catch (\Throwable) {
-			return null;
-		}
+		return $this->container->get(FilePathResolver::class)->depotPath($id, $filePath, $options);
 	}
 }

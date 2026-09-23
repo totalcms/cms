@@ -150,13 +150,7 @@ readonly class DataTwigAdapter
 			'property'   => 'image',
 		], $options);
 
-		$image = $this->raw($options['collection'], $id, $options['property']);
-
-		if (!is_array($image)) {
-			return [];
-		}
-
-		return $image;
+		return $this->rawArray($options['collection'], $id, $options['property']);
 	}
 
 	/**
@@ -171,13 +165,7 @@ readonly class DataTwigAdapter
 			'property'   => 'gallery',
 		], $options);
 
-		$gallery = $this->raw($options['collection'], $id, $options['property']);
-
-		if (!is_array($gallery)) {
-			return [];
-		}
-
-		return $gallery;
+		return $this->rawArray($options['collection'], $id, $options['property']);
 	}
 
 	/**
@@ -192,13 +180,7 @@ readonly class DataTwigAdapter
 			'property'   => 'file',
 		], $options);
 
-		$file = $this->raw($options['collection'], $id, $options['property']);
-
-		if (!is_array($file)) {
-			return [];
-		}
-
-		return $file;
+		return $this->rawArray($options['collection'], $id, $options['property']);
 	}
 
 	/**
@@ -213,13 +195,20 @@ readonly class DataTwigAdapter
 			'property'   => 'depot',
 		], $options);
 
-		$depot = $this->raw($options['collection'], $id, $options['property']);
+		return $this->rawArray($options['collection'], $id, $options['property']);
+	}
 
-		if (!is_array($depot)) {
-			return [];
-		}
+	/**
+	 * A structured property (image, gallery, file, depot) as its array, or
+	 * empty when the object has nothing there.
+	 *
+	 * @return array<mixed>
+	 */
+	private function rawArray(string $collection, string $id, string $property): array
+	{
+		$value = $this->raw($collection, $id, $property);
 
-		return $depot;
+		return is_array($value) ? $value : [];
 	}
 
 	/** @param array<string,string> $options */

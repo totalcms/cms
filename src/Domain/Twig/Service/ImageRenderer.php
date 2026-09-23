@@ -326,22 +326,7 @@ class ImageRenderer
 			'property'   => 'image',
 		], $options);
 
-		// Resolve image data, descending dotted `property` for card/deck-nested.
-		[$rootProp, $segments] = MediaTwigAdapter::splitDottedProperty((string)$options['property']);
-		if (is_array($idOrObject)) {
-			$image = MediaTwigAdapter::descendDottedPath($idOrObject, $rootProp, $segments);
-		} else {
-			$image = $this->data->raw($options['collection'], $idOrObject, $rootProp);
-			foreach ($segments as $segment) {
-				$image = is_array($image) ? ($image[$segment] ?? null) : null;
-			}
-		}
-
-		if (!is_array($image)) {
-			return '';
-		}
-
-		return self::altFromImageData($image);
+		return self::altFromImageData($this->imageData($idOrObject, $options));
 	}
 
 	/**

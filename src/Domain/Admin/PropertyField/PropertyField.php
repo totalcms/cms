@@ -44,6 +44,12 @@ class PropertyField
 
 	protected function buildFormInfo(): string
 	{
+		return HTMLUtils::details('Form Info', $this->formInfoFields(), '', ['open' => '']);
+	}
+
+	/** The fields of the "Form Info" section; SchemaField adds the default value. */
+	protected function formInfoFields(): string
+	{
 		$formInfo = $this->form->field('label', [
 			'field'       => 'text',
 			'label'       => 'Label',
@@ -67,7 +73,7 @@ class PropertyField
 			'value'       => $this->help,
 		]);
 
-		return HTMLUtils::details('Form Info', $formInfo, '', ['open' => '']);
+		return $formInfo;
 	}
 
 	protected function buildSettingsOptions(): string
@@ -94,9 +100,7 @@ class PropertyField
 
 	protected function buildDialog(string $content = ''): string
 	{
-		$content .= $this->topFieldInfo();
-		$content .= $this->buildFormInfo();
-		$content .= $this->buildSettingsOptions();
+		$content .= $this->dialogSections();
 
 		$close = HTMLUtils::button('Close', ['class' => 'close']);
 		$docs  = HTMLUtils::element('a', 'Search Docs', [
@@ -109,6 +113,12 @@ class PropertyField
 		$content .= HTMLUtils::element('section', $close . $docs);
 
 		return HTMLUtils::dialog($content, 'small');
+	}
+
+	/** The scrolling body of the edit dialog; SchemaField appends its own sections. */
+	protected function dialogSections(): string
+	{
+		return $this->topFieldInfo() . $this->buildFormInfo() . $this->buildSettingsOptions();
 	}
 
 	protected function buildPropertyField(string $property = '', string $field = ''): string

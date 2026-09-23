@@ -156,21 +156,7 @@ class SchemaForm extends TotalForm
 		$options['name'] = $name;
 		$options['form'] = $this;
 
-		// Sub-fields of card/deck composites bring their own complete config
-		// from the card's sub-schema iteration — skip the parent-schema lookup
-		// and (further down) the schemaObjectData value pull, otherwise a
-		// sub-field named `description` would inherit the parent schema's
-		// `description` property settings AND value. Matches the guard pattern
-		// in ObjectForm::buildFieldOptions.
-		//
-		// Two guards because CardField and DeckItem pass different flags:
-		// CardField goes through TotalForm::subField() (sets `subfield: true`);
-		// DeckItem calls form->field() directly with `deck_context: true`.
-		if (isset($options['deck_context']) && $options['deck_context'] === true) {
-			return $options;
-		}
-
-		if (isset($options['subfield']) && $options['subfield'] === true) {
+		if (self::isCompositeChild($options)) {
 			return $options;
 		}
 

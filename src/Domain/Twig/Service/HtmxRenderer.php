@@ -194,26 +194,13 @@ readonly class HtmxRenderer
 			}
 		}
 
-		$trigger     = $params['trigger'] ?? 'revealed';
-		$buttonLabel = $params['buttonLabel'] ?? 'Load More';
-		$buttonClass = $params['buttonClass'] ?? '';
-		$transition  = !empty($params['transition']);
-
-		$url   = $baseUrl . '?' . http_build_query($queryParams);
-		$swap  = 'outerHTML' . ($transition ? ' transition:true' : '');
-		$class = trim('cms-load-more ' . $buttonClass);
-
-		$attributes = [
-			'hx-get'     => $url,
-			'hx-trigger' => $trigger,
-			'hx-swap'    => $swap,
-			'class'      => $class,
-		];
-
-		if ($trigger === 'click') {
-			return HTMLUtils::element('button', htmlspecialchars($buttonLabel), $attributes);
-		}
-
-		return HTMLUtils::element('div', '', $attributes);
+		return $this->buildInitialTrigger(
+			$baseUrl,
+			$queryParams,
+			$params['trigger'] ?? 'revealed',
+			$params['buttonLabel'] ?? 'Load More',
+			$params['buttonClass'] ?? '',
+			!empty($params['transition']),
+		);
 	}
 }

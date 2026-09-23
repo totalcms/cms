@@ -42,6 +42,18 @@ readonly class SchemaTwigAdapter
 	{
 		$schemas = $this->schemaLister->listAllSchemas();
 
+		return $this->accessible($schemas);
+	}
+
+	/**
+	 * The schemas the current edition may use, as arrays.
+	 *
+	 * @param array<SchemaData> $schemas
+	 *
+	 * @return array<array<string,mixed>>
+	 */
+	private function accessible(array $schemas): array
+	{
 		$schemas = array_filter(
 			$schemas,
 			fn (SchemaData $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema->id)
@@ -71,12 +83,7 @@ readonly class SchemaTwigAdapter
 	{
 		$schemas = $this->schemaLister->listReservedSchemas();
 
-		$schemas = array_filter(
-			$schemas,
-			fn (SchemaData $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema->id)
-		);
-
-		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
+		return $this->accessible($schemas);
 	}
 
 	/**
@@ -88,12 +95,7 @@ readonly class SchemaTwigAdapter
 	{
 		$schemas = $this->schemaLister->listCustomSchemas();
 
-		$schemas = array_filter(
-			$schemas,
-			fn (SchemaData $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema->id)
-		);
-
-		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
+		return $this->accessible($schemas);
 	}
 
 	/**
@@ -105,12 +107,7 @@ readonly class SchemaTwigAdapter
 	{
 		$schemas = $this->schemaLister->listExtensionSchemas();
 
-		$schemas = array_filter(
-			$schemas,
-			fn (SchemaData $schema): bool => $this->collectionEditionService->isSchemaAccessible($schema->id)
-		);
-
-		return array_map(fn (SchemaData $schema): array => $schema->toArray(), $schemas);
+		return $this->accessible($schemas);
 	}
 
 	/** @return array<string,array<array<string,mixed>>> */

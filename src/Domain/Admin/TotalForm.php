@@ -1199,6 +1199,25 @@ class TotalForm implements \Stringable
 		return $options;
 	}
 
+	/**
+	 * Whether a field is a child of a card or deck rather than a property of
+	 * this form's schema. Such fields bring their own complete config from the
+	 * composite's sub-schema iteration, so a builder must not look them up in
+	 * the parent schema or pull a value for them — a sub-field named
+	 * `description` (inside the mcp card, say) would otherwise inherit the
+	 * parent's top-level `description` settings and value.
+	 *
+	 * Two flags because the two composites pass different ones: CardField goes
+	 * through subField(), which sets `subfield: true`; DeckItem calls field()
+	 * directly with `deck_context: true`.
+	 *
+	 * @param array<string,mixed> $options
+	 */
+	protected static function isCompositeChild(array $options): bool
+	{
+		return ($options['deck_context'] ?? false) === true || ($options['subfield'] ?? false) === true;
+	}
+
 	/** @param array<string,mixed> $options */
 	public function addField(string $name, array $options = []): void
 	{

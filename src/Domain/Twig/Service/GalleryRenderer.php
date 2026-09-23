@@ -444,27 +444,7 @@ class GalleryRenderer
 
 		$image = $this->media->galleryImageData($idOrObject, $name, $options);
 
-		if (!is_array($image)) {
-			return '';
-		}
-
-		// Template mode: render using lightweight Twig engine
-		if ($template !== '') {
-			return $this->renderCaptionTemplate($template, $image);
-		}
-
-		// Default fallback chain (no filename)
-		if (!empty($image['alt'])) {
-			return $image['alt'];
-		}
-		if (!empty($image['exif']['title'])) {
-			return $image['exif']['title'];
-		}
-		if (!empty($image['exif']['description'])) {
-			return $image['exif']['description'];
-		}
-
-		return '';
+		return is_array($image) ? $this->captionFromImageData($image, $template) : '';
 	}
 
 	/**

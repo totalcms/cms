@@ -51,39 +51,15 @@ class SchemaField extends PropertyField
 	) {
 	}
 
-	protected function buildFormInfo(): string
+	protected function formInfoFields(): string
 	{
-		$formInfo = $this->form->field('label', [
-			'field'       => 'text',
-			'label'       => 'Label',
-			'placeholder' => 'Enter a label',
-			'help'        => 'The label that will be added to the field form',
-			'value'       => $this->label,
-		]);
-		$formInfo .= $this->form->field('placeholder', [
-			'field'       => 'text',
-			'label'       => 'Placeholder',
-			'placeholder' => 'Enter a placeholder',
-			'help'        => 'The placeholder text that will be added to the field form',
-			'value'       => $this->placeholder,
-		]);
-		$formInfo .= $this->form->field('help', [
-			'field'       => 'textarea',
-			'label'       => 'Help',
-			'rows'        => 2,
-			'placeholder' => 'Enter help text',
-			'help'        => 'The help text that will be added to the field form',
-			'value'       => $this->help,
-		]);
-		$formInfo .= $this->form->field('default', [
+		return parent::formInfoFields() . $this->form->field('default', [
 			'field'       => 'text',
 			'label'       => 'Default Value',
 			'placeholder' => '',
 			'help'        => 'The default value for this property when an object is saved without a value',
 			'value'       => $this->default,
 		]);
-
-		return HTMLUtils::details('Form Info', $formInfo, '', ['open' => '']);
 	}
 
 	protected function buildPropertyInfo(): string
@@ -150,25 +126,9 @@ class SchemaField extends PropertyField
 		return HTMLUtils::details('MCP Details', $content);
 	}
 
-	protected function buildDialog(string $content = ''): string
+	protected function dialogSections(): string
 	{
-		$content .= $this->topFieldInfo();
-		$content .= $this->buildFormInfo();
-		$content .= $this->buildSettingsOptions();
-		$content .= $this->buildPropertyInfo();
-		$content .= $this->buildMcpInfo();
-
-		$close = HTMLUtils::button('Close', ['class' => 'close']);
-		$docs  = HTMLUtils::element('a', 'Search Docs', [
-			'href'   => 'docs',
-			'target' => '_blank',
-			'class'  => 'docs-link',
-		]);
-
-		$content  = HTMLUtils::scroller($content);
-		$content .= HTMLUtils::element('section', $close . $docs);
-
-		return HTMLUtils::dialog($content, 'small');
+		return parent::dialogSections() . $this->buildPropertyInfo() . $this->buildMcpInfo();
 	}
 
 	public function build(): string

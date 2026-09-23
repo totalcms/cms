@@ -860,18 +860,24 @@ class TotalCMSTwigFilters
 				continue;
 			}
 
-			$key       = $item[$property] ?? '';
-			$keyString = is_scalar($key) ? (string)$key : '';
-
-			if ($keyString === '') {
-				$keyString = '_ungrouped';
-			}
-
-			$result[$keyString] ??= [];
-			$result[$keyString][] = $item;
+			$result[self::groupKey($item, $property)][] = $item;
 		}
 
 		return $result;
+	}
+
+	/**
+	 * The bucket an item lands in: its scalar property value, or `_ungrouped`
+	 * when the property is missing, empty or not scalar.
+	 *
+	 * @param array<string,mixed> $item
+	 */
+	private static function groupKey(array $item, string $property): string
+	{
+		$key       = $item[$property] ?? '';
+		$keyString = is_scalar($key) ? (string)$key : '';
+
+		return $keyString === '' ? '_ungrouped' : $keyString;
 	}
 
 	/**
@@ -890,24 +896,7 @@ class TotalCMSTwigFilters
 			return [];
 		}
 
-		$result = [];
-		foreach ($collection as $item) {
-			if (!is_array($item)) {
-				continue;
-			}
-
-			$key       = $item[$property] ?? '';
-			$keyString = is_scalar($key) ? (string)$key : '';
-
-			if ($keyString === '') {
-				$keyString = '_ungrouped';
-			}
-
-			$result[$keyString] ??= 0;
-			$result[$keyString]++;
-		}
-
-		return $result;
+		return array_map(count(...), self::groupBy($collection, $property));
 	}
 
 	/**

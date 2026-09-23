@@ -2,12 +2,14 @@
 
 namespace TotalCMS\Domain\Admin\PropertyField;
 
-use TotalCMS\Domain\Admin\Form\Builder\CollectionForm;
+use TotalCMS\Domain\Admin\PropertyField\Concerns\ResolvesPropertyFields;
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 class CustomPropertyField
 {
+	use ResolvesPropertyFields;
+
 	/** @var array<string,PropertyField> */
 	private array $fields = [];
 
@@ -23,16 +25,15 @@ class CustomPropertyField
 	private function initFields(): void
 	{
 		foreach ($this->properties as $property => $options) {
-			$this->fields[(string)$property] = $this->createPropertyField($property, $options);
+			$this->fields[(string)$property] = $this->resolvePropertyField($property, $options);
 		}
 	}
 
 	public function template(): string
 	{
-		$templateProperty = new PropertyField(form : $this->form, property : '');
-		$content          = $templateProperty->template();
+		$content = $this->newPropertyTemplate();
 
-		$content .= $this->createAddPropertyField();
+		$content .= $this->overridePropertySelect([]);
 		$content  = $this->accordion('', $content);
 
 		return HTMLUtils::element('template', $content, ['class' => 'custom-property-template']);
@@ -64,69 +65,9 @@ class CustomPropertyField
 		foreach ($this->fields as $field) {
 			$content .= $field->build();
 		}
-		$content .= $this->createNewPropertyTemplate();
-		$content .= $this->createAddPropertyField(array_keys($this->properties));
+		$content .= $this->newPropertyTemplate();
+		$content .= $this->overridePropertySelect(array_keys($this->properties));
 
 		return $this->accordion($this->object, $content);
-	}
-
-	protected function createNewPropertyTemplate(): string
-	{
-		$templateProperty = new PropertyField(
-			form     : $this->form,
-			property : ''
-		);
-
-		return $templateProperty->template();
-	}
-
-	/** @param array<string> $excludeProperties */
-	protected function createAddPropertyField(array $excludeProperties = []): string
-	{
-		if (!$this->form instanceof CollectionForm) {
-			return '';
-		}
-
-		$schema = $this->form->getCollectionSchema();
-
-		if (is_null($schema)) {
-			return '';
-		}
-
-		$schemaProperties = array_keys($schema->properties);
-		$propertiesToAdd  = array_diff($schemaProperties, $excludeProperties);
-
-		if ($propertiesToAdd === []) {
-			return '';
-		}
-
-		$options = HTMLUtils::option('Override Property', '', [
-			'class'    => 'placeholder',
-			'disabled' => 'disabled',
-			'selected' => 'selected',
-		]);
-
-		foreach ($propertiesToAdd as $property) {
-			$schemaProp = $this->form->filterFieldProperties($schema->properties[$property]);
-			$options .= HTMLUtils::option($property, '', [
-				'value' => (string)json_encode($schemaProp),
-			]);
-		}
-
-		return HTMLUtils::element('select', $options, ['name' => 'addProperty']);
-	}
-
-	/** @param array<string,mixed> $options */
-	private function createPropertyField(string $property, array $options): PropertyField
-	{
-		$options['property'] = $property;
-		$options['form']     = $this->form;
-
-		$typeClass = 'TotalCMS\\Domain\\Admin\\PropertyField\\' . ucfirst($options['field'] ?? '') . 'Field';
-		if (class_exists($typeClass) && is_subclass_of($typeClass, PropertyField::class)) {
-			return new $typeClass(...$options);
-		}
-
-		return new PropertyField(...$options);
 	}
 }
