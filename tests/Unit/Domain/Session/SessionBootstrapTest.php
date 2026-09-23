@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Odan\Session\SessionInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Session\Service\SessionBootstrap;
+use TotalCMS\Support\ContainerFactory;
 
 // The host page's session data survives the PhpSession restart under
 // `preserve` (the default) and is dropped under `replace` or anything else.
@@ -26,4 +27,12 @@ test('restore writes every key back under its original name', function (): void 
 		->with(test()->logicalOr('cart', 'user'), test()->anything());
 
 	(new SessionBootstrap(new NullLogger()))->restore($session, ['cart' => [1], 'user' => 'bob']);
+});
+
+// The PHP API (Stacks pages) pulls this out of the container before the
+// session starts. LoggerInterface has no default binding, so the service
+// needs its own definition or every Stacks page dies on an uninitialized
+// session property.
+test('resolves from the container', function (): void {
+	expect(ContainerFactory::build()->get(SessionBootstrap::class))->toBeInstanceOf(SessionBootstrap::class);
 });

@@ -175,6 +175,7 @@ use TotalCMS\Domain\Seo\Service\JsonLd\WebSiteProvider;
 use TotalCMS\Domain\Seo\Service\JsonLdBuilder;
 use TotalCMS\Domain\Seo\Service\MetaBuilder;
 use TotalCMS\Domain\Seo\Service\SeoContextFactory;
+use TotalCMS\Domain\Session\Service\SessionBootstrap;
 use TotalCMS\Domain\Settings\Services\SettingsSaver;
 use TotalCMS\Domain\Skill\Listener\ExtensionSkillListener;
 use TotalCMS\Domain\Skill\Service\ExtensionSkillSync;
@@ -403,6 +404,13 @@ return [
 		$container->get(ObjectRepository::class),
 		$container->get(IndexRepository::class),
 		$container->get(IndexBuilder::class),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::App),
+	),
+
+	// Explicit for the same reason: the PHP API resolves this on every Stacks
+	// page before the session starts, and a host session that had to be closed
+	// is worth a log line.
+	SessionBootstrap::class => fn (ContainerInterface $container): SessionBootstrap => new SessionBootstrap(
 		$container->get(LoggerFactory::class)->channelLogger(LogChannel::App),
 	),
 
