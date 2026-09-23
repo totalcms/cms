@@ -64,8 +64,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	 */
 	public function getCategories(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$blog = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$base = rtrim($this->config->api, '/');
@@ -100,8 +99,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	 */
 	public function getCategoryList(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$blog = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 
@@ -120,8 +118,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	 */
 	public function getTags(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$blog = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$base = rtrim($this->config->api, '/');
@@ -150,17 +147,12 @@ readonly class TaxonomyHandler implements MethodHandler
 	 */
 	public function getPostCategories(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$postId = (string)($params[0] ?? '');
 		// getPostCategories carries no blogid — resolveForPost() locates the post
 		// rather than guessing which blog was meant.
-		$blog = $this->registry->resolveForPost($identity, $collection, $postId);
-
-		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
-			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
-		}
+		$blog = $this->registry->resolvePost($identity, $collection, $postId);
 
 		$object     = $this->objectFetcher->fetchObject($blog->id, $postId)->toArray();
 		$categories = is_array($object['categories'] ?? null) ? $object['categories'] : [];
@@ -184,17 +176,12 @@ readonly class TaxonomyHandler implements MethodHandler
 	 */
 	public function setPostCategories(array $params, ?string $collection): bool
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'PUT');
+		$identity = $this->auth->authorize($params, 'PUT');
 
 		$postId = (string)($params[0] ?? '');
 		// setPostCategories carries no blogid — resolveForPost() locates the post
 		// rather than guessing which blog was meant.
-		$blog = $this->registry->resolveForPost($identity, $collection, $postId);
-
-		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
-			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
-		}
+		$blog = $this->registry->resolvePost($identity, $collection, $postId);
 
 		$sent  = is_array($params[3] ?? null) ? $params[3] : [];
 		$names = [];
@@ -228,8 +215,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	 */
 	public function newCategory(array $params, ?string $collection): string
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'POST');
+		$identity = $this->auth->authorize($params, 'POST');
 		$this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 
 		$struct = is_array($params[3] ?? null) ? $params[3] : [];
@@ -254,8 +240,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	 */
 	public function getTaxonomies(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 		$this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 
 		return [
@@ -281,8 +266,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	 */
 	public function getTerms(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$blog     = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$taxonomy = is_string($params[3] ?? null) ? trim($params[3]) : '';
@@ -320,8 +304,7 @@ readonly class TaxonomyHandler implements MethodHandler
 	 */
 	public function getAuthors(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$blog = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 

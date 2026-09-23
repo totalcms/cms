@@ -144,3 +144,15 @@ it('never lets the username elevate what the key is authorized to do', function 
 	expect(fn (): mixed => $auth->assertOperation($identity, 'DELETE'))
 		->toThrow(XmlRpcFault::class);
 });
+
+it('authorize is authenticate plus the operation check, in one call', function (): void {
+	$auth = makeXmlRpcAuth(validatedKey: xmlRpcApiKey(['methods' => ['GET'], 'paths' => ['/xmlrpc.php']]), proEdition: true);
+
+	expect($auth->authorize(['blog', 'joe', 'tcms_testkey'], 'GET')->apiKey->name)->toBe('MarsEdit on the laptop');
+
+	expect(fn (): mixed => $auth->authorize(['blog', 'joe', 'tcms_testkey'], 'DELETE'))
+		->toThrow(XmlRpcFault::class, 'not permitted to perform DELETE operations');
+
+	// wp.getUsersBlogs carries no blogid: username and password sit at 0 and 1.
+	expect($auth->authorize(['joe', 'tcms_testkey'], 'GET', 0, 1)->authorName)->toBe('MarsEdit on the laptop');
+});

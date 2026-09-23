@@ -37,23 +37,6 @@ final readonly class McpToolsValidator
 	) {
 	}
 
-	/**
-	 * Resolve the active tool-name prefix (with trailing underscore) from config.
-	 * Returns '' when unset or invalid — mirrors McpServerFactory::toolNamePrefix().
-	 */
-	private function resolvedPrefix(): string
-	{
-		$prefix = trim((string)($this->config->mcp['toolPrefix'] ?? ''));
-		if ($prefix === '') {
-			return '';
-		}
-
-		if (!preg_match('/^[a-z][a-z0-9_]{0,23}$/', $prefix)) {
-			return '';
-		}
-
-		return $prefix . '_';
-	}
 
 	/**
 	 * Validate and normalise `mcp.tools`.
@@ -129,7 +112,7 @@ final readonly class McpToolsValidator
 			// The JSON Schema + fromArray() cap the BASE name at 64 chars, but
 			// the registered name is prefix + base. Enforce the true ceiling here
 			// so a customer with a long prefix gets a clear save-time error.
-			$prefix           = $this->resolvedPrefix();
+			$prefix           = McpToolPrefix::fromConfig($this->config);
 			$registeredName   = $prefix . $definition->name;
 			$registeredLength = strlen($registeredName);
 			if ($registeredLength > self::MAX_REGISTERED_NAME_LEN) {

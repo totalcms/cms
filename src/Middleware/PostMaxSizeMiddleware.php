@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Renderer\JsonRenderer;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * Guards against the PHP `post_max_size` overflow.
@@ -36,7 +37,7 @@ readonly class PostMaxSizeMiddleware implements MiddlewareInterface
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		$postMax = $this->iniSizeToBytes((string)ini_get('post_max_size'));
+		$postMax = FileUtils::iniSizeToBytes((string)ini_get('post_max_size'));
 
 		if ($this->exceedsPostMax($request, $postMax)) {
 			// With display_errors on (dev), PHP's "Request Startup: POST
@@ -82,28 +83,6 @@ readonly class PostMaxSizeMiddleware implements MiddlewareInterface
 		$contentLength = (int)$request->getHeaderLine('Content-Length');
 
 		return $contentLength > $postMax && $_POST === [] && $_FILES === [];
-	}
-
-	/**
-	 * Parse a PHP ini shorthand size ("8M", "2G", "512K", "8388608") to bytes.
-	 * Returns 0 for empty/"0" (treated as unlimited by the caller).
-	 */
-	private function iniSizeToBytes(string $value): int
-	{
-		$value = trim($value);
-		if ($value === '') {
-			return 0;
-		}
-
-		$number = (int)$value;
-		$unit   = strtolower($value[strlen($value) - 1]);
-
-		return match ($unit) {
-			'g'     => $number * 1024 * 1024 * 1024,
-			'm'     => $number * 1024 * 1024,
-			'k'     => $number * 1024,
-			default => $number,
-		};
 	}
 
 	private function formatBytes(int $bytes): string

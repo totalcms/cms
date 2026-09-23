@@ -22,6 +22,7 @@ use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
 use TotalCMS\Domain\Update\Service\UpdateChecker;
 use TotalCMS\Support\Config;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * The admin dashboard's data panels behind `cms.admin.dashboard*()`: stats,
@@ -433,8 +434,8 @@ readonly class DashboardRenderer
 		// meaningful under a web SAPI — the CLI ini values don't reflect the web
 		// server's real capacity, so skip the check when running from the CLI.
 		$minChunkMb = 6; // 5MB chunk (see droplet.js) + multipart overhead
-		$postMax    = PHP_SAPI === 'cli' ? 0 : $this->iniSizeToBytes((string)ini_get('post_max_size'));
-		$uploadMax  = PHP_SAPI === 'cli' ? 0 : $this->iniSizeToBytes((string)ini_get('upload_max_filesize'));
+		$postMax    = PHP_SAPI === 'cli' ? 0 : FileUtils::iniSizeToBytes((string)ini_get('post_max_size'));
+		$uploadMax  = PHP_SAPI === 'cli' ? 0 : FileUtils::iniSizeToBytes((string)ini_get('upload_max_filesize'));
 		// A value of 0 means "unlimited" (post_max_size) or CLI — never warn on that.
 		$limits = array_filter([$postMax, $uploadMax], static fn (int $b): bool => $b > 0);
 		if ($limits !== [] && min($limits) < $minChunkMb * 1024 * 1024) {
@@ -452,28 +453,6 @@ readonly class DashboardRenderer
 		}
 
 		return $alerts;
-	}
-
-	/**
-	 * Parse a PHP ini shorthand size ("8M", "2G", "512K", "8388608") to bytes.
-	 * Returns 0 for empty/"0" so callers can treat it as "unlimited".
-	 */
-	private function iniSizeToBytes(string $value): int
-	{
-		$value = trim($value);
-		if ($value === '') {
-			return 0;
-		}
-
-		$number = (int)$value;
-		$unit   = strtolower($value[strlen($value) - 1]);
-
-		return match ($unit) {
-			'g'     => $number * 1024 * 1024 * 1024,
-			'm'     => $number * 1024 * 1024,
-			'k'     => $number * 1024,
-			default => $number,
-		};
 	}
 
 	/**

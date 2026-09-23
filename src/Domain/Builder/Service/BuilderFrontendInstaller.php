@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Builder\Service;
 
 use TotalCMS\Support\OperationResult;
 use TotalCMS\Support\PathResolver;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * Installs a Vite-based frontend asset pipeline scaffold into a project's
@@ -31,45 +32,7 @@ readonly class BuilderFrontendInstaller
 			return OperationResult::failure("Could not create target directory: {$target}");
 		}
 
-		$copied  = [];
-		$skipped = [];
-		$failed  = [];
-
-		$iterator = new \RecursiveIteratorIterator(
-			new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS),
-			\RecursiveIteratorIterator::SELF_FIRST,
-		);
-
-		foreach ($iterator as $item) {
-			if (!$item instanceof \SplFileInfo) {
-				continue;
-			}
-
-			$relative = ltrim(str_replace($source, '', $item->getPathname()), DIRECTORY_SEPARATOR);
-			$dest     = $target . DIRECTORY_SEPARATOR . $relative;
-
-			if ($item->isDir()) {
-				if (!is_dir($dest) && !mkdir($dest, 0755, true) && !is_dir($dest)) {
-					$failed[] = $relative;
-				}
-
-				continue;
-			}
-
-			if (!$force && file_exists($dest)) {
-				$skipped[] = $relative;
-
-				continue;
-			}
-
-			if (!@copy($item->getPathname(), $dest)) {
-				$failed[] = $relative;
-
-				continue;
-			}
-
-			$copied[] = $relative;
-		}
+		['copied' => $copied, 'skipped' => $skipped, 'failed' => $failed] = FileUtils::copyTree($source, $target, $force);
 
 		if ($failed !== []) {
 			return OperationResult::failure(

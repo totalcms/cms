@@ -151,6 +151,28 @@ readonly class BlogRegistry
 	}
 
 	/**
+	 * The blog a post lives in, with the post's existence checked — what
+	 * every method that takes a post id needs before touching it. On the
+	 * URL-pinned route resolveForPost() only pins the collection, so the
+	 * existence check is still required here.
+	 */
+	public function resolvePost(XmlRpcIdentity $identity, ?string $urlCollection, string $postId): CollectionData
+	{
+		$blog = $this->resolveForPost($identity, $urlCollection, $postId);
+		$this->assertPost($blog, $postId);
+
+		return $blog;
+	}
+
+	/** Fault 404 unless the post exists in the blog. The message is what clients show. */
+	public function assertPost(CollectionData $blog, string $postId): void
+	{
+		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
+			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
+		}
+	}
+
+	/**
 	 * Whether the key's `paths` scope grants this specific collection.
 	 *
 	 * Delegates entirely to the shared checker, which now matches on path-

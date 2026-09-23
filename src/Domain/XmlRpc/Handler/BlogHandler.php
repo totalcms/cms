@@ -106,8 +106,7 @@ readonly class BlogHandler implements MethodHandler
 	 */
 	public function getUserInfo(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$name  = $identity->authorName;
 		$parts = explode(' ', $name, 2);
@@ -137,8 +136,7 @@ readonly class BlogHandler implements MethodHandler
 	 */
 	public function getProfile(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$name  = $identity->authorName;
 		$parts = explode(' ', $name, 2);
@@ -169,8 +167,7 @@ readonly class BlogHandler implements MethodHandler
 	 */
 	public function getOptions(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$base = rtrim($this->config->api, '/');
 

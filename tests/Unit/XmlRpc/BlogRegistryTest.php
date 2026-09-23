@@ -149,3 +149,20 @@ it('faults resolveFor on a blogid outside the key scope rather than falling back
 	expect(fn (): CollectionData => $registry->resolveFor($identity, null, 'news'))
 		->toThrow(XmlRpcFault::class);
 });
+
+it('resolvePost faults 404 on the pinned route when the post is missing', function (): void {
+	// The stub object fetcher knows no objects: a pinned collection resolves,
+	// but the post inside it must still exist. Same fault text clients show.
+	$registry = makeBlogRegistry([blogCollection('blog')]);
+	$identity = xmlRpcIdentity(['methods' => ['GET'], 'paths' => ['*']]);
+
+	expect(fn (): CollectionData => $registry->resolvePost($identity, 'blog', 'ghost'))
+		->toThrow(XmlRpcFault::class, 'Post "ghost" was not found.');
+});
+
+it('assertPost faults 404 for an empty id before looking anything up', function (): void {
+	$registry = makeBlogRegistry([blogCollection('blog')]);
+
+	expect(fn () => $registry->assertPost(blogCollection('blog'), ''))
+		->toThrow(XmlRpcFault::class, 'Post "" was not found.');
+});

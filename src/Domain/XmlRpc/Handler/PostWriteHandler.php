@@ -55,8 +55,7 @@ readonly class PostWriteHandler implements MethodHandler
 	 */
 	public function newPost(array $params, ?string $collection): string
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'POST');
+		$identity = $this->auth->authorize($params, 'POST');
 
 		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$struct = is_array($params[3] ?? null) ? $params[3] : [];
@@ -76,19 +75,14 @@ readonly class PostWriteHandler implements MethodHandler
 	 */
 	public function editPost(array $params, ?string $collection): bool
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'PUT');
+		$identity = $this->auth->authorize($params, 'PUT');
 
 		$postId = (string)($params[0] ?? '');
 		// editPost carries no blogid — resolveForPost() locates the post by
 		// searching the collections this key can see, rather than guessing which
 		// blog was meant (the bug that let one blog's post be overwritten by an
 		// edit meant for another).
-		$blog = $this->registry->resolveForPost($identity, $collection, $postId);
-
-		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
-			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
-		}
+		$blog = $this->registry->resolvePost($identity, $collection, $postId);
 
 		$struct = is_array($params[3] ?? null) ? $params[3] : [];
 		// Unlike newPost, an omitted publish flag on edit must NOT be treated as
@@ -114,8 +108,7 @@ readonly class PostWriteHandler implements MethodHandler
 	 */
 	public function bloggerDeletePost(array $params, ?string $collection): bool
 	{
-		$identity = $this->auth->authenticate($params, 2, 3);
-		$this->auth->assertOperation($identity, 'DELETE');
+		$identity = $this->auth->authorize($params, 'DELETE', 2, 3);
 
 		$postId = (string)($params[1] ?? '');
 		$blog   = $this->registry->resolveForPost($identity, $collection, $postId);
@@ -132,8 +125,7 @@ readonly class PostWriteHandler implements MethodHandler
 	 */
 	public function wpDeletePost(array $params, ?string $collection): bool
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'DELETE');
+		$identity = $this->auth->authorize($params, 'DELETE');
 
 		$postId = (string)($params[3] ?? '');
 		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
@@ -154,8 +146,7 @@ readonly class PostWriteHandler implements MethodHandler
 	 */
 	public function wpNewPost(array $params, ?string $collection): string
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'POST');
+		$identity = $this->auth->authorize($params, 'POST');
 
 		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$struct = is_array($params[3] ?? null) ? $params[3] : [];
@@ -182,15 +173,12 @@ readonly class PostWriteHandler implements MethodHandler
 	 */
 	public function wpEditPost(array $params, ?string $collection): bool
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'PUT');
+		$identity = $this->auth->authorize($params, 'PUT');
 
 		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$postId = (string)($params[3] ?? '');
 
-		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
-			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
-		}
+		$this->registry->assertPost($blog, $postId);
 
 		$struct = is_array($params[4] ?? null) ? $params[4] : [];
 		// Only a post that already has its own extended entry is eligible for
@@ -206,9 +194,7 @@ readonly class PostWriteHandler implements MethodHandler
 
 	private function deleteFrom(CollectionData $blog, string $postId): bool
 	{
-		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
-			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
-		}
+		$this->registry->assertPost($blog, $postId);
 
 		return $this->objectRemover->deleteObject($blog->id, $postId);
 	}

@@ -58,19 +58,14 @@ readonly class PostReadHandler implements MethodHandler
 	 */
 	public function getPost(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$postId = (string)($params[0] ?? '');
 		// getPost carries no blogid at all — resolveForPost() locates the post by
 		// searching the collections this key can see, rather than guessing which
 		// blog was meant. On the URL-pinned route it still just pins the
 		// collection, so the existence check below still applies there.
-		$blog = $this->registry->resolveForPost($identity, $collection, $postId);
-
-		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
-			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
-		}
+		$blog = $this->registry->resolvePost($identity, $collection, $postId);
 
 		return $this->mapper->toStruct(
 			$this->objectFetcher->fetchObject($blog->id, $postId)->toArray(),
@@ -87,8 +82,7 @@ readonly class PostReadHandler implements MethodHandler
 	 */
 	public function getRecentPosts(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$blog  = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$count = $this->clampCount($this->requestedCount($params[3] ?? null));
@@ -119,8 +113,7 @@ readonly class PostReadHandler implements MethodHandler
 	 */
 	public function getRecentPostTitles(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$blog  = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$count = $this->clampCount($this->requestedCount($params[3] ?? null));
@@ -155,8 +148,7 @@ readonly class PostReadHandler implements MethodHandler
 	 */
 	public function wpGetPosts(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$filter = is_array($params[3] ?? null) ? $params[3] : [];
@@ -200,15 +192,12 @@ readonly class PostReadHandler implements MethodHandler
 	 */
 	public function wpGetPost(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 
 		$blog   = $this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 		$postId = (string)($params[3] ?? '');
 
-		if ($postId === '' || !$this->objectFetcher->existsObject($blog->id, $postId)) {
-			throw XmlRpcFault::notFound(sprintf('Post "%s" was not found.', $postId));
-		}
+		$this->registry->assertPost($blog, $postId);
 
 		return $this->mapper->toWpStruct($this->objectFetcher->fetchObject($blog->id, $postId)->toArray(), $blog);
 	}
@@ -225,8 +214,7 @@ readonly class PostReadHandler implements MethodHandler
 	 */
 	public function wpGetPostTypes(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 		$this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 
 		return [
@@ -252,8 +240,7 @@ readonly class PostReadHandler implements MethodHandler
 	 */
 	public function wpGetPostStatusList(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 		$this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 
 		return ['draft' => 'Draft', 'publish' => 'Published'];
@@ -272,8 +259,7 @@ readonly class PostReadHandler implements MethodHandler
 	 */
 	public function wpGetPostFormats(array $params, ?string $collection): array
 	{
-		$identity = $this->auth->authenticate($params, 1, 2);
-		$this->auth->assertOperation($identity, 'GET');
+		$identity = $this->auth->authorize($params, 'GET');
 		$this->registry->resolveFor($identity, $collection, (string)($params[0] ?? ''));
 
 		return ['standard' => 'Standard'];

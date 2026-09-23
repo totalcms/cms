@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Skill\Service;
 
 use TotalCMS\Support\Version;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * Installs (or refreshes) the bundled Total CMS agent skill into a project's
@@ -75,46 +76,12 @@ class SkillInstaller
 			return $result;
 		}
 
-		$copied = [];
-		$failed = [];
-
-		$iterator = new \RecursiveIteratorIterator(
-			new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS),
-			\RecursiveIteratorIterator::SELF_FIRST,
+		['copied' => $copied, 'failed' => $failed] = FileUtils::copyTree(
+			$source,
+			$target,
+			$force,
+			fn (string $from, string $to): bool => $this->copyFile($from, $to, $composerInstall),
 		);
-
-		foreach ($iterator as $item) {
-			if (!$item instanceof \SplFileInfo) {
-				continue;
-			}
-
-			$relative = ltrim(str_replace($source, '', $item->getPathname()), DIRECTORY_SEPARATOR);
-			$dest     = $target . DIRECTORY_SEPARATOR . $relative;
-
-			if ($item->isDir()) {
-				if (!is_dir($dest) && !mkdir($dest, 0755, true) && !is_dir($dest)) {
-					$failed[] = $relative;
-				}
-				continue;
-			}
-
-			if (!$force && file_exists($dest)) {
-				continue;
-			}
-
-			$destDir = dirname($dest);
-			if (!is_dir($destDir) && !mkdir($destDir, 0755, true) && !is_dir($destDir)) {
-				$failed[] = $relative;
-				continue;
-			}
-
-			if (!$this->copyFile($item->getPathname(), $dest, $composerInstall)) {
-				$failed[] = $relative;
-				continue;
-			}
-
-			$copied[] = $relative;
-		}
 
 		$fingerprint = $this->fingerprint($source);
 

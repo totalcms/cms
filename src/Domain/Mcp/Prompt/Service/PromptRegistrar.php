@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Prompt\Service;
 
+use Mcp\Schema\Prompt;
 use Mcp\Server\Builder;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
+use TotalCMS\Domain\Mcp\Prompt\Handler\ExtensionPromptHandler;
 
 final readonly class PromptRegistrar
 {
 	public function __construct(
 		// @phpstan-ignore property.onlyWritten
 		private PromptRenderer $renderer,
+		private LoggerInterface $logger = new NullLogger(),
 	) {
 	}
 
@@ -35,6 +40,58 @@ final readonly class PromptRegistrar
 				name: $prompt->name,
 				description: $prompt->description,
 			);
+		}
+	}
+
+	/**
+	 * Register the prompts extensions declared through
+	 * ExtensionContext::registerMcpPrompt(). They use the SDK's Prompt type
+	 * directly (not PromptData). Collision policy: soft deny — a name already
+	 * taken by a collection-stored prompt is logged and skipped, and the SDK's
+	 * own duplicate error is caught the same way rather than crashing the
+	 * build. The persona filter matches collection-stored prompts, and the
+	 * handler re-checks access at call time so a lower-privilege caller who
+	 * guesses a name via prompts/get is denied.
+	 *
+	 * @param array<string,list<array{prompt: Prompt, handler: callable, access: string}>> $byExtension
+	 * @param list<PromptData>                                                             $collectionPrompts
+	 */
+	public function registerExtensionPrompts(Builder $builder, array $byExtension, array $collectionPrompts, McpPersona $persona): void
+	{
+		$reserved = array_flip(array_map(static fn (PromptData $p): string => $p->name, $collectionPrompts));
+
+		foreach ($byExtension as $extensionId => $registrations) {
+			foreach ($registrations as $reg) {
+				$name   = $reg['prompt']->name;
+				$access = $reg['access'];
+
+				if (!self::personaCanAccess($persona, $access)) {
+					continue;
+				}
+
+				if (isset($reserved[$name])) {
+					$this->logger->warning('Extension MCP prompt skipped: name collides with collection-stored prompt', [
+						'extension' => $extensionId,
+						'prompt'    => $name,
+					]);
+					continue;
+				}
+
+				try {
+					// Builder::add() (not addPrompt()) so the declared Prompt object
+					// IS the advertised schema. addPrompt() reflects the handler,
+					// which recovers parameter names only — argument descriptions
+					// and required flags are lost, and clients render an unlabelled
+					// optional box for a described, required argument.
+					$builder->add($reg['prompt'], new ExtensionPromptHandler($reg['handler'], $persona, $name, $access));
+				} catch (\LogicException $e) {
+					$this->logger->warning('Extension MCP prompt registration failed', [
+						'extension' => $extensionId,
+						'prompt'    => $name,
+						'error'     => $e->getMessage(),
+					]);
+				}
+			}
 		}
 	}
 

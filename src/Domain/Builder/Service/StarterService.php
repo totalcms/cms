@@ -13,6 +13,7 @@ use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\OperationResult;
 use TotalCMS\Support\PathResolver;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 readonly class StarterService
 {
@@ -259,43 +260,12 @@ readonly class StarterService
 			return 0;
 		}
 
-		$copied   = 0;
-		$iterator = new \RecursiveIteratorIterator(
-			new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS),
-			\RecursiveIteratorIterator::SELF_FIRST,
-		);
-
-		foreach ($iterator as $item) {
-			if (!$item instanceof \SplFileInfo) {
-				continue;
-			}
-
-			$relative = ltrim(str_replace($source, '', $item->getPathname()), DIRECTORY_SEPARATOR);
-			$dest     = $target . DIRECTORY_SEPARATOR . $relative;
-
-			if ($item->isDir()) {
-				if (!is_dir($dest) && !mkdir($dest, 0755, true) && !is_dir($dest)) {
-					$this->logger->warning('Could not create asset subdirectory', ['path' => $dest]);
-				}
-
-				continue;
-			}
-
-			if (!$force && file_exists($dest)) {
-				continue;
-			}
-
-			if (@copy($item->getPathname(), $dest)) {
-				$copied++;
-			} else {
-				$this->logger->warning('Could not copy starter asset', [
-					'source' => $item->getPathname(),
-					'dest'   => $dest,
-				]);
-			}
+		$result = FileUtils::copyTree($source, $target, $force);
+		foreach ($result['failed'] as $relative) {
+			$this->logger->warning('Could not copy starter asset', ['source' => $source . '/' . $relative, 'dest' => $target . '/' . $relative]);
 		}
 
-		return $copied;
+		return count($result['copied']);
 	}
 
 	/**

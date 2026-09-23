@@ -11,6 +11,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Event\Data\CoreEvent;
+use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
+use TotalCMS\Domain\Mcp\Resource\Data\McpResourceTemplateDefinition;
 use TotalCMS\Domain\Event\Payload\ExtensionEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Extension\Data\AdminNavItem;
@@ -707,7 +709,7 @@ class ExtensionManager
 	 * so McpExtensionRegistrar can attribute collisions to a specific extension.
 	 * Gated by the `mcp:resources` capability permission.
 	 *
-	 * @return array<string,list<array{uri: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}>>
+	 * @return array<string,list<McpResourceDefinition>>
 	 */
 	public function getAllMcpResources(): array
 	{
@@ -727,7 +729,7 @@ class ExtensionManager
 	 * getAllMcpResources(); templates and concrete resources share the
 	 * `mcp:resources` capability flag.
 	 *
-	 * @return array<string,list<array{uriTemplate: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}>>
+	 * @return array<string,list<McpResourceTemplateDefinition>>
 	 */
 	public function getAllMcpResourceTemplates(): array
 	{

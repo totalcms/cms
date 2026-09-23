@@ -19,6 +19,8 @@ use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\License\Data\Edition;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
+use TotalCMS\Domain\Mcp\Resource\Data\McpResourceTemplateDefinition;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Schema\Repository\SchemaRepository;
 use TotalCMS\Domain\Schema\Service\SchemaSaver;
@@ -94,10 +96,10 @@ final class ExtensionContext
 	/** @var list<McpToolDefinition> Tools registered for the MCP server */
 	private array $mcpTools = [];
 
-	/** @var list<array{uri: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> Concrete MCP resources */
+	/** @var list<McpResourceDefinition> Concrete MCP resources */
 	private array $mcpResources = [];
 
-	/** @var list<array{uriTemplate: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> MCP resource templates (URI patterns with {placeholder} segments) */
+	/** @var list<McpResourceTemplateDefinition> MCP resource templates (URI patterns with {placeholder} segments) */
 	private array $mcpResourceTemplates = [];
 
 	/** @var list<SearchProvider> */
@@ -355,14 +357,14 @@ final class ExtensionContext
 		string $name = '',
 		string $mimeType = 'application/json',
 	): void {
-		$this->mcpResources[] = [
-			'uri'         => $uri,
-			'name'        => $name !== '' ? $name : $uri,
-			'description' => $description,
-			'handler'     => $handler,
-			'access'      => $access,
-			'mimeType'    => $mimeType,
-		];
+		$this->mcpResources[] = new McpResourceDefinition(
+			uri: $uri,
+			name: $name !== '' ? $name : $uri,
+			description: $description,
+			mimeType: $mimeType,
+			access: $access,
+			handler: $handler,
+		);
 	}
 
 	/**
@@ -398,14 +400,14 @@ final class ExtensionContext
 		string $name = '',
 		string $mimeType = 'application/json',
 	): void {
-		$this->mcpResourceTemplates[] = [
-			'uriTemplate' => $uriTemplate,
-			'name'        => $name !== '' ? $name : $uriTemplate,
-			'description' => $description,
-			'handler'     => $handler,
-			'access'      => $access,
-			'mimeType'    => $mimeType,
-		];
+		$this->mcpResourceTemplates[] = new McpResourceTemplateDefinition(
+			uriTemplate: $uriTemplate,
+			name: $name !== '' ? $name : $uriTemplate,
+			description: $description,
+			mimeType: $mimeType,
+			access: $access,
+			handler: $handler,
+		);
 	}
 
 	/**
@@ -726,13 +728,13 @@ final class ExtensionContext
 		return $this->mcpTools;
 	}
 
-	/** @return list<array{uri: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> */
+	/** @return list<McpResourceDefinition> */
 	public function getRegisteredMcpResources(): array
 	{
 		return $this->mcpResources;
 	}
 
-	/** @return list<array{uriTemplate: string, name: string, description: string, handler: \Closure, access: string, mimeType: string}> */
+	/** @return list<McpResourceTemplateDefinition> */
 	public function getRegisteredMcpResourceTemplates(): array
 	{
 		return $this->mcpResourceTemplates;

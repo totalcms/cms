@@ -74,6 +74,21 @@ readonly class XmlRpcAuth
 	}
 
 	/**
+	 * The prelude of every method: who is calling, and may they perform this
+	 * operation. `$httpMethod` is the REST verb the XML-RPC method maps to,
+	 * checked against the API key's permitted methods.
+	 *
+	 * @param array<int,mixed> $params
+	 */
+	public function authorize(array $params, string $httpMethod, int $userIndex = 1, int $passIndex = 2): XmlRpcIdentity
+	{
+		$identity = $this->authenticate($params, $userIndex, $passIndex);
+		$this->assertOperation($identity, $httpMethod);
+
+		return $identity;
+	}
+
+	/**
 	 * Map an RPC operation onto the key's HTTP method scopes, so a read-only key
 	 * genuinely cannot delete a post.
 	 */

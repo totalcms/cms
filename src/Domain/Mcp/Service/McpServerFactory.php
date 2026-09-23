@@ -19,9 +19,9 @@ use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
-use TotalCMS\Domain\Mcp\Prompt\Handler\ExtensionPromptHandler;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptRegistrar;
+use TotalCMS\Domain\Mcp\Tool\Service\McpToolPrefix;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Subscription\Service\PersonaNotificationBus;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -207,54 +207,9 @@ readonly class McpServerFactory
 		$prompts = $this->filterPromptsForPersona($prompts, $persona);
 		$this->promptRegistrar->registerAll($builder, $prompts, $persona);
 
-		// Extension-registered prompts (Phase 5 Chunk C).
-		// These are code-defined prompts shipped by extensions using
-		// ExtensionContext::registerMcpPrompt(). They use the SDK's Mcp\Schema\Prompt
-		// type directly (not PromptData) and take a separate registration path.
-		// Collision policy: soft-deny — collection-stored prompts always win.
-		// If a name is already registered, the SDK throws on addPrompt(); we catch
-		// that and log a warning instead of crashing the server build.
-		// H5 fix: extension prompts are filtered by persona using the same access
-		// logic as collection-stored prompts (PromptRegistrar::personaCanAccess).
-		// The handler is also wrapped to re-check access at call time so a
-		// lower-privilege caller who guesses a prompt name via prompts/get is denied.
-		$collectionPromptNames = array_flip(array_map(static fn (PromptData $p): string => $p->name, $prompts));
-		foreach ($this->extensions->getAllMcpPrompts() as $extensionId => $registrations) {
-			foreach ($registrations as $reg) {
-				$name   = $reg['prompt']->name;
-				$access = $reg['access'];
-
-				// Persona filter — hide prompts the current persona cannot access.
-				if (!PromptRegistrar::personaCanAccess($persona, $access)) {
-					continue;
-				}
-
-				if (isset($collectionPromptNames[$name])) {
-					$this->logger->warning('Extension MCP prompt skipped: name collides with collection-stored prompt', [
-						'extension' => $extensionId,
-						'prompt'    => $name,
-					]);
-					continue;
-				}
-				try {
-					// Builder::add() (not addPrompt()) so the declared Prompt object
-					// IS the advertised schema. addPrompt() reflects the handler,
-					// which recovers parameter names only — argument descriptions
-					// and required flags are lost, and clients render an unlabelled
-					// optional box for a described, required argument.
-					$builder->add(
-						$reg['prompt'],
-						new ExtensionPromptHandler($reg['handler'], $persona, $name, $access),
-					);
-				} catch (\LogicException $e) {
-					$this->logger->warning('Extension MCP prompt registration failed', [
-						'extension' => $extensionId,
-						'prompt'    => $name,
-						'error'     => $e->getMessage(),
-					]);
-				}
-			}
-		}
+		// Extension-registered prompts: collection-stored prompts always win a
+		// name collision (soft deny), and the same persona filter applies.
+		$this->promptRegistrar->registerExtensionPrompts($builder, $this->extensions->getAllMcpPrompts(), $prompts, $persona);
 
 		return $builder->build();
 	}
@@ -496,28 +451,9 @@ readonly class McpServerFactory
 		return $this->toolNamePrefix() . $tool->name;
 	}
 
-	/**
-	 * Resolves the optional tool-name prefix from config. Operators running
-	 * multiple T3 sites in one AI agent can set `mcp.toolPrefix` to namespace
-	 * each site's tools (e.g. `bistro` → `bistro_list_collections`). Returns
-	 * the prefix with a trailing underscore, or empty string if unset.
-	 *
-	 * Validates against the same snake_case regex as the settings schema —
-	 * invalid values silently fall back to empty so a misconfigured setting
-	 * can't break the endpoint.
-	 */
 	private function toolNamePrefix(): string
 	{
-		$prefix = trim((string)($this->config->mcp['toolPrefix'] ?? ''));
-		if ($prefix === '') {
-			return '';
-		}
-
-		if (!preg_match('/^[a-z][a-z0-9_]{0,23}$/', $prefix)) {
-			return '';
-		}
-
-		return $prefix . '_';
+		return McpToolPrefix::fromConfig($this->config);
 	}
 
 	public function protocolVersion(): string

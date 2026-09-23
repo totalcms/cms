@@ -8,12 +8,14 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use TotalCMS\Domain\Extension\Service\McpExtensionRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
+use TotalCMS\Domain\Mcp\Resource\Data\McpResourceTemplateDefinition;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 
 /**
- * Covers the resource-side paths added to McpExtensionRegistrar in Phase 2
- * Chunk C: registerResources() and registerResourceTemplates() over the
- * ResourceRegistry, including strict-deny collision policy.
+ * registerResources() and registerResourceTemplates() over the
+ * ResourceRegistry with the strict-deny collision policy. Extensions hand
+ * over finished definitions (ExtensionContext builds them), so the registrar
+ * only arbitrates collisions.
  */
 final class McpExtensionRegistrarResourcesTest extends TestCase
 {
@@ -28,49 +30,34 @@ final class McpExtensionRegistrarResourcesTest extends TestCase
 		$this->registrar = new McpExtensionRegistrar($this->logger);
 	}
 
-	// ── registerResources ────────────────────────────────────────────────────
+	private function resource(string $uri, string $name): McpResourceDefinition
+	{
+		return new McpResourceDefinition($uri, $name, 'desc', 'application/json', 'public', fn (): array => []);
+	}
 
-	public function testRegisterResourcesMaterializesEntriesIntoRegistry(): void
+	private function template(string $uriTemplate, string $name): McpResourceTemplateDefinition
+	{
+		return new McpResourceTemplateDefinition($uriTemplate, $name, 'desc', 'application/json', 'public', fn (): array => []);
+	}
+
+	public function testRegisterResourcesPutsEntriesIntoTheRegistry(): void
 	{
 		$result = $this->registrar->registerResources($this->registry, [
-			'acme/widgets' => [
-				[
-					'uri'         => 'acme://widgets/all',
-					'name'        => 'Acme Widgets',
-					'description' => 'All widgets',
-					'handler'     => fn (): array => [],
-					'access'      => 'public',
-					'mimeType'    => 'application/json',
-				],
-			],
+			'acme/widgets' => [$this->resource('acme://widgets/all', 'Acme Widgets')],
 		]);
 
 		$this->assertSame(['registered' => 1, 'blocked' => 0], $result);
-
-		$res = $this->registry->get('acme://widgets/all');
-		$this->assertNotNull($res);
-		$this->assertSame('acme://widgets/all', $res->uri);
-		$this->assertSame('Acme Widgets', $res->name);
-		$this->assertSame('All widgets', $res->description);
-		$this->assertSame('public', $res->access);
-		$this->assertSame('application/json', $res->mimeType);
+		$this->assertSame('Acme Widgets', $this->registry->get('acme://widgets/all')?->name);
 	}
 
 	public function testRegisterResourcesBlocksDuplicateUriAcrossExtensions(): void
 	{
 		$this->registrar->registerResources($this->registry, [
-			'acme/widgets' => [
-				['uri' => 'acme://widgets/all', 'name' => 'Acme', 'description' => 'a', 'handler' => fn (): array => [], 'access' => 'public', 'mimeType' => 'application/json'],
-			],
-			'beta/widgets' => [
-				['uri' => 'acme://widgets/all', 'name' => 'Beta', 'description' => 'b', 'handler' => fn (): array => [], 'access' => 'public', 'mimeType' => 'application/json'],
-			],
+			'acme/widgets' => [$this->resource('acme://widgets/all', 'Acme')],
+			'beta/widgets' => [$this->resource('acme://widgets/all', 'Beta')],
 		]);
 
-		$res = $this->registry->get('acme://widgets/all');
-		$this->assertNotNull($res);
-		$this->assertSame('Acme', $res->name, 'first-registered wins; duplicate blocked');
-
+		$this->assertSame('Acme', $this->registry->get('acme://widgets/all')?->name, 'first-registered wins; duplicate blocked');
 		$this->assertCount(1, $this->logger->records);
 		$this->assertSame('warning', $this->logger->records[0]['level']);
 		$this->assertStringContainsString('beta/widgets', $this->logger->records[0]['message']);
@@ -79,107 +66,37 @@ final class McpExtensionRegistrarResourcesTest extends TestCase
 
 	public function testRegisterResourcesBlocksCollisionWithCoreRegistration(): void
 	{
-		// Simulate a core registration: a tcms:// resource already in the registry.
-		$this->registry->register(new McpResourceDefinition(
-			uri: 'tcms://blog/',
-			name: 'core-blog',
-			description: 'core',
-			mimeType: 'application/json',
-			access: 'public',
-			handler: fn (): array => [],
-		));
+		$this->registry->register($this->resource('tcms://blog/', 'core-blog'));
 
 		$result = $this->registrar->registerResources($this->registry, [
-			'rogue/ext' => [
-				['uri' => 'tcms://blog/', 'name' => 'rogue', 'description' => 'r', 'handler' => fn (): array => [], 'access' => 'public', 'mimeType' => 'application/json'],
-			],
+			'rogue/ext' => [$this->resource('tcms://blog/', 'rogue')],
 		]);
 
 		$this->assertSame(['registered' => 0, 'blocked' => 1], $result);
 		$this->assertSame('core-blog', $this->registry->get('tcms://blog/')?->name, 'core registration preserved');
 	}
 
-	public function testRegisterResourcesSkipsMalformedEntriesWithoutCrashing(): void
-	{
-		$result = $this->registrar->registerResources($this->registry, [
-			'broken/ext' => [
-				'not-an-array',
-				['missing-uri' => true],
-				['uri'         => 'acme://ok/', 'name' => 'OK', 'description' => '', 'handler' => fn (): array => [], 'access' => 'public', 'mimeType' => 'application/json'],
-			],
-		]);
-
-		// Only the well-formed entry is registered; the malformed ones are
-		// defensively skipped without throwing.
-		$this->assertSame(['registered' => 1, 'blocked' => 0], $result);
-		$this->assertNotNull($this->registry->get('acme://ok/'));
-	}
-
-	public function testRegisterResourcesAppliesDefaults(): void
-	{
-		// Extensions might use the ExtensionContext helper that fills defaults,
-		// but if they construct the array shape directly with missing keys,
-		// the registrar still produces a sensible registration.
-		$this->registrar->registerResources($this->registry, [
-			'acme' => [
-				['uri' => 'acme://thing/', 'handler' => fn (): array => []],
-			],
-		]);
-
-		$res = $this->registry->get('acme://thing/');
-		$this->assertNotNull($res);
-		$this->assertSame('acme://thing/', $res->name);
-		$this->assertSame('', $res->description);
-		$this->assertSame('public', $res->access);
-		$this->assertSame('application/json', $res->mimeType);
-	}
-
-	// ── registerResourceTemplates ────────────────────────────────────────────
-
-	public function testRegisterResourceTemplatesMaterializesEntriesIntoRegistry(): void
+	public function testRegisterResourceTemplatesPutsEntriesIntoTheRegistry(): void
 	{
 		$result = $this->registrar->registerResourceTemplates($this->registry, [
-			'acme/widgets' => [
-				[
-					'uriTemplate' => 'acme://widgets/{id}',
-					'name'        => 'Acme Widget Detail',
-					'description' => 'Single widget by id',
-					'handler'     => fn (string $id): array => [],
-					'access'      => 'public',
-					'mimeType'    => 'application/json',
-				],
-			],
+			'acme/widgets' => [$this->template('acme://widgets/{id}', 'Acme Widget')],
 		]);
 
 		$this->assertSame(['registered' => 1, 'blocked' => 0], $result);
-		$tmpl = $this->registry->getTemplate('acme://widgets/{id}');
-		$this->assertNotNull($tmpl);
-		$this->assertSame('Acme Widget Detail', $tmpl->name);
+		$this->assertSame('Acme Widget', $this->registry->getTemplate('acme://widgets/{id}')?->name);
 	}
 
-	public function testRegisterResourceTemplatesBlocksDuplicateTemplate(): void
+	public function testRegisterResourceTemplatesBlocksDuplicates(): void
 	{
-		$this->registrar->registerResourceTemplates($this->registry, [
-			'acme/widgets' => [
-				['uriTemplate' => 'acme://widgets/{id}', 'name' => 'Acme', 'description' => 'a', 'handler' => fn (string $id): array => [], 'access' => 'public', 'mimeType' => 'application/json'],
-			],
-			'beta/widgets' => [
-				['uriTemplate' => 'acme://widgets/{id}', 'name' => 'Beta', 'description' => 'b', 'handler' => fn (string $id): array => [], 'access' => 'public', 'mimeType' => 'application/json'],
-			],
+		$this->registry->registerTemplate($this->template('tcms://blog/{id}', 'core'));
+
+		$result = $this->registrar->registerResourceTemplates($this->registry, [
+			'rogue/ext' => [$this->template('tcms://blog/{id}', 'rogue')],
 		]);
 
-		$this->assertNotEmpty($this->logger->records);
-		$this->assertStringContainsString('beta/widgets', $this->logger->records[0]['message']);
-		$this->assertStringContainsString('acme://widgets/{id}', $this->logger->records[0]['message']);
-	}
-
-	public function testEmptyExtensionMapReturnsZeroCounts(): void
-	{
-		$result = $this->registrar->registerResources($this->registry, []);
-		$this->assertSame(['registered' => 0, 'blocked' => 0], $result);
-
-		$result = $this->registrar->registerResourceTemplates($this->registry, []);
-		$this->assertSame(['registered' => 0, 'blocked' => 0], $result);
+		$this->assertSame(['registered' => 0, 'blocked' => 1], $result);
+		$this->assertSame('core', $this->registry->getTemplate('tcms://blog/{id}')?->name);
+		$this->assertStringContainsString('rogue/ext', $this->logger->records[0]['message']);
 	}
 }
 

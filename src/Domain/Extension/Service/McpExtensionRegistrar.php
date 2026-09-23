@@ -77,14 +77,11 @@ final readonly class McpExtensionRegistrar
 	}
 
 	/**
-	 * Register extension resources into the ResourceRegistry. Each entry in
-	 * $extensionResources is the raw array shape ExtensionContext stores —
-	 * we materialize McpResourceDefinition here so extensions don't need to
-	 * import the SDK-adjacent Data class. Non-conformant entries (missing
-	 * uri/handler) are defensively skipped — a buggy extension shouldn't
-	 * crash boot.
+	 * Register extension resources into the ResourceRegistry. Strict deny on
+	 * collision: a URI already taken by core or another extension is logged
+	 * and skipped, never overridden.
 	 *
-	 * @param array<string,list<mixed>> $extensionResources
+	 * @param array<string,list<McpResourceDefinition>> $extensionResources
 	 *
 	 * @return array{registered: int, blocked: int}
 	 */
@@ -94,29 +91,18 @@ final readonly class McpExtensionRegistrar
 		$blocked    = 0;
 
 		foreach ($extensionResources as $extensionId => $resources) {
-			foreach ($resources as $r) {
-				if (!is_array($r) || !isset($r['uri'], $r['handler'])) {
-					continue;
-				}
-
-				if ($registry->get((string)$r['uri']) instanceof McpResourceDefinition) {
+			foreach ($resources as $resource) {
+				if ($registry->get($resource->uri) instanceof McpResourceDefinition) {
 					$this->logger->warning(sprintf(
 						"MCP resource '%s' from extension '%s' blocked: URI already registered (core or another extension).",
-						$r['uri'],
+						$resource->uri,
 						$extensionId,
 					));
 					$blocked++;
 					continue;
 				}
 
-				$registry->register(new McpResourceDefinition(
-					uri: (string)$r['uri'],
-					name: (string)($r['name'] ?? $r['uri']),
-					description: (string)($r['description'] ?? ''),
-					mimeType: (string)($r['mimeType'] ?? 'application/json'),
-					access: (string)($r['access'] ?? 'public'),
-					handler: $r['handler'],
-				));
+				$registry->register($resource);
 				$registered++;
 			}
 		}
@@ -125,12 +111,10 @@ final readonly class McpExtensionRegistrar
 	}
 
 	/**
-	 * Register extension resource templates into the ResourceRegistry. Same
-	 * collision policy as concrete resources, against the template registry.
-	 * Non-conformant entries (missing uriTemplate/handler) are defensively
-	 * skipped.
+	 * Register extension resource templates. Same collision policy as
+	 * concrete resources, against the template registry.
 	 *
-	 * @param array<string,list<mixed>> $extensionTemplates
+	 * @param array<string,list<McpResourceTemplateDefinition>> $extensionTemplates
 	 *
 	 * @return array{registered: int, blocked: int}
 	 */
@@ -140,29 +124,18 @@ final readonly class McpExtensionRegistrar
 		$blocked    = 0;
 
 		foreach ($extensionTemplates as $extensionId => $templates) {
-			foreach ($templates as $t) {
-				if (!is_array($t) || !isset($t['uriTemplate'], $t['handler'])) {
-					continue;
-				}
-
-				if ($registry->getTemplate((string)$t['uriTemplate']) instanceof McpResourceTemplateDefinition) {
+			foreach ($templates as $template) {
+				if ($registry->getTemplate($template->uriTemplate) instanceof McpResourceTemplateDefinition) {
 					$this->logger->warning(sprintf(
 						"MCP resource template '%s' from extension '%s' blocked: template already registered (core or another extension).",
-						$t['uriTemplate'],
+						$template->uriTemplate,
 						$extensionId,
 					));
 					$blocked++;
 					continue;
 				}
 
-				$registry->registerTemplate(new McpResourceTemplateDefinition(
-					uriTemplate: (string)$t['uriTemplate'],
-					name: (string)($t['name'] ?? $t['uriTemplate']),
-					description: (string)($t['description'] ?? ''),
-					mimeType: (string)($t['mimeType'] ?? 'application/json'),
-					access: (string)($t['access'] ?? 'public'),
-					handler: $t['handler'],
-				));
+				$registry->registerTemplate($template);
 				$registered++;
 			}
 		}

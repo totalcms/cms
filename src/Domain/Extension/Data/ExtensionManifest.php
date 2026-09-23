@@ -173,26 +173,7 @@ final readonly class ExtensionManifest
 	 */
 	public function withBundled(bool $bundled): self
 	{
-		return new self(
-			id: $this->id,
-			name: $this->name,
-			description: $this->description,
-			version: $this->version,
-			requires: $this->requires,
-			entrypoint: $this->entrypoint,
-			settingsSchema: $this->settingsSchema,
-			minEdition: $this->minEdition,
-			author: $this->author,
-			license: $this->license,
-			links: $this->links,
-			icon: $this->icon,
-			bundled: $bundled,
-			hidden: $this->hidden,
-			reviewNote: $this->reviewNote,
-			project: $this->project,
-			defaultEnabled: $this->defaultEnabled,
-			composerPackage: $this->composerPackage,
-		);
+		return $this->with(['bundled' => $bundled]);
 	}
 
 	/**
@@ -203,26 +184,7 @@ final readonly class ExtensionManifest
 	 */
 	public function withProject(bool $project): self
 	{
-		return new self(
-			id: $this->id,
-			name: $this->name,
-			description: $this->description,
-			version: $this->version,
-			requires: $this->requires,
-			entrypoint: $this->entrypoint,
-			settingsSchema: $this->settingsSchema,
-			minEdition: $this->minEdition,
-			author: $this->author,
-			license: $this->license,
-			links: $this->links,
-			icon: $this->icon,
-			bundled: $this->bundled,
-			hidden: $this->hidden,
-			reviewNote: $this->reviewNote,
-			project: $project,
-			defaultEnabled: $this->defaultEnabled,
-			composerPackage: $this->composerPackage,
-		);
+		return $this->with(['project' => $project]);
 	}
 
 	/**
@@ -233,26 +195,7 @@ final readonly class ExtensionManifest
 	 */
 	public function withComposerPackage(string $composerPackage): self
 	{
-		return new self(
-			id: $this->id,
-			name: $this->name,
-			description: $this->description,
-			version: $this->version,
-			requires: $this->requires,
-			entrypoint: $this->entrypoint,
-			settingsSchema: $this->settingsSchema,
-			minEdition: $this->minEdition,
-			author: $this->author,
-			license: $this->license,
-			links: $this->links,
-			icon: $this->icon,
-			bundled: $this->bundled,
-			hidden: $this->hidden,
-			reviewNote: $this->reviewNote,
-			project: $this->project,
-			defaultEnabled: $this->defaultEnabled,
-			composerPackage: $composerPackage,
-		);
+		return $this->with(['composerPackage' => $composerPackage]);
 	}
 
 	/**
@@ -263,26 +206,18 @@ final readonly class ExtensionManifest
 	 */
 	public function withVersion(string $version): self
 	{
-		return new self(
-			id: $this->id,
-			name: $this->name,
-			description: $this->description,
-			version: $version,
-			requires: $this->requires,
-			entrypoint: $this->entrypoint,
-			settingsSchema: $this->settingsSchema,
-			minEdition: $this->minEdition,
-			author: $this->author,
-			license: $this->license,
-			links: $this->links,
-			icon: $this->icon,
-			bundled: $this->bundled,
-			hidden: $this->hidden,
-			reviewNote: $this->reviewNote,
-			project: $this->project,
-			defaultEnabled: $this->defaultEnabled,
-			composerPackage: $this->composerPackage,
-		);
+		return $this->with(['version' => $version]);
+	}
+
+	/**
+	 * A copy with some fields replaced. Every field is a promoted public
+	 * property, so a new field is threaded through here automatically.
+	 *
+	 * @param array<string,mixed> $overrides
+	 */
+	private function with(array $overrides): self
+	{
+		return new self(...array_merge(get_object_vars($this), $overrides));
 	}
 
 	public function vendor(): string
