@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Resource\Service;
 
 use TotalCMS\Domain\DataView\Service\DataViewLister;
+use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceTemplateDefinition;
 use TotalCMS\Domain\Mcp\Resource\Handler\DataViewResource;
@@ -65,7 +66,7 @@ readonly class DataViewResourceRegistrar
 				continue;
 			}
 
-			$access = $this->normalizeAccess((string)($mcp['access'] ?? 'admin'));
+			$access = McpAccessLevel::fromString((string)($mcp['access'] ?? 'admin'))->value;
 			$name   = $this->toSdkName($id);
 			$desc   = (string)($mcp['description'] ?? $entry['description'] ?? '');
 			if ($desc === '') {
@@ -93,14 +94,5 @@ readonly class DataViewResourceRegistrar
 		$safe = preg_replace('/[^a-zA-Z0-9_-]/', '', $viewId);
 
 		return 'view-' . (($safe !== null && $safe !== '') ? $safe : 'unnamed');
-	}
-
-	private function normalizeAccess(string $access): string
-	{
-		return match ($access) {
-			'public'        => 'public',
-			'authenticated' => 'authenticated',
-			default         => 'admin',
-		};
 	}
 }

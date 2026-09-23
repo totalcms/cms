@@ -6,7 +6,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Discovery;
 
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
-use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -64,8 +64,9 @@ readonly class ListViewsTool
 				continue;
 			}
 
-			$access = $this->normalizeAccess((string)($entry['mcp']['access'] ?? 'admin'));
-			if (!$this->allowed($persona, $access)) {
+			$level  = McpAccessLevel::fromString((string)($entry['mcp']['access'] ?? 'admin'));
+			$access = $level->value;
+			if (!$level->allows($persona)) {
 				continue;
 			}
 
@@ -143,23 +144,5 @@ readonly class ListViewsTool
 				'total' => ['type' => 'integer'],
 			],
 		];
-	}
-
-	private function allowed(McpPersona $persona, string $access): bool
-	{
-		return match ($persona) {
-			McpPersona::ADMIN         => true,
-			McpPersona::AUTHENTICATED => $access === 'public' || $access === 'authenticated',
-			McpPersona::PUBLIC_       => $access === 'public',
-		};
-	}
-
-	private function normalizeAccess(string $access): string
-	{
-		return match ($access) {
-			'public'        => 'public',
-			'authenticated' => 'authenticated',
-			default         => 'admin',
-		};
 	}
 }

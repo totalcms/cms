@@ -50,19 +50,10 @@ readonly class SchemaEditionMiddleware extends BaseEditionMiddleware
 		if ($schema === null) {
 			// No schema ID — this is a POST to create a new schema (requires Pro)
 			if ($request->getMethod() === 'POST' && !$this->editionFeatures->can(EditionFeature::CUSTOM_SCHEMAS)) {
-				$feature = EditionFeature::CUSTOM_SCHEMAS;
-
-				$message = sprintf(
-					'The "%s" feature requires the %s edition or higher.',
-					$feature->label(),
-					ucfirst($feature->requiredEdition()->value)
+				return $this->forbiddenResponse(
+					$request,
+					EditionFeature::CUSTOM_SCHEMAS->deniedMessage($this->config->env === 'dev' ? $this->editionFeatures->getEdition() : null),
 				);
-
-				if ($this->config->env === 'dev') {
-					$message .= sprintf(' Current edition: %s.', ucfirst($this->editionFeatures->getEdition()->value));
-				}
-
-				return $this->forbiddenResponse($request, $message);
 			}
 
 			return $handler->handle($request);

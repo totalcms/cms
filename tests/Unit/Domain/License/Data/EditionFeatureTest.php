@@ -161,4 +161,17 @@ final class EditionFeatureTest extends TestCase
 			$values[] = $feature->value;
 		}
 	}
+
+	public function testDeniedMessageNamesTheFeatureAndTheEditionItNeeds(): void
+	{
+		// The same sentence used to be assembled by hand in three places.
+		$this->assertSame(
+			'The "Custom Schemas" feature requires the Pro edition or higher.',
+			EditionFeature::CUSTOM_SCHEMAS->deniedMessage(),
+		);
+		$this->assertSame(
+			'The "Custom Schemas" feature requires the Pro edition or higher. Current edition: Lite.',
+			EditionFeature::CUSTOM_SCHEMAS->deniedMessage(Edition::LITE),
+		);
+	}
 }

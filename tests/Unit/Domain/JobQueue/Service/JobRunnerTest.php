@@ -12,7 +12,6 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
-use TotalCMS\Domain\Mailer\Exception\EmailRateLimitException;
 use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
@@ -96,16 +95,17 @@ function jobRunnerFrom(array $m, array $smtp = []): JobRunner
 	);
 }
 
-describe('JobRunner::processNextJob lifecycle', function (): void {
+describe('JobRunner::processNextJobWithDetails lifecycle', function (): void {
 	it('deletes a job that ran cleanly', function (): void {
 		$job = jobRunnerJob(JobData::TYPE_REBUILD);
 		$m   = jobRunnerMocks();
 		$m['indexBuilder']->method('buildIndex')->willReturn(new IndexData([]));
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
 		$m['jobRepository']->expects(test()->once())->method('delete')->with($job);
 		$m['jobRepository']->expects(test()->never())->method('markFailed');
 
-		jobRunnerFrom($m)->processNextJob();
+		jobRunnerFrom($m)->processNextJobWithDetails();
 	});
 
 	it('records a throwing job as failed and does not delete it', function (): void {
@@ -114,22 +114,24 @@ describe('JobRunner::processNextJob lifecycle', function (): void {
 		$job = jobRunnerJob(JobData::TYPE_REBUILD);
 		$m   = jobRunnerMocks();
 		$m['indexBuilder']->method('buildIndex')->willThrowException(new RuntimeException('index blew up'));
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
 		$m['jobRepository']->expects(test()->once())->method('markFailed')->with($job, 'index blew up');
 		$m['jobRepository']->expects(test()->never())->method('delete');
 
-		jobRunnerFrom($m)->processNextJob();
+		jobRunnerFrom($m)->processNextJobWithDetails();
 	});
 
 	it('swallows the handler exception rather than aborting the queue', function (): void {
-		// processPendingJobs() loops over this; letting the throwable escape
+		// JobQueueDrainer loops over this; letting the throwable escape
 		// would stop every remaining job behind one bad one.
 		$job = jobRunnerJob(JobData::TYPE_REBUILD);
 		$m   = jobRunnerMocks();
 		$m['indexBuilder']->method('buildIndex')->willThrowException(new RuntimeException('boom'));
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
 
-		jobRunnerFrom($m)->processNextJob();
+		jobRunnerFrom($m)->processNextJobWithDetails();
 
 		expect(true)->toBeTrue();
 	});
@@ -138,6 +140,7 @@ describe('JobRunner::processNextJob lifecycle', function (): void {
 		// A rate limit is not the job's fault — it must not consume a retry.
 		$job = jobRunnerJob(JobData::TYPE_EMAIL);
 		$m   = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
 		// One send allowed per hour, one already sent.
 		$m['bulkMailerRepository']->method('countSentSince')->willReturn(1);
@@ -145,8 +148,26 @@ describe('JobRunner::processNextJob lifecycle', function (): void {
 		$m['jobRepository']->expects(test()->never())->method('markFailed');
 		$m['jobRepository']->expects(test()->never())->method('delete');
 
-		expect(fn () => jobRunnerFrom($m, ['maxPerHour' => 1])->processNextJob())
-			->toThrow(EmailRateLimitException::class);
+		$result = jobRunnerFrom($m, ['maxPerHour' => 1])->processNextJobWithDetails();
+
+		// Reported as deferred, not failed, so the drainer stops the run and the
+		// job (and everything queued behind it) waits for the next tick.
+		expect($result)->not->toBeNull()
+			->and($result['success'])->toBeFalse()
+			->and($result['deferred'] ?? false)->toBeTrue();
+	});
+
+	it('does not mark an ordinary failure as deferred', function (): void {
+		$job = jobRunnerJob(JobData::TYPE_REBUILD);
+		$m   = jobRunnerMocks();
+		$m['indexBuilder']->method('buildIndex')->willThrowException(new RuntimeException('boom'));
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
+		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
+
+		$result = jobRunnerFrom($m)->processNextJobWithDetails();
+
+		expect($result['success'])->toBeFalse()
+			->and($result['deferred'] ?? false)->toBeFalse();
 	});
 });
 
@@ -154,30 +175,33 @@ describe('JobRunner job dispatch', function (): void {
 	it('routes an import job to the object importer', function (): void {
 		$job = jobRunnerJob(JobData::TYPE_IMPORT, payload: '{"id":"post-1"}');
 		$m   = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
 		$m['objectImporter']->expects(test()->once())->method('importObject')
 			->with('blog', ['id' => 'post-1']);
 
-		jobRunnerFrom($m)->processNextJob();
+		jobRunnerFrom($m)->processNextJobWithDetails();
 	});
 
 	it('routes a rebuild job to the index builder', function (): void {
 		$job = jobRunnerJob(JobData::TYPE_REBUILD);
 		$m   = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
 		$m['indexBuilder']->expects(test()->once())->method('buildIndex')
 			->with('blog')->willReturn(new IndexData([]));
 
-		jobRunnerFrom($m)->processNextJob();
+		jobRunnerFrom($m)->processNextJobWithDetails();
 	});
 
 	it('routes a search reindex job to the reindex job', function (): void {
 		$job = jobRunnerJob(JobData::TYPE_SEARCH_REINDEX);
 		$m   = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
 		$m['searchReindexJob']->expects(test()->once())->method('run')->with($job);
 
-		jobRunnerFrom($m)->processNextJob();
+		jobRunnerFrom($m)->processNextJobWithDetails();
 	});
 
 	it('discards a job of unknown type instead of retrying it forever', function (): void {
@@ -186,32 +210,34 @@ describe('JobRunner job dispatch', function (): void {
 		// is deliberate — an unknown type will never become known on a retry.
 		$job = jobRunnerJob('not-a-real-type');
 		$m   = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
 		$m['jobRepository']->expects(test()->once())->method('delete')->with($job);
 		$m['objectImporter']->expects(test()->never())->method('importObject');
 
-		jobRunnerFrom($m)->processNextJob();
+		jobRunnerFrom($m)->processNextJobWithDetails();
 	});
 
 	it('skips an import whose payload is not valid JSON, without failing the job', function (): void {
 		$job = jobRunnerJob(JobData::TYPE_IMPORT, payload: '{not json');
 		$m   = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
 		$m['objectImporter']->expects(test()->never())->method('importObject');
 		$m['jobRepository']->expects(test()->once())->method('delete');
 
-		jobRunnerFrom($m)->processNextJob();
+		jobRunnerFrom($m)->processNextJobWithDetails();
 	});
 });
 
-describe('JobRunner::retryFailedJobs', function (): void {
+describe('JobRunner::retryFailedJobsWithStats', function (): void {
 	it('resets a failed job that still has retries left', function (): void {
 		$job = jobRunnerJob(JobData::TYPE_REBUILD, attempts: 1);
 		$m   = jobRunnerMocks();
 		$m['jobRepository']->method('fetchFailedJobs')->willReturn([$job]);
 		$m['jobRepository']->expects(test()->once())->method('resetJobStatus')->with($job);
 
-		jobRunnerFrom($m)->retryFailedJobs();
+		jobRunnerFrom($m)->retryFailedJobsWithStats();
 	});
 
 	it('leaves a job alone once it has hit the retry ceiling', function (): void {
@@ -221,7 +247,7 @@ describe('JobRunner::retryFailedJobs', function (): void {
 		$m['jobRepository']->method('fetchFailedJobs')->willReturn([$job]);
 		$m['jobRepository']->expects(test()->never())->method('resetJobStatus');
 
-		jobRunnerFrom($m)->retryFailedJobs();
+		jobRunnerFrom($m)->retryFailedJobsWithStats();
 	});
 
 	it('retries the eligible jobs and skips the exhausted ones in one pass', function (): void {
@@ -234,7 +260,7 @@ describe('JobRunner::retryFailedJobs', function (): void {
 		$m['jobRepository']->method('fetchFailedJobs')->willReturn([$ok, $done]);
 		$m['jobRepository']->expects(test()->once())->method('resetJobStatus')->with($ok);
 
-		jobRunnerFrom($m)->retryFailedJobs();
+		jobRunnerFrom($m)->retryFailedJobsWithStats();
 	});
 
 	it('does nothing when there is nothing failed', function (): void {
@@ -242,7 +268,7 @@ describe('JobRunner::retryFailedJobs', function (): void {
 		$m['jobRepository']->method('fetchFailedJobs')->willReturn([]);
 		$m['jobRepository']->expects(test()->never())->method('resetJobStatus');
 
-		jobRunnerFrom($m)->retryFailedJobs();
+		jobRunnerFrom($m)->retryFailedJobsWithStats();
 	});
 });
 
@@ -266,42 +292,6 @@ function jobRunnerCollection(string $id, bool $queueRebuildOnSave = false): Coll
 
 	return $collection;
 }
-
-describe('JobRunner::processPendingJobs', function (): void {
-	it('drains the queue until nothing is pending', function (): void {
-		$m = jobRunnerMocks();
-		// Pending three times, then empty. The loop asks before each job, so a
-		// runner that checked once would process one job and call it a day.
-		$m['jobRepository']->method('hasPendingJobs')->willReturnOnConsecutiveCalls(true, true, true, false);
-		$m['jobRepository']->method('fetchPendingJobs')->willReturn([]);
-		$m['jobRepository']->method('fetchNextJob')->willReturn(jobRunnerJob(JobData::TYPE_REBUILD));
-		$m['indexBuilder']->method('buildIndex')->willReturn(new IndexData([]));
-		$m['jobRepository']->expects(test()->exactly(3))->method('delete');
-
-		jobRunnerFrom($m)->processPendingJobs();
-	});
-
-	it('stops the whole run when the mail rate limit is hit', function (): void {
-		// The remaining jobs must stay pending for the next cron tick rather
-		// than being burned through and marked failed against a limit that has
-		// nothing to do with them.
-		$m = jobRunnerMocks();
-		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
-		$m['jobRepository']->method('fetchPendingJobs')->willReturn([]);
-		$m['jobRepository']->method('fetchNextJob')->willReturn(jobRunnerJob(JobData::TYPE_EMAIL));
-		$m['bulkMailerRepository']->method('countSentSince')->willReturn(500);
-		// Deferred, not failed: the job is put back to pending untouched.
-		$m['jobRepository']->expects(test()->once())->method('resetJobStatus');
-		$m['jobRepository']->expects(test()->never())->method('markFailed');
-		$m['jobRepository']->expects(test()->never())->method('delete');
-
-		// Reaching the end at all is half the point: the exception is caught by
-		// processPendingJobs and breaks the loop rather than escaping to cron.
-		jobRunnerFrom($m, ['maxPerHour' => 10])->processPendingJobs();
-
-		expect(true)->toBeTrue();
-	});
-});
 
 describe('JobRunner import optimisation', function (): void {
 	it('turns on queued rebuilds for collections with import work waiting', function (): void {
@@ -492,10 +482,11 @@ describe('JobRunner export job', function (): void {
 		// The non-reporting variant must not be the one the job reaches for.
 		$m['objectExporter']->expects(test()->never())->method('exportAllObjects');
 
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn(jobRunnerJob(JobData::TYPE_EXPORT, 'blog'));
 		$m['jobRepository']->expects(test()->once())->method('delete');
 
-		jobRunnerFrom($m)->processNextJob();
+		jobRunnerFrom($m)->processNextJobWithDetails();
 	});
 
 	it('writes the export file when the payload names a path', function (): void {
@@ -505,11 +496,12 @@ describe('JobRunner export job', function (): void {
 		$m = jobRunnerMocks();
 		$m['objectExporter']->method('exportAllObjectsForJson')
 			->willReturn(['data' => [['id' => 'a']], 'errors' => []]);
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn(
 			jobRunnerJob(JobData::TYPE_EXPORT, 'blog', json_encode(['export_path' => $path]))
 		);
 
-		jobRunnerFrom($m)->processNextJob();
+		jobRunnerFrom($m)->processNextJobWithDetails();
 
 		expect(file_exists($path))->toBeTrue()
 			->and(json_decode((string)file_get_contents($path), true))->toBe([['id' => 'a']]);
@@ -522,6 +514,7 @@ describe('JobRunner export job', function (): void {
 		$m = jobRunnerMocks();
 		$m['objectExporter']->method('exportAllObjectsForJson')
 			->willReturn(['data' => [], 'errors' => []]);
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn(
 			jobRunnerJob(JobData::TYPE_EXPORT, 'blog', json_encode(['export_path' => '/nonexistent-dir/out.json']))
 		);
@@ -535,7 +528,7 @@ describe('JobRunner export job', function (): void {
 		set_error_handler(static fn (): bool => true);
 
 		try {
-			jobRunnerFrom($m)->processNextJob();
+			jobRunnerFrom($m)->processNextJobWithDetails();
 		} finally {
 			restore_error_handler();
 		}
@@ -544,11 +537,12 @@ describe('JobRunner export job', function (): void {
 	it('rejects a payload that is not valid JSON without exporting', function (): void {
 		$m = jobRunnerMocks();
 		$m['objectExporter']->expects(test()->never())->method('exportAllObjectsForJson');
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
 		$m['jobRepository']->method('fetchNextJob')->willReturn(
 			jobRunnerJob(JobData::TYPE_EXPORT, 'blog', '{not json')
 		);
 
-		jobRunnerFrom($m)->processNextJob();
+		jobRunnerFrom($m)->processNextJobWithDetails();
 
 		expect(true)->toBeTrue();
 	});

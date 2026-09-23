@@ -9,6 +9,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Renderer\ForbiddenRenderer;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
@@ -47,20 +48,10 @@ abstract readonly class BaseEditionMiddleware implements MiddlewareInterface
 		$feature = $this->getFeature();
 
 		if ($feature instanceof EditionFeature && !$this->editionFeatures->can($feature)) {
-			$requiredEdition = $feature->requiredEdition();
-			$currentEdition  = $this->editionFeatures->getEdition();
-
-			$message = sprintf(
-				'The "%s" feature requires the %s edition or higher.',
-				$feature->label(),
-				ucfirst($requiredEdition->value)
+			return $this->forbiddenResponse(
+				$request,
+				$feature->deniedMessage($this->config->env === 'dev' ? $this->editionFeatures->getEdition() : null),
 			);
-
-			if ($this->config->env === 'dev') {
-				$message .= sprintf(' Current edition: %s.', ucfirst($currentEdition->value));
-			}
-
-			return $this->forbiddenResponse($request, $message);
 		}
 
 		return $handler->handle($request);
@@ -71,29 +62,11 @@ abstract readonly class BaseEditionMiddleware implements MiddlewareInterface
 	 */
 	protected function forbiddenResponse(ServerRequestInterface $request, string $message): ResponseInterface
 	{
-		$path = $request->getUri()->getPath();
+		$details = $this->config->env === 'dev'
+			? sprintf("Path: %s\nEdition: %s", $request->getUri()->getPath(), ucfirst($this->editionFeatures->getEdition()->value))
+			: null;
 
-		// Admin UI requests get HTML response
-		if (str_starts_with($path, '/admin/')) {
-			$details = $this->config->env === 'dev'
-				? sprintf("Path: %s\nEdition: %s", $path, ucfirst($this->editionFeatures->getEdition()->value))
-				: null;
-
-			return $this->twigRenderer->template(
-				$this->responseFactory->createResponse()->withStatus(403),
-				'access-denied.twig',
-				[
-					'message'  => $message,
-					'details'  => $details,
-					'referrer' => $request->getHeaderLine('Referer') ?: null,
-				]
-			);
-		}
-
-		// API requests get JSON response
-		return $this->jsonRenderer->json(
-			$this->responseFactory->createResponse()->withStatus(403),
-			['error' => ['message' => $message]]
-		);
+		return (new ForbiddenRenderer($this->twigRenderer, $this->jsonRenderer, $this->responseFactory))
+			->forbidden($request, $message, $details);
 	}
 }

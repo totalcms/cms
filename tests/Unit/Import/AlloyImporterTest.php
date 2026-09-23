@@ -8,9 +8,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Import\AlloyImporter;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
@@ -23,8 +22,7 @@ class AlloyImporterTest extends TestCase
 {
 	private AlloyImporter $alloyImporter;
 	private MockObject $collectionFetcher;
-	private MockObject $collectionFactory;
-	private MockObject $collectionRepository;
+	private MockObject $collectionSaver;
 	private MockObject $jobQueuer;
 	private MockObject $loggerFactory;
 	private MockObject $logger;
@@ -37,8 +35,7 @@ class AlloyImporterTest extends TestCase
 
 		// Create mock dependencies (now possible since final was removed)
 		$this->collectionFetcher    = $this->createMock(CollectionFetcher::class);
-		$this->collectionFactory    = $this->createMock(CollectionFactory::class);
-		$this->collectionRepository = $this->createMock(CollectionRepository::class);
+		$this->collectionSaver      = $this->createMock(CollectionSaver::class);
 		$this->jobQueuer            = $this->createMock(JobQueuer::class);
 		$this->logger               = $this->createMock(LoggerInterface::class);
 		$this->loggerFactory        = $this->createMock(LoggerFactory::class);
@@ -52,8 +49,7 @@ class AlloyImporterTest extends TestCase
 
 		$this->alloyImporter = new AlloyImporter(
 			$this->collectionFetcher,
-			$this->collectionFactory,
-			$this->collectionRepository,
+			$this->collectionSaver,
 			$this->jobQueuer,
 			$this->loggerFactory
 		);
@@ -299,14 +295,15 @@ class AlloyImporterTest extends TestCase
 		$fetcher = $this->createMock(CollectionFetcher::class);
 		$fetcher->method('collectionExists')->willReturnOnConsecutiveCalls(false, true, true, true, true);
 
-		$this->collectionFactory->expects($this->atLeastOnce())->method('generateCollection')
+		// Collections are created through CollectionSaver so the edition gate
+		// and the collection.created event apply to imported collections too.
+		$this->collectionSaver->expects($this->atLeastOnce())->method('saveCollection')
+			->with($this->callback(fn (array $data): bool => isset($data['id'], $data['schema'], $data['name'])))
 			->willReturn(new CollectionData());
-		$this->collectionRepository->expects($this->atLeastOnce())->method('saveCollection');
 
 		$importer = new AlloyImporter(
 			$fetcher,
-			$this->collectionFactory,
-			$this->collectionRepository,
+			$this->collectionSaver,
 			$this->jobQueuer,
 			$this->loggerFactory,
 		);

@@ -70,6 +70,27 @@ final class JsonImporterTest extends TestCase
 		$this->assertEquals(2, $count);
 	}
 
+	public function testIdsAreSlugifiedLikeTheCsvImporterDoes(): void
+	{
+		// The CSV importer normalises incoming ids through SlugData; the JSON
+		// importer did not, so the same id in the two formats produced two
+		// different objects. Both the exists check and the write use the slug.
+		$file = $this->createUploadedFile((string)json_encode([
+			['id' => 'Hello World!', 'name' => 'Test'],
+		]));
+
+		$this->collectionFetcher->method('collectionExists')->willReturn(true);
+		$this->objectFetcher->expects($this->once())
+			->method('existsObject')
+			->with('products', 'hello-world')
+			->willReturn(false);
+		$this->objectImporter->expects($this->once())
+			->method('importObject')
+			->with('products', $this->callback(fn (array $record): bool => $record['id'] === 'hello-world'));
+
+		$this->assertSame(1, $this->importer->import('products', $file));
+	}
+
 	public function testThrowsExceptionForNonexistentCollection(): void
 	{
 		$file = $this->createUploadedFile('[]');

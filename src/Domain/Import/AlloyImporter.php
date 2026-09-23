@@ -3,9 +3,8 @@
 namespace TotalCMS\Domain\Import;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -20,8 +19,7 @@ class AlloyImporter
 
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
-		private readonly CollectionFactory $collectionFactory,
-		private readonly CollectionRepository $collectionRepository,
+		private readonly CollectionSaver $collectionSaver,
 		private readonly JobQueuer $jobQueuer,
 		LoggerFactory $loggerFactory,
 	) {
@@ -463,8 +461,11 @@ class AlloyImporter
 				'name'   => $name,
 			];
 
-			$collection = $this->collectionFactory->generateCollection($collectionData);
-			$this->collectionRepository->saveCollection($collection);
+			// Through the saver, not the raw repository: that is where the
+			// reference-schema refusal, edition gating, count initialisation and
+			// the collection.created event live. Writing the record directly
+			// used to skip all four.
+			$this->collectionSaver->saveCollection($collectionData);
 
 			// Verify collection was created successfully
 			if (!$this->collectionFetcher->collectionExists($id)) {

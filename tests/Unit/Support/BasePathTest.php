@@ -78,4 +78,27 @@ final class BasePathTest extends TestCase
 			'empty script name'   => ['', []],
 		];
 	}
+
+	/**
+	 * strip() is what every middleware that compares request paths against a
+	 * prefix (/admin/, /setup, OAuth scopes) uses to make the path relative
+	 * to the mount point first.
+	 */
+	#[DataProvider('stripProvider')]
+	public function testStripsTheMountPrefix(string $basePath, string $path, string $expected): void
+	{
+		$this->assertSame($expected, BasePath::strip($basePath, $path));
+	}
+
+	/** @return array<string, array{string, string, string}> */
+	public static function stripProvider(): array
+	{
+		return [
+			'root install'          => ['', '/admin/x', '/admin/x'],
+			'subfolder'             => ['/site', '/site/admin/x', '/admin/x'],
+			'the mount point itself' => ['/site', '/site', '/'],
+			'path outside the mount' => ['/site', '/other/admin/x', '/other/admin/x'],
+			'nested subfolder'      => ['/a/b', '/a/b/setup', '/setup'],
+		];
+	}
 }

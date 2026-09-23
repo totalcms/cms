@@ -116,26 +116,19 @@ describe('Factory Operations', function (): void {
 		$initialCount        = $initialData['data']['count'] ?? 0;
 		$initialTotalObjects = $initialData['data']['totalObjects'] ?? 0;
 
-		// Run factory import
-		$factoryParams = [
-			'count'  => 5,
-			'locale' => 'en_US',
-		];
+		// Run a synchronous factory import of five objects.
+		postJson('/api/import/collections/factory-count-test/factory', ['fqty' => 5])->assertOk();
 
-		$factoryResponse = post('/api/collections/factory-count-test/factory', $factoryParams);
+		$response = get('/api/collections/factory-count-test');
+		$response->assertOk();
+		$updatedData = json_decode((string)$response->getBody(), true);
 
-		// If factory was successful, verify counts were updated
-		if ($factoryResponse->getStatusCode() === 200 || $factoryResponse->getStatusCode() === 201) {
-			$response = get('/api/collections/factory-count-test');
-			$response->assertOk();
-			$updatedData = json_decode((string)$response->getBody(), true);
-
-			$newCount        = $updatedData['data']['count'] ?? 0;
-			$newTotalObjects = $updatedData['data']['totalObjects'] ?? 0;
-
-			// Both count and totalObjects should have increased by 5
-			expect($newCount)->toBe($initialCount + 5);
-			expect($newTotalObjects)->toBe($initialTotalObjects + 5);
-		}
+		// count is the lifetime OID counter, totalObjects the objects on disk;
+		// both move by exactly five. The importer used to add the batch to
+		// totalObjects on top of the index rebuild that had already counted
+		// it, doubling the figure — and this test never caught it because it
+		// posted to the wrong route and skipped its assertions on a 405.
+		expect($updatedData['data']['count'])->toBe($initialCount + 5)
+			->and($updatedData['data']['totalObjects'])->toBe($initialTotalObjects + 5);
 	});
 });

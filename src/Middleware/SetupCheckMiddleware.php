@@ -13,6 +13,7 @@ use Slim\App;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Setup\Service\SetupStateManager;
 use TotalCMS\Renderer\RedirectRenderer;
+use TotalCMS\Support\BasePath;
 use TotalCMS\Support\Config;
 
 /**
@@ -101,17 +102,6 @@ readonly class SetupCheckMiddleware implements MiddlewareInterface
 	 */
 	private function stripBasePath(string $path): string
 	{
-		$basePath = $this->app->getBasePath();
-
-		if ($basePath === '' || !str_starts_with($path, $basePath)) {
-			return $path;
-		}
-
-		$stripped = substr($path, strlen($basePath));
-
-		// Ensure the result still starts with `/` so prefix checks behave
-		// consistently for both `/basepath/setup` -> `/setup` and the
-		// `/basepath` itself -> `/`.
-		return $stripped === '' ? '/' : $stripped;
+		return BasePath::strip($this->app->getBasePath(), $path);
 	}
 }

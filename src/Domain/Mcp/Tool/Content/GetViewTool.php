@@ -7,7 +7,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Content;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\DataView\Service\DataViewFetcher;
-use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -67,8 +67,9 @@ readonly class GetViewTool
 		$persona = $this->personaContext->current();
 		$view    = $this->fetchView($id);
 
-		$access = $this->normalizeAccess((string)($view['mcp']['access'] ?? 'admin'));
-		if (!$this->allowed($persona, $access)) {
+		$level  = McpAccessLevel::fromString((string)($view['mcp']['access'] ?? 'admin'));
+		$access = $level->value;
+		if (!$level->allows($persona)) {
 			throw new ToolCallException(sprintf(
 				'View "%s" is not accessible to the current caller. Use list_views to see what you can fetch.',
 				$id,
@@ -176,23 +177,5 @@ readonly class GetViewTool
 				'hint'      => ['type' => 'string', 'description' => 'Present only when truncated — points the agent at query_view.'],
 			],
 		];
-	}
-
-	private function allowed(McpPersona $persona, string $access): bool
-	{
-		return match ($persona) {
-			McpPersona::ADMIN         => true,
-			McpPersona::AUTHENTICATED => $access === 'public' || $access === 'authenticated',
-			McpPersona::PUBLIC_       => $access === 'public',
-		};
-	}
-
-	private function normalizeAccess(string $access): string
-	{
-		return match ($access) {
-			'public'        => 'public',
-			'authenticated' => 'authenticated',
-			default         => 'admin',
-		};
 	}
 }

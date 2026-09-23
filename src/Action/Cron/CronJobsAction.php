@@ -74,6 +74,7 @@ final readonly class CronJobsAction
 				'stuck_recovered' => $stuck,
 				'pruned'          => $maintenance['pruned'],
 				'deadline_hit'    => $drain->deadlineHit,
+				'rate_limited'    => $drain->rateLimited,
 				'remaining'       => $this->jobRunner->hasPendingJobs(),
 			], 200);
 		} finally {

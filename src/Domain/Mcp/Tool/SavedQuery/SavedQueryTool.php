@@ -10,6 +10,7 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
@@ -156,12 +157,7 @@ final readonly class SavedQueryTool
 
 	private function personaCanAccess(McpPersona $persona): bool
 	{
-		return match ($this->definition->access) {
-			'public'        => true,
-			'admin'         => $persona === McpPersona::ADMIN,
-			'authenticated' => $persona !== McpPersona::PUBLIC_,
-			default         => false,
-		};
+		return McpAccessLevel::fromString($this->definition->access)->allows($persona);
 	}
 
 	/**

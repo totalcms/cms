@@ -8,8 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Import\TotalCmsOneImporter;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -20,7 +20,7 @@ final class TotalCmsOneImporterTest extends TestCase
 {
 	private TotalCmsOneImporter $importer;
 	private MockObject $collectionFetcher;
-	private MockObject $collectionFactory;
+	private MockObject $collectionSaver;
 	private MockObject $collectionRepository;
 	private MockObject $indexReader;
 	private MockObject $jobQueuer;
@@ -30,7 +30,7 @@ final class TotalCmsOneImporterTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->collectionFetcher     = $this->createMock(CollectionFetcher::class);
-		$this->collectionFactory     = $this->createMock(CollectionFactory::class);
+		$this->collectionSaver       = $this->createMock(CollectionSaver::class);
 		$this->collectionRepository  = $this->createMock(CollectionRepository::class);
 		$this->indexReader           = $this->createMock(IndexReader::class);
 		$this->jobQueuer             = $this->createMock(JobQueuer::class);
@@ -42,7 +42,7 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->importer = new TotalCmsOneImporter(
 			$this->collectionFetcher,
-			$this->collectionFactory,
+			$this->collectionSaver,
 			$this->collectionRepository,
 			$this->indexReader,
 			$this->jobQueuer,
@@ -88,16 +88,12 @@ final class TotalCmsOneImporterTest extends TestCase
 		$collection     = $this->createMock(CollectionData::class);
 		$collection->id = 'test-id';
 
-		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function (array $data) use ($collection): MockObject {
-				$collection->id = $data['id'];
+		$this->collectionSaver->method('saveCollection')
+			->willReturnCallback(function (array $data) use ($collection, &$createdCollections): MockObject {
+				$collection->id       = $data['id'];
+				$createdCollections[] = $data['id'];
 
 				return $collection;
-			});
-
-		$this->collectionRepository->method('saveCollection')
-			->willReturnCallback(function ($coll) use (&$createdCollections): void {
-				$createdCollections[] = $coll->id;
 			});
 
 		return ['collection' => $collection, 'created' => &$createdCollections];
@@ -138,14 +134,12 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->setupCollectionMocking();
 
-		$this->collectionFactory->expects($this->once())
-			->method('generateCollection')
-			->with($this->callback(fn ($data): bool => $data['id'] === 'myblog'
+		$this->collectionSaver->expects($this->once())
+			->method('saveCollection')
+			->with($this->callback(fn (array $data): bool => $data['id'] === 'myblog'
 					&& $data['schema'] === 'blog-legacy'
-					&& $data['name'] === 'Myblog'));
-
-		$this->collectionRepository->expects($this->once())
-			->method('saveCollection');
+					&& $data['name'] === 'Myblog'))
+			->willReturn($this->createMock(CollectionData::class));
 
 		$this->importer->import($this->testDataPath);
 	}
@@ -162,9 +156,10 @@ final class TotalCmsOneImporterTest extends TestCase
 
 		$this->indexReader->method('fetchIndex')->willReturn($index);
 
-		$this->collectionFactory->expects($this->once())
-			->method('generateCollection')
-			->with($this->callback(fn ($data): bool => $data['id'] === 'myblog-one'));
+		$this->collectionSaver->expects($this->once())
+			->method('saveCollection')
+			->with($this->callback(fn (array $data): bool => $data['id'] === 'myblog-one'))
+			->willReturn($this->createMock(CollectionData::class));
 
 		$this->importer->import($this->testDataPath);
 	}
@@ -204,15 +199,15 @@ final class TotalCmsOneImporterTest extends TestCase
 		$this->setupCollectionMocking();
 		$this->collectionFetcher->method('fetchCollection')->willReturn($collectionData);
 
-		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function (array $data) use ($collectionData): MockObject {
-				if (isset($data['url'])) {
-					$this->assertEquals('/blog/', $data['url']);
-					$this->assertTrue($data['prettyUrl']);
-				}
+		$this->collectionSaver->expects($this->once())
+			->method('patchCollection')
+			->with('myblog', $this->callback(function (array $patch): bool {
+				$this->assertEquals('/blog/', $patch['url']);
+				$this->assertTrue($patch['prettyUrl']);
 
-				return $collectionData;
-			});
+				return true;
+			}))
+			->willReturn($collectionData);
 
 		$this->importer->import($this->testDataPath);
 	}
@@ -518,14 +513,15 @@ final class TotalCmsOneImporterTest extends TestCase
 		$this->setupCollectionMocking();
 		$this->collectionFetcher->method('fetchCollection')->willReturn($collectionData);
 
-		$this->collectionFactory->method('generateCollection')
-			->willReturnCallback(function (array $data) use ($collectionData): MockObject {
-				if (isset($data['url']) && str_contains((string)$data['url'], '?permalink=')) {
-					$this->assertFalse($data['prettyUrl']);
-				}
+		$this->collectionSaver->expects($this->once())
+			->method('patchCollection')
+			->with('myblog', $this->callback(function (array $patch): bool {
+				$this->assertStringContainsString('?permalink=', (string)$patch['url']);
+				$this->assertFalse($patch['prettyUrl']);
 
-				return $collectionData;
-			});
+				return true;
+			}))
+			->willReturn($collectionData);
 
 		$this->importer->import($this->testDataPath);
 	}

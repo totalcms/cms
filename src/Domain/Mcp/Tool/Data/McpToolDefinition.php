@@ -8,6 +8,7 @@ use Closure;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 
 /**
  * Value object describing a single MCP tool.
@@ -113,11 +114,13 @@ readonly class McpToolDefinition
 	 */
 	public function isVisibleTo(McpPersona $persona, ?UserAuthority $authority = null): bool
 	{
+		$level = McpAccessLevel::fromString($this->access);
+
 		return match ($persona) {
 			McpPersona::ADMIN         => true,
-			McpPersona::AUTHENTICATED => $this->access === 'public' || $this->access === 'authenticated'
+			McpPersona::AUTHENTICATED => $level->allows($persona)
 				|| ($this->requires instanceof ToolRequirement && $authority instanceof UserAuthority && $this->requires->isSatisfiedForAny($authority)),
-			McpPersona::PUBLIC_       => $this->access === 'public' && $this->isPublicReadRequirement(),
+			McpPersona::PUBLIC_       => $level->allows($persona) && $this->isPublicReadRequirement(),
 		};
 	}
 

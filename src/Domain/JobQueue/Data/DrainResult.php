@@ -22,6 +22,7 @@ final readonly class DrainResult
 		public int $succeeded,
 		public int $failed,
 		public bool $deadlineHit,
+		public bool $rateLimited = false,
 		public array $byType = [],
 		public array $byCollection = [],
 	) {

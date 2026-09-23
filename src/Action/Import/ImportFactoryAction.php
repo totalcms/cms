@@ -37,7 +37,8 @@ readonly class ImportFactoryAction
 	{
 		$collection = $args['collection'];
 		$params     = $request->getQueryParams();
-		$rules      = json_decode($request->getBody(), true);
+		$rules      = json_decode((string)$request->getBody(), true);
+		$rules      = is_array($rules) ? $rules : [];
 
 		// using fqty so that it's not a common name that could be used by the user
 		$quantity = intval($params['fqty'] ?? $rules['fqty'] ?? 1);

@@ -83,6 +83,7 @@ use TotalCMS\Slim\Test\TestResponse;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
+use TotalCMS\Support\RemoteFileDownloader;
 
 $_SERVER['APP_ENV'] = 'test';
 
@@ -907,4 +908,18 @@ function drainStreamedBody(ResponseInterface|TestResponse $response): string
 	$outer = (string)ob_get_clean();
 
 	return $inner . $outer;
+}
+
+/**
+ * A RemoteFileDownloader over a test HTTP client, writing into a throwaway
+ * temp dir. Shared by the RSS importer suites (three files construct the
+ * importer), which is why it lives here and not in one of them.
+ */
+function rssTestDownloader(HttpClientInterface $httpClient): RemoteFileDownloader
+{
+	$config                  = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->tmpdir          = sys_get_temp_dir() . '/totalcms-rss-test-' . uniqid();
+	$config->maxDownloadSize = 2048;
+
+	return new RemoteFileDownloader($httpClient, $config);
 }

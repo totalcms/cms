@@ -370,14 +370,17 @@ class FactoryImporter
 			$importCount++;
 		}
 
-		// Rebuild index
-		$this->indexBuilder->buildIndex($collection);
-
-		// Update collection counts for the imported objects
+		// Bump the lifetime OID counter for the batch BEFORE the index rebuild.
+		// The rebuild resets totalObjects from disk and updateCollection() then
+		// clamps count up to it, so an increment applied afterwards counted the
+		// batch twice; running it first, the clamp finds count already correct.
+		// totalObjects itself is never incremented here — the rebuild owns it.
 		if ($importCount > 0) {
 			$this->collectionSaver->incrementCount($collection, $importCount);
-			$this->collectionSaver->incrementTotalObjects($collection, $importCount);
 		}
+
+		// Rebuild index
+		$this->indexBuilder->buildIndex($collection);
 
 		// Clean cache
 		$this->cleanCache();

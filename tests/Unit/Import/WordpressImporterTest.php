@@ -12,6 +12,8 @@ use TotalCMS\Domain\Import\WordpressImporter;
 use TotalCMS\Domain\JobQueue\Data\JobData;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
+use TotalCMS\Support\RemoteFileDownloader;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
 
@@ -41,10 +43,13 @@ class WordpressImporterTest extends TestCase
 		$httpClient = $this->createMock(HttpClientInterface::class);
 		$httpClient->method('request')->willReturn(new HttpResponse(200, 'fake-image-data'));
 
+		$config         = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->tmpdir = sys_get_temp_dir() . '/totalcms-wp-test-' . uniqid();
+
 		$this->importer = new WordpressImporter(
 			$this->collectionFetcher,
 			$this->jobQueuer,
-			$httpClient,
+			new RemoteFileDownloader($httpClient, $config),
 			$loggerFactory,
 		);
 
@@ -254,6 +259,39 @@ class WordpressImporterTest extends TestCase
 		$this->assertStringContainsString('T', $phpPost['date']);
 	}
 
+	public function testImageDownloadsVerifyCertificatesAndAreSizeCapped(): void
+	{
+		// The importer used to carry its own download routine with SSL
+		// verification switched off and no size cap, while the admin's
+		// upload-from-URL path had both. Every download now goes through
+		// RemoteFileDownloader, so the posture is the same everywhere.
+		$captured   = [];
+		$httpClient = $this->createMock(HttpClientInterface::class);
+		$httpClient->method('request')->willReturnCallback(function (string $method, string $url, array $options) use (&$captured): HttpResponse {
+			$captured[] = $options;
+
+			return new HttpResponse(200, 'fake-image-data');
+		});
+
+		$logger        = $this->createMock(LoggerInterface::class);
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('addFileHandler')->willReturnSelf();
+		$loggerFactory->method('createLogger')->willReturn($logger);
+
+		$config                  = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->tmpdir          = sys_get_temp_dir() . '/totalcms-wp-test-' . uniqid();
+		$config->maxDownloadSize = 25;
+
+		$importer = new WordpressImporter($this->collectionFetcher, $this->jobQueuer, new RemoteFileDownloader($httpClient, $config), $loggerFactory);
+		$importer->import($this->sampleXml, 'blog');
+
+		$this->assertNotEmpty($captured, 'the sample export has featured images, so at least one download is expected');
+		foreach ($captured as $options) {
+			$this->assertTrue($options['verify_ssl'] ?? false);
+			$this->assertSame(25 * 1024 * 1024, $options['max_bytes'] ?? 0);
+		}
+	}
+
 	public function testImportThrowsForMissingCollection(): void
 	{
 		$collectionFetcher = $this->createMock(CollectionFetcher::class);
@@ -264,8 +302,8 @@ class WordpressImporterTest extends TestCase
 		$loggerFactory->method('addFileHandler')->willReturnSelf();
 		$loggerFactory->method('createLogger')->willReturn($logger);
 
-		$httpClient = $this->createMock(HttpClientInterface::class);
-		$importer   = new WordpressImporter($collectionFetcher, $this->jobQueuer, $httpClient, $loggerFactory);
+		$config     = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$importer   = new WordpressImporter($collectionFetcher, $this->jobQueuer, new RemoteFileDownloader($this->createMock(HttpClientInterface::class), $config), $loggerFactory);
 
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage('does not exist');

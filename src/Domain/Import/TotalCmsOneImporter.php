@@ -3,10 +3,9 @@
 namespace TotalCMS\Domain\Import;
 
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Collection\Service\CollectionFactory;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Factory\LogChannel;
@@ -20,7 +19,7 @@ class TotalCmsOneImporter
 
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
-		private readonly CollectionFactory $collectionFactory,
+		private readonly CollectionSaver $collectionSaver,
 		private readonly CollectionRepository $collectionRepository,
 		private readonly IndexReader $indexReader,
 		private readonly JobQueuer $jobQueuer,
@@ -112,14 +111,11 @@ class TotalCmsOneImporter
 		if (file_exists($posturlFile)) {
 			$url = trim((string)file_get_contents($posturlFile));
 			if ($url !== '') {
-				$collection = $this->collectionFetcher->fetchCollection($blogId);
-				if ($collection instanceof CollectionData) {
-					$collectionData              = $collection->toArray();
-					$collectionData['url']       = $url;
-					$collectionData['prettyUrl'] = !str_contains($url, '?permalink=');
-
-					$updatedCollection = $this->collectionFactory->generateCollection($collectionData);
-					$this->collectionRepository->saveCollection($updatedCollection);
+				if ($this->collectionFetcher->collectionExists($blogId)) {
+					$this->collectionSaver->patchCollection($blogId, [
+						'url'       => $url,
+						'prettyUrl' => !str_contains($url, '?permalink='),
+					]);
 				}
 			}
 		}
@@ -519,8 +515,11 @@ class TotalCmsOneImporter
 				'name'   => $name,
 			];
 
-			$collection = $this->collectionFactory->generateCollection($collectionData);
-			$this->collectionRepository->saveCollection($collection);
+			// Through the saver, not the raw repository: that is where the
+			// reference-schema refusal, edition gating, count initialisation and
+			// the collection.created event live. Writing the record directly
+			// used to skip all four.
+			$this->collectionSaver->saveCollection($collectionData);
 
 			// Verify collection was created successfully
 			if (!$this->collectionFetcher->collectionExists($id)) {

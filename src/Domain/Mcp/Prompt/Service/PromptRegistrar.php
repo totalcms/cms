@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Prompt\Service;
 
 use Mcp\Server\Builder;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 
 final readonly class PromptRegistrar
@@ -99,11 +100,6 @@ final readonly class PromptRegistrar
 	 */
 	public static function personaCanAccess(McpPersona $persona, string $access): bool
 	{
-		return match ($access) {
-			'public'        => true,
-			'authenticated' => $persona !== McpPersona::PUBLIC_,
-			'admin'         => $persona === McpPersona::ADMIN,
-			default         => $persona === McpPersona::ADMIN,
-		};
+		return McpAccessLevel::fromString($access)->allows($persona);
 	}
 }

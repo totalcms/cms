@@ -87,6 +87,26 @@ enum EditionFeature: string
 	}
 
 	/**
+	 * The sentence shown when this feature is gated off.
+	 *
+	 * @param Edition|null $currentEdition When given, the running edition is appended (dev environments).
+	 */
+	public function deniedMessage(?Edition $currentEdition = null): string
+	{
+		$message = sprintf(
+			'The "%s" feature requires the %s edition or higher.',
+			$this->label(),
+			ucfirst($this->requiredEdition()->value)
+		);
+
+		if ($currentEdition instanceof Edition) {
+			$message .= sprintf(' Current edition: %s.', ucfirst($currentEdition->value));
+		}
+
+		return $message;
+	}
+
+	/**
 	 * Get the minimum edition required for this feature.
 	 */
 	public function requiredEdition(): Edition

@@ -92,6 +92,22 @@ final class BasePath
 		return array_values(array_unique(array_filter([$scriptDir, $parentDir], static fn (string $dir): bool => $dir !== '')));
 	}
 
+	/**
+	 * Make a request path relative to the mount point: `/site/admin/x` with a
+	 * base path of `/site` becomes `/admin/x`; the mount point itself becomes
+	 * `/`. Paths outside the mount point, or a root install, are unchanged.
+	 */
+	public static function strip(string $basePath, string $path): string
+	{
+		if ($basePath === '' || !str_starts_with($path, $basePath)) {
+			return $path;
+		}
+
+		$stripped = substr($path, strlen($basePath));
+
+		return $stripped === '' ? '/' : $stripped;
+	}
+
 	private static function normalizeDir(string $dir): string
 	{
 		$dir = str_replace('\\', '/', $dir);

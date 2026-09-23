@@ -5,9 +5,10 @@ namespace TotalCMS\Domain\Import;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
-use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\RemoteFileDownloader;
 
 class WordpressImporter
 {
@@ -25,7 +26,7 @@ class WordpressImporter
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly JobQueuer $jobQueuer,
-		private readonly HttpClientInterface $httpClient,
+		private readonly RemoteFileDownloader $downloader,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::WordpressImporter);
@@ -354,29 +355,11 @@ class WordpressImporter
 	private function downloadImage(string $url): ?string
 	{
 		try {
-			$response = $this->httpClient->request('GET', $url, [
-				'timeout'          => 15,
-				'verify_ssl'       => false,
-				'follow_redirects' => true,
-			]);
-
-			if ($response->statusCode !== 200) {
-				$this->logger->warning(sprintf('Failed to download image: %s (status %d)', $url, $response->statusCode));
-
-				return null;
-			}
-
-			$urlPath  = parse_url($url, PHP_URL_PATH);
-			$pathInfo = pathinfo(is_string($urlPath) ? $urlPath : '');
-			$ext      = isset($pathInfo['extension']) && $pathInfo['extension'] !== '' ? $pathInfo['extension'] : 'jpg';
-
-			$tempFile = sys_get_temp_dir() . '/wp-import-' . uniqid() . '.' . $ext;
-			file_put_contents($tempFile, $response->body);
-
+			$tempFile = $this->downloader->download($url, ['timeout' => 15, 'prefix' => 'wp-import']);
 			$this->logger->info(sprintf('Downloaded image: %s → %s', $url, $tempFile));
 
 			return $tempFile;
-		} catch (\Exception $e) {
+		} catch (\RuntimeException $e) {
 			$this->logger->warning(sprintf('Error downloading image %s: %s', $url, $e->getMessage()));
 
 			return null;
@@ -388,15 +371,10 @@ class WordpressImporter
 	 */
 	private function slugify(string $text): string
 	{
-		$text = (string)preg_replace('/[^\p{L}\p{N}\s-]/u', '', $text);
-		$text = (string)preg_replace('/[\s-]+/', '-', $text);
-		$text = trim($text, '-');
-		$text = mb_strtolower($text);
+		// The same slug every other importer and the id field mint from a
+		// title, so an imported entry's id matches what T3 would derive itself.
+		$slug = SlugData::slugify($text);
 
-		if ($text === '') {
-			return 'untitled-' . uniqid();
-		}
-
-		return $text;
+		return $slug === '' ? 'untitled-' . uniqid() : $slug;
 	}
 }

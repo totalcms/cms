@@ -150,6 +150,39 @@ final class SavedQueryToolTest extends TestCase
 		$this->assertStringContainsString('Austin', $capturedParams['include'] ?? '');
 	}
 
+	public function testAnUnrecognisedAccessLevelStillAdmitsTheAdmin(): void
+	{
+		// The access gate must fail closed to admin-only, not to nobody. This
+		// tool used to be the one copy of the persona rule whose fallback
+		// denied everyone — so a malformed mcp.access locked the admin out of
+		// their own saved query. Passing the gate here lands on the missing
+		// collection, whose error names list_collections.
+		$def = SavedQueryToolDefinition::fromArray('does-not-exist', 'bogus', [
+			'name'        => 'odd_tool',
+			'description' => 'Odd access value.',
+		]);
+
+		$tool = new SavedQueryTool(
+			definition: $def,
+			indexQueryService: $this->createMock(IndexQueryService::class),
+			filterValueResolver: new FilterValueResolver(),
+			contentRenderer: $this->createMock(ContentRenderer::class),
+			personaContext: $this->makePersonaContext(McpPersona::ADMIN),
+			objectUrlBuilder: $this->createMock(ObjectUrlBuilder::class),
+			schemaResolver: $this->createMock(McpSchemaResolver::class),
+			collectionRepository: $this->createMock(CollectionRepository::class),
+			resultFormatter: new CollectionQueryResultFormatter(),
+		);
+
+		try {
+			$tool->handle([]);
+			$this->fail('Expected ToolCallException.');
+		} catch (ToolCallException $e) {
+			$this->assertStringNotContainsString('requires admin access', $e->getMessage());
+			$this->assertStringContainsString('list_collections', $e->getMessage());
+		}
+	}
+
 	public function testThrowsToolCallExceptionWithRecoveryHintWhenCollectionMissing(): void
 	{
 		$def = SavedQueryToolDefinition::fromArray('does-not-exist', 'admin', [

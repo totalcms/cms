@@ -1,6 +1,7 @@
 <?php
 
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
+use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFunctions;
 use Twig\TwigFilter;
 
 describe('TotalCMSTwigFilters', function (): void {
@@ -159,6 +160,19 @@ describe('TotalCMSTwigFilters', function (): void {
 		expect($sortedByAge[0]['age'])->toBe(25);
 		expect($sortedByAge[1]['age'])->toBe(30);
 		expect($sortedByAge[2]['age'])->toBe(35);
+	});
+
+	test('TotalCMSTwigFilters → sortBy orders strings case-insensitively, the same as the sortByKey function', function (): void {
+		// The filter and the function are two entry points to one sort. They
+		// used to have different comparators — the filter compared bytes, so
+		// every capitalised name sorted before every lower-case one — and a
+		// template got a different order depending on which it reached for.
+		$array = [['name' => 'Zed'], ['name' => 'apple'], ['name' => 'Mango']];
+
+		$sorted = TotalCMSTwigFilters::sortBy($array, 'name');
+
+		expect(array_column($sorted, 'name'))->toBe(['apple', 'Mango', 'Zed'])
+			->and($sorted)->toBe(TotalCMSTwigFunctions::sortByKey($array, 'name'));
 	});
 
 	test('TotalCMSTwigFilters → sortBy handles empty arrays and missing keys', function (): void {

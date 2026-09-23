@@ -15,7 +15,7 @@ use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
-use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\RemoteFileDownloader;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 readonly class FileSaveAction
@@ -25,7 +25,7 @@ readonly class FileSaveAction
 		private SaverFactory $factory,
 		private Config $config,
 		private HeicConverter $heicConverter,
-		private HttpClientInterface $httpClient,
+		private RemoteFileDownloader $downloader,
 		private FileUploadValidator $validator,
 	) {
 	}
@@ -68,7 +68,7 @@ readonly class FileSaveAction
 				}
 
 				// Never store an executable/script, even from a URL.
-				$nameCheck = $this->validator->validateFilename($this->extractFilenameFromUrl($fileUrl));
+				$nameCheck = $this->validator->validateFilename(RemoteFileDownloader::filenameFor($fileUrl));
 				if (!$nameCheck['valid']) {
 					return $this->renderer->json($response, [
 						'error'   => 'File upload validation failed',
@@ -299,9 +299,7 @@ readonly class FileSaveAction
 	}
 
 	/**
-	 * Download a file from a URL and save it to a temporary location.
-	 *
-	 * @param non-empty-string $url The URL to download from
+	 * Download a file from a URL into the temp directory.
 	 *
 	 * @throws \RuntimeException If the download fails
 	 *
@@ -309,72 +307,6 @@ readonly class FileSaveAction
 	 */
 	private function downloadFileFromUrl(string $url): string
 	{
-		// Ensure the temporary directory exists
-		if (!file_exists($this->config->tmpdir)) {
-			mkdir($this->config->tmpdir, 0700, true);
-		}
-
-		// Extract filename from URL or generate one
-		$filename     = $this->extractFilenameFromUrl($url);
-		$tempFilePath = $this->config->tmpdir . '/' . $filename;
-
-		// Max download size in bytes (0 = unlimited)
-		$maxBytes = $this->config->maxDownloadSize > 0
-			? $this->config->maxDownloadSize * 1024 * 1024
-			: 0;
-
-		try {
-			$response = $this->httpClient->request('GET', $url, [
-				'timeout'          => 30,
-				'follow_redirects' => 5,
-				'user_agent'       => 'TotalCMS File Downloader',
-				'verify_ssl'       => true,
-				'max_bytes'        => $maxBytes,
-			]);
-		} catch (\RuntimeException $e) {
-			if ($maxBytes > 0 && str_contains($e->getMessage(), 'maximum size')) {
-				throw new \RuntimeException('File exceeds maximum download size of ' . $this->config->maxDownloadSize . ' MB', $e->getCode(), $e);
-			}
-			throw new \RuntimeException('Failed to download file from URL: ' . $e->getMessage(), $e->getCode(), $e);
-		}
-
-		if ($response->statusCode !== 200) {
-			throw new \RuntimeException('HTTP error when downloading file: ' . $response->statusCode);
-		}
-
-		// Save the downloaded content to a temporary file
-		$bytesWritten = file_put_contents($tempFilePath, $response->body);
-		if ($bytesWritten === false) {
-			throw new \RuntimeException('Failed to save downloaded file to: ' . $tempFilePath);
-		}
-
-		return $tempFilePath;
-	}
-
-	/**
-	 * Extract filename from URL or generate a unique filename.
-	 *
-	 * @param string $url The URL to extract filename from
-	 *
-	 * @return string The extracted or generated filename
-	 */
-	private function extractFilenameFromUrl(string $url): string
-	{
-		// Parse the URL to get the path
-		$parsedUrl = parse_url($url);
-		$path      = $parsedUrl['path'] ?? '';
-
-		// Get the filename from the path
-		$filename = basename($path);
-
-		// If no filename or it doesn't have an extension, generate one
-		if ($filename === '' || !pathinfo($filename, PATHINFO_EXTENSION)) {
-			$filename = 'downloaded_file_' . uniqid() . '.tmp';
-		}
-
-		// Sanitize the filename for safety
-		$sanitized = preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
-
-		return $sanitized ?? 'sanitized_file_' . uniqid();
+		return $this->downloader->download($url);
 	}
 }

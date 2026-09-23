@@ -20,6 +20,7 @@ use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Renderer\ForbiddenRenderer;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
@@ -230,30 +231,12 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	 */
 	protected function forbiddenResponse(ServerRequestInterface $request, string $message): ResponseInterface
 	{
-		$path = $request->getUri()->getPath();
+		$details = $this->config->env === 'dev'
+			? sprintf("Path: %s\nMethod: %s\nUser: %s", $request->getUri()->getPath(), $request->getMethod(), $this->session->get(SessionKeys::AUTH_USER) ?? 'none')
+			: null;
 
-		// Admin UI requests should get HTML response
-		if (str_starts_with($path, '/admin/')) {
-			$details = $this->config->env === 'dev'
-				? sprintf("Path: %s\nMethod: %s\nUser: %s", $path, $request->getMethod(), $this->session->get(SessionKeys::AUTH_USER) ?? 'none')
-				: null;
-
-			return $this->twigRenderer->template(
-				$this->responseFactory->createResponse()->withStatus(403),
-				'access-denied.twig',
-				[
-					'message'  => $message,
-					'details'  => $details,
-					'referrer' => $request->getHeaderLine('Referer') ?: null,
-				]
-			);
-		}
-
-		// API requests get JSON response
-		return $this->jsonRenderer->json(
-			$this->responseFactory->createResponse()->withStatus(403),
-			['error' => ['message' => $message]]
-		);
+		return (new ForbiddenRenderer($this->twigRenderer, $this->jsonRenderer, $this->responseFactory))
+			->forbidden($request, $message, $details);
 	}
 
 	/**

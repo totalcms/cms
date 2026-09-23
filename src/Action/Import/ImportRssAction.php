@@ -31,6 +31,13 @@ readonly class ImportRssAction
 			], 400);
 		}
 
+		if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+			return $this->renderer->json($response, [
+				'success' => false,
+				'message' => 'Invalid URL provided',
+			], 400);
+		}
+
 		if ($collection === '') {
 			return $this->renderer->json($response, [
 				'success' => false,

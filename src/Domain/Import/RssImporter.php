@@ -8,10 +8,12 @@ use Laminas\Feed\Reader\Reader;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
+use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\RemoteFileDownloader;
 use TotalCMS\Support\Version;
 
 class RssImporter
@@ -35,6 +37,7 @@ class RssImporter
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly JobQueuer $jobQueuer,
 		private readonly HttpClientInterface $httpClient,
+		private readonly RemoteFileDownloader $downloader,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::RssImporter);
@@ -634,25 +637,15 @@ class RssImporter
 	private function downloadImage(string $url): ?string
 	{
 		try {
-			$response = $this->httpClient->request('GET', $url, $this->requestOptions(15));
-
-			if ($response->statusCode !== 200) {
-				$this->logger->warning(sprintf('Failed to download image: %s (status %d)', $url, $response->statusCode));
-
-				return null;
-			}
-
-			$urlPath  = parse_url($url, PHP_URL_PATH);
-			$pathInfo = pathinfo(is_string($urlPath) ? $urlPath : '');
-			$ext      = isset($pathInfo['extension']) && $pathInfo['extension'] !== '' ? $pathInfo['extension'] : 'jpg';
-
-			$tempFile = sys_get_temp_dir() . '/rss-import-' . uniqid() . '.' . $ext;
-			file_put_contents($tempFile, $response->body);
-
+			$tempFile = $this->downloader->download($url, [
+				'timeout'    => 15,
+				'prefix'     => 'rss-import',
+				'user_agent' => $this->requestOptions(15)['user_agent'],
+			]);
 			$this->logger->info(sprintf('Downloaded image: %s → %s', $url, $tempFile));
 
 			return $tempFile;
-		} catch (\Exception $e) {
+		} catch (\RuntimeException $e) {
 			$this->logger->warning(sprintf('Error downloading image %s: %s', $url, $e->getMessage()));
 
 			return null;
@@ -664,15 +657,10 @@ class RssImporter
 	 */
 	private function slugify(string $text): string
 	{
-		$text = (string)preg_replace('/[^\p{L}\p{N}\s-]/u', '', $text);
-		$text = (string)preg_replace('/[\s-]+/', '-', $text);
-		$text = trim($text, '-');
-		$text = mb_strtolower($text);
+		// The same slug every other importer and the id field mint from a
+		// title, so an imported entry's id matches what T3 would derive itself.
+		$slug = SlugData::slugify($text);
 
-		if ($text === '') {
-			return 'untitled-' . uniqid();
-		}
-
-		return $text;
+		return $slug === '' ? 'untitled-' . uniqid() : $slug;
 	}
 }

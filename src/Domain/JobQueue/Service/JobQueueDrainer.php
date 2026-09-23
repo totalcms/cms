@@ -37,6 +37,7 @@ final readonly class JobQueueDrainer
 		$succeeded    = 0;
 		$failed       = 0;
 		$deadlineHit  = false;
+		$rateLimited  = false;
 		$byType       = [];
 		$byCollection = [];
 
@@ -48,6 +49,14 @@ final readonly class JobQueueDrainer
 
 			$result = $this->jobRunner->processNextJobWithDetails();
 			if ($result === null) {
+				break;
+			}
+
+			// A deferred job went back to pending untouched; the next one would
+			// hit the same email rate limit, so the remaining queue waits for
+			// the next tick. Not processed, not failed.
+			if ($result['deferred'] ?? false) {
+				$rateLimited = true;
 				break;
 			}
 
@@ -73,6 +82,7 @@ final readonly class JobQueueDrainer
 			succeeded: $succeeded,
 			failed: $failed,
 			deadlineHit: $deadlineHit,
+			rateLimited: $rateLimited,
 			byType: $byType,
 			byCollection: $byCollection,
 		);

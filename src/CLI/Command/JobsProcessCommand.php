@@ -220,6 +220,7 @@ class JobsProcessCommand extends BaseCommand
 				'succeeded'        => $succeeded,
 				'failed'           => $failed,
 				'deadline_hit'     => $drain->deadlineHit,
+				'rate_limited'     => $drain->rateLimited,
 				'by_type'          => $jobsByType,
 				'by_collection'    => $jobsByCollection,
 				'maintenance'      => $maintenance,
@@ -243,6 +244,11 @@ class JobsProcessCommand extends BaseCommand
 			'Succeeded'       => $succeeded,
 			'Failed'          => $failed,
 		]);
+
+		if ($drain->rateLimited) {
+			$output->writeln('');
+			$output->writeln('Stopped at the email send rate limit. The remaining email jobs will go out on a later run.');
+		}
 
 		if ($drain->deadlineHit) {
 			$output->writeln('');

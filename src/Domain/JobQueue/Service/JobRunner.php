@@ -52,68 +52,6 @@ readonly class JobRunner
 	}
 
 	/**
-	 * Retry all failed jobs by resetting their status to pending.
-	 * Jobs that exceed MAX_RETRY_ATTEMPTS will be skipped.
-	 */
-	public function retryFailedJobs(): void
-	{
-		$failedJobs   = $this->jobRepository->fetchFailedJobs();
-		$retriedCount = 0;
-		$skippedCount = 0;
-
-		foreach ($failedJobs as $job) {
-			// Check if job has exceeded maximum retry attempts
-			if ($job->attempts >= self::MAX_RETRY_ATTEMPTS) {
-				$this->logger->warning('Job exceeded max retry attempts, skipping', [
-					'job_id'       => $job->id,
-					'attempts'     => $job->attempts,
-					'max_attempts' => self::MAX_RETRY_ATTEMPTS,
-					'type'         => $job->type,
-					'collection'   => $job->collection,
-				]);
-				$skippedCount++;
-				continue;
-			}
-
-			$this->jobRepository->resetJobStatus($job);
-			$this->logger->info('Job retried', array_merge($job->toArray(), [
-				'attempt'      => $job->attempts + 1,
-				'max_attempts' => self::MAX_RETRY_ATTEMPTS,
-			]));
-			$retriedCount++;
-		}
-
-		$this->logger->info('Retry summary', [
-			'total_failed' => count($failedJobs),
-			'retried'      => $retriedCount,
-			'skipped'      => $skippedCount,
-			'max_attempts' => self::MAX_RETRY_ATTEMPTS,
-		]);
-	}
-
-	public function processPendingJobs(): void
-	{
-		// Get collections with pending import/update/factory jobs and enable queueRebuildOnSave
-		$collectionsToOptimize = $this->enableQueueRebuildForImportCollections();
-
-		// Process all jobs
-		while ($this->jobRepository->hasPendingJobs()) {
-			try {
-				$this->processNextJob();
-			} catch (EmailRateLimitException) {
-				// Rate limit reached — stop processing, remaining jobs stay pending
-				$this->logger->info('Stopping job processing: email rate limit reached');
-				break;
-			}
-		}
-
-		// Rebuild indexes and restore settings for optimized collections
-		$this->finalizeOptimizedCollections($collectionsToOptimize);
-
-		$this->logger->info('Processed all pending jobs');
-	}
-
-	/**
 	 * Find collections with pending import/update/factory jobs and enable queueRebuildOnSave.
 	 *
 	 * @return array<CollectionData> Map of collection ID to original queueRebuildOnSave setting
@@ -169,41 +107,6 @@ readonly class JobRunner
 			$this->logger->info('Restored queueRebuildOnSave setting', [
 				'collection' => $collection->id,
 			]);
-		}
-	}
-
-	public function processNextJob(): void
-	{
-		$job = $this->jobRepository->fetchNextJob();
-		try {
-			$this->processJob($job);
-			$this->jobRepository->delete($job);
-			$this->logger->info('Job processed successfully', $job->toArray());
-		} catch (EmailRateLimitException $e) {
-			// Rate limit hit — reset job to pending without counting as a failure
-			$this->jobRepository->resetJobStatus($job);
-			$this->logger->info('Email rate limit reached, deferring job', [
-				'job_id'  => $job->id,
-				'message' => $e->getMessage(),
-			]);
-			// Re-throw so processPendingJobs can stop processing
-			throw $e;
-		} catch (\Throwable $e) {
-			$this->jobRepository->markFailed($job, $e->getMessage());
-
-			// Add additional context if job has reached max attempts
-			$logContext = array_merge($job->toArray(), [
-				'error'        => $e->getMessage(),
-				'backtrace'    => "\n" . $e->getTraceAsString() . "\n",
-				'attempt'      => $job->attempts,
-				'max_attempts' => self::MAX_RETRY_ATTEMPTS,
-			]);
-
-			if ($job->attempts >= self::MAX_RETRY_ATTEMPTS) {
-				$this->logger->error('Job failed and exceeded max retry attempts', $logContext);
-			} else {
-				$this->logger->error('Job failed, can be retried', $logContext);
-			}
 		}
 	}
 
@@ -562,7 +465,13 @@ readonly class JobRunner
 	/**
 	 * Process and return the next job with details.
 	 *
-	 * @return array{success: bool, job: array<string,mixed>, error?: string}|null
+	 * A job that hit the email send rate limit is not a failure: it is put back
+	 * to pending without consuming an attempt and reported as `deferred`, which
+	 * tells JobQueueDrainer to stop the run — every email job behind it would
+	 * hit the same limit. This used to live only in a processNextJob() twin
+	 * that nothing called, so the live path marked such jobs failed.
+	 *
+	 * @return array{success: bool, deferred?: bool, job: array<string,mixed>, error?: string}|null
 	 */
 	public function processNextJobWithDetails(): ?array
 	{
@@ -579,6 +488,19 @@ readonly class JobRunner
 			return [
 				'success' => true,
 				'job'     => $job->toArray(),
+			];
+		} catch (EmailRateLimitException $e) {
+			$this->jobRepository->resetJobStatus($job);
+			$this->logger->info('Email rate limit reached, deferring job', [
+				'job_id'  => $job->id,
+				'message' => $e->getMessage(),
+			]);
+
+			return [
+				'success'  => false,
+				'deferred' => true,
+				'job'      => $job->toArray(),
+				'error'    => $e->getMessage(),
 			];
 		} catch (\Throwable $e) {
 			$this->jobRepository->markFailed($job, $e->getMessage());

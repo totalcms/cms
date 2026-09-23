@@ -45,6 +45,29 @@ final class JobQueueDrainerTest extends TestCase
 		return new JobQueueDrainer($runner);
 	}
 
+	public function testADeferredJobStopsTheRunWithoutCountingAsAFailure(): void
+	{
+		// An email job that hit the send rate limit is put back to pending by
+		// the runner and reported as deferred. Pulling the next job would just
+		// hit the same limit, so the drain ends there — the remaining jobs wait
+		// for the next cron tick — and the deferred job is not a failure.
+		$runner = $this->createMock(JobRunner::class);
+		$runner->method('hasPendingJobs')->willReturn(true);
+		$runner->method('processNextJobWithDetails')->willReturn([
+			'success'  => false,
+			'deferred' => true,
+			'job'      => ['id' => 1, 'type' => 'email', 'collection' => 'members'],
+			'error'    => 'rate limit',
+		]);
+
+		$result = (new JobQueueDrainer($runner))->drain();
+
+		$this->assertSame(0, $result->processed);
+		$this->assertSame(0, $result->failed);
+		$this->assertTrue($result->rateLimited);
+		$this->assertFalse($result->deadlineHit);
+	}
+
 	public function testWithoutADeadlineItDrainsEverything(): void
 	{
 		$result = $this->drainerFor([true, true, true])->drain();

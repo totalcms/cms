@@ -27,6 +27,7 @@ use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Renderer\ForbiddenRenderer;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -194,10 +195,8 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 
 	private function redirectToLogin(ServerRequestInterface $request): ResponseInterface
 	{
-		$path = $request->getUri()->getPath();
-
 		// API requests get JSON 401 response
-		if (!str_starts_with($path, '/admin/')) {
+		if (!ForbiddenRenderer::isAdminUi($request)) {
 			return $this->unauthorizedJsonResponse('Authentication required');
 		}
 
@@ -206,10 +205,8 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 
 	private function redirectToDenied(ServerRequestInterface $request): ResponseInterface
 	{
-		$path = $request->getUri()->getPath();
-
 		// API requests get JSON 403 response
-		if (!str_starts_with($path, '/admin/')) {
+		if (!ForbiddenRenderer::isAdminUi($request)) {
 			return $this->jsonRenderer->json(
 				$this->responseFactory->createResponse()->withStatus(403),
 				['error' => ['message' => 'Access denied']]

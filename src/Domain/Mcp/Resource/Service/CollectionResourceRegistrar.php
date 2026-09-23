@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Resource\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceTemplateDefinition;
 use TotalCMS\Domain\Mcp\Resource\Handler\CollectionObjectResource;
@@ -54,7 +55,7 @@ readonly class CollectionResourceRegistrar
 			return;
 		}
 
-		$access       = $this->normalizeAccess($mcp['access']);
+		$access       = McpAccessLevel::fromString($mcp['access'])->value;
 		$displayName  = $collection->name !== '' ? $collection->name : ucfirst($collection->id);
 		$sdkName      = $this->toSdkName($collection->id);
 		$desc         = (string)($mcp['description'] ?? '');
@@ -114,14 +115,5 @@ readonly class CollectionResourceRegistrar
 		$safe = preg_replace('/[^a-zA-Z0-9_-]/', '', $collectionId);
 
 		return ($safe !== null && $safe !== '') ? $safe : 'collection';
-	}
-
-	private function normalizeAccess(string $access): string
-	{
-		return match ($access) {
-			'public'        => 'public',
-			'authenticated' => 'authenticated',
-			default         => 'admin',
-		};
 	}
 }

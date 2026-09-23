@@ -77,15 +77,8 @@ readonly class AdminUtilsAction
 
 		// Check edition for import pages (RSS, WordPress)
 		if (in_array($page, ['import-rss', 'import-wordpress'], true) && !$this->editionFeatures->can(EditionFeature::RSS_IMPORT)) {
-			$feature         = EditionFeature::RSS_IMPORT;
-			$requiredEdition = $feature->requiredEdition();
-
 			return $this->twigRenderer->template($response, 'access-denied.twig', [
-				'message'  => sprintf(
-					'The "%s" feature requires the %s edition or higher.',
-					$feature->label(),
-					ucfirst($requiredEdition->value)
-				),
+				'message'  => EditionFeature::RSS_IMPORT->deniedMessage(),
 				'details'  => null,
 				'referrer' => $request->getHeaderLine('Referer') ?: null,
 			]);

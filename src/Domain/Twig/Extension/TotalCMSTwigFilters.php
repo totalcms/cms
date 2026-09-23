@@ -600,15 +600,13 @@ class TotalCMSTwigFilters
 		if ($array === [] || $key === '') {
 			return $array;
 		}
-		usort($array, function (array $a, array $b) use ($key): int {
-			if (!isset($a[$key]) || !isset($b[$key])) {
-				return 0; // If key doesn't exist, consider them equal
-			}
 
-			return $a[$key] <=> $b[$key];
-		});
-
-		return $array;
+		// The filter and the sortByKey() function are two entry points to one
+		// sort. They used to have different comparators — this one compared
+		// bytes, so every capitalised name sorted before every lower-case one
+		// while sortByKey() was case-insensitive — and a template got a
+		// different order depending on which it reached for.
+		return TotalCMSTwigFunctions::sortByKey($array, $key);
 	}
 
 	/**
@@ -618,9 +616,7 @@ class TotalCMSTwigFilters
 	 */
 	public static function ksort(array $array): array
 	{
-		ksort($array);
-
-		return $array;
+		return TotalCMSTwigFunctions::ksort($array);
 	}
 
 	/**
@@ -630,9 +626,7 @@ class TotalCMSTwigFilters
 	 */
 	public static function krsort(array $array): array
 	{
-		krsort($array);
-
-		return $array;
+		return TotalCMSTwigFunctions::krsort($array);
 	}
 
 	/**

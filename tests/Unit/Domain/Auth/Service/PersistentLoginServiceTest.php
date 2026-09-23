@@ -10,6 +10,7 @@ use Odan\Session\SessionManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
+use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
@@ -109,6 +110,7 @@ function persistentLoginService(
 		$session,
 		persistentLoginConfig($authOverrides),
 		$validator ?? persistentLoginValidator(),
+		new SessionLogin($session),
 		persistentLoginLoggerFactory(),
 	);
 }
@@ -650,7 +652,12 @@ describe('restoreFromPersistentToken succeeds', function (): void {
 			->and($session->get(SessionKeys::AUTH_USER))->toBe('editor-7')
 			->and($session->get(SessionKeys::AUTH_COLLECTION))->toBe('members')
 			->and($session->get(SessionKeys::AUTH_PERSISTENT_LOGIN))->toBeTrue()
-			->and($session->get(SessionKeys::LAST_ACTIVITY))->toBeInt();
+			->and($session->get(SessionKeys::LAST_ACTIVITY))->toBeInt()
+			// A restored session is a login like any other: the license check
+			// the interactive login schedules must run here too. This key was
+			// missing because the restore path wrote the session keys by hand
+			// instead of through SessionLogin::establish().
+			->and($session->get(SessionKeys::LICENSE_CHECK_DUE))->toBeTrue();
 	});
 
 	it('regenerates the session id before elevating to authenticated', function (): void {

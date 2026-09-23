@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Resource\Data;
 
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 
 /**
  * Value object describing an MCP resource template — a URI pattern like
@@ -52,12 +53,11 @@ readonly class McpResourceTemplateDefinition
 
 	public function isVisibleTo(McpPersona $persona, ?UserAuthority $authority = null): bool
 	{
-		return match ($persona) {
-			McpPersona::ADMIN         => true,
-			McpPersona::AUTHENTICATED => ($this->access === 'public' || $this->access === 'authenticated')
-				&& $this->authorizedFor($authority),
-			McpPersona::PUBLIC_       => $this->access === 'public',
-		};
+		if (!McpAccessLevel::fromString($this->access)->allows($persona)) {
+			return false;
+		}
+
+		return $persona !== McpPersona::AUTHENTICATED || $this->authorizedFor($authority);
 	}
 
 	/**

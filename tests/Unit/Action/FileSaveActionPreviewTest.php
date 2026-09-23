@@ -11,6 +11,7 @@ use TotalCMS\Domain\Security\Upload\FileUploadValidator;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
+use TotalCMS\Support\RemoteFileDownloader;
 
 function createPreviewAction(string $apiBase): FileSaveAction
 {
@@ -23,7 +24,7 @@ function createPreviewAction(string $apiBase): FileSaveAction
 		test()->createMock(SaverFactory::class),
 		$config,
 		test()->createMock(HeicConverter::class),
-		test()->createMock(HttpClientInterface::class),
+		new RemoteFileDownloader(test()->createMock(HttpClientInterface::class), $config),
 		new FileUploadValidator(),
 	);
 }

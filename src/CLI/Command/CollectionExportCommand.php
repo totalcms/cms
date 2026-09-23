@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\Domain\Index\Data\IndexData;
+use TotalCMS\Domain\Object\Service\ObjectExporter;
 
 class CollectionExportCommand extends BaseCommand
 {
@@ -40,6 +41,10 @@ class CollectionExportCommand extends BaseCommand
 			return $this->exportZip($input, $output, $collectionId, $outputFile);
 		}
 
+		if ($format === 'csv') {
+			return $this->exportCsv($output, $collectionId, $outputFile);
+		}
+
 		$index = $this->totalcms->indexReader()->fetchIndex($collectionId);
 		$total = $index->objects->count();
 
@@ -48,7 +53,7 @@ class CollectionExportCommand extends BaseCommand
 			return $this->streamJsonToFile($input, $output, $collectionId, $index, $outputFile, $total);
 		}
 
-		// For stdout/CSV, warn if collection is very large
+		// For stdout, warn if collection is very large
 		if (!is_string($outputFile) && $total > 1000) {
 			return $this->outputError(
 				$input,
@@ -57,15 +62,11 @@ class CollectionExportCommand extends BaseCommand
 			);
 		}
 
-		// For stdout or CSV, load all objects into memory
+		// For stdout, load all objects into memory
 		$objects = $this->fetchAllObjects($output, $collectionId, $index, $total);
 
 		if ($objects === null) {
 			return $this->outputError($input, $output, "Failed to fetch any of the {$total} objects in '{$collectionId}'. Run with -v for details.");
-		}
-
-		if ($format === 'csv') {
-			return $this->exportCsv($output, $objects, $outputFile);
 		}
 
 		return $this->exportJson($output, $objects, $outputFile);
@@ -142,7 +143,7 @@ class CollectionExportCommand extends BaseCommand
 	}
 
 	/**
-	 * Fetch all objects into memory (for stdout/CSV).
+	 * Fetch all objects into memory (for stdout).
 	 *
 	 * @return list<array<string,mixed>>|null
 	 */
@@ -205,39 +206,34 @@ class CollectionExportCommand extends BaseCommand
 	}
 
 	/**
-	 * @param list<array<string,mixed>> $objects
+	 * The same CSV the admin export produces: ObjectExporter flattens cards
+	 * and localized fields into dot-notation columns (`mycard.label`), which
+	 * is the shape CsvImporter reads back. The command used to build its own
+	 * CSV with nested values JSON-encoded into one column, so a CLI export
+	 * could not round-trip through `tcms collection:import`.
 	 */
-	private function exportCsv(OutputInterface $output, array $objects, mixed $outputFile): int
+	private function exportCsv(OutputInterface $output, string $collectionId, mixed $outputFile): int
 	{
-		if ($objects === []) {
+		$result = $this->totalcms->container()->get(ObjectExporter::class)->exportAllObjectsForCSv($collectionId);
+
+		if (count($result['errors']) > 0) {
+			$output->writeln(sprintf('<comment>Warning: %d object(s) were skipped due to data mismatches. Check the logs for details.</comment>', count($result['errors'])));
+		}
+
+		// The first row is the header, so a header-only result is an empty collection.
+		if (count($result['data']) <= 1) {
 			$output->writeln('No objects to export.');
 
 			return Command::SUCCESS;
 		}
 
-		// Build CSV from object data
-		$firstObject = $objects[0];
-		$headers     = array_keys($firstObject);
-
-		$csv = Writer::createFromString();
-		$csv->insertOne($headers);
-
-		foreach ($objects as $obj) {
-			$row = [];
-			foreach ($headers as $key) {
-				$value = $obj[$key] ?? '';
-				$row[] = is_array($value)
-					? (string)json_encode($value, JSON_UNESCAPED_SLASHES)
-					: (string)$value;
-			}
-			$csv->insertOne($row);
-		}
-
+		$csv = Writer::fromString('');
+		$csv->insertAll($result['data']);
 		$csvContent = $csv->toString();
 
 		if (is_string($outputFile)) {
 			file_put_contents($outputFile, $csvContent);
-			$output->writeln('<info>Exported ' . count($objects) . " objects to {$outputFile}</info>");
+			$output->writeln('<info>Exported ' . (count($result['data']) - 1) . " objects to {$outputFile}</info>");
 
 			return Command::SUCCESS;
 		}

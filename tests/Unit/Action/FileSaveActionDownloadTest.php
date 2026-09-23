@@ -10,6 +10,7 @@ use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
+use TotalCMS\Support\RemoteFileDownloader;
 
 function createFileSaveAction(HttpClientInterface $httpClient, ?Config $config = null): FileSaveAction
 {
@@ -28,7 +29,7 @@ function createFileSaveAction(HttpClientInterface $httpClient, ?Config $config =
 		$config->maxDownloadSize = 2048;
 	}
 
-	return new FileSaveAction($renderer, $factory, $config, $heicConverter, $httpClient, new FileUploadValidator());
+	return new FileSaveAction($renderer, $factory, $config, $heicConverter, new RemoteFileDownloader($httpClient, $config), new FileUploadValidator());
 }
 
 function createDownloadRequest(string $url): ServerRequestInterface
@@ -159,26 +160,12 @@ describe('FileSaveAction URL Download', function (): void {
 	});
 
 	test('extracts filename from URL correctly', function (): void {
-		$httpClient = test()->createMock(HttpClientInterface::class);
-		$httpClient->method('request')
-			->willReturn(new HttpResponse(200, 'content'));
-
-		$action = createFileSaveAction($httpClient);
-
-		$reflection = new ReflectionClass($action);
-		$method     = $reflection->getMethod('extractFilenameFromUrl');
-
-		// Normal URL with filename
-		$result = $method->invoke($action, 'https://example.com/images/photo.jpg');
-		expect($result)->toBe('photo.jpg');
-
-		// URL with query params
-		$result = $method->invoke($action, 'https://example.com/doc.pdf?v=2');
-		expect($result)->toBe('doc.pdf');
-
-		// URL with special chars gets sanitized
-		$result = $method->invoke($action, 'https://example.com/my file (1).jpg');
-		expect($result)->toContain('my_file__1_.jpg');
+		// The filename rule now lives on RemoteFileDownloader, which the action
+		// uses both to validate the name before downloading and to name the
+		// temp file.
+		expect(RemoteFileDownloader::filenameFor('https://example.com/images/photo.jpg'))->toBe('photo.jpg')
+			->and(RemoteFileDownloader::filenameFor('https://example.com/doc.pdf?v=2'))->toBe('doc.pdf')
+			->and(RemoteFileDownloader::filenameFor('https://example.com/my file (1).jpg'))->toContain('my_file__1_.jpg');
 	});
 
 	test('follows redirects with limit of 5', function (): void {

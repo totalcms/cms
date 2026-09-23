@@ -11,6 +11,7 @@ use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
+use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -138,9 +139,14 @@ class JsonImporter
 	 */
 	public function importNewObject(array $record): bool
 	{
-		// Records may omit `id` — ObjectSaver autogenerates one when the schema
-		// allows it (and rejects the record when it doesn't), so the exists
-		// check and log lines only use the id when the record carries one.
+		// Slugify the id so JSON and CSV imports of the same record land on the
+		// same object. Records may omit `id` — ObjectSaver autogenerates one
+		// when the schema allows it (and rejects the record when it doesn't),
+		// so the exists check and log lines only use the id when present.
+		if (isset($record['id'])) {
+			$record['id'] = SlugData::slugify((string)$record['id']);
+		}
+
 		if (isset($record['id']) && $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
 			$error = sprintf('Object with id %s already exists in %s', $record['id'], $this->collection);
 			$this->logger->warning($error);
@@ -169,6 +175,10 @@ class JsonImporter
 	 */
 	public function updateObject(array $record): bool
 	{
+		if (isset($record['id'])) {
+			$record['id'] = SlugData::slugify((string)$record['id']);
+		}
+
 		if (!isset($record['id'])) {
 			$this->logger->info('Skipping update of record without ID');
 			$this->lastSkipReason = 'Record has no id (required for update)';

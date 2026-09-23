@@ -14,6 +14,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Slim\App;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeEvaluator;
+use TotalCMS\Support\BasePath;
 
 /**
  * Gates Bearer-authenticated REST API requests by OAuth scope.
@@ -92,14 +93,6 @@ readonly class OAuthRestScopeMiddleware implements MiddlewareInterface
 	 */
 	private function stripBasePath(string $path): string
 	{
-		$basePath = $this->app->getBasePath();
-
-		if ($basePath === '' || !str_starts_with($path, $basePath)) {
-			return $path;
-		}
-
-		$stripped = substr($path, strlen($basePath));
-
-		return $stripped === '' ? '/' : $stripped;
+		return BasePath::strip($this->app->getBasePath(), $path);
 	}
 }

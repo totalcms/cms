@@ -53,6 +53,7 @@ final class RssImporterBehaviourTest extends TestCase
 			$this->objectFetcher,
 			$this->jobQueuer,
 			$this->httpClient,
+			rssTestDownloader($this->httpClient),
 			$loggerFactory,
 		);
 	}
@@ -86,6 +87,18 @@ final class RssImporterBehaviourTest extends TestCase
 	}
 
 	// ── Draft handling ───────────────────────────────────────────────────────
+
+	public function testIdsAreTheSameSlugsTheRestOfTheSystemWouldMint(): void
+	{
+		// The importer used to carry a private slugifier that kept accents and
+		// dropped symbols differently from SlugData, so a feed entry's id did
+		// not match the id T3 derives from the same title anywhere else.
+		$this->serves($this->rss('<item><title>Café Menu &amp; Wine</title><link>https://example.com/a</link></item>'));
+
+		$queued = $this->capture(fn () => $this->importer()->import('https://example.com/feed', 'blog'));
+
+		$this->assertSame('cafe-menu-wine', $queued[0]['id']);
+	}
 
 	public function testEntriesArriveAsDraftsUnlessAskedOtherwise(): void
 	{
@@ -181,6 +194,7 @@ final class RssImporterBehaviourTest extends TestCase
 			$this->objectFetcher,
 			$this->jobQueuer,
 			$this->httpClient,
+			rssTestDownloader($this->httpClient),
 			$loggerFactory,
 		);
 

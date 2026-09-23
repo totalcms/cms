@@ -3,7 +3,6 @@
 namespace TotalCMS\Domain\Auth\Service;
 
 use Odan\Session\SessionInterface;
-use Odan\Session\SessionManagerInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LogChannel;
@@ -28,6 +27,7 @@ class PersistentLoginService
 		private readonly SessionInterface $session,
 		private readonly Config $config,
 		private readonly UserValidationService $userValidator,
+		private readonly SessionLogin $sessionLogin,
 		LoggerFactory $loggerFactory,
 	) {
 		// Under the data dir, NOT tmpdir. tmpdir is projectRoot/tmp, inside the
@@ -286,18 +286,11 @@ class PersistentLoginService
 			return false;
 		}
 
-		// Regenerate the session id before elevating to an authenticated session
-		// (remember-me restore is a privilege boundary — prevents session
-		// fixation). This path sets the auth keys directly rather than via
-		// SessionLogin::establish(), so it needs its own regeneration.
-		if ($this->session instanceof SessionManagerInterface) {
-			$this->session->regenerateId();
-		}
-
-		// Restore session FIRST
-		$this->session->set(SessionKeys::AUTH_USER, $tokenData['user_id']);
-		$this->session->set(SessionKeys::AUTH_COLLECTION, $tokenData['collection']);
-		$this->session->set(SessionKeys::AUTH_PERSISTENT_LOGIN, true);
+		// Restore the session FIRST, through the one writer every login entry
+		// point uses. establish() regenerates the session id at this privilege
+		// boundary (remember-me restore is one — session fixation) and schedules
+		// the license re-check, which a hand-rolled copy here used to skip.
+		$this->sessionLogin->establish((string)$tokenData['user_id'], (string)$tokenData['collection'], persistent: true);
 		$this->session->set(SessionKeys::LAST_ACTIVITY, time());
 
 		$this->logger->info('Restored session from persistent token', [
