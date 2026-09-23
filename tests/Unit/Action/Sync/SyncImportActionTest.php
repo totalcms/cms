@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Action\Sync;
 
-use Odan\Session\SessionInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -10,9 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Slim\Exception\HttpBadRequestException;
 use TotalCMS\Action\Sync\SyncImportAction;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
-use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\OperationResult;
 
@@ -31,9 +29,9 @@ final class SyncImportActionTest extends TestCase
 		$this->response          = $this->createMock(ResponseInterface::class);
 	}
 
-	private function actionWithSession(SessionInterface $session, UserValidationService $userValidation): SyncImportAction
+	private function actionWithAccess(AccessManager $access): SyncImportAction
 	{
-		return new SyncImportAction($this->jumpStartImporter, $this->renderer, $session, $userValidation);
+		return new SyncImportAction($this->jumpStartImporter, $this->renderer, $access);
 	}
 
 	private function stubBody(string $json): void
@@ -49,10 +47,8 @@ final class SyncImportActionTest extends TestCase
 		$this->stubBody((string)json_encode($definition));
 
 		// Anonymous / API-key-only caller: no AUTH_USER in session.
-		$session = $this->createMock(SessionInterface::class);
-		$session->method('get')->willReturn(null);
-		$userValidation = $this->createMock(UserValidationService::class);
-		$userValidation->expects($this->never())->method('isSuperAdmin');
+		$access = $this->createMock(AccessManager::class);
+		$access->method('sessionIsSuperAdmin')->willReturn(false);
 
 		// upsert = true (sync semantics), allowSystemCollections = false.
 		$this->jumpStartImporter->expects($this->once())
@@ -62,7 +58,7 @@ final class SyncImportActionTest extends TestCase
 
 		$this->renderer->method('json')->willReturn($this->response);
 
-		($this->actionWithSession($session, $userValidation))($this->request, $this->response);
+		($this->actionWithAccess($access))($this->request, $this->response);
 	}
 
 	public function testLoggedInNonSuperAdminSyncDoesNotAuthorizeSystemCollections(): void
@@ -72,12 +68,8 @@ final class SyncImportActionTest extends TestCase
 
 		// A real, logged-in user who is NOT a super-admin — the likeliest
 		// real-world bypass attempt.
-		$session = $this->createMock(SessionInterface::class);
-		$session->method('get')->willReturnCallback(
-			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'bob' : null,
-		);
-		$userValidation = $this->createMock(UserValidationService::class);
-		$userValidation->method('isSuperAdmin')->with('bob')->willReturn(false);
+		$access = $this->createMock(AccessManager::class);
+		$access->method('sessionIsSuperAdmin')->willReturn(false);
 
 		$this->jumpStartImporter->expects($this->once())
 			->method('importFromDefinition')
@@ -86,7 +78,7 @@ final class SyncImportActionTest extends TestCase
 
 		$this->renderer->method('json')->willReturn($this->response);
 
-		($this->actionWithSession($session, $userValidation))($this->request, $this->response);
+		($this->actionWithAccess($access))($this->request, $this->response);
 	}
 
 	public function testSuperAdminSyncAuthorizesSystemCollections(): void
@@ -94,12 +86,8 @@ final class SyncImportActionTest extends TestCase
 		$definition = ['name' => 'Mirror', 'objects' => []];
 		$this->stubBody((string)json_encode($definition));
 
-		$session = $this->createMock(SessionInterface::class);
-		$session->method('get')->willReturnCallback(
-			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'admin' : null,
-		);
-		$userValidation = $this->createMock(UserValidationService::class);
-		$userValidation->method('isSuperAdmin')->with('admin')->willReturn(true);
+		$access = $this->createMock(AccessManager::class);
+		$access->method('sessionIsSuperAdmin')->willReturn(true);
 
 		$this->jumpStartImporter->expects($this->once())
 			->method('importFromDefinition')
@@ -108,39 +96,36 @@ final class SyncImportActionTest extends TestCase
 
 		$this->renderer->method('json')->willReturn($this->response);
 
-		($this->actionWithSession($session, $userValidation))($this->request, $this->response);
+		($this->actionWithAccess($access))($this->request, $this->response);
 	}
 
 	public function testThrowsOnEmptyBody(): void
 	{
 		$this->stubBody('');
-		$session        = $this->createMock(SessionInterface::class);
-		$userValidation = $this->createMock(UserValidationService::class);
+		$access = $this->createMock(AccessManager::class);
 
 		$this->expectException(HttpBadRequestException::class);
 
-		($this->actionWithSession($session, $userValidation))($this->request, $this->response);
+		($this->actionWithAccess($access))($this->request, $this->response);
 	}
 
 	public function testThrowsOnInvalidJson(): void
 	{
 		$this->stubBody('not json');
-		$session        = $this->createMock(SessionInterface::class);
-		$userValidation = $this->createMock(UserValidationService::class);
+		$access = $this->createMock(AccessManager::class);
 
 		$this->expectException(HttpBadRequestException::class);
 
-		($this->actionWithSession($session, $userValidation))($this->request, $this->response);
+		($this->actionWithAccess($access))($this->request, $this->response);
 	}
 
 	public function testThrowsWhenJsonRootIsNotAnObject(): void
 	{
 		$this->stubBody('"a string"');
-		$session        = $this->createMock(SessionInterface::class);
-		$userValidation = $this->createMock(UserValidationService::class);
+		$access = $this->createMock(AccessManager::class);
 
 		$this->expectException(HttpBadRequestException::class);
 
-		($this->actionWithSession($session, $userValidation))($this->request, $this->response);
+		($this->actionWithAccess($access))($this->request, $this->response);
 	}
 }

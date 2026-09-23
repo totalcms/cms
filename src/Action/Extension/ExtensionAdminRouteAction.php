@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Extension;
 
-use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
-use TotalCMS\Domain\Extension\Service\ExtensionManager;
-use TotalCMS\Renderer\JsonRenderer;
 
 /**
  * Dispatches requests to extension-registered admin route handlers.
@@ -17,47 +12,10 @@ use TotalCMS\Renderer\JsonRenderer;
  * Route: /admin/ext/{vendor}/{name}/{path}
  * Auth: handled by admin middleware on the route group.
  */
-readonly class ExtensionAdminRouteAction
+readonly class ExtensionAdminRouteAction extends AbstractExtensionRouteAction
 {
-	public function __construct(
-		private ExtensionManager $extensionManager,
-		private ContainerInterface $container,
-		private JsonRenderer $renderer,
-	) {
-	}
-
-	/**
-	 * @param array<string,string> $args
-	 */
-	public function __invoke(
-		ServerRequestInterface $request,
-		ResponseInterface $response,
-		array $args,
-	): ResponseInterface {
-		$extensionId = ($args['vendor'] ?? '') . '/' . ($args['name'] ?? '');
-		$path        = '/' . ltrim($args['path'] ?? '', '/');
-		$method      = strtoupper($request->getMethod());
-
-		if (!$this->extensionManager->isEnabled($extensionId)) {
-			return $this->renderer->json($response, ['error' => 'Extension not found'])->withStatus(404);
-		}
-
-		$routeMatch = $this->extensionManager->matchExtensionAdminRoute($extensionId, $method, $path);
-		if (!$routeMatch instanceof ExtensionRoute) {
-			return $this->renderer->json($response, ['error' => 'Route not found'])->withStatus(404);
-		}
-
-		$handler = $routeMatch->handler;
-		if (is_string($handler) && class_exists($handler)) {
-			$handler = $this->container->get($handler);
-		}
-
-		if (is_callable($handler)) {
-			// Merge any {placeholder} values captured from the registered
-			// route path (e.g. /dashboard/{id}) into the handler's args.
-			return $handler($request, $response, array_merge($args, $routeMatch->params));
-		}
-
-		return $this->renderer->json($response, ['error' => 'Invalid route handler'])->withStatus(500);
+	protected function match(string $extensionId, string $method, string $path): ?ExtensionRoute
+	{
+		return $this->extensionManager->matchExtensionAdminRoute($extensionId, $method, $path);
 	}
 }

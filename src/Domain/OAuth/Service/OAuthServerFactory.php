@@ -35,7 +35,7 @@ class OAuthServerFactory
 	public function buildAuthorizationServer(): AuthorizationServer
 	{
 		$privateKey    = $this->loadSigningKey();
-		$encryptionKey = $this->deriveEncryptionKey();
+		$encryptionKey = $this->encryptionKey();
 
 		$server = new AuthorizationServer(
 			$this->clients,
@@ -131,16 +131,19 @@ class OAuthServerFactory
 	}
 
 	/**
-	 * Derive a deterministic symmetric encryption key from the private key
-	 * file contents. League accepts a plain PHP string for password-based
-	 * symmetric encryption of auth-code payloads (Defuse\Crypto\Crypto::encryptWithPassword).
-	 * Using the hex SHA-256 of the PEM keeps it printable and stable across
-	 * calls as long as the key file does not change.
+	 * The deterministic symmetric key League encrypts auth-code and refresh
+	 * token payloads with (Defuse\Crypto\Crypto::encryptWithPassword): the hex
+	 * SHA-256 of the signing PEM, printable and stable as long as the key file
+	 * does not change. TokenRevoker decrypts refresh tokens with the same key,
+	 * so the derivation lives here and nowhere else.
 	 */
-	private function deriveEncryptionKey(): string
+	public function encryptionKey(): string
 	{
-		$pem = (string)file_get_contents((string)$this->config->oauth['signingKeyPath']);
+		$keyPath = (string)$this->config->oauth['signingKeyPath'];
+		if (!is_file($keyPath)) {
+			return '';
+		}
 
-		return hash('sha256', $pem);
+		return hash('sha256', (string)file_get_contents($keyPath));
 	}
 }

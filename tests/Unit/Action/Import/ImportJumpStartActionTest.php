@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Action\Import;
 
-use Odan\Session\SessionInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -11,9 +10,8 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Slim\Exception\HttpBadRequestException;
 use TotalCMS\Action\Import\ImportJumpStartAction;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
-use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\OperationResult;
 
@@ -24,8 +22,7 @@ final class ImportJumpStartActionTest extends TestCase
 	private MockObject $renderer;
 	private MockObject $request;
 	private MockObject $response;
-	private MockObject $session;
-	private MockObject $userValidation;
+	private MockObject $access;
 
 	protected function setUp(): void
 	{
@@ -33,17 +30,15 @@ final class ImportJumpStartActionTest extends TestCase
 		$this->renderer          = $this->createMock(JsonRenderer::class);
 		$this->request           = $this->createMock(ServerRequestInterface::class);
 		$this->response          = $this->createMock(ResponseInterface::class);
-		$this->session           = $this->createMock(SessionInterface::class);
-		$this->userValidation    = $this->createMock(UserValidationService::class);
+		$this->access            = $this->createMock(AccessManager::class);
 
 		// Default: anonymous / non-super-admin caller.
-		$this->session->method('get')->willReturn(null);
+		$this->access->method('sessionIsSuperAdmin')->willReturn(false);
 
 		$this->action = new ImportJumpStartAction(
 			$this->jumpStartImporter,
 			$this->renderer,
-			$this->session,
-			$this->userValidation,
+			$this->access,
 		);
 	}
 
@@ -114,14 +109,10 @@ final class ImportJumpStartActionTest extends TestCase
 		$file->method('getStream')->willReturn($stream);
 
 		// Super-admin session: get(AUTH_USER) returns an id, isSuperAdmin true.
-		$session = $this->createMock(SessionInterface::class);
-		$session->method('get')->willReturnCallback(
-			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'admin' : null,
-		);
-		$userValidation = $this->createMock(UserValidationService::class);
-		$userValidation->method('isSuperAdmin')->with('admin')->willReturn(true);
+		$access = $this->createMock(AccessManager::class);
+		$access->method('sessionIsSuperAdmin')->willReturn(true);
 
-		$action = new ImportJumpStartAction($this->jumpStartImporter, $this->renderer, $session, $userValidation);
+		$action = new ImportJumpStartAction($this->jumpStartImporter, $this->renderer, $access);
 
 		$this->request->method('getQueryParams')->willReturn([]);
 		$this->request->method('getUploadedFiles')->willReturn(['jumpstart' => $file]);
@@ -152,14 +143,10 @@ final class ImportJumpStartActionTest extends TestCase
 
 		// A real, logged-in user who is NOT a super-admin — the likeliest
 		// real-world bypass attempt. Must resolve to allowSystemCollections=false.
-		$session = $this->createMock(SessionInterface::class);
-		$session->method('get')->willReturnCallback(
-			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'bob' : null,
-		);
-		$userValidation = $this->createMock(UserValidationService::class);
-		$userValidation->method('isSuperAdmin')->with('bob')->willReturn(false);
+		$access = $this->createMock(AccessManager::class);
+		$access->method('sessionIsSuperAdmin')->willReturn(false);
 
-		$action = new ImportJumpStartAction($this->jumpStartImporter, $this->renderer, $session, $userValidation);
+		$action = new ImportJumpStartAction($this->jumpStartImporter, $this->renderer, $access);
 
 		$this->request->method('getQueryParams')->willReturn([]);
 		$this->request->method('getUploadedFiles')->willReturn(['jumpstart' => $file]);

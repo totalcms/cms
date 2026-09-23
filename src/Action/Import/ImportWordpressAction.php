@@ -10,12 +10,15 @@ use Psr\Http\Message\UploadedFileInterface;
 use TotalCMS\Domain\Import\WordpressImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-readonly class ImportWordpressAction
+/**
+ * Import a WordPress WXR export uploaded as `wordpress`. The analyze variant
+ * parses the same upload ({@see ImportWordpressAnalyzeAction}).
+ */
+readonly class ImportWordpressAction extends ImportEndpoint
 {
-	public function __construct(
-		private WordpressImporter $importer,
-		private JsonRenderer $renderer,
-	) {
+	public function __construct(protected WordpressImporter $importer, JsonRenderer $renderer)
+	{
+		parent::__construct($renderer);
 	}
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
@@ -24,50 +27,33 @@ readonly class ImportWordpressAction
 		$files = $request->getUploadedFiles();
 
 		if (!isset($files['wordpress']) || $files['wordpress']->getError() !== UPLOAD_ERR_OK) {
-			return $this->renderer->json($response, [
-				'success' => false,
-				'message' => 'Missing or invalid file upload. Use field name "wordpress".',
-			], 400);
+			return $this->reject($response, 'Missing or invalid file upload. Use field name "wordpress".');
 		}
 
-		$xmlContent = (string)$files['wordpress']->getStream();
-
-		if (trim($xmlContent) === '') {
-			return $this->renderer->json($response, [
-				'success' => false,
-				'message' => 'Uploaded file is empty.',
-			], 400);
+		$xml = (string)$files['wordpress']->getStream();
+		if (trim($xml) === '') {
+			return $this->reject($response, 'Uploaded file is empty.');
 		}
 
+		return $this->run($request, $response, $xml);
+	}
+
+	protected function run(ServerRequestInterface $request, ResponseInterface $response, string $xml): ResponseInterface
+	{
 		$params     = (array)$request->getParsedBody();
 		$collection = isset($params['collection']) ? trim((string)$params['collection']) : '';
-
 		if ($collection === '') {
-			return $this->renderer->json($response, [
-				'success' => false,
-				'message' => 'Missing required field: collection',
-			], 400);
+			return $this->reject($response, 'Missing required field: collection');
 		}
 
 		$options = [];
-
 		if (isset($params['draft'])) {
 			$options['draft'] = filter_var($params['draft'], FILTER_VALIDATE_BOOLEAN);
 		}
 
-		try {
-			$importCount = $this->importer->import($xmlContent, $collection, $options);
-
-			return $this->renderer->json($response, [
-				'success'      => true,
-				'message'      => sprintf('Successfully queued %d posts for import from WordPress export.', $importCount),
-				'import_count' => $importCount,
-			]);
-		} catch (\Exception $e) {
-			return $this->renderer->json($response, [
-				'success' => false,
-				'message' => 'Import failed: ' . $e->getMessage(),
-			], 500);
-		}
+		return $this->attempt($response, 'Import failed', fn (): array => $this->imported(
+			$this->importer->import($xml, $collection, $options),
+			'Successfully queued %d posts for import from WordPress export.',
+		));
 	}
 }

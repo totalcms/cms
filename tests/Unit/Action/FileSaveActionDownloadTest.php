@@ -3,6 +3,7 @@
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Action\Property\File\FileSaveAction;
+use TotalCMS\Domain\Media\Service\ChunkedUploadAssembler;
 use TotalCMS\Domain\Media\Service\HeicConverter;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
@@ -29,7 +30,7 @@ function createFileSaveAction(HttpClientInterface $httpClient, ?Config $config =
 		$config->maxDownloadSize = 2048;
 	}
 
-	return new FileSaveAction($renderer, $factory, $config, $heicConverter, new RemoteFileDownloader($httpClient, $config), new FileUploadValidator());
+	return new FileSaveAction($renderer, $factory, $config, $heicConverter, new RemoteFileDownloader($httpClient, $config), new FileUploadValidator(), new ChunkedUploadAssembler($config));
 }
 
 function createDownloadRequest(string $url): ServerRequestInterface

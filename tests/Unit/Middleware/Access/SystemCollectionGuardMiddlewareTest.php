@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Middleware\Access;
 
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
-use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -19,8 +17,7 @@ use TotalCMS\Support\Config;
 
 describe('SystemCollectionGuardMiddleware', function (): void {
 	beforeEach(function (): void {
-		$this->session         = $this->createMock(SessionInterface::class);
-		$this->userValidation  = $this->createMock(UserValidationService::class);
+		$this->access          = $this->createMock(AccessManager::class);
 		$this->jsonRenderer    = $this->createMock(JsonRenderer::class);
 		$this->responseFactory = $this->createMock(ResponseFactoryInterface::class);
 
@@ -44,14 +41,11 @@ describe('SystemCollectionGuardMiddleware', function (): void {
 		};
 
 		$this->make = function (string $collection, bool $superAdmin, string $userId = 'u1'): TestableSystemCollectionGuardMiddleware {
-			$this->session->method('get')->willReturnCallback(
-				static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? $userId : null,
-			);
-			$this->userValidation->method('isSuperAdmin')->willReturn($superAdmin);
+			// A super-admin needs a real session; anything else — anonymous, API key, plain user — is not one.
+			$this->access->method('sessionIsSuperAdmin')->willReturn($superAdmin && $userId !== '');
 
 			return new TestableSystemCollectionGuardMiddleware(
-				$this->session,
-				$this->userValidation,
+				$this->access,
 				$this->jsonRenderer,
 				$this->responseFactory,
 				$this->config,

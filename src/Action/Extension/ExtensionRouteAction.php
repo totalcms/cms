@@ -16,7 +16,7 @@ use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
- * Dispatches requests to extension-registered route handlers.
+ * Dispatches requests to extension-registered API route handlers.
  *
  * Route: /ext/{vendor}/{name}/{path}
  *
@@ -24,66 +24,25 @@ use TotalCMS\Renderer\JsonRenderer;
  * session or API key for addRoutes(), none for addPublicRoutes(). Session-
  * authorised writes additionally go through the CSRF policy — see authorize().
  */
-readonly class ExtensionRouteAction
+readonly class ExtensionRouteAction extends AbstractExtensionRouteAction
 {
 	public function __construct(
-		private ExtensionManager $extensionManager,
+		ExtensionManager $extensionManager,
 		private AccessManager $accessManager,
 		private ApiKeyAuthenticator $apiKeyAuthenticator,
-		private ContainerInterface $container,
-		private JsonRenderer $renderer,
+		ContainerInterface $container,
+		JsonRenderer $renderer,
 		private CSRFRequestValidator $csrfValidator,
 	) {
+		parent::__construct($extensionManager, $container, $renderer);
+	}
+
+	protected function match(string $extensionId, string $method, string $path): ?ExtensionRoute
+	{
+		return $this->extensionManager->matchExtensionRoute($extensionId, $method, $path);
 	}
 
 	/**
-	 * @param array<string,string> $args
-	 */
-	public function __invoke(
-		ServerRequestInterface $request,
-		ResponseInterface $response,
-		array $args,
-	): ResponseInterface {
-		$extensionId = ($args['vendor'] ?? '') . '/' . ($args['name'] ?? '');
-		$path        = '/' . ltrim($args['path'] ?? '', '/');
-		$method      = strtoupper($request->getMethod());
-
-		if (!$this->extensionManager->isEnabled($extensionId)) {
-			return $this->renderer->json($response, ['error' => 'Extension not found'])->withStatus(404);
-		}
-
-		$routeMatch = $this->extensionManager->matchExtensionRoute($extensionId, $method, $path);
-		if (!$routeMatch instanceof ExtensionRoute) {
-			return $this->renderer->json($response, ['error' => 'Route not found'])->withStatus(404);
-		}
-
-		// Enforce auth for non-public routes
-		if (!$routeMatch->public) {
-			$denied = $this->authorize($request, $response);
-			if ($denied instanceof ResponseInterface) {
-				return $denied;
-			}
-		}
-
-		// Resolve and invoke the handler
-		$handler = $routeMatch->handler;
-		if (is_string($handler) && class_exists($handler)) {
-			$handler = $this->container->get($handler);
-		}
-
-		if (is_callable($handler)) {
-			// Merge any {placeholder} values captured from the registered
-			// route path (e.g. /s/{id}) into the handler's args.
-			return $handler($request, $response, array_merge($args, $routeMatch->params));
-		}
-
-		return $this->renderer->json($response, ['error' => 'Invalid route handler'])->withStatus(500);
-	}
-
-	/**
-	 * Authorise a non-public extension route. Returns an error response to send,
-	 * or null to proceed.
-	 *
 	 * These routes are mounted without middleware (config/routes/api/ext.php),
 	 * so this is the only place their credentials are checked — including CSRF.
 	 * Session-cookie auth is the one credential CSRF can ride, so a session-
@@ -94,8 +53,12 @@ readonly class ExtensionRouteAction
 	 * scheme couldn't close this gap without breaking every third-party
 	 * extension's JS.
 	 */
-	private function authorize(ServerRequestInterface $request, ResponseInterface $response): ?ResponseInterface
+	protected function authorize(ServerRequestInterface $request, ResponseInterface $response, ExtensionRoute $route): ?ResponseInterface
 	{
+		if ($route->public) {
+			return null;
+		}
+
 		if ($this->accessManager->sessionHasUser()) {
 			if (!$this->csrfValidator->passes($request)) {
 				return $this->renderer->json($response, [

@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Middleware\Access;
 
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Middleware\Access\SystemCollectionGuardMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -24,14 +23,13 @@ use TotalCMS\Support\Config;
 final readonly class TestableSystemCollectionGuardMiddleware extends SystemCollectionGuardMiddleware
 {
 	public function __construct(
-		SessionInterface $session,
-		UserValidationService $userValidation,
+		AccessManager $accessManager,
 		JsonRenderer $jsonRenderer,
 		ResponseFactoryInterface $responseFactory,
 		Config $config,
 		private string $collection,
 	) {
-		parent::__construct($session, $userValidation, $jsonRenderer, $responseFactory, $config);
+		parent::__construct($accessManager, $jsonRenderer, $responseFactory, $config);
 	}
 
 	protected function resolveCollection(ServerRequestInterface $request): string

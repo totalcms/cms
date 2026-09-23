@@ -2,64 +2,29 @@
 
 namespace TotalCMS\Action\Export;
 
-use Nyholm\Psr7\Stream;
-use Odan\Session\SessionInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Object\Service\ObjectExporter;
-
-readonly class ExportJsonAction
+readonly class ExportJsonAction extends ExportDownloadAction
 {
-	public function __construct(
-		private ObjectExporter $objectExporter,
-		private SessionInterface $session,
-	) {
+	protected function format(): string
+	{
+		return 'JSON';
 	}
 
-	/** @param array<string,string> $args The arguments	 */
-	public function __invoke(
-		ServerRequestInterface $request,
-		ResponseInterface $response,
-		array $args,
-	): ResponseInterface {
-		$collection = $args['collection'];
-		$params     = $request->getQueryParams();
+	protected function contentType(): string
+	{
+		return 'application/json';
+	}
 
-		// Backwards compatibility: remap 'filter' to 'include'
-		if (isset($params['filter']) && !isset($params['include'])) {
-			$params['include'] = $params['filter'];
-			unset($params['filter']);
-		}
-
-		$hasFilters = isset($params['include']) || isset($params['exclude']);
-		$result     = $hasFilters
+	protected function export(string $collection, array $params, bool $filtered): array
+	{
+		return $filtered
 			? $this->objectExporter->exportFilteredObjectsForJson($collection, $params)
 			: $this->objectExporter->exportAllObjectsForJson($collection);
-		$objects    = $result['data'];
-		$errors     = $result['errors'];
+	}
 
-		// If there were errors, set a flash message for the user
-		if (count($errors) > 0) {
-			$flash   = $this->session->getFlash();
-			$message = sprintf(
-				'%d object(s) were skipped during JSON export due to data mismatches. Check the logs for more information.',
-				count($errors)
-			);
-			$flash->add('warning', $message);
-		}
+	protected function encode(array $objects): ?string
+	{
+		$json = json_encode($objects);
 
-		$response = $response->withHeader('Content-Type', 'application/json')
-			->withHeader('Content-Disposition', sprintf('attachment; filename="collection-%s.json"', $collection));
-
-		$jsonData = json_encode($objects);
-
-		if ($jsonData === false) {
-			$response = $response->withStatus(500);
-			$response->getBody()->write('Failed to encode JSON');
-
-			return $response;
-		}
-
-		return $response->withBody(Stream::create($jsonData));
+		return $json === false ? null : $json;
 	}
 }

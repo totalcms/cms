@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Import;
 
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Slim\Exception\HttpBadRequestException;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
-use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 
 readonly class ImportJumpStartAction
@@ -19,8 +17,7 @@ readonly class ImportJumpStartAction
 	public function __construct(
 		private JumpStartImporter $jumpStartImporter,
 		private JsonRenderer $renderer,
-		private SessionInterface $session,
-		private UserValidationService $userValidation,
+		private AccessManager $accessManager,
 	) {
 	}
 
@@ -31,10 +28,7 @@ readonly class ImportJumpStartAction
 	 */
 	private function callerIsSuperAdmin(): bool
 	{
-		$userId         = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
-		$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
-
-		return $userId !== '' && $this->userValidation->isSuperAdmin($userId, $userCollection);
+		return $this->accessManager->sessionIsSuperAdmin();
 	}
 
 	/**

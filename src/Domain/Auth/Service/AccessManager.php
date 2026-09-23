@@ -164,6 +164,16 @@ class AccessManager
 		return $this->session->has(SessionKeys::AUTH_USER) && $this->session->has(SessionKeys::AUTH_COLLECTION);
 	}
 
+	/**
+	 * Whether the session belongs to a super admin. The one check behind every
+	 * "only a real admin session may do this" gate (system-collection writes,
+	 * JumpStart and sync imports) — an API key or OAuth token never qualifies.
+	 */
+	public function sessionIsSuperAdmin(): bool
+	{
+		return $this->sessionHasUser() && $this->isSuperAdmin();
+	}
+
 	private function redirectToLogin(string $collection = '', ?string $customLoginUrl = null): void
 	{
 		$loginUrl = $this->config->api . '/admin/login';

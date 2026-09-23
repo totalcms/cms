@@ -9,49 +9,42 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Import\AlloyImporter;
 use TotalCMS\Renderer\JsonRenderer;
 
-readonly class ImportAlloyAction
+/**
+ * Import from an Alloy blog. The analyze variant parses the same request
+ * ({@see ImportAlloyAnalyzeAction}), so a validation rule lives once.
+ */
+readonly class ImportAlloyAction extends ImportEndpoint
 {
-	public function __construct(
-		private AlloyImporter $importer,
-		private JsonRenderer $renderer,
-	) {
+	private const FOLDERS = ['blog', 'image_uploads', 'embeds', 'droplets'];
+
+	public function __construct(protected AlloyImporter $importer, JsonRenderer $renderer)
+	{
+		parent::__construct($renderer);
 	}
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
 	{
 		$params = (array)$request->getParsedBody();
-
-		// Validate required parameters
-		$requiredFields = ['blog', 'image_uploads', 'embeds', 'droplets'];
-		foreach ($requiredFields as $field) {
+		foreach (self::FOLDERS as $field) {
 			if (empty($params[$field])) {
-				return $this->renderer->json($response, [
-					'success' => false,
-					'message' => sprintf('Missing required field: %s', $field),
-				], 400);
+				return $this->reject($response, sprintf('Missing required field: %s', $field));
 			}
 		}
 
-		$folders = [
-			'blog'          => $params['blog'],
-			'image_uploads' => $params['image_uploads'],
-			'embeds'        => $params['embeds'],
-			'droplets'      => $params['droplets'],
-		];
+		return $this->run($response, [
+			'blog'          => (string)$params['blog'],
+			'image_uploads' => (string)$params['image_uploads'],
+			'embeds'        => (string)$params['embeds'],
+			'droplets'      => (string)$params['droplets'],
+		]);
+	}
 
-		try {
-			$importCount = $this->importer->import($folders);
-
-			return $this->renderer->json($response, [
-				'success'      => true,
-				'message'      => sprintf('Successfully queued %d items for import from Alloy.', $importCount),
-				'import_count' => $importCount,
-			]);
-		} catch (\Exception $e) {
-			return $this->renderer->json($response, [
-				'success' => false,
-				'message' => 'Import failed: ' . $e->getMessage(),
-			], 500);
-		}
+	/** @param array{blog: string, image_uploads: string, embeds: string, droplets: string} $folders */
+	protected function run(ResponseInterface $response, array $folders): ResponseInterface
+	{
+		return $this->attempt($response, 'Import failed', fn (): array => $this->imported(
+			$this->importer->import($folders),
+			'Successfully queued %d items for import from Alloy.',
+		));
 	}
 }

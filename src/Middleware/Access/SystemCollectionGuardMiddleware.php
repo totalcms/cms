@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Middleware\Access;
 
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,9 +11,8 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -44,8 +42,7 @@ readonly class SystemCollectionGuardMiddleware implements MiddlewareInterface
 	private const WRITE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
 	public function __construct(
-		private SessionInterface $session,
-		private UserValidationService $userValidation,
+		private AccessManager $accessManager,
 		private JsonRenderer $jsonRenderer,
 		private ResponseFactoryInterface $responseFactory,
 		private Config $config,
@@ -70,9 +67,7 @@ readonly class SystemCollectionGuardMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		$userId         = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
-		$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
-		if ($userId !== '' && $this->userValidation->isSuperAdmin($userId, $userCollection)) {
+		if ($this->accessManager->sessionIsSuperAdmin()) {
 			return $handler->handle($request);
 		}
 

@@ -4,20 +4,24 @@ namespace TotalCMS\Action\Property\File;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\UploadedFileInterface;
 use Slim\Exception\HttpNotFoundException;
-use TotalCMS\Domain\Admin\FormField\ImageField;
+use TotalCMS\Domain\Media\Service\ChunkedUploadAssembler;
 use TotalCMS\Domain\Media\Service\HeicConverter;
-use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Media\Service\UploadPreviewUrl;
 use TotalCMS\Domain\Property\Service\SaverFactory;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
-use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\RemoteFileDownloader;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
+/**
+ * Store a file on an object property, whether it arrives as a (chunked)
+ * upload or as a URL to fetch. The pieces — chunk assembly, remote download,
+ * HEIC conversion, the preview URL — each live in their own service; this
+ * action only decides which of them a request needs.
+ */
 readonly class FileSaveAction
 {
 	public function __construct(
@@ -27,12 +31,11 @@ readonly class FileSaveAction
 		private HeicConverter $heicConverter,
 		private RemoteFileDownloader $downloader,
 		private FileUploadValidator $validator,
+		private ChunkedUploadAssembler $assembler,
 	) {
 	}
 
 	/**
-	 * File Save Action.
-	 *
 	 * @param array<string,string> $args
 	 */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
@@ -45,8 +48,8 @@ readonly class FileSaveAction
 		// under the child field's name (e.g. `image`), not the parent property
 		// name (`mycard`) that's in the URL. The form-data key for the upload is
 		// the last subpath segment when nested; otherwise it's the property.
-		$rawPath    = $args['path'] ?? null;
-		$paramName  = $args['property'];
+		$rawPath   = $args['path'] ?? null;
+		$paramName = $args['property'];
 		if (is_string($rawPath) && $rawPath !== '') {
 			$pos       = strrpos($rawPath, '/');
 			$paramName = $pos === false ? $rawPath : substr($rawPath, $pos + 1);
@@ -54,97 +57,67 @@ readonly class FileSaveAction
 
 		$file = $files[$paramName] ?? $files[$args['property']] ?? null;
 
-		$finalFilePath = '';
-
 		if ($file === null) {
-			// Check if a URL was provided instead of a file upload
 			$bodyKey = isset($body[$paramName]) ? $paramName : $args['property'];
-			if (isset($body[$bodyKey]) && is_string($body[$bodyKey])) {
-				$fileUrl = trim($body[$bodyKey]);
-
-				// Validate that it's a valid URL and not empty
-				if ($fileUrl === '' || !filter_var($fileUrl, FILTER_VALIDATE_URL)) {
-					throw new \RuntimeException('Invalid URL provided for property: ' . $bodyKey);
-				}
-
-				// Never store an executable/script, even from a URL.
-				$nameCheck = $this->validator->validateFilename(RemoteFileDownloader::filenameFor($fileUrl));
-				if (!$nameCheck['valid']) {
-					return $this->renderer->json($response, [
-						'error'   => 'File upload validation failed',
-						'details' => $nameCheck['errors'],
-					])->withStatus(400);
-				}
-
-				// Download the file from the URL
-				$finalFilePath = $this->downloadFileFromUrl($fileUrl);
-			} else {
+			if (!isset($body[$bodyKey]) || !is_string($body[$bodyKey])) {
 				// No file and no URL — this isn't a save request. The greedy
 				// nested-upload route catches more URL shapes than just card/deck
 				// children, so signal "no such resource" rather than 500ing on a
 				// URL that simply doesn't represent a file upload.
 				throw new HttpNotFoundException($request, 'No file found in request for property: ' . $paramName);
 			}
+
+			$fileUrl = trim($body[$bodyKey]);
+			if ($fileUrl === '' || !filter_var($fileUrl, FILTER_VALIDATE_URL)) {
+				throw new \RuntimeException('Invalid URL provided for property: ' . $bodyKey);
+			}
+
+			// Never store an executable/script, even from a URL.
+			$nameCheck = $this->validator->validateFilename(RemoteFileDownloader::filenameFor($fileUrl));
+			if (!$nameCheck['valid']) {
+				return $this->validationFailed($response, $nameCheck['errors']);
+			}
+
+			$finalFilePath = $this->downloadFileFromUrl($fileUrl);
 		} else {
 			// Block executables/scripts before storing — applies to every
-			// property upload (image/file/gallery/depot), which the media-library
-			// UploadFileAction already does but this handler previously did not.
-			// Checked on the first chunk too (the client filename is sent with
-			// each chunk), so a dangerous upload fails fast.
+			// property upload (image/file/gallery/depot). Checked on the first
+			// chunk too (the client filename is sent with each chunk), so a
+			// dangerous upload fails fast.
 			$nameCheck = $this->validator->validateFilename((string)$file->getClientFilename());
 			if (!$nameCheck['valid']) {
-				return $this->renderer->json($response, [
-					'error'   => 'File upload validation failed',
-					'details' => $nameCheck['errors'],
-				])->withStatus(400);
+				return $this->validationFailed($response, $nameCheck['errors']);
 			}
 
-			// Handle normal file upload with chunking
-			$uploadResult = $this->handleFileUpload($file, $body, $response);
-
-			// If it's a ResponseInterface, it means we're dealing with a chunk
-			if ($uploadResult instanceof ResponseInterface) {
-				return $uploadResult;
+			$finalFilePath = $this->assembler->receive($file, $body);
+			if ($finalFilePath === null) {
+				return $this->renderer->json($response, ['status' => 'chunk received']);
 			}
-
-			$finalFilePath = $uploadResult;
 		}
 
-		// Convert HEIC to JPEG if applicable (for image properties only)
+		// Convert HEIC to JPEG if applicable (for image properties only). If
+		// conversion fails the original is saved as-is and can be retried later.
 		if ($this->heicConverter->isHeicFile($finalFilePath)) {
 			$conversionResult = $this->heicConverter->convertAndReplace($finalFilePath);
 			if ($conversionResult->success) {
 				$finalFilePath = (string)$conversionResult->data['path'];
 			}
-			// If conversion fails, continue with original HEIC file
-			// The file will be saved as-is and conversion can be attempted again later
 		}
 
 		// Resolve subpath. Prefer the route arg (`/{prop}/{path:.+}` for nested
 		// uploads on card children) and fall back to the legacy `?path=` query
 		// (used by depot folder uploads).
 		$rawPath = $args['path'] ?? $query['path'] ?? null;
-		$subpath = is_string($rawPath) && $rawPath !== ''
-			? PathUtils::sanitizeSubpath($rawPath)
-			: '';
+		$subpath = is_string($rawPath) && $rawPath !== '' ? PathUtils::sanitizeSubpath($rawPath) : '';
 		$subpath = $subpath === '' ? null : $subpath;
 
-		// Save the file (whether uploaded or downloaded)
 		$saver  = $this->factory->generateSaverService($args['collection'], $args['property'], $args['id'], $subpath);
-		$object = $saver->save(
-			$args['collection'],
-			$args['id'],
-			$args['property'],
-			$finalFilePath,
-			$subpath,
-		);
+		$object = $saver->save($args['collection'], $args['id'], $args['property'], $finalFilePath, $subpath);
 
-		// Ship the exact ImageWorks preview URL the admin form field would render
-		// on a page refresh, so the droplet UI can swap its local thumbnail or
-		// placeholder for the stored image. Additive meta — omitted when it can't
-		// be built; never fail the upload over it.
+		// Additive meta: the preview the droplet swaps in for its local thumbnail.
+		// Omitted when it can't be built; never fails the upload.
 		$meta    = [];
-		$preview = $this->buildPreviewUrl($saver->type, $args, $subpath, $object);
+		$preview = UploadPreviewUrl::build($saver->type, $this->config->api, $args['collection'], $args['id'], $args['property'], $subpath, $object);
 		if ($preview !== '') {
 			$meta['preview'] = $preview;
 		}
@@ -152,158 +125,19 @@ readonly class FileSaveAction
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer(), $meta);
 	}
 
-	/**
-	 * Build the admin-preview ImageWorks URL for the file that was just saved —
-	 * identical to the one ImageField/GalleryField render on a page refresh
-	 * (same dimensions, quality and cache token). Returns '' for non-image
-	 * property types or when the URL cannot be determined.
-	 *
-	 * @param array<string,string> $args
-	 */
-	private function buildPreviewUrl(string $type, array $args, ?string $subpath, ObjectData $object): string
+	/** @param array<string> $errors */
+	private function validationFailed(ResponseInterface $response, array $errors): ResponseInterface
 	{
-		if (!in_array($type, ['image', 'gallery'], true)) {
-			return '';
-		}
-
-		try {
-			// ImageWorks is a PUBLIC route mounted at `{base}/imageworks/...` —
-			// NOT under `/api`. `config->api` is the site base path, the same
-			// base TotalForm::baseApi() hands the form fields.
-			$api = $this->config->api;
-
-			$imageworks = [
-				'w' => ImageField::PREVIEW_WIDTH,
-				'h' => ImageField::PREVIEW_HEIGHT,
-				'q' => ImageField::PREVIEW_QUALITY,
-			];
-
-			$data  = $object->toArray();
-			$image = $data[$args['property']] ?? null;
-
-			if ($type === 'gallery') {
-				// GallerySaver appends the new upload, so it is the last entry.
-				$image = is_array($image) ? end($image) : null;
-				if (!is_array($image) || empty($image['name'])) {
-					return '';
-				}
-
-				return MediaTwigAdapter::buildImageworksGalleryAPI($api, $args['id'], (string)$image['name'], $image, $imageworks, [
-					'collection' => $args['collection'],
-					'property'   => $args['property'],
-				]);
-			}
-
-			// Image field — possibly nested in a card/deck: walk the subpath down
-			// to the saved child and mirror it in the dot-notation property path.
-			$propertyPath = $args['property'];
-			if ($subpath !== null && $subpath !== '') {
-				foreach (explode('/', $subpath) as $segment) {
-					$image = is_array($image) ? ($image[$segment] ?? null) : null;
-				}
-				$propertyPath .= '.' . str_replace('/', '.', $subpath);
-			}
-			if (!is_array($image) || empty($image['name'])) {
-				return '';
-			}
-
-			return MediaTwigAdapter::buildImageworksAPI($api, $args['id'], $image, $imageworks, [
-				'collection' => $args['collection'],
-				'property'   => $propertyPath,
-			]);
-		} catch (\Throwable) {
-			return '';
-		}
-	}
-
-	private function assembleChunks(string $originalFilename, int $totalChunks): string
-	{
-		$finalFilePath = $this->config->tmpdir . '/' . $originalFilename;
-		$finalFile     = fopen($finalFilePath, 'wb');
-
-		if ($finalFile === false) {
-			throw new \RuntimeException('Unable to open final file for writing:' . $finalFilePath);
-		}
-
-		// Assemble the chunks
-		for ($i = 0; $i < $totalChunks; $i++) {
-			$chunkPath = $this->chunkName($originalFilename, $i);
-			$chunk     = fopen($chunkPath, 'rb');
-			if ($chunk === false) {
-				throw new \RuntimeException('Unable to open chunk file');
-			}
-			while ($data = fread($chunk, 8192)) {
-				fwrite($finalFile, $data);
-			}
-			fclose($chunk);
-			unlink($chunkPath); // Delete the chunk after appending
-		}
-
-		fclose($finalFile);
-
-		return $finalFilePath;
-	}
-
-	private function chunkName(string $filename, int $chunkIndex): string
-	{
-		return $this->config->tmpdir . '/' . $filename . '.part' . $chunkIndex;
-	}
-
-	/**
-	 * Handle normal file upload with chunking support.
-	 *
-	 * @param array<string,mixed> $body
-	 *
-	 * @throws \RuntimeException If upload processing fails
-	 *
-	 * @return string|ResponseInterface Path to the final assembled file, or early response for chunks
-	 */
-	private function handleFileUpload(UploadedFileInterface $file, array $body, ResponseInterface $response): string|ResponseInterface
-	{
-		// Check for upload errors
-		$error = $file->getError();
-		if ($error !== UPLOAD_ERR_OK) {
-			$errorMessages = [
-				UPLOAD_ERR_INI_SIZE   => 'File exceeds upload_max_filesize in php.ini',
-				UPLOAD_ERR_FORM_SIZE  => 'File exceeds MAX_FILE_SIZE in HTML form',
-				UPLOAD_ERR_PARTIAL    => 'File was only partially uploaded',
-				UPLOAD_ERR_NO_FILE    => 'No file was uploaded',
-				UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary upload directory',
-				UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
-				UPLOAD_ERR_EXTENSION  => 'File upload stopped by PHP extension',
-			];
-			$message = $errorMessages[$error] ?? 'Unknown upload error (code: ' . $error . ')';
-			throw new \RuntimeException($message);
-		}
-
-		// Get chunk information from the request
-		$chunkIndex       = intval($body['dzchunkindex'] ?? $body['chunkindex'] ?? 0);
-		$totalChunks      = intval($body['dztotalchunkcount'] ?? $body['totalchunkcount'] ?? 1);
-		$originalFilename = $file->getClientFilename() ?? 'unknown_file';
-		$chunkFilename    = $this->chunkName($originalFilename, $chunkIndex);
-
-		// Ensure the temporary directory exists
-		if (!file_exists($this->config->tmpdir)) {
-			mkdir($this->config->tmpdir, 0700, true);
-		}
-
-		// Move the uploaded chunk to the temporary directory
-		$file->moveTo($chunkFilename);
-
-		if ($chunkIndex !== $totalChunks - 1) {
-			// If not the last chunk, return a success response
-			return $this->renderer->json($response, ['status' => 'chunk received']);
-		}
-
-		return $this->assembleChunks($originalFilename, $totalChunks);
+		return $this->renderer->json($response, [
+			'error'   => 'File upload validation failed',
+			'details' => $errors,
+		])->withStatus(400);
 	}
 
 	/**
 	 * Download a file from a URL into the temp directory.
 	 *
 	 * @throws \RuntimeException If the download fails
-	 *
-	 * @return string Path to the downloaded file
 	 */
 	private function downloadFileFromUrl(string $url): string
 	{

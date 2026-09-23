@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Sync;
 
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\JumpStart\Service\JumpStartImporter;
-use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Renderer\JsonRenderer;
 
 /**
@@ -38,8 +36,7 @@ readonly class SyncImportAction
 	public function __construct(
 		private JumpStartImporter $jumpStartImporter,
 		private JsonRenderer $renderer,
-		private SessionInterface $session,
-		private UserValidationService $userValidation,
+		private AccessManager $accessManager,
 	) {
 	}
 
@@ -51,10 +48,7 @@ readonly class SyncImportAction
 	 */
 	private function callerIsSuperAdmin(): bool
 	{
-		$userId         = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
-		$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
-
-		return $userId !== '' && $this->userValidation->isSuperAdmin($userId, $userCollection);
+		return $this->accessManager->sessionIsSuperAdmin();
 	}
 
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface

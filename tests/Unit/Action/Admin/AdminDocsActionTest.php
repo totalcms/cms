@@ -8,6 +8,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use TotalCMS\Action\Admin\AdminDocsAction;
+use TotalCMS\Domain\Docs\Service\DocsMarkdownRenderer;
+use TotalCMS\Domain\Docs\Service\DocsPageLoader;
 use TotalCMS\Renderer\TwigRenderer;
 
 final class AdminDocsActionTest extends TestCase
@@ -23,7 +25,7 @@ final class AdminDocsActionTest extends TestCase
 		$this->request  = $this->createMock(ServerRequestInterface::class);
 		$this->response = $this->createMock(ResponseInterface::class);
 
-		$this->action = new AdminDocsAction($this->renderer);
+		$this->action = new AdminDocsAction($this->renderer, new DocsPageLoader(), new DocsMarkdownRenderer());
 	}
 
 	public function testLoadsIndexPageByDefault(): void
@@ -271,7 +273,8 @@ final class AdminDocsActionTest extends TestCase
 
 	public function testUnescapesPipesInsideTableCellsOnly(): void
 	{
-		$method = new \ReflectionMethod(AdminDocsAction::class, 'unescapeTablePipes');
+		$renderer = new DocsMarkdownRenderer();
+		$method   = new \ReflectionMethod($renderer, 'unescapeTablePipes');
 
 		// A table cell code span with a GFM-escaped pipe, plus a fenced code
 		// block (outside any cell) that legitimately contains a backslash-pipe.
@@ -281,7 +284,7 @@ final class AdminDocsActionTest extends TestCase
 			. '</tr></tbody></table>'
 			. '<pre><code>grep "a\|b"</code></pre>';
 
-		$result = (string)$method->invoke($this->action, $html);
+		$result = (string)$method->invoke($renderer, $html);
 
 		// Escaped pipes inside table cells become literal pipes (matches GFM/Astro).
 		$this->assertStringContainsString('<code>| hex</code>', $result);
