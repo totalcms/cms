@@ -82,8 +82,37 @@ class DocsPageLoader
 	}
 
 	/**
-	 * The sidebar menu from `menu.php`, shared with `bin/build-docs-index.php`
-	 * so search results carry the same group labels.
+	 * Every markdown page under the docs directory as a page path
+	 * (`site-builder/overview`), sorted, without the landing `index`.
+	 *
+	 * @return list<string>
+	 */
+	public function markdownPages(): array
+	{
+		$dir = $this->docsDir();
+		if (!is_dir($dir)) {
+			return [];
+		}
+
+		$pages    = [];
+		$iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS));
+		foreach ($iterator as $file) {
+			if (!$file instanceof \SplFileInfo || !$file->isFile() || $file->getExtension() !== 'md') {
+				continue;
+			}
+			$page = substr($file->getPathname(), strlen($dir) + 1, -3);
+			if ($page !== 'index') {
+				$pages[] = $page;
+			}
+		}
+		sort($pages);
+
+		return $pages;
+	}
+
+	/**
+	 * The sidebar menu from `menu.php` as the template consumes it: the
+	 * nested groups, untouched.
 	 *
 	 * @return list<array<string,mixed>>
 	 */
@@ -113,5 +142,39 @@ class DocsPageLoader
 		}
 
 		return $normalized;
+	}
+
+	/**
+	 * The menu flattened to its leaf pages, each labelled with the top-level
+	 * group it sits under — whether a direct `sub` entry or nested inside
+	 * `groups`. Backs the quick-nav index and the search index's group
+	 * labels, so neither can drift from the sidebar.
+	 *
+	 * @return list<array{group:string,title:string,path:string}>
+	 */
+	public function pages(): array
+	{
+		$pages = [];
+		foreach ($this->menu() as $group) {
+			$groupTitle = is_string($group['title'] ?? null) ? $group['title'] : '';
+			$subgroups  = is_array($group['groups'] ?? null) ? $group['groups'] : [];
+			$leaves     = [$group['sub'] ?? null];
+			foreach ($subgroups as $subgroup) {
+				$leaves[] = is_array($subgroup) ? ($subgroup['sub'] ?? null) : null;
+			}
+
+			foreach ($leaves as $sub) {
+				if (!is_array($sub)) {
+					continue;
+				}
+				foreach ($sub as $page) {
+					if (is_array($page) && is_string($page['title'] ?? null) && is_string($page['path'] ?? null)) {
+						$pages[] = ['group' => $groupTitle, 'title' => $page['title'], 'path' => $page['path']];
+					}
+				}
+			}
+		}
+
+		return $pages;
 	}
 }

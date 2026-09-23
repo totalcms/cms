@@ -68,35 +68,37 @@ final class AccessManagerTest extends TestCase
 
 	public function testSessionHasUserReturnsTrueWhenBothKeysPresent(): void
 	{
-		$this->session->expects($this->exactly(2))
-			->method('has')
-			->willReturnMap([
-				[SessionKeys::AUTH_USER, true],
-				[SessionKeys::AUTH_COLLECTION, true],
-			]);
+		$this->setupSessionWithUser('user-1', 'auth');
 
 		$this->assertTrue($this->accessManager->sessionHasUser());
 	}
 
 	public function testSessionHasUserReturnsFalseWhenUserKeyMissing(): void
 	{
-		$this->session->expects($this->once())
-			->method('has')
-			->with(SessionKeys::AUTH_USER)
-			->willReturn(false);
+		$this->session->method('get')
+			->willReturnMap([
+				[SessionKeys::AUTH_USER, null, null],
+				[SessionKeys::AUTH_COLLECTION, null, 'auth'],
+			]);
 
 		$this->assertFalse($this->accessManager->sessionHasUser());
 	}
 
-	public function testSessionHasUserReturnsFalseWhenCollectionKeyMissing(): void
+	public function testSessionHasUserFallsBackToTheDefaultCollection(): void
 	{
-		$this->session->method('has')
+		// The test harness (and older sessions) store '' for the default auth
+		// collection; the user is still logged in, against the configured one.
+		$this->session->method('get')
 			->willReturnMap([
-				[SessionKeys::AUTH_USER, true],
-				[SessionKeys::AUTH_COLLECTION, false],
+				[SessionKeys::AUTH_USER, null, 'user-1'],
+				[SessionKeys::AUTH_COLLECTION, null, ''],
 			]);
+		$this->userValidator->method('isSuperAdmin')
+			->with('user-1', 'auth')
+			->willReturn(true);
 
-		$this->assertFalse($this->accessManager->sessionHasUser());
+		$this->assertTrue($this->accessManager->sessionHasUser());
+		$this->assertTrue($this->accessManager->sessionIsSuperAdmin());
 	}
 
 	// ==================== User Logged In Tests ====================

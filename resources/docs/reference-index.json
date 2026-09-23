@@ -486,7 +486,7 @@
         {
             "name": "cms.admin.docsMenu",
             "signature": "docsMenu(): array",
-            "description": "Flattened docs menu for the quick-nav index. Reads the same resources/docs/menu.php that AdminDocsAction and the search-index builder consume, so quick-nav can never drift from the real doc tree.",
+            "description": "Flattened docs menu for the quick-nav index: the same menu.php leaves, with their top-level group, that the docs viewer and the search-index builder read through DocsPageLoader::pages().",
             "examples": [],
             "url": "https://docs.totalcms.co/admin/twig/"
         },
@@ -5332,6 +5332,13 @@
                 "name": "addFormAction",
                 "signature": "addFormAction(string $name, Data\\FormAction $action): void",
                 "description": "Register a form action type that the JS form processor can dispatch to an extension-owned API route. The route must be registered separately via addRoutes().",
+                "phase": "register",
+                "permission": null
+            },
+            {
+                "name": "capabilityKeys",
+                "signature": "capabilityKeys(): array",
+                "description": "Every capability key an extension can register, in display order. Matches the keys of \\capabilityLabels() \u2014 a test asserts it.",
                 "phase": "register",
                 "permission": null
             }

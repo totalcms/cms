@@ -11,6 +11,7 @@ use TotalCMS\Domain\Cache\CacheSizingAdvisor;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
+use TotalCMS\Domain\Docs\Service\DocsPageLoader;
 use TotalCMS\Domain\ImageWorks\Service\ImageCacheService;
 use TotalCMS\Domain\JobQueue\Data\JobQueueHealthData;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -24,7 +25,6 @@ use TotalCMS\Domain\Twig\Service\JobQueueRenderer;
 use TotalCMS\Infrastructure\Diagnostics\LogAnalyzer;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
-use TotalCMS\Support\PathResolver;
 
 /**
  * Twig sub-adapter for admin dashboard and management operations.
@@ -383,60 +383,15 @@ readonly class AdminTwigAdapter
 	}
 
 	/**
-	 * Flattened docs menu for the quick-nav index. Reads the same
-	 * resources/docs/menu.php that AdminDocsAction and the search-index
-	 * builder consume, so quick-nav can never drift from the real doc tree.
-	 * Walks both flat (`sub`) and nested (`groups`) top-level groups; the
-	 * top-level group title becomes each entry's group label.
+	 * Flattened docs menu for the quick-nav index: the same menu.php leaves,
+	 * with their top-level group, that the docs viewer and the search-index
+	 * builder read through {@see DocsPageLoader::pages()}.
 	 *
 	 * @return list<array{group:string,title:string,path:string}>
 	 */
 	public function docsMenu(): array
 	{
-		$menuFile = PathResolver::packageRoot() . '/resources/docs/menu.php';
-		if (!file_exists($menuFile)) {
-			return [];
-		}
-		$menu = require $menuFile;
-		if (!is_array($menu)) {
-			return [];
-		}
-
-		$items = [];
-		foreach ($menu as $group) {
-			if (!is_array($group)) {
-				continue;
-			}
-			$groupTitle = is_string($group['title'] ?? null) ? $group['title'] : '';
-
-			$collect = function (mixed $sub) use (&$items, $groupTitle): void {
-				if (!is_array($sub)) {
-					return;
-				}
-				foreach ($sub as $page) {
-					if (is_array($page) && isset($page['title'], $page['path'])
-						&& is_string($page['title']) && is_string($page['path'])) {
-						$items[] = [
-							'group' => $groupTitle,
-							'title' => $page['title'],
-							'path'  => $page['path'],
-						];
-					}
-				}
-			};
-
-			$collect($group['sub'] ?? null);
-
-			if (is_array($group['groups'] ?? null)) {
-				foreach ($group['groups'] as $subgroup) {
-					if (is_array($subgroup)) {
-						$collect($subgroup['sub'] ?? null);
-					}
-				}
-			}
-		}
-
-		return $items;
+		return (new DocsPageLoader())->pages();
 	}
 
 	/**

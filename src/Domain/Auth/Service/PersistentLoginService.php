@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Auth\Service;
 use Odan\Session\SessionInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Session\SessionUser;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -78,10 +79,8 @@ class PersistentLoginService
 	 */
 	public function createPersistentToken(): ?string
 	{
-		$userId     = $this->session->get(SessionKeys::AUTH_USER);
-		$collection = $this->session->get(SessionKeys::AUTH_COLLECTION);
-
-		if (!$userId || !$collection) {
+		$user = SessionUser::fromSession($this->session);
+		if ($user === null || $user->collection === '') {
 			$this->logger->debug('Cannot create persistent token: no user or collection in session');
 
 			return null;
@@ -104,8 +103,8 @@ class PersistentLoginService
 
 		// Store token data
 		$tokenData = [
-			'user_id'    => $userId,
-			'collection' => $collection,
+			'user_id'    => $user->id,
+			'collection' => $user->collection,
 			'token_hash' => $hashedToken,
 			'created_at' => time(),
 			'expires_at' => $expiry,
@@ -151,7 +150,7 @@ class PersistentLoginService
 			return null;
 		}
 
-		$this->logger->info('Created persistent login token', ['user' => $userId, 'selector' => $selector]);
+		$this->logger->info('Created persistent login token', ['user' => $user->id, 'selector' => $selector]);
 
 		return $selector;
 	}

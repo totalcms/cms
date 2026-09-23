@@ -38,4 +38,22 @@ final class DocsMarkdownRendererTest extends TestCase
 		$this->assertStringContainsString('<code>x | y</code>', $page['content']);
 		$this->assertStringContainsString('a \\| b', $page['content']);
 	}
+
+	public function testTheTitleIsTheFirstH1ThenTheFrontMatter(): void
+	{
+		$renderer = new DocsMarkdownRenderer();
+
+		$this->assertSame('Heading', $renderer->render("---\ntitle: Meta\n---\n\n# Heading\n\n## Sub\n")['title']);
+		$this->assertSame('Meta', $renderer->render("---\ntitle: Meta\n---\n\n## Sub\n")['title']);
+		$this->assertSame('', $renderer->render("## Sub\n")['title']);
+	}
+
+	public function testSearchTextFlattensTheRenderedPage(): void
+	{
+		// The search index wants what the reader sees — no front matter, no
+		// tags, code kept, entities decoded, whitespace collapsed.
+		$page = (new DocsMarkdownRenderer())->render("---\ntitle: Meta\n---\n\n# Title\n\nUse `cms.login()` &amp; <b>go</b>.\n\n```twig\n{{ x }}\n```\n");
+
+		$this->assertSame('Title Use cms.login() & go. {{ x }}', DocsMarkdownRenderer::searchText($page['content']));
+	}
 }

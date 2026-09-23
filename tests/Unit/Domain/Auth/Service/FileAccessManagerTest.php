@@ -145,22 +145,18 @@ final class FileAccessManagerTest extends TestCase
 
 	public function testSessionHasUserReturnsTrueWhenBothKeysPresent(): void
 	{
-		$this->session->expects($this->exactly(2))
-			->method('has')
-			->willReturnMap([
-				[SessionKeys::AUTH_USER, true],
-				[SessionKeys::AUTH_COLLECTION, true],
-			]);
+		$this->setupSessionWithUser('user-1', 'auth');
 
 		$this->assertTrue($this->fileAccessManager->sessionHasUser());
 	}
 
 	public function testSessionHasUserReturnsFalseWhenUserKeyMissing(): void
 	{
-		$this->session->expects($this->once())
-			->method('has')
-			->with(SessionKeys::AUTH_USER)
-			->willReturn(false);
+		$this->session->method('get')
+			->willReturnMap([
+				[SessionKeys::AUTH_USER, null, null],
+				[SessionKeys::AUTH_COLLECTION, null, 'auth'],
+			]);
 
 		$this->assertFalse($this->fileAccessManager->sessionHasUser());
 	}

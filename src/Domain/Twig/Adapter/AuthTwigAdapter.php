@@ -15,6 +15,7 @@ use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Session\SessionUser;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
 
@@ -310,17 +311,13 @@ readonly class AuthTwigAdapter
 		// collides with an admin's would pass this gate. An explicitly supplied
 		// $userId carries no collection, so it keeps the historical
 		// assume-the-default behavior.
-		$collection = '';
-		if ($userId === '') {
-			$userId     = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
-			$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
+		if ($userId !== '') {
+			return $this->userValidation->isSuperAdmin($userId, '');
 		}
 
-		if ($userId === '') {
-			return false;
-		}
+		$user = SessionUser::fromSession($this->session);
 
-		return $this->userValidation->isSuperAdmin($userId, $collection);
+		return $user !== null && $this->userValidation->isSuperAdmin($user->id, $user->collection);
 	}
 
 	/**

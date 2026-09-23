@@ -16,83 +16,38 @@ require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/lib/docs-reference-parsers.php';
 require_once __DIR__ . '/lib/docs-reference-reflectors.php';
 
+use TotalCMS\Domain\Docs\Service\DocsMarkdownRenderer;
+use TotalCMS\Domain\Docs\Service\DocsPageLoader;
+
 $docsDir            = __DIR__ . '/../resources/docs';
 $outputFile         = $docsDir . '/search-index.json';
 $referenceIndexFile = $docsDir . '/reference-index.json';
 
-// Build path → group lookup from the shared menu config so search results carry
-// the section label that matches the in-admin sidebar grouping.
-$menu        = require $docsDir . '/menu.php';
-$groupLookup = [];
-foreach ($menu as $topGroup) {
-	$title = $topGroup['title'] ?? '';
-	foreach ($topGroup['sub'] ?? [] as $leaf) {
-		if (isset($leaf['path'])) {
-			$groupLookup[$leaf['path']] = $title;
-		}
-	}
-	foreach ($topGroup['groups'] ?? [] as $subGroup) {
-		foreach ($subGroup['sub'] ?? [] as $leaf) {
-			if (isset($leaf['path'])) {
-				$groupLookup[$leaf['path']] = $title;
-			}
-		}
-	}
-}
+// The same loader and renderer the in-admin viewer uses, so the index
+// carries the sidebar's group labels and indexes what the reader sees.
+$loader   = new DocsPageLoader($docsDir);
+$renderer = new DocsMarkdownRenderer();
 
-// Get all markdown files (including nested subdirectories)
-$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($docsDir));
-$files    = [];
-foreach ($iterator as $file) {
-	if ($file->isFile() && $file->getExtension() === 'md') {
-		$files[] = $file->getPathname();
-	}
-}
+$groupLookup = array_column($loader->pages(), 'group', 'path');
 
 $index = [];
 
-foreach ($files as $file) {
-	$relativePath = str_replace($docsDir . '/', '', $file);
-	$path         = str_replace('.md', '', $relativePath);
-
-	// Skip the index file itself
-	if ($path === 'index') {
-		continue;
-	}
-
-	$content = file_get_contents($file);
+foreach ($loader->markdownPages() as $path) {
+	$content = file_get_contents("{$docsDir}/{$path}.md");
 	if ($content === false) {
 		continue;
 	}
 
-	// Extract title from first H1
-	$title = basename($file, '.md');
-	if (preg_match('/^#\s+(.+)$/m', $content, $matches)) {
-		$title = trim($matches[1]);
-	}
+	$page  = $renderer->render($content);
+	$title = $page['title'] !== '' ? $page['title'] : basename($path);
 
-	// Extract all headings for section indexing
-	$sections = [];
-	if (preg_match_all('/^##\s+(.+)$/m', $content, $matches)) {
-		$sections = $matches[1];
-	}
+	// H2s are the sections a search hit can point into
+	$sections = array_values(array_map(
+		static fn (array $heading): string => $heading['text'],
+		array_filter($page['toc'], static fn (array $heading): bool => $heading['level'] === 2),
+	));
 
-	// Clean content for indexing:
-	// - Remove code block fences but keep the code content
-	$searchContent = (string)preg_replace('/```\w*\n?/', '', $content);
-	// - Replace <pre> tags with their content (preserve code for searching)
-	$searchContent = (string)preg_replace('/<pre[^>]*>(.*?)<\/pre>/s', ' $1 ', $searchContent);
-	// - Remove HTML tags
-	$searchContent = strip_tags($searchContent);
-	// - Remove markdown formatting but preserve dots (for cms.login, etc.)
-	$searchContent = (string)preg_replace('/[#*_`\[\]()]/', ' ', $searchContent);
-	// - Remove URLs
-	$searchContent = (string)preg_replace('/https?:\/\/[^\s]+/', '', $searchContent);
-	// - Remove Twig delimiters but keep the content
-	$searchContent = (string)preg_replace('/\{\{|\}\}|\{%|%\}/', ' ', $searchContent);
-	// - Normalize whitespace
-	$searchContent = (string)preg_replace('/\s+/', ' ', $searchContent);
-	$searchContent = trim($searchContent);
+	$searchContent = DocsMarkdownRenderer::searchText($page['content']);
 
 	// Create excerpt (first 200 chars after title)
 	$excerpt = substr($searchContent, 0, 200);

@@ -8,7 +8,7 @@ use Odan\Session\SessionInterface;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Session\SessionUser;
 
 /**
  * Whether a raw upload may be served to the current session.
@@ -46,18 +46,16 @@ final readonly class UploadAccessPolicy
 			return null;
 		}
 
-		if (!$this->session->has(SessionKeys::AUTH_USER) || !$this->session->has(SessionKeys::AUTH_COLLECTION)) {
+		$user = SessionUser::fromSession($this->session);
+		if ($user === null) {
 			return 'Authentication required';
 		}
 
-		$userId         = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
-		$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
-
-		if ($userId !== '' && $this->userValidator->isSuperAdmin($userId, $userCollection)) {
+		if ($this->userValidator->isSuperAdmin($user->id, $user->collection)) {
 			return null;
 		}
 
-		return $this->userValidator->validateFileAccess($userId, $collectionData->groups, $userCollection)
+		return $this->userValidator->validateFileAccess($user->id, $collectionData->groups, $user->collection)
 			? null
 			: 'Access denied';
 	}

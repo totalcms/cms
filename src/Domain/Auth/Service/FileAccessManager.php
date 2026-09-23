@@ -10,7 +10,7 @@ use TotalCMS\Domain\Property\Data\DepotData;
 use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Service\FileFetcher;
 use TotalCMS\Domain\Property\Service\PropertyFetcher;
-use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Session\SessionUser;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
@@ -66,7 +66,7 @@ class FileAccessManager
 
 	public function sessionHasUser(): bool
 	{
-		return $this->session->has(SessionKeys::AUTH_USER) && $this->session->has(SessionKeys::AUTH_COLLECTION);
+		return SessionUser::fromSession($this->session) !== null;
 	}
 
 	public function isProtectedByGroups(): bool
@@ -77,7 +77,8 @@ class FileAccessManager
 
 	public function userHasAccess(): bool
 	{
-		if (!$this->sessionHasUser()) {
+		$user = SessionUser::fromSession($this->session);
+		if ($user === null) {
 			return false;
 		}
 
@@ -90,11 +91,8 @@ class FileAccessManager
 			return true;
 		}
 
-		$userID         = $this->session->get(SessionKeys::AUTH_USER) ?? '';
-		$userCollection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?? '';
-
 		try {
-			if ($this->userValidator->validateFileAccess($userID, $this->collection->groups, $userCollection)) {
+			if ($this->userValidator->validateFileAccess($user->id, $this->collection->groups, $user->collection)) {
 				return true;
 			}
 		} catch (\Throwable $th) {
@@ -111,7 +109,7 @@ class FileAccessManager
 
 	public function verfiyPassword(string $password): bool
 	{
-		if ($this->sessionHasUser() && $this->isSuperAdmin()) {
+		if ($this->isSuperAdmin()) {
 			return true;
 		}
 
@@ -125,16 +123,14 @@ class FileAccessManager
 
 	public function logDownload(string $collection, string $objectId, string $property, string $filename, ?string $subpath = null): void
 	{
-		if (!$this->sessionHasUser()) {
+		$user = SessionUser::fromSession($this->session);
+		if ($user === null) {
 			return;
 		}
 
-		$userID         = $this->session->get(SessionKeys::AUTH_USER) ?? 'unknown';
-		$userCollection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?? 'unknown';
-
 		$logData = [
-			'user_id'         => $userID,
-			'user_collection' => $userCollection,
+			'user_id'         => $user->id,
+			'user_collection' => $user->collection,
 			'collection'      => $collection,
 			'object_id'       => $objectId,
 			'property'        => $property,
@@ -150,9 +146,8 @@ class FileAccessManager
 
 	private function isSuperAdmin(): bool
 	{
-		$userID         = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
-		$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
+		$user = SessionUser::fromSession($this->session);
 
-		return $userID !== '' && $this->userValidator->isSuperAdmin($userID, $userCollection);
+		return $user !== null && $this->userValidator->isSuperAdmin($user->id, $user->collection);
 	}
 }

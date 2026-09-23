@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Auth\Service;
 use Odan\Session\SessionInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Domain\Session\SessionUser;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -147,21 +148,18 @@ class AccessManager
 
 	private function getSessionData(): void
 	{
-		if (!$this->sessionHasUser()) {
+		$user = SessionUser::fromSession($this->session);
+		if ($user === null) {
 			return;
 		}
 
-		$this->userID         = $this->session->get(SessionKeys::AUTH_USER) ?? '';
-		$this->userCollection = $this->session->get(SessionKeys::AUTH_COLLECTION) ?? '';
-
-		if ($this->userCollection === '') {
-			$this->userCollection = $this->defaultAuthCollection;
-		}
+		$this->userID         = $user->id;
+		$this->userCollection = $user->collection !== '' ? $user->collection : $this->defaultAuthCollection;
 	}
 
 	public function sessionHasUser(): bool
 	{
-		return $this->session->has(SessionKeys::AUTH_USER) && $this->session->has(SessionKeys::AUTH_COLLECTION);
+		return SessionUser::fromSession($this->session) !== null;
 	}
 
 	/**

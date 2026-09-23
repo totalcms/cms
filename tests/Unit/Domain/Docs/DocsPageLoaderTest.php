@@ -22,7 +22,7 @@ final class DocsPageLoaderTest extends TestCase
 		file_put_contents($this->root . '/guide/images/shot.png', 'png');
 		file_put_contents($this->root . '/search-index.json', '[]');
 		file_put_contents($this->root . '/legacy.html', '<p>old</p>');
-		file_put_contents($this->root . '/menu.php', '<?php return [["title" => "Guide", "sub" => []], "junk"];');
+		file_put_contents($this->root . '/menu.php', '<?php return [["title" => "Guide", "sub" => [["title" => "Page", "path" => "guide/page"]], "groups" => [["title" => "Nested", "sub" => [["title" => "Deep", "path" => "guide/deep"], ["title" => "No path"]]]]], "junk"];');
 
 		$this->loader = new DocsPageLoader($this->root);
 	}
@@ -70,6 +70,28 @@ final class DocsPageLoaderTest extends TestCase
 
 	public function testMenuKeepsOnlyStringKeyedGroups(): void
 	{
-		$this->assertSame([['title' => 'Guide', 'sub' => []]], $this->loader->menu());
+		$menu = $this->loader->menu();
+
+		$this->assertCount(1, $menu);
+		$this->assertSame('Guide', $menu[0]['title']);
+	}
+
+	public function testPagesFlattenTheMenuUnderTheTopLevelGroup(): void
+	{
+		// The quick-nav index and the search-index builder both want every
+		// leaf with the group it sits under, whether it is a direct `sub`
+		// entry or nested inside `groups`. Entries without a path are menu
+		// decoration, not pages.
+		$this->assertSame([
+			['group' => 'Guide', 'title' => 'Page', 'path' => 'guide/page'],
+			['group' => 'Guide', 'title' => 'Deep', 'path' => 'guide/deep'],
+		], $this->loader->pages());
+	}
+
+	public function testMarkdownPagesWalkTheTreeAndSkipTheIndex(): void
+	{
+		file_put_contents($this->root . '/guide/notes.txt', 'not a page');
+
+		$this->assertSame(['guide/page'], $this->loader->markdownPages());
 	}
 }

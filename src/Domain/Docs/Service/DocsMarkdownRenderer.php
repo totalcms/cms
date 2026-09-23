@@ -15,7 +15,10 @@ use Webuni\FrontMatter\FrontMatterChain;
 class DocsMarkdownRenderer
 {
 	/**
-	 * @return array{data: array<string,mixed>, content: string, toc: list<array{level:int,id:string,text:string}>}
+	 * `title` is the page's first H1, falling back to the front matter's
+	 * `title` — the name the search index and quick-nav show for it.
+	 *
+	 * @return array{data: array<string,mixed>, content: string, toc: list<array{level:int,id:string,text:string}>, title: string}
 	 */
 	public function render(string $markdown): array
 	{
@@ -28,7 +31,22 @@ class DocsMarkdownRenderer
 		/** @var array<string,mixed> $data */
 		$data = $document->getData();
 
-		return ['data' => $data, 'content' => $html, 'toc' => $toc];
+		$title = preg_match('/<h1\b[^>]*>(.*?)<\/h1>/is', $html, $h1)
+			? trim(html_entity_decode(strip_tags($h1[1]), ENT_QUOTES | ENT_HTML5))
+			: trim((string)($data['title'] ?? ''));
+
+		return ['data' => $data, 'content' => $html, 'toc' => $toc, 'title' => $title];
+	}
+
+	/**
+	 * The rendered page as the flat text a search index wants: tags gone,
+	 * code kept, entities decoded, whitespace collapsed.
+	 */
+	public static function searchText(string $html): string
+	{
+		$text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5);
+
+		return trim((string)preg_replace('/\s+/', ' ', $text));
 	}
 
 	/**
