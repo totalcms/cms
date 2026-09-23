@@ -10,6 +10,7 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Import\CsvImporter;
+use TotalCMS\Domain\Import\RecordBatchImporter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -35,10 +36,7 @@ describe('CsvImporter extra coverage', function (): void {
 
 		$this->importer = new CsvImporter(
 			$this->collectionFetcher,
-			$this->objectFetcher,
-			$this->objectImporter,
-			new EventDispatcher(new NullLogger()),
-			$this->jobQueuer,
+			new RecordBatchImporter($this->objectFetcher, $this->objectImporter, new EventDispatcher(new NullLogger()), $this->jobQueuer),
 			$loggerFactory,
 		);
 
@@ -226,10 +224,7 @@ describe('CsvImporter extra coverage', function (): void {
 		$loggerFactory->method('createLogger')->willReturn($this->logger);
 		$importer = new CsvImporter(
 			$this->collectionFetcher,
-			$this->objectFetcher,
-			$failingImporter,
-			new EventDispatcher(new NullLogger()),
-			$this->jobQueuer,
+			new RecordBatchImporter($this->objectFetcher, $failingImporter, new EventDispatcher(new NullLogger()), $this->jobQueuer),
 			$loggerFactory,
 		);
 

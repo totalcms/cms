@@ -6,32 +6,25 @@ use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\Payload\ImportEventPayload;
-use TotalCMS\Domain\Event\Service\EventDispatcher;
-use TotalCMS\Domain\JobQueue\Service\JobQueuer;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectImporter;
-use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
+/**
+ * Import a CSV upload into a collection: one record per row, headers as
+ * property names. Parsing is the only thing here; the writing is
+ * {@see RecordBatchImporter}.
+ */
 class CsvImporter
 {
 	private readonly LoggerInterface $logger;
-	private string $collection;
 	private bool $queueJobs = false;
 
 	/** @var list<array{offset: int|string, id: string|null, reason: string}> */
-	private array $skipped          = [];
-	private ?string $lastSkipReason = null;
+	private array $skipped = [];
 
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
-		private readonly ObjectFetcher $objectFetcher,
-		private readonly ObjectImporter $objectImporter,
-		private readonly EventDispatcher $eventDispatcher,
-		private readonly JobQueuer $jobQueuer,
+		private readonly RecordBatchImporter $batch,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::CsvImporter);
@@ -43,38 +36,29 @@ class CsvImporter
 	}
 
 	/**
-	 * Clean up CSV data by removing empty headers and rows with no data.
+	 * Rows as associative arrays: trimmed, columns with an empty header
+	 * dropped, rows with nothing in them dropped.
 	 *
 	 * @param Reader<array<string,string>> $csv
 	 *
-	 * @return array<int, array<string, mixed>> Cleaned CSV records
+	 * @return list<array<string,string>>
 	 */
 	public static function cleanCsvData(Reader $csv): array
 	{
-		$headers = $csv->getHeader(); // Get the headers
-		$records = $csv->getRecords(); // Get the records
+		$headers = array_filter($csv->getHeader(), fn (string $header): bool => trim($header) !== '');
 
-		// Filter out empty headers
-		$headers = array_filter($headers, fn (string $header): bool => (trim($header) !== ''));
+		$cleaned = [];
+		foreach ($csv->getRecords() as $record) {
+			$filtered = array_intersect_key(array_map(trim(...), $record), array_flip($headers));
 
-		$cleanedRecords = [];
-		foreach ($records as $record) {
-			// Trim all values in the record
-			$trimmedRecord = array_map(trim(...), $record);
-
-			// Remove columns with empty headers
-			$filteredRecord = array_intersect_key($trimmedRecord, array_flip($headers));
-
-			// Skip rows where all values are empty
-			if (array_filter($filteredRecord)) {
-				$cleanedRecords[] = $filteredRecord;
+			if (array_filter($filtered)) {
+				$cleaned[] = $filtered;
 			}
 		}
 
-		return $cleanedRecords;
+		return $cleaned;
 	}
 
-	/** @SuppressWarnings("PHPMD.BooleanArgumentFlag") */
 	public function import(string $collection, UploadedFileInterface $file, bool $updateObject = false): int
 	{
 		if (!$this->collectionFetcher->collectionExists($collection)) {
@@ -82,158 +66,27 @@ class CsvImporter
 			$this->logger->error($error);
 			throw new \InvalidArgumentException($error);
 		}
-		$this->collection = $collection;
 
 		$this->logger->info(sprintf('Starting CSV import for collection: %s', $collection));
-		$importCount   = 0;
-		$createdIds    = [];
-		$updatedIds    = [];
-		$this->skipped = [];
 
-		// Take the uploaded file and update object with related data
 		$csv = Reader::fromString((string)$file->getStream());
 		$csv->setHeaderOffset(0);
+		$records = self::cleanCsvData($csv);
+		$this->logger->info(sprintf('Found %d records to import', count($records)));
 
-		$cleanedRecords = self::cleanCsvData($csv);
-		$totalRecords   = count($cleanedRecords);
-		$this->logger->info(sprintf('Found %d records to import', $totalRecords));
+		$result        = $this->batch->import($collection, $records, $updateObject, $this->queueJobs, $this->logger);
+		$this->skipped = $result->skipped;
 
-		// Suspend per-object index rebuilds AND `object.created`/`object.updated`
-		// events during batch import. Listeners that want import-time
-		// notifications subscribe to `import.created` / `import.updated`
-		// instead — those fire from ObjectImporter regardless of suspension.
-		$this->eventDispatcher->suspendIndexRebuild($collection);
-		$this->eventDispatcher->suspendForImport($collection);
+		$this->logger->info(sprintf('CSV import completed. Successfully imported %d of %d records into collection: %s', $result->imported, count($records), $collection));
 
-		foreach ($cleanedRecords as $offset => $record) {
-			$this->lastSkipReason = null;
-			try {
-				$imported = $updateObject ?
-					$this->updateObject($offset, $record) :
-					$this->importNewObject($offset, $record);
-
-				if ($imported) {
-					// Rows without an id column still count — the schema autogen
-					// assigns one during save, so only the id lists skip them.
-					$importCount++;
-					if (isset($record['id'])) {
-						$id = (string)$record['id'];
-						if ($updateObject) {
-							$updatedIds[] = $id;
-						} else {
-							$createdIds[] = $id;
-						}
-					}
-				} else {
-					$this->recordSkip($offset, $record, $this->lastSkipReason ?? 'skipped');
-				}
-			} catch (\Exception $exception) {
-				$this->logger->error(
-					sprintf('Error importing record at row %s: %s', $offset, $exception->getMessage())
-				);
-				$this->recordSkip($offset, $record, $exception->getMessage());
-			}
-		}
-
-		// Single index rebuild at end of import
-		$this->eventDispatcher->dispatch(CoreEvent::IMPORT_COMPLETED, new ImportEventPayload($collection, $importCount, $createdIds, $updatedIds));
-
-		$this->logger->info(sprintf('CSV import completed. Successfully imported %d of %d records into collection: %s', $importCount, $totalRecords, $collection));
-
-		return $importCount;
+		return $result->imported;
 	}
 
 	/**
-	 * Per-record skip/failure details from the most recent import() call.
-	 * Each entry has the record's row offset, its id (when present), and a
-	 * human-readable reason. Empty when every record imported cleanly. Lets
-	 * callers (e.g. the CLI) surface why rows were skipped instead of failing
-	 * silently.
-	 *
 	 * @return list<array{offset: int|string, id: string|null, reason: string}>
 	 */
 	public function getSkipped(): array
 	{
 		return $this->skipped;
-	}
-
-	/**
-	 * @param array<string,mixed> $record
-	 */
-	private function recordSkip(int|string $offset, array $record, string $reason): void
-	{
-		$this->skipped[] = [
-			'offset' => $offset,
-			'id'     => isset($record['id']) ? (string)$record['id'] : null,
-			'reason' => $reason,
-		];
-	}
-
-	/**
-	 * @param array<string,mixed> $record
-	 */
-	public function importNewObject(int $offset, array $record): bool
-	{
-		// Slugify ID to ensure consistent format. Rows may omit the id column —
-		// ObjectSaver autogenerates one when the schema allows it (and rejects
-		// the row when it doesn't), so only use the id when it's present.
-		if (isset($record['id'])) {
-			$record['id'] = SlugData::slugify((string)$record['id']);
-		}
-
-		if (isset($record['id']) && $this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
-			$error = sprintf('Object with id %s already exists in %s', $record['id'], $this->collection);
-			$this->logger->warning($error);
-			$this->lastSkipReason = $error;
-
-			return false;
-		}
-
-		$label = isset($record['id']) ? (string)$record['id'] : '(autogen id)';
-		if ($this->queueJobs) {
-			// Add job to queue
-			$this->jobQueuer->queueImport($this->collection, $record);
-			$this->logger->info(sprintf('Queued record for import: %s', $label));
-		} else {
-			// Save the object but do not rebuild the index, we do that at the end
-			$this->objectImporter->importObject($this->collection, $record);
-			$this->logger->info(sprintf('Imported record: %s', $label));
-		}
-		$this->logger->debug('Imported record', $record);
-
-		return true;
-	}
-
-	/**
-	 * @param array<string,mixed> $record
-	 */
-	public function updateObject(int $offset, array $record): bool
-	{
-		// Slugify ID to ensure consistent format
-		if (isset($record['id'])) {
-			$record['id'] = SlugData::slugify((string)$record['id']);
-		}
-
-		if (!isset($record['id']) || !$this->objectFetcher->existsObject($this->collection, (string)$record['id'])) {
-			$this->logger->info(sprintf('Skipping update of record (%s) at row %s', $record['id'] ?? 'no-id', $offset));
-			$this->lastSkipReason = isset($record['id'])
-				? sprintf('No existing object with id %s to update', $record['id'])
-				: 'Row has no id (required for update)';
-
-			return false;
-		}
-
-		if ($this->queueJobs) {
-			// Add job to queue
-			$this->jobQueuer->queueUpdate($this->collection, $record);
-			$this->logger->info(sprintf('Queued record for update: %s', $record['id']));
-		} else {
-			// Save the object but do not rebuild the index, we do that at the end
-			$this->objectImporter->updateObject($this->collection, $record);
-			$this->logger->info(sprintf('Updated record: %s', $record['id']));
-		}
-		$this->logger->debug('Updated record', $record);
-
-		return true;
 	}
 }

@@ -7,187 +7,50 @@ namespace TotalCMS\Domain\Import;
 use League\Csv\Reader;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Event\Data\CoreEvent;
-use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
-use TotalCMS\Domain\Event\Service\EventDispatcher;
-use TotalCMS\Domain\Object\Service\AutogenIdService;
-use TotalCMS\Domain\Object\Service\AutogenService;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Object\Service\ObjectUpdater;
-use TotalCMS\Domain\Property\Data\DeckData;
-use TotalCMS\Domain\Property\Data\SlugData;
-use TotalCMS\Domain\Schema\Data\PropertyDefinition;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 
 /**
- * Imports CSV data into a deck property of an existing object.
- * Each CSV row becomes a deck item.
+ * Import a CSV upload as deck items: one item per row. Parsing and id
+ * resolution here; the merge and write are {@see DeckItemImporter}.
  */
 class DeckCsvImporter
 {
 	private readonly LoggerInterface $logger;
 
 	public function __construct(
-		private readonly ObjectFetcher $objectFetcher,
-		private readonly ObjectUpdater $objectUpdater,
-		private readonly SchemaFetcher $schemaFetcher,
-		private readonly EventDispatcher $eventDispatcher,
+		private readonly DeckItemImporter $deckItems,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::DeckCsvImporter);
 	}
 
-	/**
-	 * Import CSV rows into a deck property.
-	 *
-	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
-	 */
-	public function import(
-		string $collection,
-		string $objectId,
-		string $property,
-		UploadedFileInterface $file,
-		bool $update = false,
-	): int {
+	public function import(string $collection, string $objectId, string $property, UploadedFileInterface $file, bool $update = false): int
+	{
 		$this->logger->info("Starting deck CSV import: {$collection}/{$objectId}/{$property}");
 
-		// Fetch object and validate property is a deck
-		$object       = $this->objectFetcher->fetchObject($collection, $objectId);
-		$deckProperty = $object->properties->get($property);
-
-		if (!$deckProperty instanceof DeckData) {
-			throw new \InvalidArgumentException("Property '{$property}' is not a deck property");
-		}
-
-		// Parse and clean CSV
 		$csv = Reader::fromString((string)$file->getStream());
 		$csv->setHeaderOffset(0);
 
-		$records    = CsvImporter::cleanCsvData($csv);
-		$totalRows  = count($records);
-		$this->logger->info("Found {$totalRows} records to import");
+		$records = CsvImporter::cleanCsvData($csv);
+		$this->logger->info('Found ' . count($records) . ' records to import');
 
-		if ($totalRows === 0) {
-			return 0;
-		}
-
-		// Resolve autogen pattern for ID generation
-		$autogenPattern = $this->getIdAutogenPattern($collection, $property);
-		$hasIdColumn    = isset($records[0]['id']);
-
-		// Build new deck items from CSV
-		$existingDeck = $deckProperty->deck;
-		$importCount  = 0;
+		$autogenPattern = $this->deckItems->idAutogenPattern($collection, $property);
+		$items          = [];
 
 		foreach ($records as $offset => $record) {
-			try {
-				$itemId = $this->resolveItemId($record, $hasIdColumn, $autogenPattern);
-
-				if ($itemId === '') {
-					$this->logger->warning("Skipping row {$offset}: could not determine item ID");
-					continue;
-				}
-
-				$exists = isset($existingDeck[$itemId]);
-
-				if ($exists && !$update) {
-					$this->logger->info("Skipping existing deck item: {$itemId}");
-					continue;
-				}
-
-				// Ensure id is in the record
-				$record['id'] = $itemId;
-
-				if ($exists) {
-					$existingDeck[$itemId] = array_merge($existingDeck[$itemId], $record);
-					$this->logger->info("Updated deck item: {$itemId}");
-				} else {
-					$existingDeck[$itemId] = $record;
-					$this->logger->info("Imported deck item: {$itemId}");
-				}
-
-				$importCount++;
-			} catch (\Exception $e) {
-				$this->logger->error("Error importing row {$offset}: {$e->getMessage()}");
+			$itemId = $this->deckItems->resolveItemId($record, $autogenPattern);
+			if ($itemId === '') {
+				$this->logger->warning("Skipping row {$offset}: could not determine item ID");
+				continue;
 			}
+			$items[$itemId] = $record;
 		}
 
-		if ($importCount === 0) {
-			return 0;
-		}
+		$count = $this->deckItems->importItems($collection, $objectId, $property, $items, $update, $this->logger);
 
-		// Update the parent object with the complete deck in one operation.
-		// Suppress `object.updated` and fire `import.updated` so listeners can
-		// tell deck-import writes apart from regular saves on the parent.
-		$objectData            = $object->toArray();
-		$objectData[$property] = $existingDeck;
+		$this->logger->info('Deck CSV import completed. Imported ' . $count . ' of ' . count($records) . ' items');
 
-		$this->eventDispatcher->suspendForImport($collection);
-		try {
-			$this->objectUpdater->updateObject($collection, $objectId, $objectData);
-			$updated = $this->objectFetcher->fetchObject($collection, $objectId);
-			$this->eventDispatcher->dispatch(
-				CoreEvent::IMPORT_UPDATED,
-				new ObjectEventPayload($collection, $objectId, $updated, $object),
-			);
-		} finally {
-			$this->eventDispatcher->resumeForImport($collection);
-		}
-
-		$this->logger->info("Deck CSV import completed. Imported {$importCount} of {$totalRows} items");
-
-		return $importCount;
-	}
-
-	/**
-	 * Resolve the item ID for a CSV row.
-	 *
-	 * @param array<string,mixed> $record
-	 */
-	private function resolveItemId(array $record, bool $hasIdColumn, string $autogenPattern): string
-	{
-		if ($hasIdColumn && trim((string)($record['id'] ?? '')) !== '') {
-			$id = SlugData::slugify((string)$record['id']);
-
-			return str_replace('-', '_', $id);
-		}
-
-		if ($autogenPattern !== '') {
-			$raw = AutogenService::generateWithOidCount($autogenPattern, $record, 0);
-			$id  = SlugData::slugify($raw);
-
-			return str_replace('-', '_', $id);
-		}
-
-		// Fallback: generate a uid
-		return str_replace('-', '_', AutogenIdService::generateUid());
-	}
-
-	/**
-	 * Get the autogen pattern for the deck schema's ID property.
-	 */
-	private function getIdAutogenPattern(string $collection, string $propertyName): string
-	{
-		try {
-			$schema         = $this->schemaFetcher->fetchSchemaForCollection($collection);
-			$propertyConfig = $schema->properties[$propertyName] ?? null;
-			if (!$propertyConfig) {
-				return '';
-			}
-
-			$schemaref = PropertyDefinition::extractSchemaRef($propertyConfig);
-			if ($schemaref === null) {
-				return '';
-			}
-
-			$deckSchemaId = SchemaFetcher::extractSchemaId($schemaref);
-			$deckSchema   = $this->schemaFetcher->fetchSchema($deckSchemaId);
-
-			return $deckSchema->properties['id']['settings']['autogen'] ?? '';
-		} catch (\Exception) {
-			return '';
-		}
+		return $count;
 	}
 }

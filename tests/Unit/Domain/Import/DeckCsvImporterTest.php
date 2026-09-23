@@ -13,6 +13,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Import\DeckCsvImporter;
+use TotalCMS\Domain\Import\DeckItemImporter;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
@@ -39,10 +40,7 @@ final class DeckCsvImporterTest extends TestCase
 		$loggerFactory->method('createLogger')->willReturn($logger);
 
 		$this->importer = new DeckCsvImporter(
-			$this->objectFetcher,
-			$this->objectUpdater,
-			$this->schemaFetcher,
-			new EventDispatcher(new NullLogger()),
+			new DeckItemImporter($this->objectFetcher, $this->objectUpdater, $this->schemaFetcher, new EventDispatcher(new NullLogger())),
 			$loggerFactory,
 		);
 	}

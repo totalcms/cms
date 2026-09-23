@@ -2,34 +2,42 @@
 
 namespace TotalCMS\Domain\Import;
 
-use Laminas\Feed\Reader\Entry\AbstractEntry;
-use Laminas\Feed\Reader\Entry\EntryInterface;
-use Laminas\Feed\Reader\Reader;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
-use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Data\SlugData;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\RemoteFileDownloader;
 use TotalCMS\Support\Version;
 
+/**
+ * Import the entries of an RSS, Atom or JSON feed into a collection as
+ * queued objects, or preview them.
+ *
+ * {@see FeedReader} turns whichever format arrives into one list of entries,
+ * so there is a single pipeline here: fetch, parse, and for each entry mint
+ * an id from the title, skip it if that object exists, map its fields onto
+ * the collection, download its image, queue the import. It used to be two
+ * pipelines (XML and JSON) with the sequence written out in each.
+ */
 class RssImporter
 {
-	/**
-	 * Feed hosts — Cloudflare-fronted ones especially — routinely 403 an HTTP
-	 * library's default user-agent. Identifying the CMS honestly gets through
-	 * without pretending to be a browser, which is both more truthful and less
-	 * likely to be read as evasion by the host being fetched.
-	 */
 	private const USER_AGENT_TEMPLATE = 'TotalCMS/%s (+https://totalcms.co)';
 
-	private readonly LoggerInterface $logger;
-	private int $importCount = 0;
+	private const DEFAULT_FIELD_MAP = [
+		'title'      => 'title',
+		'content'    => 'content',
+		'summary'    => 'summary',
+		'date'       => 'date',
+		'author'     => 'author',
+		'categories' => 'categories',
+		'link'       => 'media',
+	];
 
-	/** Set for the duration of one analyze()/import() call, like $importCount. */
+	private readonly LoggerInterface $logger;
 	private ?string $userAgent = null;
 
 	public function __construct(
@@ -38,43 +46,43 @@ class RssImporter
 		private readonly JobQueuer $jobQueuer,
 		private readonly HttpClientInterface $httpClient,
 		private readonly RemoteFileDownloader $downloader,
+		private readonly FeedReader $reader,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::RssImporter);
 	}
 
 	/**
-	 * Analyze an RSS/Atom/JSON feed and return a preview of its contents.
+	 * Preview a feed: its metadata and one row per entry.
 	 *
-	 * @return array{feed: array<string,mixed>, entries: array<int,array<string,mixed>>}
+	 * @return array{feed: array<string,mixed>, entries: list<array<string,mixed>>}
 	 */
 	public function analyze(string $feedUrl, ?string $userAgent = null): array
 	{
 		$this->userAgent = $userAgent === '' ? null : $userAgent;
 		$this->logger->info(sprintf('Starting feed analysis: %s', $feedUrl));
 
-		$raw = $this->fetchRawFeed($feedUrl);
+		$feed = $this->reader->parse($this->fetchRawFeed($feedUrl));
 
-		if ($this->isJsonFeed($raw)) {
-			return $this->analyzeJsonFeed($raw);
-		}
+		$this->logger->info(sprintf('Feed analysis completed: %d entries found', count($feed->entries)));
 
-		return $this->analyzeXmlFeed($raw);
+		return [
+			'feed'    => $feed->summary(),
+			'entries' => array_map(static fn (FeedEntry $entry): array => $entry->preview(), $feed->entries),
+		];
 	}
 
 	/**
-	 * Import feed entries into a collection via the job queue.
+	 * @param array{draft?: bool, userAgent?: string, fieldMap?: array<string,string>} $options
 	 *
-	 * @param array{draft?: bool, fieldMap?: array<string,string>, userAgent?: string} $options
+	 * @return int Entries queued for import.
 	 */
 	public function import(string $feedUrl, string $collection, array $options = []): int
 	{
-		$this->importCount = 0;
-		$isDraft           = $options['draft'] ?? true;
-		$userAgent         = $options['userAgent'] ?? '';
-		$this->userAgent   = $userAgent === '' ? null : $userAgent;
-		/** @var array<string,string> $fieldMap */
-		$fieldMap = $options['fieldMap'] ?? [];
+		$isDraft         = $options['draft'] ?? true;
+		$userAgent       = $options['userAgent'] ?? '';
+		$this->userAgent = $userAgent === '' ? null : $userAgent;
+		$fieldMap        = $options['fieldMap'] ?? [];
 
 		$this->logger->info(sprintf('Starting feed import from %s into collection %s', $feedUrl, $collection));
 
@@ -82,24 +90,56 @@ class RssImporter
 			throw new \RuntimeException(sprintf('Collection "%s" does not exist', $collection));
 		}
 
-		$raw = $this->fetchRawFeed($feedUrl);
+		$feed  = $this->reader->parse($this->fetchRawFeed($feedUrl));
+		$count = 0;
 
-		if ($this->isJsonFeed($raw)) {
-			$this->importJsonFeed($raw, $collection, $isDraft, $fieldMap);
-		} else {
-			$this->importXmlFeed($raw, $collection, $isDraft, $fieldMap);
+		foreach ($feed->entries as $entry) {
+			if ($this->importEntry($entry, $collection, $isDraft, $fieldMap)) {
+				$count++;
+			}
 		}
 
-		$this->logger->info(sprintf('Feed import completed. Total items queued: %d', $this->importCount));
+		$this->logger->info(sprintf('Feed import completed. Total items queued: %d', $count));
 
-		return $this->importCount;
+		return $count;
 	}
 
-	// ─── Feed Fetching ──────────────────────────────────────────
-
 	/**
-	 * Fetch raw feed content from a URL.
+	 * @param array<string,string> $fieldMap
 	 */
+	private function importEntry(FeedEntry $entry, string $collection, bool $isDraft, array $fieldMap): bool
+	{
+		try {
+			$id = $this->slugify($entry->titleOrUntitled());
+
+			if ($this->objectFetcher->existsObject($collection, $id)) {
+				$this->logger->info(sprintf('Skipping feed entry, object already exists: %s/%s', $collection, $id));
+
+				return false;
+			}
+
+			$data          = $this->mapFields($entry->toRecord(), $fieldMap);
+			$data['id']    = $id;
+			$data['draft'] = $isDraft;
+
+			if ($entry->imageUrl !== null) {
+				$tempPath = $this->downloadImage($entry->imageUrl);
+				if ($tempPath !== null) {
+					$data[$fieldMap['image'] ?? 'image'] = $tempPath;
+				}
+			}
+
+			$this->jobQueuer->queueImport($collection, $data);
+			$this->logger->info(sprintf('Queued feed entry import: %s/%s', $collection, $id));
+
+			return true;
+		} catch (\Exception $e) {
+			$this->logger->error(sprintf('Error importing feed entry "%s": %s', $entry->title, $e->getMessage()));
+
+			return false;
+		}
+	}
+
 	private function fetchRawFeed(string $feedUrl): string
 	{
 		try {
@@ -120,450 +160,6 @@ class RssImporter
 	}
 
 	/**
-	 * Detect whether the raw content is a JSON Feed.
-	 */
-	private function isJsonFeed(string $raw): bool
-	{
-		$trimmed = ltrim($raw);
-
-		if (!str_starts_with($trimmed, '{')) {
-			return false;
-		}
-
-		$decoded = json_decode($trimmed, true);
-
-		return is_array($decoded) && isset($decoded['version']) && str_contains((string)$decoded['version'], 'jsonfeed');
-	}
-
-	// ─── XML (RSS/Atom) Feed Handling ───────────────────────────
-
-	/**
-	 * @return array{feed: array<string,mixed>, entries: array<int,array<string,mixed>>}
-	 */
-	private function analyzeXmlFeed(string $xml): array
-	{
-		$feed = Reader::importString($xml);
-
-		$feedData = [
-			'title'       => $feed->getTitle() ?? '',
-			'description' => $feed->getDescription() ?? '',
-			'link'        => $feed->getLink() ?? '',
-			'count'       => $feed->count(),
-		];
-
-		$entries = [];
-		foreach ($feed as $entry) {
-			/** @var EntryInterface $entry */
-			$author     = $entry->getAuthor();
-			$authorName = is_array($author) && isset($author['name']) ? $author['name'] : '';
-
-			$categories = $entry->getCategories()->getValues();
-
-			$content     = $entry->getContent();
-			$description = $entry->getDescription();
-
-			$dateModified = $entry->getDateModified();
-			$dateCreated  = $entry->getDateCreated();
-			$dateStr      = '';
-			if ($dateModified !== null) {
-				$dateStr = $dateModified->format('c');
-			} elseif ($dateCreated !== null) {
-				$dateStr = $dateCreated->format('c');
-			}
-
-			$imageUrl = $this->extractImageUrl($entry);
-
-			$entries[] = [
-				'title'      => $entry->getTitle(),
-				'date'       => $dateStr,
-				'author'     => $authorName,
-				'summary'    => $description !== '' ? mb_substr(strip_tags((string)$description), 0, 200) : '',
-				'categories' => $categories,
-				'hasContent' => $content !== '',
-				'hasImage'   => $imageUrl !== null,
-				'link'       => $entry->getLink(),
-			];
-		}
-
-		$this->logger->info(sprintf('XML feed analysis completed: %d entries found', count($entries)));
-
-		return [
-			'feed'    => $feedData,
-			'entries' => $entries,
-		];
-	}
-
-	/**
-	 * @param array<string,string> $fieldMap
-	 */
-	private function importXmlFeed(string $xml, string $collection, bool $isDraft, array $fieldMap): void
-	{
-		$feed = Reader::importString($xml);
-
-		foreach ($feed as $entry) {
-			/** @var EntryInterface $entry */
-			$this->importXmlEntry($entry, $collection, $isDraft, $fieldMap);
-		}
-	}
-
-	/**
-	 * @param array<string,string> $fieldMap
-	 */
-	private function importXmlEntry(EntryInterface $entry, string $collection, bool $isDraft, array $fieldMap): void
-	{
-		try {
-			$title = $entry->getTitle();
-			if ($title === '') {
-				$title = 'Untitled';
-			}
-			$id = $this->slugify($title);
-
-			if ($this->alreadyImported($collection, $id)) {
-				return;
-			}
-
-			$rssData = $this->extractXmlEntryData($entry);
-
-			$data          = $this->mapFields($rssData, $fieldMap);
-			$data['id']    = $id;
-			$data['draft'] = $isDraft;
-
-			$imageUrl = $this->extractImageUrl($entry);
-			if ($imageUrl !== null) {
-				$tempPath = $this->downloadImage($imageUrl);
-				if ($tempPath !== null) {
-					$mappedImageField        = $fieldMap['image'] ?? 'image';
-					$data[$mappedImageField] = $tempPath;
-				}
-			}
-
-			$this->jobQueuer->queueImport($collection, $data);
-			$this->importCount++;
-			$this->logger->info(sprintf('Queued feed entry import: %s/%s', $collection, $id));
-		} catch (\Exception $e) {
-			$this->logger->error(sprintf('Error importing feed entry "%s": %s', $entry->getTitle(), $e->getMessage()));
-		}
-	}
-
-	/**
-	 * @return array<string,mixed>
-	 */
-	private function extractXmlEntryData(EntryInterface $entry): array
-	{
-		$content     = $entry->getContent();
-		$description = $entry->getDescription();
-
-		$author     = $entry->getAuthor();
-		$authorName = is_array($author) && isset($author['name']) ? $author['name'] : '';
-
-		$categories = $entry->getCategories()->getValues();
-
-		$dateModified = $entry->getDateModified();
-		$dateCreated  = $entry->getDateCreated();
-		$date         = $dateModified ?? $dateCreated;
-
-		$data = [
-			'title'      => $entry->getTitle() !== '' ? $entry->getTitle() : 'Untitled',
-			'link'       => $entry->getLink(),
-			'author'     => $authorName,
-			'categories' => $categories,
-			'date'       => $date !== null ? $date->format('c') : '',
-		];
-
-		if ($content !== '') {
-			$data['content'] = $content;
-			if ($description !== '') {
-				$data['summary'] = $description;
-			}
-		} elseif ($description !== '') {
-			$data['content'] = $description;
-		}
-
-		return $data;
-	}
-
-	// ─── JSON Feed Handling ─────────────────────────────────────
-
-	/**
-	 * @return array{feed: array<string,mixed>, entries: array<int,array<string,mixed>>}
-	 */
-	private function analyzeJsonFeed(string $json): array
-	{
-		$data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-		if (!is_array($data)) {
-			throw new \RuntimeException('Invalid JSON Feed structure');
-		}
-
-		/** @var array<int,mixed> $items */
-		$items = $data['items'] ?? [];
-
-		$feedData = [
-			'title'       => (string)($data['title'] ?? ''),
-			'description' => (string)($data['description'] ?? ''),
-			'link'        => (string)($data['home_page_url'] ?? ''),
-			'count'       => count($items),
-		];
-
-		$entries = [];
-		foreach ($items as $item) {
-			if (!is_array($item)) {
-				continue;
-			}
-
-			$authorName = $this->extractJsonAuthor($item, $data);
-			$content    = (string)($item['content_html'] ?? $item['content_text'] ?? '');
-			$summary    = (string)($item['summary'] ?? '');
-			$imageUrl   = $this->extractJsonImageUrl($item);
-
-			$tags = [];
-			if (isset($item['tags']) && is_array($item['tags'])) {
-				$tags = array_map(strval(...), $item['tags']);
-			}
-
-			$entries[] = [
-				'title'      => (string)($item['title'] ?? ''),
-				'date'       => (string)($item['date_published'] ?? $item['date_modified'] ?? ''),
-				'author'     => $authorName,
-				'summary'    => $summary !== '' ? mb_substr(strip_tags($summary), 0, 200) : ($content !== '' ? mb_substr(strip_tags($content), 0, 200) : ''),
-				'categories' => $tags,
-				'hasContent' => $content !== '',
-				'hasImage'   => $imageUrl !== null,
-				'link'       => (string)($item['url'] ?? $item['external_url'] ?? ''),
-			];
-		}
-
-		$this->logger->info(sprintf('JSON feed analysis completed: %d entries found', count($entries)));
-
-		return [
-			'feed'    => $feedData,
-			'entries' => $entries,
-		];
-	}
-
-	/**
-	 * @param array<string,string> $fieldMap
-	 */
-	private function importJsonFeed(string $json, string $collection, bool $isDraft, array $fieldMap): void
-	{
-		$data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-		if (!is_array($data)) {
-			throw new \RuntimeException('Invalid JSON Feed structure');
-		}
-
-		/** @var array<int,mixed> $items */
-		$items = $data['items'] ?? [];
-
-		foreach ($items as $item) {
-			if (!is_array($item)) {
-				continue;
-			}
-			$this->importJsonEntry($item, $data, $collection, $isDraft, $fieldMap);
-		}
-	}
-
-	/**
-	 * @param array<string,mixed> $item
-	 * @param array<string,mixed> $feedData
-	 * @param array<string,string> $fieldMap
-	 */
-	private function importJsonEntry(array $item, array $feedData, string $collection, bool $isDraft, array $fieldMap): void
-	{
-		try {
-			$title = (string)($item['title'] ?? '');
-			if ($title === '') {
-				$title = 'Untitled';
-			}
-			$id = $this->slugify($title);
-
-			if ($this->alreadyImported($collection, $id)) {
-				return;
-			}
-
-			$rssData = $this->extractJsonEntryData($item, $feedData);
-
-			$data          = $this->mapFields($rssData, $fieldMap);
-			$data['id']    = $id;
-			$data['draft'] = $isDraft;
-
-			$imageUrl = $this->extractJsonImageUrl($item);
-			if ($imageUrl !== null) {
-				$tempPath = $this->downloadImage($imageUrl);
-				if ($tempPath !== null) {
-					$mappedImageField        = $fieldMap['image'] ?? 'image';
-					$data[$mappedImageField] = $tempPath;
-				}
-			}
-
-			$this->jobQueuer->queueImport($collection, $data);
-			$this->importCount++;
-			$this->logger->info(sprintf('Queued JSON feed entry import: %s/%s', $collection, $id));
-		} catch (\Exception $e) {
-			$this->logger->error(sprintf('Error importing JSON feed entry "%s": %s', $item['title'] ?? 'unknown', $e->getMessage()));
-		}
-	}
-
-	/**
-	 * @param array<string,mixed> $item
-	 * @param array<string,mixed> $feedData
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function extractJsonEntryData(array $item, array $feedData): array
-	{
-		$contentHtml = (string)($item['content_html'] ?? '');
-		$contentText = (string)($item['content_text'] ?? '');
-		$summary     = (string)($item['summary'] ?? '');
-
-		$tags = [];
-		if (isset($item['tags']) && is_array($item['tags'])) {
-			$tags = array_map(strval(...), $item['tags']);
-		}
-
-		$date = (string)($item['date_published'] ?? $item['date_modified'] ?? '');
-
-		$data = [
-			'title'      => (string)($item['title'] ?? 'Untitled'),
-			'link'       => (string)($item['url'] ?? $item['external_url'] ?? ''),
-			'author'     => $this->extractJsonAuthor($item, $feedData),
-			'categories' => $tags,
-			'date'       => $date,
-		];
-
-		// Prefer content_html over content_text
-		if ($contentHtml !== '') {
-			$data['content'] = $contentHtml;
-			if ($summary !== '') {
-				$data['summary'] = $summary;
-			}
-		} elseif ($contentText !== '') {
-			$data['content'] = $contentText;
-			if ($summary !== '') {
-				$data['summary'] = $summary;
-			}
-		} elseif ($summary !== '') {
-			$data['content'] = $summary;
-		}
-
-		return $data;
-	}
-
-	/**
-	 * Extract author name from a JSON Feed item, falling back to feed-level authors.
-	 *
-	 * @param array<string,mixed> $item
-	 * @param array<string,mixed> $feedData
-	 */
-	private function extractJsonAuthor(array $item, array $feedData): string
-	{
-		// Item-level authors (JSON Feed 1.1)
-		if (isset($item['authors']) && is_array($item['authors'])) {
-			$first = $item['authors'][0] ?? null;
-			if (is_array($first) && isset($first['name'])) {
-				return (string)$first['name'];
-			}
-		}
-
-		// Legacy item-level author (JSON Feed 1.0)
-		if (isset($item['author']) && is_array($item['author']) && isset($item['author']['name'])) {
-			return (string)$item['author']['name'];
-		}
-
-		// Feed-level authors
-		if (isset($feedData['authors']) && is_array($feedData['authors'])) {
-			$first = $feedData['authors'][0] ?? null;
-			if (is_array($first) && isset($first['name'])) {
-				return (string)$first['name'];
-			}
-		}
-
-		// Legacy feed-level author
-		if (isset($feedData['author']) && is_array($feedData['author']) && isset($feedData['author']['name'])) {
-			return (string)$feedData['author']['name'];
-		}
-
-		return '';
-	}
-
-	/**
-	 * Extract image URL from a JSON Feed item.
-	 *
-	 * @param array<string,mixed> $item
-	 */
-	private function extractJsonImageUrl(array $item): ?string
-	{
-		if (isset($item['image']) && is_string($item['image']) && $item['image'] !== '') {
-			return $item['image'];
-		}
-
-		if (isset($item['banner_image']) && is_string($item['banner_image']) && $item['banner_image'] !== '') {
-			return $item['banner_image'];
-		}
-
-		return null;
-	}
-
-	// ─── XML Image Extraction ───────────────────────────────────
-
-	/**
-	 * Extract image URL from RSS entry enclosures or media elements.
-	 */
-	private function extractImageUrl(EntryInterface $entry): ?string
-	{
-		// Check enclosure
-		$enclosure = $entry->getEnclosure();
-		if ($enclosure !== null && isset($enclosure->url)) {
-			$type = $enclosure->type ?? '';
-			if ($type === '' || str_starts_with((string)$type, 'image/')) {
-				return (string)$enclosure->url;
-			}
-		}
-
-		// Try to extract from content via media:content or media:thumbnail in the XML
-		if (!$entry instanceof AbstractEntry) {
-			return null;
-		}
-
-		$entryElement  = $entry->getElement();
-		$ownerDocument = $entryElement->ownerDocument;
-		if ($ownerDocument === null) {
-			return null;
-		}
-
-		$xpath = new \DOMXPath($ownerDocument);
-
-		// Register media namespace
-		$xpath->registerNamespace('media', 'http://search.yahoo.com/mrss/');
-
-		// Try media:content
-		$mediaNodes = $xpath->query('.//media:content[@url]', $entryElement);
-		if ($mediaNodes !== false && $mediaNodes->length > 0) {
-			$node = $mediaNodes->item(0);
-			if ($node instanceof \DOMElement) {
-				$medium = $node->getAttribute('medium');
-				$type   = $node->getAttribute('type');
-				if ($medium === 'image' || $medium === '' || str_starts_with($type, 'image/')) {
-					return $node->getAttribute('url');
-				}
-			}
-		}
-
-		// Try media:thumbnail
-		$thumbNodes = $xpath->query('.//media:thumbnail[@url]', $entryElement);
-		if ($thumbNodes !== false && $thumbNodes->length > 0) {
-			$node = $thumbNodes->item(0);
-			if ($node instanceof \DOMElement) {
-				return $node->getAttribute('url');
-			}
-		}
-
-		return null;
-	}
-
-	// ─── Shared Utilities ───────────────────────────────────────
-
-	/**
-	 * Outbound request options shared by the feed fetch and image downloads.
-	 *
 	 * @return array<string,mixed>
 	 */
 	private function requestOptions(int $timeout): array
@@ -577,63 +173,28 @@ class RssImporter
 	}
 
 	/**
-	 * Has this entry been imported by an earlier poll of the feed?
+	 * Rename the entry's fields to the collection's. The default map sends
+	 * each field to a property of the same name and the link to `media`; an
+	 * empty target drops the field.
 	 *
-	 * Ids are slugified titles, so re-polling a feed regenerates the id of
-	 * every entry already imported. Queueing those anyway costs a failed job
-	 * apiece — ObjectSaver rejects a duplicate id rather than overwriting —
-	 * so the caller skips before doing any further work on the entry.
-	 *
-	 * Logged at info, not warning: for a feed that is polled repeatedly, an
-	 * entry that already exists is the steady state rather than a fault.
-	 */
-	private function alreadyImported(string $collection, string $id): bool
-	{
-		if (!$this->objectFetcher->existsObject($collection, $id)) {
-			return false;
-		}
-
-		$this->logger->info(sprintf('Skipping feed entry, object already exists: %s/%s', $collection, $id));
-
-		return true;
-	}
-
-	/**
-	 * Map feed fields to collection fields using provided mapping or defaults.
-	 *
-	 * @param array<string,mixed> $rssData
+	 * @param array<string,mixed>  $record
 	 * @param array<string,string> $fieldMap
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function mapFields(array $rssData, array $fieldMap): array
+	private function mapFields(array $record, array $fieldMap): array
 	{
-		$defaults = [
-			'title'      => 'title',
-			'content'    => 'content',
-			'summary'    => 'summary',
-			'date'       => 'date',
-			'author'     => 'author',
-			'categories' => 'categories',
-			'link'       => 'media',
-		];
-
-		$mapping = array_merge($defaults, $fieldMap);
-		$mapped  = [];
-
-		foreach ($mapping as $rssField => $collectionField) {
-			if ($collectionField === '' || !isset($rssData[$rssField])) {
+		$mapped = [];
+		foreach (array_merge(self::DEFAULT_FIELD_MAP, $fieldMap) as $feedField => $collectionField) {
+			if ($collectionField === '' || !isset($record[$feedField])) {
 				continue;
 			}
-			$mapped[$collectionField] = $rssData[$rssField];
+			$mapped[$collectionField] = $record[$feedField];
 		}
 
 		return $mapped;
 	}
 
-	/**
-	 * Download an image to a temporary file.
-	 */
 	private function downloadImage(string $url): ?string
 	{
 		try {
@@ -652,9 +213,6 @@ class RssImporter
 		}
 	}
 
-	/**
-	 * Convert a title string into a URL-safe slug.
-	 */
 	private function slugify(string $text): string
 	{
 		// The same slug every other importer and the id field mint from a

@@ -6,6 +6,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Import\FeedReader;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -47,6 +48,7 @@ final class RssImporterSkipExistingTest extends TestCase
 			$this->jobQueuer,
 			$this->httpClient,
 			rssTestDownloader($this->httpClient),
+			new FeedReader(),
 			$loggerFactory,
 		);
 	}

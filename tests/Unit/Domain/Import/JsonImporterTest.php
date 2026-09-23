@@ -11,6 +11,7 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Import\JsonImporter;
+use TotalCMS\Domain\Import\RecordBatchImporter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -42,10 +43,7 @@ final class JsonImporterTest extends TestCase
 
 		$this->importer = new JsonImporter(
 			$this->collectionFetcher,
-			$this->objectFetcher,
-			$this->objectImporter,
-			$this->eventDispatcher,
-			$this->jobQueuer,
+			new RecordBatchImporter($this->objectFetcher, $this->objectImporter, $this->eventDispatcher, $this->jobQueuer),
 			$loggerFactory
 		);
 	}

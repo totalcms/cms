@@ -13,6 +13,7 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Import\CsvImporter;
+use TotalCMS\Domain\Import\RecordBatchImporter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
@@ -44,10 +45,7 @@ final class CsvImporterTest extends TestCase
 
 		$this->csvImporter = new CsvImporter(
 			$this->collectionFetcher,
-			$this->objectFetcher,
-			$this->objectImporter,
-			new EventDispatcher(new NullLogger()),
-			$this->jobQueuer,
+			new RecordBatchImporter($this->objectFetcher, $this->objectImporter, new EventDispatcher(new NullLogger()), $this->jobQueuer),
 			$this->loggerFactory
 		);
 	}

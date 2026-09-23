@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Import;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Import\FeedReader;
 use TotalCMS\Domain\Import\RssImporter;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -50,6 +51,7 @@ final class RssImporterUserAgentTest extends TestCase
 			$this->createMock(JobQueuer::class),
 			$httpClient,
 			rssTestDownloader($httpClient),
+			new FeedReader(),
 			$loggerFactory,
 		);
 	}
