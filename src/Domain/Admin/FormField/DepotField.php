@@ -5,17 +5,9 @@ namespace TotalCMS\Domain\Admin\FormField;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
-class DepotField extends FormField
+class DepotField extends UploadField
 {
 	protected string $defaultFieldType = 'file';
-	protected string $defaultInputType = 'file';
-
-	public function init(): void
-	{
-		parent::init();
-
-		$this->icon = false; // No icon for file fields
-	}
 
 	public function buildFormField(): string
 	{
@@ -32,14 +24,14 @@ class DepotField extends FormField
 		return $input . $browser . $addFolder . $folderDialog . $fileTemplate . $folderTemplate . $protectionDialog;
 	}
 
-	/**
-	 * Translated string escaped for interpolation into a heredoc template.
-	 * HTMLUtils escapes attribute values itself, so this is only needed where
-	 * we assemble markup by hand rather than through the builders.
-	 */
-	private function esc(string $key, string $default): string
+	protected function linkTool(): string
 	{
-		return htmlspecialchars($this->t($key, $default), ENT_QUOTES, 'UTF-8');
+		return 'filelinks';
+	}
+
+	protected function linkDialogClass(): string
+	{
+		return 'file-links-dialog';
 	}
 
 	/** @param array<array<string,mixed>> $files */
@@ -59,24 +51,8 @@ class DepotField extends FormField
 	/** @param array<string,mixed> $depot */
 	private function protectionDialog(array $depot): string
 	{
-		// Determine default protected value from settings or default to true
-		$defaultProtected = $this->settings['protectedByCollection'] ?? true;
-
-		$content = $this->form->subField('protected', [
-			'field'       => 'checkbox',
-			'label'       => $this->t('depot.protected_label', 'Protected by Collection'),
-			'help'        => $this->t('depot.protected_help', 'Access group protection is set in the Collection.'),
-			'value'       => $depot['protected'] ?? $defaultProtected,
-		]);
-		$content .= $this->form->subField('password', [
-			'field'    => 'password',
-			'label'    => $this->t('depot.password_label', 'Password'),
-			'help'     => $this->t('depot.password_help', 'Require a password to download files from this depot. This overrides all collection level access controls.'),
-			'value'    => $depot['password'] ?? '',
-			'required' => false,
-			'settings' => ['ignoreManagers' => true],
-		]);
-		$content .= $this->closeSection();
+		$passwordHelp = $this->t('depot.password_help', 'Require a password to download files from this depot. This overrides all collection level access controls.');
+		$content      = $this->protectionFields($depot, $passwordHelp) . $this->closeSection();
 
 		return HTMLUtils::dialog($content, 'protection-dialog');
 	}
@@ -176,12 +152,12 @@ class DepotField extends FormField
 	protected function filePreview(): string
 	{
 		$preview  = $this->esc('depot.preview', 'Preview');
-		$size     = $this->esc('depot.size', 'Size');
+		$size     = $this->esc('upload.size', 'Size');
 		$date     = $this->esc('depot.date', 'Date');
 		$count    = $this->esc('depot.count_short', 'D.Count');
 		$download = $this->esc('depot.download_short', 'D.Name');
-		$comments = $this->esc('depot.comments', 'Comments');
-		$tags     = $this->esc('depot.tags', 'Tags');
+		$comments = $this->esc('upload.comments', 'Comments');
+		$tags     = $this->esc('upload.tags', 'Tags');
 
 		return <<<HTML
 		<div class="file-preview cms-hide">
@@ -216,12 +192,12 @@ class DepotField extends FormField
 	{
 		$addFolderDisabled = $this->form->isEditMode() ? '' : 'disabled';
 
-		$edit      = $this->esc('depot.edit_file_info', 'Edit File Info');
-		$links     = $this->esc('depot.download_links', 'Download Links');
-		$download  = $this->esc('depot.download_file', 'Download File');
+		$edit      = $this->esc('upload.edit_file_info', 'Edit File Info');
+		$links     = $this->esc('upload.download_links', 'Download Links');
+		$download  = $this->esc('upload.download_file', 'Download File');
 		$upload    = $this->esc('depot.upload', 'Upload');
 		$newFolder = $this->esc('depot.new_folder', 'New Folder');
-		$trash     = $this->esc('depot.delete_file', 'Delete File');
+		$trash     = $this->esc('upload.delete_file', 'Delete File');
 
 		return <<<HTML
 		<div class="actionbar">
@@ -248,23 +224,6 @@ class DepotField extends FormField
 		return HTMLUtils::dialog($content, 'folder-add-dialog');
 	}
 
-	protected function linkDialog(string $filename, string $path = ''): string
-	{
-		$query = http_build_query(array_filter([
-			'id'         => $this->form->id,
-			'collection' => $this->form->collection,
-			'property'   => $this->name,
-			'name'       => $filename,
-			'path'       => trim($path, '/'),
-		]));
-		// 	The cms.api may have a ? because of the Stacks Preview server
-		$join = str_contains($this->form->api, '?') ? '&' : '?';
-
-		$iframe = HTMLUtils::iframe("{$this->form->baseApi()}/admin/filelinks{$join}{$query}");
-
-		return HTMLUtils::dialog($iframe, 'file-links-dialog');
-	}
-
 	/** @param array<string,mixed> $data */
 	protected function folderDialog(array $data = []): string
 	{
@@ -281,104 +240,16 @@ class DepotField extends FormField
 		return HTMLUtils::dialog($content, 'folder-edit-dialog');
 	}
 
-	/** @param array<string,mixed> $fileData */
-	protected function fileDialog(array $fileData): string
+	/** @param array<string,mixed> $data */
+	protected function dialogFields(array $data): string
 	{
-		$content = $this->fileFieldsSection($fileData);
-		$content .= $this->closeSection();
-
-		return HTMLUtils::dialog($content, 'file-edit-dialog');
+		return $this->infoFields($data) . $this->metaFields($data);
 	}
 
-	/** @param array<string,mixed> $fileData */
-	private function fileFieldsSection(array $fileData): string
+	/** Depot files are not indexed as media, so the tags field gets no suggestions. */
+	protected function tagSuggestions(): ?array
 	{
-		$fields  = $this->infoFields($fileData);
-		$fields .= $this->metaFields($fileData);
-
-		return HTMLUtils::scroller($fields);
-	}
-
-	private function closeSection(): string
-	{
-		$button = HTMLUtils::button($this->esc('btn.close', 'Close'), ['class' => 'close']);
-
-		return HTMLUtils::element('section', $button);
-	}
-
-	/** @param array<string,mixed> $fileData */
-	private function infoFields(array $fileData): string
-	{
-		$content = $this->form->subField('download', [
-			'field' => 'text',
-			'label' => $this->t('depot.download_name_label', 'Download Name'),
-			'help'  => $this->t('depot.download_name_help', 'The name of the file when it gets downloaded.'),
-			'value' => $fileData['download'] ?? $fileData['name'] ?? '',
-		]);
-		$content .= $this->form->subField('comments', [
-			'field'       => 'textarea',
-			'label'       => $this->t('depot.comments', 'Comments'),
-			'help'        => $this->t('depot.comments_help', 'Comments about this file'),
-			'value'       => $fileData['comments'] ?? '',
-		]);
-		$content .= $this->form->subField('tags', [
-			'field'       => 'list',
-			'label'       => $this->t('depot.tags', 'Tags'),
-			'help'        => $this->t('depot.tags_help', 'Add tags to help organize your files.'),
-			'placeholder' => $this->t('depot.tags_placeholder', 'Add Tags'),
-			'value'       => $fileData['tags'] ?? [],
-		]);
-
-		return HTMLUtils::details($this->t('depot.section_info', 'Info'), $content);
-	}
-
-	/** @param array<string,mixed> $fileData */
-	private function metaFields(array $fileData): string
-	{
-		$content = $this->form->subField('name', [
-			'field'    => 'text',
-			'label'    => $this->t('depot.filename_label', 'Filename'),
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $fileData['name'] ?? '',
-		]);
-		$content .= $this->form->subField('ext', [
-			'field'    => 'text',
-			'label'    => $this->t('depot.extension_label', 'Extension'),
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $fileData['ext'] ?? '',
-		]);
-		$content .= $this->form->subField('size', [
-			'field'    => 'number',
-			'label'    => $this->t('depot.size', 'Size'),
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $fileData['size'] ?? '',
-		]);
-		$content .= $this->form->subField('count', [
-			'field'    => 'number',
-			'label'    => $this->t('depot.download_count_label', 'Download Count'),
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $fileData['count'] ?? '',
-		]);
-		$content .= $this->form->subField('mime', [
-			'field'    => 'text',
-			'label'    => $this->t('depot.mime_label', 'MIME Type'),
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $fileData['mime'] ?? '',
-		]);
-		$content .= $this->form->subField('uploadDate', [
-			'field'    => 'datetime',
-			'label'    => $this->t('depot.upload_date_label', 'Upload Date'),
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $fileData['uploadDate'] ?? '',
-		]);
-
-		return HTMLUtils::details($this->t('depot.section_meta', 'Meta (Readonly)'), $content);
+		return null;
 	}
 
 	/**

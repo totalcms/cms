@@ -5,7 +5,7 @@ namespace TotalCMS\Domain\Admin\FormField;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 
-class ImageField extends FormField
+class ImageField extends UploadField
 {
 	protected string $defaultFieldType = 'image';
 	protected string $defaultInputType = 'image';
@@ -14,23 +14,13 @@ class ImageField extends FormField
 	public const PREVIEW_HEIGHT  = 600;
 	public const PREVIEW_QUALITY = 60;
 
-	public function init(): void
-	{
-		parent::init();
-
-		$this->icon = false; // No icon for image fields
-	}
-
 	public function buildFormField(): string
 	{
 		$imageData = is_array($this->value) ? $this->value : []; // Image data is stored in the value field
 
 		$api        = $this->form->baseApi();
 		$imageworks = ['w' => self::PREVIEW_WIDTH, 'h' => self::PREVIEW_HEIGHT, 'q' => self::PREVIEW_QUALITY];
-		// Dot-notation path: `mycard.image` for a card child, `mydeck.item-3.image`
-		// for a deck child, `image` for top-level. `nestedPath` is the prefix.
-		$propertyPath = $this->nestedPath !== null ? "{$this->nestedPath}.{$this->name}" : $this->name;
-		$options      = ['collection' => $this->form->collection, 'property' => $propertyPath];
+		$options    = ['collection' => $this->form->collection, 'property' => $this->propertyPath()];
 		$id           = $this->form->id;
 
 		$imagePath = MediaTwigAdapter::buildImageworksAPI($api, $id, $imageData, $imageworks, $options);
@@ -45,37 +35,43 @@ class ImageField extends FormField
 
 		$previewTemplate = HTMLUtils::element('div', $imagePreview . $imageDialog . $linkDialog, $previewAttrs);
 
-		$inputAttrs = [
-			'id'       => 'field-' . $this->uuid,
-			'type'     => 'text',
-			'name'     => $this->name,
-			'required' => $this->required ? '' : null,
-		];
-		$inputAttrs = array_filter($inputAttrs, fn (?string $x): bool => !is_null($x));
+		return $this->dropzoneShell($previewTemplate);
+	}
 
-		$input    = $this->proxyInput($inputAttrs);
-		$overlay  = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);
-		$preview  = HTMLUtils::element('div', $previewTemplate, ['class' => 'total-preview']);
-		$template = HTMLUtils::element('template', $previewTemplate, ['id' => 'template-' . $this->uuid]);
+	protected function linkTool(): string
+	{
+		return 'imageworks';
+	}
 
-		return $input . $overlay . $preview . $template;
+	protected function linkDialogClass(): string
+	{
+		return 'image-link-dialog';
 	}
 
 	protected function imagePreview(string $imagePath, string $alt): string
 	{
 		$escapedAlt = htmlspecialchars($alt, ENT_QUOTES, 'UTF-8');
 
+		$edit     = $this->esc('image.edit_info', 'Edit Image Info');
+		$links    = $this->esc('image.url', 'Image URL');
+		$featured = $this->esc('image.toggle_featured', 'Toggle Featured');
+		$download = $this->esc('image.download_original', 'Download Original Image');
+		$move     = $this->esc('image.reorder', 'Reorder Image');
+		$upload   = $this->esc('image.upload_new', 'Upload New Image');
+		$clear    = $this->esc('image.clear_cache', 'Clear Cache');
+		$trash    = $this->esc('image.delete', 'Delete Image');
+
 		return <<<HTML
 		<div class="dz-preview dz-file-preview not-found">
 			<div class="actionbar">
-				<button type="button" class="edit"     title="Edit Image Info"></button>
-				<button type="button" class="links"    title="Image URL"></button>
-				<button type="button" class="featured" title="Toggle Featured"></button>
-				<button type="button" class="download" title="Download Original Image"></button>
-				<button type="button" class="move"     title="Reorder Image"></button>
-				<button type="button" class="upload dz-clickable" title="Upload New Image"></button>
-				<button type="button" class="clear"    title="Clear Cache"></button>
-				<button type="button" class="trash"    title="Delete Image"></button>
+				<button type="button" class="edit"     title="{$edit}"></button>
+				<button type="button" class="links"    title="{$links}"></button>
+				<button type="button" class="featured" title="{$featured}"></button>
+				<button type="button" class="download" title="{$download}"></button>
+				<button type="button" class="move"     title="{$move}"></button>
+				<button type="button" class="upload dz-clickable" title="{$upload}"></button>
+				<button type="button" class="clear"    title="{$clear}"></button>
+				<button type="button" class="trash"    title="{$trash}"></button>
 			</div>
 			<img src="{$imagePath}" alt="{$escapedAlt}" onload="this.parentNode.classList.remove('not-found')" oncontextmenu="return false;" draggable="false" data-dz-thumbnail />
 			<div class="dz-progress">
@@ -87,34 +83,11 @@ class ImageField extends FormField
 		HTML;
 	}
 
-	protected function linkDialog(?string $name = null): string
-	{
-		// Gallery passes the name of the image
-		// The name should be null for an image field
-		//
-		// For nested images, `property` is a dot-notation path (e.g. `mycard.image`
-		// or `mydeck.item-3.image`) so the imageworks utility can resolve the
-		// nested image and the macro builder emits the correct Twig syntax.
-		$propertyPath = $this->nestedPath !== null ? "{$this->nestedPath}.{$this->name}" : $this->name;
-		$query        = http_build_query(array_filter([
-			'id'         => $this->form->id,
-			'collection' => $this->form->collection,
-			'property'   => $propertyPath,
-			'name'       => $name,
-		], fn (?string $v): bool => $v !== null && $v !== ''));
-		// 	The cms.api may have a ? because of the Stacks Preview server
-		$join = str_contains($this->form->api, '?') ? '&' : '?';
-
-		$iframe = HTMLUtils::iframe("{$this->form->baseApi()}/admin/imageworks{$join}{$query}");
-
-		return HTMLUtils::dialog($iframe, 'image-link-dialog');
-	}
-
 	/** @param array<string,mixed> $imageData */
 	protected function imageDialog(string $imagePath, array $imageData): string
 	{
 		$content = $this->imagePreviewSection($imagePath, $imageData);
-		$content .= $this->imageFieldsSection($imageData);
+		$content .= HTMLUtils::scroller($this->dialogFields($imageData));
 		$content .= $this->closeSection();
 
 		return HTMLUtils::dialog($content, 'split-view image-edit-dialog');
@@ -151,21 +124,20 @@ class ImageField extends FormField
 		return HTMLUtils::element('section', $image . $fpoint, $sectionAttrs);
 	}
 
-	/** @param array<string,mixed> $imageData */
-	private function imageFieldsSection(array $imageData): string
+	/** @param array<string,mixed> $data */
+	protected function dialogFields(array $data): string
 	{
-		$fields = $this->infoFields($imageData);
-		$fields .= $this->focalFields($imageData);
-		$fields .= $this->exifFields($imageData);
-		$fields .= $this->cameraFields($imageData);
-		$fields .= $this->gpsFields($imageData);
-		$fields .= $this->paletteFields($imageData);
-		$fields .= $this->metaFields($imageData);
-
-		return HTMLUtils::scroller($fields);
+		return $this->infoFields($data)
+			. $this->focalFields($data)
+			. $this->exifFields($data)
+			. $this->cameraFields($data)
+			. $this->gpsFields($data)
+			. $this->paletteFields($data)
+			. $this->metaFields($data);
 	}
 
-	private function closeSection(): string
+	/** Save + Discard rather than the plain Close the file dialogs use. */
+	protected function closeSection(): string
 	{
 		// Save keeps the edits (the field autosaves on close); Discard puts
 		// every dialog field back to what it held when the dialog opened, so
@@ -179,62 +151,36 @@ class ImageField extends FormField
 	}
 
 	/** @param array<string,mixed> $imageData */
-	private function infoFields(array $imageData): string
+	protected function infoFields(array $imageData): string
 	{
 		$content = $this->form->subField('featured', [
-			'field'    => 'checkbox',
-			'label'    => 'Featured',
-			'help'     => 'Mark this image as featured.',
-			'value'    => $imageData['featured'] ?? false,
-			'required' => false,
+			'field' => 'checkbox',
+			'label' => $this->t('image.featured_label', 'Featured'),
+			'help'  => $this->t('image.featured_help', 'Mark this image as featured.'),
+			'value' => $imageData['featured'] ?? false,
 		]);
 		$content .= $this->form->subField('alt', [
 			'field'       => 'text',
-			'label'       => 'Alt Text',
-			'help'        => 'Alt text is used by screen readers and search engines to describe the image.',
-			'placeholder' => 'Enter Alt Text',
+			'label'       => $this->t('image.alt_label', 'Alt Text'),
+			'help'        => $this->t('image.alt_help', 'Alt text is used by screen readers and search engines to describe the image.'),
+			'placeholder' => $this->t('image.alt_placeholder', 'Enter Alt Text'),
 			'value'       => $imageData['alt'] ?? '',
-			'required'    => false,
 		]);
 		$content .= $this->form->subField('link', [
 			'field'       => 'url',
-			'label'       => 'Link',
-			'help'        => 'Enter a URL to link the image to.',
+			'label'       => $this->t('image.link_label', 'Link'),
+			'help'        => $this->t('image.link_help', 'Enter a URL to link the image to.'),
 			'placeholder' => 'https://example.com',
 			'value'       => $imageData['link'] ?? '',
-			'required'    => false,
 		]);
 		$content .= $this->form->subField('tags', $this->tagFieldSettings($imageData));
 
-		return HTMLUtils::details('Info', $content);
+		return HTMLUtils::details($this->t('upload.section_info', 'Info'), $content);
 	}
 
-	/**
-	 * Settings for the generated `tags` sub-field. Attaches tag-suggestion
-	 * options sourced from the collection index when the parent media property
-	 * is indexed (the index requirement is the opt-in).
-	 *
-	 * @param array<string,mixed> $imageData
-	 *
-	 * @return array<string,mixed>
-	 */
-	protected function tagFieldSettings(array $imageData): array
+	protected function tagsHelp(): string
 	{
-		$settings = [
-			'field'       => 'list',
-			'label'       => 'Tags',
-			'help'        => 'Add tags to help organize your images.',
-			'placeholder' => 'Add Tags',
-			'value'       => $imageData['tags'] ?? [],
-			'required'    => false,
-		];
-
-		$options = $this->mediaTagOptions();
-		if ($options !== null) {
-			$settings['settings'] = ['propertyOptions' => $options];
-		}
-
-		return $settings;
+		return $this->t('image.tags_help', 'Add tags to help organize your images.');
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -242,20 +188,20 @@ class ImageField extends FormField
 	{
 		$content = $this->form->subField('focalpoint-x', [
 			'field'    => 'range',
-			'label'    => 'Focal Point X',
-			'help'     => 'Set the horizontal focal point coordinate of the image.',
+			'label'    => $this->t('image.focal_x_label', 'Focal Point X'),
+			'help'     => $this->t('image.focal_x_help', 'Set the horizontal focal point coordinate of the image.'),
 			'value'    => $imageData['focalpoint']['x'] ?? 50,
 			'required' => false,
 		]);
 		$content .= $this->form->subField('focalpoint-y', [
 			'field'    => 'range',
-			'label'    => 'Focal Point Y',
-			'help'     => 'Set the vertical focal point coordinate of the image.',
+			'label'    => $this->t('image.focal_y_label', 'Focal Point Y'),
+			'help'     => $this->t('image.focal_y_help', 'Set the vertical focal point coordinate of the image.'),
 			'value'    => $imageData['focalpoint']['y'] ?? 50,
 			'required' => false,
 		]);
 
-		return HTMLUtils::details('Focal Point', $content);
+		return HTMLUtils::details($this->t('image.section_focal', 'Focal Point'), $content);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -263,43 +209,43 @@ class ImageField extends FormField
 	{
 		$content = $this->form->subField('exif-date', [
 			'field'    => 'datetime',
-			'label'    => 'Date',
+			'label'    => $this->t('image.exif_date', 'Date'),
 			'value'    => $imageData['exif']['date'] ?? '',
 			'required' => false,
 		]);
 		$content .= $this->form->subField('exif-title', [
 			'field'       => 'text',
-			'label'       => 'Title',
-			'placeholder' => 'No Title Found',
+			'label'       => $this->t('image.exif_title', 'Title'),
+			'placeholder' => $this->t('image.exif_title_placeholder', 'No Title Found'),
 			'value'       => $imageData['exif']['title'] ?? '',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-author', [
 			'field'       => 'text',
-			'label'       => 'Author',
-			'placeholder' => 'No Autor Found',
+			'label'       => $this->t('image.exif_author', 'Author'),
+			'placeholder' => $this->t('image.exif_author_placeholder', 'No Author Found'),
 			'class'       => 'icon-user',
 			'value'       => $imageData['exif']['author'] ?? '',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-copyright', [
 			'field'       => 'text',
-			'label'       => 'Copyright',
-			'placeholder' => 'No Copyright Found',
+			'label'       => $this->t('image.exif_copyright', 'Copyright'),
+			'placeholder' => $this->t('image.exif_copyright_placeholder', 'No Copyright Found'),
 			'class'       => 'icon-copyright',
 			'value'       => $imageData['exif']['copyright'] ?? '',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-description', [
 			'field'       => 'textarea',
-			'label'       => 'Description',
-			'placeholder' => 'No Description Found',
+			'label'       => $this->t('image.exif_description', 'Description'),
+			'placeholder' => $this->t('image.exif_description_placeholder', 'No Description Found'),
 			'value'       => $imageData['exif']['description'] ?? '',
 			'rows'        => 3,
 			'required'    => false,
 		]);
 
-		return HTMLUtils::details('EXIF - Info', $content);
+		return HTMLUtils::details($this->t('image.section_exif', 'EXIF - Info'), $content);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -307,32 +253,32 @@ class ImageField extends FormField
 	{
 		$content = $this->form->subField('exif-make', [
 			'field'       => 'text',
-			'label'       => 'Make',
+			'label'       => $this->t('image.camera_make', 'Make'),
 			'class'       => 'icon-camera',
-			'placeholder' => 'Camera Make Not Found',
+			'placeholder' => $this->t('image.camera_make_placeholder', 'Camera Make Not Found'),
 			'value'       => $imageData['exif']['make'] ?? '',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-camera', [
 			'field'       => 'text',
-			'label'       => 'Model',
-			'placeholder' => 'Camera Model Not Found',
+			'label'       => $this->t('image.camera_model', 'Model'),
+			'placeholder' => $this->t('image.camera_model_placeholder', 'Camera Model Not Found'),
 			'class'       => 'icon-camera',
 			'value'       => $imageData['exif']['camera'] ?? '',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-lens', [
 			'field'       => 'text',
-			'label'       => 'Lens',
-			'placeholder' => 'Lens Not Found',
+			'label'       => $this->t('image.camera_lens', 'Lens'),
+			'placeholder' => $this->t('image.camera_lens_placeholder', 'Lens Not Found'),
 			'class'       => 'icon-camera',
 			'value'       => $imageData['exif']['lens'] ?? '',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-focalLength', [
 			'field'       => 'number',
-			'label'       => 'Focal Length',
-			'placeholder' => 'Focal Length Not Found',
+			'label'       => $this->t('image.camera_focal_length', 'Focal Length'),
+			'placeholder' => $this->t('image.camera_focal_length_placeholder', 'Focal Length Not Found'),
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['focalLength'] ?? '',
 			// Whatever the camera reported: f/2.69, 4.25mm. A fixed step makes
@@ -342,8 +288,8 @@ class ImageField extends FormField
 		]);
 		$content .= $this->form->subField('exif-aperture', [
 			'field'       => 'number',
-			'label'       => 'Aperture',
-			'placeholder' => 'Aperture Not Found',
+			'label'       => $this->t('image.camera_aperture', 'Aperture'),
+			'placeholder' => $this->t('image.camera_aperture_placeholder', 'Aperture Not Found'),
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['aperture'] ?? '',
 			// Whatever the camera reported: f/2.69, 4.25mm. A fixed step makes
@@ -353,8 +299,8 @@ class ImageField extends FormField
 		]);
 		$content .= $this->form->subField('exif-iso', [
 			'field'       => 'number',
-			'label'       => 'ISO',
-			'placeholder' => 'ISO Not Found',
+			'label'       => $this->t('image.camera_iso', 'ISO'),
+			'placeholder' => $this->t('image.camera_iso_placeholder', 'ISO Not Found'),
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['iso'] ?? '',
 			// Whatever the camera reported: f/2.69, 4.25mm. A fixed step makes
@@ -364,14 +310,14 @@ class ImageField extends FormField
 		]);
 		$content .= $this->form->subField('exif-shutterSpeed', [
 			'field'       => 'text',
-			'label'       => 'Shutter Speed',
-			'placeholder' => 'Shutter Speed Not Found',
+			'label'       => $this->t('image.camera_shutter', 'Shutter Speed'),
+			'placeholder' => $this->t('image.camera_shutter_placeholder', 'Shutter Speed Not Found'),
 			'class'       => 'icon-shutter',
 			'value'       => $imageData['exif']['shutterSpeed'] ?? '',
 			'required'    => false,
 		]);
 
-		return HTMLUtils::details('EXIF - Camera', $content);
+		return HTMLUtils::details($this->t('image.section_camera', 'EXIF - Camera'), $content);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -379,33 +325,33 @@ class ImageField extends FormField
 	{
 		$content = $this->form->subField('exif-country', [
 			'field'       => 'text',
-			'label'       => 'Country',
+			'label'       => $this->t('image.location_country', 'Country'),
 			'class'       => 'icon-gps',
-			'placeholder' => 'Country Not Found',
+			'placeholder' => $this->t('image.location_country_placeholder', 'Country Not Found'),
 			'value'       => $imageData['exif']['country'] ?? '',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-state', [
 			'field'       => 'text',
-			'label'       => 'State/Province',
+			'label'       => $this->t('image.location_state', 'State/Province'),
 			'class'       => 'icon-gps',
-			'placeholder' => 'State or Province Not Found',
+			'placeholder' => $this->t('image.location_state_placeholder', 'State or Province Not Found'),
 			'value'       => $imageData['exif']['state'] ?? '',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-city', [
 			'field'       => 'text',
-			'label'       => 'City',
+			'label'       => $this->t('image.location_city', 'City'),
 			'class'       => 'icon-gps',
-			'placeholder' => 'City Not Found',
+			'placeholder' => $this->t('image.location_city_placeholder', 'City Not Found'),
 			'value'       => $imageData['exif']['city'] ?? '',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-sublocation', [
 			'field'       => 'text',
-			'label'       => 'Sub-Location',
+			'label'       => $this->t('image.location_sublocation', 'Sub-Location'),
 			'class'       => 'icon-gps',
-			'placeholder' => 'Sub-Location Not Found',
+			'placeholder' => $this->t('image.location_sublocation_placeholder', 'Sub-Location Not Found'),
 			'value'       => $imageData['exif']['sublocation'] ?? '',
 			'required'    => false,
 		]);
@@ -414,30 +360,30 @@ class ImageField extends FormField
 
 		$content .= $this->form->subField('exif-longitude', [
 			'field'       => 'text',
-			'label'       => 'Longitude',
+			'label'       => $this->t('image.location_longitude', 'Longitude'),
 			'class'       => 'icon-gps',
-			'placeholder' => 'Longitude Not Found',
+			'placeholder' => $this->t('image.location_longitude_placeholder', 'Longitude Not Found'),
 			'value'       => $imageData['exif']['longitude'] ?? '',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-latitude', [
 			'field'       => 'text',
-			'label'       => 'Latitude',
+			'label'       => $this->t('image.location_latitude', 'Latitude'),
 			'class'       => 'icon-gps',
-			'placeholder' => 'Latitude Not Found',
+			'placeholder' => $this->t('image.location_latitude_placeholder', 'Latitude Not Found'),
 			'value'       => $imageData['exif']['latitude'] ?? '',
 			'required'    => false,
 		]);
 		$content .= $this->form->subField('exif-altitude', [
 			'field'       => 'text',
-			'label'       => 'Altitude',
+			'label'       => $this->t('image.location_altitude', 'Altitude'),
 			'class'       => 'icon-gps',
-			'placeholder' => 'Altitude Not Found',
+			'placeholder' => $this->t('image.location_altitude_placeholder', 'Altitude Not Found'),
 			'value'       => $imageData['exif']['altitude'] ?? '',
 			'required'    => false,
 		]);
 
-		return HTMLUtils::details('EXIF - Location', $content);
+		return HTMLUtils::details($this->t('image.section_location', 'EXIF - Location'), $content);
 	}
 
 	/** @param array<string,mixed> $imageData */
@@ -471,56 +417,20 @@ class ImageField extends FormField
 
 		$palette = HTMLUtils::element('div', $content, ['class' => 'palette']);
 
-		return HTMLUtils::details('Color Palette', $palette);
+		return HTMLUtils::details($this->t('image.section_palette', 'Color Palette'), $palette);
 	}
 
-	/** @param array<string,mixed> $imageData */
-	private function metaFields(array $imageData): string
+	/** Image meta: dimensions first, no extension or download count. @param array<string,mixed> $data */
+	protected function metaFields(array $data): string
 	{
-		$content = $this->form->subField('height', [
-			'field'    => 'number',
-			'label'    => 'Height',
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $imageData['height'] ?? '',
-		]);
-		$content .= $this->form->subField('width', [
-			'field'    => 'number',
-			'label'    => 'Width',
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $imageData['width'] ?? '',
-		]);
-		$content .= $this->form->subField('size', [
-			'field'    => 'number',
-			'label'    => 'Size',
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $imageData['size'] ?? '',
-		]);
-		$content .= $this->form->subField('name', [
-			'field'    => 'text',
-			'label'    => 'Filename',
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $imageData['name'] ?? '',
-		]);
-		$content .= $this->form->subField('mime', [
-			'field'    => 'text',
-			'label'    => 'MIME Type',
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $imageData['mime'] ?? '',
-		]);
-		$content .= $this->form->subField('uploadDate', [
-			'field'    => 'datetime',
-			'label'    => 'Upload Date',
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $imageData['uploadDate'] ?? '',
-		]);
+		$content = $this->readonlyField('height', $this->t('image.height_label', 'Height'), $data['height'] ?? '', 'number');
+		$content .= $this->readonlyField('width', $this->t('image.width_label', 'Width'), $data['width'] ?? '', 'number');
+		$content .= $this->readonlyField('size', $this->t('upload.size', 'Size'), $data['size'] ?? '', 'number');
+		$content .= $this->readonlyField('name', $this->t('upload.filename_label', 'Filename'), $data['name'] ?? '');
+		$content .= $this->readonlyField('mime', $this->t('upload.mime_label', 'MIME Type'), $data['mime'] ?? '');
+		$content .= $this->readonlyField('uploadDate', $this->t('upload.upload_date_label', 'Upload Date'), $data['uploadDate'] ?? '', 'datetime');
 
-		return HTMLUtils::details('Meta (Readonly)', $content);
+		return HTMLUtils::details($this->t('upload.section_meta', 'Meta (Readonly)'), $content);
 	}
 }
 

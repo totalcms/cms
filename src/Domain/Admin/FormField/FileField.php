@@ -4,44 +4,32 @@ namespace TotalCMS\Domain\Admin\FormField;
 
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
-class FileField extends FormField
+class FileField extends UploadField
 {
 	protected string $defaultFieldType = 'file';
-	protected string $defaultInputType = 'file';
-
-	public function init(): void
-	{
-		parent::init();
-
-		$this->icon = false; // No icon for file fields
-	}
 
 	public function buildFormField(): string
 	{
 		$fileData = is_array($this->value) ? $this->value : []; // File data is stored in the value field
 
-		$previewAttrs = ['class' => 'file-preview'];
-		$name         = $fileData['download'] ?? $fileData['name'] ?? '';
-		$filePreview  = $this->filePreview($name);
-		$fileDialog   = $this->fileDialog($fileData);
-		$linkDialog   = $this->linkDialog($fileData['name'] ?? null);
+		$name            = $fileData['download'] ?? $fileData['name'] ?? '';
+		$previewTemplate = HTMLUtils::element(
+			'div',
+			$this->filePreview($name) . $this->fileDialog($fileData) . $this->linkDialog(),
+			['class' => 'file-preview'],
+		);
 
-		$previewTemplate = HTMLUtils::element('div', $filePreview . $fileDialog . $linkDialog, $previewAttrs);
+		return $this->dropzoneShell($previewTemplate);
+	}
 
-		$inputAttrs = [
-			'id'       => 'field-' . $this->uuid,
-			'type'     => 'text',
-			'name'     => $this->name,
-			'required' => $this->required ? '' : null,
-		];
-		$inputAttrs = array_filter($inputAttrs, fn (?string $x): bool => !is_null($x));
+	protected function linkTool(): string
+	{
+		return 'filelinks';
+	}
 
-		$input    = $this->proxyInput($inputAttrs);
-		$overlay  = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);
-		$preview  = HTMLUtils::element('div', $previewTemplate, ['class' => 'total-preview']);
-		$template = HTMLUtils::element('template', $previewTemplate, ['id' => 'template-' . $this->uuid]);
-
-		return $input . $overlay . $preview . $template;
+	protected function linkDialogClass(): string
+	{
+		return 'file-links-dialog';
 	}
 
 	protected function filePreview(string $name = ''): string
@@ -51,14 +39,20 @@ class FileField extends FormField
 
 		$notFound = $name === '' ? 'not-found' : '';
 
+		$edit     = $this->esc('upload.edit_file_info', 'Edit File Info');
+		$links    = $this->esc('upload.download_links', 'Download Links');
+		$download = $this->esc('upload.download_file', 'Download File');
+		$upload   = $this->esc('file.upload_new', 'Upload New File');
+		$trash    = $this->esc('upload.delete_file', 'Delete File');
+
 		return <<<HTML
 		<div class="dz-preview dz-file-preview {$notFound}">
 			<div class="actionbar">
-				<button type="button" class="edit" title="Edit File Info"></button>
-				<button type="button" class="links" title="Download Links"></button>
-				<button type="button" class="download" title="Download File"></button>
-				<button type="button" class="upload dz-clickable" title="Upload New File"></button>
-				<button type="button" class="trash" title="Delete File"></button>
+				<button type="button" class="edit" title="{$edit}"></button>
+				<button type="button" class="links" title="{$links}"></button>
+				<button type="button" class="download" title="{$download}"></button>
+				<button type="button" class="upload dz-clickable" title="{$upload}"></button>
+				<button type="button" class="trash" title="{$trash}"></button>
 			</div>
 
 			<div class="file-icon {$iconClass}"></div>
@@ -73,181 +67,16 @@ class FileField extends FormField
 		HTML;
 	}
 
-	protected function linkDialog(?string $filename = null): string
+	/** @param array<string,mixed> $data */
+	protected function dialogFields(array $data): string
 	{
-		// Depot passes the name of the file
-		// The name should be null for an file field
-		//
-		// For nested files, `property` is a dot-notation path (e.g. `mycard.file`
-		// or `mydeck.one.file`) so the filelinks tool can resolve the nested
-		// file and emit the correct macro and URL.
-		$propertyPath = $this->nestedPath !== null ? "{$this->nestedPath}.{$this->name}" : $this->name;
+		$passwordHelp = $this->t('file.password_help', 'Require a password to download this file. This overrides all collection level access controls.');
+		$protection   = HTMLUtils::details(
+			$this->t('upload.section_protection', 'Protection'),
+			$this->protectionFields($data, $passwordHelp),
+		);
 
-		$query = http_build_query([
-			'id'         => $this->form->id,
-			'collection' => $this->form->collection,
-			'property'   => $propertyPath,
-			// 'name'       => $filename,
-		]);
-		// 	The cms.api may have a ? because of the Stacks Preview server
-		$join = str_contains($this->form->api, '?') ? '&' : '?';
-
-		$iframe = HTMLUtils::iframe("{$this->form->baseApi()}/admin/filelinks{$join}{$query}");
-
-		return HTMLUtils::dialog($iframe, 'file-links-dialog');
-	}
-
-	/** @param array<string,mixed> $fileData */
-	protected function fileDialog(array $fileData): string
-	{
-		$content = $this->fileFieldsSection($fileData);
-		$content .= $this->closeSection();
-
-		return HTMLUtils::dialog($content, 'file-edit-dialog');
-	}
-
-	/** @param array<string,mixed> $fileData */
-	private function fileFieldsSection(array $fileData): string
-	{
-		$fields = $this->infoFields($fileData);
-		$fields .= $this->protectionFields($fileData);
-		$fields .= $this->metaFields($fileData);
-
-		return HTMLUtils::scroller($fields);
-	}
-
-	private function closeSection(): string
-	{
-		$button = HTMLUtils::button('Close', ['class' => 'close']);
-
-		return HTMLUtils::element('section', $button);
-	}
-
-	/** @param array<string,mixed> $fileData */
-	private function infoFields(array $fileData): string
-	{
-		$content = $this->form->subField('download', [
-			'field'    => 'text',
-			'label'    => 'Download Name',
-			'help'     => 'The name of the file when it gets downloaded.',
-			'value'    => $fileData['download'] ?? $fileData['name'] ?? '',
-			'required' => false,
-		]);
-		$content .= $this->form->subField('comments', [
-			'field'       => 'textarea',
-			'label'       => 'Comments',
-			'help'        => 'Comments about this file',
-			'value'       => $fileData['comments'] ?? '',
-			'required'    => false,
-		]);
-		$content .= $this->form->subField('tags', $this->tagFieldSettings($fileData));
-
-		return HTMLUtils::details('Info', $content);
-	}
-
-	/**
-	 * Settings for the generated `tags` sub-field. Attaches tag-suggestion
-	 * options sourced from the collection index when this file property is
-	 * top-level and indexed (mirrors ImageField; suggestions are additive).
-	 *
-	 * @param array<string,mixed> $fileData
-	 *
-	 * @return array<string,mixed>
-	 */
-	protected function tagFieldSettings(array $fileData): array
-	{
-		$settings = [
-			'field'       => 'list',
-			'label'       => 'Tags',
-			'help'        => 'Add tags to help organize your files.',
-			'placeholder' => 'Add Tags',
-			'value'       => $fileData['tags'] ?? [],
-			'required'    => false,
-		];
-
-		$options = $this->mediaTagOptions();
-		if ($options !== null) {
-			$settings['settings'] = ['propertyOptions' => $options];
-		}
-
-		return $settings;
-	}
-
-	/** @param array<string,mixed> $fileData */
-	private function protectionFields(array $fileData): string
-	{
-		// Determine default protected value from settings or default to true
-		$defaultProtected = $this->settings['protectedByCollection'] ?? true;
-
-		$content = $this->form->subField('protected', [
-			'field'       => 'checkbox',
-			'label'       => 'Protected by Collection',
-			'help'        => 'Access group protection is set in the Collection.',
-			'value'       => $fileData['protected'] ?? $defaultProtected,
-			'required'    => false,
-		]);
-		$content .= $this->form->subField('password', [
-			'field'    => 'password',
-			'label'    => 'Password',
-			'help'     => 'Require a password to download this file. This overrides all collection level access controls.',
-			'value'    => $fileData['password'] ?? '',
-			'required' => false,
-			'settings' => ['ignoreManagers' => true],
-		]);
-
-		return HTMLUtils::details('Protection', $content);
-	}
-
-	/** @param array<string,mixed> $fileData */
-	private function metaFields(array $fileData): string
-	{
-		$content = $this->form->subField('name', [
-			'field'    => 'text',
-			'label'    => 'Filename',
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $fileData['name'] ?? '',
-		]);
-		$content .= $this->form->subField('ext', [
-			'field'    => 'text',
-			'label'    => 'Extension',
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $fileData['ext'] ?? '',
-		]);
-		$content .= $this->form->subField('size', [
-			'field'    => 'number',
-			'label'    => 'Size',
-			'icon'     => false,
-			'readonly' => true,
-			// Integers in file.json — an empty input serializes as null and
-			// fails validation, so cast like FileData does: an absent file, a
-			// null, or an empty string all read as 0.
-			'value'    => intval($fileData['size'] ?? 0),
-		]);
-		$content .= $this->form->subField('count', [
-			'field'    => 'number',
-			'label'    => 'Download Count',
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => intval($fileData['count'] ?? 0),
-		]);
-		$content .= $this->form->subField('mime', [
-			'field'    => 'text',
-			'label'    => 'MIME Type',
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $fileData['mime'] ?? '',
-		]);
-		$content .= $this->form->subField('uploadDate', [
-			'field'    => 'datetime',
-			'label'    => 'Upload Date',
-			'icon'     => false,
-			'readonly' => true,
-			'value'    => $fileData['uploadDate'] ?? '',
-		]);
-
-		return HTMLUtils::details('Meta (Readonly)', $content);
+		return $this->infoFields($data) . $protection . $this->metaFields($data);
 	}
 }
 

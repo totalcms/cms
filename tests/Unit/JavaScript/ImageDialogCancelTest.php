@@ -24,7 +24,7 @@ final class ImageDialogCancelTest extends TestCase
 	public function testTheDialogRendersSaveThenDiscardInOneActionsRow(): void
 	{
 		$php  = $this->src('src/Domain/Admin/FormField/ImageField.php');
-		$body = (string)preg_replace('/.*private function closeSection\(\): string/s', '', $php);
+		$body = (string)preg_replace('/.*(?:private|protected) function closeSection\(\): string/s', '', $php);
 		$body = substr($body, 0, (int)strpos($body, "\n\t}"));
 
 		// The class names are the contract: the JS binds `.cancel` and the Dialog closes on `.close`.

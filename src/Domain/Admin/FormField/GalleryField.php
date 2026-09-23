@@ -32,16 +32,8 @@ class GalleryField extends ImageField
 		}
 		$previews = HTMLUtils::element('div', $previews, ['class' => 'total-preview']);
 
-		$inputAttrs = [
-			'id'       => 'field-' . $this->uuid,
-			'type'     => 'text',
-			'name'     => $this->name,
-			'required' => $this->required ? '' : null,
-		];
-		$inputAttrs = array_filter($inputAttrs, fn (?string $x): bool => !is_null($x));
-
-		$input   = $this->proxyInput($inputAttrs);
-		$overlay = HTMLUtils::element('div', '', ['class' => 'dz-overlay dz-clickable']);
+		$input   = $this->uploadInput();
+		$overlay = $this->dropzoneOverlay();
 
 		// Template with full dialogs for the shared edit dialog (cloned once on first edit click)
 		$imagePreview    = $this->imagePreview('', '');
@@ -63,7 +55,7 @@ class GalleryField extends ImageField
 
 		$uploadButton = HTMLUtils::element('button', '', [
 			'type'  => 'button',
-			'title' => 'Upload New Image',
+			'title' => $this->t('image.upload_new', 'Upload New Image'),
 		]);
 		$uploadButton = HTMLUtils::element('div', $uploadButton, [
 			'class' => 'gallery-upload dz-clickable',
