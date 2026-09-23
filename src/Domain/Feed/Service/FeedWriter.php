@@ -126,6 +126,20 @@ readonly class FeedWriter
 			}
 		}
 
+		// The channel image: a URL, or a hash with its own title and link.
+		// RSS wants all three, so the feed's own title and link fill in.
+		$image = $meta['image'] ?? null;
+		if (is_string($image) && $image !== '') {
+			$image = ['uri' => $image];
+		}
+		if (is_array($image) && (string)($image['uri'] ?? $image['url'] ?? '') !== '') {
+			$feed->setImage([
+				'uri'   => $this->absolute((string)($image['uri'] ?? $image['url'])),
+				'title' => (string)($image['title'] ?? $meta['title']),
+				'link'  => $this->absolute((string)($image['link'] ?? $meta['link'])),
+			]);
+		}
+
 		// Podcast tags are RSS-only: the directories read RSS, and Atom has no
 		// iTunes namespace convention. Ignored for atom rather than refused.
 		if ($format === 'rss' && is_array($meta['podcast'] ?? null)) {

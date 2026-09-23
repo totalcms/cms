@@ -54,6 +54,7 @@ The route's extension sets the `Content-Type`, so `/changelog/rss` and
 | `self` | Atom only | The feed's own URL. Readers use it to re-fetch |
 | `language` | no | e.g. `en-us` |
 | `updated` | no | Defaults to the newest item's date |
+| `image` | no | The channel image: a URL, or `{url, title, link}`. Title and link default to the feed's own |
 | `generator` | no | |
 | `copyright` | no | |
 

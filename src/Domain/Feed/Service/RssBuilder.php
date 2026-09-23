@@ -2,14 +2,18 @@
 
 namespace TotalCMS\Domain\Feed\Service;
 
-use Laminas\Feed\Writer\Entry;
-use Laminas\Feed\Writer\Feed;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Support\Config;
 
+/**
+ * The `/feed/rss/{collection}` endpoint: pick a collection's objects by the
+ * request's filters, map fields by name, and hand them to {@see FeedWriter}
+ * — the same engine `cms.feed.rss()` uses, so the two endpoints can never
+ * render the same post differently.
+ */
 class RssBuilder
 {
 	public const DEFAULT_FIELD_MAP = [
@@ -23,7 +27,6 @@ class RssBuilder
 
 	/** @var array<string,string> */
 	private array $fieldMap = self::DEFAULT_FIELD_MAP;
-	private readonly Feed $feed;
 
 	public function __construct(
 		private readonly IndexFilter $indexFilter,
@@ -31,8 +34,8 @@ class RssBuilder
 		private readonly ObjectUrlBuilder $objectUrlBuilder,
 		private readonly SchemaFetcher $schemaFetcher,
 		private readonly Config $config,
+		private readonly FeedWriter $writer,
 	) {
-		$this->feed = new Feed();
 	}
 
 	/** @param array<string,string> $fieldMap */
@@ -61,7 +64,7 @@ class RssBuilder
 		$limit = isset($options['limit']) ? (int)$options['limit'] : 25;
 		unset($options['limit']);
 
-		$this->setupFeed($options);
+		$meta = $this->meta($options);
 
 		// Fetch and filter objects
 		$objects = $this->indexFilter->fetchFilteredIndex($collection, $options);
@@ -79,6 +82,7 @@ class RssBuilder
 			$objects = array_slice($objects, 0, $limit);
 		}
 
+		$items = [];
 		foreach ($objects as $object) {
 			$url = $this->objectUrlBuilder->buildUrl($collectionData, $object);
 
@@ -87,62 +91,46 @@ class RssBuilder
 				continue;
 			}
 
-			$entry = $this->createEntry($object, $url);
-			$this->feed->addEntry($entry);
+			$items[] = $this->item($object, $url);
 		}
 
-		return $this->feed->export('rss');
+		return $this->writer->write($meta, $items, 'rss');
 	}
 
-	/** @param array<string,mixed> $object */
-	private function createEntry(array $object, string $url): Entry
+	/**
+	 * One object as a FeedWriter item, through the field map.
+	 *
+	 * @param array<string,mixed> $object
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function item(array $object, string $url): array
 	{
-		$id      = $object['id'];
-		$title   = $object[$this->fieldMap['title']] ?? false;
-		$author  = $object[$this->fieldMap['author']] ?? false;
-		$content = $object[$this->fieldMap['content']] ?? false;
-		$media   = $object[$this->fieldMap['media']] ?? false;
-		$date    = $object[$this->fieldMap['date']] ?? time();
-		$mime    = $this->mimeType($media);
+		$id    = (string)$object['id'];
+		$title = $object[$this->fieldMap['title']] ?? '';
+		$date  = $object[$this->fieldMap['date']] ?? null;
 
-		if (!str_starts_with($url, 'http')) {
-			$url = 'https://' . $this->config->domain . $url;
-		}
-
-		$entry = $this->feed->createEntry();
-		$entry->setLink($url);
-		$entry->setId($id);
-		$timestamp = is_string($date) ? (strtotime($date) ?: time()) : (int)$date;
-		$entry->setDateModified($timestamp);
-
-		if ($title) {
-			$entry->setTitle($title);
-		} else {
-			// Laminas requires a title, use ID as fallback
-			$entry->setTitle($id);
-		}
-
-		if ($author) {
-			$entry->addAuthor(['name' => $author]);
-		}
-
-		if ($content) {
-			$entry->setDescription($content);
-		}
-
-		if ($media) {
-			$entry->setEnclosure([
-				'uri'    => $media,
-				'type'   => $mime,
-				'length' => 0,
-			]);
-		}
-
-		return $entry;
+		return [
+			'id'      => $id,
+			// Laminas requires a title; the id is the fallback
+			'title'   => is_string($title) && $title !== '' ? $title : $id,
+			'link'    => $url,
+			'date'    => $date ?? time(),
+			'summary' => $object[$this->fieldMap['content']] ?? '',
+			'author'  => $object[$this->fieldMap['author']] ?? '',
+			'media'   => $object[$this->fieldMap['media']] ?? '',
+		];
 	}
 
-	/** @param array<string,string|false> $options */
-	private function setupFeed(array $options): void
+	/**
+	 * Feed-level meta from the request's query options, with the site's name
+	 * and homepage as the defaults.
+	 *
+	 * @param array<string,string|false> $options
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function meta(array $options): array
 	{
 		// URL decode string options that come from query parameters
 		foreach (['name', 'description', 'link', 'image', 'language'] as $key) {
@@ -157,55 +145,19 @@ class RssBuilder
 			$defaultLink = 'https://' . ($this->config->domain ?: 'localhost');
 		}
 
-		$options = array_merge([
-			'link'        => $defaultLink,
-			'rssurl'      => false,
-			'image'       => false,
-			'name'        => ($this->config->displayName() ?: $this->domainName() ?: 'RSS') . ' Feed',
-			'description' => false,
-			'language'    => false,
-		], $options);
+		$name = (string)($options['name'] ?? (($this->config->displayName() ?: $this->domainName() ?: 'RSS') . ' Feed'));
 
-		$this->feed->setDateModified(time());
-		$this->feed->setGenerator('Total CMS');
-		$this->feed->setLink(strval($options['link']));
-
-		if ($options['language']) {
-			$this->feed->setLanguage($options['language']);
-		}
-
-		if ($options['rssurl']) {
-			$this->feed->setFeedLink($options['rssurl'], 'rss');
-		}
-
-		if ($options['image']) {
-			$this->feed->setImage([
-				'uri'   => $options['image'],
-				'title' => strval($options['name']),
-				'link'  => strval($options['link']),
-			]);
-		}
-
-		if ($options['name']) {
-			$this->feed->setTitle($options['name']);
-		}
-
-		if ($options['description']) {
-			$this->feed->setDescription($options['description']);
-		} else {
+		return [
+			'title'       => $name,
+			'link'        => (string)($options['link'] ?? $defaultLink),
 			// Laminas requires a description
-			$this->feed->setDescription(strval($options['name']));
-		}
-	}
-
-	/**
-	 * Shared with FeedWriter so the two do not answer differently for the same
-	 * file. The shared table also covers images and PDFs, which this one did
-	 * not — those previously went out as application/octet-stream.
-	 */
-	private function mimeType(string $media): string
-	{
-		return MediaMimeGuesser::guess($media);
+			'description' => (string)(($options['description'] ?? '') ?: $name),
+			'self'        => (string)($options['rssurl'] ?? ''),
+			'image'       => (string)($options['image'] ?? ''),
+			'language'    => (string)($options['language'] ?? ''),
+			'generator'   => 'Total CMS',
+			'updated'     => time(),
+		];
 	}
 
 	/** @SuppressWarnings("PHPMD.Superglobals") */

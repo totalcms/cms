@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
+use TotalCMS\Domain\Feed\Service\FeedWriter;
 use TotalCMS\Domain\Feed\Service\RssBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -37,6 +38,7 @@ final class RssBuilderTest extends TestCase
 			$this->objectUrlBuilder,
 			$this->schemaFetcher,
 			$this->config,
+			new FeedWriter($this->config),
 		);
 	}
 
