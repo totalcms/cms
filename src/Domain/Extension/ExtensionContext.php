@@ -566,14 +566,7 @@ final class ExtensionContext
 		bool $preload  = false,
 		?string $version  = null,
 	): void {
-		$this->adminAssets[] = [
-			'type'     => $type,
-			'path'     => $path,
-			'position' => $position,
-			'module'   => $module,
-			'preload'  => $preload,
-			'version'  => $version,
-		];
+		$this->adminAssets[] = self::assetRecord($type, $path, $position, $module, $preload, $version);
 	}
 
 	/**
@@ -599,7 +592,17 @@ final class ExtensionContext
 		bool $preload  = false,
 		?string $version  = null,
 	): void {
-		$this->frontendAssets[] = [
+		$this->frontendAssets[] = self::assetRecord($type, $path, $position, $module, $preload, $version);
+	}
+
+	/**
+	 * One asset registration, the same shape for admin and frontend.
+	 *
+	 * @return array{type: string, path: string, position: string|null, module: bool, preload: bool, version: string|null}
+	 */
+	private static function assetRecord(string $type, string $path, ?string $position, bool $module, bool $preload, ?string $version): array
+	{
+		return [
 			'type'     => $type,
 			'path'     => $path,
 			'position' => $position,
@@ -868,9 +871,51 @@ final class ExtensionContext
 	}
 
 	/**
-	 * Detect which capabilities this extension actually registered.
+	 * Capability key => the registration list that proves it, in display
+	 * order. `schemas` (a directory) and `mcp:resources` (two lists) are the
+	 * two that are not a single property; they are handled by name.
 	 *
-	 * Returns only capabilities that have at least one registration.
+	 * @var array<string,string|null>
+	 */
+	private const CAPABILITY_SOURCES = [
+		'twig:functions'  => 'twigFunctions',
+		'twig:filters'    => 'twigFilters',
+		'twig:globals'    => 'twigGlobals',
+		'cli:commands'    => 'commands',
+		'routes:api'      => 'routes',
+		'routes:public'   => 'publicRoutes',
+		'routes:admin'    => 'adminRoutes',
+		'admin:nav'       => 'adminNavItems',
+		'admin:widgets'   => 'dashboardWidgets',
+		'admin:assets'    => 'adminAssets',
+		'frontend:assets' => 'frontendAssets',
+		'events:listen'   => 'eventListeners',
+		'automations'     => 'automations',
+		'fields'          => 'fieldTypes',
+		'container'       => 'containerDefinitions',
+		'page-middleware' => 'pageMiddleware',
+		'form-actions'    => 'formActions',
+		'schemas'         => null,
+		'mcp:tools'       => 'mcpTools',
+		'mcp:resources'   => null,
+		'mcp:search'      => 'searchProviders',
+		'mcp:prompts'     => 'registeredMcpPrompts',
+	];
+
+	/**
+	 * Every capability key an extension can register, in display order.
+	 * Matches the keys of {@see capabilityLabels()} — a test asserts it.
+	 *
+	 * @return list<string>
+	 */
+	public static function capabilityKeys(): array
+	{
+		return array_keys(self::CAPABILITY_SOURCES);
+	}
+
+	/**
+	 * Detect which capabilities this extension actually registered — only
+	 * those with at least one registration.
 	 *
 	 * @return array<string,bool> Capability key => true
 	 */
@@ -878,71 +923,15 @@ final class ExtensionContext
 	{
 		$caps = [];
 
-		if ($this->twigFunctions !== []) {
-			$caps['twig:functions'] = true;
-		}
-		if ($this->twigFilters !== []) {
-			$caps['twig:filters'] = true;
-		}
-		if ($this->twigGlobals !== []) {
-			$caps['twig:globals'] = true;
-		}
-		if ($this->commands !== []) {
-			$caps['cli:commands'] = true;
-		}
-		if ($this->routes !== []) {
-			$caps['routes:api'] = true;
-		}
-		if ($this->publicRoutes !== []) {
-			$caps['routes:public'] = true;
-		}
-		if ($this->adminRoutes !== []) {
-			$caps['routes:admin'] = true;
-		}
-		if ($this->adminNavItems !== []) {
-			$caps['admin:nav'] = true;
-		}
-		if ($this->dashboardWidgets !== []) {
-			$caps['admin:widgets'] = true;
-		}
-		if ($this->adminAssets !== []) {
-			$caps['admin:assets'] = true;
-		}
-		if ($this->frontendAssets !== []) {
-			$caps['frontend:assets'] = true;
-		}
-		if ($this->eventListeners !== []) {
-			$caps['events:listen'] = true;
-		}
-		if ($this->automations !== []) {
-			$caps['automations'] = true;
-		}
-		if ($this->fieldTypes !== []) {
-			$caps['fields'] = true;
-		}
-		if ($this->containerDefinitions !== []) {
-			$caps['container'] = true;
-		}
-		if ($this->pageMiddleware !== []) {
-			$caps['page-middleware'] = true;
-		}
-		if ($this->formActions !== []) {
-			$caps['form-actions'] = true;
-		}
-		if (is_dir($this->extensionPath . '/schemas')) {
-			$caps['schemas'] = true;
-		}
-		if ($this->mcpTools !== []) {
-			$caps['mcp:tools'] = true;
-		}
-		if ($this->mcpResources !== [] || $this->mcpResourceTemplates !== []) {
-			$caps['mcp:resources'] = true;
-		}
-		if ($this->searchProviders !== []) {
-			$caps['mcp:search'] = true;
-		}
-		if ($this->registeredMcpPrompts !== []) {
-			$caps['mcp:prompts'] = true;
+		foreach (self::CAPABILITY_SOURCES as $cap => $property) {
+			$present = match ($cap) {
+				'schemas'       => is_dir($this->extensionPath . '/schemas'),
+				'mcp:resources' => $this->mcpResources !== [] || $this->mcpResourceTemplates !== [],
+				default         => $this->{$property} !== [],
+			};
+			if ($present) {
+				$caps[$cap] = true;
+			}
 		}
 
 		return $caps;

@@ -22,6 +22,7 @@ use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Data\ExtensionRoute;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
 use TotalCMS\Domain\Extension\Data\FormAction;
+use TotalCMS\Domain\Extension\Exception\EntrypointLoadException;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
 use TotalCMS\Domain\Extension\Repository\ExtensionStateRepository;
@@ -38,7 +39,6 @@ use TotalCMS\Domain\Extension\Service\Boot\SearchProvidersStep;
 use TotalCMS\Domain\Extension\Service\Boot\TwigStep;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Search\Service\SearchProvider;
-use TotalCMS\Domain\Skill\Service\ExtensionSkillSync;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
 use Twig\AbstractTwigCallable;
 use Twig\TwigFilter;
@@ -67,25 +67,9 @@ class ExtensionManager
 	private bool $registered = false;
 	private bool $booted     = false;
 
-	/**
-	 * Capabilities considered "risky" — they either expose publicly accessible
-	 * surface or grant access to sensitive data. Each maps to a plain-language
-	 * FYI label shown on the pre-enable review screen. Single source of truth.
-	 *
-	 * @var array<string,string>
-	 */
-	private const RISKY_CAPABILITIES = [
-		'routes:public' => 'Exposes public, unauthenticated endpoints.',
-		'events:listen' => 'Can observe all content changes.',
-		'automations'   => 'Runs server-side code automatically on a schedule or content events.',
-		// 'container' is deliberately NOT here: it is always-on infrastructure
-		// (ExtensionContext::ALWAYS_ON_CAPABILITIES) and extensions can only
-		// register their OWN services — core/known service IDs are strict-denied
-		// at apply time (see isProtectedServiceId), so there is nothing risky
-		// to disclose.
-		'mcp:tools'     => 'Registers actions AI agents can call (reachable externally if MCP public access is enabled).',
-		'mcp:resources' => 'Exposes data that AI agents can fetch.',
-	];
+	private readonly ExtensionEntrypointLoader $entrypoints;
+	private readonly ExtensionInfoBuilder $info;
+	private readonly ExtensionEnableReviewer $reviewer;
 
 	/**
 	 * The wiring steps bootAll() runs, in order, after the register/boot
@@ -132,6 +116,9 @@ class ExtensionManager
 		private readonly ExtensionGuard $guard,
 		private readonly ExtensionProfiler $profiler,
 	) {
+		$this->entrypoints = new ExtensionEntrypointLoader();
+		$this->info        = new ExtensionInfoBuilder($profiler, $guard, $manifestValidator);
+		$this->reviewer    = new ExtensionEnableReviewer();
 	}
 
 	/**
@@ -403,65 +390,7 @@ class ExtensionManager
 			$capabilities = [];
 		}
 
-		// Bundled extensions are exempt from the source scan — they version
-		// with core and ship reviewed in the package (same rationale as the
-		// update re-consent gate). Capability FYIs still show below; only the
-		// pattern findings are skipped.
-		$extPath  = $this->discovery->getExtensionPath($extensionId);
-		$findings = ($extPath !== null && !$manifest->bundled)
-			? (new DangerousCodeScanner())->scan($extPath)
-			: [];
-
-		// Intersect detected capabilities with the risky set, preserving the
-		// stable order defined by RISKY_CAPABILITIES.
-		$risky = [];
-		foreach (self::RISKY_CAPABILITIES as $cap => $label) {
-			if (($capabilities[$cap] ?? false) === true) {
-				$risky[$cap] = $label;
-			}
-		}
-
-		return [
-			'capabilities' => $capabilities,
-			'findings'     => $findings,
-			'reviewNote'   => $manifest->reviewNote,
-			'risky'        => $risky,
-			'hasFlags'     => $risky !== [] || $findings !== [],
-			'skill'        => $this->skillReview($extensionId, $extPath),
-		];
-	}
-
-	/**
-	 * The agent skill an extension ships, for the pre-enable review. A skill
-	 * is instructions to the agent, installed into the project's
-	 * `.claude/skills/` while the extension is enabled — so the operator
-	 * reads it before consenting, the way they read the source findings.
-	 *
-	 * @return array{target: string, contents: string, files: list<string>}|null
-	 */
-	private function skillReview(string $extensionId, ?string $extPath): ?array
-	{
-		$source = $extPath !== null ? $extPath . '/' . ExtensionSkillSync::SKILL_DIR : null;
-		if ($source === null || !is_file($source . '/SKILL.md')) {
-			return null;
-		}
-
-		$files    = [];
-		$iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS));
-		foreach ($iterator as $item) {
-			if ($item instanceof \SplFileInfo && $item->isFile()) {
-				$files[] = str_replace(DIRECTORY_SEPARATOR, '/', ltrim(substr($item->getPathname(), strlen($source)), DIRECTORY_SEPARATOR));
-			}
-		}
-		sort($files);
-		// SKILL.md first: it is the file the agent loads.
-		$files = array_values(array_unique(array_merge(['SKILL.md'], $files)));
-
-		return [
-			'target'   => '.claude/skills/' . ExtensionSkillSync::folderName($extensionId) . '/',
-			'contents' => (string)@file_get_contents($source . '/SKILL.md'),
-			'files'    => $files,
-		];
+		return $this->reviewer->review($extensionId, $manifest, $capabilities, $this->discovery->getExtensionPath($extensionId));
 	}
 
 	public function getExtensionPath(string $extensionId): ?string
@@ -587,7 +516,7 @@ class ExtensionManager
 			if ($manifest->hidden) {
 				continue;
 			}
-			$extensions[] = $this->buildExtensionInfo($id, $manifest, $states[$id] ?? null, $capabilityLabels);
+			$extensions[] = $this->info->build($id, $manifest, $states[$id] ?? null, $this->discovery->getExtensionPath($id), $capabilityLabels);
 		}
 
 		// Sort: enabled first, then alphabetical by name
@@ -616,54 +545,7 @@ class ExtensionManager
 
 		$state = $this->stateRepository->loadAll()[$extensionId] ?? null;
 
-		return $this->buildExtensionInfo($extensionId, $manifest, $state, ExtensionContext::capabilityLabels());
-	}
-
-	/**
-	 * @param array<string,string> $capabilityLabels
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function buildExtensionInfo(
-		string $id,
-		ExtensionManifest $manifest,
-		?ExtensionState $state,
-		array $capabilityLabels,
-	): array {
-		$enabled     = $state instanceof ExtensionState && $state->enabled;
-		$permissions = $state instanceof ExtensionState ? $state->permissions : [];
-
-		$capabilities = [];
-		foreach ($permissions as $cap => $capEnabled) {
-			if ($capEnabled) {
-				$capabilities[] = $capabilityLabels[$cap] ?? $cap;
-			}
-		}
-
-		return [
-			'id'                   => $id,
-			'name'                 => $manifest->name,
-			'description'          => $manifest->description,
-			'version'              => $manifest->version,
-			'author'               => $manifest->author,
-			'license'              => $manifest->license,
-			'capabilities'         => $capabilities,
-			'enabled'              => $enabled,
-			'error'                => $state?->error,
-			'quarantined'          => $state instanceof ExtensionState && $state->isQuarantined(),
-			'quarantineReason'     => $state?->quarantine['lastError'] ?? null,
-			'updateDisabled'       => $state instanceof ExtensionState && $state->isUpdateDisabled(),
-			'updateDisabledReason' => $state?->updateDisabled['reason'] ?? null,
-			'updateFindings'       => $state?->updateDisabled['findings'] ?? null,
-			'health'               => $this->profiler->metricsFor($id),
-			'errorCount'           => $this->guard->failureCountFor($id),
-			'incompatibility'      => $this->manifestValidator->getIncompatibilityReasons($manifest),
-			'links'                => $manifest->links,
-			'hasSettings'          => $enabled && ($permissions !== [] || $manifest->settingsSchema !== null),
-			'icon'                 => $this->resolveIcon($id, $manifest),
-			'hidden'               => $manifest->hidden,
-			'origin'               => $manifest->origin(),
-		];
+		return $this->info->build($extensionId, $manifest, $state, $this->discovery->getExtensionPath($extensionId), ExtensionContext::capabilityLabels());
 	}
 
 	// -------------------------------------------------------------------------
@@ -1263,7 +1145,7 @@ class ExtensionManager
 	 */
 	public function matchExtensionRoute(string $extensionId, string $method, string $path): ?ExtensionRoute
 	{
-		$match = $this->resolveRoute($this->extensionRoutes[$extensionId] ?? [], $method, $path);
+		$match = ExtensionRouteMatcher::resolve($this->extensionRoutes[$extensionId] ?? [], $method, $path);
 		if ($match === null) {
 			return null;
 		}
@@ -1280,7 +1162,7 @@ class ExtensionManager
 	 */
 	public function matchExtensionAdminRoute(string $extensionId, string $method, string $path): ?ExtensionRoute
 	{
-		$match = $this->resolveRoute($this->extensionAdminRoutes[$extensionId] ?? [], $method, $path);
+		$match = ExtensionRouteMatcher::resolve($this->extensionAdminRoutes[$extensionId] ?? [], $method, $path);
 		if ($match === null) {
 			return null;
 		}
@@ -1293,87 +1175,6 @@ class ExtensionManager
 			permission: ($match['route']['permission'] ?? null) === 'any' ? 'any' : 'admin',
 			params: $match['params'],
 		);
-	}
-
-	/**
-	 * Resolve a request method+path against a list of registered routes,
-	 * supporting Slim-style {placeholder} segments. An exact static match
-	 * wins over a placeholder pattern (FastRoute-style precedence), so a
-	 * literal `/embed/list` is never shadowed by `/embed/{id}` regardless of
-	 * registration order.
-	 *
-	 * @param list<array{method: string, path: string, handler: mixed, public: bool, permission: string|null}> $routes
-	 *
-	 * @return array{route: array{method: string, path: string, handler: mixed, public: bool, permission: string|null}, params: array<string,string>}|null
-	 */
-	private function resolveRoute(array $routes, string $method, string $path): ?array
-	{
-		// Pass 1: exact static match.
-		foreach ($routes as $route) {
-			if ($route['method'] === $method && $route['path'] === $path) {
-				return ['route' => $route, 'params' => []];
-			}
-		}
-
-		// Pass 2: {placeholder} patterns.
-		foreach ($routes as $route) {
-			if ($route['method'] !== $method || !str_contains($route['path'], '{')) {
-				continue;
-			}
-
-			$params = $this->matchRoutePath($route['path'], $path);
-			if ($params !== null) {
-				return ['route' => $route, 'params' => $params];
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Match a request path against a registered route pattern containing
-	 * {placeholder} segments, mirroring Slim/FastRoute semantics: `{id}`
-	 * captures a single non-slash segment, `{id:\d+}` adds a regex
-	 * constraint. Literal portions are matched verbatim (regex-quoted).
-	 * Returns the captured params on a match, or null when the path doesn't
-	 * match the pattern.
-	 *
-	 * @return array<string,string>|null
-	 */
-	private function matchRoutePath(string $pattern, string $path): ?array
-	{
-		$regex  = '';
-		$offset = 0;
-
-		preg_match_all('/\{(\w+)(?::([^{}]+))?\}/', $pattern, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
-
-		foreach ($matches as $match) {
-			$placeholder = $match[0][0];
-			$position    = $match[0][1];
-			$name        = $match[1][0];
-			$constraint  = (isset($match[2]) && $match[2][1] !== -1) ? $match[2][0] : '[^/]+';
-
-			$regex .= preg_quote(substr($pattern, $offset, $position - $offset), '#');
-			$regex .= '(?P<' . $name . '>' . $constraint . ')';
-			$offset  = $position + strlen($placeholder);
-		}
-
-		$regex .= preg_quote(substr($pattern, $offset), '#');
-
-		if (preg_match('#^' . $regex . '$#', $path, $captured) !== 1) {
-			return null;
-		}
-
-		// Keep only the named captures (the {placeholder} values), discarding
-		// preg's parallel numeric-indexed entries.
-		$params = [];
-		foreach ($captured as $key => $value) {
-			if (is_string($key)) {
-				$params[$key] = $value;
-			}
-		}
-
-		return $params;
 	}
 
 	/**
@@ -1448,25 +1249,8 @@ class ExtensionManager
 			return [];
 		}
 
-		// Load autoloader and entrypoint
-		$autoloadFile = $extPath . '/vendor/autoload.php';
-		if (is_file($autoloadFile)) {
-			require_once $autoloadFile;
-		}
-
-		$entrypointFile = $extPath . '/' . $manifest->entrypoint;
-		if (!is_file($entrypointFile)) {
-			return [];
-		}
-
-		require_once $entrypointFile;
-
-		$className = $this->resolveClassName($entrypointFile);
-		if ($className === null || !class_exists($className) || !is_subclass_of($className, ExtensionInterface::class)) {
-			return [];
-		}
-
 		try {
+			$className  = $this->entrypoints->load($manifest, $extPath);
 			$extension  = new $className();
 			$trialCtx   = new ExtensionContext($manifest, $extPath, $this->container, $this->settingsManager, $this->logger);
 			$extension->register($trialCtx);
@@ -1501,35 +1285,11 @@ class ExtensionManager
 			return;
 		}
 
-		// Load extension autoloader
-		$autoloadFile = $extPath . '/vendor/autoload.php';
-		if (is_file($autoloadFile)) {
-			require_once $autoloadFile;
-		}
-
-		// Load the entry point class
-		$entrypointFile = $extPath . '/' . $manifest->entrypoint;
-		if (!is_file($entrypointFile)) {
-			$this->logger->error("Extension '{$id}' entrypoint not found: {$manifest->entrypoint}");
-			$this->stateRepository->recordError($id, "Entrypoint not found: {$manifest->entrypoint}");
-
-			return;
-		}
-
-		require_once $entrypointFile;
-
-		// Determine the class name from the file
-		$className = $this->resolveClassName($entrypointFile);
-		if ($className === null || !class_exists($className)) {
-			$this->logger->error("Extension '{$id}' class not found in {$manifest->entrypoint}");
-			$this->stateRepository->recordError($id, "Extension class not found in {$manifest->entrypoint}");
-
-			return;
-		}
-
-		if (!is_subclass_of($className, ExtensionInterface::class)) {
-			$this->logger->error("Extension '{$id}' class does not implement ExtensionInterface");
-			$this->stateRepository->recordError($id, 'Extension class does not implement ExtensionInterface');
+		try {
+			$className = $this->entrypoints->load($manifest, $extPath);
+		} catch (EntrypointLoadException $e) {
+			$this->logger->error("Extension '{$id}': " . $e->getMessage());
+			$this->stateRepository->recordError($id, $e->getMessage());
 
 			return;
 		}
@@ -1686,130 +1446,5 @@ class ExtensionManager
 		));
 
 		$this->stateRepository->saveState($id, $state);
-	}
-
-	/**
-	 * Extract the fully qualified class name from a PHP file.
-	 *
-	 * Uses PHP's tokenizer rather than regex so we correctly skip comments
-	 * (including the word "class" inside docblocks or line comments) and
-	 * `Foo::class` constant expressions. The naive regex version once picked
-	 * up "class string" from a comment and produced a bogus class name —
-	 * extension authors shouldn't have to police their comments.
-	 */
-	private function resolveClassName(string $filePath): ?string
-	{
-		$contents = file_get_contents($filePath);
-		if ($contents === false) {
-			return null;
-		}
-
-		$tokens = token_get_all($contents);
-		$count  = count($tokens);
-
-		$namespace = '';
-		$class     = '';
-
-		for ($i = 0; $i < $count; $i++) {
-			$token = $tokens[$i];
-			if (!is_array($token)) {
-				continue;
-			}
-
-			[$id] = $token;
-
-			if ($id === T_NAMESPACE) {
-				// Collect tokens until `;` or `{` — that's the namespace name.
-				for ($j = $i + 1; $j < $count; $j++) {
-					$next = $tokens[$j];
-					if (is_string($next) && ($next === ';' || $next === '{')) {
-						break;
-					}
-					if (is_array($next) && in_array($next[0], [T_STRING, T_NS_SEPARATOR, T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NAME_RELATIVE], true)) {
-						$namespace .= $next[1];
-					}
-				}
-				$namespace = trim($namespace);
-
-				continue;
-			}
-
-			if ($id === T_CLASS) {
-				// Skip `Foo::class` (T_CLASS preceded by `::`).
-				$prev = $i - 1;
-				while ($prev >= 0 && is_array($tokens[$prev]) && in_array($tokens[$prev][0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
-					$prev--;
-				}
-				if ($prev >= 0 && is_array($tokens[$prev]) && $tokens[$prev][0] === T_DOUBLE_COLON) {
-					continue;
-				}
-
-				// Find the class name — next T_STRING token.
-				for ($j = $i + 1; $j < $count; $j++) {
-					$next = $tokens[$j];
-					if (is_array($next) && $next[0] === T_STRING) {
-						$class = $next[1];
-						break 2;
-					}
-				}
-			}
-		}
-
-		if ($class === '') {
-			return null;
-		}
-
-		return $namespace !== '' ? $namespace . '\\' . $class : $class;
-	}
-
-	/**
-	 * Resolve an extension's icon to a data URI, or null if no icon exists.
-	 */
-	private function resolveIcon(string $id, ExtensionManifest $manifest): ?string
-	{
-		if ($manifest->icon === '') {
-			return null;
-		}
-
-		$extPath = $this->discovery->getExtensionPath($id);
-		if ($extPath === null) {
-			return null;
-		}
-
-		// Block path traversal
-		if (str_contains($manifest->icon, '..')) {
-			return null;
-		}
-
-		$iconPath = $extPath . '/' . $manifest->icon;
-		if (!is_file($iconPath)) {
-			return null;
-		}
-
-		// Limit to 64KB to prevent abuse
-		$size = filesize($iconPath);
-		if ($size === false || $size > 65536) {
-			return null;
-		}
-
-		$contents = file_get_contents($iconPath);
-		if ($contents === false) {
-			return null;
-		}
-
-		$mime = match (strtolower(pathinfo($iconPath, PATHINFO_EXTENSION))) {
-			'svg'          => 'image/svg+xml',
-			'png'          => 'image/png',
-			'jpg', 'jpeg'  => 'image/jpeg',
-			'gif'          => 'image/gif',
-			'webp'         => 'image/webp',
-			default        => null,
-		};
-
-		if ($mime === null) {
-			return null;
-		}
-
-		return 'data:' . $mime . ';base64,' . base64_encode($contents);
 	}
 }
