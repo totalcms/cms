@@ -4,50 +4,15 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Stream;
 
-use Odan\Session\PhpSession;
-use TotalCMS\Domain\Auth\Service\FileAccessManager;
-use TotalCMS\Domain\Object\Service\ObjectUpdater;
-use TotalCMS\Domain\Property\Data\FileData;
-use TotalCMS\Domain\Property\Service\FileFetcher;
+use TotalCMS\Domain\Property\Service\PropertyFile;
 
+/**
+ * `/stream/{collection}/{id}/{property}` — a plain file property.
+ */
 class StreamFileAction extends StreamAction
 {
-	public function __construct(
-		protected FileFetcher $fileFetcher,
-		protected FileAccessManager $accessManager,
-		protected ObjectUpdater $objectUpdater,
-		protected PhpSession $session,
-	) {
-	}
-
-	protected function fetchFile(): FileData
+	protected function resolve(array $args, array $query): PropertyFile
 	{
-		return $this->fileFetcher->fetchFile($this->collection, $this->id, $this->property);
-	}
-
-	protected function fileExists(): bool
-	{
-		return $this->fileFetcher->fileExists($this->collection, $this->id, $this->property);
-	}
-
-	protected function loadFile(): void
-	{
-		$this->accessManager->loadFile($this->collection, $this->id, $this->property);
-	}
-
-	protected function incrementCount(FileData $file): void
-	{
-		$file->count++;
-		$this->objectUpdater->updateObjectProperty($this->collection, $this->id, $this->property, $file->transform(), silent: true);
-	}
-
-	protected function actualFileSize(): int
-	{
-		return $this->fileFetcher->fileSize($this->collection, $this->id, $this->property);
-	}
-
-	protected function streamFile()
-	{
-		return $this->fileFetcher->streamFile($this->collection, $this->id, $this->property);
+		return $this->resolver->file($args['collection'], $args['id'], $args['property']);
 	}
 }
