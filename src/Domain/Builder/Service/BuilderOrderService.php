@@ -282,4 +282,34 @@ readonly class BuilderOrderService
 			}
 		}
 	}
+
+	/**
+	 * Coerce an incoming order tree into the shape write() expects. The
+	 * payload may come from a remote, so nothing about its shape is trusted:
+	 * non-array nodes are dropped and keys are normalized to strings. write()
+	 * reconciles the ids afterwards; this only guarantees the container shape.
+	 *
+	 * @param array<mixed> $tree
+	 *
+	 * @return list<array<string,mixed>>
+	 */
+	public static function normalizeTree(array $tree): array
+	{
+		$clean = [];
+
+		foreach ($tree as $node) {
+			if (!is_array($node)) {
+				continue;
+			}
+
+			$normalized = [];
+			foreach ($node as $key => $value) {
+				$normalized[(string)$key] = $value;
+			}
+
+			$clean[] = $normalized;
+		}
+
+		return $clean;
+	}
 }
