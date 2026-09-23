@@ -13,7 +13,14 @@ use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
 
 /**
- * Service for checking user access permissions based on assigned access groups.
+ * Access checks for the current session user, and the session-free
+ * UserAuthority for OAuth-identified users.
+ *
+ * Every rule lives in UserAuthority. The `canAccess*` methods here are the
+ * session entry point: they resolve the caller's authority from the session's
+ * auth collection and ask it. They used to be a second copy of the engine —
+ * fourteen twenty-line methods that had to be kept in step with UserAuthority
+ * by hand — and the two had drifted.
  */
 readonly class AccessControlService
 {
@@ -26,325 +33,69 @@ readonly class AccessControlService
 	}
 
 	/**
+	 * Utils that need a super-admin identity. Kept here for the callers that
+	 * reference it by this name; the rule itself is UserAuthority's.
+	 */
+	public const SUPER_ADMIN_ONLY_UTILS = UserAuthority::SUPER_ADMIN_ONLY_UTILS;
+
+	/**
 	 * Check if user is a super admin.
 	 *
 	 * $collection is the auth collection the caller actually belongs to
 	 * (e.g. an OAuthUserRef's collection, which has no PHP session to fall
 	 * back on). When omitted, falls back to the current session's auth
-	 * collection so session-based callers in this class keep working
-	 * unchanged.
+	 * collection so session-based callers keep working unchanged.
 	 */
 	public function isAdmin(string $userId, string $collection = ''): bool
 	{
 		return $this->userValidation->isSuperAdmin($userId, $collection !== '' ? $collection : $this->sessionCollection());
 	}
 
-	/**
-	 * Check if user can access a specific collection's metadata with the given CRUD operation.
-	 */
 	public function canAccessCollectionMeta(string $userId, string $collection, string $operation): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessCollectionMeta($group, $collection, $operation)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canCollectionMeta($operation, $collection);
 	}
 
-	/**
-	 * Check if user can access a specific collection with the given CRUD operation.
-	 */
 	public function canAccessCollection(string $userId, string $collection, string $operation): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessCollection($group, $collection, $operation)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canCollection($operation, $collection);
 	}
 
-	/**
-	 * Check if user can perform a CRUD operation on collections metadata in general (no specific collection).
-	 * Useful for routes like GET /collections or POST /collections that don't target a specific collection.
-	 */
 	public function canAccessCollectionsMetaOperation(string $userId, string $operation): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true if any group allows the operation for collections metadata
-		foreach ($groups as $group) {
-			$permissions = $group->permissions['collectionsMeta'] ?? [];
-
-			// Check if user has any collection metadata access (all or specific collections)
-			$all     = $permissions['all'] ?? false;
-			$allowed = $permissions['allowed'] ?? [];
-
-			if (!$all && $allowed === []) {
-				continue; // No collection metadata access in this group
-			}
-
-			// Check if operation is allowed
-			$operations = $permissions['operations'] ?? [];
-			if (in_array($operation, $operations)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canCollectionsMetaOperation($operation);
 	}
 
-	/**
-	 * Check if user can perform a CRUD operation on collections in general (no specific collection).
-	 * Useful for routes like GET /collections or POST /collections that don't target a specific collection.
-	 */
 	public function canAccessCollectionsOperation(string $userId, string $operation): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true if any group allows the operation for collections
-		foreach ($groups as $group) {
-			$permissions = $group->permissions['collections'] ?? [];
-
-			// Check if user has any collection access (all or specific collections)
-			$all     = $permissions['all'] ?? false;
-			$allowed = $permissions['allowed'] ?? [];
-
-			if (!$all && $allowed === []) {
-				continue; // No collection access in this group
-			}
-
-			// Check if operation is allowed
-			$operations = $permissions['operations'] ?? [];
-			if (in_array($operation, $operations)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canCollectionsOperation($operation);
 	}
 
-	/**
-	 * Check if user can access a specific schema with the given CRUD operation.
-	 */
 	public function canAccessSchema(string $userId, string $schema, string $operation): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessSchema($group, $schema, $operation)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canSchema($operation, $schema);
 	}
 
-	/**
-	 * Check if user can perform a CRUD operation on schemas in general (no specific schema).
-	 * Useful for routes like GET /schemas or POST /schemas that don't target a specific schema.
-	 */
 	public function canAccessSchemasOperation(string $userId, string $operation): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true if any group allows the operation for schemas
-		foreach ($groups as $group) {
-			$permissions = $group->permissions['schemas'] ?? [];
-
-			// Check if user has any schema access (all or specific schemas)
-			$all     = $permissions['all'] ?? false;
-			$allowed = $permissions['allowed'] ?? [];
-
-			if (!$all && $allowed === []) {
-				continue; // No schema access in this group
-			}
-
-			// Check if operation is allowed
-			$operations = $permissions['operations'] ?? [];
-			if (in_array($operation, $operations)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canSchemasOperation($operation);
 	}
 
-	/**
-	 * Utils pages that require a super-admin session regardless of access-group
-	 * configuration. A full JumpStart export dumps every schema, collection, and
-	 * object on the site; an import overwrites collections and can seed factory
-	 * data — both are equivalent in risk to direct filesystem access.
-	 *
-	 * Public so the Permission Matrix can include these ids in its utils
-	 * dimension and mark them super-admin-only without maintaining a second copy.
-	 *
-	 * @var list<string>
-	 */
-	public const SUPER_ADMIN_ONLY_UTILS = ['jumpstart', 'permission-matrix'];
-
-	/**
-	 * Check if user can access a specific util with the given CRUD operation.
-	 */
 	public function canAccessUtils(string $userId, string $util): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Certain utils require a super-admin session; no access-group bypass.
-		if (in_array($util, self::SUPER_ADMIN_ONLY_UTILS, true)) {
-			return false;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessUtils($group, $util)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canUtil($util);
 	}
 
-	/**
-	 * Check if user can access mailer.
-	 */
 	public function canAccessMailer(string $userId): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessMailer($group)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canMailer();
 	}
 
-	/**
-	 * Check if user can access playground.
-	 */
 	public function canAccessPlayground(string $userId): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessPlayground($group)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canPlayground();
 	}
 
-	/**
-	 * May this user edit records of this collection in place?
-	 *
-	 * One question, one answer, no notion of surface — the collection table's
-	 * pencil and a future live-site editor both ask exactly this. True only
-	 * when all three hold:
-	 *
-	 *   1. the `dashboard.inlineEditing` master switch is on;
-	 *   2. the user is a super admin, or one of their groups grants `inlineEdit`;
-	 *   3. the user can `update` that collection.
-	 *
-	 * Being a super admin short-circuits (2) only. The master switch is a kill
-	 * switch — it applies to admins too — and (3) is the ordinary write check
-	 * inline editing must never be a way around.
-	 */
 	public function canInlineEdit(string $userId, string $collection): bool
 	{
 		if (!$this->inlineEditingEnabled()) {
@@ -357,168 +108,37 @@ readonly class AccessControlService
 			return true;
 		}
 
-		if (!$this->groupsGrantInlineEdit($userId)) {
-			return false;
-		}
-
-		return $this->canAccessCollection($userId, $collection, 'update');
+		return $this->sessionAuthority($userId)->canInlineEdit($collection);
 	}
 
-	/**
-	 * Condition 2 on its own: super admin, or a group that grants `inlineEdit`.
-	 */
-	private function groupsGrantInlineEdit(string $userId): bool
-	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanInlineEdit($group)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * The `dashboard.inlineEditing` master switch. Absent (a site whose
-	 * config predates the setting) means on.
-	 */
-	private function inlineEditingEnabled(): bool
-	{
-		return ($this->config->dashboard['inlineEditing'] ?? true) === true;
-	}
-
-	/**
-	 * Check if a single group grants inline editing.
-	 */
-	private function groupCanInlineEdit(AccessGroupData $group): bool
-	{
-		return $group->allowsInlineEdit();
-	}
-
-	/**
-	 * Check if user can access docs.
-	 */
 	public function canAccessDocs(string $userId): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessDocs($group)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canDocs();
 	}
 
-	/**
-	 * Check if user has ANY access to utils (boolean check, not operation-based).
-	 */
 	public function canAccessAnyUtils(string $userId): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessAnyUtils($group)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canAnyUtil();
 	}
 
-	/**
-	 * Check if user can access utils with the given CRUD operation (no specific page).
-	 */
 	public function canAccessUtilsOperation(string $userId, string $operation): bool
 	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			$permissions = $group->permissions['utils'] ?? [];
-
-			// Check if utils permissions exist
-			$all     = $permissions['all'] ?? false;
-			$allowed = $permissions['allowed'] ?? [];
-
-			// If no access at all, skip this group
-			if (!$all && $allowed === []) {
-				continue;
-			}
-
-			// Check operation permission
-			$operations = $permissions['operations'] ?? [];
-			if (in_array($operation, $operations)) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->sessionAuthority($userId)->canUtilsOperation($operation);
 	}
 
-	/**
-	 * Get all AccessGroupData objects for the user, resolving the auth
-	 * collection from the current session.
-	 *
-	 * @return array<AccessGroupData>
-	 */
-	private function getUserAccessGroups(string $userId): array
+	public function canAccessDataViews(string $userId): bool
 	{
-		// Get the collection the user is authenticated from (stored in session)
-		// This ensures we fetch the user from the correct auth collection (e.g., 'staff', 'auth')
-		return $this->getUserAccessGroupsIn($userId, $this->sessionCollection());
+		return $this->sessionAuthority($userId)->canDataViews();
 	}
 
-	/**
-	 * The auth collection the current session's user is authenticated
-	 * against. '' when there is no session user (e.g. OAuth Bearer requests,
-	 * which resolve identity via {@see authorityFor()} instead).
-	 */
-	private function sessionCollection(): string
+	public function canAccessBuilder(string $userId): bool
 	{
-		return (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
+		return $this->sessionAuthority($userId)->canBuilder();
+	}
+
+	public function canAccessExtension(string $userId, string $extensionId): bool
+	{
+		return $this->sessionAuthority($userId)->canExtension($extensionId);
 	}
 
 	/**
@@ -553,17 +173,45 @@ readonly class AccessControlService
 	 */
 	public function authorityFor(OAuthUserRef $ref): UserAuthority
 	{
-		if ($this->userValidation->isSuperAdmin($ref->userId, $ref->collection)) {
-			return new UserAuthority(isAdmin: true, groups: [], inlineEditingEnabled: $this->inlineEditingEnabled());
-		}
-
 		try {
-			$groups = $this->getUserAccessGroupsIn($ref->userId, $ref->collection);
+			return $this->authority($ref->userId, $ref->collection);
 		} catch (\Throwable) {
 			return UserAuthority::denied();
 		}
+	}
 
-		return new UserAuthority(isAdmin: false, groups: $groups, inlineEditingEnabled: $this->inlineEditingEnabled());
+	/**
+	 * The authority of a session user, resolved against the session's auth
+	 * collection. Unlike {@see authorityFor()} a lookup failure propagates:
+	 * a session naming a user that cannot be validated is an error, not a
+	 * quiet denial.
+	 */
+	private function sessionAuthority(string $userId): UserAuthority
+	{
+		return $this->authority($userId, $this->sessionCollection());
+	}
+
+	private function authority(string $userId, string $collection): UserAuthority
+	{
+		if ($this->userValidation->isSuperAdmin($userId, $collection)) {
+			return new UserAuthority(isAdmin: true, groups: [], inlineEditingEnabled: $this->inlineEditingEnabled());
+		}
+
+		return new UserAuthority(
+			isAdmin: false,
+			groups: $this->getUserAccessGroupsIn($userId, $collection),
+			inlineEditingEnabled: $this->inlineEditingEnabled(),
+		);
+	}
+
+	private function inlineEditingEnabled(): bool
+	{
+		return ($this->config->dashboard['inlineEditing'] ?? true) === true;
+	}
+
+	private function sessionCollection(): string
+	{
+		return (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
 	}
 
 	/**
@@ -605,197 +253,5 @@ readonly class AccessControlService
 		}
 
 		return $groups;
-	}
-
-	/**
-	 * Check if a single group can access a collection's metadata.
-	 */
-	private function groupCanAccessCollectionMeta(AccessGroupData $group, string $collection, string $operation): bool
-	{
-		return $group->allowsCollectionMeta($operation, $collection);
-	}
-
-	/**
-	 * Check if a single group can access a collection.
-	 */
-	private function groupCanAccessCollection(AccessGroupData $group, string $collection, string $operation): bool
-	{
-		return $group->allowsCollection($operation, $collection);
-	}
-
-	/**
-	 * Check if a single group can access a schema.
-	 */
-	private function groupCanAccessSchema(AccessGroupData $group, string $schema, string $operation): bool
-	{
-		return $group->allowsSchema($operation, $schema);
-	}
-
-	/**
-	 * Check if a single group can access a util.
-	 * Utils use simple page-based access (no operation-specific permissions).
-	 */
-	private function groupCanAccessUtils(AccessGroupData $group, string $util): bool
-	{
-		return $group->allowsUtil($util);
-	}
-
-	/**
-	 * Check if group has ANY access to utils.
-	 */
-	private function groupCanAccessAnyUtils(AccessGroupData $group): bool
-	{
-		$permissions = $group->permissions['utils'] ?? [];
-		$all         = $permissions['all'] ?? false;
-		$allowed     = $permissions['allowed'] ?? [];
-
-		// Has access if "all" is true OR if they have specific utils allowed
-		return $all || $allowed !== [];
-	}
-
-	/**
-	 * Check if a single group can access mailer.
-	 */
-	private function groupCanAccessMailer(AccessGroupData $group): bool
-	{
-		return $group->permissions['mailer'] ?? false;
-	}
-
-	/**
-	 * Check if a single group can access playground.
-	 */
-	private function groupCanAccessPlayground(AccessGroupData $group): bool
-	{
-		return $group->permissions['playground'] ?? false;
-	}
-
-	/**
-	 * Check if user can access data views.
-	 */
-	public function canAccessDataViews(string $userId): bool
-	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessDataViews($group)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check if a single group can access docs.
-	 */
-	private function groupCanAccessDocs(AccessGroupData $group): bool
-	{
-		return $group->permissions['docs'] ?? false;
-	}
-
-	/**
-	 * Check if a single group can access data views.
-	 */
-	private function groupCanAccessDataViews(AccessGroupData $group): bool
-	{
-		return $group->permissions['dataviews'] ?? false;
-	}
-
-	/**
-	 * Check if user can access the Site Builder.
-	 */
-	public function canAccessBuilder(string $userId): bool
-	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessBuilder($group)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check if a single group can access the Site Builder.
-	 *
-	 * Groups saved before the dedicated `builder` permission existed fall
-	 * back to their `templates` permission — that is what effectively gated
-	 * Builder access until now (the builder routes ran behind
-	 * TemplateAccessMiddleware), so upgrades preserve who could already use
-	 * it. Once the group is re-saved, the explicit value wins.
-	 */
-	private function groupCanAccessBuilder(AccessGroupData $group): bool
-	{
-		return $group->permissions['builder'] ?? ($group->permissions['templates'] ?? false);
-	}
-
-	/**
-	 * Check if user can access an extension's admin surface (nav items,
-	 * dashboard widgets, and admin pages registered with permission 'any').
-	 * Admin-only extension pages are unaffected — they require a super
-	 * admin regardless of groups.
-	 */
-	public function canAccessExtension(string $userId, string $extensionId): bool
-	{
-		// Admin users have full access
-		if ($this->userValidation->isSuperAdmin($userId, $this->sessionCollection())) {
-			return true;
-		}
-
-		// Get user's access groups
-		$groups = $this->getUserAccessGroups($userId);
-		if ($groups === []) {
-			return false;
-		}
-
-		// Check each group - return true on first match
-		foreach ($groups as $group) {
-			if ($this->groupCanAccessExtension($group, $extensionId)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check if a single group can access an extension's admin surface.
-	 *
-	 * Groups saved before the `extensions` block existed fall back to
-	 * all=true — extension nav items marked 'any' were visible to every
-	 * dashboard user until now, so upgrades preserve that. Restriction is
-	 * opt-in via the access-group form.
-	 */
-	private function groupCanAccessExtension(AccessGroupData $group, string $extensionId): bool
-	{
-		$permissions = $group->permissions['extensions'] ?? ['all' => true, 'allowed' => []];
-
-		if (($permissions['all'] ?? false) === true) {
-			return true;
-		}
-
-		return in_array($extensionId, (array)($permissions['allowed'] ?? []), true);
 	}
 }

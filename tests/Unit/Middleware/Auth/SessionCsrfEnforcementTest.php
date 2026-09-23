@@ -17,7 +17,9 @@ use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
+use TotalCMS\Domain\Auth\Service\LoginRedirector;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
+use TotalCMS\Domain\Auth\Service\SessionActivityTracker;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
@@ -124,7 +126,6 @@ function makeDualAuthMiddleware(PhpSession $session, CSRFTokenManager $csrfManag
 		$authenticator,
 		new JsonRenderer(),
 		new ResponseFactory(),
-		$session,
 		csrfTestConfig(),
 		csrfTestAccessManager(),
 		test()->createMock(PersistentLoginService::class),
@@ -133,6 +134,8 @@ function makeDualAuthMiddleware(PhpSession $session, CSRFTokenManager $csrfManag
 		$editionFeatures,
 		csrfTestValidator($csrfManager),
 		test()->createMock(PropertyMetaResolver::class),
+		new SessionActivityTracker($session, csrfTestConfig(), test()->createMock(PersistentLoginService::class)),
+		new LoginRedirector($session, new ResponseFactory()),
 		csrfTestLoggerFactory(),
 	);
 }
@@ -140,12 +143,12 @@ function makeDualAuthMiddleware(PhpSession $session, CSRFTokenManager $csrfManag
 function makeAuthMiddleware(PhpSession $session, CSRFTokenManager $csrfManager): AuthMiddleware
 {
 	return new AuthMiddleware(
-		new ResponseFactory(),
-		$session,
 		csrfTestConfig(),
 		csrfTestAccessManager(),
 		test()->createMock(PersistentLoginService::class),
 		csrfTestValidator($csrfManager),
+		new SessionActivityTracker($session, csrfTestConfig(), test()->createMock(PersistentLoginService::class)),
+		new LoginRedirector($session, new ResponseFactory()),
 		csrfTestLoggerFactory(),
 	);
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Middleware\Auth;
 
-use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,15 +15,16 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Auth\Service\LoginRedirector;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
+use TotalCMS\Domain\Auth\Service\SessionActivityTracker;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
-use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\ForbiddenRenderer;
@@ -53,7 +53,6 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private ApiKeyAuthenticator $authenticator,
 		private JsonRenderer $jsonRenderer,
 		private ResponseFactoryInterface $responseFactory,
-		private PhpSession $session,
 		private Config $config,
 		private AccessManager $accessManager,
 		private PersistentLoginService $persistentLoginService,
@@ -62,6 +61,8 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private EditionFeatureService $editionFeatures,
 		private CSRFRequestValidator $csrfValidator,
 		private PropertyMetaResolver $propertyMeta,
+		private SessionActivityTracker $activity,
+		private LoginRedirector $redirector,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::DualAuth);
@@ -150,8 +151,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 	 */
 	private function sessionAuth(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
 	{
-		// This is the existing AuthMiddleware logic
-		$this->trackSessionActivity();
+		$this->activity->touch();
 
 		// Try to restore from persistent login if not authenticated
 		if (!$this->accessManager->sessionHasUser()) {
@@ -200,7 +200,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			return $this->unauthorizedJsonResponse('Authentication required');
 		}
 
-		return $this->redirectToRoute($request, 'login');
+		return $this->redirector->toRoute($request, 'login');
 	}
 
 	private function redirectToDenied(ServerRequestInterface $request): ResponseInterface
@@ -213,53 +213,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 			);
 		}
 
-		return $this->redirectToRoute($request, 'denied');
-	}
-
-	private function redirectToRoute(ServerRequestInterface $request, string $route): ResponseInterface
-	{
-		// Set the current request URL in the session so we can send the user back to it after login
-		$this->session->set(SessionKeys::REQUEST_ORIGIN_URL, (string)$request->getUri());
-		$this->session->set(SessionKeys::REQUEST_REFERER_URL, $request->getHeaderLine('referer'));
-
-		// User is not logged in. Redirect to login page.
-		$routeParser = RouteContext::fromRequest($request)->getRouteParser();
-		$url         = $routeParser->urlFor($route);
-
-		return $this->responseFactory->createResponse()
-			->withStatus(302)
-			->withHeader('Location', $url);
-	}
-
-	private function trackSessionActivity(): void
-	{
-		$now  = time();
-		$last = $this->session->get(SessionKeys::LAST_ACTIVITY) ?? $now;
-		$max  = $this->config->session['gc_maxlifetime'];
-
-		// Check for persistent login - use hasPersistentLoginOrCookie() to handle
-		// the case where session was garbage collected but cookie still exists
-		$isPersistentLogin = $this->persistentLoginService->hasPersistentLoginOrCookie();
-
-		$this->session->set(SessionKeys::LAST_ACTIVITY, $now);
-
-		if ($now - $last > $max / 4) {
-			// Regenerate session ID every 4th of the max session lifetime
-			$this->session->regenerateId();
-		}
-
-		// Check if session has expired
-		if ($now - $last > $max) {
-			if ($isPersistentLogin) {
-				// Clean up expired tokens periodically
-				$this->persistentLoginService->cleanupExpiredTokens();
-
-				return;
-			}
-			// Session has expired for non-persistent login. Clear and destroy the session.
-			$this->session->clear();
-			$this->session->destroy();
-		}
+		return $this->redirector->toRoute($request, 'denied');
 	}
 
 	/**

@@ -17,6 +17,11 @@ use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
  */
 final class UserAuthority
 {
+	/**
+	 * Utils that need a super-admin identity; no access group can grant them.
+	 */
+	public const SUPER_ADMIN_ONLY_UTILS = ['jumpstart', 'permission-matrix'];
+
 	/** @var array<string,bool> */
 	private array $memo = [];
 
@@ -104,6 +109,10 @@ final class UserAuthority
 				return true;
 			}
 
+			if (in_array($util, self::SUPER_ADMIN_ONLY_UTILS, true)) {
+				return false;
+			}
+
 			foreach ($this->groups as $group) {
 				if ($group->allowsUtil($util)) {
 					return true;
@@ -145,6 +154,11 @@ final class UserAuthority
 	 * collection target (e.g. `GET /collections`, `POST /collections`).
 	 * Mirrors AccessControlService::canAccessCollectionsOperation().
 	 */
+	public function canUtilsOperation(string $op): bool
+	{
+		return $this->remember("utilsOperation:$op", fn (): bool => $this->groupGrantsBulkOperation('utils', $op));
+	}
+
 	public function canCollectionsOperation(string $op): bool
 	{
 		return $this->remember("collectionsOperation:$op", fn (): bool => $this->groupGrantsBulkOperation('collections', $op));
@@ -205,6 +219,39 @@ final class UserAuthority
 	public function canPlayground(): bool
 	{
 		return $this->remember('playground', fn (): bool => $this->groupGrantsBooleanPermission('playground'));
+	}
+
+	public function canMailer(): bool
+	{
+		return $this->remember('mailer', fn (): bool => $this->groupGrantsBooleanPermission('mailer'));
+	}
+
+	public function canDocs(): bool
+	{
+		return $this->remember('docs', fn (): bool => $this->groupGrantsBooleanPermission('docs'));
+	}
+
+	/**
+	 * Groups saved before the `extensions` permission existed have no key and
+	 * keep the access they always had: every extension.
+	 */
+	public function canExtension(string $extensionId): bool
+	{
+		return $this->remember("extension:$extensionId", function () use ($extensionId): bool {
+			if ($this->isAdmin) {
+				return true;
+			}
+
+			foreach ($this->groups as $group) {
+				$permissions = $group->permissions['extensions'] ?? ['all' => true, 'allowed' => []];
+
+				if (($permissions['all'] ?? false) === true || in_array($extensionId, (array)($permissions['allowed'] ?? []), true)) {
+					return true;
+				}
+			}
+
+			return false;
+		});
 	}
 
 	/**

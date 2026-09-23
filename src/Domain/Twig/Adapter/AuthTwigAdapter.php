@@ -111,9 +111,14 @@ readonly class AuthTwigAdapter
 	}
 
 	/**
-	 * Check if user is in admin group (bypasses all access controls).
+	 * The policy every access check shares: with auth off everything is
+	 * allowed, with no session user nothing is, otherwise ask the access
+	 * control service about the current user. It used to be written out in
+	 * each of the fifteen methods below.
+	 *
+	 * @param \Closure(string): bool $check
 	 */
-	public function isAdmin(): bool
+	private function withUser(\Closure $check): bool
 	{
 		if (!$this->config->authEnabled()) {
 			return true;
@@ -124,7 +129,15 @@ readonly class AuthTwigAdapter
 			return false;
 		}
 
-		return $this->accessControl->isAdmin($userData['id']);
+		return $check((string)$userData['id']);
+	}
+
+	/**
+	 * Check if user is in admin group (bypasses all access controls).
+	 */
+	public function isAdmin(): bool
+	{
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->isAdmin($userId));
 	}
 
 	/**
@@ -132,16 +145,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessCollection(string $collection, string $operation = 'read'): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessCollection($userData['id'], $collection, $operation);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessCollection($userId, $collection, $operation));
 	}
 
 	/**
@@ -168,16 +172,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessCollectionsOperation(string $operation = 'read'): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessCollectionsOperation($userData['id'], $operation);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessCollectionsOperation($userId, $operation));
 	}
 
 	/**
@@ -185,16 +180,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessCollectionMeta(string $collection, string $operation = 'read'): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessCollectionMeta($userData['id'], $collection, $operation);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessCollectionMeta($userId, $collection, $operation));
 	}
 
 	/**
@@ -202,16 +188,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessCollectionsMetaOperation(string $operation = 'read'): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessCollectionsMetaOperation($userData['id'], $operation);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessCollectionsMetaOperation($userId, $operation));
 	}
 
 	/**
@@ -219,16 +196,7 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessSchema(string $schema, string $operation = 'read'): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessSchema($userData['id'], $schema, $operation);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessSchema($userId, $schema, $operation));
 	}
 
 	/**
@@ -236,128 +204,47 @@ readonly class AuthTwigAdapter
 	 */
 	public function canAccessSchemasOperation(string $operation = 'read'): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessSchemasOperation($userData['id'], $operation);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessSchemasOperation($userId, $operation));
 	}
 
 	public function canAccessUtil(string $page): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessUtils($userData['id'], $page);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessUtils($userId, $page));
 	}
 
 	public function canAccessUtils(): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessAnyUtils($userData['id']);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessAnyUtils($userId));
 	}
 
 	public function canAccessMailer(): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessMailer($userData['id']);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessMailer($userId));
 	}
 
 	public function canAccessPlayground(): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessPlayground($userData['id']);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessPlayground($userId));
 	}
 
 	public function canAccessDataViews(): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessDataViews($userData['id']);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessDataViews($userId));
 	}
 
 	public function canAccessBuilder(): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessBuilder($userData['id']);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessBuilder($userId));
 	}
 
 	public function canAccessExtension(string $extensionId): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessExtension($userData['id'], $extensionId);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessExtension($userId, $extensionId));
 	}
 
 	public function canAccessDocs(): bool
 	{
-		if (!$this->config->authEnabled()) {
-			return true;
-		}
-
-		$userData = $this->accessManager->userData();
-		if ($userData === [] || !isset($userData['id'])) {
-			return false;
-		}
-
-		return $this->accessControl->canAccessDocs($userData['id']);
+		return $this->withUser(fn (string $userId): bool => $this->accessControl->canAccessDocs($userId));
 	}
 
 	/**
