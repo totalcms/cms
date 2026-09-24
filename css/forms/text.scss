@@ -36,12 +36,22 @@
 
     textarea {
         max-width  : 100%;
-        max-height : 60vh; // Auto-grow ceiling (textarea.js); falls back to internal scrollbar past this
+        max-height : 60vh; // Content-sizing ceiling; the internal scrollbar takes over past this
         resize     : vertical;
 
         &[rows] {
             height     : auto;
             min-height : 3em;
+        }
+
+        // A plain textarea grows and shrinks with its content, never below its
+        // rows. field-sizing ignores the rows attribute, so TextareaField hands
+        // the count over as --rows; the floor adds the .5rem padding and 1px
+        // border on each side because the box is border-box. A manual drag of
+        // the corner still sets an explicit height, as before.
+        &[data-autosize] {
+            field-sizing   : content;
+            min-block-size : calc(var(--rows, 8) * 1lh + 1rem + 2px);
         }
     }
 

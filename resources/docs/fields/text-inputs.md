@@ -30,26 +30,14 @@ The following can be used on text fields to limit the number of characters.
 
 ### Auto-grow
 
-Textareas auto-grow as the user types, expanding to fit content up to a
-`max-height` of 60vh (after which the internal scrollbar takes over). The
-`rows` setting controls the *initial* height; the field grows beyond that
-as content is added.
+A textarea sizes itself to its content as the user types, growing and shrinking with the text. The `rows` setting is the floor: the field never gets shorter than that many lines, so an empty field still shows its full height. It stops growing at a `max-height` of 60vh, after which the internal scrollbar takes over.
 
-On desktop, the corner resize handle still works — drag it to make the
-field larger and that manual size is preserved across subsequent edits.
-The textarea never auto-shrinks once expanded, avoiding layout jitter
-when content is deleted. This is the same behavior Slack, Gmail, and
-GitHub use for comment fields.
-
-On touch devices (iPad, iPhone), the corner handle is hard to grab
-precisely, so auto-grow is the primary way the field expands. This is
-what fixes the long-standing "can't make my textarea taller on iPad"
-complaint.
+This is plain CSS, the `field-sizing: content` property, so it works on public forms and in the admin with no script. On desktop the corner resize handle still works: drag it and the field keeps the size you chose. On touch devices, where the handle is hard to grab, growing with the content is how the field gets taller.
 
 ### Disabling auto-grow
 
 Set `autoGrow: false` in the settings object when you want a strictly
-fixed-height textarea with an internal scrollbar (e.g., a "short summary"
+fixed-height textarea, exactly `rows` lines tall, with an internal scrollbar (e.g., a "short summary"
 field where you want to discourage long content).
 
 ```json

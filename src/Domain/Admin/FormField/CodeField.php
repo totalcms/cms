@@ -6,6 +6,9 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 
 class CodeField extends TextareaField
 {
+	/** An editor replaces the textarea and sizes itself. */
+	protected bool $sizesToContent = false;
+
 	protected string $defaultFieldType = 'text';
 	protected string $defaultInputType = 'code';
 

@@ -1,6 +1,5 @@
 import TotalField from './totalfield';
 import Identifier from './identifier';
-import Textarea from './textarea';
 import NumberField from './number';
 import SelectField from './select';
 import Checkbox from './checkbox';
@@ -26,7 +25,7 @@ export const coreFieldTypes = {
 	hidden   : TotalField,
 	email    : TotalField,
 	phone    : TotalField,
-	textarea : Textarea,
+	textarea : TotalField,
 	number   : NumberField,
 	select   : SelectField,
 	checkbox : Checkbox,

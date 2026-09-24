@@ -10,6 +10,8 @@ class StyledtextField extends TextareaField
 {
 	protected string $defaultFieldType = 'styledtext';
 	protected string $defaultInputType = 'textarea';
+	/** An editor replaces the textarea and sizes itself. */
+	protected bool $sizesToContent = false;
 
 	public function buildFormField(): string
 	{
