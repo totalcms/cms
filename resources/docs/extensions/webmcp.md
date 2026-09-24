@@ -1,12 +1,12 @@
 ---
 title: "WebMCP (Bundled Extension)"
-description: "Make your forms and public collections callable by a browser AI agent inside the visitor's own session, through the WebMCP origin trial in Chrome 149+. Experimental."
+description: "Make your forms callable by a browser AI agent, and hand it the MCP server's read tools inside the visitor's own session, through the WebMCP origin trial in Chrome 149+. Experimental."
 since: "3.6.0"
 ---
 
 # WebMCP
 
-`totalcms/webmcp` — bundled with Total CMS, off by default, **experimental**. Renders forms an AI agent in the visitor's browser can fill and submit, and registers search and get tools for the collections you choose, so an agent on the page can look content up. One Twig call; no API keys, no separate login, because the agent works inside the session the visitor already has.
+`totalcms/webmcp` — bundled with Total CMS, off by default, **experimental**. Renders forms an AI agent in the visitor's browser can fill and submit, and hands that agent the **MCP server's read tools**, called inside the session the visitor already has. One Twig call for forms; nothing to configure for reads beyond what the MCP server already knows. Read tools need the Standard edition or above, because they are the MCP server's — Data Views tools (`list_views`/`query_view`) stay Pro and simply come back empty below it.
 
 ## What WebMCP is
 
@@ -20,7 +20,7 @@ Chrome 149 opened the WebMCP **origin trial**; Edge follows Chromium; no other e
 
 1. **Admin → Extensions → WebMCP → Enable** (or `tcms extension:enable totalcms/webmcp`).
 2. To use it without a flag, register your site's origin for the trial at [developer.chrome.com/origintrials](https://developer.chrome.com/origintrials/#/register_trial/4163014905550602241) and paste the token into **Chrome origin-trial token**. The extension emits it as a `<meta http-equiv="origin-trial">` on every page. For local testing, `chrome://flags/#enable-webmcp-testing` does the same job.
-3. Under **Collections exposed as read tools**, pick the collections an agent may search. A visitor's agent only sees those that allow public `read` under the collection's **Public Operations**, because the API would refuse the call anyway; your own agent, while you are signed in, sees them all.
+3. There is no list of collections to expose here. What an agent may read is what the MCP server would let that person read: each collection's **MCP Access** on its MCP tab — Public collections are readable by anyone; Authenticated collections are readable by a signed-in, non-administrator only when their access groups grant them read; Admin only collections are never reachable by anyone but an administrator — plus the per-property **Expose to MCP** flag, and the `mcp.enabled` / `mcp.publicAccess` switches. See [MCP Server](docs/mcp/server).
 
 The settings page also has **Agent-callable forms** and **Read tools** switches. Off, the templates below keep rendering plain forms and nothing is registered.
 
@@ -48,25 +48,32 @@ When an agent submits, the bundled script answers with the form's own save resul
 
 ## Read tools
 
-Two tools are registered when the page loads, the same shape as the MCP server's `query_collection` and `get_object`:
+When the page loads in a browser that has the WebMCP API, `assets/webmcp.js` makes one `tools/list` call to this site's `/mcp` endpoint and registers only the tools the server marks read-only, under the server's own name, description and input schema: `list_collections`, `describe_collection`, `query_collection`, `get_object`, `search_collection`, `search_collections`, `list_views` and `query_view`, `get_site_info`, every [saved-query tool](docs/mcp/saved-query-tools) you have defined, and any read-only tool an extension adds. `assets/webmcp.js` imports `assets/bridge.js` — the script that answers an agent's form submits — so a page that needs read tools gets both from one script tag; a page with **Read tools** off and **Agent-callable forms** on loads `assets/bridge.js` alone. A browser without the API costs the server nothing: the script checks for `document.modelContext` before it makes a request.
 
-| Tool | Input | Returns |
-|---|---|---|
-| `search_content` | `collection`, `q` (search terms), `limit` (up to **Search results per call**) | id, title, summary or description, and url of each match |
-| `get_content` | `collection`, `id` | the object as JSON |
+The call carries the browser's own session, and the MCP server treats a same-origin session like an OAuth client acting for that user: a visitor stays the same anonymous client it always was, seeing collections whose MCP Access is Public (with `mcp.publicAccess` on); a signed-in user who is not an administrator sees collections whose MCP Access is Authenticated or Public **and** that their access groups grant read on — a collection whose MCP Access is Admin only is never readable by a non-administrator, grant or not; an administrator sees everything. The script registers only tools the server marks read-only, so no write tool ever reaches an agent on a page; for a signed-in session the server itself lists none. Results pass through the same shaping as any MCP client's: properties not exposed to MCP are stripped, styled text is rendered, drafts are hidden from anyone without draft authority.
 
-`collection` is an enum of the collections the manifest offers, each named in the tool description with its plural label and its description, which you wrote. The tools read the collections API with the browser's own session, so what the enum holds depends on who is looking: a visitor gets the listed collections that allow public `read`; a signed-in operator gets every listed collection, on a public page as much as in the dashboard. Both tools are annotated `readOnlyHint` and `untrustedContentHint`, so a well-behaved agent treats what comes back as data, not instructions.
+Every registered tool is annotated `readOnlyHint` and `untrustedContentHint`, so a well-behaved agent treats what comes back as data, not instructions.
+
+### Upgrading from the first release
+
+The first release of this extension had its own two tools, `search_content` and `get_content`, over the REST collections API, with its own list of exposed collections. Those are gone. What changes for an operator:
+
+- **Which collections an agent sees** now follows each collection's MCP Access, not its Public Operations or the old list. A collection with public REST read but "Admin only" MCP access disappears from a visitor's agent; the reverse appears.
+- **Which fields come back** follows the per-property Expose to MCP flag.
+- **Signed-in users** who are not administrators now see collections whose MCP Access is Authenticated or Public and that their access groups grant read on — never a collection marked Admin only — where before anyone signed into the operator collection saw every listed collection.
+- **The edition, `mcp.enabled` and `mcp.publicAccess`** now apply to the browser too. On a Lite site the read tools stop working; Standard and above have them — Data Views tools (`list_views`/`query_view`) are Pro and simply come back empty below it. Forms still work everywhere.
+- The **Collections exposed as read tools** and **Search results per call** settings are removed; a saved value is ignored.
 
 ## In the admin dashboard
 
-**Read tools in the admin dashboard**, off by default, loads the script on dashboard pages too, so an agent in the operator's own browser gets the same two tools there. Admin forms are not annotated: an agent in the dashboard would be the operator, with none of the scopes, group access or audit trail the [MCP server](docs/mcp/server) gives an agent, so for agents that manage content, that server is the right surface.
+**Read tools in the admin dashboard**, off by default, loads the script on dashboard pages too, so an agent in the operator's own browser gets the same tools there — read-only, even for an administrator. Admin forms are not annotated. For an agent that manages content, the [MCP server](docs/mcp/server) with an API key or OAuth is the right surface: scopes, group access and an activity log.
 
 ## Testing
 
 - Chrome 150+ with `chrome://flags/#enable-webmcp-testing` enabled, or the origin-trial token in place.
 - The [Model Context Tool Inspector](https://github.com/beaufortfrancois/model-context-tool-inspector) Chrome extension lists a page's tools, calls them by hand, and can drive them through Gemini.
 - DevTools console: the script logs under `[webmcp]` how many tools it registered, and every agent submit.
-- `GET /api/ext/totalcms/webmcp/tools.json` is the manifest the script reads; it shows which collections made the list for the session asking.
+- The Network tab shows one POST to `/mcp` per page load, `Mcp-Method: tools/list`, and one per call. A 403 means the edition does not include MCP; a 404 means `mcp.enabled` is off; a 401 for a signed-out visitor means `mcp.publicAccess` is off.
 
 ## Security
 
@@ -81,4 +88,4 @@ An agent inside your visitor's session is a **confused deputy**: it carries the 
 
 - Chrome and Chromium-based browsers only, behind the origin trial or a flag. No Safari or Firefox.
 - The declarative attributes may be renamed by the spec; this extension will follow, and the change will be an extension update.
-- Read tools cover collections with public read; there are no write tools beyond the forms you annotate, by design.
+- Read tools are the MCP server's, so they need the Standard edition or above and `mcp.enabled`; there are no write tools beyond the forms you annotate, by design.
