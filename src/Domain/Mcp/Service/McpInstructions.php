@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Service;
 
+use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
 /**
@@ -21,15 +22,17 @@ use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
  */
 final class McpInstructions
 {
-	public static function for(McpPersona $persona): string
+	public static function for(McpPersona $persona, McpCallerKind $kind = McpCallerKind::Anonymous): string
 	{
 		$parts = [self::orientation(), self::reading(), self::lookup()];
 
-		$parts[] = match ($persona) {
-			McpPersona::PUBLIC_       => 'This connection can only read. Writing and the admin tools (schemas, collections, cache) need an API key or an OAuth token; tell the user so rather than trying.',
-			McpPersona::AUTHENTICATED => 'This connection writes within the approving user\'s scopes and access groups; a refused write means the user is not allowed it, not that the tool is broken. ' . self::writing(),
-			McpPersona::ADMIN         => self::writing() . ' ' . self::modelling(),
-		};
+		$parts[] = $kind === McpCallerKind::Session
+			? 'This connection runs inside a browser session and can only read, whatever the user may do in the admin. Writing and the admin tools (schemas, collections, cache) need the MCP server with an API key or an OAuth token; tell the user so rather than trying.'
+			: match ($persona) {
+				McpPersona::PUBLIC_       => 'This connection can only read. Writing and the admin tools (schemas, collections, cache) need an API key or an OAuth token; tell the user so rather than trying.',
+				McpPersona::AUTHENTICATED => 'This connection writes within the approving user\'s scopes and access groups; a refused write means the user is not allowed it, not that the tool is broken. ' . self::writing(),
+				McpPersona::ADMIN         => self::writing() . ' ' . self::modelling(),
+			};
 
 		return implode(' ', $parts);
 	}

@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Mcp\Service;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
@@ -42,7 +43,7 @@ final readonly class McpRequestAuthorizer
 	public function authorize(ServerRequestInterface $request, ResponseInterface $response, McpRequestBody $body): McpPersona|ResponseInterface
 	{
 		try {
-			$persona = $this->mcpAuth->resolvePersona($request);
+			$caller = $this->mcpAuth->resolveCaller($request);
 		} catch (McpAuthException $e) {
 			// WWW-Authenticate triggers lazy-auth UX in MCP clients — the host
 			// knows whether to prompt for credentials (login_required) vs surface
@@ -62,10 +63,26 @@ final readonly class McpRequestAuthorizer
 			);
 		}
 
+		$persona = $caller->persona;
+
 		// Stash the persona so individual tool handlers can read it during
 		// dispatch. Must happen before build() since the SDK invokes handlers
 		// synchronously from inside the server->run() call below.
 		$this->personaContext->set($persona);
+		$this->personaContext->setCallerKind($caller->kind);
+
+		// A browser session (WebMCP) is equipped like a read-only OAuth grant
+		// the user approved: read scope, the tool surface, and the user's own
+		// access-group authority, so every gate below behaves as for a Bearer
+		// caller. The client id names the surface in the activity log.
+		if ($caller->kind === McpCallerKind::Session) {
+			$this->personaContext->setScopes(McpAuth::SESSION_SCOPES);
+			$this->personaContext->setClientId('webmcp');
+			$this->personaContext->setUserId($caller->userRef);
+			$this->personaContext->setAuthority($this->accessControl->authorityFor(
+				OAuthUserRef::parse($caller->userRef, (string)$this->config->auth['collection']),
+			));
+		}
 
 		// For Bearer / OAuth requests capture the validated scopes into
 		// PersonaContext so OAuthScopeEvaluator can read them during tool
@@ -117,7 +134,7 @@ final readonly class McpRequestAuthorizer
 			$isLifecycle = $body->isLifecycle();
 
 			if ($method !== '' && !$isLifecycle && !$this->scopeEvaluator->isAllowed($this->personaContext->getScopes(), $operation)) {
-				$clientId = (string)$request->getAttribute('oauth_client_id', '');
+				$clientId = $this->personaContext->getClientId();
 				$this->activityLogger->scopeRejected($clientId, $operation, $this->personaContext->getScopes());
 
 				$response = $this->renderer->json($response, [

@@ -8,10 +8,13 @@ use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Mcp\Auth\Data\McpCaller;
+use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
@@ -20,6 +23,7 @@ use TotalCMS\Domain\Mcp\Service\McpRequestAuthorizer;
 use TotalCMS\Domain\Mcp\Service\McpRequestBody;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\McpUrlBuilder;
+use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeEvaluator;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
@@ -86,14 +90,25 @@ final class McpRequestAuthorizerTest extends TestCase
 		);
 	}
 
-	private function request(string $json): ServerRequest
+	private function request(string $json = '{}'): ServerRequest
 	{
 		return new ServerRequest('POST', '/mcp', ['Content-Type' => 'application/json'], $json);
 	}
 
+	/** @param array<string,mixed> $params */
+	private function body(string $method, array $params = []): McpRequestBody
+	{
+		$rpc = ['method' => $method];
+		if ($params !== []) {
+			$rpc['params'] = $params;
+		}
+
+		return McpRequestBody::from($this->request((string)json_encode($rpc)));
+	}
+
 	public function testAuthFailureIsA401WithTheReasonInWwwAuthenticate(): void
 	{
-		$this->mcpAuth->method('resolvePersona')->willThrowException(new McpAuthException('Login required', 'login_required'));
+		$this->mcpAuth->method('resolveCaller')->willThrowException(new McpAuthException('Login required', 'login_required'));
 		$request = $this->request('{"method":"initialize"}');
 
 		$result = $this->authorizer()->authorize($request, new Response(), McpRequestBody::from($request));
@@ -110,7 +125,7 @@ final class McpRequestAuthorizerTest extends TestCase
 
 	public function testAdminPersonaSkipsTheScopeGateAndIsStashed(): void
 	{
-		$this->mcpAuth->method('resolvePersona')->willReturn(McpPersona::ADMIN);
+		$this->mcpAuth->method('resolveCaller')->willReturn(new McpCaller(McpPersona::ADMIN, McpCallerKind::ApiKey));
 		$this->accessControl->expects($this->never())->method('authorityFor');
 		$request = $this->request('{"method":"tools/call","params":{"name":"anything"}}');
 
@@ -123,7 +138,7 @@ final class McpRequestAuthorizerTest extends TestCase
 
 	public function testBearerRequestCapturesScopesClientIdUserIdAndAuthority(): void
 	{
-		$this->mcpAuth->method('resolvePersona')->willReturn(McpPersona::AUTHENTICATED);
+		$this->mcpAuth->method('resolveCaller')->willReturn(new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::OAuth));
 		$authority = new UserAuthority(isAdmin: false, groups: []);
 		$this->accessControl->expects($this->once())->method('authorityFor')->willReturn($authority);
 		$request = $this->request('{"method":"ping"}')
@@ -147,7 +162,7 @@ final class McpRequestAuthorizerTest extends TestCase
 
 	public function testLifecycleMessagesBypassTheScopeGate(): void
 	{
-		$this->mcpAuth->method('resolvePersona')->willReturn(McpPersona::AUTHENTICATED);
+		$this->mcpAuth->method('resolveCaller')->willReturn(new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::OAuth));
 		$request = $this->request('{"method":"notifications/initialized"}')->withAttribute('oauth_scopes', []);
 
 		self::assertSame(McpPersona::AUTHENTICATED, $this->authorizer()->authorize($request, new Response(), McpRequestBody::from($request)));
@@ -155,7 +170,7 @@ final class McpRequestAuthorizerTest extends TestCase
 
 	public function testAScopeRejectionIsA403WithInsufficientScope(): void
 	{
-		$this->mcpAuth->method('resolvePersona')->willReturn(McpPersona::AUTHENTICATED);
+		$this->mcpAuth->method('resolveCaller')->willReturn(new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::OAuth));
 		$request = $this->request('{"method":"tools/call","params":{"name":"create_object"}}')
 			->withAttribute('oauth_scopes', ['cms:read'])
 			->withAttribute('oauth_client_id', 'client-1');
@@ -176,9 +191,84 @@ final class McpRequestAuthorizerTest extends TestCase
 
 	public function testAnAllowedOperationPassesTheGate(): void
 	{
-		$this->mcpAuth->method('resolvePersona')->willReturn(McpPersona::AUTHENTICATED);
+		$this->mcpAuth->method('resolveCaller')->willReturn(new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::OAuth));
 		$request = $this->request('{"method":"tools/list"}')->withAttribute('oauth_scopes', ['mcp:tools']);
 
 		self::assertSame(McpPersona::AUTHENTICATED, $this->authorizer()->authorize($request, new Response(), McpRequestBody::from($request)));
+	}
+
+	public function testSessionCallerIsEquippedWithReadScopesAndAuthority(): void
+	{
+		$authority = new UserAuthority(isAdmin: false, groups: []);
+		$this->mcpAuth->method('resolveCaller')->willReturn(
+			new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::Session, 'members:member-1'),
+		);
+		$this->accessControl->expects(self::once())->method('authorityFor')
+			->with(self::callback(static fn (OAuthUserRef $ref): bool => $ref->collection === 'members' && $ref->userId === 'member-1'))
+			->willReturn($authority);
+
+		$result = $this->authorizer()->authorize($this->request(), new Response(), $this->body('tools/list'));
+
+		self::assertSame(McpPersona::AUTHENTICATED, $result);
+		self::assertSame(McpCallerKind::Session, $this->personaContext->callerKind());
+		self::assertTrue($this->personaContext->isReadOnly());
+		self::assertSame(['cms:read', 'mcp:tools'], $this->personaContext->getScopes());
+		self::assertSame('webmcp', $this->personaContext->getClientId());
+		self::assertSame('members:member-1', $this->personaContext->getUserId());
+		self::assertSame($authority, $this->personaContext->getAuthority());
+	}
+
+	public function testAdminSessionCallerIsReadOnlyToo(): void
+	{
+		$this->mcpAuth->method('resolveCaller')->willReturn(
+			new McpCaller(McpPersona::ADMIN, McpCallerKind::Session, 'auth:admin-user-test-com'),
+		);
+		$this->accessControl->method('authorityFor')->willReturn(new UserAuthority(isAdmin: true, groups: []));
+
+		$this->authorizer()->authorize($this->request(), new Response(), $this->body('tools/list'));
+
+		self::assertTrue($this->personaContext->isReadOnly());
+		self::assertSame(['cms:read', 'mcp:tools'], $this->personaContext->getScopes());
+	}
+
+	public function testSessionCallerPassesTheTransportScopeGateForToolCalls(): void
+	{
+		// mcp:tools covers tools/list and tools/call generically at this gate;
+		// write refusal happens by non-registration (Task 5), not here.
+		$this->mcpAuth->method('resolveCaller')->willReturn(
+			new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::Session, 'members:member-1'),
+		);
+		$this->accessControl->method('authorityFor')->willReturn(new UserAuthority(isAdmin: false, groups: []));
+
+		$result = $this->authorizer()->authorize($this->request(), new Response(), $this->body('tools/call', ['name' => 'query_collection']));
+
+		self::assertSame(McpPersona::AUTHENTICATED, $result);
+	}
+
+	public function testSessionCallerIsRefusedResourcesByScope(): void
+	{
+		$this->mcpAuth->method('resolveCaller')->willReturn(
+			new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::Session, 'members:member-1'),
+		);
+		$this->accessControl->method('authorityFor')->willReturn(new UserAuthority(isAdmin: false, groups: []));
+
+		// No mcp:resources scope for a session: the gate answers 403 insufficient_scope.
+		$result = $this->authorizer()->authorize($this->request(), new Response(), $this->body('resources/list'));
+
+		self::assertInstanceOf(ResponseInterface::class, $result);
+		self::assertSame(403, $result->getStatusCode());
+	}
+
+	public function testApiKeyCallerRecordsItsKindAndNothingElseChanges(): void
+	{
+		$this->mcpAuth->method('resolveCaller')->willReturn(new McpCaller(McpPersona::ADMIN, McpCallerKind::ApiKey));
+
+		$result = $this->authorizer()->authorize($this->request(), new Response(), $this->body('tools/list'));
+
+		self::assertSame(McpPersona::ADMIN, $result);
+		self::assertSame(McpCallerKind::ApiKey, $this->personaContext->callerKind());
+		self::assertFalse($this->personaContext->isReadOnly());
+		self::assertSame([], $this->personaContext->getScopes());
+		self::assertSame('', $this->personaContext->getClientId());
 	}
 }

@@ -4,35 +4,42 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Auth\Service;
 
+use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
+use TotalCMS\Domain\Security\CSRF\RequestOriginValidator;
 use TotalCMS\Support\Config;
 
 final class McpAuthTest extends TestCase
 {
 	private MockObject $authenticator;
 	private MockObject $accessControl;
+	private MockObject $accessManager;
 	private Config $config;
 
 	protected function setUp(): void
 	{
 		$this->authenticator = $this->createMock(ApiKeyAuthenticator::class);
 		$this->accessControl = $this->createMock(AccessControlService::class);
+		$this->accessManager = $this->createMock(AccessManager::class);
 
 		// Config can't be createMock'd reliably because its constructor expects
 		// a fully-populated settings array; bypass it.
-		$this->config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$this->config->mcp  = ['publicAccess' => true];
-		$this->config->auth = ['collection' => 'auth'];
+		$this->config         = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$this->config->mcp    = ['publicAccess' => true];
+		$this->config->auth   = ['collection' => 'auth'];
+		$this->config->domain = 'test.local';
 	}
 
 	/**
@@ -45,7 +52,31 @@ final class McpAuthTest extends TestCase
 			static fn (EditionFeature $f): bool => !in_array($f, $denied, true),
 		);
 
-		return new McpAuth($this->authenticator, $this->accessControl, $this->config, $editions);
+		// RequestOriginValidator is final readonly: use the real one against
+		// config->domain, and drive it through the Origin header.
+		return new McpAuth(
+			$this->authenticator,
+			$this->accessControl,
+			$this->config,
+			$editions,
+			$this->accessManager,
+			new RequestOriginValidator($this->config),
+		);
+	}
+
+	/** A cookie-carrying browser POST: no bearer attribute, no API key header. */
+	private function sessionRequest(?string $origin = 'https://test.local'): ServerRequest
+	{
+		$request = new ServerRequest('POST', 'https://test.local/mcp');
+
+		return $origin === null ? $request : $request->withHeader('Origin', $origin);
+	}
+
+	private function sessionUser(string $id, bool $superAdmin, string $collection = 'auth'): void
+	{
+		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->accessManager->method('sessionIsSuperAdmin')->willReturn($superAdmin);
+		$this->accessManager->method('userData')->willReturn(['id' => $id, 'collection' => $collection]);
 	}
 
 	/**
@@ -371,5 +402,128 @@ final class McpAuthTest extends TestCase
 		$persona = $this->auth()->resolvePersona($request);
 
 		$this->assertSame(McpPersona::PUBLIC_, $persona);
+	}
+
+	// ── Session tests ───────────────────────────────────────────────────────
+
+	public function testSuperAdminSessionIsAdminSessionCaller(): void
+	{
+		$this->sessionUser('admin-user-test-com', true);
+
+		$caller = $this->auth()->resolveCaller($this->sessionRequest());
+
+		self::assertSame(McpPersona::ADMIN, $caller->persona);
+		self::assertSame(McpCallerKind::Session, $caller->kind);
+		self::assertSame('auth:admin-user-test-com', $caller->userRef);
+	}
+
+	public function testOtherSessionUserIsAuthenticatedSessionCaller(): void
+	{
+		$this->sessionUser('member-1', false, 'members');
+
+		$caller = $this->auth()->resolveCaller($this->sessionRequest());
+
+		self::assertSame(McpPersona::AUTHENTICATED, $caller->persona);
+		self::assertSame(McpCallerKind::Session, $caller->kind);
+		self::assertSame('members:member-1', $caller->userRef);
+	}
+
+	public function testCrossOriginSessionIsAnonymous(): void
+	{
+		$this->sessionUser('admin-user-test-com', true);
+
+		$caller = $this->auth()->resolveCaller($this->sessionRequest('https://evil.example'));
+
+		self::assertSame(McpPersona::PUBLIC_, $caller->persona);
+		self::assertSame(McpCallerKind::Anonymous, $caller->kind);
+	}
+
+	public function testOriginNullIsNotSameOrigin(): void
+	{
+		$this->sessionUser('admin-user-test-com', true);
+
+		$caller = $this->auth()->resolveCaller($this->sessionRequest('null'));
+
+		self::assertSame(McpCallerKind::Anonymous, $caller->kind);
+		self::assertSame(McpPersona::PUBLIC_, $caller->persona);
+		self::assertSame('', $caller->userRef);
+	}
+
+	public function testMissingOriginIsAnonymous(): void
+	{
+		$this->sessionUser('admin-user-test-com', true);
+
+		$caller = $this->auth()->resolveCaller($this->sessionRequest(null));
+
+		self::assertSame(McpCallerKind::Anonymous, $caller->kind);
+		self::assertSame(McpPersona::PUBLIC_, $caller->persona);
+		self::assertSame('', $caller->userRef);
+	}
+
+	public function testSessionNamingAnUnknownUserIsAnonymous(): void
+	{
+		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->accessManager->method('sessionIsSuperAdmin')->willReturn(false);
+		$this->accessManager->method('userData')->willReturn([]);
+
+		$caller = $this->auth()->resolveCaller($this->sessionRequest());
+
+		self::assertSame(McpCallerKind::Anonymous, $caller->kind);
+	}
+
+	public function testCrossOriginSessionWithPublicAccessOffIsLoginRequired(): void
+	{
+		$this->config->mcp = ['publicAccess' => false];
+		$this->sessionUser('admin-user-test-com', true);
+
+		$this->expectException(McpAuthException::class);
+		$this->auth()->resolveCaller($this->sessionRequest('https://evil.example'));
+	}
+
+	public function testApiKeyBeatsSession(): void
+	{
+		$this->sessionUser('admin-user-test-com', true);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->authenticator->method('authenticate')->willReturn($this->createStub(ApiKeyData::class));
+
+		$caller = $this->auth()->resolveCaller($this->sessionRequest());
+
+		self::assertSame(McpPersona::ADMIN, $caller->persona);
+		self::assertSame(McpCallerKind::ApiKey, $caller->kind);
+	}
+
+	public function testBearerBeatsSessionEvenWhenOAuthIsNotLicensed(): void
+	{
+		// A bearer attribute makes this a credentialed request regardless of
+		// whether the edition honors OAuth — it must not fall through to the
+		// session branch just because the edition denies branch 1.
+		$this->sessionUser('admin-user-test-com', true);
+		$request = $this->sessionRequest()->withAttribute('oauth_scopes', ['mcp:tools']);
+
+		$caller = $this->auth(denied: [EditionFeature::OAUTH_SERVER])->resolveCaller($request);
+
+		self::assertSame(McpCallerKind::Anonymous, $caller->kind);
+		self::assertSame(McpPersona::PUBLIC_, $caller->persona);
+	}
+
+	public function testApiKeyHeaderBeatsSessionEvenWhenApiKeysAreNotLicensed(): void
+	{
+		// Same as above for the API-key path: !$apiKeysAvailable alone must not
+		// short-circuit past consulting hasApiKeyHeader() before the session
+		// branch is allowed to run.
+		$this->sessionUser('admin-user-test-com', true);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
+
+		$caller = $this->auth(denied: [EditionFeature::API_KEYS])->resolveCaller($this->sessionRequest());
+
+		self::assertSame(McpCallerKind::Anonymous, $caller->kind);
+		self::assertSame(McpPersona::PUBLIC_, $caller->persona);
+	}
+
+	public function testResolvePersonaStillReturnsThePersona(): void
+	{
+		$this->sessionUser('admin-user-test-com', true);
+
+		self::assertSame(McpPersona::ADMIN, $this->auth()->resolvePersona($this->sessionRequest()));
 	}
 }

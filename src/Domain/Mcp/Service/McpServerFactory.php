@@ -82,7 +82,7 @@ readonly class McpServerFactory
 			// Persona-aware: a read-only connection is not told how to write. The
 			// text is the skill's judgment for clients that never install a skill —
 			// see McpInstructions.
-			->setInstructions(McpInstructions::for($persona))
+			->setInstructions(McpInstructions::for($persona, $this->personaContext->callerKind()))
 			->setSession($this->sessionStore)
 			->setLogger($this->logger)
 			// Bound how long a modern-era `subscriptions/listen` stream holds a
@@ -124,7 +124,7 @@ readonly class McpServerFactory
 		// see the first pass's tools as collisions and skip them — don't do that.
 		$this->schemaToolRegistrar->register($this->toolRegistry);
 
-		foreach ($this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority()) as $tool) {
+		foreach ($this->registrableTools($persona) as $tool) {
 			// Persona-aware tools (Phase 1 content tools) expose a builder that
 			// renders a per-persona description — e.g., the field catalog must
 			// only list collections the caller can actually see. Static-string
@@ -212,6 +212,35 @@ readonly class McpServerFactory
 		$this->promptRegistrar->registerExtensionPrompts($builder, $this->extensions->getAllMcpPrompts(), $prompts, $persona);
 
 		return $builder->build();
+	}
+
+	/**
+	 * The tools the server built for this request registers: the persona's
+	 * view of the registry, and — for a browser session (WebMCP), which reads
+	 * only — nothing that is not readOnlyHint: true. A tool with no
+	 * annotations is read-only by default; an annotations object must
+	 * declare readOnlyHint true (the same effective-annotations rule build()
+	 * applies: null annotations fall back to the read-only default, but a
+	 * present annotations object is taken exactly as declared — a partially
+	 * annotated tool that leaves readOnlyHint unset is NOT read-only, matching
+	 * what tools/list reports to the client via that same object).
+	 * Omission, not a handler wrapper: tools/list never shows the tool and
+	 * tools/call on it fails as unknown, and a wrapper would change the
+	 * closure the SDK reflects on for tools that declare no inputSchema.
+	 *
+	 * @return list<McpToolDefinition>
+	 */
+	public function registrableTools(McpPersona $persona): array
+	{
+		$tools = $this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority());
+		if (!$this->personaContext->isReadOnly()) {
+			return $tools;
+		}
+
+		return array_values(array_filter(
+			$tools,
+			static fn (McpToolDefinition $tool): bool => $tool->annotations === null || $tool->annotations->readOnlyHint === true,
+		));
 	}
 
 	/**

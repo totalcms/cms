@@ -8,6 +8,7 @@ use Mcp\Exception\ToolCallException;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 
@@ -45,6 +46,8 @@ class PersonaContext
 	private string $clientId = '';
 
 	private string $userId = '';
+
+	private McpCallerKind $callerKind = McpCallerKind::Anonymous;
 
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
@@ -151,6 +154,30 @@ class PersonaContext
 	public function getUserId(): string
 	{
 		return $this->userId;
+	}
+
+	/**
+	 * How this request's caller proved itself. Set by McpRequestAuthorizer
+	 * next to the persona; defaults to anonymous so a context nobody resolved
+	 * (tests, CLI) behaves exactly as before the kind existed.
+	 */
+	public function setCallerKind(McpCallerKind $kind): void
+	{
+		$this->callerKind = $kind;
+	}
+
+	public function callerKind(): McpCallerKind
+	{
+		return $this->callerKind;
+	}
+
+	/**
+	 * A browser session (WebMCP) is read-only whatever its persona: the server
+	 * built for it registers no tool that is not readOnlyHint: true.
+	 */
+	public function isReadOnly(): bool
+	{
+		return $this->callerKind === McpCallerKind::Session;
 	}
 
 	/**

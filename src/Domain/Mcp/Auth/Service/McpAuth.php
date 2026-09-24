@@ -8,11 +8,16 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mcp\Auth\Data\McpCaller;
+use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
+use TotalCMS\Domain\Security\CSRF\OriginVerdict;
+use TotalCMS\Domain\Security\CSRF\RequestOriginValidator;
 use TotalCMS\Support\Config;
 
 /**
@@ -30,7 +35,13 @@ use TotalCMS\Support\Config;
  *   2. API key — ApiKeyAuthenticator validates the X-API-Key / Authorization
  *      header against stored keys and path/method scopes. A valid key resolves
  *      to ADMIN.
- *   3. Anonymous — resolves to PUBLIC_ when mcp.publicAccess is true; throws
+ *   3. Session — a same-origin request (browser-set Origin matching the
+ *      site, which page script cannot forge) carrying a session cookie and
+ *      neither of the credentials above. A super-admin session resolves to
+ *      ADMIN, any other validated user to AUTHENTICATED; McpRequestAuthorizer
+ *      marks the caller read-only. A session that fails the origin check is
+ *      simply anonymous: a cross-site page cannot borrow the cookie.
+ *   4. Anonymous — resolves to PUBLIC_ when mcp.publicAccess is true; throws
  *      login_required otherwise.
  *
  * When `mcp.publicAccess` is false in config, anonymous callers are rejected
@@ -61,15 +72,25 @@ use TotalCMS\Support\Config;
  */
 readonly class McpAuth
 {
+	/** Consent a browser session is deemed to carry: reads and the tool surface. */
+	public const SESSION_SCOPES = ['cms:read', 'mcp:tools'];
+
 	public function __construct(
 		private ApiKeyAuthenticator $apiKeyAuthenticator,
 		private AccessControlService $accessControl,
 		private Config $config,
 		private EditionFeatureService $editionFeatures,
+		private AccessManager $accessManager,
+		private RequestOriginValidator $originValidator,
 	) {
 	}
 
 	public function resolvePersona(ServerRequestInterface $request): McpPersona
+	{
+		return $this->resolveCaller($request)->persona;
+	}
+
+	public function resolveCaller(ServerRequestInterface $request): McpCaller
 	{
 		// ── 1. OAuth Bearer path ────────────────────────────────────────────────
 		// OAuthBearerMiddleware (upstream) validates the JWT and sets oauth_scopes
@@ -116,11 +137,11 @@ readonly class McpAuth
 			) {
 				$ref = OAuthUserRef::parse($userId, (string)$this->config->auth['collection']);
 				if ($this->accessControl->isAdmin($ref->userId, $ref->collection)) {
-					return McpPersona::ADMIN;
+					return new McpCaller(McpPersona::ADMIN, McpCallerKind::OAuth);
 				}
 			}
 
-			return McpPersona::AUTHENTICATED;
+			return new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::OAuth);
 		}
 
 		// ── 2. API key path ─────────────────────────────────────────────────────
@@ -130,6 +151,13 @@ readonly class McpAuth
 		$apiKeysAvailable = $this->editionFeatures->can(EditionFeature::API_KEYS);
 
 		if (!$apiKeysAvailable || !$this->apiKeyAuthenticator->hasApiKeyHeader($request)) {
+			// ── 3. Session path ──
+			$session = $this->sessionCaller($request);
+			if ($session instanceof McpCaller) {
+				return $session;
+			}
+
+			// ── 4. Anonymous ──
 			if (!(bool)($this->config->mcp['publicAccess'] ?? false)) {
 				throw new McpAuthException(
 					'Anonymous access is disabled. Provide an API key in the X-API-Key header or Authorization: Bearer.',
@@ -137,7 +165,7 @@ readonly class McpAuth
 				);
 			}
 
-			return McpPersona::PUBLIC_;
+			return new McpCaller(McpPersona::PUBLIC_, McpCallerKind::Anonymous);
 		}
 
 		// authenticate() handles extract + repo lookup + method/path scope check
@@ -153,6 +181,43 @@ readonly class McpAuth
 			);
 		}
 
-		return McpPersona::ADMIN;
+		return new McpCaller(McpPersona::ADMIN, McpCallerKind::ApiKey);
+	}
+
+	/**
+	 * The browser-session caller, or null when this request is not one: no
+	 * session user, an Origin that is not this site (CSRF-grade — page script
+	 * cannot set Origin), or a session naming a user that no longer validates.
+	 * Null never means "error": the caller is then whatever an anonymous
+	 * client would be.
+	 */
+	private function sessionCaller(ServerRequestInterface $request): ?McpCaller
+	{
+		// A bearer attribute or API-key header makes this a credentialed request
+		// even when the edition doesn't honor that credential — it is then
+		// anonymous (or login_required), never a session, cookie or not.
+		if ($request->getAttribute('oauth_scopes') !== null || $this->apiKeyAuthenticator->hasApiKeyHeader($request)) {
+			return null;
+		}
+
+		if (!$this->accessManager->sessionHasUser()) {
+			return null;
+		}
+
+		if ($this->originValidator->verdict($request) !== OriginVerdict::SameOrigin) {
+			return null;
+		}
+
+		$user       = $this->accessManager->userData();
+		$userId     = (string)($user['id'] ?? '');
+		$collection = (string)($user['collection'] ?? '');
+		if ($userId === '' || $collection === '') {
+			return null;
+		}
+
+		$ref     = OAuthUserRef::compose($collection, $userId);
+		$persona = $this->accessManager->sessionIsSuperAdmin() ? McpPersona::ADMIN : McpPersona::AUTHENTICATED;
+
+		return new McpCaller($persona, McpCallerKind::Session, $ref);
 	}
 }

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\McpInstructions;
 
@@ -45,4 +46,17 @@ test('it stays short enough to prepend to every conversation', function (): void
 	foreach (McpPersona::cases() as $persona) {
 		expect(str_word_count(McpInstructions::for($persona)))->toBeLessThan(420);
 	}
+});
+
+test('a session caller is told it reads only, whatever its persona', function (): void {
+	foreach ([McpPersona::ADMIN, McpPersona::AUTHENTICATED, McpPersona::PUBLIC_] as $persona) {
+		$text = McpInstructions::for($persona, McpCallerKind::Session);
+
+		expect($text)->toContain('browser session')->toContain('only read')->toContain('API key')
+			->not->toContain('patch_object')->not->toContain('create_schema');
+	}
+});
+
+test('the kind defaults to anonymous and changes nothing for existing callers', function (): void {
+	expect(McpInstructions::for(McpPersona::ADMIN))->toBe(McpInstructions::for(McpPersona::ADMIN, McpCallerKind::ApiKey));
 });

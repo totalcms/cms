@@ -10,6 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpListeningStream;
 use TotalCMS\Domain\Mcp\Service\McpRequestAuthorizer;
 use TotalCMS\Domain\Mcp\Service\McpRequestBody;
@@ -49,6 +50,7 @@ readonly class McpEndpointAction
 		private EditionFeatureService $editionFeatures,
 		private JsonRenderer $renderer,
 		private Config $config,
+		private PersonaContext $personaContext,
 	) {
 	}
 
@@ -92,6 +94,10 @@ readonly class McpEndpointAction
 			// advertise those. Every other client keeps the full surface.
 			$toolsOnly = ToolsOnlyClients::matches($name);
 		}
+
+		// A browser session gets the tools-only surface the ChatGPT path uses:
+		// WebMCP has no slot for resources, prompts or subscriptions.
+		$toolsOnly = $toolsOnly || $this->personaContext->isReadOnly();
 
 		// McpRequestBody::from() already rewound the stream; this call is kept
 		// as a guard so a future branch above that reads the stream cannot

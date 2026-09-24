@@ -3,6 +3,9 @@
 use DI\Container;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
+use Mcp\Schema\Wire\McpHeader;
+use Mcp\Server\Stateless\RequestMeta;
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Odan\Session\PhpSession;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\NullLogger;
@@ -584,6 +587,47 @@ function signInAs(App $app, string $userId, string $authCollection = ''): void
 	/** @var CSRFTokenManager $csrf */
 	$csrf = $app->getContainer()->get(CSRFTokenManager::class);
 	TotalCMS\Slim\Pest\withHeader('X-CSRF-Token', $csrf->getToken());
+}
+
+/**
+ * One modern-era (2026-07-28) MCP request: no handshake, no session id, the
+ * client identified in params._meta and the subject repeated in the Mcp-*
+ * headers (SEP-2243). Shared by the session-caller and baseline tests.
+ *
+ * @param array<string,mixed>  $params
+ * @param array<string,string> $headers extra headers, e.g. Origin, X-API-Key
+ */
+function mcpStatelessCall(App $app, string $method, array $params = [], array $headers = [], string $ip = '203.0.113.77'): ResponseInterface
+{
+	$params['_meta'] = [
+		RequestMeta::PROTOCOL_VERSION    => '2026-07-28',
+		RequestMeta::CLIENT_CAPABILITIES => new stdClass(),
+		RequestMeta::CLIENT_INFO         => ['name' => 'pest-stateless', 'version' => '0.1'],
+	];
+
+	$request = (new Psr17Factory())
+		->createServerRequest('POST', '/mcp')
+		->withHeader('Content-Type', 'application/json')
+		->withHeader('Accept', 'application/json, text/event-stream')
+		->withHeader(McpHeader::METHOD, $method)
+		->withHeader(McpHeader::PROTOCOL_VERSION, '2026-07-28')
+		// A dedicated client IP so the per-IP rate limiter never shares a
+		// bucket with another test in the same run.
+		->withHeader('X-Forwarded-For', $ip);
+
+	$name = McpHeader::nameFor($method, $params);
+	if ($name !== null) {
+		$request = $request->withHeader(McpHeader::NAME, $name);
+	}
+
+	foreach ($headers as $header => $value) {
+		$request = $request->withHeader($header, $value);
+	}
+
+	$request->getBody()->write((string)json_encode(['jsonrpc' => '2.0', 'id' => 1, 'method' => $method, 'params' => $params]));
+	$request->getBody()->rewind();
+
+	return $app->handle($request);
 }
 
 function restoreFixtures(): void

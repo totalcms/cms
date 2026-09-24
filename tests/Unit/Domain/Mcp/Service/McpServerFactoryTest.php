@@ -17,6 +17,7 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Index\Service\IndexFilter;
+use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
@@ -56,7 +57,7 @@ final class McpServerFactoryTest extends TestCase
 		$this->logger            = new NullLogger();
 	}
 
-	private function factory(): McpServerFactory
+	private function factory(?PersonaContext $context = null): McpServerFactory
 	{
 		// SessionSubscriptionManager is the SDK default — fine as a stand-in
 		// for tests since they don't exercise subscription dispatch.
@@ -106,7 +107,7 @@ final class McpServerFactoryTest extends TestCase
 			// (`requires:` unset throughout), so guardHandler()'s objects+read
 			// canReadCollection() branch is unreachable here — plain stubs
 			// satisfy PersonaContext's Task 10b constructor deps only.
-			new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
+			$context ?? new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
 			new OAuthScopeRegistry(),
 			new OAuthActivityLogger(new NullLogger()),
 			// Modern-era notification bus. Nothing in this file opens a
@@ -124,6 +125,82 @@ final class McpServerFactoryTest extends TestCase
 			access: $access,
 			handler: static fn (): array => ['name' => $name],
 		);
+	}
+
+	/** @return list<string> */
+	private function toolNames(McpServerFactory $factory, McpPersona $persona): array
+	{
+		$names = array_map(static fn (McpToolDefinition $t): string => $t->name, $factory->registrableTools($persona));
+		sort($names);
+
+		return $names;
+	}
+
+	public function testReadOnlyCallerSeesOnlyReadOnlyTools(): void
+	{
+		$this->registry->register($this->tool('read_thing'));                       // annotations null → read-only default
+		$this->registry->register(new McpToolDefinition(
+			name: 'write_thing',
+			description: 'writes',
+			access: 'public',
+			handler: static fn (): array => [],
+			annotations: new ToolAnnotations(readOnlyHint: false),
+		));
+		$this->registry->register(new McpToolDefinition(
+			name: 'explicit_read',
+			description: 'reads',
+			access: 'public',
+			handler: static fn (): array => [],
+			annotations: new ToolAnnotations(readOnlyHint: true),
+		));
+		// Partially annotated: an annotations object exists but leaves
+		// readOnlyHint null. build() registers this object as-is, so the SDK
+		// reports readOnlyHint null (not true) to the client — the filter
+		// must agree and exclude it, not fall back to the null-annotations
+		// read-only default.
+		$this->registry->register(new McpToolDefinition(
+			name: 'partial_write',
+			description: 'partially annotated',
+			access: 'public',
+			handler: static fn (): array => [],
+			annotations: new ToolAnnotations(title: 'Partial', destructiveHint: true),
+		));
+
+		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
+		$context->set(McpPersona::ADMIN);
+		$context->setCallerKind(McpCallerKind::Session);
+
+		self::assertSame(['explicit_read', 'read_thing'], $this->toolNames($this->factory($context), McpPersona::ADMIN));
+		// And the server still builds with the filtered set.
+		self::assertInstanceOf(Server::class, $this->factory($context)->build(McpPersona::ADMIN));
+	}
+
+	public function testApiKeyCallerStillSeesWriteTools(): void
+	{
+		$this->registry->register(new McpToolDefinition(
+			name: 'write_thing',
+			description: 'writes',
+			access: 'admin',
+			handler: static fn (): array => [],
+			annotations: new ToolAnnotations(readOnlyHint: false),
+		));
+		// Not read-only either (see testReadOnlyCallerSeesOnlyReadOnlyTools),
+		// but a non-read-only context skips the annotation filter entirely —
+		// this must stay visible regardless of readOnlyHint being unset.
+		$this->registry->register(new McpToolDefinition(
+			name: 'partial_write',
+			description: 'partially annotated',
+			access: 'admin',
+			handler: static fn (): array => [],
+			annotations: new ToolAnnotations(title: 'Partial', destructiveHint: true),
+		));
+
+		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
+		$context->set(McpPersona::ADMIN);
+		$context->setCallerKind(McpCallerKind::ApiKey);
+
+		self::assertContains('write_thing', $this->toolNames($this->factory($context), McpPersona::ADMIN));
+		self::assertContains('partial_write', $this->toolNames($this->factory($context), McpPersona::ADMIN));
 	}
 
 	public function testProtocolVersionMatchesMcpSpec(): void
