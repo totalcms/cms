@@ -1,7 +1,6 @@
 {
-    "version": "3.5.2",
-    "build": "ded800a7b",
-    "commits": 175,
-    "date": "2026-09-23",
-    "signature": "cce7ce177d6a07588e0eaacb1b8d0f65afd477e29f72bcf061a20a04658ddfe7"
+    "version": "3.6.0",
+    "build": "64a563c4a",
+    "date": "2026-09-24",
+    "signature": "f21a92826eb66a18ffcf1b0b893bd50229311a9a796d3131ab71e74d4662697e"
 }
