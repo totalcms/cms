@@ -1454,6 +1454,10 @@ return [
 	'oauth.consent.requested_permissions' => 'Angeforderte Berechtigungen',
 	'oauth.consent.allow'                 => 'Erlauben',
 	'oauth.consent.deny'                  => 'Abbrechen',
+	'oauth.consent.self_registered'       => 'Selbst registriert — die App hat diesen Namen selbst gewählt',
+	'oauth.consent.redirect_to'           => 'Nach der Freigabe werden Sie zu {host} weitergeleitet',
+	'oauth.consent.redirect_local'        => 'Nach der Freigabe geht das Ergebnis an eine App auf diesem Computer ({host})',
+	'oauth.consent.unknown_host_warning'  => '{host} ist kein bekannter KI-Client. Stimmen Sie nur zu, wenn Sie diese Verbindung selbst gestartet haben und diese Weiterleitung erwarten.',
 	'oauth.error.title'                   => 'Autorisierungsfehler',
 	'oauth.error.return'                  => 'Zurück zu {site}',
 

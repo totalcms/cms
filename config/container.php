@@ -148,6 +148,7 @@ use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthClientPruner;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\OAuth\Service\OAuthServerFactory;
+use TotalCMS\Domain\OAuth\Service\OAuthTtl;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -1167,14 +1168,16 @@ return [
 		$container->get(Config::class)->datadir . '/.system/.oauth-gc',
 	),
 
+	// Both caches must hold an entry as long as the token it tracks can live,
+	// so their TTLs follow the configured lifetimes (see OAuthTtl).
 	OAuthRevocationList::class => fn (ContainerInterface $container): OAuthRevocationList => new OAuthRevocationList(
 		$container->get(CacheManager::class),
-		3600, // TODO: derive from $config->oauth['accessTokenTtl'] DateInterval if needed
+		OAuthTtl::seconds($container->get(Config::class)->oauth['accessTokenTtl'] ?? null, 3600),
 	),
 
 	OAuthReplayDetector::class => fn (ContainerInterface $container): OAuthReplayDetector => new OAuthReplayDetector(
 		$container->get(CacheManager::class),
-		refreshTokenTtlSeconds: 30 * 24 * 3600, // 30 days; matches default refresh TTL
+		refreshTokenTtlSeconds: OAuthTtl::seconds($container->get(Config::class)->oauth['refreshTokenTtl'] ?? null, 30 * 24 * 3600),
 	),
 
 	AuthorizationServer::class => fn (ContainerInterface $container): AuthorizationServer => $container->get(OAuthServerFactory::class)->buildAuthorizationServer(),

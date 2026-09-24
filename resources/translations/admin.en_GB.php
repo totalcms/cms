@@ -1454,6 +1454,10 @@ return [
 	'oauth.consent.requested_permissions' => 'Requested permissions',
 	'oauth.consent.allow'                 => 'Allow',
 	'oauth.consent.deny'                  => 'Cancel',
+	'oauth.consent.self_registered'       => 'Self-registered — the app chose this name itself',
+	'oauth.consent.redirect_to'           => 'After you approve, you will be sent to {host}',
+	'oauth.consent.redirect_local'        => 'After you approve, the result goes to an app on this computer ({host})',
+	'oauth.consent.unknown_host_warning'  => '{host} is not a known AI client. Only approve if you started this connection yourself and expected to be sent there.',
 	'oauth.error.title'                   => 'Authorisation error',
 	'oauth.error.return'                  => 'Return to {site}',
 

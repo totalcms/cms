@@ -111,10 +111,12 @@ return function (RouteCollectorProxyInterface $app): void {
 
 	// RFC 7591 — dynamic client registration. Lets MCP clients (Claude,
 	// Cursor) self-register OAuth credentials without admin intervention.
-	// OFF by default ($config->oauth['dynamicRegistration'] = false) because
-	// it creates persistent server state from an unauthenticated request;
-	// operators opt in. Rate-limited tightly even when enabled. NoCache
-	// because the response carries a one-time client_secret.
+	// ON by default: with OAuth on and registration off, every AI client's
+	// connect flow fails. It creates persistent server state from an
+	// unauthenticated request, so it is rate-limited and stale clients are
+	// pruned; consent phishing (a self-chosen client name) is countered by
+	// the consent screen showing the redirect host. NoCache because the
+	// response carries a one-time client_secret.
 	$app->post('/oauth/register', OAuthRegisterAction::class)
 		->add(OAuthTokenRateLimitMiddleware::class)
 		->add(NoCacheMiddleware::class)

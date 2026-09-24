@@ -1454,6 +1454,10 @@ return [
 	'oauth.consent.requested_permissions' => 'Gevraagde machtigingen',
 	'oauth.consent.allow'                 => 'Toestaan',
 	'oauth.consent.deny'                  => 'Annuleren',
+	'oauth.consent.self_registered'       => 'Zelf geregistreerd — de app heeft deze naam zelf gekozen',
+	'oauth.consent.redirect_to'           => 'Na goedkeuring word je doorgestuurd naar {host}',
+	'oauth.consent.redirect_local'        => 'Na goedkeuring gaat het resultaat naar een app op deze computer ({host})',
+	'oauth.consent.unknown_host_warning'  => '{host} is geen bekende AI-client. Keur alleen goed als je deze verbinding zelf hebt gestart en verwachtte daarheen te worden gestuurd.',
 	'oauth.error.title'                   => 'Autorisatiefout',
 	'oauth.error.return'                  => 'Terug naar {site}',
 

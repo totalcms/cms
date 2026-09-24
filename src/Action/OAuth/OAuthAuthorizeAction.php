@@ -18,6 +18,7 @@ use TotalCMS\Domain\OAuth\Adapter\LeagueScopeEntity;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Repository\OAuthClientRepository;
+use TotalCMS\Domain\OAuth\Service\OAuthRedirectClassifier;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeRegistry;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
 use TotalCMS\Domain\Session\SessionKeys;
@@ -36,6 +37,7 @@ readonly class OAuthAuthorizeAction
 		private AccessControlService $accessControl,
 		private UserValidationService $userValidation,
 		private Config $config,
+		private OAuthRedirectClassifier $redirectClassifier,
 	) {
 	}
 
@@ -100,14 +102,27 @@ readonly class OAuthAuthorizeAction
 			$scopeRows[] = ['identifier' => $id, 'description' => $desc];
 		}
 
+		// Where approval sends the code. league leaves getRedirectUri() null
+		// when the request omitted redirect_uri and the client's registered
+		// one is used instead — show that one.
+		$redirectUri = $authRequest->getRedirectUri();
+		if ($redirectUri === null) {
+			$registered  = $authRequest->getClient()->getRedirectUri();
+			$redirectUri = is_array($registered) ? (string)($registered[0] ?? '') : $registered;
+		}
+		$redirect = $this->redirectClassifier->classify($redirectUri);
+
 		return $this->twig->template($response, 'oauth/consent.twig', [
-			'clientName' => $client instanceof OAuthClientData ? $client->name : $authRequest->getClient()->getIdentifier(),
-			'clientIcon' => $client?->iconPath,
-			'scopes'     => $scopeRows,
-			'userId'     => (string)$userId,
-			'userName'   => $this->displayName((string)$userId),
-			'csrfField'  => $this->csrf->getTokenField(),
-			'state'      => $authRequest->getState(),
+			'clientName'     => $client instanceof OAuthClientData ? $client->name : $authRequest->getClient()->getIdentifier(),
+			'clientIcon'     => $client?->iconPath,
+			'selfRegistered' => $client instanceof OAuthClientData && $client->isDynamic,
+			'redirectHost'   => $redirect['host'],
+			'redirectKind'   => $redirect['kind'],
+			'scopes'         => $scopeRows,
+			'userId'         => (string)$userId,
+			'userName'       => $this->displayName((string)$userId),
+			'csrfField'      => $this->csrf->getTokenField(),
+			'state'          => $authRequest->getState(),
 		]);
 	}
 

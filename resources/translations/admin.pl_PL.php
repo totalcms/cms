@@ -1454,6 +1454,10 @@ return [
 	'oauth.consent.requested_permissions' => 'Żądane uprawnienia',
 	'oauth.consent.allow'                 => 'Zezwól',
 	'oauth.consent.deny'                  => 'Anuluj',
+	'oauth.consent.self_registered'       => 'Zarejestrowany samodzielnie — aplikacja sama wybrała tę nazwę',
+	'oauth.consent.redirect_to'           => 'Po zatwierdzeniu nastąpi przekierowanie do {host}',
+	'oauth.consent.redirect_local'        => 'Po zatwierdzeniu wynik trafi do aplikacji na tym komputerze ({host})',
+	'oauth.consent.unknown_host_warning'  => '{host} nie jest znanym klientem AI. Zatwierdź tylko, jeśli sam rozpocząłeś to połączenie i spodziewałeś się przekierowania.',
 	'oauth.error.title'                   => 'Błąd autoryzacji',
 	'oauth.error.return'                  => 'Wróć do {site}',
 

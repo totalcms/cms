@@ -88,6 +88,7 @@ function createTestClient(
 	string $secret,
 	array $redirectUris,
 	array $scopes,
+	bool $isDynamic = false,
 ): OAuthClientData {
 	$client = new OAuthClientData(
 		id: $clientId,
@@ -95,7 +96,7 @@ function createTestClient(
 		secretHash: password_hash($secret, PASSWORD_BCRYPT, ['cost' => 4]),
 		redirectUris: $redirectUris,
 		scopes: $scopes,
-		isDynamic: false,
+		isDynamic: $isDynamic,
 		isConfidential: true,
 		createdAt: gmdate('c'),
 		createdBy: 'test',
@@ -456,5 +457,76 @@ describe('OAuthAuthorizationCodeFlow', function (): void {
 		$body = (string)$response->getBody();
 		expect($body)->toContain('cms:read');
 		expect($body)->not->toContain('claudeai');
+	});
+
+	it('tells the approver where a self-registered client sends the code', function (string $redirectUri, array $expected, array $absent): void {
+		setupOAuthKeys($this->app);
+
+		$clientId = 'dyn-client-' . uniqid('', true);
+		createTestClient($this->app, $clientId, 'secret', [$redirectUri], ['cms:read'], isDynamic: true);
+		seedSessionUser($this->app, 'admin@example.test');
+
+		$verifier  = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+		$challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+		$response  = $this->app->handle((new Psr17Factory())->createServerRequest('GET', '/oauth/authorize?' . http_build_query([
+			'response_type'         => 'code',
+			'client_id'             => $clientId,
+			'redirect_uri'          => $redirectUri,
+			'scope'                 => 'cms:read',
+			'state'                 => 'state-dyn',
+			'code_challenge'        => $challenge,
+			'code_challenge_method' => 'S256',
+		])));
+
+		expect($response->getStatusCode())->toBe(200);
+		$body = (string)$response->getBody();
+		expect($body)->toContain('Self-registered');
+		foreach ($expected as $text) {
+			expect($body)->toContain($text);
+		}
+		foreach ($absent as $text) {
+			expect($body)->not->toContain($text);
+		}
+	})->with([
+		'known AI client' => [
+			'https://claude.ai/api/mcp/auth_callback',
+			['you will be sent to claude.ai'],
+			['is not a known AI client'],
+		],
+		'unknown host' => [
+			'https://evil.example/callback',
+			['you will be sent to evil.example', 'evil.example is not a known AI client'],
+			[],
+		],
+		'app on this computer' => [
+			'http://127.0.0.1:6274/oauth/callback',
+			['an app on this computer (127.0.0.1)'],
+			['is not a known AI client'],
+		],
+	]);
+
+	it('shows no self-registered badge or warning for an admin-created client', function (): void {
+		setupOAuthKeys($this->app);
+
+		$clientId = 'static-client-' . uniqid('', true);
+		createTestClient($this->app, $clientId, 'secret', ['https://integrations.example/cb'], ['cms:read']);
+		seedSessionUser($this->app, 'admin@example.test');
+
+		$verifier  = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+		$challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+		$response  = $this->app->handle((new Psr17Factory())->createServerRequest('GET', '/oauth/authorize?' . http_build_query([
+			'response_type'         => 'code',
+			'client_id'             => $clientId,
+			'redirect_uri'          => 'https://integrations.example/cb',
+			'scope'                 => 'cms:read',
+			'state'                 => 'state-static',
+			'code_challenge'        => $challenge,
+			'code_challenge_method' => 'S256',
+		])));
+
+		$body = (string)$response->getBody();
+		expect($body)->toContain('you will be sent to integrations.example');
+		expect($body)->not->toContain('Self-registered');
+		expect($body)->not->toContain('is not a known AI client');
 	});
 });

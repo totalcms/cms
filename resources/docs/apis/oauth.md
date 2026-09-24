@@ -119,7 +119,7 @@ Zapier's test step triggers the consent flow. Approve it from a T3 admin session
 
 ## Connecting Claude Desktop or Cursor
 
-AI clients that follow the MCP spec auto-discover everything — provided you have turned on **Allow Dynamic Registration**, which is **off by default** and must be enabled first.
+AI clients that follow the MCP spec auto-discover everything through **Allow Dynamic Registration**, which is on by default.
 
 In Claude Desktop, add a remote MCP server and paste your site URL:
 
@@ -133,11 +133,11 @@ In Claude Desktop, add a remote MCP server and paste your site URL:
 }
 ```
 
-Dynamic registration is **off by default** (see [Dynamic registration toggle](#dynamic-registration-toggle)), so enable it first if you want this zero-touch flow. With it on, Claude Desktop fetches `/.well-known/oauth-authorization-server`, self-registers as a client via RFC 7591, and opens the consent screen in your browser. You log in as a T3 admin, review the requested scopes, and approve. Claude Desktop saves the tokens and reconnects automatically on expiry.
+With dynamic registration on (the default — see [Dynamic registration toggle](#dynamic-registration-toggle)), Claude Desktop fetches `/.well-known/oauth-authorization-server`, self-registers as a client via RFC 7591, and opens the consent screen in your browser. You log in as a T3 admin, review the requested scopes, and approve. Claude Desktop saves the tokens and reconnects automatically on expiry.
 
 Cursor and other conformant MCP clients follow the same pattern. No manual client setup, no secret to paste.
 
-If dynamic registration is left off, you must create a static client in the admin first and configure the MCP client with those credentials manually — the self-registration step gets a 403.
+If you turn dynamic registration off, you must create a static client in the admin first and configure the MCP client with those credentials manually — the self-registration step gets a 403.
 
 ---
 
@@ -205,16 +205,20 @@ Connected apps can revoke their own tokens at `POST /oauth/revoke`. This is the 
 
 ## Dynamic registration toggle
 
-**Admin → Settings → OAuth Server → Allow Dynamic Registration** (default: off) controls whether `POST /oauth/register` is accessible.
+**Admin → Settings → OAuth Server → Allow Dynamic Registration** (default: on) controls whether `POST /oauth/register` is accessible.
 
 | State | Effect |
 |---|---|
-| **Off** (default) | `/oauth/register` returns 403. Every integration requires a manually-created static client |
-| **On** | AI clients (Claude, Cursor) auto-register and connect without manual setup |
+| **On** (default) | AI clients (Claude, ChatGPT, Cursor) auto-register and connect without manual setup |
+| **Off** | `/oauth/register` returns 403. Every integration requires a manually-created static client |
 
-Dynamic registration is **off by default** because `/oauth/register` is an unauthenticated endpoint that writes persistent server state. Note that self-registration alone never grants data access — a registered client still can't get a token until a logged-in admin approves its consent screen — but leaving the endpoint open lets anyone create client records and invites consent-phishing attempts. Turn it **on** when you want the zero-touch AI client flow (type your URL into Claude Desktop and it self-registers); leave it off and create static clients in the admin for each integration otherwise.
+`/oauth/register` is an unauthenticated endpoint that writes persistent server state, but self-registration alone never grants data access — a registered client still can't get a token until a logged-in admin approves its consent screen. Three safeguards keep the open endpoint in check:
 
-Dynamic registration is rate-limited by default (10 registrations/hour per IP) to prevent client-record flooding even when enabled. Adjust in **Settings → OAuth Server → Dynamic Registration Rate Limit**.
+- **The consent screen shows where approval sends you.** A self-registered client chooses its own name, so anyone could register one called "Claude". The consent screen marks such clients as *Self-registered* and names the host the authorization code goes to (for example *claude.ai*). When that host isn't a known AI client, it shows a warning — only approve if you started the connection yourself. Codes sent to `localhost` or an app scheme such as `cursor://` are described as going to an app on this computer.
+- **Rate limiting.** 60 registrations per hour per IP by default. Hosted clients like claude.ai register from their provider's shared servers and register again on every connect attempt, so a much lower limit locks connectors out after a few retries. Adjust in **Settings → OAuth Server → Dynamic Registration Rate Limit**.
+- **Pruning.** Self-registered clients with no grant are removed after 24 hours (see [Pruning expired grants and stale clients](#pruning-expired-grants-and-stale-clients-with-oauthgc)).
+
+Turn it **off** if you would rather create a static client in the admin for each integration.
 
 ---
 
@@ -361,12 +365,12 @@ Settings live in **Admin → Settings → OAuth Server**.
 | Key | Default | Effect |
 |---|---|---|
 | `oauth.enabled` | `true` | Master switch. Off = every OAuth endpoint and discovery document returns 404 — see [Running public-only MCP](#running-public-only-mcp) |
-| `oauth.dynamicRegistration` | `false` | Enable RFC 7591 self-registration at `/oauth/register` (off by default — unauthenticated endpoint) |
+| `oauth.dynamicRegistration` | `true` | RFC 7591 self-registration at `/oauth/register`. `false` = static clients only |
 | `oauth.accessTokenTtl` | `PT1H` | PHP DateInterval — access token lifetime |
 | `oauth.refreshTokenTtl` | `P30D` | PHP DateInterval — refresh token lifetime |
 | `oauth.authCodeTtl` | `PT10M` | PHP DateInterval — authorization code lifetime (should stay short) |
 | `oauth.tokenEndpointLimit` | `60` | `/oauth/token` rate limit per IP per minute. `0` = disabled |
-| `oauth.dynamicRegistrationLimit` | `10` | `/oauth/register` rate limit per IP per hour. `0` = disabled |
+| `oauth.dynamicRegistrationLimit` | `60` | `/oauth/register` rate limit per IP per hour. `0` = disabled |
 
 ---
 

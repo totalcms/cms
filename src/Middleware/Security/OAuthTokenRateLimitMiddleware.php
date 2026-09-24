@@ -22,9 +22,12 @@ use TotalCMS\Support\Config;
  * brute-force code-exchange attempts and runaway refresh-token loops.
  *
  * Register endpoint (RFC 7591 dynamic registration): defaults to
- * 10 requests/hour. Dynamic registration is the abuse vector for
+ * 60 requests/hour. Dynamic registration is the abuse vector for
  * client-record flooding — an unauthenticated endpoint that creates
- * persistent state on the server. Tight throttle by design.
+ * persistent state on the server. Not tighter than that because hosted
+ * AI clients (claude.ai, ChatGPT) register from their provider's shared
+ * backend IPs and re-register on every connect attempt — at 10/hour a
+ * few retries locked a customer's Claude connector out for the hour.
  *
  * Storage routes through CacheManager — APCu→Redis→Memcached→filesystem.
  * Multi-worker accurate only on shared backends (Redis); APCu-only
@@ -56,7 +59,7 @@ readonly class OAuthTokenRateLimitMiddleware implements MiddlewareInterface
 			$window = (int)($this->config->oauth['tokenEndpointWindow'] ?? 60);
 			$prefix = self::PREFIX_TOKEN;
 		} elseif (str_ends_with($path, '/oauth/register')) {
-			$limit  = (int)($this->config->oauth['dynamicRegistrationLimit'] ?? 10);
+			$limit  = (int)($this->config->oauth['dynamicRegistrationLimit'] ?? 60);
 			$window = (int)($this->config->oauth['dynamicRegistrationWindow'] ?? 3600);
 			$prefix = self::PREFIX_REGISTER;
 		} else {

@@ -150,7 +150,7 @@ A typical "read-only AI browser" connection requests `cms:read mcp:tools mcp:res
 
 ### Configuring a static client for Claude Desktop
 
-Dynamic registration is **off by default** (an unauthenticated endpoint that writes server state — see the toggle's help text for the trade-off). Turn it on in **Admin → Settings → OAuth Server → Allow Dynamic Registration** for the zero-touch Claude flow: until it's on, the discovery document doesn't advertise `registration_endpoint`, and clients either report the server as incompatible (Claude Code) or ask for a manual Client ID and secret (claude.ai connectors). If you'd rather not enable it — or want a named client you can track and revoke independently — create a static client instead:
+Dynamic registration is on by default, which gives the zero-touch Claude flow. If it has been turned off (**Admin → Settings → OAuth Server → Allow Dynamic Registration**), the discovery document doesn't advertise `registration_endpoint`, and clients either report the server as incompatible (Claude Code) or ask for a manual Client ID and secret (claude.ai connectors). If you'd rather keep it off — or want a named client you can track and revoke independently — create a static client instead:
 
 1. **Admin → Utilities → OAuth Clients → Create Client.**
 2. Name it something traceable: "Claude Desktop – Joe", "Cursor – Content Team".
@@ -199,8 +199,9 @@ Every one of these has bitten a real setup. Match the symptom, apply the fix:
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Claude Code: "Incompatible auth server: does not support dynamic client registration" | Dynamic registration is off (the default) | Enable **Allow Dynamic Registration**, or create a static client and connect with its Client ID |
+| Claude Code: "Incompatible auth server: does not support dynamic client registration" | Dynamic registration is turned off | Enable **Allow Dynamic Registration**, or create a static client and connect with its Client ID |
 | claude.ai connector asks for a manual Client ID and secret | Same — DCR not advertised in discovery | Same as above |
+| claude.ai: "Couldn't register with … sign-in service" | Dynamic registration is off, or its rate limit is exhausted (a `security.rate_limit` entry for `/oauth/register` in the OAuth activity log). Every connect attempt registers again from Anthropic's servers | Wait out the hour or raise **Dynamic Registration Rate Limit** — or create a static client and paste its Client ID and secret into the connector's advanced settings |
 | OAuth errors about keys / empty `jwks.json` | Signing keys never generated | Run `tcms oauth:setup` once |
 | Works in a browser, but connectors/`curl` get 403 | A firewall (7G/8G, security plugin) filters non-browser user agents | Exempt `/mcp`, `/oauth/*`, `/.well-known/*` from UA rules |
 | Every request returns 401 | Wrong or revoked API key / token | Check the key; `WWW-Authenticate` on the 401 names the scheme it expects |

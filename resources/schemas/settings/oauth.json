@@ -15,35 +15,57 @@
 			"type"    : "boolean",
 			"field"   : "toggle",
 			"label"   : "Allow Dynamic Registration",
-			"help"    : "Enable RFC 7591 self-registration at <code>POST /oauth/register</code>. Off by default — it's an unauthenticated endpoint that writes server state. MCP clients (Claude Desktop, Cursor) need this on to connect without manual setup. Left off, create admin static clients for each integration. Self-registration alone never grants data access (a registered client still needs admin consent), but an open endpoint invites client-record flooding and consent-phishing.",
-			"default" : false
+			"help"    : "Enable RFC 7591 self-registration at <code>POST /oauth/register</code>. On by default — MCP clients (Claude, ChatGPT, Cursor) need it to connect without manual setup. Self-registration alone never grants data access: a registered client still needs an admin to approve its consent screen, which marks the client as self-registered and shows where approval sends you. Registrations are rate-limited and unused ones are pruned after a day. Turn off to require an admin-created static client for every integration.",
+			"default" : true
 		},
 		"accessTokenTtl": {
-			"type"        : "string",
-			"field"       : "text",
-			"label"       : "Access Token Lifetime",
-			"help"        : "How long an access token is valid. PHP <code>DateInterval</code> spec — e.g. <code>PT1H</code> (1 hour), <code>PT15M</code> (15 minutes), <code>P1D</code> (1 day). Shorter = better security (revocation more effective) but more refresh round-trips. Default 1h is the OAuth common middle ground.",
-			"placeholder" : "PT1H",
-			"default"     : "PT1H",
-			"pattern"     : "^P(?:[0-9]+[YMWD])*(?:T(?:[0-9]+[HMS])+)?$"
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "Access Token Lifetime",
+			"help"    : "How long an access token is valid. Shorter = better security (revocation takes effect sooner) but more refresh round-trips. Default 1 hour is the common OAuth middle ground. A custom PHP <code>DateInterval</code> spec set in <code>tcms.php</code> (e.g. <code>PT45M</code>) is kept and shown as-is.",
+			"default" : "PT1H",
+			"pattern" : "^P(?:[0-9]+[YMWD])*(?:T(?:[0-9]+[HMS])+)?$",
+			"options" : [
+				{"value": "PT15M", "label": "15 minutes"},
+				{"value": "PT30M", "label": "30 minutes"},
+				{"value": "PT1H", "label": "1 hour"},
+				{"value": "PT2H", "label": "2 hours"},
+				{"value": "PT6H", "label": "6 hours"},
+				{"value": "PT12H", "label": "12 hours"},
+				{"value": "P1D", "label": "1 day"}
+			]
 		},
 		"refreshTokenTtl": {
-			"type"        : "string",
-			"field"       : "text",
-			"label"       : "Refresh Token Lifetime",
-			"help"        : "How long a refresh token can be used to obtain new access tokens. After this, the user must re-authorize via the consent screen. Common values: <code>P30D</code> (30 days), <code>P90D</code> (90 days), <code>P1Y</code> (1 year). Default 30 days.",
-			"placeholder" : "P30D",
-			"default"     : "P30D",
-			"pattern"     : "^P(?:[0-9]+[YMWD])*(?:T(?:[0-9]+[HMS])+)?$"
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "Refresh Token Lifetime",
+			"help"    : "How long a refresh token can be used to obtain new access tokens. After this, the user must re-authorize via the consent screen. Default 30 days. A custom PHP <code>DateInterval</code> spec set in <code>tcms.php</code> is kept and shown as-is.",
+			"default" : "P30D",
+			"pattern" : "^P(?:[0-9]+[YMWD])*(?:T(?:[0-9]+[HMS])+)?$",
+			"options" : [
+				{"value": "P1D", "label": "1 day"},
+				{"value": "P7D", "label": "7 days"},
+				{"value": "P14D", "label": "14 days"},
+				{"value": "P30D", "label": "30 days"},
+				{"value": "P60D", "label": "60 days"},
+				{"value": "P90D", "label": "90 days"},
+				{"value": "P180D", "label": "180 days"},
+				{"value": "P1Y", "label": "1 year"}
+			]
 		},
 		"authCodeTtl": {
-			"type"        : "string",
-			"field"       : "text",
-			"label"       : "Authorization Code Lifetime",
-			"help"        : "How long an authorization code is valid before it must be exchanged for tokens. Short by design — the user is mid-flow. RFC 6749 §4.1.2 recommends 10 minutes maximum. <code>PT10M</code> default.",
-			"placeholder" : "PT10M",
-			"default"     : "PT10M",
-			"pattern"     : "^P(?:[0-9]+[YMWD])*(?:T(?:[0-9]+[HMS])+)?$"
+			"type"    : "string",
+			"field"   : "select",
+			"label"   : "Authorization Code Lifetime",
+			"help"    : "How long an authorization code is valid before it must be exchanged for tokens. Short by design — the user is mid-flow. RFC 6749 §4.1.2 recommends 10 minutes maximum. Default 10 minutes.",
+			"default" : "PT10M",
+			"pattern" : "^P(?:[0-9]+[YMWD])*(?:T(?:[0-9]+[HMS])+)?$",
+			"options" : [
+				{"value": "PT1M", "label": "1 minute"},
+				{"value": "PT2M", "label": "2 minutes"},
+				{"value": "PT5M", "label": "5 minutes"},
+				{"value": "PT10M", "label": "10 minutes"}
+			]
 		},
 		"tokenEndpointLimit": {
 			"type"        : "number",
@@ -59,9 +81,9 @@
 			"type"        : "number",
 			"field"       : "number",
 			"label"       : "Dynamic Registration Rate Limit (per hour)",
-			"help"        : "Maximum requests to <code>/oauth/register</code> per hour from a single IP. Dynamic registration is the abuse vector for client-record flooding — an unauthenticated endpoint that creates persistent server state. Default 10/hour by design. Set to <code>0</code> to disable.",
-			"placeholder" : "10",
-			"default"     : 10,
+			"help"        : "Maximum requests to <code>/oauth/register</code> per hour from a single IP. Dynamic registration is an unauthenticated endpoint that creates persistent server state, so it is throttled — but hosted AI clients (Claude, ChatGPT) register from their provider's shared backend IPs and register again on every connect attempt, so too low a limit locks those connectors out for the rest of the hour. Default 60/hour. Set to <code>0</code> to disable.",
+			"placeholder" : "60",
+			"default"     : 60,
 			"min"         : 0,
 			"max"         : 1000,
 			"settings" : {

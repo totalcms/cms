@@ -1454,6 +1454,10 @@ return [
 	'oauth.consent.requested_permissions' => 'Autorizzazioni richieste',
 	'oauth.consent.allow'                 => 'Consenti',
 	'oauth.consent.deny'                  => 'Annulla',
+	'oauth.consent.self_registered'       => 'Auto-registrato: il nome è stato scelto dall\'app stessa',
+	'oauth.consent.redirect_to'           => 'Dopo l\'approvazione verrai reindirizzato a {host}',
+	'oauth.consent.redirect_local'        => 'Dopo l\'approvazione il risultato viene inviato a un\'app su questo computer ({host})',
+	'oauth.consent.unknown_host_warning'  => '{host} non è un client IA conosciuto. Approva solo se hai avviato tu questa connessione e ti aspettavi di essere reindirizzato lì.',
 	'oauth.error.title'                   => 'Errore di autorizzazione',
 	'oauth.error.return'                  => 'Torna a {site}',
 
