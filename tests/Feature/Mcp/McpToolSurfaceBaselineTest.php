@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use Slim\App;
 
 /**
  * Regression pin for the spec's compatibility guarantee: an API-key caller and
@@ -30,11 +31,11 @@ beforeEach(function (): void {
 	], JSON_PRETTY_PRINT));
 });
 
-function baselineToolNames(\Slim\App $app, array $headers, string $ip): array
+function baselineToolNames(App $app, array $headers, string $ip): array
 {
 	$response = mcpStatelessCall($app, 'tools/list', [], $headers, $ip);
 	expect($response->getStatusCode())->toBe(200);
-	$body = json_decode((string)$response->getBody(), true);
+	$body  = json_decode((string)$response->getBody(), true);
 	$names = array_column($body['result']['tools'] ?? [], 'name');
 	sort($names);
 

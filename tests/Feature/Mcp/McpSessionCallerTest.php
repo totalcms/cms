@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Slim\App;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
@@ -60,7 +61,7 @@ beforeEach(function (): void {
  * Full tool entries (name + annotations, etc.), not just names — lets a test
  * check every listed tool's readOnlyHint, not just a hand-picked few.
  */
-function sessionTools(\Slim\App $app, string $origin = SESSION_ORIGIN, string $ip = '203.0.113.60'): array
+function sessionTools(App $app, string $origin = SESSION_ORIGIN, string $ip = '203.0.113.60'): array
 {
 	$response = mcpStatelessCall($app, 'tools/list', [], ['Origin' => $origin], $ip);
 	expect($response->getStatusCode())->toBe(200);
@@ -69,7 +70,7 @@ function sessionTools(\Slim\App $app, string $origin = SESSION_ORIGIN, string $i
 	return $body['result']['tools'] ?? [];
 }
 
-function sessionToolsList(\Slim\App $app, string $origin = SESSION_ORIGIN, string $ip = '203.0.113.60'): array
+function sessionToolsList(App $app, string $origin = SESSION_ORIGIN, string $ip = '203.0.113.60'): array
 {
 	return array_column(sessionTools($app, $origin, $ip), 'name');
 }
@@ -125,9 +126,9 @@ describe('a super-admin session', function (): void {
 	});
 
 	test('a schema-defined saved-query tool is listed for a session caller', function (): void {
-		$container  = $this->app->getContainer();
-		$collection = $container->get(CollectionFetcher::class)->fetchCollection('blog');
-		$mcp        = is_array($collection->mcp) ? $collection->mcp : [];
+		$container       = $this->app->getContainer();
+		$collection      = $container->get(CollectionFetcher::class)->fetchCollection('blog');
+		$mcp             = is_array($collection->mcp) ? $collection->mcp : [];
 		$collection->mcp = array_merge($mcp, ['tools' => ['recent_posts' => ['id' => 'recent_posts', 'description' => 'Newest posts', 'sort' => 'date:desc', 'limit' => 5]]]);
 		$container->get(CollectionRepository::class)->saveCollection($collection);
 
@@ -264,7 +265,7 @@ describe('a session that is not same-origin', function (): void {
 test('an API-key request with a session cookie keeps the API-key persona', function (): void {
 	signInAs($this->app, 'blogger-user-test-com', 'auth');
 	file_put_contents(cmsDataDir() . '.system/apikeys.json', (string)json_encode(['apikeys' => [[
-		'id' => 'k', 'name' => 'k', 'key' => 'tcms_mcp_session_test_key_00000000000000', 'created' => '2026-01-01T00:00:00Z', 'lastUsed' => null,
+		'id'     => 'k', 'name' => 'k', 'key' => 'tcms_mcp_session_test_key_00000000000000', 'created' => '2026-01-01T00:00:00Z', 'lastUsed' => null,
 		'scopes' => ['methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], 'paths' => ['*']],
 	]]]));
 

@@ -239,7 +239,7 @@ readonly class McpServerFactory
 
 		return array_values(array_filter(
 			$tools,
-			static fn (McpToolDefinition $tool): bool => $tool->annotations === null || $tool->annotations->readOnlyHint === true,
+			static fn (McpToolDefinition $tool): bool => !$tool->annotations instanceof ToolAnnotations || $tool->annotations->readOnlyHint === true,
 		));
 	}
 

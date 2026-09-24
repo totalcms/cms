@@ -25,7 +25,7 @@ Both authenticate requests to T3's REST API and MCP endpoint. Choose based on th
 |---|---|
 | Your own server-side scripts, cron jobs, CI pipelines | **API key** — simpler, no consent flow |
 | Third-party app that needs access to your site | **OAuth** — scoped, revocable, audited |
-| AI client (Claude Desktop, Cursor) connecting to your site | **OAuth** — self-registers automatically once you enable dynamic registration |
+| AI client (Claude Desktop, Cursor) connecting to your site | **OAuth** — self-registers automatically (dynamic registration is on by default) |
 | ActivePieces, Zapier, n8n workflows | **OAuth** — pre-register a static client in the admin |
 
 The two methods coexist. The same REST and MCP endpoints accept either an `X-API-Key` header or a Bearer token — you don't have to pick one globally.

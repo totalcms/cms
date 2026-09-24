@@ -44,7 +44,7 @@ final readonly class OAuthRedirectClassifier
 		$scheme = strtolower((string)parse_url($redirectUri, PHP_URL_SCHEME));
 		$host   = strtolower((string)parse_url($redirectUri, PHP_URL_HOST));
 
-		if ($scheme !== '' && $scheme !== 'http' && $scheme !== 'https') {
+		if (!in_array($scheme, ['', 'http', 'https'], true)) {
 			return ['host' => $scheme . '://', 'kind' => 'local'];
 		}
 

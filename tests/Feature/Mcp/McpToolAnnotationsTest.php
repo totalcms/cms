@@ -14,7 +14,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  */
 beforeEach(function (): void {
 	$this->setUpApp(bootstrap());
-	$container = $this->app->getContainer();
+	$container      = $this->app->getContainer();
 	$this->registry = $container->get(ToolRegistry::class);
 	$container->get(SchemaToolRegistrar::class)->register($this->registry);
 });

@@ -642,13 +642,13 @@ $settings['search'] = [
 // Generate with: tcms oauth:setup (creates keys at the paths below).
 // accessTokenTtl / refreshTokenTtl / authCodeTtl are PHP DateInterval specs.
 $settings['oauth'] = [
-	'enabled'             => true,     // off = public-only MCP: OAuth well-knowns and endpoints 404, so MCP clients connect anonymously instead of demanding a login
-	'signingKeyPath'      => $settings['datadir'] . '/.system/oauth-keys/private.key',
-	'publicKeyPath'       => $settings['datadir'] . '/.system/oauth-keys/public.key',
-	'accessTokenTtl'      => 'PT1H',   // 1 hour
-	'refreshTokenTtl'     => 'P30D',   // 30 days
-	'authCodeTtl'         => 'PT10M',  // 10 minutes
-	'dynamicRegistration' => true,     // RFC 7591 self-registration — MCP clients (Claude, ChatGPT, Cursor) need it to connect without manual setup; the consent screen shows where the code goes
+	'enabled'                  => true,     // off = public-only MCP: OAuth well-knowns and endpoints 404, so MCP clients connect anonymously instead of demanding a login
+	'signingKeyPath'           => $settings['datadir'] . '/.system/oauth-keys/private.key',
+	'publicKeyPath'            => $settings['datadir'] . '/.system/oauth-keys/public.key',
+	'accessTokenTtl'           => 'PT1H',   // 1 hour
+	'refreshTokenTtl'          => 'P30D',   // 30 days
+	'authCodeTtl'              => 'PT10M',  // 10 minutes
+	'dynamicRegistration'      => true,     // RFC 7591 self-registration — MCP clients (Claude, ChatGPT, Cursor) need it to connect without manual setup; the consent screen shows where the code goes
 	'dynamicRegistrationLimit' => 60,  // /oauth/register requests per IP per hour; hosted AI clients share backend IPs and re-register per connect attempt. 0 = no limit
 	// Scopes granted when a client requests none. Without this, scope-less tokens
 	// authenticate but fail every MCP call with insufficient_scope. '' disables.
