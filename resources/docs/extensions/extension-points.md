@@ -547,6 +547,17 @@ $context->addFrontendAsset(
 
 Defaults: CSS goes in the head, JS goes in the body, module scripts emit `type="module"`, no preload, mtime-based cache busting.
 
+### Head meta tags
+
+An extension can also put a `<meta>` tag in the head of public or dashboard pages — an origin-trial token, a verification tag. Attributes are escaped; there is no raw-HTML path.
+
+```php
+$context->addFrontendMeta(['http-equiv' => 'origin-trial', 'content' => $token]);
+$context->addAdminMeta(['name' => 'my-extension', 'content' => 'on']);
+```
+
+They render through `cms.assetsHead()` / `cms.adminAssetsHead()` before any stylesheet, under the same `frontend:assets` / `admin:assets` capabilities.
+
 ### Where they render
 
 Extension assets are merged with Total CMS core assets and emitted by these Twig helpers in your templates:
@@ -563,9 +574,10 @@ Extension assets are merged with Total CMS core assets and emitted by these Twig
 For the admin interface there's nothing to do — core admin templates already call the helpers. For public pages, your theme template needs to call `cms.assetsHead()` / `cms.assetsBody()` for extension frontend assets to render. A site can leave core frontend features it never renders out of those helpers, site-wide with `$settings['frontendAssets']['except']` or per call with `{except: [...]}` (see [Frontend Assets](docs/site-builder/frontend)); extension assets always render.
 
 Within each helper, output ordering is:
-1. Stylesheets first.
-2. Preload hints (`<link rel="preload">` / `<link rel="modulepreload">`) — always emitted in the head regardless of the asset's own `position`.
-3. Script tags last.
+1. Meta tags first (`cms.assetsHead()` / `cms.adminAssetsHead()` only — a meta tag has no body position).
+2. Stylesheets next.
+3. Preload hints (`<link rel="preload">` / `<link rel="modulepreload">`) — always emitted in the head regardless of the asset's own `position`.
+4. Script tags last.
 
 ## Which admin surface?
 

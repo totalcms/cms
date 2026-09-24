@@ -1,7 +1,7 @@
 {
 	"id"          : "totalcms/webmcp",
 	"name"        : "WebMCP",
-	"description" : "Make your forms and public collections callable by browser AI agents through the WebMCP origin trial in Chrome 149+. Experimental: the spec is still moving, and this extension tracks it.",
+	"description" : "Make your forms callable by a browser AI agent, and hand it the MCP server's read tools inside the visitor's own session, through the WebMCP origin trial in Chrome 149+. Read tools need the Standard edition or above (they are the MCP server's). Experimental: the spec is still moving, and this extension tracks it.",
 	"icon"        : "icon.png",
 	"hidden"      : false,
 	"requires"    : {

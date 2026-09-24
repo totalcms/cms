@@ -1,7 +1,7 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"title": "WebMCP",
-	"description": "Forms rendered with webmcp_form() and the collections listed here become callable by a browser AI agent inside the visitor's own session. Experimental: Chrome 149+ with the origin trial, and the spec is still moving.",
+	"description": "Forms rendered with webmcp_form() and collections the MCP server exposes become callable by a browser AI agent inside the visitor's own session. Experimental: Chrome 149+ with the origin trial, and the spec is still moving.",
 	"type": "object",
 	"properties": {
 		"declarativeForms": {
@@ -15,34 +15,15 @@
 			"type": "boolean",
 			"field": "toggle",
 			"label": "Read tools",
-			"help": "Register search_content and get_content tools over the collections below, so an agent on the page can look content up.",
+			"help": "Register the MCP server's read tools for an agent on the page, calling as whoever is signed in — a visitor gets the collections whose MCP Access is Public, a signed-in user what their access groups grant. Requires the Standard edition or above, like the MCP server.",
 			"default": true
-		},
-		"readCollections": {
-			"type": "array",
-			"field": "list",
-			"label": "Collections exposed as read tools",
-			"help": "A visitor's agent sees only those that allow public read (Collection → Public Operations); yours, while signed in, sees them all. Responses are marked untrusted content for the agent.",
-			"settings": {
-				"propertyOptions": "collectionIds"
-			},
-			"default": []
 		},
 		"adminTools": {
 			"type": "boolean",
 			"field": "toggle",
 			"label": "Read tools in the admin dashboard",
-			"help": "Also load the read tools on dashboard pages, for an agent in your own browser. Forms in the admin are never annotated. Off by default.",
+			"help": "Also load the read tools on dashboard pages, for an agent in your own browser. The agent reads only, even for an administrator; forms in the admin are never annotated. Off by default.",
 			"default": false
-		},
-		"maxResults": {
-			"type": "number",
-			"field": "number",
-			"label": "Search results per call",
-			"help": "The most objects a search tool returns to the agent in one call.",
-			"default": 10,
-			"min": 1,
-			"max": 50
 		},
 		"originTrialToken": {
 			"type": "string",

@@ -288,6 +288,10 @@ class TotalCMSTwigAdapter
 	 */
 	private function withApiBase(FrontendAsset $asset): FrontendAsset
 	{
+		if ($asset->type === 'meta') {
+			return $asset;
+		}
+
 		return new FrontendAsset(
 			type: $asset->type,
 			url: $this->api . $asset->url,
@@ -295,6 +299,7 @@ class TotalCMSTwigAdapter
 			module: $asset->module,
 			preload: $asset->preload,
 			name: $asset->name,
+			attributes: $asset->attributes,
 		);
 	}
 

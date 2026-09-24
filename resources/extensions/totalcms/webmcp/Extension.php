@@ -6,28 +6,29 @@ namespace TotalCMS\Bundled\WebMcp;
 
 use Psr\Container\ContainerInterface;
 use TotalCMS\Domain\Admin\TotalFormFactory;
-use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Extension\ExtensionContext;
 use TotalCMS\Domain\Extension\ExtensionInterface;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Support\Config;
 use Twig\Markup;
 use Twig\TwigFunction;
 
 require_once __DIR__ . '/WebMcpAttributes.php';
 require_once __DIR__ . '/WebMcpFormBuilder.php';
-require_once __DIR__ . '/ToolManifestAction.php';
 
 /**
- * WebMCP — agent-callable forms and read tools, as an extension.
+ * WebMCP — agent-callable forms, and the MCP server's read tools registered
+ * in the visitor's browser.
  *
- * Everything WebMCP-specific lives here; core gained only generic seams
- * (extra attributes on a form and its controls, save() returning its
- * promise). The declarative API is explainer-only and Chrome-only today, so
- * the extension is experimental and off by default; spec churn is a version
- * bump of this extension, not of the CMS. See docs/extensions/webmcp.
+ * The read tools are not this extension's: the script is a stateless MCP
+ * client of /mcp, calling as the signed-in user, so what an agent may read
+ * follows each collection's MCP Access, the field exposure flags, mcp.enabled,
+ * mcp.publicAccess and the Standard edition or above — one place to configure AI exposure.
+ * Core recognizes a same-origin session on /mcp and makes it read-only.
+ *
+ * Experimental and off by default; spec churn is a version bump here, never
+ * a CMS release. See docs/extensions/webmcp.
  */
 class Extension implements ExtensionInterface
 {
@@ -52,28 +53,30 @@ class Extension implements ExtensionInterface
 			['is_safe' => ['html']],
 		));
 
-		// The browser half: origin-trial meta, the respondWith bridge for
-		// annotated forms, and the read tools. Body position, module.
-		$context->addFrontendAsset('js', 'webmcp.js');
+		$forms = $context->setting('declarativeForms', true) === true;
+		$tools = $context->setting('readTools', true) === true;
+		$admin = $context->setting('adminTools', false) === true;
+		$token = trim((string)$context->setting('originTrialToken', ''));
 
-		// Dashboard read tools are opt-in: an agent in the operator's own
-		// browser reads with the operator's session. Admin forms are never
-		// annotated, and the toggle is read here, when the extension registers.
-		if ($context->setting('adminTools', false) === true) {
-			$context->addAdminAsset('js', 'webmcp.js');
+		// bridge.js answers agent submits on annotated forms; webmcp.js imports
+		// it and adds the read tools. Both off: nothing on the page at all.
+		if ($forms || $tools) {
+			$context->addFrontendAsset('js', $tools ? 'webmcp.js' : 'bridge.js');
+			if ($token !== '') {
+				// Server-rendered so Chrome sees the token at parse time.
+				$context->addFrontendMeta(['http-equiv' => 'origin-trial', 'content' => $token]);
+			}
 		}
 
-		$config   = $context->get(Config::class);
-		$access   = $context->get(AccessManager::class);
-		$manifest = new ToolManifestAction(
-			$context->get(ExtensionSettingsManager::class),
-			$context->get(CollectionFetcher::class),
-			$config,
-			static fn (): bool => $access->userLoggedIn((string)($config->auth['collection'] ?? '')),
-		);
-		$context->addPublicRoutes(static function ($routes) use ($manifest): void {
-			$routes->get('/tools.json', $manifest);
-		});
+		// Dashboard read tools are opt-in: an agent in the operator's own
+		// browser reads with the operator's session, read-only. Admin forms
+		// are never annotated.
+		if ($admin) {
+			$context->addAdminAsset('js', 'webmcp.js');
+			if ($token !== '') {
+				$context->addAdminMeta(['http-equiv' => 'origin-trial', 'content' => $token]);
+			}
+		}
 	}
 
 	public function boot(ExtensionContext $context): void

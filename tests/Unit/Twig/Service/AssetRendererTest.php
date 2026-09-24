@@ -177,3 +177,21 @@ test('URL attribute values are HTML-escaped', function (): void {
 	expect($html)->toContain('href="/api/a.css?x=1&amp;y=2"');
 	expect($html)->not->toContain('?x=1&y=2"');
 });
+
+test('head emits a meta tag for a meta asset, before stylesheets, with escaped attributes', function (): void {
+	$assets = [
+		new FrontendAsset(type: 'css', url: '/api/assets/foo.css', position: 'head'),
+		new FrontendAsset(type: 'meta', url: '', position: 'head', attributes: ['http-equiv' => 'origin-trial', 'content' => 'A"B']),
+	];
+
+	$html = AssetRenderer::head($assets);
+
+	expect($html)->toContain('<meta http-equiv="origin-trial" content="A&quot;B"')
+		->and(strpos($html, '<meta'))->toBeLessThan(strpos($html, '<link'));
+});
+
+test('body never emits a meta asset', function (): void {
+	$assets = [new FrontendAsset(type: 'meta', url: '', position: 'head', attributes: ['name' => 'x', 'content' => 'y'])];
+
+	expect(AssetRenderer::body($assets))->toBe('');
+});

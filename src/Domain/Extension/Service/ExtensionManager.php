@@ -998,7 +998,7 @@ class ExtensionManager
 	 * Collect asset records from contexts, building servable URLs with
 	 * mtime-based cache busting and applying position defaults.
 	 *
-	 * @param callable(ExtensionContext): list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string}> $registrationsFor
+	 * @param callable(ExtensionContext): list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string, attributes: array<string,string>}> $registrationsFor
 	 *
 	 * @return list<FrontendAsset>
 	 */
@@ -1021,6 +1021,10 @@ class ExtensionManager
 			$assetDir = $context->extensionPath() . '/assets';
 
 			foreach ($registrationsFor($context) as $asset) {
+				if ($asset['type'] === 'meta') {
+					$records[] = new FrontendAsset(type: 'meta', url: '', position: 'head', attributes: $asset['attributes']);
+					continue;
+				}
 				if ($asset['type'] !== 'css' && $asset['type'] !== 'js') {
 					continue;
 				}

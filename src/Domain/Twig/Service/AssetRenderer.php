@@ -27,6 +27,14 @@ final class AssetRenderer
 	{
 		$html = '';
 
+		// Meta tags first: an origin-trial token, for one, must be seen before
+		// any script that depends on the feature it enables.
+		foreach ($assets as $asset) {
+			if ($asset->type === 'meta') {
+				$html .= HTMLUtils::inlineElement('meta', $asset->attributes) . "\n";
+			}
+		}
+
 		foreach ($assets as $asset) {
 			if ($asset->type === 'css' && $asset->position === 'head') {
 				$html .= self::stylesheet($asset->url) . "\n";

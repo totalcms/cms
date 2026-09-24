@@ -155,62 +155,78 @@ it('never puts object data into a tool string', function (): void {
 		->and(webmcpFormTag($html))->toContain('toolname="update_notes"');
 });
 
-describe('the tool manifest', function (): void {
-	test('lists only the configured collections that allow public read', function (): void {
-		// blog allows public read (beforeEach); notes does not; missing does not exist.
-		$this->settings->saveSettings('totalcms/webmcp', ['readCollections' => ['blog', 'notes', 'missing'], 'maxResults' => 5, 'originTrialToken' => 'TOKEN123']);
+/**
+ * Settings are read when the extension registers, so they must be on disk
+ * before the app boots — hence the re-bootstrap in each case.
+ */
+function bootWebMcpWith(object $test, array $settings): void
+{
+	recursiveDelete(cmsDataDir());
+	restoreFixtures();
+	@mkdir(cmsDataDir() . '.system/extension-settings/totalcms', 0755, true);
+	file_put_contents(cmsDataDir() . '.system/extensions.json', json_encode(['totalcms/webmcp' => ['enabled' => true]]));
+	file_put_contents(cmsDataDir() . '.system/extension-settings/totalcms/webmcp.json', json_encode($settings));
+	// setUpApp() and $app are protected; called from this global function they
+	// need an explicit scope bind rather than the closure-scope trick beforeEach() relies on.
+	$app = Closure::bind(function () use ($test) {
+		$test->setUpApp(bootstrap());
 
-		$response = get('/api/ext/totalcms/webmcp/tools.json');
-		$json     = json_decode((string)$response->getBody(), true);
+		return $test->app;
+	}, $test, $test::class)();
+	$test->render = fn (string $template): string => $app->getContainer()->get(TwigEngine::class)->renderString($template, []);
+}
 
-		expect($response->getStatusCode())->toBe(200)
-			->and($response->getHeaderLine('Content-Type'))->toContain('application/json')
-			->and($json['originTrialToken'])->toBe('TOKEN123')
-			->and($json['maxResults'])->toBe(5)
-			->and($json['api'])->toEndWith('/api')
-			->and(array_column($json['tools'], 'collection'))->toBe(['blog'])
-			->and($json['tools'][0]['label'])->toBe('Posts')
-			->and($json['tools'][0]['description'])->toBe('The blog');
+describe('the frontend assets', function (): void {
+	test('read tools on: the MCP-client script is on public pages', function (): void {
+		bootWebMcpWith($this, ['readTools' => true]);
+
+		expect(($this->render)('{{ cms.assetsBody() }}'))->toContain('ext/totalcms/webmcp/assets/webmcp.js');
 	});
 
-	test('lists nothing when read tools are switched off', function (): void {
-		$this->settings->saveSettings('totalcms/webmcp', ['readTools' => false, 'readCollections' => ['blog']]);
+	test('read tools off, forms on: only the bridge is on public pages', function (): void {
+		bootWebMcpWith($this, ['readTools' => false, 'declarativeForms' => true]);
+		$html = ($this->render)('{{ cms.assetsBody() }}');
 
-		$json = json_decode((string)get('/api/ext/totalcms/webmcp/tools.json')->getBody(), true);
-
-		expect($json['tools'])->toBe([]);
+		expect($html)->toContain('ext/totalcms/webmcp/assets/bridge.js')
+			->and($html)->not->toContain('assets/webmcp.js');
 	});
 
-	test('the frontend script is served as an extension asset', function (): void {
-		$response = get('/api/ext/totalcms/webmcp/assets/webmcp.js');
+	test('both switches off: nothing is registered', function (): void {
+		bootWebMcpWith($this, ['readTools' => false, 'declarativeForms' => false, 'originTrialToken' => 'TOKEN123']);
 
-		expect($response->getStatusCode())->toBe(200)
-			->and((string)$response->getBody())->toContain('modelContext');
-	});
-});
-
-describe('for a signed-in operator', function (): void {
-	test('the manifest lists every configured collection, on any page, uncached', function (): void {
-		// notes has no public read: hidden from visitors, listed for the operator,
-		// whose session the tools read with — on a public page as much as in the admin.
-		$this->settings->saveSettings('totalcms/webmcp', ['readCollections' => ['blog', 'notes', 'missing']]);
-		signInAs($this->app, 'blogger-user-test-com', 'auth');
-
-		$response = get('/api/ext/totalcms/webmcp/tools.json');
-		$json     = json_decode((string)$response->getBody(), true);
-
-		expect(array_column($json['tools'], 'collection'))->toBe(['blog', 'notes'])
-			->and($response->getHeaderLine('Cache-Control'))->toContain('no-store');
+		expect(($this->render)('{{ cms.assetsBody() }}'))->not->toContain('webmcp')
+			->and(($this->render)('{{ cms.assetsHead() }}'))->not->toContain('origin-trial');
 	});
 
-	test('a visitor\'s manifest is cacheable but varies on the cookie, so signing in never reuses it', function (): void {
-		$this->settings->saveSettings('totalcms/webmcp', ['readCollections' => ['blog', 'notes']]);
+	test('a token becomes one origin-trial meta tag in the head', function (): void {
+		bootWebMcpWith($this, ['originTrialToken' => ' TOKEN123 ']);
 
-		$response = get('/api/ext/totalcms/webmcp/tools.json');
+		expect(($this->render)('{{ cms.assetsHead() }}'))->toContain('<meta http-equiv="origin-trial" content="TOKEN123"');
+	});
 
-		expect(array_column(json_decode((string)$response->getBody(), true)['tools'], 'collection'))->toBe(['blog'])
-			->and($response->getHeaderLine('Vary'))->toBe('Cookie')
-			->and($response->getHeaderLine('Cache-Control'))->toContain('max-age');
+	test('no token, no meta tag', function (): void {
+		bootWebMcpWith($this, []);
+
+		expect(($this->render)('{{ cms.assetsHead() }}'))->not->toContain('origin-trial');
+	});
+
+	test('the old manifest route is gone', function (): void {
+		bootWebMcpWith($this, ['readTools' => true]);
+
+		expect(get('/api/ext/totalcms/webmcp/tools.json')->getStatusCode())->toBe(404);
+	});
+
+	test('the scripts are served as extension assets', function (): void {
+		bootWebMcpWith($this, ['readTools' => true]);
+
+		expect((string)get('/api/ext/totalcms/webmcp/assets/webmcp.js')->getBody())->toContain('tools/list')
+			->and(get('/api/ext/totalcms/webmcp/assets/bridge.js')->getStatusCode())->toBe(200);
+	});
+
+	test('a settings file that still carries the removed keys loads', function (): void {
+		bootWebMcpWith($this, ['readTools' => true, 'readCollections' => ['blog'], 'maxResults' => 5]);
+
+		expect(($this->render)('{{ cms.assetsBody() }}'))->toContain('assets/webmcp.js');
 	});
 });
 
@@ -222,7 +238,7 @@ describe('the admin asset', function (): void {
 		restoreFixtures();
 		@mkdir(cmsDataDir() . '.system/extension-settings/totalcms', 0755, true);
 		file_put_contents(cmsDataDir() . '.system/extensions.json', json_encode(['totalcms/webmcp' => ['enabled' => true]]));
-		file_put_contents(cmsDataDir() . '.system/extension-settings/totalcms/webmcp.json', json_encode(['adminTools' => true]));
+		file_put_contents(cmsDataDir() . '.system/extension-settings/totalcms/webmcp.json', json_encode(['adminTools' => true, 'originTrialToken' => 'TOKEN123']));
 		$this->setUpApp(bootstrap());
 		signInAs($this->app, 'blogger-user-test-com', 'auth');
 	});
@@ -230,7 +246,8 @@ describe('the admin asset', function (): void {
 	test('the script loads on dashboard pages when the admin toggle is on', function (): void {
 		$html = (string)get('/admin/collections')->getBody();
 
-		expect($html)->toContain('ext/totalcms/webmcp/assets/webmcp.js');
+		expect($html)->toContain('ext/totalcms/webmcp/assets/webmcp.js')
+			->and($html)->toContain('<meta http-equiv="origin-trial" content="TOKEN123"');
 	});
 });
 

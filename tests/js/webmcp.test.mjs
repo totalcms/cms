@@ -1,22 +1,21 @@
 //-----------------------------------------------
-// The WebMCP extension's frontend script. Three jobs: answer an agent's
-// submit on an annotated form with the form's own save result, register the
-// search_content / get_content read tools over the collections the manifest
-// lists, and emit the origin-trial meta tag. Everything is feature-detected: without
-// document.modelContext or respondWith nothing happens and nothing throws.
+// The WebMCP extension's frontend: bridge.js answers an agent's submit on an
+// annotated form with the form's own save result; webmcp.js registers the
+// MCP server's read tools from a stateless tools/list, calling as the
+// browser's own session. Everything is feature-detected: without
+// document.modelContext nothing is fetched and nothing throws.
 //-----------------------------------------------
 
-const MANIFEST = {
-	originTrialToken: '',
-	maxResults: 10,
-	api: 'https://example.test/api',
-	tools: [
-		{ collection: 'blog', label: 'Posts', description: 'The blog' },
-		{ collection: 'docs', label: 'Docs', description: '' },
-	],
-};
+const TOOLS = [
+	{ name: 'query_collection', description: 'Query a collection', inputSchema: { type: 'object', properties: { collection: { type: 'string' } }, required: ['collection'] }, annotations: { readOnlyHint: true, title: 'Query Collection' } },
+	{ name: 'get_object', description: 'Get one object', inputSchema: { type: 'object', properties: { collection: { type: 'string' }, id: { type: 'string' } } }, annotations: { readOnlyHint: true } },
+];
 
-async function loadScript({ manifest = MANIFEST, modelContext = { registerTool: vi.fn() } } = {}) {
+function jsonResponse(body, status = 200) {
+	return { ok: status < 400, status, statusText: status === 200 ? 'OK' : 'Error', json: async () => body };
+}
+
+async function loadScript({ modelContext = { registerTool: vi.fn() }, respond } = {}) {
 	vi.resetModules();
 	document.head.innerHTML = '';
 	document.body.innerHTML = '';
@@ -24,92 +23,146 @@ async function loadScript({ manifest = MANIFEST, modelContext = { registerTool: 
 	if (modelContext) document.modelContext = modelContext;
 	else delete document.modelContext;
 
-	global.fetch = vi.fn(async (url) => ({
-		ok: true,
-		json: async () => (String(url).includes('tools.json') ? manifest : { data: [{ id: 'a', title: 'A' }] }),
-	}));
+	global.fetch = vi.fn(async (url, init) => {
+		const method = init?.headers?.['Mcp-Method'];
+		if (respond) return respond(method, JSON.parse(init.body), init);
+		if (method === 'tools/list') return jsonResponse({ jsonrpc: '2.0', id: 1, result: { tools: TOOLS } });
+		return jsonResponse({ jsonrpc: '2.0', id: 1, result: { content: [{ type: 'text', text: '{"items":[]}' }] } });
+	});
 
 	await import('../../resources/extensions/totalcms/webmcp/assets/webmcp.js');
-	// The script fetches the manifest and registers asynchronously.
 	await new Promise((r) => setTimeout(r, 0));
 	await new Promise((r) => setTimeout(r, 0));
 	return { fetch: global.fetch, modelContext };
 }
 
 describe('read tools', () => {
-	test('registers one search and one get tool with the listed collections as an enum, read-only and untrusted', async () => {
-		const { modelContext } = await loadScript();
+	test('without document.modelContext nothing is fetched and nothing throws', async () => {
+		const { fetch } = await loadScript({ modelContext: null });
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	test('one stateless tools/list, then one registration per tool with the server\'s name, schema and annotations plus untrusted', async () => {
+		const { modelContext, fetch } = await loadScript();
+
+		expect(fetch).toHaveBeenCalledTimes(1);
+		const [url, init] = fetch.mock.calls[0];
+		expect(String(url)).toMatch(/\/mcp$/);
+		expect(init.method).toBe('POST');
+		expect(init.credentials).toBe('same-origin');
+		expect(init.headers['Mcp-Method']).toBe('tools/list');
+		expect(init.headers['MCP-Protocol-Version']).toBe('2026-07-28');
+		expect(init.headers['Mcp-Name']).toBeUndefined();
+		const body = JSON.parse(init.body);
+		expect(body.method).toBe('tools/list');
+		expect(body.params._meta['io.modelcontextprotocol/protocolVersion']).toBe('2026-07-28');
 
 		const names = modelContext.registerTool.mock.calls.map(([tool]) => tool.name);
-		expect(names).toEqual(['search_content', 'get_content']);
-
-		const search = modelContext.registerTool.mock.calls[0][0];
-		expect(search.description).toContain('Posts');
-		expect(search.description).toContain('The blog');
-		expect(search.inputSchema.required).toEqual(['collection', 'q']);
-		expect(search.inputSchema.properties.collection.enum).toEqual(['blog', 'docs']);
-		expect(search.inputSchema.properties.limit.maximum).toBe(10);
-		expect(search.annotations).toEqual({ readOnlyHint: true, untrustedContentHint: true });
-
-		const get = modelContext.registerTool.mock.calls[1][0];
-		expect(get.inputSchema.required).toEqual(['collection', 'id']);
-		expect(get.inputSchema.properties.collection.enum).toEqual(['blog', 'docs']);
+		expect(names).toEqual(['query_collection', 'get_object']);
+		const [query] = modelContext.registerTool.mock.calls[0];
+		expect(query.description).toBe('Query a collection');
+		expect(query.inputSchema.required).toEqual(['collection']);
+		expect(query.annotations).toEqual({ readOnlyHint: true, title: 'Query Collection', untrustedContentHint: true });
+		expect(modelContext.registerTool.mock.calls[1][0].annotations).toEqual({ readOnlyHint: true, untrustedContentHint: true });
 	});
 
-	test('search calls the chosen collection\'s query API with the encoded terms and clamps the limit', async () => {
+	test('a call is a stateless tools/call naming the tool, and returns the content as-is', async () => {
 		const { modelContext, fetch } = await loadScript();
-		const search = modelContext.registerTool.mock.calls[0][0];
+		const [query] = modelContext.registerTool.mock.calls[0];
 
-		const result = await search.execute({ collection: 'docs', q: 'hello world', limit: 500 });
+		const result = await query.execute({ collection: 'blog' });
 
-		const url = String(fetch.mock.calls.at(-1)[0]);
-		expect(url).toBe('https://example.test/api/collections/docs/query?search=hello%20world&limit=10');
-		expect(result.content[0].type).toBe('text');
-		expect(JSON.parse(result.content[0].text)).toEqual([{ id: 'a', title: 'A' }]);
+		const [, init] = fetch.mock.calls[1];
+		expect(init.headers['Mcp-Method']).toBe('tools/call');
+		expect(init.headers['Mcp-Name']).toBe('query_collection');
+		expect(JSON.parse(init.body).params).toMatchObject({ name: 'query_collection', arguments: { collection: 'blog' } });
+		expect(result).toEqual({ content: [{ type: 'text', text: '{"items":[]}' }] });
 	});
 
-	test('get fetches one object by collection and id', async () => {
-		const { modelContext, fetch } = await loadScript();
-		const get = modelContext.registerTool.mock.calls[1][0];
+	test('an isError result throws with its text', async () => {
+		const { modelContext } = await loadScript({
+			respond: (method) => method === 'tools/list'
+				? jsonResponse({ jsonrpc: '2.0', id: 1, result: { tools: TOOLS } })
+				: jsonResponse({ jsonrpc: '2.0', id: 1, result: { isError: true, content: [{ type: 'text', text: 'Collection "x" not found.' }] } }),
+		});
+		const [query] = modelContext.registerTool.mock.calls[0];
 
-		await get.execute({ collection: 'blog', id: 'hello/../x' });
-
-		expect(String(fetch.mock.calls.at(-1)[0])).toBe('https://example.test/api/collections/blog/hello%2F..%2Fx');
+		await expect(query.execute({ collection: 'x' })).rejects.toThrow('Collection "x" not found.');
 	});
 
-	test('a collection outside the enum is refused before any request', async () => {
-		const { modelContext, fetch } = await loadScript();
-		const get = modelContext.registerTool.mock.calls[1][0];
-		const before = fetch.mock.calls.length;
+	test('a JSON-RPC error throws with its message', async () => {
+		const { modelContext } = await loadScript({
+			respond: (method) => method === 'tools/list'
+				? jsonResponse({ jsonrpc: '2.0', id: 1, result: { tools: TOOLS } })
+				: jsonResponse({ jsonrpc: '2.0', id: 1, error: { code: -32602, message: 'Unknown tool' } }),
+		});
+		const [query] = modelContext.registerTool.mock.calls[0];
 
-		await expect(get.execute({ collection: 'auth', id: 'admin' })).rejects.toThrow(/Unknown collection/);
-		expect(fetch.mock.calls.length).toBe(before);
+		await expect(query.execute({})).rejects.toThrow('Unknown tool');
 	});
 
-	test('no listed collections, no tools', async () => {
-		const { modelContext } = await loadScript({ manifest: { ...MANIFEST, tools: [] } });
-
+	test('a non-OK endpoint registers nothing and does not throw', async () => {
+		const { modelContext } = await loadScript({ respond: () => jsonResponse({ error: { message: 'MCP is only available on Pro' } }, 403) });
 		expect(modelContext.registerTool).not.toHaveBeenCalled();
 	});
 
-	test('without document.modelContext nothing is registered and nothing throws', async () => {
-		await expect(loadScript({ modelContext: null })).resolves.toBeTruthy();
-	});
-});
-
-describe('origin trial', () => {
-	test('a token in the manifest becomes one origin-trial meta tag', async () => {
-		await loadScript({ manifest: { ...MANIFEST, originTrialToken: 'TOKEN123' } });
-
-		const metas = document.head.querySelectorAll('meta[http-equiv="origin-trial"]');
-		expect(metas.length).toBe(1);
-		expect(metas[0].content).toBe('TOKEN123');
+	test('an empty tool list registers nothing', async () => {
+		const { modelContext } = await loadScript({ respond: () => jsonResponse({ jsonrpc: '2.0', id: 1, result: { tools: [] } }) });
+		expect(modelContext.registerTool).not.toHaveBeenCalled();
 	});
 
-	test('no token, no meta tag', async () => {
-		await loadScript();
+	test('follows nextCursor across pages and registers every tool', async () => {
+		const { modelContext, fetch } = await loadScript({
+			respond: (method, body) => {
+				if (method === 'tools/list') {
+					return body.params.cursor === 'p2'
+						? jsonResponse({ jsonrpc: '2.0', id: 1, result: { tools: [TOOLS[1]] } })
+						: jsonResponse({ jsonrpc: '2.0', id: 1, result: { tools: [TOOLS[0]], nextCursor: 'p2' } });
+				}
+				return jsonResponse({ jsonrpc: '2.0', id: 1, result: { content: [] } });
+			},
+		});
 
-		expect(document.head.querySelector('meta[http-equiv="origin-trial"]')).toBeNull();
+		expect(fetch).toHaveBeenCalledTimes(2);
+		const [, secondInit] = fetch.mock.calls[1];
+		expect(JSON.parse(secondInit.body).params.cursor).toBe('p2');
+
+		const names = modelContext.registerTool.mock.calls.map(([tool]) => tool.name);
+		expect(names).toEqual(['query_collection', 'get_object']);
+	});
+
+	test('a registration that throws does not stop the others', async () => {
+		const registerTool = vi.fn()
+			.mockImplementationOnce(() => { throw new Error('inputSchema rejected'); })
+			.mockImplementation(() => {});
+		const debug = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+		await loadScript({ modelContext: { registerTool } });
+
+		expect(registerTool).toHaveBeenCalledTimes(2);
+		expect(debug).toHaveBeenCalledWith('[webmcp]', '1 tools registered');
+
+		debug.mockRestore();
+	});
+
+	test('a tool marked readOnlyHint: false, and a tool with no annotations at all, register neither — only the explicitly read-only one — and the log reports the registered count', async () => {
+		const debug = vi.spyOn(console, 'debug').mockImplementation(() => {});
+		const mixedTools = [
+			{ name: 'query_collection', description: 'Query a collection', inputSchema: { type: 'object', properties: {} }, annotations: { readOnlyHint: true } },
+			{ name: 'delete_object', description: 'Delete an object', inputSchema: { type: 'object', properties: {} }, annotations: { readOnlyHint: false } },
+			{ name: 'mystery_tool', description: 'No annotations declared', inputSchema: { type: 'object', properties: {} } },
+		];
+		const { modelContext } = await loadScript({
+			respond: (method) => method === 'tools/list'
+				? jsonResponse({ jsonrpc: '2.0', id: 1, result: { tools: mixedTools } })
+				: jsonResponse({ jsonrpc: '2.0', id: 1, result: { content: [] } }),
+		});
+
+		const names = modelContext.registerTool.mock.calls.map(([tool]) => tool.name);
+		expect(names).toEqual(['query_collection']);
+		expect(debug).toHaveBeenCalledWith('[webmcp]', '1 tools registered');
+
+		debug.mockRestore();
 	});
 });
 

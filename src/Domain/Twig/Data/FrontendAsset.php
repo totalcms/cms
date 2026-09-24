@@ -19,8 +19,9 @@ namespace TotalCMS\Domain\Twig\Data;
 final readonly class FrontendAsset
 {
 	/**
-	 * @param 'css'|'js'    $type
-	 * @param 'head'|'body' $position
+	 * @param 'css'|'js'|'meta' $type
+	 * @param 'head'|'body'     $position
+	 * @param array<string,string> $attributes for type 'meta': the tag's attributes; url is unused
 	 *
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
@@ -31,6 +32,7 @@ final readonly class FrontendAsset
 		public bool $module = false,
 		public bool $preload = false,
 		public string $name = '',
+		public array $attributes = [],
 	) {
 	}
 }

@@ -72,10 +72,10 @@ final class ExtensionContext
 	/** @var array<string,string> Field name => default schema property type */
 	private array $fieldDefaultTypes = [];
 
-	/** @var list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string}> */
+	/** @var list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string, attributes: array<string,string>}> */
 	private array $adminAssets = [];
 
-	/** @var list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string}> */
+	/** @var list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string, attributes: array<string,string>}> */
 	private array $frontendAssets = [];
 
 	/** @var array<string,list<array{callable, int}>> */
@@ -596,20 +596,53 @@ final class ExtensionContext
 	}
 
 	/**
+	 * Register a <meta> tag for public pages, emitted by cms.assetsHead()
+	 * before any stylesheet or script. Attributes are escaped; no raw HTML.
+	 * Covered by the frontend:assets capability.
+	 *
+	 * @param array<string,string> $attributes e.g. ['http-equiv' => 'origin-trial', 'content' => $token]
+	 */
+	public function addFrontendMeta(array $attributes): void
+	{
+		$this->frontendAssets[] = $this->metaRecord($attributes);
+	}
+
+	/**
+	 * The same for dashboard pages (cms.adminAssetsHead()). Covered by admin:assets.
+	 *
+	 * @param array<string,string> $attributes
+	 */
+	public function addAdminMeta(array $attributes): void
+	{
+		$this->adminAssets[] = $this->metaRecord($attributes);
+	}
+
+	/**
 	 * One asset registration, the same shape for admin and frontend.
 	 *
-	 * @return array{type: string, path: string, position: string|null, module: bool, preload: bool, version: string|null}
+	 * @return array{type: string, path: string, position: string|null, module: bool, preload: bool, version: string|null, attributes: array<string,string>}
 	 */
 	private function assetRecord(string $type, string $path, ?string $position, bool $module, bool $preload, ?string $version): array
 	{
 		return [
-			'type'     => $type,
-			'path'     => $path,
-			'position' => $position,
-			'module'   => $module,
-			'preload'  => $preload,
-			'version'  => $version,
+			'type'       => $type,
+			'path'       => $path,
+			'position'   => $position,
+			'module'     => $module,
+			'preload'    => $preload,
+			'version'    => $version,
+			'attributes' => [],
 		];
+	}
+
+	/**
+	 * @param array<string,string> $attributes
+	 *
+	 * @return array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string, attributes: array<string,string>}
+	 */
+	private function metaRecord(array $attributes): array
+	{
+		return ['type' => 'meta', 'path' => '', 'position' => 'head', 'module' => false, 'preload' => false, 'version' => null, 'attributes' => $attributes];
 	}
 
 	/**
@@ -773,13 +806,13 @@ final class ExtensionContext
 		return $this->dashboardWidgets;
 	}
 
-	/** @return list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string}> */
+	/** @return list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string, attributes: array<string,string>}> */
 	public function getRegisteredAdminAssets(): array
 	{
 		return $this->adminAssets;
 	}
 
-	/** @return list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string}> */
+	/** @return list<array{type: string, path: string, position: ?string, module: bool, preload: bool, version: ?string, attributes: array<string,string>}> */
 	public function getRegisteredFrontendAssets(): array
 	{
 		return $this->frontendAssets;
