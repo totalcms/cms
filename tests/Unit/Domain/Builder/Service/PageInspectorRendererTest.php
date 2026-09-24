@@ -8,6 +8,7 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
@@ -16,22 +17,24 @@ use TotalCMS\Support\Config;
 /**
  * Unit tests for PageInspectorRenderer.
  *
- * The renderer is gated to logged-in admin sessions and not-yet-dismissed
- * visitors. These tests cover both the gating logic and the snippet
+ * The renderer is gated to signed-in users who may edit pages (super admins
+ * and groups with the Site Builder permission) and not-yet-dismissed visitors. These tests cover both the gating logic and the snippet
  * structure for builder-page and collection-URL renders.
  */
 final class PageInspectorRendererTest extends TestCase
 {
 	private AccessManager&MockObject $accessManager;
+	private AccessControlService&MockObject $accessControl;
 	private Config $config;
 	private PageInspectorRenderer $renderer;
 
 	protected function setUp(): void
 	{
 		$this->accessManager = $this->createMock(AccessManager::class);
+		$this->accessControl = $this->createMock(AccessControlService::class);
 		$this->config        = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$this->config->api   = 'https://example.test';
-		$this->renderer      = new PageInspectorRenderer($this->accessManager, $this->config);
+		$this->renderer      = new PageInspectorRenderer($this->accessManager, $this->accessControl, $this->config);
 	}
 
 	public function testReturnsBodyUnchangedWhenNotLoggedIn(): void
@@ -49,7 +52,7 @@ final class PageInspectorRendererTest extends TestCase
 
 	public function testReturnsBodyUnchangedWhenDismissCookieIsSet(): void
 	{
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->signedIn();
 
 		$body    = '<html><body>hi</body></html>';
 		$match   = $this->builderPageMatch();
@@ -63,7 +66,7 @@ final class PageInspectorRendererTest extends TestCase
 
 	public function testInjectsBeforeClosingBodyTag(): void
 	{
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->signedIn();
 
 		$body   = '<html><body>hi</body></html>';
 		$result = $this->renderer->maybeInject($body, $this->request(), $this->builderPageMatch());
@@ -80,7 +83,7 @@ final class PageInspectorRendererTest extends TestCase
 		// in this email" preview) might have `</body>` inside its content.
 		// The inspector must not split that — it must inject before the
 		// REAL last </body>.
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->signedIn();
 
 		$body   = '<html><body><pre>example: &lt;/body&gt;</pre><p>real content</p></body></html>';
 		$result = $this->renderer->maybeInject($body, $this->request(), $this->builderPageMatch());
@@ -94,7 +97,7 @@ final class PageInspectorRendererTest extends TestCase
 	{
 		// HTML fragments without a body tag still get the chip — better to
 		// surface it somewhere than nowhere.
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->signedIn();
 
 		$body   = '<div>fragment</div>';
 		$result = $this->renderer->maybeInject($body, $this->request(), $this->builderPageMatch());
@@ -105,7 +108,7 @@ final class PageInspectorRendererTest extends TestCase
 
 	public function testBuilderPageSnippetIncludesPageEditUrl(): void
 	{
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->signedIn();
 
 		$result = $this->renderer->maybeInject(
 			'<body></body>',
@@ -119,7 +122,7 @@ final class PageInspectorRendererTest extends TestCase
 
 	public function testCollectionMatchSnippetIncludesObjectEditUrl(): void
 	{
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->signedIn();
 
 		$match = new RouteMatch(
 			template: 'pages/post.twig',
@@ -137,7 +140,7 @@ final class PageInspectorRendererTest extends TestCase
 
 	public function testSnippetIncludesActiveFeaturesForBuilderPages(): void
 	{
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->signedIn();
 
 		$result = $this->renderer->maybeInject(
 			'<body></body>',
@@ -155,7 +158,7 @@ final class PageInspectorRendererTest extends TestCase
 
 	public function testSnippetEscapesUserContent(): void
 	{
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->signedIn();
 
 		$result = $this->renderer->maybeInject(
 			'<body></body>',
@@ -168,6 +171,57 @@ final class PageInspectorRendererTest extends TestCase
 
 		$this->assertStringNotContainsString('<script>alert(1)', $result);
 		$this->assertStringContainsString('&lt;script&gt;alert(1)', $result);
+	}
+
+	public function testReturnsBodyUnchangedForASignedInUserWhoCannotEditPages(): void
+	{
+		// A member of a portal auth collection is a session user, but the
+		// chip names routes and templates and links into the admin: it is
+		// for people who edit pages, not for everyone who can sign in.
+		$this->signedIn(canEditPages: false);
+
+		$body = '<html><body>hi</body></html>';
+
+		$this->assertSame(
+			$body,
+			$this->renderer->maybeInject($body, $this->request(), $this->builderPageMatch()),
+		);
+	}
+
+	public function testReturnsBodyUnchangedWhenTheSessionUserNoLongerValidates(): void
+	{
+		// userData() is empty for a session naming a deleted user.
+		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->accessManager->method('userData')->willReturn([]);
+		$this->accessControl->expects($this->never())->method('canAccessBuilder');
+
+		$body = '<html><body>hi</body></html>';
+
+		$this->assertSame(
+			$body,
+			$this->renderer->maybeInject($body, $this->request(), $this->builderPageMatch()),
+		);
+	}
+
+	public function testInjectsForASignedInUserWhoCanEditPages(): void
+	{
+		$this->signedIn(canEditPages: true);
+
+		$result = $this->renderer->maybeInject('<html><body>hi</body></html>', $this->request(), $this->builderPageMatch());
+
+		$this->assertStringContainsString('id="t3-inspector"', $result);
+	}
+
+	/**
+	 * A signed-in user. canEditPages is the answer to canAccessBuilder(),
+	 * which super admins always pass and which a group grants through the
+	 * Site Builder permission.
+	 */
+	private function signedIn(bool $canEditPages = true): void
+	{
+		$this->accessManager->method('sessionHasUser')->willReturn(true);
+		$this->accessManager->method('userData')->willReturn(['id' => 'editor-1', 'collection' => 'auth']);
+		$this->accessControl->method('canAccessBuilder')->with('editor-1')->willReturn($canEditPages);
 	}
 
 	private function request(): ServerRequestInterface

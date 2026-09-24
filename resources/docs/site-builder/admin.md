@@ -248,7 +248,7 @@ The `×` button in the chip sets the `tcms_inspector_hidden` cookie for 30 days,
 
 The inspector is only injected when:
 
-1. The visitor has an active admin session
+1. The visitor is signed in as someone who edits pages: a super admin, or a user whose access groups grant the **Site Builder** permission. Members signed into another auth collection, such as a portal's, never see it
 2. The response is HTML (`text/html`)
 3. The dismiss cookie isn't set
 

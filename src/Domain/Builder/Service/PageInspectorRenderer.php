@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Builder\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
@@ -26,7 +27,10 @@ use TotalCMS\Support\Config;
  *     extra HTTP request.
  *
  * Injection is gated to:
- *   - Logged-in admin sessions only
+ *   - Signed-in users who may edit pages: super admins, and users whose
+ *     access groups grant the Site Builder permission. A member signed into
+ *     a portal auth collection is a session user too, and must not see a
+ *     chip that names routes and templates and links into the admin
  *   - Visitors who haven't dismissed the chip (cookie `tcms_inspector_hidden`)
  *
  * The HTML content-type check lives in the caller (PageRouterMiddleware) —
@@ -38,6 +42,7 @@ readonly class PageInspectorRenderer
 
 	public function __construct(
 		private AccessManager $accessManager,
+		private AccessControlService $accessControl,
 		private Config $config,
 	) {
 	}
@@ -60,13 +65,35 @@ readonly class PageInspectorRenderer
 		// Dev installs typically run with auth off, so there's no session user
 		// to gate against — but devs still need the inspector. Treat env=dev
 		// as "trusted operator" the same way AdminOnlyMiddleware does.
-		if (!$this->accessManager->sessionHasUser() && $this->config->env !== 'dev') {
+		if ($this->config->env !== 'dev' && !$this->sessionUserCanEditPages()) {
 			return false;
 		}
 
 		$cookies = $request->getCookieParams();
 
 		return ($cookies[self::DISMISS_COOKIE] ?? '') !== '1';
+	}
+
+	/**
+	 * Whether the session belongs to someone who edits pages. A session naming
+	 * a user that no longer validates has no user data, and counts as no.
+	 */
+	private function sessionUserCanEditPages(): bool
+	{
+		if (!$this->accessManager->sessionHasUser()) {
+			return false;
+		}
+
+		$userId = (string)($this->accessManager->userData()['id'] ?? '');
+		if ($userId === '') {
+			return false;
+		}
+
+		try {
+			return $this->accessControl->canAccessBuilder($userId);
+		} catch (\Throwable) {
+			return false;
+		}
 	}
 
 	/**
