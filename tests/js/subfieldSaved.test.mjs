@@ -152,3 +152,20 @@ describe('clearing a deleted file', () => {
 		expect(calls.at(-1)).toEqual(['field.saved']);
 	});
 });
+
+describe('filling a preview from the server', () => {
+	// A fresh upload answers with `count: 0`. `0||""` blanked the number
+	// input, which serialized as null and failed the parent's next save.
+	test('FilePreview.setValue() keeps zero and false', () => {
+		const { p, calls } = previewOf(FilePreview);
+		p.updatePreview = () => {};
+		p.fields = ['count', 'protected', 'alt'].map(name => ({ totalfield: {
+			property: name,
+			setValue: v => calls.push([name, v]),
+			saved: () => {},
+		} }));
+		p.setValue({ count: 0, protected: false });
+
+		expect(calls).toEqual([['count', 0], ['protected', false], ['alt', '']]);
+	});
+});

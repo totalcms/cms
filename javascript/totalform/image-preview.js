@@ -365,7 +365,7 @@ setupActionBar() {
 			const key = field.totalfield.property;
 			if (key.startsWith("exif-")) {
 				const exifKey = key.replace("exif-","");
-				field.totalfield.setValue(image.exif[exifKey]||"");
+				field.totalfield.setValue(image.exif?.[exifKey] ?? "");
 
 			} else if (key.startsWith("focalpoint-")) {
 				const focalpointKey = key.replace("focalpoint-","");
@@ -376,7 +376,7 @@ setupActionBar() {
 				field.totalfield.setValue(image.palette[paletteIndex]);
 
 			} else {
-				field.totalfield.setValue(image[key]||"");
+				field.totalfield.setValue(image[key] ?? ""); // `??` keeps a 0
 			}
 			// setting to saved state since this data comes from the server
 			field.totalfield.saved();

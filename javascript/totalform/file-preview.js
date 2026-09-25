@@ -184,7 +184,9 @@ export default class FilePreview {
 		// from tests this.fields updates as colors are dragged in the palette
 		for (const field of this.fields) {
 			const key = field.totalfield.property;
-			field.totalfield.setValue(file[key]||"");
+			// `??`, not `||`: a fresh upload's `count` is 0, and `0||""` left
+			// the number input empty — serialized as null, failing the next save.
+			field.totalfield.setValue(file[key] ?? "");
 			// setting to saved state since this data comes from the server
 			field.totalfield.saved();
 		}
