@@ -84,6 +84,11 @@ document.addEventListener("DOMContentLoaded", event => {
 				filesize.textContent = 'Error';
 				console.warn('Image size fetch failed:', response.status);
 			}
+		}).catch(error => {
+			// Network-level failure (Safari "Load failed", Chrome "Failed to
+			// fetch") — the size readout is cosmetic, so show it and move on.
+			filesize.textContent = 'Error';
+			console.warn('Image size fetch failed:', error);
 		});
 	};
 	getImageSize();
