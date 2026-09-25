@@ -2018,8 +2018,8 @@
         "title": "Smart Date Defaults",
         "group": "Fields",
         "sections": [],
-        "excerpt": "Smart Date Defaults Use the following settings can be used for a date field to auto-populate it when an object is created or updated. { \"onUpdate\" : true } { \"onCreate\" : true }",
-        "content": "smart date defaults use the following settings can be used for a date field to auto-populate it when an object is created or updated. { \"onupdate\" : true } { \"oncreate\" : true }",
+        "excerpt": "Smart Date Defaults Use the following settings on a date field to auto-populate it when an object is created or updated. { \"onUpdate\" : true } { \"onCreate\" : true } onCreate fills the date on the firs...",
+        "content": "smart date defaults use the following settings on a date field to auto-populate it when an object is created or updated. { \"onupdate\" : true } { \"oncreate\" : true } oncreate fills the date on the first save, when it is still empty, and never changes it after that. onupdate stamps the date on every save, including the first one. for a \"last modified\" field, onupdate on its own is enough. if a field sets both, onupdate wins: the date is re-stamped on every save.",
         "keywords": "smart date defaults "
     },
     {

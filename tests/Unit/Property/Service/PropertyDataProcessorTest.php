@@ -154,8 +154,9 @@ final class PropertyDataProcessorTest extends TestCase
 
 	public function testProcessDateDataWithBothSettings(): void
 	{
-		// When both settings are true, CREATION_DATE is checked first
-		// If the date already exists, it won't be updated
+		// With both set, UPDATE_DATE wins and re-stamps every save. It used to
+		// sit behind CREATION_DATE in an elseif, so a "last modified" field
+		// froze at the creation date.
 		$settings = [
 			DateData::CREATION_DATE => true,
 			DateData::UPDATE_DATE   => true,
@@ -165,9 +166,20 @@ final class PropertyDataProcessorTest extends TestCase
 		$result = $this->processor->processBeforeSave($dateData);
 
 		$this->assertInstanceOf(DateData::class, $result);
-		$this->assertNotEmpty($result->date);
-		// CREATION_DATE logic preserves existing dates, so original date should remain
-		$this->assertStringContainsString('2023-01-01', $result->date);
+		$this->assertStringNotContainsString('2023-01-01', $result->date);
+		$this->assertStringContainsString(date('Y-m-d'), $result->date);
+	}
+
+	public function testProcessDateDataWithBothSettingsStampsEmptyDate(): void
+	{
+		$settings = [
+			DateData::CREATION_DATE => true,
+			DateData::UPDATE_DATE   => true,
+		];
+		$result = $this->processor->processBeforeSave(new DateData('', $settings));
+
+		$this->assertInstanceOf(DateData::class, $result);
+		$this->assertStringContainsString(date('Y-m-d'), $result->date);
 	}
 
 	public function testProcessDateDataUpdateTakesPrecedenceWhenCreationDateNotTrue(): void

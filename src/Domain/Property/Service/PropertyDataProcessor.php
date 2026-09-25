@@ -132,12 +132,15 @@ class PropertyDataProcessor implements PropertyDataProcessorInterface
 	 */
 	private function processDateData(DateData $dateData): DateData
 	{
-		if (isset($dateData->settings[DateData::CREATION_DATE]) && $dateData->settings[DateData::CREATION_DATE] === true) {
+		// onUpdate first: it stamps every save, the first one included, so with
+		// both flags set it has to win — checked second, it was never reached
+		// once onCreate had filled the date.
+		if (($dateData->settings[DateData::UPDATE_DATE] ?? false) === true) {
+			$dateData->date = DateData::cleanDate();
+		} elseif (($dateData->settings[DateData::CREATION_DATE] ?? false) === true) {
 			if ($dateData->date === '' || $dateData->date === DateData::CREATION_DATE) {
 				$dateData->date = DateData::cleanDate();
 			}
-		} elseif (isset($dateData->settings[DateData::UPDATE_DATE]) && $dateData->settings[DateData::UPDATE_DATE] === true) {
-			$dateData->date = DateData::cleanDate();
 		}
 
 		return $dateData;

@@ -3191,7 +3191,7 @@
             "name": "date",
             "title": "Smart Date Defaults",
             "description": "Auto-populate date fields in Total CMS with onCreate and onUpdate settings for automatic timestamps when objects are created or modified.",
-            "content": "smart date defaults use the following settings can be used for a date field to auto-populate it when an object is created or updated. { \"onupdate\" : true } { \"oncreate\" : true }",
+            "content": "smart date defaults use the following settings on a date field to auto-populate it when an object is created or updated. { \"onupdate\" : true } { \"oncreate\" : true } - oncreate fills the date on the first save, when it is still empty, and never changes it after that. - onupdate stamps the date on every save, including the first one. for a \"last modified\" field, onupdate on its own is enough. if a field sets both, onupdate wins: the date is re-stamped on every save.",
             "url": "https://docs.totalcms.co/fields/date/"
         },
         {
