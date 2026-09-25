@@ -8,6 +8,7 @@ use DI\NotFoundException;
 use FastRoute\BadRouteException;
 use League\Csv\SyntaxError;
 use League\Flysystem\CorruptedPathDetected;
+use League\Flysystem\PathTraversalDetected;
 use League\Flysystem\UnableToCreateDirectory;
 use League\Flysystem\UnableToMoveFile;
 use League\Flysystem\UnableToWriteFile;
@@ -60,6 +61,9 @@ class SentryMiddleware implements MiddlewareInterface
 			UnableToCreateDirectory::class,
 			UnableToMoveFile::class,
 			CorruptedPathDetected::class,
+			// Flysystem refused a `..` path — a probe with a crafted ID was blocked
+			// as designed (the guard working, not a bug).
+			PathTraversalDetected::class,
 			BadRouteException::class, // Duplicate route registration - user configuration issue
 			InvalidKeywordException::class, // Invalid schema definition - user error
 			UnresolvedReferenceException::class, // User schema $ref points at a missing/external schema
