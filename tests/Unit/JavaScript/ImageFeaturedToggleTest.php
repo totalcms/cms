@@ -53,11 +53,13 @@ final class ImageFeaturedToggleTest extends TestCase
 	{
 		// help-on-focus is CSS :focus-within on the field; a clicked <button>
 		// takes focus, so every action-bar click popped the field's help label.
+		// The move handle must be exempt: a native drag only starts from a
+		// mousedown left to its default, so blocking it broke gallery reorder.
 		foreach (['image-preview.js', 'gallery-preview.js'] as $file) {
 			$this->assertMatchesRegularExpression(
-				'/querySelector\("\.actionbar"\)\?\.addEventListener\("mousedown", event => event\.preventDefault\(\)\)/',
+				'/querySelector\("\.actionbar"\)\?\.addEventListener\("mousedown", event => \{\s*if \(!event\.target\.closest\("\.move"\)\) event\.preventDefault\(\);\s*\}\)/',
 				$this->src($file),
-				"{$file} must keep action-bar clicks from taking focus.",
+				"{$file} must keep action-bar clicks from taking focus, except on the move handle.",
 			);
 		}
 	}
