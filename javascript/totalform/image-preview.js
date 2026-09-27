@@ -55,8 +55,11 @@ setupActionBar() {
 		// show the field's help label as if the person had tabbed into it.
 		// mousedown is the moment focus is taken; preventing its default keeps
 		// the click and skips the focus. Keyboard users still Tab to the
-		// buttons, and for them the help is right to appear.
-		this.container.querySelector(".actionbar")?.addEventListener("mousedown", event => event.preventDefault());
+		// buttons, and for them the help is right to appear. The move handle is
+		// exempt: a native drag only starts from a mousedown left to its default.
+		this.container.querySelector(".actionbar")?.addEventListener("mousedown", event => {
+			if (!event.target.closest(".move")) event.preventDefault();
+		});
 		this.setupFeaturedToggle();
 		this.setupDownload();
 
