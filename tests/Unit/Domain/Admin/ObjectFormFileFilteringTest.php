@@ -290,4 +290,31 @@ describe('ObjectForm File Property Filtering', function (): void {
 		// duplicateData is only set when id is empty
 		expect($filteredDuplicateData)->toBe([]);
 	});
+
+	test('clears onCreate and onUpdate date fields from duplicate data', function (): void {
+		$date = 'https://www.totalcms.co/schemas/properties/date.json';
+		$this->schemaData->properties += [
+			'created'   => ['$ref' => $date, 'settings' => ['onCreate' => true]],
+			'updated'   => ['$ref' => $date, 'settings' => ['onUpdate' => true]],
+			'stamped'   => ['$ref' => $date, 'onCreate' => true],
+			'published' => ['$ref' => $date, 'settings' => ['onCreate' => false]],
+		];
+
+		$form = new ObjectForm($this->services, new FormOptions(api: '/api', collection: 'test-collection', data: [
+			'id'        => 'original-id',
+			'title'     => 'Test Title',
+			'created'   => '2026-01-01T00:00:00+00:00',
+			'updated'   => '2026-02-01T00:00:00+00:00',
+			'stamped'   => '2026-03-01T00:00:00+00:00',
+			'published' => '2026-04-01T00:00:00+00:00',
+		]));
+
+		$filtered = (new ReflectionClass($form))->getProperty('duplicateData')->getValue($form);
+
+		expect($filtered)->not->toHaveKey('created')
+			->and($filtered)->not->toHaveKey('updated')
+			->and($filtered)->not->toHaveKey('stamped')
+			->and($filtered['published'])->toBe('2026-04-01T00:00:00+00:00')
+			->and($filtered['title'])->toBe('Test Title');
+	});
 });

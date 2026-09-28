@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Admin\Form\Builder;
 
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 
 /**
@@ -53,7 +54,7 @@ class ObjectForm extends TotalForm
 
 		// Handle duplicate object - filter out file-based properties and store raw data
 		if ($this->id === '' && $this->data !== []) {
-			$this->duplicateData = $this->filterFileProperties($this->data);
+			$this->duplicateData = $this->filterAutoStampedProperties($this->filterFileProperties($this->data));
 			$this->isDuplicate   = true;
 			// Blank out ID to allow autogen rules to work (unless keepIdOnDuplicate setting is enabled)
 			$keepId = $this->services->config->dashboard['keepIdOnDuplicate'] ?? false;
@@ -174,6 +175,32 @@ class ObjectForm extends TotalForm
 		$this->collectionData = $collectionData;
 		$this->schema         = $this->collectionData->schema;
 		$this->schemaData     = $this->services->schemaFetcher->fetchSchema($this->schema);
+	}
+
+	/**
+	 * Filter out onCreate/onUpdate properties from duplicate data. The save
+	 * re-stamps them anyway (ObjectSaver), so copying the original's
+	 * timestamps into the form would only show dates the duplicate won't keep.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function filterAutoStampedProperties(array $data): array
+	{
+		if (!$this->schemaData instanceof SchemaData) {
+			return $data;
+		}
+
+		foreach ($this->schemaData->properties as $propertyName => $propertySchema) {
+			foreach ([DateData::CREATION_DATE, DateData::UPDATE_DATE] as $setting) {
+				if (($propertySchema[$setting] ?? false) === true || ($propertySchema['settings'][$setting] ?? false) === true) {
+					unset($data[$propertyName]);
+				}
+			}
+		}
+
+		return $data;
 	}
 
 	/**

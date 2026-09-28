@@ -8,6 +8,7 @@ All notable changes to Total CMS will be documented in this file.
 - **Textareas size to their content in CSS.** A textarea now grows and shrinks with its text through `field-sizing: content`, and never gets shorter than its `rows`, so an empty field still shows its full height. The script that grew textareas is gone, which also means a public form's textarea sizes itself without any JavaScript, and the JSON field's textarea grows too. The fields that hand their textarea to an editor (code, styled text, SVG) are unchanged, `autoGrow: false` still keeps a fixed height, and the 60vh ceiling and the resize handle work as before. One difference: the old script only ever grew, so deleting text now shrinks the field back, down to its rows
 
 ### Fixed
+- **A duplicated object starts with its onCreate and onUpdate dates empty.** The duplicate form copied the original's timestamps even though the save re-stamps them, so it showed dates the new object would never keep. Those fields are now left blank, like the id and file fields already were
 - **Gallery images drag to reorder again.** A 3.6 change that stopped action-bar clicks from focusing the field also blocked the move handle's mousedown, so a drag never started. The move handle is now exempt
 
 ## [3.6.0] - 2026-09-24
