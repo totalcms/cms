@@ -2,14 +2,20 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [Unreleased]
+## [3.6.1] - 2026-09-28
 
 ### Changed
+
+- **Confirmation dialogs wait 2 seconds instead of 3.** The countdown that keeps a destructive dialog's confirm button disabled now defaults to 2 seconds. The settings form's placeholder and the script's own fallback said 5 and now agree too. A site that set its own **Confirmation Countdown** under Settings → Dashboard keeps it
 - **Textareas size to their content in CSS.** A textarea now grows and shrinks with its text through `field-sizing: content`, and never gets shorter than its `rows`, so an empty field still shows its full height. The script that grew textareas is gone, which also means a public form's textarea sizes itself without any JavaScript, and the JSON field's textarea grows too. The fields that hand their textarea to an editor (code, styled text, SVG) are unchanged, `autoGrow: false` still keeps a fixed height, and the 60vh ceiling and the resize handle work as before. One difference: the old script only ever grew, so deleting text now shrinks the field back, down to its rows
 
 ### Fixed
-- **A duplicated object starts with its onCreate and onUpdate dates empty.** The duplicate form copied the original's timestamps even though the save re-stamps them, so it showed dates the new object would never keep. Those fields are now left blank, like the id and file fields already were
+
 - **Gallery images drag to reorder again.** A 3.6 change that stopped action-bar clicks from focusing the field also blocked the move handle's mousedown, so a drag never started. The move handle is now exempt
+- **A freshly uploaded file in a deck no longer fails the next save.** A new upload's download count of `0` blanked its input, which then saved as `null` and failed schema validation, taking every other edit in that save with it. Reloading the page hid the problem. Zero and false values now survive in both the file and image previews
+- **A date field with both onCreate and onUpdate re-stamps on every save.** With both flags set, onCreate always won, so once the first save had filled the date a "last modified" field froze at creation. onUpdate is now checked first. Either flag on its own behaves as before, and the [date field docs](https://docs.totalcms.co/fields/date) now spell out what each setting and the combination do
+- **A duplicated object starts with its onCreate and onUpdate dates empty.** The duplicate form copied the original's timestamps even though the save re-stamps them, so it showed dates the new object would never keep. Those fields are now left blank, like the id and file fields already were
+- **The ImageWorks builder shows "Error" when it cannot read an image's size.** A network failure while fetching the preview (Safari's "Load failed") surfaced as an unhandled error instead of the readout the builder already showed for a failed response
 
 ## [3.6.0] - 2026-09-24
 

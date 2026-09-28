@@ -22,7 +22,7 @@
  *      if (await tcmsConfirm({ message: 'Delete?', countdown: 3 })) { ... }
  *
  * Countdown resolution order:
- *   options.countdown -> window.TCMS_CONFIG.confirmCountdown -> 5
+ *   options.countdown -> window.TCMS_CONFIG.confirmCountdown -> 2
  *
  * Opting out:
  *   Pass the triggering element via options.element. When that element (or any
@@ -36,7 +36,7 @@
 
 import { t } from './i18n';
 
-const DEFAULT_COUNTDOWN = 5;
+const DEFAULT_COUNTDOWN = 2;
 
 function resolveCountdown(override) {
 	if (typeof override === 'number' && override >= 0) return override;

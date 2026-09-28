@@ -22,7 +22,7 @@
 			"type"        : "number",
 			"label"       : "Confirmation Countdown (seconds)",
 			"help"        : "Destructive confirmation dialogs (delete, reset, etc.) disable the confirm button for this many seconds, forcing the user to pause and read the message. Set to <code>0</code> to disable the countdown.",
-			"placeholder" : "5",
+			"placeholder" : "2",
 			"min"         : 0,
 			"max"         : 30,
 			"default"     : 2
