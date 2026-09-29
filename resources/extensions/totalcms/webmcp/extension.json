@@ -5,7 +5,7 @@
 	"icon"        : "icon.png",
 	"hidden"      : false,
 	"requires"    : {
-		"totalcms" : ">=3.5.2",
+		"totalcms" : ">=3.6.0",
 		"php"      : ">=8.2"
 	},
 	"entrypoint"       : "Extension.php",
