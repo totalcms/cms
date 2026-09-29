@@ -40,6 +40,42 @@ You should commit your customization files:
 - Custom templates in your theme directory
 - Custom schemas if you've created any
 
+### Versioning Content (Optional)
+
+Ignoring `tcms-data` is the right default: on most sites editors work in the admin on production, and git and the admin cannot both be the source of truth for the same content. To move content between a local copy and production, use [`tcms push` and `tcms pull`](docs/operations/sync) instead.
+
+Some sites work the other way round — content written by developers, or by an agent working locally, then deployed like code. Content can be versioned there, but **never commit the whole `tcms-data` folder**. It holds more than content:
+
+| Path | What it holds | Why it must not be committed |
+|------|---------------|------------------------------|
+| `tcms-data/.system/` | Settings, API keys, the site encryption key (`site.key`), OAuth signing keys, sessions, remember-me tokens, OAuth grants, job and automation queues, migration state, [record history](docs/operations/backups), and logs on zip installs | API keys and the sync key are stored as-is, so the repository becomes a set of admin credentials. Sessions, queues and migration state are live runtime state: deploying them logs people out, re-runs jobs, or skips a migration |
+| `tcms-data/auth/` | User records, with password hashes and passkeys | Credentials, even hashed, do not belong in a repository |
+| `tcms-data/**/.index.json` | Each collection's index | Rebuilt on every save, so every commit touches it and any two branches conflict on it. It can be regenerated |
+
+Commit the collection folders (each object file and the collection's `.meta.json`) and `.schemas/`, and ignore the rest:
+
+```gitignore
+# Total CMS 3 — versioned content, never runtime state
+tcms-data/.system/
+tcms-data/auth/
+tcms-data/**/.index.json
+**/tcms/cache
+**/tcms/logs
+**/tcms/tmp
+```
+
+After cloning or pulling, rebuild the indexes so they match the files on disk:
+
+```bash
+tcms repair:index --all
+```
+
+Three things to expect:
+
+- **`.meta.json` changes on saves.** It is the collection's definition, so it must be committed, but it also carries the object count and a last-updated time. Expect those lines in diffs, and resolve a conflict on them either way — `repair:index` recalculates the count.
+- **Uploads are binary.** Images, files and depots live inside the object folders, so committing them puts every upload's full history in the repository. Consider Git LFS for them, or keep them out of git.
+- **Diffs read best in Markdown.** A collection can store each object as Markdown with YAML front matter instead of JSON; see [Storage Format](docs/collections/storage-format).
+
 ## Deployment Pipeline
 
 After pulling new code, four things have to happen in the right order to bring a Total CMS site fully up to date:
