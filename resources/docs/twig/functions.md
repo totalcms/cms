@@ -529,8 +529,10 @@ Outputs a variable as formatted JSON.
 #}
 ```
 
-### `parseJson(string): array`
-Decodes JSON strings to arrays. Alias for `json_decode`.
+### `parseJson(string): array|null`
+Decodes a JSON string to an array. Returns `null` when the string is empty, is not valid JSON, or decodes to something other than an object or list (a bare number or string), so an `{% if %}` guards it.
+
+PHP's `json_decode()` is also available as a function, but it is passed through unchanged: without `true` as its second argument it returns objects rather than arrays. Prefer `parseJson()`. Neither is a filter — `value|json_decode` fails with "Unknown filter".
 
 ```twig
 {# Process stored JSON configuration #}

@@ -273,8 +273,8 @@
         },
         {
             "name": "parseJson",
-            "signature": "parseJson(string): array",
-            "description": "Decodes JSON strings to arrays. Alias for `json_decode`.",
+            "signature": "parseJson(string): array|null",
+            "description": "Decodes a JSON string to an array. Returns `null` when the string is empty, is not valid JSON, or decodes to something other than an object or list (a bare number or string), so an `{% if %}` guards it.",
             "examples": [
                 "{# Process stored JSON configuration #}\n{% set settings = cms.collection.object('config', 'app-settings') %}\n{% set config = parseJson(settings.json_config) %}\n\n<div class=\"app-config\">\n    {% for key, value in config %}\n        <div class=\"config-item\">\n            <strong>{{ key | humanize }}:</strong> {{ value }}\n        </div>\n    {% endfor %}\n</div>\n\n{# Parse API response #}\n{% set data = parseJson(apiResponse) %}\n{% if data %}\n    <h2>{{ data.title }}</h2>\n    <p>{{ data.description }}</p>\n{% endif %}"
             ],
@@ -2992,15 +2992,6 @@
             "description": "Converts to array.",
             "examples": [
                 "{% set tags = post.tags | array %}\n{% for tag in tags %}\n    <span class=\"tag\">{{ tag }}</span>\n{% endfor %}"
-            ],
-            "url": "https://docs.totalcms.co/twig/filters/"
-        },
-        {
-            "name": "json_decode",
-            "signature": "json_decode(mixed $variable): array",
-            "description": "Decodes JSON string to array.",
-            "examples": [
-                "{% set config = post.metadata | json_decode %}\n{% for key, value in config %}\n    <meta name=\"{{ key }}\" content=\"{{ value }}\">\n{% endfor %}"
             ],
             "url": "https://docs.totalcms.co/twig/filters/"
         },

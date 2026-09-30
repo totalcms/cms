@@ -1215,15 +1215,7 @@ Converts to array.
 
 ### Debugging
 
-#### `json_decode(mixed $variable): array`
-Decodes JSON string to array.
-
-```twig
-{% set config = post.metadata | json_decode %}
-{% for key, value in config %}
-    <meta name="{{ key }}" content="{{ value }}">
-{% endfor %}
-```
+Decoding JSON is a function, not a filter: use `parseJson()`, described under [Functions](docs/twig/functions).
 
 #### `print_r(mixed $variable): string`
 Pretty-prints variable for debugging.
