@@ -283,7 +283,7 @@ Total CMS adds many custom filters to Twig:
 
 Total CMS automatically caches compiled templates. Clear cache when making large changes.
 
-[Go to Cache Manager](utils/cache-manager)
+Clear it from **Utilities → Cache Manager** in the admin.
 
 ### 2. Escape Output
 
