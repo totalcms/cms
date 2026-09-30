@@ -103,6 +103,67 @@ final class PageRouterMiddlewareTest extends TestCase
 		$this->assertSame(404, $response->getStatusCode());
 	}
 
+	public function testHeadRendersBuilderPageLikeGet(): void
+	{
+		// HTTP requires HEAD wherever GET works. Uptime monitors, link checkers
+		// and `curl -I` probe with HEAD, and every builder page used to answer
+		// them 404. The server drops the body; status and headers match GET.
+		$request = (new ServerRequestFactory())->createServerRequest('HEAD', '/about');
+		$handler = $this->createHandler(404);
+
+		$match = new RouteMatch(
+			template: 'pages/about.twig',
+			pageData: ['id' => 'about'],
+			params: [],
+		);
+		$this->pageRouter->method('match')->with('/about')->willReturn($match);
+		$this->twigEngine->method('render')->willReturn('<html>About</html>');
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(200, $response->getStatusCode());
+		$this->assertStringContainsString('text/html', $response->getHeaderLine('Content-Type'));
+	}
+
+	public function testHeadFollowsPageRedirectLikeGet(): void
+	{
+		$request = (new ServerRequestFactory())->createServerRequest('HEAD', '/old');
+		$handler = $this->createHandler(404);
+
+		$match = new RouteMatch(
+			template: 'pages/old.twig',
+			pageData: ['id' => 'old'],
+			params: [],
+			status: 301,
+			redirectTo: '/new',
+		);
+		$this->pageRouter->method('match')->willReturn($match);
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(301, $response->getStatusCode());
+		$this->assertSame('/new', $response->getHeaderLine('Location'));
+	}
+
+	public function testHeadWithNoPageMatchUsesFallback404LikeGet(): void
+	{
+		$request = (new ServerRequestFactory())->createServerRequest('HEAD', '/missing');
+		$handler = $this->createHandler(404);
+
+		$this->pageRouter->method('match')->willReturn(null);
+		$this->pageRouter->expects($this->once())->method('fallback404')->willReturn(new RouteMatch(
+			template: 'pages/not-found.twig',
+			pageData: ['id' => 'not-found'],
+			params: [],
+			status: 404,
+		));
+		$this->twigEngine->method('render')->willReturn('<html>Custom 404</html>');
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(404, $response->getStatusCode());
+	}
+
 	public function testPostToPageRunsMiddlewareAndReturnsShortCircuit(): void
 	{
 		// A page feature (e.g. Protect's passcode form) POSTs back to the page

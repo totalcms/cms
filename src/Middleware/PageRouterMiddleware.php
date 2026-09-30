@@ -74,12 +74,15 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		ServerRequestInterface $request,
 		RequestHandlerInterface $handler,
 	): ResponseInterface {
-		// Page rendering is GET-only, but page-feature middleware (e.g. the
-		// Protect passcode form) needs to handle its own POST submissions back to
-		// the page URL — Slim has no POST route for a builder page, so those land
-		// here as 404s. So GET and POST both run the page-middleware chain below;
-		// a POST simply never falls through to rendering (if no middleware handles
-		// it, the 404 stands). Other verbs have no page semantics — pass through.
+		// Pages render on GET, and on HEAD exactly as on GET (HTTP requires HEAD
+		// wherever GET works; the server drops the body). Monitors, link checkers
+		// and `curl -I` probe with HEAD, and every page used to 404 for them.
+		// Page-feature middleware (e.g. the Protect passcode form) also needs to
+		// handle its own POST submissions back to the page URL — Slim has no POST
+		// route for a builder page, so those land here as 404s. So GET, HEAD and
+		// POST all run the page-middleware chain below; a POST simply never falls
+		// through to rendering (if no middleware handles it, the 404 stands).
+		// Other verbs have no page semantics — pass through.
 		//
 		// Admin and API 404s are never overridden with the public fallback page:
 		// /admin/* has its own Admin404Action; /api/* returns JSON 404s that
@@ -87,7 +90,9 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		$method = $request->getMethod();
 		$path   = $request->getUri()->getPath();
 
-		$mayAugment = ($method === 'GET' || $method === 'POST')
+		$rendersPage = $method === 'GET' || $method === 'HEAD';
+
+		$mayAugment = ($rendersPage || $method === 'POST')
 			&& $path !== '/admin' && !str_starts_with($path, '/admin/')
 			&& $path !== '/api' && !str_starts_with($path, '/api/');
 
@@ -116,8 +121,8 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 			// Fall back to the page flagged as the universal 404 (if any). Lets
 			// users ship a custom-styled 404 from the admin without touching
 			// code; the page's own status field controls the response code.
-			// GET only: the fallback renders an HTML page, which a POST must never do.
-			if ($method === 'GET') {
+			// GET/HEAD only: the fallback renders an HTML page, which a POST must never do.
+			if ($rendersPage) {
 				$match = $this->pageRouter->fallback404();
 			}
 		}
@@ -129,9 +134,9 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		// Redirect — when the page status is a 3xx and redirectTo is set, send
 		// a Location header instead of rendering. Lets users move/replace URLs
 		// from the admin without writing route files. Runs before middleware
-		// because a redirected page has nothing to gate. GET only — a redirect
-		// is a rendering decision, not a gate.
-		if ($method === 'GET' && $match->redirectTo !== '' && $match->status >= 300 && $match->status < 400) {
+		// because a redirected page has nothing to gate. GET/HEAD only — a
+		// redirect is a rendering decision, not a gate.
+		if ($rendersPage && $match->redirectTo !== '' && $match->status >= 300 && $match->status < 400) {
 			return (new Response())
 				->withStatus($match->status)
 				->withHeader('Location', $match->redirectTo);
@@ -158,8 +163,8 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		}
 
 		// A POST that no page-feature middleware handled has nowhere to go —
-		// pages only render on GET. Return the original 404 untouched.
-		if ($method !== 'GET') {
+		// pages only render on GET/HEAD. Return the original 404 untouched.
+		if (!$rendersPage) {
 			return $response;
 		}
 
