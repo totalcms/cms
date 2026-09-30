@@ -147,4 +147,17 @@
 	background: oklch(var(--totalform-nearwhite));
 	border-left: 3px solid oklch(var(--totalform-error));
 	border-radius: var(--totalform-radius);
+}.bulk-history-note {
+	color: oklch(var(--totalform-darkgray));
+	font-size: 0.9rem;
+}
+.bulk-history-output {
+	margin-block: 0.5rem 1rem;
+	overflow-x: auto;
+}
+.bulk-history-table small {
+	color: oklch(var(--totalform-medgray));
+}
+.bulk-history-empty {
+	color: oklch(var(--totalform-medgray));
 }

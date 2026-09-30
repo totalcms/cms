@@ -240,10 +240,30 @@ final readonly class PresetForms
 			]);
 			$bulkPreviewDetails = HTMLUtils::details('Preview', $bulkPreviewForm . $bulkPreviewOutput);
 
+			// Send History accordion: loads with the page and reloads after
+			// every queue (BulkMailerAction sends the bulk-send-queued trigger)
+			$historyUrl     = $this->api . '/action/mailer/bulk/history?' . http_build_query(['mailerId' => $id]);
+			$historyOutput  = HTMLUtils::element('div', '', array_merge(
+				HTMLUtils::htmxAttributes($historyUrl, 'get', [
+					'trigger' => 'load, bulk-send-queued from:body',
+					'swap'    => 'innerHTML',
+				]),
+				['id' => 'bulk-history-output', 'class' => 'bulk-history-output']
+			));
+			$historyRefresh = HTMLUtils::element('button', 'Refresh', array_merge(
+				HTMLUtils::htmxAttributes($historyUrl, 'get', [
+					'target' => '#bulk-history-output',
+					'swap'   => 'innerHTML',
+				]),
+				['type' => 'button', 'class' => 'dash-button', 'id' => 'bulk-history-refresh']
+			));
+			$historyNote = HTMLUtils::element('p', 'Each email is sent to an object only once. Objects that already received it are left out of later sends; test sends to an override address never count.', ['class' => 'bulk-history-note']);
+			$bulkHistoryDetails = HTMLUtils::details('Send History', $historyNote . $historyOutput . $historyRefresh);
+
 			$bulkSection  = $hiddenMailerId;
 			$bulkSection .= HTMLUtils::element('h2', 'Bulk Send <span class="bulk-pro-badge">Pro</span>');
 			$bulkSection .= HTMLUtils::element('p', 'Send this email to every matching object in a collection.');
-			$bulkSection .= $bulkSendDetails . $bulkPreviewDetails . $objectPickerScript;
+			$bulkSection .= $bulkSendDetails . $bulkPreviewDetails . $bulkHistoryDetails . $objectPickerScript;
 			$bulkSection  = HTMLUtils::element('form', $bulkSection, ['class' => 'bulk-send-section totalform custom-layout help-on-hover help-box no-save no-unsaved-warning']);
 		}
 

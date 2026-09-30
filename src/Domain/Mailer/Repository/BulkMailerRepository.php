@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mailer\Repository;
 
+use TotalCMS\Domain\Mailer\Data\BulkBatchSummaryData;
 use TotalCMS\Domain\Mailer\Data\BulkMailLogData;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
@@ -67,6 +68,23 @@ class BulkMailerRepository
 			SQL);
 		}
 
+		// Created unconditionally so databases from before 3.6.2 gain it too.
+		// One row per queued batch: the send log only learns about an object
+		// once its job runs, so this is what pending counts are measured against.
+		$this->db->exec(<<<SQL
+			CREATE TABLE IF NOT EXISTS bulk_batches (
+				batchId     TEXT PRIMARY KEY,
+				mailerId    TEXT NOT NULL,
+				collection  TEXT NOT NULL,
+				queued      INTEGER NOT NULL DEFAULT 0,
+				excluded    INTEGER NOT NULL DEFAULT 0,
+				overrideTo  TEXT NOT NULL DEFAULT '',
+				scheduledAt DATETIME DEFAULT NULL,
+				createdAt   DATETIME DEFAULT CURRENT_TIMESTAMP
+			);
+			CREATE INDEX IF NOT EXISTS idx_batches_mailer ON bulk_batches (mailerId);
+		SQL);
+
 		return $this->db;
 	}
 
@@ -95,7 +113,12 @@ class BulkMailerRepository
 	}
 
 	/**
-	 * Check if a mailer has already been sent to a specific object.
+	 * Check if a mailer has already been delivered to a specific object.
+	 *
+	 * Only real deliveries count. A test send to an "Override To" address is
+	 * logged with that address in `sentTo`; real sends leave it empty. Counting
+	 * test sends here made proofing a batch to yourself silently skip every
+	 * real recipient on the follow-up send.
 	 */
 	public function hasBeenSent(string $mailerId, string $objectId): bool
 	{
@@ -105,7 +128,7 @@ class BulkMailerRepository
 
 		$sql = <<<SQL
 			SELECT 1 FROM bulk_send_log
-			WHERE mailerId = :mailerId AND objectId = :objectId AND status = 'sent'
+			WHERE mailerId = :mailerId AND objectId = :objectId AND status = 'sent' AND sentTo = ''
 			LIMIT 1
 		SQL;
 
@@ -115,6 +138,116 @@ class BulkMailerRepository
 		$stmt->execute();
 
 		return $stmt->fetch(\PDO::FETCH_ASSOC) !== false;
+	}
+
+	/**
+	 * IDs of every object the mailer has been delivered to, as a lookup set.
+	 * One query for the whole collection, rather than hasBeenSent() per object.
+	 *
+	 * @return array<string,true>
+	 */
+	public function fetchDeliveredObjectIds(string $mailerId): array
+	{
+		if (!$this->dbExists()) {
+			return [];
+		}
+
+		$sql = <<<SQL
+			SELECT DISTINCT objectId FROM bulk_send_log
+			WHERE mailerId = :mailerId AND status = 'sent' AND sentTo = ''
+		SQL;
+
+		$stmt = $this->getDb()->prepare($sql);
+		$stmt->bindValue(':mailerId', $mailerId);
+		$stmt->execute();
+
+		$ids = [];
+		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$ids[(string)$row['objectId']] = true;
+		}
+
+		return $ids;
+	}
+
+	/**
+	 * Record a queued batch so its progress can be reported later.
+	 */
+	public function recordBatch(string $batchId, string $mailerId, string $collection, int $queued, int $excluded, ?string $overrideTo, ?string $scheduledAt): void
+	{
+		$sql = <<<SQL
+			INSERT INTO bulk_batches (batchId, mailerId, collection, queued, excluded, overrideTo, scheduledAt)
+			VALUES (:batchId, :mailerId, :collection, :queued, :excluded, :overrideTo, :scheduledAt)
+		SQL;
+
+		$stmt = $this->getDb()->prepare($sql);
+		$stmt->bindValue(':batchId', $batchId);
+		$stmt->bindValue(':mailerId', $mailerId);
+		$stmt->bindValue(':collection', $collection);
+		$stmt->bindValue(':queued', $queued, \PDO::PARAM_INT);
+		$stmt->bindValue(':excluded', $excluded, \PDO::PARAM_INT);
+		$stmt->bindValue(':overrideTo', $overrideTo ?? '');
+		$stmt->bindValue(':scheduledAt', $scheduledAt);
+		$stmt->execute();
+	}
+
+	/**
+	 * The mailer's most recent batches with per-status counts, newest first.
+	 *
+	 * Counts are per object, by the latest log row for that object in the
+	 * batch — a job that failed and then succeeded on retry counts once, as
+	 * sent. Batches queued before bulk_batches existed are still listed from
+	 * the log alone, without a queued total.
+	 *
+	 * @return list<BulkBatchSummaryData>
+	 */
+	public function fetchMailerBatches(string $mailerId, int $limit = 10): array
+	{
+		if (!$this->dbExists()) {
+			return [];
+		}
+
+		$db = $this->getDb();
+
+		$stmt = $db->prepare(<<<SQL
+			SELECT l.batchId,
+				MAX(l.collection) AS collection,
+				MAX(l.sentTo)     AS sentTo,
+				MIN(l.sentAt)     AS firstAt,
+				MAX(l.sentAt)     AS lastAt,
+				SUM(l.status = 'sent')    AS sent,
+				SUM(l.status = 'failed')  AS failed,
+				SUM(l.status = 'skipped') AS skipped
+			FROM bulk_send_log l
+			WHERE l.mailerId = :mailerId
+				AND l.id IN (SELECT MAX(id) FROM bulk_send_log WHERE mailerId = :mailerId GROUP BY batchId, objectId)
+			GROUP BY l.batchId
+		SQL);
+		$stmt->bindValue(':mailerId', $mailerId);
+		$stmt->execute();
+
+		$logged = [];
+		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$logged[(string)$row['batchId']] = $row;
+		}
+
+		$stmt = $db->prepare('SELECT * FROM bulk_batches WHERE mailerId = :mailerId');
+		$stmt->bindValue(':mailerId', $mailerId);
+		$stmt->execute();
+
+		$batches = [];
+		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$batchId           = (string)$row['batchId'];
+			$batches[$batchId] = BulkBatchSummaryData::fromRows($row, $logged[$batchId] ?? null);
+			unset($logged[$batchId]);
+		}
+		foreach ($logged as $batchId => $row) {
+			$batches[(string)$batchId] = BulkBatchSummaryData::fromRows(null, $row);
+		}
+
+		$batches = array_values($batches);
+		usort($batches, static fn (BulkBatchSummaryData $a, BulkBatchSummaryData $b): int => strcmp($b->startedAt, $a->startedAt));
+
+		return array_slice($batches, 0, $limit);
 	}
 
 	/**

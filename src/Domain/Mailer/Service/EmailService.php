@@ -207,12 +207,21 @@ readonly class EmailService
 			return OperationResult::success('Whitelist not enabled');
 		}
 
-		// Extract domain from email
-		$emailDomain = '@' . substr((string)strrchr($email, '@'), 1);
+		// Extract domain from email. Domains are case-insensitive, so
+		// Jane@Example.COM must match an "@example.com" entry.
+		$emailDomain = '@' . strtolower(substr((string)strrchr($email, '@'), 1));
 
-		// Check if email domain matches any whitelisted domain
+		// Each entry names one domain. The leading "@" is added when missing:
+		// a bare "company.com" used to match "@evilcompany.com" as well.
 		foreach ($allowedDomains as $allowedDomain) {
-			if (str_ends_with($emailDomain, (string)$allowedDomain)) {
+			$allowedDomain = strtolower(trim((string)$allowedDomain));
+			if ($allowedDomain === '') {
+				continue;
+			}
+			if (!str_starts_with($allowedDomain, '@')) {
+				$allowedDomain = '@' . $allowedDomain;
+			}
+			if ($emailDomain === $allowedDomain) {
 				return OperationResult::success('Email domain allowed');
 			}
 		}

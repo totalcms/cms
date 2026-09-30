@@ -8,7 +8,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\StreamInterface;
+use Slim\Psr7\Factory\ResponseFactory;
 use TotalCMS\Action\Mailer\BulkMailerAction;
 use TotalCMS\Domain\Mailer\Service\BulkMailerService;
 use TotalCMS\Renderer\RawRenderer;
@@ -153,6 +153,8 @@ final class BulkMailerActionTest extends TestCase
 		$this->assertStringContainsString('cms-success', $body);
 		$this->assertStringContainsString('Queued!', $body);
 		$this->assertStringContainsString('bulk_abc', $body);
+		// Reloads the Send History panel so the new batch appears
+		$this->assertSame('bulk-send-queued', $result->getHeaderLine('HX-Trigger'));
 	}
 
 	public function testReturnsErrorHtmlOnServiceFailure(): void
@@ -196,45 +198,6 @@ final class BulkMailerActionTest extends TestCase
 
 	private function createResponse(): ResponseInterface
 	{
-		$stream = $this->createMock(StreamInterface::class);
-		$buffer = '';
-
-		$stream->method('write')->willReturnCallback(function (string $data) use (&$buffer): int {
-			$buffer .= $data;
-
-			return strlen($data);
-		});
-
-		$stream->method('__toString')->willReturnCallback(function () use (&$buffer): string {
-			return $buffer;
-		});
-
-		$response = $this->createMock(ResponseInterface::class);
-		$response->method('getBody')->willReturn($stream);
-		$response->method('withHeader')->willReturnCallback(
-			function (string $name, string $value) use (&$buffer): ResponseInterface {
-				// Return a new mock that remembers the header
-				$newResponse = $this->createMock(ResponseInterface::class);
-				$stream      = $this->createMock(StreamInterface::class);
-
-				$stream->method('write')->willReturnCallback(function (string $data) use (&$buffer): int {
-					$buffer .= $data;
-
-					return strlen($data);
-				});
-				$stream->method('__toString')->willReturnCallback(function () use (&$buffer): string {
-					return $buffer;
-				});
-
-				$newResponse->method('getBody')->willReturn($stream);
-				$newResponse->method('getHeaderLine')->willReturnCallback(
-					fn (string $headerName): string => strtolower($headerName) === strtolower($name) ? $value : ''
-				);
-
-				return $newResponse;
-			}
-		);
-
-		return $response;
+		return (new ResponseFactory())->createResponse();
 	}
 }

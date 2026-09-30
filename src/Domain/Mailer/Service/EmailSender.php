@@ -55,7 +55,10 @@ readonly class EmailSender
 				}
 
 				// Handle secure connection
-				$secure = $smtpConfig['secure'] ?? '';
+				// Lowercased because the shipped default is "TLS" while the
+				// settings select stores "tls" — a never-saved install used to
+				// match neither branch and set no encryption at all.
+				$secure = strtolower((string)($smtpConfig['secure'] ?? ''));
 				if ($secure === 'tls') {
 					$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 				} elseif ($secure === 'ssl') {

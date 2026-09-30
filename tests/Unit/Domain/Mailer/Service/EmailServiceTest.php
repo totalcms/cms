@@ -210,6 +210,27 @@ final class EmailServiceTest extends TestCase
 		$this->assertTrue($result->success);
 	}
 
+	public function testWhitelistIgnoresCase(): void
+	{
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData(to: 'Jane@Allowed.COM'));
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+		$this->config->mailer = ['whitelist' => ['@allowed.com']];
+		$this->emailSender->expects($this->once())->method('send')->willReturn(OperationResult::success('Sent'));
+
+		$this->assertTrue($this->service->sendEmail('test-mailer')->success);
+	}
+
+	public function testWhitelistEntryWithoutAtMatchesOnlyThatDomain(): void
+	{
+		// "allowed.com" must not let "@notallowed.com" through
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData(to: 'x@notallowed.com'));
+		$this->twigEngine->method('renderString')->willReturnArgument(0);
+		$this->config->mailer = ['whitelist' => ['allowed.com']];
+		$this->emailSender->expects($this->never())->method('send');
+
+		$this->assertFalse($this->service->sendEmail('test-mailer')->success);
+	}
+
 	public function testWhitelistDisabledWhenEmpty(): void
 	{
 		$mailerData = $this->createMailerData(to: 'any@example.com');

@@ -54,9 +54,10 @@ readonly class BulkMailerAction
 			$batchId = htmlspecialchars((string)($result->data['batchId'] ?? ''));
 
 			$html = '<div class="cms-success"><strong>Queued!</strong> ' . $message .
-				'<br>Batch ID: <code>' . $batchId . '</code></div>';
+				'<br>Batch ID: <code>' . $batchId . '</code>. Follow its progress under Send History.</div>';
 
-			return $this->htmlResponse($response, $html);
+			// Reloads the Send History panel so the new batch shows up
+			return $this->htmlResponse($response->withHeader('HX-Trigger', 'bulk-send-queued'), $html);
 		}
 
 		$message = htmlspecialchars($result->message);

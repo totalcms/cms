@@ -14,6 +14,7 @@ use TotalCMS\Domain\JobQueue\Repository\JobRepository;
 use TotalCMS\Domain\JobQueue\Service\JobRunner;
 use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
 use TotalCMS\Domain\Mailer\Service\EmailService;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectExporter;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectImporter;
@@ -21,6 +22,7 @@ use TotalCMS\Domain\Search\Job\ReindexJob;
 use TotalCMS\Domain\Seo\IndexNow\IndexNowJob;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\OperationResult;
 
 // JobRunner is where imports, index rebuilds, exports, data-view updates, bulk
 // email and search reindexing all actually execute — usually from cron, with
@@ -155,6 +157,49 @@ describe('JobRunner::processNextJobWithDetails lifecycle', function (): void {
 		expect($result)->not->toBeNull()
 			->and($result['success'])->toBeFalse()
 			->and($result['deferred'] ?? false)->toBeTrue();
+	});
+
+	it('hands back the attempt a rate-limited job was charged', function (): void {
+		// fetchNextJob() has already counted this run as an attempt. Without
+		// handing it back, a job deferred three times would get no retries
+		// left for a real failure later.
+		$job = jobRunnerJob(JobData::TYPE_EMAIL, attempts: 2);
+		$m   = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
+		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
+		$m['bulkMailerRepository']->method('countSentSince')->willReturn(1);
+		$m['jobRepository']->expects(test()->once())->method('resetJobStatus')
+			->with(test()->callback(fn (JobData $j): bool => $j->attempts === 1));
+
+		jobRunnerFrom($m, ['maxPerHour' => 1])->processNextJobWithDetails();
+	});
+
+	it('measures the send-limit window in UTC, like the send log', function (): void {
+		// sentAt is SQLite CURRENT_TIMESTAMP (UTC); a window in the site's
+		// timezone would count the wrong hour.
+		$tz = date_default_timezone_get();
+		date_default_timezone_set('America/Los_Angeles');
+
+		try {
+			$job = jobRunnerJob(JobData::TYPE_EMAIL);
+			$m   = jobRunnerMocks();
+			$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
+			$m['jobRepository']->method('fetchNextJob')->willReturn($job);
+			$since = null;
+			$m['bulkMailerRepository']->method('countSentSince')
+				->willReturnCallback(function (string $s) use (&$since): int {
+					$since = $s;
+
+					return 1;
+				});
+
+			jobRunnerFrom($m, ['maxPerHour' => 1])->processNextJobWithDetails();
+
+			$expected = gmdate('Y-m-d H:i:s', time() - 3600);
+			expect(abs(strtotime($since . ' UTC') - strtotime($expected . ' UTC')))->toBeLessThan(5);
+		} finally {
+			date_default_timezone_set($tz);
+		}
 	});
 
 	it('does not mark an ordinary failure as deferred', function (): void {
@@ -545,5 +590,56 @@ describe('JobRunner export job', function (): void {
 		jobRunnerFrom($m)->processNextJobWithDetails();
 
 		expect(true)->toBeTrue();
+	});
+});
+
+describe('JobRunner bulk email dedupe', function (): void {
+	/** @param array<string,mixed> $m */
+	$runEmail = function (array $m, array $payload): void {
+		$job = jobRunnerJob(JobData::TYPE_EMAIL, payload: (string)json_encode($payload));
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
+		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
+		$object = test()->createMock(ObjectData::class);
+		$object->method('toArray')->willReturn(['id' => 'obj-1']);
+		$m['objectFetcher']->method('fetchObject')->willReturn($object);
+		jobRunnerFrom($m)->processNextJobWithDetails();
+	};
+
+	it('skips a real send to an object that already received it', function () use ($runEmail): void {
+		$m = jobRunnerMocks();
+		$m['bulkMailerRepository']->method('hasBeenSent')->willReturn(true);
+		$m['emailService']->expects(test()->never())->method('sendEmail');
+		$m['bulkMailerRepository']->expects(test()->once())->method('log')
+			->with(test()->callback(fn (array $row): bool => $row['status'] === 'skipped'));
+
+		$runEmail($m, ['mailerId' => 'news', 'objectId' => 'obj-1', 'collection' => 'members', 'batchId' => 'b1']);
+	});
+
+	it('logs a failure when the object was deleted after queueing', function (): void {
+		// Otherwise the batch shows the object as pending forever
+		$job = jobRunnerJob(JobData::TYPE_EMAIL, payload: (string)json_encode(['mailerId' => 'news', 'objectId' => 'gone', 'collection' => 'members', 'batchId' => 'b1']));
+		$m   = jobRunnerMocks();
+		$m['jobRepository']->method('hasPendingJobs')->willReturn(true);
+		$m['jobRepository']->method('fetchNextJob')->willReturn($job);
+		$m['objectFetcher']->method('fetchObject')->willThrowException(new RuntimeException('Object not found'));
+		$m['emailService']->expects(test()->never())->method('sendEmail');
+		$m['bulkMailerRepository']->expects(test()->once())->method('log')
+			->with(test()->callback(fn (array $row): bool => $row['status'] === 'failed' && $row['objectId'] === 'gone'));
+		$m['jobRepository']->expects(test()->once())->method('markFailed');
+
+		jobRunnerFrom($m)->processNextJobWithDetails();
+	});
+
+	it('always sends an override test copy, even after a real delivery', function () use ($runEmail): void {
+		// Proofing a batch to yourself must never be deduped away.
+		$m = jobRunnerMocks();
+		$m['bulkMailerRepository']->expects(test()->never())->method('hasBeenSent');
+		$m['emailService']->expects(test()->once())->method('sendEmail')
+			->with('news', test()->anything(), 'me@example.com')
+			->willReturn(OperationResult::success());
+		$m['bulkMailerRepository']->expects(test()->once())->method('log')
+			->with(test()->callback(fn (array $row): bool => $row['status'] === 'sent' && $row['sentTo'] === 'me@example.com'));
+
+		$runEmail($m, ['mailerId' => 'news', 'objectId' => 'obj-1', 'collection' => 'members', 'batchId' => 'b1', 'overrideTo' => 'me@example.com']);
 	});
 });

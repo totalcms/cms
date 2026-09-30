@@ -13,6 +13,7 @@ use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mailer\Data\MailerData;
+use TotalCMS\Domain\Mailer\Repository\BulkMailerRepository;
 use TotalCMS\Domain\Mailer\Service\BulkMailerService;
 use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -30,6 +31,7 @@ final class BulkMailerServiceTest extends TestCase
 	private MockObject $editionFeatures;
 	private MockObject $twigEngine;
 	private MockObject $logger;
+	private MockObject $bulkMailerRepository;
 
 	protected function setUp(): void
 	{
@@ -40,6 +42,8 @@ final class BulkMailerServiceTest extends TestCase
 		$this->editionFeatures = $this->createMock(EditionFeatureService::class);
 		$this->twigEngine      = $this->createMock(TwigEngine::class);
 		$this->logger          = $this->createMock(LoggerInterface::class);
+
+		$this->bulkMailerRepository = $this->createMock(BulkMailerRepository::class);
 
 		// By default, allow bulk mailer actions
 		$this->editionFeatures->method('can')->willReturn(true);
@@ -55,6 +59,7 @@ final class BulkMailerServiceTest extends TestCase
 			$this->jobQueuer,
 			$this->editionFeatures,
 			$this->twigEngine,
+			$this->bulkMailerRepository,
 			$loggerFactory,
 		);
 	}
@@ -79,6 +84,7 @@ final class BulkMailerServiceTest extends TestCase
 			$this->jobQueuer,
 			$this->editionFeatures,
 			$this->twigEngine,
+			$this->bulkMailerRepository,
 			$loggerFactory,
 		);
 
@@ -174,22 +180,37 @@ final class BulkMailerServiceTest extends TestCase
 		$this->service->queueBulkSend('test-mailer', 'subscribers', '', '', null, 'override@example.com');
 	}
 
-	public function testPassesScheduledAtThroughToJobQueuer(): void
+	public function testConvertsTheScheduleFromSiteTimeToUtc(): void
 	{
-		$mailer = $this->createMailerData();
-		$this->mailerFetcher->method('fetchMailer')->willReturn($mailer);
+		// The admin posts a datetime-local value in the site's timezone; the
+		// job queue compares against SQLite's UTC CURRENT_TIMESTAMP.
+		$tz = date_default_timezone_get();
+		date_default_timezone_set('America/New_York');
+
+		try {
+			$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData());
+			$this->indexFilter->method('fetchFilteredIndex')->willReturn([['id' => 'obj-1']]);
+			$this->jobQueuer->expects($this->once())
+				->method('queueEmail')
+				->with($this->anything(), '2026-03-01 17:00:00')
+				->willReturn($this->createMock(JobData::class));
+
+			$this->service->queueBulkSend('test-mailer', 'subscribers', '', '', '2026-03-01T12:00');
+		} finally {
+			date_default_timezone_set($tz);
+		}
+	}
+
+	public function testRejectsAnUnparseableSchedule(): void
+	{
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData());
 		$this->indexFilter->method('fetchFilteredIndex')->willReturn([['id' => 'obj-1']]);
+		$this->jobQueuer->expects($this->never())->method('queueEmail');
 
-		$jobData = $this->createMock(JobData::class);
-		$this->jobQueuer->expects($this->once())
-			->method('queueEmail')
-			->with(
-				$this->anything(),
-				'2026-03-01 12:00:00'
-			)
-			->willReturn($jobData);
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers', '', '', 'next blursday');
 
-		$this->service->queueBulkSend('test-mailer', 'subscribers', '', '', '2026-03-01 12:00:00');
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('Invalid schedule', $result->message);
 	}
 
 	public function testPassesIncludeExcludeFiltersToIndexFilter(): void
@@ -246,6 +267,58 @@ final class BulkMailerServiceTest extends TestCase
 		$this->assertStringStartsWith('bulk_', $result->data['batchId']);
 		$this->assertSame(1, $result->data['count']);
 		$this->assertStringContainsString('1 emails', $result->message);
+	}
+
+	public function testLeavesOutObjectsThatAlreadyReceivedTheEmail(): void
+	{
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData());
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([['id' => 'obj-1'], ['id' => 'obj-2'], ['id' => 'obj-3']]);
+		$this->bulkMailerRepository->method('fetchDeliveredObjectIds')->willReturn(['obj-2' => true]);
+
+		$queued = [];
+		$this->jobQueuer->method('queueEmail')
+			->willReturnCallback(function (array $data) use (&$queued): JobData {
+				$queued[] = $data['objectId'];
+
+				return $this->createMock(JobData::class);
+			});
+		$this->bulkMailerRepository->expects($this->once())->method('recordBatch')
+			->with($this->stringStartsWith('bulk_'), 'test-mailer', 'subscribers', 2, 1, null, null);
+
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
+
+		$this->assertTrue($result->success);
+		$this->assertSame(['obj-1', 'obj-3'], $queued);
+		$this->assertSame(1, $result->data['excluded']);
+		$this->assertStringContainsString('1 left out', $result->message);
+	}
+
+	public function testFailsWhenEveryObjectAlreadyReceivedTheEmail(): void
+	{
+		// "Queued N emails" followed by N silent skips is what hid this from
+		// the operator; say so up front instead.
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData());
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([['id' => 'obj-1'], ['id' => 'obj-2']]);
+		$this->bulkMailerRepository->method('fetchDeliveredObjectIds')->willReturn(['obj-1' => true, 'obj-2' => true]);
+		$this->jobQueuer->expects($this->never())->method('queueEmail');
+		$this->bulkMailerRepository->expects($this->never())->method('recordBatch');
+
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers');
+
+		$this->assertFalse($result->success);
+		$this->assertStringContainsString('already received', $result->message);
+	}
+
+	public function testOverrideSendsIgnorePriorDeliveries(): void
+	{
+		$this->mailerFetcher->method('fetchMailer')->willReturn($this->createMailerData());
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([['id' => 'obj-1']]);
+		$this->bulkMailerRepository->expects($this->never())->method('fetchDeliveredObjectIds');
+		$this->jobQueuer->expects($this->once())->method('queueEmail')->willReturn($this->createMock(JobData::class));
+
+		$result = $this->service->queueBulkSend('test-mailer', 'subscribers', '', '', null, 'me@example.com');
+
+		$this->assertTrue($result->success);
 	}
 
 	public function testUsesObjectIdsInsteadOfFiltersWhenProvided(): void

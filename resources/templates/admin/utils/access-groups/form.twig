@@ -172,6 +172,9 @@
 		<div class="permission-section">
 			<h3>{{ t('access_groups.other_permissions') }}</h3>
 
+			{# A new group starts from AccessGroupData::getDefaultPermissions() —
+			   keep the defaults below in step. Mailer, Data Views and Builder stay
+			   off until granted, the same as a group created through the API. #}
 			{{ cms.form.field("checklist", "permissions-simple", {
 				label    : t('access_groups.dashboard_features'),
 				help     : t('access_groups.select_features'),
@@ -187,7 +190,7 @@
 					)|merge(
 						group.permissions.inlineEdit ?? true ? ["inlineEdit"] : []
 					)
-				) : ["docs", "mailer", "playground", "dataviews", "builder", "inlineEdit"],
+				) : ["docs", "playground", "inlineEdit"],
 				options  : [
 					{value: "builder", label: t('access_groups.feature_builder')},
 					{value: "docs", label: t('access_groups.feature_docs')},
@@ -202,9 +205,11 @@
 				}
 			}) }}
 
+			{# Off for a new group, like AccessGroupData's default: pick the
+			   utility pages it needs rather than granting all of them. #}
 			{{ cms.form.field("checklist", "utils-all", {
 				label    : t('access_groups.utils_access'),
-				value    : group ? (group.permissions.utils.all ? ["all"] : []) : ["all"],
+				value    : group ? (group.permissions.utils.all ? ["all"] : []) : [],
 				settings : { toggleAll : false },
 				options  : [
 					{value: "all", label: t('access_groups.all_utils')}

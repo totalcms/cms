@@ -311,8 +311,10 @@ readonly class JobRunner
 		$batchId    = (string)($data['batchId'] ?? '');
 		$overrideTo = isset($data['overrideTo']) ? (string)$data['overrideTo'] : null;
 
-		// Skip if already sent
-		if ($this->bulkMailerRepository->hasBeenSent($mailerId, $objectId)) {
+		// Skip if already delivered. Test sends to an override address are
+		// neither deduped nor counted as a delivery, so a batch can be proofed
+		// any number of times before the real send.
+		if ($overrideTo === null && $this->bulkMailerRepository->hasBeenSent($mailerId, $objectId)) {
 			$this->logger->info('Skipping already-sent email', [
 				'mailerId'   => $mailerId,
 				'objectId'   => $objectId,
@@ -336,9 +338,23 @@ readonly class JobRunner
 			usleep($sendDelay * 1000);
 		}
 
-		// Fetch object data
-		$object     = $this->objectFetcher->fetchObject($collection, $objectId);
-		$objectData = $object->toArray();
+		// Fetch object data. An object deleted since the send was queued is
+		// logged as failed, so Send History does not show it pending forever.
+		try {
+			$objectData = $this->objectFetcher->fetchObject($collection, $objectId)->toArray();
+		} catch (\Throwable $e) {
+			$this->bulkMailerRepository->log([
+				'batchId'    => $batchId,
+				'mailerId'   => $mailerId,
+				'collection' => $collection,
+				'objectId'   => $objectId,
+				'sentTo'     => $overrideTo ?? '',
+				'status'     => 'failed',
+				'error'      => $e->getMessage(),
+			]);
+
+			throw $e;
+		}
 
 		// Send email
 		$result = $this->emailService->sendEmail($mailerId, $objectData, $overrideTo);
@@ -381,8 +397,12 @@ readonly class JobRunner
 		$maxPerHour = intval($this->config->smtp['maxPerHour'] ?? 0);
 		$maxPerDay  = intval($this->config->smtp['maxPerDay'] ?? 0);
 
+		// The send log's sentAt is SQLite CURRENT_TIMESTAMP, which is UTC. A
+		// window built with date() was in the site's timezone, so the limit
+		// counted the wrong hour/day by the site's UTC offset.
+
 		if ($maxPerHour > 0) {
-			$since     = date('Y-m-d H:i:s', strtotime('-1 hour'));
+			$since     = gmdate('Y-m-d H:i:s', time() - 3600);
 			$sentCount = $this->bulkMailerRepository->countSentSince($since);
 			if ($sentCount >= $maxPerHour) {
 				throw new EmailRateLimitException("Hourly email limit reached ({$sentCount}/{$maxPerHour})");
@@ -390,7 +410,7 @@ readonly class JobRunner
 		}
 
 		if ($maxPerDay > 0) {
-			$since     = date('Y-m-d H:i:s', strtotime('-24 hours'));
+			$since     = gmdate('Y-m-d H:i:s', time() - 86400);
 			$sentCount = $this->bulkMailerRepository->countSentSince($since);
 			if ($sentCount >= $maxPerDay) {
 				throw new EmailRateLimitException("Daily email limit reached ({$sentCount}/{$maxPerDay})");
@@ -490,6 +510,9 @@ readonly class JobRunner
 				'job'     => $job->toArray(),
 			];
 		} catch (EmailRateLimitException $e) {
+			// fetchNextJob() counted this as an attempt; hand it back so a job
+			// that waits out the limit several times still gets its retries.
+			$job->attempts = max(0, $job->attempts - 1);
 			$this->jobRepository->resetJobStatus($job);
 			$this->logger->info('Email rate limit reached, deferring job', [
 				'job_id'  => $job->id,
