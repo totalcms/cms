@@ -22,13 +22,21 @@ Go to [pushover.net/apps/build](https://pushover.net/apps/build) and create a ne
 
 Your **User Key** is displayed on your [Pushover dashboard](https://pushover.net/dashboard).
 
-### 4. Configure Total CMS
+### 4. Enable the Extension
 
-Go to **Settings > Push Notifications** in the Total CMS admin and enter your Application Token and User Key.
+Pushover ships with Total CMS as a bundled extension, disabled by default. Enable it in **Admin → Extensions**, or from the command line:
 
-### 5. Test Your Configuration
+```bash
+tcms extension:enable totalcms/pushover
+```
 
-Use the **Test Push Notifications** section at the bottom of the settings page to send a test notification and verify everything is working.
+### 5. Configure It
+
+Open the extension's settings page from **Admin → Extensions** and enter your **Application Token** and **User Key**.
+
+### 6. Test Your Configuration
+
+Use the **Test Notification** link on the extension's card in **Admin → Extensions** to send a test notification and verify everything is working.
 
 ## Form Action
 
@@ -166,7 +174,7 @@ If the image cannot be generated (missing property, empty gallery, etc.), the no
 Pushover [delivery groups](https://pushover.net/api/groups) let you broadcast the same notification to multiple users with a single key. To use groups:
 
 1. Create a delivery group at [pushover.net/groups/build](https://pushover.net/groups/build) and add your team members
-2. Enter the group key in **Settings > Push Notifications > Pushover Group Key**
+2. Enter the group key as **Group Key (optional)** on the extension's settings page
 3. Add `"group": true` to your action config
 
 ```json

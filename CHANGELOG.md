@@ -2,6 +2,34 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [Unreleased]
+
+### Security
+
+- **The Bulk Mailer endpoints need a signed-in user with the Mailer permission.** `/api/action/mailer/bulk`, `/preview` and `/objects` only checked the edition, so on a Pro site anyone could queue a bulk send to a whole collection or list any collection's object ids and titles without signing in. They now require a session or API key whose access group grants `mailer`, the same check as the Mailer admin page. `POST /api/action/mailer`, which front-end form actions call, stays public
+- **A new access group no longer starts with Mailer, Data Views, Builder and every utility ticked.** The admin form pre-selected them, and "All utilities" as well, while a group created any other way starts without them, so a group made in the admin could reach more than the built-in Editor group. The form now starts from the same defaults, so these stay off until an admin grants them. Existing groups are unchanged
+
+### Added
+
+- **Send History for bulk emails.** A template's edit page lists its recent bulk sends with sent, failed, skipped and pending counts, marks test sends to an override address, and refreshes after each queue. Until now nothing in the admin showed what a bulk send had actually done
+
+### Fixed
+
+- **A test send with Override To no longer stops the real send.** Proofing a bulk email to your own address recorded every object as sent, so clearing the override and queuing the real send skipped everyone, while the admin reported the emails as queued. Test sends are no longer deduped and never count as a delivery, and an install that already has test rows can simply queue the real send again
+- **A bulk send says how many objects it left out.** A template goes to each object once; objects that already received it are now left out when the send is queued, and the result says how many ("Queued 12 emails for sending (40 left out: already received this email)"). When every object has it already, nothing is queued and the error says why, instead of reporting emails that would all be skipped
+- **A scheduled bulk send goes out at the time you picked.** The schedule was stored in the browser's `2026-10-01T09:00` form and compared as text against the queue's UTC clock, so a send scheduled for later today waited for the next UTC day and the site's timezone was ignored. It is now converted from the site's timezone to UTC when queued, and an unreadable date is refused
+- **The hourly and daily email limits count the right hour.** The window was worked out in the site's timezone but compared against send times recorded in UTC, so the limits were off by the site's UTC offset: too strict west of UTC, too loose east of it
+- **Waiting out an email limit no longer uses up a job's retries.** Each deferral counted as an attempt, so a bulk email that waited for the limit a few times had no retries left if the send then failed once
+- **The Mailer whitelist matches domains exactly and ignores case.** `Jane@Example.COM` was refused by an `@example.com` entry, and an entry written without the `@`, such as `example.com`, also let `@badexample.com` through. The `@` is now added when missing
+- **A bulk email to an object deleted after queuing is logged as failed.** It left no record, so its batch would have shown as in progress indefinitely
+- **SMTP encryption applies on an install that never saved its SMTP settings.** The shipped default was `TLS` while the check only matched `tls` and `ssl`, so no encryption mode was set until the settings were saved from the admin
+
+### Documentation
+
+- **The Mailer has full documentation.** The placeholder page is replaced with SMTP and Mailer settings, template fields and variables, Inky layouts, sending from forms, auth flows, automations, PHP and the API, and Bulk Send, including the once-per-object rule, proofing with Override To and Send History
+- **The OpenAPI spec describes `/action/mailer` correctly** (`mailerId` and `data`, not `to`/`subject`/`body`) and adds the bulk endpoints
+- **Pushover is documented as the bundled extension it is.** Form Settings and the Pushover page pointed at a Settings → Push Notifications page that no longer exists; setup now goes through Admin → Extensions
+
 ## [3.6.1] - 2026-09-28
 
 ### Changed

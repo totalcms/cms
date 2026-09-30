@@ -3608,64 +3608,73 @@
     "/action/mailer": {
       "post": {
         "summary": "Send Email",
-        "description": "Send email via form submission with rate limiting. Useful for contact forms and notifications.",
+        "description": "Send a Mailer template. `data` is exposed to the template as `{{ data.* }}`, and the signed-in user, if any, as `{{ user.* }}`. Front-end form `mailer` actions call this endpoint, so it is public and protected only by rate limiting (Settings → Mailer) and the optional recipient-domain whitelist. Requires the Standard edition or higher. See docs/notifications/mailer.",
         "tags": [
           "system"
         ],
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "to": {
-                    "type": "string",
-                    "format": "email",
-                    "description": "Recipient email address"
-                  },
-                  "from": {
-                    "type": "string",
-                    "format": "email",
-                    "description": "Sender email address"
-                  },
-                  "subject": {
-                    "type": "string",
-                    "description": "Email subject"
-                  },
-                  "body": {
-                    "type": "string",
-                    "description": "Email body (HTML or plain text)"
-                  },
-                  "replyTo": {
-                    "type": "string",
-                    "format": "email",
-                    "description": "Reply-to email address"
-                  }
-                },
                 "required": [
-                  "to",
-                  "from",
-                  "subject",
-                  "body"
-                ]
+                  "mailerId"
+                ],
+                "properties": {
+                  "mailerId": {
+                    "type": "string",
+                    "description": "ID of a template in the mailer collection",
+                    "example": "contact-notify"
+                  },
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Template data. May also be sent as a JSON string.",
+                    "example": {
+                      "name": "Jane",
+                      "email": "jane@example.com",
+                      "message": "Hello!"
+                    }
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "mailerId"
+                ],
+                "properties": {
+                  "mailerId": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "string",
+                    "description": "JSON-encoded template data"
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Email sent successfully",
+            "description": "Email sent",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "success": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "example": true
                     },
                     "message": {
-                      "type": "string"
+                      "type": "string",
+                      "example": "Email sent successfully"
                     }
                   }
                 }
@@ -3673,17 +3682,348 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/ValidationError"
-          },
-          "429": {
-            "description": "Rate limit exceeded",
+            "description": "`mailerId` missing, or `data` is not an object",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limit exceeded. See the `Retry-After` header.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the window resets"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Rate limit exceeded"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "retry_after": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "window": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The send failed: template not found or inactive, edition too low, recipient not whitelisted, or an SMTP error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action/mailer/bulk": {
+      "post": {
+        "summary": "Queue Bulk Send",
+        "description": "Queue one email job per object in a collection. Objects that already received the template are left out, unless `bulkOverrideTo` is set. Requires a signed-in user or API key whose access group grants the `mailer` permission, and the Pro edition. Returns an HTML fragment for the admin UI, not a stable API.",
+        "tags": [
+          "system"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "SessionAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "mailerId",
+                  "bulkCollection"
+                ],
+                "properties": {
+                  "mailerId": {
+                    "type": "string"
+                  },
+                  "bulkCollection": {
+                    "type": "string",
+                    "description": "Collection to send to"
+                  },
+                  "bulkInclude": {
+                    "type": "string",
+                    "description": "Include filter, e.g. subscribed:true"
+                  },
+                  "bulkExclude": {
+                    "type": "string",
+                    "description": "Exclude filter"
+                  },
+                  "bulkObjectIds[]": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Specific object IDs; overrides the filters"
+                  },
+                  "bulkOverrideTo": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Send every email to this address instead (test send; never counts as delivered)"
+                  },
+                  "bulkscheduledAt": {
+                    "type": "string",
+                    "description": "Send time in the site's timezone, e.g. 2026-10-01T09:00"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Result message: queued count, or the reason nothing was queued",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/action/mailer/bulk/preview": {
+      "post": {
+        "summary": "Preview Bulk Email",
+        "description": "Render the subject, recipient, and HTML body one object would receive, without sending. Requires a signed-in user or API key whose access group grants the `mailer` permission, and the Pro edition. Returns an HTML fragment for the admin UI, not a stable API.",
+        "tags": [
+          "system"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "SessionAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "mailerId",
+                  "bulkPreviewObjectId",
+                  "bulkCollection"
+                ],
+                "properties": {
+                  "mailerId": {
+                    "type": "string"
+                  },
+                  "bulkPreviewObjectId": {
+                    "type": "string"
+                  },
+                  "bulkCollection": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rendered preview",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/action/mailer/bulk/objects": {
+      "get": {
+        "summary": "List Bulk Audience Objects",
+        "description": "List the objects a bulk send would reach, for the admin object picker. Requires a signed-in user or API key whose access group grants the `mailer` permission, and the Pro edition.",
+        "tags": [
+          "system"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "SessionAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bulkCollection",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bulkInclude",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bulkExclude",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Objects as picker options",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "string",
+                        "description": "Object ID"
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "ID plus its name, title, email, subject, or label"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/action/mailer/bulk/history": {
+      "get": {
+        "summary": "Bulk Send History",
+        "description": "A template's 10 most recent bulk send batches with sent, failed, skipped, and pending counts. Requires a signed-in user or API key whose access group grants the `mailer` permission, and the Pro edition. Returns an HTML fragment for the admin UI, not a stable API.",
+        "tags": [
+          "system"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "SessionAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "mailerId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "History table",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           }
         }
       }

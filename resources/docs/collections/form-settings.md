@@ -1,6 +1,6 @@
 ---
 title: "Collection Form Settings"
-description: "Configure Total CMS collection form behavior including help text display, form actions like redirects, webhooks, mailer, Pushover notifications, and validation."
+description: "Configure Total CMS collection form behavior including help text display, form actions like redirects, webhooks, and mailer emails, and validation."
 ---
 
 # Collection Form Settings
@@ -148,6 +148,8 @@ The following action types are supported by Total CMS (as defined in `/javascrip
 - **back** - Go back to the previous page (referrer)
 - **webhook** / **ajax** - Send POST request to external URL
 - **mailer** - Send email via configured mailer
+
+Extensions can add their own action types. The bundled [Pushover extension](#pushover), for example, adds `pushover`.
 
 ## Common Action Properties
 
@@ -382,7 +384,7 @@ Send an email notification using a configured mailer.
 
 ### Pushover
 
-Send a push notification via [Pushover](https://pushover.net). Requires **Pro edition** and Pushover configuration in **Settings > Push Notifications**.
+The `pushover` action comes from the bundled **Pushover** extension, not from core. It needs the **Pro edition**, and the extension has to be enabled in **Admin → Extensions** first, with your Application Token and User Key entered on its settings page.
 
 ```json
 {
@@ -392,40 +394,7 @@ Send a push notification via [Pushover](https://pushover.net). Requires **Pro ed
 }
 ```
 
-**Properties:**
-- `action` - Must be `"pushover"`
-- `title` - Notification title (supports Twig)
-- `message` - Notification body (supports Twig, required)
-- `priority` - Priority level: `-2` (lowest), `-1` (low), `0` (normal), `1` (high), `2` (emergency)
-- `sound` - Notification sound (e.g., `cashregister`, `magic`, `none`)
-- `link` - Supplementary clickable URL (supports Twig)
-- `linkTitle` - Label for the URL (supports Twig)
-- `image` - Image attachment object with `collection`, `id`, `property`, and optional `name` (for galleries)
-- `group` - (optional) If `true`, send to group key instead of user key
-- `continue` - (optional) If `true`, continue to next action even if notification fails
-
-**Twig Variables:** All text fields support `{{ data.fieldName }}` for form values and `{{ user.fieldName }}` for the authenticated user.
-
-**Example with all options:**
-```json
-{
-	"action": "pushover",
-	"title": "New Order #{{ data.id }}",
-	"message": "{{ data.customerName }} placed an order for ${{ data.total }}",
-	"priority": 1,
-	"sound": "cashregister",
-	"link": "https://mysite.com/admin/collections/orders/{{ data.id }}",
-	"linkTitle": "View Order",
-	"continue": true
-}
-```
-
-**Example use cases:**
-- Get notified on your phone when new content is submitted
-- Alert admin of high-priority form submissions
-- Monitor e-commerce orders in real time
-
-For full documentation including sound options, priority levels, and setup instructions, see [Pushover Push Notifications](docs/extensions/pushover).
+For every property (priority, sound, links, image attachments, delivery groups) and the setup steps, see [Pushover Push Notifications](docs/extensions/pushover).
 
 ## Complete Examples
 
