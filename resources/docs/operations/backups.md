@@ -19,7 +19,7 @@ This is a **record history**, not a site backup. Only the object's data is kept:
 |-------|----------|
 | An object is **saved** | The state *before* the save |
 | An object is **deleted** | The final state, as it was |
-| A **sync** overwrites a schema, collection or object | The file that was about to be replaced (see [Sync](sync#automatic-backups)) |
+| A **sync** overwrites a schema, collection or object | The file that was about to be replaced (see [Sync](docs/operations/sync#automatic-backups)) |
 
 Creating an object writes nothing: its first state is recoverable from the first update's snapshot, and doubling writes on import-heavy sites buys nothing. Imports never write snapshots at all — the whole point of a bulk import is that it's bulk.
 
@@ -93,6 +93,6 @@ Both commands take `--json` for machine-readable output.
 ## Where It Fits
 
 - **Editing mistakes** — this feature. `backup:list`, pick the version, `backup:restore`.
-- **A sync that replaced the wrong thing** — also this feature; sync's pre-overwrite snapshots land in the same tree. See [Sync](sync#automatic-backups).
-- **A rolled-back application update** — see [Updates](updates); that path keeps the previous release's files, not content.
+- **A sync that replaced the wrong thing** — also this feature; sync's pre-overwrite snapshots land in the same tree. See [Sync](docs/operations/sync#automatic-backups).
+- **A rolled-back application update** — see [Updates](docs/operations/updates); that path keeps the previous release's files, not content.
 - **Disaster recovery** — back up `tcms-data/` with your host's tooling. Snapshots are inside it, so they come along.

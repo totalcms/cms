@@ -25,7 +25,7 @@ A Composer install (`composer create-project totalcms/totalcms`) drops these `.h
 
 Zip installs and the Stacks plugin layout ship the same files. If you are installing from a custom source and don't see them, the snippets below are the canonical content.
 
-> **You only need the project-root `.htaccess` when your docroot is one level above `public/`.** If you point Apache's `DocumentRoot` directly at `public/` (the recommended layout — see [Filesystem](operations/filesystem)), only the two files inside `public/` and `tcms-data/` matter.
+> **You only need the project-root `.htaccess` when your docroot is one level above `public/`.** If you point Apache's `DocumentRoot` directly at `public/` (the recommended layout — see [Filesystem](docs/operations/filesystem)), only the two files inside `public/` and `tcms-data/` matter.
 
 ## The Setup Wizard Snippet
 

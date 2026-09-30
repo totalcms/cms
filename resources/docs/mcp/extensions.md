@@ -14,7 +14,7 @@ updated: 2026-08-13
 
 Extensions can publish their own MCP tools and resources via `ExtensionContext`, plugging directly into the site's MCP server alongside the core surface. AI agents see your extension's tools and resources the same way they see `query_collection`, `get_object`, or `tcms://blog/`.
 
-For an overview of T3's MCP server itself — personas, transport, tool catalog, resources — see the [MCP Server](mcp/server).
+For an overview of T3's MCP server itself — personas, transport, tool catalog, resources — see the [MCP Server](docs/mcp/server).
 
 ## What you'd build with this
 
@@ -66,19 +66,19 @@ $context->registerMcpTool(
 );
 ```
 
-`access` controls which [persona](mcp/server#three-audiences-one-endpoint) sees the tool: `admin` (visible only to the admin persona), `public` (visible to everyone, including unauthenticated callers), or `authenticated` (visible to any OAuth-authenticated caller plus admin, but not anonymous callers). An unrecognised `access` value matches none of these and fails closed to admin-only visibility.
+`access` controls which [persona](docs/mcp/server#three-audiences-one-endpoint) sees the tool: `admin` (visible only to the admin persona), `public` (visible to everyone, including unauthenticated callers), or `authenticated` (visible to any OAuth-authenticated caller plus admin, but not anonymous callers). An unrecognised `access` value matches none of these and fails closed to admin-only visibility.
 
-**A tool with no `annotations` counts as read-only.** `registerMcpTool()` takes an optional `annotations: new \Mcp\Schema\ToolAnnotations(...)` argument, and a tool that omits it entirely is treated as `readOnlyHint: true` for the purpose of deciding what a [same-origin browser session](mcp/server#a-fourth-caller-the-visitors-browser) may call — which is exactly the population WebMCP hands tools to. If your handler writes, declare `readOnlyHint: false` (and `destructiveHint: true` where it deletes or overwrites), or it becomes callable from a visitor's own page with that visitor's own authority. An `annotations` object that sets some other field but leaves `readOnlyHint` out (`new ToolAnnotations(title: 'Acme Search')`, say) is *not* the same as omitting `annotations` entirely — it no longer reads as `readOnlyHint: true` by default, so the tool is excluded from a same-origin session's `tools/list` and from a WebMCP page just as a declared writer would be.
+**A tool with no `annotations` counts as read-only.** `registerMcpTool()` takes an optional `annotations: new \Mcp\Schema\ToolAnnotations(...)` argument, and a tool that omits it entirely is treated as `readOnlyHint: true` for the purpose of deciding what a [same-origin browser session](docs/mcp/server#a-fourth-caller-the-visitors-browser) may call — which is exactly the population WebMCP hands tools to. If your handler writes, declare `readOnlyHint: false` (and `destructiveHint: true` where it deletes or overwrites), or it becomes callable from a visitor's own page with that visitor's own authority. An `annotations` object that sets some other field but leaves `readOnlyHint` out (`new ToolAnnotations(title: 'Acme Search')`, say) is *not* the same as omitting `annotations` entirely — it no longer reads as `readOnlyHint: true` by default, so the tool is excluded from a same-origin session's `tools/list` and from a WebMCP page just as a declared writer would be.
 
 **`access: 'public'` bypasses this for a truly anonymous caller.** The read-only rule above is enforced server-side only for a *session* — a signed-in browser tab. A visitor with no session at all is a plain anonymous MCP client like any other, and the server does not narrow its tool list by `readOnlyHint`; if your tool writes, registering it at `access: 'public'` makes it callable by that anonymous visitor (and by curl, and by any other unauthenticated MCP client) regardless of whether WebMCP is installed. The WebMCP extension's own script filters what it offers *on a page* to `readOnlyHint: true` tools, but that is a courtesy in the browser, not a server-side gate — `access` plus `readOnlyHint`/`destructiveHint`, chosen honestly, are what actually decide who can call a writing tool.
 
-**`outputSchema` is optional but recommended.** Declare a JSON Schema describing your handler's return shape — its root must be `{type: 'object', ...}`, same as `inputSchema`. It costs nothing at call time (T3 doesn't validate your handler's actual return against it), but SDK-aware MCP clients use it to pre-validate results and, more importantly, models reason better about a tool's output when they know its shape up front instead of inferring it from one example response. OpenAI's plugin-directory scanner specifically flags tools that omit it. Match the shape your handler actually returns — if it varies (an error object vs. a success object, say), use `oneOf` rather than picking one shape and hoping; see [Saved-Query Tools](mcp/saved-query-tools) or `src/Domain/Mcp/Tool/Discovery/ListCollectionsTool.php` for worked examples.
+**`outputSchema` is optional but recommended.** Declare a JSON Schema describing your handler's return shape — its root must be `{type: 'object', ...}`, same as `inputSchema`. It costs nothing at call time (T3 doesn't validate your handler's actual return against it), but SDK-aware MCP clients use it to pre-validate results and, more importantly, models reason better about a tool's output when they know its shape up front instead of inferring it from one example response. OpenAI's plugin-directory scanner specifically flags tools that omit it. Match the shape your handler actually returns — if it varies (an error object vs. a success object, say), use `oneOf` rather than picking one shape and hoping; see [Saved-Query Tools](docs/mcp/saved-query-tools) or `src/Domain/Mcp/Tool/Discovery/ListCollectionsTool.php` for worked examples.
 
 **Important — `authenticated` is a Phase 4 capability.** Registering `access: 'authenticated'` for a tool, resource, or template causes it to be silently invisible to all clients until Phase 4 ships OAuth and scoped-token support. No error is raised; the tool simply never appears in `tools/list`. Use `'admin'` or `'public'` for all current deployments.
 
 The handler closure is invoked by the MCP SDK using PHP reflection on its named parameters — define typed `string` / `int` / `bool` / `array` params that map one-to-one with your `inputSchema` properties.
 
-The bundled [Documentation Tools](mcp/docs-tools) extension (`totalcms/docs`) is a real registration at `authenticated` access if you want a worked example beyond the snippet above.
+The bundled [Documentation Tools](docs/mcp/docs-tools) extension (`totalcms/docs`) is a real registration at `authenticated` access if you want a worked example beyond the snippet above.
 
 ## Registering a resource
 
@@ -287,7 +287,7 @@ The following capabilities show up automatically in the Extensions admin page on
 
 ## Subscriptions and change notifications
 
-T3's resource subscription system pushes `notifications/resources/updated` events when subscribed URIs change. Core wires this to collection/object events automatically; extensions opt in by dispatching events the [`McpResourceSubscriptionListener`](mcp/server#resource-subscriptions) listens for, or by calling `ResourceNotifier::notifyResourceChanged($uri)` directly from your domain code when something behind your URIs changes.
+T3's resource subscription system pushes `notifications/resources/updated` events when subscribed URIs change. Core wires this to collection/object events automatically; extensions opt in by dispatching events the [`McpResourceSubscriptionListener`](docs/mcp/server#resource-subscriptions) listens for, or by calling `ResourceNotifier::notifyResourceChanged($uri)` directly from your domain code when something behind your URIs changes.
 
 For most extensions, the simpler path is: store your data in a T3 collection (perhaps a reserved-name collection like `acme-invoices`) and let the core listener handle subscriptions to `tcms://acme-invoices/` automatically. Custom URI schemes (`acme://...`) require explicit notification calls.
 
@@ -596,7 +596,7 @@ $context->registerSearchProvider(new MeilisearchSearchProvider(
 ));
 ```
 
-For a production-quality reference implementation see the bundled **[Algolia Search](extensions/algolia-search)** extension — it follows the same pattern with cross-collection faceting, snippet extraction, and ranking score normalization.
+For a production-quality reference implementation see the bundled **[Algolia Search](docs/extensions/algolia-search)** extension — it follows the same pattern with cross-collection faceting, snippet extraction, and ranking score normalization.
 
 ---
 
@@ -608,8 +608,8 @@ For a production-quality reference implementation see the bundled **[Algolia Sea
 
 ## Related
 
-- [MCP Server](mcp/server) — personas, transport, core tool catalog
-- [MCP Prompts](mcp/prompts) — operator-authored prompts stored in the `mcp-prompt` collection
-- [Extension Points](extensions/extension-points) — full catalog of `ExtensionContext` hooks
-- [Events](extensions/events) — dispatching custom events that listeners (including subscription listeners) can consume
-- [Algolia Search](extensions/algolia-search) — bundled search provider extension, complete working implementation
+- [MCP Server](docs/mcp/server) — personas, transport, core tool catalog
+- [MCP Prompts](docs/mcp/prompts) — operator-authored prompts stored in the `mcp-prompt` collection
+- [Extension Points](docs/extensions/extension-points) — full catalog of `ExtensionContext` hooks
+- [Events](docs/extensions/events) — dispatching custom events that listeners (including subscription listeners) can consume
+- [Algolia Search](docs/extensions/algolia-search) — bundled search provider extension, complete working implementation

@@ -227,5 +227,5 @@ Use a saved-query tool when you want a predictable, named entry point. Use `quer
 
 ## Reference
 
-- [MCP Server](mcp/server) — personas, transport, core tool catalog, collection MCP settings.
-- [Extending MCP](mcp/extensions) — registering tools and resources from PHP extensions, progress notifications, error handling, persona-aware handlers.
+- [MCP Server](docs/mcp/server) — personas, transport, core tool catalog, collection MCP settings.
+- [Extending MCP](docs/mcp/extensions) — registering tools and resources from PHP extensions, progress notifications, error handling, persona-aware handlers.

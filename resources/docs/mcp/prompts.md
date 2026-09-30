@@ -13,7 +13,7 @@ related:
 
 MCP prompts are reusable, operator-authored templates that AI clients discover via `prompts/list` and invoke via `prompts/get`. Each prompt lives as an object in the `mcp-prompt` reserved collection. The body is a Twig template — the full `cms.*` function library is available alongside declared argument values.
 
-Use prompts when you want to ship a starting workflow to an AI agent — a house-style blog scaffold, a brand-voice rewrite template, or a site-wide content audit outline. For data retrieval, use [Saved-Query Tools](mcp/saved-query-tools) instead.
+Use prompts when you want to ship a starting workflow to an AI agent — a house-style blog scaffold, a brand-voice rewrite template, or a site-wide content audit outline. For data retrieval, use [Saved-Query Tools](docs/mcp/saved-query-tools) instead.
 
 | | Prompts | Saved-Query Tools |
 |---|---|---|
@@ -171,11 +171,11 @@ Only declared argument names are injected into the template context. Extra keys 
 
 Extensions can ship code-defined prompts alongside the collection-stored ones this page covers. They share the same `prompts/list` and `prompts/get` surface; the difference is authoring path — PHP in an extension vs. JSON object in the admin.
 
-See **[Extending MCP → Registering code-defined prompts](mcp/extensions)** for the full guide: signature, when-to-use comparison vs. collection-stored, worked examples, access tiers, and collision policy.
+See **[Extending MCP → Registering code-defined prompts](docs/mcp/extensions)** for the full guide: signature, when-to-use comparison vs. collection-stored, worked examples, access tiers, and collision policy.
 
 ## ID field and snake_case
 
-The `id` field on the `mcp-prompt` schema is readonly and auto-generated from the **Name** you enter. It follows the `snakeCase` ID setting — see [ID Field](fields/id) for details. The `name` field is the canonical identifier AI clients use to call the prompt; keep it stable once published.
+The `id` field on the `mcp-prompt` schema is readonly and auto-generated from the **Name** you enter. It follows the `snakeCase` ID setting — see [ID Field](docs/fields/id) for details. The `name` field is the canonical identifier AI clients use to call the prompt; keep it stable once published.
 
 ## Limitations (v1)
 
@@ -186,6 +186,6 @@ The `id` field on the `mcp-prompt` schema is readonly and auto-generated from th
 
 ## Reference
 
-- [MCP Server](mcp/server) — personas, transport, core tool catalog, collection MCP settings.
-- [Saved-Query Tools](mcp/saved-query-tools) — parameterised data queries; the right tool when you need filtered collection content rather than a workflow template.
-- [Extending MCP](mcp/extensions) — `registerMcpPrompt()` in the full context of the extension MCP API surface.
+- [MCP Server](docs/mcp/server) — personas, transport, core tool catalog, collection MCP settings.
+- [Saved-Query Tools](docs/mcp/saved-query-tools) — parameterised data queries; the right tool when you need filtered collection content rather than a workflow template.
+- [Extending MCP](docs/mcp/extensions) — `registerMcpPrompt()` in the full context of the extension MCP API surface.

@@ -10,11 +10,11 @@ related:
 
 # Colors in Twig
 
-A [color field](fields/color) stores its value in two forms at once — a `hex` string and an **OKLCH** breakdown (`l`, `c`, `h`). Twig gives you a small toolkit on top of that to read a color, emit it in any CSS format, and derive new colors (lighter, more muted, complementary) without leaving the template.
+A [color field](docs/fields/color) stores its value in two forms at once — a `hex` string and an **OKLCH** breakdown (`l`, `c`, `h`). Twig gives you a small toolkit on top of that to read a color, emit it in any CSS format, and derive new colors (lighter, more muted, complementary) without leaving the template.
 
 ## Reading a color
 
-Use the [`cms.data`](twig/data) adapter. It returns the stored object, so you can reach `hex` and the OKLCH parts directly:
+Use the [`cms.data`](docs/twig/data) adapter. It returns the stored object, so you can reach `hex` and the OKLCH parts directly:
 
 ```twig
 {% set brand = cms.data.color('brand') %}
@@ -101,4 +101,4 @@ Generate a small set of CSS custom properties from a single brand color:
 </style>
 ```
 
-For the field itself (admin control, storage shape, preset swatches) see the [Color field](fields/color); for the broader `cms.data` reference see [Twig Data](twig/data).
+For the field itself (admin control, storage shape, preset swatches) see the [Color field](docs/fields/color); for the broader `cms.data` reference see [Twig Data](docs/twig/data).

@@ -74,4 +74,4 @@ $results = $searchService->search(new SearchQuery(
 
 `relevance` defaults to `false`, in which case the legacy all-or-nothing AND filter is used unchanged. Optional `weights` boost matches in chosen fields; with no weights the score is simply the number of distinct terms matched.
 
-Twig templates can opt into the same ranking on the front-end search via [`cms.collection.searchScored()`](../twig/collections#searchscored) — the standard `cms.collection.search()` (with its AND/OR syntax and [priority properties](#prioritizing-search-results)) is unchanged.
+Twig templates can opt into the same ranking on the front-end search via [`cms.collection.searchScored()`](docs/twig/collections#searchscored) — the standard `cms.collection.search()` (with its AND/OR syntax and [priority properties](#prioritizing-search-results)) is unchanged.

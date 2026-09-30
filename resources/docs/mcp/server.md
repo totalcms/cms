@@ -569,9 +569,9 @@ tcms mcp:test list_collections --json
 
 ## Extension authoring
 
-Extensions can publish their own MCP tools and resources via `ExtensionContext::registerMcpTool()`, `registerMcpResource()`, and `registerMcpResourceTemplate()`. Custom tools and resources show up alongside the core surface — AI agents see them the same way they see `query_collection` or `tcms://blog/`. The bundled [Documentation Tools](mcp/docs-tools) (`docs_search`, `docs_get`, `docs_lookup`) are a real-world example — a bundled extension registering `authenticated`-access tools with the same `ExtensionContext` API a third-party extension would use.
+Extensions can publish their own MCP tools and resources via `ExtensionContext::registerMcpTool()`, `registerMcpResource()`, and `registerMcpResourceTemplate()`. Custom tools and resources show up alongside the core surface — AI agents see them the same way they see `query_collection` or `tcms://blog/`. The bundled [Documentation Tools](docs/mcp/docs-tools) (`docs_search`, `docs_get`, `docs_lookup`) are a real-world example — a bundled extension registering `authenticated`-access tools with the same `ExtensionContext` API a third-party extension would use.
 
-See **[Extending MCP](mcp/extensions)** for the full authoring guide, including registration examples, naming conventions, capability toggles, and real-world use cases.
+See **[Extending MCP](docs/mcp/extensions)** for the full authoring guide, including registration examples, naming conventions, capability toggles, and real-world use cases.
 
 ---
 
@@ -628,7 +628,7 @@ Before submitting your site to Anthropic's Connector Directory, walk through:
 - [ ] Tool names ≤ 64 characters (including any `toolPrefix`).
 - [ ] Read and write operations split into separate tools (no mixed-mode tools).
 - [ ] Tool descriptions don't instruct Claude ("always do X", "you must call Y first") — Total CMS uses `setInstructions()` for cross-tool guidance.
-- [ ] Tools report errors by throwing `Mcp\Exception\ToolCallException` with a recovery hint in the message — the SDK sets `isError: true` for you (see [Extending MCP](mcp/extensions), "Returning data and reporting errors"). A hand-built `['isError' => true, ...]` return array does NOT set the outer `CallToolResult.isError`.
+- [ ] Tools report errors by throwing `Mcp\Exception\ToolCallException` with a recovery hint in the message — the SDK sets `isError: true` for you (see [Extending MCP](docs/mcp/extensions), "Returning data and reporting errors"). A hand-built `['isError' => true, ...]` return array does NOT set the outer `CallToolResult.isError`.
 - [ ] Lazy authentication verified: public tools work unauthenticated; only protected tools challenge.
 - [ ] Submission slug chosen carefully (fixed after publication).
 

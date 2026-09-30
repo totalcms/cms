@@ -32,7 +32,7 @@ What changes:
 
 What is dropped: any element not listed above (`iframe`, `object`, `canvas`, `form` controls, `script`, `style`, custom elements), a `div` without a class or id (its contents are kept), and `<a>` attributes other than `href`, `target`, `rel`, `class`, `style`, `title` and `data-*`.
 
-For content you author by hand and want stored byte-for-byte, use a [code editor](fields/code-editor) field with `"mode": "html"` and render it with the `raw` filter. Keep styled text for content editors will actually edit in the toolbar.
+For content you author by hand and want stored byte-for-byte, use a [code editor](docs/fields/code-editor) field with `"mode": "html"` and render it with the `raw` filter. Keep styled text for content editors will actually edit in the toolbar.
 
 ## Editor Height
 

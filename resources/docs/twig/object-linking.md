@@ -166,7 +166,7 @@ Get the absolute canonical URL for an object, including scheme and domain.
 
 > **Linking to a page rather than an object?** Site Builder pages have their own
 > equivalent, `cms.builder.canonicalUrl(page)` — see
-> [Site Builder](site-builder/overview). Both resolve the domain from the site
+> [Site Builder](docs/site-builder/overview). Both resolve the domain from the site
 > config, so neither needs a hard-coded host in a template.
 
 ### cms.collection.redirectToCanonicalUrl()

@@ -75,7 +75,7 @@ Any PHP-capable server with URL rewriting will work.
 | Server | Notes |
 |---|---|
 | Apache | `mod_rewrite` must be enabled. T3 ships an `.htaccess` |
-| Nginx | Use PHP-FPM. See [Nginx Configuration](operations/nginx) |
+| Nginx | Use PHP-FPM. See [Nginx Configuration](docs/operations/nginx) |
 | Caddy | Use PHP-FPM, same fundamentals as Nginx — different config syntax |
 | LiteSpeed | Works out of the box |
 | FrankenPHP | Classic mode works like PHP-FPM. **Worker mode is unverified** — use at your own risk for now |
@@ -100,4 +100,4 @@ These requirements only apply to the admin. Your public-facing site is rendered 
 
 ## What the wizard checks
 
-When you load your install URL for the first time, the [setup wizard](get-started/installation) runs an environment check before anything else. Required extensions must all pass; recommended ones show up as friendly suggestions. If something's missing, you'll see exactly what's wrong and what to install — no guessing.
+When you load your install URL for the first time, the [setup wizard](docs/get-started/installation) runs an environment check before anything else. Required extensions must all pass; recommended ones show up as friendly suggestions. If something's missing, you'll see exactly what's wrong and what to install — no guessing.

@@ -170,5 +170,5 @@ authenticated user, so it broadens access to all signed-in users regardless of
 the other entries.
 
 > **Note:** File Access Groups only gate file downloads and streaming. They are
-> separate from the [access group permissions](auth/access-groups) that control
+> separate from the [access group permissions](docs/auth/access-groups) that control
 > admin and API access to collections.

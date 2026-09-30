@@ -181,7 +181,7 @@ Listing one of these is not blocked, but nothing good comes of it.
 
 `tcms push` / `tcms pull` read their remote from `sync` in `config/tcms.php`
 rather than an overlay, so a deploy key never has to live in the shared data
-folder at all. See [Sync](sync).
+folder at all. See [Sync](docs/operations/sync).
 
 ## Known limitations
 

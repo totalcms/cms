@@ -57,8 +57,8 @@ Give the field an `options` list to offer a set of preset colors as a datalist n
 }
 ```
 
-Presets follow the same rules as every other option-backed field — see [Static Options](fields/static-options) for the full syntax (including pulling values from another property or collection).
+Presets follow the same rules as every other option-backed field — see [Static Options](docs/fields/static-options) for the full syntax (including pulling values from another property or collection).
 
 ## Using the value in a template
 
-Read a color with `cms.data.color('id')` (or the `cms.color('id')` shorthand) and emit it in any CSS format — hex, `rgb()`, `hsl()`, `oklch()` — or derive lighter/muted/complementary variants with the OKLCH adjustment filters. That's all covered in **[Colors in Twig](twig/colors)**.
+Read a color with `cms.data.color('id')` (or the `cms.color('id')` shorthand) and emit it in any CSS format — hex, `rgb()`, `hsl()`, `oklch()` — or derive lighter/muted/complementary variants with the OKLCH adjustment filters. That's all covered in **[Colors in Twig](docs/twig/colors)**.

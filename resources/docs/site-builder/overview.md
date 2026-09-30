@@ -184,7 +184,7 @@ A page's description and social image live on its **SEO card** (`page.seo.descri
 {% endif %}
 ```
 
-For the social tags themselves, let `cms.seo.head(page)` do the work — it resolves the card image, falls back to the site default, and emits `og:image` with its alt. See [SEO](site-builder/seo).
+For the social tags themselves, let `cms.seo.head(page)` do the work — it resolves the card image, falls back to the site default, and emits `og:image` with its alt. See [SEO](docs/site-builder/seo).
 
 ## HTTP Status Codes
 

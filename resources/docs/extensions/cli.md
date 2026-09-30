@@ -574,9 +574,9 @@ tcms jumpstart:import my-site.json --json
 
 ## Sync Commands
 
-Push and pull schemas, templates, site-machinery objects, and collection settings between a local development instance and a production server. Configure the production server URL and API key in **Settings > Sync** in the admin dashboard. Full details, including the object-seeding workflow: [Sync guide](operations/sync).
+Push and pull schemas, templates, site-machinery objects, and collection settings between a local development instance and a production server. Configure the production server URL and API key in **Settings > Sync** in the admin dashboard. Full details, including the object-seeding workflow: [Sync guide](docs/operations/sync).
 
-> **3.5.1 note:** `--collections` now means collection *settings* (it used to mean objects from five allowlisted collections). The flag formerly named `collection-meta` is gone — `--collections` does its job now. Objects for those five collections move via their own feature flags instead (`--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, `--automations`), and any other collection's object data can be seeded with `--objects`. Full breaking-changes writeup: [Sync guide](operations/sync).
+> **3.5.1 note:** `--collections` now means collection *settings* (it used to mean objects from five allowlisted collections). The flag formerly named `collection-meta` is gone — `--collections` does its job now. Objects for those five collections move via their own feature flags instead (`--pages`, `--dataviews`, `--mailer`, `--mcp-prompts`, `--automations`), and any other collection's object data can be seeded with `--objects`. Full breaking-changes writeup: [Sync guide](docs/operations/sync).
 
 ### `push`
 
@@ -641,7 +641,7 @@ tcms pull --collections=comparisons
 
 **Filter semantics:** a bare `tcms push` or `tcms pull` is a full mirror of schemas, templates, the five feature-flagged collections, and collection settings — it never seeds `--objects`, which only runs when named explicitly. The moment any filter flag is given, the categories you did not mention are excluded entirely, so `tcms push --schemas=blog` moves the blog schema and nothing else.
 
-**Backups:** before an overwrite lands, the receiving instance snapshots the current version to `tcms-data/.system/backups/{schemas,objects}/...` (ten most recent per item). See the [Sync guide](operations/sync) for details.
+**Backups:** before an overwrite lands, the receiving instance snapshots the current version to `tcms-data/.system/backups/{schemas,objects}/...` (ten most recent per item). See the [Sync guide](docs/operations/sync) for details.
 
 ---
 
@@ -742,7 +742,7 @@ tcms mcp:test query_collection --params='{"collection":"blog"}' --persona=public
 
 ## Backup Commands
 
-Every object save keeps the version it replaced and every delete keeps the final state, under `tcms-data/.system/backups/objects/`. These two commands read that history back. See [Backups](../operations/backups) for what is kept and for how long.
+Every object save keeps the version it replaced and every delete keeps the final state, under `tcms-data/.system/backups/objects/`. These two commands read that history back. See [Backups](docs/operations/backups) for what is kept and for how long.
 
 ### `backup:list`
 

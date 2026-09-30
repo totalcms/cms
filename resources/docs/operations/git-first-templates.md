@@ -58,11 +58,11 @@ git pull          # brings in template changes
 # clear caches as usual — see the Deployment guide
 ```
 
-See the [Deployment guide](operations/deployment) for webhook and cache-clearing details.
+See the [Deployment guide](docs/operations/deployment) for webhook and cache-clearing details.
 
 ## Pages and content still use Sync
 
-Git-first templates cover **templates only**. Your **pages** (the `builder-pages` records: routes, template bindings, nav, content) and other collection data are not git-controlled — they're promoted local → production with the [Sync Manager](operations/sync), exactly as before. Each artifact has one delivery channel:
+Git-first templates cover **templates only**. Your **pages** (the `builder-pages` records: routes, template bindings, nav, content) and other collection data are not git-controlled — they're promoted local → production with the [Sync Manager](docs/operations/sync), exactly as before. Each artifact has one delivery channel:
 
 - **Templates → git**
 - **Pages & content → Sync**

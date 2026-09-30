@@ -27,7 +27,7 @@ If you have scripts or CI steps calling `tcms push --collections=...` expecting 
 - **Site-machinery objects**, one feature flag per collection — `--pages` (`builder-pages`), `--dataviews` (`dataviews`), `--mailer` (`mailer`), `--mcp-prompts` (`mcp-prompt`), `--automations` (`automations`). Each upserts: given with no value it moves every object in that collection (`--pages`), given a value it moves just those ids (`--pages=home,about`).
 - **Seeded objects (push only)** — `--objects=collection[:id,id]` exports object data from any seedable collection and lands it on the target, but only where the target doesn't already have that id. See [Seeding objects with `--objects`](#seeding-objects-with-objects) below.
 
-> **Git-managed templates are excluded.** If you keep a `builder/` folder at your project root, templates travel by git, not Sync — so Sync skips them and carries schemas and the flagged/settings/seeded data only. See [Git-First Templates](operations/git-first-templates).
+> **Git-managed templates are excluded.** If you keep a `builder/` folder at your project root, templates travel by git, not Sync — so Sync skips them and carries schemas and the flagged/settings/seeded data only. See [Git-First Templates](docs/operations/git-first-templates).
 
 ### The five feature flags
 
@@ -110,7 +110,7 @@ On your **local** Total CMS instance:
 #### Configuring sync in `tcms.php` instead
 
 The Settings page writes to `settings.json` inside `tcms-data`. If several
-installs [share one data folder](shared-data), they share that file — so
+installs [share one data folder](docs/operations/shared-data), they share that file — so
 every site would push to the same server with the same deploy key, and there
 would be no way to give one site its own remote.
 
@@ -277,7 +277,7 @@ tcms-data/.system/backups/objects/{collection}/{id}/{id}-{YYYYMMDD-HHMMSS}.json
 tcms-data/.system/backups/collections/{id}/{id}-{YYYYMMDD-HHMMSS}.json
 ```
 
-This happens on whichever side is receiving: production backs up on a push, your local instance backs up on a pull. Each schema and object keeps its ten most recent snapshots; re-syncing unchanged content does not stack duplicates. Objects restore with `tcms backup:list` and `tcms backup:restore` — see [Backups](backups). Schemas and collection settings are still a manual copy: find the snapshot you want, copy it back over the live file, then clear the cache.
+This happens on whichever side is receiving: production backs up on a push, your local instance backs up on a pull. Each schema and object keeps its ten most recent snapshots; re-syncing unchanged content does not stack duplicates. Objects restore with `tcms backup:list` and `tcms backup:restore` — see [Backups](docs/operations/backups). Schemas and collection settings are still a manual copy: find the snapshot you want, copy it back over the live file, then clear the cache.
 
 Backups only cover what sync overwrites. They are not a substitute for real backups of `tcms-data/`.
 

@@ -59,7 +59,7 @@ The prompt text lives in `prompts.json` inside the extension, not in its PHP. It
 
 Unlike most bundled extensions (disabled until an operator opts in — see [Bundled Extensions](docs/extensions/bundled)), `totalcms/docs` ships `default_enabled: true`. A fresh install has all three tools live immediately, no admin action required.
 
-That does **not** mean they're public. The tools register at `authenticated` access by default: visible to the admin persona (API key) and to any OAuth-authenticated caller, but absent from `tools/list` for anonymous callers. Listing and calling are gated separately — resolving to the authenticated persona needs any `mcp:*` scope, while actually invoking a tool needs `mcp:tools`. A token carrying only `mcp:resources` therefore sees these tools listed and is refused when it calls one. Installing or updating to a version that ships this extension changes nothing about a site's *public* MCP surface — `mcp.publicAccess` and each collection's `mcp.access` setting still govern what an anonymous agent can reach. See [Three audiences, one endpoint](mcp/server#three-audiences-one-endpoint) for how the personas work.
+That does **not** mean they're public. The tools register at `authenticated` access by default: visible to the admin persona (API key) and to any OAuth-authenticated caller, but absent from `tools/list` for anonymous callers. Listing and calling are gated separately — resolving to the authenticated persona needs any `mcp:*` scope, while actually invoking a tool needs `mcp:tools`. A token carrying only `mcp:resources` therefore sees these tools listed and is refused when it calls one. Installing or updating to a version that ships this extension changes nothing about a site's *public* MCP surface — `mcp.publicAccess` and each collection's `mcp.access` setting still govern what an anonymous agent can reach. See [Three audiences, one endpoint](docs/mcp/server#three-audiences-one-endpoint) for how the personas work.
 
 ## Exposing the tools publicly
 
@@ -93,7 +93,7 @@ The tool list shown per persona reflects whether the extension is enabled and, i
 
 ## See also
 
-- [MCP Server](mcp/server) — personas, transport, the full core tool catalog
-- [Extending MCP](mcp/extensions) — how extensions register their own tools and resources
+- [MCP Server](docs/mcp/server) — personas, transport, the full core tool catalog
+- [Extending MCP](docs/mcp/extensions) — how extensions register their own tools and resources
 - [Bundled Extensions](docs/extensions/bundled) — the bundled-extension model in general
 - [Extension Manifest Reference](docs/extensions/manifest) — the `default_enabled` field this extension uses
