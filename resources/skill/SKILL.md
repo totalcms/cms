@@ -11,8 +11,14 @@ This project **is a website** built on Total CMS, a flat-file PHP CMS. There is
 
 ## Is this copy current?
 
-This skill is a copy of the one shipped with the installed CMS, so it can fall
-behind. At the start of a session run `vendor/bin/tcms skill:install --check`.
+This check applies only inside a Total CMS project. If you are not working in
+one — this skill came with a plugin and the current folder has no Total CMS CLI
+— skip it: there is no installed copy to check, and this text describes the
+latest release. When a project's own copy (in `.claude/skills/totalcms/`) is
+also loaded, follow that one: it matches the CMS version the project runs.
+
+In a project, this skill is a copy of the one shipped with the installed CMS, so
+it can fall behind. At the start of a session run `vendor/bin/tcms skill:install --check`.
 If it reports stale, run `vendor/bin/tcms skill:install` and then tell the user
 to start a new session — the text already loaded cannot replace itself. The
 stamp is a hash of the skill's own content, not the release number, so only real
