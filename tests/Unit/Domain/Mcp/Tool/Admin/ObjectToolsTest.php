@@ -19,14 +19,12 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class ObjectToolsTest extends TestCase
 {
 	private MockObject $saver;
-	private MockObject $updater;
 	private MockObject $patcher;
 	private MockObject $schemaFetcher;
 	private MockObject $objectFetcher;
@@ -47,16 +45,20 @@ final class ObjectToolsTest extends TestCase
 
 	private bool $collectionExists = true;
 
+	/** Whether objectFetcher->existsObject() finds the object (see note above). */
+	private bool $objectExists = true;
+
 	/** @var list<string> */
 	private array $hiddenProperties = [];
 
 	protected function setUp(): void
 	{
 		$this->saver         = $this->createMock(ObjectSaver::class);
-		$this->updater       = $this->createMock(ObjectUpdater::class);
 		$this->patcher       = $this->createMock(ObjectPatcher::class);
 		$this->schemaFetcher = $this->createMock(SchemaFetcher::class);
 		$this->objectFetcher = $this->createMock(ObjectFetcher::class);
+		$this->objectFetcher->method('existsObject')
+			->willReturnCallback(fn (): bool => $this->objectExists);
 
 		// Final review fix (Critical #1/#1b): requireExposed()/stripNonExposed()
 		// deps. Default every test to the "wide open, nothing hidden" shape —
@@ -88,7 +90,6 @@ final class ObjectToolsTest extends TestCase
 
 		$this->tool = new ObjectTools(
 			$this->saver,
-			$this->updater,
 			$this->patcher,
 			$this->schemaFetcher,
 			$this->objectFetcher,
@@ -404,7 +405,7 @@ final class ObjectToolsTest extends TestCase
 				'promo' => ['field' => 'video'],
 			]));
 
-		$this->updater->expects($this->never())->method('updateObject');
+		$this->patcher->expects($this->never())->method('patchObject');
 
 		try {
 			$this->tool->updateHandler(collection: 'clips', id: 'one', data: [
@@ -423,7 +424,6 @@ final class ObjectToolsTest extends TestCase
 				'id'    => ['field' => 'id'],
 				'promo' => ['field' => 'video'],
 			]));
-		$this->objectFetcher->method('existsObject')->willReturn(true);
 
 		$this->patcher->expects($this->never())->method('patchObject');
 
@@ -463,10 +463,9 @@ final class ObjectToolsTest extends TestCase
 	// ─── update/patch_object video poster preservation (final review fix #3) ─
 	//
 	// A video property's `poster` lives one level below the top-level binary
-	// fields preserveBinaryFields() already carries forward. Writing only
+	// fields, and the merge replaces the whole video value. Writing only
 	// `{promo: {url: '...'}}` (the only key an MCP write is allowed to set)
-	// must not drop an existing uploaded poster on a full-replace update or a
-	// merge patch.
+	// must not drop an existing uploaded poster.
 
 	public function testUpdatePreservesExistingVideoPosterWhenPayloadOmitsIt(): void
 	{
@@ -483,8 +482,8 @@ final class ObjectToolsTest extends TestCase
 				'promo' => ['url' => 'https://youtu.be/old', 'poster' => $existingPoster],
 			]));
 
-		$this->updater->expects($this->once())
-			->method('updateObject')
+		$this->patcher->expects($this->once())
+			->method('patchObject')
 			->with(
 				'clips',
 				'one',
@@ -505,7 +504,6 @@ final class ObjectToolsTest extends TestCase
 				'id'    => ['field' => 'id'],
 				'promo' => ['field' => 'video'],
 			]));
-		$this->objectFetcher->method('existsObject')->willReturn(true);
 
 		$existingPoster = ['name' => 'poster.jpg', 'size' => 12345, 'mime' => 'image/jpeg'];
 		$this->objectFetcher->method('fetchObject')
@@ -532,7 +530,7 @@ final class ObjectToolsTest extends TestCase
 	// Final review follow-up (Residual #2): a `poster` key that IS present
 	// but empty (null / []) passes refuseIfPayloadWritesVideoPoster()'s
 	// emptiness check (it isn't a real write) but must still be treated like
-	// an absent key here — otherwise it reaches the updater/patcher verbatim
+	// an absent key here — otherwise it reaches the patcher verbatim
 	// and wipes the stored poster instead of leaving it untouched.
 
 	public function testUpdatePreservesExistingVideoPosterWhenPayloadSendsAnExplicitNullPoster(): void
@@ -550,8 +548,8 @@ final class ObjectToolsTest extends TestCase
 				'promo' => ['url' => 'https://youtu.be/old', 'poster' => $existingPoster],
 			]));
 
-		$this->updater->expects($this->once())
-			->method('updateObject')
+		$this->patcher->expects($this->once())
+			->method('patchObject')
 			->with(
 				'clips',
 				'one',
@@ -571,7 +569,6 @@ final class ObjectToolsTest extends TestCase
 				'id'    => ['field' => 'id'],
 				'promo' => ['field' => 'video'],
 			]));
-		$this->objectFetcher->method('existsObject')->willReturn(true);
 
 		$existingPoster = ['name' => 'poster.jpg', 'size' => 12345, 'mime' => 'image/jpeg'];
 		$this->objectFetcher->method('fetchObject')
@@ -602,7 +599,7 @@ final class ObjectToolsTest extends TestCase
 			->willReturn($this->textOnlySchema());
 
 		$this->objectFetcher->expects($this->never())->method('fetchObject');
-		$this->updater->method('updateObject')->willReturn($this->blogObject('my-post'));
+		$this->patcher->method('patchObject')->willReturn($this->blogObject('my-post'));
 
 		$this->tool->updateHandler(collection: 'blog', id: 'my-post', data: ['title' => 'New']);
 	}
@@ -645,18 +642,17 @@ final class ObjectToolsTest extends TestCase
 	}
 
 	// ─── update_object ───────────────────────────────────────────────────────
+	// update_object merges like patch_object (it was a full replace). These
+	// pin that it goes through ObjectPatcher, so an omitted field — including
+	// a binary field or a password an agent never sees — keeps its value.
 
-	public function testUpdateDispatchesToUpdaterWithIdStampedIntoData(): void
+	public function testUpdateMergesThroughThePatcherWithIdStamped(): void
 	{
-		// ObjectUpdater::updateObject validates that the resolved object id
-		// matches the route arg. The tool stamps `id` onto the data payload
-		// so the factory builds the object with that id and the equality
-		// check passes.
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->textOnlySchema());
 
-		$this->updater->expects($this->once())
-			->method('updateObject')
+		$this->patcher->expects($this->once())
+			->method('patchObject')
 			->with(
 				'blog',
 				'my-post',
@@ -674,11 +670,10 @@ final class ObjectToolsTest extends TestCase
 		$this->assertSame(['id' => 'my-post'], $result);
 	}
 
-	public function testUpdatePreservesExistingBinaryWhenOmitted(): void
+	public function testUpdateLeavesAnOmittedBinaryFieldToTheMerge(): void
 	{
-		// The crux of the data-safety fix: updateObject is a full replace, so
-		// an edit that omits the image would wipe it. The tool must carry the
-		// existing object's binary value forward into the payload.
+		// Nothing is carried forward into the payload any more: the merge
+		// keeps the stored image because the payload doesn't mention it.
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->schema([
 				'id'        => ['field' => 'id'],
@@ -686,22 +681,37 @@ final class ObjectToolsTest extends TestCase
 				'thumbnail' => ['field' => 'image'],
 			]));
 
-		$this->objectFetcher->expects($this->once())
-			->method('fetchObject')
-			->with('blog', 'my-post')
-			->willReturn($this->objectWith('my-post', ['title' => 'Old', 'thumbnail' => 'existing.jpg']));
-
-		$this->updater->expects($this->once())
-			->method('updateObject')
+		$this->objectFetcher->expects($this->never())->method('fetchObject');
+		$this->patcher->expects($this->once())
+			->method('patchObject')
 			->with(
 				'blog',
 				'my-post',
 				$this->callback(static fn (array $data): bool => ($data['title'] ?? '') === 'New'
-						&& ($data['thumbnail'] ?? null) === 'existing.jpg'),
+						&& !array_key_exists('thumbnail', $data)),
 			)
 			->willReturn($this->blogObject('my-post'));
 
 		$this->tool->updateHandler(collection: 'blog', id: 'my-post', data: ['title' => 'New']);
+	}
+
+	public function testUpdateStripsAnEmptyBinaryEchoSoTheMergeCannotClearIt(): void
+	{
+		// An agent that fetched the object and blanked the image before
+		// sending it back must not wipe the stored value.
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema([
+				'id'        => ['field' => 'id'],
+				'title'     => ['field' => 'text'],
+				'thumbnail' => ['field' => 'image'],
+			]));
+
+		$this->patcher->expects($this->once())
+			->method('patchObject')
+			->with('blog', 'my-post', $this->callback(static fn (array $data): bool => !array_key_exists('thumbnail', $data)))
+			->willReturn($this->blogObject('my-post'));
+
+		$this->tool->updateHandler(collection: 'blog', id: 'my-post', data: ['title' => 'New', 'thumbnail' => '']);
 	}
 
 	public function testUpdateRefusesWhenPayloadSetsBinaryField(): void
@@ -713,7 +723,7 @@ final class ObjectToolsTest extends TestCase
 				'thumbnail' => ['field' => 'image'],
 			]));
 
-		$this->updater->expects($this->never())->method('updateObject');
+		$this->patcher->expects($this->never())->method('patchObject');
 		$this->objectFetcher->expects($this->never())->method('fetchObject');
 
 		try {
@@ -724,22 +734,35 @@ final class ObjectToolsTest extends TestCase
 		}
 	}
 
-	public function testUpdateConvertsNotFoundToToolError(): void
+	public function testUpdateReportsAMissingObjectUnderItsOwnName(): void
 	{
-		// ObjectUpdater throws UnexpectedValueException when the underlying
-		// fetch fails or the id mismatches.
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->textOnlySchema());
-
-		$this->updater->method('updateObject')
-			->willThrowException(new \UnexpectedValueException('Object missing-post not found in blog'));
+		$this->objectExists = false;
+		$this->patcher->expects($this->never())->method('patchObject');
 
 		try {
 			$this->tool->updateHandler(collection: 'blog', id: 'missing-post', data: ['title' => 'X']);
 			$this->fail('Expected ToolCallException for missing object.');
 		} catch (ToolCallException $e) {
-			$this->assertStringContainsString('blog', $e->getMessage());
-			$this->assertStringContainsString('missing-post', $e->getMessage());
+			$this->assertStringContainsString('update_object', $e->getMessage());
+			$this->assertStringContainsString('blog/missing-post', $e->getMessage());
+		}
+	}
+
+	public function testUpdateConvertsAWriteFailureToToolError(): void
+	{
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->textOnlySchema());
+
+		$this->patcher->method('patchObject')
+			->willThrowException(new \UnexpectedValueException('Invalid Object data provided'));
+
+		try {
+			$this->tool->updateHandler(collection: 'blog', id: 'my-post', data: ['title' => 'X']);
+			$this->fail('Expected ToolCallException for a failed write.');
+		} catch (ToolCallException $e) {
+			$this->assertStringContainsString('Could not update object "blog/my-post"', $e->getMessage());
 		}
 	}
 
@@ -752,7 +775,6 @@ final class ObjectToolsTest extends TestCase
 		// over the stored object. No round-trip through the full body.
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->textOnlySchema());
-		$this->objectFetcher->method('existsObject')->willReturn(true);
 
 		$this->patcher->expects($this->once())
 			->method('patchObject')
@@ -781,7 +803,6 @@ final class ObjectToolsTest extends TestCase
 		// wins.
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->textOnlySchema());
-		$this->objectFetcher->method('existsObject')->willReturn(true);
 
 		$this->patcher->expects($this->once())
 			->method('patchObject')
@@ -820,7 +841,6 @@ final class ObjectToolsTest extends TestCase
 				'title'     => ['field' => 'text'],
 				'thumbnail' => ['field' => 'image'],
 			]));
-		$this->objectFetcher->method('existsObject')->willReturn(true);
 
 		$this->patcher->expects($this->once())
 			->method('patchObject')
@@ -837,7 +857,7 @@ final class ObjectToolsTest extends TestCase
 		// discovery and creation tools.
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->textOnlySchema());
-		$this->objectFetcher->method('existsObject')->willReturn(false);
+		$this->objectExists = false;
 
 		$this->patcher->expects($this->never())->method('patchObject');
 
@@ -854,7 +874,6 @@ final class ObjectToolsTest extends TestCase
 	{
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->textOnlySchema());
-		$this->objectFetcher->method('existsObject')->willReturn(true);
 
 		$this->patcher->method('patchObject')
 			->willThrowException(new \DomainException('Schema Validation Failed. (/title) too long'));
@@ -912,7 +931,7 @@ final class ObjectToolsTest extends TestCase
 	{
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($this->textOnlySchema());
 		$this->exposureAccessible = false;
-		$this->updater->expects($this->never())->method('updateObject');
+		$this->patcher->expects($this->never())->method('patchObject');
 
 		try {
 			$this->tool->updateHandler(collection: 'blog', id: 'my-post', data: ['title' => 'Nope']);
@@ -978,7 +997,7 @@ final class ObjectToolsTest extends TestCase
 	{
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($this->textOnlySchema());
 		$this->hiddenProperties = ['secret'];
-		$this->updater->method('updateObject')
+		$this->patcher->method('patchObject')
 			->willReturn($this->objectWith('my-post', ['title' => 'Visible', 'secret' => 'hidden-value']));
 
 		$result = $this->tool->updateHandler(collection: 'blog', id: 'my-post', data: ['title' => 'Visible']);
@@ -990,7 +1009,6 @@ final class ObjectToolsTest extends TestCase
 	{
 		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($this->textOnlySchema());
 		$this->hiddenProperties = ['secret'];
-		$this->objectFetcher->method('existsObject')->willReturn(true);
 		$this->patcher->method('patchObject')
 			->willReturn($this->objectWith('my-post', ['title' => 'Visible', 'secret' => 'hidden-value']));
 

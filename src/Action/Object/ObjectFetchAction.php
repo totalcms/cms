@@ -43,7 +43,7 @@ readonly class ObjectFetchAction
 		// HTML mode, for quick views, expandable rows and inline detail.
 		if (($request->getQueryParams()['format'] ?? '') === 'html') {
 			$html = $this->fragments->render($request, FragmentRenderer::templateFrom($request), [
-				'object'     => $object->toArray(),
+				'object'     => $object->toArrayWithoutPasswords(),
 				'collection' => $args['collection'],
 			]);
 

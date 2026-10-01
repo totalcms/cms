@@ -16,6 +16,7 @@ use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Data\PasswordData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
@@ -319,7 +320,7 @@ final class IndexBuilderTest extends TestCase
 
 		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';
-		$object->method('toArray')->willReturn(['id' => 'post-1', 'title' => 'New']);
+		$object->method('toArrayWithoutPasswords')->willReturn(['id' => 'post-1', 'title' => 'New']);
 
 		$saved = null;
 		$this->storage->method('saveIndex')
@@ -334,13 +335,37 @@ final class IndexBuilderTest extends TestCase
 		$this->assertSame('New', $saved[1]['title']);
 	}
 
+	public function testARebuildNeverIndexesAPasswordEvenWhenTheSchemaListsIt(): void
+	{
+		// The index is served by the /index and query endpoints, which a
+		// collection's public Read opens to anyone. A schema that lists its
+		// password field in `index` must not put the hash there.
+		$object = $this->objectWith(['title' => 'A user']);
+		$object->properties->put('password', new PasswordData(password_hash('secret', PASSWORD_DEFAULT)));
+
+		$this->storage->method('fetchObjectIdsFromDisk')->willReturn(['user-1']);
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->createSchemaWithIndex(['id', 'title', 'password']));
+		$this->objectFetcher->method('fetchObjectFromDisk')->willReturn($object);
+
+		$saved = null;
+		$this->storage->method('saveIndex')
+			->willReturnCallback(function (string $c, IndexData $i) use (&$saved): void {
+				$saved = $i->objects->values()->toArray();
+			});
+
+		$this->builder->buildIndex('members');
+
+		$this->assertSame(['title' => 'A user', 'id' => 'user-1'], $saved[0]);
+	}
+
 	public function testAppendingToACollectionWithNoIndexYetStartsOne(): void
 	{
 		$this->storage->method('fetchIndex')->willReturn(null);
 
 		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';
-		$object->method('toArray')->willReturn(['id' => 'post-1']);
+		$object->method('toArrayWithoutPasswords')->willReturn(['id' => 'post-1']);
 
 		$this->storage->expects($this->once())->method('saveIndex');
 
@@ -359,7 +384,7 @@ final class IndexBuilderTest extends TestCase
 
 		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';
-		$object->method('toArray')->willReturn(['id' => 'post-1', 'title' => 'T', 'body' => 'not indexed']);
+		$object->method('toArrayWithoutPasswords')->willReturn(['id' => 'post-1', 'title' => 'T', 'body' => 'not indexed']);
 
 		$saved = null;
 		$this->storage->method('saveIndex')
@@ -426,7 +451,7 @@ final class IndexBuilderTest extends TestCase
 
 		$object     = $this->createMock(ObjectData::class);
 		$object->id = 'post-1';
-		$object->method('toArray')->willReturn(['id' => 'post-1']);
+		$object->method('toArrayWithoutPasswords')->willReturn(['id' => 'post-1']);
 
 		$this->storage->expects($this->once())->method('saveIndex');
 		$this->jobQueuer->expects($this->once())->method('queueBuildIndex')->with('blog');

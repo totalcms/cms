@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Schema\Service;
 
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 
 /**
@@ -73,6 +74,16 @@ readonly class SchemaLinter
 		foreach ($raw->index as $name) {
 			if (!in_array($name, $defined, true)) {
 				$errors[] = "index lists '{$name}', which is not a defined property.";
+
+				continue;
+			}
+
+			// Saving the schema now drops it, but a schema saved before that, or
+			// edited on disk, can still list one. IndexBuilder never indexes a
+			// password, so the entry is dead — say so rather than let it look live.
+			$property = $flattened->properties[$name];
+			if (is_array($property) && PropertyDefinition::fromArray($property)->isPassword()) {
+				$warnings[] = "index lists password property '{$name}'. Password hashes are never indexed — remove it from index.";
 			}
 		}
 

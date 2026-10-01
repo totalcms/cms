@@ -34,7 +34,8 @@ class PasswordData extends PropertyData implements \Stringable
 
 	public function transform(): string
 	{
-		// TODO: How can we always store the password in the CMS but not expose it in the API?
+		// The stored hash. API responses and the index leave password
+		// properties out entirely — see ObjectData::toArrayWithoutPasswords().
 		return (string)$this;
 	}
 

@@ -114,7 +114,8 @@ readonly class SchemaSaver
 	}
 
 	/**
-	 * Sanitize required and index arrays to only contain existing properties.
+	 * Sanitize required and index arrays to only contain existing properties,
+	 * and keep password properties out of the index.
 	 *
 	 * @param array<string,mixed> $schemaData
 	 * @param array<string> $inheritedProperties Property names from inherited schemas
@@ -137,11 +138,19 @@ readonly class SchemaSaver
 			));
 		}
 
-		// Sanitize index array
+		// Sanitize index array. Password properties come out too: the index is
+		// served by the public /index and query endpoints, so a hash must never
+		// land there. IndexBuilder skips them regardless — this keeps the saved
+		// schema from claiming an index entry that never exists. Inherited
+		// properties are known here only by name; IndexBuilder covers those.
 		if (isset($schemaData['index']) && is_array($schemaData['index'])) {
+			$passwords = array_keys(array_filter(
+				$schemaData['properties'],
+				fn ($property): bool => is_array($property) && PropertyDefinition::fromArray($property)->isPassword()
+			));
 			$schemaData['index'] = array_values(array_filter(
 				$schemaData['index'],
-				fn ($prop): bool => in_array($prop, $validProperties, true)
+				fn ($prop): bool => in_array($prop, $validProperties, true) && !in_array($prop, $passwords, true)
 			));
 		}
 

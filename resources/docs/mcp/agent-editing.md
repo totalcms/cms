@@ -57,21 +57,26 @@ Three merge rules to know:
 - **Binary fields are untouchable.** Image, file, gallery, and depot fields
   always keep their current values; a payload that sets one is refused.
 
-## Full replace, when you need it
+## update_object
 
-**`update_object` replaces the entire object** — the server saves exactly the
-`data` you send, and any schema field you omit reverts to its default. Use it
-when you intend to rewrite the whole record. The safe sequence:
+**`update_object` merges exactly like `patch_object`.** Fields in `data` are
+written and omitted fields keep their current values, so a missing field is
+never lost. It used to replace the whole object, and any field an agent left
+out reverted to its default. Clearing still has to be explicit: send the
+field's empty value.
 
-1. **Fetch the complete object with `format: "html"`.**
+If you write back an object you fetched, rather than only the changed fields:
+
+1. **Fetch it with `format: "html"`.**
    The default `format` is `markdown`, which *converts* styled-text fields for
    reading. Markdown-converted content written back would permanently replace
    the original HTML. `html` returns fields as stored.
-2. **Edit the fields that need to change** — in the full returned object.
-3. **Strip the `url` key.** Read tools decorate each item with its public
+2. **Strip the `url` key.** Read tools decorate each item with its public
    `url`; it is not part of the object and must not be written back.
-4. **Send the whole body** to `update_object`. The response echoes the saved
-   object — confirm your change is in it.
+3. **Strip binary fields** (image, file, gallery, depot). A payload that sets
+   one is refused; omitted, they keep their values.
+4. **Send it** to `update_object` or `patch_object`. The response echoes the
+   saved object — confirm your change is in it.
 
 After any write — patch, update, or create — **do not clear the cache**:
 object writes fire the `object.updated` event, which invalidates affected page

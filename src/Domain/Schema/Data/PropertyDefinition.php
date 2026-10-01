@@ -146,6 +146,16 @@ readonly class PropertyDefinition
 	}
 
 	/**
+	 * Whether this property stores a password hash — the same rule that makes
+	 * the property a PasswordData at runtime. Password properties are never
+	 * indexed: see SchemaSaver::sanitizeRequiredAndIndex() and IndexBuilder.
+	 */
+	public function isPassword(): bool
+	{
+		return $this->resolveType() === 'password';
+	}
+
+	/**
 	 * Resolve the property type name from either $type or $ref.
 	 * Replaces the scattered extractPropertyType() logic.
 	 */

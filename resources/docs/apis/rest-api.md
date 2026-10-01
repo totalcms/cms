@@ -176,6 +176,8 @@ GET /api/collections/{collection}/{id}
 curl https://yoursite.com/api/collections/blog/my-first-post
 ```
 
+Password fields are never included in a response, whatever the collection's read permissions are. A user record from an auth collection comes back without its `password`. This applies to every object response: fetch, create, update, patch, and the collection index.
+
 **Response:**
 ```json
 {
@@ -238,11 +240,16 @@ POST /api/collections/{collection}
 PUT /api/collections/{collection}/{id}
 ```
 
-**Request Body:**
+PUT **replaces the whole object** with the request body. Any field you leave out is reset to its default. To change a few fields, use [PATCH](#partial-update) instead.
+
+**Request Body** (every field the object should keep):
 ```json
 {
     "title": "Updated Blog Post Title",
-    "status": "published"
+    "content": "This is the content of my new blog post.",
+    "author": "jane-doe",
+    "status": "published",
+    "tags": ["announcement", "news"]
 }
 ```
 
@@ -262,13 +269,15 @@ PUT /api/collections/{collection}/{id}
 }
 ```
 
+**Passwords are the one exception.** Responses never include password fields, so a body built from a GET has no `password`. When a password key is missing from a PUT body, the stored password is kept rather than cleared, so fetching a user and sending it back does not lock them out. To set a new password, include the field with the new value.
+
 ### Partial Update
 
 ```http
 PATCH /api/collections/{collection}/{id}
 ```
 
-Updates only specified fields:
+Updates only the fields you send and leaves everything else as stored. This is the right call for editing an object, including user records: a PATCH never touches a password unless the body includes one.
 
 ```json
 {

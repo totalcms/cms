@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
+use TotalCMS\Domain\Property\Data\PasswordData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Data\SlugData;
 
@@ -45,6 +46,52 @@ class ObjectData
 		$properties = $this->properties->map(fn ($property): mixed => $property->transform());
 
 		return array_merge($base, $properties->toArray());
+	}
+
+	/**
+	 * The object as it may leave the server: toArray() minus every password
+	 * property. Stored password values are bcrypt hashes, which only login
+	 * and password reset need — they read toArray() internally. API responses
+	 * and rendered fragments use this so a hash is never sent to a client,
+	 * whatever the collection's read permissions are.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function toArrayWithoutPasswords(): array
+	{
+		$base = ['id' => $this->id];
+
+		$properties = $this->properties
+			->reject(fn ($property): bool => $property instanceof PasswordData)
+			->map(fn ($property): mixed => $property->transform());
+
+		return array_merge($base, $properties->toArray());
+	}
+
+	/**
+	 * Fill in this (stored) object's password hashes for any password key the
+	 * incoming full-object payload leaves out.
+	 *
+	 * For the entry points where the payload comes from outside the server
+	 * and was shaped by a read that never includes passwords — REST PUT and
+	 * MCP update_object. A full replace would otherwise blank the hash and
+	 * lock the user out. Only an absent key is filled: a key that is present,
+	 * even empty, is the caller's value. Internal callers build their payload
+	 * from toArray(), which already carries the hash, and don't need this.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function carryPasswordsInto(array $data): array
+	{
+		foreach ($this->properties as $name => $property) {
+			if ($property instanceof PasswordData && !array_key_exists($name, $data)) {
+				$data[$name] = $property->hash;
+			}
+		}
+
+		return $data;
 	}
 
 	public function toJson(): string

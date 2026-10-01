@@ -11,6 +11,7 @@ use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\JobQueue\Service\JobQueuer;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Property\Data\PasswordData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
@@ -119,13 +120,7 @@ class IndexBuilder
 			try {
 				// Bypass cache to ensure fresh data from filesystem
 				$object  = $this->objectFetcher->fetchObjectFromDisk($collection, $id);
-				// The reject method is used to filter out properties that are not in the index
-				// The map method is used to transform the properties into an array
-				$summary = $object->properties
-					->reject(fn ($value, $key): bool => !in_array($key, $indexProps, true))
-					->map(fn ($property): mixed => $property->transform());
-				$summary->put('id', $id);
-				$index->objects->push($summary->toArray());
+				$index->objects->push($this->summarize($object, $indexProps, $id));
 			} catch (\Throwable $e) {
 				// Skip objects that fail to load (e.g., type mismatches after schema changes)
 				// Log the error but continue building index with remaining valid objects
@@ -168,19 +163,13 @@ class IndexBuilder
 				// Bypass cache to ensure fresh data from filesystem
 				$object = $this->objectFetcher->fetchObjectFromDisk($collection, $id);
 
-				// Extract only indexed properties
-				$summary = $object->properties
-					->reject(fn ($value, $key): bool => !in_array($key, $indexProps, true))
-					->map(fn ($property): mixed => $property->transform());
-				$summary->put('id', $id);
-
 				// Write directly to file
-				$this->storage->writeIndexEntry($handle, $summary->toArray(), $isFirst);
+				$this->storage->writeIndexEntry($handle, $this->summarize($object, $indexProps, $id), $isFirst);
 				$isFirst = false;
 				$count++;
 
 				// Explicitly free memory
-				unset($object, $summary);
+				unset($object);
 			} catch (\Throwable $e) {
 				$this->skippedIds[] = $id;
 				$this->logger->warning('Skipping object during index build due to error', [
@@ -255,10 +244,29 @@ class IndexBuilder
 
 		// Remove existing entry with same ID (for updates) and append new one
 		$index->objects = $index->objects->reject(fn ($item): bool => $item['id'] === $object->id);
-		$index->objects->push($object->toArray());
+		$index->objects->push($object->toArrayWithoutPasswords());
 
 		// Save the updated index
 		$this->storage->saveIndex($collection, $index);
+	}
+
+	/**
+	 * The index entry for one object: its indexed properties plus the id.
+	 * Password properties never go in, even when a schema lists one in its
+	 * index — the index is served by the public `/index` and query endpoints.
+	 *
+	 * @param array<string> $indexProps
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function summarize(ObjectData $object, array $indexProps, string $id): array
+	{
+		$summary = $object->properties
+			->reject(fn ($value, $key): bool => !in_array($key, $indexProps, true) || $value instanceof PasswordData)
+			->map(fn ($property): mixed => $property->transform());
+		$summary->put('id', $id);
+
+		return $summary->toArray();
 	}
 
 	/**

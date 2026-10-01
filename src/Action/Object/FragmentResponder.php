@@ -36,7 +36,7 @@ final readonly class FragmentResponder
 	public function respond(ServerRequestInterface $request, ResponseInterface $response, ObjectData $object, string $collection): ResponseInterface
 	{
 		$html = $this->fragments->render($request, FragmentRenderer::templateFrom($request), [
-			'object'     => $object->toArray(),
+			'object'     => $object->toArrayWithoutPasswords(),
 			'collection' => $collection,
 		]);
 

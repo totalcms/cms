@@ -116,6 +116,8 @@ A list of property names to include in the collection index. Indexed properties 
 
 Like `required`, the `index` array can reference inherited properties and is merged with parent schemas during inheritance.
 
+Password properties are never indexed. The index is served by the collection's index and query endpoints, so a password hash must not appear there. Saving a schema removes any password property from `index`, the index builder skips one that is still listed (for example, an inherited one), and `tcms schema:lint` warns about it.
+
 
 
 ### formgrid

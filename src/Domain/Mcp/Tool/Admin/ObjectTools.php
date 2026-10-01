@@ -15,7 +15,6 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
-use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -24,18 +23,17 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  *
  * Ships `create_object`, `update_object`, and `patch_object` as the
  * operator's MCP-side surface for writing content. The handlers are thin
- * wrappers around the same `ObjectSaver` / `ObjectUpdater` /
- * `ObjectPatcher` services the admin form save and REST API call into, so
+ * wrappers around the same `ObjectSaver` / `ObjectPatcher` services the admin form save and REST API call into, so
  * schema validation, slug generation, event dispatch (object.created /
  * object.updated → index rebuild, cache invalidation, dataview refresh),
  * and `processBeforeSave` property actions all fire for free.
  *
- * `patch_object` exists because full-replace semantics are a data-loss
- * hazard for agents: update_object requires round-tripping the complete
- * object, and any field the agent fails to carry forward silently reverts
- * to its schema default. The patch tool merges the provided top-level
- * fields over the stored object (REST PATCH semantics via ObjectPatcher),
- * so agents can change one field without having fetched the rest.
+ * `update_object` and `patch_object` both merge the provided top-level
+ * fields over the stored object (REST PATCH semantics via ObjectPatcher).
+ * update_object used to be a full replace, which was a data-loss hazard for
+ * agents: any field an agent failed to carry forward silently reverted to
+ * its schema default — and agents cannot carry binary values or passwords
+ * at all. The two names remain because connected clients call both.
  *
  * Binary fields are checked at the PAYLOAD level, not the schema level: a
  * collection that merely *contains* an image / file / gallery / depot field
@@ -43,9 +41,8 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * upload needs a request-shape MCP doesn't have today (multipart bodies,
  * persistent storage handles), so a payload that puts a value into a binary
  * field is refused with a clear error naming the offenders — but omitting
- * them is fine. On create the field is left unset; on update the existing
- * object's value is preserved (updateObject is a full replace, so without
- * this a partial edit that omits the image would wipe it). This lets agents
+ * them is fine. On create the field is left unset; on update the merge
+ * leaves the existing value alone. This lets agents
  * build real content-rich collections (blog posts, etc.) that happen to have
  * an optional image field, instead of being blocked outright.
  *
@@ -103,7 +100,6 @@ readonly class ObjectTools
 
 	public function __construct(
 		private ObjectSaver $saver,
-		private ObjectUpdater $updater,
 		private ObjectPatcher $patcher,
 		private SchemaFetcher $schemaFetcher,
 		private ObjectFetcher $objectFetcher,
@@ -160,7 +156,7 @@ readonly class ObjectTools
 
 		$registry->register(new McpToolDefinition(
 			name: 'update_object',
-			description: 'Replace an existing object. Required: collection + id + data. The data shape is the complete object body — fields not present in the payload revert to the schema default. To change a subset of fields, prefer patch_object (merge semantics, no round-trip needed); if you do use this tool, fetch the current object first via get_object with format "html". Binary fields (image, file, gallery, depot) cannot be given values via MCP yet, but they do not block the write: omit them and their current values are carried forward. Only a payload that puts a non-empty value into one is refused — so strip binary fields from any object you fetched before sending it back.',
+			description: 'Update an existing object. Required: collection + id + data. Same behavior as patch_object: fields present in data are written, omitted fields keep their current values — sending the complete object or only the fields you change both work. Container fields (card, deck, list) are replaced whole when present. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Binary fields (image, file, gallery, depot) cannot be given values via MCP yet, but they never block the write — omit them and they keep their current values. Only a payload that puts a non-empty value into one is refused.',
 			access: 'admin',
 			handler: $this->updateHandler(...),
 			inputSchema: [
@@ -182,7 +178,7 @@ readonly class ObjectTools
 						// See create_object's `data` for why plain type:object
 						// rather than the oneOf empty-{} workaround.
 						'type'        => 'object',
-						'description' => 'Replacement field values keyed by schema property name. This is a full replace — round-trip via get_object first if you only want to change a subset.',
+						'description' => 'Field values to write, keyed by schema property name. Omitted fields keep their current values. Containers (card/deck/list) replace whole.',
 					],
 				],
 			],
@@ -198,7 +194,7 @@ readonly class ObjectTools
 
 		$registry->register(new McpToolDefinition(
 			name: 'patch_object',
-			description: 'Update a SUBSET of an object\'s fields. Required: collection + id + data. This is a merge, not a replace: fields present in data are written, omitted fields keep their current values — no need to fetch the object first. Container fields (card, deck, list) are replaced whole when present, never deep-merged — send the complete container to change any part of it. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Binary fields (image, file, gallery, depot) cannot be given values via MCP yet, but they never block the write — omit them and they keep their current values. Only a payload that sets a non-empty value into one is refused. Prefer this over update_object for targeted edits.',
+			description: 'Update a SUBSET of an object\'s fields. Required: collection + id + data. This is a merge, not a replace: fields present in data are written, omitted fields keep their current values — no need to fetch the object first. Container fields (card, deck, list) are replaced whole when present, never deep-merged — send the complete container to change any part of it. To clear a field, pass its empty value ("" for text, [] for containers); omitting a field never clears it. Binary fields (image, file, gallery, depot) cannot be given values via MCP yet, but they never block the write — omit them and they keep their current values. Only a payload that sets a non-empty value into one is refused. update_object behaves the same way.',
 			access: 'admin',
 			handler: $this->patchHandler(...),
 			inputSchema: [
@@ -282,38 +278,8 @@ readonly class ObjectTools
 	 */
 	public function updateHandler(string $collection, string $id, array $data): array
 	{
-		$schema         = $this->fetchSchemaOrFail($collection, 'update_object');
-		$collectionData = $this->requireExposed($collection, 'update_object');
-		$binary         = $this->binaryFieldsIn($schema);
-
-		$this->refuseIfPayloadWritesBinary($collection, 'update_object', $data, $binary);
-		$this->refuseIfPayloadWritesVideoPoster($collection, 'update_object', $data, $schema);
-
-		// ObjectUpdater::updateObject validates that the resolved object id
-		// matches the route-style $id arg. Stamp the id onto the payload
-		// here so the factory builds the object with the same id and the
-		// equality check passes.
-		$data['id'] = $id;
-
-		// updateObject is a full replace — it regenerates the object from
-		// $data — so any binary field omitted from the payload would be wiped.
-		// Carry the existing object's binary values forward so an MCP edit
-		// that omits the image keeps it.
-		$data = $this->preserveBinaryFields($collection, $id, $data, $binary);
-		$data = $this->preserveVideoPosters($collection, $id, $data, $schema);
-
-		try {
-			$object = $this->updater->updateObject($collection, $id, $data);
-		} catch (\DomainException|\UnexpectedValueException $e) {
-			throw new ToolCallException(sprintf(
-				'Could not update object "%s/%s": %s',
-				$collection,
-				$id,
-				$e->getMessage(),
-			), $e->getCode(), $e);
-		}
-
-		return $this->stripNonExposed($object->toArray(), $collectionData);
+		// update_object writes with patch semantics — see mergeWrite().
+		return $this->mergeWrite('update_object', $collection, $id, $data);
 	}
 
 	/**
@@ -323,14 +289,36 @@ readonly class ObjectTools
 	 */
 	public function patchHandler(string $collection, string $id, array $data): array
 	{
-		$schema         = $this->fetchSchemaOrFail($collection, 'patch_object');
-		$collectionData = $this->requireExposed($collection, 'patch_object');
+		return $this->mergeWrite('patch_object', $collection, $id, $data);
+	}
+
+	/**
+	 * The write behind both update_object and patch_object: merge the payload
+	 * over the stored object (REST PATCH semantics via ObjectPatcher).
+	 *
+	 * update_object used to be a full replace, and every field an agent left
+	 * out reverted to its schema default. Agents can't send binary values or
+	 * passwords at all — passwords are never exposed to them — so a replace
+	 * needed a carry-forward for each kind of field it would otherwise wipe,
+	 * and still lost anything an agent simply forgot. A merge of a complete
+	 * object stores exactly what was sent (containers replace whole, never
+	 * deep-merge), so the only behavior given up is clearing a field by
+	 * omitting it; agents clear with the field's empty value instead.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function mergeWrite(string $toolName, string $collection, string $id, array $data): array
+	{
+		$schema         = $this->fetchSchemaOrFail($collection, $toolName);
+		$collectionData = $this->requireExposed($collection, $toolName);
 		$binary         = $this->binaryFieldsIn($schema);
 
-		$this->refuseIfPayloadWritesBinary($collection, 'patch_object', $data, $binary);
-		$this->refuseIfPayloadWritesVideoPoster($collection, 'patch_object', $data, $schema);
+		$this->refuseIfPayloadWritesBinary($collection, $toolName, $data, $binary);
+		$this->refuseIfPayloadWritesVideoPoster($collection, $toolName, $data, $schema);
 
-		// A patch never touches binary fields: non-empty values were refused
+		// The write never touches binary fields: non-empty values were refused
 		// above, and empty echoes are stripped here so the merge can't clear
 		// an existing image/file value.
 		$data = $this->stripBinaryFields($data, $binary);
@@ -343,7 +331,8 @@ readonly class ObjectTools
 
 		if (!$this->objectFetcher->existsObject($collection, $id)) {
 			throw new ToolCallException(sprintf(
-				'patch_object: object "%s/%s" not found. Use query_collection to discover ids, or create_object to create it.',
+				'%s: object "%s/%s" not found. Use query_collection to discover ids, or create_object to create it.',
+				$toolName,
 				$collection,
 				$id,
 			));
@@ -353,7 +342,8 @@ readonly class ObjectTools
 			$object = $this->patcher->patchObject($collection, $id, $data);
 		} catch (\DomainException|\UnexpectedValueException $e) {
 			throw new ToolCallException(sprintf(
-				'Could not patch object "%s/%s": %s',
+				'Could not %s object "%s/%s": %s',
+				$toolName === 'update_object' ? 'update' : 'patch',
 				$collection,
 				$id,
 				$e->getMessage(),
@@ -522,41 +512,6 @@ readonly class ObjectTools
 		return $data;
 	}
 
-	/**
-	 * Carry the existing object's binary-field values into the update payload
-	 * so the full-replace save doesn't wipe them. If the object can't be read
-	 * (first write / missing), the binary keys are stripped and the updater is
-	 * left to surface any not-found error.
-	 *
-	 * @param array<string,mixed>                  $data
-	 * @param list<array{name:string,type:string}> $binary
-	 *
-	 * @return array<string,mixed>
-	 */
-	private function preserveBinaryFields(string $collection, string $id, array $data, array $binary): array
-	{
-		if ($binary === []) {
-			return $data;
-		}
-
-		try {
-			$existing = $this->objectFetcher->fetchObject($collection, $id)->toArray();
-		} catch (\Throwable) {
-			return $this->stripBinaryFields($data, $binary);
-		}
-
-		foreach ($binary as $field) {
-			$name = $field['name'];
-			if (array_key_exists($name, $existing)) {
-				$data[$name] = $existing[$name];
-			} else {
-				unset($data[$name]);
-			}
-		}
-
-		return $data;
-	}
-
 	private function isEmpty(mixed $value): bool
 	{
 		return in_array($value, [null, '', []], true);
@@ -593,11 +548,10 @@ readonly class ObjectTools
 
 	/**
 	 * A `video` property's `poster` lives one level below the top-level binary
-	 * fields preserveBinaryFields() carries forward, so a payload that writes
-	 * `{promo: {url: '...'}}` — legitimate, since `url` is the only video key
-	 * an MCP write is allowed to set — would otherwise silently drop an
-	 * existing uploaded poster on both a full-replace update and a merge
-	 * patch. For every video property present in the payload as an array
+	 * fields the merge leaves alone, and the merge replaces the whole video
+	 * value — so a payload that writes `{promo: {url: '...'}}` — legitimate,
+	 * since `url` is the only video key an MCP write is allowed to set — would
+	 * otherwise silently drop an existing uploaded poster. For every video property present in the payload as an array
 	 * without a `poster` key — or with one that's empty (null, '', or []),
 	 * treated identically to absent — copy the stored object's poster (when
 	 * present and non-empty) into the payload so it survives the save.
@@ -619,7 +573,7 @@ readonly class ObjectTools
 		// emptiness refuseIfPayloadWritesVideoPoster() treats as "not writing
 		// it" — must be carried forward exactly like an absent key. Without
 		// this, such a payload passes the refusal (it isn't a real write) but
-		// then reaches the updater/patcher with that empty value, wiping the
+		// then reaches the patcher with that empty value, wiping the
 		// stored poster instead of leaving it untouched.
 		$candidates = array_filter(
 			$videoFields,

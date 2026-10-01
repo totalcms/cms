@@ -254,7 +254,7 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | `delete_schema` | admin‡ | **Destructive.** Refuses to delete reserved schemas, inherited schemas, or schemas still used by a collection. |
 | `create_collection` | admin‡ | Create a new collection bound to a schema. Errors on duplicate id. |
 | `create_object` | admin‡ | Create a content object in a collection. Runs the same `ObjectSaver` path as the admin form — schema validation, slug generation, events. See *Binary fields* below. |
-| `update_object` | admin‡ | Replace a content object by id. Idempotent. Full replace, not a partial merge — send the whole object. See *Binary fields* below. |
+| `update_object` | admin‡ | Update a content object by id. Idempotent. Merges like `patch_object`: omitted fields keep their values. See *Binary fields* below. |
 | `patch_object` | admin‡ | Merge a subset of fields into an existing object — omitted fields keep their current values, so no get/round-trip is needed. Containers (card/deck/list) replace whole. The safer default for targeted agent edits. See *Binary fields* below. |
 | `list_extensions` | admin | Every installed extension with id, name, enabled flag, capabilities. |
 | `list_templates` | admin‡ | List the Site Builder Twig templates (builder templates only — reserved admin templates are never listed). Read-only. See *Site Builder templates* below. |
@@ -272,7 +272,7 @@ Image, file, gallery, and depot fields can't be written through MCP — they nee
 
 This means content-rich collections (blog posts with an optional hero image, etc.) work end-to-end from an agent. Set binary fields afterward in the admin UI, or via the admin clone feature.
 
-> Reading objects with `get_object` / `query_collection` returns binary fields too. If you fetch an object, edit a text field, and send it back to `update_object`, strip the binary fields first (or blank them) — otherwise the call is refused. (`patch_object` sidesteps the whole issue: send only the fields you changed.)
+> Reading objects with `get_object` / `query_collection` returns binary fields too. If you fetch an object, edit a text field, and send the whole thing back, strip the binary fields first (or blank them) — otherwise the call is refused. Sending only the fields you changed sidesteps the issue.
 
 #### Site Builder templates
 

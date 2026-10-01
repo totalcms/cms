@@ -163,11 +163,11 @@ agents rely on. Fill descriptions in on the first pass, not as a follow-up.
 
 Two rules prevent the two worst mistakes:
 
-- **Patch, don't replace.** When editing a live site through its MCP server,
-  prefer `patch_object` (merges only the fields you send). `update_object` is a
-  FULL replace — if you must use it, fetch the complete record with
-  `get_object` + `format: "html"` first, edit, strip the decorated `url` key,
-  and write the whole body back. Details: `references/mcp-content.md`.
+- **Send only what changes.** When editing a live site through its MCP
+  server, use `patch_object` with just the changed fields. `update_object`
+  merges the same way (omitted fields keep their values). If you write back a
+  fetched record, fetch it with `format: "html"` and strip the decorated `url`
+  key and binary fields first. Details: `references/mcp-content.md`.
 - **After launch, the server owns content.** Local seed files go stale by
   design — never re-import them over live data. Use `pull`/`push` (dry-run
   first; filters are exclusive). Details: `references/going-live.md`.

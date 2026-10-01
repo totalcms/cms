@@ -70,6 +70,39 @@ it('handles empty inherited properties array', function (): void {
 	expect($result['index'])->toBe(['id']);
 });
 
+it('drops password properties from index in every spelling', function (): void {
+	// The index is served by the public /index and query endpoints — a
+	// password hash must never be listed there, however the property is typed.
+	$data = [
+		'properties' => [
+			'id'       => [],
+			'email'    => ['field' => 'email'],
+			'password' => ['$ref' => 'https://www.totalcms.co/schemas/properties/password.json', 'field' => 'password'],
+			'pin'      => ['type' => 'password'],
+			'legacy'   => ['field' => 'password'],
+		],
+		'required' => ['id', 'password'],
+		'index'    => ['id', 'email', 'password', 'pin', 'legacy'],
+	];
+
+	$result = SchemaSaver::sanitizeRequiredAndIndex($data);
+	expect($result['index'])->toBe(['id', 'email']);
+	// Only the index changes: a password can still be required.
+	expect($result['required'])->toBe(['id', 'password']);
+});
+
+it('leaves an inherited property in index since only its name is known here', function (): void {
+	// IndexBuilder skips an inherited password at build time; the linter
+	// flags it from the flattened schema.
+	$data = [
+		'properties' => ['id' => []],
+		'index'      => ['id', 'parentPassword'],
+	];
+
+	$result = SchemaSaver::sanitizeRequiredAndIndex($data, ['parentPassword']);
+	expect($result['index'])->toBe(['id', 'parentPassword']);
+});
+
 it('returns unchanged data when no properties key', function (): void {
 	$data   = ['id' => 'test'];
 	$result = SchemaSaver::sanitizeRequiredAndIndex($data);

@@ -165,3 +165,43 @@ it('reports an unloadable schema as a single error', function (): void {
 	expect($result['errors'])->toHaveCount(1);
 	expect($result['errors'][0])->toContain('Schema cannot be loaded');
 });
+
+/** @return array<string,mixed> */
+function passwordProperty(): array
+{
+	return [
+		'field' => 'password',
+		'label' => 'Password',
+		'help'  => 'The account password',
+		'$ref'  => 'https://www.totalcms.co/schemas/properties/password.json',
+	];
+}
+
+it('warns when index lists a password property', function (): void {
+	$schema = makeSchema('members', ['id' => idProperty(), 'password' => passwordProperty()], ['id'], ['id', 'password']);
+	$result = makeLinter(['members' => $schema])->lint('members');
+
+	expect($result['errors'])->toBeEmpty();
+	expect($result['warnings'])->toBe([
+		"index lists password property 'password'. Password hashes are never indexed — remove it from index.",
+	]);
+});
+
+it('warns when index lists an inherited password property', function (): void {
+	$parent    = makeSchema('base-user', ['id' => idProperty(), 'password' => passwordProperty()], ['id'], ['id']);
+	$raw       = makeSchema('members', ['id' => idProperty()], ['id'], ['id', 'password'], ['base-user']);
+	$flattened = makeSchema('members', ['id' => idProperty(), 'password' => passwordProperty()], ['id'], ['id', 'password'], ['base-user']);
+
+	$result = makeLinter(['members' => $raw, 'base-user' => $parent], ['members' => $flattened])->lint('members');
+
+	expect($result['warnings'])->toContain(
+		"index lists password property 'password'. Password hashes are never indexed — remove it from index."
+	);
+});
+
+it('does not warn about a password property that is not indexed', function (): void {
+	$schema = makeSchema('members', ['id' => idProperty(), 'password' => passwordProperty()], ['id'], ['id']);
+	$result = makeLinter(['members' => $schema])->lint('members');
+
+	expect($result['warnings'])->toBeEmpty();
+});

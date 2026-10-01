@@ -18,6 +18,6 @@ class ObjectMetaTransformer extends Fractal\TransformerAbstract
 	 */
 	public function transform(ObjectData $object): array
 	{
-		return $object->toArray();
+		return $object->toArrayWithoutPasswords();
 	}
 }

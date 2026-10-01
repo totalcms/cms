@@ -38,16 +38,17 @@ container to change or remove any part); clearing is explicit (`""` / `[]`);
 omitting never clears; binary fields (image/file/gallery/depot) can't be
 written and always survive.
 
-**`update_object` is a FULL REPLACE** — any field absent from `data` reverts
-to its schema default. Only use it to rewrite a whole record, and never write
-back an object you have not fully fetched:
+**`update_object` merges exactly like `patch_object`** — omitted fields keep
+their values (it was a full replace in older versions). If you write back an
+object you fetched rather than just the changed fields:
 
 1. `get_object` with **`format: "html"`**. The default `format: "markdown"`
    CONVERTS styled-text fields — writing a markdown-converted body back destroys
    the original HTML.
-2. Edit the fields you need in the full returned object.
-3. **Delete the decorated `url` key** (and any other keys not in the schema).
-4. `update_object` with the complete body.
+2. Edit the fields you need in the returned object.
+3. **Delete the decorated `url` key** (and any other keys not in the schema),
+   and strip binary fields — a payload that sets one is refused.
+4. Send it to `patch_object` or `update_object`.
 
 After any write, the response echoes the saved object — verify your change is
 in it. Page caches invalidate automatically via the `object.updated` event —
