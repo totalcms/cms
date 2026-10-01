@@ -111,8 +111,16 @@ class DepotPropertyManager
 			return $files;
 		}
 
-		// Break down the path into an array of folder names
-		$pathParts         = explode('/', trim($path, '/'));
+		// Break down the path into an array of folder names. Blank segments
+		// ("de//x", "de/ /x") are dropped: a folder named "" resolves to its
+		// parent on disk, so deleting it deletes the parent.
+		$pathParts = array_values(array_filter(
+			array_map(trim(...), explode('/', $path)),
+			fn (string $part): bool => $part !== '',
+		));
+		if ($pathParts === []) {
+			return $files;
+		}
 		$currentFolderName = array_shift($pathParts);
 
 		// Traverse through the structure to find or create the specified path

@@ -403,7 +403,9 @@ export default class DepotField extends TotalField {
     }
 
 	addFolderToBrowser(folder) {
-		const path = folder.split("/");
+		// Drop blank segments: the dialog is prefilled with "parent/", and a
+		// trailing slash used to insert a folder named "" into the browser.
+		const path = folder.split("/").map(dir => dir.trim()).filter(dir => dir.length > 0);
 		let currentPath = "";
 		path.forEach(dir => {
             const lastPath = currentPath.slice(0, -1); // Remove trailing slash
@@ -445,6 +447,7 @@ export default class DepotField extends TotalField {
 
         files.forEach(file => {
             const name = this.getFileAttribute(file, "name");
+            if (!name || !name.trim()) return; // blank → whole-property DELETE
             const path = file.closest("details")?.querySelector("summary.folder")?.dataset.path || "";
 
             let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
@@ -458,6 +461,9 @@ export default class DepotField extends TotalField {
 
     async trashFile(file) {
         const name = this.getFileAttribute(file, "name");
+        // A blank name collapses the URL to the property itself, and the
+        // server would delete the whole depot.
+        if (!name || !name.trim()) return;
         const path = this.getPath();
 
         let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;
@@ -473,6 +479,10 @@ export default class DepotField extends TotalField {
 
     trashFolder(folder) {
         const name = folder.textContent;
+        // A blank name collapses the URL to the property itself, and the
+        // server would delete the whole depot. A blank folder has no directory
+        // of its own; the server drops it the next time the depot is saved.
+        if (!name.trim()) return;
         const path = this.getParentPath();
 
         let deleteApi = `/collections/${this.form.collection}/${this.form.id}/${this.property}/${name}`;

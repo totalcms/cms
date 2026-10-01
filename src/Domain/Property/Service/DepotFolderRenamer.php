@@ -27,6 +27,13 @@ class DepotFolderRenamer
 		string $path,
 		string $newName,
 	): ObjectData {
+		// A blank name would move the folder onto its parent's path; a slash
+		// would move it somewhere else entirely.
+		$newName = trim($newName);
+		if ($newName === '' || str_contains($newName, '/') || str_contains($newName, '\\') || trim($path, '/') === '') {
+			throw new \InvalidArgumentException('A folder name is required and cannot contain slashes');
+		}
+
 		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
 			throw new \UnexpectedValueException("Object $objectID does not exist in $collection");
 		}

@@ -173,6 +173,42 @@ class DepotRemoverTest extends TestCase
 		$this->createRemover()->deleteFile('blog', 'post-1', 'files', 'delete-me.txt');
 	}
 
+	/**
+	 * An empty name makes buildPath() resolve to the depot root (or the parent
+	 * folder when a subpath is given), so deleting a blank-named entry used to
+	 * wipe every file in the depot. A blank name must be refused before the
+	 * record or the disk is touched.
+	 */
+	public function testRefusesBlankNameWithoutTouchingRecordOrDisk(): void
+	{
+		$depotData = new DepotData([
+			'files' => [
+				['name' => 'de', 'mime' => 'folder', 'files' => [
+					['name' => 'keep.pdf', 'mime' => 'application/pdf', 'size' => 10],
+				]],
+			],
+		]);
+
+		$this->mockPropFetcher->method('fetchProperty')->willReturn($depotData);
+		$this->mockObjectFetcher->method('existsObject')->willReturn(true);
+
+		$this->mockObjectPatcher->expects($this->never())->method('patchObject');
+		$this->mockStorage->expects($this->never())->method('deleteDirectory');
+		$this->mockStorage->expects($this->never())->method('deleteFile');
+
+		$remover = $this->createRemover();
+
+		foreach (['', '   '] as $name) {
+			foreach ([null, 'de'] as $subpath) {
+				try {
+					$remover->deleteFile('blog', 'post-1', 'files', $name, $subpath);
+					$this->fail('Blank depot name was not refused');
+				} catch (\InvalidArgumentException) {
+				}
+			}
+		}
+	}
+
 	private function createRemover(): DepotRemover
 	{
 		return new DepotRemover(

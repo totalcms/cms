@@ -16,6 +16,13 @@ class DepotRemover extends FileRemover
 		string $name,
 		?string $subpath = null,
 	): ObjectData {
+		// A blank name makes the storage path resolve to the depot root — or to
+		// the parent folder under a subpath — so "delete this entry" would
+		// delete every file in it.
+		if (trim($name) === '') {
+			throw new \InvalidArgumentException('A depot file or folder name is required');
+		}
+
 		if (!$this->objectFetcher->existsObject($collection, $objectID)) {
 			throw new \UnexpectedValueException("Object $objectID does not exist in $collection");
 		}

@@ -475,4 +475,19 @@ describe('DepotPropertyManager', function (): void {
 
 		expect($current->files[0]->name)->toBe('deep.txt');
 	});
+	// A path with an empty segment ("de//x", or the admin dialog's prefilled
+	// "de/" plus a blank name) used to create a folder named "", and deleting
+	// that folder resolved to its parent directory on disk.
+	test('DepotPropertyManager → createFolder never creates a blank-named folder', function (): void {
+		$depot   = new DepotData(['files' => [['name' => 'de', 'mime' => 'folder', 'files' => []]]]);
+		$manager = new DepotPropertyManager($depot);
+
+		$manager->createFolder('de/');
+		$manager->createFolder('de//x');
+		$manager->createFolder('de/ /y');
+
+		$names = array_map(fn ($f) => $f->name, $depot->files[0]->files);
+		expect(count($depot->files))->toBe(1);
+		expect($names)->toBe(['x', 'y']);
+	});
 });

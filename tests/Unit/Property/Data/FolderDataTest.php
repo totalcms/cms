@@ -299,4 +299,21 @@ describe('FolderData', function (): void {
 			expect($folder->transform()['name'])->toBe($name);
 		}
 	});
+	// A record already carrying a blank-named folder (written by the admin's
+	// "add folder" dialog before 3.6.2) must heal on load: deleting that entry
+	// resolved to the parent directory and wiped the depot. Its children live
+	// in the parent directory on disk, so they are hoisted, not dropped.
+	test('FolderData → buildFolder hoists the contents of a blank-named folder', function (): void {
+		$folder = FolderData::buildFolder([
+			['name' => '', 'mime' => 'folder', 'files' => []],
+			['name' => ' ', 'mime' => 'folder', 'files' => [
+				['name' => 'inner.pdf', 'mime' => 'application/pdf', 'size' => 1],
+			]],
+			['name' => 'keep.pdf', 'mime' => 'application/pdf', 'size' => 2],
+		]);
+
+		$names = array_map(fn ($f) => $f->name, $folder);
+		expect($names)->toBe(['inner.pdf', 'keep.pdf']);
+		expect($folder[0])->toBeInstanceOf(FileData::class);
+	});
 });

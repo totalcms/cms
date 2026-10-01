@@ -134,6 +134,29 @@ class DepotFolderRenamerTest extends TestCase
 		$this->assertInstanceOf(ObjectData::class, $result);
 	}
 
+	/**
+	 * A blank new name resolves the destination to the folder's parent, and a
+	 * blank source path resolves to the depot root — either moves far more
+	 * than one folder. Both must be refused before storage is touched.
+	 */
+	public function testRefusesBlankNameSlashedNameOrBlankPath(): void
+	{
+		$this->mockObjectFetcher->method('existsObject')->willReturn(true);
+		$this->mockStorage->expects($this->never())->method('renameFolder');
+		$this->mockObjectPatcher->expects($this->never())->method('patchObject');
+
+		$renamer = $this->createRenamer();
+
+		$cases = [['de/sub', ''], ['de/sub', '   '], ['de/sub', 'a/b'], ['', 'renamed'], ['/', 'renamed']];
+		foreach ($cases as [$path, $newName]) {
+			try {
+				$renamer->renameFolder('blog', 'post-1', 'files', $path, $newName);
+				$this->fail("Rename of '{$path}' to '{$newName}' was not refused");
+			} catch (\InvalidArgumentException) {
+			}
+		}
+	}
+
 	private function createRenamer(): DepotFolderRenamer
 	{
 		return new DepotFolderRenamer(
