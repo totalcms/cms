@@ -37,6 +37,10 @@ export default class FileField extends TotalField {
 
 	setupPreview(file) {
 		const filePreview = this.previewContainer.children.item(0);
+		// Nothing to set up when the preview is gone — the user deleted the
+		// file while its upload was still running, and the upload finished
+		// afterwards (fileUploaded → here).
+		if (!filePreview) return;
 		const preview = new FilePreview(filePreview, this);
 		if (file) preview.setValue(file);
 		this.preview = preview;
