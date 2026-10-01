@@ -381,27 +381,22 @@ class SentryMiddleware implements MiddlewareInterface
 
 		// DI failures survive to here on the CLI by design (see WEB_ONLY_IGNORE):
 		// a wiring regression that hard-downs `jobs:process` is worth paging on.
-		// But the same exception is also what a HALF-COPIED install throws, and
-		// a local Stacks export mid-publish hits the CLI just as readily as a
-		// server does. The two are distinguishable: ask whether the class PHP
-		// says it can't find is actually loadable. If it isn't, the file simply
-		// is not on disk — the install is incomplete, and no change to T3 fixes
-		// it. If it IS loadable, the container genuinely failed to wire a class
-		// that exists, which is our bug, and it still reports.
-		if (preg_match("/No entry or class found for '([^']+)'/", $exception->getMessage(), $matches) === 1) {
-			$missing = $matches[1];
-			// class_exists() runs the autoloader, which on a corrupted install
-			// can itself fatal on an unparseable file. That answers the question
-			// too — the install is broken either way.
-			try {
-				$loadable = class_exists($missing) || interface_exists($missing);
-			} catch (\Throwable) {
-				$loadable = false;
-			}
-
-			if (str_starts_with($missing, 'TotalCMS\\') && !$loadable) {
-				return null;
-			}
+		// But "No entry or class found" for one of OUR classes is never that.
+		// PHP-DI only says it when the class could not be loaded at the moment
+		// it resolved — a real wiring bug in a class that loads fails with a
+		// different message (an unresolvable constructor parameter, say). So it
+		// means the files were not readable: a half-copied install, or a cron
+		// run (`automations:process`, `jobs:process`) landing while a Stacks
+		// export or deploy is rewriting them. No change to T3 fixes either.
+		//
+		// This used to report when class_exists() succeeded here, reading that
+		// as "the class exists, so the container is at fault". That is a race
+		// on optimized installs: the Composer classmap hands back the path
+		// without checking the file, a missed include is not cached as a miss,
+		// and by the time this filter runs the copy has finished — so every
+		// mid-copy cron run reported as a wiring bug.
+		if (str_contains($exception->getMessage(), "No entry or class found for 'TotalCMS\\")) {
+			return null;
 		}
 
 		// Belt-and-suspenders on `ignore_exceptions`. The Sentry SDK applies
