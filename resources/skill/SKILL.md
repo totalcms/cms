@@ -114,7 +114,7 @@ Prefer looking things up over guessing; training data is often stale on exact si
    Key `builder-pages` fields: `route`, `template`, `title`, `draft`, `data` (free-form
    JSON exposed as `page.data.*`). Full list in `references/site-builder.md`.
 5. **Preview:** `php -S localhost:8080 -t public public/index.php` and visit the
-   page's `route`. Pass `public/index.php` as the router script — without it the
+   page's `route`. Give `public/index.php` as the router script — without it the
    built-in server only serves files that exist on disk and never reaches the page
    router, so every builder page 404s. Clear caches after template changes if
    needed: `vendor/bin/tcms cache:clear`. Restart the server after adding page

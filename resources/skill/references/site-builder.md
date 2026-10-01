@@ -63,7 +63,7 @@ record's SEO card → the collection's field mapping → the Site SEO record. Ru
   and `<meta name="description">`** or the page ships two of each.
 - A detail page (`/blog/{id}`) overrides the block to describe the object, not
   the page record: `{% block seo %}{{ cms.seo.head(post, {collection: 'blog'}) }}{% endblock %}`.
-  Always pass `collection` — an object array does not know where it came from.
+  Always set `collection` — an object array does not know where it came from.
 - The collection needs its **URL** set or its objects get no canonical, no
   `og:url` and no Article node. The reserved `blog` collection ships with none.
 - Site-wide values (site name, base URL, default image, verification tokens) live
