@@ -61,6 +61,7 @@ use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionFormatConverter;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
+use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\DataView\Service\DataViewDependencyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
@@ -135,6 +136,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Migration\Migration\BuilderPageSeoFieldsMigration;
+use TotalCMS\Domain\Migration\Migration\ClearPublicReadOnSensitiveCollectionsMigration;
 use TotalCMS\Domain\Migration\Migration\EnsureAutomationsCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\EnsureMcpPromptCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
@@ -888,12 +890,20 @@ return [
 		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),
 	),
 
+	ClearPublicReadOnSensitiveCollectionsMigration::class => fn (ContainerInterface $container): ClearPublicReadOnSensitiveCollectionsMigration => new ClearPublicReadOnSensitiveCollectionsMigration(
+		$container->get(CollectionLister::class),
+		$container->get(CollectionSaver::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),
+	),
+
 	MigrationRunner::class => fn (ContainerInterface $container): MigrationRunner => new MigrationRunner(
 		[
 			$container->get(LegacyTemplatesMigration::class),
 			$container->get(EnsureMcpPromptCollectionMigration::class),
 			$container->get(EnsureAutomationsCollectionMigration::class),
 			$container->get(BuilderPageSeoFieldsMigration::class),
+			$container->get(ClearPublicReadOnSensitiveCollectionsMigration::class),
 		],
 		$container->get(MigrationStateRepository::class),
 		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),
