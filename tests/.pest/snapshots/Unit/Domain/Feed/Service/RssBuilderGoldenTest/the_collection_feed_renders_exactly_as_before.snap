@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:slash="http://purl.org/rss/1.0/modules/slash/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <language>en-US</language>
     <title>Example Blog</title>
@@ -20,7 +20,6 @@
       <link>https://example.com/blog/newest</link>
       <guid isPermaLink="false">newest</guid>
       <enclosure type="image/png" length="0" url="https://example.com/uploads/cover.png"/>
-      <slash:comments>0</slash:comments>
     </item>
     <item>
       <title>Older post</title>
@@ -31,7 +30,6 @@
       <author>Joe</author>
       <enclosure type="audio/mpeg" length="0" url="https://cdn.example.com/a.mp3"/>
       <dc:creator>Joe</dc:creator>
-      <slash:comments>0</slash:comments>
     </item>
   </channel>
 </rss>
