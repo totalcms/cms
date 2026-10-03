@@ -97,7 +97,7 @@ Total CMS is free to use, with every Pro feature, on domains that can only exist
 | `127.0.0.1`, on any port | `127.0.0.1:8000` |
 | Any `.test` domain | `mysite.test`, `client.mysite.test` |
 
-These names are reserved for testing by internet standards ([RFC 6761](https://www.rfc-editor.org/rfc/rfc6761)), so they can never be a real public website. Tools like Laravel Herd, Valet, and DDEV serve local sites on `.test` by default, and Chrome and Firefox resolve any `.localhost` name to your own machine without a hosts-file entry.
+These names are reserved for testing by internet standards ([RFC 6761](https://www.rfc-editor.org/rfc/rfc6761)), so they can never be a real public website. Herd and Valet serve on `.test` by default; DDEV can be configured to. Chrome and Firefox resolve any `.localhost` name to your own machine without a hosts-file entry.
 
 A development domain runs as a **Development license**: full Pro features with no expiry. The admin sidebar shows "Development license in use. Not for production sites." as a reminder.
 
