@@ -61,6 +61,22 @@
 			"help": "markdown field. A Markdown source editor with a toolbar, preview and fullscreen; stored as written. Render it with the |markdown filter. Use for: content written by people who know Markdown, and Markdown that uses footnotes or raw HTML.",
 			"field": "markdown"
 		},
+		"customMarkdown": {
+			"type": "string",
+			"label": "Markdown with a custom toolbar",
+			"help": "markdown field with the toolbarConfig, headingLevels and heightMin settings. toolbarConfig chooses the buttons, including strike, which is not in the default toolbar. headingLevels sets the levels in the heading menu. Use for: a long document that needs every heading level and a taller editor.",
+			"field": "markdown",
+			"settings": {
+				"heightMin": 400,
+				"headingLevels": [1, 2, 3, 4],
+				"toolbarConfig": [
+					{ "name": "text", "buttons": ["heading", "bold", "italic", "strike", "inlineCode"] },
+					{ "name": "paragraph", "buttons": ["bulletList", "orderedList", "blockquote", "codeBlock"] },
+					{ "name": "insert", "buttons": ["link", "image", "table"] },
+					{ "name": "misc", "buttons": ["preview", "fullscreen"], "align": "right" }
+				]
+			}
+		},
 		"styledmarkdown": {
 			"type": "string",
 			"label": "Styled Markdown",

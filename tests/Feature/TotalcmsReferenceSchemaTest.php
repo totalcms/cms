@@ -40,7 +40,7 @@ describe('totalcms schema completeness', function (): void {
 
 	test('the settings demonstrations are present', function (): void {
 		$raw = (string)file_get_contents(reservedSchemaPath() . 'totalcms.json');
-		foreach (['"autogen"', '"calc"', '"hide"', '"visibility"', '"required"', '"toolbarConfig"', '"htmlclean"'] as $needle) {
+		foreach (['"autogen"', '"calc"', '"hide"', '"visibility"', '"required"', '"toolbarConfig"', '"htmlclean"', '"headingLevels"'] as $needle) {
 			expect(str_contains($raw, $needle))->toBeTrue("totalcms.json should demonstrate the {$needle} setting");
 		}
 	});
