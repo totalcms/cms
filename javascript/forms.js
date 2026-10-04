@@ -19,7 +19,15 @@ import { lazyFieldTypes } from './totalform/field-types-lazy';
 // registers the same way on both surfaces.
 //-----------------------------------------------
 
-TotalForm.registerBuiltInFieldTypes({ ...coreFieldTypes, ...lazyFieldTypes });
+// A class that is already registered stays: a customer admin page can load
+// admin.js (every class, built synchronously) and this entry together, and a
+// loader must not replace a class that is already on the page. When this
+// entry runs first, admin.js replaces the whole registry afterwards.
+const alreadyLoaded = Object.fromEntries(
+	Object.entries(TotalForm.builtInFieldTypes).filter(([, entry]) => typeof entry === 'function')
+);
+
+TotalForm.registerBuiltInFieldTypes({ ...coreFieldTypes, ...lazyFieldTypes, ...alreadyLoaded });
 
 window.TotalCMS = Object.assign(window.TotalCMS ?? {}, {
 	TotalForm,

@@ -50,4 +50,27 @@ describe('forms.js', () => {
 		expect(globalThis.__tcmsFormsBooted).toBeUndefined();
 		expect(document.querySelector('form.totalform').totalform).toBeUndefined();
 	});
+
+	test('keeps a field class that is already registered instead of replacing it with a loader', async () => {
+		// A customer admin page can load admin.js and forms.js together. admin.js
+		// registers every class; forms.js used to overwrite that with its lazy
+		// loaders, so fields built asynchronously on a page that expects them
+		// straight away — a fresh upload's data never reached the form.
+		vi.resetModules();
+		document.body.innerHTML = '';
+		delete globalThis.__tcmsFormsBooted;
+		globalThis.__tcmsAdminLoaded = true;
+		const TotalForm = (await import('../../javascript/totalform/totalform.js')).default;
+		class ListField {}
+		class ImageField {}
+		TotalForm.registerBuiltInFieldTypes({ list: ListField, image: ImageField });
+
+		await import('../../javascript/forms.js');
+
+		expect(TotalForm.builtInFieldTypes.list).toBe(ListField);
+		expect(TotalForm.builtInFieldTypes.image).toBe(ImageField);
+		expect(TotalForm.builtInFieldTypes.text).toBeTypeOf('function');
+		expect(TotalForm.builtInFieldTypes.styledtext.lazy).toBeTypeOf('function');
+		delete globalThis.__tcmsAdminLoaded;
+	});
 });

@@ -183,6 +183,15 @@ export default class TotalField {
 		return parent.closest(".form-field");
 	}
 
+	// Run the callback once every field on the form has its object. On a
+	// forms.js page heavy field classes load on demand (TotalForm.loadField),
+	// so a sub-field that was just added to the page may not be built yet.
+	// With nothing loading — always the case under admin.js — it runs now.
+	whenSubFieldsBuilt(callback) {
+		if (!this.form?.pending?.size) return callback();
+		this.form.whenReady().then(callback);
+	}
+
 	isSubField() {
 		// Filter for determining if a field is a subproperty of another field.
 		// Deliberately element-based rather than delegating to getParent(): the

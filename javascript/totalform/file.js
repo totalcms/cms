@@ -42,8 +42,10 @@ export default class FileField extends TotalField {
 		// afterwards (fileUploaded → here).
 		if (!filePreview) return;
 		const preview = new FilePreview(filePreview, this);
-		if (file) preview.setValue(file);
 		this.preview = preview;
+		// The preview's sub-fields (tags is a `list`) may still be loading on a
+		// forms.js page; writing the upload's data into them has to wait.
+		if (file) this.whenSubFieldsBuilt(() => preview.setValue(file));
 
 		Array.from(preview.fields).forEach(field => {
 			field.addEventListener("subfield-change", () => this.changed());

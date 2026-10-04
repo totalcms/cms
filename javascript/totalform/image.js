@@ -42,8 +42,10 @@ export default class ImageField extends TotalField {
 		// afterwards (fileUploaded → here).
 		if (!imagePreview) return;
 		const preview = new ImagePreview(imagePreview, this);
-		if (image) preview.setValue(image);
 		this.preview = preview;
+		// The preview's sub-fields (tags is a `list`) may still be loading on a
+		// forms.js page; writing the upload's data into them has to wait.
+		if (image) this.whenSubFieldsBuilt(() => preview.setValue(image));
 
 		Array.from(preview.fields).forEach(field => {
 			field.addEventListener("subfield-change", () => this.changed());
