@@ -32,3 +32,34 @@ describe('DeckItem.generateLabel', () => {
 		expect(item({ id: 'sd' }).generateLabel('${missing}')).toBe('sd');
 	});
 });
+
+// updateLabel() writes the label into the page as HTML. Fields that hold
+// source (code, markdown) are not sanitized when saved, so the label is.
+describe('DeckItem.updateLabel', () => {
+	function labelled(fieldData, pattern) {
+		const di = item(fieldData);
+		di.container.setAttribute('data-deck-label-pattern', pattern);
+		const button = document.createElement('button');
+		button.className = 'deck-item-label';
+		di.container.appendChild(button);
+		di.updateLabel();
+		return button;
+	}
+
+	test('removes script and event handlers from an interpolated value', () => {
+		const button = labelled({ body: 'Hi <img src=x onerror="alert(1)"><script>alert(2)</script>', id: 'a' }, '${body}');
+
+		expect(button.querySelector('script')).toBeNull();
+		expect(button.innerHTML).not.toContain('onerror');
+		expect(button.textContent).toContain('Hi');
+	});
+
+	test('keeps an svg icon and harmless formatting', () => {
+		const svg = '<svg viewBox="0 0 4 4" onload="alert(1)"><circle cx="2" cy="2" r="2"></circle></svg>';
+		const button = labelled({ icon: svg, name: '<strong>Bold</strong>', id: 'a' }, '${icon} ${name}');
+
+		expect(button.querySelector('.deck-label-svg svg circle')).not.toBeNull();
+		expect(button.innerHTML).not.toContain('onload');
+		expect(button.querySelector('strong').textContent).toBe('Bold');
+	});
+});

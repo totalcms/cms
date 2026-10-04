@@ -13,7 +13,9 @@ export default class ListField extends MultiSelectField {
 		// Define option defaults
 		const defaults = {
 			asString              : false,
-			allowHTML             : true,
+			// Labels are text. Relational options can take theirs from a field
+			// that is not sanitized on save (code, markdown).
+			allowHTML             : false,
 			removeItemButton      : true,
 			duplicateItemsAllowed : false,
 			addChoices            : true,

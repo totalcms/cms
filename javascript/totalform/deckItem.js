@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import Dialog from "./dialog";
 import { collectScopedFieldValues } from "./fieldCollection.mjs";
 
@@ -81,7 +82,9 @@ export default class DeckItem {
 		const pattern = this.container.getAttribute('data-deck-label-pattern') || '${id}';
 		const labelText = this.generateLabel(pattern);
 
-		labelElement.innerHTML = labelText;
+		// Fields that hold source (code, markdown) are not sanitized when
+		// saved, and the label is written into the page as HTML.
+		labelElement.innerHTML = DOMPurify.sanitize(labelText);
 	}
 
 	generateLabel(pattern) {

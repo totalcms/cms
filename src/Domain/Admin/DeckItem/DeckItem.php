@@ -9,6 +9,9 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Security\Sanitization\HTMLSanitizer;
+use TotalCMS\Domain\Security\Sanitization\SVGSanitizer;
+use TotalCMS\Support\Config;
 
 /**
  * DeckItem - Represents a single item in a deck field.
@@ -196,7 +199,7 @@ class DeckItem
 			}
 
 			// Dot notation walks into composite values — card.title, text.es, …
-			return TemplatePlaceholder::resolvePath($this->itemData, $key);
+			return $this->safeLabelValue(TemplatePlaceholder::resolvePath($this->itemData, $key));
 		});
 
 		$label = trim($label);
@@ -207,5 +210,24 @@ class DeckItem
 		}
 
 		return $label;
+	}
+
+	/**
+	 * The label is printed into the page as HTML, and not every field is
+	 * sanitized when it is saved (code, markdown, `htmlclean: false`). An SVG
+	 * value stays an icon; anything else with markup goes through the same
+	 * sanitizer a string field uses. Mirror of updateLabel() in deckItem.js.
+	 */
+	private function safeLabelValue(string $value): string
+	{
+		if ($value === strip_tags($value)) {
+			return $value;
+		}
+
+		if (str_starts_with(ltrim($value), '<svg')) {
+			return SVGSanitizer::sanitize($value);
+		}
+
+		return HTMLSanitizer::sanitizeRichContent($value, Config::init()->htmlclean);
 	}
 }

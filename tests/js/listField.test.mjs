@@ -52,4 +52,16 @@ describe('ListField', () => {
 		// The previously-selected 'b' returns to the pool; suggestions are intact.
 		expect(available(field).sort()).toEqual(['a', 'b', 'c']);
 	});
+
+	test('an option label is shown as text, never run as HTML', () => {
+		// Relational options can take their label from a field that is not
+		// sanitized on save (code, markdown).
+		const field = makeListField(['<img src=x onerror="alert(1)">', 'plain']);
+
+		field.setValue(['<img src=x onerror="alert(1)">']);
+
+		expect(field.settings.allowHTML).toBe(false);
+		expect(document.querySelector('.choices img')).toBeNull();
+		expect(document.querySelector('.choices').textContent).toContain('<img src=x');
+	});
 });
