@@ -55,6 +55,26 @@
 			"help": "styledtext field. Rich text (Tiptap) editor storing HTML. Use for: article bodies and any content an editor formats with headings, links, lists or images.",
 			"field": "styledtext"
 		},
+		"styledmarkdown": {
+			"type": "string",
+			"label": "Styled Markdown",
+			"help": "styledmarkdown field. The styledtext (Tiptap) editor storing Markdown source, not HTML. Render it with the |markdown filter. Use for: content kept as Markdown, such as docs, changelogs, and bodies in a markdown-format collection.",
+			"field": "styledmarkdown"
+		},
+		"toolbarMarkdown": {
+			"type": "string",
+			"label": "Styled Markdown with a custom toolbar",
+			"help": "styledmarkdown field with the toolbarConfig and htmlclean settings. toolbarConfig chooses the buttons, including the opt-in ones (strike, undo, redo, preview, fullscreen). htmlclean strips unsafe HTML on save. Use for: Markdown written by people you do not fully trust, or a toolbar with a preview.",
+			"field": "styledmarkdown",
+			"settings": {
+				"htmlclean": true,
+				"toolbarConfig": [
+					{ "name": "text", "buttons": ["heading", "bold", "italic", "strike", "inlineCode"] },
+					{ "name": "insert", "buttons": ["link", "image"] },
+					{ "name": "misc", "buttons": ["preview", "codeView", "fullscreen"], "align": "right" }
+				]
+			}
+		},
 		"code": {
 			"$ref": "https://www.totalcms.co/schemas/properties/code.json",
 			"label": "Code",

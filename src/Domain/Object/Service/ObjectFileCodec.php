@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Object\Service;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Property\Data\MarkdownData;
 
 /**
  * Turns an object's array into the bytes of its file and back, for both
@@ -30,7 +31,7 @@ final class ObjectFileCodec
 	public const BODY_PROPERTY = 'content';
 
 	/** Field types whose value is a string a person would write as a body. */
-	private const BODY_FIELDS = ['text', 'textarea', 'markdown', 'styledtext'];
+	private const BODY_FIELDS = ['text', 'textarea', 'styledtext', ...MarkdownData::FIELDS];
 
 	/**
 	 * Splits a markdown object file into its frontmatter YAML and its body.

@@ -44,7 +44,7 @@ describe('the registries', () => {
 	});
 
 	test('the full set covers every type the admin can render, and the lazy set covers exactly what core does not', () => {
-		const everything = ['id', 'slug', 'text', 'time', 'url', 'hidden', 'email', 'phone', 'textarea', 'checkbox', 'toggle', 'checklist', 'multicheckbox', 'radio', 'number', 'price', 'color', 'date', 'datetime', 'select', 'multiselect', 'list', 'password', 'secret', 'range', 'styledtext', 'localizedtext', 'localizedtextarea', 'localizedstyledtext', 'svg', 'image', 'gallery', 'json', 'file', 'depot', 'depotDrop', 'code', 'card', 'video', 'deck', 'deckTable', 'properties', 'customProperties', 'schemaProperties'];
+		const everything = ['id', 'slug', 'text', 'time', 'url', 'hidden', 'email', 'phone', 'textarea', 'checkbox', 'toggle', 'checklist', 'multicheckbox', 'radio', 'number', 'price', 'color', 'date', 'datetime', 'select', 'multiselect', 'list', 'password', 'secret', 'range', 'styledtext', 'styledmarkdown', 'localizedtext', 'localizedtextarea', 'localizedstyledtext', 'svg', 'image', 'gallery', 'json', 'file', 'depot', 'depotDrop', 'code', 'card', 'video', 'deck', 'deckTable', 'properties', 'customProperties', 'schemaProperties'];
 
 		for (const type of everything) {
 			expect(allFieldTypes[type], type).toBeTypeOf('function');

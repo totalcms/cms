@@ -548,6 +548,14 @@
 		display : none;
 	}
 }
+.markdown-field,
+.styledmarkdown-field {
+	--schema-icon : var(--icon-markdown);
+
+	&.string-type:after {
+		display : none;
+	}
+}
 .svg-field {
 	--schema-icon : var(--icon-svg);
 

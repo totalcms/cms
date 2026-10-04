@@ -24,12 +24,17 @@ export default class StyledTextField extends TotalField {
 		// get final settings... defaultConfig() -> global window.totalcms settings -> settings from arguments
 		this.settings = Object.assign({}, this.defaultConfig(), this.settings);
 
-		this.tiptap = new TiptapEditor(this.input, this.settings);
+		this.tiptap = this.createEditor();
 
 		// Initial upload-enabled state, then keep it in sync with parent-form ID
 		// (top-level case) and deck-item ID (nested case) as they get filled in.
 		this.tiptap.updateUploadEnabled();
 		this.bindUploadReadyWatchers();
+	}
+
+	// StyledMarkdownField swaps in its own editor here.
+	createEditor() {
+		return new TiptapEditor(this.input, this.settings);
 	}
 
 	bindUploadReadyWatchers() {

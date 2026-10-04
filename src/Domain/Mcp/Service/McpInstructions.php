@@ -60,7 +60,7 @@ final class McpInstructions
 	{
 		return 'Writing: read the object and the schema\'s help text first — help is the brief for each field. '
 			. 'Edit with patch_object and send only the fields you change; omitted fields keep their values, so clear a field by sending its empty value. '
-			. 'Respect shapes: a list is an array, a date is ISO 8601, styledtext is HTML, a select takes one of its options, a deck is keyed by item id. '
+			. 'Respect shapes: a list is an array, a date is ISO 8601, styledtext is HTML, a markdown or styledmarkdown field is Markdown source (never HTML), a select takes one of its options, a deck is keyed by item id. '
 			. 'Never invent ids — use the schema\'s autogen rule or ask. Never write password or secret fields. Confirm before creating or deleting.';
 	}
 

@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Property\Service;
 
 use TotalCMS\Domain\Property\Data\CardData;
 use TotalCMS\Domain\Property\Data\DeckData;
+use TotalCMS\Domain\Property\Data\MarkdownData;
 use TotalCMS\Domain\Property\Data\PriceData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
@@ -49,6 +50,9 @@ readonly class PropertyFactory
 		// so it has its own Data class even though resolveType() returns 'number'.
 		if ($field === 'price') {
 			$className = PriceData::class;
+		} elseif (in_array($field, MarkdownData::FIELDS, true) && $type === 'string') {
+			// A string like any other, but stored without the HTML sanitizer.
+			$className = MarkdownData::class;
 		} else {
 			$className = 'TotalCMS\\Domain\\Property\\Data\\' . ucfirst($type) . 'Data';
 		}

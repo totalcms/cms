@@ -1,5 +1,6 @@
 /**
- * TiptapCodeView - CodeMirror 6 integration for HTML source editing.
+ * TiptapCodeView - CodeMirror 6 integration for source editing (HTML for
+ * styledtext, Markdown for the markdown field).
  * Toggle hides ProseMirror, shows CodeMirror instance.
  */
 
@@ -22,7 +23,8 @@ export default class TiptapCodeView {
 		this.active = true;
 
 		// Capture the editor wrapper's rendered height before hiding
-		const editorHeight = wrapper.offsetHeight;
+		// A field inside a closed dialog has no height yet.
+		const editorHeight = wrapper.offsetHeight || 300;
 
 		// Hide the editor wrapper
 		wrapper.style.display = 'none';
@@ -32,12 +34,15 @@ export default class TiptapCodeView {
 		this.editorContainer.className = 'ste-code-view';
 		this.container.appendChild(this.editorContainer);
 
-		// Initialize CodeMirror 6 via factory
+		// Initialize CodeMirror 6 via factory. `factory` names the
+		// TotalCMSCodeMirror method to use; the rest are editor options.
+		const { factory = 'createHtmlEditor', ...editorOptions } = this.options;
+
 		if (window.TotalCMSCodeMirror) {
-			this.editor = window.TotalCMSCodeMirror.createHtmlEditor(this.editorContainer, {
+			this.editor = window.TotalCMSCodeMirror[factory](this.editorContainer, {
 				value: html,
 				tabSize: 2,
-				...this.options,
+				...editorOptions,
 			});
 
 			// Use the same height as the editor wrapper so CodeMirror scrolls internally

@@ -20,6 +20,7 @@ export const lazyFieldTypes = {
 	range               : lazy(() => import('./range.js')),
 	price               : lazy(() => import('./price.js')),
 	styledtext          : lazy(() => import('./styledtext.js')),
+	styledmarkdown      : lazy(() => import('./styledmarkdown.js')),
 	localizedtext       : localized,
 	localizedtextarea   : localized,
 	localizedstyledtext : lazy(() => import('./localizedstyledtext.js')),

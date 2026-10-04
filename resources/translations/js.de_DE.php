@@ -31,4 +31,15 @@ return [
 
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.processing'             => 'Wird verarbeitet...',
+
+	// ── Markdown Field ──────────────────────────────────────────────────────
+	'markdown.visual_title'        => 'In den visuellen Editor wechseln?',
+	'markdown.visual_lossy'        => 'Dieser Inhalt verwendet {syntax}. Der visuelle Editor kann das nicht erhalten; beim Bearbeiten im visuellen Modus geht es verloren.',
+	'markdown.visual_confirm'      => 'Trotzdem wechseln',
+	'markdown.source_notice'       => 'Im Quelltextmodus geöffnet, weil dieser Inhalt {syntax} verwendet, was der visuelle Editor nicht erhalten kann.',
+	'markdown.syntax.html'         => 'rohes HTML',
+	'markdown.syntax.comment'      => 'HTML-Kommentare',
+	'markdown.syntax.footnote'     => 'Fußnoten',
+	'markdown.syntax.abbreviation' => 'Abkürzungen',
+	'markdown.syntax.linkedImage'  => 'verlinkte Bilder',
 ];

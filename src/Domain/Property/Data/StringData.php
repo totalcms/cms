@@ -11,6 +11,15 @@ class StringData extends PropertyData implements \Stringable
 {
 	public function __construct(public string $text = '', public array $settings = [])
 	{
+		$this->normalize();
+	}
+
+	/**
+	 * Clean the value on the way in: sanitize HTML, trim empty paragraphs,
+	 * apply the text transform. MarkdownData stores its value as written.
+	 */
+	protected function normalize(): void
+	{
 		// Sanitize HTML content unless explicitly disabled
 		$config        = Config::init();
 		$globalEnabled = $config->htmlclean['enabled'] ?? true;

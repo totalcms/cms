@@ -31,4 +31,15 @@ return [
 
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.processing'             => 'Przetwarzanie...',
+
+	// ── Markdown Field ──────────────────────────────────────────────────────
+	'markdown.visual_title'        => 'Przełączyć na edytor wizualny?',
+	'markdown.visual_lossy'        => 'Ta treść używa: {syntax}. Edytor wizualny nie może tego zachować; edycja w trybie wizualnym to usunie.',
+	'markdown.visual_confirm'      => 'Przełącz mimo to',
+	'markdown.source_notice'       => 'Otwarto w trybie źródłowym, ponieważ ta treść używa: {syntax}, czego edytor wizualny nie może zachować.',
+	'markdown.syntax.html'         => 'surowy HTML',
+	'markdown.syntax.comment'      => 'komentarze HTML',
+	'markdown.syntax.footnote'     => 'przypisy',
+	'markdown.syntax.abbreviation' => 'skróty',
+	'markdown.syntax.linkedImage'  => 'obrazy z linkiem',
 ];

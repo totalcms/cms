@@ -77,6 +77,7 @@ return [
 					['title' => 'Radio & Checklist', 'path' => 'fields/radio-checklist'],
 					['title' => 'Secret',                'path' => 'fields/secret'],
 					['title' => 'Select',                'path' => 'fields/select'],
+					['title' => 'Styled Markdown',       'path' => 'fields/styled-markdown'],
 					['title' => 'Styled Text',           'path' => 'fields/styled-text'],
 					['title' => 'SVG',                   'path' => 'fields/svg'],
 					['title' => 'Text Inputs',           'path' => 'fields/text-inputs'],

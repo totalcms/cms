@@ -87,15 +87,13 @@ export default class TiptapEditor {
 		this.editor = new Editor({
 			element: editorEl,
 			extensions: extensions,
-			content: this.textarea.value || '',
+			...this.initialContent(),
 			imageUploadConfig: this.buildUploadConfig('image'),
 			editorProps: this.buildEditorProps(),
 			onUpdate: ({ editor }) => {
 				// Use the editor handed to the callback, not this.editor: during
 				// the constructor's initial mount this.editor isn't assigned yet.
-				this.syncToTextarea(editor);
-				this.updateFooter();
-				this.options.onContentChanged?.();
+				this.handleUpdate(editor);
 			},
 			onSelectionUpdate: () => {
 				this.toolbar?.updateActiveStates();
@@ -103,7 +101,7 @@ export default class TiptapEditor {
 		});
 
 		// Create toolbar
-		this.toolbar = new TiptapToolbar(this.editor, this.options.toolbarConfig, this.options);
+		this.toolbar = new TiptapToolbar(this.editor, this.toolbarConfig(), this.options);
 		this.container.appendChild(this.toolbar.element);
 
 		// Listen for custom toolbar commands
@@ -134,7 +132,7 @@ export default class TiptapEditor {
 		}
 
 		// Create code view handler
-		this.codeView = new TiptapCodeView(this.container);
+		this.codeView = this.createCodeView();
 
 		// Create footer for char/word counters
 		this.buildFooter();
@@ -142,6 +140,29 @@ export default class TiptapEditor {
 		// Update active states initially
 		this.toolbar.updateActiveStates();
 		this.updateFooter();
+	}
+
+	// A document change: store it and tell the field. TiptapMarkdownEditor
+	// overrides this, because not every transaction there is an edit.
+	handleUpdate(editor) {
+		this.syncToTextarea(editor);
+		this.updateFooter();
+		this.options.onContentChanged?.();
+	}
+
+	// Seams for TiptapMarkdownEditor. All three run inside the constructor,
+	// before a subclass has assigned any of its own properties, so an
+	// override may read this.options and this.textarea only.
+	initialContent() {
+		return { content: this.textarea.value || '' };
+	}
+
+	toolbarConfig() {
+		return this.options.toolbarConfig;
+	}
+
+	createCodeView() {
+		return new TiptapCodeView(this.container);
 	}
 
 	buildExtensions() {
@@ -339,6 +360,9 @@ export default class TiptapEditor {
 				break;
 			case 'openBlockAttributesDialog':
 				this.openBlockAttributesDialog();
+				break;
+			case 'togglePreview':
+				this.togglePreview?.();
 				break;
 		}
 	}

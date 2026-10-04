@@ -404,7 +404,8 @@
 //------------------------------
 // Markdown Field
 //------------------------------
-.markdown-field .form-group-icon {
+.markdown-field .form-group-icon,
+.styledmarkdown-field .form-group-icon {
 	&:after {
 		mask-image : var(--icon-markdown);
 	}

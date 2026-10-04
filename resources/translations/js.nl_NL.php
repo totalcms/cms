@@ -31,4 +31,15 @@ return [
 
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.processing'             => 'Verwerken...',
+
+	// ── Markdown Field ──────────────────────────────────────────────────────
+	'markdown.visual_title'        => 'Overschakelen naar de visuele editor?',
+	'markdown.visual_lossy'        => 'Deze inhoud gebruikt {syntax}, wat de visuele editor niet kan behouden. Bewerken in de visuele modus verwijdert het.',
+	'markdown.visual_confirm'      => 'Toch overschakelen',
+	'markdown.source_notice'       => 'Geopend in bronmodus omdat deze inhoud {syntax} gebruikt, wat de visuele editor niet kan behouden.',
+	'markdown.syntax.html'         => 'onbewerkte HTML',
+	'markdown.syntax.comment'      => 'HTML-opmerkingen',
+	'markdown.syntax.footnote'     => 'voetnoten',
+	'markdown.syntax.abbreviation' => 'afkortingen',
+	'markdown.syntax.linkedImage'  => 'gelinkte afbeeldingen',
 ];

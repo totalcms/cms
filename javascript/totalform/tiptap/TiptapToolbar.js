@@ -46,6 +46,8 @@ const ICON_MAP = {
 	htmlSnippets:    'add-element',
 	anchor:          'anchor',
 	blockAttributes: 'code',
+	inlineCode:      'inline-code',
+	preview:         'preview',
 };
 
 const BUTTON_DEFS = {
@@ -79,6 +81,8 @@ const BUTTON_DEFS = {
 	hardBreak:       { command: 'setHardBreak',       label: 'Hard Break' },
 	anchor:          { command: 'openAnchorDialog',          label: 'Anchor ID' },
 	blockAttributes: { command: 'openBlockAttributesDialog', label: 'Element Attributes' },
+	inlineCode:      { command: 'toggleCode',                label: 'Inline Code' },
+	preview:         { command: 'togglePreview',             label: 'Preview' },
 };
 
 const DEFAULT_HEADING_LEVELS = [2, 3, 4];
@@ -157,11 +161,11 @@ export default class TiptapToolbar {
 					groupEl.appendChild(this.buildAlignDropdown());
 					continue;
 				}
-				if (buttonName === 'bulletList') {
+				if (buttonName === 'bulletList' && !this.options.plainLists) {
 					groupEl.appendChild(this.buildListDropdown('bulletList', BULLET_STYLES));
 					continue;
 				}
-				if (buttonName === 'orderedList') {
+				if (buttonName === 'orderedList' && !this.options.plainLists) {
 					groupEl.appendChild(this.buildListDropdown('orderedList', ORDERED_STYLES));
 					continue;
 				}
@@ -799,7 +803,7 @@ export default class TiptapToolbar {
 			'toggleCodeView', 'openLinkDialog', 'openImageDialog',
 			'openVideoDialog', 'openFileDialog', 'insertTable',
 			'setColor', 'setHighlight', 'setFontFamily', 'toggleFullscreen',
-			'openAnchorDialog', 'openBlockAttributesDialog',
+			'openAnchorDialog', 'openBlockAttributesDialog', 'togglePreview',
 		];
 
 		if (delegatedCommands.includes(command)) {
@@ -850,6 +854,10 @@ export default class TiptapToolbar {
 				case 'alignRight':     isActive = this.editor.isActive({ textAlign: 'right' }); break;
 				case 'alignJustify':   isActive = this.editor.isActive({ textAlign: 'justify' }); break;
 				case 'link':           isActive = this.editor.isActive('link'); break;
+				// Plain list buttons (the markdown toolbar); the list dropdowns are handled above.
+				case 'inlineCode':     isActive = this.editor.isActive('code'); break;
+				case 'bulletList':     isActive = this.editor.isActive('bulletList'); break;
+				case 'orderedList':    isActive = this.editor.isActive('orderedList'); break;
 			}
 
 			// A link needs a selection (or an existing link to edit). Disable the

@@ -31,4 +31,15 @@ return [
 
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.processing'             => 'Processing...',
+
+	// ── Markdown Field ──────────────────────────────────────────────────────
+	'markdown.visual_title'        => 'Switch to the visual editor?',
+	'markdown.visual_lossy'        => 'This content uses {syntax}, which the visual editor cannot keep. Editing in visual mode will remove it.',
+	'markdown.visual_confirm'      => 'Switch anyway',
+	'markdown.source_notice'       => 'Opened in source mode because this content uses {syntax}, which the visual editor cannot keep.',
+	'markdown.syntax.html'         => 'raw HTML',
+	'markdown.syntax.comment'      => 'HTML comments',
+	'markdown.syntax.footnote'     => 'footnotes',
+	'markdown.syntax.abbreviation' => 'abbreviations',
+	'markdown.syntax.linkedImage'  => 'linked images',
 ];

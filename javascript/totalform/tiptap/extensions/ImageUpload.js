@@ -313,6 +313,14 @@ function createImageDialog(editor, uploadConfig) {
 const ImageUpload = Image.extend({
 	name: 'image',
 
+	// popover: the width/float controls. Off for markdown, which cannot store them.
+	addOptions() {
+		return {
+			...this.parent?.(),
+			popover: true,
+		};
+	},
+
 	addAttributes() {
 		return {
 			...this.parent?.(),
@@ -425,7 +433,7 @@ const ImageUpload = Image.extend({
 					},
 				},
 			}),
-			createImagePopoverPlugin(this.editor),
+			...(this.options.popover === false ? [] : [createImagePopoverPlugin(this.editor)]),
 		];
 	},
 });

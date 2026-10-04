@@ -31,4 +31,15 @@ return [
 
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.processing'             => 'Procesando...',
+
+	// ── Markdown Field ──────────────────────────────────────────────────────
+	'markdown.visual_title'        => '¿Cambiar al editor visual?',
+	'markdown.visual_lossy'        => 'Este contenido usa {syntax}, que el editor visual no puede conservar. Al editar en modo visual se eliminará.',
+	'markdown.visual_confirm'      => 'Cambiar de todos modos',
+	'markdown.source_notice'       => 'Se abrió en modo de código fuente porque este contenido usa {syntax}, que el editor visual no puede conservar.',
+	'markdown.syntax.html'         => 'HTML sin procesar',
+	'markdown.syntax.comment'      => 'comentarios HTML',
+	'markdown.syntax.footnote'     => 'notas al pie',
+	'markdown.syntax.abbreviation' => 'abreviaturas',
+	'markdown.syntax.linkedImage'  => 'imágenes enlazadas',
 ];

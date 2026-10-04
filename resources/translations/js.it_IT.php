@@ -31,4 +31,15 @@ return [
 
 	// ── Depot Field ─────────────────────────────────────────────────────────
 	'depot.processing'             => 'Elaborazione...',
+
+	// ── Markdown Field ──────────────────────────────────────────────────────
+	'markdown.visual_title'        => "Passare all'editor visuale?",
+	'markdown.visual_lossy'        => "Questo contenuto usa {syntax}, che l'editor visuale non può conservare. La modifica in modalità visuale lo rimuoverà.",
+	'markdown.visual_confirm'      => 'Passa comunque',
+	'markdown.source_notice'       => "Aperto in modalità sorgente perché questo contenuto usa {syntax}, che l'editor visuale non può conservare.",
+	'markdown.syntax.html'         => 'HTML grezzo',
+	'markdown.syntax.comment'      => 'commenti HTML',
+	'markdown.syntax.footnote'     => 'note a piè di pagina',
+	'markdown.syntax.abbreviation' => 'abbreviazioni',
+	'markdown.syntax.linkedImage'  => 'immagini con link',
 ];

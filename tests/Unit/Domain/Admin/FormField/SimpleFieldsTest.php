@@ -6,6 +6,7 @@ use TotalCMS\Domain\Admin\FormField\ColorField;
 use TotalCMS\Domain\Admin\FormField\ListField;
 use TotalCMS\Domain\Admin\FormField\PriceField;
 use TotalCMS\Domain\Admin\FormField\RangeField;
+use TotalCMS\Domain\Admin\FormField\StyledmarkdownField;
 use TotalCMS\Domain\Admin\FormField\StyledtextField;
 use TotalCMS\Domain\Admin\FormField\UrlField;
 use TotalCMS\Domain\Admin\TotalForm;
@@ -180,5 +181,40 @@ describe('Simple form fields', function (): void {
 		$html  = $field->build();
 
 		expect($html)->toContain('styledtext-field');
+	});
+
+	// --- StyledmarkdownField ---
+
+	test('StyledmarkdownField → wraps textarea in the shared editor wrapper', function (): void {
+		$field = new StyledmarkdownField(form: $this->form, name: 'body', value: "# Hi\n\n* one");
+		$html  = $field->build();
+
+		expect($html)->toContain('styledtext-wrapper markdown-wrapper');
+		expect($html)->toContain('<textarea');
+		expect($html)->toContain('# Hi');
+	});
+
+	test('StyledmarkdownField → renders with the styledmarkdown-field class and type', function (): void {
+		$field = new StyledmarkdownField(form: $this->form, name: 'body');
+		$html  = $field->build();
+
+		expect($html)->toContain('styledmarkdown-field');
+		expect($html)->toContain('data-type="styledmarkdown"');
+	});
+
+	test('StyledmarkdownField → escapes HTML in the stored markdown', function (): void {
+		$field = new StyledmarkdownField(form: $this->form, name: 'body', value: '</textarea><script>x</script>');
+		$html  = $field->build();
+
+		expect($html)->not->toContain('</textarea><script>');
+		expect($html)->toContain('&lt;/textarea&gt;&lt;script&gt;');
+	});
+
+	test('StyledmarkdownField → an entity in the markdown survives the form round trip', function (): void {
+		$field = new StyledmarkdownField(form: $this->form, name: 'body', value: 'Fish &amp; chips &copy;');
+		$html  = $field->build();
+
+		// The browser decodes this back to the stored text.
+		expect($html)->toContain('Fish &amp;amp; chips &amp;copy;');
 	});
 });
