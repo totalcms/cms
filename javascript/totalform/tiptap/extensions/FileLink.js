@@ -1,6 +1,7 @@
 /**
  * FileLink Extension
- * File upload that inserts download links.
+ * File upload that inserts download links. `target` is an insert target
+ * (see insertTargets.js): { getContent(), insertFileLink({href, text}) }.
  * Includes Files tab for managing previously uploaded files.
  */
 
@@ -14,7 +15,7 @@ import { apiErrorMessage, rejectNonOk } from '../../../api-error';
  * so it stacks correctly above other modals (e.g., a deck dialog hosting the
  * styledtext field).
  */
-function createFileDialog(editor, uploadConfig) {
+function createFileDialog(target, uploadConfig) {
 	const dialog = document.createElement('dialog');
 	dialog.className = 'ste-dialog ste-dialog--file-manager';
 
@@ -211,7 +212,7 @@ function createFileDialog(editor, uploadConfig) {
 	}
 
 	async function handleDeleteFile(filename, row) {
-		const editorHtml = editor.getHTML();
+		const editorHtml = target.getContent();
 		const inUse = editorHtml.includes(filename);
 
 		const message = inUse
@@ -249,15 +250,11 @@ function createFileDialog(editor, uploadConfig) {
 
 		if (activePanel === 'upload' && uploadedUrl) {
 			const linkText = linkTextInput.value || uploadedName || 'Download file';
-			editor.chain().focus().insertContent(
-				`<a href="${uploadedUrl}" target="_blank" rel="noopener">${linkText}</a>`
-			).run();
+			target.insertFileLink({ href: uploadedUrl, text: linkText });
 			close();
 		} else if (activePanel === 'files' && selectedFileUrl) {
 			const linkText = linkTextInput.value || selectedFileName || 'Download file';
-			editor.chain().focus().insertContent(
-				`<a href="${selectedFileUrl}" target="_blank" rel="noopener">${linkText}</a>`
-			).run();
+			target.insertFileLink({ href: selectedFileUrl, text: linkText });
 			close();
 		}
 	}

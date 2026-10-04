@@ -30,6 +30,7 @@ import { Youtube, createVideoDialog } from './extensions/VideoEmbed.js';
 import VideoNode from './extensions/VideoNode.js';
 import AudioNode from './extensions/AudioNode.js';
 import { createFileDialog } from './extensions/FileLink.js';
+import { tiptapInsertTarget } from './extensions/insertTargets.js';
 import { createLinkDialog } from './extensions/LinkDialog.js';
 import { createAnchorDialog } from './extensions/AnchorDialog.js';
 import { createBlockAttributesDialog } from './extensions/BlockAttributesDialog.js';
@@ -410,7 +411,7 @@ export default class TiptapEditor {
 	}
 
 	openFileDialog() {
-		createFileDialog(this.editor, this.buildUploadConfig('file'));
+		createFileDialog(tiptapInsertTarget(this.editor), this.buildUploadConfig('file'));
 	}
 
 	insertTable() {

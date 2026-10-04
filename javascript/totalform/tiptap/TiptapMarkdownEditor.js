@@ -17,8 +17,6 @@ import TableHeader from '@tiptap/extension-table-header';
 import CharacterCount from '@tiptap/extension-character-count';
 import { TaskList, TaskItem } from '@tiptap/extension-list';
 import { Markdown } from '@tiptap/markdown';
-import DOMPurify from 'dompurify';
-import { Marked } from 'marked';
 
 import TiptapEditor from './TiptapEditor.js';
 import TiptapCodeView from './TiptapCodeView.js';
@@ -26,6 +24,7 @@ import ImageUpload from './extensions/ImageUpload.js';
 import TablePopover from './extensions/TablePopover.js';
 import { patchMarkdownSerializer } from './markdown/serializer.js';
 import { findLossySyntax } from './markdown/lossy.js';
+import { renderMarkdownPreview } from '../markdown/preview.js';
 import tcmsConfirm from '../../confirm-dialog';
 import { t } from '../../i18n';
 
@@ -49,10 +48,6 @@ const SYNTAX_LABELS = {
 
 // The view buttons stay usable while the visual editor is hidden.
 const VIEW_COMMANDS = ['toggleCodeView', 'togglePreview', 'toggleFullscreen'];
-
-// A parser of its own: Tiptap's instance carries tokenizers with no HTML
-// renderer (task lists) and throws when asked to render.
-const previewParser = new Marked({ gfm: true, breaks: true });
 
 export default class TiptapMarkdownEditor extends TiptapEditor {
 
@@ -324,7 +319,7 @@ export default class TiptapMarkdownEditor extends TiptapEditor {
 	openPreview() {
 		this.previewEl = document.createElement('div');
 		this.previewEl.className = 'ste-preview';
-		this.previewEl.innerHTML = DOMPurify.sanitize(previewParser.parse(this.getValue()));
+		this.previewEl.innerHTML = renderMarkdownPreview(this.getValue());
 
 		this.wrapperEl().style.display = 'none';
 		if (this.codeView.editorContainer) this.codeView.editorContainer.style.display = 'none';
