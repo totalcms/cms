@@ -6,6 +6,7 @@ use TotalCMS\Domain\Admin\FormField\ColorField;
 use TotalCMS\Domain\Admin\FormField\ListField;
 use TotalCMS\Domain\Admin\FormField\PriceField;
 use TotalCMS\Domain\Admin\FormField\RangeField;
+use TotalCMS\Domain\Admin\FormField\MarkdownField;
 use TotalCMS\Domain\Admin\FormField\StyledmarkdownField;
 use TotalCMS\Domain\Admin\FormField\StyledtextField;
 use TotalCMS\Domain\Admin\FormField\UrlField;
@@ -216,5 +217,48 @@ describe('Simple form fields', function (): void {
 
 		// The browser decodes this back to the stored text.
 		expect($html)->toContain('Fish &amp;amp; chips &amp;copy;');
+	});
+
+	// --- MarkdownField ---
+
+	test('MarkdownField → wraps textarea in the shared editor wrapper', function (): void {
+		$field = new MarkdownField(form: $this->form, name: 'body', value: "# Hi\n\n* one");
+		$html  = $field->build();
+
+		expect($html)->toContain('styledtext-wrapper markdown-wrapper');
+		expect($html)->toContain('<textarea');
+		expect($html)->toContain('# Hi');
+	});
+
+	test('MarkdownField → renders with the markdown-field class and type', function (): void {
+		$field = new MarkdownField(form: $this->form, name: 'body');
+		$html  = $field->build();
+
+		expect($html)->toContain('markdown-field');
+		expect($html)->toContain('data-type="markdown"');
+		expect($html)->not->toContain('styledmarkdown');
+	});
+
+	test('MarkdownField → escapes HTML in the stored markdown', function (): void {
+		$field = new MarkdownField(form: $this->form, name: 'body', value: '</textarea><script>x</script>');
+		$html  = $field->build();
+
+		expect($html)->not->toContain('</textarea><script>');
+		expect($html)->toContain('&lt;/textarea&gt;&lt;script&gt;');
+	});
+
+	test('MarkdownField → keeps a leading newline in the value', function (): void {
+		// The HTML parser drops one newline straight after <textarea>, so a
+		// value that begins with one would lose it on an untouched save.
+		$field = new MarkdownField(form: $this->form, name: 'body', value: "\nabc");
+
+		expect($field->build())->toContain(">\n\nabc</textarea>");
+	});
+
+	test('StyledmarkdownField → is the markdown field with its own type', function (): void {
+		$field = new StyledmarkdownField(form: $this->form, name: 'body');
+
+		expect($field)->toBeInstanceOf(MarkdownField::class);
+		expect($field->build())->toContain('data-type="styledmarkdown"');
 	});
 });

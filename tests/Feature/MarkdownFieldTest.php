@@ -84,3 +84,10 @@ it('renders stored HTML escaped through the markdown filter', function (): void 
 		->and($html)->not->toContain('<b onclick')
 		->and($html)->toContain('&lt;script&gt;');
 });
+
+it('stores footnotes, raw HTML and comments in a markdown field as written', function (): void {
+	$value = "Claim.[^1]\n\n<div class=\"x\">raw</div>\n\n<!-- note -->\n\n[^1]: Note.\n";
+	$this->saver->saveObject('notes', ['id' => 'one', 'source' => $value]);
+
+	expect($this->fetcher->fetchObjectFromDisk('notes', 'one')->toArray()['source'])->toBe($value);
+});

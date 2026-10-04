@@ -2,6 +2,7 @@
 title: "Styled Markdown"
 description: "The styledmarkdown field edits Markdown in the Styled Text visual editor, with a source mode and preview. It stores Markdown source; render it with the markdown filter."
 related:
+  - fields/markdown
   - fields/styled-text
   - twig/markdown
   - collections/storage-format
@@ -10,6 +11,8 @@ related:
 # Styled Markdown
 
 The `styledmarkdown` field stores a Markdown string. It uses the same editor as [Styled Text](docs/fields/styled-text), limited to what Markdown can express, so editors get a toolbar and writers who know Markdown get the source.
+
+For writing the Markdown source yourself, use the [`markdown`](docs/fields/markdown) field. Both store the same value, so a schema can switch between them at any time.
 
 Use it when the content should stay as Markdown: documentation, changelogs, or bodies in a [markdown-format collection](docs/collections/storage-format). Use [Styled Text](docs/fields/styled-text) when editors need color, alignment, or embedded video.
 
@@ -58,7 +61,7 @@ These Styled Text settings work the same way in this field. Each links to its de
 | [`toolbarConfig`](docs/fields/styled-text#toolbar-configuration) | The toolbar buttons and their groups. See [Changing the toolbar](docs/fields/styled-markdown#changing-the-toolbar) for the buttons this field has. |
 | [`headingLevels`](docs/fields/styled-text#heading-levels) | The levels in the heading menu. The default is 2, 3 and 4. |
 | [`charCounterCount`, `charCounterMax`, `wordCounterCount`, `wordCounterMax`](docs/fields/styled-text#character-and-word-counters) | Counters under the editor. They count the visible text, not the Markdown characters, and a maximum only highlights when it is exceeded. |
-| [`imagePreset`, `imageUploadRules`, `fileUploadRules`](docs/fields/styled-text#upload-settings) | The preset and validation rules for uploads. |
+| [`imagePreset`, `imageUploadRules`](docs/fields/styled-text#upload-settings) | The preset and validation rules for image uploads. |
 
 Custom inline styles, custom inline classes, block classes, HTML snippets and the color palette do nothing in this field. Markdown has no syntax for them.
 

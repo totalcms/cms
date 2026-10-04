@@ -57,7 +57,7 @@ happen.
 | a headline, name, label | `text` | |
 | a summary, excerpt, plain note | `textarea` | `text`, `styledtext` |
 | a formatted body | `styledtext` | `textarea` |
-| a body kept as Markdown source | `styledmarkdown` (render with `\|markdown`) | `textarea`, `styledtext` |
+| a body kept as Markdown source | `markdown` (source editor) or `styledmarkdown` (visual editor); render with `\|markdown` | `textarea`, `styledtext` |
 | a date / a timestamp | `date` / `datetime` | `text` |
 | yes or no (featured, draft, in stock) | `toggle` | `text`, `select` |
 | one of a fixed list (status, size, layout) | `select` (`radio` for 2–5 shown at once) | `text` |
@@ -89,7 +89,7 @@ Every property has a `field` (the editor) and a `type` (the stored shape).
 Get the type one of three ways, in order of preference:
 
 1. **Omit it.** On save the type is filled from the field: `text`/`textarea`/
-   `select`/`styledtext`/`styledmarkdown` → `string`, `checkbox`/`toggle` → `boolean`,
+   `select`/`styledtext`/`markdown`/`styledmarkdown` → `string`, `checkbox`/`toggle` → `boolean`,
    `number`/`price`/`range` → `number`, `checklist`/`multiselect` → `array`,
    and every other field → the type of the same name (`code` → `code`,
    `json` → `json`, `url` → `url`, `list` → `list`, `image` → `image` …).

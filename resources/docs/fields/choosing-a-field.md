@@ -32,6 +32,7 @@ happen. Every one of those has a field built for it.
 | a name, headline or short label | `text` | Add `pattern`, `minLength`, `maxLength` for codes with a known format. |
 | a summary, excerpt or plain note | `textarea` | No formatting. |
 | an article body, formatted content | `styledtext` | Rich text, stored as HTML. |
+| content written as Markdown source | `markdown` | A source editor; stored as written. Render with the `markdown` filter. |
 | content kept as Markdown source, edited visually | `styledmarkdown` | The Styled Text editor, stored as Markdown. Render with the `markdown` filter. |
 | an embed snippet, custom CSS, raw markup | `code` | Set `mode` to `html`, `css` or `javascript`. |
 | an email address | `email` | Validated. Never `text`. |

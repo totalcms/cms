@@ -55,6 +55,12 @@
 			"help": "styledtext field. Rich text (Tiptap) editor storing HTML. Use for: article bodies and any content an editor formats with headings, links, lists or images.",
 			"field": "styledtext"
 		},
+		"markdown": {
+			"type": "string",
+			"label": "Markdown",
+			"help": "markdown field. A Markdown source editor with a toolbar, preview and fullscreen; stored as written. Render it with the |markdown filter. Use for: content written by people who know Markdown, and Markdown that uses footnotes or raw HTML.",
+			"field": "markdown"
+		},
 		"styledmarkdown": {
 			"type": "string",
 			"label": "Styled Markdown",

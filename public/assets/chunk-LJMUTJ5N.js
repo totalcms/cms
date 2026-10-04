@@ -1,0 +1,2 @@
+import{a as o}from"./chunk-KLKOGLWR.js";import{a as i}from"./chunk-4QSQTZY7.js";import{a as n}from"./chunk-CW345KIZ.js";var s=new o({gfm:!0,breaks:!0}),u=["form","button","select","textarea","style"];function f(c){let t=String(c??"");if(t==="")return"";let r=document.createElement("template");r.innerHTML=i.sanitize(s.parse(t),{FORBID_TAGS:u});for(let e of r.content.querySelectorAll("input"))e.type==="checkbox"?(e.disabled=!0,e.removeAttribute("name")):e.remove();return r.innerHTML}n(f,"renderMarkdownPreview");export{f as a};
+//# sourceMappingURL=chunk-LJMUTJ5N.js.map

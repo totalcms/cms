@@ -6,6 +6,7 @@ import RangeSlider from './range';
 import PriceField from './price';
 import StyledTextField from './styledtext';
 import StyledMarkdownField from './styledmarkdown';
+import MarkdownField from './markdown';
 import LocalizedTextField from './localizedtext';
 import LocalizedStyledTextField from './localizedstyledtext';
 import SVGField from './svg';
@@ -40,6 +41,7 @@ export const allFieldTypes = {
 	price               : PriceField,
 	styledtext          : StyledTextField,
 	styledmarkdown      : StyledMarkdownField,
+	markdown            : MarkdownField,
 	localizedtext       : LocalizedTextField,
 	localizedtextarea   : LocalizedTextField,
 	localizedstyledtext : LocalizedStyledTextField,

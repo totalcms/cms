@@ -71,3 +71,97 @@
 	opacity        : 0.4;
 	pointer-events : none;
 }
+
+//------------------------------
+// Markdown source editor (the `markdown` field)
+//
+// .ste-source holds CodeMirror, or a plain textarea on a page without it.
+// The preview replaces the source inside the form (.ste-previewing) and sits
+// beside it in fullscreen (.ste-previewing.ste-fullscreen).
+//------------------------------
+
+.ste-markdown-source {
+	.ste-source-body {
+		display : flex;
+	}
+
+	.ste-source {
+		flex      : 1 1 0;
+		min-width : 0;
+
+		.cm-editor {
+			min-height : var(--ste-source-min, 200px);
+			max-height : var(--ste-source-max, 800px);
+		}
+
+		// Keep the text off the edges, matching the plain textarea's 1em.
+		// CodeMirror wants vertical padding on the content and horizontal
+		// padding on each line, so selections and the cursor stay aligned.
+		.cm-content {
+			padding : 1em 0;
+		}
+
+		.cm-line {
+			padding : 0 1em;
+		}
+	}
+
+	.ste-source-textarea {
+		display     : block;
+		width       : 100%;
+		min-height  : var(--ste-source-min, 200px);
+		max-height  : var(--ste-source-max, 800px);
+		padding     : 1em;
+		border      : 0;
+		resize      : vertical;
+		font-family : ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size   : 0.9em;
+		line-height : 1.5;
+		color       : oklch(var(--totalform-text-color));
+		background  : transparent;
+
+		&:focus {
+			outline : none;
+		}
+	}
+
+	.ste-preview {
+		display    : none;
+		flex       : 1 1 0;
+		min-width  : 0;
+		min-height : var(--ste-source-min, 200px);
+		max-height : var(--ste-source-max, 800px);
+	}
+
+	&.ste-previewing .ste-preview {
+		display : block;
+	}
+
+	&.ste-previewing:not(.ste-fullscreen) .ste-source {
+		display : none;
+	}
+
+	&.ste-fullscreen {
+		.ste-source-body {
+			flex       : 1 1 auto;
+			min-height : 0;
+		}
+
+		.ste-source,
+		.ste-preview {
+			overflow-y : auto;
+			max-height : none;
+		}
+
+		.ste-source .cm-editor,
+		.ste-source-textarea {
+			height     : 100%;
+			max-height : none;
+			resize     : none;
+		}
+
+		&.ste-previewing .ste-preview {
+			border-left : 1px solid oklch(var(--totalform-border-color));
+		}
+	}
+}

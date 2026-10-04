@@ -1,5 +1,6 @@
 import TotalField from "./totalfield.js";
 import TiptapEditor from "./tiptap/TiptapEditor.js";
+import { editorUploadUrl } from "./editor-uploads.js";
 import tcmsConfirm from "../confirm-dialog";
 import { t } from "../i18n";
 
@@ -81,10 +82,7 @@ export default class StyledTextField extends TotalField {
 	}
 
 	uploadAPI() {
-		const ctx = this.getUploadContext();
-		if (!ctx) return null;
-		const path = ctx.subpath ? `/${ctx.subpath}` : '';
-		return this.api.buildApiQuery(`/upload/${ctx.collection}/${ctx.id}/${ctx.property}${path}`);
+		return editorUploadUrl(this);
 	}
 
 	updateUploadURLs() {
