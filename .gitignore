@@ -46,6 +46,11 @@ config/env.php
 /docs/superpowers
 graphify-out/
 
+# Source maps are a local debugging aid. They never ship (.gitattributes
+# export-ignores *.map, and the release script uploads its own to Sentry), and
+# tracking them doubled the files every JS change touched.
+/public/assets/*.map
+
 # Mermaid ships a lazy chunk per diagram type; the data visualizers only render
 # erDiagram (Collection Visualizer) and flowchart (Object Visualizer), so the
 # other renderers are emitted by the build but never loaded. Keep them out of git

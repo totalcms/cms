@@ -404,7 +404,8 @@ print_info "Regenerating bundle integrity manifest..."
 composer run bundle
 
 print_info "Committing release artifacts..."
-git add -f public/assets/
+# -f because the unused Mermaid chunks are gitignored; source maps stay out.
+git add -f -- public/assets/ ':(exclude)public/assets/*.map'
 git add version.json code-report.txt checksums.txt resources/bundle
 if git diff --cached --quiet; then
     print_info "No artifact changes to commit"
