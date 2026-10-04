@@ -10,6 +10,7 @@ use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 use TotalCMS\Domain\Twig\Service\AssetRenderer;
+use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
@@ -66,6 +67,7 @@ class TotalCMSTwigAdapter
 		public LocaleTwigAdapter $locale,
 		public UtilsTwigAdapter $utils,
 		public SeoTwigAdapter $seo,
+		private readonly ?\Closure $twigEngineFactory = null,
 	) {
 		$this->logger     = $this->loggerFactory->channelLogger(LogChannel::Twig);
 		$this->env        = $this->config->env;
@@ -416,7 +418,35 @@ class TotalCMSTwigAdapter
 	 */
 	public function adminAssetsHead(): string
 	{
-		return AssetRenderer::head($this->adminAssetsList) . $this->adminAccentStyle();
+		return AssetRenderer::head($this->adminAssetsList) . $this->adminAccentStyle() . $this->sentryScript();
+	}
+
+	/**
+	 * The browser error-reporting snippet, when the `sentry` setting is on.
+	 *
+	 * Part of the head helper so a customer admin page (the Stacks Admin Core,
+	 * or any page calling cms.adminAssetsHead()) reports errors in the admin
+	 * scripts as the dashboard does. Such a page also runs the customer's own
+	 * scripts, so reports are limited to errors thrown by Total CMS's assets
+	 * or its dashboard pages. A render failure costs the snippet, not the page.
+	 */
+	private function sentryScript(): string
+	{
+		if ($this->config->sentry !== true || !$this->twigEngineFactory instanceof \Closure) {
+			return '';
+		}
+
+		try {
+			$engine = ($this->twigEngineFactory)();
+
+			return $engine instanceof TwigEngine
+				? $engine->render('partials/sentry.twig', ['sentryAllowUrls' => [$this->api . '/assets/', $this->dashboard . '/']])
+				: '';
+		} catch (\Throwable $e) {
+			$this->logger->warning('Could not render the Sentry snippet: ' . $e->getMessage());
+
+			return '';
+		}
 	}
 
 	/**

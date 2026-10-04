@@ -9,6 +9,12 @@
 			// Explicit privacy guarantee (also the SDK default): no client
 			// IPs or user info attached to browser error reports.
 			sendDefaultPii: false,
+{% if sentryAllowUrls is defined and sentryAllowUrls %}
+			// Report only errors thrown by Total CMS's own scripts or dashboard
+			// pages. Set when the snippet comes from cms.adminAssetsHead(), which
+			// also runs on a customer's own admin page next to their scripts.
+			allowUrls: {{ sentryAllowUrls|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }},
+{% endif %}
 			beforeSend(event, hint) {
 				const error = hint.originalException;
 

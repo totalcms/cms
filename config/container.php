@@ -601,6 +601,8 @@ return [
 		new LocaleTwigAdapter($container->get(TranslationService::class), $container->get(Config::class)),
 		new UtilsTwigAdapter(),
 		$container->get(SeoTwigAdapter::class),
+		// Lazy: the engine's `cms` global is this adapter.
+		fn (): TwigEngine => $container->get(TwigEngine::class),
 	),
 
 	// HttpClientInterface → GuzzleHttpClient. Interface binding (autowiring can't

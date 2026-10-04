@@ -38,8 +38,7 @@
 		})();
 	</script>
 
-	{% include 'partials/sentry.twig' %}
-
+	{# Sentry comes from cms.adminAssetsHead() below, so a customer admin page gets it too. #}
 	<meta name="csrf-token" content="{{ csrf_token() }}">
     <base href="{{ cms.dashboard }}/">
 
