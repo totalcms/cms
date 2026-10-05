@@ -5,7 +5,6 @@ namespace TotalCMS\Domain\Feed\Service;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Support\Config;
 
 /**
@@ -22,7 +21,6 @@ class RssBuilder
 		'media'   => 'media',
 		'author'  => 'author',
 		'date'    => 'updated',
-		'draft'   => 'draft',
 	];
 
 	/** @var array<string,string> */
@@ -32,16 +30,31 @@ class RssBuilder
 		private readonly IndexFilter $indexFilter,
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly ObjectUrlBuilder $objectUrlBuilder,
-		private readonly SchemaFetcher $schemaFetcher,
 		private readonly Config $config,
 		private readonly FeedWriter $writer,
 	) {
 	}
 
-	/** @param array<string,string> $fieldMap */
+	/**
+	 * Remap which object field feeds each item slot. Only the keys of
+	 * {@see DEFAULT_FIELD_MAP} are taken, and only non-empty strings — the
+	 * caller hands over a whole query string. `draft` is deliberately not one
+	 * of them: see {@see isDraft()}.
+	 *
+	 * @param array<string,mixed> $fieldMap
+	 */
 	public function setFieldMap(array $fieldMap): void
 	{
-		$this->fieldMap = array_merge(self::DEFAULT_FIELD_MAP, $fieldMap);
+		$map = self::DEFAULT_FIELD_MAP;
+
+		foreach (array_keys($map) as $key) {
+			$field = $fieldMap[$key] ?? null;
+			if (is_string($field) && $field !== '') {
+				$map[$key] = $field;
+			}
+		}
+
+		$this->fieldMap = $map;
 	}
 
 	/** @param array<string,string> $options */
@@ -52,14 +65,6 @@ class RssBuilder
 			throw new \Exception('Collection not found: ' . $collection);
 		}
 
-		// Auto-filter drafts for blog schemas if no include/exclude filters are defined
-		if (!isset($options['include']) && !isset($options['exclude'])) {
-			$schemaData = $this->schemaFetcher->fetchSchema($collectionData->schema);
-			if (in_array($schemaData->id, ['blog', 'blog-legacy'], true)) {
-				$options['exclude'] = 'draft:true';
-			}
-		}
-
 		// Extract limit (default: 25, 0 or -1 means no limit)
 		$limit = isset($options['limit']) ? (int)$options['limit'] : 25;
 		unset($options['limit']);
@@ -68,6 +73,11 @@ class RssBuilder
 
 		// Fetch and filter objects
 		$objects = $this->indexFilter->fetchFilteredIndex($collection, $options);
+
+		// Drafts never reach a public feed. Done here, in code, for every
+		// schema: as an `exclude` default it applied to the blog schemas only
+		// and was replaced by any include/exclude the request carried.
+		$objects = array_filter($objects, fn (array $object): bool => !$this->isDraft($object));
 
 		// Sort by date (newest first)
 		usort($objects, function (array $a, array $b): int {
@@ -95,6 +105,19 @@ class RssBuilder
 		}
 
 		return $this->writer->write($meta, $items, 'rss');
+	}
+
+	/**
+	 * Whether an index row is a draft. Always the literal `draft` property —
+	 * were the field mappable, `?draft=anything` would switch the filter off.
+	 * A schema that has `draft` but does not index it is not covered: the feed
+	 * reads index rows.
+	 *
+	 * @param array<string,mixed> $object
+	 */
+	private function isDraft(array $object): bool
+	{
+		return filter_var($object['draft'] ?? false, FILTER_VALIDATE_BOOLEAN);
 	}
 
 	/**

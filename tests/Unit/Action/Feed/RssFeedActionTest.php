@@ -173,4 +173,34 @@ final class RssFeedActionTest extends TestCase
 
 		($this->action)($this->request, $this->response, $args);
 	}
+
+	public function testDropsQueryKeysTheFeedDoesNotDocument(): void
+	{
+		$uri = $this->createMock(UriInterface::class);
+		$uri->method('__toString')->willReturn('https://example.com/feed');
+
+		$this->request->method('getUri')->willReturn($uri);
+		$this->request->method('getQueryParams')->willReturn([
+			'content' => 'body',
+			'exclude' => 'category:news',
+			'limit'   => '5',
+			'draft'   => 'anything',
+			'rssurl'  => 'https://evil.example/feed',
+			'bogus'   => 'x',
+			'title'   => ['array'],
+		]);
+
+		$expected = [
+			'content' => 'body',
+			'exclude' => 'category:news',
+			'limit'   => '5',
+			'rssurl'  => 'https://example.com/feed',
+		];
+
+		$this->rssBuilder->expects($this->once())->method('setFieldMap')->with($expected);
+		$this->rssBuilder->expects($this->once())->method('buildFeed')->with('blog', $expected)->willReturn('');
+		$this->xmlRenderer->method('xml')->willReturn($this->response);
+
+		($this->action)($this->request, $this->response, ['collection' => 'blog']);
+	}
 }

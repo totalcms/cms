@@ -36,7 +36,6 @@ final class RssBuilderTest extends TestCase
 			$this->indexFilter,
 			$this->collectionFetcher,
 			$this->objectUrlBuilder,
-			$this->schemaFetcher,
 			$this->config,
 			new FeedWriter($this->config),
 		);
@@ -189,27 +188,98 @@ final class RssBuilderTest extends TestCase
 		$this->assertStringNotContainsString('Broken Post', $result);
 	}
 
-	public function testBuildFeedAutoFiltersDraftsForBlogSchema(): void
+	/**
+	 * Build a feed over the given index rows, whatever the schema.
+	 *
+	 * @param list<array<string,mixed>> $rows
+	 * @param array<string,string>      $options
+	 */
+	private function feedOf(array $rows, array $options = []): string
 	{
 		$collectionData         = $this->createMock(CollectionData::class);
-		$collectionData->schema = 'blog';
+		$collectionData->schema = 'articles';
 
-		$schemaData     = $this->createMock(SchemaData::class);
-		$schemaData->id = 'blog';
+		$this->collectionFetcher->method('fetchCollection')->willReturn($collectionData);
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn($rows);
+		$this->objectUrlBuilder->method('buildUrl')->willReturnCallback(
+			static fn ($collection, array $object): string => '/articles/' . $object['id'],
+		);
+		$this->objectUrlBuilder->method('hasEmptySegments')->willReturn(false);
 
-		$this->collectionFetcher->method('fetchCollection')
-			->willReturn($collectionData);
+		return $this->builder->buildFeed('articles', $options);
+	}
 
-		$this->schemaFetcher->method('fetchSchema')
-			->willReturn($schemaData);
+	/** @return list<array<string,mixed>> */
+	private function publishedAndDraft(): array
+	{
+		return [
+			['id' => 'live', 'title' => 'Published Post', 'updated' => '2024-01-15', 'draft' => false],
+			['id' => 'hidden', 'title' => 'Secret Draft', 'updated' => '2024-01-16', 'draft' => true],
+		];
+	}
 
-		// Expect exclude filter to be applied
-		$this->indexFilter->expects($this->once())
-			->method('fetchFilteredIndex')
-			->with('test', $this->callback(fn ($options): bool => isset($options['exclude']) && $options['exclude'] === 'draft:true'))
-			->willReturn([]);
+	public function testDraftsAreDroppedForAnySchema(): void
+	{
+		// Used to be filtered for the `blog` schemas only; every other schema
+		// with a `draft` field served its drafts in full.
+		$result = $this->feedOf($this->publishedAndDraft());
 
-		$this->builder->buildFeed('test');
+		$this->assertStringContainsString('Published Post', $result);
+		$this->assertStringNotContainsString('Secret Draft', $result);
+	}
+
+	public function testDraftsStayDroppedWhenTheRequestCarriesItsOwnFilters(): void
+	{
+		// The old draft filter was an `exclude` default, so any include or
+		// exclude in the query string replaced it — drafts and all.
+		foreach ([['exclude' => 'title:zzz'], ['include' => 'title:Post']] as $options) {
+			$this->setUp();
+			$result = $this->feedOf($this->publishedAndDraft(), $options);
+
+			$this->assertStringContainsString('Published Post', $result);
+			$this->assertStringNotContainsString('Secret Draft', $result);
+		}
+	}
+
+	public function testDraftFieldCannotBeRemapped(): void
+	{
+		// A mappable draft field would be an off switch: ?draft=anything.
+		$this->builder->setFieldMap(['draft' => 'nosuchfield']);
+		$result = $this->feedOf($this->publishedAndDraft());
+
+		$this->assertStringNotContainsString('Secret Draft', $result);
+	}
+
+	public function testDraftValuesStoredAsStringsAreUnderstood(): void
+	{
+		$result = $this->feedOf([
+			['id' => 'a', 'title' => 'String False', 'updated' => '2024-01-15', 'draft' => 'false'],
+			['id' => 'b', 'title' => 'String True', 'updated' => '2024-01-15', 'draft' => 'true'],
+			['id' => 'c', 'title' => 'No Draft Field', 'updated' => '2024-01-15'],
+		]);
+
+		$this->assertStringContainsString('String False', $result);
+		$this->assertStringContainsString('No Draft Field', $result);
+		$this->assertStringNotContainsString('String True', $result);
+	}
+
+	public function testFieldMapIgnoresUnknownKeysAndNonStringValues(): void
+	{
+		$this->builder->setFieldMap([
+			'title'   => 'headline',
+			'content' => '',
+			'author'  => ['nested'],
+			'rssurl'  => 'https://example.com/feed',
+			'limit'   => '5',
+		]);
+
+		$result = $this->feedOf([
+			['id' => 'a', 'title' => 'Plain Title', 'headline' => 'Mapped Headline', 'summary' => 'Default Summary', 'updated' => '2024-01-15'],
+		]);
+
+		$this->assertStringContainsString('Mapped Headline', $result);
+		// An empty mapping falls back to the default field, not to nothing.
+		$this->assertStringContainsString('Default Summary', $result);
 	}
 
 	public function testBuildFeedSortsByDateNewestFirst(): void
@@ -338,7 +408,6 @@ final class RssBuilderTest extends TestCase
 			'media'   => 'media',
 			'author'  => 'author',
 			'date'    => 'updated',
-			'draft'   => 'draft',
 		], RssBuilder::DEFAULT_FIELD_MAP);
 	}
 }

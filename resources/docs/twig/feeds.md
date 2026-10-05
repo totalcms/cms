@@ -226,5 +226,9 @@ endpoint maps fields by name — which field is the title, which is the content
 cannot run content through `|markdown`, so a Markdown field arrives at the
 subscriber as raw `- **like this**`.
 
+Objects whose `draft` field is on are never included, for any schema and
+whatever filters the URL carries. That relies on `draft` being in the
+schema's index, which is where the endpoint reads from.
+
 Use the endpoint when your collection already has a plain-text summary field
 and a usable title. Build the feed in Twig when you need control over either.

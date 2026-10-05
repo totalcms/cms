@@ -39,7 +39,7 @@ function goldenRssBuilder(array $objects): RssBuilder
 	$config->domain = 'example.com';
 	$config->method('displayName')->willReturn('Example Site');
 
-	return new RssBuilder($index, $collections, $urls, $schemas, $config, new FeedWriter($config));
+	return new RssBuilder($index, $collections, $urls, $config, new FeedWriter($config));
 }
 
 function goldenRss(string $xml): string
