@@ -118,7 +118,7 @@ Anonymous callers see only what you have deliberately exposed. An API key raises
 
 Create one in **Admin → API Keys**, then supply it as an `X-API-Key` header, or paste it into the desktop extension's **API key** field at install time.
 
-Without a key, what an agent can reach is governed by `mcp.publicAccess` and each collection's own `mcp.access` setting. A site with public access off simply exposes nothing to anonymous callers, which is the default.
+Without a key, what an agent can reach is governed by `mcp.publicAccess` and each collection's own `mcp.access` setting. Public access is on by default, but every collection starts as admin-only, so a site exposes nothing to anonymous callers until a collection is marked public.
 
 ## If it doesn't connect
 

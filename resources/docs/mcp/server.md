@@ -44,7 +44,7 @@ The same `/mcp` URL serves three personas; the tool surface scales per caller:
 | **Authenticated consumer** (`authenticated`) | `Authorization: Bearer <oauth-token>` header with at least one `mcp:*` scope | The **intersection** of what the token's scopes consent to and what the approving user's access groups grant — not every `mcp.access: 'authenticated'` collection. A blogger-group user's token can read/write the collections their groups say `blogger` can touch, plus anything marked `mcp.access: 'public'`; nothing else. Used by "Connect Claude" / "Connect Cursor" style flows where an end-user grants a third-party AI client scoped access to their content. See [The three-layer rule](#the-three-layer-rule-scope-group-exposure) and [OAuth Server](docs/apis/oauth) for setup. A token approved by an **admin-group** user and carrying the `cms:admin` scope elevates to the admin persona — see [Required scopes for MCP](#required-scopes-for-mcp). |
 | **Public AI agent** (`public`) | No credentials (anonymous) | Only tools marked `access: public` AND only collections with `mcp.access: 'public'`. Drafts are auto-hidden. |
 
-Public access is **default-deny**. Anonymous requests get a 401 unless the operator explicitly flips `mcp.publicAccess` on in settings AND marks at least one collection's `mcp.access` as `public` in the schema editor.
+Public content is **opt-in per collection**. `mcp.publicAccess` is on by default, so an anonymous caller can open a session, but every collection's `mcp.access` defaults to `admin` — the public persona sees nothing until the operator marks a collection's `mcp.access` as `public` in the schema editor. To refuse anonymous callers outright (401), set `mcp.publicAccess` to `false`.
 
 ### A fourth caller: the visitor's browser
 
@@ -370,7 +370,7 @@ Settings live in **Admin → Settings → MCP Server** and serialize to `mcp.*` 
 | Key | Default | Effect |
 |---|---|---|
 | `mcp.enabled` | `true` | Master switch. When `false`, `POST /mcp` returns 404 and discovery reports `disabled: true`. |
-| `mcp.publicAccess` | `false` | Default-deny for anonymous callers. When `false`, requests without an API key get 401 + `WWW-Authenticate: Bearer realm="MCP", error="login_required"`. |
+| `mcp.publicAccess` | `true` | Master switch for anonymous callers. When `true`, they resolve to the public persona and see only collections marked `mcp.access: 'public'` (none by default). When `false`, requests without an API key get 401 + `WWW-Authenticate: Bearer realm="MCP", error="login_required"`. |
 | `mcp.allowedOrigins` | `[]` | CORS origin allow-list for **browser-rendered** AI clients. Empty = browsers blocked. See [CORS and browser AI clients](#cors-and-browser-ai-clients) below. |
 | `mcp.publicIpPerMinute` | `60` | Per-IP rate limit on anonymous requests, 60-second window. API key callers bypass. Set to `0` to disable. |
 | `mcp.toolPrefix` | `""` | Optional snake_case prefix prepended to every tool name (`bistro` → `bistro_list_collections`). Useful when an agent connects to multiple T3 sites simultaneously. |
@@ -636,7 +636,7 @@ Before submitting your site to Anthropic's Connector Directory, walk through:
 
 ## Security considerations
 
-- **Anonymous access is default-deny.** `mcp.publicAccess: false` and `mcp.access: 'admin'` on every reserved schema mean a fresh install never leaks content until the operator opts a collection in.
+- **Anonymous content is opt-in.** `mcp.publicAccess` defaults to `true`, so anonymous callers can open a session, but `mcp.access` defaults to `admin` on every collection, so a fresh install never leaks content until the operator opts a collection in. Set `mcp.publicAccess: false` to turn anonymous callers away with a 401.
 - **Drafts are server-filtered.** Public/anonymous callers can never see `draft:true` items regardless of caller intent — `query_collection`, `search_collection`, and `get_object` enforce this server-side. AUTHENTICATED (OAuth) callers see drafts only in collections where their access groups grant `read` — public `mcp.access` exposure by itself does not unlock drafts, even though it unlocks published content. `get_view` / `query_view` are the one exception: they follow the view's own `mcp.access` field, not group grants — see [Data views are the exception](#data-views-are-the-exception-to-the-group-rule).
 - **Public registration carries automatic login.** Forms that use the public registration endpoint auto-log the new user in; gate them with CAPTCHA / rate limit / email verification when the access group new users land in reaches sensitive content. (Unrelated to MCP directly, but worth flagging — the same operator who exposes a collection to MCP might also be running public registration.)
 - **API keys are scoped.** A key scoped only to `/collections/blog` does NOT unlock MCP; the operator must explicitly include `/mcp` (or `*`) in the scope.
