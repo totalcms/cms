@@ -149,6 +149,13 @@ Both `--- My Header` (new) and `---Title Here---` (still supported) produce the 
 +------------------+------------------+
 ```
 
+
+### Dividers and headers with conditional fields
+
+A divider or header hides itself while every field in the section it introduces is hidden by a [visibility rule](docs/fields/all-fields#conditional-visibility), and reappears when one of them shows. A group of settings behind a toggle can therefore have its own dividers without leaving stray lines when the toggle is off. The section is the run of rows up to the next divider or header; if it contains a fieldset or an accordion, the divider always shows.
+
+Fieldsets and accordions do the same. A fieldset hides while every field inside it is hidden, an accordion panel likewise, and an accordion hides once all of its panels have.
+
 ## Fieldsets
 
 Use `[[ ]]` to group related fields inside a styled fieldset container. The text after `[[` on the same line is an optional legend:

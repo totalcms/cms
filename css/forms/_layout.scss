@@ -390,6 +390,21 @@ button.cms-add {
 	border-radius    : var(--totalform-radius);
 }
 
+// Gaps before hidden rows at the end of a grid (field-visibility.js)
+.formgrid {
+	margin-bottom : calc(var(--collapsed-row-gap, 0px) * -1);
+}
+
+// Every field the marker introduces, or the group holds, is hidden
+// (field-visibility.js)
+.form-grid-section-header.section-hidden,
+.form-grid-section-divider.section-hidden,
+.form-grid-fieldset.section-hidden,
+.formgrid-panel.section-hidden,
+.formgrid-accordion.section-hidden {
+	display : none;
+}
+
 .form-grid-section-divider {
 	grid-column      : 1 / -1 !important;
 	height           : 1px;

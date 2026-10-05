@@ -65,6 +65,66 @@ export default class FieldVisibility {
 			// Initial visibility evaluation
 			this.updateScopedVisibility(fieldElement, visibility, fields);
 		});
+
+		// A divider or header with nothing visible under it goes too. Every
+		// show/hide dispatches a bubbling `visibility-change`, so one listener
+		// on the container covers all of its fields.
+		const tidy = () => {
+			this.updateSections(container);
+			this.collapseTrailingRows(container);
+		};
+		container.addEventListener('visibility-change', tidy, listenerOpts);
+		tidy();
+	}
+
+	//-------------------------
+	// Hide section dividers and headers whose fields are all hidden,
+	// then fieldsets and accordions (updateGroups)
+	//
+	// FormGridBuilder lists the fields each marker introduces in
+	// `data-section-fields`. The fields are looked up among the marker's own
+	// siblings — its grid — so a card's dividers answer to the card's fields,
+	// not to a same-named field elsewhere in the form.
+	//-------------------------
+	updateSections(container) {
+		container.querySelectorAll('[data-section-fields]').forEach(marker => {
+			const areas = marker.dataset.sectionFields.split(' ').filter(Boolean);
+			const grid  = marker.parentElement;
+			if (areas.length === 0 || !grid) return;
+
+			const siblings = Array.from(grid.children);
+			const anyVisible = areas.some(area => {
+				const field = siblings.find(el => el.style.getPropertyValue('--grid-area').trim() === area);
+				// A listed field that was never rendered counts as hidden.
+				return field && !field.classList.contains('field-hidden') && !field.classList.contains('hidden-field');
+			});
+
+			marker.classList.toggle('section-hidden', !anyVisible);
+		});
+
+		this.updateGroups(container);
+	}
+
+	//-------------------------
+	// Hide fieldsets and accordions whose fields are all hidden
+	//
+	// A group holds its own fields, so there is nothing to look up: it goes
+	// when it has fields and none of them shows. A group with no fields at
+	// all (a cms.form.fieldset() around plain markup) is left alone. Panels
+	// are settled before their accordion, which goes when every panel has.
+	//-------------------------
+	updateGroups(container) {
+		const shows = field => !field.closest('.field-hidden, .hidden-field');
+
+		container.querySelectorAll('.form-grid-fieldset, .formgrid-panel').forEach(group => {
+			const fields = Array.from(group.querySelectorAll('.form-field'));
+			group.classList.toggle('section-hidden', fields.length > 0 && !fields.some(shows));
+		});
+
+		container.querySelectorAll('.formgrid-accordion').forEach(accordion => {
+			const panels = Array.from(accordion.querySelectorAll(':scope > .formgrid-panel'));
+			accordion.classList.toggle('section-hidden', panels.length > 0 && panels.every(panel => panel.classList.contains('section-hidden')));
+		});
 	}
 
 	//-------------------------
@@ -130,6 +190,35 @@ export default class FieldVisibility {
 		if (wasVisible !== isActive) {
 			field.container.dispatchEvent(new Event('visibility-change', { bubbles: true }));
 		}
+	}
+
+	//-------------------------
+	// Close up the space left by hidden rows at the end of a grid
+	//
+	// A row whose fields are all hidden collapses to 0px, but the grid still
+	// puts a row-gap before it. One or two go unnoticed; a card that hides a
+	// dozen rows behind a toggle is left with a tall blank block. Only the
+	// trailing run is closed up — a negative margin can take space off the
+	// end of the grid, not out of its middle.
+	//-------------------------
+	collapseTrailingRows(container) {
+		const grids = Array.from(container.querySelectorAll('.formgrid'));
+		if (container.matches?.('.formgrid')) grids.push(container);
+
+		grids.forEach(grid => {
+			const style = getComputedStyle(grid);
+			const rows  = (style.gridTemplateRows || '').split(' ').filter(Boolean);
+			const gap   = parseFloat(style.rowGap) || 0;
+
+			let empty = 0;
+			while (empty < rows.length - 1 && parseFloat(rows[rows.length - 1 - empty]) === 0) empty++;
+
+			if (empty > 0 && gap > 0) {
+				grid.style.setProperty('--collapsed-row-gap', `${empty * gap}px`);
+			} else {
+				grid.style.removeProperty('--collapsed-row-gap');
+			}
+		});
 	}
 
 	//-------------------------

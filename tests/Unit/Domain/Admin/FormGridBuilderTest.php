@@ -65,6 +65,22 @@ describe('FormGridBuilder', function (): void {
 		expect($html)->toContain('My Section');
 	});
 
+	test('a divider or header lists the fields it introduces', function (): void {
+		// So the browser can hide it while all of them are hidden.
+		$builder = new FormGridBuilder("enabled .\n---\nname language\ndescription description\n---Mapping---\ntitle date\nmedia .");
+
+		$html = $builder->buildGridSectionHtml();
+
+		expect($html)->toContain('data-section-fields="name language description"');
+		expect($html)->toContain('data-section-fields="title date media"');
+	});
+
+	test('a section that is not a plain run of fields is never auto-hidden', function (): void {
+		$builder = new FormGridBuilder("title title\n---\n[[ Details\nbody body\n]]\n---\n");
+
+		expect($builder->buildGridSectionHtml())->not->toContain('data-section-fields');
+	});
+
 	test('buildGridSectionHtml escapes header titles', function (): void {
 		$builder = new FormGridBuilder('---<script>bad</script>---');
 

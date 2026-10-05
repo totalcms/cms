@@ -444,11 +444,11 @@ CSS;
 		foreach ($sections as $section) {
 			switch ($section['type']) {
 				case 'header':
-					$content .= $this->buildHeaderHtml($section['title'], $section['area']);
+					$content .= $this->buildHeaderHtml($section['title'], $section['area'], $section['fields']);
 					break;
 
 				case 'divider':
-					$content .= $this->buildDividerHtml($section['area']);
+					$content .= $this->buildDividerHtml($section['area'], $section['fields']);
 					break;
 			}
 		}
@@ -456,20 +456,69 @@ CSS;
 		return $content;
 	}
 
-	private function buildDividerHtml(string $gridArea): string
+	/** @param list<string>|null $fields */
+	private function buildDividerHtml(string $gridArea, ?array $fields): string
 	{
 		return HTMLUtils::inlineElement('hr', [
 			'class' => 'form-grid-section-divider',
 			'style' => "grid-area: $gridArea;",
-		]);
+		] + $this->sectionFieldsAttribute($fields));
 	}
 
-	private function buildHeaderHtml(string $title, string $gridArea): string
+	/** @param list<string>|null $fields */
+	private function buildHeaderHtml(string $title, string $gridArea, ?array $fields): string
 	{
 		return HTMLUtils::element('h3', htmlspecialchars($title, ENT_QUOTES, 'UTF-8'), [
 			'class' => 'form-grid-section-header',
 			'style' => "grid-area: $gridArea;",
-		]);
+		] + $this->sectionFieldsAttribute($fields));
+	}
+
+	/**
+	 * `data-section-fields`: the fields a divider or header introduces, so the
+	 * browser can hide it while every one of them is hidden (field-visibility.js)
+	 * — a heading over nothing is never wanted. Left off when the section is
+	 * not a plain run of fields; the marker then always shows.
+	 *
+	 * @param list<string>|null $fields
+	 *
+	 * @return array<string,string>
+	 */
+	private function sectionFieldsAttribute(?array $fields): array
+	{
+		return $fields === null || $fields === [] ? [] : ['data-section-fields' => implode(' ', $fields)];
+	}
+
+	/**
+	 * The field areas in the run of rows that follows block $index, up to the
+	 * next divider or header. Null when anything else is in that run (a
+	 * fieldset, an accordion): its contents are not this grid's fields.
+	 *
+	 * @return list<string>|null
+	 */
+	private function fieldsAfter(int $index): ?array
+	{
+		$fields = [];
+
+		for ($i = $index + 1, $count = count($this->blocks); $i < $count; $i++) {
+			$block = $this->blocks[$i];
+			$type  = $block['type'] ?? '';
+
+			if ($type === 'divider' || $type === 'header') {
+				break;
+			}
+			if ($type !== 'row') {
+				return null;
+			}
+
+			foreach (preg_split('/\s+/', trim((string)$block['line'])) ?: [] as $area) {
+				if ($area !== '' && $area !== '.' && !in_array($area, $fields, true)) {
+					$fields[] = $area;
+				}
+			}
+		}
+
+		return $fields;
 	}
 
 	/**
@@ -482,22 +531,24 @@ CSS;
 		$sections       = [];
 		$sectionCounter = 0;
 
-		foreach ($this->blocks as $block) {
+		foreach ($this->blocks as $index => $block) {
 			switch ($block['type'] ?? '') {
 				case 'divider':
 					$sectionCounter++;
 					$sections[] = [
-						'type' => 'divider',
-						'area' => 'section-divider-' . $sectionCounter,
+						'type'   => 'divider',
+						'area'   => 'section-divider-' . $sectionCounter,
+						'fields' => $this->fieldsAfter($index),
 					];
 					break;
 
 				case 'header':
 					$sectionCounter++;
 					$sections[] = [
-						'type'  => 'header',
-						'title' => (string)$block['title'],
-						'area'  => 'section-header-' . $sectionCounter,
+						'type'   => 'header',
+						'title'  => (string)$block['title'],
+						'area'   => 'section-header-' . $sectionCounter,
+						'fields' => $this->fieldsAfter($index),
 					];
 					break;
 			}
