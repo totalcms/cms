@@ -21,6 +21,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Fixed
 
+- **IndexNow submissions are accepted.** Every submission was sent without its JSON content type, so the IndexNow endpoint answered HTTP 415 and no changed URL ever reached Bing or the other engines. The job failed in the queue with "IndexNow returned HTTP 415". Submissions now go out as JSON; re-save a page to submit it
 - **MCP content no longer returns `&amp;` for an ampersand.** Styled text read as Markdown through the MCP tools came back with every `&` HTML-escaped, so "Tom & Jerry" read as `Tom &amp; Jerry` and agents copied that into titles and summaries. A plain ampersand is now returned as written
 - **Form dividers, section headers, fieldsets and accordions hide with their fields.** A `---` divider, a section header, a fieldset or an accordion panel in a formgrid stayed on screen when every field in it was hidden by a visibility rule. Each now hides with its fields, and the blank space left by hidden rows at the end of a form or card is closed up
 - **A Sync push no longer removes the receiving site's files.** A file or depot field was sent empty and written over whatever the receiving site had, so a push dropped a file uploaded there from its record. File and depot fields are now left out of the payload and kept on the receiving site, the same as images and galleries, at the top level and inside cards and decks. Both sites need this version
