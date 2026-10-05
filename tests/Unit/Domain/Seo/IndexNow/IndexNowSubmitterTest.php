@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Seo\IndexNow;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Response;
 use Monolog\Level;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -11,6 +16,7 @@ use TotalCMS\Domain\Seo\Data\SeoSettings;
 use TotalCMS\Domain\Seo\IndexNow\IndexNowSubmitter;
 use TotalCMS\Domain\Seo\Service\SeoSettingsLoader;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\GuzzleHttpClient;
 use TotalCMS\Support\HttpClientInterface;
 use TotalCMS\Support\HttpResponse;
 
@@ -66,7 +72,28 @@ final class IndexNowSubmitterTest extends TestCase
 			'keyLocation' => 'https://example.com/abc123def456.txt',
 			'urlList'     => ['https://example.com/blog/hello', 'https://example.com/about'],
 		], $sent);
-		$this->assertSame('application/json; charset=utf-8', $this->requests[0]['options']['headers']['Content-Type']);
+		$this->assertSame(['Content-Type: application/json; charset=utf-8'], $this->requests[0]['options']['headers']);
+	}
+
+	/**
+	 * Through the real client, not the fake: the endpoint answers 415 unless
+	 * the request says it is JSON, and the fake cannot see a header that the
+	 * client drops on the way out.
+	 */
+	public function testTheJsonContentTypeReachesTheWire(): void
+	{
+		$loader = $this->createMock(SeoSettingsLoader::class);
+		$loader->method('load')->willReturn(SeoSettings::fromArray(self::ON, 'example.com'));
+
+		$sent  = [];
+		$stack = HandlerStack::create(new MockHandler([new Response(200)]));
+		$stack->push(Middleware::history($sent));
+		$http = new GuzzleHttpClient(new Client(['handler' => $stack]));
+
+		$submitter = new IndexNowSubmitter($http, $loader, new LoggerFactory(['level' => Level::Debug, 'test' => new NullLogger()]));
+
+		$this->assertTrue($submitter->submit(['https://example.com/blog/hello']));
+		$this->assertSame('application/json; charset=utf-8', $sent[0]['request']->getHeaderLine('Content-Type'));
 	}
 
 	public function testAcceptsA202AsWell(): void

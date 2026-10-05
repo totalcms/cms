@@ -53,7 +53,14 @@ class GuzzleHttpClient implements HttpClientInterface
 		}
 		// Merge raw header strings (e.g., "Content-Type: application/json")
 		if (isset($options['headers']) && is_array($options['headers'])) {
-			foreach ($options['headers'] as $header) {
+			foreach ($options['headers'] as $name => $header) {
+				// A name => value pair. Without this the value alone is read as
+				// a header line, has no colon, and the header is silently lost.
+				if (is_string($name)) {
+					$headers[$name] = trim((string)$header);
+
+					continue;
+				}
 				$parts = explode(':', (string)$header, 2);
 				if (count($parts) === 2) {
 					$headers[trim($parts[0])] = trim($parts[1]);

@@ -18,7 +18,8 @@ interface HttpClientInterface
 	 * @param string $method HTTP method (GET, POST, PUT, etc.)
 	 * @param string $url    Full URL to request
 	 * @param array<string,mixed> $options Request options:
-	 *   - 'headers'         => array<string,string> HTTP headers
+	 *   - 'headers'         => list<string> Header lines, each "Name: value". A name => value
+	 *                          pair is accepted too.
 	 *   - 'body'            => string Request body
 	 *   - 'timeout'         => int Timeout in seconds
 	 *   - 'connect_timeout' => int Connection timeout in seconds

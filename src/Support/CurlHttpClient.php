@@ -64,7 +64,12 @@ class CurlHttpClient implements HttpClientInterface
 
 		// Headers
 		if (isset($options['headers']) && is_array($options['headers'])) {
-			$curlOptions[CURLOPT_HTTPHEADER] = $options['headers'];
+			// cURL wants "Name: value" lines; a name => value pair becomes one.
+			$lines = [];
+			foreach ($options['headers'] as $name => $header) {
+				$lines[] = is_string($name) ? $name . ': ' . $header : (string)$header;
+			}
+			$curlOptions[CURLOPT_HTTPHEADER] = $lines;
 		}
 
 		// Request body

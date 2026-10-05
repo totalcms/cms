@@ -103,7 +103,7 @@ readonly class IndexNowSubmitter
 		], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
 
 		$response = $this->http->request('POST', self::ENDPOINT, [
-			'headers' => ['Content-Type' => 'application/json; charset=utf-8'],
+			'headers' => ['Content-Type: application/json; charset=utf-8'],
 			'body'    => $payload,
 			'timeout' => 10,
 		]);

@@ -4,8 +4,10 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
+use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
 use TotalCMS\Support\GuzzleHttpClient;
 use TotalCMS\Support\HttpResponse;
@@ -72,5 +74,20 @@ describe('GuzzleHttpClient', function (): void {
 
 		expect(fn () => $client->request('GET', 'https://example.test/big.zip', ['max_bytes' => 10]))
 			->toThrow(RuntimeException::class, 'Download exceeds maximum size limit');
+	});
+
+	test('sends headers given as lines and as name => value pairs', function (): void {
+		$sent  = [];
+		$stack = HandlerStack::create(new MockHandler([new Response(200)]));
+		$stack->push(Middleware::history($sent));
+		$client = new GuzzleHttpClient(new Client(['handler' => $stack]));
+
+		$client->request('POST', 'https://example.test/', [
+			'headers' => ['Accept: application/json', 'Content-Type' => 'application/json; charset=utf-8'],
+			'body'    => '{}',
+		]);
+
+		expect($sent[0]['request']->getHeaderLine('Accept'))->toBe('application/json');
+		expect($sent[0]['request']->getHeaderLine('Content-Type'))->toBe('application/json; charset=utf-8');
 	});
 });
