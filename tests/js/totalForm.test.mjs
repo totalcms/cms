@@ -136,6 +136,34 @@ describe('TotalForm.focusFirstInput', () => {
 		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
 	});
 
+	// The formgrid places fields by grid area, so markup order is not screen
+	// order: on the blog form the Draft toggle is rendered before the ID field
+	// it sits below, and used to take the cursor.
+	const place = (name, top, left = 0, size = 20) => {
+		document.querySelector(`[name="${name}"]`).getBoundingClientRect = () => ({ top, left, width: size, height: size });
+	};
+
+	test('focuses the field that is first on screen, not first in the markup', () => {
+		const form = formWithHtml(textField('draft') + textField('featured') + textField('id') + textField('title'));
+		place('draft', 292, 0);
+		place('featured', 292, 300);
+		place('id', 157);
+		place('title', 237);
+
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="id"]'));
+	});
+
+	test('left-most wins on the same row, and an input with no box is passed over', () => {
+		const form = formWithHtml(textField('collapsed') + textField('right') + textField('left'));
+		place('collapsed', 0, 0, 0);
+		place('right', 100, 300);
+		place('left', 100, 0);
+
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="left"]'));
+	});
+
 	test('still ignores inputs inside dialogs', () => {
 		const form = formWithHtml(
 			`<div class="form-field" data-type="deck"><dialog><input name="inmodal"></dialog></div>` + textField('title'),

@@ -95,7 +95,13 @@ export default class TotalForm {
 		// visit is technically the new-object form, but it is a settings record
 		// (Site SEO, Site Settings) — jumping into the first field there, with
 		// help-on-focus swapping its label for help text, reads as noise.
-		if (this.isObjectForm() && !this.isEditMode() && !this.form.dataset.singleton) {
+		//
+		// Never from inside an iframe. An image field's link dialog embeds the
+		// ImageWorks builder page, which carries a form of its own; that form
+		// focusing its first input pulled focus out of the parent's field a
+		// moment after load. Safari moves focus into a frame on a scripted
+		// focus() even when the frame is hidden; Chrome does not.
+		if (this.isObjectForm() && !this.isEditMode() && !this.form.dataset.singleton && window === window.top) {
 			this.focusFirstInput();
 		}
 
@@ -567,8 +573,18 @@ export default class TotalForm {
 		const selector   = 'input:not([type="hidden"]):not([readonly]):not([disabled]):not([data-proxy]), textarea:not([readonly]):not([disabled]), select:not([disabled])';
 		const candidates = Array.from(this.form.querySelectorAll(selector));
 		// Skip inputs nested in <dialog> elements — those belong to image/file/deck-item edit modals
-		const first = candidates.find(input => !input.closest('dialog'));
-		first?.focus();
+		const eligible = candidates.filter(input => !input.closest('dialog'));
+
+		// First on screen, not first in the markup: the formgrid places fields by
+		// grid area, so a toggle rendered early in the DOM can sit below the ID
+		// field it precedes. Top-most wins, then left-most; inputs with no box
+		// (a closed accordion panel) are passed over while anything else shows.
+		const placed = eligible
+			.map(input => ({ input, rect: input.getBoundingClientRect() }))
+			.filter(({ rect }) => rect.width > 0 || rect.height > 0)
+			.sort((a, b) => (a.rect.top - b.rect.top) || (a.rect.left - b.rect.left));
+
+		(placed[0]?.input ?? eligible[0])?.focus();
 	}
 
 	save() {
