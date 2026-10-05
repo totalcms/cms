@@ -97,6 +97,7 @@ return [
 	'flash.login_success'              => 'Anmeldung erfolgreich',
 	'flash.login_too_many_attempts'    => 'Zu viele Anmeldeversuche',
 	'flash.login_credentials_required' => 'E-Mail und Passwort sind erforderlich',
+	'flash.login_invalid'              => 'Ungültige Anmeldedaten',
 	'flash.invalid_token'              => 'Ungültiger Zurücksetzungs-Token.',
 	'flash.password_required'          => 'Bitte geben Sie ein neues Passwort ein.',
 	'flash.passwords_no_match'         => 'Passwörter stimmen nicht überein.',

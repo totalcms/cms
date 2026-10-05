@@ -370,4 +370,35 @@ final class IndexSearcherTest extends TestCase
 		$this->assertSame('b', $results[0]['id']);
 		$this->assertSame('a', $results[1]['id']);
 	}
+
+	public function testFindByPropertyExactMatchesWholeValueOnly(): void
+	{
+		$this->mockIndexWithObjects([
+			['id' => 'john', 'email' => 'john.smith@gmail.com'],
+			['id' => 'smith', 'email' => 'Smith@Gmail.com'],
+			['id' => 'jane', 'email' => 'jane@example.com'],
+		]);
+
+		// A fragment, a suffix after a word boundary, and a prefix all match
+		// under searchByProperty(). None of them is the address.
+		$this->assertCount(0, $this->searcher->findByPropertyExact('users', 'email', 'gmail.com'));
+		$this->assertCount(0, $this->searcher->findByPropertyExact('users', 'email', 'jane@example'));
+		$this->assertCount(0, $this->searcher->findByPropertyExact('users', 'email', 'missing'));
+
+		// `smith@gmail.com` is its own record, never `john.smith@gmail.com`.
+		$results = $this->searcher->findByPropertyExact('users', 'email', ' smith@gmail.com ');
+		$this->assertSame(['smith'], $results->pluck('id')->values()->all());
+	}
+
+	public function testFindByPropertyExactIgnoresEmptyQueryAndNonScalarValues(): void
+	{
+		$this->mockIndexWithObjects([
+			['id' => 'a', 'email' => ''],
+			['id' => 'b', 'email' => ['x@y.test']],
+			['id' => 'c'],
+		]);
+
+		$this->assertCount(0, $this->searcher->findByPropertyExact('users', 'email', ''));
+		$this->assertCount(0, $this->searcher->findByPropertyExact('users', 'email', 'x@y.test'));
+	}
 }

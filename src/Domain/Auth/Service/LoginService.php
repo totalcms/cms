@@ -4,6 +4,7 @@ namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Exception\AccountNotActiveException;
+use TotalCMS\Domain\Auth\Exception\InvalidCredentialsException;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\UserEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -61,20 +62,30 @@ class LoginService
 		}
 
 		// Normal authentication flow for the requested collection
-		$user   = $this->validator->validateUser($idOrEmail, $collection);
+		try {
+			$user = $this->validator->validateUser($idOrEmail, $collection);
+		} catch (\Exception $e) {
+			// Hash anyway, so a miss costs about what a wrong password does
+			// and response time doesn't say which one it was.
+			password_hash($password, PASSWORD_DEFAULT);
+			$this->logger->error("$collection: login failed, " . $e->getMessage());
+			throw new InvalidCredentialsException();
+		}
 		$userId = $user['id'];
 
 		$this->account = "$collection/$userId";
 
+		if (!password_verify($password, (string)$user['password'])) {
+			$this->logger->error("{$this->account}: Invalid password");
+			throw new InvalidCredentialsException();
+		}
+
+		// Account state is checked only once the password is verified: these
+		// errors name the account, so they must not be reachable by someone
+		// who merely knows (or is guessing) an identifier.
 		$this->testUserActive($user);
 		$this->testUserExpiration($user);
 		$this->testUserMaxLoginCount($user);
-
-		if (!password_verify($password, (string)$user['password'])) {
-			$error = "{$this->account}: Invalid password";
-			$this->logger->error($error);
-			throw new \Exception($error);
-		}
 
 		// Update the last login date of the user
 		$this->updateService->updateLoginDate($collection, $user['id']);

@@ -97,6 +97,7 @@ return [
 	'flash.login_success'              => 'Accesso eseguito',
 	'flash.login_too_many_attempts'    => 'Troppi tentativi di accesso',
 	'flash.login_credentials_required' => 'Email e password sono obbligatorie',
+	'flash.login_invalid'              => 'Credenziali di accesso non valide',
 	'flash.invalid_token'              => 'Token di ripristino non valido.',
 	'flash.password_required'          => 'Inserisci una nuova password.',
 	'flash.passwords_no_match'         => 'Le password non coincidono.',

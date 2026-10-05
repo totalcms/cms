@@ -885,7 +885,7 @@
             "signature": "verifyFilePassword(string $password, string $collection, string $id, string $property, ?string $name = null): bool",
             "description": "Verify a password for accessing a protected file or depot item.",
             "examples": [
-                "{% if cms.auth.verifyFilePassword(password, 'documents', docId, 'file') %}\n    <a href=\"{{ cms.media.download(docId, {pwd: password}) }}\">Download</a>\n{% else %}\n    <p>Invalid password</p>\n{% endif %}\n\n{# For depot files, include the filename #}\n{% if cms.auth.verifyFilePassword(password, 'files', objId, 'depot', 'report.pdf') %}\n    <a href=\"{{ cms.media.depotDownload(objId, 'report.pdf', {pwd: password}) }}\">Download Report</a>\n{% endif %}"
+                "{% if cms.auth.verifyFilePassword(password, 'documents', docId, 'file') %}\n    <a href=\"{{ cms.media.download(docId, {pwd: password}) }}\">Download</a>\n{% else %}\n    <p>Invalid login credentials</p>\n{% endif %}\n\n{# For depot files, include the filename #}\n{% if cms.auth.verifyFilePassword(password, 'files', objId, 'depot', 'report.pdf') %}\n    <a href=\"{{ cms.media.depotDownload(objId, 'report.pdf', {pwd: password}) }}\">Download Report</a>\n{% endif %}"
             ],
             "url": "https://docs.totalcms.co/auth/twig/"
         },

@@ -97,6 +97,7 @@ return [
 	'flash.login_success'              => 'Login successful',
 	'flash.login_too_many_attempts'    => 'Too many login attempts',
 	'flash.login_credentials_required' => 'Email and password are required',
+	'flash.login_invalid'              => 'Invalid login credentials',
 	'flash.invalid_token'              => 'Invalid reset token.',
 	'flash.password_required'          => 'Please enter a new password.',
 	'flash.passwords_no_match'         => 'Passwords do not match.',

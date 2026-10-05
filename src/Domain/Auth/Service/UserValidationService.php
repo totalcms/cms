@@ -57,7 +57,7 @@ readonly class UserValidationService
 			$collection = $this->config->auth['collection'];
 		}
 
-		$users = $this->searcher->searchByProperty($collection, 'email', $email);
+		$users = $this->searcher->findByPropertyExact($collection, 'email', $email);
 		$first = $users->first();
 
 		if ($users->isEmpty() || is_null($first)) {
@@ -81,7 +81,7 @@ readonly class UserValidationService
 		}
 
 		try {
-			$users = $this->searcher->searchByProperty($collection, 'email', $email);
+			$users = $this->searcher->findByPropertyExact($collection, 'email', $email);
 			$first = $users->first();
 
 			if ($users->isEmpty() || is_null($first)) {

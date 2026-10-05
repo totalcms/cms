@@ -22,6 +22,30 @@ readonly class IndexSearcher
 	}
 
 	/**
+	 * Objects whose property equals the value exactly, ignoring case and
+	 * surrounding whitespace. For identity lookups (a login email), where
+	 * searchByProperty()'s word-boundary match is wrong: it resolves a fragment
+	 * such as `gmail.com`, or `smith@gmail.com` to `john.smith@gmail.com`.
+	 *
+	 * @return Collection<int,array<string,mixed>>
+	 */
+	public function findByPropertyExact(string $collection, string $property, string $value): Collection
+	{
+		$needle = mb_strtolower(trim($value));
+		if ($needle === '') {
+			return collect([]);
+		}
+
+		$index = $this->reader->fetchIndex($collection);
+
+		return $index->objects->filter(
+			static fn (array $object): bool => isset($object[$property])
+				&& is_string($object[$property])
+				&& mb_strtolower(trim($object[$property])) === $needle,
+		);
+	}
+
+	/**
 	 * @param string|array<string> $priorityProperties
 	 *
 	 * @return Collection<int,array<string,mixed>>

@@ -267,7 +267,7 @@ By default, gallery images display in their stored order. Use the `sort` option 
 {% if cms.auth.verifyFilePassword(password, 'documents', docId, 'file') %}
     <a href="{{ cms.media.download(docId, {pwd: password}) }}">Download Document</a>
 {% else %}
-    <p>Invalid password</p>
+    <p>Invalid login credentials</p>
 {% endif %}
 ```
 

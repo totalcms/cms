@@ -277,7 +277,7 @@ Verify a password for accessing a protected file or depot item.
 {% if cms.auth.verifyFilePassword(password, 'documents', docId, 'file') %}
     <a href="{{ cms.media.download(docId, {pwd: password}) }}">Download</a>
 {% else %}
-    <p>Invalid password</p>
+    <p>Invalid login credentials</p>
 {% endif %}
 
 {# For depot files, include the filename #}

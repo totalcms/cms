@@ -40,7 +40,7 @@ final class UserValidationServiceTest extends TestCase
 		]);
 
 		$searcher->expects($this->once())
-			->method('searchByProperty')
+			->method('findByPropertyExact')
 			->with('users', 'email', 'john@example.com')
 			->willReturn($searchResults);
 
@@ -85,7 +85,7 @@ final class UserValidationServiceTest extends TestCase
 		$searchResults = new Collection([]);
 
 		$searcher->expects($this->once())
-			->method('searchByProperty')
+			->method('findByPropertyExact')
 			->with('users', 'email', 'notfound@example.com')
 			->willReturn($searchResults);
 
@@ -667,7 +667,7 @@ final class UserValidationServiceTest extends TestCase
 		]);
 
 		$searcher->expects($this->once())
-			->method('searchByProperty')
+			->method('findByPropertyExact')
 			->with('users', 'email', 'a@b.test')
 			->willReturn($searchResults);
 
@@ -695,7 +695,7 @@ final class UserValidationServiceTest extends TestCase
 
 		// Empty results — unlike validateUserByEmail, this MUST NOT throw.
 		$searcher->expects($this->once())
-			->method('searchByProperty')
+			->method('findByPropertyExact')
 			->willReturn(new Collection([]));
 
 		// And we should never try to fetch the object.
@@ -717,7 +717,7 @@ final class UserValidationServiceTest extends TestCase
 
 		$config->auth = ['collection' => 'users'];
 
-		$searcher->method('searchByProperty')
+		$searcher->method('findByPropertyExact')
 			->willThrowException(new \RuntimeException('index corrupt'));
 
 		$service = new UserValidationService($searcher, $objectFetcher, $config);
@@ -735,7 +735,7 @@ final class UserValidationServiceTest extends TestCase
 		$config->auth = ['collection' => 'admin'];
 
 		$searcher->expects($this->once())
-			->method('searchByProperty')
+			->method('findByPropertyExact')
 			->with('members', 'email', 'a@b.test')  // ← uses 'members', not the default
 			->willReturn(new Collection([['id' => 'user-1']]));
 

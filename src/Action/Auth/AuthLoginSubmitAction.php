@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpUnauthorizedException;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Exception\AccountNotActiveException;
+use TotalCMS\Domain\Auth\Exception\InvalidCredentialsException;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
@@ -90,6 +91,9 @@ readonly class AuthLoginSubmitAction
 			// error message still shows alongside.
 			$flash->add('error', $e->getMessage());
 			$flash->add('account_not_active', '1');
+		} catch (InvalidCredentialsException) {
+			// One message for "no such account" and "wrong password".
+			$flash->add('error', $this->translator->trans('flash.login_invalid'));
 		} catch (\Exception $e) {
 			// throw new HttpUnauthorizedException($request, $e->getMessage());
 			$flash->add('error', $e->getMessage());

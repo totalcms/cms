@@ -97,6 +97,7 @@ return [
 	'flash.login_success'              => 'Succesvol ingelogd',
 	'flash.login_too_many_attempts'    => 'Te veel inlogpogingen',
 	'flash.login_credentials_required' => 'E-mail en wachtwoord zijn vereist',
+	'flash.login_invalid'              => 'Ongeldige inloggegevens',
 	'flash.invalid_token'              => 'Ongeldige hersteltoken.',
 	'flash.password_required'          => 'Voer een nieuw wachtwoord in.',
 	'flash.passwords_no_match'         => 'Wachtwoorden komen niet overeen.',

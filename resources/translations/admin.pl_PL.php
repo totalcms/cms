@@ -97,6 +97,7 @@ return [
 	'flash.login_success'              => 'Zalogowano pomyślnie',
 	'flash.login_too_many_attempts'    => 'Zbyt wiele prób logowania',
 	'flash.login_credentials_required' => 'E-mail i hasło są wymagane',
+	'flash.login_invalid'              => 'Nieprawidłowe dane logowania',
 	'flash.invalid_token'              => 'Nieprawidłowy token resetowania.',
 	'flash.password_required'          => 'Wprowadź nowe hasło.',
 	'flash.passwords_no_match'         => 'Hasła nie są zgodne.',

@@ -97,6 +97,7 @@ return [
 	'flash.login_success'              => 'Inicio de sesión exitoso',
 	'flash.login_too_many_attempts'    => 'Demasiados intentos de inicio de sesión',
 	'flash.login_credentials_required' => 'El correo electrónico y la contraseña son obligatorios',
+	'flash.login_invalid'              => 'Credenciales de inicio de sesión no válidas',
 	'flash.invalid_token'              => 'Token de restablecimiento inválido.',
 	'flash.password_required'          => 'Por favor, introduzca una nueva contraseña.',
 	'flash.passwords_no_match'         => 'Las contraseñas no coinciden.',
