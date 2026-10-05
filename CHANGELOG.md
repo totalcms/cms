@@ -15,6 +15,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Added
 
+- **The login form can leave out "Keep me signed in".** `cms.form.loginForm({showRememberMe: false})`, or `showRememberMe` in the whitelabel login options, renders the form without the persistent login checkbox
 - **RSS Feed settings on each collection.** A new card on the collection form holds the feed's name, description, language, link, image, filters, item limit and field mapping, plus a **Hidden Field**: objects with that property on are left out of the feed. It defaults to `draft`. The feed URL is a clean `/feed/rss/{collection}`; `include`, `exclude`, `limit`, `name` and `description` can still be passed to build a filtered variant, which is what the Feeds utility now generates
 - **Send History for bulk emails.** A template's edit page lists its recent bulk sends with sent, failed, skipped and pending counts, marks test sends to an override address, and refreshes after each queue. Until now nothing in the admin showed what a bulk send had actually done
 

@@ -38,6 +38,10 @@ readonly class LoginForm implements \Stringable
 		private string $forgotPasswordLabel    = '',
 		private string $passkeyLabel           = '',
 		private string $orLabel                = '',
+		// Last so existing positional callers are unaffected. Hides the
+		// checkbox only: a request that posts `persistent_login` anyway is
+		// still honored by AuthLoginSubmitAction.
+		private bool $showRememberMe           = true,
 	) {
 	}
 
@@ -87,7 +91,9 @@ readonly class LoginForm implements \Stringable
 		$fields[] = $this->buildPasswordField();
 
 		// Remember me checkbox
-		$fields[] = $this->buildCheckboxField();
+		if ($this->showRememberMe) {
+			$fields[] = $this->buildCheckboxField();
+		}
 
 		// Forgot password link
 		$forgotPasswordLink = '';

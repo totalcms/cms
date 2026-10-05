@@ -86,7 +86,7 @@ final readonly class AdminForms
 	/**
 	 * Create a login form.
 	 *
-	 * @param array<string,mixed> $options Options: collection, redirect, showForgotPassword, submitLabel, class, flashMessages, emailLabel, passwordLabel, rememberLabel, forgotPasswordLabel
+	 * @param array<string,mixed> $options Options: collection, redirect, showForgotPassword, showRememberMe, submitLabel, class, flashMessages, emailLabel, passwordLabel, rememberLabel, forgotPasswordLabel
 	 */
 	public function loginForm(array $options = []): string
 	{

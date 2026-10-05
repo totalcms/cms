@@ -199,6 +199,7 @@ Customize the welcome message at the top of the admin dashboard:
 | `submitLabel` | Sign in | Text for the submit button |
 | `forgotPasswordLabel` | Forgot Password? | Text for the forgot password link |
 | `showForgotPassword` | true | Whether to show the forgot password link |
+| `showRememberMe` | true | Whether to show the persistent login checkbox |
 
 ### Login Page - Below Form
 
