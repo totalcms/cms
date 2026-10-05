@@ -33,6 +33,43 @@ final class TiptapToMarkdownConverterTest extends TestCase
 		$this->assertSame('Just text.', trim($this->converter->convert('Just text.')));
 	}
 
+	// ─── Ampersands ──────────────────────────────────────────────────────────
+
+	public function testAPlainAmpersandIsNotHtmlEscaped(): void
+	{
+		// The library escapes every text node, so this came out as
+		// `Tom &amp; Jerry` — valid Markdown, but an agent reads it literally
+		// and copies `&amp;` into titles and summaries.
+		$this->assertSame('Tom & Jerry', trim($this->converter->convert('<p>Tom &amp; Jerry</p>')));
+		$this->assertSame('## Q&A', trim($this->converter->convert('<h2>Q&amp;A</h2>')));
+		$this->assertSame('- AT&T', trim($this->converter->convert('<ul><li>AT&amp;T</li></ul>')));
+		$this->assertSame('**P&L** *M&A*', trim($this->converter->convert('<p><strong>P&amp;L</strong> <em>M&amp;A</em></p>')));
+		$this->assertSame('[R&D](/x?a=1&b=2)', trim($this->converter->convert('<p><a href="/x?a=1&amp;b=2">R&amp;D</a></p>')));
+	}
+
+	public function testAnAmpersandThatWouldStartAnEntityStaysEscaped(): void
+	{
+		// Text that literally reads "&lt;" or "&copy;": unescaping its
+		// ampersand would turn it into a different character.
+		$result = trim($this->converter->convert('<p>&amp;lt; &amp;copy; &amp;#38; &amp;#x26; but &amp;x and &amp; y</p>'));
+
+		$this->assertSame('&amp;lt; &amp;copy; &amp;#38; &amp;#x26; but &x and & y', $result);
+	}
+
+	public function testAngleBracketsInTextStayEscaped(): void
+	{
+		// Unknown tags pass through as HTML, so a literal "<b>" in the text
+		// must not read as one.
+		$this->assertSame('a &lt;b&gt; c', trim($this->converter->convert('<p>a &lt;b&gt; c</p>')));
+	}
+
+	public function testCodeIsUntouched(): void
+	{
+		$result = $this->converter->convert('<p><code>a &amp;&amp; b &amp;amp;</code></p>');
+
+		$this->assertSame('`a && b &amp;`', trim($result));
+	}
+
 	public function testSingleParagraph(): void
 	{
 		$result = $this->converter->convert('<p>Hello world.</p>');

@@ -39,6 +39,9 @@ readonly class TiptapToMarkdownConverter
 			'strip_tags'      => false,
 			'hard_break'      => true,  // <br> → \n (not the two-trailing-space form)
 		]);
+
+		// Replaces the library's own handler for text nodes.
+		$this->converter->getEnvironment()->addConverter(new LiteralAmpersandTextConverter());
 	}
 
 	public function convert(string $html): string
