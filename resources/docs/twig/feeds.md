@@ -225,10 +225,9 @@ template: turn on **Publish RSS Feed** in the collection's settings. See
 [RSS Feeds](docs/collections/rss-feed).
 
 That endpoint maps fields by name — which property is the title, which is the
-content — and that is its limit: it cannot build a title out of two fields, and
-it cannot run content through `|markdown`, so a Markdown field arrives at the
-subscriber as raw `- **like this**`. It also reads the collection index, so
-every property it uses has to be indexed.
+content — and that is its limit: it cannot build a title out of two fields or
+shape the content beyond rendering a Markdown field to HTML. It also reads the
+collection index, so every property it uses has to be indexed.
 
 Use the endpoint when your collection already has a plain-text summary field
 and a usable title. Build the feed in Twig when you need control over either,

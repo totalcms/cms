@@ -39,6 +39,8 @@ Each collection has an **RSS Feed** card on its edit form (`/admin/collections/{
 
 Saving the collection writes these into its `.meta.json` under a `feed` block.
 
+If the Content Property is a `markdown` or `styledmarkdown` field, its Markdown is rendered to HTML for the feed, the same way the `|markdown` filter renders it. Other field types go out as written.
+
 The feed reads the collection's **index**, not the full objects. A property you map, filter on or name as the Hidden Field must be in the schema's index.
 
 ## What Is Left Out

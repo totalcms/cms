@@ -6,6 +6,9 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Feed\Exception\FeedDisabledException;
 use TotalCMS\Domain\Index\Service\IndexFilter;
+use TotalCMS\Domain\Property\Data\MarkdownData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
 use TotalCMS\Support\Config;
 
 /**
@@ -51,6 +54,8 @@ class RssBuilder
 		private readonly ObjectUrlBuilder $objectUrlBuilder,
 		private readonly Config $config,
 		private readonly FeedWriter $writer,
+		private readonly SchemaFetcher $schemaFetcher,
+		private readonly ParsedownMarkdown $markdown,
 	) {
 	}
 
@@ -105,6 +110,8 @@ class RssBuilder
 			$objects = array_slice($objects, 0, $limit);
 		}
 
+		$markdown = $this->isMarkdownField($collectionData->schema, $fieldMap['content']);
+
 		$items = [];
 		foreach ($objects as $object) {
 			$url = $this->objectUrlBuilder->buildUrl($collectionData, $object);
@@ -114,7 +121,7 @@ class RssBuilder
 				continue;
 			}
 
-			$items[] = $this->item($object, $url, $fieldMap);
+			$items[] = $this->item($object, $url, $fieldMap, $markdown);
 		}
 
 		return $this->writer->write($meta, $items, 'rss');
@@ -198,11 +205,18 @@ class RssBuilder
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function item(array $object, string $url, array $fieldMap): array
+	private function item(array $object, string $url, array $fieldMap, bool $markdown): array
 	{
-		$id    = (string)$object['id'];
-		$title = $object[$fieldMap['title']] ?? '';
-		$date  = $object[$fieldMap['date']] ?? null;
+		$id      = (string)$object['id'];
+		$title   = $object[$fieldMap['title']] ?? '';
+		$date    = $object[$fieldMap['date']] ?? null;
+		$content = $object[$fieldMap['content']] ?? '';
+
+		// A Markdown field holds source. Rendered the way |markdown renders
+		// it — Parsedown in safe mode, which escapes any raw HTML.
+		if ($markdown && is_string($content) && $content !== '') {
+			$content = $this->markdown->convert($content);
+		}
 
 		return [
 			'id'      => $id,
@@ -210,10 +224,27 @@ class RssBuilder
 			'title'   => is_string($title) && $title !== '' ? $title : $id,
 			'link'    => $url,
 			'date'    => $date ?? time(),
-			'summary' => $object[$fieldMap['content']] ?? '',
+			'summary' => $content,
 			'author'  => $object[$fieldMap['author']] ?? '',
 			'media'   => $object[$fieldMap['media']] ?? '',
 		];
+	}
+
+	/**
+	 * Whether the mapped content property is a Markdown field in the
+	 * collection's schema. Decided by field type, never by sniffing the text:
+	 * asterisks in a plain text field are asterisks. A schema that cannot be
+	 * read just means the content goes out as written.
+	 */
+	private function isMarkdownField(string $schemaId, string $property): bool
+	{
+		try {
+			$definition = $this->schemaFetcher->fetchSchema($schemaId)->properties[$property] ?? [];
+		} catch (\Throwable) {
+			return false;
+		}
+
+		return in_array($definition['field'] ?? '', MarkdownData::FIELDS, true);
 	}
 
 	/**

@@ -11,6 +11,9 @@ use TotalCMS\Domain\Feed\Exception\FeedDisabledException;
 use TotalCMS\Domain\Feed\Service\FeedWriter;
 use TotalCMS\Domain\Feed\Service\RssBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
 use TotalCMS\Support\Config;
 
 final class RssBuilderTest extends TestCase
@@ -19,6 +22,7 @@ final class RssBuilderTest extends TestCase
 	private MockObject $collectionFetcher;
 	private MockObject $objectUrlBuilder;
 	private MockObject $config;
+	private MockObject $schemaFetcher;
 	private RssBuilder $builder;
 
 	protected function setUp(): void
@@ -28,6 +32,7 @@ final class RssBuilderTest extends TestCase
 		$this->objectUrlBuilder  = $this->createMock(ObjectUrlBuilder::class);
 		$this->config            = $this->createMock(Config::class);
 		$this->config->domain    = 'example.com';
+		$this->schemaFetcher     = $this->createMock(SchemaFetcher::class);
 
 		$this->builder = new RssBuilder(
 			$this->indexFilter,
@@ -35,7 +40,18 @@ final class RssBuilderTest extends TestCase
 			$this->objectUrlBuilder,
 			$this->config,
 			new FeedWriter($this->config),
+			$this->schemaFetcher,
+			new ParsedownMarkdown(),
 		);
+	}
+
+	/** The collection's schema, as far as the feed cares: each property's field type. */
+	private function schemaWith(array $fields): void
+	{
+		$schema             = $this->createMock(SchemaData::class);
+		$schema->properties = array_map(static fn (string $field): array => ['field' => $field], $fields);
+
+		$this->schemaFetcher->method('fetchSchema')->willReturn($schema);
 	}
 
 	/**
@@ -219,6 +235,64 @@ final class RssBuilderTest extends TestCase
 
 		$this->assertStringContainsString('Plain Title', $result);
 		$this->assertStringContainsString('Default Summary', $result);
+	}
+
+	/** The first item's description as a reader receives it: the HTML, XML escaping undone. */
+	private function firstItemBody(string $xml): string
+	{
+		$feed = simplexml_load_string($xml);
+		$this->assertNotFalse($feed);
+
+		return (string)$feed->channel->item[0]->description;
+	}
+
+	public function testAMarkdownContentFieldIsRenderedToHtml(): void
+	{
+		// It used to reach the subscriber as raw `- **like this**`.
+		$this->schemaWith(['body' => 'markdown']);
+
+		$html = $this->firstItemBody($this->feedOf(
+			[['id' => 'a', 'title' => 'Post', 'body' => "Some **bold** text\n\n- one\n- two", 'updated' => '2024-01-15']],
+			['enabled' => true, 'content' => 'body'],
+		));
+
+		$this->assertStringContainsString('<strong>bold</strong>', $html);
+		$this->assertStringContainsString('<li>one</li>', $html);
+		$this->assertStringNotContainsString('**bold**', $html);
+	}
+
+	public function testRenderedMarkdownEscapesRawHtml(): void
+	{
+		// Markdown is stored as written; it is made safe when rendered.
+		$this->schemaWith(['summary' => 'styledmarkdown']);
+
+		$html = $this->firstItemBody($this->feedOf(
+			[['id' => 'a', 'title' => 'Post', 'summary' => 'Hello <script>alert(1)</script> *there*', 'updated' => '2024-01-15']],
+		));
+
+		$this->assertStringContainsString('<em>there</em>', $html);
+		$this->assertStringContainsString('&lt;script&gt;', $html);
+		$this->assertStringNotContainsString('<script>', $html);
+	}
+
+	public function testOtherFieldTypesAreLeftAsWritten(): void
+	{
+		// Asterisks in a plain text field are just asterisks, and styledtext
+		// is HTML already.
+		$this->schemaWith(['summary' => 'textarea']);
+
+		$result = $this->feedOf([['id' => 'a', 'title' => 'Post', 'summary' => 'Rated **** by readers', 'updated' => '2024-01-15']]);
+
+		$this->assertStringContainsString('Rated **** by readers', $result);
+	}
+
+	public function testAFeedStillBuildsWhenTheSchemaCannotBeRead(): void
+	{
+		$this->schemaFetcher->method('fetchSchema')->willThrowException(new \RuntimeException('schema missing'));
+
+		$result = $this->feedOf([['id' => 'a', 'title' => 'Post', 'summary' => 'Plain **text**', 'updated' => '2024-01-15']]);
+
+		$this->assertStringContainsString('Plain **text**', $result);
 	}
 
 	public function testARequestCannotChooseFields(): void

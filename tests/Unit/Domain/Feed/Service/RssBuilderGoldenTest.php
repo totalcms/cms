@@ -8,6 +8,8 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Feed\Service\FeedWriter;
 use TotalCMS\Domain\Feed\Service\RssBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Twig\Markdown\ParsedownMarkdown;
 use TotalCMS\Support\Config;
 
 /**
@@ -34,7 +36,7 @@ function goldenRssBuilder(array $objects, array $feed = []): RssBuilder
 	$config->domain = 'example.com';
 	$config->method('displayName')->willReturn('Example Site');
 
-	return new RssBuilder($index, $collections, $urls, $config, new FeedWriter($config));
+	return new RssBuilder($index, $collections, $urls, $config, new FeedWriter($config), test()->createMock(SchemaFetcher::class), new ParsedownMarkdown());
 }
 
 function goldenRss(string $xml): string

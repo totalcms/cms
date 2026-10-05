@@ -202,7 +202,7 @@
 		"content": {
 			"type": "string",
 			"label": "Content Property",
-			"help": "Object property used for each item's text. The feed reads the collection index, so the property must be indexed.",
+			"help": "Object property used for each item's text. A Markdown field is rendered to HTML. The feed reads the collection index, so the property must be indexed.",
 			"field": "select",
 			"placeholder": "summary",
 			"default": "",
