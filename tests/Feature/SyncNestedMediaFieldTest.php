@@ -37,6 +37,7 @@ beforeEach(function (): void {
 			'id'      => ['$ref' => 'https://www.totalcms.co/schemas/properties/slug.json', 'field' => 'id'],
 			'caption' => ['type' => 'string', 'field' => 'text'],
 			'image'   => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json', 'field' => 'image'],
+			'doc'     => ['$ref' => 'https://www.totalcms.co/schemas/properties/file.json', 'field' => 'file'],
 		],
 	]);
 
@@ -135,4 +136,34 @@ it('keeps the destination images inside cards and decks when a sync payload omit
 	expect($object['slides']['one']['image']['name'])->toBe('slide.jpg');
 	// A deck item new to the destination has no image to keep, and gets none.
 	expect($object['slides']['two']['image']['name'] ?? '')->toBe('');
+});
+
+it('treats a file inside a card the same way: omitted from the payload, kept on the destination', function (): void {
+	$this->saver->saveObject('builder-pages', [
+		'id'    => 'home',
+		'title' => 'Original',
+		'seo'   => ['caption' => 'Old card', 'doc' => ['name' => 'destination.pdf', 'size' => 999]],
+	]);
+
+	$data     = $this->exporter->exportSyncData(null, null, ['builder-pages' => null]);
+	$exported = null;
+	foreach ($data->objects as $object) {
+		if (($object['id'] ?? '') === 'home') {
+			$exported = $object['data'];
+		}
+	}
+
+	expect($exported['seo']['caption'])->toBe('Old card');
+	expect($exported['seo'])->not->toHaveKey('doc');
+
+	$this->importer->importFromDefinition([
+		'objects' => [
+			['collection' => 'builder-pages', 'id' => 'home', 'data' => ['id' => 'home', 'title' => 'Updated', 'seo' => ['caption' => 'New card']]],
+		],
+	], upsert: true);
+
+	$object = $this->fetcher->fetchObject('builder-pages', 'home')->toArray();
+
+	expect($object['seo']['caption'])->toBe('New card');
+	expect($object['seo']['doc']['name'])->toBe('destination.pdf');
 });

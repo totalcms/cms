@@ -115,11 +115,12 @@ readonly class ObjectSection
 	}
 
 	/**
-	 * Carry the destination's own image/gallery values through an upsert.
+	 * Carry the destination's own image, gallery, file and depot values
+	 * through an upsert.
 	 *
 	 * The upsert path replaces the whole object, so a field the payload does
 	 * not mention would be wiped. JumpStart carries no binaries, which means
-	 * an image field is not syncable data in either direction: the source
+	 * a media field is not syncable data in either direction: the source
 	 * cannot send one and must not clear one it never received. Only fields
 	 * ABSENT from the payload are restored; a value that is present is an
 	 * authored factory rule and is still honored.
@@ -148,7 +149,7 @@ readonly class ObjectSection
 
 		foreach ($schema->properties as $fieldName => $property) {
 			$fieldType = $property['field'] ?? $property['type'] ?? '';
-			if (!in_array($fieldType, ['image', 'gallery'], true) || array_key_exists($fieldName, $objectData)) {
+			if (!in_array($fieldType, NestedMediaFields::TYPES, true) || array_key_exists($fieldName, $objectData)) {
 				continue;
 			}
 			if (array_key_exists($fieldName, $existing)) {

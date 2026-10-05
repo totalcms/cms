@@ -19,13 +19,16 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * page push sent a reference to a file the destination did not have, and the
  * next push overwrote whatever image the destination had uploaded instead.
  *
- * The treatment is deliberately identical to the top level:
- *   - image / gallery — omitted from the payload, and the destination's own
- *     value carried forward on upsert when the payload does not mention it
- *   - file / depot    — normalized to an empty array
+ * The treatment is deliberately identical to the top level: an image,
+ * gallery, file or depot field is omitted from the payload, and the
+ * destination's own value is carried forward on upsert when the payload does
+ * not mention it.
  */
 final readonly class NestedMediaFields
 {
+	/** Field types whose value points at a binary. They never travel; the destination owns them. */
+	public const TYPES = ['image', 'gallery', 'file', 'depot'];
+
 	/** Composites nest (a deck item can hold a card); stop well before a cyclic schemaref could loop. */
 	private const MAX_DEPTH = 4;
 
@@ -54,7 +57,7 @@ final readonly class NestedMediaFields
 	}
 
 	/**
-	 * Carry the destination's image/gallery values inside cards and decks
+	 * Carry the destination's media values inside cards and decks
 	 * through an upsert, for every nested media key the payload omits. Deck
 	 * items are matched by id; an item new to the destination has nothing to
 	 * keep.
@@ -81,12 +84,8 @@ final readonly class NestedMediaFields
 				continue;
 			}
 
-			$type = $this->fieldType($property);
-
-			if (in_array($type, ['image', 'gallery'], true)) {
+			if (in_array($this->fieldType($property), self::TYPES, true)) {
 				unset($data[$name]);
-			} elseif (in_array($type, ['file', 'depot'], true)) {
-				$data[$name] = [];
 			}
 		}
 
@@ -108,7 +107,7 @@ final readonly class NestedMediaFields
 	private function preserveAll(SchemaData $schema, array $incoming, array $existing, int $depth): array
 	{
 		foreach ($schema->properties as $name => $property) {
-			if (!in_array($this->fieldType($property), ['image', 'gallery'], true)) {
+			if (!in_array($this->fieldType($property), self::TYPES, true)) {
 				continue;
 			}
 

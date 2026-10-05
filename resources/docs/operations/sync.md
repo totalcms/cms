@@ -46,7 +46,7 @@ These five are the only collections sync can move *destructively* (overwriting a
   - The five feature-flag collections (`builder-pages`, `dataviews`, `mailer`, `mcp-prompt`, `automations`) are reachable only through their own flag, not `--objects`.
   - `image`, `gallery`, `file`, and `depot` can never be seeded — see [Binaries never travel](#what-never-gets-synced) below.
   - `playground` can never be seeded — it's a per-install scratchpad created on demand, not portable content.
-- Binaries never travel even for seedable collections: a card or field that references an image/file/gallery/depot is exported without that field, so the receiving object simply won't have it populated. A pushed blog post never blanks a production image field, because the field never arrives at all.
+- Binaries never travel even for seedable collections: a card or field that references an image/file/gallery/depot is exported without that field, so the receiving object simply won't have it populated. A pushed blog post never blanks a production image or file field, because the field never arrives at all.
 
 ## What Never Gets Synced
 

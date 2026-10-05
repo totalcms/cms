@@ -446,6 +446,8 @@ readonly class JumpStartExporter
 				switch ($fieldType) {
 					case 'image':
 					case 'gallery':
+					case 'depot':
+					case 'file':
 						// Omitted, not normalized to the type name. Writing
 						// "image" here collided with the factory-rule syntax the
 						// importer honors, so every sync round-trip made the
@@ -458,13 +460,11 @@ readonly class JumpStartExporter
 						// file it does not have. Leaving the key out is the only
 						// honest encoding of "this did not travel", and the
 						// importer reads its absence as "keep what you have".
+						//
+						// The same holds for file and depot. They used to be
+						// sent as an empty array, which the upsert wrote over
+						// the destination's own uploaded file.
 						unset($processedData[$fieldName]);
-						break;
-
-					case 'depot':
-					case 'file':
-						// Normalize depot and file properties to empty arrays
-						$processedData[$fieldName] = [];
 						break;
 				}
 			}

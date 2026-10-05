@@ -58,6 +58,8 @@ beforeEach(function (): void {
 			'id'    => ['$ref' => 'https://www.totalcms.co/schemas/properties/slug.json', 'field' => 'id'],
 			'title' => ['type' => 'string', 'field' => 'text'],
 			'image' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json', 'field' => 'image'],
+			'doc'   => ['$ref' => 'https://www.totalcms.co/schemas/properties/file.json', 'field' => 'file'],
+			'files' => ['$ref' => 'https://www.totalcms.co/schemas/properties/depot.json', 'field' => 'depot'],
 		],
 	]);
 
@@ -166,4 +168,54 @@ it('still honors an image factory rule an author wrote by hand', function (): vo
 
 	expect($object['title'])->toBe('Seeded');
 	expect($object['image']['name'] ?? '')->not->toBe('');
+});
+
+// File and depot fields were left on the older behaviour when images were
+// fixed: the exporter sent them as an empty array, and the upsert wrote that
+// over whatever the destination had. A push removed the destination's own
+// uploaded file from the record.
+
+it('omits file and depot fields from the sync payload instead of sending them empty', function (): void {
+	$this->saver->saveObject('builder-pages', [
+		'id'    => 'home',
+		'title' => 'Home',
+		'doc'   => ['name' => 'source.pdf', 'size' => 1234],
+	]);
+
+	$data = $this->exporter->exportSyncData(null, null, ['builder-pages' => null]);
+
+	$exported = null;
+	foreach ($data->objects as $object) {
+		if (($object['id'] ?? '') === 'home') {
+			$exported = $object['data'];
+		}
+	}
+
+	expect($exported)->not->toBeNull();
+	expect($exported)->not->toHaveKey('doc');
+	expect($exported)->not->toHaveKey('files');
+	expect($exported['title'])->toBe('Home');
+});
+
+it('keeps the destination file when a sync payload omits it', function (): void {
+	$this->saver->saveObject('builder-pages', [
+		'id'    => 'home',
+		'title' => 'Original Title',
+		'doc'   => ['name' => 'destination.pdf', 'size' => 999],
+	]);
+
+	$this->importer->importFromDefinition([
+		'objects' => [
+			[
+				'collection' => 'builder-pages',
+				'id'         => 'home',
+				'data'       => ['id' => 'home', 'title' => 'Updated Title'],
+			],
+		],
+	], upsert: true);
+
+	$object = $this->fetcher->fetchObject('builder-pages', 'home')->toArray();
+
+	expect($object['title'])->toBe('Updated Title');
+	expect($object['doc']['name'])->toBe('destination.pdf');
 });
