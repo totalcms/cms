@@ -12,6 +12,7 @@ use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ImportEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\JumpStart\Data\ImportReport;
+use TotalCMS\Domain\JumpStart\Service\NestedMediaFields;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LogChannel;
@@ -155,6 +156,8 @@ readonly class ObjectSection
 			}
 		}
 
-		return $objectData;
+		// Same rule for media inside cards and decks: the card arrives whole
+		// and would otherwise replace the destination's, image and all.
+		return (new NestedMediaFields($this->schemaFetcher))->preserve($schema, $objectData, $existing);
 	}
 }

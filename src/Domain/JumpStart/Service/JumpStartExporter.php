@@ -471,7 +471,9 @@ readonly class JumpStartExporter
 		}
 		unset($processedData['id']);
 
-		return $processedData;
+		// The loop above only sees top-level fields. Media inside a card or
+		// deck (a page's `seo.image`) gets the same treatment.
+		return (new NestedMediaFields($this->schemaFetcher))->strip($schema, $processedData);
 	}
 
 	/** @param list<string>|null $filter */
