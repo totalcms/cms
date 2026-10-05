@@ -41,6 +41,7 @@ return [
 			['title' => 'Migrating from another CMS', 'path' => 'collections/migrate'],
 			['title' => 'Exporting Data',      'path' => 'collections/export'],
 			['title' => 'Sitemap Builder',     'path' => 'collections/sitemap-builder'],
+			['title' => 'RSS Feeds',           'path' => 'collections/rss-feed'],
 			['title' => 'Podcasts',            'path' => 'collections/podcast'],
 		],
 	],

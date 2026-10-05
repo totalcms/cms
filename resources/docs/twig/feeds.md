@@ -220,15 +220,16 @@ Serve it from a route ending in `.xml`, and remember `meta.self`.
 
 ## Compared with the built-in feed
 
-Total CMS also serves `/feed/rss/{collection}` without any template. That
-endpoint maps fields by name — which field is the title, which is the content
-— and that is its limit: it cannot build a title out of two fields, and it
-cannot run content through `|markdown`, so a Markdown field arrives at the
-subscriber as raw `- **like this**`.
+A collection can also publish a feed at `/feed/rss/{collection}` without any
+template: turn on **Publish RSS Feed** in the collection's settings. See
+[RSS Feeds](docs/collections/rss-feed).
 
-Objects whose `draft` field is on are never included, for any schema and
-whatever filters the URL carries. That relies on `draft` being in the
-schema's index, which is where the endpoint reads from.
+That endpoint maps fields by name — which property is the title, which is the
+content — and that is its limit: it cannot build a title out of two fields, and
+it cannot run content through `|markdown`, so a Markdown field arrives at the
+subscriber as raw `- **like this**`. It also reads the collection index, so
+every property it uses has to be indexed.
 
 Use the endpoint when your collection already has a plain-text summary field
-and a usable title. Build the feed in Twig when you need control over either.
+and a usable title. Build the feed in Twig when you need control over either,
+or when you want a feed no URL parameter can filter.

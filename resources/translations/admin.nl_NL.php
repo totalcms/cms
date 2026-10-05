@@ -281,7 +281,9 @@ return [
 
 	// ── Collection Feeds ────────────────────────────────────────────────────
 	'collection.feeds_title'          => 'RSS-bouwer voor {collection}',
-	'collection.feeds_desc'           => 'Het volgende genereert een URL die bezoekers kunnen gebruiken om zich te abonneren op een RSS-feed van uw Collection. Alle onderstaande velden zijn optioneel. Als er geen veldtoewijzingen worden opgegeven, wordt de toewijzing voor een blog-Schema gebruikt.',
+	'collection.feeds_desc'           => 'De RSS-feed van deze collectie wordt ingesteld in de collectie-instellingen: de feednaam, de veldtoewijzing en wat wordt weggelaten. Met de onderstaande opties maakt u een URL voor een variant van die feed, zoals één categorie of een kortere lijst. Alle velden zijn optioneel.',
+	'collection.feeds_disabled_title' => 'RSS-feed niet ingeschakeld',
+	'collection.feeds_disabled_desc'  => 'Deze collectie publiceert geen RSS-feed, dus de feed-URL geeft 404. Schakel eerst ‘Publish RSS Feed’ in de collectie-instellingen in.',
 	'collection.feeds_settings'       => 'RSS-feedinstellingen',
 	'collection.feeds_name'           => 'Feednaam',
 	'collection.feeds_name_ph'        => 'Mijn {collection}-feed',

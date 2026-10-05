@@ -76,6 +76,9 @@ class CollectionData
 	public array $sitemap = [];  // Sitemap card settings (enabled, date, frequency, priority, include, exclude)
 
 	/** @var array<string,mixed> */
+	public array $feed = [];  // RSS Feed card settings (enabled, name, description, filters, limit, hidden field, field mapping) — see RssBuilder
+
+	/** @var array<string,mixed> */
 	public array $mcp = [];  // MCP card settings (access, description, resource). All editions; writes need Pro — see EditionFeature::MCP_SERVER.
 
 	/** @var array<string,mixed> */
@@ -149,6 +152,10 @@ class CollectionData
 
 		if ($this->sitemap !== []) {
 			$collection['sitemap'] = $this->sitemap;
+		}
+
+		if ($this->feed !== []) {
+			$collection['feed'] = $this->feed;
 		}
 
 		if ($this->mcp !== []) {

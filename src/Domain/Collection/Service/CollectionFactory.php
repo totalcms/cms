@@ -6,6 +6,7 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Feed\Service\RssBuilder;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 
@@ -86,6 +87,12 @@ readonly class CollectionFactory
 		}
 
 		$collection->singleton = in_array($collectionId, SchemaData::SINGLETON_COLLECTIONS, true);
+
+		// A blog or feed collection publishes its RSS feed from the start;
+		// every other collection's feed is off until someone turns it on.
+		if (in_array($collectionId, RssBuilder::FEED_SCHEMAS, true)) {
+			$collection->feed = ['enabled' => true];
+		}
 
 		return $collection;
 	}

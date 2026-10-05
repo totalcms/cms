@@ -281,7 +281,9 @@ return [
 
 	// ── Collection Feeds ────────────────────────────────────────────────────
 	'collection.feeds_title'          => 'RSS Builder for {collection}',
-	'collection.feeds_desc'           => 'The following will produce a URL that you can use for visitor to subscribe to an RSS feed of your collection. All of the fields below are optional. If no field mappings are provided, then the mapping for a blog schema will be used.',
+	'collection.feeds_desc'           => 'This collection\'s RSS feed is set up in its collection settings: the feed name, the field mapping and what is left out. The options below build a URL for a variant of that feed, such as a single category or a shorter list. All of the fields are optional.',
+	'collection.feeds_disabled_title' => 'RSS Feed Not Enabled',
+	'collection.feeds_disabled_desc'  => 'This collection does not publish an RSS feed, so its feed URL returns 404. Turn on Publish RSS Feed in the collection settings first.',
 	'collection.feeds_settings'       => 'RSS Feed Settings',
 	'collection.feeds_name'           => 'Feed Name',
 	'collection.feeds_name_ph'        => 'My {collection} Feed',

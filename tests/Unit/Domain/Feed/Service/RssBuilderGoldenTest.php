@@ -8,8 +8,6 @@ use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
 use TotalCMS\Domain\Feed\Service\FeedWriter;
 use TotalCMS\Domain\Feed\Service\RssBuilder;
 use TotalCMS\Domain\Index\Service\IndexFilter;
-use TotalCMS\Domain\Schema\Data\SchemaData;
-use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Support\Config;
 
 /**
@@ -18,17 +16,14 @@ use TotalCMS\Support\Config;
  * reader can see — a relative enclosure URL is now absolute, which RSS
  * requires anyway. The channel pubDate is the wall clock and is normalized.
  */
-function goldenRssBuilder(array $objects): RssBuilder
+function goldenRssBuilder(array $objects, array $feed = []): RssBuilder
 {
 	$collection         = test()->createMock(CollectionData::class);
 	$collection->schema = 'blog';
-	$schema             = test()->createMock(SchemaData::class);
-	$schema->id         = 'blog';
+	$collection->feed   = ['enabled' => true] + $feed;
 
 	$collections = test()->createMock(CollectionFetcher::class);
 	$collections->method('fetchCollection')->willReturn($collection);
-	$schemas = test()->createMock(SchemaFetcher::class);
-	$schemas->method('fetchSchema')->willReturn($schema);
 	$index = test()->createMock(IndexFilter::class);
 	$index->method('fetchFilteredIndex')->willReturn($objects);
 	$urls = test()->createMock(ObjectUrlBuilder::class);
@@ -54,18 +49,19 @@ test('the collection feed renders exactly as before', function (): void {
 		['id' => 'newest', 'title' => 'Newest post', 'summary' => 'Plain summary', 'updated' => '2026-03-01T12:30:00+00:00', 'media' => '/uploads/cover.png'],
 		['id' => 'untitled', 'summary' => '', 'updated' => '2025-12-24'],
 		['id' => 'broken', 'title' => 'No URL', 'updated' => '2026-02-01'],
-	]);
-	$builder->setFieldMap(['content' => 'summary']);
-
-	$xml = $builder->buildFeed('blog', [
-		'name'        => 'Example%20Blog',
-		'description' => 'All%20the%20posts',
+	], [
+		// The feed's settings live on the collection now; they used to ride
+		// in the query string. The document is the same either way.
+		'name'        => 'Example Blog',
+		'description' => 'All the posts',
 		'link'        => 'https://example.com/blog/',
-		'rssurl'      => 'https://example.com/feed/rss/blog',
 		'image'       => 'https://example.com/logo.png',
 		'language'    => 'en-US',
-		'limit'       => '3',
+		'limit'       => 3,
+		'content'     => 'summary',
 	]);
+
+	$xml = $builder->buildFeed('blog', ['rssurl' => 'https://example.com/feed/rss/blog']);
 
 	expect(goldenRss($xml))->toMatchSnapshot();
 });

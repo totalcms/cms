@@ -281,7 +281,9 @@ return [
 
 	// ── Collection Feeds ────────────────────────────────────────────────────
 	'collection.feeds_title'          => 'Kreator RSS dla {collection}',
-	'collection.feeds_desc'           => 'Poniżej wygenerujesz adres URL, dzięki któremu odwiedzający mogą subskrybować kanał RSS Twojej collection. Wszystkie pola są opcjonalne. Jeśli nie podasz mapowania pól, zostanie użyte mapowanie schema bloga.',
+	'collection.feeds_desc'           => 'Kanał RSS tej kolekcji konfiguruje się w ustawieniach kolekcji: nazwę kanału, mapowanie pól i to, co jest pomijane. Poniższe opcje tworzą adres URL wariantu tego kanału, na przykład jednej kategorii lub krótszej listy. Wszystkie pola są opcjonalne.',
+	'collection.feeds_disabled_title' => 'Kanał RSS nie jest włączony',
+	'collection.feeds_disabled_desc'  => 'Ta kolekcja nie publikuje kanału RSS, więc adres URL kanału zwraca 404. Najpierw włącz „Publish RSS Feed” w ustawieniach kolekcji.',
 	'collection.feeds_settings'       => 'Ustawienia kanału RSS',
 	'collection.feeds_name'           => 'Nazwa kanału',
 	'collection.feeds_name_ph'        => 'Mój kanał {collection}',

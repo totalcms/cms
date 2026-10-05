@@ -1,0 +1,255 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://www.totalcms.co/schemas/feed-collection.json",
+	"id": "feed-collection",
+	"type": "object",
+	"description": "RSS feed settings for a Total CMS collection. Used as a card sub-schema on the collection meta.",
+	"category": "Internal",
+	"formgrid": "enabled .\nname language\nlink image\ndescription description\ninclude exclude\nlimit hidden\n---\ntitle date\ncontent author\nmedia .",
+	"properties": {
+		"id": {
+			"$ref": "https://www.totalcms.co/schemas/properties/slug.json",
+			"label": "ID",
+			"help": "Reserved — required by the schema system but unused for cards.",
+			"field": "id",
+			"factory": "slug",
+			"settings": {
+				"readonly": true
+			}
+		},
+		"enabled": {
+			"type": "boolean",
+			"label": "Publish RSS Feed",
+			"help": "Serve this collection as an RSS feed at /feed/rss/{collection}. When disabled, that URL returns 404.",
+			"field": "toggle",
+			"default": false
+		},
+		"name": {
+			"type": "string",
+			"label": "Feed Name",
+			"help": "The feed's title in a reader. Defaults to the site name.",
+			"field": "text",
+			"default": "",
+			"settings": {
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			},
+			"placeholder": "My Blog Feed"
+		},
+		"language": {
+			"type": "string",
+			"label": "Language",
+			"help": "The language the feed is written in.",
+			"field": "select",
+			"placeholder": "Select a language",
+			"default": "",
+			"settings": {
+				"propertyOptions": "locales",
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			}
+		},
+		"description": {
+			"type": "string",
+			"label": "Feed Description",
+			"help": "A short description of the feed. Defaults to the feed name.",
+			"field": "textarea",
+			"default": "",
+			"settings": {
+				"rows": 4,
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			},
+			"placeholder": "A description of the feed"
+		},
+		"link": {
+			"type": "string",
+			"label": "Link to Website",
+			"help": "The page the feed belongs to. Defaults to the site's homepage.",
+			"field": "url",
+			"default": "",
+			"settings": {
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			},
+			"placeholder": "https://example.com/blog"
+		},
+		"image": {
+			"type": "string",
+			"label": "Feed Image",
+			"help": "URL of an image that represents the feed.",
+			"field": "url",
+			"default": "",
+			"settings": {
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			},
+			"placeholder": "https://example.com/feed.jpg"
+		},
+		"include": {
+			"type": "string",
+			"label": "Include Filter",
+			"help": "Only include objects matching this filter expression. Example: featured:true",
+			"field": "text",
+			"default": "",
+			"settings": {
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			},
+			"placeholder": "featured:true"
+		},
+		"exclude": {
+			"type": "string",
+			"label": "Exclude Filter",
+			"help": "Skip objects matching this filter expression. Example: category:internal",
+			"field": "text",
+			"default": "",
+			"settings": {
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			},
+			"placeholder": "category:internal"
+		},
+		"limit": {
+			"type": "number",
+			"label": "Item Limit",
+			"help": "The most items the feed lists, newest first. Enter -1 for no limit.",
+			"field": "number",
+			"placeholder": "25",
+			"default": 25,
+			"settings": {
+				"min": -1,
+				"max": 1000,
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			}
+		},
+		"hidden": {
+			"type": "string",
+			"label": "Hidden Field",
+			"help": "Objects with this property turned on are left out of the feed. Defaults to draft. Choosing another property replaces draft, so drafts are then included unless you exclude them. The property must be in the schema's index.",
+			"field": "select",
+			"placeholder": "draft",
+			"default": "",
+			"settings": {
+				"propertyOptions": "schemaProperties",
+				"sortOptions": true,
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			}
+		},
+		"title": {
+			"type": "string",
+			"label": "Title Property",
+			"help": "Object property used for each item's title.",
+			"field": "select",
+			"placeholder": "title",
+			"default": "",
+			"settings": {
+				"propertyOptions": "schemaProperties",
+				"sortOptions": true,
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			}
+		},
+		"date": {
+			"type": "string",
+			"label": "Date Property",
+			"help": "Object property used for each item's date, and to sort the feed newest first.",
+			"field": "select",
+			"placeholder": "updated",
+			"default": "",
+			"settings": {
+				"propertyOptions": "schemaProperties",
+				"sortOptions": true,
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			}
+		},
+		"content": {
+			"type": "string",
+			"label": "Content Property",
+			"help": "Object property used for each item's text. The feed reads the collection index, so the property must be indexed.",
+			"field": "select",
+			"placeholder": "summary",
+			"default": "",
+			"settings": {
+				"propertyOptions": "schemaProperties",
+				"sortOptions": true,
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			}
+		},
+		"author": {
+			"type": "string",
+			"label": "Author Property",
+			"help": "Object property used for each item's author.",
+			"field": "select",
+			"placeholder": "author",
+			"default": "",
+			"settings": {
+				"propertyOptions": "schemaProperties",
+				"sortOptions": true,
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			}
+		},
+		"media": {
+			"type": "string",
+			"label": "Media Property",
+			"help": "Object property used for each item's enclosure (audio, video or image).",
+			"field": "select",
+			"placeholder": "media",
+			"default": "",
+			"settings": {
+				"propertyOptions": "schemaProperties",
+				"sortOptions": true,
+				"visibility": {
+					"watch": "enabled",
+					"value": "1",
+					"operator": "=="
+				}
+			}
+		}
+	},
+	"required": []
+}

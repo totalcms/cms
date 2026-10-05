@@ -137,6 +137,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
 use TotalCMS\Domain\Migration\Migration\BuilderPageSeoFieldsMigration;
 use TotalCMS\Domain\Migration\Migration\ClearPublicReadOnSensitiveCollectionsMigration;
+use TotalCMS\Domain\Migration\Migration\EnableCollectionFeedsMigration;
 use TotalCMS\Domain\Migration\Migration\EnsureAutomationsCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\EnsureMcpPromptCollectionMigration;
 use TotalCMS\Domain\Migration\Migration\LegacyTemplatesMigration;
@@ -899,6 +900,13 @@ return [
 		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),
 	),
 
+	EnableCollectionFeedsMigration::class => fn (ContainerInterface $container): EnableCollectionFeedsMigration => new EnableCollectionFeedsMigration(
+		$container->get(CollectionLister::class),
+		$container->get(CollectionSaver::class),
+		$container->get(SchemaFetcher::class),
+		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),
+	),
+
 	MigrationRunner::class => fn (ContainerInterface $container): MigrationRunner => new MigrationRunner(
 		[
 			$container->get(LegacyTemplatesMigration::class),
@@ -906,6 +914,7 @@ return [
 			$container->get(EnsureAutomationsCollectionMigration::class),
 			$container->get(BuilderPageSeoFieldsMigration::class),
 			$container->get(ClearPublicReadOnSensitiveCollectionsMigration::class),
+			$container->get(EnableCollectionFeedsMigration::class),
 		],
 		$container->get(MigrationStateRepository::class),
 		$container->get(LoggerFactory::class)->channelLogger(LogChannel::Migrations),

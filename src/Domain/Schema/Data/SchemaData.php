@@ -35,6 +35,7 @@ class SchemaData
 		'depot',
 		'email',
 		'feed',
+		'feed-collection',
 		'file',
 		'gallery',
 		'image',

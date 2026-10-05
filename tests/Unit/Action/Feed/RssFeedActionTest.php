@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use TotalCMS\Action\Feed\RssFeedAction;
+use TotalCMS\Domain\Feed\Exception\FeedDisabledException;
 use TotalCMS\Domain\Feed\Service\RssBuilder;
 use TotalCMS\Renderer\XmlRenderer;
 
@@ -29,25 +30,25 @@ final class RssFeedActionTest extends TestCase
 		$this->action = new RssFeedAction($this->xmlRenderer, $this->rssBuilder);
 	}
 
-	public function testBuildsRssFeedSuccessfully(): void
+	/** @param array<string,mixed> $query */
+	private function request(array $query, string $url = 'https://example.com/feed/rss/blog'): void
 	{
-		$args = ['collection' => 'blog'];
-
 		$uri = $this->createMock(UriInterface::class);
-		$uri->method('__toString')->willReturn('https://example.com/feed/blog');
+		$uri->method('__toString')->willReturn($url);
 
 		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getQueryParams')->willReturn(['limit' => '10']);
+		$this->request->method('getQueryParams')->willReturn($query);
+	}
+
+	public function testRendersTheCollectionFeedAsXml(): void
+	{
+		$this->request(['limit' => '10']);
 
 		$xml = '<?xml version="1.0"?><rss></rss>';
 
 		$this->rssBuilder->expects($this->once())
-			->method('setFieldMap')
-			->with($this->callback(fn ($params): bool => $params['limit'] === '10' && $params['rssurl'] === 'https://example.com/feed/blog'));
-
-		$this->rssBuilder->expects($this->once())
 			->method('buildFeed')
-			->with('blog', $this->anything())
+			->with('blog', ['limit' => '10', 'rssurl' => 'https://example.com/feed/rss/blog'])
 			->willReturn($xml);
 
 		$this->xmlRenderer->expects($this->once())
@@ -55,152 +56,68 @@ final class RssFeedActionTest extends TestCase
 			->with($this->response, $xml)
 			->willReturn($this->response);
 
-		$result = ($this->action)($this->request, $this->response, $args);
-
-		$this->assertSame($this->response, $result);
+		$this->assertSame($this->response, ($this->action)($this->request, $this->response, ['collection' => 'blog']));
 	}
 
-	public function testPassesCollectionToBuilder(): void
+	public function testOnlyTheOverridableKeysReachTheBuilder(): void
 	{
-		$args = ['collection' => 'news'];
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('__toString')->willReturn('https://example.com/feed/news');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getQueryParams')->willReturn([]);
-
-		$this->rssBuilder->method('setFieldMap');
+		$this->request([
+			'name'        => 'News Only',
+			'description' => 'Just the news',
+			'include'     => 'category:news',
+			'exclude'     => 'category:internal',
+			'limit'       => '5',
+			// Everything below used to pass straight through.
+			'content'     => 'body',
+			'title'       => 'headline',
+			'link'        => 'https://evil.example/',
+			'draft'       => 'anything',
+			'hidden'      => 'anything',
+			'enabled'     => '1',
+			'rssurl'      => 'https://evil.example/feed',
+			'bogus'       => 'x',
+		]);
 
 		$this->rssBuilder->expects($this->once())
 			->method('buildFeed')
-			->with('news', $this->anything())
+			->with('blog', [
+				'name'        => 'News Only',
+				'description' => 'Just the news',
+				'include'     => 'category:news',
+				'exclude'     => 'category:internal',
+				'limit'       => '5',
+				'rssurl'      => 'https://example.com/feed/rss/blog',
+			])
 			->willReturn('');
-
-		$this->xmlRenderer->method('xml')->willReturn($this->response);
-
-		($this->action)($this->request, $this->response, $args);
-	}
-
-	public function testAddsRssUrlToParams(): void
-	{
-		$args = ['collection' => 'blog'];
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('__toString')->willReturn('https://example.com/feed/blog?limit=5');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getQueryParams')->willReturn(['limit' => '5']);
-
-		$this->rssBuilder->expects($this->once())
-			->method('setFieldMap')
-			->with($this->callback(fn ($params): bool => isset($params['rssurl']) && $params['rssurl'] === 'https://example.com/feed/blog?limit=5'));
-
-		$this->rssBuilder->method('buildFeed')->willReturn('');
-		$this->xmlRenderer->method('xml')->willReturn($this->response);
-
-		($this->action)($this->request, $this->response, $args);
-	}
-
-	public function testPassesQueryParamsToBuilder(): void
-	{
-		$args = ['collection' => 'blog'];
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('__toString')->willReturn('https://example.com/feed');
-
-		$params = [
-			'title'       => 'My Blog',
-			'description' => 'Blog Description',
-			'limit'       => '20',
-		];
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getQueryParams')->willReturn($params);
-
-		$this->rssBuilder->expects($this->once())
-			->method('setFieldMap')
-			->with($this->callback(fn ($p): bool => $p['title'] === 'My Blog'
-					&& $p['description'] === 'Blog Description'
-					&& $p['limit'] === '20'
-					&& isset($p['rssurl'])));
-
-		$this->rssBuilder->method('buildFeed')->willReturn('');
-		$this->xmlRenderer->method('xml')->willReturn($this->response);
-
-		($this->action)($this->request, $this->response, $args);
-	}
-
-	public function testReturnsXmlResponse(): void
-	{
-		$args = ['collection' => 'blog'];
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('__toString')->willReturn('https://example.com/feed');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getQueryParams')->willReturn([]);
-
-		$xml = '<?xml version="1.0"?><rss version="2.0"><channel></channel></rss>';
-
-		$this->rssBuilder->method('setFieldMap');
-		$this->rssBuilder->method('buildFeed')->willReturn($xml);
-
-		$this->xmlRenderer->expects($this->once())
-			->method('xml')
-			->with($this->response, $xml)
-			->willReturn($this->response);
-
-		$result = ($this->action)($this->request, $this->response, $args);
-
-		$this->assertSame($this->response, $result);
-	}
-
-	public function testCallsBothSetFieldMapAndBuildFeed(): void
-	{
-		$args = ['collection' => 'blog'];
-
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('__toString')->willReturn('https://example.com/feed');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getQueryParams')->willReturn(['title' => 'Blog Feed']);
-
-		$this->rssBuilder->expects($this->once())->method('setFieldMap');
-		$this->rssBuilder->expects($this->once())->method('buildFeed')->willReturn('');
-
-		$this->xmlRenderer->method('xml')->willReturn($this->response);
-
-		($this->action)($this->request, $this->response, $args);
-	}
-
-	public function testDropsQueryKeysTheFeedDoesNotDocument(): void
-	{
-		$uri = $this->createMock(UriInterface::class);
-		$uri->method('__toString')->willReturn('https://example.com/feed');
-
-		$this->request->method('getUri')->willReturn($uri);
-		$this->request->method('getQueryParams')->willReturn([
-			'content' => 'body',
-			'exclude' => 'category:news',
-			'limit'   => '5',
-			'draft'   => 'anything',
-			'rssurl'  => 'https://evil.example/feed',
-			'bogus'   => 'x',
-			'title'   => ['array'],
-		]);
-
-		$expected = [
-			'content' => 'body',
-			'exclude' => 'category:news',
-			'limit'   => '5',
-			'rssurl'  => 'https://example.com/feed',
-		];
-
-		$this->rssBuilder->expects($this->once())->method('setFieldMap')->with($expected);
-		$this->rssBuilder->expects($this->once())->method('buildFeed')->with('blog', $expected)->willReturn('');
 		$this->xmlRenderer->method('xml')->willReturn($this->response);
 
 		($this->action)($this->request, $this->response, ['collection' => 'blog']);
+	}
+
+	public function testNonStringValuesAreDropped(): void
+	{
+		$this->request(['include' => ['array'], 'limit' => '5']);
+
+		$this->rssBuilder->expects($this->once())
+			->method('buildFeed')
+			->with('blog', ['limit' => '5', 'rssurl' => 'https://example.com/feed/rss/blog'])
+			->willReturn('');
+		$this->xmlRenderer->method('xml')->willReturn($this->response);
+
+		($this->action)($this->request, $this->response, ['collection' => 'blog']);
+	}
+
+	public function testACollectionWithoutAFeedAnswersNotFound(): void
+	{
+		$this->request([]);
+
+		$this->rssBuilder->method('buildFeed')
+			->willThrowException(new FeedDisabledException('RSS feed is not enabled for collection: members'));
+
+		$notFound = $this->createMock(ResponseInterface::class);
+		$this->response->expects($this->once())->method('withStatus')->with(404)->willReturn($notFound);
+		$this->xmlRenderer->expects($this->never())->method('xml');
+
+		$this->assertSame($notFound, ($this->action)($this->request, $this->response, ['collection' => 'members']));
 	}
 }

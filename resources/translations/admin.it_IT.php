@@ -281,7 +281,9 @@ return [
 
 	// ── Collection Feeds ────────────────────────────────────────────────────
 	'collection.feeds_title'          => 'Generatore RSS per {collection}',
-	'collection.feeds_desc'           => 'Le seguenti impostazioni produrranno un URL che i visitatori possono usare per iscriversi a un feed RSS della tua raccolta. Tutti i campi sotto sono opzionali. Se non viene fornita alcuna mappatura dei campi, verrà usata quella per uno schema blog.',
+	'collection.feeds_desc'           => 'Il feed RSS di questa collezione si configura nelle impostazioni della collezione: il nome del feed, la mappatura dei campi e ciò che viene escluso. Le opzioni seguenti generano un URL per una variante di quel feed, come una singola categoria o un elenco più breve. Tutti i campi sono facoltativi.',
+	'collection.feeds_disabled_title' => 'Feed RSS non attivato',
+	'collection.feeds_disabled_desc'  => 'Questa collezione non pubblica un feed RSS, quindi l’URL del feed restituisce 404. Attiva prima «Publish RSS Feed» nelle impostazioni della collezione.',
 	'collection.feeds_settings'       => 'Impostazioni feed RSS',
 	'collection.feeds_name'           => 'Nome feed',
 	'collection.feeds_name_ph'        => 'Il mio feed {collection}',

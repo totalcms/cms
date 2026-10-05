@@ -281,7 +281,9 @@ return [
 
 	// ── Collection Feeds ────────────────────────────────────────────────────
 	'collection.feeds_title'          => 'RSS-Generator für {collection}',
-	'collection.feeds_desc'           => 'Das Folgende erzeugt eine URL, über die Besucher einen RSS-Feed Ihrer Collection abonnieren können. Alle untenstehenden Felder sind optional. Wenn keine Feldzuordnungen angegeben werden, wird die Zuordnung eines Blog-Schemas verwendet.',
+	'collection.feeds_desc'           => 'Der RSS-Feed dieser Collection wird in den Collection-Einstellungen eingerichtet: der Feed-Name, die Feldzuordnung und was ausgelassen wird. Mit den folgenden Optionen erstellen Sie eine URL für eine Variante dieses Feeds, etwa eine einzelne Kategorie oder eine kürzere Liste. Alle Felder sind optional.',
+	'collection.feeds_disabled_title' => 'RSS-Feed nicht aktiviert',
+	'collection.feeds_disabled_desc'  => 'Diese Collection veröffentlicht keinen RSS-Feed, daher liefert ihre Feed-URL 404. Aktivieren Sie zuerst „Publish RSS Feed“ in den Collection-Einstellungen.',
 	'collection.feeds_settings'       => 'RSS-Feed-Einstellungen',
 	'collection.feeds_name'           => 'Feed-Name',
 	'collection.feeds_name_ph'        => 'Mein {collection}-Feed',

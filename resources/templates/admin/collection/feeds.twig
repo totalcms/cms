@@ -12,6 +12,15 @@
 	{% set collection = cms.collection.get(url.collection) %}
 	{% set schema = cms.schema.get(collection.schema) %}
 
+	{% if not (collection.feed.enabled|default(false)) %}
+		<div class="warning-box feed-disabled-warning">
+			<div>
+				<strong>{{ t('collection.feeds_disabled_title') }}</strong>
+				<p>{{ t('collection.feeds_disabled_desc') }} <a href="collections/{{ collection.id }}/edit">{{ t('collection.sitemap_disabled_link') }}</a></p>
+			</div>
+		</div>
+	{% else %}
+
 	<form id="rss-builder"
 		class="totalform"
 		method="POST"
@@ -24,23 +33,6 @@
 
 			<label for="name">{{ t('collection.feeds_name') }}</label>
 			<input type="text" name="name" value="{{ postData.name }}" placeholder="{{ t('collection.feeds_name_ph', {'{collection}': url.collection | humanize}) }}"/>
-
-			<label for="language">{{ t('collection.feeds_language') }}</label>
-			<select name="language">
-				<option value="">Select a Language</option>
-				{% for lang, code in cms.locale.languages() %}
-					<option value="{{ code }}"
-						{% if postData.language == code %}selected{% endif %}>
-						{{ lang }}
-					</option>
-				{% endfor %}
-			</select>
-
-			<label for="link">{{ t('collection.feeds_link') }}</label>
-			<input type="url" name="link" value="{{ postData.link }}" placeholder="https://{{ cms.domain }}"/>
-
-			<label for="image">{{ t('collection.feeds_image') }}</label>
-			<input type="url" name="image" value="{{ postData.image }}" placeholder="https://{{ cms.domain }}/feed.jpg"/>
 
 			<label for="description">{{ t('collection.feeds_description') }}</label>
 			<textarea name="description" rows="5" placeholder="{{ t('collection.feeds_description_ph') }}">{{ postData.description }}</textarea>
@@ -70,39 +62,14 @@
 			</select>
 
 			<label for="limit">{{ t('collection.feeds_limit') }}</label>
-			<input type="number" min="-1" max="1000" name="limit" value="{{ postData.limit|default(25) }}" placeholder="25"/>
+			<input type="number" min="-1" max="1000" name="limit" value="{{ postData.limit }}" placeholder="{{ collection.feed.limit|default(25) }}"/>
 			<p style="font-size: 0.875rem; margin-top: 0.25rem; color: oklch(var(--totalform-darkgray));">{{ t('collection.feeds_limit_help') }}</p>
-
-			<h4 style="margin:1rem 0">{{ t('collection.feeds_mapping_title') }}</h4>
-
-			<div class="cms-field-mapping">
-				<div>
-					<label for="title">{{ t('collection.feeds_field_title') }}</label>
-					<input type="text" name="title" value="{{ postData.title }}" placeholder="title"/>
-				</div>
-				<div>
-					<label for="date">{{ t('collection.feeds_field_date') }}</label>
-					<input type="text" name="date" value="{{ postData.date }}" placeholder="updated"/>
-				</div>
-				<div>
-					<label for="content">{{ t('collection.feeds_field_content') }}</label>
-					<input type="text" name="content" value="{{ postData.content }}" placeholder="summary"/>
-				</div>
-				<div>
-					<label for="author">{{ t('collection.feeds_field_author') }}</label>
-					<input type="text" name="author" value="{{ postData.author }}" placeholder="author"/>
-				</div>
-				<div>
-					<label for="media">{{ t('collection.feeds_field_media') }}</label>
-					<input type="text" name="media" value="{{ postData.media }}" placeholder="media"/>
-				</div>
-			</div>
 
 		</div>
 		<button class="cms-button" type="submit">{{ t('collection.feeds_generate') }}</button>
 	</form>
 
-	{% set query = http_build_query(postData | filter((v, k) => k != "type" and k != "csrf_token")) %}
+	{% set query = http_build_query(postData | filter((v, k) => k != "type" and k != "csrf_token" and v != "")) %}
 	{% if str_starts_with(cms.base, "http") %}
 		{% set base = cms.base %}
 	{% else %}
@@ -119,5 +86,7 @@
 		<pre><code>{{ rssurl }}</code></pre>
 		<p style="margin-top:0;font-size:0.9em"><a href="{{ rssurl }}" target="_blank">{{ t('collection.feeds_link_rss') }} ↗</a></p>
 	</div>
+
+	{% endif %}
 
 </section>
