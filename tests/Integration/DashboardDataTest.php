@@ -117,34 +117,33 @@ describe('Dashboard Data Methods', function (): void {
 	});
 
 	it('dashboard collections limits to top 10', function (): void {
-		// Create 12 collections
+		// Twelve collections, each last updated a day after the one before.
+		// The dates are given, not left to the clock: lastUpdated has
+		// one-second resolution, so collections created 0.1s apart tie, ties
+		// fall back to id order, and whether collection-11 made the cut
+		// depended on where the second boundaries happened to land. Far-future
+		// dates, so they also outrank any collection a boot-time migration
+		// creates when this happens to be the first test in its process.
 		for ($i = 1; $i <= 12; $i++) {
 			postJson('/api/collections', [
-				'id'     => "collection-{$i}",
-				'name'   => "Collection {$i}",
-				'schema' => 'blog',
+				'id'          => "collection-{$i}",
+				'name'        => "Collection {$i}",
+				'schema'      => 'blog',
+				'lastUpdated' => sprintf('2099-01-%02dT12:00:00+00:00', $i),
 			])->assertOk();
-
-			if ($i < 12) {
-				usleep(100000); // 0.1s delay between collections
-			}
 		}
 
 		// Get adapter
 		$container = $this->app->getContainer();
 		$adapter   = $container->get(TotalCMSTwigAdapter::class);
 
-		// Get dashboard collections
-		$collections = $adapter->dashboardRecentCollections();
+		// The ten most recent, newest first; collection-1 and -2 are cut.
+		$ids = array_column($adapter->dashboardRecentCollections(), 'id');
 
-		// Should return only top 10 (12 created + auth = 13 total, but limited to 10)
-		expect($collections)->toHaveCount(10);
-
-		// Verify we get recent collections (timing in CI may vary, so just check most recent are present)
-		$ids = array_column($collections, 'id');
-		expect($ids)->toContain('collection-12');
-		expect($ids)->toContain('collection-11');
-		// Note: collection-10 may or may not be in top 10 depending on timing, so we don't assert it
+		expect($ids)->toBe([
+			'collection-12', 'collection-11', 'collection-10', 'collection-9', 'collection-8',
+			'collection-7', 'collection-6', 'collection-5', 'collection-4', 'collection-3',
+		]);
 	});
 
 	it('dashboard collections uses totalObjects field', function (): void {
