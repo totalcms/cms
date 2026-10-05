@@ -160,6 +160,8 @@ This account has full privileges, including installing extensions and modifying 
 
 Your license is validated automatically. New installations start with a free trial; if you've already purchased a license for this domain, it's detected on first run.
 
+Local development domains are free. On `localhost`, `127.0.0.1`, or any `.localhost` or `.test` domain, Total CMS runs with every Pro feature and needs no trial or license key. A `.local` domain is not one of them and starts a normal trial. See [Development Domains](docs/operations/licenses#development-domains).
+
 You can change the license later from **Settings → License Manager** in the admin.
 
 ![Setup Wizard — License](docs/get-started/images/wizard-license.jpg)
