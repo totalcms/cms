@@ -80,6 +80,10 @@ Sub-fields are rendered using the referenced schema's `properties`, `required`, 
 - Sub-field `settings` are run through the same preset pipeline as top-level fields, including named presets and type-default presets.
 - The referenced schema's `formgrid` is honored for sub-field layout. Any sub-field not listed in `formgrid` is appended automatically.
 
+### In the collection table
+
+When a card is in the schema's `index`, its column shows the card's **first text field** in the card schema's order — a title, a name, a street — skipping `id`, hidden fields and anything that is not a one-line value (styled text, code, SVG, JSON, passwords). A card with no such field, or with it empty, shows its first two scalar values joined with a comma. Put the field you want to see first in the card schema.
+
 ## Property Restrictions
 
 Card values must be basic types or simple property schemas. The following are **not** allowed inside a card:

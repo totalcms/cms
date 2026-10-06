@@ -11,6 +11,7 @@ use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotFoundException;
 use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
+use TotalCMS\Domain\Admin\Table\CardSummary;
 use TotalCMS\Domain\Admin\Table\InlineEditable;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
@@ -54,6 +55,7 @@ readonly class AdminCellAction
 		private TotalFormFactory $forms,
 		private AccessControlService $accessControl,
 		private PhpSession $session,
+		private CardSummary $cardSummary,
 	) {
 	}
 
@@ -137,12 +139,15 @@ readonly class AdminCellAction
 	/** @param array<string,mixed> $meta */
 	private function cellFragment(string $collection, ObjectData $object, string $property, array $meta, bool $editable): string
 	{
+		$type = PropertyDefinition::fromArray($meta)->resolveType();
+
 		return $this->twig->render('admin/collection/table-cell.twig', [
 			'object'      => $object->toArray(),
 			'col'         => [
 				'name'     => $property,
-				'type'     => PropertyDefinition::fromArray($meta)->resolveType(),
+				'type'     => $type,
 				'editable' => $editable,
+				'summary'  => $type === 'card' ? $this->cardSummary->field($meta) : null,
 			],
 			'_collection' => $collection,
 		]);

@@ -26,9 +26,15 @@
 		<div class="color-preview" style="background-color: {{ value.hex }}">{{ value.hex }}</div>
 	{% endif %}
 {% elseif col.type == 'card' %}
-	{# A card is a single sub-object. Show a summary of its scalar fields
-	   (skip the internal id and nested composites like image/file). #}
-	{{ value|filter((v, k) => k != 'id' and v is not iterable)|join(', ')|striptags }}
+	{# A card is a single sub-object. Lead with its first text field
+	   (col.summary, from the card's schema); a card without one, or with
+	   that field empty, shows its first two scalars instead. #}
+	{% set lead = col.summary|default('') ? value[col.summary]|default('') : '' %}
+	{% if lead is not iterable and lead != '' %}
+		{{ lead|striptags }}
+	{% else %}
+		{{ value|filter((v, k) => k != 'id' and v is not iterable and v != '')|slice(0, 2)|join(', ')|striptags }}
+	{% endif %}
 {% elseif col.type in ['deck', 'depot', 'array'] %}
 	{{ value|length }}
 {% elseif col.type == 'file' %}

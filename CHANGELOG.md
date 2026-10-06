@@ -6,6 +6,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Changed
 
+- **A card in the collection table shows its first text field.** An indexed card's cell joined every scalar sub-field, so an SEO card read as "About Us, Who we are, 1, 1". It now leads with the first text field in the card schema's order (skipping `id`, hidden fields, styled text, code, SVG, JSON and passwords); a card with none, or with it empty, shows its first two values. Decks still show their item count
 - **`pdo_sqlite` is required software.** The job queue (imports, automations, bulk mail) and the bulk mailer's send log are SQLite files, but the Server Checker, `tcms check` and the setup wizard did not list the extension, so a host whose cron PHP lacks it only showed up as `jobs:process` failing every minute with "could not find driver". All three now check for it, and the requirements page says to check the cron PHP as well as the web server's
 
 ### Fixed
