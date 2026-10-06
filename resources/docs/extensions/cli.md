@@ -32,7 +32,7 @@ All commands support a `--json` flag that outputs valid JSON to stdout. This is 
 
 ### `info`
 
-Show site status, version, edition, license, collection count, and cache backend.
+Show site status, version, edition, license, collection count, and cache backends.
 
 ```bash
 tcms info
@@ -42,16 +42,23 @@ tcms info --json
 **JSON output:**
 ```json
 {
-    "version": "3.2.2",
+    "version": "3.6.2",
     "build": "7f080a63",
     "edition": "pro",
     "license": { "valid": true, "trial": false, "trialDaysRemaining": null },
     "domain": "example.com",
     "collections": { "total": 12 },
-    "schemas": { "reserved": 22, "custom": 4 },
-    "cache": { "backend": "apcu" }
+    "schemas": { "reserved": 38, "custom": 4 },
+    "cache": {
+        "backend": "apcu",
+        "backends": { "opcache": "available", "apcu": "available", "redis": "active", "filesystem": "active" }
+    }
 }
 ```
+
+`cache.backend` is the backend a web request stores data in; `cache.backends` lists every installed one with its status in the CLI process — `available` means installed but not usable from the command line, which is normal for APCu and OPcache when `apc.enable_cli` and `opcache.enable_cli` are off. The admin's Cache Manager shows the same status for web requests.
+
+The domain, and with it the edition and license, come from the Host header, which the CLI does not have. Web requests record the site's origin in `cache/.siteurl` and the CLI reads it back, so the first `tcms info` on a fresh install (or right after a cache clear) can report `unknown` and a trial until the site has been loaded once in a browser. Setting `domain` in `config/tcms.php` overrides both.
 
 ---
 

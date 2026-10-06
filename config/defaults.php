@@ -4,6 +4,7 @@ use Monolog\Level;
 use TotalCMS\Support\BasePath;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
+use TotalCMS\Support\SiteOrigin;
 
 // Configure defaults for the whole application.
 
@@ -140,6 +141,21 @@ if ($settings['docroot'] !== '' && PHP_SAPI !== 'cli' && !file_exists($docrootFi
 	if ($storedDocroot !== false && $storedDocroot !== '') {
 		$settings['docroot']      = rtrim($storedDocroot, DIRECTORY_SEPARATOR);
 		$_SERVER['DOCUMENT_ROOT'] = $settings['docroot'];
+	}
+}
+
+// Web requests record their origin so the CLI, which has no Host header, runs
+// as the same site (and so licenses as it). Same idea as the .docroot file
+// above. `domain` in config/tcms.php still overrides both.
+$siteOriginFile = $settings['cachedir'] . '/.siteurl';
+if (PHP_SAPI !== 'cli') {
+	SiteOrigin::remember($siteOriginFile, $settings['domain'], $settings['is_https']);
+} elseif ($settings['domain'] === 'unknown') {
+	$storedOrigin = SiteOrigin::recall($siteOriginFile);
+	if ($storedOrigin !== null) {
+		$settings['domain']   = $storedOrigin['domain'];
+		$settings['is_https'] = $storedOrigin['https'];
+		$settings['url']      = ($storedOrigin['https'] ? 'https://' : 'http://') . $storedOrigin['domain'];
 	}
 }
 

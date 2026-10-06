@@ -4047,12 +4047,12 @@
     "cli_commands": [
         {
             "name": "info",
-            "description": "Show site status, version, edition, license, collection count, and cache backend.",
+            "description": "Show site status, version, edition, license, collection count, and cache backends.",
             "arguments": [],
             "options": [],
             "examples": [
                 "tcms info\ntcms info --json",
-                "{\n    \"version\": \"3.2.2\",\n    \"build\": \"7f080a63\",\n    \"edition\": \"pro\",\n    \"license\": { \"valid\": true, \"trial\": false, \"trialDaysRemaining\": null },\n    \"domain\": \"example.com\",\n    \"collections\": { \"total\": 12 },\n    \"schemas\": { \"reserved\": 22, \"custom\": 4 },\n    \"cache\": { \"backend\": \"apcu\" }\n}"
+                "{\n    \"version\": \"3.6.2\",\n    \"build\": \"7f080a63\",\n    \"edition\": \"pro\",\n    \"license\": { \"valid\": true, \"trial\": false, \"trialDaysRemaining\": null },\n    \"domain\": \"example.com\",\n    \"collections\": { \"total\": 12 },\n    \"schemas\": { \"reserved\": 38, \"custom\": 4 },\n    \"cache\": {\n        \"backend\": \"apcu\",\n        \"backends\": { \"opcache\": \"available\", \"apcu\": \"available\", \"redis\": \"active\", \"filesystem\": \"active\" }\n    }\n}"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"

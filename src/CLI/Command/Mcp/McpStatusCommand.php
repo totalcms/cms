@@ -61,9 +61,11 @@ class McpStatusCommand extends BaseCommand
 		$public = array_map(static fn ($t): string => $t->name, $registry->forPersona(McpPersona::PUBLIC_));
 
 		// The licensing domain is auto-detected from the request Host header, and
-		// the CLI has neither that nor SERVER_NAME — so config/defaults.php falls
-		// back to the literal 'unknown', the license API has no record for it, and
-		// the edition reads as a trial on a properly licensed install.
+		// the CLI has neither that nor SERVER_NAME. config/defaults.php reads the
+		// origin the last web request stored (cache/.siteurl); until a request
+		// has run, or after a cache clear, it falls back to the literal 'unknown',
+		// the license API has no record for it, and the edition reads as a trial
+		// on a properly licensed install.
 		//
 		// The gate itself is right and worth reporting: on Lite it is the reason
 		// /mcp answers 403, which is the second thing an operator checks after

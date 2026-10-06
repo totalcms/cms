@@ -335,11 +335,13 @@ readonly class CacheReporter
 	}
 
 	/**
-	 * Get 3-state status for each cache backend.
+	 * Get 3-state status for each cache backend the operator has not switched
+	 * off: `active` (usable in this process), `available` (installed but not
+	 * usable here, e.g. APCu with apc.enable_cli off) or `not_installed`.
 	 *
 	 * @return array<string,string>
 	 */
-	private function getBackendStatus(): array
+	public function getBackendStatus(): array
 	{
 		$status = [
 			'opcache'    => $this->getServiceStatus($this->opcacheService),

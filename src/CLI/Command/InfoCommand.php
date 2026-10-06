@@ -7,6 +7,7 @@ namespace TotalCMS\CLI\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TotalCMS\CLI\Formatter\TableHelper;
+use TotalCMS\Domain\Cache\CacheReporter;
 use TotalCMS\Support\Version;
 
 class InfoCommand extends BaseCommand
@@ -34,8 +35,9 @@ class InfoCommand extends BaseCommand
 		$customSchemas   = $this->totalcms->schemaLister()->listCustomSchemas();
 		$reservedSchemas = $this->totalcms->schemaLister()->listReservedSchemas();
 
-		// Cache backend
-		$cacheBackend = $this->detectCacheBackend();
+		// Cache backends, as the admin Cache Manager reports them
+		$backendStatus = $this->totalcms->container()->get(CacheReporter::class)->getBackendStatus();
+		$backendStatus = array_filter($backendStatus, fn (string $status): bool => $status !== 'not_installed');
 
 		$data = [
 			'version'     => $version,
@@ -55,7 +57,8 @@ class InfoCommand extends BaseCommand
 				'custom'   => count($customSchemas),
 			],
 			'cache'       => [
-				'backend' => $cacheBackend,
+				'backend'  => $this->primaryBackend($backendStatus),
+				'backends' => $backendStatus,
 			],
 		];
 
@@ -86,21 +89,50 @@ class InfoCommand extends BaseCommand
 		}
 	}
 
-	private function detectCacheBackend(): string
+	/**
+	 * The backend a web request stores data in: the first installed one in
+	 * CacheManager's order. The CLI process itself may not be able to use it
+	 * (APCu is usually off for the CLI), which is why `installed` and not
+	 * `active` decides.
+	 *
+	 * @param array<string,string> $backendStatus
+	 */
+	private function primaryBackend(array $backendStatus): string
 	{
-		$cache = $this->totalcms->config->cache;
-
-		if (!empty($cache['apcu']['enabled'])) {
-			return 'apcu';
-		}
-		if (!empty($cache['redis']['enabled'])) {
-			return 'redis';
-		}
-		if (!empty($cache['memcached']['enabled'])) {
-			return 'memcached';
+		foreach (['apcu', 'redis', 'memcached', 'filesystem'] as $backend) {
+			if (isset($backendStatus[$backend])) {
+				return $backend;
+			}
 		}
 
 		return 'filesystem';
+	}
+
+	/**
+	 * "APCu (not active in CLI), Redis, Filesystem, OPcache": data backends in
+	 * priority order, then OPcache, which caches bytecode rather than data.
+	 *
+	 * @param array<string,string> $backendStatus
+	 */
+	private function describeBackends(array $backendStatus): string
+	{
+		$names = [
+			'apcu'       => 'APCu',
+			'redis'      => 'Redis',
+			'memcached'  => 'Memcached',
+			'filesystem' => 'Filesystem',
+			'opcache'    => 'OPcache',
+		];
+
+		$parts = [];
+		foreach ($names as $backend => $name) {
+			if (!isset($backendStatus[$backend])) {
+				continue;
+			}
+			$parts[] = $backendStatus[$backend] === 'active' ? $name : "{$name} (not active in CLI)";
+		}
+
+		return $parts === [] ? 'filesystem' : implode(', ', $parts);
 	}
 
 	/**
@@ -124,7 +156,7 @@ class InfoCommand extends BaseCommand
 			'License'     => $status,
 			'Collections' => (string)$data['collections']['total'],
 			'Schemas'     => "{$data['schemas']['custom']} custom, {$data['schemas']['reserved']} reserved",
-			'Cache'       => $data['cache']['backend'],
+			'Cache'       => $this->describeBackends($data['cache']['backends']),
 		]);
 
 		$output->writeln('');
