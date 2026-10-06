@@ -60,6 +60,24 @@ tcms info --json
 
 The domain, and with it the edition and license, come from the Host header, which the CLI does not have. Web requests record the site's origin in `cache/.siteurl` and the CLI reads it back, so the first `tcms info` on a fresh install (or right after a cache clear) can report `unknown` and a trial until the site has been loaded once in a browser. Setting `domain` in `config/tcms.php` overrides both.
 
+### `check`
+
+The admin's **Server Checker** (Admin → Utilities) from the command line: bundle integrity, license, server information, directory permissions, required and optional PHP extensions.
+
+```bash
+tcms check
+tcms check --config    # also print the merged configuration, secrets redacted
+tcms check --json
+```
+
+The command exits **1** when the install cannot run — the bundle is corrupted, `tcms-data`, `cache`, `logs` or `tmp` is not writable, or a required extension is missing — and **0** otherwise, so a deploy script can gate on it:
+
+```bash
+composer update && vendor/bin/tcms check || exit 1
+```
+
+The checks run in the command line's PHP, which is not the one serving pages: the extensions, limits, cache state and session settings it reports can differ from the web server's, and rows only a web request knows (the web server software) are left out. For the values a page request sees, use the Server Checker in the admin. The domain and license follow the same `cache/.siteurl` rule as `info`.
+
 ---
 
 ## Schema Commands

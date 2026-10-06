@@ -4058,6 +4058,18 @@
             "since": "3.5.0"
         },
         {
+            "name": "check",
+            "description": "The admin's **Server Checker** (Admin \u2192 Utilities) from the command line: bundle integrity, license, server information, directory permissions, required and optional PHP extensions.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "tcms check\ntcms check --config    # also print the merged configuration, secrets redacted\ntcms check --json",
+                "composer update && vendor/bin/tcms check || exit 1"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
             "name": "schema:list",
             "description": "List all schemas.",
             "arguments": [],

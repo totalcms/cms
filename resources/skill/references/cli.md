@@ -36,6 +36,7 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 
 ### Site status
 - `info` — site status, version, configuration
+- `check` — the Server Checker on the CLI: integrity, license, permissions, PHP extensions; exits 1 when the install cannot run, so deploy scripts can gate on it
 - `cache:clear` — clear all caches (run after template edits if stale)
 - `deploy` — post-deploy cleanup: wipe DI container, clear caches, run migrations
 

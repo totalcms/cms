@@ -70,9 +70,11 @@ class ServerChecker
 			// domain to PHP-FPM changes this to `fpm-fcgi` and usually fixes it.
 			'PHP SAPI'           => PHP_SAPI,
 			'Operating System'   => PHP_OS,
-			'Web Server'         => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
-			'Domain'             => $_SERVER['SERVER_NAME'] ?? 'Unknown',
-			'Document Root'      => $_SERVER['DOCUMENT_ROOT'] ?? 'Unknown',
+			// The two $_SERVER rows below are only known to a web request. The
+			// CLI (`tcms check`) leaves them out rather than print "Unknown".
+			'Web Server'         => $_SERVER['SERVER_SOFTWARE'] ?? null,
+			'Domain'             => $this->config->domain,
+			'Document Root'      => $_SERVER['DOCUMENT_ROOT'] ?? null,
 			'Max POST Size'      => ini_get('post_max_size'),
 			'Max Upload Size'    => ini_get('upload_max_filesize'),
 			'Max Execution Time' => ini_get('max_execution_time'),
@@ -97,7 +99,7 @@ class ServerChecker
 		$info = array_merge($info, $this->getHeicInfo());
 
 		// Add license information
-		$info = array_merge($info, $this->getLicenseInfo());
+		$info = array_merge($info, $this->licenseInfo());
 
 		// How this install is treating proxy client-IP headers. Worth showing
 		// even when it is working, because the broken case looks like a rate
@@ -125,7 +127,7 @@ class ServerChecker
 			$info['MCP Connection Check'] = 'Never run — see Settings → MCP → Test connection';
 		}
 
-		return $info;
+		return array_filter($info, static fn (mixed $value): bool => $value !== null);
 	}
 
 	public function totalspace(): string
@@ -533,13 +535,15 @@ class ServerChecker
 	/** @return array<string,bool> */
 	public function checkPermissions(): array
 	{
+		// Only a disabled cache (null) drops out: a plain array_filter() also
+		// dropped every false, so a directory that was not writable vanished
+		// from the Server Checker instead of showing as failed
 		return array_filter([
 			'tcms-data' => is_writable($this->config->datadir),
-			// Don't check cache if it's disabled
-			'cache' => $this->getCacheWritable(),
-			'logs'  => is_writable($this->config->logger['path']),
-			'tmp'   => is_writable($this->config->tmpdir),
-		]);
+			'cache'     => $this->getCacheWritable(),
+			'logs'      => is_writable($this->config->logger['path']),
+			'tmp'       => is_writable($this->config->tmpdir),
+		], static fn (?bool $writable): bool => $writable !== null);
 	}
 
 	public function bundleCheck(): bool
@@ -558,7 +562,7 @@ class ServerChecker
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function getLicenseInfo(): array
+	public function licenseInfo(): array
 	{
 		$info = [];
 
