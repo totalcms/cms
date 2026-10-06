@@ -18,14 +18,14 @@ Run these in your terminal to see your PHP version and confirm every required ex
 
 ```bash
 php -v
-php -r 'foreach (explode(" ", "curl exif fileinfo gd json mbstring openssl") as $e) echo (extension_loaded($e) ? "✓" : "✗") . " $e\n";'
+php -r 'foreach (explode(" ", "curl exif fileinfo gd json mbstring openssl pdo_sqlite") as $e) echo (extension_loaded($e) ? "✓" : "✗") . " $e\n";'
 ```
 
 **Windows (cmd / PowerShell):**
 
 ```bat
 php -v
-php -r "foreach (explode(' ', 'curl exif fileinfo gd json mbstring openssl') as $e) { echo (extension_loaded($e) ? 'OK' : 'MISSING') . \" $e\r\n\"; }"
+php -r "foreach (explode(' ', 'curl exif fileinfo gd json mbstring openssl pdo_sqlite') as $e) { echo (extension_loaded($e) ? 'OK' : 'MISSING') . \" $e\r\n\"; }"
 ```
 
 Windows shells don't treat single quotes as string delimiters — only double quotes — so the quoting has to be inverted.
@@ -49,6 +49,7 @@ These must all be present. The setup wizard refuses to continue if any are missi
 | `json` | JSON parsing — used everywhere, since storage is flat-file JSON |
 | `mbstring` | Multibyte string handling |
 | `openssl` | HTTPS, encryption, and password hashing |
+| `pdo_sqlite` | The job queue (imports, automations, bulk mail) and the bulk mailer's send log. Check the PHP your cron uses as well as the web server's — hosts often build them differently |
 
 ### Recommended extensions
 

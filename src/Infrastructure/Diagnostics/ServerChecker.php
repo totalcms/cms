@@ -30,7 +30,10 @@ class ServerChecker
 		'json',
 		'mbstring',
 		'openssl',
-		// 'pdo',
+		// The job queue (imports, automations, bulk mail) and the bulk mailer's
+		// send log are SQLite files. Hosts commonly build the cron PHP without
+		// it while the web PHP has it, so jobs:process fails every minute.
+		'pdo_sqlite',
 	];
 	private const OPTIONAL_SOFTWARE = [
 		'intl',

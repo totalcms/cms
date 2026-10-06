@@ -4,6 +4,10 @@ All notable changes to Total CMS will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **`pdo_sqlite` is required software.** The job queue (imports, automations, bulk mail) and the bulk mailer's send log are SQLite files, but the Server Checker, `tcms check` and the setup wizard did not list the extension, so a host whose cron PHP lacks it only showed up as `jobs:process` failing every minute with "could not find driver". All three now check for it, and the requirements page says to check the cron PHP as well as the web server's
+
 ### Fixed
 
 - **A property with `"type": "integer"` saves.** The docs and the agent skill recommend it for whole numbers, `schema:lint` accepts it and the reserved schemas use it, but every save of an object with one failed with "Unknown property type for object": the property factory builds its class from the type and there was no `IntegerData`. There is now; a whole number is stored as `3`, not `3.0`, a default applies, and `2.5` is still refused by schema validation. The error for a type that really is unknown now names the type and the property (`Unknown property type "foo" for property "position"`). Reported by Marcelo
