@@ -58,7 +58,13 @@ readonly class PropertyFactory
 		}
 
 		if (!class_exists($className)) {
-			throw new \UnexpectedValueException('Unknown property type for object.');
+			// Name the property: a schema with twenty properties and one bad
+			// type is otherwise a hunt
+			throw new \UnexpectedValueException(sprintf(
+				'Unknown property type "%s"%s.',
+				$type,
+				$propertyName !== '' ? sprintf(' for property "%s"', $propertyName) : '',
+			));
 		}
 
 		if ($definition->default !== null) {

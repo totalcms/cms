@@ -199,7 +199,7 @@ class SentryMiddleware implements MiddlewareInterface
 			// schema validation correctly refuses to re-encode it.
 			'Malformed UTF-8 characters',
 			// User schema references a property type that doesn't exist.
-			'Unknown property type for object',
+			'Unknown property type "',
 			// Operator never ran `tcms oauth:setup`, so the OAuth signing key is
 			// missing/invalid (see OAuthServerFactory::loadSigningKey).
 			'OAuth signing key is missing or invalid',

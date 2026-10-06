@@ -2,6 +2,11 @@
 
 All notable changes to Total CMS will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- **A property with `"type": "integer"` saves.** The docs and the agent skill recommend it for whole numbers, `schema:lint` accepts it and the reserved schemas use it, but every save of an object with one failed with "Unknown property type for object": the property factory builds its class from the type and there was no `IntegerData`. There is now; a whole number is stored as `3`, not `3.0`, a default applies, and `2.5` is still refused by schema validation. The error for a type that really is unknown now names the type and the property (`Unknown property type "foo" for property "position"`). Reported by Marcelo
 ## [3.6.2] - 2026-10-05
 
 ### Security
