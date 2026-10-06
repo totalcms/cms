@@ -22,6 +22,11 @@ $settings['datadir']  = $_SERVER['TCMS_TEST_DATADIR'] ?? ($settings['root'] . '/
 $settings['cachedir'] = $_SERVER['TCMS_TEST_CACHEDIR'] ?? ($settings['root'] . '/cache');
 $settings['tmpdir']   = $_SERVER['TCMS_TEST_TMPDIR'] ?? ($settings['root'] . '/tmp');
 $settings['domain']   = 'totalcms.test';
+// Pin the scheme too. defaults.php may have read the origin a developer's
+// browser recorded in <root>/cache/.siteurl (https://totalcms.test on a dev
+// box), and a test run must not depend on what was last loaded in a browser.
+$settings['is_https'] = false;
+$settings['url']      = 'http://totalcms.test';
 
 // OAuth signing-key paths are computed in defaults.php using $settings['datadir']
 // AT DEFAULT-LOAD TIME — which points at the live tcms-data, not the test one.
