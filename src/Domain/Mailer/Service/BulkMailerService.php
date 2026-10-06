@@ -83,7 +83,7 @@ readonly class BulkMailerService
 		$effectiveOverrideTo = ($overrideTo !== null && $overrideTo !== '') ? $overrideTo : null;
 
 		try {
-			$scheduledAt = self::scheduleToUtc($scheduledAt);
+			$scheduledAt = $this->scheduleToUtc($scheduledAt);
 		} catch (\Exception) {
 			return OperationResult::failure('Invalid schedule date: ' . $scheduledAt);
 		}
@@ -158,7 +158,7 @@ readonly class BulkMailerService
 	 * that shape: a send scheduled for later today waited for the next UTC
 	 * day, and every schedule ignored the site's timezone.
 	 */
-	private static function scheduleToUtc(?string $scheduledAt): ?string
+	private function scheduleToUtc(?string $scheduledAt): ?string
 	{
 		if ($scheduledAt === null || trim($scheduledAt) === '') {
 			return null;

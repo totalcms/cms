@@ -56,7 +56,7 @@ it('is not included a second time by the dashboard layout', function (): void {
 
 it('stays on the login and setup layout, without the script filter', function (): void {
 	$this->config->sentry = true;
-	$layout = (string)file_get_contents(dirname(__DIR__, 2) . '/resources/templates/admin-layout.twig');
+	$layout               = (string)file_get_contents(dirname(__DIR__, 2) . '/resources/templates/admin-layout.twig');
 
 	// That layout writes its own asset tags and never calls the helper.
 	expect($layout)->toContain("include 'partials/sentry.twig'")

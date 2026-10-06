@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use TotalCMS\Domain\Admin\FormField\ColorField;
 use TotalCMS\Domain\Admin\FormField\ListField;
+use TotalCMS\Domain\Admin\FormField\MarkdownField;
 use TotalCMS\Domain\Admin\FormField\PriceField;
 use TotalCMS\Domain\Admin\FormField\RangeField;
-use TotalCMS\Domain\Admin\FormField\MarkdownField;
 use TotalCMS\Domain\Admin\FormField\StyledmarkdownField;
 use TotalCMS\Domain\Admin\FormField\StyledtextField;
 use TotalCMS\Domain\Admin\FormField\UrlField;

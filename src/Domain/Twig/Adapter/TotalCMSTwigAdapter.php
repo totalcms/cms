@@ -432,7 +432,7 @@ class TotalCMSTwigAdapter
 	 */
 	private function sentryScript(): string
 	{
-		if ($this->config->sentry !== true || !$this->twigEngineFactory instanceof \Closure) {
+		if (!$this->config->sentry || !$this->twigEngineFactory instanceof \Closure) {
 			return '';
 		}
 

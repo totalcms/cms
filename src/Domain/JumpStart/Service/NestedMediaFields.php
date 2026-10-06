@@ -162,7 +162,7 @@ final readonly class NestedMediaFields
 				}
 
 				$existingItem          = is_array($existingValue[$itemId] ?? null) ? $existingValue[$itemId] : [];
-				$data[$name][$itemId] = $apply($child, $item, $existingItem, $depth);
+				$data[$name][$itemId]  = $apply($child, $item, $existingItem, $depth);
 			}
 		}
 

@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Infrastructure\Diagnostics;
 
-use ReflectionClass;
+use TotalCMS\Domain\Bundle\Service\BundleChecker;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\License\Service\LicenseValidator;
 use TotalCMS\Domain\Mcp\Service\McpConnectionChecker;
 use TotalCMS\Domain\Security\Request\ClientIpResolver;
-use TotalCMS\Domain\Bundle\Service\BundleChecker;
 use TotalCMS\Infrastructure\Diagnostics\ServerChecker;
 use TotalCMS\Support\Config;
 
@@ -19,7 +18,7 @@ beforeEach(function (): void {
 		mkdir("{$this->root}/{$dir}", 0755, true);
 	}
 
-	$config           = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config           = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->datadir  = "{$this->root}/tcms-data";
 	$config->cachedir = "{$this->root}/cache";
 	$config->tmpdir   = "{$this->root}/tmp";

@@ -146,7 +146,7 @@ readonly class SchemaSaver
 		if (isset($schemaData['index']) && is_array($schemaData['index'])) {
 			$passwords = array_keys(array_filter(
 				$schemaData['properties'],
-				fn ($property): bool => is_array($property) && PropertyDefinition::fromArray($property)->isPassword()
+				fn (mixed $property): bool => is_array($property) && PropertyDefinition::fromArray($property)->isPassword()
 			));
 			$schemaData['index'] = array_values(array_filter(
 				$schemaData['index'],

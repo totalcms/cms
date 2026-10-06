@@ -24,8 +24,8 @@ function bulkHistoryRender(BulkMailerRepository $repository, string $mailerId): 
 beforeEach(function (): void {
 	$this->tmpDir = sys_get_temp_dir() . '/tcms-bulk-history-' . uniqid('', true);
 	mkdir($this->tmpDir, 0755, true);
-	$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-	$config->datadir = $this->tmpDir;
+	$config           = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+	$config->datadir  = $this->tmpDir;
 	$this->repository = new BulkMailerRepository($config);
 });
 

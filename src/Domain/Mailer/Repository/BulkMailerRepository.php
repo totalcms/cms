@@ -241,7 +241,7 @@ class BulkMailerRepository
 			unset($logged[$batchId]);
 		}
 		foreach ($logged as $batchId => $row) {
-			$batches[(string)$batchId] = BulkBatchSummaryData::fromRows(null, $row);
+			$batches[$batchId] = BulkBatchSummaryData::fromRows(null, $row);
 		}
 
 		$batches = array_values($batches);

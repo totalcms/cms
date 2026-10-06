@@ -257,7 +257,7 @@ final readonly class PresetForms
 				]),
 				['type' => 'button', 'class' => 'dash-button', 'id' => 'bulk-history-refresh']
 			));
-			$historyNote = HTMLUtils::element('p', 'Each email is sent to an object only once. Objects that already received it are left out of later sends; test sends to an override address never count.', ['class' => 'bulk-history-note']);
+			$historyNote        = HTMLUtils::element('p', 'Each email is sent to an object only once. Objects that already received it are left out of later sends; test sends to an override address never count.', ['class' => 'bulk-history-note']);
 			$bulkHistoryDetails = HTMLUtils::details('Send History', $historyNote . $historyOutput . $historyRefresh);
 
 			$bulkSection  = $hiddenMailerId;

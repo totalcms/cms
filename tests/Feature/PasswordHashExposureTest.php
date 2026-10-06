@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Slim\App;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Support\Config;
@@ -26,7 +27,7 @@ beforeEach(function (): void {
 });
 
 /** Turn authentication on for the app under test without signing anyone in. */
-function enableAuthAnonymously(Slim\App $app): void
+function enableAuthAnonymously(App $app): void
 {
 	/** @var Config $config */
 	$config         = $app->getContainer()->get(Config::class);
