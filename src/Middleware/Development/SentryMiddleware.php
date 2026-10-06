@@ -29,6 +29,7 @@ use Slim\Exception\HttpUnauthorizedException;
 use Symfony\Component\Console\Exception\ExceptionInterface;
 use TotalCMS\Domain\License\Exception\LicenseException;
 use TotalCMS\Domain\Security\Encryption\Cipher;
+use TotalCMS\Support\PathResolver;
 use TotalCMS\Support\Version;
 
 use function Sentry\captureException;
@@ -213,6 +214,11 @@ class SentryMiddleware implements MiddlewareInterface
 			// Corrupted vendor tree — an abstract class resolved where its
 			// concrete provider file is missing (e.g. broken Faker install).
 			'Cannot instantiate abstract class',
+			// PDO has no sqlite driver: the host's PHP (often a different binary
+			// for cron than for the web) was built without pdo_sqlite, which the
+			// job queue and mailer log need. Server configuration, and a cron
+			// every minute reports it every minute.
+			'could not find driver',
 			// User Twig template calling an adapter/function without its
 			// required arguments. This surfaces at shutdown as an
 			// ErrorException — a genuinely thrown ArgumentCountError is our own
@@ -376,6 +382,22 @@ class SentryMiddleware implements MiddlewareInterface
 		// segment plus the Windows variant for cross-platform installs.
 		$file = $exception->getFile();
 		if (str_contains($file, '/tcms-data/extensions/') || str_contains($file, '\\tcms-data\\extensions\\')) {
+			return null;
+		}
+
+		// Site-specific extensions live at `<projectRoot>/extensions/` (see
+		// ExtensionDiscovery) and are the site's own code, same as the above.
+		// Bundled extensions under resources/extensions/ are ours and still report.
+		$projectExtensions = PathResolver::projectRoot() . DIRECTORY_SEPARATOR . 'extensions' . DIRECTORY_SEPARATOR;
+		if ($projectExtensions !== DIRECTORY_SEPARATOR . 'extensions' . DIRECTORY_SEPARATOR && str_starts_with($file, $projectExtensions)) {
+			return null;
+		}
+
+		// Slim could not resolve a middleware or route handler class. T3's own
+		// are checked by PHPStan and the test suite, so this is a class a site
+		// added in its public/index.php (or a half-uploaded install) — the
+		// message names the class, and nothing in T3 fixes it.
+		if ($exception instanceof \RuntimeException && preg_match('/^Callable \S+ does not exist$/', $exception->getMessage()) === 1) {
 			return null;
 		}
 

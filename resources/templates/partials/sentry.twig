@@ -77,6 +77,16 @@
 				// Ignore server validation errors shown in UI
 				if (message.includes('400 Bad Request')) return null;
 
+				// Ignore a fetch that never got a response: the user navigated away,
+				// went offline, or a content blocker cut it. Safari says "Load failed",
+				// Chrome "Failed to fetch", Firefox "NetworkError when attempting to
+				// fetch resource". A server error comes back as a response, not this.
+				if (errorName === 'TypeError' && (
+					message.startsWith('Load failed') ||
+					message.startsWith('Failed to fetch') ||
+					message.startsWith('NetworkError when attempting to fetch')
+				)) return null;
+
 				// Ignore benign ResizeObserver loop errors (browser limitation, not a real bug)
 				if (message.includes('ResizeObserver loop')) return null;
 

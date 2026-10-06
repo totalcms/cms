@@ -81,4 +81,20 @@ final class SentryMiddlewareTest extends TestCase
 
 		$this->assertInstanceOf(Event::class, $this->filter($exception));
 	}
+
+	public function testDropsAMiddlewareClassASiteAddedThatDoesNotExist(): void
+	{
+		// Slim's CallableResolver wording for `$app->add(Missing::class)` in a
+		// site's own public/index.php (TOTAL-CMS-MZ, 260 events).
+		$exception = new \RuntimeException('Callable Coune\\Portal\\Middleware\\GalerieBildMiddleware does not exist');
+
+		$this->assertNull($this->filter($exception));
+	}
+
+	public function testReportsOtherRuntimeExceptions(): void
+	{
+		$exception = new \RuntimeException('Callable things are not the problem here, the disk is full');
+
+		$this->assertInstanceOf(Event::class, $this->filter($exception));
+	}
 }
