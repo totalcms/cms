@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Twig\Service;
 use Cake\Chronos\Chronos;
 use Cake\I18n\I18n;
 use Cake\I18n\RelativeTimeFormatter;
+use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Cache\FragmentCache;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
@@ -140,6 +141,14 @@ readonly class TwigEngine
 		try {
 			return $this->twig->render($templateName, $data);
 		} catch (\Exception $e) {
+			// Not an error: the template is declining to render this URL
+			// (`cms.notFound()`). Unwrap it so PageRouterMiddleware can answer
+			// with the 404 page rather than showing the error block as a 200.
+			$notFound = PageNotFoundException::find($e);
+			if ($notFound instanceof PageNotFoundException) {
+				throw $notFound;
+			}
+
 			return sprintf(
 				'<p class="cms-twig-error render-error"><strong>Error rendering template</strong>: %s - %s</p><pre class="cms-twig-traceback">%s</pre>',
 				$templateName,
