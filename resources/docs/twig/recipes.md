@@ -298,13 +298,13 @@ post today:
 ])|sortCollection([{property: 'publish', reverse: true}]) %}
 ```
 
-Apply the same two filters on the single-object page and redirect when
-they exclude it, otherwise a guessed URL still reveals the post:
+Apply the same two filters on the single-object page and answer with the
+404 page when they exclude it, otherwise a guessed URL still reveals the
+post:
 
 ```twig
 {% set post = cms.collection.object('blog', getData.id) %}
-{% if post.draft or post.publish|dateIsFuture %}{% set post = [] %}{% endif %}
-{{ cms.collection.redirectIfNotFound(post) }}
+{% if post is empty or post.draft or post.publish|dateIsFuture %}{{ cms.notFound() }}{% endif %}
 ```
 
 Page caches do not know a date has passed. If you cache the list with

@@ -1111,7 +1111,7 @@
         {
             "name": "cms.collection.redirectIfNotFound",
             "signature": "redirectIfNotFound(array|string|null $object = [], string $redirectUrl = ''): void",
-            "description": "Redirect to the 404 page if the provided object is empty or null. Useful in detail page templates to handle missing objects.",
+            "description": "Redirect to the 404 page if the provided object is empty or null. The visitor is sent to the 404 page's own address with a `302` \u2014 the URL they typed is lost, and a crawler records a redirect rather than a missing page. On a Site Builder site, prefer [`cms.notFound()`](docs/twig/totalcms#notfound), which renders the 404 page in place with a real `404` status.",
             "examples": [
                 "{% set post = cms.collection.object('blog', id) %}\n{{ cms.collection.redirectIfNotFound(post) }}\n\n{# With custom redirect URL #}\n{{ cms.collection.redirectIfNotFound(post, '/blog') }}\n\n<h1>{{ post.title }}</h1>"
             ],
@@ -2029,6 +2029,13 @@
                 "{# A video property on your own schema #}\n{{ cms.media.videoPoster(post, {w: 800}, {property: 'promo'}) }}\n\n{# An object from the ready-made video collection \u2014 collection and property default to \"video\" #}\n{{ cms.media.videoPoster('intro', {w: 800}) }}"
             ],
             "url": "https://docs.totalcms.co/twig/media/"
+        },
+        {
+            "name": "cms.notFound",
+            "signature": "notFound(): never",
+            "description": "Stop rendering and answer the request as a 404: the site's not-found page, at the visitor's own URL, with the 404 status a crawler or link checker needs. For a page template that discovers it has nothing to show \u2014 a draft reached through a collection URL, a record marked not to render, an empty lookup. Nothing after the call is rendered.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/totalcms/"
         },
         {
             "name": "cms.render.alt",

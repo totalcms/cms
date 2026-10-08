@@ -51,6 +51,10 @@ Live on the filesystem under `tcms-data/builder/`:
   implicitly pretty; it dispatches through the object URL builder.
 - The `prettyUrl` flag only applies to non-templated URL prefixes.
 - `vendor/bin/tcms builder:routes` prints the full routing table and flags conflicts.
+- A page with `status: 404` is the site's not-found page: it renders in place, at the
+  visitor's URL, for any path that matches nothing. Collection URLs match drafts too, so a
+  detail template that should not serve a record calls `cms.notFound()` — same answer,
+  rendering stops. Not `cms.collection.redirectIfNotFound()`, which answers 302.
 
 ## SEO in layouts and detail pages
 

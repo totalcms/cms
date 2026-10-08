@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Twig\Adapter;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Action\XmlRpc\XmlRpcDiscoveryAction;
 use TotalCMS\Domain\Admin\TotalFormFactory;
+use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
@@ -108,6 +109,21 @@ class TotalCMSTwigAdapter
 	public function log(string $message, string $level = 'warning', array $context = []): void
 	{
 		$this->logger->log($level, $message, $context);
+	}
+
+	/**
+	 * Stop rendering and answer the request as a 404: the site's not-found
+	 * page, at the visitor's own URL, with the 404 status a crawler or link
+	 * checker needs. For a page template that discovers it has nothing to
+	 * show — a draft reached through a collection URL, a record marked not to
+	 * render, an empty lookup. Nothing after the call is rendered.
+	 *
+	 * `cms.collection.redirectIfNotFound()` sends the visitor to the 404 page
+	 * instead; it answers 302, so it is for when the move itself is wanted.
+	 */
+	public function notFound(): never
+	{
+		throw new PageNotFoundException();
 	}
 
 	/**

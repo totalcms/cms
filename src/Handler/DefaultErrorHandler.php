@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Exception\HttpException;
+use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Template\Exception\TemplatesLockedException;
 use TotalCMS\Factory\LogChannel;
@@ -200,6 +201,13 @@ readonly class DefaultErrorHandler
 		if ($exception instanceof TemplatesLockedException) {
 			// Templates are git-managed on this environment — editing is forbidden.
 			$statusCode = StatusCodeInterface::STATUS_FORBIDDEN;
+		}
+
+		if (PageNotFoundException::find($exception) instanceof PageNotFoundException) {
+			// A template called cms.notFound() somewhere the page router did not
+			// catch it (a render endpoint, the playground). Twig wraps it, so
+			// look through the chain.
+			$statusCode = StatusCodeInterface::STATUS_NOT_FOUND;
 		}
 
 		$file = basename($exception->getFile());

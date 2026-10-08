@@ -13,6 +13,7 @@ use Psr\Log\LoggerInterface;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
+use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
 use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
@@ -174,40 +175,67 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		}
 
 		try {
-			// Collection-URL matches expose the matched record as `object.*`;
-			// builder-page matches expose it as `page.*`. Different conceptual
-			// roles — one is "this is the page record", the other is "this is
-			// the collection object I'm rendering" — so different variable
-			// names make templates self-documenting.
-			$data = ['params' => $match->params];
-			if ($match->collection !== null) {
-				$data['object'] = $match->pageData;
-			} else {
-				$data['page'] = $match->pageData;
+			return $this->renderMatch($request, $match, $path);
+		} catch (\Throwable $throwable) {
+			// The template declined to render the URL (`cms.notFound()`: a
+			// draft behind a collection URL, a record it will not serve).
+			// Answer exactly as an unmatched URL is answered above — the
+			// site's 404 page in place, status 404, the URL kept — rather
+			// than bouncing to the 404 page's own address with a 302.
+			if (PageNotFoundException::find($throwable) instanceof PageNotFoundException) {
+				$this->logger->info(sprintf('404: %s %s — the template declined to render it', $method, $path));
+
+				$fallback = $this->pageRouter->fallback404();
+				if ($fallback instanceof RouteMatch) {
+					try {
+						return $this->renderMatch($request, $fallback, $path);
+					} catch (\Throwable) {
+						// The 404 page itself failed — the plain 404 below stands.
+					}
+				}
 			}
 
-			$body        = $this->twigEngine->render($match->template, $data);
-			$contentType = $this->detectContentType($path);
-
-			// Inject the admin-only Page Inspector overlay and live-reload
-			// snippet for HTML responses. Gating (logged-in admin, dismiss
-			// cookie, setting toggle) lives in the renderers; the content-
-			// type check is here because the renderers don't see the response.
-			if (str_starts_with($contentType, 'text/html')) {
-				$body = $this->pageInspector->maybeInject($body, $request, $match);
-				$body = $this->pageReloadInjector->maybeInject($body, $request);
-			}
-
-			$pageResponse = new Response();
-			$pageResponse->getBody()->write($body);
-
-			return $pageResponse
-				->withStatus($match->status)
-				->withHeader('Content-Type', $contentType);
-		} catch (\Throwable) {
 			// Render failed — return the original 404
 			return $response;
 		}
+	}
+
+	/**
+	 * Render a matched page or collection object to a response carrying the
+	 * match's status. Throws whatever the template throws.
+	 */
+	private function renderMatch(ServerRequestInterface $request, RouteMatch $match, string $path): ResponseInterface
+	{
+		// Collection-URL matches expose the matched record as `object.*`;
+		// builder-page matches expose it as `page.*`. Different conceptual
+		// roles — one is "this is the page record", the other is "this is
+		// the collection object I'm rendering" — so different variable
+		// names make templates self-documenting.
+		$data = ['params' => $match->params];
+		if ($match->collection !== null) {
+			$data['object'] = $match->pageData;
+		} else {
+			$data['page'] = $match->pageData;
+		}
+
+		$body        = $this->twigEngine->render($match->template, $data);
+		$contentType = $this->detectContentType($path);
+
+		// Inject the admin-only Page Inspector overlay and live-reload
+		// snippet for HTML responses. Gating (logged-in admin, dismiss
+		// cookie, setting toggle) lives in the renderers; the content-
+		// type check is here because the renderers don't see the response.
+		if (str_starts_with($contentType, 'text/html')) {
+			$body = $this->pageInspector->maybeInject($body, $request, $match);
+			$body = $this->pageReloadInjector->maybeInject($body, $request);
+		}
+
+		$pageResponse = new Response();
+		$pageResponse->getBody()->write($body);
+
+		return $pageResponse
+			->withStatus($match->status)
+			->withHeader('Content-Type', $contentType);
 	}
 
 	/**
