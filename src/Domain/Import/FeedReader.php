@@ -70,7 +70,7 @@ final class FeedReader
 			link: (string)$entry->getLink(),
 			author: is_array($author) && isset($author['name']) ? (string)$author['name'] : '',
 			categories: array_values(array_map(strval(...), $entry->getCategories()->getValues())),
-			date: $date !== null ? $date->format('c') : '',
+			date: $date?->format('c') ?? '',
 			content: (string)$entry->getContent(),
 			summary: (string)$entry->getDescription(),
 			imageUrl: $this->xmlImageUrl($entry),

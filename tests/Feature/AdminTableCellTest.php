@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use TotalCMS\Domain\Builder\Service\BuilderInstaller;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Support\Config;
@@ -61,7 +62,7 @@ it('renders no inline-edit trigger when the master switch is off', function (): 
 
 it('shows a card by its first text field, not every scalar joined together', function (): void {
 	$container = $this->app->getContainer();
-	$container->get(\TotalCMS\Domain\Builder\Service\BuilderInstaller::class)->ensurePagesCollection();
+	$container->get(BuilderInstaller::class)->ensurePagesCollection();
 	$container->get(ObjectSaver::class)->saveObject('builder-pages', [
 		'id'       => 'about',
 		'title'    => 'About',
@@ -82,7 +83,7 @@ it('shows a card by its first text field, not every scalar joined together', fun
 
 it('falls back to the first two scalars of a card with no text field', function (): void {
 	$container = $this->app->getContainer();
-	$container->get(\TotalCMS\Domain\Builder\Service\BuilderInstaller::class)->ensurePagesCollection();
+	$container->get(BuilderInstaller::class)->ensurePagesCollection();
 	// Only flags set: nothing text-like to lead with
 	$container->get(ObjectSaver::class)->saveObject('builder-pages', [
 		'id'       => 'secret',
