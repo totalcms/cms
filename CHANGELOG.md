@@ -4,6 +4,10 @@ All notable changes to Total CMS will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **`cms.notFound()`: a template answers its URL with the 404 page, in place.** A collection URL matches every object, drafts included, so a detail template that should not serve a record had only `cms.collection.redirectIfNotFound()`, which sends the visitor to the 404 page's own address — and answers 302, since PHP drops the 404 status it set once a `Location` header is sent. Crawlers and link checkers recorded a redirect rather than a missing page, and a guessed draft slug answered differently from a slug that never existed. `cms.notFound()` stops rendering and the page with status 404 renders at the visitor's URL with a real 404, exactly as an unmatched URL is answered. `redirectIfNotFound()` is unchanged for sites that want the redirect. See [Total CMS helpers](resources/docs/twig/totalcms.md)
+
 ### Changed
 
 - **A card in the collection table shows its first text field.** An indexed card's cell joined every scalar sub-field, so an SEO card read as "About Us, Who we are, 1, 1". It now leads with the first text field in the card schema's order (skipping `id`, hidden fields, styled text, code, SVG, JSON and passwords); a card with none, or with it empty, shows its first two values. Decks still show their item count
