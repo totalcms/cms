@@ -119,7 +119,9 @@ class CurlHttpClient implements HttpClientInterface
 		$httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		$curlError = curl_error($ch);
 
-		if ($sinkFp !== null && is_string($options['sink'] ?? null)) {
+		// A handle we opened ourselves (sink given as a path) is ours to close;
+		// a stream the caller passed in stays theirs
+		if ($sinkFp !== null && is_string($options['sink'])) {
 			fclose($sinkFp);
 		}
 

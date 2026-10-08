@@ -269,7 +269,7 @@ class MediaTwigAdapter
 			return $values[array_rand($values)] ?? null;
 		}
 		if ($name === 'featured') {
-			$featured = array_filter($values, fn (array $img): bool => !empty($img['featured']));
+			$featured = array_filter($values, fn (mixed $img): bool => is_array($img) && !empty($img['featured']));
 			if ($featured !== []) {
 				return $featured[array_rand($featured)];
 			}
