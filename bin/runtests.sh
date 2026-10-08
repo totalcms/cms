@@ -50,7 +50,7 @@ usage() {
 Usage: bin/runtests.sh [FILTER] [--lint] [-v]
 
   bin/runtests.sh                          Full battery (~45s)
-                                             bundle:check, stan, docs:validate,
+                                             bundle:check, stan, md, docs:validate,
                                              PHP tests (parallel), JS tests
   bin/runtests.sh Barcode                  Only PHP tests matching "Barcode"
   bin/runtests.sh tests/Feature/Foo.php    Only that file or directory
@@ -265,6 +265,7 @@ fi
 run_step "PHP version"      'PHP [0-9]'     php -r 'echo "PHP ", PHP_VERSION, " (CI pins ", getenv("CI_PHP") ?: "'"$CI_PHP"'", ")\n";'
 run_step "Bundle integrity" 'Bundle check'  composer run bundle:check
 run_step "Static analysis"  '\[OK\]|error'  composer run stan
+run_step "Mess detection"   'violations|mess' composer run md
 run_step "Docs validation"  '^OK:|^ *OK:'   composer run docs:validate
 
 if [ "$RUN_LINT" = true ]; then

@@ -46,6 +46,10 @@ class CliApplication
 		fwrite($handle, $message);
 	}
 
+	/**
+	 * @SuppressWarnings("PHPMD.ExitExpression") the CLI entry point: a failed
+	 *                                            bootstrap has no caller to return to
+	 */
 	public static function run(): void
 	{
 		// Auto-detect project root for Composer installs

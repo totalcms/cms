@@ -180,6 +180,8 @@ final readonly class SavedQueryToolFactory
 	 * The eval() input is strictly validated: types restricted to
 	 * string|number|integer|boolean, names enforced against
 	 * ^[a-z][a-z0-9_]*$ by SavedQueryToolDefinition::fromArray().
+	 *
+	 * @SuppressWarnings("PHPMD.EvalExpression")
 	 */
 	public function closureFor(SavedQueryToolDefinition $definition, SavedQueryTool $tool): \Closure
 	{

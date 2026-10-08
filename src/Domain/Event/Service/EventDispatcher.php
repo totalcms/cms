@@ -166,7 +166,7 @@ final class EventDispatcher
 		// Sort by priority (lower = first)
 		usort($listeners, fn (array $a, array $b): int => $a[1] <=> $b[1]);
 
-		foreach ($listeners as [$listener, $priority]) {
+		foreach ($listeners as [$listener]) {
 			try {
 				$listener($payloadArray);
 			} catch (\Throwable $e) {

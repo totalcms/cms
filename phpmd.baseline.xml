@@ -1,0 +1,234 @@
+<?xml version="1.0"?>
+<phpmd-baseline>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Action/Admin/AdminCellAction.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Action/Admin/AdminCollectionAction.php" method="__invoke"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Action/Admin/AdminCollectionAction.php" method="__invoke"/>
+  <violation rule="PHPMD\Rule\Controversial\Superglobals" file="src/Action/Admin/AdminSettingsAction.php" method="__invoke"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Action/Auth/AuthLoginSubmitAction.php" method="__invoke"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Action/Mcp/McpEndpointAction.php" method="__invoke"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Action/Mcp/McpEndpointAction.php" method="__invoke"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Action/OAuth/OAuthAuthorizeAction.php"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Action/Property/File/FileSaveAction.php" method="__invoke"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/CLI/CliApplication.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/CLI/CliApplication.php" method="run"/>
+  <violation rule="PHPMD\Rule\Design\NumberOfChildren" file="src/CLI/Command/BaseCommand.php"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/CLI/Command/CollectionConvertCommand.php" method="execute"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/CLI/Command/JobsProcessCommand.php" method="execute"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/CLI/Command/JobsProcessCommand.php" method="execute"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/CLI/Command/JobsProcessCommand.php" method="execute"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/CLI/Command/PushCommand.php" method="execute"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/CLI/Command/PushCommand.php" method="execute"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/CLI/Command/SyncFilterOptions.php" method="renderSyncDryRun"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/CLI/Command/SyncFilterOptions.php" method="renderSyncDryRun"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/CLI/Command/SyncFilterOptions.php" method="renderSyncDryRun"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/CLI/Command/SyncFilterOptions.php" method="renderDiffCategory"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/CLI/Command/UpdateApplyCommand.php" method="execute"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Admin/Form/AdminForms.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Admin/Form/Builder/LoginForm.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Admin/Form/Builder/ObjectForm.php" method="buildFieldOptions"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Admin/Form/FormOptionSources.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Admin/Form/FormOptions.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Admin/Form/FormServices.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="src/Domain/Admin/Form/Layout/FormGridBuilder.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Admin/Form/PresetForms.php" method="mailer"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Admin/Form/SettingsForms.php" method="settings"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Admin/Form/SettingsForms.php" method="settings"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Admin/FormField/FormField.php" method="init"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Admin/FormField/FormField.php" method="init"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Admin/FormField/FormField.php" method="buildOptionsForProperty"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Admin/FormField/FormField.php" method="buildRelationalOptions"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassLength" file="src/Domain/Admin/TotalForm.php"/>
+  <violation rule="PHPMD\Rule\ExcessivePublicCount" file="src/Domain/Admin/TotalForm.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyFields" file="src/Domain/Admin/TotalForm.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="src/Domain/Admin/TotalForm.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Admin/TotalForm.php" method="build"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Admin/TotalForm.php" method="build"/>
+  <violation rule="PHPMD\Rule\ExcessivePublicCount" file="src/Domain/Admin/TotalFormFactory.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Admin/TotalFormFactory.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Auth/Data/UserAuthority.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Auth/Service/AccessControlService.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Auth/Service/PasskeyService.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Auth/Service/PersistentLoginService.php" method="restoreFromPersistentToken"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Auth/Service/PersistentLoginService.php" method="restoreFromPersistentToken"/>
+  <violation rule="PHPMD\Rule\Controversial\Superglobals" file="src/Domain/Auth/Service/PersistentLoginService.php" method="restoreFromPersistentToken"/>
+  <violation rule="PHPMD\Rule\Controversial\Superglobals" file="src/Domain/Auth/Service/PersistentLoginService.php" method="clearPersistentLogin"/>
+  <violation rule="PHPMD\Rule\Controversial\Superglobals" file="src/Domain/Auth/Service/PersistentLoginService.php" method="clearPersistentCookie"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Automation/Data/AutomationContext.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Automation/Data/AutomationContext.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Automation/Service/AutomationContextFactory.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Automation/Service/AutomationContextFactory.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Automation/Service/AutomationRunner.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Builder/Service/BuilderTemplatePaths.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Builder/Service/PageInspectorRenderer.php" method="renderSnippet"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Builder/Service/PageInspectorRenderer.php" method="renderSnippet"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="src/Domain/Cache/CacheManager.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Cache/CacheManager.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Cache/CacheManager.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Cache/CacheManager.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Cache/CacheSizingAdvisor.php" method="calculateRecommendations"/>
+  <violation rule="PHPMD\Rule\Design\TooManyFields" file="src/Domain/Collection/Data/CollectionData.php"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Collection/Data/CollectionData.php" method="toArray"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Collection/Service/CollectionFormatConverter.php" method="convert"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Collection/Service/CollectionSaver.php" method="updateCollection"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Collection/Utilities/ManualSorter.php" method="sort"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/DataView/Service/DataViewDependencyResolver.php" method="order"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/DataView/Service/DataViewDependencyResolver.php" method="order"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Extension/Data/ExtensionManifest.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\ExcessivePublicCount" file="src/Domain/Extension/ExtensionContext.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyFields" file="src/Domain/Extension/ExtensionContext.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="src/Domain/Extension/ExtensionContext.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Extension/ExtensionContext.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Extension/ExtensionContext.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Extension/Service/DangerousCodeScanner.php" method="scanContents"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Extension/Service/ExtensionEnrollment.php" method="selectForRegister"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Extension/Service/ExtensionEntrypointLoader.php" method="classNameIn"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Extension/Service/ExtensionEntrypointLoader.php" method="classNameIn"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassLength" file="src/Domain/Extension/Service/ExtensionManager.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Extension/Service/ExtensionManager.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="src/Domain/Extension/Service/ExtensionManager.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Extension/Service/ExtensionManager.php"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Extension/Service/ExtensionManager.php" method="bootAll"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Factory/Faker/FakerExtension.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Factory/Service/FactoryImporter.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Factory/Service/FactoryImporter.php" method="generateFakeObject"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Feed/Service/FeedWriter.php" method="buildEntry"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Feed/Service/PodcastTags.php" method="applyToFeed"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Feed/Service/PodcastTags.php" method="applyToEntry"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/ImageWorks/Service/ImageDimensionCalculator.php" method="calculate"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/ImageWorks/Service/ImageGenerator.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/ImageWorks/Service/TextWatermarkFactory.php" method="createTextImage"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/ImageWorks/Service/TextWatermarkFactory.php" method="createTextImage"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/ImageWorks/Service/TextWatermarkFactory.php" method="createTextImage"/>
+  <violation rule="PHPMD\Rule\Controversial\Superglobals" file="src/Domain/Import/AlloyImporter.php" method="analyze"/>
+  <violation rule="PHPMD\Rule\Controversial\Superglobals" file="src/Domain/Import/AlloyImporter.php" method="import"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="src/Domain/JobQueue/Repository/JobRepository.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/JobQueue/Service/JobRunner.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/JobQueue/Service/JobRunner.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/JumpStart/Data/JumpStartData.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/JumpStart/Service/JumpStartExporter.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/License/Data/LicenseData.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Mailer/Data/BulkBatchSummaryData.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Mailer/Data/MailerData.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mailer/Service/BulkMailerService.php" method="queueBulkSend"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Mailer/Service/BulkMailerService.php" method="queueBulkSend"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mailer/Service/EmailSender.php" method="send"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Mailer/Service/EmailSender.php" method="send"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Mailer/Service/EmailSender.php" method="send"/>
+  <violation rule="PHPMD\Rule\UnusedLocalVariable" file="src/Domain/Mcp/Prompt/Service/PromptRegistrar.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mcp/Service/McpRequestAuthorizer.php" method="authorize"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Mcp/Service/McpServerFactory.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Mcp/Service/McpServerFactory.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mcp/Service/McpServerFactory.php" method="build"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mcp/Service/McpServerFactory.php" method="guardHandler"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Mcp/Service/McpServerFactory.php" method="guardHandler"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mcp/Tool/Admin/ObjectTools.php" method="register"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Mcp/Tool/Admin/SchemaTools.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mcp/Tool/Admin/SchemaTools.php" method="register"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Mcp/Tool/Data/SavedQueryToolDefinition.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mcp/Tool/Service/McpToolsValidator.php" method="validate"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Mcp/Tool/Service/McpToolsValidator.php" method="validate"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Mcp/Tool/Service/SchemaToolRegistrar.php" method="register"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Media/Generator/BarcodeGenerator.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="src/Domain/Media/Service/ImageMetaReader.php"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Media/Service/ImageMetaReader.php" method="getMetaData"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Media/Service/ImageMetaReader.php" method="extractXmpData"/>
+  <violation rule="PHPMD\Rule\Naming\LongClassName" file="src/Domain/Migration/Migration/ClearPublicReadOnSensitiveCollectionsMigration.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/OAuth/Service/OAuthActivityLogger.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\IfStatementAssignment" file="src/Domain/Object/Service/CalcService.php" method="parseUnary"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Object/Service/ObjectImporter.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Orphan/Service/OrphanScanner.php" method="performScan"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Orphan/Service/OrphanScanner.php" method="performScan"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Orphan/Service/OrphanScanner.php" method="performScan"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Property/Data/VideoData.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Property/Repository/PropertyRepository.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Property/Service/PropertyFactory.php" method="generateProperty"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Property/Service/PropertyFactory.php" method="generateProperty"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Property/Service/PropertyFile.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="src/Domain/Query/Service/ObjectFilter.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Query/Service/ObjectFilter.php" method="isExcluded"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Query/Service/ObjectFilter.php" method="isIncluded"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="src/Domain/Rendering/Utilities/HTMLUtils.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Rendering/Utilities/HTMLUtils.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Repair/Service/CollectionFileRepairService.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Schema/Data/PropertyDefinition.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Schema/Data/PropertyDefinition.php" method="toArray"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Schema/Repository/SchemaRepository.php"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Schema/Service/SchemaLinter.php" method="lint"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Seo/Data/MetaPayload.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Seo/Data/SeoContext.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Seo/Data/SeoSettings.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Seo/Service/MetaBuilder.php" method="build"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Seo/Service/MetaBuilder.php" method="build"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Seo/Service/MetaBuilder.php" method="build"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Seo/Service/SeoSettingsLoader.php" method="load"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Sitemap/Lib/Drivers/XmlWriterDriver.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\IfStatementAssignment" file="src/Domain/Sitemap/Lib/Drivers/XmlWriterDriver.php" method="visitVideoExtension"/>
+  <violation rule="PHPMD\Rule\Design\TooManyFields" file="src/Domain/Sitemap/Lib/Extensions/Video.php"/>
+  <violation rule="PHPMD\Rule\Naming\BooleanGetMethodName" file="src/Domain/Sitemap/Lib/Extensions/Video.php" method="getRequiresSubscription"/>
+  <violation rule="PHPMD\Rule\Naming\BooleanGetMethodName" file="src/Domain/Sitemap/Lib/Extensions/Video.php" method="getLive"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="src/Domain/Twig/Adapter/AdminTwigAdapter.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Twig/Adapter/AuthTwigAdapter.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Twig/Adapter/BarcodeTwigAdapter.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Twig/Adapter/BuilderTwigAdapter.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Twig/Adapter/DataTwigAdapter.php"/>
+  <violation rule="PHPMD\Rule\Naming\BooleanGetMethodName" file="src/Domain/Twig/Adapter/EditionTwigAdapter.php" method="getIsSimulating"/>
+  <violation rule="PHPMD\Rule\Naming\BooleanGetMethodName" file="src/Domain/Twig/Adapter/EditionTwigAdapter.php" method="getIsStandard"/>
+  <violation rule="PHPMD\Rule\Naming\BooleanGetMethodName" file="src/Domain/Twig/Adapter/EditionTwigAdapter.php" method="getIsPro"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Twig/Adapter/LocaleTwigAdapter.php" method="text"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Twig/Adapter/LocaleTwigAdapter.php" method="text"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Twig/Adapter/MediaTwigAdapter.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Twig/Adapter/TotalCMSTwigAdapter.php" method="__call"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassLength" file="src/Domain/Twig/Extension/TotalCMSTwigFilters.php"/>
+  <violation rule="PHPMD\Rule\ExcessivePublicCount" file="src/Domain/Twig/Extension/TotalCMSTwigFilters.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="src/Domain/Twig/Extension/TotalCMSTwigFunctions.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Twig/Service/DashboardRenderer.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Twig/Service/DashboardRenderer.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Twig/Service/DashboardRenderer.php" method="dashboardAlerts"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Twig/Service/DashboardRenderer.php" method="dashboardAlerts"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Twig/Service/DashboardRenderer.php" method="dashboardAlerts"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Twig/Service/GalleryRenderer.php" method="gallery"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Twig/Service/GalleryRenderer.php" method="gallery"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Twig/Service/GalleryRenderer.php" method="gallery"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Twig/Service/GalleryRenderer.php" method="galleryLauncher"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Twig/Service/VideoRenderer.php" method="render"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Domain/Typography/Data/TypographyOptions.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Typography/Service/Typographer.php" method="process"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Typography/Service/Typographer.php" method="quotes"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Typography/Service/Typographer.php" method="quotes"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Visualizer/Service/RelationshipAnalyzer.php" method="analyze"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Visualizer/Service/RelationshipAnalyzer.php" method="analyze"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Visualizer/Service/RelationshipAnalyzer.php" method="analyze"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/XmlRpc/Service/PostMapper.php" method="toObject"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/XmlRpc/Service/PostMapper.php" method="fromWpStruct"/>
+  <violation rule="PHPMD\Rule\Design\CountInLoopExpression" file="src/Infrastructure/Diagnostics/LogAnalyzer.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="src/Infrastructure/Diagnostics/ServerChecker.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Infrastructure/Diagnostics/ServerChecker.php" method="getCacheInfo"/>
+  <violation rule="PHPMD\Rule\Naming\BooleanGetMethodName" file="src/Infrastructure/Diagnostics/ServerChecker.php" method="getCacheWritable"/>
+  <violation rule="PHPMD\Rule\Design\CountInLoopExpression" file="src/Infrastructure/Filesystem/FileUtils.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Middleware/Access/ExtensionAdminAccessMiddleware.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Middleware/Auth/DualAuthMiddleware.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="src/Middleware/Auth/DualAuthMiddleware.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Middleware/Development/SentryMiddleware.php" method="filterEvent"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Middleware/Development/SentryMiddleware.php" method="filterEvent"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Middleware/License/LicenseValidationMiddleware.php" method="process"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Middleware/PageRouterMiddleware.php" method="process"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Middleware/PageRouterMiddleware.php" method="process"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Middleware/PageRouterMiddleware.php" method="process"/>
+  <violation rule="PHPMD\Rule\Controversial\Superglobals" file="src/Middleware/PostMaxSizeMiddleware.php" method="exceedsPostMax"/>
+  <violation rule="PHPMD\Rule\ExcessivePublicCount" file="src/Support/Config.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyFields" file="src/Support/Config.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Support/Config.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Support/Config.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Support/Config.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Support/CurlHttpClient.php" method="request"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Support/CurlHttpClient.php" method="request"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Support/CurlHttpClient.php" method="request"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Support/GuzzleHttpClient.php" method="request"/>
+  <violation rule="PHPMD\Rule\ExcessivePublicCount" file="src/TotalCMS.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="src/TotalCMS.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Utils/Color/Color.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Utils/Color/Converters/OkLch.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Utils/Color/Util.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="src/Utils/Color/Util.php"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Utils/Color/Util.php" method="changeCoordinate"/>
+</phpmd-baseline>

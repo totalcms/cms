@@ -90,3 +90,7 @@ graphify-out/
 /public/assets/xychartDiagram-*
 /docs/releases
 /.superpowers
+
+# PHPMD result caches (composer run md / md:tests)
+.phpmd.cache.php
+.phpmd-tests.cache.php

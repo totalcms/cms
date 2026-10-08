@@ -78,6 +78,18 @@ composer run test:all
 `composer.json` defines ~40 scripts; the others worth knowing are `quality` /
 `quality:full`, `docs:validate`, `rector` / `rector:fix`, and `mcp:inspect`.
 
+### Mess detection (PHPMD)
+
+`composer run md` runs PHPMD 3 over `src/` and `config/` with `phpmd.yml` and
+reports only violations **not in `phpmd.baseline.xml`** — the baseline holds the
+structural debt accepted when the gate was set up (large methods, high
+coupling, etc.), keyed by rule + file + method so line edits do not disturb it.
+It is part of `bin/runtests.sh` and `test:build`, so a new over-complex method,
+unused variable or superglobal fails CI. When you refactor something that is in
+the baseline, run `composer run md:baseline` to drop it (the command only
+removes entries; it never adds). Prefer a `@SuppressWarnings("PHPMD.Rule")`
+docblock with a reason over a baseline entry for anything deliberate.
+
 ## Architecture Overview
 
 ### Directory Structure

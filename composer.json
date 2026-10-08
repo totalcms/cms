@@ -101,21 +101,21 @@
     "friendsofphp/php-cs-fixer": "^3.0",
     "mikey179/vfsstream": "^1.6",
     "nikic/php-parser": "^5.0",
-    "totalcms/pest-plugin-slim": "^4.0",
-    "totalcms/slim-test": "^4.0",
     "overtrue/phplint": "^9.0",
     "pestphp/pest": "^3.0",
     "pestphp/pest-plugin-arch": "^3.0",
     "pestphp/pest-plugin-faker": "^3.0",
     "pestphp/pest-plugin-type-coverage": "^3.0",
-    "phpmd/phpmd": "^2.12",
+    "phpmd/phpmd": "^3.0",
     "phpstan/phpstan": "^2.0",
     "phpunit/phpunit": "^11.0",
     "rector/rector": "^2.1",
     "selective/test-traits": "^4.1",
     "spatie/pest-plugin-snapshots": "^2.0",
     "squizlabs/php_codesniffer": "^4.0",
-    "symfony/var-dumper": "^7.1"
+    "symfony/var-dumper": "^7.1",
+    "totalcms/pest-plugin-slim": "^4.0",
+    "totalcms/slim-test": "^4.0"
   },
   "config": {
     "process-timeout": 0,
@@ -149,9 +149,8 @@
     "cs:fix": "php-cs-fixer fix --config=.php-cs-fixer.php",
     "lint": "phplint ./ --exclude=vendor --no-interaction --no-cache",
     "stan": "phpstan analyse -c phpstan.neon --no-ansi --no-progress --memory-limit 2G",
-    "md:src": "phpmd src ansi phpmd.xml",
-    "md:config": "phpmd config ansi phpmd.xml",
-    "md:tests": "phpmd tests ansi phpmd.xml",
+    "md:tests": "phpmd analyze tests --format=ansi --no-progress --cache --cache-file=.phpmd-tests.cache.php",
+    "md:baseline": "phpmd analyze src config --format=ansi --no-progress --update-baseline",
     "mcp:inspect": "bin/mcp-inspector.sh",
     "schema:dump": "php bin/console.php schema-dump",
     "sniffer:check": "phpcs --standard=phpcbf.xml",
@@ -173,11 +172,7 @@
     "bundle": "php bin/make-bundle.php",
     "bundle:check": "php bin/make-bundle.php --check",
     "docs:validate": "php bin/validate-docs.php",
-    "md": [
-      "@md:src",
-      "@md:config",
-      "@md:tests"
-    ],
+    "md": "phpmd analyze src config --format=ansi --no-progress --cache --cache-file=.phpmd.cache.php",
     "test:format": [
       "@lint",
       "@cs"
@@ -198,6 +193,7 @@
     "test:build": [
       "@stan",
       "@docs:validate",
+      "@md",
       "@test",
       "@snapshots:check",
       "@test:js"
@@ -205,6 +201,7 @@
     "quality": [
       "@cs",
       "@stan",
+      "@md",
       "@rector",
       "@sniffer:check"
     ],

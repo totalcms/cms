@@ -61,7 +61,7 @@ final class ExtensionDependencySorter
 		$visiting[$id] = true;
 
 		if (isset($manifests[$id])) {
-			foreach ($manifests[$id]->requiredExtensions() as $depId => $constraint) {
+			foreach (array_keys($manifests[$id]->requiredExtensions()) as $depId) {
 				if (isset($manifests[$depId])) {
 					$this->visit($depId, $manifests, $sorted, $visiting, $visited);
 				}
