@@ -13,8 +13,8 @@ use TotalCMS\Domain\Seo\Service\JsonLd\JsonLdProvider;
  * `<script>` tag.
  *
  * The builder itself holds no schema.org knowledge — it concatenates what the
- * providers return, keeps the first node for any repeated `@id` (so a provider
- * registered earlier wins over a later one describing the same entity) and
+ * providers return, folds any repeated `@id` into the first node that carried
+ * it (the first node's values win, later ones only add what it lacks) and
  * encodes the result.
  */
 class JsonLdBuilder
@@ -32,9 +32,13 @@ class JsonLdBuilder
 	 *
 	 * `$extra` is whatever the template passed as `options.jsonld`. It lands
 	 * after every provider node, so a template node carrying an `@id` a
-	 * provider already emitted loses the dedupe — the core description of an
-	 * entity wins, and a template referencing `{base}/#organization` links to
-	 * the real node instead of replacing it.
+	 * provider already emitted cannot replace it — the core description of an
+	 * entity wins — but it can extend it: properties the provider did not set
+	 * are added to the provider's node. That is how a site says something
+	 * about its Organization that core has no setting for (`founder`,
+	 * `foundingDate`, `address`): pass `{'@id': base ~ '/#organization',
+	 * 'founder': {'@id': …}}` and the property lands on the real node rather
+	 * than on a duplicate.
 	 *
 	 * @param list<array<string,mixed>> $extra
 	 *
@@ -54,8 +58,10 @@ class JsonLdBuilder
 			$nodes[] = $node;
 		}
 
+		/** @var list<array<string,mixed>> $graph */
 		$graph = [];
-		$seen  = [];
+		/** @var array<string,int> $seen @id → index in $graph */
+		$seen = [];
 
 		foreach ($nodes as $node) {
 			$id = $node['@id'] ?? null;
@@ -63,9 +69,10 @@ class JsonLdBuilder
 			// Nodes without an @id can't be compared, so they pass through.
 			if (is_string($id) && $id !== '') {
 				if (isset($seen[$id])) {
+					$graph[$seen[$id]] += $node;
 					continue;
 				}
-				$seen[$id] = true;
+				$seen[$id] = count($graph);
 			}
 
 			$graph[] = $node;

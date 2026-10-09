@@ -50,8 +50,12 @@ final class WebPageProvider implements JsonLdProvider
 			$node['breadcrumb'] = ['@id' => BreadcrumbProvider::id($ctx)];
 		}
 
-		if ($ctx->kind === 'object' && $this->str($ctx, 'created') !== '') {
-			$node['datePublished'] = $this->str($ctx, 'created');
+		// The same date the Article node reports: the record's own `date`
+		// when it has one, else when it was created. Two nodes for one page
+		// must not disagree on when it was published.
+		$published = $this->str($ctx, 'date') !== '' ? $this->str($ctx, 'date') : $this->str($ctx, 'created');
+		if ($ctx->kind === 'object' && $published !== '') {
+			$node['datePublished'] = $published;
 		}
 		if ($ctx->kind === 'object' && $this->str($ctx, 'updated') !== '') {
 			$node['dateModified'] = $this->str($ctx, 'updated');

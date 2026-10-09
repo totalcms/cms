@@ -32,7 +32,7 @@ final class ArticleProvider implements JsonLdProvider
 		$node = [
 			'@type'            => $meta->contentType === 'blogposting' ? 'BlogPosting' : 'Article',
 			'@id'              => $ctx->url . '#article',
-			'headline'         => mb_substr($meta->rawTitle, 0, self::HEADLINE_LENGTH),
+			'headline'         => mb_substr($meta->name, 0, self::HEADLINE_LENGTH),
 			'isPartOf'         => ['@id' => WebPageProvider::id($ctx)],
 			'mainEntityOfPage' => ['@id' => WebPageProvider::id($ctx)],
 		];

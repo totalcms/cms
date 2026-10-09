@@ -44,7 +44,7 @@ final class BreadcrumbProvider implements JsonLdProvider
 			$items[] = $this->item(count($items) + 1, $this->collectionLabel($ctx), $collectionUrl);
 		}
 
-		$items[] = $this->item(count($items) + 1, $meta->rawTitle, $ctx->url);
+		$items[] = $this->item(count($items) + 1, $meta->name, $ctx->url);
 
 		return [[
 			'@type'           => 'BreadcrumbList',

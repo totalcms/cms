@@ -366,7 +366,7 @@ With **Emit JSON-LD** on, `head()` writes one `<script type="application/ld+json
 | `BreadcrumbList` | `{url}#breadcrumb` | Alongside a WebPage: Home → collection → this page |
 | `Article` / `BlogPosting` | `{url}#article` | A page or object whose Structured Data Type resolves to Article or Blog post — a blog collection by default, or any record whose card says so |
 
-An `Article` node carries the headline, description, image, `datePublished` and `dateModified` from the object, an `author` built from the object's `author` value, and a `publisher` reference to the Organization. A string author becomes a `Person` with that name. An array is the author node itself — a `@type` of `Person` is added when it has none — which is how a site gives search engines the author's `url` and `sameAs` rather than a bare name: declare the Person once as an extra node (below) and point the article at it by `@id`:
+An `Article` node carries the headline, description, image, `datePublished` and `dateModified` from the object, an `author` built from the object's `author` value, and a `publisher` reference to the Organization. The headline — and the last breadcrumb item — is the record's own `title`, what the page's H1 says, not the browser title: an authored card Title or a title template exists to shape the tab (`Post | Bistro`), and a headline carrying that suffix reads as the wrong headline to a search engine. `datePublished` is the record's `date` when it has one, else `created`, on the WebPage and the Article alike, so the two nodes never disagree about when one page was published. A string author becomes a `Person` with that name. An array is the author node itself — a `@type` of `Person` is added when it has none — which is how a site gives search engines the author's `url` and `sameAs` rather than a bare name: declare the Person once as an extra node (below) and point the article at it by `@id`:
 
 ```twig
 {% set author = {
@@ -418,7 +418,16 @@ Core emits the five nodes above and stops there. A page that needs an FAQ, a pro
 A few rules:
 
 - **Your nodes land after the core ones**, and the first node for any `@id` wins. That is what makes `{ '@id': seo.site.baseUrl ~ '/#organization' }` above a *reference* — core's Organization node is already in the graph, so yours links to the real thing instead of replacing it with a stub. The three ids worth referencing are `{base}/#organization`, `{base}/#website` and `{url}#webpage`; [`cms.seo.data()`](#reusing-the-values) gives you both halves to build them from.
-- **A node that repeats a core `@id` is dropped**, for the same reason. To describe an entity core already describes, give it an id of its own.
+- **A node that repeats a core `@id` extends it, and never replaces it.** Properties core set stand; properties it did not set are added to its node. That is how a page says something about the Organization core has no setting for — a founder, a founding date, an address:
+
+  ```twig
+  {{ cms.seo.head(page, {jsonld: [
+      {'@id': seo.site.baseUrl ~ '/#organization', 'founder': {'@id': seo.site.baseUrl ~ '/about#founder'}},
+      person
+  ]}) }}
+  ```
+
+  To describe a different entity, give it an id of its own.
 - **Every entry must be a hash, not a list.** `{jsonld: [faq]}` is a list of one hash — the outer `[...]` holds the nodes, each node is a `{...}`. An entry that is not a hash is ignored rather than written: a `[...]` where a node belongs (the easy mistake of wrapping one node in an extra pair of brackets) is dropped, and so is anything that is not an array at all.
 - **Nothing is interpolated.** Your nodes go through the same `json_encode` as core's, with the same `</script>` protection, so a value containing markup or a quote cannot break out of the tag. Write plain Twig values; do not pre-encode them.
 - **Off means off.** With **Emit JSON-LD** switched off on the Site SEO record, no script is written at all — your nodes included.
