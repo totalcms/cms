@@ -7,6 +7,7 @@ All notable changes to Total CMS will be documented in this file.
 ### Added
 
 - **`cms.notFound()`: a template answers its URL with the 404 page, in place.** A collection URL matches every object, drafts included, so a detail template that should not serve a record had only `cms.collection.redirectIfNotFound()`, which sends the visitor to the 404 page's own address — and answers 302, since PHP drops the 404 status it set once a `Location` header is sent. Crawlers and link checkers recorded a redirect rather than a missing page, and a guessed draft slug answered differently from a slug that never existed. `cms.notFound()` stops rendering and the page with status 404 renders at the visitor's URL with a real 404, exactly as an unmatched URL is answered. `redirectIfNotFound()` is unchanged for sites that want the redirect. See [Total CMS helpers](resources/docs/twig/totalcms.md)
+- **The Article node's `author` can be a node, not just a name.** `author` on the record was read as a string and became `{"@type": "Person", "name": …}` — so a site that declared a full Person (with `url` and `sameAs`) as an extra JSON-LD node still handed search engines an anonymous author, since the two nodes were never linked and the author is the one they read. An array `author` is now emitted as the author node itself, `@type: Person` added when it has none, so a template can pass `{'@id': base ~ '/about#founder'}` and the article points at the Person it already declares. A string still works as before. See [SEO](resources/docs/site-builder/seo.md)
 
 ### Changed
 

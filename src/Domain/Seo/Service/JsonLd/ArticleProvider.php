@@ -51,8 +51,9 @@ final class ArticleProvider implements JsonLdProvider
 		if ($this->str($ctx, 'updated') !== '') {
 			$node['dateModified'] = $this->str($ctx, 'updated');
 		}
-		if ($this->str($ctx, 'author') !== '') {
-			$node['author'] = ['@type' => 'Person', 'name' => $this->str($ctx, 'author')];
+		$author = $this->author($ctx);
+		if ($author !== []) {
+			$node['author'] = $author;
 		}
 		if (OrganizationProvider::applies($ctx)) {
 			$node['publisher'] = ['@id' => OrganizationProvider::id($ctx)];
@@ -68,6 +69,32 @@ final class ArticleProvider implements JsonLdProvider
 	private function applies(SeoContext $ctx, MetaPayload $meta): bool
 	{
 		return WebPageProvider::applies($ctx) && $meta->contentType !== 'website';
+	}
+
+	/**
+	 * The author node. A string names a Person; an array is the node itself,
+	 * so a template can point at a Person it declares elsewhere in the graph
+	 * (`{'@id': base ~ '/about#founder'}`) — search engines resolve the
+	 * reference and read that node's `url` and `sameAs` as the author's,
+	 * which a bare name never gives them. The Person type is filled in only
+	 * when the array is more than a reference; a reference carries `@id` alone.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function author(SeoContext $ctx): array
+	{
+		$value = $ctx->object['author'] ?? '';
+		if (is_array($value)) {
+			if ($value === [] || array_is_list($value)) {
+				return [];
+			}
+
+			return isset($value['@type']) || (isset($value['@id']) && count($value) === 1) ? $value : ['@type' => 'Person'] + $value;
+		}
+
+		$name = is_string($value) ? trim($value) : '';
+
+		return $name === '' ? [] : ['@type' => 'Person', 'name' => $name];
 	}
 
 	private function str(SeoContext $ctx, string $key): string

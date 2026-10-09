@@ -366,7 +366,20 @@ With **Emit JSON-LD** on, `head()` writes one `<script type="application/ld+json
 | `BreadcrumbList` | `{url}#breadcrumb` | Alongside a WebPage: Home → collection → this page |
 | `Article` / `BlogPosting` | `{url}#article` | A page or object whose Structured Data Type resolves to Article or Blog post — a blog collection by default, or any record whose card says so |
 
-An `Article` node carries the headline, description, image, `datePublished` and `dateModified` from the object, an `author` Person built from the object's `author` value, and a `publisher` reference to the Organization. Set the card's **Structured Data Type** to `Webpage` to leave one object out, or to `Article` / `Blog post` to bring a Site Builder page in — a page has a title, a card description and image, and its `created` / `updated` dates, which is all the node needs.
+An `Article` node carries the headline, description, image, `datePublished` and `dateModified` from the object, an `author` built from the object's `author` value, and a `publisher` reference to the Organization. A string author becomes a `Person` with that name. An array is the author node itself — a `@type` of `Person` is added when it has none — which is how a site gives search engines the author's `url` and `sameAs` rather than a bare name: declare the Person once as an extra node (below) and point the article at it by `@id`:
+
+```twig
+{% set author = {
+    '@type' : 'Person',
+    '@id'   : seo.site.baseUrl ~ '/about#founder',
+    'name'  : 'Ada Lovelace',
+    'url'   : seo.site.baseUrl ~ '/about',
+    'sameAs': ['https://github.com/ada', 'https://www.linkedin.com/in/ada']
+} %}
+{{ cms.seo.head(object|merge({author: {'@id': author['@id']}}), {jsonld: [author]}) }}
+```
+
+Set the card's **Structured Data Type** to `Webpage` to leave one object out, or to `Article` / `Blog post` to bring a Site Builder page in — a page has a title, a card description and image, and its `created` / `updated` dates, which is all the node needs.
 
 The JSON is encoded so that a `</script>` inside any value cannot break out of the tag.
 

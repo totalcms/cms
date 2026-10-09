@@ -64,6 +64,20 @@ describe('JsonLdBuilder', function (): void {
 		expect($article)->not->toBeNull()->and($article['headline'])->toBe('Essay')->and($article['datePublished'])->toBe('2026-01-01T00:00:00+00:00');
 	});
 
+	test('an author string becomes a Person, an array is the author node, a reference stays a reference', function () use ($build): void {
+		$article = fn (array $object): array => array_values(array_filter($build(seoCtx(['object' => $object])), fn (array $n): bool => $n['@type'] === 'Article'))[0];
+		$base    = ['id' => 'hello', 'title' => 'Hello'];
+
+		expect($article($base + ['author' => ' Ada '])['author'])->toBe(['@type' => 'Person', 'name' => 'Ada']);
+		expect($article($base + ['author' => ['@id' => 'https://example.com/about#founder']])['author'])->toBe(['@id' => 'https://example.com/about#founder']);
+		expect($article($base + ['author' => ['name' => 'Ada', 'url' => 'https://ada.test']])['author'])->toBe(['@type' => 'Person', 'name' => 'Ada', 'url' => 'https://ada.test']);
+		expect($article($base + ['author' => ['@type' => 'Organization', 'name' => 'Bistro Ltd']])['author'])->toBe(['@type' => 'Organization', 'name' => 'Bistro Ltd']);
+		expect($article($base))->not->toHaveKey('author');
+		expect($article($base + ['author' => '']))->not->toHaveKey('author');
+		expect($article($base + ['author' => []]))->not->toHaveKey('author');
+		expect($article($base + ['author' => ['Ada', 'Grace']]))->not->toHaveKey('author');
+	});
+
 	test('jsonldType website suppresses the Article, and the script cannot break out', function () use ($build): void {
 		$ctx = seoCtx(['fields' => SeoFields::fromArray(['jsonldType' => 'website', 'title' => '</script><script>alert(1)</script>'])]);
 		expect(array_column($build($ctx), '@type'))->not->toContain('Article');
