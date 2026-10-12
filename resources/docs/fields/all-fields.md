@@ -376,9 +376,11 @@ The `visibility` setting controls when a field is displayed in forms based on th
 - `in` - Current value is in the expected value array
 - `not_in` - Current value is not in the expected value array
 
-**Special Operators (for array fields like checkbox, multiselect):**
-- `empty` - Field array is empty
-- `not_empty` - Field array has at least one value
+**Emptiness Operators (any field; `value` is ignored):**
+- `empty` - The field has nothing in it
+- `not_empty` - The field has a value
+
+A field is empty when it is blank text, an array field (checkbox, multiselect, list) with no items, or an image, file or card with nothing in it. `0` and an unticked toggle are values, not empty — use `==` for those.
 
 ### Examples
 
@@ -437,11 +439,11 @@ The `visibility` setting controls when a field is displayed in forms based on th
 }
 ```
 
-**Show field when array field is not empty:**
+**Show field once another has a value (text, image, list, …):**
 ```json
 {
 	"visibility": {
-		"watch": "categories",
+		"watch": "image",
 		"value": null,
 		"operator": "not_empty"
 	}

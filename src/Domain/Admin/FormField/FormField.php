@@ -312,21 +312,26 @@ class FormField
 			return false; // No watch field specified, hide by default
 		}
 
-		// Get the expected value(s)
-		$expectedValue = $visibility['value'] ?? null;
-		if ($expectedValue === null) {
-			return false; // No expected value, hide by default
-		}
-
 		// Get the operator (default to equality)
 		$operator = $visibility['operator'] ?? '==';
+
+		// `empty` / `not_empty` ask about a missing value, so neither null
+		// guard below applies: they take no expected value, and a watched
+		// field with nothing in it (a new form) is exactly what `empty` means.
+		$asksAboutEmptiness = in_array($operator, ['empty', 'not_empty'], true);
+
+		// Get the expected value(s)
+		$expectedValue = $visibility['value'] ?? null;
+		if ($expectedValue === null && !$asksAboutEmptiness) {
+			return false; // No expected value, hide by default
+		}
 
 		// Get the current value from the form
 		$currentValue = $this->form->getFieldValue($watchField);
 
 		// If we can't get the current value, hide the field by default
 		// This ensures proper initial state for new forms
-		if ($currentValue === null) {
+		if ($currentValue === null && !$asksAboutEmptiness) {
 			return false;
 		}
 
@@ -371,8 +376,26 @@ class FormField
 			'<'     => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue < $expectedValue,
 			'>='    => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue >= $expectedValue,
 			'<='    => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue <= $expectedValue,
+			'empty'     => $this->isEmptyValue($currentValue),
+			'not_empty' => !$this->isEmptyValue($currentValue),
 			default => $currentValue == $expectedValue, // Default to equality
 		};
+	}
+
+	/**
+	 * What `empty` / `not_empty` mean for a non-array value: null or a blank
+	 * string. 0 and false are values — a zero quantity and an unticked toggle
+	 * are not "empty", unlike PHP's empty(). Arrays (and an image or card
+	 * value, which is one here) are handled by the array branch above.
+	 * Mirrors isEmptyValue() in field-visibility.js.
+	 */
+	protected function isEmptyValue(mixed $value): bool
+	{
+		if ($value === null) {
+			return true;
+		}
+
+		return is_string($value) && trim($value) === '';
 	}
 
 	/**

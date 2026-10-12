@@ -285,8 +285,26 @@ export default class FieldVisibility {
 				return currentValue == expectedValue;
 			case 'not_in':
 				return currentValue != expectedValue;
+			case 'empty':
+				return this.isEmptyValue(currentValue);
+			case 'not_empty':
+				return !this.isEmptyValue(currentValue);
 			default:
 				return currentValue == expectedValue;
 		}
+	}
+
+	//-------------------------
+	// What `empty` / `not_empty` mean for a non-array value: nothing at all, a
+	// blank string, or an object with no keys (an image, file or card field
+	// with nothing in it). 0 and false are values — a zero quantity and an
+	// unticked toggle are not "empty", unlike PHP's empty(). Mirrored by
+	// FormField::isEmptyValue() for the initial render.
+	//-------------------------
+	isEmptyValue(value) {
+		if (value === null || value === undefined) return true;
+		if (typeof value === 'string') return value.trim() === '';
+		if (typeof value === 'object') return Object.keys(value).length === 0;
+		return false;
 	}
 }

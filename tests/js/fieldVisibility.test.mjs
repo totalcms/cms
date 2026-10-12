@@ -48,6 +48,21 @@ describe('FieldVisibility.evaluateCondition', () => {
 		expect(evaluate(['a'], 'x', 'empty')).toBe(false);
 		expect(evaluate(['a'], 'x', 'not_empty')).toBe(true);
 	});
+
+	test('empty / not_empty on scalar and object current values', () => {
+		// Empty: nothing, a blank string, an object with no keys (an image or
+		// card field with nothing in it).
+		for (const empty of [null, undefined, '', '   ', {}]) {
+			expect(evaluate(empty, null, 'empty')).toBe(true);
+			expect(evaluate(empty, null, 'not_empty')).toBe(false);
+		}
+		// Not empty: any text, and 0 / false — a zero quantity and an unticked
+		// toggle are values, unlike PHP's empty().
+		for (const value of ['a', ' a ', 0, '0', false, { path: 'x.jpg' }]) {
+			expect(evaluate(value, null, 'empty')).toBe(false);
+			expect(evaluate(value, null, 'not_empty')).toBe(true);
+		}
+	});
 });
 
 //-----------------------------------------------
