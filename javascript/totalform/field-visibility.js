@@ -52,14 +52,24 @@ export default class FieldVisibility {
 			const watchedFieldElement = container.querySelector(`[style*="--grid-area: ${watchField}"]`);
 			if (!watchedFieldElement) return;
 
-			// Re-evaluate when the watched field's value changes (native `change`)
-			// or when its own visibility flips (`visibility-change` from a parent
-			// cascade). The latter must NOT be a `change` event — that would bubble
-			// to TotalField's change listener and falsely mark the field unsaved
+			// Re-evaluate when the watched field's value changes, or when its own
+			// visibility flips (`visibility-change` from a parent cascade). The
+			// latter must NOT be a `change` event — that would bubble to
+			// TotalField's change listener and falsely mark the field unsaved
 			// (cards and other composite fields whose getValue() returns a fresh
 			// object can't rely on the `===` equality guard in changed()).
+			//
+			// A value change is heard two ways. The native `change` bubbling from
+			// the watched field's input answers at once, with no debounce. But
+			// most field types (Tiptap, date, color, list, card, …) set their
+			// value in code and call changed(), which fires no native event, so
+			// a rule watching one of those never re-evaluated. The TotalField
+			// events cover them (`subfield-change` for a field in a deck item).
+			// Re-evaluation is idempotent, so hearing one edit twice is harmless.
 			const reevaluate = () => this.updateScopedVisibility(fieldElement, visibility, fields);
 			watchedFieldElement.addEventListener('change', reevaluate, listenerOpts);
+			watchedFieldElement.addEventListener('field-change', reevaluate, listenerOpts);
+			watchedFieldElement.addEventListener('subfield-change', reevaluate, listenerOpts);
 			watchedFieldElement.addEventListener('visibility-change', reevaluate, listenerOpts);
 
 			// Initial visibility evaluation

@@ -1,4 +1,7 @@
+import { vi } from 'vitest';
+
 import FieldVisibility from '../../javascript/totalform/field-visibility.js';
+import TotalField from '../../javascript/totalform/totalfield.js';
 
 //-----------------------------------------------
 // evaluateCondition() is the pure heart of conditional field visibility. It
@@ -162,5 +165,56 @@ describe('FieldVisibility.updateGroups', () => {
 		update(container);
 		expect(hidden(container, '#b')).toBe(true);
 		expect(hidden(container, '.formgrid-accordion')).toBe(true);
+	});
+});
+
+//-----------------------------------------------
+// A watch rule must follow a field that sets its value in code and calls
+// changed() without any native event (Tiptap, date, color, list, card, …).
+// Before the TotalField events were listened to, such a field never
+// re-evaluated the rules watching it.
+//-----------------------------------------------
+
+describe('FieldVisibility watch follows a code-driven field', () => {
+	function buildForm() {
+		document.body.innerHTML = `
+			<form>
+				<div class="form-field" data-type="styledtext" style="--grid-area: notes"><textarea name="notes"></textarea></div>
+				<div class="form-field" data-type="text" style="--grid-area: summary"
+					data-settings='{"visibility":{"watch":"notes","operator":"!=","value":""}}'>
+					<input name="summary">
+				</div>
+			</form>`;
+		const form = document.querySelector('form');
+		const fields = Array.from(form.querySelectorAll('.form-field')).map(el => new TotalField(el, {}));
+		return { form, fields };
+	}
+
+	test('re-evaluates after changed() with no native event', () => {
+		vi.useFakeTimers();
+		try {
+			const { form, fields } = buildForm();
+			const [notes, summary] = fields;
+			new FieldVisibility(form, fields).initializeScope(form, fields);
+			expect(summary.isVisible()).toBe(false);
+
+			notes.input.value = '<p>Written in code</p>';
+			notes.changed();
+			expect(summary.isVisible()).toBe(false); // nothing native fired
+			vi.advanceTimersByTime(300); // the dispatcher debounce
+			expect(summary.isVisible()).toBe(true);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	test('a native change still answers at once', () => {
+		const { form, fields } = buildForm();
+		const [notes, summary] = fields;
+		new FieldVisibility(form, fields).initializeScope(form, fields);
+
+		notes.input.value = 'typed';
+		notes.input.dispatchEvent(new Event('change', { bubbles: true }));
+		expect(summary.isVisible()).toBe(true);
 	});
 });
