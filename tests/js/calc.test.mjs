@@ -1,4 +1,5 @@
 import Calc from '../../javascript/totalform/calc.js';
+import { vi } from 'vitest';
 
 //-----------------------------------------------
 // Calc evaluates number-field expressions. parse() is a hand-written safe math
@@ -129,5 +130,36 @@ describe('Calc with display-formatted (masked) field values', () => {
 		c.field = { settings: {}, isInDeck: true, deckItem: item, form: null };
 
 		expect(c.evaluate()).toBe(10000);
+	});
+});
+
+describe('Calc.attachListeners', () => {
+	// Same collision as Autogen: an image field renders readonly `width`/`size`
+	// sub-inputs, so a `${width}` calc rendered after the image must listen on
+	// the form's own `width` field, not the image's sub-input that precedes it.
+	test('listens on the form\'s own field, not a composite sub-field rendered earlier', () => {
+		document.body.innerHTML = `
+			<form>
+				<div class="form-field" data-type="image">
+					<input name="photo" type="hidden">
+					<details>
+						<div class="form-field" data-type="number"><input name="width" value="800" readonly></div>
+					</details>
+				</div>
+				<div class="form-field" data-type="number"><input name="width" value="2"></div>
+				<div class="form-field" data-type="number"><input name="area" value=""></div>
+			</form>`;
+		const formEl = document.querySelector('form');
+		const calc = new Calc({ settings: { calc: '${width} * 2' }, isInDeck: false, form: { form: formEl } });
+		const callback = vi.fn();
+		calc.attachListeners(callback);
+
+		const fieldChange = (container, type = 'field-change') =>
+			container.dispatchEvent(new CustomEvent(type, { bubbles: true }));
+		const [imageWidth, ownWidth] = formEl.querySelectorAll('input[name="width"]');
+		fieldChange(ownWidth.closest('.form-field'));
+		expect(callback).toHaveBeenCalledTimes(1);
+		fieldChange(imageWidth.closest('.form-field'), 'subfield-change');
+		expect(callback).toHaveBeenCalledTimes(1);
 	});
 });

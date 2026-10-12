@@ -3,7 +3,7 @@
 // Provides pattern-based value generation for any field.
 // Used by TotalField for generic autogen and by Identifier for ID-specific autogen.
 //-----------------------------------------------
-import { collectScopedInputValues } from "./fieldCollection.mjs";
+import { collectScopedInputValues, listenToScopedField } from "./fieldCollection.mjs";
 
 export default class Autogen {
 
@@ -44,11 +44,14 @@ export default class Autogen {
 		const fieldNames = this.getFieldNames();
 		const searchScope = this.field.isInDeck ? this.field.deckItem : this.field.form.form;
 
-		fieldNames.forEach(name => {
-			const input = searchScope.querySelector(`[name="${name}"]`);
-			if (!input) return;
-			input.addEventListener("change", () => callback());
-		});
+		// Subscribe to the referenced fields' own change events, scoped to the
+		// container's top-level fields. This used to query the first input in
+		// the scope with that name: a composite field's sub-inputs (an image's
+		// readonly `name` "Filename") share the scope's property names, so a
+		// schema whose form order put an `image` before `name` (the `auth`
+		// schema does) wired `${name}` to the Filename input and typing a name
+		// never regenerated the id. See fieldCollection.mjs.
+		fieldNames.forEach(name => listenToScopedField(searchScope, name, callback));
 	}
 
 	/**

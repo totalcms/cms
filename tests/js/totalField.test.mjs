@@ -250,7 +250,9 @@ describe('TotalField calc write-back', () => {
 		});
 		field.form = { form, generateData: () => ({ amount: 5000 }) };
 
-		source.querySelector('input').dispatchEvent(new Event('input', { bubbles: true }));
+		// Calc follows the source's TotalField event (what changed() dispatches),
+		// not a native input/change on its input.
+		source.dispatchEvent(new CustomEvent('field-change', { bubbles: true }));
 
 		expect(field.masked).toBe(10000);
 		expect(field.input.value).toBe('$10,000.00');
