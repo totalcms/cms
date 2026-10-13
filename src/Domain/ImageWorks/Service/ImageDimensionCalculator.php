@@ -24,6 +24,8 @@ class ImageDimensionCalculator
 			return ['width' => $originalWidth, 'height' => $originalHeight];
 		}
 
+		['width' => $originalWidth, 'height' => $originalHeight] = self::sourceDimensions($originalWidth, $originalHeight, $params);
+
 		$targetWidth  = isset($params['w']) ? (int)$params['w'] : null;
 		$targetHeight = isset($params['h']) ? (int)$params['h'] : null;
 		$fit          = $params['fit'] ?? null;
@@ -94,6 +96,42 @@ class ImageDimensionCalculator
 		return [
 			'width'  => (int)round($targetHeight * $aspectRatio),
 			'height' => $targetHeight,
+		];
+	}
+
+	/**
+	 * The dimensions every later step starts from: the image itself, or the
+	 * `crop` rect (`width,height,x,y`) when one is given — Glide's crop
+	 * manipulator runs before its size step, so a candidate can never be
+	 * wider than the rect. The rect is validated and clamped exactly as Glide
+	 * does it: four numbers, a positive size, an offset inside the image, and
+	 * a size cut down to what remains past the offset. Anything else is
+	 * ignored, as Glide ignores it.
+	 *
+	 * @param array<string,string|int> $params
+	 *
+	 * @return array{width: int, height: int}
+	 */
+	public static function sourceDimensions(int $width, int $height, array $params): array
+	{
+		$crop = (string)($params['crop'] ?? '');
+		if ($crop === '' || $width === 0 || $height === 0) {
+			return ['width' => $width, 'height' => $height];
+		}
+
+		$rect = explode(',', $crop);
+		if (count($rect) !== 4 || array_filter($rect, 'is_numeric') !== $rect) {
+			return ['width' => $width, 'height' => $height];
+		}
+
+		[$rectWidth, $rectHeight, $x, $y] = array_map('intval', $rect);
+		if ($rectWidth <= 0 || $rectHeight <= 0 || $x < 0 || $y < 0 || $x >= $width || $y >= $height) {
+			return ['width' => $width, 'height' => $height];
+		}
+
+		return [
+			'width'  => min($rectWidth, $width - $x),
+			'height' => min($rectHeight, $height - $y),
 		];
 	}
 

@@ -38,13 +38,17 @@ Render a complete `<img>` tag with ImageWorks URL, dimensions, alt text, and laz
 
 {# Eager loading (default is lazy) #}
 {{ cms.render.image('hero', {}, {loading: 'eager'}) }}
+
+{# Your own alt text, or an empty one for a decorative image #}
+{{ cms.render.image(post, {}, {alt: post.title, collection: 'blog'}) }}
+{{ cms.render.image('divider', {}, {alt: ''}) }}
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `idOrObject` | string\|array\|null | required | Object ID or full object data |
 | `imageworks` | array | `[]` | ImageWorks transformation parameters (`w`, `h`, `fit`, `fm`, etc.) |
-| `options` | array | `[]` | Collection context: `collection`, `property`, `loading` |
+| `options` | array | `[]` | Collection context: `collection`, `property`, `loading`, `class`, and `alt` — alt text for this render. Without it the image's own alt applies, then its EXIF title, description, and finally the filename. Pass an empty string for a decorative image; otherwise the filename fallback is what a screen reader hears |
 
 #### Nested images (cards and decks)
 
@@ -97,9 +101,10 @@ Same three arguments as `image()`: the object, then **ImageWorks transforms**, t
 | `sizes` | string | `'100vw'` | The `sizes` attribute on every `<source>` and the `<img>`. `100vw` is what a browser assumes without it, so narrow it per call |
 | `dark` | string\|array | — | The image to show under `prefers-color-scheme: dark` — an object ID or object, resolved with the same `collection` and `property` as the light image |
 | `darkProperty` | string | — | The dark image as a second image property on the **same** object (dotted for card/deck-nested). `dark` wins when both are given |
+| `alt` | string | the image's own | Alt text for the `<img>`, as in `image()`. The dark image never contributes alt text |
 | `collection`, `property`, `loading`, `class` | | as `image()` | Collection context, dotted nested `property`, lazy loading, extra class |
 
-Every `w` descriptor is the width ImageWorks will actually deliver for that candidate, after `h` and `fit` are applied — never the requested number. Two requested widths that clamp to one delivered width collapse into one candidate. A GIF gets no `<source>` children at all, since re-encoding to a still format would drop its animation. Change the defaults site-wide under `imageworks.picture` in `config/tcms.php`; see [Format & Quality](docs/twig/imageworks#format--quality) for the format list.
+Every `w` descriptor is the width ImageWorks will actually deliver for that candidate, after `crop`, `h` and `fit` are applied — never the requested number. A `crop` rect (`crop: '520,717,0,100'`, as width, height, x, y) is cut before anything is sized, so the rect is the source: candidates wider than it are dropped, its width joins as the largest, and the `<img>` carries the rect's dimensions. Two requested widths that clamp to one delivered width collapse into one candidate. A GIF gets no `<source>` children at all, since re-encoding to a still format would drop its animation. Change the defaults site-wide under `imageworks.picture` in `config/tcms.php`; see [Format & Quality](docs/twig/imageworks#format--quality) for the format list.
 
 #### Light and dark mode
 

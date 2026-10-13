@@ -215,4 +215,42 @@ class ImageDimensionCalculatorTest extends TestCase
 		// With crop and only height, width should be original (clamped)
 		$this->assertEquals(['width' => 1920, 'height' => 500], $result);
 	}
+
+	// A Glide `crop` rect (w,h,x,y) runs before the size step, so the rect —
+	// not the upload — is what every later calculation and the browser see.
+	public function testCropRectBecomesTheSource(): void
+	{
+		$this->assertEquals(['width' => 520, 'height' => 717], ImageDimensionCalculator::calculate(2138, 1434, ['crop' => '520,717,0,100']));
+	}
+
+	public function testCropRectThenWidthScalesTheRect(): void
+	{
+		$this->assertEquals(['width' => 480, 'height' => 662], ImageDimensionCalculator::calculate(2138, 1434, ['crop' => '520,717,0,100', 'w' => 480]));
+	}
+
+	public function testCropRectNeverUpscales(): void
+	{
+		$this->assertEquals(['width' => 520, 'height' => 717], ImageDimensionCalculator::calculate(2138, 1434, ['crop' => '520,717,0,100', 'w' => 1024]));
+	}
+
+	public function testCropRectIsClampedToTheImageLikeGlide(): void
+	{
+		$this->assertEquals(['width' => 2038, 'height' => 1334], ImageDimensionCalculator::calculate(2138, 1434, ['crop' => '3000,3000,100,100']));
+	}
+
+	/** @dataProvider invalidCropRects */
+	public function testAnInvalidCropRectIsIgnoredLikeGlide(string $crop): void
+	{
+		$this->assertEquals(['width' => 2138, 'height' => 1434], ImageDimensionCalculator::calculate(2138, 1434, ['crop' => $crop]));
+	}
+
+	/** @return iterable<string, array{string}> */
+	public static function invalidCropRects(): iterable
+	{
+		yield 'garbage'         => ['abc'];
+		yield 'three parts'     => ['100,100,0'];
+		yield 'zero width'      => ['0,100,0,0'];
+		yield 'x past the edge' => ['100,100,2138,0'];
+		yield 'negative offset' => ['100,100,-1,0'];
+	}
 }

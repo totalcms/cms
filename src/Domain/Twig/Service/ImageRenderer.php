@@ -57,7 +57,11 @@ class ImageRenderer
 	/**
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $imageworks
-	 * @param array<string,mixed> $options
+	 * `alt` in the options replaces the stored alt text; an explicit empty
+	 * string marks the image decorative. Without it the fallback chain in
+	 * {@see altFromImageData()} applies.
+	 *
+	 * @param array<string,mixed> $options collection, property, loading, class, alt
 	 */
 	public function image(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
 	{
@@ -95,7 +99,7 @@ class ImageRenderer
 
 		$html = HTMLUtils::inlineElement('img', [
 			'src'           => $imagePath,
-			'alt'           => $this->alt($idOrObject, $options),
+			'alt'           => array_key_exists('alt', $options) ? (string)$options['alt'] : $this->alt($idOrObject, $options),
 			'width'         => $dimensions['width'],
 			'height'        => $dimensions['height'],
 			'class'         => $options['class'] ?? null,
@@ -132,7 +136,13 @@ class ImageRenderer
 	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $imageworks
-	 * @param array<string,mixed> $options widths, formats, sizes, dark, darkProperty, plus collection, property, loading, class
+	 * A `crop` rect in `$imageworks` (`width,height,x,y`) is the source
+	 * every candidate is cut from — Glide crops before it sizes — so the
+	 * candidate widths, the `<img>` dimensions and every `w` descriptor are
+	 * taken from the rect, not the upload. `alt` in the options works as in
+	 * {@see image()} and applies to the light `<img>` only.
+	 *
+	 * @param array<string,mixed> $options widths, formats, sizes, dark, darkProperty, alt, plus collection, property, loading, class
 	 */
 	public function picture(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
 	{
@@ -165,7 +175,7 @@ class ImageRenderer
 		$ceiling = isset($base['w']) ? (int)$base['w'] : null;
 		unset($base['w']);
 
-		$candidates = $this->candidateWidths($widths, (int)($image['width'] ?? 0), $ceiling);
+		$candidates = $this->candidateWidths($widths, $this->sourceWidth($image, $base), $ceiling);
 		if ($candidates === []) {
 			return '';
 		}
@@ -178,7 +188,7 @@ class ImageRenderer
 		$dark    = $this->darkVariant($idOrObject, $options);
 		if ($dark !== null) {
 			[$darkTarget, $darkImage, $darkOptions] = $dark;
-			$darkCandidates = $this->candidateWidths($widths, (int)($darkImage['width'] ?? 0), $ceiling);
+			$darkCandidates = $this->candidateWidths($widths, $this->sourceWidth($darkImage, $base), $ceiling);
 			$darkNative     = $this->nativeFormat($darkImage);
 			foreach ($darkCandidates === [] ? [] : array_unique([...$formats, $darkNative]) as $format) {
 				$sources .= HTMLUtils::inlineElement('source', [
@@ -210,7 +220,7 @@ class ImageRenderer
 			'src'           => $this->media->imagePath($idOrObject, $base + ['w' => $largest, 'fm' => $native], $options),
 			'srcset'        => $this->srcset($idOrObject, $image, $base, $options, $candidates, $native),
 			'sizes'         => $sizes,
-			'alt'           => self::altFromImageData($image),
+			'alt'           => array_key_exists('alt', $options) ? (string)$options['alt'] : self::altFromImageData($image),
 			'width'         => $dimensions['width'],
 			'height'        => $dimensions['height'],
 			'class'         => $options['class'] ?? null,
@@ -304,6 +314,18 @@ class ImageRenderer
 		$native = strtolower(pathinfo((string)($image['name'] ?? ''), PATHINFO_EXTENSION));
 
 		return isset(self::MIME[$native]) ? $native : 'jpg';
+	}
+
+	/**
+	 * The width candidates are cut from: the stored width, or the `crop`
+	 * rect's when the transforms carry one.
+	 *
+	 * @param array<string,mixed> $image
+	 * @param array<string,string|int> $base
+	 */
+	private function sourceWidth(array $image, array $base): int
+	{
+		return ImageDimensionCalculator::sourceDimensions((int)($image['width'] ?? 0), (int)($image['height'] ?? 0), $base)['width'];
 	}
 
 	/**

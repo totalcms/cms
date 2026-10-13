@@ -117,6 +117,35 @@ test('picture() never emits a candidate wider than the source, and adds the sour
 		->and($html)->toContain('height="600"');
 });
 
+test('image() and picture() take an alt option, and an explicit empty alt marks the image decorative', function (): void {
+	// HTMLUtils writes an empty value as the bare attribute — `<img alt ...>`
+	// is the HTML empty-attribute form of alt="" — so a decorative image
+	// gets ` alt ` rather than the filename it would fall back to.
+	expect($this->render->image(imageObject(), [], ['alt' => 'Sidebar crop']))->toContain('alt="Sidebar crop"')
+		->and($this->render->image(imageObject(), [], ['alt' => '']))->toContain(' alt width=')
+		->and($this->render->image(imageObject()))->toContain('alt="Hero shot"');
+
+	$picture = $this->render->picture(imageObject(), [], ['alt' => 'Sidebar crop']);
+	expect($picture)->toContain('alt="Sidebar crop"')
+		->and($picture)->not->toContain('Hero shot')
+		->and($this->render->picture(imageObject(), [], ['alt' => '']))->toContain(' alt width=');
+});
+
+test('a crop rect sizes the <img> and the candidates from the rect, not the upload', function (): void {
+	// Glide's crop runs before size, so a 520x717 rect out of the 1920x1080
+	// upload can never deliver more than 520px — a 768w or 1920w descriptor
+	// would send a large screen a small image.
+	$html = $this->render->picture(imageObject(), ['crop' => '520,717,0,100']);
+
+	expect($html)->toContain('width="520"')
+		->and($html)->toContain('height="717"')
+		->and($html)->toContain('?crop=520%2C717%2C0%2C100&amp;w=480')
+		->and($html)->toContain('520w')
+		->and($html)->not->toContain('768w')
+		->and($html)->not->toContain('1920w')
+		->and($this->render->image(imageObject(), ['crop' => '520,717,0,100']))->toContain('width="520" height="717"');
+});
+
 test('picture() honours explicit widths, formats and sizes, and a w in the transforms caps the largest candidate', function (): void {
 	$html = $this->render->picture(
 		imageObject(),
