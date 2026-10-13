@@ -47,7 +47,12 @@ export function rejectNonOk(response) {
 	}
 
 	return response.json().then(json => {
-		const message = typeof json.error === 'string' ? json.error : (json.error?.message || 'Unknown error');
+		// Most endpoints answer {error: {message}} (DefaultErrorHandler) or
+		// {error: "..."}; the settings and access-group actions answer
+		// {success: false, message: "..."}, which used to surface as
+		// "Unknown error" (TOTALCMS-DASHBOARD-5K).
+		const message = typeof json.error === 'string' ? json.error
+			: (json.error?.message || (typeof json.message === 'string' ? json.message : '') || `HTTP ${response.status}`);
 		const error   = new Error(message);
 		error.data    = json;
 		error.status  = response.status;

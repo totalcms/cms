@@ -14,7 +14,6 @@ export default class GalleryField extends ImageField {
     constructor(container, settings) {
         super(container, settings);
 
-		this.imageDataStore = this.loadImageData();
 		this.sharedDialog = null;
 		this.sharedLinkDialog = null;
 		this.activePreview = null;
@@ -23,6 +22,23 @@ export default class GalleryField extends ImageField {
 		this.sortable = null;
 		this.watchPreviews();
     }
+
+	// Built on first read rather than in the constructor: ImageField's
+	// constructor runs setupPreview() and setupDroplet() before this class's
+	// body, and TotalField has already attached the change listener. If
+	// anything in that window throws, totalform only console.warns, and the
+	// half-built field keeps answering change events with no store, so every
+	// drag-reorder blew up in getValue() (TOTALCMS-DASHBOARD-5N).
+	get imageDataStore() {
+		if (!this._imageDataStore) {
+			this._imageDataStore = this.loadImageData();
+		}
+		return this._imageDataStore;
+	}
+
+	set imageDataStore(store) {
+		this._imageDataStore = store;
+	}
 
 	loadImageData() {
 		const store = new Map();

@@ -195,7 +195,10 @@ export default class TotalFormManager {
 		this.delayProcessing(() => {
 			this.bannerStatus("error");
 			this.statusBanner.addEventListener("click", () => {
-				if (navigator.clipboard?.writeText) navigator.clipboard.writeText(error);
+				// Copying the error is a convenience; Safari rejects with
+				// NotAllowedError when it decides the click was not a user gesture
+				// (TOTALCMS-DASHBOARD-5P), and an Error object is not a string.
+				if (navigator.clipboard?.writeText) navigator.clipboard.writeText(String(error)).catch(() => {});
 				this.bannerStatus();
 				this.statusBanner.style.setProperty('--totalform-formerror', "");
 			}, {once: true});

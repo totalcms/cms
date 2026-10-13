@@ -215,3 +215,33 @@ describe('GalleryField.isUnsaved', () => {
 		expect(galleryWith([]).isUnsaved()).toBe(false);
 	});
 });
+
+//-----------------------------------------------
+// The image store is built on first read, not in the constructor. ImageField's
+// constructor runs setupPreview()/setupDroplet() before GalleryField's body and
+// TotalField has already attached the change listener; if that window threw,
+// totalform only warned and the half-built field answered every drag-reorder
+// change event with `this.imageDataStore` undefined (TOTALCMS-DASHBOARD-5N).
+//-----------------------------------------------
+describe('GalleryField.imageDataStore', () => {
+	test('exists on a field whose constructor never finished', () => {
+		const g = Object.create(GalleryField.prototype);
+		g.container = document.createElement('div');
+
+		expect(g.imageDataStore).toBeInstanceOf(Map);
+		expect(g.imageDataStore.size).toBe(0);
+		expect(g.imageDataStore).toBe(g.imageDataStore);
+	});
+
+	test('is seeded from the gallery-data script and can be replaced', () => {
+		const g = Object.create(GalleryField.prototype);
+		g.container = document.createElement('div');
+		g.container.innerHTML = '<script id="gallery-data-x" type="application/json">[{"name":"pic.jpg","alt":"a"}]</script>';
+
+		expect(g.imageDataStore.get('pic.jpg')).toEqual({ name: 'pic.jpg', alt: 'a' });
+
+		const replacement = new Map();
+		g.imageDataStore  = replacement;
+		expect(g.imageDataStore).toBe(replacement);
+	});
+});

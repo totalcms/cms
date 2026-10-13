@@ -93,6 +93,17 @@
 				// Ignore clipboard API errors (unavailable in non-secure HTTP contexts)
 				if (message.includes('navigator.clipboard')) return null;
 
+				// Ignore clipboard and WebAuthn permission denials: Safari rejects
+				// writeText() with NotAllowedError when it decides the click was not
+				// a user gesture, and a cancelled passkey prompt says the same thing.
+				if (errorName === 'NotAllowedError' && message.includes('not allowed by the user agent')) return null;
+
+				// Ignore htmx's history.replaceState() on a page opened with
+				// credentials in the URL (https://user:pass@host/...): the browser
+				// refuses to write that URL into history. The message carries the
+				// password, which must never reach Sentry.
+				if (errorName === 'SecurityError' && message.includes("on 'History'")) return null;
+
 				// Ignore auth errors (session expired, user needs to re-login)
 				if (message === 'Authentication required') return null;
 
@@ -109,6 +120,9 @@
 				// Ignore ProseMirror/Tiptap internal errors (not actionable)
 				if (message.includes('Applying a mismatched transaction')) return null;
 				if (message.includes('outside of fragment')) return null;
+				// ProseMirror resolving a stale selection after an iOS composition
+				// (autocorrect) rewrote the DOM; nothing of ours is on the stack.
+				if (errorName === 'RangeError' && /^Position -?\d+ out of range/.test(message)) return null;
 
 				// Ignore CodeMirror closetag addon bug: accesses context.length before null-checking context.
 				// CodeMirror 5 is abandoned upstream so no fix is coming.
