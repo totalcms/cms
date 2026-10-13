@@ -173,7 +173,7 @@ color: #f3f4f6; max-width: 380px; box-shadow: 0 8px 24px rgba(0,0,0,.25); border
 background: #1f2937; print-color-adjust: exact; }
 @media print { #t3-inspector { display: none !important; } }
 #t3-inspector * { box-sizing: border-box; }
-#t3-inspector .t3i-toggle { display: flex; align-items: center; gap: .5rem; padding: .5rem .75rem;
+#t3-inspector .t3i-toggle { display: flex; align-items: center; gap: .5rem; padding: .5rem .75rem; margin: 0;
 background: transparent; border: 0; color: inherit; font: inherit; cursor: pointer; width: 100%; text-align: left; }
 #t3-inspector .t3i-badge { background: #2563eb; color: #fff; font-weight: 600; font-size: 11px;
 padding: 2px 6px; border-radius: 4px; letter-spacing: .04em; }
