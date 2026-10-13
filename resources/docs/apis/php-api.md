@@ -92,6 +92,10 @@ $totalcms = new TotalCMS\TotalCMS();
 <?php echo $totalcms->processBufferMacros(); ?>
 ```
 
+The constructor starts the PHP session in `tcms-data/.system/sessions`. If the
+page, or another application on the site, already uses `$_SESSION`, read
+[Sharing Sessions with Other PHP Apps](docs/operations/sharing-sessions) first.
+
 ### Reducing Time to First Byte
 
 For large pages, you can flush the `<head>` early so the browser can start loading stylesheets and scripts while the rest of the page is still rendering:
