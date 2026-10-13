@@ -32,7 +32,10 @@ class TotalCMSTwigFilters
 		'dirname',
 		'rtrim',
 		'ltrim',
-		'trim',
+		// Not `trim`: Twig's own filter takes a character mask and a side
+		// (`|trim('-', 'left')`). Registering PHP's trim here shadowed it,
+		// so the three-argument form compiled to a native call that fails
+		// with an ArgumentCountError (TOTAL-CMS-QH).
 		'ucwords',
 		'lcfirst',
 		'html_entity_decode',

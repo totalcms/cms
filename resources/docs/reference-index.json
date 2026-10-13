@@ -2450,10 +2450,10 @@
         },
         {
             "name": "trim",
-            "signature": "trim(string $string): string",
-            "description": "Removes whitespace from both sides.",
+            "signature": "trim(string $string, string $characterMask = null, string $side = 'both'): string",
+            "description": "Twig's own filter. Removes whitespace from both sides, or the given characters from one side.",
             "examples": [
-                "{{ \"  Hello World  \" | trim }}\n{# Output: \"Hello World\" #}"
+                "{{ \"  Hello World  \" | trim }}\n{# Output: \"Hello World\" #}\n\n{{ \"\u2022 Item\" | trim('\u2022-* ', 'left') }}\n{# Output: \"Item\" #}"
             ],
             "url": "https://docs.totalcms.co/twig/filters/"
         },

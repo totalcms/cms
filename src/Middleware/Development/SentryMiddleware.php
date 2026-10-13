@@ -262,6 +262,12 @@ class SentryMiddleware implements MiddlewareInterface
 			// it as a RuntimeException from the fetcher.
 			'Nested file data missing at',
 			'Unable to locate nested file at',
+			// A file-property save was given a URL to fetch and the remote host
+			// answered with an error status or refused the connection. The URL
+			// is caller-supplied (API clients, importers); nothing in T3 fixes
+			// the other server.
+			'HTTP error when downloading file',
+			'Failed to download file from URL',
 		],
 	];
 

@@ -67,6 +67,28 @@ readonly class PropertyDefinition
 	}
 
 	/**
+	 * The property type as a string. JSON Schema also allows a list
+	 * (`"type": ["string", "null"]`), which SchemaSaver passes through
+	 * untouched; the first non-null entry names the T3 type. Casting the
+	 * list with (string) produced "Array" plus a warning that crashed
+	 * `jumpstart:import` and `schema:lint` under the error handler.
+	 */
+	private static function typeFrom(mixed $type): ?string
+	{
+		if (is_array($type)) {
+			foreach ($type as $entry) {
+				if (is_string($entry) && $entry !== '' && $entry !== 'null') {
+					return $entry;
+				}
+			}
+
+			return null;
+		}
+
+		return is_scalar($type) ? (string)$type : null;
+	}
+
+	/**
 	 * Create from an associative array (JSON schema property definition).
 	 *
 	 * @param array<string,mixed> $data
@@ -84,8 +106,8 @@ readonly class PropertyDefinition
 		$extra = array_diff_key($data, array_flip($known));
 
 		return new self(
-			type: isset($data['type']) ? (string)$data['type'] : null,
-			ref: isset($data['$ref']) ? (string)$data['$ref'] : null,
+			type: self::typeFrom($data['type'] ?? null),
+			ref: is_scalar($data['$ref'] ?? null) ? (string)$data['$ref'] : null,
 			field: (string)($data['field'] ?? 'text'),
 			label: (string)($data['label'] ?? ''),
 			help: (string)($data['help'] ?? ''),

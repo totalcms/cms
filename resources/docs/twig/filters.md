@@ -54,12 +54,15 @@ Extracts directory from path.
 
 ### String Trimming
 
-#### `trim(string $string): string`
-Removes whitespace from both sides.
+#### `trim(string $string, string $characterMask = null, string $side = 'both'): string`
+Twig's own filter. Removes whitespace from both sides, or the given characters from one side.
 
 ```twig
 {{ "  Hello World  " | trim }}
 {# Output: "Hello World" #}
+
+{{ "• Item" | trim('•-* ', 'left') }}
+{# Output: "Item" #}
 ```
 
 #### `rtrim(string $string): string`

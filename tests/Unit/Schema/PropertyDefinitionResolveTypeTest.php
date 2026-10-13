@@ -96,4 +96,25 @@ final class PropertyDefinitionResolveTypeTest extends TestCase
 		]);
 		expect($prop->resolveType())->toBe('integer');
 	}
+
+	public function testJsonSchemaListTypeResolvesToItsFirstNonNullEntry(): void
+	{
+		// `"type": ["string", "null"]` is valid JSON Schema and SchemaSaver passes
+		// it through. Casting the list to string warned "Array to string
+		// conversion", which the error handler turned into a crash of
+		// jumpstart:import and schema:lint (TOTAL-CMS-QE / QF).
+		$prop = PropertyDefinition::fromArray([
+			'type'  => ['null', 'string'],
+			'field' => 'text',
+		]);
+		expect($prop->type)->toBe('string');
+		expect($prop->resolveType())->toBe('string');
+
+		$onlyNull = PropertyDefinition::fromArray([
+			'type'  => ['null'],
+			'field' => 'text',
+		]);
+		expect($onlyNull->type)->toBeNull();
+		expect($onlyNull->resolveType())->toBe('text');
+	}
 }
