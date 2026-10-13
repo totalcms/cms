@@ -82,11 +82,20 @@ function sessionBootstrapSpyLogger(): AbstractLogger
 	};
 }
 
+// session_save_path() is process-wide. The folder these tests point it at
+// is deleted on the way out, so the original path must come back or every
+// later session_start() in this worker fails to open its file — which is
+// exactly what CI showed when the file shared a worker with the CSRF tests.
+beforeEach(function (): void {
+	$this->savePathBefore = session_save_path();
+});
+
 afterEach(function (): void {
 	if (session_status() === PHP_SESSION_ACTIVE) {
 		session_destroy();
 	}
 	session_id('');
+	session_save_path((string)$this->savePathBefore);
 	foreach ($this->folders ?? [] as $folder) {
 		exec('rm -rf ' . escapeshellarg($folder));
 	}
