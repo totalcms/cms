@@ -61,11 +61,14 @@ readonly class DefaultErrorHandler
 		bool $displayErrorDetails,
 		bool $logErrors,
 	): ResponseInterface {
-		// Clear OPcache to prevent cached errors from persisting
-		// This ensures that after fixing code errors, the fixes take effect immediately
-		if ($this->opcacheService->isAvailable()) {
-			$this->opcacheService->clear();
-		}
+		// Reset OPcache after a fault in the code so that, once the file is
+		// fixed, the fix takes effect immediately. An HTTP exception is not a
+		// fault: a routing 404 is the normal answer to a bot probing
+		// /wp-login.php, and resetting the pool-wide bytecode cache on every
+		// such hit would recompile the whole site each time.
+		$opcacheCleared = !$exception instanceof HttpException
+			&& $this->opcacheService->isAvailable()
+			&& $this->opcacheService->clear();
 
 		// Log error (skip expected 404s: HEAD existence checks, and requests the
 		// PageRouterMiddleware may augment into a rendered builder page — every
@@ -125,10 +128,9 @@ readonly class DefaultErrorHandler
 			->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
 			->withHeader('Pragma', 'no-cache')
 			->withHeader('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT')
-			->withHeader('X-OPcache-Cleared', 'true')
 			->withStatus($statusCode);
 
-		return $response;
+		return $opcacheCleared ? $response->withHeader('X-OPcache-Cleared', 'true') : $response;
 	}
 
 	/**

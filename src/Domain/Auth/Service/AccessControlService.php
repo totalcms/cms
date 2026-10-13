@@ -108,6 +108,12 @@ readonly class AccessControlService
 			return true;
 		}
 
+		// No session user — an API-key or OAuth caller rendering the table
+		// format. Nobody to grant the pencil to, which is a denial, not an error.
+		if ($userId === '') {
+			return false;
+		}
+
 		return $this->sessionAuthority($userId)->canInlineEdit($collection);
 	}
 
