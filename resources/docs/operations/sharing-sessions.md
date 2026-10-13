@@ -93,23 +93,25 @@ one of the first two options when you can.
 
 The browser sends one session cookie, so both apps look for the same session
 ID, but each looks in its own folder. The result is one ID with two separate
-stores:
+stores, and data one app writes never appears in the other. A page that sets
+`$_SESSION['user']` for the cart does so in Total CMS's folder, and the cart
+reads its own, older copy from PHP's default folder.
 
-- Data one app writes never appears in the other. A page that sets
-  `$_SESSION['user']` for the cart does so in Total CMS's folder, and the cart
-  reads an empty session from PHP's default folder.
-- An app that turns on `session.use_strict_mode` before `session_start()`
-  rejects a session ID that has no file in its folder and issues a new one.
-  The browser now sends an ID Total CMS has never seen, so the visitor is
-  logged out of Total CMS, and the app's own data is lost on the next page in
-  the same way. The symptom is a cart that empties itself as the visitor moves
-  between pages, and a login that does not stick.
+Total CMS leaves the other app's file where it found it, so the other app
+keeps working with its own data and the session ID stays valid everywhere.
+That matters for apps that turn on `session.use_strict_mode` before
+`session_start()`: strict mode rejects an ID that has no file behind it and
+issues a new one, which would log the visitor out of Total CMS on the next
+page. Releases before 3.6.3 deleted the file, and on sites running such an app
+the symptom was a login that did not stick and a cart that emptied itself
+between pages.
 
 To confirm a split session, take the `PHPSESSID` value from the browser and
-look for `sess_<id>` in both folders. If each folder has its own copy, or one
-folder has none, the apps are not sharing a store. Total CMS also writes a
-debug-level `Session conflict detected` line to its log whenever it finds a
-session already open when it starts.
+look for `sess_<id>` in both folders. If each folder has its own copy, the
+apps are not sharing a store. Total CMS also says so in its log: whenever a
+page opened the session in a folder other than Total CMS's, it writes an
+info-level `Session relocated from the host's store` line naming both paths.
+A conflict inside one shared folder is routine and is logged at debug only.
 
 ## Rules for shared data
 
