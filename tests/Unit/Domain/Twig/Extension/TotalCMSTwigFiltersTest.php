@@ -2,6 +2,8 @@
 
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFilters;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigFunctions;
+use Twig\Environment;
+use Twig\Loader\ArrayLoader;
 use Twig\TwigFilter;
 
 describe('TotalCMSTwigFilters', function (): void {
@@ -37,7 +39,7 @@ describe('TotalCMSTwigFilters', function (): void {
 		$filterNames = array_map(fn (TwigFilter $filter): string => $filter->getName(), $filters);
 		expect($filterNames)->not->toContain('trim');
 
-		$twig = new \Twig\Environment(new \Twig\Loader\ArrayLoader([
+		$twig = new Environment(new ArrayLoader([
 			't' => "{{ '• Item' | trim('•-* ', 'left') }}|{{ '  x  ' | trim }}|{{ '--y--' | trim('-') }}",
 		]));
 		foreach ($filters as $filter) {

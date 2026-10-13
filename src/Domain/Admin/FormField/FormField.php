@@ -370,15 +370,15 @@ class FormField
 		// Evaluate based on operator
 		// Note: Array $expectedValue is handled earlier (lines 184-191), so it's never an array here
 		return match ($operator) {
-			'=='    => $currentValue == $expectedValue,
-			'!='    => $currentValue != $expectedValue,
-			'>'     => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue > $expectedValue,
-			'<'     => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue < $expectedValue,
-			'>='    => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue >= $expectedValue,
-			'<='    => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue <= $expectedValue,
+			'=='        => $currentValue == $expectedValue,
+			'!='        => $currentValue != $expectedValue,
+			'>'         => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue > $expectedValue,
+			'<'         => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue < $expectedValue,
+			'>='        => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue >= $expectedValue,
+			'<='        => is_numeric($currentValue) && is_numeric($expectedValue) && $currentValue <= $expectedValue,
 			'empty'     => $this->isEmptyValue($currentValue),
 			'not_empty' => !$this->isEmptyValue($currentValue),
-			default => $currentValue == $expectedValue, // Default to equality
+			default     => $currentValue == $expectedValue, // Default to equality
 		};
 	}
 
