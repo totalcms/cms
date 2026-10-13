@@ -178,6 +178,57 @@ test('picture() is reachable from a template as cms.render.picture() with the sa
 		->and($html)->toContain('1920w');
 });
 
+test('picture() with a dark option emits prefers-color-scheme sources for the dark image first, in every format, sized from the dark image itself', function (): void {
+	$dark = ['id' => 'hero-dark', 'image' => imageObject(['name' => 'hero-dark.jpg', 'width' => 1200, 'height' => 675])['image']];
+
+	$html = $this->render->picture(imageObject(), [], ['dark' => $dark]);
+
+	$firstDark  = strpos($html, 'media="(prefers-color-scheme: dark)"');
+	$firstLight = strpos($html, '<source type="image/avif" srcset="/imageworks/image/hero/image.avif');
+
+	expect($firstDark)->not->toBeFalse()
+		->and($firstLight)->not->toBeFalse()
+		->and($firstDark)->toBeLessThan($firstLight)
+		// The dark set keeps the native format too: it has no <img> fallback of its own.
+		->and($html)->toContain('<source media="(prefers-color-scheme: dark)" type="image/avif" srcset="/imageworks/image/hero-dark/image.avif?w=480')
+		->and($html)->toContain('<source media="(prefers-color-scheme: dark)" type="image/webp" srcset="/imageworks/image/hero-dark/image.webp?w=480')
+		->and($html)->toContain('<source media="(prefers-color-scheme: dark)" type="image/jpeg" srcset="/imageworks/image/hero-dark/image.jpg?w=480')
+		->and(substr_count($html, 'media="(prefers-color-scheme: dark)"'))->toBe(3)
+		->and(substr_count($html, '<source '))->toBe(5)
+		// Dark candidates stop at the dark image's own 1200px, not the light image's 1920.
+		->and($html)->toContain('/imageworks/image/hero-dark/image.avif?w=1200&amp;')
+		->and($html)->toContain(' 1200w')
+		->and($html)->not->toContain('/imageworks/image/hero-dark/image.avif?w=1440')
+		->and($html)->not->toContain('/imageworks/image/hero-dark/image.avif?w=1920')
+		// The <img> fallback, alt and dimensions stay the light image's.
+		->and($html)->toContain('<img src="/imageworks/image/hero/image.jpg?w=1920')
+		->and($html)->toContain('alt="Hero shot"')
+		->and($html)->toContain('width="1920"');
+});
+
+test('picture() with darkProperty reads the dark image from a second property on the same object', function (): void {
+	$object              = imageObject();
+	$object['imageDark'] = imageObject(['name' => 'hero-dark.png', 'mime' => 'image/png'])['image'];
+
+	$html = $this->render->picture($object, ['q' => 70], ['darkProperty' => 'imageDark', 'formats' => ['webp']]);
+
+	expect($html)->toContain('<source media="(prefers-color-scheme: dark)" type="image/webp" srcset="/imageworks/image/hero/imageDark.webp?q=70&amp;w=480')
+		// The dark image's own PNG rides along as its last-resort source.
+		->and($html)->toContain('<source media="(prefers-color-scheme: dark)" type="image/png" srcset="/imageworks/image/hero/imageDark.png?q=70&amp;w=480')
+		->and($html)->toContain('<source type="image/webp" srcset="/imageworks/image/hero/image.webp?q=70&amp;w=480')
+		->and(substr_count($html, '<source '))->toBe(3)
+		->and($html)->toContain('<img src="/imageworks/image/hero/image.jpg?q=70&amp;w=1920');
+});
+
+test('picture() renders the plain light markup when the dark image is missing, empty or a GIF', function (): void {
+	$light = $this->render->picture(imageObject());
+
+	expect($this->render->picture(imageObject(), [], ['dark' => 'does-not-exist']))->toBe($light)
+		->and($this->render->picture(imageObject(), [], ['dark' => ['id' => 'x', 'image' => imageObject(['size' => 0])['image']]]))->toBe($light)
+		->and($this->render->picture(imageObject(), [], ['darkProperty' => 'nope']))->toBe($light)
+		->and($this->render->picture(imageObject(), [], ['dark' => ['id' => 'x', 'image' => imageObject(['name' => 'loop.gif', 'mime' => 'image/gif'])['image']]]))->toBe($light);
+});
+
 // ─── gallery() ───────────────────────────────────────────────────────────────
 
 test('gallery() renders one figure per image with thumb and full ImageWorks URLs, sizes, and the container settings', function (): void {

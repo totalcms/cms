@@ -213,11 +213,13 @@ class RenderTwigAdapter
 	/**
 	 * A responsive `<picture>` with per-format `<source>` srcsets and an
 	 * `<img>` fallback. Same three arguments as image(); `widths`, `formats`
-	 * and `sizes` ride in the options. All the work lives in ImageRenderer.
+	 * and `sizes` ride in the options, as do `dark` / `darkProperty` for a
+	 * second image under `prefers-color-scheme: dark`. All the work lives in
+	 * ImageRenderer.
 	 *
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $imageworks base transform for every candidate; `w` caps the largest
-	 * @param array<string,mixed> $options widths, formats, sizes, collection, property, loading, class
+	 * @param array<string,mixed> $options widths, formats, sizes, dark, darkProperty, collection, property, loading, class
 	 */
 	public function picture(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
 	{

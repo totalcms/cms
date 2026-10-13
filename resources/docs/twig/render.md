@@ -78,6 +78,10 @@ Same three arguments as `image()`: the object, then **ImageWorks transforms**, t
 
 {# The transforms apply to every candidate; w there is a ceiling, not a candidate #}
 {{ cms.render.picture(post, {w: 1200, h: 675, fit: 'crop-focalpoint', q: 75}) }}
+
+{# A different image for dark mode: another object, or a second property on the same object #}
+{{ cms.render.picture('logo', {}, {dark: 'logo-dark'}) }}
+{{ cms.render.picture(post, {}, {darkProperty: 'imageDark', collection: 'blog'}) }}
 ```
 
 | Parameter | Type | Default | Description |
@@ -91,9 +95,17 @@ Same three arguments as `image()`: the object, then **ImageWorks transforms**, t
 | `widths` | int[] | `[480, 768, 1024, 1440, 1920]` | Candidate widths for every `srcset`. Any wider than the source are dropped and the source width joins as the largest — ImageWorks never upscales, so a wider candidate would deliver the source's own width and mis-report it |
 | `formats` | string[] | `['avif', 'webp']` | One `<source>` per format, in order, best first. A format equal to the image's own is skipped as redundant. Any of `jpg`, `png`, `webp`, `avif` |
 | `sizes` | string | `'100vw'` | The `sizes` attribute on every `<source>` and the `<img>`. `100vw` is what a browser assumes without it, so narrow it per call |
+| `dark` | string\|array | — | The image to show under `prefers-color-scheme: dark` — an object ID or object, resolved with the same `collection` and `property` as the light image |
+| `darkProperty` | string | — | The dark image as a second image property on the **same** object (dotted for card/deck-nested). `dark` wins when both are given |
 | `collection`, `property`, `loading`, `class` | | as `image()` | Collection context, dotted nested `property`, lazy loading, extra class |
 
 Every `w` descriptor is the width ImageWorks will actually deliver for that candidate, after `h` and `fit` are applied — never the requested number. Two requested widths that clamp to one delivered width collapse into one candidate. A GIF gets no `<source>` children at all, since re-encoding to a still format would drop its animation. Change the defaults site-wide under `imageworks.picture` in `config/tcms.php`; see [Format & Quality](docs/twig/imageworks#format--quality) for the format list.
+
+#### Light and dark mode
+
+With `dark` or `darkProperty` set, the `<picture>` leads with one `<source media="(prefers-color-scheme: dark)">` per format for the dark image, then the light sources and the light `<img>` as usual. A browser takes the first `<source>` whose media query and type both match, and re-evaluates the media query live, so the image swaps when the visitor's theme changes — no CSS or JavaScript involved. Nothing is needed for light mode: the unqualified sources and the `<img>` already are the light image.
+
+The dark image gets its own candidate list, capped at its own width, with the same transforms, `widths`, `formats` and `sizes`. Because the dark set has no `<img>` of its own to fall back to, its stored format is appended after the requested formats as a last resort. Alt text, `width`/`height` and the link wrapper come from the light image. A dark image that is missing, empty or a GIF is ignored and the markup is exactly what it would be without the option.
 
 ### alt()
 
