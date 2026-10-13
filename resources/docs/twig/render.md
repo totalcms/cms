@@ -48,7 +48,7 @@ Render a complete `<img>` tag with ImageWorks URL, dimensions, alt text, and laz
 |-----------|------|---------|-------------|
 | `idOrObject` | string\|array\|null | required | Object ID or full object data |
 | `imageworks` | array | `[]` | ImageWorks transformation parameters (`w`, `h`, `fit`, `fm`, etc.) |
-| `options` | array | `[]` | Collection context: `collection`, `property`, `loading`, `class`, and `alt` — alt text for this render. Without it the image's own alt applies, then its EXIF title, description, and finally the filename. Pass an empty string for a decorative image; otherwise the filename fallback is what a screen reader hears |
+| `options` | array | `[]` | Collection context: `collection`, `property`, `loading`, `class`, `alt` and `protect`. `alt` is the alt text for this render; without it the image's own alt applies, then its EXIF title, description, and finally the filename. Pass an empty string for a decorative image; otherwise the filename fallback is what a screen reader hears. `protect` is covered under [Protecting images](#protecting-images) |
 
 #### Nested images (cards and decks)
 
@@ -102,6 +102,7 @@ Same three arguments as `image()`: the object, then **ImageWorks transforms**, t
 | `dark` | string\|array | — | The image to show under `prefers-color-scheme: dark` — an object ID or object, resolved with the same `collection` and `property` as the light image |
 | `darkProperty` | string | — | The dark image as a second image property on the **same** object (dotted for card/deck-nested). `dark` wins when both are given |
 | `alt` | string | the image's own | Alt text for the `<img>`, as in `image()`. The dark image never contributes alt text |
+| `protect` | bool | `imageworks.protect` | Drag and context-menu protection on the `<img>` — see [Protecting images](#protecting-images) |
 | `collection`, `property`, `loading`, `class` | | as `image()` | Collection context, dotted nested `property`, lazy loading, extra class |
 
 Every `w` descriptor is the width ImageWorks will actually deliver for that candidate, after `crop`, `h` and `fit` are applied — never the requested number. A `crop` rect (`crop: '520,717,0,100'`, as width, height, x, y) is cut before anything is sized, so the rect is the source: candidates wider than it are dropped, its width joins as the largest, and the `<img>` carries the rect's dimensions. Two requested widths that clamp to one delivered width collapse into one candidate. A GIF gets no `<source>` children at all, since re-encoding to a still format would drop its animation. Change the defaults site-wide under `imageworks.picture` in `config/tcms.php`; see [Format & Quality](docs/twig/imageworks#format--quality) for the format list.
@@ -122,6 +123,24 @@ Get the alt text for an image. Falls back through alt text, EXIF data, then file
 
 {# Card child #}
 {{ cms.render.alt('post-1', {property: 'mycard.image'}) }}
+```
+
+### Protecting images
+
+Every `<img>` these helpers write — `image()`, `picture()`, `gallery()` thumbnails and `galleryImage()` — carries `draggable="false"` and a disabled context menu, which stops the casual drag-to-desktop and right-click-save. It is a courtesy, not security: the URL is in the markup and the browser has already downloaded the file.
+
+Turn it off site-wide in `config/tcms.php`, or per call with the `protect` option, which wins either way:
+
+```php
+$settings['imageworks']['protect'] = false;
+```
+
+```twig
+{# A logo visitors are welcome to grab #}
+{{ cms.render.image('logo', {}, {protect: false}) }}
+
+{# Protected even on a site that has turned it off #}
+{{ cms.render.picture(photo, {}, {protect: true, collection: 'portfolio'}) }}
 ```
 
 ## Video
@@ -218,6 +237,7 @@ Render a complete gallery grid with LightGallery lightbox support.
 | `counter` | bool | `true` | Show image counter |
 | `plugins` | array | `['zoom','thumbnail','fullscreen']` | LightGallery plugins |
 | `zoomFromOrigin` | bool | `true` | Animate the lightbox open and close from the clicked thumbnail. Set `false` when thumbnails are cropped to a different shape than the originals — see below |
+| `protect` | bool | `imageworks.protect` | Drag and context-menu protection on every thumbnail — see [Protecting images](#protecting-images) |
 
 Every option that is not one of Total CMS's own (`collection`, `property`, `captions`, `gridCaptions`, `sort`, `class`, `maxVisible`, `viewAllText`, `featuredOnly`) is passed straight through to [LightGallery's settings](https://www.lightgalleryjs.com/docs/settings/), so `loop`, `download`, `counter`, `zoomFromOrigin`, `speed`, `mode` and the rest all work as documented there.
 

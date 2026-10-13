@@ -55,13 +55,33 @@ class ImageRenderer
 	}
 
 	/**
+	 * The attributes that discourage saving an image — no drag-to-desktop,
+	 * no context menu — or none. `protect` in the call's options decides;
+	 * without it, `imageworks.protect` in settings does; without that, the
+	 * image is protected. Shared with the gallery renderer so one switch
+	 * covers every `<img>` Total CMS writes.
+	 *
+	 * @param array<string,mixed> $options
+	 *
+	 * @return array<string,string>
+	 */
+	public static function protection(array $options, ?Config $config): array
+	{
+		$protect = $options['protect'] ?? $config?->imageworks['protect'] ?? true;
+
+		return filter_var($protect, FILTER_VALIDATE_BOOLEAN)
+			? ['draggable' => 'false', 'oncontextmenu' => 'return false;']
+			: [];
+	}
+
+	/**
 	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
 	 * @param array<string,string|int> $imageworks
 	 * `alt` in the options replaces the stored alt text; an explicit empty
 	 * string marks the image decorative. Without it the fallback chain in
 	 * {@see altFromImageData()} applies.
 	 *
-	 * @param array<string,mixed> $options collection, property, loading, class, alt
+	 * @param array<string,mixed> $options collection, property, loading, class, alt, protect
 	 */
 	public function image(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
 	{
@@ -104,9 +124,7 @@ class ImageRenderer
 			'height'        => $dimensions['height'],
 			'class'         => $options['class'] ?? null,
 			'loading'       => $options['loading'] ?? null,
-			'draggable'     => 'false',
-			'oncontextmenu' => 'return false;',
-		]);
+		] + self::protection($options, $this->config));
 
 		if (!empty($image['link'])) {
 			return HTMLUtils::element('a', $html, ['href' => $image['link']]);
@@ -142,7 +160,7 @@ class ImageRenderer
 	 * taken from the rect, not the upload. `alt` in the options works as in
 	 * {@see image()} and applies to the light `<img>` only.
 	 *
-	 * @param array<string,mixed> $options widths, formats, sizes, dark, darkProperty, alt, plus collection, property, loading, class
+	 * @param array<string,mixed> $options widths, formats, sizes, dark, darkProperty, alt, protect, plus collection, property, loading, class
 	 */
 	public function picture(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
 	{
@@ -225,9 +243,7 @@ class ImageRenderer
 			'height'        => $dimensions['height'],
 			'class'         => $options['class'] ?? null,
 			'loading'       => $options['loading'] ?? null,
-			'draggable'     => 'false',
-			'oncontextmenu' => 'return false;',
-		]);
+		] + self::protection($options, $this->config));
 
 		$html = HTMLUtils::element('picture', $sources . $img);
 

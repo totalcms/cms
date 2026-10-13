@@ -113,9 +113,7 @@ class GalleryRenderer
 				'width'         => $thumbDimensions['width'],
 				'height'        => $thumbDimensions['height'],
 				'loading'       => 'lazy',
-				'draggable'     => 'false',
-				'oncontextmenu' => 'return false;',
-			]);
+			] + ImageRenderer::protection($options, $this->config));
 			$link = HTMLUtils::element('a', $img, [
 				'href' => $fullUrl,
 			]);
@@ -388,13 +386,11 @@ class GalleryRenderer
 			'alt'                => $this->galleryAlt($idOrObject, $name, $options),
 			'width'              => $dimensions['width'],
 			'height'             => $dimensions['height'],
-			'draggable'          => 'false',
-			'oncontextmenu'      => 'return false;',
 			'data-gallery'       => "{$options['collection']}-{$id}",
 			'data-gallery-image' => $imageName,
 			'class'              => $options['class'] ?? null,
 			'loading'            => $options['loading'] ?? null,
-		];
+		] + ImageRenderer::protection($options, $this->config);
 
 		$html = HTMLUtils::inlineElement('img', $imgAttrs);
 

@@ -44,6 +44,38 @@ function imageObject(array $overrides = []): array
 	], $overrides)];
 }
 
+// ─── protect ────────────────────────────────────────────────────────────────
+
+test('every image helper protects its <img> by default, and protect: false drops both attributes', function (): void {
+	$protected = fn (string $html): bool => str_contains($html, 'draggable="false"') && str_contains($html, 'oncontextmenu="return false;"');
+	$bare      = fn (string $html): bool => !str_contains($html, 'draggable') && !str_contains($html, 'oncontextmenu');
+
+	expect($protected($this->render->image(imageObject())))->toBeTrue()
+		->and($protected($this->render->picture(imageObject())))->toBeTrue()
+		->and($protected($this->render->gallery(galleryObject())))->toBeTrue()
+		->and($protected($this->render->galleryImage(galleryObject(), 'beach.jpg')))->toBeTrue();
+
+	expect($bare($this->render->image(imageObject(), [], ['protect' => false])))->toBeTrue()
+		->and($bare($this->render->picture(imageObject(), [], ['protect' => false])))->toBeTrue()
+		->and($bare($this->render->gallery(galleryObject(), [], [], ['protect' => false])))->toBeTrue()
+		->and($bare($this->render->galleryImage(galleryObject(), 'beach.jpg', [], ['protect' => false])))->toBeTrue();
+});
+
+test('imageworks.protect in settings is the site-wide default, and a call can still override it either way', function (): void {
+	$config = $this->app->getContainer()->get(\TotalCMS\Support\Config::class);
+	$before = $config->imageworks['protect'] ?? null;
+	$config->imageworks['protect'] = false;
+
+	try {
+		expect($this->render->image(imageObject()))->not->toContain('oncontextmenu')
+			->and($this->render->picture(imageObject()))->not->toContain('draggable')
+			->and($this->render->gallery(galleryObject()))->not->toContain('oncontextmenu')
+			->and($this->render->image(imageObject(), [], ['protect' => true]))->toContain('oncontextmenu="return false;"');
+	} finally {
+		$config->imageworks['protect'] = $before;
+	}
+});
+
 // ─── image() ─────────────────────────────────────────────────────────────────
 
 test('image() renders an ImageWorks <img> with alt, dimensions, lazy loading and the class option', function (): void {

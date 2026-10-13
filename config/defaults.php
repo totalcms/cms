@@ -339,6 +339,11 @@ $settings['mailer'] = [
 
 $settings['imageworks'] = [
 	'gatherLocation'      => true,
+	// Every <img> cms.render writes (image, picture, gallery, galleryImage)
+	// carries draggable="false" and a disabled context menu, which stops the
+	// casual drag-to-desktop and right-click-save. Set false to drop both
+	// site-wide, or pass `protect: false` / `protect: true` per call.
+	'protect'             => true,
 	'watermarksGallery'   => 'watermarks',
 	'watermarkFontsDepot' => 'watermark-fonts',
 	'defaults'            => [
