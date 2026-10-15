@@ -81,8 +81,6 @@
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Domain/Extension/ExtensionContext.php"/>
   <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Extension/Service/DangerousCodeScanner.php" method="scanContents"/>
   <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Domain/Extension/Service/ExtensionEnrollment.php" method="selectForRegister"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Extension/Service/ExtensionEntrypointLoader.php" method="classNameIn"/>
-  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Extension/Service/ExtensionEntrypointLoader.php" method="classNameIn"/>
   <violation rule="PHPMD\Rule\Design\ExcessiveClassLength" file="src/Domain/Extension/Service/ExtensionManager.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="src/Domain/Extension/Service/ExtensionManager.php"/>
   <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="src/Domain/Extension/Service/ExtensionManager.php"/>

@@ -17,7 +17,7 @@ class OPcacheService implements CacheInterface
 		}
 
 		// Normal shared-memory mode reports a status array.
-		if (opcache_get_status() !== false) {
+		if (opcache_get_status(false) !== false) {
 			return true;
 		}
 

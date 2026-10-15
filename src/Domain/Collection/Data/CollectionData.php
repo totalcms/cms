@@ -2,9 +2,7 @@
 
 namespace TotalCMS\Domain\Collection\Data;
 
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
+use TotalCMS\Domain\Storage\SerializerFactory;
 
 /**
  * Data object.
@@ -26,7 +24,6 @@ class CollectionData
 		'views',
 	];
 
-	private readonly Serializer $serializer;
 
 	public string $id;                        // collection id
 	public string $name;                      // collection name
@@ -83,11 +80,6 @@ class CollectionData
 
 	/** @var array<string,mixed> */
 	public array $seo = [];  // SEO card settings (type, title, description, image — the JSON-LD type and which properties supply the title/description/image)
-
-	public function __construct()
-	{
-		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-	}
 
 	/** @return array<string,mixed> */
 	public function toArray(): array
@@ -181,7 +173,7 @@ class CollectionData
 
 	public function toJson(): string
 	{
-		return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
+		return SerializerFactory::json()->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
 	}
 
 	/**

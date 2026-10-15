@@ -2,9 +2,7 @@
 
 namespace TotalCMS\Domain\Storage;
 
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Storage\Exception\CorruptedStorageFileException;
 
@@ -24,7 +22,7 @@ abstract class StorageRepository
 	 */
 	public function __construct(protected StorageAdapterInterface $filesystem)
 	{
-		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+		$this->serializer = SerializerFactory::json();
 	}
 
 	/**

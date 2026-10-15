@@ -44,3 +44,26 @@ test('a class that is not an extension is refused after loading', function (): v
 	expect(fn () => (new ExtensionEntrypointLoader())->load(loaderManifest('plain.php'), $this->dir))
 		->toThrow(EntrypointLoadException::class, 'does not implement ExtensionInterface');
 });
+
+// Only the file up to its class declaration is tokenized (a bundled entry
+// file can run to megabytes); anything that fools that prefix falls back to
+// the whole file, so the answer never changes.
+
+test('a class declared after a heredoc that mentions a class at line start is still found', function (): void {
+	file_put_contents($this->dir . '/heredoc.php', "<?php\nnamespace Acme\\Doc;\n\$tpl = <<<TXT\nclass Fake extends Nothing\nTXT;\n\$s = \"\nclass Quoted\n\";\nfinal readonly class RealExtension {}\n");
+
+	expect(ExtensionEntrypointLoader::classNameIn($this->dir . '/heredoc.php'))->toBe('Acme\\Doc\\RealExtension');
+});
+
+test('an attribute on the declaration line still resolves the class', function (): void {
+	file_put_contents($this->dir . '/attr.php', "<?php\nnamespace Acme\\Attr;\n#[\\AllowDynamicProperties] class Tagged {}\n");
+
+	expect(ExtensionEntrypointLoader::classNameIn($this->dir . '/attr.php'))->toBe('Acme\\Attr\\Tagged');
+});
+
+test('a class at the end of a large file is found', function (): void {
+	$filler = str_repeat("function f" . uniqid() . "() { return 'x'; }\n", 20000);
+	file_put_contents($this->dir . '/big.php', "<?php\nnamespace Acme\\Big;\n" . $filler . "abstract class Late {}\n");
+
+	expect(ExtensionEntrypointLoader::classNameIn($this->dir . '/big.php'))->toBe('Acme\\Big\\Late');
+});

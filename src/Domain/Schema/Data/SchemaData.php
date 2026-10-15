@@ -2,10 +2,8 @@
 
 namespace TotalCMS\Domain\Schema\Data;
 
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use TotalCMS\Domain\Schema\Service\SchemaTransformer;
+use TotalCMS\Domain\Storage\SerializerFactory;
 
 /**
  * Schema Data object.
@@ -275,12 +273,6 @@ class SchemaData
 	public array $index = [];
 	/** @var array<string> */
 	public array $inheritFrom = [];
-	protected Serializer $serializer;
-
-	public function __construct()
-	{
-		$this->serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-	}
 
 	/** @return array<string,mixed> */
 	public function toArray(): array
@@ -330,6 +322,6 @@ class SchemaData
 
 	public function toJson(): string
 	{
-		return $this->serializer->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
+		return SerializerFactory::json()->serialize($this->toArray(), 'json', ['json_encode_options' => JSON_PRETTY_PRINT]);
 	}
 }
