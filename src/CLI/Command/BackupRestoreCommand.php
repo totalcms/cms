@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace TotalCMS\CLI\Command;
 
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 /**
  * Put a snapshot back as the live record. Goes through ObjectRestorer →
@@ -59,22 +57,15 @@ class BackupRestoreCommand extends BaseCommand
 
 		$live = $this->totalcms->objectFetcher()->existsObject($collectionId, $objectId);
 
-		if (!$input->getOption('force') && !$this->isJson($input)) {
-			/** @var QuestionHelper $helper */
-			$helper   = $this->getHelper('question');
-			$question = new ConfirmationQuestion(sprintf(
-				"%s '%s' in '%s' from %s? The current state is snapshotted first. [y/N] ",
-				$live ? 'Overwrite' : 'Recreate',
-				$objectId,
-				$collectionId,
-				$snapshot,
-			), false);
-
-			if (!$helper->ask($input, $output, $question)) {
-				$output->writeln('Aborted.');
-
-				return Command::SUCCESS;
-			}
+		$refused = $this->confirmOrRefuse($input, $output, sprintf(
+			"%s '%s' in '%s' from %s? The current state is snapshotted first. [y/N] ",
+			$live ? 'Overwrite' : 'Recreate',
+			$objectId,
+			$collectionId,
+			$snapshot,
+		));
+		if ($refused !== null) {
+			return $refused;
 		}
 
 		try {

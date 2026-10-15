@@ -169,6 +169,18 @@ describe('object:delete', function (): void {
 		expect($data['id'])->toBe('post-1');
 	});
 
+	it('refuses, with exit code 1, when nobody can answer the prompt and --force is absent', function (): void {
+		// The question's default is no; taking it silently would print
+		// "Aborted." and exit 0, and a cron or CI script would believe the
+		// delete happened.
+		$this->remover->expects($this->never())->method('deleteObject');
+
+		$this->tester->execute(['collection' => 'blog', 'id' => 'post-1'], ['interactive' => false]);
+
+		expect($this->tester->getStatusCode())->toBe(1)
+			->and($this->tester->getDisplay())->toContain('--force');
+	});
+
 	it('returns error for nonexistent object', function (): void {
 		$this->remover->expects($this->never())->method('deleteObject');
 

@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\Console\Command\Command;
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Data\ExtensionState;
 use TotalCMS\Domain\Extension\Data\FormAction;
@@ -25,7 +27,7 @@ use TotalCMS\Support\Config;
  */
 
 /** @param array<string,ExtensionState> $states */
-function accessorManager(array $states): ExtensionManager
+function accessorManager(array $states, ?LoggerInterface $logger = null): ExtensionManager
 {
 	$config          = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 	$config->datadir = sys_get_temp_dir();
@@ -47,7 +49,7 @@ function accessorManager(array $states): ExtensionManager
 		new ExtensionDependencySorter(),
 		new ExtensionSettingsManager($settingsStorage),
 		$container,
-		new NullLogger(),
+		$logger ?? new NullLogger(),
 		$validator,
 		testExtensionGuard(),
 		testExtensionProfiler(),
@@ -127,6 +129,40 @@ test('getAllPageMiddleware and getAllFormActions are gated by their capabilities
 	expect($manager->getAllPageMiddleware())->toBe(['a/on' => ['mw' => 'Vendor\\Mw']])
 		->and(array_keys($manager->getAllFormActions()))->toBe(['a/on'])
 		->and($manager->getAllFormActions()['a/on'][0]->name)->toBe('fa');
+});
+
+test('getAllTwigGlobals is gated by twig:globals, not twig:functions', function (): void {
+	// An extension that registers only globals holds only `twig:globals`;
+	// it used to be checked against `twig:functions` and lose its globals.
+	$manager = accessorManager([
+		'a/globals-only' => new ExtensionState(enabled: true, permissions: ['twig:globals' => true]),
+		'b/denied'       => new ExtensionState(enabled: true, permissions: ['twig:globals' => false, 'twig:functions' => true]),
+	]);
+	accessorContext($manager, 'a/globals-only', $this->tmp . '/without', fn (ExtensionContext $ctx) => $ctx->addTwigGlobal('siteCountry', 'fr'));
+	accessorContext($manager, 'b/denied', $this->tmp . '/without', fn (ExtensionContext $ctx) => $ctx->addTwigGlobal('leaked', true));
+
+	expect($manager->getAllTwigGlobals())->toBe(['siteCountry' => 'fr']);
+});
+
+test('a capability first seen at boot is stored off and warned about, naming the way out', function (): void {
+	$logger = test()->createMock(LoggerInterface::class);
+	$logger->expects(test()->once())->method('warning')->with(test()->callback(
+		static fn (string $message): bool => str_contains($message, "'a/grown'")
+			&& str_contains($message, '[cli:commands]')
+			&& str_contains($message, 'tcms extension:enable a/grown'),
+	));
+	$manager = accessorManager(['a/grown' => new ExtensionState(enabled: true, permissions: ['twig:globals' => true])], $logger);
+	accessorContext($manager, 'a/grown', $this->tmp . '/without', function (ExtensionContext $ctx): void {
+		$ctx->addTwigGlobal('g', 1);
+		$ctx->addCommand(new Command('grown:cmd'));
+	});
+	$context = (new ReflectionProperty(ExtensionManager::class, 'contexts'))->getValue($manager)['a/grown'];
+
+	(new ReflectionMethod(ExtensionManager::class, 'updateStoredCapabilities'))->invoke($manager, 'a/grown', $context);
+
+	$repo = (new ReflectionProperty(ExtensionManager::class, 'stateRepository'))->getValue($manager);
+	expect($repo->getState('a/grown')->permissions)->toBe(['twig:globals' => true, 'cli:commands' => false])
+		->and($manager->getAllCommands())->toBe([]);
 });
 
 test('an extension with no stored state is permitted everything', function (): void {

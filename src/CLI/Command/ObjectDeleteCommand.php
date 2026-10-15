@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace TotalCMS\CLI\Command;
 
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 /**
  * Delete a single object. Goes through ObjectRemover, which dispatches
@@ -44,19 +42,9 @@ class ObjectDeleteCommand extends BaseCommand
 			return $this->outputError($input, $output, "Object '{$objectId}' not found in collection '{$collectionId}'.");
 		}
 
-		if (!$input->getOption('force') && !$this->isJson($input)) {
-			/** @var QuestionHelper $helper */
-			$helper   = $this->getHelper('question');
-			$question = new ConfirmationQuestion(
-				"Delete object '{$objectId}' from '{$collectionId}'? This cannot be undone. [y/N] ",
-				false,
-			);
-
-			if (!$helper->ask($input, $output, $question)) {
-				$output->writeln('Aborted.');
-
-				return Command::SUCCESS;
-			}
+		$refused = $this->confirmOrRefuse($input, $output, "Delete object '{$objectId}' from '{$collectionId}'? This cannot be undone. [y/N] ");
+		if ($refused !== null) {
+			return $refused;
 		}
 
 		$deleted = $this->totalcms->objectRemover()->deleteObject($collectionId, $objectId);

@@ -780,7 +780,7 @@ class ExtensionManager
 	public function getAllTwigGlobals(): array
 	{
 		$globals = [];
-		foreach ($this->permittedContexts('twig:functions') as $context) {
+		foreach ($this->permittedContexts('twig:globals') as $context) {
 			$globals = array_merge($globals, $context->getRegisteredTwigGlobals());
 		}
 
@@ -1435,20 +1435,31 @@ class ExtensionManager
 			return;
 		}
 
-		// DIAGNOSTIC: the detected capability set changed, so permissions were
-		// reconciled. If this fires after a Total-CMS-only update (extension
-		// untouched), Total CMS changed what capabilities it detects — added
-		// caps land OFF, removed caps are pruned, which presents as the
-		// extension's features turning off even though it stayed enabled.
-		$addedOff = array_values(array_diff(array_keys($state->permissions), array_keys($original)));
-		$pruned   = array_values(array_diff(array_keys($original), array_keys($state->permissions)));
-		$this->logger->info(sprintf(
-			"Extension '%s' capabilities reconciled: added-off [%s]; pruned [%s].",
-			$id,
-			implode(', ', $addedOff),
-			implode(', ', $pruned),
-		));
-
 		$this->stateRepository->saveState($id, $state);
+
+		// The detected capability set changed, so permissions were reconciled.
+		// Added capabilities land OFF, so whatever the extension registered
+		// under them is dropped until an operator turns them on: that is the
+		// re-consent rule for an updated extension, and it also catches an
+		// extension that gained a registration between enables (a developer
+		// iterating on it). Say so at warning level, with the way out —
+		// otherwise the new Twig function or command is silently absent and
+		// the admin screen gives no hint why. If this fires after a
+		// Total-CMS-only update (extension untouched), Total CMS changed what
+		// capabilities it detects. Pruned capabilities are routine.
+		$added    = array_diff_key($state->permissions, $original);
+		$addedOff = array_keys(array_filter($added, static fn (bool $on): bool => !$on));
+		$pruned   = array_keys(array_diff_key($original, $state->permissions));
+		if ($addedOff !== []) {
+			$this->logger->warning(sprintf(
+				"Extension '%s' now registers capabilities it was not enabled with: [%s]. They are OFF, and what the extension registers under them is not loaded, until an operator turns them on under Admin > Extensions or runs `tcms extension:enable %s` again.",
+				$id,
+				implode(', ', $addedOff),
+				$id,
+			));
+		}
+		if ($pruned !== []) {
+			$this->logger->info(sprintf("Extension '%s' no longer registers capabilities [%s]; their permissions were pruned.", $id, implode(', ', $pruned)));
+		}
 	}
 }

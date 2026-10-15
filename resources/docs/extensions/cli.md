@@ -437,6 +437,8 @@ tcms object:delete blog my-post --force
 |--------|-------------|
 | `--force, -f` | Skip the confirmation prompt (required for non-interactive/CI use) |
 
+The prompt defaults to no. A run that cannot answer it — no terminal on stdin, or `-n` — fails with exit code 1 and deletes nothing, so a script that forgets `--force` finds out rather than carrying on. The same holds for every command that confirms before acting: `backup:restore`, `update:apply`, `update:rollback` and `extension:remove`. `--json` also skips the prompt.
+
 ---
 
 ## Deck Commands
@@ -923,6 +925,8 @@ tcms extension:enable acme/seo-pro --json
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `id` | Yes | Extension ID (e.g. `vendor/extension-name`) |
+
+Running it again on an extension that is already enabled keeps the operator's permission choices and turns **on** any capability the extension has gained since. That is the quick way to pick up a new registration while developing an extension: a capability Total CMS first sees at boot is added turned **off** (see [Stability & Safety](docs/extensions/safety#updates)), and the log says so with a warning naming the capability.
 
 ### `extension:disable`
 

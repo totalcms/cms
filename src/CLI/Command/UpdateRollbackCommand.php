@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace TotalCMS\CLI\Command;
 
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 class UpdateRollbackCommand extends BaseCommand
 {
@@ -29,19 +27,10 @@ class UpdateRollbackCommand extends BaseCommand
 		if (!$input->getOption('force') && !$isJson) {
 			$output->writeln('<comment>This will restore the previous version of Total CMS.</comment>');
 			$output->writeln('');
-
-			/** @var QuestionHelper $helper */
-			$helper   = $this->getHelper('question');
-			$question = new ConfirmationQuestion(
-				'Roll back to previous version? [y/N] ',
-				false
-			);
-
-			if (!$helper->ask($input, $output, $question)) {
-				$output->writeln('Rollback cancelled.');
-
-				return Command::SUCCESS;
-			}
+		}
+		$refused = $this->confirmOrRefuse($input, $output, 'Roll back to previous version? [y/N] ', 'Rollback cancelled.');
+		if ($refused !== null) {
+			return $refused;
 		}
 
 		try {
