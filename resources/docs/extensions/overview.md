@@ -39,6 +39,29 @@ tcms-data/extensions/
 
 Total CMS also ships **bundled extensions** in `resources/extensions/` — included with every install but disabled by default. They appear in the admin alongside user-installed extensions but cannot be removed (only disabled). See [Bundled Extensions](docs/extensions/bundled).
 
+### Installing an Extension
+
+The quickest way to install an extension is to upload it: on the **Extensions** page click **Install Extension** and drop the zip the developer gave you onto the panel (or click it to choose the file). The upload starts at once. Total CMS unpacks it into `tcms-data/extensions/{vendor}/{name}/` and brings you back to the Extensions page with the new extension highlighted. It stays disabled until you enable it. When there is something to read first — the developer left a note, the extension uses a sensitive capability (public routes, event listeners, automations, MCP tools or resources), it ships an agent skill, or the source scan flagged something — you land on its [review page](docs/extensions/safety#the-pre-enable-review) instead, and enable it from there.
+
+The same install runs from the CLI:
+
+```bash
+tcms extension:install ~/Downloads/seo-pro-1.2.0.zip
+tcms extension:enable acme/seo-pro
+```
+
+Uploads require a signed-in admin browser session; API keys and OAuth tokens are refused. To install from a script or a deploy, use the CLI.
+
+**What the zip looks like.** The extension folder, zipped — `seo-pro/extension.json`, `seo-pro/Extension.php` and so on inside a single top-level folder (a zip with `extension.json` at its root also works). Right-click → Compress on a Mac produces exactly this, and so does `tcms extension:package`. The folder name does not matter: the install location comes from the `id` in `extension.json`.
+
+**Updating.** Upload a newer zip of an extension you installed this way and its files are replaced. Its enabled state, permissions and settings are kept. The new code is scanned on the way in; if an enabled extension's update adds risky code patterns it is disabled until you review it, exactly as described in [Stability & Safety](docs/extensions/safety#updates).
+
+**What cannot be installed over.** An id that belongs to a bundled extension, a Composer package or a project extension is refused — the package, Composer or your repository owns those files, and the upload would be undone or would shadow code your site thinks it is running. The message names the owner and the way to change it.
+
+**Dependencies.** An extension that uses Composer packages must ship its `vendor/` directory in the zip. The installer warns when a `composer.json` has requirements but no `vendor/autoload.php` is present; that is for the developer to fix by running `composer install --no-dev` before packaging.
+
+**Removing.** The **Remove** button on a user-installed extension's card (or `tcms extension:remove vendor/name`) deletes its files and keeps its settings and data, so a later reinstall picks up where it left off.
+
 ### Project Extensions
 
 Site-specific extensions can instead live in an `extensions/` directory at the **project root**, next to `tcms-data/`:
@@ -167,9 +190,11 @@ A broken extension cannot crash Total CMS. If an extension throws an exception d
 **CLI:**
 ```bash
 tcms extension:list                    # List all extensions
+tcms extension:install path/to.zip     # Install or replace from a zip
 tcms extension:enable vendor/name      # Enable an extension
 tcms extension:disable vendor/name     # Disable an extension
 tcms extension:remove vendor/name      # Remove extension files (tcms-data/extensions only)
+tcms extension:package path/to/dir     # Build the distributable zip of an extension
 ```
 
 `extension:list` shows where each extension came from — `bundled`, `composer`, `project` or `user` — and only a `user` extension (one in `tcms-data/extensions/`) can be removed here. The other three are owned by the package, by Composer, or by source control, and are removed there.
@@ -179,12 +204,14 @@ tcms extension:remove vendor/name      # Remove extension files (tcms-data/exten
 Clone the [extension-starter](https://github.com/totalcms/extension-starter) repo to get a working extension with examples of every extension point:
 
 ```bash
-cd tcms-data/extensions/
-mkdir your-vendor && cd your-vendor
 git clone https://github.com/totalcms/extension-starter.git your-extension
-cd your-extension && composer install
+cd your-extension && composer install --no-dev
+tcms extension:package .                # writes ../your-extension-1.0.0.zip
+tcms extension:install ../your-extension-1.0.0.zip
 tcms extension:enable your-vendor/your-extension
 ```
+
+While developing, you can also clone straight into `tcms-data/extensions/your-vendor/your-extension/` and skip the package step; `extension:package` is for the zip you hand to someone else.
 
 ## Next Steps
 

@@ -2,7 +2,16 @@
 
 {% block dashcontent %}
 <main class="dash-main-content ext-review" style="max-width:1000px;">
-	<header><h1>Enable {{ extensionId }}?</h1></header>
+	<header>
+		{# The dashboard header is a space-between flex row; one wrapper keeps
+		   the name line under the heading instead of pushed to the far right. #}
+		<div>
+			<h1>Enable {{ extensionId|e }}?</h1>
+			{% if name %}
+			<p style="margin:0.25rem 0 0; font-size:0.85rem; color:oklch(var(--totalform-darkgray));">{{ name|e }}{% if version %} v{{ version|e }}{% endif %}</p>
+			{% endif %}
+		</div>
+	</header>
 
 	<section class="dash-content-section">
 
@@ -64,7 +73,7 @@
 		<article class="dash-card">
 			<h2 style="margin-top:0;">What this extension tells AI agents</h2>
 			<p style="margin:0 0 0.85rem; font-size:0.85rem; color:oklch(var(--totalform-darkgray));">
-				This extension ships an agent skill. While it is enabled, the files below are installed to <code>{{ skill.target }}</code> so Claude Code and other coding agents working in this project follow them. Read it as you would read instructions you were giving the agent yourself.
+				This extension ships an agent skill. While it is enabled, the files below are installed to <code>{{ skill.target|e }}</code> so Claude Code and other coding agents working in this project follow them. Read it as you would read instructions you were giving the agent yourself.
 			</p>
 			<p style="margin:0 0 0.85rem; font-size:0.85rem;">
 				{% for file in skill.files %}<code>{{ file|e }}</code>{% if not loop.last %} {% endif %}{% endfor %}
@@ -75,7 +84,7 @@
 
 		{# Confirm / cancel #}
 		<footer style="display:flex; gap:0.5rem; margin-top:1rem;">
-			<form method="post" action="{{ cms.dashboard }}/extensions/{{ extensionId }}/enable" style="margin:0;">
+			<form method="post" action="{{ cms.dashboard }}/extensions/{{ extensionId|e('html_attr') }}/enable" style="margin:0;">
 				{{ csrf_field() }}
 				<input type="hidden" name="confirmed" value="1">
 				<button type="submit" class="btn btn-primary">Enable</button>

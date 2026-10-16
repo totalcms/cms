@@ -68,6 +68,17 @@ describe('ManifestValidator', function (): void {
 		expect($validator->validate($manifest))->toContain('vendor/name');
 	});
 
+	test('rejects an ID with a trailing newline', function (): void {
+		$validator = createManifestValidator();
+		$manifest  = ExtensionManifest::fromArray([
+			'id'      => "acme/thing\n",
+			'name'    => 'Test',
+			'version' => '1.0.0',
+		]);
+
+		expect($validator->validate($manifest))->toContain('vendor/name');
+	});
+
 	test('rejects invalid version format', function (): void {
 		$validator = createManifestValidator();
 		$manifest  = ExtensionManifest::fromArray([
@@ -78,6 +89,28 @@ describe('ManifestValidator', function (): void {
 
 		expect($validator->validate($manifest))->toContain('semver');
 	});
+
+	test('rejects a version with trailing markup', function (): void {
+		// The version is printed on the Extensions and review pages; the
+		// pattern is anchored at both ends so nothing can ride after it.
+		$manifest = ExtensionManifest::fromArray([
+			'id'      => 'vendor/test',
+			'name'    => 'Test',
+			'version' => '1.0.0<svg onload=1>',
+		]);
+
+		expect(createManifestValidator()->validate($manifest))->toContain('semver');
+	});
+
+	test('accepts pre-release and build-metadata versions', function (string $version): void {
+		$manifest = ExtensionManifest::fromArray([
+			'id'      => 'vendor/test',
+			'name'    => 'Test',
+			'version' => $version,
+		]);
+
+		expect(createManifestValidator()->validate($manifest))->toBeNull();
+	})->with(['1.0.0-beta.1', '1.0.0+build.5', '1.0.0.1', '1.2.3beta']);
 
 	test('rejects invalid min_edition', function (): void {
 		$validator = createManifestValidator();

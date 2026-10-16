@@ -89,6 +89,8 @@ Every save keeps the version it replaced; every delete keeps the final state
 
 ### Extensions
 - `extension:list` / `extension:enable <id>` / `extension:disable <id>` / `extension:remove <id>`
+- `extension:install <zip>` — install or replace a user extension from a zip (`--force` skips the replace prompt); nothing is enabled
+- `extension:package [dir]` — build `{name}-{version}.zip` for distribution; include `vendor/` by running `composer install --no-dev` first
 
 ### MCP and OAuth
 - `mcp:status` — MCP server status: enabled, edition, tool counts per persona

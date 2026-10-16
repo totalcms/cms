@@ -15,6 +15,6 @@
 
 {% if overBudget %}
 <div class="warning-box" role="status">
-	<div>{{ extName }} is adding ~{{ health.avgMs }}ms per request — above the {{ budgets.perExtension }}ms guideline.</div>
+	<div>{{ extName|e }} is adding ~{{ health.avgMs }}ms per request — above the {{ budgets.perExtension }}ms guideline.</div>
 </div>
 {% endif %}

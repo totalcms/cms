@@ -72,7 +72,7 @@
 | PHP API | `apis/php-api.md` | For custom PHP pages outside Site Builder. |
 | WordPress XML-RPC publishing (MarsEdit, Ulysses) | `apis/wordpress-publishing.md` | **Off by default**; enable in config. Credential is an API key. |
 | MCP server (agents reading/writing the site) | `mcp/connect.md`, `mcp/agent-editing.md`, `mcp/saved-query-tools.md`, `mcp/prompts.md` | See `references/mcp-content.md`. Property help text is the agent-facing catalog. |
-| Extensions | `extensions/overview.md`, `extensions/extension-points.md`, `extensions/manifest.md` | See `references/extensions.md`. |
+| Extensions | `extensions/overview.md`, `extensions/extension-points.md`, `extensions/manifest.md` | See `references/extensions.md`. Install from zip on the Extensions page / `extension:install`. |
 
 ## Operations
 

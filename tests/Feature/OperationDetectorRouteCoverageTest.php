@@ -77,6 +77,9 @@ test('every named route is mapped in OperationDetector or explicitly exempt', fu
 		'admin-utils-api-keys',
 		'all-collection-image-cache-delete',
 		'api-docs',
+		// Admin-only and session-only (AdminOnlyMiddleware + SessionOnlyMiddleware); no operation detection.
+		'api-extension-install',
+		'api-extension-remove',
 		'apikey-create',
 		'apikey-delete',
 		'apple-touch-icon', // /apple-touch-icon.png — a public asset like /favicon.ico

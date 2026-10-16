@@ -35,10 +35,11 @@ readonly class ExtensionToggleAction
 			$body      = $request->getParsedBody();
 			$confirmed = is_array($body) && (($body['confirmed'] ?? '') === '1');
 
-			// A genuinely disabled extension with review flags gets one stop at the
-			// review page first. Quarantined extensions are enabled=true (isEnabled
-			// is true), so re-enabling them skips this and clears quarantine directly.
-			if (!$confirmed && !$this->manager->isEnabled($extensionId) && $this->manager->getEnableReview($extensionId)['hasFlags']) {
+			// A genuinely disabled extension with something to review (flags, a
+			// developer note, an agent skill) gets one stop at the review page
+			// first. Quarantined extensions are enabled=true (isEnabled is true),
+			// so re-enabling them skips this and clears quarantine directly.
+			if (!$confirmed && !$this->manager->isEnabled($extensionId) && $this->manager->getEnableReview($extensionId)['needsReview']) {
 				$reviewUrl = $this->routeParser->urlFor('admin-extension-review', ['extension' => $extensionId]);
 
 				return $response

@@ -364,8 +364,10 @@ class ExtensionManager
 	 * Pre-enable review data: the developer's review note, what the extension
 	 * registers (capabilities), which of those are risky (with plain-language
 	 * labels), and risky source patterns found by a one-time scan. Informational —
-	 * not enforcement. `hasFlags` tells the review page whether there's anything
-	 * worth showing at all.
+	 * not enforcement. `hasFlags` says whether there is anything to warn about;
+	 * `needsReview` whether there is anything to read at all (flags, a review
+	 * note, an agent skill) — the enable flow stops at the review page only
+	 * when it is true.
 	 *
 	 * @return array{
 	 *   capabilities: array<string,bool>,
@@ -373,6 +375,7 @@ class ExtensionManager
 	 *   reviewNote: string,
 	 *   risky: array<string,string>,
 	 *   hasFlags: bool,
+	 *   needsReview: bool,
 	 *   skill: array{target:string,contents:string,files:list<string>}|null
 	 * }
 	 */
@@ -380,7 +383,7 @@ class ExtensionManager
 	{
 		$manifest = $this->discoveredManifests[$extensionId] ?? null;
 		if ($manifest === null) {
-			return ['capabilities' => [], 'findings' => [], 'reviewNote' => '', 'risky' => [], 'hasFlags' => false, 'skill' => null];
+			return ['capabilities' => [], 'findings' => [], 'reviewNote' => '', 'risky' => [], 'hasFlags' => false, 'needsReview' => false, 'skill' => null];
 		}
 
 		try {
@@ -1187,6 +1190,14 @@ class ExtensionManager
 	public function getDiscoveredManifests(): array
 	{
 		return $this->discoveredManifests;
+	}
+
+	/**
+	 * The discovered manifest for one extension, enabled or not.
+	 */
+	public function getManifest(string $extensionId): ?ExtensionManifest
+	{
+		return $this->discoveredManifests[$extensionId] ?? null;
 	}
 
 	/**

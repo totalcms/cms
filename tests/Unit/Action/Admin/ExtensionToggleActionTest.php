@@ -106,6 +106,27 @@ describe('ExtensionToggleAction enable path', function (): void {
 		expect($manager->isEnabled('test-vendor/dangerous-ext'))->toBeFalse();
 	});
 
+	test('an extension with only an agent skill to read redirects to review before enabling', function (): void {
+		// No risky capability and no scan finding (hasFlags false), but the
+		// skill it would install is instructions to the agent: the operator
+		// reads it first, from the card as well as after an install.
+		$manager = makeToggleReviewManager(dirname(__DIR__, 3) . '/fixtures');
+		$manager->discoverAndRegister();
+		expect($manager->getEnableReview('test-vendor/skill-ext')['hasFlags'])->toBeFalse();
+
+		$action  = makeToggleAction($manager);
+		$request = (new ServerRequestFactory())->createServerRequest('POST', '/admin/extensions/test-vendor/skill-ext/enable');
+
+		$result = $action($request, new Response(), [
+			'extension' => 'test-vendor/skill-ext',
+			'action'    => 'enable',
+		]);
+
+		expect($result->getStatusCode())->toBe(302);
+		expect($result->getHeaderLine('Location'))->toBe('/admin/extensions/test-vendor/skill-ext/review');
+		expect($manager->isEnabled('test-vendor/skill-ext'))->toBeFalse();
+	});
+
 	test('a flagged disabled extension with confirmed=1 enables directly', function (): void {
 		$manager = makeToggleReviewManager(dirname(__DIR__, 3) . '/fixtures');
 		$manager->discoverAndRegister();

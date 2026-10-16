@@ -76,7 +76,7 @@ Short description of what the extension does.
 
 ### `reviewNote`
 
-A plain-language note shown to the operator on the [pre-enable review screen](docs/extensions/safety#the-pre-enable-review). If your extension uses any sensitive capability (public routes, event listeners, container services, MCP tools/resources) or contains high-risk code patterns, the operator sees a review screen before enabling — and your `reviewNote` leads it.
+A plain-language note shown to the operator on the [pre-enable review screen](docs/extensions/safety#the-pre-enable-review). The operator sees that screen before enabling whenever there is something to review: a sensitive capability (public routes, event listeners, automations, MCP tools/resources), high-risk code patterns, an agent skill — or this note itself. Your `reviewNote` leads it.
 
 ```json
 "reviewNote": "Receives Stripe webhooks at a public endpoint to confirm payments, and watches new orders to send notifications. No data leaves your site except the Stripe calls you configure."

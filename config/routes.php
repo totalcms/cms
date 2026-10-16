@@ -53,6 +53,7 @@ return function (App $app): void {
 		(require __DIR__ . '/routes/api/dataviews.php')($api);
 		(require __DIR__ . '/routes/api/orphan.php')($api);
 		(require __DIR__ . '/routes/api/ext.php')($api);
+		(require __DIR__ . '/routes/api/extensions.php')($api);
 		(require __DIR__ . '/routes/api/action.php')($api);
 		// OAuthBearerMiddleware runs first (outermost): validates JWT + sets oauth_* request attributes.
 		// OAuthRestScopeMiddleware runs second (inner): gates Bearer-authed requests by scope.

@@ -83,6 +83,8 @@ use TotalCMS\Domain\Extension\Service\ExtensionGuard;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Extension\Service\ExtensionProfiler;
 use TotalCMS\Domain\Extension\Service\ExtensionSettingsManager;
+use TotalCMS\Domain\Extension\Service\Install\ExtensionArchive;
+use TotalCMS\Domain\Extension\Service\Install\ExtensionInstaller;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\Index\Service\IndexBuilder;
@@ -808,6 +810,20 @@ return [
 		return new ExtensionDiscovery(
 			$container->get(Config::class),
 			$container->get(ManifestValidator::class),
+			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Extensions, $extLevel),
+		);
+	},
+
+	// Explicit because LoggerInterface is not bound; the installer logs to
+	// the extensions channel like the manager and discovery.
+	ExtensionInstaller::class => function (ContainerInterface $container): ExtensionInstaller {
+		$extLevel = LoggerFactory::resolveLevel((string)($container->get(Config::class)->extensions['logLevel'] ?? 'info'), Level::Info);
+
+		return new ExtensionInstaller(
+			$container->get(ExtensionArchive::class),
+			$container->get(ExtensionDiscovery::class),
+			$container->get(ExtensionStateRepository::class),
+			$container->get(Config::class),
 			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Extensions, $extLevel),
 		);
 	},

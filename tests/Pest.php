@@ -993,3 +993,55 @@ function jsonStoreArgs(string $absolutePath): array
 
 	return [$store, basename($absolutePath)];
 }
+
+/**
+ * Build a zip in a private temp dir from a map of entry name => contents.
+ * A value of null adds a directory entry. Returns the zip path.
+ *
+ * @param array<string,string|null> $entries
+ */
+function buildTestZip(array $entries, string $prefix = 'tcms-ext-zip'): string
+{
+	$dir = tcmsTestTempDir($prefix);
+	mkdir($dir, 0755, true);
+	$path = $dir . '/archive.zip';
+
+	$zip = new ZipArchive();
+	$zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+	foreach ($entries as $name => $contents) {
+		if ($contents === null) {
+			$zip->addEmptyDir($name);
+		} else {
+			$zip->addFromString($name, $contents);
+		}
+	}
+	$zip->close();
+
+	return $path;
+}
+
+/**
+ * extension.json contents for a fixture extension.
+ *
+ * @param array<string,mixed> $extra
+ */
+function testExtensionManifest(string $id, string $version = '1.0.0', array $extra = []): string
+{
+	return (string)json_encode(array_merge([
+		'id'          => $id,
+		'name'        => 'Fixture ' . $id,
+		'description' => 'A fixture',
+		'version'     => $version,
+		'requires'    => ['totalcms' => '>=3.0.0', 'php' => '>=8.2'],
+		'entrypoint'  => 'Extension.php',
+		'license'     => 'MIT',
+	], $extra), JSON_PRETTY_PRINT);
+}
+
+/** A minimal Extension.php body. $risky adds a shell_exec so the scanner flags it. */
+function testExtensionClass(bool $risky = false): string
+{
+	$body = $risky ? "\t\tshell_exec('ls');\n" : '';
+
+	return "<?php\n\ndeclare(strict_types=1);\n\nnamespace TestZip\\Fixture;\n\nuse TotalCMS\\Domain\\Extension\\ExtensionContext;\nuse TotalCMS\\Domain\\Extension\\ExtensionInterface;\n\nclass Extension implements ExtensionInterface\n{\n\tpublic function register(ExtensionContext \$context): void\n\t{\n{$body}\t}\n\n\tpublic function boot(ExtensionContext \$context): void\n\t{\n\t}\n}\n";
+}

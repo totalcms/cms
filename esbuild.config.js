@@ -27,6 +27,7 @@ esbuild.build({
 		"javascript/swagger.js",
 		"javascript/mailto-decoder.js",
 		"javascript/docs-highlight.js",
+		"javascript/extension-install.js",
 	],
 	format        : "esm",
 	platform      : "browser",

@@ -161,6 +161,8 @@ class CliApplication
 		$app->addCommand(new Command\Extension\ExtensionEnableCommand($totalcms));
 		$app->addCommand(new Command\Extension\ExtensionDisableCommand($totalcms));
 		$app->addCommand(new Command\Extension\ExtensionRemoveCommand($totalcms));
+		$app->addCommand(new Command\Extension\ExtensionPackageCommand($totalcms));
+		$app->addCommand(new Command\Extension\ExtensionInstallCommand($totalcms));
 
 		// Extension-provided commands (with collision protection)
 		try {

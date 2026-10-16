@@ -37,12 +37,16 @@ final readonly class ManifestValidator
 		}
 
 		// Validate ID format: vendor/name
-		if (!preg_match('/^[a-z0-9-]+\/[a-z0-9-]+$/', $manifest->id)) {
+		if (!preg_match('/^[a-z0-9-]+\/[a-z0-9-]+\z/', $manifest->id)) {
 			return "Invalid extension ID '{$manifest->id}': must be vendor/name using lowercase alphanumeric and hyphens";
 		}
 
 		// Validate version format
-		if (!preg_match('/^\d+\.\d+\.\d+/', $manifest->version)) {
+		// Three numbers, then any suffix drawn from a safe set: pre-release
+		// and build tags (1.0.0-beta.1, 1.0.0+build.5) but also the looser
+		// forms installed extensions already use (1.0.0.1, 1.2.3beta). The
+		// version is rendered in the admin, so markup never passes.
+		if (!preg_match('/^\d+\.\d+\.\d+[0-9A-Za-z.+-]*\z/', $manifest->version)) {
 			return "Invalid version '{$manifest->version}': must be semver (e.g. 1.0.0)";
 		}
 

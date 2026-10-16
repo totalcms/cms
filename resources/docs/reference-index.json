@@ -4963,6 +4963,54 @@
             "since": "3.5.0"
         },
         {
+            "name": "extension:install",
+            "description": "Install an extension from a zip into `tcms-data/extensions/{vendor}/{name}/`, or replace one that is already there.",
+            "arguments": [
+                {
+                    "name": "zip",
+                    "required": true,
+                    "description": "Path to the extension zip"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--force, -f",
+                    "description": "Replace an existing copy without the confirmation prompt"
+                }
+            ],
+            "examples": [
+                "tcms extension:install ~/Downloads/seo-pro-1.2.0.zip\ntcms extension:install seo-pro-1.2.0.zip --force     # replace without asking\ntcms extension:install seo-pro-1.2.0.zip --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "extension:package",
+            "description": "Build the distributable zip for an extension directory: `{name}-{version}.zip` with everything inside a single `{name}/` folder \u2014 the shape `extension:install` and the admin upload accept.",
+            "arguments": [
+                {
+                    "name": "dir",
+                    "required": false,
+                    "description": "Extension directory containing `extension.json` (default: current directory)"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--output, -o",
+                    "description": "Directory to write the zip into (default: next to the extension directory)"
+                },
+                {
+                    "name": "--force, -f",
+                    "description": "Overwrite an existing zip"
+                }
+            ],
+            "examples": [
+                "cd my-extension && tcms extension:package\ntcms extension:package path/to/my-extension --output ~/releases\ntcms extension:package . --force                       # overwrite an existing zip"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
             "name": "extension:enable",
             "description": "Enable a discovered extension.",
             "arguments": [
@@ -5784,8 +5832,8 @@
                 },
                 {
                     "id": "totalcms/algolia-search",
-                    "name": "Algolia Search <em>(beta)</em>",
-                    "description": "<em>Free during beta \u2014 will be a paid extension after launch.</em> Semantic + keyword search backed by Algolia. Pushes T3 content into Algolia on save and routes MCP search tools (plus any future REST or site-wide search) through Algolia's hybrid keyword+neural search. Requires an Algolia account + Pro edition.",
+                    "name": "Algolia Search (beta)",
+                    "description": "Free during beta \u2014 will be a paid extension after launch. Semantic + keyword search backed by Algolia. Pushes T3 content into Algolia on save and routes MCP search tools (plus any future REST or site-wide search) through Algolia's hybrid keyword+neural search. Requires an Algolia account + Pro edition.",
                     "version": "",
                     "url": "https://docs.totalcms.co/extensions/algolia-search/"
                 },
@@ -5834,7 +5882,7 @@
                 {
                     "id": "totalcms/podcast",
                     "name": "Podcast",
-                    "description": "Host a podcast from two collections. Ships the <code>podcast</code> (show) and <code>podcast-episode</code> schemas, a feed the directories accept at <code>/api/ext/totalcms/podcast/feed</code> \u2014 no page or template needed \u2014 and a <code>podcast_feed()</code> Twig function for sites that want the feed on a page of their own. One show per collection; a site can host several.",
+                    "description": "Host a podcast from two collections. Ships the podcast (show) and podcast-episode schemas, a feed the directories accept at /api/ext/totalcms/podcast/feed \u2014 no page or template needed \u2014 and a podcast_feed() Twig function for sites that want the feed on a page of their own. One show per collection; a site can host several.",
                     "version": "",
                     "url": "https://docs.totalcms.co/extensions/podcast/"
                 },
@@ -5883,7 +5931,7 @@
                     "url": "https://docs.totalcms.co/extensions/ab-split/"
                 },
                 {
-                    "label": "Algolia Search <em>(beta)</em>",
+                    "label": "Algolia Search (beta)",
                     "url": "https://docs.totalcms.co/extensions/algolia-search/"
                 },
                 {

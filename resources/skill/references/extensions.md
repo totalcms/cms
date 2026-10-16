@@ -15,6 +15,7 @@ load). It never touches the container directly — everything goes through
 `$context->add*()` / `register*()` methods. What it registers is detected
 afterwards and becomes a per-capability permission the operator can switch
 off, so register everything in `register()`.
+An operator installs a third-party extension by dropping its zip on the Extensions page (it uploads at once and lands disabled; the review page comes first only when there is a `reviewNote`, an agent skill, a sensitive capability or a scan finding) or with `tcms extension:install`; build that zip with `tcms extension:package` from the extension directory.
 
 An extension can ship a skill of its own: a `skill/` directory beside the
 manifest (`SKILL.md` + optional `references/`), installed to

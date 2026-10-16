@@ -913,6 +913,49 @@ tcms extension:list --json
 
 `source` is where the extension was found: `bundled` (ships with Total CMS), `composer` (a `totalcms-extension` package in `vendor/`), `project` (the site's `extensions/` directory) or `user` (`tcms-data/extensions/`).
 
+### `extension:install`
+
+Install an extension from a zip into `tcms-data/extensions/{vendor}/{name}/`, or replace one that is already there.
+
+```bash
+tcms extension:install ~/Downloads/seo-pro-1.2.0.zip
+tcms extension:install seo-pro-1.2.0.zip --force     # replace without asking
+tcms extension:install seo-pro-1.2.0.zip --json
+```
+
+The zip is the extension folder zipped (a single top-level folder holding `extension.json`), or `extension.json` at the zip root. The install path comes from the manifest id. The archive is checked for unsafe paths and symlinks, the manifest is validated and checked against this site's Total CMS, PHP and edition requirements, and the code is scanned before it lands. A fresh install is **not** enabled; run `extension:enable` when you have reviewed it. Replacing an installed extension keeps its state, permissions and settings and asks for confirmation unless `--force` is given; an enabled extension whose replacement adds risky code is disabled pending review.
+
+An id owned by a bundled, Composer or project extension is refused with the owner named.
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `zip` | Yes | Path to the extension zip |
+
+| Option | Description |
+|--------|-------------|
+| `--force, -f` | Replace an existing copy without the confirmation prompt |
+
+### `extension:package`
+
+Build the distributable zip for an extension directory: `{name}-{version}.zip` with everything inside a single `{name}/` folder — the shape `extension:install` and the admin upload accept.
+
+```bash
+cd my-extension && tcms extension:package
+tcms extension:package path/to/my-extension --output ~/releases
+tcms extension:package . --force                       # overwrite an existing zip
+```
+
+`.git`, `.github`, `.DS_Store`, `node_modules` and `tests` are left out at any depth; everything else, including `vendor/`, goes in as found. Run `composer install --no-dev` first if the extension has Composer dependencies — the command warns when `composer.json` has requirements but there is no `vendor/autoload.php`.
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `dir` | No | Extension directory containing `extension.json` (default: current directory) |
+
+| Option | Description |
+|--------|-------------|
+| `--output, -o` | Directory to write the zip into (default: next to the extension directory) |
+| `--force, -f` | Overwrite an existing zip |
+
 ### `extension:enable`
 
 Enable a discovered extension.
