@@ -19,6 +19,10 @@ All notable changes to Total CMS will be documented in this file.
 - **A card in the collection table shows its first text field.** An indexed card's cell joined every scalar sub-field, so an SEO card read as "About Us, Who we are, 1, 1". It now leads with the first text field in the card schema's order (skipping `id`, hidden fields, styled text, code, SVG, JSON and passwords); a card with none, or with it empty, shows its first two values. Decks still show their item count
 - **`pdo_sqlite` is required software.** The job queue (imports, automations, bulk mail) and the bulk mailer's send log are SQLite files, but the Server Checker, `tcms check` and the setup wizard did not list the extension, so a host whose cron PHP lacks it only showed up as `jobs:process` failing every minute with "could not find driver". All three now check for it, and the requirements page says to check the cron PHP as well as the web server's
 
+### Removed
+
+- **A page URL no longer answers with JSON for `?_format=json` or `Accept: application/json`.** The page router returned the matched builder page or collection record as JSON before the template ran: every field of the record, whether or not the template showed it, and past any `cms.notFound()` guard, on an `Accept` header some fetch clients send by default. Nobody asked for it and the REST API is the headless surface, with API keys and access groups in front of it. Those requests now render the page like any other, and the `auth` page middleware answers them with the login redirect rather than a JSON 401
+
 ### Fixed
 
 - **A 404 no longer resets OPcache.** The default error handler reset the pool-wide bytecode cache on every exception it answered, so each bot probing `/wp-login.php` and the like recompiled the whole site on the next request — and on a shared pool, every co-located site with it. The reset exists so a fixed file takes effect right after a fault; it now runs only for a real fault, never for an HTTP exception, and the `X-OPcache-Cleared` header is sent only when a reset actually happened

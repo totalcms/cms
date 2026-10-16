@@ -147,10 +147,6 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		// applies to builder-page matches (collection-URL matches don't
 		// have a per-record middleware concept yet). The runner returns a
 		// Response if any middleware short-circuits; null means proceed.
-		//
-		// Runs BEFORE the headless-JSON shortcut: gating still has to apply
-		// to JSON consumers, otherwise an auth-protected page would happily
-		// hand its data to a logged-out visitor that asks for `?_format=json`.
 		if ($match->collection === null) {
 			$page               = new PageData($match->pageData);
 			$middlewareResponse = $this->pageMiddlewareRunner->run($request, $page);
@@ -167,11 +163,6 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		// pages only render on GET/HEAD. Return the original 404 untouched.
 		if (!$rendersPage) {
 			return $response;
-		}
-
-		// Headless mode — return the matched page record as JSON instead of rendering
-		if ($this->wantsJson($request)) {
-			return $this->jsonResponse($match);
 		}
 
 		try {
@@ -236,57 +227,6 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		return $pageResponse
 			->withStatus($match->status)
 			->withHeader('Content-Type', $contentType);
-	}
-
-	/**
-	 * Detect whether the client wants the matched page as JSON instead of HTML.
-	 * Triggered by `?_format=json` query param or `Accept: application/json`.
-	 *
-	 * Lets the same builder pages drive both web and a headless head (Next.js,
-	 * Astro, etc.) without a separate API surface.
-	 */
-	private function wantsJson(ServerRequestInterface $request): bool
-	{
-		parse_str($request->getUri()->getQuery(), $query);
-		if (($query['_format'] ?? '') === 'json') {
-			return true;
-		}
-
-		$accept = $request->getHeaderLine('Accept');
-		if ($accept === '') {
-			return false;
-		}
-
-		// Accept: application/json wins; */* or text/html don't trigger headless mode
-		return str_contains(strtolower($accept), 'application/json');
-	}
-
-	/**
-	 * Encode a RouteMatch as a JSON response.
-	 */
-	private function jsonResponse(RouteMatch $match): ResponseInterface
-	{
-		// Mirror the template's variable convention for consumers — a
-		// collection-URL match returns the matched record under `object`,
-		// a builder-page match returns it under `page`.
-		$payload = [
-			'params'     => $match->params,
-			'template'   => $match->template,
-			'collection' => $match->collection,
-			'status'     => $match->status,
-		];
-		if ($match->collection !== null) {
-			$payload['object'] = $match->pageData;
-		} else {
-			$payload['page'] = $match->pageData;
-		}
-
-		$response = new Response();
-		$response->getBody()->write((string)json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-
-		return $response
-			->withStatus($match->status)
-			->withHeader('Content-Type', 'application/json; charset=utf-8');
 	}
 
 	/**

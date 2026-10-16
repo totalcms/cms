@@ -58,36 +58,23 @@ final class PageAuthMiddlewareTest extends TestCase
 		$this->assertStringContainsString('members', $location);
 	}
 
-	public function testReturnsJson401ForJsonAcceptHeader(): void
+	public function testJsonAcceptHeaderIsRedirectedToLoginLikeAnyOther(): void
 	{
+		// The page router no longer answers JSON, so there is no JSON caller
+		// to give a 401 to; the redirect is the one answer.
 		$this->accessManager->method('sessionHasUser')->willReturn(false);
 
-		$request = $this->psr17->createServerRequest('GET', '/members')
+		$request = $this->psr17->createServerRequest('GET', '/members?_format=json')
 			->withHeader('Accept', 'application/json');
 
 		$response = $this->middleware->handle($request, $this->page('members'));
 
 		$this->assertNotNull($response);
-		$this->assertSame(401, $response->getStatusCode());
-		$this->assertSame('application/json; charset=utf-8', $response->getHeaderLine('Content-Type'));
-		$this->assertSame('', $response->getHeaderLine('Location'));
-
-		/** @var array<string,mixed> $body */
-		$body = json_decode((string)$response->getBody(), true);
-		$this->assertSame(['error' => 'Authentication required'], $body);
+		$this->assertSame(302, $response->getStatusCode());
+		$this->assertStringContainsString('/admin/login?', $response->getHeaderLine('Location'));
 	}
 
-	public function testReturnsJson401ForFormatJsonQueryParam(): void
-	{
-		$this->accessManager->method('sessionHasUser')->willReturn(false);
 
-		$request = $this->psr17->createServerRequest('GET', '/members?_format=json');
-
-		$response = $this->middleware->handle($request, $this->page('members'));
-
-		$this->assertNotNull($response);
-		$this->assertSame(401, $response->getStatusCode());
-	}
 
 	public function testRedirectAddsRedirectParamWithExistingQueryString(): void
 	{
@@ -153,27 +140,6 @@ final class PageAuthMiddlewareTest extends TestCase
 		$this->assertSame('403 Forbidden', (string)$response->getBody());
 	}
 
-	public function testLoggedInJsonRequestNotInRequiredGroupGets403Json(): void
-	{
-		$this->accessManager->method('sessionHasUser')->willReturn(true);
-		$this->accessManager->method('userHasAccess')->willReturn(false);
-
-		$request = $this->psr17->createServerRequest('GET', '/members')
-			->withHeader('Accept', 'application/json');
-
-		$response = $this->middleware->handle(
-			$request,
-			new PageData(['id' => 'members', 'accessGroups' => ['staff']]),
-		);
-
-		$this->assertNotNull($response);
-		$this->assertSame(403, $response->getStatusCode());
-		$this->assertSame('application/json; charset=utf-8', $response->getHeaderLine('Content-Type'));
-
-		/** @var array<string,mixed> $body */
-		$body = json_decode((string)$response->getBody(), true);
-		$this->assertSame(['error' => 'Forbidden'], $body);
-	}
 
 	public function testNotLoggedInWithAccessGroupsStillRedirectsToLogin(): void
 	{

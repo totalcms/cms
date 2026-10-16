@@ -246,7 +246,7 @@ The page form's **Features** section is a checklist populated from the registry.
 
 | Name | Behavior |
 |------|----------|
-| `auth` | Requires a logged-in visitor. Redirects logged-out browsers to `/admin/login` (with `?redirect=` to bring them back). Returns `401 {"error": "Authentication required"}` for JSON requests (`Accept: application/json` or `?_format=json`). Optionally restricted to specific access groups via the **Access Groups** field — see below. |
+| `auth` | Requires a logged-in visitor. Redirects logged-out visitors to `/admin/login` (with `?redirect=` to bring them back). Optionally restricted to specific access groups via the **Access Groups** field — see below. |
 
 Common uses for `auth`: legal documents that need a login, draft preview links, member-only pages.
 
