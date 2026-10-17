@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <phpmd-baseline>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Action/Admin/AdminCellAction.php"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Action/Admin/AdminCollectionAction.php" method="__invoke"/>
-  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Action/Admin/AdminCollectionAction.php" method="__invoke"/>
   <violation rule="PHPMD\Rule\Controversial\Superglobals" file="src/Action/Admin/AdminSettingsAction.php" method="__invoke"/>
   <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Action/Auth/AuthLoginSubmitAction.php" method="__invoke"/>
   <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="src/Action/Mcp/McpEndpointAction.php" method="__invoke"/>
@@ -35,7 +33,6 @@
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Admin/Form/SettingsForms.php" method="settings"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/Admin/FormField/FormField.php" method="init"/>
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Admin/FormField/FormField.php" method="init"/>
-  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Admin/FormField/FormField.php" method="buildOptionsForProperty"/>
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Admin/FormField/FormField.php" method="buildRelationalOptions"/>
   <violation rule="PHPMD\Rule\Design\ExcessiveClassLength" file="src/Domain/Admin/TotalForm.php"/>
   <violation rule="PHPMD\Rule\ExcessivePublicCount" file="src/Domain/Admin/TotalForm.php"/>
@@ -69,7 +66,6 @@
   <violation rule="PHPMD\Rule\Design\TooManyFields" file="src/Domain/Collection/Data/CollectionData.php"/>
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Collection/Data/CollectionData.php" method="toArray"/>
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Collection/Service/CollectionFormatConverter.php" method="convert"/>
-  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Collection/Service/CollectionSaver.php" method="updateCollection"/>
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/Collection/Utilities/ManualSorter.php" method="sort"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Domain/DataView/Service/DataViewDependencyResolver.php" method="order"/>
   <violation rule="PHPMD\Rule\Design\NPathComplexity" file="src/Domain/DataView/Service/DataViewDependencyResolver.php" method="order"/>

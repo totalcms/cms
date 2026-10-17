@@ -98,9 +98,15 @@ structural debt accepted when the gate was set up (large methods, high
 coupling, etc.), keyed by rule + file + method so line edits do not disturb it.
 It is part of `bin/runtests.sh` and `test:build`, so a new over-complex method,
 unused variable or superglobal fails CI. When you refactor something that is in
-the baseline, run `composer run md:baseline` to drop it (the command only
-removes entries; it never adds). Prefer a `@SuppressWarnings("PHPMD.Rule")`
+the baseline, delete its `<violation>` line from `phpmd.baseline.xml` by hand and
+run `composer run md` — a still-needed entry resurfaces as a violation. Do NOT run
+`composer run md:baseline`: under PHPMD 3.0.0 `--update-baseline` keeps only the
+violations it reports, which are the ones the baseline does not cover, so it
+empties the file (verified 2026-10-17, with and without the PDepend cache). Prefer a `@SuppressWarnings("PHPMD.Rule")`
 docblock with a reason over a baseline entry for anything deliberate.
+`pdepend.yml.dist` runs PDepend with its cache in memory: the on-disk cache in
+`~/.cache/pdepend` has produced both phantom violations and (2026-10-17) a clean
+local run for code CI then failed, so the local gate now always recomputes.
 
 ## Architecture Overview
 

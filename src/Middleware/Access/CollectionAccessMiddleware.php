@@ -344,39 +344,57 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 			return in_array($routeName, self::OWNER_ALLOWED_IDLESS_ROUTES, true);
 		}
 
-		if ($routeName === 'admin-collection' || $routeName === 'admin-collection-post') {
-			// Admin pseudo-pages (-export, -import, -factory, -sitemap, -feeds)
-			// work across every object; -export lists every object id.
-			if (str_starts_with($objectId, '-')) {
-				return false;
-			}
-
-			// Admin-side clone: POST .../add with a `duplicate` field copies
-			// another object. Same condition AdminCollectionAction acts on, so
-			// any string value (even "0") is refused for a scoped actor.
-			$body = (array)$request->getParsedBody();
-			if ($routeName === 'admin-collection-post' && isset($body['duplicate']) && is_string($body['duplicate'])) {
-				return false;
-			}
+		if ($this->adminRouteDeniesOwner($routeName, $objectId, $request)) {
+			return false;
 		}
 
 		if (!$this->objectFetcher->existsObject($collection, $objectId)) {
-			// A missing object passes only for a read, so the action returns its
-			// usual 404 (this tells a scoped actor whether an id exists: 404
-			// here, 403 for someone else's object; the spec accepts that, since
-			// ids are slugs and the content stays unreadable). A create, update
-			// or delete is denied: the property savers (file, image, gallery,
-			// depot) create a missing object through ObjectSaver, outside the
-			// field policy, so it would carry no owner stamp and no forced
-			// values. Members create through `object-save`. The admin add form
-			// (`admin-collection-post` on the `add` keyword) only renders a page.
-			return $operation === 'read'
-				|| ($routeName === 'admin-collection-post' && $objectId === 'add');
+			return $this->missingObjectAllows($operation, $routeName, $objectId);
 		}
 
 		$object = $this->objectFetcher->fetchObject($collection, $objectId)->toArray();
 
 		return (new OwnerScope($ownerProperty, $userId))->matches($object);
+	}
+
+	/**
+	 * The admin page routes a scoped actor may not use even with an object id.
+	 */
+	private function adminRouteDeniesOwner(string $routeName, string $objectId, ServerRequestInterface $request): bool
+	{
+		if ($routeName !== 'admin-collection' && $routeName !== 'admin-collection-post') {
+			return false;
+		}
+
+		// Admin pseudo-pages (-export, -import, -factory, -sitemap, -feeds)
+		// work across every object; -export lists every object id.
+		if (str_starts_with($objectId, '-')) {
+			return true;
+		}
+
+		// Admin-side clone: POST .../add with a `duplicate` field copies
+		// another object. Same condition AdminCollectionAction acts on, so
+		// any string value (even "0") is refused for a scoped actor.
+		$body = (array)$request->getParsedBody();
+
+		return $routeName === 'admin-collection-post' && isset($body['duplicate']) && is_string($body['duplicate']);
+	}
+
+	/**
+	 * A missing object passes only for a read, so the action returns its
+	 * usual 404 (this tells a scoped actor whether an id exists: 404 here,
+	 * 403 for someone else's object; the spec accepts that, since ids are
+	 * slugs and the content stays unreadable). A create, update or delete is
+	 * denied: the property savers (file, image, gallery, depot) create a
+	 * missing object through ObjectSaver, outside the field policy, so it
+	 * would carry no owner stamp and no forced values. Members create through
+	 * `object-save`. The admin add form (`admin-collection-post` on the
+	 * `add` keyword) only renders a page.
+	 */
+	private function missingObjectAllows(string $operation, string $routeName, string $objectId): bool
+	{
+		return $operation === 'read'
+			|| ($routeName === 'admin-collection-post' && $objectId === 'add');
 	}
 
 	/**

@@ -147,41 +147,10 @@ readonly class CollectionSaver
 			throw new \UnexpectedValueException(sprintf('Error fetching Collection with id %s', $collectionId));
 		}
 
-		// The format is fixed at creation: the setting and the files on disk
-		// must agree, and only CollectionFormatConverter changes both.
-		// Normalized first so a harmless case/whitespace difference (e.g. the
-		// form re-posting `JSON`) is not mistaken for an attempted change.
-		if (isset($data['format']) && $data['format'] !== '' && $this->normalizeFormat($data['format']) !== $existingCollection->format) {
-			throw new \DomainException(sprintf(
-				"Collection '%s' is stored as %s. Change the storage format with `tcms collection:convert %s --to=%s`.",
-				$collectionId,
-				$existingCollection->format,
-				$collectionId,
-				(string)$data['format'],
-			));
-		}
+		$this->assertFormatUnchanged($collectionId, $data, $existingCollection);
 		$data['format'] = $existingCollection->format;
 
-		// An ownerProperty the schema lacks silently makes the collection
-		// unowned. Check it when it (or the schema) changed, or when the caller
-		// did not hand us the stored record. The metadata cascade (count bumps
-		// on every object write) passes the record and changes neither, so it
-		// skips the schema read; a patch changing either is validated here, on
-		// the merged data.
-		$ownerUnchanged = $callerSuppliedExisting
-			&& (string)($data['ownerProperty'] ?? '') === $existingCollection->ownerProperty
-			&& (string)($data['schema'] ?? '') === $existingCollection->schema;
-		if (!$ownerUnchanged) {
-			$this->assertOwnerPropertyValid($data);
-		}
-
-		// Same skip for ownerCollection: only a changed value (or a call
-		// without the stored record) reads the named collection.
-		$ownerCollectionUnchanged = $callerSuppliedExisting
-			&& (string)($data['ownerCollection'] ?? '') === $existingCollection->ownerCollection;
-		if (!$ownerCollectionUnchanged) {
-			$this->assertOwnerCollectionValid($data);
-		}
+		$this->assertOwnerSettingsValid($data, $existingCollection, $callerSuppliedExisting);
 
 		// Recalculate totalObjects from index if not explicitly provided (self-healing)
 		if (!isset($data['totalObjects'])) {
@@ -229,6 +198,60 @@ readonly class CollectionSaver
 		$this->eventDispatcher->dispatch(CoreEvent::COLLECTION_UPDATED, new CollectionEventPayload($collectionId, $configChanged));
 
 		return $collection;
+	}
+
+	/**
+	 * The format is fixed at creation: the setting and the files on disk
+	 * must agree, and only CollectionFormatConverter changes both.
+	 * Normalized first so a harmless case/whitespace difference (e.g. the
+	 * form re-posting `JSON`) is not mistaken for an attempted change.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @throws \DomainException
+	 */
+	private function assertFormatUnchanged(string $collectionId, array $data, CollectionData $existingCollection): void
+	{
+		if (!isset($data['format']) || $data['format'] === '' || $this->normalizeFormat($data['format']) === $existingCollection->format) {
+			return;
+		}
+
+		throw new \DomainException(sprintf(
+			"Collection '%s' is stored as %s. Change the storage format with `tcms collection:convert %s --to=%s`.",
+			$collectionId,
+			$existingCollection->format,
+			$collectionId,
+			(string)$data['format'],
+		));
+	}
+
+	/**
+	 * An ownerProperty the schema lacks silently makes the collection
+	 * unowned. Check it when it (or the schema) changed, or when the caller
+	 * did not hand us the stored record. The metadata cascade (count bumps
+	 * on every object write) passes the record and changes neither, so it
+	 * skips the schema read; a patch changing either is validated here, on
+	 * the merged data. Same skip for ownerCollection: only a changed value
+	 * (or a call without the stored record) reads the named collection.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @throws \DomainException
+	 */
+	private function assertOwnerSettingsValid(array $data, CollectionData $existingCollection, bool $callerSuppliedExisting): void
+	{
+		$ownerUnchanged = $callerSuppliedExisting
+			&& (string)($data['ownerProperty'] ?? '') === $existingCollection->ownerProperty
+			&& (string)($data['schema'] ?? '') === $existingCollection->schema;
+		if (!$ownerUnchanged) {
+			$this->assertOwnerPropertyValid($data);
+		}
+
+		$ownerCollectionUnchanged = $callerSuppliedExisting
+			&& (string)($data['ownerCollection'] ?? '') === $existingCollection->ownerCollection;
+		if (!$ownerCollectionUnchanged) {
+			$this->assertOwnerCollectionValid($data);
+		}
 	}
 
 	/**

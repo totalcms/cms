@@ -619,81 +619,73 @@ class FormField
 	{
 		$source = $this->settings['propertyOptions'] ?? true;
 
-		if (is_array($source) && ($source['source'] ?? null) === 'mediaTags') {
+		if (is_array($source)) {
+			$options = $this->buildOptionsForStructuredSource($source);
+		} elseif (is_string($source)) {
+			$options = $this->buildOptionsForNamedSource($source);
+		} else {
+			$options = null;
+		}
+
+		// Default: fetch from current collection
+		return $options ?? $this->form->propertyListForCollection($this->name);
+	}
+
+	/**
+	 * The `{"source": ...}` object form of propertyOptions. Null for an
+	 * unknown source, which falls back to the current collection's properties.
+	 *
+	 * @param array<string,mixed> $source
+	 *
+	 * @return array<int,string|array<string,string>>|array<string,array<int,array<string,string>>>|null
+	 */
+	private function buildOptionsForStructuredSource(array $source): ?array
+	{
+		if (($source['source'] ?? null) === 'mediaTags') {
 			return $this->form->mediaTagsForCollection(
 				(string)($source['field'] ?? ''),
 				(string)($source['type'] ?? 'image'),
 			);
 		}
 
-		if (is_array($source) && ($source['source'] ?? null) === 'schemaProperties') {
+		if (($source['source'] ?? null) === 'schemaProperties') {
 			$types = array_values(array_filter((array)($source['types'] ?? []), is_string(...)));
 
 			return $this->form->schemaPropertyKeys('', $types, ($source['owner'] ?? false) === true);
 		}
 
-		if ($source === 'collections') {
-			return $this->form->categoryListForCollections();
-		}
+		return null;
+	}
 
-		if ($source === 'schemas') {
-			return $this->form->categoryListForSchemas();
-		}
-
-		if ($source === 'collectionIds') {
-			return $this->form->collectionIdListWithLabels();
-		}
-
-		if ($source === 'pageCollections') {
-			return $this->form->pageCollectionOptions();
-		}
-
-		if (is_string($source) && str_starts_with($source, 'schemaCollections:')) {
+	/**
+	 * The string form of propertyOptions: a named source, or
+	 * `schemaCollections:{schema}`. Null for an unknown name.
+	 *
+	 * @return array<int,string|array<string,string>>|array<string,array<int,array<string,string>>>|null
+	 */
+	private function buildOptionsForNamedSource(string $source): ?array
+	{
+		if (str_starts_with($source, 'schemaCollections:')) {
 			return $this->form->collectionsUsingSchema(substr($source, strlen('schemaCollections:')));
 		}
 
-		if ($source === 'viewIds') {
-			return $this->form->viewIdList();
-		}
-
-		if ($source === 'collectionsAndViews') {
-			return $this->form->collectionAndViewOptions();
-		}
-
-		if ($source === 'layouts') {
-			return $this->form->layoutListForBuilder();
-		}
-
-		if ($source === 'pages') {
-			return $this->form->pageListForBuilder();
-		}
-
-		if ($source === 'pageMiddleware') {
-			return $this->form->pageMiddlewareList();
-		}
-
-		if ($source === 'navItems') {
-			return $this->form->adminNavItemList();
-		}
-
-		if ($source === 'schemaProperties') {
-			return $this->form->schemaPropertyKeys();
-		}
-
-		if ($source === 'locales') {
-			return $this->form->localeList();
-		}
-
-		if ($source === 'events') {
-			return $this->form->eventsList();
-		}
-
-		if ($source === 'podcastCategories') {
-			return TotalForm::podcastCategoryOptions();
-		}
-
-		// Default: fetch from current collection
-		return $this->form->propertyListForCollection($this->name);
+		return match ($source) {
+			'collections'         => $this->form->categoryListForCollections(),
+			'schemas'             => $this->form->categoryListForSchemas(),
+			'collectionIds'       => $this->form->collectionIdListWithLabels(),
+			'pageCollections'     => $this->form->pageCollectionOptions(),
+			'viewIds'             => $this->form->viewIdList(),
+			'collectionsAndViews' => $this->form->collectionAndViewOptions(),
+			'layouts'             => $this->form->layoutListForBuilder(),
+			'pages'               => $this->form->pageListForBuilder(),
+			'pageMiddleware'      => $this->form->pageMiddlewareList(),
+			'navItems'            => $this->form->adminNavItemList(),
+			'schemaProperties'    => $this->form->schemaPropertyKeys(),
+			'locales'             => $this->form->localeList(),
+			'events'              => $this->form->eventsList(),
+			'podcastCategories'   => TotalForm::podcastCategoryOptions(),
+			default               => null,
+		};
 	}
 
 	/**
