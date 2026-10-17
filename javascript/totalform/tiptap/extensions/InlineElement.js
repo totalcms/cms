@@ -5,7 +5,7 @@
  * all attributes, rendering back to the original element.
  */
 
-import { Mark, mergeAttributes } from '@tiptap/core';
+import { Mark } from '@tiptap/core';
 
 function parseAttrs(element) {
 	return {

@@ -18,10 +18,10 @@ Total CMS is a modern PHP-based Content Management System using flat-file JSON s
 ## Technology Stack
 
 - **Backend**: PHP 8.2+, Slim 4, Twig 3, PHP-DI 7, PSR-7/PSR-15
-- **Frontend**: ESBuild, Sass/SCSS, TypeScript/ES6+, HTMX 4.x, Node.js/Yarn
+- **Frontend**: ESBuild, Sass/SCSS, TypeScript/ES6+, HTMX 4.x, Node.js with pnpm via Vite+ (`vp`)
 - **Rich Text**: Tiptap editor (replaced Froala)
 - **Search**: `SearchProvider` abstraction — built-in `text` provider by default, optional Algolia (`algolia/algoliasearch-client-php`)
-- **Testing**: Pest (PHP testing), PHPStan Level 8, PHP-CS-Fixer, PHPMD, Rector
+- **Testing**: Pest (PHP testing), PHPStan Level 8, PHP-CS-Fixer, PHPMD, Rector; Vitest + Oxlint for JS, both run through `vp`
 
 ## Common Development Commands
 
@@ -38,6 +38,15 @@ bin/watch.sh
 # Full application build (manual release builds only)
 composer run build
 
+# JS toolchain: Vite+ (`vp`, install with `curl -fsSL https://vite.plus | bash`)
+# fronts pnpm (pinned in package.json#devEngines), Vitest and Oxlint. The
+# esbuild build itself is unchanged — vp only replaced Yarn and the test/lint
+# runners. There is no yarn.lock any more; pnpm-lock.yaml is the lockfile.
+vp install            # dependencies (bin/build-assets.sh runs this)
+vp run test:js        # Vitest, ~5s
+vp run lint:js        # Oxlint over javascript/, warnings fail (.oxlintrc.json)
+vp run lint:js:fix    # Oxlint safe auto-fixes; also part of `composer run clean`
+
 # Create distribution bundle (manual release builds only)
 composer run bundle
 ```
@@ -52,7 +61,7 @@ composer run cs
 composer run cs:fix
 
 # Run tests — bin/runtests.sh is the normal entry point.
-# No args: bundle:check, stan, docs:validate, JS tests, PHP tests (~45s).
+# No args: bundle:check, stan, md, docs:validate, JS lint, JS tests, PHP tests (~45s).
 # With a filter: ONLY the matching PHP tests, for a fast edit-run loop.
 bin/runtests.sh                          # everything
 bin/runtests.sh SomeTest                 # tests matching a name

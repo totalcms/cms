@@ -30,7 +30,7 @@ function markdownUrl(url) {
 }
 
 function markdownLabel(text) {
-	return String(text ?? '').replace(/([\[\]])/g, '\\$1');
+	return String(text ?? '').replace(/([[\]])/g, '\\$1');
 }
 
 export default class MarkdownSourceEditor {

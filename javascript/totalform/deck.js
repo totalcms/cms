@@ -2,7 +2,6 @@ import TotalField from "./totalfield";
 import { regenerateIds } from "./regenerateIds.mjs";
 import DeckItem, { missingIdPropertyMessage } from "./deckItem";
 import TotalSortable from "./total-sortable";
-const slugify = require('slugify');
 
 //-----------------------------------------------
 // Total CMS Deck Field

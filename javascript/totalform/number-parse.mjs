@@ -50,7 +50,7 @@ export function normalizePrice(value) {
 	if (typeof value === 'number') return String(value);
 
 	// Keep only digits, separators, and a sign.
-	let s = String(value).replace(/[^0-9,.\-]/g, '');
+	let s = String(value).replace(/[^0-9,.-]/g, '');
 	if (s === '' || s === '-') return '0';
 
 	const hasComma = s.includes(',');

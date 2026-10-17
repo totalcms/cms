@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 import FieldVisibility from '../../javascript/totalform/field-visibility.js';
 import TotalField from '../../javascript/totalform/totalfield.js';

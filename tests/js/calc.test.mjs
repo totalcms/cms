@@ -1,5 +1,5 @@
 import Calc from '../../javascript/totalform/calc.js';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 //-----------------------------------------------
 // Calc evaluates number-field expressions. parse() is a hand-written safe math

@@ -184,7 +184,11 @@ export default class FieldVisibility {
 	setVisibility(field, isActive, mode = 'hide') {
 		if (mode === 'disable') {
 			const wasActive = !field.container.classList.contains('field-disabled');
-			isActive ? field.enable() : field.disable();
+			if (isActive) {
+				field.enable();
+			} else {
+				field.disable();
+			}
 			if (wasActive !== isActive) {
 				field.container.dispatchEvent(new Event('visibility-change', { bubbles: true }));
 			}
@@ -195,7 +199,11 @@ export default class FieldVisibility {
 		// toggle `field-hidden` (the legacy `cms-hide` class was never set by
 		// either path, so the previous read here always returned `true`).
 		const wasVisible = field.isVisible();
-		isActive ? field.show() : field.hide();
+		if (isActive) {
+			field.show();
+		} else {
+			field.hide();
+		}
 
 		if (wasVisible !== isActive) {
 			field.container.dispatchEvent(new Event('visibility-change', { bubbles: true }));

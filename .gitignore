@@ -12,9 +12,11 @@ cache.properties
 vendor/
 build/
 node_modules/
-# This project uses yarn. CI runs `yarn install --frozen-lockfile`; nothing
-# reads a package-lock, and a second lockfile only drifts from yarn.lock.
+# This project uses pnpm through Vite+ (`vp install`); CI runs it with
+# --frozen-lockfile. Nothing reads a package-lock or yarn.lock, and a second
+# lockfile only drifts from pnpm-lock.yaml.
 package-lock.json
+yarn.lock
 dist/
 
 tmp/*

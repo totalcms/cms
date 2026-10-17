@@ -205,7 +205,6 @@ function createTablePopoverPlugin(editor) {
 		view() {
 			return {
 				update(view) {
-					const { state } = view;
 					const isInTable = editor.isActive('table');
 
 					if (isInTable) {

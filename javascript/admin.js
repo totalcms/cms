@@ -13,7 +13,6 @@ import DataVisualizer from './totalform/data-visualizer';
 import SortableTable from './totalform/sortable-table';
 import ClipButton from './clipboard-button';
 import JSONField from './totalform/json';
-import SelectField from './totalform/select';
 import TotalField from './totalform/totalfield';
 import SlugifyInput from './totalform/slugify-inputs';
 import DevModeToggle from './devmode';
@@ -101,7 +100,7 @@ if (!duplicateLoad) document.body.addEventListener('htmx:confirm', (e) => {
 
 document.addEventListener("DOMContentLoaded", event => {
 	if (duplicateLoad) return;
-	const manager = new TotalFormManager();
+	new TotalFormManager();
 
 	const simpleForms = Array.from(document.getElementsByClassName("simple-form"));
 	simpleForms.forEach(form => new SimpleForm(form));
@@ -113,7 +112,7 @@ document.addEventListener("DOMContentLoaded", event => {
 	adminlists.forEach(list => {
 		const content    = list.querySelector('.list-content');
 		const input      = list.querySelector('input[type="search"]');
-		const filterlist = new FilterList(input, content);
+		new FilterList(input, content);
 	});
 
 	const dashboardSidebar = Array.from(document.getElementsByClassName("dash-content-sidebar"));
@@ -134,7 +133,7 @@ document.addEventListener("DOMContentLoaded", event => {
 		const lists = Array.from(sidebar.querySelectorAll('.links ul'));
 		lists.forEach(list => {
 			const input      = sidebar.querySelector('input[type="search"]');
-			const filterlist = new FilterList(input, list, {
+			new FilterList(input, list, {
 				scrollable     : false,
 				maintainHeight : false,
 			});

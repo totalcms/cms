@@ -837,7 +837,7 @@ export default class TiptapToolbar {
 				continue;
 			}
 
-			const { element: btn, def } = entry;
+			const { element: btn } = entry;
 			let isActive = false;
 
 			switch (name) {

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 import Autogen from '../../javascript/totalform/autogen.js';
 import TotalField from '../../javascript/totalform/totalfield.js';

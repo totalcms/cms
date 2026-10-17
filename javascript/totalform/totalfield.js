@@ -53,7 +53,7 @@ export default class TotalField {
 		// subclass's first changed() event will overwrite storedValue with the real value.
 		try {
 			this.storedValue = this.getValue();
-		} catch (e) {
+		} catch {
 			this.storedValue = this.input.value;
 		}
 
@@ -394,7 +394,6 @@ export default class TotalField {
 	}
 
     changed() {
-		const hadError = this.container.classList.contains("error");
 		this.input.setCustomValidity("");
 		this.container.classList.remove("error");
 

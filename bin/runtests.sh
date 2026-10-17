@@ -51,7 +51,7 @@ Usage: bin/runtests.sh [FILTER] [--lint] [-v]
 
   bin/runtests.sh                          Full battery (~45s)
                                              bundle:check, stan, md, docs:validate,
-                                             PHP tests (parallel), JS tests
+                                             PHP tests (parallel), JS lint, JS tests
   bin/runtests.sh Barcode                  Only PHP tests matching "Barcode"
   bin/runtests.sh tests/Feature/Foo.php    Only that file or directory
   bin/runtests.sh --lint                   Also run phplint (~36s, off by default)
@@ -272,6 +272,8 @@ if [ "$RUN_LINT" = true ]; then
 	run_step "PHP lint" 'Time:|files|OK'    composer run lint
 fi
 
+# Oxlint prints nothing when clean and one line per finding otherwise.
+run_step "JS lint"   '.'                   composer run lint:js
 run_step "JS tests"  '^ *Tests '            composer run test:js
 run_step_live "PHP tests" '^ *Tests:'       composer run test:parallel -- --colors=always
 # A golden test whose snapshot is not in git proves nothing (bin/check-snapshots.php).

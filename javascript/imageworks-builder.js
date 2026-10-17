@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", event => {
 
 	const details = Array.from(document.querySelectorAll("details"));
 	for (const detail of details) {
-		const accordion = new Details(detail, {openFirst:true});
+		new Details(detail, {openFirst:true});
 	}
 
 	const fitModal = new Dialog(document.getElementById("fit-modal"));

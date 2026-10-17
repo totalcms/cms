@@ -336,7 +336,7 @@ export default class TotalForm {
 	// Resolves once every field whose module was still loading is in.
 	whenReady() {
 		if (this.pending.size === 0) return Promise.resolve();
-		return Promise.all([...this.pending]).then(() => this.whenReady());
+		return Promise.all(this.pending).then(() => this.whenReady());
 	}
 
 	//-------------------------
@@ -561,7 +561,11 @@ export default class TotalForm {
 	closeDialog() {
 		const dialog = this.form.querySelector("dialog[open]");
 		if (dialog) {
-			dialog.dialog ? dialog.dialog.close() : dialog.close();
+			if (dialog.dialog) {
+				dialog.dialog.close();
+			} else {
+				dialog.close();
+			}
 		}
 	}
 
