@@ -7,6 +7,8 @@ namespace TotalCMS\Domain\Mcp\Tool\Admin;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
+use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -33,11 +35,21 @@ use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
  * whose access-group grants collectionsMeta 'create' for the target id also
  * sees and can call this tool — mirrors the REST `/api/collections` group
  * gate.
+ *
+ * That grant does not cover the registration settings: `publicRegistration`
+ * and `registrationGroups` are refused in `extra` unless the caller is ADMIN,
+ * as CollectionMetaAccessMiddleware refuses them over REST. Otherwise a
+ * grantee could create an auth collection open to registration that hands
+ * registrants a group of its choosing.
  */
 readonly class CollectionTools
 {
+	/** Collection settings only admin callers may set. */
+	private const REGISTRATION_KEYS = ['publicRegistration', 'registrationGroups'];
+
 	public function __construct(
 		private CollectionSaver $saver,
+		private PersonaContext $personaContext,
 	) {
 	}
 
@@ -45,7 +57,7 @@ readonly class CollectionTools
 	{
 		$registry->register(new McpToolDefinition(
 			name: 'create_collection',
-			description: 'Create a new collection. Required: id (slug) + schema (existing schema id). Optional extra: name, url, description, category, prettyUrl, sortBy, reverseSort, groups, publicOperations, mcp settings. Errors if the id already exists.',
+			description: 'Create a new collection. Required: id (slug) + schema (existing schema id). Optional extra: name, url, description, category, prettyUrl, sortBy, reverseSort, groups, publicOperations, mcp settings; publicRegistration and registrationGroups: admin callers only. Errors if the id already exists.',
 			access: 'admin',
 			handler: $this->createHandler(...),
 			inputSchema: [
@@ -74,7 +86,7 @@ readonly class CollectionTools
 							['type' => 'object'],
 							['type' => 'array', 'maxItems' => 0],
 						],
-						'description' => 'Optional additional collection fields: name (display label), url (pattern with {id} placeholders), description, category, prettyUrl (bool), sortBy, reverseSort (bool), groups (array), publicOperations (array), mcp (object).',
+						'description' => 'Optional additional collection fields: name (display label), url (pattern with {id} placeholders), description, category, prettyUrl (bool), sortBy, reverseSort (bool), groups (array), publicOperations (array), mcp (object); publicRegistration (bool) and registrationGroups (array): admin callers only.',
 						'default'     => new \stdClass(),
 					],
 				],
@@ -97,6 +109,11 @@ readonly class CollectionTools
 	 */
 	public function createHandler(string $id, string $schema, array $extra = []): array
 	{
+		if ($this->personaContext->current() !== McpPersona::ADMIN
+			&& array_intersect(self::REGISTRATION_KEYS, array_keys($extra)) !== []) {
+			throw new ToolCallException('Only admin callers may set publicRegistration or registrationGroups.');
+		}
+
 		$data           = $extra;
 		$data['id']     = $id;
 		$data['schema'] = $schema;

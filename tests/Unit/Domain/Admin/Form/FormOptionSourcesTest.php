@@ -46,7 +46,8 @@ describe('collections', function (): void {
 
 		$landing              = new SchemaData();
 		$landing->inheritFrom = ['builder-page'];
-		$fetcher              = $this->createMock(SchemaFetcher::class);
+		// Partial: the real isOrInherits() reads the stubbed raw schemas.
+		$fetcher              = $this->createPartialMock(SchemaFetcher::class, ['fetchRawSchema']);
 		$fetcher->method('fetchRawSchema')->willReturnCallback(fn (string $id): SchemaData => match ($id) {
 			'landing' => $landing,
 			default   => throw new RuntimeException("no schema $id"),

@@ -3862,6 +3862,39 @@
             "url": "https://docs.totalcms.co/collections/settings/"
         },
         {
+            "key": "publicRegistration",
+            "type": "boolean",
+            "required": false,
+            "default": "false",
+            "description": "Lets anonymous visitors create their own account in this collection through [`POST /admin/register/{collection}`](docs/forms/options#public-registration-forms). Only collections whose schema is `auth` or inherits it have it.",
+            "examples": [
+                "{\n    \"publicRegistration\": true\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
+            "key": "requireEmailVerification",
+            "type": "boolean",
+            "required": false,
+            "default": "false",
+            "description": "New registrants are created inactive and must click a link in a verification email before they can sign in. Shown as **Require Email Verification** once [`publicRegistration`](#publicregistration) is on. With it off, a registrant is signed in as soon as the account is created. See [Email Verification](docs/forms/options#email-verification) for the full flow.",
+            "examples": [
+                "{\n    \"publicRegistration\": true,\n    \"requireEmailVerification\": true\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
+            "key": "registrationGroups",
+            "type": "array<string>",
+            "required": false,
+            "default": "[]",
+            "description": "Access groups given to every registrant. Shown as **Registration Groups**, a list of access groups, once [`publicRegistration`](#publicregistration) is on.",
+            "examples": [
+                "{\n    \"publicRegistration\": true,\n    \"registrationGroups\": [\"members\", \"newsletter\"]\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
             "key": "ownerProperty",
             "type": "string",
             "required": false,
@@ -3869,6 +3902,17 @@
             "description": "The property that holds the id of the user who owns each object. Setting it makes this an **owned collection**: every user who is not a super admin is limited to the objects they own, and the server writes their user id into this property when they create one.",
             "examples": [
                 "{\n    \"ownerProperty\": \"owner\"\n}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
+            "key": "ownerCollection",
+            "type": "string",
+            "required": false,
+            "default": "\"\"",
+            "description": "The auth collection whose members are scoped owners of this collection. Pick it from the **Owner Collection** select, next to **Owner Property**; \"Any auth collection\" leaves it empty. It only has an effect when `ownerProperty` is set.",
+            "examples": [
+                "{\n    \"ownerProperty\": \"owner\",\n    \"ownerCollection\": \"members\"\n}"
             ],
             "url": "https://docs.totalcms.co/collections/settings/"
         },

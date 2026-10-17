@@ -15,6 +15,7 @@ use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Auth\Service\AuthMailer;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\LoginService;
+use TotalCMS\Domain\Auth\Service\RegistrationCollections;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -81,6 +82,8 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		);
 		$schemaFetcher = $this->createMock(SchemaFetcher::class);
 		$schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+		// The collections here use the `auth` schema, so the toggle counts.
+		$schemaFetcher->method('isOrInherits')->willReturnCallback(static fn (string $schemaId, string $target): bool => $schemaId === $target);
 		$policyLoggerFactory = $this->createMock(LoggerFactory::class);
 		$policyLoggerFactory->method('channelLogger')->willReturn(new NullLogger());
 		$ownerProperties = $this->createMock(OwnerPropertyResolver::class);
@@ -104,6 +107,10 @@ final class AuthRegisterSubmitActionTest extends TestCase
 			$this->verificationService,
 			new AuthMailer($this->emailService, $this->emailSender, $this->twigEngine, $this->createMock(UserValidationService::class), $this->config),
 			$this->config,
+			// RegistrationCollections is final, so it cannot be mocked: a real one
+			// over the same Config and fetcher mock. The gate and the groups then
+			// follow `$this->config->auth` and the collection built by withCollection().
+			new RegistrationCollections($this->config, $this->collectionFetcher, $schemaFetcher),
 		);
 	}
 
@@ -438,12 +445,84 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		$this->assertSame($jsonResponse, $result);
 	}
 
-	private function withCollection(string $id, bool $requireVerification): void
+	public function testToggleOnlyCollectionRegisters(): void
+	{
+		// Not in the config allow-list: the collection's own toggle opens it.
+		$this->config->auth['publicRegistration'] = [];
+		$this->withCollection('members', requireVerification: false, publicRegistration: true);
+
+		$saved = (new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor();
+		$this->objectSaver->expects($this->once())
+			->method('saveObject')
+			->with('members', $this->anything())
+			->willReturn($saved);
+
+		$this->loginService->method('authenticate')->willReturn(['id' => 'alice']);
+		$jsonResponse = $this->createMock(ResponseInterface::class);
+		$this->renderer->method('jsonItem')->willReturn($jsonResponse);
+
+		$result = ($this->action)(
+			$this->createRequest(['email' => 'a@b.test', 'password' => 'sekret123']),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+
+		$this->assertSame($jsonResponse, $result);
+	}
+
+	public function testRejectsCollectionWithToggleOffAndNotInAllowList(): void
+	{
+		$this->config->auth['publicRegistration'] = [];
+		$this->withCollection('members', requireVerification: false, publicRegistration: false, registrationGroups: ['vip']);
+
+		$this->objectSaver->expects($this->never())->method('saveObject');
+
+		$this->expectException(HttpForbiddenException::class);
+		$this->expectExceptionMessage('Public registration is not enabled for this collection.');
+
+		($this->action)(
+			$this->createRequest(['email' => 'a@b.test', 'password' => 'sekret123']),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	public function testGroupsAreTheUnionOfGlobalAndCollectionGroupsIgnoringSubmitted(): void
+	{
+		$this->config->auth['publicRegistrationGroup'] = 'member';
+		$this->withCollection('members', requireVerification: false, registrationGroups: ['vip', 'member']);
+
+		$saved = (new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor();
+		$this->objectSaver->expects($this->once())
+			->method('saveObject')
+			->with('members', $this->callback(static function (array $d): bool {
+				expect($d['groups'])->toBe(['member', 'vip']); // not ['admin']
+
+				return true;
+			}))
+			->willReturn($saved);
+
+		$this->loginService->method('authenticate')->willReturn(['id' => 'alice']);
+		$this->renderer->method('jsonItem')->willReturn($this->createMock(ResponseInterface::class));
+
+		($this->action)(
+			$this->createRequest(['email' => 'a@b.test', 'password' => 'sekret123', 'groups' => ['admin']]),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	/**
+	 * @param list<string> $registrationGroups
+	 */
+	private function withCollection(string $id, bool $requireVerification, bool $publicRegistration = false, array $registrationGroups = []): void
 	{
 		$collection                           = new CollectionData();
 		$collection->id                       = $id;
 		$collection->schema                   = 'auth';
 		$collection->requireEmailVerification = $requireVerification;
+		$collection->publicRegistration       = $publicRegistration;
+		$collection->registrationGroups       = $registrationGroups;
 
 		$this->collectionFetcher->method('fetchCollection')
 			->with($id)

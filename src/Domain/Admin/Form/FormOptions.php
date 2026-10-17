@@ -55,8 +55,10 @@ final readonly class FormOptions
 		public bool $useFormGrid = true,
 		public bool $addOnly = false,
 		// Public-registration form mode. When true, the form's action is
-		// retargeted to POST /admin/register/{collection} — the allow-listed
-		// registration endpoint that creates the user AND auto-logs them in.
+		// retargeted to POST /admin/register/{collection} — the registration
+		// endpoint, open to collections that enable Allow Public Registration
+		// or are listed in `auth.publicRegistration`. It creates the user AND
+		// auto-logs them in.
 		// Implies `addOnly` because the registration route only handles POST.
 		public bool $register = false,
 		public ?FormActionRegistry $formActionRegistry = null,

@@ -115,19 +115,10 @@ final readonly class FormOptionSources
 		return $options;
 	}
 
-	private function schemaIsOrInherits(string $schemaId, string $target): bool
+	/** Whether a schema is `$target` or names it in `inheritFrom`. False for a schema that cannot be read. */
+	public function schemaIsOrInherits(string $schemaId, string $target): bool
 	{
-		if ($schemaId === $target) {
-			return true;
-		}
-
-		try {
-			$schema = $this->services->schemaFetcher->fetchRawSchema($schemaId);
-		} catch (\Throwable) {
-			return false;
-		}
-
-		return in_array($target, $schema->inheritFrom, true);
+		return $this->services->schemaFetcher->isOrInherits($schemaId, $target);
 	}
 
 	/**

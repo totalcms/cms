@@ -9,6 +9,7 @@ use TotalCMS\Domain\Rendering\Utilities\TemplatePlaceholder;
 /**
  *  @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  *  @SuppressWarnings("PHPMD.NumberOfChildren")
+ *  @SuppressWarnings("PHPMD.TooManyMethods")
  */
 class FormField
 {
@@ -17,6 +18,8 @@ class FormField
 
 	protected string $uuid;
 	protected bool $datalist = false;
+	/** Set by hide(); see there. */
+	private bool $hidden = false;
 
 	/**
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
@@ -257,8 +260,32 @@ class FormField
 		}
 
 		$this->applyVisibility($attributes);
+		$this->applyHidden($attributes);
 
 		return $attributes;
+	}
+
+	/**
+	 * Mark a container hidden by hide(), with the same markers a false
+	 * visibility rule sets, unless applyVisibility() already set them.
+	 *
+	 * @param array<string,string> $attributes
+	 */
+	private function applyHidden(array &$attributes): void
+	{
+		if (!$this->hidden) {
+			return;
+		}
+
+		$classes = $attributes['class'] ?? '';
+		if (!in_array('field-hidden', explode(' ', $classes), true)) {
+			$attributes['class'] = $classes . ' field-hidden';
+		}
+
+		$style = $attributes['style'] ?? '';
+		if (!str_contains($style, 'display: none;')) {
+			$attributes['style'] = $style . ' display: none;';
+		}
 	}
 
 	/**
@@ -483,6 +510,17 @@ class FormField
 	{
 		$this->disabled = true;
 		$this->readonly = true;
+	}
+
+	/**
+	 * Hide the field server-side, for a field that does not apply to the
+	 * record being edited. The container gets the `field-hidden` class and
+	 * `display: none;`, so the browser treats it like a false visibility rule
+	 * (and a section left with only hidden fields hides too). Idempotent.
+	 */
+	public function hide(): void
+	{
+		$this->hidden = true;
 	}
 
 	public function buildFormField(): string

@@ -18,11 +18,15 @@ return function (RouteCollectorProxyInterface $app): void {
 	//   POST /sync/import — receive a push. Always runs the importer in
 	//     upsert mode so a sync push produces a true mirror on the remote
 	//     rather than silently skipping existing rows. See SyncImportAction.
+	//     AdminOnly: it writes collections, schemas and templates.
 	//   GET /sync/export — serve a pull. The sync payload (custom schemas,
 	//     templates, allowlisted collection objects); AdminOnly to match
 	//     the export-jumpstart route it supersedes for sync use.
+	//
+	// Both routes are admin-only for a session; API keys bypass AdminOnly
+	// as always and are gated by their own path grant.
 	$app->group('/sync', function (RouteCollectorProxy $group): void {
-		$group->post('/import', SyncImportAction::class)->setName('sync-import');
+		$group->post('/import', SyncImportAction::class)->setName('sync-import')->add(AdminOnlyMiddleware::class);
 		$group->get('/export', SyncExportAction::class)->setName('sync-export')->add(AdminOnlyMiddleware::class);
 	})->add(DualAuthMiddleware::class);
 };

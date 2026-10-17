@@ -16,7 +16,7 @@ A fixed banner appears at the top of every page (admin and front-end) while impe
 
 ## Starting Impersonation
 
-1. Open an auth-enabled collection (the `auth` operator collection or any public-registration member collection) in the admin.
+1. Open an auth-enabled collection (the `auth` operator collection or any collection that allows public registration) in the admin.
 2. Open the object for the user you want to impersonate.
 3. Click the **⋯** collection-actions menu.
 4. Select **Impersonate User**.

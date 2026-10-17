@@ -123,7 +123,7 @@ For user-registration forms specifically, prefer `register: true` over plain `ad
 
 **Required server-side opt-in:**
 
-The target collection must appear in `config.auth.publicRegistration` in `config/tcms.php`, otherwise the endpoint returns a `403 Forbidden`:
+The target collection must either have **Allow Public Registration** switched on in the **Public Registration** section of its settings, or be listed in `config.auth.publicRegistration` in `config/tcms.php`. The toggle applies to collections whose schema is `auth` or inherits it; a collection listed in `config.auth.publicRegistration` is accepted as listed. Otherwise the endpoint returns a `403 Forbidden` ("Public registration is not enabled for this collection."):
 
 ```php
 return [
@@ -133,11 +133,15 @@ return [
 ];
 ```
 
-The allow-list is empty by default so the operator-only `auth` collection isn't accidentally exposed to public signups. Opt in your member / customer collections explicitly.
+The config list is the older way and still works; a collection in it registers whatever its toggle says. Nothing is open by default, so the operator-only `auth` collection isn't accidentally exposed to public signups. Opt in your member / customer collections explicitly.
+
+**Registrant groups:**
+
+A registrant receives the global `publicRegistrationGroup` (auth settings) plus the collection's **Registration Groups**, with duplicates removed. `admin` is never granted from Registration Groups. A `groups` value submitted in the form is always ignored.
 
 ### Email Verification
 
-Per-collection, you can require new registrants to confirm their email before their account is activated. Enable **Require Email Verification** on the collection's settings page (under Public Access).
+Per-collection, you can require new registrants to confirm their email before their account is activated. Enable **Require Email Verification** on the collection's settings page (in the Public Registration section, once **Allow Public Registration** is on).
 
 When enabled:
 
@@ -161,7 +165,7 @@ When enabled:
 5. Clicking the link hits `GET /admin/verify-email/{token}`, flips `active = true`, and redirects to the login page
 6. If the link expired, the user is redirected to `/admin/resend-verification` where they can request a fresh link
 
-A "Resend verification email" link is auto-added below the login form whenever `publicRegistration` is non-empty.
+A "Resend verification email" link appears below the login form when a sign-in fails because the account is not yet active.
 
 Default behavior (when the toggle is **off**) is unchanged: the new user is authenticated and signed in before the response returns — no verification step.
 
@@ -175,7 +179,7 @@ Verification-related config (in `config/tcms.php` under `auth`):
 **Security caveats the operator owns:**
 
 - Anyone who reaches the registration endpoint can create a user record. Verification stops a bot from logging in, but it doesn't stop them from filling the user table with junk records — gate the form with a CAPTCHA or rate limit even when verification is on.
-- New users land in whatever default access group the auth collection's schema assigns. If that group reaches gated content, every verified signup gains that access.
+- New users receive the global `publicRegistrationGroup` plus the collection's Registration Groups (never `admin`). If those groups reach gated content, every verified signup gains that access.
 - Password validation (minimum length etc.) is the schema's responsibility, not the endpoint's.
 - The verification flow assumes the auth schema has an `email` field. If your custom schema doesn't, the verification email cannot be sent — the account is still created (inactive) but stays in limbo unless an admin activates it manually.
 

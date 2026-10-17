@@ -12,6 +12,7 @@ use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Auth\Service\AuthMailer;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\LoginService;
+use TotalCMS\Domain\Auth\Service\RegistrationCollections;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -29,10 +30,11 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
  * chain deferred image uploads and post-save actions against the new record
  * without any special casing on the client side.
  *
- * The collection MUST appear in `$config->auth['publicRegistration']` —
- * otherwise the endpoint throws a 403. That allow-list is empty by default so
- * the default admin auth collection isn't accidentally exposed to public
- * signups.
+ * The collection MUST be open to registration — listed in
+ * `$config->auth['publicRegistration']` OR with **Allow Public Registration**
+ * on in its settings (see {@see RegistrationCollections}) — otherwise the
+ * endpoint throws a 403. Both are off by default so the default admin auth
+ * collection isn't accidentally exposed to public signups.
  *
  * Two flows controlled by the collection's `requireEmailVerification` meta:
  *  - **false** (default): account is created with whatever `active` value the
@@ -49,9 +51,9 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
  *    or rate limit even with email verification enabled — verification stops
  *    a bot from logging in, but it doesn't stop them from filling the user
  *    table with junk records.
- *  - New users land in whatever default access group the auth collection's
- *    schema assigns. If that group reaches gated content, every signup
- *    (including bot signups) gains that access once they verify.
+ *  - New users land in the global `publicRegistrationGroup` plus the
+ *    collection's Registration Groups. If those groups reach gated content,
+ *    every signup (including bot signups) gains that access once they verify.
  *  - Password validation (minimum length etc.) is the schema's responsibility.
  */
 readonly class AuthRegisterSubmitAction
@@ -66,6 +68,7 @@ readonly class AuthRegisterSubmitAction
 		private EmailVerificationService $verificationService,
 		private AuthMailer $mailer,
 		private Config $config,
+		private RegistrationCollections $registrationCollections,
 	) {
 	}
 
@@ -78,9 +81,8 @@ readonly class AuthRegisterSubmitAction
 		array $args,
 	): ResponseInterface {
 		$collection = $args['collection'] ?? (string)($this->config->auth['collection'] ?? '');
-		$allowed    = (array)($this->config->auth['publicRegistration'] ?? []);
 
-		if (!in_array($collection, $allowed, true)) {
+		if (!$this->registrationCollections->isEnabled($collection)) {
 			// 403 with a generic message — don't leak whether the collection
 			// exists. Slim's error handler renders it as JSON for AJAX clients.
 			throw new HttpForbiddenException($request, 'Public registration is not enabled for this collection.');
@@ -105,10 +107,10 @@ readonly class AuthRegisterSubmitAction
 		// inactive until verified, active immediately when verification is off.
 		$data['active'] = !$requiresVerification;
 
-		// Force the configured default access group. Empty config => no groups,
-		// so a registrant gains no group-gated access until an operator grants it.
-		$defaultGroup   = (string)($this->config->auth['publicRegistrationGroup'] ?? '');
-		$data['groups'] = $defaultGroup !== '' ? [$defaultGroup] : [];
+		// Force the server-side groups: the global `publicRegistrationGroup` plus
+		// the collection's Registration Groups. Neither set => no groups, so a
+		// registrant gains no group-gated access until an operator grants it.
+		$data['groups'] = $this->registrationCollections->groupsFor($collection);
 
 		// Save the user record. Errors (validation, duplicate id, etc.) bubble
 		// up to Slim's error handler — same as ObjectSaveAction.

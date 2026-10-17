@@ -4,8 +4,16 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Access Controls---\npublicOperations publicOperations\nrequireEmailVerification requireEmailVerification\n---\ngroups groups\nownerProperty ownerCollection\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
+	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Registration---\npublicRegistration publicRegistration\nregistrationGroups registrationGroups\nrequireEmailVerification requireEmailVerification\n---Access Controls---\npublicOperations publicOperations\n---\ngroups groups\nownerProperty ownerCollection\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
     "properties"  : {
+        "name": {
+			"type"        : "string",
+			"label"       : "Name",
+			"help"        : "The name of the collection.",
+			"minLength"   : 1,
+			"placeholder" : "My Objects",
+			"field"       : "text"
+        },
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
 			"label"       : "ID",
@@ -15,14 +23,6 @@
 			"settings"     : {
 				"autogen" : "${name}"
 			}
-        },
-        "name": {
-			"type"        : "string",
-			"label"       : "Name",
-			"help"        : "The name of the collection.",
-			"minLength"   : 1,
-			"placeholder" : "My Objects",
-			"field"       : "text"
         },
         "schema": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -48,6 +48,17 @@
 				"url"
 			]
         },
+        "format": {
+			"type"    : "string",
+			"label"   : "Storage Format",
+			"help"    : "How each object is stored on disk. JSON is the default. Markdown writes {id}.md with YAML frontmatter and the content property as the body, for content managed in a text editor or git. Fixed after creation: change it with tcms collection:convert.",
+			"field"   : "select",
+			"default" : "json",
+			"options" : [
+				{ "value" : "json",     "label" : "JSON" },
+				{ "value" : "markdown", "label" : "Markdown" }
+			]
+        },
         "description": {
 			"type"        : "string",
 			"label"       : "Description",
@@ -62,16 +73,11 @@
 			"help"  : "This collection holds exactly one object. Clicking it opens that object directly for editing.",
 			"field" : "checkbox"
         },
-        "format": {
-			"type"    : "string",
-			"label"   : "Storage Format",
-			"help"    : "How each object is stored on disk. JSON is the default. Markdown writes {id}.md with YAML frontmatter and the content property as the body, for content managed in a text editor or git. Fixed after creation: change it with tcms collection:convert.",
-			"field"   : "select",
-			"default" : "json",
-			"options" : [
-				{ "value" : "json",     "label" : "JSON" },
-				{ "value" : "markdown", "label" : "Markdown" }
-			]
+        "queueRebuildOnSave": {
+			"type"  : "boolean",
+			"label" : "Queue Rebuild Index on Save",
+			"help"  : "When enabled, saving objects will no longer trigger a rebuild of the index. This is useful for large collections.",
+			"field" : "checkbox"
         },
         "url": {
 			"type"        : "string",
@@ -86,18 +92,44 @@
 			"help"  : "Use pretty URLs for linking building to objects in this collection.",
 			"field" : "checkbox"
         },
-		"groups": {
-			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
-			"label"    : "File Access Groups",
-			"help"     : "Control who can download/stream this collection's protected files. Leave empty for public access. Add the 'default' group to allow any logged-in user, or pick specific groups to limit access to their members.",
-			"field"    : "list",
-			"settings" : {
-				"accessGroupOptions"    : true,
-				"duplicateItemsAllowed" : false,
-				"addChoices"            : false
-			}
-		},
-		"publicOperations": {
+        "category": {
+			"type"     : "string",
+			"label"    : "Category",
+			"help"     : "Add a category to organize the collections in the side panel",
+			"field"    : "text",
+			"settings" : { "propertyOptions": "collections" }
+        },
+        "labelPlural": {
+			"type"        : "string",
+			"label"       : "Plural Label",
+			"help"        : "Custom plural term for collection items (e.g. 'Posts', 'Articles'). Defaults to 'Objects' if not set.",
+			"placeholder" : "Objects",
+			"field"       : "text"
+        },
+        "sortBy": {
+			"type"        : "string",
+			"label"       : "Sort By",
+			"help"        : "The default property to sort the collection by in the collection view.",
+			"field"       : "select",
+			"placeholder" : "Select a Property",
+			"options"     : [
+				"id"
+			]
+        },
+        "labelSingular": {
+			"type"        : "string",
+			"label"       : "Singular Label",
+			"help"        : "Custom singular term for collection items (e.g. 'Post', 'Article'). Defaults to 'Object' if not set.",
+			"placeholder" : "Object",
+			"field"       : "text"
+        },
+        "reverseSort": {
+			"type"  : "boolean",
+			"label" : "Reverse Sort",
+			"help"  : "Sort in reverse order",
+			"field" : "checkbox"
+        },
+        "publicOperations": {
 			"type"  : "array",
 			"label" : "Allow unauthenticated users to perform these operations on this collection",
 			"field" : "checklist",
@@ -114,59 +146,21 @@
 				"toggleAll" : false
 			}
 		},
-        "category": {
-			"type"     : "string",
-			"label"    : "Category",
-			"help"     : "Add a category to organize the collections in the side panel",
-			"field"    : "text",
-			"settings" : { "propertyOptions": "collections" }
-        },
-        "labelPlural": {
-			"type"        : "string",
-			"label"       : "Plural Label",
-			"help"        : "Custom plural term for collection items (e.g. 'Posts', 'Articles'). Defaults to 'Objects' if not set.",
-			"placeholder" : "Objects",
-			"field"       : "text"
-        },
-        "labelSingular": {
-			"type"        : "string",
-			"label"       : "Singular Label",
-			"help"        : "Custom singular term for collection items (e.g. 'Post', 'Article'). Defaults to 'Object' if not set.",
-			"placeholder" : "Object",
-			"field"       : "text"
-        },
-		"sortBy": {
-			"type"        : "string",
-			"label"       : "Sort By",
-			"help"        : "The default property to sort the collection by in the collection view.",
-			"field"       : "select",
-			"placeholder" : "Select a Property",
-			"options"     : [
-				"id"
-			]
-        },
-        "reverseSort": {
-			"type"  : "boolean",
-			"label" : "Reverse Sort",
-			"help"  : "Sort in reverse order",
-			"field" : "checkbox"
-        },
-        "queueRebuildOnSave": {
-			"type"  : "boolean",
-			"label" : "Queue Rebuild Index on Save",
-			"help"  : "When enabled, saving objects will no longer trigger a rebuild of the index. This is useful for large collections.",
-			"field" : "checkbox"
-        },
-        "requireEmailVerification": {
-			"type"  : "boolean",
-			"label" : "Require Email Verification on Create",
-			"help"  : "When a user registers via the public registration endpoint, create their account inactive and send a verification email. Only takes effect for collections listed in $config->auth['publicRegistration'].",
-			"field" : "checkbox"
-        },
+        "groups": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"    : "File Access Groups",
+			"help"     : "Control who can download/stream this collection's protected files. Leave empty for public access. Add the 'default' group to allow any logged-in user, or pick specific groups to limit access to their members.",
+			"field"    : "list",
+			"settings" : {
+				"accessGroupOptions"    : true,
+				"duplicateItemsAllowed" : false,
+				"addChoices"            : false
+			}
+		},
         "ownerProperty": {
 			"type"        : "string",
 			"label"       : "Owner Property",
-			"help"        : "Property that holds the owning user's id: a string property for one owner, or a list property for several. Users who are not super admins can then only read, edit and delete objects they own, and the server fills this property with their id when they create one. Leave empty for ordinary collections. The property must be listed in the schema's index; only string properties and lists of strings are offered, and the list is empty until the collection has been saved with its schema.",
+			"help"        : "Property holding the owner's user id (a string, or a list for several owners). Non-admins then see and edit only their own objects.",
 			"field"       : "select",
 			"default"     : "",
 			"options"     : [{ "value": "", "label": "None" }],
@@ -178,13 +172,108 @@
         "ownerCollection": {
 			"type"        : "string",
 			"label"       : "Owner Collection",
-			"help"        : "Limit ownership to members of one auth collection. Members of other auth collections are treated like anonymous callers on this collection. Leave empty to accept any auth collection; the owner value is the bare user id, so ids must then be unique across auth collections.",
+			"help"        : "Only members of this auth collection can own objects here. Leave empty to accept any auth collection.",
 			"field"       : "select",
 			"default"     : "",
 			"options"     : [{ "value": "", "label": "Any auth collection" }],
 			"settings"    : {
 				"propertyOptions" : "schemaCollections:auth",
 				"sortOptions"     : false
+			}
+        },
+        "publicRegistration": {
+			"type"    : "boolean",
+			"label"   : "Allow Public Registration",
+			"help"    : "Let visitors create their own account in this collection.",
+			"field"   : "toggle",
+			"default" : false
+        },
+        "requireEmailVerification": {
+			"type"     : "boolean",
+			"label"    : "Require Email Verification",
+			"help"     : "Registrants start inactive and must confirm their email before signing in.",
+			"field"    : "checkbox",
+			"settings" : { "visibility": { "watch": "publicRegistration", "value": true, "operator": "==" } }
+        },
+        "registrationGroups": {
+			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
+			"label"    : "Registration Groups",
+			"help"     : "Access groups every registrant receives, added to the Public Registration Group from the auth settings.",
+			"field"    : "list",
+			"settings" : {
+				"accessGroupOptions"    : true,
+				"duplicateItemsAllowed" : false,
+				"addChoices"            : false,
+				"visibility"            : { "watch": "publicRegistration", "value": true, "operator": "==" }
+			}
+        },
+        "seo": {
+			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
+			"field"     : "card",
+			"schemaref" : "https://www.totalcms.co/schemas/seo-collection.json"
+		},
+        "sitemap": {
+			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
+			"field"     : "card",
+			"schemaref" : "https://www.totalcms.co/schemas/sitemap-meta.json"
+		},
+        "feed": {
+			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
+			"field"     : "card",
+			"schemaref" : "https://www.totalcms.co/schemas/feed-collection.json"
+		},
+        "mcp": {
+			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
+			"field"     : "card",
+			"schemaref" : "https://www.totalcms.co/schemas/mcp-collection.json",
+			"help"      : "Configure how this collection is exposed via the MCP server. Pro+ only."
+		},
+        "formSettings": {
+			"type"        : "object",
+			"label"       : "Object Form Settings",
+			"help"        : "Custom settings for the object creation/edit forms. Available options: helpStyle, helpOnHover, helpOnFocus, newActions, editActions, deleteActions",
+			"field"       : "json",
+			"placeholder" : "{\n\t\"helpStyle\": \"tooltip\",\n\t\"newActions\": [\n\t\t{\"action\": \"mailer\", \"mailerId\": \"newobject-1234\"}\n\t]\n}",
+			"settings"    : {
+				"rows" : 6
+			}
+		},
+        "manualSort": {
+			"type"     : "object",
+			"label"    : "Manual Sort Orders",
+			"placeholder": "{\n\t\"position\": [\"ceo\", \"cfo\", \"cmo\"]\n}",
+			"help"     : "Define custom sort orders by property name.",
+			"field"    : "json",
+			"settings" : {
+				"rows" : 4
+			}
+		},
+        "properties": {
+			"$ref"  : "https://www.totalcms.co/schemas/properties/properties.json",
+			"help"  : "Override schema property attributes for this collection.",
+			"label" : "Schema Overrides",
+			"field" : "properties"
+		},
+        "customProperties": {
+			"type"              : "object",
+			"label"             : "Object Specific Overrides",
+			"field"             : "customProperties",
+			"help"              : "Custom values for the form fields for specific objects.",
+			"patternProperties" : {
+				"^\\S+$": {
+					"$ref": "https://www.totalcms.co/schemas/properties/properties.json"
+				}
+			}
+		},
+        "totalObjects": {
+			"type"    : "integer",
+			"label"   : "Current Object Count",
+			"help"    : "Current number of objects that have been created in this collection.",
+			"default" : 0,
+			"minimum" : 0,
+			"field"   : "number",
+			"settings" : {
+				"readonly": true
 			}
         },
         "count": {
@@ -198,18 +287,7 @@
 				"readonly": true
 			}
         },
-        "totalObjects": {
-			"type"    : "integer",
-			"label"   : "Current Object Count",
-			"help"    : "Current number of objects that have been created in this collection.",
-			"default" : 0,
-			"minimum" : 0,
-			"field"   : "number",
-			"settings" : {
-				"readonly": true
-			}
-        },
-		"lastUpdated": {
+        "lastUpdated": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
 			"label"    : "Content Updated",
 			"help"     : "When content in this collection last changed — bumped by every object create, update, and delete. Says nothing about the collection's settings; see Settings Updated for that.",
@@ -219,71 +297,13 @@
 				"readonly": true
 			}
 		},
-		"updated": {
+        "updated": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/date.json",
 			"label"    : "Settings Updated",
 			"help"     : "When this collection's settings last changed (URL, MCP card, sitemap, access, schema overrides). Content changes never move it — sync uses it to tell which side has the newer configuration, and preserves it verbatim when settings arrive via sync.",
 			"field"    : "datetime",
 			"settings" : {
 				"readonly": true
-			}
-		},
-		"formSettings": {
-			"type"        : "object",
-			"label"       : "Object Form Settings",
-			"help"        : "Custom settings for the object creation/edit forms. Available options: helpStyle, helpOnHover, helpOnFocus, newActions, editActions, deleteActions",
-			"field"       : "json",
-			"placeholder" : "{\n\t\"helpStyle\": \"tooltip\",\n\t\"newActions\": [\n\t\t{\"action\": \"mailer\", \"mailerId\": \"newobject-1234\"}\n\t]\n}",
-			"settings"    : {
-				"rows" : 6
-			}
-		},
-		"manualSort": {
-			"type"     : "object",
-			"label"    : "Manual Sort Orders",
-			"placeholder": "{\n\t\"position\": [\"ceo\", \"cfo\", \"cmo\"]\n}",
-			"help"     : "Define custom sort orders by property name.",
-			"field"    : "json",
-			"settings" : {
-				"rows" : 4
-			}
-		},
-		"sitemap": {
-			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
-			"field"     : "card",
-			"schemaref" : "https://www.totalcms.co/schemas/sitemap-meta.json"
-		},
-		"feed": {
-			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
-			"field"     : "card",
-			"schemaref" : "https://www.totalcms.co/schemas/feed-collection.json"
-		},
-		"seo": {
-			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
-			"field"     : "card",
-			"schemaref" : "https://www.totalcms.co/schemas/seo-collection.json"
-		},
-		"mcp": {
-			"$ref"      : "https://www.totalcms.co/schemas/properties/card.json",
-			"field"     : "card",
-			"schemaref" : "https://www.totalcms.co/schemas/mcp-collection.json",
-			"help"      : "Configure how this collection is exposed via the MCP server. Pro+ only."
-		},
-		"properties": {
-			"$ref"  : "https://www.totalcms.co/schemas/properties/properties.json",
-			"help"  : "Override schema property attributes for this collection.",
-			"label" : "Schema Overrides",
-			"field" : "properties"
-		},
-		"customProperties": {
-			"type"              : "object",
-			"label"             : "Object Specific Overrides",
-			"field"             : "customProperties",
-			"help"              : "Custom values for the form fields for specific objects.",
-			"patternProperties" : {
-				"^\\S+$": {
-					"$ref": "https://www.totalcms.co/schemas/properties/properties.json"
-				}
 			}
 		}
     },

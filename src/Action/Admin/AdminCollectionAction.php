@@ -5,12 +5,14 @@ namespace TotalCMS\Action\Admin;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Service\RegistrationCollections;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\SingletonCollectionResolver;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Renderer\RedirectRenderer;
 use TotalCMS\Renderer\TwigRenderer;
+use TotalCMS\Support\Config;
 
 /**
  * Action.
@@ -23,6 +25,8 @@ readonly class AdminCollectionAction
 		private ObjectFetcher $objectFetcher,
 		private RedirectRenderer $redirectRenderer,
 		private SingletonCollectionResolver $singletonResolver,
+		private Config $config,
+		private RegistrationCollections $registrationCollections,
 	) {
 	}
 
@@ -104,6 +108,11 @@ readonly class AdminCollectionAction
 				'id'         => $args['id'] ?? '',
 			],
 			'singleton' => $collectionData instanceof CollectionData && $collectionData->singleton,
+			// The "Impersonate User" action: the default auth collection and any collection that may register.
+			// Reuses the record fetched above rather than fetching it again.
+			'canImpersonateUsers' => $collectionData instanceof CollectionData
+				&& ($collection === (string)$this->config->auth['collection']
+					|| $this->registrationCollections->isEnabledFor($collectionData)),
 		];
 
 		// Handle POST request for object duplication

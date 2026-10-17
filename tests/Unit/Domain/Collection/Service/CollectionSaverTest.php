@@ -27,6 +27,8 @@ final class CollectionSaverTest extends TestCase
 	private MockObject $collectionFetcher;
 	private MockObject $editionFeatures;
 	private MockObject $schemaFetcher;
+	/** @var list<array<string,mixed>> what the saver handed the factory, i.e. what it stores */
+	private array $generated = [];
 
 	protected function setUp(): void
 	{
@@ -41,6 +43,7 @@ final class CollectionSaverTest extends TestCase
 		$this->factory
 			->method('generateCollection')
 			->willReturnCallback(function (array $data): CollectionData {
+				$this->generated[]        = $data;
 				$collection               = new CollectionData();
 				$collection->id           = $data['id'] ?? '';
 				$collection->schema       = $data['schema'] ?? 'blog';
@@ -84,6 +87,59 @@ final class CollectionSaverTest extends TestCase
 		$collection->lastUpdated   = '2025-01-01T00:00:00+00:00';
 
 		return $collection;
+	}
+
+	/** @return array<string,array{mixed,bool}> */
+	public static function publicRegistrationValues(): array
+	{
+		return [
+			'string false'   => ['false', false],
+			'string off'     => ['off', false],
+			'garbage'        => ['garbage', false],
+			'empty string'   => ['', false],
+			'null'           => [null, false],
+			'array'          => [['1'], false],
+			'string on'      => ['on', true],
+			'string true'    => ['true', true],
+			'string 1'       => ['1', true],
+			'string yes'     => ['yes', true],
+			'int 1'          => [1, true],
+			'bool true'      => [true, true],
+			'bool false'     => [false, false],
+		];
+	}
+
+	/**
+	 * The serializer casts loosely ("false" would be stored as true), so the
+	 * saver stores the strict normalised value the access middleware compares.
+	 *
+	 * @dataProvider publicRegistrationValues
+	 */
+	public function testSaveStoresPublicRegistrationStrictly(mixed $submitted, bool $stored): void
+	{
+		$this->saver->saveCollection(['id' => 'members', 'schema' => 'auth', 'publicRegistration' => $submitted]);
+
+		expect($this->generated[0]['publicRegistration'])->toBe($stored);
+	}
+
+	public function testSaveStoresRegistrationGroupsAsAListOfNonEmptyStrings(): void
+	{
+		$this->saver->saveCollection(['id' => 'members', 'schema' => 'auth', 'registrationGroups' => [' vip ', '', 'vip', 42, 'member']]);
+		$this->saver->saveCollection(['id' => 'members', 'schema' => 'auth', 'registrationGroups' => 'admin']);
+
+		expect($this->generated[0]['registrationGroups'])->toBe(['vip', 'member']);
+		expect($this->generated[1]['registrationGroups'])->toBe([]);
+	}
+
+	public function testPatchStoresPublicRegistrationStrictly(): void
+	{
+		$this->repository->method('fetchCollection')->willReturn($this->storedCollection('auth'));
+
+		$this->saver->patchCollection('portfolio', ['publicRegistration' => 'false', 'registrationGroups' => 'admin']);
+
+		$stored = end($this->generated);
+		expect($stored['publicRegistration'])->toBeFalse();
+		expect($stored['registrationGroups'])->toBe([]);
 	}
 
 	public function testSaveRejectsOwnerPropertyMissingFromSchema(): void

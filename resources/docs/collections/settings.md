@@ -401,6 +401,66 @@ Operations that unauthenticated users can perform on this collection via the API
 
 ---
 
+### publicRegistration
+
+**Type:** `boolean`
+**Required:** No
+**Default:** `false`
+
+Lets anonymous visitors create their own account in this collection through [`POST /admin/register/{collection}`](docs/forms/options#public-registration-forms). Only collections whose schema is `auth` or inherits it have it.
+
+```json
+{
+    "publicRegistration": true
+}
+```
+
+Switch it on with **Allow Public Registration** in the **Public Registration** section of the collection form. The field is hidden on other collections, and on the new-collection form until the collection is saved. A collection may also register when it is listed in `config.auth.publicRegistration` in `config/tcms.php`; that list stays in force, so a collection in it registers whatever this toggle says. When neither is true the endpoint returns `403` "Public registration is not enabled for this collection."
+
+An enabled collection can also be [impersonated](docs/operations/impersonation), like the default auth collection.
+
+Turning it on reveals two more fields: **Require Email Verification** (`requireEmailVerification`, off by default) and **Registration Groups** (below).
+
+---
+
+### requireEmailVerification
+
+**Type:** `boolean`
+**Required:** No
+**Default:** `false`
+
+New registrants are created inactive and must click a link in a verification email before they can sign in. Shown as **Require Email Verification** once [`publicRegistration`](#publicregistration) is on. With it off, a registrant is signed in as soon as the account is created. See [Email Verification](docs/forms/options#email-verification) for the full flow.
+
+```json
+{
+    "publicRegistration": true,
+    "requireEmailVerification": true
+}
+```
+
+---
+
+### registrationGroups
+
+**Type:** `array<string>`
+**Required:** No
+**Default:** `[]`
+
+Access groups given to every registrant. Shown as **Registration Groups**, a list of access groups, once [`publicRegistration`](#publicregistration) is on.
+
+```json
+{
+    "publicRegistration": true,
+    "registrationGroups": ["members", "newsletter"]
+}
+```
+
+A registrant receives the global `publicRegistrationGroup` (auth settings) plus these groups, with duplicates removed. A `groups` value submitted in the registration form is always ignored, so a visitor cannot grant themselves access.
+
+`admin` is never granted this way: it is dropped from the list when a registrant is created. Only super admins and API keys may change `publicRegistration` and `registrationGroups`; a request from any other user that would change either is refused with `403`, whatever collection access their groups grant.
+
+---
+
 ### ownerProperty
 
 **Type:** `string`

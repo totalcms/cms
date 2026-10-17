@@ -399,9 +399,12 @@ $settings['auth'] = [
 	// Allow-list of collection IDs that accept public (unauthenticated) user
 	// registration via POST /admin/register/{collection}. Empty by default
 	// because the default auth collection is operator-only — opt your member /
-	// customer collections in explicitly. Whether new users are auto-logged in
-	// or sent a verification email is controlled per-collection via the
-	// "Require Email Verification" toggle on the collection's settings page.
+	// customer collections in explicitly, or enable **Allow Public Registration**
+	// on the collection's settings page; the two are combined (a collection
+	// listed here registers whatever its toggle says). Whether new users are
+	// auto-logged in or sent a verification email is controlled per-collection
+	// via the "Require Email Verification" toggle on the collection's settings
+	// page.
 	// Bot abuse note: with auto-login enabled, any visitor (or bot) that fills
 	// the form gets a logged-in session in whatever default access group new
 	// users land in. With verification required, the account is created
@@ -412,7 +415,9 @@ $settings['auth'] = [
 	// Empty = no access group (safest default; registrants get no gated access
 	// until an operator grants it). Set to a member/customer group id to grant
 	// new signups that group. A `groups` value submitted in the form is always
-	// ignored — only this server-side value is honored.
+	// ignored — only server-side groups are honored. Collections can add further
+	// groups through their **Registration Groups** setting; registrants receive
+	// the union.
 	'publicRegistrationGroup' => '',
 ];
 

@@ -252,7 +252,7 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | `create_schema` | admin‡ | Save a new schema. Errors on reserved ids and id collisions. |
 | `update_schema` | admin‡ | Replace an existing schema definition. Idempotent (same input → same final state). |
 | `delete_schema` | admin‡ | **Destructive.** Refuses to delete reserved schemas, inherited schemas, or schemas still used by a collection. |
-| `create_collection` | admin‡ | Create a new collection bound to a schema. Errors on duplicate id. |
+| `create_collection` | admin‡ | Create a new collection bound to a schema. Errors on duplicate id. `publicRegistration` and `registrationGroups` in `extra` are refused unless the caller is an admin. |
 | `create_object` | admin‡ | Create a content object in a collection. Runs the same `ObjectSaver` path as the admin form — schema validation, slug generation, events. See *Binary fields* below. |
 | `update_object` | admin‡ | Update a content object by id. Idempotent. Merges like `patch_object`: omitted fields keep their values. See *Binary fields* below. |
 | `patch_object` | admin‡ | Merge a subset of fields into an existing object — omitted fields keep their current values, so no get/round-trip is needed. Containers (card/deck/list) replace whole. The safer default for targeted agent edits. See *Binary fields* below. |

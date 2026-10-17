@@ -6,7 +6,7 @@
 {% endset %}
 
 
-{% macro collectionHeader(collection, page) %}
+{% macro collectionHeader(collection, page, canImpersonateUsers = false) %}
 	<header>
 		{% if page and not collection.singleton|default(false) %}
 		<h1><a href="collections">collections</a> / <a href="collections/{{ collection.id }}">{{ collection.id }}</a> / <span>{{ page | lower }}</span></h1>
@@ -47,8 +47,7 @@
 						<a href="utils/object-visualizer?collection={{ collection.id }}&id={{ page }}">Relationships</a>
 					</li>
 					{# Show "Impersonate User" only when editing an auth-collection object that is not itself a super-admin #}
-					{% set isAuthCollection = collection.id == cms.config('auth', 'collection') or collection.id in (cms.config('auth', 'publicRegistration')|default([])) %}
-					{% if page and cms.auth.isSuperAdmin() and isAuthCollection and not cms.auth.isSuperAdmin(page) %}
+					{% if page and cms.auth.isSuperAdmin() and canImpersonateUsers and not cms.auth.isSuperAdmin(page) %}
 					<li class="impersonate" style="display:none">
 						<form method="post" action="impersonate/{{ collection.id }}/{{ page }}">{{ csrf_field() }}<button type="submit">Impersonate User</button></form>
 					</li>
@@ -118,7 +117,7 @@
 		{% include "admin/collection/new.twig" %}
 
 	{% elseif url.id is empty %}
-		{{ _self.collectionHeader(collection, labelPlural) }}
+		{{ _self.collectionHeader(collection, labelPlural, canImpersonateUsers|default(false)) }}
 		{# Active singletons redirect to the object before reaching here, so a
 		   singleton rendering the list is always dormant (more than one object). #}
 		{% if collection.singleton %}
@@ -129,20 +128,20 @@
 		{% include "admin/collection/index.twig" %}
 
 	{% elseif url.id == "add" %}
-		{{ _self.collectionHeader(collection, "new " ~ labelSingular) }}
+		{{ _self.collectionHeader(collection, "new " ~ labelSingular, canImpersonateUsers|default(false)) }}
 		{% include "admin/collection/add.twig" %}
 
 	{% elseif url.id == "edit" %}
-		{{ _self.collectionHeader(collection) }}
+		{{ _self.collectionHeader(collection, null, canImpersonateUsers|default(false)) }}
 		{% include "admin/collection/edit.twig" %}
 
 	{% elseif url.id in ["-factory", "-import", "-export", "-sitemap", "-feeds"] %}
 		{% set pageName = url.id | replace({"-":""}) %}
-		{{ _self.collectionHeader(collection, pageName) }}
+		{{ _self.collectionHeader(collection, pageName, canImpersonateUsers|default(false)) }}
 		{% include "admin/collection/" ~ pageName ~ ".twig" %}
 
 	{% else %}
-		{{ _self.collectionHeader(collection, url.id) }}
+		{{ _self.collectionHeader(collection, url.id, canImpersonateUsers|default(false)) }}
 		{% include "admin/collection/object.twig" %}
 
 	{% endif %}

@@ -347,7 +347,8 @@ readonly class CollectionSaver
 	/**
 	 * Coerce what a form or a sync sends into the on-disk shape: the URL as a
 	 * path, empty-string `formSettings` / `manualSort` as arrays, and an
-	 * empty `mcp.tools` as an array. An entirely empty `mcp` block stays
+	 * empty `mcp.tools` as an array, and the registration settings in
+	 * their strict stored form. An entirely empty `mcp` block stays
 	 * empty: `tcms push` sends "no MCP settings" as `mcp: []`, and growing
 	 * it into `{tools: []}` made every sync dry run report a difference.
 	 *
@@ -365,6 +366,15 @@ readonly class CollectionSaver
 			if (isset($data[$key]) && $data[$key] === '') {
 				$data[$key] = [];
 			}
+		}
+
+		// The serializer casts loosely ("false" becomes true): store the same
+		// normalised values the access middleware compares against.
+		if (array_key_exists('publicRegistration', $data)) {
+			$data['publicRegistration'] = CollectionData::normalizePublicRegistration($data['publicRegistration']);
+		}
+		if (array_key_exists('registrationGroups', $data)) {
+			$data['registrationGroups'] = CollectionData::normalizeRegistrationGroups($data['registrationGroups']);
 		}
 
 		if (isset($data['mcp']) && is_array($data['mcp']) && $data['mcp'] !== []) {
