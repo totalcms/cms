@@ -35,7 +35,7 @@ class SlugData extends PropertyData implements \Stringable
 	 */
 	private static function slugifier(): Slugify
 	{
-		if (self::$slugifier === null) {
+		if (!self::$slugifier instanceof Slugify) {
 			self::$slugifier = new Slugify(['regexp' => self::SLUGREGEX]);
 			self::$slugifier->addRule('@', '-at-');
 		}

@@ -80,7 +80,6 @@ class ImageRenderer
 	 * `alt` in the options replaces the stored alt text; an explicit empty
 	 * string marks the image decorative. Without it the fallback chain in
 	 * {@see altFromImageData()} applies.
-	 *
 	 * @param array<string,mixed> $options collection, property, loading, class, alt, protect
 	 */
 	public function image(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
@@ -159,7 +158,6 @@ class ImageRenderer
 	 * candidate widths, the `<img>` dimensions and every `w` descriptor are
 	 * taken from the rect, not the upload. `alt` in the options works as in
 	 * {@see image()} and applies to the light `<img>` only.
-	 *
 	 * @param array<string,mixed> $options widths, formats, sizes, dark, darkProperty, alt, protect, plus collection, property, loading, class
 	 */
 	public function picture(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
@@ -206,8 +204,8 @@ class ImageRenderer
 		$dark    = $this->darkVariant($idOrObject, $options);
 		if ($dark !== null) {
 			[$darkTarget, $darkImage, $darkOptions] = $dark;
-			$darkCandidates = $this->candidateWidths($widths, $this->sourceWidth($darkImage, $base), $ceiling);
-			$darkNative     = $this->nativeFormat($darkImage);
+			$darkCandidates                         = $this->candidateWidths($widths, $this->sourceWidth($darkImage, $base), $ceiling);
+			$darkNative                             = $this->nativeFormat($darkImage);
 			foreach ($darkCandidates === [] ? [] : array_unique([...$formats, $darkNative]) as $format) {
 				$sources .= HTMLUtils::inlineElement('source', [
 					'media'  => '(prefers-color-scheme: dark)',

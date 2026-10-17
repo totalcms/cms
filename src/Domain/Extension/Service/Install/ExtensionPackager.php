@@ -18,13 +18,13 @@ use TotalCMS\Domain\Extension\Service\ManifestValidator;
  * as found because a sideloaded extension loads its own autoloader. The
  * excludes are the things that are never part of a release.
  */
-final class ExtensionPackager
+final readonly class ExtensionPackager
 {
 	/** Directory or file names skipped at any depth. */
 	public const EXCLUDES = ['.git', '.github', '.DS_Store', 'node_modules', 'tests'];
 
 	public function __construct(
-		private readonly ManifestValidator $validator,
+		private ManifestValidator $validator,
 	) {
 	}
 
@@ -59,8 +59,8 @@ final class ExtensionPackager
 
 		$tmpPath = $zipPath . '.tmp-' . bin2hex(random_bytes(4));
 		$skip    = [
-			(string)realpath($outputDir) . '/' . basename($zipPath),
-			(string)realpath($outputDir) . '/' . basename($tmpPath),
+			realpath($outputDir) . '/' . basename($zipPath),
+			realpath($outputDir) . '/' . basename($tmpPath),
 		];
 
 		[$count, $hasAutoloader] = $this->build($real, $name, $zipPath, $tmpPath, $skip);
@@ -73,9 +73,9 @@ final class ExtensionPackager
 	 *
 	 * @param list<string> $skip absolute paths never to include
 	 *
-	 * @return array{int,bool} file count and whether vendor/autoload.php was packed
-	 *
 	 * @throws InstallException
+	 *
+	 * @return array{int,bool} file count and whether vendor/autoload.php was packed
 	 */
 	private function build(string $real, string $name, string $zipPath, string $tmpPath, array $skip): array
 	{
@@ -173,9 +173,7 @@ final class ExtensionPackager
 	 */
 	private function walk(string $root, array $skip): \Generator
 	{
-		$filter = static function (\SplFileInfo $current): bool {
-			return !in_array($current->getFilename(), self::EXCLUDES, true);
-		};
+		$filter = (static fn (\SplFileInfo $current): bool => !in_array($current->getFilename(), self::EXCLUDES, true));
 
 		$iterator = new \RecursiveIteratorIterator(
 			new \RecursiveCallbackFilterIterator(

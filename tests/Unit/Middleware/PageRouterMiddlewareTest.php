@@ -388,7 +388,6 @@ final class PageRouterMiddlewareTest extends TestCase
 		$this->assertSame('Slim not found', (string)$response->getBody());
 	}
 
-
 	public function testJsonAcceptHeaderOrFormatParamStillRendersTheTemplate(): void
 	{
 		// Until 3.6.3 either one returned the matched record as JSON before
@@ -412,8 +411,6 @@ final class PageRouterMiddlewareTest extends TestCase
 		$this->assertStringContainsString('text/html', $response->getHeaderLine('Content-Type'));
 		$this->assertSame('<html>About</html>', (string)$response->getBody());
 	}
-
-
 
 	public function testRedirectsWhen301WithLocationSet(): void
 	{
@@ -598,7 +595,6 @@ final class PageRouterMiddlewareTest extends TestCase
 
 		$this->assertSame(200, $response->getStatusCode());
 	}
-
 
 	public function testPassesThroughFor500Errors(): void
 	{

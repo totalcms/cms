@@ -120,11 +120,11 @@ class ImageDimensionCalculator
 		}
 
 		$rect = explode(',', $crop);
-		if (count($rect) !== 4 || array_filter($rect, 'is_numeric') !== $rect) {
+		if (count($rect) !== 4 || array_filter($rect, is_numeric(...)) !== $rect) {
 			return ['width' => $width, 'height' => $height];
 		}
 
-		[$rectWidth, $rectHeight, $x, $y] = array_map('intval', $rect);
+		[$rectWidth, $rectHeight, $x, $y] = array_map(intval(...), $rect);
 		if ($rectWidth <= 0 || $rectHeight <= 0 || $x < 0 || $y < 0 || $x >= $width || $y >= $height) {
 			return ['width' => $width, 'height' => $height];
 		}

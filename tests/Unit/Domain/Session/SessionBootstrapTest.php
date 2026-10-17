@@ -71,11 +71,11 @@ function sessionBootstrapHostSession(string $folder, array $data): void
 /** A logger that keeps every record so the test can read the level and context back. */
 function sessionBootstrapSpyLogger(): AbstractLogger
 {
-	return new class () extends AbstractLogger {
+	return new class extends AbstractLogger {
 		/** @var list<array{level: string, message: string, context: array<string,mixed>}> */
 		public array $records = [];
 
-		public function log($level, string|\Stringable $message, array $context = []): void
+		public function log($level, string|Stringable $message, array $context = []): void
 		{
 			$this->records[] = ['level' => (string)$level, 'message' => (string)$message, 'context' => $context];
 		}

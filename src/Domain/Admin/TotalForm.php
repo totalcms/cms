@@ -2,6 +2,7 @@
 
 namespace TotalCMS\Domain\Admin;
 
+use Odan\Session\SessionInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormOptionSources;
@@ -12,8 +13,10 @@ use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Data\OwnerScope;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Extension\Data\FormAction;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -555,7 +558,7 @@ class TotalForm implements \Stringable
 		$session    = $this->services->session;
 		$validation = $this->services->userValidation;
 		$resolver   = $this->services->ownerProperties;
-		if ($session === null || $validation === null || $resolver === null) {
+		if (!$session instanceof SessionInterface || !$validation instanceof UserValidationService || !$resolver instanceof OwnerPropertyResolver) {
 			return false;
 		}
 

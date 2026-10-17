@@ -21,7 +21,7 @@ use TotalCMS\Infrastructure\Filesystem\FileUtils;
  * Finder adds `__MACOSX/` and `.DS_Store` entries; both are ignored
  * throughout so a right-click → Compress zip installs cleanly.
  */
-final class ExtensionArchive
+final readonly class ExtensionArchive
 {
 	public const MANIFEST = 'extension.json';
 
@@ -30,7 +30,7 @@ final class ExtensionArchive
 	public const MAX_UNCOMPRESSED_BYTES = 200 * 1024 * 1024;
 
 	public function __construct(
-		private readonly ManifestValidator $validator,
+		private ManifestValidator $validator,
 	) {
 	}
 

@@ -40,7 +40,7 @@ readonly class IndexQueryService
 	public function query(string $collection, array $params, ?OwnerScope $scope = null): QueryResult
 	{
 		$items = $this->indexFilter->fetchFilteredIndex($collection, []);
-		if ($scope !== null) {
+		if ($scope instanceof OwnerScope) {
 			$items = $scope->filter($items);
 		}
 
@@ -48,7 +48,7 @@ readonly class IndexQueryService
 		// served to an unscoped caller (or to a differently scoped one), so the
 		// scope is part of the prefix.
 		$cachePrefix = 'collection-query:' . $collection;
-		if ($scope !== null) {
+		if ($scope instanceof OwnerScope) {
 			$cachePrefix .= ':' . $scope->cacheKey();
 		}
 

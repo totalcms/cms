@@ -28,7 +28,6 @@
  * `'pinned' => true` stays at the top of a sorted list in its written order,
  * for the overview page a reference list still wants first.
  */
-
 $menu = [
 	[
 		'title' => 'Get Started',

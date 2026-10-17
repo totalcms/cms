@@ -6,6 +6,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Twig\Adapter\RenderTwigAdapter;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use TotalCMS\Support\Config;
 
 use function TotalCMS\Slim\Pest\postUpload;
 
@@ -62,8 +63,8 @@ test('every image helper protects its <img> by default, and protect: false drops
 });
 
 test('imageworks.protect in settings is the site-wide default, and a call can still override it either way', function (): void {
-	$config = $this->app->getContainer()->get(\TotalCMS\Support\Config::class);
-	$before = $config->imageworks['protect'] ?? null;
+	$config                        = $this->app->getContainer()->get(Config::class);
+	$before                        = $config->imageworks['protect'] ?? null;
 	$config->imageworks['protect'] = false;
 
 	try {

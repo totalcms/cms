@@ -271,7 +271,7 @@ describe('ExtensionInstaller failure handling', function (): void {
 		$fail = static function (string $staging, string $target): void {
 			throw new RuntimeException('disk full');
 		};
-		['installer' => $installer, 'datadir' => $datadir, 'states' => $states] = installerHarness(moveTree: $fail);
+		['installer' => $installer, 'datadir' => $datadir, 'states' => $states]  = installerHarness(moveTree: $fail);
 		$target                                                                  = $datadir . '/extensions/acme/thing';
 		mkdir($target, 0755, true);
 		file_put_contents($target . '/extension.json', testExtensionManifest('acme/thing', '1.0.0'));

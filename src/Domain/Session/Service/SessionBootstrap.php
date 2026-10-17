@@ -64,7 +64,7 @@ readonly class SessionBootstrap
 		}
 		session_write_close();
 
-		$relocated = $savePath !== '' && self::normalizePath($hostPath) !== self::normalizePath($savePath);
+		$relocated = $savePath !== '' && $this->normalizePath($hostPath) !== $this->normalizePath($savePath);
 		$this->logger->log(
 			$relocated ? LogLevel::INFO : LogLevel::DEBUG,
 			$relocated ? 'Session relocated from the host\'s store; the host app will not see this page\'s writes' : 'Session conflict detected',
@@ -96,7 +96,7 @@ readonly class SessionBootstrap
 		return $semicolon === false ? $path : substr($path, $semicolon + 1);
 	}
 
-	private static function normalizePath(string $path): string
+	private function normalizePath(string $path): string
 	{
 		$real = realpath($path);
 

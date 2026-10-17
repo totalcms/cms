@@ -74,8 +74,6 @@ final class PageAuthMiddlewareTest extends TestCase
 		$this->assertStringContainsString('/admin/login?', $response->getHeaderLine('Location'));
 	}
 
-
-
 	public function testRedirectAddsRedirectParamWithExistingQueryString(): void
 	{
 		// Login URL is hardcoded as /admin/login (no `?` in the base) so this
@@ -139,7 +137,6 @@ final class PageAuthMiddlewareTest extends TestCase
 		$this->assertSame('text/plain; charset=utf-8', $response->getHeaderLine('Content-Type'));
 		$this->assertSame('403 Forbidden', (string)$response->getBody());
 	}
-
 
 	public function testNotLoggedInWithAccessGroupsStillRedirectsToLogin(): void
 	{

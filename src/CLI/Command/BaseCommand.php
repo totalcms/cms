@@ -78,7 +78,7 @@ abstract class BaseCommand extends Command
 			return null;
 		}
 
-		if (!self::canPrompt($input)) {
+		if (!$this->canPrompt($input)) {
 			return $this->outputError($input, $output, 'This command asks for confirmation and no one can answer: pass --force to run it without a prompt.');
 		}
 
@@ -98,7 +98,7 @@ abstract class BaseCommand extends Command
 	 * is a terminal. An input with its own stream (a test harness feeding
 	 * answers) counts as answerable.
 	 */
-	private static function canPrompt(InputInterface $input): bool
+	private function canPrompt(InputInterface $input): bool
 	{
 		if (!$input->isInteractive()) {
 			return false;

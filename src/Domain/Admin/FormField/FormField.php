@@ -627,7 +627,7 @@ class FormField
 		}
 
 		if (is_array($source) && ($source['source'] ?? null) === 'schemaProperties') {
-			$types = array_values(array_filter((array)($source['types'] ?? []), 'is_string'));
+			$types = array_values(array_filter((array)($source['types'] ?? []), is_string(...)));
 
 			return $this->form->schemaPropertyKeys('', $types, ($source['owner'] ?? false) === true);
 		}

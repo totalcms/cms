@@ -135,7 +135,7 @@ readonly class CollectionMetaAccessMiddleware extends BaseAccessMiddleware
 		}
 
 		return array_key_exists('registrationGroups', $body)
-			&& self::sorted(CollectionData::normalizeRegistrationGroups($body['registrationGroups'])) !== self::sorted(CollectionData::normalizeRegistrationGroups($stored->registrationGroups));
+			&& $this->sorted(CollectionData::normalizeRegistrationGroups($body['registrationGroups'])) !== $this->sorted(CollectionData::normalizeRegistrationGroups($stored->registrationGroups));
 	}
 
 	/** The record being updated, or null when it cannot be read. */
@@ -161,7 +161,7 @@ readonly class CollectionMetaAccessMiddleware extends BaseAccessMiddleware
 	 *
 	 * @return list<string>
 	 */
-	private static function sorted(array $groups): array
+	private function sorted(array $groups): array
 	{
 		sort($groups);
 
