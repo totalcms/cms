@@ -123,17 +123,7 @@ For user-registration forms specifically, prefer `register: true` over plain `ad
 
 **Required server-side opt-in:**
 
-The target collection must either have **Allow Public Registration** switched on in the **Public Registration** section of its settings, or be listed in `config.auth.publicRegistration` in `config/tcms.php`. The toggle applies to collections whose schema is `auth` or inherits it; a collection listed in `config.auth.publicRegistration` is accepted as listed. Otherwise the endpoint returns a `403 Forbidden` ("Public registration is not enabled for this collection."):
-
-```php
-return [
-    'auth' => [
-        'publicRegistration' => ['members'],
-    ],
-];
-```
-
-The config list is the older way and still works; a collection in it registers whatever its toggle says. Nothing is open by default, so the operator-only `auth` collection isn't accidentally exposed to public signups. Opt in your member / customer collections explicitly.
+Switch on **Allow Public Registration** in the **Public Registration** section of the target collection's settings; it is offered on collections whose schema is `auth` or inherits it. Nothing is open by default, so the operator-only `auth` collection is never exposed to public signups by accident. Without it the endpoint returns `403 Forbidden` ("Public registration is not enabled for this collection."). See [`publicRegistration`](docs/collections/settings#publicregistration).
 
 **Registrant groups:**
 

@@ -415,7 +415,7 @@ Lets anonymous visitors create their own account in this collection through [`PO
 }
 ```
 
-Switch it on with **Allow Public Registration** in the **Public Registration** section of the collection form. The field is hidden on other collections, and on the new-collection form until the collection is saved. A collection may also register when it is listed in `config.auth.publicRegistration` in `config/tcms.php`; that list stays in force, so a collection in it registers whatever this toggle says. When neither is true the endpoint returns `403` "Public registration is not enabled for this collection."
+Switch it on with **Allow Public Registration** in the **Public Registration** section of the collection form. The field is hidden on other collections, and on the new-collection form until the collection is saved. With it off the endpoint returns `403` "Public registration is not enabled for this collection." Installs that opted collections in through the older `config.auth.publicRegistration` list keep working; new setups use this toggle.
 
 An enabled collection can also be [impersonated](docs/operations/impersonation), like the default auth collection.
 
