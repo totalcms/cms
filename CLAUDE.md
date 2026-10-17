@@ -28,7 +28,8 @@ Total CMS is a modern PHP-based Content Management System using flat-file JSON s
 ### Build and Development
 
 You do not need to worry about frontend asset building (primary development command).
-There is a watch script in dev that will autobuild all front end assets.
+There is a watch script in dev that will autobuild all front end assets and
+rebuild the bundle integrity manifest (`resources/bundle`) on every change.
 
 ```bash
 # Development with file watching (typically runs in background)
@@ -69,6 +70,8 @@ composer run test:all:parallel                   # stan + docs + PHP + JS
 # or the covered src/ files — a stale manifest breaks writes at runtime
 # with 400 "installation has been corrupted", and the test suite does NOT
 # catch it. See "Bundle integrity" under Testing Best Practices.
+# `bin/watch.sh` rebuilds it for you while it is running; this is the check
+# for when it was not.
 composer run bundle:check
 
 # Run all quality checks
@@ -239,7 +242,7 @@ docblock with a reason over a baseline entry for anything deliberate.
 - **Error Handling**: Test both success and failure scenarios with graceful error handling
 - **Golden snapshots**: `tests/Feature/FormGoldenTest.php` pins the HTML of every form the factory builds against Pest snapshots in `tests/.pest/snapshots/`, which are **committed**. Pest never fails on a missing snapshot — it recreates it silently and marks the test incomplete, `--ci` included — so `bin/check-snapshots.php` fails when a snapshot is untracked or deleted-unstaged; it runs after the PHP tests in `bin/runtests.sh`, in `composer test:build`, and in the pre-commit hook. A snapshot diff is a behaviour change: intended → delete the file and re-run, then commit the new one; not intended → that is the regression
 - **Stale Twig cache**: Twig render tests can serve stale compiled templates after a `.twig` edit (test env has `auto_reload` off) — `rm -rf cache/*` before re-running locally. Under `--parallel` the cache is per-worker, so clear `tests/.workers/*/cache` (or just `rm -rf tests/.workers`) instead
-- **Bundle integrity**: `resources/bundle` hashes `config/`, `resources/templates/` **and select `src/` files** — not just config. After editing anything it covers, rebuild with `composer run bundle` and commit the manifest alongside the change. Never hand-edit it. A stale manifest makes every write fail at runtime with 400 "installation has been corrupted"
+- **Bundle integrity**: `resources/bundle` hashes `config/`, `resources/templates/` **and select `src/` files** — not just config. After editing anything it covers, rebuild with `composer run bundle` and commit the manifest alongside the change. `bin/watch.sh` does the rebuild automatically while it runs. Never hand-edit it. A stale manifest makes every write fail at runtime with 400 "installation has been corrupted"
   - **Tests do not catch this.** `tests/bootstrap.php` sets `APP_ENV=test`, which switches `BundleMiddleware`'s check off so the suite doesn't have to regenerate the manifest after every edit, and no test covers the manifest. `composer test` is plain pest with no bundle step. The gate is `composer run bundle:check` (~0.3s), which CI runs — but only after a push, so an install tracking `dev-develop` can pull the broken commit first. `bin/runtests.sh` runs it as its first step, so use that and you cannot miss it
   - Install the pre-commit hook with `bin/install-hooks.sh` to run that check automatically. Note the manifest hashes the **working tree, not the index**: rebuild with unstaged edits to a covered file present and it records content that isn't in the commit
 
