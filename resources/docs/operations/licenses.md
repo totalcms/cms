@@ -126,6 +126,8 @@ tcms-data/.system/{domain}-offline-license.key
 
 The file is checked before any online validation, so with it in place there is **no validation callback, no periodic check-in, and no outbound connectivity of any kind**. The signature is verified locally against a public key that ships with Total CMS. The License Manager shows the offline license's details instead of the store.
 
+**The domain has to match.** The file is named for the licensed domain and the token inside is signed for it, and both are compared against the domain Total CMS detects from the request. A port (`cms.internal:8080`), an IP address, a `www.` prefix, or a proxy that does not forward the Host header all count as a different domain, and the file is then ignored. When that happens the dashboard reports **Offline license file found but rejected** with the reason, and the License Manager shows a domain-mismatch badge. The fix is to set `domain` in `config/tcms.php` to the licensed domain.
+
 Installing an offline license also **disables error monitoring automatically**. A network-isolated deployment never attempts an outbound call, regardless of the settings toggle. See [Error Monitoring](docs/operations/security#error-monitoring).
 
 Updates for offline deployments are downloaded separately, transferred across the network boundary by whatever process your environment permits, and installed manually.

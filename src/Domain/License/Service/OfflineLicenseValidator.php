@@ -48,6 +48,9 @@ EOD;
 	/** @var array<string,mixed>|false|null In-memory cache for details */
 	private array|false|null $cachedDetails = null;
 
+	/** Why the file on disk was rejected, when it was read but did not validate. */
+	private ?string $validationError = null;
+
 	public function __construct(
 		private readonly OfflineLicenseRepository $repository,
 		private readonly Config $config,
@@ -113,11 +116,28 @@ EOD;
 				'error' => $e->getMessage(),
 			]);
 
-			$this->cachedLicense = false;
+			$this->cachedLicense   = false;
+			$this->validationError = $e->getMessage();
 
 			// Invalid token - return null to fall through to online validation
 			return null;
 		}
+	}
+
+	/**
+	 * Why the offline license file was rejected, or null when there is no file
+	 * or it validated. The admin surfaces this ahead of any other license
+	 * status: once a file is present, whatever license data is in use instead
+	 * is a stale online result, and its warnings do not apply to an air-gapped
+	 * deployment. Runs the validation if nothing has asked for it yet.
+	 */
+	public function getValidationError(): ?string
+	{
+		if ($this->cachedLicense === null) {
+			$this->validate();
+		}
+
+		return $this->validationError;
 	}
 
 	/**

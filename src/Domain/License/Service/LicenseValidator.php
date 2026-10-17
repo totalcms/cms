@@ -126,6 +126,19 @@ class LicenseValidator
 	}
 
 	/**
+	 * Why the offline license file was rejected, or null when there is none or
+	 * it validated.
+	 */
+	public function getOfflineLicenseError(): ?string
+	{
+		if (!$this->offlineValidator instanceof OfflineLicenseValidator) {
+			return null;
+		}
+
+		return $this->offlineValidator->getValidationError();
+	}
+
+	/**
 	 * Get offline license details for display.
 	 *
 	 * @return array<string,mixed>|null
