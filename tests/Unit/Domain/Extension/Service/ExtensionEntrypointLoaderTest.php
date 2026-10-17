@@ -62,7 +62,7 @@ test('an attribute on the declaration line still resolves the class', function (
 });
 
 test('a class at the end of a large file is found', function (): void {
-	$filler = str_repeat("function f" . uniqid() . "() { return 'x'; }\n", 20000);
+	$filler = str_repeat('function f' . uniqid() . "() { return 'x'; }\n", 20000);
 	file_put_contents($this->dir . '/big.php', "<?php\nnamespace Acme\\Big;\n" . $filler . "abstract class Late {}\n");
 
 	expect(ExtensionEntrypointLoader::classNameIn($this->dir . '/big.php'))->toBe('Acme\\Big\\Late');
