@@ -47,6 +47,8 @@ class CollectionData
 	public bool $requireEmailVerification = false;     // when true, public registration creates inactive users + sends a verification email
 	/** Property holding the owning user's id. Non-empty makes this an owned collection: non-super-admins are scoped to the objects they own and the server stamps their id on create. See OwnerPropertyResolver. */
 	public string $ownerProperty          = '';
+	/** Auth collection whose members may own objects here. Empty means any auth collection (the owner value is a bare user id, so ids must then be unique across auth collections). See OwnerPropertyResolver::ownerCollection(). */
+	public string $ownerCollection        = '';
 	public int $count                     = 0;                    // total number of objects created in this collection
 	public int $totalObjects              = -1;                // current number of objects (-1 = not calculated yet)
 	public string $lastUpdated            = '';                // ISO 8601 datetime of last object modification (CONTENT timestamp — bumps on every object write)
@@ -116,6 +118,7 @@ class CollectionData
 			'format'                   => $this->format,
 			'requireEmailVerification' => $this->requireEmailVerification,
 			'ownerProperty'            => $this->ownerProperty,
+			'ownerCollection'          => $this->ownerCollection,
 			'queueRebuildOnSave'       => $this->queueRebuildOnSave,
 			'count'                    => $this->count,
 			'totalObjects'             => max($this->totalObjects, 0),

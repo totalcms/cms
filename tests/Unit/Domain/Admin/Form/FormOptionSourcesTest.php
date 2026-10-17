@@ -197,6 +197,60 @@ describe('objects and properties', function (): void {
 			->and($this->sources->schemaPropertyKeys())->toBe([]);
 	});
 
+	test('schemaPropertyKeys keeps only the asked-for types, an untyped property counting as string', function (): void {
+		$schema             = new SchemaData();
+		$schema->properties = [
+			'title'  => ['type' => 'string'],
+			'owners' => ['type' => 'array'],
+			'nick'   => [],
+			'draft'  => ['type' => 'boolean'],
+			'count'  => ['type' => 'number'],
+		];
+		$fetcher = $this->createMock(SchemaFetcher::class);
+		$fetcher->method('fetchSchemaForCollection')->willReturn($schema);
+		$fetcher->method('fetchSchema')->willReturn($schema);
+		$sources = new FormOptionSources(formServices(['schemaFetcher' => $fetcher]));
+
+		expect($sources->schemaPropertyKeys('members', '', ['string', 'array']))->toBe(['title', 'owners', 'nick'])
+			->and($sources->schemaPropertyKeys('', 'member', ['string', 'array']))->toBe(['title', 'owners', 'nick'])
+			->and($sources->schemaPropertyKeys('members', '', []))->toBe(['title', 'owners', 'nick', 'draft', 'count'])
+			->and($sources->schemaPropertyKeys('members'))->toBe(['title', 'owners', 'nick', 'draft', 'count']);
+	});
+
+	test('schemaPropertyKeys reads a $ref property through its $ref', function (): void {
+		$schema             = new SchemaData();
+		$schema->properties = [
+			'tags'  => ['$ref' => 'https://www.totalcms.co/schemas/properties/list.json', 'field' => 'list'],
+			'photo' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json', 'field' => 'image'],
+			'slug'  => ['$ref' => 'https://www.totalcms.co/schemas/properties/slug.json', 'field' => 'id'],
+		];
+		$fetcher = $this->createMock(SchemaFetcher::class);
+		$fetcher->method('fetchSchemaForCollection')->willReturn($schema);
+		$sources = new FormOptionSources(formServices(['schemaFetcher' => $fetcher]));
+
+		expect($sources->schemaPropertyKeys('members', '', ['string', 'array']))->toBe(['tags', 'slug']);
+	});
+
+	test('schemaPropertyKeys owner-only keeps strings and lists of strings, never a gallery, image or boolean', function (): void {
+		$ref                = static fn (string $type): string => "https://www.totalcms.co/schemas/properties/{$type}.json";
+		$schema             = new SchemaData();
+		$schema->properties = [
+			'owner'   => ['type' => 'string'],
+			'nick'    => ['field' => 'input'],
+			'owners'  => ['$ref' => $ref('list'), 'field' => 'list'],
+			'gallery' => ['$ref' => $ref('gallery'), 'field' => 'gallery'],
+			'photo'   => ['$ref' => $ref('image'), 'field' => 'image'],
+			'draft'   => ['type' => 'boolean'],
+		];
+		$fetcher = $this->createMock(SchemaFetcher::class);
+		$fetcher->method('fetchSchemaForCollection')->willReturn($schema);
+		$fetcher->method('fetchSchema')->willReturn($schema);
+		$sources = new FormOptionSources(formServices(['schemaFetcher' => $fetcher]));
+
+		expect($sources->schemaPropertyKeys('members', '', [], true))->toBe(['owner', 'nick', 'owners'])
+			->and($sources->schemaPropertyKeys('', 'member', [], true))->toBe(['owner', 'nick', 'owners']);
+	});
+
 	test('mediaTagsForCollection extracts tags from the index', function (): void {
 		$index  = new IndexData([
 			['id' => 'a', 'photo' => ['tags' => ['sky', 'sea']]],

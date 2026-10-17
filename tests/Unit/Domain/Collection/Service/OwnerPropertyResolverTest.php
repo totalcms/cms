@@ -78,3 +78,68 @@ describe('OwnerPropertyResolver', function (): void {
 		expect((new OwnerPropertyResolver($collections, $schemas))->resolve('showcase'))->toBe(OwnerPropertyResolver::UNRESOLVED);
 	});
 });
+
+describe('OwnerPropertyResolver::ownerCollection', function (): void {
+	/** @param CollectionData|Throwable|null $meta */
+	$resolverFor = static function (CollectionData|Throwable|null $meta): OwnerPropertyResolver {
+		$collections = test()->createMock(CollectionFetcher::class);
+		if ($meta instanceof Throwable) {
+			$collections->method('fetchCollection')->willThrowException($meta);
+		} else {
+			$collections->method('fetchCollection')->willReturn($meta);
+		}
+
+		return new OwnerPropertyResolver($collections, test()->createMock(SchemaFetcher::class));
+	};
+
+	it('returns the configured owner collection', function () use ($resolverFor): void {
+		$meta                  = new CollectionData();
+		$meta->id              = 'showcase';
+		$meta->ownerProperty   = 'owner';
+		$meta->ownerCollection = 'members';
+
+		expect($resolverFor($meta)->ownerCollection('showcase'))->toBe('members');
+	});
+
+	it('returns empty when unset', function () use ($resolverFor): void {
+		$meta     = new CollectionData();
+		$meta->id = 'showcase';
+
+		expect($resolverFor($meta)->ownerCollection('showcase'))->toBe('');
+	});
+
+	it('returns empty when the collection does not exist', function () use ($resolverFor): void {
+		expect($resolverFor(null)->ownerCollection('ghost'))->toBe('');
+	});
+
+	it('returns empty when the collection record cannot be read', function () use ($resolverFor): void {
+		// resolve() returns UNRESOLVED for the same record, which already denies.
+		expect($resolverFor(new RuntimeException('collection.json is corrupt'))->ownerCollection('showcase'))->toBe('');
+	});
+
+	it('makes no one an outsider when ownerCollection is unset', function () use ($resolverFor): void {
+		$meta     = new CollectionData();
+		$meta->id = 'showcase';
+
+		expect($resolverFor($meta)->isOutsider('showcase', 'partners', 'auth'))->toBeFalse()
+			->and($resolverFor($meta)->isOutsider('showcase', '', 'auth'))->toBeFalse();
+	});
+
+	it('makes a member of another auth collection an outsider when ownerCollection is set', function () use ($resolverFor): void {
+		$meta                  = new CollectionData();
+		$meta->id              = 'showcase';
+		$meta->ownerCollection = 'members';
+
+		expect($resolverFor($meta)->isOutsider('showcase', 'partners', 'auth'))->toBeTrue()
+			->and($resolverFor($meta)->isOutsider('showcase', 'members', 'auth'))->toBeFalse();
+	});
+
+	it('resolves an empty actor collection to the default before comparing', function () use ($resolverFor): void {
+		$meta                  = new CollectionData();
+		$meta->id              = 'showcase';
+		$meta->ownerCollection = 'members';
+
+		expect($resolverFor($meta)->isOutsider('showcase', '', 'members'))->toBeFalse()
+			->and($resolverFor($meta)->isOutsider('showcase', '', 'auth'))->toBeTrue();
+	});
+});

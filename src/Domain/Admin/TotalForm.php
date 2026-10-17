@@ -13,6 +13,7 @@ use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Extension\Data\FormAction;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -541,7 +542,9 @@ class TotalForm implements \Stringable
 
 	/**
 	 * True when the collection is owned, the actor is neither the owner of
-	 * object `$this->id` nor a super admin, and so must not be shown it.
+	 * object `$this->id` nor a super admin (or belongs to an auth collection
+	 * other than the collection's `ownerCollection`), and so must not be
+	 * shown it.
 	 * Skipped (false) when the form was built without the owner services, and
 	 * when authentication is off for the install (there is no actor then, and
 	 * every edit form on an owned collection would refuse). The caller checks
@@ -571,9 +574,16 @@ class TotalForm implements \Stringable
 			return false;
 		}
 
+		// A member of an auth collection other than the one `ownerCollection`
+		// names owns nothing here. The session's empty collection (a login at
+		// the plain /admin/login route) is the default auth collection.
+		if ($resolver->isOutsider($this->collection, $actorCollection, (string)($this->services->config->auth['collection'] ?? ''))) {
+			return true;
+		}
+
 		$object = $this->services->objectFetcher->fetchObject($this->collection, $this->id);
 
-		return $actor === '' || (string)($object->toArray()[$owner] ?? '') !== $actor;
+		return $actor === '' || !(new OwnerScope($owner, $actor))->matches($object->toArray());
 	}
 
 	/**
@@ -916,21 +926,29 @@ class TotalForm implements \Stringable
 	 * `$this->collection` (works for ObjectForm). Returns an empty list when no
 	 * source is available or the schema can't be loaded.
 	 *
+	 * `$types` keeps only properties of those JSON-Schema types (an untyped
+	 * property counts as `string`); empty keeps every property. `$ownerOnly`
+	 * keeps only properties that can hold an owner (see OwnerPropertyKind).
+	 *
+	 * @param array<string> $types
+	 *
 	 * @return array<string>
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function schemaPropertyKeys(string $collection = ''): array
+	public function schemaPropertyKeys(string $collection = '', array $types = [], bool $ownerOnly = false): array
 	{
 		if ($collection !== '') {
-			return $this->optionSources()->schemaPropertyKeys($collection);
+			return $this->optionSources()->schemaPropertyKeys($collection, '', $types, $ownerOnly);
 		}
 
 		// CollectionForm path: schema name lives on the loaded CollectionData
 		if ($this->collectionData instanceof CollectionData && $this->collectionData->schema !== '') {
-			return $this->optionSources()->schemaPropertyKeys('', $this->collectionData->schema);
+			return $this->optionSources()->schemaPropertyKeys('', $this->collectionData->schema, $types, $ownerOnly);
 		}
 
 		// ObjectForm path: collection name on the form itself
-		return $this->optionSources()->schemaPropertyKeys($this->collection);
+		return $this->optionSources()->schemaPropertyKeys($this->collection, '', $types, $ownerOnly);
 	}
 
 	/**

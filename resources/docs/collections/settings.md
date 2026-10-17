@@ -415,12 +415,31 @@ The property that holds the id of the user who owns each object. Setting it make
 }
 ```
 
-The property must exist in the collection's schema (a plain text field is enough; a single-value `relational` field pointing at the users collection makes the admin table show names). The stored value is the user id alone. Saving a collection whose `ownerProperty` is not a property of its schema is rejected, so add the property to the schema first. The property must also be a string property (declared `string`, or with no declared type) and listed in the schema's `index`.
+Pick it from the **Owner Property** select on the collection form, which lists the schema's string properties and lists of strings (not galleries or other lists of objects); choose "None" to clear it. The list is empty on a new collection until it is saved with its schema. The property must exist in the schema and be listed in the schema's `index`. It can be a string or a list of strings. A plain text field is enough, and a `relational` field pointing at the users collection makes the admin table show names. The stored value is the user id alone. Saving a collection whose `ownerProperty` is not a string property or a list of strings, is not in the schema, or is not in the `index` is rejected with a 400 that names the problem, so add the property to the schema first.
 
-- **Single value, text type.** The property must hold one string, not a list: the owner check is an exact string comparison between the stored value and the user's id.
+- **String or list.** A string holds one user id. A list (`type: array` with string items, or the `list` property type) holds several, and each listed user owns the object. The check is an exact string comparison between the user's id and the stored value, or each entry of it. On create the server stamps `[userId]` (an anonymous public submission stamps `[]`). Members cannot change the field on update: what they send is reverted to the stored value, so only super admins and API keys add or remove co-owners. A `multicheckbox`, `multiselect` or `checklist` array works too, but the admin form shows a user id that is not one of its options, so prefer `list`.
 - **In the index.** The property must be in the schema's [`index`](docs/schemas/reference#index) array, and saving the collection is rejected otherwise. Members' queries and index reads are scoped by matching this property on the collection index, by exact comparison with the user's id (case-sensitive, no wildcards).
 
-Because the owner value does not record which auth collection the id came from, a site with several auth collections must keep user ids unique across them, or let only one auth collection write owned collections.
+Because the owner value does not record which auth collection the id came from, a site with several auth collections must keep user ids unique across them, or set [`ownerCollection`](#ownercollection).
+
+---
+
+### ownerCollection
+
+**Type:** `string`
+**Required:** No
+**Default:** `""`
+
+The auth collection whose members are scoped owners of this collection. Pick it from the **Owner Collection** select, next to **Owner Property**; "Any auth collection" leaves it empty. It only has an effect when `ownerProperty` is set.
+
+```json
+{
+    "ownerProperty": "owner",
+    "ownerCollection": "members"
+}
+```
+
+When set, a signed-in user from any other auth collection is treated like an anonymous caller on this collection: refused with `403` on every object, list, create and admin-form route (access log `reason: owner`) unless the operation is in `publicOperations`, where the caller is treated as anonymous; a public create by them stores an empty owner. Super admins and API keys are unaffected. When empty, the user's auth collection is ignored, so user ids must be unique across auth collections. Saving a collection whose `ownerCollection` is missing or is not an auth collection (its schema is not `auth` and does not inherit from it) is rejected.
 
 **Owned collections**
 

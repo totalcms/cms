@@ -9,10 +9,12 @@ use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Builder\Service\BuilderConfigService;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyKind;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Feed\Service\PodcastCategories;
 use TotalCMS\Domain\Locale\LocaleRegistry;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Template\Service\TemplateLister;
 
 /**
@@ -258,23 +260,50 @@ final readonly class FormOptionSources
 	}
 
 	/**
+	 * The property keys of a collection's (or a named schema's) schema.
+	 *
+	 * `$types` narrows the list to properties whose normalised JSON-Schema type
+	 * is one of them; a property with no type counts as `string`. An empty
+	 * `$types` returns every key. `$ownerOnly` keeps only properties that can
+	 * hold an owner (OwnerPropertyKind): string properties and lists of
+	 * strings, never a gallery or another list of objects.
+	 *
+	 * @param array<string> $types
+	 *
 	 * @return array<string>
+	 *
+	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function schemaPropertyKeys(string $collection = '', string $schema = ''): array
+	public function schemaPropertyKeys(string $collection = '', string $schema = '', array $types = [], bool $ownerOnly = false): array
 	{
 		try {
 			if ($collection !== '') {
-				return array_keys($this->services->schemaFetcher->fetchSchemaForCollection($collection)->properties);
-			}
-
-			if ($schema !== '') {
-				return array_keys($this->services->schemaFetcher->fetchSchema($schema)->properties);
+				$properties = $this->services->schemaFetcher->fetchSchemaForCollection($collection)->properties;
+			} elseif ($schema !== '') {
+				$properties = $this->services->schemaFetcher->fetchSchema($schema)->properties;
+			} else {
+				return [];
 			}
 		} catch (\Throwable) {
 			return [];
 		}
 
-		return [];
+		$keys = [];
+		foreach ($properties as $key => $definition) {
+			if ($ownerOnly) {
+				if (is_array($definition) && OwnerPropertyKind::of($definition) !== null) {
+					$keys[] = (string)$key;
+				}
+
+				continue;
+			}
+
+			if ($types === [] || in_array(PropertyDefinition::fromArray(is_array($definition) ? $definition : [])->effectiveJsonType() ?? 'string', $types, true)) {
+				$keys[] = (string)$key;
+			}
+		}
+
+		return $keys;
 	}
 
 	/**

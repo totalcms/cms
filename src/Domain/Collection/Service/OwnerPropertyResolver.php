@@ -69,4 +69,42 @@ readonly class OwnerPropertyResolver
 
 		return array_key_exists($meta->ownerProperty, $schema->properties) ? $meta->ownerProperty : '';
 	}
+
+	/**
+	 * The auth collection whose members are this collection's scoped owners,
+	 * or '' when any auth collection's members are (the setting is unset), the
+	 * collection does not exist, or its record cannot be read. Never throws.
+	 *
+	 * The unreadable case needs no denial of its own: {@see self::resolve()}
+	 * returns {@see self::UNRESOLVED} for the same record, and every owner
+	 * check already denies on that.
+	 */
+	public function ownerCollection(string $collection): string
+	{
+		try {
+			$meta = $this->collectionFetcher->fetchCollection($collection);
+		} catch (\Throwable) {
+			return '';
+		}
+
+		return $meta instanceof CollectionData ? $meta->ownerCollection : '';
+	}
+
+	/**
+	 * Whether the actor is an outsider here: the collection names an
+	 * `ownerCollection` and the actor belongs to a different auth collection.
+	 * Outsiders own nothing in the collection. An empty `$actorCollection` (a
+	 * login at the plain /admin/login route) is the default auth collection.
+	 * The one rule for the access middleware, the field policy and the admin
+	 * form.
+	 */
+	public function isOutsider(string $collection, string $actorCollection, string $defaultCollection): bool
+	{
+		$required = $this->ownerCollection($collection);
+		if ($required === '') {
+			return false;
+		}
+
+		return ($actorCollection !== '' ? $actorCollection : $defaultCollection) !== $required;
+	}
 }

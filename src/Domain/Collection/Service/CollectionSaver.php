@@ -65,6 +65,7 @@ readonly class CollectionSaver
 		// Check edition requirements for schema-specific features
 		$this->validateSchemaEdition($data['schema'] ?? '');
 		$this->assertOwnerPropertyValid($data);
+		$this->assertOwnerCollectionValid($data);
 
 		$data           = $this->normalizeSubmittedData($data);
 		$data['format'] = $this->normalizeFormat($data['format'] ?? CollectionData::FORMAT_JSON);
@@ -172,6 +173,14 @@ readonly class CollectionSaver
 			&& (string)($data['schema'] ?? '') === $existingCollection->schema;
 		if (!$ownerUnchanged) {
 			$this->assertOwnerPropertyValid($data);
+		}
+
+		// Same skip for ownerCollection: only a changed value (or a call
+		// without the stored record) reads the named collection.
+		$ownerCollectionUnchanged = $callerSuppliedExisting
+			&& (string)($data['ownerCollection'] ?? '') === $existingCollection->ownerCollection;
+		if (!$ownerCollectionUnchanged) {
+			$this->assertOwnerCollectionValid($data);
 		}
 
 		// Recalculate totalObjects from index if not explicitly provided (self-healing)
@@ -411,8 +420,9 @@ readonly class CollectionSaver
 	 * it at save time instead. It must also be in the schema's `index`: member
 	 * lists are scoped by matching the owner on the index, so an unindexed
 	 * owner property would silently empty every member's list. And it must be a
-	 * string property (declared `string`, or no declared type): the owner is
-	 * stored and compared as a user id.
+	 * string property or a list of strings (several co-owners; see
+	 * OwnerPropertyKind): the owner is stored and compared as a user id, or a
+	 * list of them.
 	 *
 	 * @param array<string,mixed> $data
 	 *
@@ -442,11 +452,53 @@ readonly class CollectionSaver
 			throw new \DomainException(sprintf("ownerProperty '%s' must be in the index of schema '%s' so member lists can be scoped. Add it to the schema's index first.", $owner, $schemaId));
 		}
 
-		// Normalised so a JSON-Schema type list (["string", "null"]) is read the
-		// way the rest of the codebase reads it: the first non-null entry.
-		$type = PropertyDefinition::fromArray($schema->properties[$owner])->type;
-		if ($type !== null && $type !== 'string') {
-			throw new \DomainException(sprintf("ownerProperty '%s' must be a string property in schema '%s' (its type is '%s').", $owner, $schemaId, $type));
+		// The owner is stored as a user id or a list of them: a gallery or any
+		// other array of objects cannot hold one (see OwnerPropertyKind).
+		$definition = is_array($schema->properties[$owner]) ? $schema->properties[$owner] : [];
+		if (OwnerPropertyKind::of($definition) === null) {
+			$effectiveType = PropertyDefinition::fromArray($definition)->effectiveJsonType();
+
+			throw new \DomainException(sprintf("ownerProperty '%s' must be a string property or a list of strings in schema '%s' (its type is '%s').", $owner, $schemaId, $effectiveType ?? 'untyped'));
+		}
+	}
+
+	/**
+	 * An ownerCollection naming a missing or non-auth collection would make
+	 * every member an outsider: nobody could own anything. Reject it at save
+	 * time. The collection's schema must be `auth` or inherit from it.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @throws \DomainException
+	 */
+	private function assertOwnerCollectionValid(array $data): void
+	{
+		$ownerCollection = $data['ownerCollection'] ?? '';
+		if (!is_string($ownerCollection) || $ownerCollection === '') {
+			return;
+		}
+
+		$message = sprintf("ownerCollection '%s' is not an auth collection. Choose a collection whose schema is auth or inherits from it.", $ownerCollection);
+
+		try {
+			$collection = $this->collectionFetcher->fetchCollection($ownerCollection);
+		} catch (\Throwable) {
+			throw new \DomainException($message);
+		}
+		if (!$collection instanceof CollectionData) {
+			throw new \DomainException($message);
+		}
+		if ($collection->schema === 'auth') {
+			return;
+		}
+
+		try {
+			$inherits = in_array('auth', $this->schemaFetcher->fetchRawSchema($collection->schema)->inheritFrom, true);
+		} catch (\Throwable) {
+			$inherits = false;
+		}
+		if (!$inherits) {
+			throw new \DomainException($message);
 		}
 	}
 

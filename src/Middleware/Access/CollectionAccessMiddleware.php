@@ -31,7 +31,9 @@ use TotalCMS\Support\Config;
  * owned collection (one whose `ownerProperty` names a property the schema
  * defines) limits every non-super-admin to the objects they own:
  *
- *   - an empty actor id is denied outright;
+ *   - an empty actor id is denied outright, and so is a member of an auth
+ *     collection other than the one the collection's `ownerCollection`
+ *     names (when set);
  *   - routes with an `{id}` deny unless the object's owner is the actor; a
  *     missing object passes for a read only (the action 404s);
  *   - `collection-query` / `collection-fetch-index` are handed an
@@ -325,6 +327,12 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 			return false;
 		}
 
+		// A member of another auth collection than the one named in
+		// `ownerCollection` owns nothing here: treated like an empty actor.
+		if ($this->isOwnerOutsider($request, $collection)) {
+			return false;
+		}
+
 		$routeName = (string)$route->getName();
 		if (in_array($routeName, self::OWNER_DENIED_ROUTES, true)) {
 			return false;
@@ -367,9 +375,8 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 		}
 
 		$object = $this->objectFetcher->fetchObject($collection, $objectId)->toArray();
-		$owner  = $object[$ownerProperty] ?? '';
 
-		return is_scalar($owner) && (string)$owner === $userId;
+		return (new OwnerScope($ownerProperty, $userId))->matches($object);
 	}
 
 	/**
@@ -407,7 +414,25 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 			return $request;
 		}
 
+		// No scope for an outsider either (also denied before reaching here).
+		if ($this->isOwnerOutsider($request, (string)$route->getArgument('collection', ''))) {
+			return $request;
+		}
+
 		return $request->withAttribute(self::OWNER_SCOPE_ATTRIBUTE, new OwnerScope($ownerProperty, $userId));
+	}
+
+	/**
+	 * Whether the collection's `ownerCollection` is set and the actor belongs
+	 * to a different auth collection. The actor's empty collection (a login
+	 * at the plain `/admin/login` route) resolves to the default auth
+	 * collection first.
+	 */
+	private function isOwnerOutsider(ServerRequestInterface $request, string $collection): bool
+	{
+		$default = (string)$this->config->auth['collection'];
+
+		return $this->ownerProperties->isOutsider($collection, $this->actorOf($request)->authCollection($default), $default);
 	}
 
 	/**

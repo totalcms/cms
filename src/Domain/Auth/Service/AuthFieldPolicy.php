@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyKind;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -31,7 +32,9 @@ use TotalCMS\Support\Config;
  *      admin-only on any collection; `"protected": {"value": X}` additionally
  *      forces the property to X on every non-admin write, sent or not.
  *   3. The collection's `ownerProperty` — stamped with the actor's user id on
- *      create, reverted on update, never writable through property routes.
+ *      create (or `[actorId]` for a list property; empty for an anonymous
+ *      submission or an actor outside the `ownerCollection`), reverted on
+ *      update, never writable through property routes.
  *
  * Applied by {@see PrivilegedFieldGuard} on every object write (save, update,
  * patch, property routes, admin cell edit) and by CollectionAccessMiddleware.
@@ -79,7 +82,7 @@ final class AuthFieldPolicy
 	 * Per-request memo of {@see rulesFor()}, keyed by collection. Cleared by
 	 * {@see forgetRules()} at the start of every request.
 	 *
-	 * @var array<string,array{plain: list<string>, forced: array<string,mixed>, owner: string}>
+	 * @var array<string,array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool}>
 	 */
 	private array $rules = [];
 
@@ -134,8 +137,9 @@ final class AuthFieldPolicy
 	 * `plain`  — revert on update, strip on create, log the attempt.
 	 * `forced` — property => value, set on every non-admin write.
 	 * `owner`  — the collection's owner property, or ''.
+	 * `ownerIsList` — whether the owner property is a list of strings.
 	 *
-	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string}
+	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool}
 	 */
 	private function rulesFor(string $collection): array
 	{
@@ -152,11 +156,11 @@ final class AuthFieldPolicy
 	}
 
 	/**
-	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string}
+	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool}
 	 */
 	private function buildRules(string $collection): array
 	{
-		$none = ['plain' => [], 'forced' => [], 'owner' => ''];
+		$none = ['plain' => [], 'forced' => [], 'owner' => '', 'ownerIsList' => false];
 
 		try {
 			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
@@ -189,11 +193,30 @@ final class AuthFieldPolicy
 			// misconfigured flag must not take the write path down.
 		}
 
+		$owner = $this->ownerProperties->resolve($collection);
+
 		return [
-			'plain'  => array_values(array_unique($plain)),
-			'forced' => $forced,
-			'owner'  => $this->ownerProperties->resolve($collection),
+			'plain'           => array_values(array_unique($plain)),
+			'forced'          => $forced,
+			'owner'           => $owner,
+			'ownerIsList'     => $this->isListProperty($schema, $owner),
 		];
+	}
+
+	/**
+	 * Whether the named property is a list of strings (see OwnerPropertyKind).
+	 * False for no owner and for the unresolved sentinel, which name no schema
+	 * property.
+	 */
+	private function isListProperty(SchemaData $schema, string $property): bool
+	{
+		if ($property === '' || $property === OwnerPropertyResolver::UNRESOLVED) {
+			return false;
+		}
+
+		$definition = $schema->properties[$property] ?? [];
+
+		return is_array($definition) && OwnerPropertyKind::of($definition) === OwnerPropertyKind::LIST;
 	}
 
 	/**
@@ -211,7 +234,9 @@ final class AuthFieldPolicy
 	 * Super-admins pass through. For everyone else: plain protected fields are
 	 * reverted to their stored values (update) or stripped (create); forced
 	 * fields are set to their configured value; the owner property is stamped
-	 * with the actor on create and reverted on update.
+	 * with the actor on create (or `[actorId]` for a list property; empty for
+	 * an actor outside the collection's `ownerCollection`) and reverted on
+	 * update.
 	 *
 	 * $actorCollection is the auth collection the ACTOR actually belongs to
 	 * (from their session) — distinct from $collection, which is the
@@ -259,9 +284,14 @@ final class AuthFieldPolicy
 		}
 
 		// On create the server decides who owns the object. An anonymous public
-		// submission (empty actor) stores an empty owner.
+		// submission (empty actor) stores an empty owner: '' or, for a list
+		// owner property, []. So does a member of an auth collection other than
+		// the one `ownerCollection` names: they own nothing here.
 		if ($rules['owner'] !== '' && !$exists) {
-			$incoming[$rules['owner']] = $actorId;
+			$stampId                   = $this->ownerProperties->isOutsider($collection, $actorCollection, (string)$this->config->auth['collection']) ? '' : $actorId;
+			$incoming[$rules['owner']] = $rules['ownerIsList']
+				? ($stampId === '' ? [] : [$stampId])
+				: $stampId;
 		}
 
 		$this->logNeutralized($actorId, $collection, $objectId, $reverted, $stripped);
@@ -273,7 +303,7 @@ final class AuthFieldPolicy
 	 * Whether enforcement does nothing for this write: auth is off, the
 	 * collection has no rules, or the actor is a super admin.
 	 *
-	 * @param array{plain: list<string>, forced: array<string,mixed>, owner: string} $rules
+	 * @param array{plain: list<string>, forced: array<string,mixed>, owner: string, ownerIsList: bool} $rules
 	 */
 	private function enforcementSkipped(array $rules, string $actorId, string $actorCollection): bool
 	{

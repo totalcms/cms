@@ -554,6 +554,13 @@ class FormField
 	 * - "schemaCollections:<id>": collections whose schema is <id> or inherits from it
 	 * - "locales": fetch locale codes from LocaleRegistry as {value, label} dicts.
 	 * - "podcastCategories": Apple's podcast taxonomy as optgroups (static).
+	 * - "schemaProperties": the property keys of the collection's schema.
+	 * - {"source": "mediaTags", "field": ..., "type": ...}: tags on a media field.
+	 * - {"source": "schemaProperties", "types": ["string", "array"]}: the
+	 *   schema's property keys, narrowed to those JSON-Schema types (an untyped
+	 *   property counts as string).
+	 * - {"source": "schemaProperties", "owner": true}: only the properties that
+	 *   can hold an owner (OwnerPropertyKind): strings and lists of strings.
 	 *
 	 * Return shape varies by source, and all three shapes `HTMLUtils::options()`
 	 * accepts are legal here: a flat list of strings, a list of `{value, label}`
@@ -579,6 +586,12 @@ class FormField
 				(string)($source['field'] ?? ''),
 				(string)($source['type'] ?? 'image'),
 			);
+		}
+
+		if (is_array($source) && ($source['source'] ?? null) === 'schemaProperties') {
+			$types = array_values(array_filter((array)($source['types'] ?? []), 'is_string'));
+
+			return $this->form->schemaPropertyKeys('', $types, ($source['owner'] ?? false) === true);
 		}
 
 		if ($source === 'collections') {

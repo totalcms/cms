@@ -38,7 +38,7 @@ final class AuthFieldPolicyTest extends TestCase
 	 * @param list<string>                     $inheritFrom
 	 * @param array<string,mixed>|null          $existing    stored record, or null when it doesn't exist
 	 */
-	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'loginCount', 'lastlogin', 'created', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = [], bool $authEnabled = true, array $definitions = [], string $ownerProperty = '', ?SchemaFetcher $schemaFetcher = null): AuthFieldPolicy
+	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'loginCount', 'lastlogin', 'created', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = [], bool $authEnabled = true, array $definitions = [], string $ownerProperty = '', ?SchemaFetcher $schemaFetcher = null, string $ownerCollection = ''): AuthFieldPolicy
 	{
 		$schema              = new SchemaData();
 		$schema->id          = $schemaId;
@@ -63,6 +63,8 @@ final class AuthFieldPolicyTest extends TestCase
 
 		$ownerProperties = $this->createMock(OwnerPropertyResolver::class);
 		$ownerProperties->method('resolve')->willReturn($ownerProperty);
+		$ownerProperties->method('ownerCollection')->willReturn($ownerCollection);
+		$ownerProperties->method('isOutsider')->willReturnCallback(static fn (string $collection, string $actorCollection, string $default): bool => $ownerCollection !== '' && ($actorCollection !== '' ? $actorCollection : $default) !== $ownerCollection);
 
 		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->auth = ['enable' => $authEnabled, 'collection' => 'auth'];
@@ -593,6 +595,149 @@ final class AuthFieldPolicyTest extends TestCase
 		$out = $policy->enforce('member1', 'showcase', 'site-1', ['owner' => 'member2', 'title' => 'New']);
 
 		expect($out['owner'])->toBe('member1');
+		expect($this->logRecords()[0]['context']['reverted'])->toBe(['owner']);
+	}
+
+	public function testListOwnerIsStampedWithTheActorAsAListOnCreate(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			props: ['id', 'title'],
+			schemaId: 'showcase',
+			definitions: ['owner' => ['type' => 'array', 'items' => ['type' => 'string']]],
+			ownerProperty: 'owner',
+		);
+
+		$out = $policy->enforce('alex', 'showcase', '', ['title' => 'New', 'owner' => ['alex', 'someone-else']]);
+
+		expect($out['owner'])->toBe(['alex']);
+	}
+
+	public function testARefDeclaredListOwnerIsStampedAsAList(): void
+	{
+		// The usual list declaration: a $ref to list.json with no `type`.
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			props: ['id', 'title'],
+			schemaId: 'showcase',
+			definitions: ['owner' => ['$ref' => 'https://www.totalcms.co/schemas/properties/list.json', 'field' => 'list']],
+			ownerProperty: 'owner',
+		);
+
+		$out = $policy->enforce('alex', 'showcase', '', ['title' => 'New']);
+
+		expect($out['owner'])->toBe(['alex']);
+	}
+
+	public function testAnonymousCreateStoresAnEmptyListOwner(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			props: ['id', 'title'],
+			schemaId: 'showcase',
+			definitions: ['owner' => ['type' => 'array']],
+			ownerProperty: 'owner',
+		);
+
+		$out = $policy->enforce('', 'showcase', '', ['title' => 'New', 'owner' => ['forged']]);
+
+		expect($out['owner'])->toBe([]);
+	}
+
+	public function testCreateByAnOutsiderOfTheOwnerCollectionStoresAnEmptyOwner(): void
+	{
+		// alex logged in at the plain /admin/login route: the default auth
+		// collection `auth`, not the owner collection `members`.
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			props: ['id', 'title', 'owner'],
+			schemaId: 'showcase',
+			ownerProperty: 'owner',
+			ownerCollection: 'members',
+		);
+
+		expect($policy->enforce('alex', 'showcase', '', ['title' => 'New', 'owner' => 'alex'])['owner'])->toBe('');
+		expect($policy->enforce('alex', 'showcase', '', ['title' => 'New'], 'partners')['owner'])->toBe('');
+	}
+
+	public function testCreateByAnOutsiderStoresAnEmptyListOwner(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			props: ['id', 'title'],
+			schemaId: 'showcase',
+			definitions: ['owner' => ['type' => 'array']],
+			ownerProperty: 'owner',
+			ownerCollection: 'members',
+		);
+
+		$out = $policy->enforce('alex', 'showcase', '', ['title' => 'New', 'owner' => ['alex']], 'partners');
+
+		expect($out['owner'])->toBe([]);
+	}
+
+	public function testCreateByAMemberOfTheOwnerCollectionStampsTheActor(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			props: ['id', 'title', 'owner'],
+			schemaId: 'showcase',
+			ownerProperty: 'owner',
+			ownerCollection: 'members',
+		);
+
+		$out = $policy->enforce('alex', 'showcase', '', ['title' => 'New'], 'members');
+
+		expect($out['owner'])->toBe('alex');
+	}
+
+	public function testOwnerCollectionMatchesTheDefaultAuthCollectionForAnEmptyActorCollection(): void
+	{
+		// The test config's default auth collection is `auth`.
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			props: ['id', 'title', 'owner'],
+			schemaId: 'showcase',
+			ownerProperty: 'owner',
+			ownerCollection: 'auth',
+		);
+
+		expect($policy->enforce('alex', 'showcase', '', ['title' => 'New'])['owner'])->toBe('alex');
+	}
+
+	public function testUpdateByAnOutsiderStillRevertsTheOwner(): void
+	{
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			existing: ['owner' => 'member1', 'title' => 'Old'],
+			props: ['id', 'title', 'owner'],
+			schemaId: 'showcase',
+			ownerProperty: 'owner',
+			ownerCollection: 'members',
+		);
+
+		$out = $policy->enforce('alex', 'showcase', 'site-1', ['owner' => 'alex', 'title' => 'New'], 'partners');
+
+		expect($out['owner'])->toBe('member1');
+	}
+
+	public function testListOwnerIsRevertedOnUpdateByAMember(): void
+	{
+		// Only admins and API keys change the owner list: a co-owner's edit to
+		// it is reverted to the stored list, exactly as for a string owner.
+		$policy = $this->makePolicy(
+			isSuperAdmin: false,
+			existing: ['owner' => ['alex', 'sam'], 'title' => 'Old'],
+			props: ['id', 'title'],
+			schemaId: 'showcase',
+			definitions: ['owner' => ['type' => 'array']],
+			ownerProperty: 'owner',
+		);
+
+		$out = $policy->enforce('sam', 'showcase', 'site-1', ['owner' => ['sam', 'kim'], 'title' => 'New']);
+
+		expect($out['owner'])->toBe(['alex', 'sam']);
+		expect($out['title'])->toBe('New');
 		expect($this->logRecords()[0]['context']['reverted'])->toBe(['owner']);
 	}
 

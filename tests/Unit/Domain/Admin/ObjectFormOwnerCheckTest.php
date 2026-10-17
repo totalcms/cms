@@ -42,18 +42,18 @@ final class ObjectFormOwnerCheckTest extends TestCase
 	 * @param string $ownerProp  resolver result ('' = not owned)
 	 * @param bool   $withChecks false builds the form without the three owner services
 	 * @param bool   $authOn     false switches authentication off for the install
+	 * @param string $ownerCollection resolver ownerCollection() result ('' = any auth collection)
+	 * @param string $actorCollection session auth collection ('' = the default `auth`)
 	 */
-	private function services(string $actor, bool $superAdmin, string $ownerProp, bool $withChecks = true, bool $authOn = true): FormServices
+	private function services(string $actor, bool $superAdmin, string $ownerProp, bool $withChecks = true, bool $authOn = true, string $ownerCollection = '', string $actorCollection = 'members'): FormServices
 	{
 		$config            = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 		$config->api       = '/api';
 		$config->dashboard = [];
-		if (!$authOn) {
-			$config->auth = ['enable' => false];
-		}
+		$config->auth      = $authOn ? ['enable' => true, 'collection' => 'auth'] : ['enable' => false];
 
 		$object = $this->createMock(ObjectData::class);
-		$object->method('toArray')->willReturn(['id' => 'doc-1', 'owner' => 'sam', 'title' => 'Sam secret']);
+		$object->method('toArray')->willReturn(['id' => 'doc-1', 'owner' => 'sam', 'team' => ['sam', 'alex'], 'title' => 'Sam secret']);
 
 		$objectFetcher = $this->createMock(ObjectFetcher::class);
 		$objectFetcher->method('existsObject')->willReturn(true);
@@ -90,7 +90,7 @@ final class ObjectFormOwnerCheckTest extends TestCase
 			$session->method('get')->willReturnCallback(
 				static fn (string $key): mixed => match ($key) {
 					SessionKeys::AUTH_USER       => $actor === '' ? null : $actor,
-					SessionKeys::AUTH_COLLECTION => $actor === '' ? null : 'members',
+					SessionKeys::AUTH_COLLECTION => $actor === '' ? null : $actorCollection,
 					default                      => null,
 				}
 			);
@@ -98,6 +98,8 @@ final class ObjectFormOwnerCheckTest extends TestCase
 			$validation->method('isSuperAdmin')->willReturn($superAdmin);
 			$resolver = $this->createMock(OwnerPropertyResolver::class);
 			$resolver->method('resolve')->willReturn($ownerProp);
+			$resolver->method('ownerCollection')->willReturn($ownerCollection);
+			$resolver->method('isOutsider')->willReturnCallback(static fn (string $collection, string $actorCollection, string $default): bool => $ownerCollection !== '' && ($actorCollection !== '' ? $actorCollection : $default) !== $ownerCollection);
 
 			$overrides['session']         = $session;
 			$overrides['userValidation']  = $validation;
@@ -113,8 +115,10 @@ final class ObjectFormOwnerCheckTest extends TestCase
 	 * @param string $ownerProp  resolver result ('' = not owned)
 	 * @param bool   $withChecks false builds the form without the three owner services
 	 * @param bool   $authOn     false switches authentication off for the install
+	 * @param string $ownerCollection resolver ownerCollection() result ('' = any auth collection)
+	 * @param string $actorCollection session auth collection ('' = the default `auth`)
 	 */
-	private function form(string $actor, bool $superAdmin, string $ownerProp, bool $withChecks = true, bool $authOn = true): ObjectForm
+	private function form(string $actor, bool $superAdmin, string $ownerProp, bool $withChecks = true, bool $authOn = true, string $ownerCollection = '', string $actorCollection = 'members'): ObjectForm
 	{
 		$reflection = new \ReflectionClass(ObjectForm::class);
 		$form       = $reflection->newInstanceWithoutConstructor();
@@ -126,7 +130,7 @@ final class ObjectFormOwnerCheckTest extends TestCase
 			'method'     => 'POST',
 			'buildError' => '',
 			'data'       => [],
-			'services'   => $this->services($actor, $superAdmin, $ownerProp, $withChecks, $authOn),
+			'services'   => $this->services($actor, $superAdmin, $ownerProp, $withChecks, $authOn, $ownerCollection, $actorCollection),
 		];
 		foreach ($values as $name => $value) {
 			for ($class = $reflection; $class !== false; $class = $class->getParentClass()) {
@@ -182,6 +186,19 @@ final class ObjectFormOwnerCheckTest extends TestCase
 		$this->assertLoaded($this->form('sam', false, 'owner'));
 	}
 
+	public function testACoOwnerInAListOwnerPropertyLoadsTheObject(): void
+	{
+		$this->assertLoaded($this->form('alex', false, 'team'));
+	}
+
+	public function testAnActorMissingFromAListOwnerPropertyIsRefused(): void
+	{
+		$form = $this->form('kim', false, 'team');
+
+		$this->assertSame(self::MESSAGE, $this->read($form, 'buildError'));
+		$this->assertNull($this->read($form, 'objectData'));
+	}
+
 	public function testASuperAdminLoadsTheObject(): void
 	{
 		$this->assertLoaded($this->form('alex', true, 'owner'));
@@ -212,6 +229,34 @@ final class ObjectFormOwnerCheckTest extends TestCase
 		// With auth off the actor is '' and every edit form on an owned
 		// collection would otherwise show the error.
 		$this->assertLoaded($this->form('', false, 'owner', true, false));
+	}
+
+	public function testAnOutsiderOfTheOwnerCollectionIsRefusedEvenOnAnObjectStampedWithTheirId(): void
+	{
+		// sam owns doc-1, but logged in from `partners`, not `members`.
+		$form = $this->form('sam', false, 'owner', ownerCollection: 'members', actorCollection: 'partners');
+
+		$this->assertSame(self::MESSAGE, $this->read($form, 'buildError'));
+		$this->assertNull($this->read($form, 'objectData'));
+	}
+
+	public function testAnOutsiderFromTheDefaultLoginIsRefused(): void
+	{
+		// An empty session collection is the default auth collection `auth`.
+		$form = $this->form('sam', false, 'owner', ownerCollection: 'members', actorCollection: '');
+
+		$this->assertSame(self::MESSAGE, $this->read($form, 'buildError'));
+	}
+
+	public function testAMemberOfTheOwnerCollectionLoadsTheirObject(): void
+	{
+		$this->assertLoaded($this->form('sam', false, 'owner', ownerCollection: 'members'));
+		$this->assertLoaded($this->form('sam', false, 'owner', ownerCollection: 'auth', actorCollection: ''));
+	}
+
+	public function testASuperAdminFromAnotherCollectionLoadsTheObject(): void
+	{
+		$this->assertLoaded($this->form('alex', true, 'owner', ownerCollection: 'members', actorCollection: 'partners'));
 	}
 
 	/** The whole form, built through the constructor and autoBuild() as cms.form.builder() does. */

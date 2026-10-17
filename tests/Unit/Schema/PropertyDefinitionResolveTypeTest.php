@@ -117,4 +117,59 @@ final class PropertyDefinitionResolveTypeTest extends TestCase
 		expect($onlyNull->type)->toBeNull();
 		expect($onlyNull->resolveType())->toBe('text');
 	}
+
+	public function testEffectiveJsonTypeOfARefListIsArray(): void
+	{
+		$prop = PropertyDefinition::fromArray(['$ref' => 'https://www.totalcms.co/schemas/properties/list.json', 'field' => 'list']);
+		expect($prop->effectiveJsonType())->toBe('array');
+	}
+
+	public function testEffectiveJsonTypeOfARefImageIsObject(): void
+	{
+		$prop = PropertyDefinition::fromArray(['$ref' => 'https://www.totalcms.co/schemas/properties/image.json', 'field' => 'image']);
+		expect($prop->effectiveJsonType())->toBe('object');
+	}
+
+	public function testEffectiveJsonTypeOfARefDeckIsObject(): void
+	{
+		$prop = PropertyDefinition::fromArray(['$ref' => 'https://www.totalcms.co/schemas/properties/deck.json', 'field' => 'deck']);
+		expect($prop->effectiveJsonType())->toBe('object');
+	}
+
+	public function testEffectiveJsonTypeOfARefColorIsObject(): void
+	{
+		// color.json is an anyOf of objects and ColorData::transform() returns an array.
+		$prop = PropertyDefinition::fromArray(['$ref' => 'https://www.totalcms.co/schemas/properties/color.json', 'field' => 'color']);
+		expect($prop->effectiveJsonType())->toBe('object');
+	}
+
+	public function testEffectiveJsonTypeOfARefSlugIsString(): void
+	{
+		$prop = PropertyDefinition::fromArray(['$ref' => 'https://www.totalcms.co/schemas/properties/slug.json', 'field' => 'id']);
+		expect($prop->effectiveJsonType())->toBe('string');
+	}
+
+	public function testEffectiveJsonTypeOfAFormatOnlyRefIsString(): void
+	{
+		$prop = PropertyDefinition::fromArray(['$ref' => 'https://www.totalcms.co/schemas/properties/email.json', 'field' => 'email']);
+		expect($prop->effectiveJsonType())->toBe('string');
+	}
+
+	public function testEffectiveJsonTypeOfACustomCardRefFallsBackToTheField(): void
+	{
+		$prop = PropertyDefinition::fromArray(['$ref' => 'https://example.com/schemas/my-card.json', 'field' => 'card']);
+		expect($prop->effectiveJsonType())->toBe('object');
+	}
+
+	public function testEffectiveJsonTypePrefersAnExplicitType(): void
+	{
+		$prop = PropertyDefinition::fromArray(['type' => 'boolean', '$ref' => 'https://www.totalcms.co/schemas/properties/list.json']);
+		expect($prop->effectiveJsonType())->toBe('boolean');
+	}
+
+	public function testEffectiveJsonTypeIsNullWithNeitherTypeNorRef(): void
+	{
+		expect(PropertyDefinition::fromArray(['field' => 'list'])->effectiveJsonType())->toBeNull();
+		expect(PropertyDefinition::fromArray([])->effectiveJsonType())->toBeNull();
+	}
 }

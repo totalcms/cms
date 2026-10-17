@@ -5,10 +5,11 @@ declare(strict_types=1);
 use TotalCMS\Domain\Collection\Data\OwnerScope;
 
 /*
- * The owner scope on member lists is exact string equality, the same
- * comparison CollectionAccessMiddleware::ownerAllows() makes when an object
- * is opened. It is deliberately not the ObjectFilter `include` grammar
- * (case-insensitive, `*` wildcards, comma-split clauses, true/false coercion).
+ * The owner scope on member lists is exact string equality (per entry for a
+ * list owner), the same comparison CollectionAccessMiddleware::ownerAllows()
+ * makes when an object is opened. It is deliberately not the ObjectFilter
+ * `include` grammar (case-insensitive, `*` wildcards, comma-split clauses,
+ * true/false coercion).
  */
 describe('OwnerScope', function (): void {
 	it('matches an exact owner value', function (): void {
@@ -42,9 +43,36 @@ describe('OwnerScope', function (): void {
 		expect((new OwnerScope('owner', ''))->matches(['id' => 'a', 'owner' => null]))->toBeFalse();
 	});
 
-	it('does not match a non-scalar owner', function (): void {
-		expect((new OwnerScope('owner', 'alex'))->matches(['owner' => ['alex']]))->toBeFalse();
+	it('does not match a non-scalar, non-list owner', function (): void {
 		expect((new OwnerScope('owner', 'Array'))->matches(['owner' => ['alex']]))->toBeFalse();
+		expect((new OwnerScope('owner', 'alex'))->matches(['owner' => new stdClass()]))->toBeFalse();
+	});
+
+	it('matches every co-owner in a list owner', function (): void {
+		$item = ['id' => 'a', 'owner' => ['alex', 'sam']];
+
+		expect((new OwnerScope('owner', 'alex'))->matches($item))->toBeTrue();
+		expect((new OwnerScope('owner', 'sam'))->matches($item))->toBeTrue();
+	});
+
+	it('compares each list entry exactly', function (): void {
+		$item = ['id' => 'a', 'owner' => ['alex', 'sam']];
+
+		expect((new OwnerScope('owner', 'al'))->matches($item))->toBeFalse();
+		expect((new OwnerScope('owner', 'Alex'))->matches($item))->toBeFalse();
+		expect((new OwnerScope('owner', 'alex'))->matches(['owner' => ['alex ']]))->toBeFalse();
+	});
+
+	it('ignores nested arrays in a list owner', function (): void {
+		$item = ['id' => 'a', 'owner' => ['alex', ['nested']]];
+
+		expect((new OwnerScope('owner', 'alex'))->matches($item))->toBeTrue();
+		expect((new OwnerScope('owner', 'nested'))->matches($item))->toBeFalse();
+		expect((new OwnerScope('owner', 'Array'))->matches($item))->toBeFalse();
+	});
+
+	it('does not match an empty list owner', function (): void {
+		expect((new OwnerScope('owner', ''))->matches(['owner' => []]))->toBeFalse();
 	});
 
 	it('filters in order and reindexes', function (): void {

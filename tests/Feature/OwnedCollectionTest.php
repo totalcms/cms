@@ -35,6 +35,7 @@ beforeEach(function (): void {
 			'id'       => ['$ref' => 'https://www.totalcms.co/schemas/properties/slug.json', 'label' => 'ID', 'help' => 'Slug', 'field' => 'id'],
 			'title'    => ['type' => 'string', 'label' => 'Title', 'help' => 'Site name', 'field' => 'input'],
 			'owner'    => ['type' => 'string', 'label' => 'Owner', 'help' => 'User id of the submitting member', 'field' => 'input'],
+			'team'     => ['type' => 'array', 'items' => ['type' => 'string'], 'label' => 'Team', 'help' => 'Co-owners', 'field' => 'list'],
 			'draft'    => ['type' => 'boolean', 'label' => 'Draft', 'help' => 'Awaiting review', 'field' => 'toggle', 'default' => true, 'protected' => ['value' => true]],
 			'featured' => ['type' => 'boolean', 'label' => 'Featured', 'help' => 'Admin pick', 'field' => 'toggle', 'default' => false, 'protected' => true],
 			'gallery'  => [
@@ -47,7 +48,7 @@ beforeEach(function (): void {
 			],
 		],
 		'required' => ['id', 'title'],
-		'index'    => ['id', 'title', 'owner', 'draft', 'featured'],
+		'index'    => ['id', 'title', 'owner', 'team', 'draft', 'featured'],
 	])->assertOk();
 
 	postJson('/api/collections', [
@@ -245,6 +246,41 @@ describe('list routes', function (): void {
 	});
 });
 
+describe('a list owner property', function (): void {
+	it('lets every co-owner in the list read the object and refuses everyone else', function (): void {
+		alexCreatesASite($this->app);
+		samCreatesASite($this->app);
+
+		// A third member of the same group, in no object's team.
+		signInAs($this->app, 'admin-user-test-com', 'auth');
+		postJson('/api/collections/auth', [
+			'id'       => 'third-editor',
+			'name'     => 'Third Editor',
+			'email'    => 'third-editor@test.com',
+			'password' => 'Correct-Horse-Battery-9',
+			'groups'   => ['editor'],
+			'active'   => true,
+		])->assertOk();
+
+		patchJson('/api/collections/portfolio', ['ownerProperty' => 'team'])->assertOk();
+		patchJson('/api/collections/portfolio/alex-site', ['team' => ['editor-user-test-com', 'second-editor']])->assertOk();
+		expect(storedPortfolio('alex-site')['team'])->toBe(['editor-user-test-com', 'second-editor']);
+
+		foreach (['editor-user-test-com', 'second-editor'] as $member) {
+			signInAs($this->app, $member, '');
+			getJson('/api/collections/portfolio/alex-site')->assertOk();
+			getJson('/api/collections/portfolio/query')
+				->assertOk()
+				->assertHeader('X-Total', '1')
+				->assertJsonPath('data.0.id', 'alex-site');
+		}
+
+		signInAs($this->app, 'third-editor', '');
+		getJson('/api/collections/portfolio/alex-site')->assertStatus(403);
+		getJson('/api/collections/portfolio/query')->assertOk()->assertHeader('X-Total', '0');
+	});
+});
+
 describe('id-less routes outside the allow-list', function (): void {
 	beforeEach(function (): void {
 		alexCreatesASite($this->app);
@@ -325,6 +361,66 @@ describe('public create on an owned collection', function (): void {
 		$stored = storedPortfolio('editor-public-site');
 		expect($stored['owner'])->toBe('editor-user-test-com');
 		expect($stored['draft'])->toBeTrue();
+	});
+});
+
+/*
+ * `ownerCollection` names the auth collection whose members own objects here.
+ * `partners` is a second auth collection; its user carries the same `editor`
+ * group, so only the ownerCollection check can refuse them.
+ */
+describe('ownerCollection', function (): void {
+	beforeEach(function (): void {
+		alexCreatesASite($this->app);
+
+		signInAs($this->app, 'admin-user-test-com', 'auth');
+		postJson('/api/collections', ['id' => 'partners', 'schema' => 'auth', 'name' => 'Partners'])->assertOk();
+		postJson('/api/collections/partners', [
+			'id'       => 'partner-editor',
+			'name'     => 'Partner Editor',
+			'email'    => 'partner-editor@test.com',
+			'password' => 'Correct-Horse-Battery-9',
+			'groups'   => ['editor'],
+			'active'   => true,
+		])->assertOk();
+	});
+
+	it('keeps an editor of the default auth collection working when it names that collection', function (): void {
+		patchJson('/api/collections/portfolio', ['ownerCollection' => 'auth'])->assertOk();
+
+		signInAs($this->app, 'editor-user-test-com', '');
+		getJson('/api/collections/portfolio/alex-site')->assertOk();
+		getJson('/api/collections/portfolio/query')->assertOk()->assertHeader('X-Total', '1');
+	});
+
+	it('lets the partners member in before ownerCollection is set', function (): void {
+		// Precondition: the group lets the partner list the collection.
+		signInAs($this->app, 'partner-editor', 'partners');
+		getJson('/api/collections/portfolio/query')->assertOk()->assertHeader('X-Total', '0');
+	});
+
+	it('refuses a member of another auth collection, while the editor keeps working', function (): void {
+		patchJson('/api/collections/portfolio', ['ownerCollection' => 'auth'])->assertOk();
+
+		signInAs($this->app, 'partner-editor', 'partners');
+		getJson('/api/collections/portfolio/alex-site')->assertStatus(403);
+		getJson('/api/collections/portfolio/query')->assertStatus(403);
+		postJson('/api/collections/portfolio', ['id' => 'partner-site', 'title' => 'Partner Site'])->assertStatus(403);
+		expect(file_exists(cmsDataDir() . 'portfolio/partner-site.json'))->toBeFalse();
+
+		signInAs($this->app, 'editor-user-test-com', '');
+		getJson('/api/collections/portfolio/alex-site')->assertOk();
+		getJson('/api/collections/portfolio/query')->assertOk()->assertHeader('X-Total', '1');
+	});
+
+	it('stamps a public create by an outsider as anonymous', function (): void {
+		patchJson('/api/collections/portfolio', ['ownerCollection' => 'auth', 'publicOperations' => ['create']])->assertOk();
+
+		signInAs($this->app, 'partner-editor', 'partners');
+		$status = postJson('/api/collections/portfolio', ['id' => 'partner-public', 'title' => 'Partner Public', 'owner' => 'partner-editor'])->getStatusCode();
+
+		expect($status)->toBeIn([200, 201]);
+		expect(storedPortfolio('partner-public')['owner'])->toBe('');
 	});
 });
 

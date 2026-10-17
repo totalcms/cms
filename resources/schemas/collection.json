@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\nrequireEmailVerification requireEmailVerification\nownerProperty ownerProperty\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
+	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Access Controls---\npublicOperations publicOperations\nrequireEmailVerification requireEmailVerification\n---\ngroups groups\nownerProperty ownerCollection\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -159,16 +159,33 @@
         },
         "requireEmailVerification": {
 			"type"  : "boolean",
-			"label" : "Require Email Verification",
+			"label" : "Require Email Verification on Create",
 			"help"  : "When a user registers via the public registration endpoint, create their account inactive and send a verification email. Only takes effect for collections listed in $config->auth['publicRegistration'].",
 			"field" : "checkbox"
         },
         "ownerProperty": {
 			"type"        : "string",
 			"label"       : "Owner Property",
-			"help"        : "Name of the property that holds the owning user's id. Users who are not super admins can then only read, edit and delete objects they own, and the server fills this property with their id when they create one. Leave empty for ordinary collections. The property must be a string field that is listed in the schema's index.",
-			"placeholder" : "owner",
-			"field"       : "input"
+			"help"        : "Property that holds the owning user's id: a string property for one owner, or a list property for several. Users who are not super admins can then only read, edit and delete objects they own, and the server fills this property with their id when they create one. Leave empty for ordinary collections. The property must be listed in the schema's index; only string properties and lists of strings are offered, and the list is empty until the collection has been saved with its schema.",
+			"field"       : "select",
+			"default"     : "",
+			"options"     : [{ "value": "", "label": "None" }],
+			"settings"    : {
+				"propertyOptions" : { "source": "schemaProperties", "owner": true },
+				"sortOptions"     : false
+			}
+        },
+        "ownerCollection": {
+			"type"        : "string",
+			"label"       : "Owner Collection",
+			"help"        : "Limit ownership to members of one auth collection. Members of other auth collections are treated like anonymous callers on this collection. Leave empty to accept any auth collection; the owner value is the bare user id, so ids must then be unique across auth collections.",
+			"field"       : "select",
+			"default"     : "",
+			"options"     : [{ "value": "", "label": "Any auth collection" }],
+			"settings"    : {
+				"propertyOptions" : "schemaCollections:auth",
+				"sortOptions"     : false
+			}
         },
         "count": {
 			"type"    : "integer",

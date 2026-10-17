@@ -56,6 +56,12 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		$this->userValidation    = $this->createMock(UserValidationService::class);
 		$this->operationDetector = $this->createMock(OperationDetector::class);
 		$this->ownerProperties   = $this->createMock(OwnerPropertyResolver::class);
+		// The real outsider rule over whatever ownerCollection() a test stubs.
+		$this->ownerProperties->method('isOutsider')->willReturnCallback(function (string $collection, string $actorCollection, string $default): bool {
+			$required = $this->ownerProperties->ownerCollection($collection);
+
+			return $required !== '' && ($actorCollection !== '' ? $actorCollection : $default) !== $required;
+		});
 		$this->objectFetcher     = $this->createMock(ObjectFetcher::class);
 
 		$this->config        = Config::init();
@@ -236,6 +242,29 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		expect($this->logged[0]['message'])->toBe('Access denied');
 		expect($this->logged[0]['context']['reason'])->toBe('owner');
 		expect($this->logged[0]['context']['user_id'])->toBe('alex');
+	});
+
+	it('allows a co-owner listed in a list owner property', function (): void {
+		($this->owned)();
+		($this->signInAs)('sam', 'update');
+		($this->storedObject)(['id' => 'site-3', 'owner' => ['alex', 'sam']]);
+
+		$response = $this->middleware->process(($this->requestFor)('object-update', 'showcase', 'site-3', 'PUT'), $this->handler);
+
+		expect($response)->toBe($this->allowed);
+		expect($this->logged)->toHaveCount(0);
+	});
+
+	it('refuses an actor missing from a list owner property, with reason owner', function (): void {
+		($this->owned)();
+		($this->signInAs)('kim', 'update');
+		($this->storedObject)(['id' => 'site-3', 'owner' => ['alex', 'sam']]);
+
+		$response = $this->middleware->process(($this->requestFor)('object-update', 'showcase', 'site-3', 'PUT'), $this->handler);
+
+		expect($response)->toBe($this->forbidden);
+		expect($this->logged)->toHaveCount(1);
+		expect($this->logged[0]['context']['reason'])->toBe('owner');
 	});
 
 	it('refuses reads of another members object too', function (): void {
@@ -826,5 +855,102 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		}
 
 		expect($this->middleware->process(($this->requestFor)('admin-collection-post', 'showcase', '-import', 'POST'), $this->handler))->toBe($this->forbidden);
+	});
+
+	describe('ownerCollection', function (): void {
+		beforeEach(function (): void {
+			// A signed-in non-admin from the given session auth collection
+			// ('' = logged in at the plain /admin/login route).
+			$this->signInFrom = function (string $userId, string $authCollection, string $operation): void {
+				$this->session->method('get')->willReturnCallback(
+					static fn (string $key) => match ($key) {
+						SessionKeys::AUTH_USER       => $userId,
+						SessionKeys::AUTH_COLLECTION => $authCollection,
+						default                      => null,
+					},
+				);
+				$this->userValidation->method('isSuperAdmin')->willReturn(false);
+				$this->operationDetector->method('detectOperation')->willReturn($operation);
+				$this->accessControl->method('canAccessCollection')->willReturn(true);
+			};
+		});
+
+		it('allows a member of the owner collection on their own object', function (): void {
+			($this->owned)();
+			$this->ownerProperties->method('ownerCollection')->willReturn('members');
+			($this->signInFrom)('alex', 'members', 'update');
+			($this->storedObject)(['id' => 'site-1', 'owner' => 'alex']);
+
+			$response = $this->middleware->process(($this->requestFor)('object-update', 'showcase', 'site-1', 'PUT'), $this->handler);
+
+			expect($response)->toBe($this->allowed);
+			expect($this->handled[0]->getAttribute('accessActor'))->toEqual(new AccessActor('alex', 'members'));
+		});
+
+		it('scopes the list routes for a member of the owner collection', function (): void {
+			($this->owned)();
+			$this->ownerProperties->method('ownerCollection')->willReturn('members');
+			($this->signInFrom)('alex', 'members', 'read');
+
+			expect($this->middleware->process(($this->requestFor)('collection-query', 'showcase'), $this->handler))->toBe($this->allowed);
+			expect($this->handled[0]->getAttribute('ownerScope'))->toBeInstanceOf(OwnerScope::class);
+		});
+
+		it('denies an outsider on their own object, the list route and object-save, with reason owner', function (): void {
+			// alex logged in at the plain /admin/login route, so belongs to the
+			// default auth collection `users`, not the owner collection `members`.
+			// An object stamped `alex` (an id that exists in both collections)
+			// is still refused.
+			$this->config->auth = ['enable' => true, 'collection' => 'users'];
+			($this->owned)();
+			$this->ownerProperties->method('ownerCollection')->willReturn('members');
+			($this->signInFrom)('alex', '', 'read');
+			($this->storedObject)(['id' => 'site-1', 'owner' => 'alex']);
+
+			foreach ([['object-fetch', 'site-1', 'GET'], ['collection-query', null, 'GET'], ['object-save', null, 'POST']] as [$routeName, $id, $method]) {
+				$this->logged->exchangeArray([]);
+				$response = $this->middleware->process(($this->requestFor)($routeName, 'showcase', $id, $method), $this->handler);
+				expect($response)->toBe($this->forbidden, "route: $routeName");
+				expect($this->logged[0]['context']['reason'])->toBe('owner', "route: $routeName");
+			}
+			expect($this->handled)->toHaveCount(0);
+		});
+
+		it('denies an outsider reading a missing id, with reason owner, instead of passing it to the 404', function (): void {
+			// A member of the owner collection reading a missing id gets the
+			// action's 404; an outsider owns nothing here and is refused before
+			// the object is looked up, so they learn nothing about which ids exist.
+			($this->owned)();
+			$this->ownerProperties->method('ownerCollection')->willReturn('members');
+			($this->signInFrom)('alex', 'partners', 'read');
+			($this->storedObject)(null);
+
+			$response = $this->middleware->process(($this->requestFor)('object-fetch', 'showcase', 'ghost'), $this->handler);
+
+			expect($response)->toBe($this->forbidden);
+			expect($this->logged[0]['context']['reason'])->toBe('owner');
+			expect($this->handled)->toHaveCount(0);
+		});
+
+		it('keeps any auth collection an owner when ownerCollection is empty', function (): void {
+			$this->config->auth = ['enable' => true, 'collection' => 'auth'];
+			($this->owned)();
+			$this->ownerProperties->method('ownerCollection')->willReturn('');
+			($this->signInFrom)('alex', 'users', 'update');
+			($this->storedObject)(['id' => 'site-1', 'owner' => 'alex']);
+
+			$response = $this->middleware->process(($this->requestFor)('object-update', 'showcase', 'site-1', 'PUT'), $this->handler);
+
+			expect($response)->toBe($this->allowed);
+		});
+
+		it('does not touch an unowned collection whatever ownerCollection says', function (): void {
+			$this->ownerProperties->method('resolve')->willReturn('');
+			$this->ownerProperties->method('ownerCollection')->willReturn('members');
+			($this->signInFrom)('alex', 'users', 'update');
+			$this->objectFetcher->expects($this->never())->method('existsObject');
+
+			expect($this->middleware->process(($this->requestFor)('object-update', 'blog', 'post-1', 'PUT'), $this->handler))->toBe($this->allowed);
+		});
 	});
 });

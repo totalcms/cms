@@ -138,7 +138,72 @@ final class CollectionSaverTest extends TestCase
 		$this->repository->expects($this->never())->method('saveCollection');
 
 		$this->expectException(\DomainException::class);
-		$this->expectExceptionMessage("ownerProperty 'owner' must be a string property in schema 'portfolio-schema' (its type is 'boolean').");
+		$this->expectExceptionMessage("ownerProperty 'owner' must be a string property or a list of strings in schema 'portfolio-schema' (its type is 'boolean').");
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+	}
+
+	public function testSaveAcceptsAListOwnerProperty(): void
+	{
+		$schema             = $this->schemaWith(['id', 'owner']);
+		$schema->properties = ['id' => ['type' => 'string'], 'owner' => ['type' => 'array']];
+		$this->schemaFetcher->method('fetchSchema')->willReturn($schema);
+		$this->repository->expects($this->once())->method('saveCollection');
+
+		$result = $this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+
+		expect($result->id)->toBe('portfolio');
+	}
+
+	public function testSaveAcceptsARefDeclaredListOwnerProperty(): void
+	{
+		$schema             = $this->schemaWith(['id', 'owner']);
+		$schema->properties = ['id' => ['type' => 'string'], 'owner' => ['$ref' => 'https://www.totalcms.co/schemas/properties/list.json', 'field' => 'list']];
+		$this->schemaFetcher->method('fetchSchema')->willReturn($schema);
+		$this->repository->expects($this->once())->method('saveCollection');
+
+		$result = $this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+
+		expect($result->id)->toBe('portfolio');
+	}
+
+	public function testSaveRejectsARefDeclaredImageOwnerProperty(): void
+	{
+		$schema             = $this->schemaWith(['id', 'owner']);
+		$schema->properties = ['id' => ['type' => 'string'], 'owner' => ['$ref' => 'https://www.totalcms.co/schemas/properties/image.json', 'field' => 'image']];
+		$this->schemaFetcher->method('fetchSchema')->willReturn($schema);
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("(its type is 'object')");
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+	}
+
+	public function testSaveRejectsAGalleryOwnerProperty(): void
+	{
+		// A gallery is an array of image objects: stamping ["alex"] into it
+		// would break every member create.
+		$schema             = $this->schemaWith(['id', 'owner']);
+		$schema->properties = ['id' => ['type' => 'string'], 'owner' => ['$ref' => 'https://www.totalcms.co/schemas/properties/gallery.json', 'field' => 'gallery']];
+		$this->schemaFetcher->method('fetchSchema')->willReturn($schema);
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("ownerProperty 'owner' must be a string property or a list of strings in schema 'portfolio-schema' (its type is 'array').");
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+	}
+
+	public function testSaveRejectsAnInlineArrayOfObjectsOwnerProperty(): void
+	{
+		$schema             = $this->schemaWith(['id', 'owner']);
+		$schema->properties = ['id' => ['type' => 'string'], 'owner' => ['type' => 'array', 'items' => ['type' => 'object']]];
+		$this->schemaFetcher->method('fetchSchema')->willReturn($schema);
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("(its type is 'array')");
 
 		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
 	}
@@ -218,6 +283,78 @@ final class CollectionSaverTest extends TestCase
 		$this->repository->expects($this->once())->method('saveCollection');
 
 		$this->saver->incrementTotalObjects('portfolio');
+	}
+
+	private function authCollection(string $id, string $schema): CollectionData
+	{
+		$collection         = new CollectionData();
+		$collection->id     = $id;
+		$collection->schema = $schema;
+
+		return $collection;
+	}
+
+	public function testSaveAcceptsAnAuthOwnerCollection(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->with('members')->willReturn($this->authCollection('members', 'auth'));
+		$this->repository->expects($this->once())->method('saveCollection');
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerCollection' => 'members']);
+	}
+
+	public function testSaveAcceptsAnOwnerCollectionWhoseSchemaInheritsAuth(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->with('members')->willReturn($this->authCollection('members', 'member'));
+		$schema              = new SchemaData();
+		$schema->inheritFrom = ['auth'];
+		$this->schemaFetcher->method('fetchRawSchema')->with('member')->willReturn($schema);
+		$this->repository->expects($this->once())->method('saveCollection');
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerCollection' => 'members']);
+	}
+
+	public function testSaveRejectsAMissingOwnerCollection(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->willReturn(null);
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("ownerCollection 'members' is not an auth collection. Choose a collection whose schema is auth or inherits from it.");
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerCollection' => 'members']);
+	}
+
+	public function testSaveRejectsANonAuthOwnerCollection(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->authCollection('blog', 'blog'));
+		$this->schemaFetcher->method('fetchRawSchema')->willReturn(new SchemaData());
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("ownerCollection 'blog' is not an auth collection.");
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerCollection' => 'blog']);
+	}
+
+	public function testPatchRejectsANonAuthOwnerCollection(): void
+	{
+		$this->repository->method('fetchCollection')->willReturn($this->storedCollection('portfolio-schema'));
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->authCollection('blog', 'blog'));
+		$this->schemaFetcher->method('fetchRawSchema')->willReturn(new SchemaData());
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("ownerCollection 'blog' is not an auth collection.");
+
+		$this->saver->patchCollection('portfolio', ['ownerCollection' => 'blog']);
+	}
+
+	public function testSaveWithEmptyOwnerCollectionSkipsTheCheck(): void
+	{
+		$this->collectionFetcher->expects($this->never())->method('fetchCollection');
+		$this->repository->expects($this->once())->method('saveCollection');
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerCollection' => '']);
 	}
 
 	public function testIncrementTotalObjects(): void
