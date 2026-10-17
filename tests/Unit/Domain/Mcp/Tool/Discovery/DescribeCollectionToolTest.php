@@ -9,7 +9,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
@@ -38,6 +37,7 @@ final class DescribeCollectionToolTest extends TestCase
 		$personaSchemaResolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'owned'         => false,
 				'description'   => null,
 				'resource'      => true,
 				'titleProperty' => '',
@@ -46,7 +46,7 @@ final class DescribeCollectionToolTest extends TestCase
 		$personaSchemaResolver->method('isAccessibleTo')->willReturnCallback(
 			fn (CollectionData $c, string $p): bool => $this->resolver->isAccessibleTo($c, $p),
 		);
-		$this->persona = new PersonaContext($this->collections, $personaSchemaResolver, $this->createStub(OwnerPropertyResolver::class));
+		$this->persona = new PersonaContext($this->collections, $personaSchemaResolver);
 
 		$this->tool = new DescribeCollectionTool(
 			$this->resolver,
@@ -146,7 +146,7 @@ final class DescribeCollectionToolTest extends TestCase
 		$this->collections->method('fetchCollection')->willReturn($blog);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('forCollection')->willReturn([
-			'access' => 'public', 'description' => 'Blog posts', 'resource' => true,
+			'access' => 'public', 'owned' => false, 'description' => 'Blog posts', 'resource' => true,
 		]);
 		$this->resolver->method('describeProperties')->willReturn([
 			['name' => 'title',   'type' => 'text',       'description' => 'Post title',  'indexed' => true,  'filterable' => true,  'sortable' => false],
@@ -184,7 +184,7 @@ final class DescribeCollectionToolTest extends TestCase
 		$this->collections->method('fetchCollection')->willReturn($this->collection('locked'));
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('forCollection')->willReturn([
-			'access' => 'admin', 'description' => null, 'resource' => true,
+			'access' => 'admin', 'owned' => false, 'description' => null, 'resource' => true,
 		]);
 		$this->resolver->method('describeProperties')->willReturn([]);
 
@@ -203,7 +203,7 @@ final class DescribeCollectionToolTest extends TestCase
 		$this->collections->method('fetchCollection')->willReturn($collection);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('forCollection')->willReturn([
-			'access' => 'public', 'description' => null, 'resource' => true,
+			'access' => 'public', 'owned' => false, 'description' => null, 'resource' => true,
 		]);
 		$this->resolver->method('describeProperties')->willReturn([]);
 

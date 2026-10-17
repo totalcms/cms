@@ -16,6 +16,7 @@ use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
+use TotalCMS\Domain\Auth\Data\AccessActor;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Auth\Service\ForcedValueContext;
@@ -114,8 +115,11 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 		);
 
 		// A request already through routing, carrying collection + id args.
-		$this->requestFor = function (string $collection, string $id): ServerRequestInterface {
+		// Attributes set with withAttribute() are kept, so the AccessActor the
+		// base middleware attaches is what the carve-out reads.
+		$this->requestFor = function (string $collection, string $id, array $attributes = []): ServerRequestInterface {
 			$route = $this->createMock(RouteInterface::class);
+			$route->method('getName')->willReturn('object-update');
 			$route->method('getArgument')->willReturnCallback(
 				static fn (string $name, $default = null) => match ($name) {
 					'collection' => $collection,
@@ -130,13 +134,15 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 			$request = $this->createMock(ServerRequestInterface::class);
 			$request->method('getUri')->willReturn($uri);
 			$request->method('getMethod')->willReturn('PUT');
-			$request->method('withAttribute')->willReturnSelf();
+			$request->method('withAttribute')->willReturnCallback(
+				fn (string $name, $value): ServerRequestInterface => ($this->requestFor)($collection, $id, [$name => $value] + $attributes),
+			);
 			$request->method('getAttribute')->willReturnCallback(
 				fn (string $name, $default = null) => match ($name) {
 					RouteContext::ROUTE           => $route,
 					RouteContext::ROUTE_PARSER    => $this->createMock(RouteParserInterface::class),
 					RouteContext::ROUTING_RESULTS => $this->createMock(RoutingResults::class),
-					default                       => $default,
+					default                       => $attributes[$name] ?? $default,
 				},
 			);
 
@@ -173,6 +179,30 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 		$response = $this->middleware->process(($this->requestFor)('auth', 'alex-park'), $this->handler);
 
 		expect($response)->toBe($this->allowed);
+	});
+
+	it('a default-login session user can still update their own profile', function (): void {
+		$this->config->auth = ['enable' => true, 'collection' => 'users'];
+		($this->signInAs)('alex', '');
+		$this->accessControl->expects($this->never())->method('canAccessCollection');
+
+		$handled = new \ArrayObject();
+		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler->method('handle')->willReturnCallback(function (ServerRequestInterface $request) use ($handled): ResponseInterface {
+			$handled[] = $request;
+
+			return $this->allowed;
+		});
+
+		$response = $this->middleware->process(($this->requestFor)('users', 'alex'), $handler);
+
+		// Allowed by the carve-out, before the group check: the actor's empty
+		// collection resolves to the configured default `users`.
+		expect($response)->toBe($this->allowed);
+		$actor = $handled[0]->getAttribute('accessActor');
+		expect($actor)->toBeInstanceOf(AccessActor::class);
+		expect($actor->userId)->toBe('alex');
+		expect($actor->collection)->toBe('');
 	});
 
 	it('still refuses a write to someone elses record', function (): void {

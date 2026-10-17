@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Object\Support;
 
-use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\NullLogger;
 use Slim\Exception\HttpForbiddenException;
 use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
+use TotalCMS\Domain\Auth\Data\AccessActor;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
@@ -17,15 +17,15 @@ use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
  * The guard wraps a real {@see AuthFieldPolicy} (both are final, so they're
  * exercised together rather than mocked). These tests assert the guard's own
- * responsibilities — the API-key/OAuth trust bypass and actor resolution from
- * the session — by observing whether the policy was allowed to act.
+ * responsibilities — the API-key/OAuth trust bypass and reading the actor that
+ * BaseAccessMiddleware attached — by observing whether the policy was allowed
+ * to act.
  */
 final class PrivilegedFieldGuardTest extends TestCase
 {
@@ -73,22 +73,23 @@ final class PrivilegedFieldGuardTest extends TestCase
 		return $config;
 	}
 
-	private function guard(AuthFieldPolicy $policy, string $actor = 'member1'): PrivilegedFieldGuard
+	private function guard(AuthFieldPolicy $policy): PrivilegedFieldGuard
 	{
-		$session = $this->createMock(SessionInterface::class);
-		$session->method('get')->willReturnCallback(
-			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? $actor : null,
-		);
-
-		return new PrivilegedFieldGuard($policy, $session, $this->config());
+		return new PrivilegedFieldGuard($policy);
 	}
 
 	/**
-	 * @param array<string,mixed> $attributes extra request attributes (e.g. accessAuthority, oauth_user_id)
+	 * A request as BaseAccessMiddleware hands it on: carrying the resolved
+	 * actor (`$actor = null` for a request that never went through it).
+	 *
+	 * @param array<string,mixed> $attributes extra request attributes (e.g. accessAuthority)
 	 */
-	private function request(?string $authMethod, array $attributes = []): ServerRequestInterface
+	private function request(?string $authMethod, array $attributes = [], ?AccessActor $actor = new AccessActor('member1', '')): ServerRequestInterface
 	{
 		$attributes['authMethod'] = $authMethod;
+		if ($actor !== null) {
+			$attributes['accessActor'] = $actor;
+		}
 
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturnCallback(
@@ -124,12 +125,9 @@ final class PrivilegedFieldGuardTest extends TestCase
 			definitions: ['draft' => ['protected' => ['value' => true]], 'owner' => []],
 			owner: 'owner',
 		);
-		// The session is empty for a bearer request: the actor must come from the token.
-		$guard   = $this->guard($policy, actor: '');
-		$request = $this->request('oauth_bearer', [
-			'accessAuthority' => new \stdClass(),
-			'oauth_user_id'   => 'members:alex',
-		]);
+		// BaseAccessMiddleware resolved the actor from the token's sub claim.
+		$guard   = $this->guard($policy);
+		$request = $this->request('oauth_bearer', ['accessAuthority' => new \stdClass()], new AccessActor('alex', 'members'));
 
 		$out = $guard->guard($request, 'portfolio', 'new-site', ['title' => 'Mine', 'draft' => false, 'owner' => 'sam']);
 
@@ -138,7 +136,7 @@ final class PrivilegedFieldGuardTest extends TestCase
 		expect($out['title'])->toBe('Mine');
 	}
 
-	public function testNonAdminOAuthBearerResolvesActorCollectionFromToken(): void
+	public function testNonAdminOAuthBearerPassesActorCollectionFromAttribute(): void
 	{
 		$schema             = new SchemaData();
 		$schema->id         = 'portfolio';
@@ -159,14 +157,14 @@ final class PrivilegedFieldGuardTest extends TestCase
 		$ownerProperties->method('resolve')->willReturn('');
 
 		$policy  = new AuthFieldPolicy($schemaFetcher, $userValidation, $this->createMock(ObjectFetcher::class), $ownerProperties, $this->config(), $loggerFactory);
-		$request = $this->request('oauth_bearer', ['accessAuthority' => new \stdClass(), 'oauth_user_id' => 'members:alex']);
+		$request = $this->request('oauth_bearer', ['accessAuthority' => new \stdClass()], new AccessActor('alex', 'members'));
 
-		$this->guard($policy, actor: '')->guardProperty($request, 'portfolio', 'site-1', 'draft');
+		$this->guard($policy)->guardProperty($request, 'portfolio', 'site-1', 'draft');
 		$this->addToAssertionCount(1); // no exception: resolved as alex in members
 
 		$this->expectException(HttpForbiddenException::class);
-		$other = $this->request('oauth_bearer', ['accessAuthority' => new \stdClass(), 'oauth_user_id' => 'auth:alex']);
-		$this->guard($policy, actor: '')->guardProperty($other, 'portfolio', 'site-1', 'draft');
+		$other = $this->request('oauth_bearer', ['accessAuthority' => new \stdClass()], new AccessActor('alex', 'auth'));
+		$this->guard($policy)->guardProperty($other, 'portfolio', 'site-1', 'draft');
 	}
 
 	public function testSessionRequestEnforcesPolicyForNonAdmin(): void
@@ -177,6 +175,28 @@ final class PrivilegedFieldGuardTest extends TestCase
 		$out = $guard->guard($this->request(null), 'auth', 'member1', ['groups' => ['admin'], 'name' => 'New']);
 		expect($out['groups'])->toBe(['member']);
 		expect($out['name'])->toBe('New');
+	}
+
+	public function testRequestWithoutActorAttributeIsTreatedAsAnonymous(): void
+	{
+		// isSuperAdmin would say yes to anyone: only an empty actor id (the
+		// policy never asks about it) keeps the privileged field reverted.
+		$guard = $this->guard($this->policy(superAdmin: true, existing: ['groups' => ['member']]));
+
+		$out = $guard->guard($this->request(null, [], null), 'auth', 'member1', ['groups' => ['admin']]);
+		expect($out['groups'])->toBe(['member']);
+
+		$this->expectException(HttpForbiddenException::class);
+		$guard->guardProperty($this->request(null, [], null), 'auth', 'member1', 'groups');
+	}
+
+	public function testAdminOAuthBearerWithNoActorAttributeIsStillTrusted(): void
+	{
+		$guard = $this->guard($this->policy(superAdmin: false, existing: ['groups' => ['member']]));
+
+		$out = $guard->guard($this->request('oauth_bearer', [], null), 'auth', 'member1', ['groups' => ['admin']]);
+		expect($out)->toBe(['groups' => ['admin']]);
+		expect($guard->guardProperty($this->request('oauth_bearer', [], null), 'auth', 'member1', 'groups'))->toBe([]);
 	}
 
 	public function testGuardPropertyBypassesForTrustedRequests(): void
@@ -205,9 +225,9 @@ final class PrivilegedFieldGuardTest extends TestCase
 
 	public function testGuardPropertyAllowsSuperAdminOnPrivilegedProperty(): void
 	{
-		$guard = $this->guard($this->policy(superAdmin: true, existing: null), actor: 'admin');
+		$guard = $this->guard($this->policy(superAdmin: true, existing: null));
 
-		$guard->guardProperty($this->request(null), 'auth', 'member1', 'groups');
+		$guard->guardProperty($this->request(null, [], new AccessActor('admin', '')), 'auth', 'member1', 'groups');
 		$this->addToAssertionCount(1); // no exception
 	}
 
@@ -233,7 +253,7 @@ final class PrivilegedFieldGuardTest extends TestCase
 	{
 		$policy = $this->policy(superAdmin: true, existing: ['draft' => false], definitions: ['draft' => ['protected' => ['value' => true]]]);
 
-		$out = $this->guard($policy, actor: 'admin')->guardProperty($this->request(null), 'auth', 'site-1', 'title');
+		$out = $this->guard($policy)->guardProperty($this->request(null, [], new AccessActor('admin', '')), 'auth', 'site-1', 'title');
 
 		expect($out)->toBe([]);
 	}

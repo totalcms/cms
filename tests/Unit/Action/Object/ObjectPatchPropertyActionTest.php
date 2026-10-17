@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Object;
 
-use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -74,6 +73,6 @@ final class ObjectPatchPropertyActionTest extends TestCase
 			$loggerFactory,
 		);
 
-		return new PrivilegedFieldGuard($policy, $this->createMock(SessionInterface::class), $config);
+		return new PrivilegedFieldGuard($policy);
 	}
 }

@@ -415,7 +415,7 @@ The property that holds the id of the user who owns each object. Setting it make
 }
 ```
 
-The property must exist in the collection's schema (a plain text field is enough; a single-value `relational` field pointing at the users collection makes the admin table show names). The stored value is the user id alone. Saving a collection whose `ownerProperty` is not a property of its schema is rejected, so add the property to the schema first.
+The property must exist in the collection's schema (a plain text field is enough; a single-value `relational` field pointing at the users collection makes the admin table show names). The stored value is the user id alone. Saving a collection whose `ownerProperty` is not a property of its schema is rejected, so add the property to the schema first. The property must also be a string property (declared `string`, or with no declared type) and listed in the schema's `index`.
 
 - **Single value, text type.** The property must hold one string, not a list: the owner check is an exact string comparison between the stored value and the user's id.
 - **In the index.** The property must be in the schema's [`index`](docs/schemas/reference#index) array, and saving the collection is rejected otherwise. Members' queries and index reads are scoped by matching this property on the collection index, by exact comparison with the user's id (case-sensitive, no wildcards).

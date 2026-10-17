@@ -130,6 +130,56 @@ final class CollectionSaverTest extends TestCase
 		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
 	}
 
+	public function testSaveRejectsAnOwnerPropertyWhoseTypeIsNotString(): void
+	{
+		$schema             = $this->schemaWith(['id', 'owner']);
+		$schema->properties = ['id' => ['type' => 'string'], 'owner' => ['type' => 'boolean']];
+		$this->schemaFetcher->method('fetchSchema')->willReturn($schema);
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("ownerProperty 'owner' must be a string property in schema 'portfolio-schema' (its type is 'boolean').");
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+	}
+
+	public function testSaveAcceptsAnOwnerPropertyTypedAsStringOrNull(): void
+	{
+		$schema             = $this->schemaWith(['id', 'owner']);
+		$schema->properties = ['id' => ['type' => 'string'], 'owner' => ['type' => ['string', 'null']]];
+		$this->schemaFetcher->method('fetchSchema')->willReturn($schema);
+		$this->repository->expects($this->once())->method('saveCollection');
+
+		$result = $this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+
+		expect($result->id)->toBe('portfolio');
+	}
+
+	public function testSaveRejectsAnOwnerPropertyTypedAsIntegerOrNull(): void
+	{
+		$schema             = $this->schemaWith(['id', 'owner']);
+		$schema->properties = ['id' => ['type' => 'string'], 'owner' => ['type' => ['integer', 'null']]];
+		$this->schemaFetcher->method('fetchSchema')->willReturn($schema);
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("(its type is 'integer')");
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+	}
+
+	public function testSaveAcceptsAnOwnerPropertyWithNoDeclaredType(): void
+	{
+		$schema             = $this->schemaWith(['id', 'owner']);
+		$schema->properties = ['id' => ['type' => 'string'], 'owner' => ['field' => 'input']];
+		$this->schemaFetcher->method('fetchSchema')->willReturn($schema);
+		$this->repository->expects($this->once())->method('saveCollection');
+
+		$result = $this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+
+		expect($result->id)->toBe('portfolio');
+	}
+
 	public function testSaveWithEmptyOwnerPropertySkipsSchemaCheck(): void
 	{
 		$this->schemaFetcher->expects($this->never())->method('fetchSchema');

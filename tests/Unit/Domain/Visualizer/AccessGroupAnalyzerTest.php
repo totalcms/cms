@@ -10,10 +10,13 @@ use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\Mcp\Service\McpDescriptionResolver;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Visualizer\Service\AccessGroupAnalyzer;
 
@@ -503,6 +506,55 @@ final class AccessGroupAnalyzerTest extends TestCase
 
 		$this->assertArrayNotHasKey('secrets', $mcp);
 		$this->assertSame([], $mcp);
+	}
+
+	/**
+	 * Owned collections (ownerProperty) resolve to admin-only MCP access, so
+	 * they drop out of the mcp dimension even with mcp.access = public, while
+	 * an ordinary public collection stays. Uses the real resolver.
+	 */
+	public function testOwnedPublicCollectionIsAbsentFromMcpDimension(): void
+	{
+		$owned                = $this->makeCollection('portfolio', 'public');
+		$owned->ownerProperty = 'owner';
+
+		$realResolver = new McpSchemaResolver(
+			$this->createMock(SchemaFetcher::class),
+			$this->createMock(McpDescriptionResolver::class),
+			$this->createMock(CollectionRepository::class),
+		);
+
+		$this->collectionLister->method('listAllCollections')->willReturn([
+			$owned,
+			$this->makeCollection('news', 'public'),
+		]);
+		$this->schemaLister->method('listAllSchemas')->willReturn([]);
+		$this->extensionManager->method('listExtensionsWithAdminSurface')->willReturn([]);
+
+		$group = $this->makeGroup([
+			'id'          => 'no-grants',
+			'description' => 'No Grants',
+			'permissions' => [
+				'collections'     => ['all' => false, 'allowed' => [], 'operations' => []],
+				'collectionsMeta' => ['all' => false, 'allowed' => [], 'operations' => []],
+				'schemas'         => ['all' => false, 'allowed' => [], 'operations' => []],
+				'utils'           => ['all' => false, 'allowed' => []],
+				'extensions'      => ['all' => false, 'allowed' => []],
+			],
+		]);
+		$this->accessGroupLister->method('listAll')->willReturn([$group]);
+
+		$analyzer = new AccessGroupAnalyzer(
+			$this->collectionLister,
+			$this->schemaLister,
+			$this->extensionManager,
+			$this->accessGroupLister,
+			$realResolver,
+		);
+		$mcp = $analyzer->analyze()[0]['dimensions']['mcp'];
+
+		$this->assertArrayNotHasKey('portfolio', $mcp);
+		$this->assertArrayHasKey('news', $mcp);
 	}
 
 	/**

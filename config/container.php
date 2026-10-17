@@ -105,6 +105,7 @@ use TotalCMS\Domain\Mcp\Prompt\Service\PromptRenderer;
 use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\DataViewResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Service\McpSessionListener;
 use TotalCMS\Domain\Mcp\Service\ResilientSessionStore;
@@ -1058,6 +1059,7 @@ return [
 	// LoggerInterface (which is not bound to a concrete class by default).
 	SchemaToolRegistrar::class => fn (ContainerInterface $container): SchemaToolRegistrar => new SchemaToolRegistrar(
 		$container->get(CollectionRepository::class),
+		$container->get(McpSchemaResolver::class),
 		$container->get(SavedQueryToolFactory::class),
 		$container->get(LoggerFactory::class)
 			->channelLogger(LogChannel::McpSchemaTools, Level::Debug),
@@ -1075,6 +1077,7 @@ return [
 	PromptDiscoveryService::class => fn (ContainerInterface $container): PromptDiscoveryService => new PromptDiscoveryService(
 		$container->get(IndexFilter::class),
 		$container->get(CollectionRepository::class),
+		$container->get(McpSchemaResolver::class),
 		$container->get(LoggerFactory::class)
 			->channelLogger(LogChannel::McpPrompts, Level::Debug),
 	),

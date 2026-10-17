@@ -10,6 +10,7 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 
 final class PromptChangeListenerTest extends TestCase
 {
@@ -33,7 +34,7 @@ final class PromptChangeListenerTest extends TestCase
 		$collections = $this->createMock(CollectionRepository::class);
 		$collections->method('collectionExists')->willReturn(true);
 
-		return new PromptDiscoveryService($indexFilter, $collections, new NullLogger());
+		return new PromptDiscoveryService($indexFilter, $collections, $this->createStub(McpSchemaResolver::class), new NullLogger());
 	}
 
 	public function testClearsCacheWhenMcpPromptObjectChanges(): void

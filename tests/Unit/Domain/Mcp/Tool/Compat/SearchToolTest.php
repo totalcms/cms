@@ -111,7 +111,7 @@ final class SearchToolTest extends TestCase
 		$schemaResolver->method('isAccessibleTo')->willReturn(true);
 		$schemaResolver->method('nonExposedProperties')->willReturn([]);
 		$schemaResolver->method('forCollection')->willReturn(
-			['access' => 'public', 'description' => null, 'resource' => true, 'titleProperty' => ''],
+			['access' => 'public', 'owned' => false, 'description' => null, 'resource' => true, 'titleProperty' => ''],
 		);
 
 		$tool   = new SearchTool($search, $collections, $fetcher, $urls, $persona, $schemaResolver, new ObjectTitleResolver());
@@ -162,7 +162,7 @@ final class SearchToolTest extends TestCase
 		$schemaResolver->method('isAccessibleTo')->willReturn(true);
 		$schemaResolver->method('nonExposedProperties')->willReturn($nonExposed);
 		$schemaResolver->method('forCollection')->willReturn(
-			['access' => 'public', 'description' => null, 'resource' => true, 'titleProperty' => $titleProperty],
+			['access' => 'public', 'owned' => false, 'description' => null, 'resource' => true, 'titleProperty' => $titleProperty],
 		);
 
 		return new SearchTool(

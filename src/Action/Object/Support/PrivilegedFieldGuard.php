@@ -4,22 +4,20 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\Object\Support;
 
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpForbiddenException;
+use TotalCMS\Domain\Auth\Data\AccessActor;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
-use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
-use TotalCMS\Domain\Session\SessionKeys;
-use TotalCMS\Support\Config;
+use TotalCMS\Middleware\Access\BaseAccessMiddleware;
 
 /**
- * Applies {@see AuthFieldPolicy} to object-write actions, resolving the acting
- * user and mirroring BaseAccessMiddleware's trust model: API keys and ADMIN
- * OAuth bearer tokens bypass field-level filtering. A bearer token issued to a
- * non-admin user (BaseAccessMiddleware marks it with the `accessAuthority`
- * attribute) is treated as that user, resolved from the token's `sub` claim
- * since bearer requests have no session. Session users are resolved from the
- * session. Public form submissions are intentionally NOT trusted here.
+ * Applies {@see AuthFieldPolicy} to object-write actions, mirroring
+ * BaseAccessMiddleware's trust model: API keys and ADMIN OAuth bearer tokens
+ * bypass field-level filtering. Everyone else is the {@see AccessActor} that
+ * BaseAccessMiddleware resolved once (token `sub` claim for a bearer, session
+ * otherwise) and attached as a request attribute. A route without the access
+ * middleware has no actor, and the policy then treats the write as anonymous.
+ * Public form submissions are intentionally NOT trusted here.
  *
  * Single-property writes go through {@see self::guardProperty()}, which also
  * returns the forced values (`protected: {value}`) the caller must write in the
@@ -29,8 +27,6 @@ final readonly class PrivilegedFieldGuard
 {
 	public function __construct(
 		private AuthFieldPolicy $policy,
-		private SessionInterface $session,
-		private Config $config,
 	) {
 	}
 
@@ -83,23 +79,18 @@ final readonly class PrivilegedFieldGuard
 	}
 
 	/**
-	 * The acting user id and the auth collection they belong to: from the
-	 * token's `sub` claim for a (non-admin) bearer request, which has no
-	 * session, otherwise from the session.
+	 * The acting user id and the auth collection they belong to, as resolved
+	 * once by BaseAccessMiddleware; `['', '']` when the request carries none.
 	 *
 	 * @return array{0: string, 1: string} actor id, actor collection
 	 */
 	private function actor(ServerRequestInterface $request): array
 	{
-		if ($request->getAttribute('authMethod') === 'oauth_bearer') {
-			$ref = OAuthUserRef::parse((string)$request->getAttribute('oauth_user_id', ''), (string)$this->config->auth['collection']);
-
-			return [$ref->userId, $ref->collection];
+		$actor = $request->getAttribute(BaseAccessMiddleware::ACTOR_ATTRIBUTE);
+		if (!$actor instanceof AccessActor) {
+			return ['', ''];
 		}
 
-		return [
-			(string)($this->session->get(SessionKeys::AUTH_USER) ?? ''),
-			(string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? ''),
-		];
+		return [$actor->userId, $actor->collection];
 	}
 }

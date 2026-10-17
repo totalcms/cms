@@ -9,7 +9,6 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
@@ -40,6 +39,7 @@ final class ListCollectionsToolTest extends TestCase
 		$personaSchemaResolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'owned'         => false,
 				'description'   => null,
 				'resource'      => true,
 				'titleProperty' => '',
@@ -48,7 +48,7 @@ final class ListCollectionsToolTest extends TestCase
 		$personaSchemaResolver->method('isAccessibleTo')->willReturnCallback(
 			fn (CollectionData $c, string $p): bool => $this->resolver->isAccessibleTo($c, $p),
 		);
-		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $personaSchemaResolver, $this->createStub(OwnerPropertyResolver::class));
+		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $personaSchemaResolver);
 
 		$this->tool = new ListCollectionsTool(
 			$this->collections,
@@ -128,7 +128,7 @@ final class ListCollectionsToolTest extends TestCase
 			fn (CollectionData $c, string $p): bool => $p === 'admin' || ($c->mcp['access'] ?? '') === 'public',
 		);
 		$this->resolver->method('forCollection')->willReturn([
-			'access' => 'public', 'description' => null, 'resource' => true,
+			'access' => 'public', 'owned' => false, 'description' => null, 'resource' => true,
 		]);
 
 		$result = $this->tool->handler();
@@ -148,7 +148,7 @@ final class ListCollectionsToolTest extends TestCase
 		$this->collections->method('listAllCollections')->willReturn([$blog, $auth]);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('forCollection')->willReturn([
-			'access' => 'public', 'description' => null, 'resource' => true,
+			'access' => 'public', 'owned' => false, 'description' => null, 'resource' => true,
 		]);
 
 		$result = $this->tool->handler();
@@ -174,7 +174,7 @@ final class ListCollectionsToolTest extends TestCase
 		$this->collections->method('listAllCollections')->willReturn([$blog]);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('forCollection')->willReturn([
-			'access' => 'public', 'description' => 'Blog posts', 'resource' => true,
+			'access' => 'public', 'owned' => false, 'description' => 'Blog posts', 'resource' => true,
 		]);
 
 		$result = $this->tool->handler();
@@ -203,7 +203,7 @@ final class ListCollectionsToolTest extends TestCase
 		$this->collections->method('listAllCollections')->willReturn([$collection]);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('forCollection')->willReturn([
-			'access' => 'public', 'description' => null, 'resource' => true,
+			'access' => 'public', 'owned' => false, 'description' => null, 'resource' => true,
 		]);
 
 		$result = $this->tool->handler();
@@ -224,7 +224,7 @@ final class ListCollectionsToolTest extends TestCase
 		$this->collections->method('listAllCollections')->willReturn([$cherry, $apple, $banana]);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('forCollection')->willReturn([
-			'access' => 'public', 'description' => null, 'resource' => true,
+			'access' => 'public', 'owned' => false, 'description' => null, 'resource' => true,
 		]);
 
 		$result = $this->tool->handler();

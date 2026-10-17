@@ -8,12 +8,13 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Resource\Handler\CollectionObjectResource;
 use TotalCMS\Domain\Mcp\Resource\Handler\CollectionResource;
 use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
 use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
+use TotalCMS\Domain\Mcp\Service\McpDescriptionResolver;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class CollectionResourceRegistrarTest extends TestCase
 {
@@ -43,7 +44,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 	 *     objectResource: MockObject&CollectionObjectResource,
 	 * }
 	 */
-	private function makeRegistrar(array $collections, string $ownerProperty = ''): array
+	private function makeRegistrar(array $collections): array
 	{
 		/** @var MockObject&CollectionRepository $repo */
 		$repo = $this->createMock(CollectionRepository::class);
@@ -58,16 +59,12 @@ final class CollectionResourceRegistrarTest extends TestCase
 		/** @var MockObject&CollectionObjectResource $objectResource */
 		$objectResource = $this->createMock(CollectionObjectResource::class);
 
-		$owners = $this->createStub(OwnerPropertyResolver::class);
-		$owners->method('resolve')->willReturn($ownerProperty);
-
 		$registry   = new ResourceRegistry();
 		$registrar  = new CollectionResourceRegistrar(
 			collectionRepository: $repo,
 			schemaResolver: $resolver,
 			collectionResource: $collectionResource,
 			collectionObjectResource: $objectResource,
-			ownerProperties: $owners,
 		);
 
 		return ['registrar' => $registrar, 'registry' => $registry, 'repo' => $repo, 'resolver' => $resolver, 'collectionResource' => $collectionResource, 'objectResource' => $objectResource];
@@ -362,11 +359,20 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 	public function testOwnedCollectionRegistersWithAdminAccessWhateverItsMcpAccess(): void
 	{
-		$collection = $this->makeCollection('portfolio', 'Portfolio', ['access' => 'public', 'resource' => true]);
+		$collection                = $this->makeCollection('portfolio', 'Portfolio', ['access' => 'public', 'resource' => true]);
+		$collection->ownerProperty = 'owner';
 
-		['registrar' => $registrar, 'registry' => $registry, 'resolver' => $resolver] = $this->makeRegistrar([$collection], 'owner');
+		$repo = $this->createStub(CollectionRepository::class);
+		$repo->method('listAllCollections')->willReturn([$collection]);
 
-		$resolver->method('forCollection')->willReturn(['access' => 'public', 'description' => null, 'resource' => true]);
+		// A REAL resolver: forCollection() is what makes an owned collection admin-only.
+		$registry  = new ResourceRegistry();
+		$registrar = new CollectionResourceRegistrar(
+			collectionRepository: $repo,
+			schemaResolver: new McpSchemaResolver($this->createStub(SchemaFetcher::class), new McpDescriptionResolver(), $repo),
+			collectionResource: $this->createStub(CollectionResource::class),
+			collectionObjectResource: $this->createStub(CollectionObjectResource::class),
+		);
 
 		$registrar->registerAll($registry);
 

@@ -11,12 +11,12 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpDescriptionResolver;
 use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -24,6 +24,7 @@ use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
 use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 /** @internal */
 final class RecordingLogger extends AbstractLogger
@@ -75,7 +76,7 @@ final class SchemaToolRegistrarTest extends TestCase
 			// This file never invokes a built tool's handler — only registration
 			// behavior — so PersonaContext's Task 10b constructor deps never
 			// matter; plain stubs satisfy the type.
-			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), $this->createStub(OwnerPropertyResolver::class)),
+			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
 			ObjectUrlBuilder::class               => $this->createMock(ObjectUrlBuilder::class),
 			McpSchemaResolver::class              => $this->createMock(McpSchemaResolver::class),
 			CollectionRepository::class           => $this->createMock(CollectionRepository::class),
@@ -92,6 +93,12 @@ final class SchemaToolRegistrarTest extends TestCase
 		$repo->method('listAllCollections')->willReturn($collections);
 
 		return $repo;
+	}
+
+	/** A REAL resolver: the registrar takes each collection's effective access from it. */
+	private function schemaResolver(): McpSchemaResolver
+	{
+		return new McpSchemaResolver($this->createStub(SchemaFetcher::class), new McpDescriptionResolver(), $this->createStub(CollectionRepository::class));
 	}
 
 	private function coreTool(string $name): McpToolDefinition
@@ -115,7 +122,7 @@ final class SchemaToolRegistrarTest extends TestCase
 		$repo      = $this->makeRepo([$collection]);
 		$factory   = $this->makeFactory();
 		$registry  = new ToolRegistry();
-		$registrar = new SchemaToolRegistrar($repo, $factory, new RecordingLogger());
+		$registrar = new SchemaToolRegistrar($repo, $this->schemaResolver(), $factory, new RecordingLogger());
 
 		$registrar->register($registry);
 
@@ -143,7 +150,7 @@ final class SchemaToolRegistrarTest extends TestCase
 		]);
 
 		$registry  = new ToolRegistry();
-		$registrar = new SchemaToolRegistrar($this->makeRepo([$collection]), $this->makeFactory(), new RecordingLogger());
+		$registrar = new SchemaToolRegistrar($this->makeRepo([$collection]), $this->schemaResolver(), $this->makeFactory(), new RecordingLogger());
 
 		$registrar->register($registry);
 
@@ -171,7 +178,7 @@ final class SchemaToolRegistrarTest extends TestCase
 		$registry->register($this->coreTool('query_collection')); // pre-populate core tool
 		$logger   = new RecordingLogger();
 
-		$registrar = new SchemaToolRegistrar($repo, $factory, $logger);
+		$registrar = new SchemaToolRegistrar($repo, $this->schemaResolver(), $factory, $logger);
 		$registrar->register($registry);
 
 		// The schema tool should not be registered (core wins).
@@ -200,7 +207,7 @@ final class SchemaToolRegistrarTest extends TestCase
 		$registry = new ToolRegistry();
 		$logger   = new RecordingLogger();
 
-		$registrar = new SchemaToolRegistrar($repo, $factory, $logger);
+		$registrar = new SchemaToolRegistrar($repo, $this->schemaResolver(), $factory, $logger);
 		$registrar->register($registry);
 
 		// Strict deny: both are rejected.
@@ -226,7 +233,7 @@ final class SchemaToolRegistrarTest extends TestCase
 		$factory   = $this->makeFactory();
 		$registry  = new ToolRegistry();
 		$logger    = new RecordingLogger();
-		$registrar = new SchemaToolRegistrar($repo, $factory, $logger);
+		$registrar = new SchemaToolRegistrar($repo, $this->schemaResolver(), $factory, $logger);
 
 		$registrar->register($registry);
 
@@ -257,7 +264,7 @@ final class SchemaToolRegistrarTest extends TestCase
 		$repo      = $this->makeRepo([$collection]);
 		$factory   = $this->makeFactory();
 		$registry  = new ToolRegistry();
-		$registrar = new SchemaToolRegistrar($repo, $factory, new RecordingLogger());
+		$registrar = new SchemaToolRegistrar($repo, $this->schemaResolver(), $factory, new RecordingLogger());
 
 		$registrar->register($registry);
 
@@ -286,7 +293,7 @@ final class SchemaToolRegistrarTest extends TestCase
 		$repo      = $this->makeRepo([$collection]);
 		$factory   = $this->makeFactory();
 		$registry  = new ToolRegistry();
-		$registrar = new SchemaToolRegistrar($repo, $factory, new RecordingLogger());
+		$registrar = new SchemaToolRegistrar($repo, $this->schemaResolver(), $factory, new RecordingLogger());
 
 		$registrar->register($registry);
 
@@ -306,7 +313,7 @@ final class SchemaToolRegistrarTest extends TestCase
 		$collection->ownerProperty = 'owner';
 
 		$registry  = new ToolRegistry();
-		$registrar = new SchemaToolRegistrar($this->makeRepo([$collection]), $this->makeFactory(), new RecordingLogger());
+		$registrar = new SchemaToolRegistrar($this->makeRepo([$collection]), $this->schemaResolver(), $this->makeFactory(), new RecordingLogger());
 
 		$registrar->register($registry);
 

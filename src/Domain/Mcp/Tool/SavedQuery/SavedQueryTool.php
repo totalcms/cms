@@ -14,6 +14,7 @@ use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\CollectionQueryResultFormatter;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
 use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Exception\SavedQueryToolException;
 use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
@@ -23,6 +24,10 @@ use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
  *
  * Handler flow:
  *   1. Persona check (collection.mcp.access vs current persona).
+ *      Then, once the collection is fetched, a call-time exposure check —
+ *      McpSchemaResolver::isAccessibleTo() on the live collection — so a
+ *      collection whose access was tightened (or which became owned) after
+ *      registration is refused.
  *   2. Group-read check (Task 10b) — PersonaContext::canReadCollection().
  *   3. Resolve {{params.X}} placeholders in filters via FilterValueResolver.
  *   4. Build REST-style include/exclude strings + persona-aware safety filters.
@@ -74,6 +79,7 @@ final readonly class SavedQueryTool
 		private McpObjectShaper $shaper,
 		private CollectionRepository $collectionRepository,
 		private CollectionQueryResultFormatter $resultFormatter,
+		private McpSchemaResolver $schemaResolver,
 	) {
 	}
 
@@ -101,9 +107,11 @@ final readonly class SavedQueryTool
 				));
 			}
 
-			if ($this->personaContext->isOwnedForNonAdmin($this->definition->collectionName)) {
+			if (!$this->schemaResolver->isAccessibleTo($collection, $persona->value)) {
 				throw new ToolCallException(sprintf(
-					'Collection "%s" is an owned collection and is available to admin callers only over MCP.',
+					$this->schemaResolver->forCollection($collection)['owned']
+						? 'Collection "%s" is an owned collection and is available to admin callers only over MCP.'
+						: 'Collection "%s" is not available to the current caller. Use list_collections to see what you can query.',
 					$this->definition->collectionName,
 				));
 			}

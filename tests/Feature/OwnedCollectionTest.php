@@ -313,6 +313,19 @@ describe('public create on an owned collection', function (): void {
 		expect($stored['owner'])->toBe('');
 		expect($stored['draft'])->toBeTrue();
 	});
+
+	it('stamps a signed-in editor as owner when they create through the public path', function (): void {
+		// A public create skips the access middleware, but a signed-in caller
+		// is still the actor the field policy stamps as owner.
+		signInAs($this->app, 'editor-user-test-com', '');
+
+		$status = postJson('/api/collections/portfolio', ['id' => 'editor-public-site', 'title' => 'Editor Public Site', 'owner' => 'sam'])->getStatusCode();
+
+		expect($status)->toBeIn([200, 201]);
+		$stored = storedPortfolio('editor-public-site');
+		expect($stored['owner'])->toBe('editor-user-test-com');
+		expect($stored['draft'])->toBeTrue();
+	});
 });
 
 /*

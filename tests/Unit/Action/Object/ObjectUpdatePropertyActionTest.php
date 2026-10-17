@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Action\Object;
 
-use Odan\Session\SessionInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -56,7 +55,7 @@ final class ObjectUpdatePropertyActionTest extends TestCase
 			$config,
 			$policyLoggerFactory,
 		);
-		$guard = new PrivilegedFieldGuard($policy, $this->createMock(SessionInterface::class), $config);
+		$guard = new PrivilegedFieldGuard($policy);
 
 		$this->action = new ObjectUpdatePropertyAction($this->renderer, $this->objectUpdater, $guard);
 	}
@@ -204,6 +203,6 @@ final class ObjectUpdatePropertyActionTest extends TestCase
 			$loggerFactory,
 		);
 
-		return new PrivilegedFieldGuard($policy, $this->createMock(SessionInterface::class), $config);
+		return new PrivilegedFieldGuard($policy);
 	}
 }

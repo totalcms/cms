@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Service;
 use Mcp\Schema\ToolAnnotations;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Data\SavedQueryToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Exception\SavedQueryToolException;
@@ -32,6 +33,7 @@ final class SchemaToolRegistrar
 
 	public function __construct(
 		private readonly CollectionRepository $collectionRepository,
+		private readonly McpSchemaResolver $schemaResolver,
 		private readonly SavedQueryToolFactory $factory,
 		private readonly LoggerInterface $logger,
 	) {
@@ -61,16 +63,13 @@ final class SchemaToolRegistrar
 		$seenSchemaNames = [];
 
 		foreach ($this->collectionRepository->listAllCollections() as $collection) {
-			$mcp   = $collection->mcp;
-			$tools = $mcp['tools'] ?? null;
+			$tools = $collection->mcp['tools'] ?? null;
 			if (!is_array($tools) || $tools === []) {
 				continue;
 			}
 
-			// Owned collections (ownerProperty) are admin-only over MCP: MCP applies no
-			// ownership scoping. Uses the declared setting directly (fail-closed superset
-			// of OwnerPropertyResolver) because the container builds this class by hand.
-			$access = $collection->ownerProperty !== '' ? 'admin' : (string)($mcp['access'] ?? 'admin');
+			// Effective access: owned collections resolve to admin.
+			$access = $this->schemaResolver->forCollection($collection)['access'];
 
 			// Two accepted shapes (see McpToolsValidator::validate):
 			//   - Keyed object (post-migration): key is the canonical id

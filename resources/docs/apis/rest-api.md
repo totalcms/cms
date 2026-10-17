@@ -301,7 +301,7 @@ DELETE /api/collections/{collection}/{id}
 POST /api/collections/{collection}/{id}/clone
 ```
 
-Creates a copy of an existing object. Optionally clone to a different ID or collection.
+Creates a copy of an existing object. Optionally clone to a different ID or collection. Cloning into a different collection, and cloning any object in a collection that has protected properties or an owner property, is available to admins and API keys only; other callers receive 403.
 
 **Request Body (optional):**
 ```json

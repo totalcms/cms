@@ -12,6 +12,7 @@ use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Exception\EditionFeatureException;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Data\DateData;
+use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
@@ -63,7 +64,7 @@ readonly class CollectionSaver
 
 		// Check edition requirements for schema-specific features
 		$this->validateSchemaEdition($data['schema'] ?? '');
-		$this->assertOwnerPropertyExists($data);
+		$this->assertOwnerPropertyValid($data);
 
 		$data           = $this->normalizeSubmittedData($data);
 		$data['format'] = $this->normalizeFormat($data['format'] ?? CollectionData::FORMAT_JSON);
@@ -170,7 +171,7 @@ readonly class CollectionSaver
 			&& (string)($data['ownerProperty'] ?? '') === $existingCollection->ownerProperty
 			&& (string)($data['schema'] ?? '') === $existingCollection->schema;
 		if (!$ownerUnchanged) {
-			$this->assertOwnerPropertyExists($data);
+			$this->assertOwnerPropertyValid($data);
 		}
 
 		// Recalculate totalObjects from index if not explicitly provided (self-healing)
@@ -409,13 +410,15 @@ readonly class CollectionSaver
 	 * owner at all, so the collection would silently behave as unowned. Reject
 	 * it at save time instead. It must also be in the schema's `index`: member
 	 * lists are scoped by matching the owner on the index, so an unindexed
-	 * owner property would silently empty every member's list.
+	 * owner property would silently empty every member's list. And it must be a
+	 * string property (declared `string`, or no declared type): the owner is
+	 * stored and compared as a user id.
 	 *
 	 * @param array<string,mixed> $data
 	 *
 	 * @throws \DomainException
 	 */
-	private function assertOwnerPropertyExists(array $data): void
+	private function assertOwnerPropertyValid(array $data): void
 	{
 		$owner = (string)($data['ownerProperty'] ?? '');
 		if ($owner === '') {
@@ -437,6 +440,13 @@ readonly class CollectionSaver
 
 		if (!in_array($owner, $schema->index, true)) {
 			throw new \DomainException(sprintf("ownerProperty '%s' must be in the index of schema '%s' so member lists can be scoped. Add it to the schema's index first.", $owner, $schemaId));
+		}
+
+		// Normalised so a JSON-Schema type list (["string", "null"]) is read the
+		// way the rest of the codebase reads it: the first non-null entry.
+		$type = PropertyDefinition::fromArray($schema->properties[$owner])->type;
+		if ($type !== null && $type !== 'string') {
+			throw new \DomainException(sprintf("ownerProperty '%s' must be a string property in schema '%s' (its type is '%s').", $owner, $schemaId, $type));
 		}
 	}
 

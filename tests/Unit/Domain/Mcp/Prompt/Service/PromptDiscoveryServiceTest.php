@@ -14,6 +14,9 @@ use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
 use TotalCMS\Domain\Mcp\Prompt\Exception\PromptCollisionException;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
+use TotalCMS\Domain\Mcp\Service\McpDescriptionResolver;
+use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class PromptDiscoveryServiceTest extends TestCase
 {
@@ -28,7 +31,7 @@ final class PromptDiscoveryServiceTest extends TestCase
 		// Default: collection exists. Tests that need the missing-collection
 		// branch can override with willReturn(false).
 		$this->collections->method('collectionExists')->willReturn(true);
-		$this->svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger());
+		$this->svc = new PromptDiscoveryService($this->indexFilter, $this->collections, $this->resolver($this->collections), new NullLogger());
 	}
 
 	public function testReturnsEmptyListWhenCollectionEmpty(): void
@@ -103,7 +106,7 @@ final class PromptDiscoveryServiceTest extends TestCase
 		$collections = $this->createMock(CollectionRepository::class);
 		$collections->method('collectionExists')->willReturn(false);
 
-		$svc = new PromptDiscoveryService($indexFilter, $collections, new NullLogger());
+		$svc = new PromptDiscoveryService($indexFilter, $collections, $this->resolver($collections), new NullLogger());
 		$this->assertSame([], $svc->discover());
 	}
 
@@ -124,7 +127,7 @@ final class PromptDiscoveryServiceTest extends TestCase
 			['id' => 'recent-posts', 'mcp' => ['access' => 'public']],
 		]);
 
-		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger(), $views);
+		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, $this->resolver($this->collections), new NullLogger(), $views);
 		$this->assertSame('public', $svc->discover()[0]->access);
 	}
 
@@ -146,7 +149,7 @@ final class PromptDiscoveryServiceTest extends TestCase
 			['id' => 'blog', 'mcp' => ['access' => 'public']],
 		]);
 
-		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger(), $views);
+		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, $this->resolver($this->collections), new NullLogger(), $views);
 		$this->assertSame('authenticated', $svc->discover()[0]->access);
 	}
 
@@ -167,7 +170,7 @@ final class PromptDiscoveryServiceTest extends TestCase
 			['id' => 'blog', 'mcp' => ['access' => 'public']],
 		]);
 
-		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger(), $views);
+		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, $this->resolver($this->collections), new NullLogger(), $views);
 		$this->assertSame('admin', $svc->discover()[0]->access);
 	}
 
@@ -181,7 +184,7 @@ final class PromptDiscoveryServiceTest extends TestCase
 		$views = $this->createMock(DataViewLister::class);
 		$views->method('listViews')->willReturn([]);
 
-		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger(), $views);
+		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, $this->resolver($this->collections), new NullLogger(), $views);
 		$this->assertSame('admin', $svc->discover()[0]->access);
 	}
 
@@ -193,8 +196,29 @@ final class PromptDiscoveryServiceTest extends TestCase
 		$views = $this->createMock(DataViewLister::class);
 		$views->expects($this->never())->method('listViews');
 
-		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, new NullLogger(), $views);
+		$svc = new PromptDiscoveryService($this->indexFilter, $this->collections, $this->resolver($this->collections), new NullLogger(), $views);
 		$this->assertSame('admin', $svc->discover()[0]->access);
+	}
+
+	public function testAnOwnedTargetCollectionResolvesToAdminWhateverItsDeclaredAccess(): void
+	{
+		$portfolio                = new CollectionData();
+		$portfolio->id            = 'portfolio';
+		$portfolio->mcp           = ['access' => 'public'];
+		$portfolio->ownerProperty = 'owner';
+		$this->collections->method('fetchCollection')->with('portfolio')->willReturn($portfolio);
+
+		$this->indexFilter->method('fetchFilteredIndex')->willReturn([
+			['id' => 'p', 'body' => 'b', 'target' => 'portfolio'],
+		]);
+
+		$this->assertSame('admin', $this->svc->discover()[0]->access);
+	}
+
+	/** A REAL resolver, so prompts inherit the effective access (owned rule included). */
+	private function resolver(CollectionRepository $collections): McpSchemaResolver
+	{
+		return new McpSchemaResolver($this->createStub(SchemaFetcher::class), new McpDescriptionResolver(), $collections);
 	}
 
 	/** A CollectionData carrying the given mcp.access ('' means none configured). */

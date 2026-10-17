@@ -38,15 +38,17 @@ final class AuthFieldPolicyTest extends TestCase
 	 * @param list<string>                     $inheritFrom
 	 * @param array<string,mixed>|null          $existing    stored record, or null when it doesn't exist
 	 */
-	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'loginCount', 'lastlogin', 'created', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = [], bool $authEnabled = true, array $definitions = [], string $ownerProperty = ''): AuthFieldPolicy
+	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'loginCount', 'lastlogin', 'created', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = [], bool $authEnabled = true, array $definitions = [], string $ownerProperty = '', ?SchemaFetcher $schemaFetcher = null): AuthFieldPolicy
 	{
 		$schema              = new SchemaData();
 		$schema->id          = $schemaId;
 		$schema->inheritFrom = $inheritFrom;
 		$schema->properties  = array_merge(array_fill_keys($props, []), $definitions);
 
-		$schemaFetcher = $this->createMock(SchemaFetcher::class);
-		$schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+		if ($schemaFetcher === null) {
+			$schemaFetcher = $this->createMock(SchemaFetcher::class);
+			$schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
+		}
 
 		$userValidation = $this->createMock(UserValidationService::class);
 		$userValidation->method('isSuperAdmin')->willReturn($isSuperAdmin);
@@ -653,5 +655,24 @@ final class AuthFieldPolicyTest extends TestCase
 		$out = $policy->enforce('member1', 'teams', 't-1', ['groups' => ['y']]);
 
 		expect($out['groups'])->toBe(['y']);
+	}
+
+	public function testEvaluatesTheRulesForACollectionOncePerRequest(): void
+	{
+		$schema             = new SchemaData();
+		$schema->id         = 'notes';
+		$schema->properties = ['title' => [], 'draft' => ['protected' => true]];
+
+		$fetcher = $this->createMock(SchemaFetcher::class);
+		$fetcher->expects($this->exactly(2))->method('fetchSchemaForCollection')->with('c')->willReturn($schema);
+
+		$policy = $this->makePolicy(isSuperAdmin: false, schemaFetcher: $fetcher);
+
+		$policy->protectedFieldsFor('c');
+		$policy->protectedFieldsFor('c');
+		$this->assertFalse($policy->canWriteProperty('u1', 'c', 'draft'));
+
+		$policy->forgetRules();
+		$policy->protectedFieldsFor('c');
 	}
 }

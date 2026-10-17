@@ -8,7 +8,6 @@ use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewFetcher;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -34,7 +33,7 @@ final class GetViewToolTest extends TestCase
 		// GetViewTool never touches canReadCollection()/canReadDrafts() —
 		// PersonaContext's Task 10b constructor deps are unused here; plain
 		// stubs satisfy the type only.
-		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), $this->createStub(OwnerPropertyResolver::class));
+		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
 		$this->tool    = new GetViewTool($this->fetcher, $this->objects, $this->persona);
 	}
 

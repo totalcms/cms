@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
@@ -13,7 +12,6 @@ function callerKindContext(): PersonaContext
 	return new PersonaContext(
 		(new ReflectionClass(CollectionFetcher::class))->newInstanceWithoutConstructor(),
 		(new ReflectionClass(McpSchemaResolver::class))->newInstanceWithoutConstructor(),
-		(new ReflectionClass(OwnerPropertyResolver::class))->newInstanceWithoutConstructor(),
 	);
 }
 

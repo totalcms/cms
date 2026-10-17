@@ -11,17 +11,19 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Resource\Handler\CollectionResource;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
+use TotalCMS\Domain\Mcp\Service\McpDescriptionResolver;
 use TotalCMS\Domain\Mcp\Service\McpObjectShaper;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class CollectionResourceTest extends TestCase
 {
@@ -48,13 +50,14 @@ final class CollectionResourceTest extends TestCase
 		// it's supplied only to satisfy the constructor. schemaResolver's
 		// forCollection() IS invoked (see below) to resolve the collection's
 		// mcp.access.
-		$this->personaContext = new PersonaContext($this->collectionFetcher, $this->schemaResolver, $this->createStub(OwnerPropertyResolver::class));
+		$this->personaContext = new PersonaContext($this->collectionFetcher, $this->schemaResolver);
 		// Derives 'access' from whatever mcp.access the test's CollectionData
 		// carries, so canReadCollection()'s public-collection carve-out
 		// reflects each test's actual fixture instead of a hardcoded default.
 		$this->schemaResolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'owned'         => false,
 				'description'   => null,
 				'resource'      => true,
 				'titleProperty' => '',
@@ -479,17 +482,34 @@ final class CollectionResourceTest extends TestCase
 		return ['authenticated' => [McpPersona::AUTHENTICATED], 'public' => [McpPersona::PUBLIC_]];
 	}
 
+	private function ownedCollection(): CollectionData
+	{
+		$collection                = $this->collection();
+		$collection->ownerProperty = 'owner';
+
+		return $collection;
+	}
+
+	/**
+	 * Both the resource's own gate and the PersonaContext run over a REAL
+	 * McpSchemaResolver, so the owned rule (forCollection() makes owned
+	 * collections admin-only) is what refuses, exactly as in production.
+	 * The shaper keeps the mock: it only shapes items the admin may read.
+	 */
 	private function ownedResource(McpPersona $persona): CollectionResource
 	{
-		$owners = $this->createStub(OwnerPropertyResolver::class);
-		$owners->method('resolve')->willReturn('owner');
-		$context = new PersonaContext($this->collectionFetcher, $this->schemaResolver, $owners);
+		$realResolver = new McpSchemaResolver(
+			$this->createStub(SchemaFetcher::class),
+			new McpDescriptionResolver(),
+			$this->createStub(CollectionRepository::class),
+		);
+		$context = new PersonaContext($this->collectionFetcher, $realResolver);
 		$context->set($persona);
 
 		return new CollectionResource(
 			$this->collectionFetcher,
 			$this->indexReader,
-			$this->schemaResolver,
+			$realResolver,
 			new McpObjectShaper($this->schemaResolver, $this->createStub(ContentRenderer::class), $this->urlBuilder),
 			$context,
 		);
@@ -498,20 +518,20 @@ final class CollectionResourceTest extends TestCase
 	#[DataProvider('nonAdminPersonas')]
 	public function testReadRefusesAnOwnedCollectionForNonAdminPersonas(McpPersona $persona): void
 	{
-		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection());
-		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->ownedCollection());
 		$this->indexReader->expects($this->never())->method('fetchIndex');
 
+		// The resource's isAccessibleTo() gate refuses: forCollection() reports
+		// an owned collection as admin access whatever its declared mcp.access.
 		$this->expectException(ToolCallException::class);
-		$this->expectExceptionMessage('owned collection');
+		$this->expectExceptionMessage('Resource tcms://blog/ is not accessible to this caller.');
 
 		$this->ownedResource($persona)->read('blog');
 	}
 
 	public function testReadStillServesAnOwnedCollectionToAdmin(): void
 	{
-		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection());
-		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->ownedCollection());
 		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
 		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([['id' => 'a']]));
 		$this->urlBuilder->method('buildUrl')->willReturn('/blog/a');

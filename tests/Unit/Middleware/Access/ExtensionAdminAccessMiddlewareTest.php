@@ -94,6 +94,7 @@ describe('ExtensionAdminAccessMiddleware', function (): void {
 			]);
 
 			$request = $this->createMock(ServerRequestInterface::class);
+			$request->method('withAttribute')->willReturnSelf();
 			$request->method('getUri')->willReturn($uri);
 			$request->method('getMethod')->willReturn('GET');
 			$request->method('getAttribute')->willReturnMap([

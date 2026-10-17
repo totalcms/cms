@@ -15,7 +15,6 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
@@ -74,6 +73,7 @@ final class McpServerFactoryTest extends TestCase
 		);
 		$schemaRegistrar = new SchemaToolRegistrar(
 			$collectionRepoMock,
+			$this->createStub(McpSchemaResolver::class),
 			$savedQueryFactory,
 			$this->createMock(LoggerInterface::class),
 		);
@@ -84,6 +84,7 @@ final class McpServerFactoryTest extends TestCase
 		$promptDiscovery = new PromptDiscoveryService(
 			$indexFilterMock,
 			$this->createMock(CollectionRepository::class),
+			$this->createStub(McpSchemaResolver::class),
 			new NullLogger(),
 		);
 
@@ -108,7 +109,7 @@ final class McpServerFactoryTest extends TestCase
 			// (`requires:` unset throughout), so guardHandler()'s objects+read
 			// canReadCollection() branch is unreachable here — plain stubs
 			// satisfy PersonaContext's Task 10b constructor deps only.
-			$context ?? new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), $this->createStub(OwnerPropertyResolver::class)),
+			$context ?? new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
 			new OAuthScopeRegistry(),
 			new OAuthActivityLogger(new NullLogger()),
 			// Modern-era notification bus. Nothing in this file opens a
@@ -167,7 +168,7 @@ final class McpServerFactoryTest extends TestCase
 			annotations: new ToolAnnotations(title: 'Partial', destructiveHint: true),
 		));
 
-		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), $this->createStub(OwnerPropertyResolver::class));
+		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
 		$context->set(McpPersona::ADMIN);
 		$context->setCallerKind(McpCallerKind::Session);
 
@@ -196,7 +197,7 @@ final class McpServerFactoryTest extends TestCase
 			annotations: new ToolAnnotations(title: 'Partial', destructiveHint: true),
 		));
 
-		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), $this->createStub(OwnerPropertyResolver::class));
+		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
 		$context->set(McpPersona::ADMIN);
 		$context->setCallerKind(McpCallerKind::ApiKey);
 

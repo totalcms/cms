@@ -8,7 +8,6 @@ use Mcp\Exception\ToolCallException;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
@@ -53,7 +52,6 @@ class PersonaContext
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly McpSchemaResolver $schemaResolver,
-		private readonly OwnerPropertyResolver $ownerProperties,
 	) {
 	}
 
@@ -309,6 +307,15 @@ class PersonaContext
 		}
 
 		if (!$this->schemaResolver->isAccessibleTo($collectionData, $this->current()->value)) {
+			// Owned collections are admin-only by McpSchemaResolver::forCollection();
+			// the tailored message only tells the agent why.
+			if ($this->schemaResolver->forCollection($collectionData)['owned']) {
+				throw new ToolCallException(sprintf(
+					'Collection "%s" is an owned collection and is available to admin callers only over MCP.',
+					$collection,
+				));
+			}
+
 			throw new ToolCallException(sprintf(
 				'Collection "%s" is not available to the current caller. Use list_collections to see what you can %s.',
 				$collection,
@@ -316,23 +323,7 @@ class PersonaContext
 			));
 		}
 
-		if ($this->isOwnedForNonAdmin($collection)) {
-			throw new ToolCallException(sprintf(
-				'Collection "%s" is an owned collection and is available to admin callers only over MCP.',
-				$collection,
-			));
-		}
-
 		return $collectionData;
-	}
-
-	/**
-	 * Owned collections (`ownerProperty`) scope members to their own objects
-	 * over REST; MCP applies no such scoping, so they are admin-only here.
-	 */
-	public function isOwnedForNonAdmin(string $collection): bool
-	{
-		return $this->current() !== McpPersona::ADMIN && $this->ownerProperties->resolve($collection) !== '';
 	}
 
 	/**
@@ -350,7 +341,7 @@ class PersonaContext
 		$visible = [];
 
 		foreach ($collections as $collection) {
-			if ($this->schemaResolver->isAccessibleTo($collection, $persona) && !$this->isOwnedForNonAdmin($collection->id) && $this->canReadCollection($collection->id, $collection)) {
+			if ($this->schemaResolver->isAccessibleTo($collection, $persona) && $this->canReadCollection($collection->id, $collection)) {
 				$visible[] = $collection;
 			}
 		}
@@ -369,7 +360,7 @@ class PersonaContext
 		$catalog = $this->schemaResolver->renderCatalog(
 			$persona,
 			McpSchemaResolver::DEFAULT_CATALOG_CAP,
-			fn (CollectionData $c): bool => ($persona === McpPersona::ADMIN || $this->ownerProperties->resolve($c->id) === '') && $this->canReadCollection($c->id, $c),
+			fn (CollectionData $c): bool => $this->canReadCollection($c->id, $c),
 		);
 
 		return $catalog === '' ? $baseDescription : $baseDescription . "\n\n" . $catalog;

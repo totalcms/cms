@@ -10,11 +10,14 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\McpDescriptionResolver;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class PersonaContextTest extends TestCase
 {
@@ -37,13 +40,14 @@ final class PersonaContextTest extends TestCase
 		$schemaResolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'owned'         => false,
 				'description'   => null,
 				'resource'      => true,
 				'titleProperty' => '',
 			],
 		);
 
-		return new PersonaContext($fetcher, $schemaResolver, $this->createStub(OwnerPropertyResolver::class));
+		return new PersonaContext($fetcher, $schemaResolver);
 	}
 
 	/** @var array<string,CollectionData> */
@@ -326,24 +330,50 @@ final class PersonaContextTest extends TestCase
 	// ── The collection gate every content tool used to inline ────────────────
 
 	/** @param array<string,CollectionData> $collections */
-	private function gateContext(array $collections, McpPersona $persona, bool $accessible = true, string $ownerProperty = ''): PersonaContext
+	private function gateContext(array $collections, McpPersona $persona, bool $accessible = true): PersonaContext
 	{
 		$fetcher = $this->createStub(CollectionFetcher::class);
 		$fetcher->method('fetchCollection')->willReturnCallback(static fn (string $id): ?CollectionData => $collections[$id] ?? null);
 		$resolver = $this->createStub(McpSchemaResolver::class);
 		$resolver->method('isAccessibleTo')->willReturn($accessible);
 		$resolver->method('forCollection')->willReturnCallback(
-			static fn (CollectionData $c): array => ['access' => (string)($c->mcp['access'] ?? 'admin'), 'description' => null, 'resource' => true, 'titleProperty' => ''],
+			static fn (CollectionData $c): array => ['access' => (string)($c->mcp['access'] ?? 'admin'), 'owned' => false, 'description' => null, 'resource' => true, 'titleProperty' => ''],
 		);
 		$resolver->method('renderCatalog')->willReturn('Available collections and filterable properties:');
 
-		$owners = $this->createStub(OwnerPropertyResolver::class);
-		$owners->method('resolve')->willReturn($ownerProperty);
-
-		$context = new PersonaContext($fetcher, $resolver, $owners);
+		$context = new PersonaContext($fetcher, $resolver);
 		$context->set($persona);
 
 		return $context;
+	}
+
+	/**
+	 * A context over a REAL McpSchemaResolver, so the owned-collection rule is
+	 * exercised where it lives (forCollection()) rather than stubbed away.
+	 *
+	 * @param array<string,CollectionData> $collections
+	 */
+	private function ownedContext(array $collections, McpPersona $persona): PersonaContext
+	{
+		$fetcher = $this->createStub(CollectionFetcher::class);
+		$fetcher->method('fetchCollection')->willReturnCallback(static fn (string $id): ?CollectionData => $collections[$id] ?? null);
+		$repository = $this->createStub(CollectionRepository::class);
+		$repository->method('listAllCollections')->willReturn(array_values($collections));
+		$schemas = $this->createStub(SchemaFetcher::class);
+		$schemas->method('fetchSchemaForCollection')->willReturn(new SchemaData());
+
+		$context = new PersonaContext($fetcher, new McpSchemaResolver($schemas, new McpDescriptionResolver(), $repository));
+		$context->set($persona);
+
+		return $context;
+	}
+
+	private function registerOwnedCollection(string $id, string $access): CollectionData
+	{
+		$collection                = $this->registerCollection($id, $access);
+		$collection->ownerProperty = 'owner';
+
+		return $collection;
 	}
 
 	public function testExposedCollectionReturnsTheRecordWhenTheCallerMayReachIt(): void
@@ -389,28 +419,27 @@ final class PersonaContextTest extends TestCase
 
 	public function testCatalogDescriptionOmitsOwnedCollectionsForNonAdmin(): void
 	{
-		$portfolio = $this->registerCollection('portfolio', 'public');
-		$captured  = [];
+		$portfolio   = $this->registerOwnedCollection('portfolio', 'public');
+		$collections = ['portfolio' => $portfolio];
 
-		$fetcher  = $this->createStub(CollectionFetcher::class);
-		$resolver = $this->createStub(McpSchemaResolver::class);
-		$resolver->method('forCollection')->willReturn(['access' => 'public', 'description' => null, 'resource' => true, 'titleProperty' => '']);
-		$resolver->method('renderCatalog')->willReturnCallback(
-			static function (McpPersona $p, int $cap, callable $filter) use ($portfolio, &$captured): string {
-				$captured[$p->value] = $filter($portfolio);
+		$this->assertSame('Base.', $this->ownedContext($collections, McpPersona::AUTHENTICATED)->catalogDescription(McpPersona::AUTHENTICATED, 'Base.'));
+		$this->assertStringContainsString('- portfolio', $this->ownedContext($collections, McpPersona::ADMIN)->catalogDescription(McpPersona::ADMIN, 'Base.'));
+	}
 
-				return 'catalog';
-			},
-		);
-		$owners = $this->createStub(OwnerPropertyResolver::class);
-		$owners->method('resolve')->willReturn('owner');
+	public function testAnAuthenticatedPersonaCannotReachAnOwnedCollectionThroughExposedCollectionVisibleCollectionsOrTheCatalog(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
+		$context   = $this->ownedContext(['portfolio' => $portfolio], McpPersona::AUTHENTICATED);
 
-		$context = new PersonaContext($fetcher, $resolver, $owners);
-		$context->catalogDescription(McpPersona::AUTHENTICATED, 'Base.');
-		$context->catalogDescription(McpPersona::ADMIN, 'Base.');
+		try {
+			$context->exposedCollection('portfolio');
+			$this->fail('exposedCollection() should refuse an owned collection for an authenticated persona.');
+		} catch (ToolCallException $e) {
+			$this->assertSame('Collection "portfolio" is an owned collection and is available to admin callers only over MCP.', $e->getMessage());
+		}
 
-		$this->assertFalse($captured['authenticated']);
-		$this->assertTrue($captured['admin']);
+		$this->assertSame([], $context->visibleCollections([$portfolio]));
+		$this->assertSame('Base.', $context->catalogDescription(McpPersona::AUTHENTICATED, 'Base.'));
 	}
 
 	// ── Owned collections are admin-only over MCP ────────────────────────────
@@ -426,8 +455,8 @@ final class PersonaContextTest extends TestCase
 	#[DataProvider('nonAdminPersonas')]
 	public function testExposedCollectionRefusesAnOwnedCollectionForNonAdminPersonas(McpPersona $persona): void
 	{
-		$portfolio = $this->registerCollection('portfolio', 'public');
-		$context   = $this->gateContext(['portfolio' => $portfolio], $persona, true, 'owner');
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
+		$context   = $this->ownedContext(['portfolio' => $portfolio], $persona);
 
 		$this->expectException(ToolCallException::class);
 		$this->expectExceptionMessage('Collection "portfolio" is an owned collection and is available to admin callers only over MCP.');
@@ -437,9 +466,9 @@ final class PersonaContextTest extends TestCase
 
 	public function testExposedCollectionStillServesAnOwnedCollectionToAdmin(): void
 	{
-		$portfolio = $this->registerCollection('portfolio', 'public');
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
 
-		$this->assertSame($portfolio, $this->gateContext(['portfolio' => $portfolio], McpPersona::ADMIN, true, 'owner')->exposedCollection('portfolio'));
+		$this->assertSame($portfolio, $this->ownedContext(['portfolio' => $portfolio], McpPersona::ADMIN)->exposedCollection('portfolio'));
 	}
 
 	public function testExposedCollectionServesAnUnownedCollectionToAuthenticated(): void
@@ -452,16 +481,16 @@ final class PersonaContextTest extends TestCase
 	#[DataProvider('nonAdminPersonas')]
 	public function testVisibleCollectionsDropsAnOwnedCollectionForNonAdminPersonas(McpPersona $persona): void
 	{
-		$portfolio = $this->registerCollection('portfolio', 'public');
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
 
-		$this->assertSame([], $this->gateContext(['portfolio' => $portfolio], $persona, true, 'owner')->visibleCollections([$portfolio]));
+		$this->assertSame([], $this->ownedContext(['portfolio' => $portfolio], $persona)->visibleCollections([$portfolio]));
 	}
 
 	public function testVisibleCollectionsKeepsAnOwnedCollectionForAdmin(): void
 	{
-		$portfolio = $this->registerCollection('portfolio', 'public');
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
 
-		$this->assertSame([$portfolio], $this->gateContext(['portfolio' => $portfolio], McpPersona::ADMIN, true, 'owner')->visibleCollections([$portfolio]));
+		$this->assertSame([$portfolio], $this->ownedContext(['portfolio' => $portfolio], McpPersona::ADMIN)->visibleCollections([$portfolio]));
 	}
 
 	public function testVisibleCollectionsKeepsAnUnownedCollectionForAuthenticated(): void

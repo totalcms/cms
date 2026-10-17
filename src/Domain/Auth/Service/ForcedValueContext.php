@@ -17,7 +17,7 @@ namespace TotalCMS\Domain\Auth\Service;
  * approved.
  *
  * It is request-scoped: one HTTP request per PHP process, and the container
- * holds a single instance. ForcedValueResetMiddleware clears it at the start
+ * holds a single instance. RequestScopeResetMiddleware clears it at the start
  * of every request, so a long-lived worker (FrankenPHP worker mode) never
  * carries one request's entries into the next. CLI commands, API keys, admin bearers and super
  * admins never reach the middleware's fill, so their writes are untouched.

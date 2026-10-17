@@ -17,6 +17,7 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\AccessActor;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
@@ -473,6 +474,20 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		expect($this->middleware->process(($this->requestFor)('object-update', 'showcase', 'site-2', 'PUT'), $this->handler))->toBe($this->allowed);
 		expect($this->middleware->process(($this->requestFor)('collection-query', 'showcase'), $this->handler))->toBe($this->allowed);
 		expect($this->handled[1]->getAttribute('ownerScope'))->toBeNull();
+		// The actor is attached before the super-admin bypass.
+		expect($this->handled[0]->getAttribute('accessActor'))->toEqual(new AccessActor('root', ''));
+	});
+
+	it('attaches the token actor to an admin bearer request it passes through', function (): void {
+		($this->owned)();
+		$this->accessControl->method('authorityFor')->willReturn(new UserAuthority(isAdmin: true, groups: []));
+		$this->objectFetcher->expects($this->never())->method('existsObject');
+
+		$request = ($this->requestFor)('object-update', 'showcase', 'site-2', 'PUT', ['authMethod' => 'oauth_bearer', 'oauth_user_id' => 'members:root']);
+
+		expect($this->middleware->process($request, $this->handler))->toBe($this->allowed);
+		expect($this->handled[0]->getAttribute('accessActor'))->toEqual(new AccessActor('root', 'members'));
+		expect($this->handled[0]->getAttribute('accessAuthority'))->toBeNull();
 	});
 
 	it('scopes a non-admin editor of the default auth collection', function (): void {

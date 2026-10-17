@@ -16,6 +16,7 @@ use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
+use TotalCMS\Domain\Auth\Data\AccessActor;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
@@ -72,6 +73,7 @@ describe('BaseAccessMiddleware', function (): void {
 			$uri->method('getPath')->willReturn($path);
 
 			$request = $this->createMock(ServerRequestInterface::class);
+			$request->method('withAttribute')->willReturnSelf();
 			$request->method('getUri')->willReturn($uri);
 			$request->method('getMethod')->willReturn('GET');
 			$request->method('getAttribute')->willReturnMap([
@@ -103,20 +105,58 @@ describe('BaseAccessMiddleware', function (): void {
 
 	test('publicSubmission attribute bypasses access control', function (): void {
 		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('withAttribute')->willReturnSelf();
 		$request->method('getAttribute')->willReturnMap([
 			['publicSubmission', null, true],
 			['authMethod', null, null],
 		]);
 
 		$this->handler->expects($this->once())->method('handle');
-		$this->session->expects($this->never())->method('get');
+		$this->operationDetector->expects($this->never())->method('detectOperation');
+		$this->userValidation->expects($this->never())->method('isSuperAdmin');
 
 		$response = ($this->make)()->process($request, $this->handler);
 		expect($response)->toBe($this->passthroughResponse);
 	});
 
+	test('an anonymous public submission carries no actor', function (): void {
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->expects($this->never())->method('withAttribute');
+		$request->method('getAttribute')->willReturnMap([
+			['publicSubmission', null, true],
+			['authMethod', null, null],
+		]);
+		$this->session->method('get')->willReturn(null);
+
+		($this->make)()->process($request, $this->handler);
+	});
+
+	test('a public submission by a signed-in session user carries that user as the actor', function (): void {
+		// PrivilegedFieldGuard reads the actor to stamp the owner on create.
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->expects($this->once())
+			->method('withAttribute')
+			->with('accessActor', $this->equalTo(new AccessActor('alex', 'members')))
+			->willReturnSelf();
+		$request->method('getAttribute')->willReturnMap([
+			['publicSubmission', null, true],
+			['authMethod', null, null],
+		]);
+		$this->session->method('get')->willReturnCallback(
+			static fn (string $key) => match ($key) {
+				SessionKeys::AUTH_USER       => 'alex',
+				SessionKeys::AUTH_COLLECTION => 'members',
+				default                      => null,
+			},
+		);
+		$this->operationDetector->expects($this->never())->method('detectOperation');
+
+		($this->make)()->process($request, $this->handler);
+	});
+
 	test('API key auth bypasses group checks', function (): void {
 		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('withAttribute')->willReturnSelf();
 		$request->method('getUri')->willReturn($this->createMock(UriInterface::class));
 		$request->method('getAttribute')->willReturnMap([
 			['publicSubmission', null, null],
@@ -140,6 +180,7 @@ describe('BaseAccessMiddleware', function (): void {
 		$this->config->auth['collection'] = 'auth';
 
 		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('withAttribute')->willReturnSelf();
 		$request->method('getUri')->willReturn($this->createMock(UriInterface::class));
 		$request->method('getAttribute')->willReturnMap([
 			['publicSubmission', null, null],
@@ -266,6 +307,7 @@ describe('BaseAccessMiddleware', function (): void {
 		$uri->method('getPath')->willReturn('/api/collections/blog');
 
 		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('withAttribute')->willReturnSelf();
 		$request->method('getUri')->willReturn($uri);
 		$request->method('getMethod')->willReturn('GET');
 		$request->method('getAttribute')->willReturnMap([

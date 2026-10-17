@@ -166,7 +166,7 @@
         "ownerProperty": {
 			"type"        : "string",
 			"label"       : "Owner Property",
-			"help"        : "Name of the property that holds the owning user's id. Users who are not super admins can then only read, edit and delete objects they own, and the server fills this property with their id when they create one. Leave empty for ordinary collections.",
+			"help"        : "Name of the property that holds the owning user's id. Users who are not super admins can then only read, edit and delete objects they own, and the server fills this property with their id when they create one. Leave empty for ordinary collections. The property must be a string field that is listed in the schema's index.",
 			"placeholder" : "owner",
 			"field"       : "input"
         },

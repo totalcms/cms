@@ -17,10 +17,8 @@ use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
-use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
-use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -245,20 +243,7 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 			return true;
 		}
 
-		return $this->policy->canWriteProperty($userId, $collection, $property, $this->actorCollectionFor($request));
-	}
-
-	/**
-	 * The auth collection the actor belongs to: from the token's `sub` claim
-	 * for a non-admin bearer (no session), otherwise the raw session value.
-	 */
-	private function actorCollectionFor(ServerRequestInterface $request): string
-	{
-		if ($request->getAttribute('accessAuthority') instanceof UserAuthority) {
-			return OAuthUserRef::parse((string)$request->getAttribute('oauth_user_id', ''), (string)$this->config->auth['collection'])->collection;
-		}
-
-		return (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
+		return $this->policy->canWriteProperty($userId, $collection, $property, $this->actorOf($request)->collection);
 	}
 
 	/**
@@ -272,7 +257,7 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 		// OAuth Bearer callers: there is no PHP session to derive groups from,
 		// so use the UserAuthority resolved from the token by BaseAccessMiddleware.
 		// This MUST run before the self-profile carve-out below: the carve-out
-		// gates on session AUTH_COLLECTION, not on auth method, so a Bearer
+		// gates on the actor's auth collection, not on auth method, so a Bearer
 		// request that ALSO carries an active session cookie (browser-originated
 		// token use) could otherwise hit the carve-out and update the auth
 		// record — bypassing the group check on exactly the record that holds
@@ -293,14 +278,12 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 		// AUTH_COLLECTION is empty for anyone who logged in at the plain
 		// `/admin/login` route, which has no `{collection}` argument — i.e.
 		// almost everyone (AuthLoginSubmitAction: `$args['collection'] ?? ''`).
-		// An empty value means "the default auth collection" everywhere else in
-		// the codebase (see UserValidationService::validateUserById), so it must
-		// be resolved before comparing. Comparing the raw session value made
-		// this carve-out dead for every default-login user: their own profile
-		// save fell through to the group check and 403'd. Super-admins never saw
-		// it — they bypass in BaseAccessMiddleware before reaching here.
+		// AccessActor::authCollection() resolves that empty value to the default
+		// auth collection before comparing. Comparing the raw value made this
+		// carve-out dead for every default-login user: their own profile save
+		// fell through to the group check and 403'd.
 		if ($operation === 'update' && $collection && $objectId) {
-			if ($collection === $this->actorAuthCollection() && $objectId === $userId) {
+			if ($collection === $this->actorOf($request)->authCollection((string)$this->config->auth['collection']) && $objectId === $userId) {
 				return true;
 			}
 		}
@@ -453,7 +436,7 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 		$this->forcedValues->remember(
 			$collection,
 			$objectId,
-			$this->policy->enforce($userId, $collection, $objectId, [], $this->actorCollectionFor($request)),
+			$this->policy->enforce($userId, $collection, $objectId, [], $this->actorOf($request)->collection),
 		);
 	}
 
@@ -494,16 +477,5 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 		$route = $request->getAttribute(RouteContext::ROUTE);
 
 		return $route instanceof RouteInterface ? $route : null;
-	}
-
-	/**
-	 * The auth collection the session user belongs to, with an empty session
-	 * value resolved to the configured default.
-	 */
-	private function actorAuthCollection(): string
-	{
-		$collection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
-
-		return $collection !== '' ? $collection : (string)$this->config->auth['collection'];
 	}
 }

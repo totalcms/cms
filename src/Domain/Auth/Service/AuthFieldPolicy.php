@@ -33,13 +33,15 @@ use TotalCMS\Support\Config;
  *   3. The collection's `ownerProperty` — stamped with the actor's user id on
  *      create, reverted on update, never writable through property routes.
  *
- * Applied by {@see PrivilegedFieldGuard} on
- * every object write (save, update, patch, property routes, admin cell edit),
- * which trusts API keys and admin OAuth bearer tokens, passes a non-admin
- * bearer's token user, and passes the session actor
- * for everyone else — an empty actor for anonymous public submissions.
+ * Applied by {@see PrivilegedFieldGuard} on every object write (save, update,
+ * patch, property routes, admin cell edit) and by CollectionAccessMiddleware.
+ * The policy resolves no actor itself: the caller passes the actor id and auth
+ * collection in, resolved once per request by BaseAccessMiddleware as an
+ * `AccessActor` request attribute (an empty actor for anonymous public
+ * submissions).
  */
-final readonly class AuthFieldPolicy
+// Not `readonly`: the per-request rules memo below is mutable state.
+final class AuthFieldPolicy
 {
 	/**
 	 * Fields a non-super-admin may never set on a collection whose schema
@@ -71,14 +73,22 @@ final readonly class AuthFieldPolicy
 	/** Schema id whose records are user/auth records. */
 	private const AUTH_SCHEMA = 'auth';
 
-	private LoggerInterface $logger;
+	private readonly LoggerInterface $logger;
+
+	/**
+	 * Per-request memo of {@see rulesFor()}, keyed by collection. Cleared by
+	 * {@see forgetRules()} at the start of every request.
+	 *
+	 * @var array<string,array{plain: list<string>, forced: array<string,mixed>, owner: string}>
+	 */
+	private array $rules = [];
 
 	public function __construct(
-		private SchemaFetcher $schemaFetcher,
-		private UserValidationService $userValidation,
-		private ObjectFetcher $objectFetcher,
-		private OwnerPropertyResolver $ownerProperties,
-		private Config $config,
+		private readonly SchemaFetcher $schemaFetcher,
+		private readonly UserValidationService $userValidation,
+		private readonly ObjectFetcher $objectFetcher,
+		private readonly OwnerPropertyResolver $ownerProperties,
+		private readonly Config $config,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Access);
@@ -128,6 +138,23 @@ final readonly class AuthFieldPolicy
 	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string}
 	 */
 	private function rulesFor(string $collection): array
+	{
+		return $this->rules[$collection] ??= $this->buildRules($collection);
+	}
+
+	/**
+	 * Drop the memoised rules. Called at the start of every request so a
+	 * long-lived worker never serves one request's schema to the next.
+	 */
+	public function forgetRules(): void
+	{
+		$this->rules = [];
+	}
+
+	/**
+	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string}
+	 */
+	private function buildRules(string $collection): array
 	{
 		$none = ['plain' => [], 'forced' => [], 'owner' => ''];
 

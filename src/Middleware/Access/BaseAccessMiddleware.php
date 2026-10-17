@@ -12,6 +12,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
+use TotalCMS\Domain\Auth\Data\AccessActor;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
@@ -40,6 +41,16 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	 */
 	protected const RESOURCE_NAME = 'resource';
 
+	/**
+	 * Request attribute carrying the {@see AccessActor}: the acting user id and
+	 * auth collection, resolved once here and read by every later layer.
+	 * Attached for bearer and session requests before the admin bypass, and for
+	 * a public submission made by a signed-in session user (so AuthFieldPolicy
+	 * still stamps them as owner); API-key, anonymous public-submission and
+	 * auth-disabled requests carry none.
+	 */
+	public const ACTOR_ATTRIBUTE = 'accessActor';
+
 	public function __construct(
 		protected UserValidationService $userValidation,
 		protected AccessControlService $accessControl,
@@ -63,7 +74,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 
 		// Public submissions bypass access control (already validated by DualAuthMiddleware)
 		if ($request->getAttribute('publicSubmission') === true) {
-			return $handler->handle($request);
+			return $handler->handle($this->withSessionActor($request));
 		}
 
 		$authMethod = $request->getAttribute('authMethod');
@@ -88,6 +99,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 			// attribute so checkPermission() implementations can use it instead of
 			// re-deriving groups from the (absent) session.
 			$ref       = OAuthUserRef::parse((string)$request->getAttribute('oauth_user_id', ''), (string)$this->config->auth['collection']);
+			$request   = $request->withAttribute(self::ACTOR_ATTRIBUTE, new AccessActor($ref->userId, $ref->collection));
 			$authority = $this->accessControl->authorityFor($ref);
 			if ($authority->isAdmin) {
 				return $handler->handle($request);
@@ -103,6 +115,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 			}
 			$userId         = (string)$sessionUserId;
 			$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
+			$request        = $request->withAttribute(self::ACTOR_ATTRIBUTE, new AccessActor($userId, $userCollection));
 
 			// Super admins bypass all access checks
 			if ($this->userValidation->isSuperAdmin($userId, $userCollection)) {
@@ -150,6 +163,33 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 		}
 
 		return $handler->handle($this->scopeRequest($request, $userId, $operation));
+	}
+
+	/**
+	 * A public submission skips access control, but a signed-in session user
+	 * making one is still the actor PrivilegedFieldGuard applies the field
+	 * policy for: attach them when there is one, and nothing when the caller
+	 * is anonymous.
+	 */
+	private function withSessionActor(ServerRequestInterface $request): ServerRequestInterface
+	{
+		$userId = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
+		if ($userId === '') {
+			return $request;
+		}
+
+		return $request->withAttribute(self::ACTOR_ATTRIBUTE, new AccessActor($userId, (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '')));
+	}
+
+	/**
+	 * The acting user resolved by process(), or an anonymous actor when the
+	 * request carries none.
+	 */
+	protected function actorOf(ServerRequestInterface $request): AccessActor
+	{
+		$actor = $request->getAttribute(self::ACTOR_ATTRIBUTE);
+
+		return $actor instanceof AccessActor ? $actor : new AccessActor('', '');
 	}
 
 	/**

@@ -49,7 +49,7 @@ readonly class McpSchemaResolver
 	/**
 	 * Effective MCP config for a collection, with defaults applied.
 	 *
-	 * @return array{access: string, description: ?string, resource: bool, titleProperty: string}
+	 * @return array{access: string, owned: bool, description: ?string, resource: bool, titleProperty: string}
 	 */
 	public function forCollection(CollectionData $collection): array
 	{
@@ -60,8 +60,19 @@ readonly class McpSchemaResolver
 			$access = 'admin';
 		}
 
+		// Owned collections (ownerProperty) scope members to their own objects over
+		// REST; MCP applies no such scoping, so they are admin-only here. Declared
+		// setting, not OwnerPropertyResolver: CollectionSaver refuses an ownerProperty
+		// the schema lacks, so the two agree, and this class is built without the
+		// resolver in several places.
+		$owned = $collection->ownerProperty !== '';
+		if ($owned) {
+			$access = 'admin';
+		}
+
 		return [
 			'access'        => $access,
+			'owned'         => $owned,
 			'description'   => $this->descriptions->forCollection($collection),
 			// Unset means off. A collection is exposed as an addressable
 			// `tcms://` resource only when someone said so — matching the schema

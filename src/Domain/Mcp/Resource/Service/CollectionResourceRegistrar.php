@@ -6,7 +6,6 @@ namespace TotalCMS\Domain\Mcp\Resource\Service;
 
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceDefinition;
 use TotalCMS\Domain\Mcp\Resource\Data\McpResourceTemplateDefinition;
@@ -39,7 +38,6 @@ readonly class CollectionResourceRegistrar
 		private McpSchemaResolver $schemaResolver,
 		private CollectionResource $collectionResource,
 		private CollectionObjectResource $collectionObjectResource,
-		private OwnerPropertyResolver $ownerProperties,
 	) {
 	}
 
@@ -57,9 +55,10 @@ readonly class CollectionResourceRegistrar
 			return;
 		}
 
-		// Owned collections are admin-only over MCP: hidden from resources/list,
-		// templates/list, subscriptions and reads for every other persona.
-		$access       = $this->ownerProperties->resolve($collection->id) !== '' ? McpAccessLevel::ADMIN->value : McpAccessLevel::fromString($mcp['access'])->value;
+		// Owned collections come back as admin access from forCollection(), so they
+		// stay out of resources/list, templates/list, subscriptions and reads for
+		// every other persona.
+		$access       = McpAccessLevel::fromString($mcp['access'])->value;
 		$displayName  = $collection->name !== '' ? $collection->name : ucfirst($collection->id);
 		$sdkName      = $this->toSdkName($collection->id);
 		$desc         = (string)($mcp['description'] ?? '');

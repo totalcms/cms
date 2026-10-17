@@ -88,7 +88,7 @@ final class FetchToolTest extends TestCase
 		$schemaResolver = $this->createMock(McpSchemaResolver::class);
 		$schemaResolver->method('renderableProperties')->willReturn(['content']);
 		$schemaResolver->method('forCollection')->willReturn(
-			['access' => 'public', 'description' => null, 'resource' => true, 'titleProperty' => ''],
+			['access' => 'public', 'owned' => false, 'description' => null, 'resource' => true, 'titleProperty' => ''],
 		);
 
 		return new FetchTool($getObject, $collectionFetcher, $schemaResolver, new ObjectTitleResolver());

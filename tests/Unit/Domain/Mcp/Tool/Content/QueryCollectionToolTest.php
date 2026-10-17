@@ -10,7 +10,6 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -43,7 +42,7 @@ final class QueryCollectionToolTest extends TestCase
 		// canReadCollection() call — the objects+read group gate is enforced
 		// entirely by McpServerFactory::guardHandler(), which this unit test
 		// (calling ->handler() directly) never exercises.
-		$this->persona = new PersonaContext($this->collections, $this->resolver, $this->createStub(OwnerPropertyResolver::class));
+		$this->persona = new PersonaContext($this->collections, $this->resolver);
 
 		$this->tool = new QueryCollectionTool(
 			$this->indexQuery,
@@ -176,6 +175,7 @@ final class QueryCollectionToolTest extends TestCase
 		$this->persona->set(McpPersona::PUBLIC_);
 		$this->collections->method('fetchCollection')->willReturn($this->collection('auth'));
 		$this->resolver->method('isAccessibleTo')->willReturn(false);
+		$this->resolver->method('forCollection')->willReturn(['access' => 'admin', 'owned' => false, 'description' => null, 'resource' => true, 'titleProperty' => '']);
 
 		try {
 			$this->tool->handler(collection: 'auth');

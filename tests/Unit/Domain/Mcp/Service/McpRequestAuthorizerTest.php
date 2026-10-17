@@ -13,7 +13,6 @@ use Psr\Log\NullLogger;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpCaller;
 use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
@@ -53,7 +52,6 @@ final class McpRequestAuthorizerTest extends TestCase
 		$this->personaContext = new PersonaContext(
 			$this->createStub(CollectionFetcher::class),
 			$this->createStub(McpSchemaResolver::class),
-			$this->createStub(OwnerPropertyResolver::class),
 		);
 		$this->urlBuilder     = $this->createMock(McpUrlBuilder::class);
 		$this->urlBuilder->method('protectedResourceMetadataUrl')->willReturn('https://site.test/.well-known/oauth-protected-resource');
