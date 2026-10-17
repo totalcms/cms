@@ -837,7 +837,15 @@ function tcmsTestTempDir(string $prefix): string
 	if ($dirs === []) {
 		register_shutdown_function(static function () use (&$dirs): void {
 			foreach ($dirs as $created) {
-				foreach ((array)@scandir($created . '/.system') as $entry) {
+				// is_dir() first: scandir() on a missing folder warns even under @,
+				// and at shutdown PHPUnit's error handler turns that into a second
+				// fatal ("Cannot find TestCase object on call stack") that buries
+				// the real one.
+				if (!is_dir($created . '/.system')) {
+					@rmdir($created);
+					continue;
+				}
+				foreach ((array)scandir($created . '/.system') as $entry) {
 					if ($entry !== '.' && $entry !== '..') {
 						@unlink($created . '/.system/' . $entry);
 					}
