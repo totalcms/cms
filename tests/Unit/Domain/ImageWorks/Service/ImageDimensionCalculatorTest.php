@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\ImageWorks\Service;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
 
@@ -238,7 +239,7 @@ class ImageDimensionCalculatorTest extends TestCase
 		$this->assertEquals(['width' => 2038, 'height' => 1334], ImageDimensionCalculator::calculate(2138, 1434, ['crop' => '3000,3000,100,100']));
 	}
 
-	/** @dataProvider invalidCropRects */
+	#[DataProvider('invalidCropRects')]
 	public function testAnInvalidCropRectIsIgnoredLikeGlide(string $crop): void
 	{
 		$this->assertEquals(['width' => 2138, 'height' => 1434], ImageDimensionCalculator::calculate(2138, 1434, ['crop' => $crop]));

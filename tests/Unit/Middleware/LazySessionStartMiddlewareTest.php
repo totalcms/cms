@@ -3,6 +3,7 @@
 namespace Tests\Unit\Middleware;
 
 use Odan\Session\SessionManagerInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -51,9 +52,7 @@ final class LazySessionStartMiddlewareTest extends TestCase
 		$this->middleware->process($this->createRequest('/mysite/imageworks/photo.png'), $this->handler);
 	}
 
-	/**
-	 * @dataProvider assetPaths
-	 */
+	#[DataProvider('assetPaths')]
 	public function testSkipsSessionForStaticAssets(string $path): void
 	{
 		// A started session sets PHPSESSID on the response, and a CDN will not

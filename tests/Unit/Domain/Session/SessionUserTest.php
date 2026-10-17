@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Session;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Domain\Auth\Service\InMemorySession;
 use TotalCMS\Domain\Session\SessionKeys;
@@ -36,10 +37,9 @@ final class SessionUserTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider anonymousSessions
-	 *
 	 * @param array<string,mixed> $data
 	 */
+	#[DataProvider('anonymousSessions')]
 	public function testASessionWithoutAUserIdIsAnonymous(array $data): void
 	{
 		$this->assertNull(SessionUser::fromSession(new InMemorySession($data)));

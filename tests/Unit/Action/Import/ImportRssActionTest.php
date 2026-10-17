@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Import;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -25,10 +26,9 @@ final class ImportRssActionTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider actions
-	 *
 	 * @param class-string $actionClass
 	 */
+	#[DataProvider('actions')]
 	public function testRejectsAMalformedUrlBeforeTouchingTheImporter(string $actionClass): void
 	{
 		$importer = $this->createMock(RssImporter::class);
@@ -56,10 +56,9 @@ final class ImportRssActionTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider actions
-	 *
 	 * @param class-string $actionClass
 	 */
+	#[DataProvider('actions')]
 	public function testRejectsAMissingUrl(string $actionClass): void
 	{
 		$importer = $this->createMock(RssImporter::class);

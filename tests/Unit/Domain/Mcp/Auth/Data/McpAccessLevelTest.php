@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Mcp\Auth\Data;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
@@ -28,7 +29,7 @@ final class McpAccessLevelTest extends TestCase
 		yield 'admin lets admin'                  => [McpAccessLevel::ADMIN, McpPersona::ADMIN, true];
 	}
 
-	/** @dataProvider matrix */
+	#[DataProvider('matrix')]
 	public function testAllowsFollowsTheMatrix(McpAccessLevel $level, McpPersona $persona, bool $expected): void
 	{
 		$this->assertSame($expected, $level->allows($persona));

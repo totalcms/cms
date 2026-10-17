@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Import;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -43,10 +44,9 @@ final class ImportActionPairsTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider alloyActions
-	 *
 	 * @param class-string $actionClass
 	 */
+	#[DataProvider('alloyActions')]
 	public function testAMissingAlloyFolderIs400OnBothPaths(string $actionClass): void
 	{
 		$importer = $this->createMock(AlloyImporter::class);
@@ -74,11 +74,10 @@ final class ImportActionPairsTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider deckActions
-	 *
 	 * @param class-string $actionClass
 	 * @param class-string $importerClass
 	 */
+	#[DataProvider('deckActions')]
 	public function testADeckImportWithoutObjectAndPropertyIsRejected(string $actionClass, string $importerClass): void
 	{
 		$request = $this->createMock(ServerRequestInterface::class);

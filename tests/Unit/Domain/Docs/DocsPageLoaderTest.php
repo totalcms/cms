@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Docs;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Docs\Service\DocsPageLoader;
 use TotalCMS\Domain\Docs\Service\DocsResource;
@@ -44,7 +45,7 @@ final class DocsPageLoaderTest extends TestCase
 		yield 'image filenames'    => ['guide/images/shot.png', 'guide/images/shot.png'];
 	}
 
-	/** @dataProvider pagePaths */
+	#[DataProvider('pagePaths')]
 	public function testSanitizeNormalizesAndFallsBackToIndex(string $in, string $out): void
 	{
 		$this->assertSame($out, $this->loader->sanitize($in));

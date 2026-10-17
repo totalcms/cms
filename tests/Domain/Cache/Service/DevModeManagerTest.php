@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Domain\Cache\Service;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
 
-/**
- * @covers \TotalCMS\Domain\Cache\Service\DevModeManager
- */
+#[CoversClass(DevModeManager::class)]
 final class DevModeManagerTest extends TestCase
 {
 	private DevModeManager $devModeManager;

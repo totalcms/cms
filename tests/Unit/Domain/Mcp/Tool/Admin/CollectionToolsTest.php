@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
@@ -137,9 +138,8 @@ final class CollectionToolsTest extends TestCase
 	 * hands registrants a group of their choosing.
 	 *
 	 * @param array<string,mixed> $extra
-	 *
-	 * @dataProvider registrationExtras
 	 */
+	#[DataProvider('registrationExtras')]
 	public function testCreateRefusesRegistrationSettingsFromANonAdminCaller(array $extra): void
 	{
 		$this->persona->set(McpPersona::AUTHENTICATED);
@@ -163,9 +163,8 @@ final class CollectionToolsTest extends TestCase
 
 	/**
 	 * @param array<string,mixed> $extra
-	 *
-	 * @dataProvider registrationExtras
 	 */
+	#[DataProvider('registrationExtras')]
 	public function testCreateAcceptsRegistrationSettingsFromAnAdminCaller(array $extra): void
 	{
 		$this->saver->expects($this->once())

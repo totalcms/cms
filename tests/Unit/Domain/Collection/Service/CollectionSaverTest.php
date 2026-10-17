@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Collection\Service;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -112,9 +113,8 @@ final class CollectionSaverTest extends TestCase
 	/**
 	 * The serializer casts loosely ("false" would be stored as true), so the
 	 * saver stores the strict normalised value the access middleware compares.
-	 *
-	 * @dataProvider publicRegistrationValues
 	 */
+	#[DataProvider('publicRegistrationValues')]
 	public function testSaveStoresPublicRegistrationStrictly(mixed $submitted, bool $stored): void
 	{
 		$this->saver->saveCollection(['id' => 'members', 'schema' => 'auth', 'publicRegistration' => $submitted]);
