@@ -34,11 +34,14 @@ jobs:
       - name: Install JS dependencies
         run: vp install --frozen-lockfile
 
+      # From here on use the project's own vp (the vite-plus devDependency).
+      # The npm-global one runs its own bundled Vitest, which cannot resolve
+      # @vitest/coverage-v8 from the project's node_modules.
       - name: Lint JS
-        run: vp run lint:js
+        run: node_modules/.bin/vp run lint:js
 
       - name: Run JS tests (with coverage gate)
-        run: vp run test:js:coverage
+        run: node_modules/.bin/vp run test:js:coverage
 
       - name: Check PHP version
         run: php -v
