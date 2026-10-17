@@ -21,13 +21,14 @@ readonly class ObjectPatchPropertyAction
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$this->guard->guardProperty($request, $args['collection'], $args['property']);
+		$extra  = $this->guard->guardProperty($request, $args['collection'], $args['id'], $args['property']);
 		$data   = (array)$request->getParsedBody();
 		$object = $this->objectPatcher->patchObjectProperty(
 			$args['collection'],
 			$args['id'],
 			$args['property'],
-			$data
+			$data,
+			$extra,
 		);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());

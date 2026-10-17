@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\nrequireEmailVerification requireEmailVerification\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
+	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Access---\npublicOperations publicOperations\ngroups groups\nrequireEmailVerification requireEmailVerification\nownerProperty ownerProperty\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
     "properties"  : {
         "id": {
 			"$ref"        : "https://www.totalcms.co/schemas/properties/slug.json",
@@ -162,6 +162,13 @@
 			"label" : "Require Email Verification",
 			"help"  : "When a user registers via the public registration endpoint, create their account inactive and send a verification email. Only takes effect for collections listed in $config->auth['publicRegistration'].",
 			"field" : "checkbox"
+        },
+        "ownerProperty": {
+			"type"        : "string",
+			"label"       : "Owner Property",
+			"help"        : "Name of the property that holds the owning user's id. Users who are not super admins can then only read, edit and delete objects they own, and the server fills this property with their id when they create one. Leave empty for ordinary collections.",
+			"placeholder" : "owner",
+			"field"       : "input"
         },
         "count": {
 			"type"    : "integer",

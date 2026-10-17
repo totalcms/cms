@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
@@ -44,7 +45,7 @@ final class GetObjectToolTest extends TestCase
 		// actually invoked from that path — reused only to satisfy the
 		// constructor. $this->resolver IS invoked (via forCollection(), stubbed
 		// below) since it's the one PersonaContext actually consults.
-		$this->persona = new PersonaContext($this->collections, $this->resolver);
+		$this->persona = new PersonaContext($this->collections, $this->resolver, $this->createStub(OwnerPropertyResolver::class));
 		$this->resolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),

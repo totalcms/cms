@@ -40,6 +40,14 @@ class ObjectForm extends TotalForm
 
 		$objectExists = $this->services->objectFetcher->existsObject($this->collection, $this->id);
 
+		// A member of an owned collection must not see another member's object
+		// prefilled: refuse before the object is read.
+		if (!$this->addOnly && $this->id !== '' && $objectExists && $this->ownerForbids()) {
+			$this->refuse(self::OWNER_REFUSAL);
+
+			return;
+		}
+
 		// For addOnly forms, never load existing objects even if an ID is somehow present
 		if (!$this->addOnly && $this->id !== '' && $objectExists) {
 			// If the form is for editing an existing item, change the method to PUT

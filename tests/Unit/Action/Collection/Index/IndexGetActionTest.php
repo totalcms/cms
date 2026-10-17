@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Collection\Index\IndexGetAction;
+use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -218,6 +219,68 @@ final class IndexGetActionTest extends TestCase
 		$result = ($this->action)($this->request, $this->response, ['collection' => 'blog']);
 
 		$this->assertInstanceOf(ResponseInterface::class, $result);
+	}
+
+	// -----------------------------------------------------------------------
+	// Owner scope. CollectionAccessMiddleware attaches an OwnerScope for a
+	// non-admin on an owned collection; the action applies it, by exact
+	// match, after the caller's own filters, so those can only narrow further.
+	// -----------------------------------------------------------------------
+
+	public function testOwnerScopeKeepsOnlyTheActorsObjects(): void
+	{
+		$indexData = new IndexData([
+			['id' => '1', 'owner' => 'alex'],
+			['id' => '2', 'owner' => 'Alex'],
+			['id' => '3', 'owner' => 'sam'],
+			['id' => '4', 'owner' => 'alex'],
+		]);
+
+		$this->request->method('getQueryParams')->willReturn([]);
+		$this->request->method('getAttribute')->willReturnCallback(
+			static fn (string $name, $default = null) => $name === 'ownerScope' ? new OwnerScope('owner', 'alex') : $default,
+		);
+		$this->indexFilter->method('extractFilterOptions')->willReturn([]);
+		$this->indexReader->expects($this->once())->method('fetchIndex')->with('showcase')->willReturn($indexData);
+
+		$rendered = null;
+		$this->renderer->method('jsonItem')->willReturnCallback(function ($response, IndexData $index) use (&$rendered) {
+			$rendered = $index;
+
+			return $this->response;
+		});
+
+		($this->action)($this->request, $this->response, ['collection' => 'showcase']);
+
+		$this->assertSame([['id' => '1', 'owner' => 'alex'], ['id' => '4', 'owner' => 'alex']], $rendered->objects->all());
+	}
+
+	public function testOwnerScopeAppliesAfterTheCallersFilter(): void
+	{
+		$params = ['include' => 'draft:false'];
+
+		$this->request->method('getQueryParams')->willReturn($params);
+		$this->request->method('getAttribute')->willReturnCallback(
+			static fn (string $name, $default = null) => $name === 'ownerScope' ? new OwnerScope('owner', 'alex') : $default,
+		);
+		$this->indexFilter->method('extractFilterOptions')->with($params)->willReturn(['include' => 'draft:false']);
+
+		// The caller's include reaches the filter untouched: no owner clause.
+		$this->indexFilter->expects($this->once())
+			->method('fetchFilteredIndexData')
+			->with('showcase', ['include' => 'draft:false'])
+			->willReturn(new IndexData([['id' => '1', 'owner' => 'sam'], ['id' => '2', 'owner' => 'alex']]));
+
+		$rendered = null;
+		$this->renderer->method('jsonItem')->willReturnCallback(function ($response, IndexData $index) use (&$rendered) {
+			$rendered = $index;
+
+			return $this->response;
+		});
+
+		($this->action)($this->request, $this->response, ['collection' => 'showcase']);
+
+		$this->assertSame([['id' => '2', 'owner' => 'alex']], $rendered->objects->all());
 	}
 
 	private function createIndexData(): IndexData

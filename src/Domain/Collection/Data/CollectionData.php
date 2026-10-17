@@ -24,7 +24,6 @@ class CollectionData
 		'views',
 	];
 
-
 	public string $id;                        // collection id
 	public string $name;                      // collection name
 	public string $schema;                    // schema name
@@ -46,6 +45,8 @@ class CollectionData
 	/** @var list<string> */
 	public const FORMATS                  = [self::FORMAT_JSON, self::FORMAT_MARKDOWN];
 	public bool $requireEmailVerification = false;     // when true, public registration creates inactive users + sends a verification email
+	/** Property holding the owning user's id. Non-empty makes this an owned collection: non-super-admins are scoped to the objects they own and the server stamps their id on create. See OwnerPropertyResolver. */
+	public string $ownerProperty          = '';
 	public int $count                     = 0;                    // total number of objects created in this collection
 	public int $totalObjects              = -1;                // current number of objects (-1 = not calculated yet)
 	public string $lastUpdated            = '';                // ISO 8601 datetime of last object modification (CONTENT timestamp — bumps on every object write)
@@ -114,6 +115,7 @@ class CollectionData
 			'singleton'                => $this->singleton,
 			'format'                   => $this->format,
 			'requireEmailVerification' => $this->requireEmailVerification,
+			'ownerProperty'            => $this->ownerProperty,
 			'queueRebuildOnSave'       => $this->queueRebuildOnSave,
 			'count'                    => $this->count,
 			'totalObjects'             => max($this->totalObjects, 0),

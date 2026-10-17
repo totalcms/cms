@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -74,7 +75,7 @@ final class SchemaToolRegistrarTest extends TestCase
 			// This file never invokes a built tool's handler — only registration
 			// behavior — so PersonaContext's Task 10b constructor deps never
 			// matter; plain stubs satisfy the type.
-			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
+			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), $this->createStub(OwnerPropertyResolver::class)),
 			ObjectUrlBuilder::class               => $this->createMock(ObjectUrlBuilder::class),
 			McpSchemaResolver::class              => $this->createMock(McpSchemaResolver::class),
 			CollectionRepository::class           => $this->createMock(CollectionRepository::class),
@@ -294,5 +295,23 @@ final class SchemaToolRegistrarTest extends TestCase
 
 		$this->assertContains('find_canonical', $toolNames);
 		$this->assertNotContains('stale_id', $toolNames);
+	}
+
+	public function testOwnedCollectionToolsAreAdminOnlyWhateverTheCollectionAccess(): void
+	{
+		$collection = $this->makeCollection('portfolio', [
+			'access' => 'public',
+			'tools'  => [['id' => 'find_all', 'description' => 'All.', 'filters' => ['featured' => ['value' => true]]]],
+		]);
+		$collection->ownerProperty = 'owner';
+
+		$registry  = new ToolRegistry();
+		$registrar = new SchemaToolRegistrar($this->makeRepo([$collection]), $this->makeFactory(), new RecordingLogger());
+
+		$registrar->register($registry);
+
+		$this->assertSame([], $registry->forPersona(McpPersona::PUBLIC_));
+		$this->assertSame([], $registry->forPersona(McpPersona::AUTHENTICATED));
+		$this->assertCount(1, $registry->forPersona(McpPersona::ADMIN));
 	}
 }

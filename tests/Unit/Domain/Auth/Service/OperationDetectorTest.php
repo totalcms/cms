@@ -149,4 +149,33 @@ describe('OperationDetector', function (): void {
 		$request = ($this->requestWithRoute)('object-delete');
 		expect($this->detector->detectOperation($request))->toBe('delete');
 	});
+
+	// --- Upload namespace ---
+	//
+	// /api/upload/* ran under DualAuthMiddleware alone, so any authenticated
+	// session from any auth collection could upload to or delete from any
+	// object's file property with no group check. The routes now sit behind
+	// CollectionAccessMiddleware, which denies on detection failure — so an
+	// unmapped name here would 403 every rich-text image upload.
+
+	test('upload writes are UPDATE (they edit a property of an object the actor may update)', function (): void {
+		foreach (['upload-post', 'upload-post-nested', 'upload-delete'] as $routeName) {
+			$request = ($this->requestWithRoute)($routeName);
+			expect($this->detector->detectOperation($request))->toBe('update', "route: $routeName");
+		}
+	});
+
+	test('upload reads are READ', function (): void {
+		foreach (['upload-list', 'upload-get'] as $routeName) {
+			$request = ($this->requestWithRoute)($routeName);
+			expect($this->detector->detectOperation($request))->toBe('read', "route: $routeName");
+		}
+	});
+
+	test('upload routes are not public operations', function (): void {
+		foreach (['upload-post', 'upload-post-nested', 'upload-list', 'upload-get', 'upload-delete'] as $routeName) {
+			$request = ($this->requestWithRoute)($routeName);
+			expect($this->detector->detectPublicOperation($request))->toBeNull("route: $routeName");
+		}
+	});
 });

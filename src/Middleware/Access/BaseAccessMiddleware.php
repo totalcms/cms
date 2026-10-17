@@ -144,12 +144,35 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 				$this->logGroupRejection($request, $userId, $operation);
 			}
 
-			$this->logDenial($request, $userId, $operation, $isOAuthBearer);
+			$this->logDenial($request, $userId, $operation, $isOAuthBearer, $this->denialContext($request, $userId, $operation));
 
 			return $this->forbiddenResponse($request, $this->getErrorMessage());
 		}
 
-		return $handler->handle($request);
+		return $handler->handle($this->scopeRequest($request, $userId, $operation));
+	}
+
+	/**
+	 * Hook for a subclass to narrow an allowed request before the action runs,
+	 * e.g. by attaching a request attribute the action applies as a filter.
+	 * The default passes the request through untouched. Only called once
+	 * checkPermission() has allowed the request; super admins, API keys and
+	 * disabled auth never reach it.
+	 */
+	protected function scopeRequest(ServerRequestInterface $request, string $userId, string $operation): ServerRequestInterface
+	{
+		return $request;
+	}
+
+	/**
+	 * Hook for a subclass to say WHY checkPermission() refused — merged into
+	 * the access-log context of the denial. The default adds nothing.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function denialContext(ServerRequestInterface $request, string $userId, string $operation): array
+	{
+		return [];
 	}
 
 	/**
@@ -162,8 +185,10 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	 * Diagnosing "my editor cannot save their own profile" then means reading the
 	 * session off disk to work out which comparison failed. Route name and
 	 * operation are the two facts that identify the check that refused.
+	 *
+	 * @param array<string,mixed> $extra subclass-supplied context, e.g. the reason
 	 */
-	private function logDenial(ServerRequestInterface $request, string $userId, string $operation, bool $isOAuthBearer): void
+	private function logDenial(ServerRequestInterface $request, string $userId, string $operation, bool $isOAuthBearer, array $extra = []): void
 	{
 		// Read the route attribute directly rather than through
 		// RouteContext::fromRequest(), which throws when routing metadata is
@@ -172,7 +197,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 		$route     = $request->getAttribute(RouteContext::ROUTE);
 		$routeName = $route instanceof RouteInterface ? (string)$route->getName() : 'unknown';
 
-		$this->loggerFactory->channelLogger(LogChannel::Access)->warning('Access denied', [
+		$this->loggerFactory->channelLogger(LogChannel::Access)->warning('Access denied', array_merge([
 			'resource'    => static::RESOURCE_NAME,
 			'operation'   => $operation,
 			'user_id'     => $userId === '' ? '(none)' : $userId,
@@ -180,7 +205,7 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 			'route_name'  => $routeName,
 			'method'      => $request->getMethod(),
 			'path'        => $request->getUri()->getPath(),
-		]);
+		], $extra));
 	}
 
 	/**

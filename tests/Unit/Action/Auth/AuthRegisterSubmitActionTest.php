@@ -19,6 +19,7 @@ use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Data\ObjectData;
@@ -82,10 +83,13 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		$schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 		$policyLoggerFactory = $this->createMock(LoggerFactory::class);
 		$policyLoggerFactory->method('channelLogger')->willReturn(new NullLogger());
+		$ownerProperties = $this->createMock(OwnerPropertyResolver::class);
+		$ownerProperties->method('resolve')->willReturn('');
 		$authFieldPolicy = new AuthFieldPolicy(
 			$schemaFetcher,
 			$this->createMock(UserValidationService::class),
 			$this->createMock(ObjectFetcher::class),
+			$ownerProperties,
 			$this->config,
 			$policyLoggerFactory,
 		);

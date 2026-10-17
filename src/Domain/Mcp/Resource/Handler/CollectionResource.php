@@ -92,6 +92,9 @@ readonly class CollectionResource
 			));
 		}
 
+		// Owned collections are admin-only over MCP (no ownership scoping here).
+		$this->personaContext->exposedCollection($collection);
+
 		$index = $this->indexReader->fetchIndex($collection);
 		$items = $index->objects->all();
 

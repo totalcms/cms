@@ -11,6 +11,7 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
@@ -51,7 +52,7 @@ final class SearchCollectionsToolTest extends TestCase
 		// type is required regardless — reuses none here since this file has no
 		// CollectionFetcher mock; a plain stub suffices, it's never invoked.
 		// $this->resolver IS invoked (via forCollection(), stubbed below).
-		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->resolver);
+		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->resolver, $this->createStub(OwnerPropertyResolver::class));
 		$this->resolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),

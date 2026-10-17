@@ -67,7 +67,10 @@ final class SchemaToolRegistrar
 				continue;
 			}
 
-			$access = (string)($mcp['access'] ?? 'admin');
+			// Owned collections (ownerProperty) are admin-only over MCP: MCP applies no
+			// ownership scoping. Uses the declared setting directly (fail-closed superset
+			// of OwnerPropertyResolver) because the container builds this class by hand.
+			$access = $collection->ownerProperty !== '' ? 'admin' : (string)($mcp['access'] ?? 'admin');
 
 			// Two accepted shapes (see McpToolsValidator::validate):
 			//   - Keyed object (post-migration): key is the canonical id

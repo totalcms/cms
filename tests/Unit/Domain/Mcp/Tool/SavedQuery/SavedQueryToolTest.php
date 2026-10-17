@@ -16,11 +16,13 @@ use Mcp\Schema\Tool;
 use Mcp\Server\Handler\Request\CallToolHandler;
 use Mcp\Server\Session\InMemorySessionStore;
 use Mcp\Server\Session\Session;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -35,7 +37,7 @@ use TotalCMS\Domain\Query\Data\QueryResult;
 
 final class SavedQueryToolTest extends TestCase
 {
-	private function makePersonaContext(McpPersona $persona): PersonaContext
+	private function makePersonaContext(McpPersona $persona, string $ownerProperty = ''): PersonaContext
 	{
 		// PersonaContext (Task 10b) needs CollectionFetcher + McpSchemaResolver
 		// to resolve canReadCollection()'s mcp.access:'public' carve-out.
@@ -54,7 +56,10 @@ final class SavedQueryToolTest extends TestCase
 			'access' => 'public', 'description' => null, 'resource' => true, 'titleProperty' => '',
 		]);
 
-		$ctx = new PersonaContext($this->createStub(CollectionFetcher::class), $schemaResolver);
+		$owners = $this->createStub(OwnerPropertyResolver::class);
+		$owners->method('resolve')->willReturn($ownerProperty);
+
+		$ctx = new PersonaContext($this->createStub(CollectionFetcher::class), $schemaResolver, $owners);
 		$ctx->set($persona);
 
 		return $ctx;
@@ -407,5 +412,41 @@ final class SavedQueryToolTest extends TestCase
 		$this->assertInstanceOf(CallToolResult::class, $result);
 		$this->assertTrue($result->isError);
 		$this->assertStringContainsString('admin access', $result->content[0]->text);
+	}
+
+	/** @return array<string,array{McpPersona}> */
+	public static function nonAdminPersonas(): array
+	{
+		return ['authenticated' => [McpPersona::AUTHENTICATED], 'public' => [McpPersona::PUBLIC_]];
+	}
+
+	#[DataProvider('nonAdminPersonas')]
+	public function testRefusesAnOwnedCollectionForNonAdminPersonas(McpPersona $persona): void
+	{
+		$def = SavedQueryToolDefinition::fromArray('portfolio', 'public', [
+			'name'        => 'find_all',
+			'description' => 'All.',
+		]);
+
+		$collectionRepo = $this->createMock(CollectionRepository::class);
+		$collectionRepo->method('fetchCollection')->willReturn($this->createMock(CollectionData::class));
+
+		$indexQuery = $this->createMock(IndexQueryService::class);
+		$indexQuery->expects($this->never())->method('query');
+
+		$tool = new SavedQueryTool(
+			definition: $def,
+			indexQueryService: $indexQuery,
+			filterValueResolver: new FilterValueResolver(),
+			personaContext: $this->makePersonaContext($persona, 'owner'),
+			shaper: new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
+			collectionRepository: $collectionRepo,
+			resultFormatter: new CollectionQueryResultFormatter(),
+		);
+
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('owned collection');
+
+		$tool->handle([]);
 	}
 }

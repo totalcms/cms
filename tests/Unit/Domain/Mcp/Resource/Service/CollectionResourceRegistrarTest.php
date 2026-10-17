@@ -8,6 +8,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Resource\Handler\CollectionObjectResource;
 use TotalCMS\Domain\Mcp\Resource\Handler\CollectionResource;
 use TotalCMS\Domain\Mcp\Resource\Service\CollectionResourceRegistrar;
@@ -42,7 +43,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 	 *     objectResource: MockObject&CollectionObjectResource,
 	 * }
 	 */
-	private function makeRegistrar(array $collections): array
+	private function makeRegistrar(array $collections, string $ownerProperty = ''): array
 	{
 		/** @var MockObject&CollectionRepository $repo */
 		$repo = $this->createMock(CollectionRepository::class);
@@ -57,12 +58,16 @@ final class CollectionResourceRegistrarTest extends TestCase
 		/** @var MockObject&CollectionObjectResource $objectResource */
 		$objectResource = $this->createMock(CollectionObjectResource::class);
 
+		$owners = $this->createStub(OwnerPropertyResolver::class);
+		$owners->method('resolve')->willReturn($ownerProperty);
+
 		$registry   = new ResourceRegistry();
 		$registrar  = new CollectionResourceRegistrar(
 			collectionRepository: $repo,
 			schemaResolver: $resolver,
 			collectionResource: $collectionResource,
 			collectionObjectResource: $objectResource,
+			ownerProperties: $owners,
 		);
 
 		return ['registrar' => $registrar, 'registry' => $registry, 'repo' => $repo, 'resolver' => $resolver, 'collectionResource' => $collectionResource, 'objectResource' => $objectResource];
@@ -353,5 +358,19 @@ final class CollectionResourceRegistrarTest extends TestCase
 		$template = $registry->getTemplate('tcms://builder-page/{id}');
 		$this->assertNotNull($template);
 		$this->assertSame('builder-page-item', $template->name);
+	}
+
+	public function testOwnedCollectionRegistersWithAdminAccessWhateverItsMcpAccess(): void
+	{
+		$collection = $this->makeCollection('portfolio', 'Portfolio', ['access' => 'public', 'resource' => true]);
+
+		['registrar' => $registrar, 'registry' => $registry, 'resolver' => $resolver] = $this->makeRegistrar([$collection], 'owner');
+
+		$resolver->method('forCollection')->willReturn(['access' => 'public', 'description' => null, 'resource' => true]);
+
+		$registrar->registerAll($registry);
+
+		$this->assertSame('admin', $registry->get('tcms://portfolio/')?->access);
+		$this->assertSame('admin', $registry->getTemplate('tcms://portfolio/{id}')?->access);
 	}
 }

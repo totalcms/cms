@@ -45,6 +45,7 @@ use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\ImpersonationService;
 use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Automation\Service\AutomationActivityLogger;
 use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
 use TotalCMS\Domain\Backup\Listener\ObjectBackupListener;
@@ -62,6 +63,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionFormatConverter;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewDependencyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
@@ -583,6 +585,9 @@ return [
 		pageMiddlewareRegistry  : $container->get(PageMiddlewareRegistry::class),
 		navRegistry             : $container->get(AdminNavRegistry::class),
 		dataViewLister          : $container->get(DataViewLister::class),
+		session                 : $container->get(SessionInterface::class),
+		userValidation          : $container->get(UserValidationService::class),
+		ownerProperties         : $container->get(OwnerPropertyResolver::class),
 	),
 
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(

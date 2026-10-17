@@ -8,6 +8,7 @@ use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewQueryService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -34,7 +35,7 @@ final class QueryViewToolTest extends TestCase
 		// QueryViewTool never touches canReadCollection()/canReadDrafts() —
 		// PersonaContext's Task 10b constructor deps are unused here; plain
 		// stubs satisfy the type only.
-		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
+		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), $this->createStub(OwnerPropertyResolver::class));
 		$this->tool    = new QueryViewTool($this->queryService, $this->objects, $this->persona);
 	}
 

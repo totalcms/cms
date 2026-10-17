@@ -139,6 +139,9 @@ readonly class OperationDetector
 		'report-fields',
 		'report-csv',
 		'report-json',
+		// Rich-text embedded uploads (config/routes/api/upload.php).
+		'upload-list',
+		'upload-get',
 	];
 
 	/**
@@ -178,6 +181,11 @@ readonly class OperationDetector
 		'property-folder-rename',
 		'dataview-rebuild',
 		'admin-builder-reorder',
+		// Rich-text embedded uploads: writing or removing a file edits a
+		// property of the object, same as property-file-save / -delete.
+		'upload-post',
+		'upload-post-nested',
+		'upload-delete',
 	];
 
 	/**

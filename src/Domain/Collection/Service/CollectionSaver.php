@@ -13,6 +13,7 @@ use TotalCMS\Domain\License\Exception\EditionFeatureException;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 /**
  * Service.
@@ -26,6 +27,7 @@ readonly class CollectionSaver
 		private CollectionFetcher $collectionFetcher,
 		private EditionFeatureService $editionFeatures,
 		private EventDispatcher $eventDispatcher,
+		private SchemaFetcher $schemaFetcher,
 	) {
 	}
 
@@ -61,6 +63,7 @@ readonly class CollectionSaver
 
 		// Check edition requirements for schema-specific features
 		$this->validateSchemaEdition($data['schema'] ?? '');
+		$this->assertOwnerPropertyExists($data);
 
 		$data           = $this->normalizeSubmittedData($data);
 		$data['format'] = $this->normalizeFormat($data['format'] ?? CollectionData::FORMAT_JSON);
@@ -131,6 +134,8 @@ readonly class CollectionSaver
 			$data['lastUpdated'] = DateData::cleanDate((string)$data['lastUpdated']);
 		}
 
+		$callerSuppliedExisting = $existingCollection instanceof CollectionData;
+
 		// Fetch existing collection to preserve system-managed fields if not provided
 		if (!$existingCollection instanceof CollectionData) {
 			$existingCollection = $this->storage->fetchCollection($collectionId);
@@ -154,6 +159,19 @@ readonly class CollectionSaver
 			));
 		}
 		$data['format'] = $existingCollection->format;
+
+		// An ownerProperty the schema lacks silently makes the collection
+		// unowned. Check it when it (or the schema) changed, or when the caller
+		// did not hand us the stored record. The metadata cascade (count bumps
+		// on every object write) passes the record and changes neither, so it
+		// skips the schema read; a patch changing either is validated here, on
+		// the merged data.
+		$ownerUnchanged = $callerSuppliedExisting
+			&& (string)($data['ownerProperty'] ?? '') === $existingCollection->ownerProperty
+			&& (string)($data['schema'] ?? '') === $existingCollection->schema;
+		if (!$ownerUnchanged) {
+			$this->assertOwnerPropertyExists($data);
+		}
 
 		// Recalculate totalObjects from index if not explicitly provided (self-healing)
 		if (!isset($data['totalObjects'])) {
@@ -383,6 +401,42 @@ readonly class CollectionSaver
 		// Check if this schema requires a specific edition feature
 		if (isset($schemaToFeature[$schema])) {
 			$this->editionFeatures->canOrFail($schemaToFeature[$schema]);
+		}
+	}
+
+	/**
+	 * An ownerProperty that names a property the schema lacks resolves to no
+	 * owner at all, so the collection would silently behave as unowned. Reject
+	 * it at save time instead. It must also be in the schema's `index`: member
+	 * lists are scoped by matching the owner on the index, so an unindexed
+	 * owner property would silently empty every member's list.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @throws \DomainException
+	 */
+	private function assertOwnerPropertyExists(array $data): void
+	{
+		$owner = (string)($data['ownerProperty'] ?? '');
+		if ($owner === '') {
+			return;
+		}
+
+		$schemaId = (string)($data['schema'] ?? '');
+		$message  = sprintf("ownerProperty '%s' is not a property of schema '%s'. Add the property to the schema first.", $owner, $schemaId);
+
+		try {
+			$schema = $this->schemaFetcher->fetchSchema($schemaId);
+		} catch (\Throwable) {
+			throw new \DomainException($message);
+		}
+
+		if (!array_key_exists($owner, $schema->properties)) {
+			throw new \DomainException($message);
+		}
+
+		if (!in_array($owner, $schema->index, true)) {
+			throw new \DomainException(sprintf("ownerProperty '%s' must be in the index of schema '%s' so member lists can be scoped. Add it to the schema's index first.", $owner, $schemaId));
 		}
 	}
 

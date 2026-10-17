@@ -8,8 +8,12 @@ use Illuminate\Support\Collection;
 use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
+use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
+use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
@@ -21,6 +25,8 @@ use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Support\Config;
 
 final class ObjectToolsTest extends TestCase
 {
@@ -51,6 +57,9 @@ final class ObjectToolsTest extends TestCase
 	/** @var list<string> */
 	private array $hiddenProperties = [];
 
+	/** The persona PersonaContext::current() reports (see note above). */
+	private McpPersona $persona = McpPersona::ADMIN;
+
 	protected function setUp(): void
 	{
 		$this->saver         = $this->createMock(ObjectSaver::class);
@@ -71,7 +80,7 @@ final class ObjectToolsTest extends TestCase
 		$this->collectionFetcher->method('fetchCollection')
 			->willReturnCallback(fn (): ?CollectionData => $this->collectionExists ? new CollectionData() : null);
 		$this->personaContext = $this->createMock(PersonaContext::class);
-		$this->personaContext->method('current')->willReturn(McpPersona::ADMIN);
+		$this->personaContext->method('current')->willReturnCallback(fn (): McpPersona => $this->persona);
 		$this->personaContext->method('exposedCollection')->willReturnCallback(function (string $collection, string $hint = 'query'): CollectionData {
 			if (!$this->collectionExists) {
 				throw new ToolCallException(sprintf('Collection "%s" not found. Use list_collections to see available collections.', $collection));
@@ -95,7 +104,39 @@ final class ObjectToolsTest extends TestCase
 			$this->objectFetcher,
 			$this->personaContext,
 			$this->schemaResolver,
+			$this->fieldPolicy(),
 		);
+	}
+
+	/**
+	 * The field policy is final, so it runs for real over the same stubbed
+	 * schemaFetcher the handlers read: a schema with a `protected` property
+	 * makes the collection protected.
+	 */
+	private function fieldPolicy(): AuthFieldPolicy
+	{
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
+		$owners = $this->createMock(OwnerPropertyResolver::class);
+		$owners->method('resolve')->willReturn('');
+
+		return new AuthFieldPolicy(
+			$this->schemaFetcher,
+			$this->createMock(UserValidationService::class),
+			$this->objectFetcher,
+			$owners,
+			(new \ReflectionClass(Config::class))->newInstanceWithoutConstructor(),
+			$loggerFactory,
+		);
+	}
+
+	private function protectedSchema(): SchemaData
+	{
+		return $this->schema([
+			'id'    => ['field' => 'id'],
+			'title' => ['field' => 'text'],
+			'draft' => ['field' => 'toggle', 'protected' => ['value' => true]],
+		]);
 	}
 
 	/**
@@ -1015,5 +1056,61 @@ final class ObjectToolsTest extends TestCase
 		$result = $this->tool->patchHandler(collection: 'blog', id: 'my-post', data: ['title' => 'Visible']);
 
 		$this->assertArrayNotHasKey('secret', $result);
+	}
+
+	// ─── Protected properties (fail closed for non-admin personas) ─────────
+	//
+	// The MCP write tools go straight to ObjectSaver / ObjectPatcher, which
+	// apply no field policy. A non-admin persona with a group grant would
+	// otherwise flip a forced or admin-only property, so a collection with
+	// protected properties accepts MCP writes from admin callers only.
+
+	public function testAuthenticatedPersonaCannotCreateInAProtectedCollection(): void
+	{
+		$this->persona = McpPersona::AUTHENTICATED;
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($this->protectedSchema());
+		$this->saver->expects($this->never())->method('saveObject');
+
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('Collection "blog" has protected properties and accepts writes from admin callers only over MCP.');
+
+		$this->tool->createHandler(collection: 'blog', data: ['title' => 'Hi', 'draft' => false]);
+	}
+
+	public function testAuthenticatedPersonaCannotUpdateOrPatchAProtectedCollection(): void
+	{
+		$this->persona = McpPersona::AUTHENTICATED;
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($this->protectedSchema());
+		$this->patcher->expects($this->never())->method('patchObject');
+
+		foreach (['updateHandler', 'patchHandler'] as $handler) {
+			try {
+				$this->tool->{$handler}(collection: 'blog', id: 'post-1', data: ['draft' => false]);
+				$this->fail("$handler wrote to a protected collection");
+			} catch (ToolCallException $e) {
+				$this->assertStringContainsString('has protected properties and accepts writes from admin callers only over MCP', $e->getMessage());
+			}
+		}
+	}
+
+	public function testAuthenticatedPersonaStillWritesAnUnprotectedCollection(): void
+	{
+		$this->persona = McpPersona::AUTHENTICATED;
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($this->textOnlySchema());
+		$this->saver->expects($this->once())->method('saveObject')->willReturn($this->blogObject('post-1'));
+		$this->patcher->expects($this->once())->method('patchObject')->willReturn($this->blogObject('post-1'));
+
+		$this->tool->createHandler(collection: 'blog', data: ['title' => 'Hi']);
+		$this->tool->patchHandler(collection: 'blog', id: 'post-1', data: ['title' => 'Hi']);
+	}
+
+	public function testAdminPersonaWritesAProtectedCollection(): void
+	{
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($this->protectedSchema());
+		$this->saver->expects($this->once())->method('saveObject')->willReturn($this->blogObject('post-1'));
+		$this->patcher->expects($this->once())->method('patchObject')->willReturn($this->blogObject('post-1'));
+
+		$this->tool->createHandler(collection: 'blog', data: ['title' => 'Hi', 'draft' => false]);
+		$this->tool->updateHandler(collection: 'blog', id: 'post-1', data: ['draft' => false]);
 	}
 }

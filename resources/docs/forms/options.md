@@ -66,6 +66,34 @@ Use `addOnly: true` for forms on the public side of your website to prevent user
 - The form will always create a new object, never update existing ones
 - Protects against malicious users passing `?id=123` to edit other users' data
 
+## Member Portals: Owned Collections
+
+`addOnly` stops a visitor editing anything. When signed-in members should edit *their own* submissions and nothing else, do not rely on the form hiding other people's ids — the form posts to the REST API, which decides on access groups alone. Instead make the collection **owned**:
+
+1. Add an `owner` text property to the schema, list it in the schema's [`index`](docs/schemas/reference#index) array, and set the collection's **Owner Property** to it ([`ownerProperty`](docs/collections/settings#ownerproperty)). Members' lists are scoped by filtering the index on `owner`; if it is not indexed, every member's list comes back empty.
+2. Grant the members' access group `create`, `read`, `update` (and `delete` if they may withdraw) on the collection.
+3. Mark the moderation fields [`protected`](docs/schemas/validation#protected): `"draft": {"protected": {"value": true}}` sends every member edit back to review.
+
+The server then stamps `owner` on create and refuses any API read or write of someone else's object. The template, though, renders on the server with its own access to the collection: `cms.object.get()` loads any object you name, whoever is signed in. So check the owner before building the edit form:
+
+```twig
+{% set user = cms.auth.userData() %}
+{% set site = cms.object.get('showcase', app.request.query.get('id')) %}
+{% if user and site and site.owner == user.id %}
+    {% set form = cms.form.builder('showcase', {
+        id: site.id,
+        actions: [{ action: 'message', text: 'Saved — your changes are back in the review queue.' }]
+    }) %}
+    {% do form.addField('name') %}
+    {% do form.addField('url') %}
+    {{ form.build() }}
+{% else %}
+    <p>That submission is not yours to edit.</p>
+{% endif %}
+```
+
+The `if` is a belt-and-braces measure: `cms.form.builder()` itself refuses to load another member's object, rendering only "You do not have permission to edit this object." in place of the whole form (no fields, no save button), and the API returns `403` for the save. The deck item forms, `cms.form.deck()` and `cms.form.deckBuilder()`, refuse the same way when `id` names another member's object, whether they would edit one of its items (`itemId`) or add one. Keep the check in the template anyway so the page around the form (headings, other `cms.objects` calls) does not show the object either. Members are also refused the whole-collection routes beyond create, list and query (export, report, import, reindex, bulk delete and clone), so a portal cannot be used to pull the full collection.
+
 ## Public Registration Forms
 
 For user-registration forms specifically, prefer `register: true` over plain `addOnly`. It retargets the form at the public registration endpoint (`POST /admin/register/{collection}`), which creates the user record AND auto-logs them in as part of the same request — so the visitor doesn't have to immediately type the credentials they just submitted.

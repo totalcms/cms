@@ -15,6 +15,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
+use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Auth\Service\LoginRedirector;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
@@ -27,6 +28,7 @@ use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Security\CSRF\CSRFRequestValidator;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
+use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Renderer\ForbiddenRenderer;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -63,6 +65,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private PropertyMetaResolver $propertyMeta,
 		private SessionActivityTracker $activity,
 		private LoginRedirector $redirector,
+		private AuthFieldPolicy $policy,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::DualAuth);
@@ -280,6 +283,27 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		// decremented anonymously, and nothing else about the object opens up.
 		if ($operation === 'increment') {
 			return $this->propertyAllowsPublicIncrement($collectionId, (string)$route->getArgument('property'));
+		}
+
+		// Clone counts as `create`, but it is not one: it copies an EXISTING
+		// object, with every value it holds, and returns the copy. A public
+		// submission skips the access middleware entirely, so under a public
+		// `create`:
+		//   - on a collection with protected, forced or owner rules (which
+		//     includes every owned collection) clone would let anyone copy an
+		//     approved object with `draft: false`, or read and copy any
+		//     member's object;
+		//   - a body naming another target `collection` would write into a
+		//     collection that was never checked at all.
+		// Neither is public: the request authenticates normally, and
+		// CollectionAccess refuses both for every non-admin.
+		if ((string)$route->getName() === 'object-clone') {
+			if ($this->policy->protectedFieldsFor($collectionId) !== []) {
+				return false;
+			}
+			if (CollectionAccessMiddleware::cloneTargetsOtherCollection($request, $collectionId)) {
+				return false;
+			}
 		}
 
 		// Check if collection allows this operation publicly

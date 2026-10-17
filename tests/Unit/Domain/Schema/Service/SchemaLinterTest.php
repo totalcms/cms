@@ -205,3 +205,35 @@ it('does not warn about a password property that is not indexed', function (): v
 
 	expect($result['warnings'])->toBeEmpty();
 });
+
+// --- protected ---
+//
+// `"protected": true` makes a property admin-only; `"protected": {"value": X}`
+// also forces X on every non-admin write. AuthFieldPolicy ignores any other
+// shape at runtime so a typo cannot take the write path down — which means
+// the linter is the only place the typo is ever reported.
+
+it('accepts both protected shapes', function (): void {
+	$schema = makeSchema('moderated', [
+		'id'       => idProperty(),
+		'featured' => ['type' => 'boolean', 'field' => 'toggle', 'help' => 'Admin-only flag', 'protected' => true],
+		'draft'    => ['type' => 'boolean', 'field' => 'toggle', 'help' => 'Forced back on', 'protected' => ['value' => true]],
+	], ['id'], ['id']);
+	$result = makeLinter(['moderated' => $schema])->lint('moderated');
+
+	expect($result['errors'])->toBeEmpty();
+});
+
+it('errors on a protected value that is neither true nor an object with value', function (): void {
+	$schema = makeSchema('typo', [
+		'id'     => idProperty(),
+		'flag'   => ['type' => 'boolean', 'field' => 'toggle', 'help' => 'Flag', 'protected' => 'yes'],
+		'off'    => ['type' => 'boolean', 'field' => 'toggle', 'help' => 'Off', 'protected' => false],
+		'noval'  => ['type' => 'string', 'field' => 'input', 'help' => 'No value key', 'protected' => ['default' => 'x']],
+	], ['id'], ['id']);
+	$result = makeLinter(['typo' => $schema])->lint('typo');
+
+	expect($result['errors'])->toContain("Property 'flag' has an invalid protected value. Use true, or an object with a value key.");
+	expect($result['errors'])->toContain("Property 'off' has an invalid protected value. Use true, or an object with a value key.");
+	expect($result['errors'])->toContain("Property 'noval' has an invalid protected value. Use true, or an object with a value key.");
+});

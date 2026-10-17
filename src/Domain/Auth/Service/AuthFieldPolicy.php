@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Auth\Service;
 
 use Psr\Log\LoggerInterface;
+use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -14,14 +16,28 @@ use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
- * Server-side authorization for privileged user-record fields.
+ * Server-side authorization for fields a non-super-admin may not set.
  *
- * The object-write path ({@see ObjectFactory})
- * copies every schema field from the request with no privilege filtering, so a
- * non-admin could otherwise self-assign `groups:['admin']` (escalation) or a
- * public registrant could submit it (mass-assignment). This policy is the single
- * source of truth for which fields only a super-admin may set on an auth-type
- * collection, and how to neutralize an unauthorized write.
+ * The object-write path ({@see ObjectFactory}) copies every schema field from
+ * the request with no privilege filtering, so a non-admin could otherwise
+ * self-assign `groups:['admin']`, flip a moderation flag, or claim another
+ * member's object. This policy is the single source of truth for which fields
+ * only a super-admin may set on ANY collection, and how to neutralize an
+ * unauthorized write. Three sources feed it:
+ *
+ *   1. {@see self::PRIVILEGED_FIELDS} — the hardcoded user-record fields, on
+ *      auth-type schemas only (schema `auth` or one inheriting from it).
+ *   2. Schema `protected` flags — `"protected": true` makes a property
+ *      admin-only on any collection; `"protected": {"value": X}` additionally
+ *      forces the property to X on every non-admin write, sent or not.
+ *   3. The collection's `ownerProperty` — stamped with the actor's user id on
+ *      create, reverted on update, never writable through property routes.
+ *
+ * Applied by {@see PrivilegedFieldGuard} on
+ * every object write (save, update, patch, property routes, admin cell edit),
+ * which trusts API keys and admin OAuth bearer tokens, passes a non-admin
+ * bearer's token user, and passes the session actor
+ * for everyone else — an empty actor for anonymous public submissions.
  */
 final readonly class AuthFieldPolicy
 {
@@ -61,6 +77,7 @@ final readonly class AuthFieldPolicy
 		private SchemaFetcher $schemaFetcher,
 		private UserValidationService $userValidation,
 		private ObjectFetcher $objectFetcher,
+		private OwnerPropertyResolver $ownerProperties,
 		private Config $config,
 		LoggerFactory $loggerFactory,
 	) {
@@ -83,29 +100,73 @@ final readonly class AuthFieldPolicy
 	}
 
 	/**
-	 * The privileged fields the given collection's schema actually defines.
-	 * Empty for ordinary content collections (policy is a no-op there).
+	 * Every field a non-super-admin may not set on this collection: plain
+	 * protected fields, forced-value fields and the owner property together.
+	 * Empty for an ordinary content collection (policy is a no-op there).
 	 *
 	 * @return list<string>
 	 */
 	public function protectedFieldsFor(string $collection): array
 	{
+		$rules = $this->rulesFor($collection);
+
+		$fields = array_merge($rules['plain'], array_keys($rules['forced']));
+		if ($rules['owner'] !== '') {
+			$fields[] = $rules['owner'];
+		}
+
+		return array_values(array_unique($fields));
+	}
+
+	/**
+	 * The protection rules the collection's schema and settings declare.
+	 *
+	 * `plain`  — revert on update, strip on create, log the attempt.
+	 * `forced` — property => value, set on every non-admin write.
+	 * `owner`  — the collection's owner property, or ''.
+	 *
+	 * @return array{plain: list<string>, forced: array<string,mixed>, owner: string}
+	 */
+	private function rulesFor(string $collection): array
+	{
+		$none = ['plain' => [], 'forced' => [], 'owner' => ''];
+
 		try {
 			$schema = $this->schemaFetcher->fetchSchemaForCollection($collection);
 		} catch (\Throwable) {
-			return [];
+			return $none;
 		}
 
-		// Only auth-type collections carry privileged fields. A content
+		$plain  = [];
+		$forced = [];
+
+		// Only auth-type collections carry the privileged list. A content
 		// collection that merely has a field NAMED `active` or `groups` (very
 		// common) must never have those treated as privileged.
-		if (!$this->isAuthSchema($schema)) {
-			return [];
+		if ($this->isAuthSchema($schema)) {
+			$plain = array_values(array_intersect(self::PRIVILEGED_FIELDS, array_keys($schema->properties)));
 		}
 
-		$present = array_keys($schema->properties);
+		foreach ($schema->properties as $name => $definition) {
+			if (!is_array($definition) || !array_key_exists('protected', $definition)) {
+				continue;
+			}
 
-		return array_values(array_intersect(self::PRIVILEGED_FIELDS, $present));
+			$flag = $definition['protected'];
+			if ($flag === true) {
+				$plain[] = (string)$name;
+			} elseif (is_array($flag) && array_key_exists('value', $flag)) {
+				$forced[(string)$name] = $flag['value'];
+			}
+			// Any other shape is a schema:lint error and ignored here: a
+			// misconfigured flag must not take the write path down.
+		}
+
+		return [
+			'plain'  => array_values(array_unique($plain)),
+			'forced' => $forced,
+			'owner'  => $this->ownerProperties->resolve($collection),
+		];
 	}
 
 	/**
@@ -119,9 +180,11 @@ final readonly class AuthFieldPolicy
 	}
 
 	/**
-	 * Neutralize unauthorized privileged-field writes in a full-object payload.
-	 * Super-admins pass through. For everyone else, privileged fields are
-	 * reverted to their stored values (update) or stripped (create).
+	 * Neutralize unauthorized protected-field writes in an object payload.
+	 * Super-admins pass through. For everyone else: plain protected fields are
+	 * reverted to their stored values (update) or stripped (create); forced
+	 * fields are set to their configured value; the owner property is stamped
+	 * with the actor on create and reverted on update.
 	 *
 	 * $actorCollection is the auth collection the ACTOR actually belongs to
 	 * (from their session) — distinct from $collection, which is the
@@ -131,36 +194,120 @@ final readonly class AuthFieldPolicy
 	 * @param array<string,mixed> $incoming
 	 *
 	 * @return array<string,mixed>
+	 *
+	 * @SuppressWarnings("PHPMD.CyclomaticComplexity")
+	 * @SuppressWarnings("PHPMD.NPathComplexity")
 	 */
 	public function enforce(string $actorId, string $collection, string $objectId, array $incoming, string $actorCollection = ''): array
 	{
+		$rules = $this->rulesFor($collection);
+		if ($this->enforcementSkipped($rules, $actorId, $actorCollection)) {
+			return $incoming;
+		}
+
+		// Safety net: the access middleware denies first. With the collection
+		// record unreadable there is no owner property to stamp.
+		if ($rules['owner'] === OwnerPropertyResolver::UNRESOLVED) {
+			throw new \RuntimeException(sprintf('Collection "%s" settings could not be read; refusing to write an owned object.', $collection));
+		}
+
+		$exists   = $objectId !== '' && $this->objectFetcher->existsObject($collection, $objectId);
+		$existing = $exists ? $this->objectFetcher->fetchObject($collection, $objectId)->toArray() : [];
+
+		// On update the owner behaves exactly like a plain protected field:
+		// whatever the client sent is reverted to what is stored.
+		$plain = $rules['plain'];
+		if ($rules['owner'] !== '' && $exists) {
+			$plain[] = $rules['owner'];
+		}
+
+		[$incoming, $reverted, $stripped] = $this->revertPlain($plain, $incoming, $existing);
+
+		// Forced values are the configured outcome of a non-admin write, not a
+		// neutralised attempt, so they are applied silently — and whether or not
+		// the client sent the field, so a partial PATCH cannot keep an admin's
+		// value alive past an edit nobody re-reviewed.
+		foreach ($rules['forced'] as $field => $value) {
+			$incoming[$field] = $value;
+		}
+
+		// On create the server decides who owns the object. An anonymous public
+		// submission (empty actor) stores an empty owner.
+		if ($rules['owner'] !== '' && !$exists) {
+			$incoming[$rules['owner']] = $actorId;
+		}
+
+		$this->logNeutralized($actorId, $collection, $objectId, $reverted, $stripped);
+
+		return $incoming;
+	}
+
+	/**
+	 * Whether enforcement does nothing for this write: auth is off, the
+	 * collection has no rules, or the actor is a super admin.
+	 *
+	 * @param array{plain: list<string>, forced: array<string,mixed>, owner: string} $rules
+	 */
+	private function enforcementSkipped(array $rules, string $actorId, string $actorCollection): bool
+	{
 		if ($this->authDisabled()) {
-			return $incoming;
+			return true;
+		}
+		if ($rules['plain'] === [] && $rules['forced'] === [] && $rules['owner'] === '') {
+			return true;
 		}
 
-		$protected = $this->protectedFieldsFor($collection);
-		if ($protected === []) {
-			return $incoming;
-		}
-		if ($actorId !== '' && $this->userValidation->isSuperAdmin($actorId, $actorCollection)) {
-			return $incoming;
+		return $actorId !== '' && $this->userValidation->isSuperAdmin($actorId, $actorCollection);
+	}
+
+	/**
+	 * Audit-log a neutralized protected write. Silent when nothing changed.
+	 *
+	 * @param list<string> $reverted
+	 * @param list<string> $stripped
+	 */
+	private function logNeutralized(string $actorId, string $collection, string $objectId, array $reverted, array $stripped): void
+	{
+		if ($reverted === [] && $stripped === []) {
+			return;
 		}
 
-		$existing = [];
-		if ($objectId !== '' && $this->objectFetcher->existsObject($collection, $objectId)) {
-			$existing = $this->objectFetcher->fetchObject($collection, $objectId)->toArray();
-		}
+		// The write is neutralized silently as far as the client is concerned
+		// — returning an error would confirm to a prober which fields are
+		// privileged, and the request's ordinary fields did save. The log is
+		// how an operator finds out afterwards why a change didn't stick.
+		// Field names only: `passkeys` values are large and credential-ish.
+		$this->logger->warning('Privileged field write neutralized', [
+			'actor'      => $actorId === '' ? '(none)' : $actorId,
+			'collection' => $collection,
+			'object'     => $objectId,
+			'reverted'   => $reverted,
+			'stripped'   => $stripped,
+		]);
+	}
 
+	/**
+	 * Revert (update) or strip (create) each plain protected field the client
+	 * sent. Only a value that differs from what is stored counts as an attempt.
+	 *
+	 * @param list<string>        $plain
+	 * @param array<string,mixed> $incoming
+	 * @param array<string,mixed> $existing
+	 *
+	 * @return array{0: array<string,mixed>, 1: list<string>, 2: list<string>} incoming, reverted, stripped
+	 */
+	private function revertPlain(array $plain, array $incoming, array $existing): array
+	{
 		$reverted = [];
 		$stripped = [];
 
-		foreach ($protected as $field) {
+		foreach ($plain as $field) {
 			if (!array_key_exists($field, $incoming)) {
 				continue;
 			}
 
 			if (array_key_exists($field, $existing)) {
-				// The admin form PUTs the whole object, so privileged fields ride
+				// The admin form PUTs the whole object, so protected fields ride
 				// along on every save whether or not anyone touched them. Only a
 				// value that differs from what is stored is an attempted write —
 				// without this check the audit log would fire on every save by a
@@ -177,28 +324,13 @@ final readonly class AuthFieldPolicy
 			}
 		}
 
-		if ($reverted !== [] || $stripped !== []) {
-			// The write is neutralized silently as far as the client is concerned
-			// — returning an error would confirm to a prober which fields are
-			// privileged, and the request's ordinary fields did save. The log is
-			// how an operator finds out afterwards why a change didn't stick.
-			// Field names only: `passkeys` values are large and credential-ish.
-			$this->logger->warning('Privileged field write neutralized', [
-				'actor'      => $actorId === '' ? '(none)' : $actorId,
-				'collection' => $collection,
-				'object'     => $objectId,
-				'reverted'   => $reverted,
-				'stripped'   => $stripped,
-			]);
-		}
-
-		return $incoming;
+		return [$incoming, $reverted, $stripped];
 	}
 
 	/**
-	 * Remove every schema-present privileged field from a payload, no actor
-	 * context. Used by public registration, which must also positively assign
-	 * its own defaults afterwards.
+	 * Remove every protected field from a payload, no actor context. Used by
+	 * public registration, which must also positively assign its own defaults
+	 * afterwards.
 	 *
 	 * Deliberately NOT relaxed when auth is disabled, unlike the actor-based
 	 * methods above. This one guards an endpoint anonymous callers can reach, so
@@ -221,8 +353,8 @@ final readonly class AuthFieldPolicy
 
 	/**
 	 * Whether the actor may write the given single property (for the
-	 * property-update routes). Super-admins always may; others may not touch a
-	 * privileged property.
+	 * property-update routes and the admin cell editor). Super-admins always
+	 * may; others may not touch a protected, forced or owner property.
 	 *
 	 * $actorCollection is the auth collection the ACTOR actually belongs to
 	 * — see {@see enforce()}.

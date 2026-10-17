@@ -17,9 +17,15 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
+use TotalCMS\Domain\Auth\Service\ForcedValueContext;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
+use TotalCMS\Domain\Object\Service\ObjectFetcher;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
@@ -82,6 +88,14 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 		$this->loggerFactory = $this->createMock(LoggerFactory::class);
 		$this->loggerFactory->method('channelLogger')->willReturn($this->accessLogger);
 
+		$ownerProperties = $this->createMock(OwnerPropertyResolver::class);
+		$ownerProperties->method('resolve')->willReturn('');
+
+		// No protected properties: the field policy never refuses here.
+		$schemaFetcher = $this->createMock(SchemaFetcher::class);
+		$schemaFetcher->method('fetchSchemaForCollection')->willReturn(new SchemaData());
+		$policy = new AuthFieldPolicy($schemaFetcher, $this->userValidation, $this->createMock(ObjectFetcher::class), $ownerProperties, $this->config, $this->loggerFactory);
+
 		$this->middleware = new CollectionAccessMiddleware(
 			$this->userValidation,
 			$this->accessControl,
@@ -93,6 +107,10 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 			$this->operationDetector,
 			$this->loggerFactory,
 			new OAuthActivityLogger(new NullLogger()),
+			$ownerProperties,
+			$this->createMock(ObjectFetcher::class),
+			$policy,
+			new ForcedValueContext(),
 		);
 
 		// A request already through routing, carrying collection + id args.
@@ -184,6 +202,7 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 		expect($this->logged[0]['context']['operation'])->toBe('update');
 		expect($this->logged[0]['context']['auth_method'])->toBe('session');
 		expect($this->logged[0]['context']['resource'])->toBe('collection');
+		expect($this->logged[0]['context']['reason'])->toBe('group');
 	});
 
 	it('logs nothing when the request is allowed', function (): void {

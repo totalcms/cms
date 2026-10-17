@@ -21,9 +21,9 @@ readonly class ObjectUpdatePropertyAction
 	/** @param array<string,string> $args */
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
-		$this->guard->guardProperty($request, $args['collection'], $args['property']);
+		$extra  = $this->guard->guardProperty($request, $args['collection'], $args['id'], $args['property']);
 		$data   = (array)$request->getParsedBody();
-		$object = $this->objectUpdater->updateObjectProperty($args['collection'], $args['id'], $args['property'], $data);
+		$object = $this->objectUpdater->updateObjectProperty($args['collection'], $args['id'], $args['property'], $data, false, $extra);
 
 		return $this->renderer->jsonItem($response, $object, new ObjectMetaTransformer());
 	}

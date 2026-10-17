@@ -9,6 +9,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
@@ -45,7 +46,7 @@ final class DescribeCollectionToolTest extends TestCase
 		$personaSchemaResolver->method('isAccessibleTo')->willReturnCallback(
 			fn (CollectionData $c, string $p): bool => $this->resolver->isAccessibleTo($c, $p),
 		);
-		$this->persona = new PersonaContext($this->collections, $personaSchemaResolver);
+		$this->persona = new PersonaContext($this->collections, $personaSchemaResolver, $this->createStub(OwnerPropertyResolver::class));
 
 		$this->tool = new DescribeCollectionTool(
 			$this->resolver,

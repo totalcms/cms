@@ -15,6 +15,8 @@ use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Index\Repository\IndexRepository;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 final class CollectionSaverTest extends TestCase
 {
@@ -24,6 +26,7 @@ final class CollectionSaverTest extends TestCase
 	private MockObject $indexRepository;
 	private MockObject $collectionFetcher;
 	private MockObject $editionFeatures;
+	private MockObject $schemaFetcher;
 
 	protected function setUp(): void
 	{
@@ -32,6 +35,7 @@ final class CollectionSaverTest extends TestCase
 		$this->indexRepository    = $this->createMock(IndexRepository::class);
 		$this->collectionFetcher  = $this->createMock(CollectionFetcher::class);
 		$this->editionFeatures    = $this->createMock(EditionFeatureService::class);
+		$this->schemaFetcher      = $this->createMock(SchemaFetcher::class);
 
 		// Setup factory mock to return valid CollectionData from arrays
 		$this->factory
@@ -54,7 +58,116 @@ final class CollectionSaverTest extends TestCase
 			$this->collectionFetcher,
 			$this->editionFeatures,
 			new EventDispatcher(new NullLogger()),
+			$this->schemaFetcher,
 		);
+	}
+
+	/**
+	 * @param list<string>      $properties
+	 * @param list<string>|null $index      null indexes every property
+	 */
+	private function schemaWith(array $properties, ?array $index = null): SchemaData
+	{
+		$schema             = new SchemaData();
+		$schema->properties = array_fill_keys($properties, ['type' => 'string']);
+		$schema->index      = $index ?? $properties;
+
+		return $schema;
+	}
+
+	private function storedCollection(string $schema, string $owner = ''): CollectionData
+	{
+		$collection                = new CollectionData();
+		$collection->id            = 'portfolio';
+		$collection->schema        = $schema;
+		$collection->ownerProperty = $owner;
+		$collection->lastUpdated   = '2025-01-01T00:00:00+00:00';
+
+		return $collection;
+	}
+
+	public function testSaveRejectsOwnerPropertyMissingFromSchema(): void
+	{
+		$this->schemaFetcher->method('fetchSchema')->with('portfolio-schema')->willReturn($this->schemaWith(['id', 'title']));
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("ownerProperty 'owner' is not a property of schema 'portfolio-schema'. Add the property to the schema first.");
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+	}
+
+	public function testSaveRejectsOwnerPropertyWhenSchemaCannotBeFetched(): void
+	{
+		$this->schemaFetcher->method('fetchSchema')->willThrowException(new \DomainException('Schema type does not exist: nope'));
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("ownerProperty 'owner' is not a property of schema 'nope'.");
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'nope', 'ownerProperty' => 'owner']);
+	}
+
+	public function testSaveAcceptsOwnerPropertyPresentInSchema(): void
+	{
+		$this->schemaFetcher->method('fetchSchema')->willReturn($this->schemaWith(['id', 'owner']));
+		$this->repository->expects($this->once())->method('saveCollection');
+
+		$result = $this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+
+		expect($result->id)->toBe('portfolio');
+	}
+
+	public function testSaveRejectsAnOwnerPropertyThatIsNotIndexed(): void
+	{
+		// Member lists are scoped on the index; an unindexed owner property
+		// would silently empty every member's list.
+		$this->schemaFetcher->method('fetchSchema')->willReturn($this->schemaWith(['id', 'title', 'owner'], ['id', 'title']));
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("ownerProperty 'owner' must be in the index of schema 'portfolio-schema' so member lists can be scoped. Add it to the schema's index first.");
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => 'owner']);
+	}
+
+	public function testSaveWithEmptyOwnerPropertySkipsSchemaCheck(): void
+	{
+		$this->schemaFetcher->expects($this->never())->method('fetchSchema');
+		$this->repository->expects($this->once())->method('saveCollection');
+
+		$this->saver->saveCollection(['id' => 'portfolio', 'schema' => 'portfolio-schema', 'ownerProperty' => '']);
+	}
+
+	public function testPatchRejectsOwnerPropertyTypo(): void
+	{
+		$this->repository->method('fetchCollection')->willReturn($this->storedCollection('portfolio-schema'));
+		$this->schemaFetcher->method('fetchSchema')->willReturn($this->schemaWith(['id', 'owner']));
+		$this->repository->expects($this->never())->method('saveCollection');
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("ownerProperty 'typo' is not a property");
+
+		$this->saver->patchCollection('portfolio', ['ownerProperty' => 'typo']);
+	}
+
+	public function testUpdateRejectsSchemaRenameThatLosesOwnerProperty(): void
+	{
+		$this->repository->method('fetchCollection')->willReturn($this->storedCollection('portfolio-schema', 'owner'));
+		$this->schemaFetcher->method('fetchSchema')->with('other-schema')->willReturn($this->schemaWith(['id']));
+
+		$this->expectException(\DomainException::class);
+		$this->expectExceptionMessage("ownerProperty 'owner' is not a property of schema 'other-schema'");
+
+		$this->saver->updateCollection('portfolio', ['id' => 'portfolio', 'schema' => 'other-schema', 'ownerProperty' => 'owner']);
+	}
+
+	public function testMetadataBumpSkipsSchemaCheckWhenOwnerAndSchemaUnchanged(): void
+	{
+		$this->repository->method('fetchCollection')->willReturn($this->storedCollection('portfolio-schema', 'owner'));
+		$this->schemaFetcher->expects($this->never())->method('fetchSchema');
+		$this->repository->expects($this->once())->method('saveCollection');
+
+		$this->saver->incrementTotalObjects('portfolio');
 	}
 
 	public function testIncrementTotalObjects(): void

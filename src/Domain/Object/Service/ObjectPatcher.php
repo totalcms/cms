@@ -29,8 +29,11 @@ readonly class ObjectPatcher
 		return $this->objectUpdater->updateObject($collection, $id, $mergedObject, $silent);
 	}
 
-	/** @param array<string,mixed> $newData */
-	public function patchObjectProperty(string $collection, string $id, string $property, array $newData): ObjectData
+	/**
+	 * @param array<string,mixed> $newData
+	 * @param array<string,mixed> $extra   top-level fields written in the same save, e.g. forced values from AuthFieldPolicy
+	 */
+	public function patchObjectProperty(string $collection, string $id, string $property, array $newData, array $extra = []): ObjectData
 	{
 		$object = $this->objectFetcher->fetchObject($collection, $id);
 
@@ -41,6 +44,7 @@ readonly class ObjectPatcher
 		// warning on the missing key and dying inside array_merge().
 		$existing              = $objectData[$property] ?? [];
 		$objectData[$property] = array_merge(is_array($existing) ? $existing : [], $newData);
+		$objectData            = array_replace($objectData, $extra);
 
 		return $this->objectUpdater->updateObject($collection, $id, $objectData);
 	}

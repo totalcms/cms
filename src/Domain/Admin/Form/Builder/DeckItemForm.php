@@ -64,6 +64,14 @@ class DeckItemForm extends TotalForm
 			return;
 		}
 
+		// A member of an owned collection must not see, or add to, another
+		// member's object: refuse before the parent object is read.
+		if ($this->services->objectFetcher->existsObject($this->collection, $this->id) && $this->ownerForbids()) {
+			$this->refuse(self::OWNER_REFUSAL);
+
+			return;
+		}
+
 		if ($this->itemId === '' && isset($_GET['itemId'])) {
 			$this->itemId = $_GET['itemId'];
 		}

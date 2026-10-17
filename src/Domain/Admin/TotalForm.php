@@ -21,6 +21,7 @@ use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Session\SessionKeys;
 
 /**
  * Total Form Builder.
@@ -345,6 +346,16 @@ class TotalForm implements \Stringable
 	/** @var array<string,string> */
 	protected array $attributes;
 
+	/** Shown, alone, instead of a form for another member's object. */
+	public const OWNER_REFUSAL = 'You do not have permission to edit this object.';
+
+	/**
+	 * Set when init() refused the form (the owner check): build() then
+	 * renders only the buildError message — no fields, no save button, no
+	 * object id.
+	 */
+	protected bool $refused = false;
+
 	public function __construct(
 		// Everything a form shares with every other form. Built once by
 		// TotalFormFactory; a test builds one from stubs (formServices()).
@@ -528,6 +539,52 @@ class TotalForm implements \Stringable
 	/** @var array<string,array<string,mixed>> */
 	private array $autoFieldOptions = [];
 
+	/**
+	 * True when the collection is owned, the actor is neither the owner of
+	 * object `$this->id` nor a super admin, and so must not be shown it.
+	 * Skipped (false) when the form was built without the owner services, and
+	 * when authentication is off for the install (there is no actor then, and
+	 * every edit form on an owned collection would refuse). The caller checks
+	 * that the object exists first.
+	 */
+	protected function ownerForbids(): bool
+	{
+		$session    = $this->services->session;
+		$validation = $this->services->userValidation;
+		$resolver   = $this->services->ownerProperties;
+		if ($session === null || $validation === null || $resolver === null) {
+			return false;
+		}
+
+		if (!$this->services->config->authEnabled()) {
+			return false;
+		}
+
+		$owner = $resolver->resolve($this->collection);
+		if ($owner === '') {
+			return false;
+		}
+
+		$actor           = (string)($session->get(SessionKeys::AUTH_USER) ?? '');
+		$actorCollection = (string)($session->get(SessionKeys::AUTH_COLLECTION) ?? '');
+		if ($validation->isSuperAdmin($actor, $actorCollection)) {
+			return false;
+		}
+
+		$object = $this->services->objectFetcher->fetchObject($this->collection, $this->id);
+
+		return $actor === '' || (string)($object->toArray()[$owner] ?? '') !== $actor;
+	}
+
+	/**
+	 * Refuse the form: build() renders only this message.
+	 */
+	protected function refuse(string $message): void
+	{
+		$this->buildError = $message;
+		$this->refused    = true;
+	}
+
 	protected function buildError(): string
 	{
 		if ($this->buildError === '') {
@@ -539,6 +596,10 @@ class TotalForm implements \Stringable
 
 	public function build(string $content = '', string $contentAfter = ''): string
 	{
+		if ($this->refused) {
+			return $this->buildError();
+		}
+
 		$formId       = null;
 		$formStyleTag = '';
 		$sectionHtml  = '';

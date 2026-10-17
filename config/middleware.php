@@ -12,6 +12,7 @@ use TotalCMS\Middleware\CacheInvalidationMiddleware;
 use TotalCMS\Middleware\Development\DevModeMiddleware;
 use TotalCMS\Middleware\Development\ExtensionProfileFlushMiddleware;
 use TotalCMS\Middleware\Development\SentryMiddleware;
+use TotalCMS\Middleware\ForcedValueResetMiddleware;
 use TotalCMS\Middleware\ImpersonationBannerMiddleware;
 use TotalCMS\Middleware\LazySessionStartMiddleware;
 use TotalCMS\Middleware\License\BundleMiddleware;
@@ -113,4 +114,8 @@ return function (App $app): void {
 	// PageRouter's post-Slim builder work (Twig functions, listeners). That makes
 	// this the right place to flush accumulated extension timing for the request.
 	$app->add(ExtensionProfileFlushMiddleware::class);
+
+	// Added last, so it runs first on every request (before PageRouter too):
+	// clears per-request forced values a long-lived worker would otherwise carry over.
+	$app->add(ForcedValueResetMiddleware::class);
 };

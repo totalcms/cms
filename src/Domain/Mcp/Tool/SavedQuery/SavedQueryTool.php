@@ -101,6 +101,13 @@ final readonly class SavedQueryTool
 				));
 			}
 
+			if ($this->personaContext->isOwnedForNonAdmin($this->definition->collectionName)) {
+				throw new ToolCallException(sprintf(
+					'Collection "%s" is an owned collection and is available to admin callers only over MCP.',
+					$this->definition->collectionName,
+				));
+			}
+
 			if (!$this->personaContext->canReadCollection($this->definition->collectionName, $collection)) {
 				throw new ToolCallException(sprintf(
 					"Your account's groups do not grant read on '%s'.",

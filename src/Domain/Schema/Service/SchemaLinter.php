@@ -93,6 +93,7 @@ readonly class SchemaLinter
 				continue;
 			}
 			array_push($errors, ...$this->lintSchemaRef($name, $property));
+			array_push($errors, ...$this->lintProtected($name, $property));
 			if (trim((string)($property['help'] ?? '')) === '') {
 				$warnings[] = "Property '{$name}' has no help text — help feeds the MCP tool catalog AI agents read.";
 			}
@@ -147,6 +148,30 @@ readonly class SchemaLinter
 		}
 
 		return [];
+	}
+
+	/**
+	 * `protected` is read by AuthFieldPolicy on every non-admin write: `true`
+	 * makes the property admin-only, `{"value": X}` also forces X. The policy
+	 * ignores any other shape rather than failing writes, so this is the only
+	 * place a misspelt flag is ever reported.
+	 *
+	 * @param array<string,mixed> $property
+	 *
+	 * @return list<string>
+	 */
+	private function lintProtected(string $name, array $property): array
+	{
+		if (!array_key_exists('protected', $property)) {
+			return [];
+		}
+
+		$flag = $property['protected'];
+		if ($flag === true || (is_array($flag) && array_key_exists('value', $flag))) {
+			return [];
+		}
+
+		return ["Property '{$name}' has an invalid protected value. Use true, or an object with a value key."];
 	}
 
 	/**

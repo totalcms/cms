@@ -6,7 +6,9 @@ namespace TotalCMS\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
+use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -78,6 +80,13 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * doing anything else. ADMIN is unaffected (`isAccessibleTo()` always
  * returns true for it), same as every other exposure check in this codebase.
  *
+ * **Protected collections are admin-only over MCP.** ObjectSaver and
+ * ObjectPatcher apply no field policy, so a non-admin persona with a group
+ * grant could otherwise flip a forced or admin-only property, or claim an
+ * owned object. `requireExposed()` therefore refuses every non-ADMIN write
+ * to a collection where `AuthFieldPolicy::protectedFieldsFor()` is not
+ * empty (protected, forced or owner rules) — fail closed.
+ *
  * **Non-exposed properties are stripped from every write response.** Each
  * handler returns the saved/patched object, which previously came back as a
  * raw `toArray()` — schema fields deliberately hidden from AI via
@@ -105,6 +114,7 @@ readonly class ObjectTools
 		private ObjectFetcher $objectFetcher,
 		private PersonaContext $personaContext,
 		private McpSchemaResolver $schemaResolver,
+		private AuthFieldPolicy $fieldPolicy,
 	) {
 	}
 
@@ -382,16 +392,26 @@ readonly class ObjectTools
 	 * ADMIN always passes — isAccessibleTo() returns true unconditionally
 	 * for it, same as it does for the read tools.
 	 *
+	 * A non-ADMIN persona is also refused on a collection with protected,
+	 * forced or owner rules: nothing on the MCP write path applies the field
+	 * policy, so those collections are admin-only here.
+	 *
 	 * Returns the resolved CollectionData so callers can reuse it for
 	 * stripNonExposed() without a second lookup.
 	 */
 	private function requireExposed(string $collection, string $toolName): CollectionData
 	{
 		try {
-			return $this->personaContext->exposedCollection($collection, 'access');
+			$collectionData = $this->personaContext->exposedCollection($collection, 'access');
 		} catch (ToolCallException $e) {
 			throw new ToolCallException($toolName . ': ' . lcfirst($e->getMessage()), $e->getCode(), $e);
 		}
+
+		if ($this->personaContext->current() !== McpPersona::ADMIN && $this->fieldPolicy->protectedFieldsFor($collection) !== []) {
+			throw new ToolCallException(sprintf('Collection "%s" has protected properties and accepts writes from admin callers only over MCP.', $collection));
+		}
+
+		return $collectionData;
 	}
 
 	/**

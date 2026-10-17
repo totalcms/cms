@@ -401,6 +401,51 @@ Operations that unauthenticated users can perform on this collection via the API
 
 ---
 
+### ownerProperty
+
+**Type:** `string`
+**Required:** No
+**Default:** `""`
+
+The property that holds the id of the user who owns each object. Setting it makes this an **owned collection**: every user who is not a super admin is limited to the objects they own, and the server writes their user id into this property when they create one.
+
+```json
+{
+    "ownerProperty": "owner"
+}
+```
+
+The property must exist in the collection's schema (a plain text field is enough; a single-value `relational` field pointing at the users collection makes the admin table show names). The stored value is the user id alone. Saving a collection whose `ownerProperty` is not a property of its schema is rejected, so add the property to the schema first.
+
+- **Single value, text type.** The property must hold one string, not a list: the owner check is an exact string comparison between the stored value and the user's id.
+- **In the index.** The property must be in the schema's [`index`](docs/schemas/reference#index) array, and saving the collection is rejected otherwise. Members' queries and index reads are scoped by matching this property on the collection index, by exact comparison with the user's id (case-sensitive, no wildcards).
+
+Because the owner value does not record which auth collection the id came from, a site with several auth collections must keep user ids unique across them, or let only one auth collection write owned collections.
+
+**Owned collections**
+
+Access groups grant operations per collection. On an owned collection the same grant applies to the user's own objects only:
+
+- **Create** — the owner is stamped server-side with the acting user's id, whatever the request sent. An anonymous public submission (`publicOperations: ["create"]`) stores an empty owner.
+- **Read, update, delete, property and file routes** — refused with `403` when the object belongs to someone else. A write that names an object id that does not exist is refused too (a read gets the usual `404`): members create through `POST /api/collections/{collection}`. The response is the same "Access denied" as a group refusal; the access log says `reason: owner` (or `reason: group` when the access group refused first).
+- **List and query** — `GET /api/collections/{c}/index` and `/query` return only the user's own objects. `ids=`, `filter=` and `search=` cannot widen that.
+- **Bulk delete, reindex and clone** — refused for scoped members; super admins, API keys and admin bearer tokens are unaffected. Bulk and reindex cannot be scoped; a clone would copy another object's owner.
+- **Whole-collection routes are an allow-list.** A scoped member can create (`POST /api/collections/{collection}`), list (`/query` and `/index`, both scoped) and open the admin collection page (not its export, import, factory, sitemap or feeds pages). Every other route that has no object id is refused with `403`: export (`/api/export/collections/{collection}/...`), report (`/api/report/collections/{collection}/...`), import (`/api/import/collections/{collection}/...`), reindex, bulk delete, and duplicating another object from the admin ("duplicate" on the add page), as well as `object-clone`.
+- The owner property itself cannot be changed by its owner. It is protected by being named here; see [protected](docs/schemas/validation#protected) for the per-field version.
+- **Protected properties on property routes.** On every collection, owned or not, a non-admin write to a protected property (or the owner property) through any property route — `PUT`/`PATCH`/`DELETE .../{id}/{property}`, deck items, files, folders, meta, counters and `/api/upload/*` — is refused with `403`; the access log says `reason: protected`.
+- **Forced values on every write.** A [`protected: {"value": X}`](docs/schemas/validation#protected) property is written as `X` on every authenticated non-admin write (session or OAuth user) — body routes, property routes, deck items, file and upload routes, meta writes and property deletes — so uploading a new screenshot to an approved object sends it back to review. Anonymous public submissions through the object body routes are forced too. The exceptions: counter increments and decrements (a tick is not an edit), property, deck and file routes reached as a public submission under a public `update`, and [registration](docs/forms/options#public-registration-forms), which strips protected fields but does not apply forced values.
+- **Clone and import on protected collections.** On every collection, owned or not, that has protected properties (or an owner property), a non-admin clone (`POST .../{id}/clone`) and every collection import (`/api/import/collections/{collection}/...`: CSV, JSON, deck CSV, deck JSON and factory) are refused with `403` and `reason: protected`: both copy or upsert whole objects with no field policy. A non-admin clone whose body names a different target `collection` is refused on any collection. Under a public `create`, neither kind of clone is public.
+
+Who is scoped: everyone who is not a super admin (a member of the `admin` group in the default auth collection), whether they sign in through a custom auth collection or the dashboard. A dashboard editor on an owned collection therefore sees only their own objects in the collection table. Staff who must moderate every object are super admins. API keys and OAuth tokens issued to admins are untouched; an OAuth token issued to a non-admin is scoped like that user's session.
+
+Over MCP an owned collection is admin-only. It is not listed by `list_collections`, the cross-collection tools, `resources/list`, tool catalogs or schema-defined tools, and any tool or resource that names it is refused for authenticated and public callers. Data views keep their own `mcp.access`, since a view is an admin's explicit publication. Over MCP, collections with protected properties accept writes (`create_object`, `update_object`, `patch_object`) from admin callers only.
+
+**Public operations bypass ownership.** Public requests skip access control entirely, so any `publicOperations` other than `create` — public `read`, `update` or `delete` — skip the owner check too: anyone could read, change or delete any member's object. An owned collection should enable public `create` at most. (Public `create` does not open clone on an owned collection, or on any collection with protected properties.)
+
+Pair this with [`protected`](docs/schemas/validation#protected) on a `draft` field — `"protected": {"value": true}` — and every member edit goes back to the review queue while an admin's approval is the only way out of it. The [member portal pattern](docs/forms/options#member-portals-owned-collections) shows the form side.
+
+---
+
 ## Sorting Settings
 
 ### manualSort
@@ -645,6 +690,7 @@ A fully configured collection metadata file:
 
     "groups": [],
     "publicOperations": ["read"],
+    "ownerProperty": "owner",
 
     "queueRebuildOnSave": false,
 

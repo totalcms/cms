@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\ContentRenderer;
@@ -47,7 +48,7 @@ final class SearchCollectionToolTest extends TestCase
 		// canReadCollection() call — the objects+read group gate is enforced
 		// entirely by McpServerFactory::guardHandler(), which this unit test
 		// (calling ->handler() directly) never exercises.
-		$this->persona = new PersonaContext($this->collections, $this->resolver);
+		$this->persona = new PersonaContext($this->collections, $this->resolver, $this->createStub(OwnerPropertyResolver::class));
 
 		$this->tool = new SearchCollectionTool(
 			$this->searchService,
