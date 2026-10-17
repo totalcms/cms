@@ -3,6 +3,7 @@
 namespace TotalCMS\Domain\JobQueue\Repository;
 
 use TotalCMS\Domain\JobQueue\Data\JobData;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
@@ -98,9 +99,7 @@ class JobRepository
 
 		// Ensure directory exists before creating database
 		$dir = dirname($dbPath);
-		if (!is_dir($dir)) {
-			mkdir($dir, 0755, true);
-		}
+		FileUtils::ensureDirectory($dir);
 
 		$db       = new \PDO('sqlite:' . $dbPath);
 		$this->db = $db;

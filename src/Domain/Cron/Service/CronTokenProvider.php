@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Cron\Service;
 
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
@@ -73,9 +74,7 @@ final readonly class CronTokenProvider
 		$path = $this->path();
 		$dir  = dirname($path);
 
-		if (!is_dir($dir)) {
-			mkdir($dir, 0700, true);
-		}
+		FileUtils::ensureDirectory($dir, 0700);
 
 		// Temp-then-rename so a concurrent reader never sees a half-written file,
 		// matching OAuthClientRepository's atomic-write pattern.

@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\Property\Service\UploadSaver;
 use TotalCMS\Domain\Security\Upload\FileUploadValidator;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
@@ -50,9 +51,7 @@ readonly class UploadFileAction
 		}
 
 		// Ensure temp directory exists with secure permissions
-		if (!file_exists($this->config->tmpdir)) {
-			mkdir($this->config->tmpdir, 0700, true);
-		}
+		FileUtils::ensureDirectory($this->config->tmpdir, 0700);
 
 		// Use sanitized filename for temporary storage
 		$filepath = $this->config->tmpdir . '/' . $sanitizedFilename;

@@ -28,7 +28,7 @@ readonly class BuilderFrontendInstaller
 		}
 
 		$target = $this->targetDir();
-		if (!is_dir($target) && !mkdir($target, 0755, true) && !is_dir($target)) {
+		if (!FileUtils::ensureDirectory($target)) {
 			return OperationResult::failure("Could not create target directory: {$target}");
 		}
 

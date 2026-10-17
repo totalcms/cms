@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Bundle\Repository;
 use TotalCMS\Domain\Bundle\Data\BundleData;
 use TotalCMS\Domain\Storage\StorageAdapterInterface;
 use TotalCMS\Domain\Storage\StorageRepository;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\PathResolver;
@@ -39,9 +40,7 @@ class BundleRepository extends StorageRepository
 		$localBundlePath = $this->getLocalBundlePath();
 		$dir             = dirname($localBundlePath);
 
-		if (!is_dir($dir)) {
-			mkdir($dir, 0755, true);
-		}
+		FileUtils::ensureDirectory($dir);
 
 		file_put_contents($localBundlePath, base64_encode($bundle->toJSON()));
 

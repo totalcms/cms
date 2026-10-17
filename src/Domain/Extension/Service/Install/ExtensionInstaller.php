@@ -191,7 +191,7 @@ class ExtensionInstaller
 	{
 		$root = rtrim($this->config->tmpdir, '/') . '/extension-install/' . bin2hex(random_bytes(8));
 		$dir  = $root . '/tree';
-		if (!mkdir($dir, 0755, true)) {
+		if (!FileUtils::ensureDirectory($dir)) {
 			throw InstallException::writeFailed("Could not create a staging directory under {$this->config->tmpdir}.");
 		}
 
@@ -206,7 +206,7 @@ class ExtensionInstaller
 	private function swap(string $staging, string $target, string $id): void
 	{
 		$parent = dirname($target);
-		if (!is_dir($parent) && !mkdir($parent, 0755, true)) {
+		if (!FileUtils::ensureDirectory($parent)) {
 			throw InstallException::writeFailed("Could not create {$parent}.");
 		}
 

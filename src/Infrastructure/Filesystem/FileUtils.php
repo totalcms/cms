@@ -20,6 +20,28 @@ class FileUtils
 	}
 
 	/**
+	 * Make sure a directory exists, creating it and its parents when it does
+	 * not. Returns whether it exists afterwards.
+	 *
+	 * Race-safe. Two processes can pass an is_dir() check together (a web
+	 * request and `jobs:process` building the same service, two requests
+	 * writing the first object of a collection) and the loser's mkdir() fails
+	 * with "File exists" even though the directory is there. The `@` keeps
+	 * that benign warning out of the logs and Sentry; the trailing is_dir()
+	 * is the real success test. False means the directory truly could not be
+	 * made (permissions, read-only filesystem, a file in the way) and the
+	 * caller decides what that means for it.
+	 */
+	public static function ensureDirectory(string $dir, int $mode = 0755): bool
+	{
+		if (is_dir($dir)) {
+			return true;
+		}
+
+		return @mkdir($dir, $mode, true) || is_dir($dir);
+	}
+
+	/**
 	 * Copy a directory tree. Directories are created as needed; a file that
 	 * already exists is skipped unless `$force`. `$copy` replaces the plain
 	 * copy() for callers that transform files on the way (the skill installer

@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mailer\Repository;
 
 use TotalCMS\Domain\Mailer\Data\BulkBatchSummaryData;
 use TotalCMS\Domain\Mailer\Data\BulkMailLogData;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
 
@@ -43,9 +44,7 @@ class BulkMailerRepository
 		$exists = $this->dbExists();
 
 		$dir = dirname($dbPath);
-		if (!is_dir($dir)) {
-			mkdir($dir, 0755, true);
-		}
+		FileUtils::ensureDirectory($dir);
 
 		$this->db = new \PDO('sqlite:' . $dbPath);
 

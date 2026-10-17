@@ -5,6 +5,7 @@ namespace TotalCMS\Domain\Factory\Service;
 use Faker\Factory;
 use Faker\Generator;
 use TotalCMS\Domain\Factory\Faker\FakerExtension;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Support\Config;
 
 /**
@@ -26,9 +27,10 @@ class FakerFactory
 		$faker = $this->safeFactory($this->config->locale);
 		$faker->addProvider(new FakerExtension($faker));
 
-		if (!is_dir($this->cacheDir)) {
-			mkdir($this->cacheDir, 0700, true);
-		}
+		// Not fatal when the directory cannot be made: it is only used once an
+		// image provider runs, and this runs in FactoryImporter's constructor,
+		// so a throw here would take down every `jobs:process` run.
+		FileUtils::ensureDirectory($this->cacheDir, 0700);
 
 		FakerExtension::$dir = $this->cacheDir;
 

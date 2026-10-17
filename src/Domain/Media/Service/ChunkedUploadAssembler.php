@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Media\Service;
 
 use Psr\Http\Message\UploadedFileInterface;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Support\Config;
 
 /**
@@ -47,9 +48,7 @@ readonly class ChunkedUploadAssembler
 		$totalChunks = intval($body['dztotalchunkcount'] ?? $body['totalchunkcount'] ?? 1);
 		$filename    = $file->getClientFilename() ?? 'unknown_file';
 
-		if (!file_exists($this->config->tmpdir)) {
-			mkdir($this->config->tmpdir, 0700, true);
-		}
+		FileUtils::ensureDirectory($this->config->tmpdir, 0700);
 
 		$file->moveTo($this->chunkPath($filename, $chunkIndex));
 

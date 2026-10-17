@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Extension\Service\Install;
 
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 
 /**
  * Reads an operator-supplied extension zip.
@@ -109,7 +110,7 @@ final class ExtensionArchive
 	 */
 	public function extractTo(string $zipPath, InstallPlan $plan, string $destination): void
 	{
-		if (!is_dir($destination) && !mkdir($destination, 0755, true)) {
+		if (!FileUtils::ensureDirectory($destination)) {
 			throw InstallException::writeFailed("Could not create {$destination}.");
 		}
 
@@ -192,7 +193,7 @@ final class ExtensionArchive
 	 */
 	private function makeDir(string $dir): void
 	{
-		if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
+		if (!FileUtils::ensureDirectory($dir)) {
 			throw InstallException::writeFailed("Could not create {$dir}.");
 		}
 	}

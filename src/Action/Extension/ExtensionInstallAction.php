@@ -11,6 +11,7 @@ use Slim\Interfaces\RouteParserInterface;
 use TotalCMS\Domain\Extension\Service\Install\ExtensionInstaller;
 use TotalCMS\Domain\Extension\Service\Install\InstallException;
 use TotalCMS\Domain\Extension\Service\Install\UploadLimit;
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 
@@ -47,9 +48,7 @@ readonly class ExtensionInstallAction
 		}
 
 		$dir = rtrim($this->config->tmpdir, '/') . '/extension-install';
-		if (!is_dir($dir)) {
-			mkdir($dir, 0700, true);
-		}
+		FileUtils::ensureDirectory($dir, 0700);
 		$zipPath = $dir . '/' . bin2hex(random_bytes(8)) . '.zip';
 
 		try {

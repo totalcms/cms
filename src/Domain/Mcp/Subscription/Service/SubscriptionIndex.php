@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Subscription\Service;
 
+use TotalCMS\Infrastructure\Filesystem\FileUtils;
+
 /**
  * Maintains a JSON reverse-index mapping resource URIs to subscribed session IDs.
  *
@@ -240,7 +242,7 @@ class SubscriptionIndex
 	{
 		$dir = dirname($this->indexFile);
 
-		if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) {
+		if (!FileUtils::ensureDirectory($dir, 0777)) {
 			throw new \RuntimeException("SubscriptionIndex: cannot create directory {$dir}");
 		}
 	}
