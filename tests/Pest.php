@@ -97,7 +97,7 @@ require_once __DIR__ . '/worker-paths.php';
 // Ensure Symfony Console Resources directory exists (missing in some CI environments)
 $consoleResourcesDir = dirname((new ReflectionClass(Application::class))->getFileName()) . '/Resources';
 if (!is_dir($consoleResourcesDir)) {
-	@mkdir($consoleResourcesDir, 0755, true);
+	is_dir($consoleResourcesDir) || mkdir($consoleResourcesDir, 0755, true);
 }
 
 /*
@@ -695,7 +695,7 @@ function testExtensionGuard(): ExtensionGuard
 	static $tmpRoot = null;
 	if ($tmpRoot === null) {
 		$tmpRoot = sys_get_temp_dir() . '/tcms-test-guard-' . bin2hex(random_bytes(6));
-		@mkdir($tmpRoot, 0777, true);
+		is_dir($tmpRoot) || mkdir($tmpRoot, 0777, true);
 		register_shutdown_function(function () use ($tmpRoot): void {
 			if (is_dir($tmpRoot)) {
 				recursiveDelete($tmpRoot, forceComplete: true);
@@ -878,7 +878,7 @@ function devModeManager(string $datadir): DevModeManager
 	$config->datadir = $datadir;
 
 	if (!is_dir($config->systemDir())) {
-		@mkdir($config->systemDir(), 0775, true);
+		is_dir($config->systemDir()) || mkdir($config->systemDir(), 0775, true);
 	}
 
 	return new DevModeManager(

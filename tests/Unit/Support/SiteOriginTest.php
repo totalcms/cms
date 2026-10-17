@@ -12,8 +12,8 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-	@unlink($this->file);
-	@rmdir(dirname($this->file));
+	is_file($this->file) && unlink($this->file);
+	rmdir(dirname($this->file));
 });
 
 it('recalls the domain and scheme a web request remembered', function (): void {

@@ -37,7 +37,7 @@ beforeEach(function (): void {
  */
 function settingsFormsWithOverlay(array $overlay, array $declared = ['i18n']): SettingsForms
 {
-	@mkdir(cmsDataDir() . '.system', 0755, true);
+	is_dir(cmsDataDir() . '.system') || mkdir(cmsDataDir() . '.system', 0755, true);
 	file_put_contents(cmsDataDir() . '.system/settings-italy.json', (string)json_encode($overlay));
 
 	$c                     = test()->diContainer;

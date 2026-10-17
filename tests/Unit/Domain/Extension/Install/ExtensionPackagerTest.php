@@ -15,7 +15,7 @@ function packagerFixture(array $extraFiles = [], string $version = '1.2.0'): str
 	file_put_contents($dir . '/thing/extension.json', testExtensionManifest('acme/thing', $version));
 	file_put_contents($dir . '/thing/Extension.php', testExtensionClass());
 	foreach ($extraFiles as $rel => $contents) {
-		@mkdir(dirname($dir . '/thing/' . $rel), 0755, true);
+		is_dir(dirname($dir . '/thing/' . $rel)) || mkdir(dirname($dir . '/thing/' . $rel), 0755, true);
 		file_put_contents($dir . '/thing/' . $rel, $contents);
 	}
 

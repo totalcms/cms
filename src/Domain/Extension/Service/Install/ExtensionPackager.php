@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Extension\Service\Install;
 
 use TotalCMS\Domain\Extension\Data\ExtensionManifest;
 use TotalCMS\Domain\Extension\Service\ManifestValidator;
+use TotalCMS\Support\QuietCall;
 
 /**
  * Builds the distributable zip for an extension directory:
@@ -107,7 +108,7 @@ final readonly class ExtensionPackager
 
 			// addFile() is lazy: unreadable files and a full disk surface here.
 			$status = $zip->getStatusString();
-			if (!@$zip->close()) {
+			if (!QuietCall::run(fn (): bool => $zip->close())) {
 				throw InstallException::writeFailed("Could not write {$zipPath}: unreadable file or no space left ({$status}).");
 			}
 
@@ -135,10 +136,12 @@ final readonly class ExtensionPackager
 		// Closing can fail again (that is why we are here), and a ZipArchive that already
 		// failed to close throws ValueError on reuse; only the unlink matters.
 		try {
-			@$zip->close();
+			QuietCall::run(fn (): bool => $zip->close());
 		} catch (\Throwable) {
 		}
-		@unlink($tmpPath);
+		if (is_file($tmpPath)) {
+			QuietCall::run(fn (): bool => unlink($tmpPath));
+		}
 	}
 
 	private function readManifest(string $dir): ExtensionManifest

@@ -22,7 +22,7 @@ use TotalCMS\Support\Config;
 beforeEach(function (): void {
 	recursiveDelete(cmsDataDir());
 	restoreFixtures();
-	@mkdir(cmsDataDir() . '.system', 0755, true);
+	is_dir(cmsDataDir() . '.system') || mkdir(cmsDataDir() . '.system', 0755, true);
 	$this->setUpApp(bootstrap());
 	$this->diContainer = $this->app->getContainer();
 });

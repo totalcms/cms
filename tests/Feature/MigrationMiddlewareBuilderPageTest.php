@@ -33,7 +33,7 @@ beforeEach(function (): void {
 
 	// A template for the page to render, so the request is a real builder-page
 	// hit rather than a 404 that happens to travel the same middleware path.
-	@mkdir(cmsDataDir() . 'builder/pages', 0755, true);
+	is_dir(cmsDataDir() . 'builder/pages') || mkdir(cmsDataDir() . 'builder/pages', 0755, true);
 	file_put_contents(templatePath('about', 'pages'), '<h1>{{ page.title }}</h1>');
 
 	// A pre-3.6 page written straight to disk: the saver would run it through

@@ -16,6 +16,7 @@ use TotalCMS\Domain\Object\Service\ObjectFileCodec;
 use TotalCMS\Domain\Object\Service\ObjectUpdater;
 use TotalCMS\Infrastructure\Filesystem\PathUtils;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\QuietCall;
 
 /**
  * Moves the pre-3.5.1 builder-page `description` and `image` values onto the
@@ -253,29 +254,25 @@ readonly class BuilderPageSeoFieldsMigration implements MigrationInterface
 		}
 
 		$parent = dirname($to);
-		// Clear first: error_get_last() is process-wide, so without this the
-		// warning below can report a stale error from anywhere earlier in the
-		// request as the reason this call failed.
-		error_clear_last();
-		if (!is_dir($parent) && !@mkdir($parent, 0755, true) && !is_dir($parent)) {
+		$error  = null;
+		if (!is_dir($parent) && !QuietCall::run(fn (): bool => mkdir($parent, 0755, true), $error) && !is_dir($parent)) {
 			$this->logger->warning('Builder page SEO migration: could not create the card image directory', [
 				'collection' => $collection,
 				'id'         => $id,
 				'path'       => $parent,
-				'error'      => error_get_last()['message'] ?? '',
+				'error'      => $error ?? '',
 			]);
 
 			return false;
 		}
 
-		error_clear_last();
-		if (!@rename($from, $to)) {
+		if (!QuietCall::run(fn (): bool => rename($from, $to), $error)) {
 			$this->logger->warning('Builder page SEO migration: could not move the page image into the SEO card', [
 				'collection' => $collection,
 				'id'         => $id,
 				'from'       => $from,
 				'to'         => $to,
-				'error'      => error_get_last()['message'] ?? '',
+				'error'      => $error ?? '',
 			]);
 
 			return false;

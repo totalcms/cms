@@ -331,7 +331,7 @@ class UpdateApplier
 
 		$retainRoot = $this->retainedBackupRoot();
 
-		if (!is_dir($retainRoot) && !@mkdir($retainRoot, 0755, true) && !is_dir($retainRoot)) {
+		if (!FileUtils::ensureDirectory($retainRoot)) {
 			$this->logger->warning('Could not create the backup directory; previous version discarded');
 			$this->deleteDirectory($backupDir);
 

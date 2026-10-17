@@ -12,6 +12,7 @@ use TotalCMS\Domain\Extension\Service\DangerousCodeScanner;
 use TotalCMS\Domain\Extension\Service\ExtensionDiscovery;
 use TotalCMS\Infrastructure\Filesystem\FileUtils;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\QuietCall;
 
 /**
  * Installs an extension zip into `tcms-data/extensions/{vendor}/{name}`.
@@ -219,7 +220,7 @@ class ExtensionInstaller
 			if (file_exists($backup)) {
 				$backup .= '-' . bin2hex(random_bytes(3));
 			}
-			if (!@rename($target, $backup)) {
+			if (!QuietCall::run(fn (): bool => rename($target, $backup))) {
 				throw InstallException::writeFailed("Could not move the existing {$target} aside — check directory permissions.");
 			}
 		}

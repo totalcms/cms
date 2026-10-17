@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Infrastructure\Filesystem;
 
+use TotalCMS\Support\QuietCall;
+
 class FileUtils
 {
 	public static function fileSizeString(int $size): string
@@ -26,7 +28,7 @@ class FileUtils
 	 * Race-safe. Two processes can pass an is_dir() check together (a web
 	 * request and `jobs:process` building the same service, two requests
 	 * writing the first object of a collection) and the loser's mkdir() fails
-	 * with "File exists" even though the directory is there. The `@` keeps
+	 * with "File exists" even though the directory is there. QuietCall keeps
 	 * that benign warning out of the logs and Sentry; the trailing is_dir()
 	 * is the real success test. False means the directory truly could not be
 	 * made (permissions, read-only filesystem, a file in the way) and the
@@ -38,7 +40,7 @@ class FileUtils
 			return true;
 		}
 
-		return @mkdir($dir, $mode, true) || is_dir($dir);
+		return QuietCall::run(fn (): bool => mkdir($dir, $mode, true)) || is_dir($dir);
 	}
 
 	/**
