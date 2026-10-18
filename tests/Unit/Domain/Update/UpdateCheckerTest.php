@@ -228,4 +228,66 @@ final class UpdateCheckerTest extends TestCase
 
 		$this->checker->checkForUpdate();
 	}
+
+	/**
+	 * A failed check is cached for an hour. Uncached, an unreachable license
+	 * server cost every dashboard load the full timeout (twice: sidebar and
+	 * alerts each call the checker).
+	 */
+	public function testServerErrorIsCachedAsNoUpdateForAnHour(): void
+	{
+		$this->cacheManager->method('getComputedData')->willReturn(null);
+		$this->cacheManager->expects($this->once())
+			->method('storeComputedData')
+			->with(
+				'update_check_' . Version::number(),
+				$this->callback(fn (array $data): bool => $data['available'] === false
+					&& $data['version'] === Version::number()
+					&& $data['updatesValid'] === true
+					&& $data['updatesExpireDate'] === '2027-04-09'),
+				3600,
+			);
+		$this->httpClient->method('request')->willReturn(new HttpResponse(503, 'Unavailable'));
+
+		$result = $this->checker->checkForUpdate();
+
+		expect($result->available)->toBeFalse();
+	}
+
+	public function testInvalidJsonIsCachedForAnHour(): void
+	{
+		$this->cacheManager->method('getComputedData')->willReturn(null);
+		$this->cacheManager->expects($this->once())
+			->method('storeComputedData')
+			->with($this->anything(), $this->isArray(), 3600);
+		$this->httpClient->method('request')->willReturn(new HttpResponse(200, 'not json'));
+
+		$this->checker->checkForUpdate();
+	}
+
+	public function testTransportFailureIsCachedAndStillThrown(): void
+	{
+		$this->cacheManager->method('getComputedData')->willReturn(null);
+		$this->cacheManager->expects($this->once())
+			->method('storeComputedData')
+			->with($this->anything(), $this->callback(fn (array $data): bool => $data['available'] === false), 3600);
+		$this->httpClient->method('request')->willThrowException(new \RuntimeException('Operation timed out'));
+
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage('Operation timed out');
+
+		$this->checker->checkForUpdate();
+	}
+
+	public function testRequestUsesShortTimeouts(): void
+	{
+		$this->cacheManager->method('getComputedData')->willReturn(null);
+		$this->httpClient->expects($this->once())
+			->method('request')
+			->with('GET', $this->anything(), $this->callback(fn (array $options): bool => $options['timeout'] === 5
+				&& $options['connect_timeout'] === 2))
+			->willReturn(new HttpResponse(200, (string)json_encode(['available' => false])));
+
+		$this->checker->checkForUpdate();
+	}
 }

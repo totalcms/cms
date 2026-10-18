@@ -13,12 +13,14 @@ use TotalCMS\Support\Version;
 
 /**
  * Checks for available updates from the license server.
- * Results are cached for 24 hours.
+ * Results are cached for 24 hours. A failed check is cached as "no update"
+ * for an hour, so an unreachable server costs one timeout, not one per page.
  */
 readonly class UpdateChecker
 {
 	private const CACHE_KEY_PREFIX = 'update_check';
 	private const CACHE_TTL        = 86400; // 24 hours
+	private const FAILURE_TTL      = 3600;  // 1 hour
 
 	public function __construct(
 		private HttpClientInterface $httpClient,
@@ -48,11 +50,17 @@ readonly class UpdateChecker
 		$licenseUrl     = Config::LICENSE_API_URL;
 		$currentVersion = Version::number();
 
-		$response = $this->httpClient->request('GET', $licenseUrl . '/version?current=' . urlencode($currentVersion), [
-			'timeout'         => 10,
-			'connect_timeout' => 5,
-			'user_agent'      => 'TotalCMS/' . $currentVersion,
-		]);
+		try {
+			$response = $this->httpClient->request('GET', $licenseUrl . '/version?current=' . urlencode($currentVersion), [
+				'timeout'         => 5,
+				'connect_timeout' => 2,
+				'user_agent'      => 'TotalCMS/' . $currentVersion,
+			]);
+		} catch (\RuntimeException $e) {
+			// Cache the miss, then let the caller report the error.
+			$this->noUpdate($currentVersion);
+			throw $e;
+		}
 
 		if ($response->statusCode >= 400) {
 			return $this->noUpdate($currentVersion);
@@ -124,9 +132,20 @@ readonly class UpdateChecker
 		}
 	}
 
+	/**
+	 * The answer for a failed check, cached for FAILURE_TTL so the next page
+	 * load does not wait on the server again.
+	 */
 	private function noUpdate(string $currentVersion): UpdateInfo
 	{
 		$licenseInfo = $this->getLicenseInfo();
+
+		$this->cacheManager->storeComputedData($this->cacheKey(), [
+			'available'         => false,
+			'version'           => $currentVersion,
+			'updatesValid'      => $licenseInfo['valid'],
+			'updatesExpireDate' => $licenseInfo['expireDate'],
+		], self::FAILURE_TTL);
 
 		return new UpdateInfo(
 			available: false,
