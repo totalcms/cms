@@ -1034,7 +1034,7 @@ class ExtensionManager
 
 				$relPath  = ltrim($asset['path'], '/');
 				$url      = '/ext/' . $extPath . '/assets/' . $relPath;
-				$version  = $asset['version'] ?? self::fileVersion($assetDir . '/' . $relPath);
+				$version  = $asset['version'] ?? $this->fileVersion($assetDir . '/' . $relPath);
 				if ($version !== null && $version !== '') {
 					$url .= '?v=' . $version;
 				}
@@ -1058,7 +1058,7 @@ class ExtensionManager
 	}
 
 	/** An asset's cache-busting version: its mtime, or null when the file is missing. */
-	private static function fileVersion(string $file): ?string
+	private function fileVersion(string $file): ?string
 	{
 		return is_file($file) ? (string)filemtime($file) : null;
 	}

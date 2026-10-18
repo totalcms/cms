@@ -70,7 +70,7 @@ readonly class EmailVerificationService
 		$expiryMinutes = (int)($this->config->auth['verificationTokenExpiry'] ?? 1440);
 		$ttl           = $expiryMinutes * 60;
 
-		$result = $this->tokenService->createToken(self::SCOPE, $email, $collection, $ttl, self::extra($redirect));
+		$result = $this->tokenService->createToken(self::SCOPE, $email, $collection, $ttl, $this->extra($redirect));
 
 		if (!$result->success) {
 			return OperationResult::failure('Unable to create verification token. Please try again.');
@@ -133,7 +133,7 @@ readonly class EmailVerificationService
 		$expiryMinutes = (int)($this->config->auth['verificationTokenExpiry'] ?? 1440);
 		$ttl           = $expiryMinutes * 60;
 
-		$result = $this->tokenService->createToken(self::SCOPE, $email, $collection, $ttl, self::extra($redirect));
+		$result = $this->tokenService->createToken(self::SCOPE, $email, $collection, $ttl, $this->extra($redirect));
 
 		if (!$result->success) {
 			// Don't surface the failure — same anti-enumeration message.
@@ -158,7 +158,7 @@ readonly class EmailVerificationService
 	 *
 	 * @return array<string,string>
 	 */
-	private static function extra(string $redirect): array
+	private function extra(string $redirect): array
 	{
 		return $redirect === '' ? [] : ['redirect' => $redirect];
 	}
