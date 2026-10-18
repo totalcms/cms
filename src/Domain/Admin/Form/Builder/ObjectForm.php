@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Admin\Form\Builder;
 
 use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -95,8 +96,9 @@ class ObjectForm extends TotalForm
 
 	/**
 	 * Bot protection is for anonymous create forms: the `botProtection`
-	 * option, or a collection with Require Bot Protection on a register form
-	 * or a create form the public may create through. Never for an edit form
+	 * option, a mailer action whose template has Require Bot Protection on,
+	 * or a collection with Require Bot Protection on a register form or a
+	 * create form the public may create through. Never for an edit form
 	 * (the POST check), and never for a signed-in visitor, whom the endpoints
 	 * skip too.
 	 */
@@ -110,7 +112,7 @@ class ObjectForm extends TotalForm
 			return false;
 		}
 
-		if ($this->botProtection) {
+		if ($this->botProtection || $this->mailerRequiresBotProtection()) {
 			return true;
 		}
 
@@ -120,6 +122,31 @@ class ObjectForm extends TotalForm
 
 		return $this->register
 			|| in_array('create', array_map(strtolower(...), $this->collectionData->publicOperations), true);
+	}
+
+	/**
+	 * Whether a mailer action this form runs after a create uses a template
+	 * with Require Bot Protection on: the endpoint would refuse its send
+	 * without the fields.
+	 */
+	private function mailerRequiresBotProtection(): bool
+	{
+		$mailers = $this->services->mailers;
+		if (!$mailers instanceof MailerFetcher) {
+			return false;
+		}
+
+		foreach ($this->newActions as $action) {
+			$mailerId = $action['mailerId'] ?? '';
+			if (($action['action'] ?? '') !== 'mailer' || !is_string($mailerId) || $mailerId === '' || !$mailers->exists($mailerId)) {
+				continue;
+			}
+			if ($mailers->fetchMailer($mailerId)->requireBotProtection) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

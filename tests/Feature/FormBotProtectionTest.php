@@ -86,3 +86,30 @@ it('adds the fields without the option where the collection requires them', func
 	expect(hasBotFields($this->factory->builder('guarded-private')->autoBuild()))->toBeFalse();
 	expect(hasBotFields($this->factory->builder('guarded-private', ['addOnly' => true])->autoBuild()))->toBeFalse();
 });
+
+it('renders the bot fields on a create form whose mailer action requires them', function (): void {
+	$c = $this->app->getContainer();
+	$c->get(CollectionSaver::class)->saveCollection(['id' => 'mailer', 'name' => 'Mailer', 'schema' => 'mailer']);
+	$mail = ['to' => 'a@b.test', 'subject' => 'Hi', 'bodyHtml' => '<p>Hi</p>'];
+	$c->get(ObjectSaver::class)->saveObject('mailer', ['id' => 'guarded-mail', 'name' => 'Guarded', 'requireBotProtection' => true, ...$mail]);
+	$c->get(ObjectSaver::class)->saveObject('mailer', ['id' => 'open-mail', 'name' => 'Open', ...$mail]);
+
+	$guarded = $this->factory->builder('notes', ['addOnly' => true, 'newActions' => [['action' => 'mailer', 'mailerId' => 'guarded-mail']]])->autoBuild();
+	expect(hasBotFields($guarded))->toBeTrue();
+	expect((new BotProtection())->check([BotProtection::TIMESTAMP_FIELD => botToken($guarded)], 'notes', 'create', time() + 10))->toBe('');
+
+	$open = $this->factory->builder('notes', ['addOnly' => true, 'newActions' => [['action' => 'mailer', 'mailerId' => 'open-mail']]])->autoBuild();
+	expect(hasBotFields($open))->toBeFalse();
+
+	$missing = $this->factory->builder('notes', ['addOnly' => true, 'newActions' => [['action' => 'mailer', 'mailerId' => 'no-such-mail']]])->autoBuild();
+	expect(hasBotFields($missing))->toBeFalse();
+});
+
+it('leaves the bot fields off an edit form even when its mailer action requires them', function (): void {
+	$c = $this->app->getContainer();
+	$c->get(CollectionSaver::class)->saveCollection(['id' => 'mailer', 'name' => 'Mailer', 'schema' => 'mailer']);
+	$c->get(ObjectSaver::class)->saveObject('mailer', ['id' => 'guarded-mail', 'name' => 'Guarded', 'requireBotProtection' => true, 'to' => 'a@b.test', 'subject' => 'Hi', 'bodyHtml' => '<p>Hi</p>']);
+
+	$html = $this->factory->builder('notes', ['id' => 'one', 'newActions' => [['action' => 'mailer', 'mailerId' => 'guarded-mail']]])->autoBuild();
+	expect(hasBotFields($html))->toBeFalse();
+});

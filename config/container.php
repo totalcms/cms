@@ -97,6 +97,7 @@ use TotalCMS\Domain\JumpStart\Data\JumpStartData;
 use TotalCMS\Domain\JumpStart\Service\JumpStartExporter;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Handler\PromptChangeListener;
 use TotalCMS\Domain\Mcp\Prompt\Service\PromptDiscoveryService;
@@ -589,6 +590,7 @@ return [
 		session                 : $container->get(SessionInterface::class),
 		userValidation          : $container->get(UserValidationService::class),
 		ownerProperties         : $container->get(OwnerPropertyResolver::class),
+		mailers                 : $container->get(MailerFetcher::class),
 	),
 
 	TotalCMSTwigAdapter::class => fn (ContainerInterface $container): TotalCMSTwigAdapter => new TotalCMSTwigAdapter(

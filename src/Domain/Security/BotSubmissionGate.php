@@ -21,8 +21,8 @@ use TotalCMS\Factory\LoggerFactory;
 
 /**
  * Applies {@see BotProtection} to an anonymous write: the public registration
- * endpoint (`register`) and public-submission object creates and clones
- * (`create`).
+ * endpoint (`register`), public-submission object creates and clones
+ * (`create`), and the mail a form's mailer action sends ({@see self::screenMail()}).
  *
  * The check runs only when the body carries either bot field or the
  * collection has **Require Bot Protection** on, so a form built before the
@@ -62,27 +62,23 @@ final readonly class BotSubmissionGate
 	 */
 	public function screen(ServerRequestInterface $request, array $body, string $collection, string $formType): array
 	{
-		$stripped = $this->protection->strip($body);
+		return $this->verdict($request, $body, $collection, [$formType], $this->required($collection), ['form' => $formType]);
+	}
 
-		if ($this->signedIn($request)) {
-			return [$stripped, ''];
-		}
-
-		if (!$this->protection->present($body) && !$this->required($collection)) {
-			return [$stripped, ''];
-		}
-
-		$reason = $this->protection->check($body, $collection, $formType);
-		if ($reason !== '') {
-			$this->logger->info('Bot submission turned away', [
-				'reason'     => $reason,
-				'collection' => $collection,
-				'form'       => $formType,
-				'path'       => $request->getUri()->getPath(),
-			]);
-		}
-
-		return [$stripped, $reason];
+	/**
+	 * The same check for a form's mailer action, which the browser sends to
+	 * `/api/action/mailer` after the save. The mail data is the form's data,
+	 * so it carries the form's bot fields; `$collection` is the form's
+	 * collection, and the token may be a create or a register token.
+	 * `$required` is the template's own Require Bot Protection setting.
+	 *
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array{0: array<string,mixed>, 1: string} the data without the bot fields, and '' when it passes or the reason it failed
+	 */
+	public function screenMail(ServerRequestInterface $request, array $data, string $collection, string $mailerId, bool $required): array
+	{
+		return $this->verdict($request, $data, $collection, ['create', 'register'], $required, ['mailer' => $mailerId]);
 	}
 
 	/**
@@ -150,6 +146,45 @@ final readonly class BotSubmissionGate
 	public static function sessionSignedIn(?SessionInterface $session): bool
 	{
 		return $session instanceof SessionInterface && (string)($session->get(SessionKeys::AUTH_USER) ?? '') !== '';
+	}
+
+	/**
+	 * @param array<string,mixed> $body
+	 * @param list<string>        $formTypes the form types a token may have been issued for
+	 * @param array<string,string> $context  logged with a failure
+	 *
+	 * @return array{0: array<string,mixed>, 1: string}
+	 */
+	private function verdict(ServerRequestInterface $request, array $body, string $collection, array $formTypes, bool $required, array $context): array
+	{
+		$stripped = $this->protection->strip($body);
+
+		if ($this->signedIn($request)) {
+			return [$stripped, ''];
+		}
+
+		if (!$this->protection->present($body) && !$required) {
+			return [$stripped, ''];
+		}
+
+		$reason = BotProtection::REASON_BAD_SIGNATURE;
+		foreach ($formTypes as $formType) {
+			$reason = $this->protection->check($body, $collection, $formType);
+			if ($reason !== BotProtection::REASON_BAD_SIGNATURE) {
+				break;
+			}
+		}
+
+		if ($reason !== '') {
+			$this->logger->info('Bot submission turned away', [
+				'reason'     => $reason,
+				'collection' => $collection,
+				...$context,
+				'path'       => $request->getUri()->getPath(),
+			]);
+		}
+
+		return [$stripped, $reason];
 	}
 
 	private function required(string $collection): bool

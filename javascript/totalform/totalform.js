@@ -793,9 +793,12 @@ export default class TotalForm {
 				}
 				break;
 			case "mailer":
+				// The collection lets the endpoint check the bot-protection
+				// token the form's data carries, which is signed for it.
 				await this.api.postAPI('/action/mailer', {
-					data     : this.generateData(),
-					mailerId : action.mailerId,
+					data       : this.generateData(),
+					mailerId   : action.mailerId,
+					collection : this.collection,
 				});
 				break;
             case "redirect":

@@ -27,6 +27,7 @@ readonly class MailerData
 		public string $bulkCollection,
 		public string $bulkInclude,
 		public string $bulkExclude,
+		public bool $requireBotProtection = false,
 	) {
 	}
 
@@ -55,6 +56,7 @@ readonly class MailerData
 			bulkCollection: $data['bulkCollection'] ?? '',
 			bulkInclude: $data['bulkInclude'] ?? '',
 			bulkExclude: $data['bulkExclude'] ?? '',
+			requireBotProtection: filter_var($data['requireBotProtection'] ?? false, FILTER_VALIDATE_BOOLEAN),
 		);
 	}
 
@@ -66,23 +68,24 @@ readonly class MailerData
 	public function toArray(): array
 	{
 		return [
-			'id'              => $this->id,
-			'active'          => $this->active,
-			'name'            => $this->name,
-			'description'     => $this->description,
-			'from'            => $this->from,
-			'fromName'        => $this->fromName,
-			'to'              => $this->to,
-			'toName'          => $this->toName,
-			'replyTo'         => $this->replyTo,
-			'cc'              => $this->cc,
-			'bcc'             => $this->bcc,
-			'subject'         => $this->subject,
-			'bodyHtml'        => $this->bodyHtml,
-			'bodyText'        => $this->bodyText,
-			'bulkCollection'  => $this->bulkCollection,
-			'bulkInclude'     => $this->bulkInclude,
-			'bulkExclude'     => $this->bulkExclude,
+			'id'                   => $this->id,
+			'active'               => $this->active,
+			'name'                 => $this->name,
+			'description'          => $this->description,
+			'from'                 => $this->from,
+			'fromName'             => $this->fromName,
+			'to'                   => $this->to,
+			'toName'               => $this->toName,
+			'replyTo'              => $this->replyTo,
+			'cc'                   => $this->cc,
+			'bcc'                  => $this->bcc,
+			'subject'              => $this->subject,
+			'bodyHtml'             => $this->bodyHtml,
+			'bodyText'             => $this->bodyText,
+			'bulkCollection'       => $this->bulkCollection,
+			'bulkInclude'          => $this->bulkInclude,
+			'bulkExclude'          => $this->bulkExclude,
+			'requireBotProtection' => $this->requireBotProtection,
 		];
 	}
 }

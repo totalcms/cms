@@ -23,6 +23,13 @@
 			"help"    : "Enable or disable this email template",
 			"default" : true
 		},
+		"requireBotProtection": {
+			"type"    : "boolean",
+			"label"   : "Require Bot Protection",
+			"field"   : "toggle",
+			"help"    : "Refuse anonymous sends through the public mailer endpoint that do not carry a form's bot-protection fields. A form whose mailer action uses this template renders the fields itself. Signed-in visitors are never checked.",
+			"default" : false
+		},
 		"name": {
 			"type"        : "string",
 			"label"       : "Template Name",

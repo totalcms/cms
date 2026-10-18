@@ -217,6 +217,8 @@ Signed-in visitors never see the fields and are never checked. With authenticati
 
 The endpoints check only submissions that carry the fields, so a form without `botProtection` keeps working. To refuse posts that skip the check altogether, a bot posting straight to the endpoint, switch on **Require Bot Protection** in the collection's Access Controls ([`requireBotProtection`](docs/collections/settings#requirebotprotection)). The collection's register form, and its new-object forms when it allows public `create`, then include the fields without the option. A public clone is checked like a create, so on such a collection an anonymous clone is answered with a decoy and nothing is copied.
 
+A form's mailer action sends the bot fields with its mail, and the mailer endpoint checks them too. A mailer template with **Require Bot Protection** on adds the fields to the create and register forms that send it, without the option. See [Bot protection for form mail](docs/notifications/mailer#bot-protection-for-form-mail).
+
 Bot protection stops naive bots. A bot that loads the form in a real browser and waits gets through, so keep email verification on where accounts reach anything of value.
 
 ## Actions

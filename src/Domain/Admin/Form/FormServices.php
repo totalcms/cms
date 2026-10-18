@@ -20,6 +20,7 @@ use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mailer\Service\MailerFetcher;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
@@ -72,6 +73,7 @@ final readonly class FormServices
 		public ?SessionInterface $session = null,
 		public ?UserValidationService $userValidation = null,
 		public ?OwnerPropertyResolver $ownerProperties = null,
+		public ?MailerFetcher $mailers = null,
 	) {
 		$this->logger = $logger ?? new NullLogger();
 	}
