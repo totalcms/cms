@@ -41,6 +41,7 @@ final class AccessGroupAnalyzerTest extends TestCase
 		$this->mcpSchemaResolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),
+				'owned'         => $c->ownerProperty !== '',
 				'description'   => null,
 				'resource'      => true,
 				'titleProperty' => '',
@@ -509,14 +510,17 @@ final class AccessGroupAnalyzerTest extends TestCase
 	}
 
 	/**
-	 * Owned collections (ownerProperty) resolve to admin-only MCP access, so
-	 * they drop out of the mcp dimension even with mcp.access = public, while
-	 * an ordinary public collection stays. Uses the real resolver.
+	 * Owned collections (ownerProperty) keep their declared MCP access, but a
+	 * group grant counts for nothing there (MCP has no per-owner scoping): an
+	 * owned public collection is read-only (public exposure), an owned
+	 * authenticated one gives a granted group nothing. Uses the real resolver.
 	 */
-	public function testOwnedPublicCollectionIsAbsentFromMcpDimension(): void
+	public function testOwnedCollectionsIgnoreTheGroupGrantInMcpDimension(): void
 	{
-		$owned                = $this->makeCollection('portfolio', 'public');
-		$owned->ownerProperty = 'owner';
+		$owned                    = $this->makeCollection('portfolio', 'public');
+		$owned->ownerProperty     = 'owner';
+		$ownedAuth                = $this->makeCollection('drafts', 'authenticated');
+		$ownedAuth->ownerProperty = 'owner';
 
 		$realResolver = new McpSchemaResolver(
 			$this->createMock(SchemaFetcher::class),
@@ -526,16 +530,17 @@ final class AccessGroupAnalyzerTest extends TestCase
 
 		$this->collectionLister->method('listAllCollections')->willReturn([
 			$owned,
+			$ownedAuth,
 			$this->makeCollection('news', 'public'),
 		]);
 		$this->schemaLister->method('listAllSchemas')->willReturn([]);
 		$this->extensionManager->method('listExtensionsWithAdminSurface')->willReturn([]);
 
 		$group = $this->makeGroup([
-			'id'          => 'no-grants',
-			'description' => 'No Grants',
+			'id'          => 'writers',
+			'description' => 'Writers',
 			'permissions' => [
-				'collections'     => ['all' => false, 'allowed' => [], 'operations' => []],
+				'collections'     => ['all' => true, 'allowed' => [], 'operations' => ['read', 'create', 'update']],
 				'collectionsMeta' => ['all' => false, 'allowed' => [], 'operations' => []],
 				'schemas'         => ['all' => false, 'allowed' => [], 'operations' => []],
 				'utils'           => ['all' => false, 'allowed' => []],
@@ -553,8 +558,9 @@ final class AccessGroupAnalyzerTest extends TestCase
 		);
 		$mcp = $analyzer->analyze()[0]['dimensions']['mcp'];
 
-		$this->assertArrayNotHasKey('portfolio', $mcp);
-		$this->assertArrayHasKey('news', $mcp);
+		$this->assertSame(['ops' => ['read'], 'all' => false], $mcp['portfolio']);
+		$this->assertSame(['ops' => [], 'all' => false], $mcp['drafts']);
+		$this->assertSame(['ops' => ['read', 'create', 'update'], 'all' => false], $mcp['news']);
 	}
 
 	/**

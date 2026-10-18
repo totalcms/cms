@@ -242,12 +242,13 @@ final readonly class OAuthPageData implements UtilsPageData
 		$deleteOnly = [];
 
 		foreach ($allCollections as $collection) {
-			// Read mirrors PersonaContext::canReadCollection(): public
-			// exposure is reachable with NO scope at all (an AUTHENTICATED
-			// caller must never read LESS than an anonymous one would), while
-			// a group read grant additionally requires the cms:read scope.
+			// Read mirrors PersonaContext::canReadCollection(): public exposure
+			// needs NO scope (never read LESS than an anonymous caller), a group
+			// grant needs cms:read and counts for nothing on an owned collection
+			// (no per-owner scoping over MCP; writes too).
+			$owned            = $this->mcpSchemaResolver->forCollection($collection)['owned'];
 			$publiclyReadable = $this->mcpSchemaResolver->isAccessibleTo($collection, 'public');
-			$groupReadable    = $hasReadScope && $authority->canCollection('read', $collection->id);
+			$groupReadable    = !$owned && $hasReadScope && $authority->canCollection('read', $collection->id);
 
 			if ($publiclyReadable || $groupReadable) {
 				$readable[] = $collection->id;
@@ -259,7 +260,7 @@ final readonly class OAuthPageData implements UtilsPageData
 			// mcp.access defaults to 'admin' (not exposed) when the operator
 			// never set it — practically every collection on a fresh site —
 			// so a group write grant alone overstates reach without this gate.
-			if ($hasWriteScope && $this->mcpSchemaResolver->isAccessibleTo($collection, 'authenticated')) {
+			if (!$owned && $hasWriteScope && $this->mcpSchemaResolver->isAccessibleTo($collection, 'authenticated')) {
 				// create_object/update_object need create/update; MCP has no
 				// delete tool. A group that only grants delete (no create or
 				// update) can still delete over REST but can't be handed

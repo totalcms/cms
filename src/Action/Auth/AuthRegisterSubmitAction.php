@@ -19,6 +19,7 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\SameOriginRedirect;
 use TotalCMS\Transformer\ObjectMetaTransformer;
 
 /**
@@ -90,6 +91,17 @@ readonly class AuthRegisterSubmitAction
 
 		$data = (array)$request->getParsedBody();
 
+		// Where the verification link should land, set by the site's register
+		// form (`verifyRedirect`). It belongs to the verification token, never
+		// to the user record, so it leaves $data before the save. Off-site
+		// targets are dropped: the link then lands on the login page as before.
+		$verifyRedirect = SameOriginRedirect::resolve(
+			is_string($data['verifyRedirect'] ?? null) ? $data['verifyRedirect'] : '',
+			$request->getUri()->getHost(),
+			'',
+		);
+		unset($data['verifyRedirect']);
+
 		// A public registrant may NEVER set privileged fields (groups, active,
 		// expiration, maxLoginCount, passkeys) — strip them, then assign our own
 		// server-side defaults below. Without this, anyone could self-register as
@@ -119,7 +131,7 @@ readonly class AuthRegisterSubmitAction
 		if ($requiresVerification) {
 			$email = trim((string)($data['email'] ?? ''));
 			if ($email !== '') {
-				$this->sendVerificationEmail($email, $collection, (string)($data['name'] ?? ''));
+				$this->sendVerificationEmail($email, $collection, (string)($data['name'] ?? ''), $verifyRedirect);
 			}
 
 			// Skip auto-login; respond with the saved user plus a verification
@@ -157,9 +169,9 @@ readonly class AuthRegisterSubmitAction
 	 * exists either way, and the user can be re-sent a link via the
 	 * resend-verification flow.
 	 */
-	private function sendVerificationEmail(string $email, string $collection, string $name): void
+	private function sendVerificationEmail(string $email, string $collection, string $name, string $redirect): void
 	{
-		$tokenResult = $this->verificationService->createVerificationToken($email, $collection);
+		$tokenResult = $this->verificationService->createVerificationToken($email, $collection, $redirect);
 
 		if (!$tokenResult->success || !isset($tokenResult->data['token'])) {
 			return;

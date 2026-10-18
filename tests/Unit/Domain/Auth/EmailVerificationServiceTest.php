@@ -186,6 +186,45 @@ final class EmailVerificationServiceTest extends TestCase
 		$this->assertSame('fresh-token', $result->data['token']);
 	}
 
+	public function testCreateVerificationTokenStoresTheRedirectOnTheToken(): void
+	{
+		$this->userValidator->method('findUserByEmail')->willReturn($this->userMock('user-1', false));
+		$this->config->auth = ['verificationTokenExpiry' => 1440];
+
+		$this->tokenService->expects($this->once())
+			->method('createToken')
+			->with('verify', 'a@b.test', 'members', 86400, ['redirect' => '/welcome'])
+			->willReturn(OperationResult::success('Token created.', ['token' => 'tok']));
+
+		$this->assertTrue($this->service->createVerificationToken('a@b.test', 'members', '/welcome')->success);
+	}
+
+	public function testCreateVerificationTokenWithoutRedirectAddsNoExtras(): void
+	{
+		$this->userValidator->method('findUserByEmail')->willReturn($this->userMock('user-1', false));
+		$this->config->auth = ['verificationTokenExpiry' => 1440];
+
+		$this->tokenService->expects($this->once())
+			->method('createToken')
+			->with('verify', 'a@b.test', 'members', 86400, [])
+			->willReturn(OperationResult::success('Token created.', ['token' => 'tok']));
+
+		$this->service->createVerificationToken('a@b.test', 'members');
+	}
+
+	public function testResendVerificationTokenStoresTheRedirectOnTheNewToken(): void
+	{
+		$this->userValidator->method('findUserByEmail')->willReturn($this->userMock('user-1', false));
+		$this->config->auth = ['verificationTokenExpiry' => 1440];
+
+		$this->tokenService->expects($this->once())
+			->method('createToken')
+			->with('verify', 'a@b.test', 'members', 86400, ['redirect' => '/welcome'])
+			->willReturn(OperationResult::success('Token created.', ['token' => 'fresh']));
+
+		$this->assertSame('fresh', $this->service->resendVerificationToken('a@b.test', 'members', '/welcome')->data['token']);
+	}
+
 	public function testResendVerificationTokenIsSilentForNonExistentUser(): void
 	{
 		// Anti-enumeration: should look identical to a successful resend.

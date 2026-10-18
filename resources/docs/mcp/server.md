@@ -249,7 +249,7 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | `get_site_info` | admin | Site name, version, edition, PHP version, installed extensions. Smoke test for "am I connected to the right site?" No group-permission analogue — stays admin-only. |
 | `list_schemas` | admin | List every schema (id + description + category). |
 | `get_schema` | admin | Fetch one schema as JSON — the same shape an operator writes into a schema file. |
-| `create_schema` | admin‡ | Save a new schema. Errors on reserved ids and id collisions. |
+| `create_schema` | admin‡ | Save a new schema. Errors on reserved ids and id collisions. `seedObjects` fills the new collection the call creates; if a collection with that id already exists, the schema is saved and seeding is refused (use `create_object`). |
 | `update_schema` | admin‡ | Replace an existing schema definition. Idempotent (same input → same final state). |
 | `delete_schema` | admin‡ | **Destructive.** Refuses to delete reserved schemas, inherited schemas, or schemas still used by a collection. |
 | `create_collection` | admin‡ | Create a new collection bound to a schema. Errors on duplicate id. `publicRegistration` and `registrationGroups` in `extra` are refused unless the caller is an admin. |

@@ -26,8 +26,9 @@ use TotalCMS\Domain\Mcp\Tool\Service\FilterValueResolver;
  *   1. Persona check (collection.mcp.access vs current persona).
  *      Then, once the collection is fetched, a call-time exposure check —
  *      McpSchemaResolver::isAccessibleTo() on the live collection — so a
- *      collection whose access was tightened (or which became owned) after
- *      registration is refused.
+ *      collection whose access was tightened after registration is refused.
+ *      An owned collection is narrowed in step 2: a non-admin caller reads it
+ *      only when it is public, and never sees its drafts.
  *   2. Group-read check (Task 10b) — PersonaContext::canReadCollection().
  *   3. Resolve {{params.X}} placeholders in filters via FilterValueResolver.
  *   4. Build REST-style include/exclude strings + persona-aware safety filters.
@@ -109,9 +110,7 @@ final readonly class SavedQueryTool
 
 			if (!$this->schemaResolver->isAccessibleTo($collection, $persona->value)) {
 				throw new ToolCallException(sprintf(
-					$this->schemaResolver->forCollection($collection)['owned']
-						? 'Collection "%s" is an owned collection and is available to admin callers only over MCP.'
-						: 'Collection "%s" is not available to the current caller. Use list_collections to see what you can query.',
+					'Collection "%s" is not available to the current caller. Use list_collections to see what you can query.',
 					$this->definition->collectionName,
 				));
 			}

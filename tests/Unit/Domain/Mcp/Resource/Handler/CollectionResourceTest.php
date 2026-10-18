@@ -474,7 +474,7 @@ final class CollectionResourceTest extends TestCase
 		$this->assertSame('/blog/post-2', $payload['items'][1]['url']);
 	}
 
-	// ─── Owned collections are admin-only ─────────────────────────────────────
+	// ─── Owned collections: non-admin callers read what anonymous ones do ────
 
 	/** @return array<string,array{McpPersona}> */
 	public static function nonAdminPersonas(): array
@@ -482,9 +482,9 @@ final class CollectionResourceTest extends TestCase
 		return ['authenticated' => [McpPersona::AUTHENTICATED], 'public' => [McpPersona::PUBLIC_]];
 	}
 
-	private function ownedCollection(): CollectionData
+	private function ownedCollection(string $access = 'public'): CollectionData
 	{
-		$collection                = $this->collection();
+		$collection                = $this->collection('blog', $access);
 		$collection->ownerProperty = 'owner';
 
 		return $collection;
@@ -492,11 +492,10 @@ final class CollectionResourceTest extends TestCase
 
 	/**
 	 * Both the resource's own gate and the PersonaContext run over a REAL
-	 * McpSchemaResolver, so the owned rule (forCollection() makes owned
-	 * collections admin-only) is what refuses, exactly as in production.
-	 * The shaper keeps the mock: it only shapes items the admin may read.
+	 * McpSchemaResolver, so the owned rule is exercised exactly as in
+	 * production. The shaper keeps the mock.
 	 */
-	private function ownedResource(McpPersona $persona): CollectionResource
+	private function ownedResource(McpPersona $persona, ?UserAuthority $authority = null): CollectionResource
 	{
 		$realResolver = new McpSchemaResolver(
 			$this->createStub(SchemaFetcher::class),
@@ -505,6 +504,7 @@ final class CollectionResourceTest extends TestCase
 		);
 		$context = new PersonaContext($this->collectionFetcher, $realResolver);
 		$context->set($persona);
+		$context->setAuthority($authority);
 
 		return new CollectionResource(
 			$this->collectionFetcher,
@@ -516,26 +516,40 @@ final class CollectionResourceTest extends TestCase
 	}
 
 	#[DataProvider('nonAdminPersonas')]
-	public function testReadRefusesAnOwnedCollectionForNonAdminPersonas(McpPersona $persona): void
-	{
-		$this->collectionFetcher->method('fetchCollection')->willReturn($this->ownedCollection());
-		$this->indexReader->expects($this->never())->method('fetchIndex');
-
-		// The resource's isAccessibleTo() gate refuses: forCollection() reports
-		// an owned collection as admin access whatever its declared mcp.access.
-		$this->expectException(ToolCallException::class);
-		$this->expectExceptionMessage('Resource tcms://blog/ is not accessible to this caller.');
-
-		$this->ownedResource($persona)->read('blog');
-	}
-
-	public function testReadStillServesAnOwnedCollectionToAdmin(): void
+	public function testReadServesAnOwnedPublicCollectionWithoutDraftsToNonAdminPersonas(McpPersona $persona): void
 	{
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->ownedCollection());
 		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
-		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([['id' => 'a']]));
+		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([['id' => 'a'], ['id' => 'b', 'draft' => true]]));
 		$this->urlBuilder->method('buildUrl')->willReturn('/blog/a');
 
-		$this->assertArrayHasKey('text', $this->ownedResource(McpPersona::ADMIN)->read('blog'));
+		// Even a group grant on the collection does not reveal drafts: MCP has
+		// no per-owner scoping, so non-admins read what anonymous callers do.
+		$payload = json_decode((string)$this->ownedResource($persona, $this->authorityGranting(['blog']))->read('blog')['text'], true);
+
+		$this->assertSame(['a'], array_column($payload['items'], 'id'));
+	}
+
+	public function testReadRefusesAGrantedAuthenticatedCallerOnAnOwnedCollectionThatIsNotPublic(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->ownedCollection('authenticated'));
+		$this->indexReader->expects($this->never())->method('fetchIndex');
+
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('Resource tcms://blog/ is not accessible to this caller.');
+
+		$this->ownedResource(McpPersona::AUTHENTICATED, $this->authorityGranting(['blog']))->read('blog');
+	}
+
+	public function testReadServesAnOwnedCollectionWithDraftsToAdmin(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->ownedCollection('authenticated'));
+		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
+		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([['id' => 'a'], ['id' => 'b', 'draft' => true]]));
+		$this->urlBuilder->method('buildUrl')->willReturn('/blog/a');
+
+		$payload = json_decode((string)$this->ownedResource(McpPersona::ADMIN)->read('blog')['text'], true);
+
+		$this->assertSame(['a', 'b'], array_column($payload['items'], 'id'));
 	}
 }

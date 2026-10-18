@@ -61,6 +61,11 @@ final readonly class FormOptions
 		// auto-logs them in.
 		// Implies `addOnly` because the registration route only handles POST.
 		public bool $register = false,
+		// Register mode only: where the email-verification link lands instead
+		// of the admin login page. Rendered as a hidden `verifyRedirect` field;
+		// the endpoint keeps it on the verification token (never on the user)
+		// and drops anything that is not same-origin.
+		public string $verifyRedirect = '',
 		public ?FormActionRegistry $formActionRegistry = null,
 		// Admin-catalog translator, supplied by TotalFormFactory as
 		// TranslationService::trans(...). Optional: a form built directly

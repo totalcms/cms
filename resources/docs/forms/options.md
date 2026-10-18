@@ -37,6 +37,7 @@ All Total CMS form methods accept `formSettings` to control form behavior, appea
     fieldIcons: true,              # Render the icon slot beside each field; a field's own `icon` option overrides (bool, default: true)
     addOnly: true,                 # Security: Only allow creating new objects, never editing (bool, default: false)
     register: true,                # Retarget the form at /admin/register/{collection} so the new user is also auto-logged-in (bool, default: false)
+    verifyRedirect: '/welcome',    # Register mode with email verification: where the verification link lands instead of the admin login (string, default: '')
 }) }}
 ```
 
@@ -152,8 +153,28 @@ When enabled:
    ```
 
 4. The form also dispatches a `cms:form:verification-required` event for custom JS (analytics, redirects, etc.)
-5. Clicking the link hits `GET /admin/verify-email/{token}`, flips `active = true`, and redirects to the login page
+5. Clicking the link hits `GET /admin/verify-email/{token}`, flips `active = true`, and redirects to the login page (or to your own page — see below)
 6. If the link expired, the user is redirected to `/admin/resend-verification` where they can request a fresh link
+
+#### Landing on your own page after verification
+
+By default the verification link ends on the admin login page. To send members to a page on your site instead, set `verifyRedirect` on the registration form:
+
+```twig
+{{ cms.form.builder('users', {register: true, verifyRedirect: '/login'}) }}
+```
+
+The form posts the target as a hidden field. It travels on the verification token only — it is never saved on the user record — so the link in the email lands on `/login` once the account is active. If the link has expired, the target rides along to the resend form, and the fresh link lands there too.
+
+The target must be on your own site: a path such as `/login` or `/members/welcome`, or a full `http(s)` URL on the same host as the form. Anything else (another domain, `//host`) is dropped and the link lands on the admin login page as before.
+
+The verification sets a success flash message. Your landing page should show it, since the visitor arrives expecting confirmation:
+
+```twig
+{% for message in flash.get('success') %}
+    <p class="cms-twig-info" role="alert">{{ message }}</p>
+{% endfor %}
+```
 
 A "Resend verification email" link appears below the login form when a sign-in fails because the account is not yet active.
 

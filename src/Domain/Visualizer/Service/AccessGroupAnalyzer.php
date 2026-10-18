@@ -113,7 +113,7 @@ readonly class AccessGroupAnalyzer
 	 * @param list<string> $collectionIds
 	 * @param list<string> $schemaIds
 	 * @param list<string> $extensionIds
-	 * @param array<string, string> $mcpExposure collection id → mcp.access ('public'|'authenticated'), MCP-exposed collections only
+	 * @param array<string, array{access: string, owned: bool}> $mcpExposure collection id → mcp.access ('public'|'authenticated') and whether it is owned, MCP-exposed collections only
 	 *
 	 * @return array{
 	 *   id: string,
@@ -165,15 +165,16 @@ readonly class AccessGroupAnalyzer
 	 *
 	 * @param array<CollectionData> $collections
 	 *
-	 * @return array<string, string> collection id → mcp.access ('public'|'authenticated')
+	 * @return array<string, array{access: string, owned: bool}> collection id → mcp.access ('public'|'authenticated') and ownership
 	 */
 	private function resolveMcpExposure(array $collections): array
 	{
 		$exposed = [];
 		foreach ($collections as $collection) {
-			$access = $this->mcpSchemaResolver->forCollection($collection)['access'];
+			$mcp    = $this->mcpSchemaResolver->forCollection($collection);
+			$access = $mcp['access'];
 			if ($access === 'public' || $access === 'authenticated') {
-				$exposed[$collection->id] = $access;
+				$exposed[$collection->id] = ['access' => $access, 'owned' => $mcp['owned']];
 			}
 		}
 
@@ -197,6 +198,12 @@ readonly class AccessGroupAnalyzer
 	 *                {@see ObjectTools::requireExposed()}
 	 *                applies before every write tool call.
 	 *   - `update` → same rule as `create`.
+	 *   - On an owned collection (ownerProperty) a non-super-admin group gets
+	 *                `read` only when the collection is public and never
+	 *                `create`/`update`: MCP has no per-owner scoping, so
+	 *                {@see PersonaContext::canReadCollection()} ignores the
+	 *                grant there and {@see ObjectTools::requireExposed()}
+	 *                refuses non-admin writes.
 	 *   - `delete` → NEVER set. MCP ships no delete tool at all
 	 *                (create_object/update_object/patch_object are the only
 	 *                write tools) — a permanently-absent D is honest.
@@ -208,7 +215,7 @@ readonly class AccessGroupAnalyzer
 	 * super-admin path below uses it, consistent with every other dimension's
 	 * super-admin treatment.
 	 *
-	 * @param array<string, string> $mcpExposure collection id → mcp.access, MCP-exposed collections only
+	 * @param array<string, array{access: string, owned: bool}> $mcpExposure collection id → mcp.access and ownership, MCP-exposed collections only
 	 *
 	 * @return array<string, array{ops: list<string>, all: bool}>
 	 */
@@ -225,11 +232,12 @@ readonly class AccessGroupAnalyzer
 		$granted     = static fn (string $id): bool => $all || in_array($id, $allowed, true);
 
 		$result = [];
-		foreach ($mcpExposure as $id => $access) {
-			$hasGrant = $granted($id);
+		foreach ($mcpExposure as $id => $exposure) {
+			// Owned: the grant counts for nothing over MCP (no per-owner scoping).
+			$hasGrant = !$exposure['owned'] && $granted($id);
 			$ops      = [];
 
-			if ($access === 'public' || ($hasGrant && isset($opsSet['read']))) {
+			if ($exposure['access'] === 'public' || ($hasGrant && isset($opsSet['read']))) {
 				$ops[] = 'read';
 			}
 			if ($hasGrant && isset($opsSet['create'])) {

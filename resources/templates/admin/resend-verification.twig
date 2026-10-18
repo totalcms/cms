@@ -23,6 +23,9 @@
 
 		<form class="totalform" method="post" action="{{ action }}" data-disabled="true" style="position:relative;">
 			{{ csrf_field() }}
+			{% if redirect|default('') %}
+				<input type="hidden" name="redirect" value="{{ redirect }}">
+			{% endif %}
 
 			<div class="form-field email-field" data-type="email">
 				<label for="field-email">{{ t('forgot.email') }}</label>

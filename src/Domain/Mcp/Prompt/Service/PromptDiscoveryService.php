@@ -123,8 +123,8 @@ final class PromptDiscoveryService
 			return 'admin';
 		}
 
-		// Effective access from McpSchemaResolver, so an owned collection
-		// (ownerProperty) resolves to admin whatever its declared mcp.access.
+		// Effective access from McpSchemaResolver (the declared mcp.access,
+		// normalised; unset or unknown → admin).
 		try {
 			$collection = $this->collections->fetchCollection($prompt->target);
 			if ($collection instanceof CollectionData) {

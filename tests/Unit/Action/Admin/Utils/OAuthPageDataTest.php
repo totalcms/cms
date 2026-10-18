@@ -203,7 +203,7 @@ final class OAuthPageDataTest extends TestCase
 	 *
 	 * @return array<string,mixed> the effectiveReach block of the single seeded grant
 	 */
-	private function effectiveReachForSingleGrant(array $scopes, ?callable $isAccessibleTo = null): array
+	private function effectiveReachForSingleGrant(array $scopes, ?callable $isAccessibleTo = null, bool $blogOwned = false): array
 	{
 		$this->oauthClientRepository->save(new OAuthClientData(
 			id: 'reach-client',
@@ -234,8 +234,14 @@ final class OAuthPageDataTest extends TestCase
 		$pages->id     = 'pages';
 		$pages->schema = 'builder-page';
 		$pages->name   = 'Pages';
+		if ($blogOwned) {
+			$blog->ownerProperty = 'owner';
+		}
 
 		$this->collectionLister->method('listAllCollections')->willReturn([$blog, $pages]);
+		$this->mcpSchemaResolver->method('forCollection')->willReturnCallback(
+			static fn (CollectionData $c): array => ['access' => 'admin', 'owned' => $c->ownerProperty !== '', 'description' => null, 'resource' => false, 'titleProperty' => ''],
+		);
 		$this->mcpSchemaResolver->method('isAccessibleTo')
 			->willReturnCallback($isAccessibleTo ?? static fn (CollectionData $collection, string $persona): bool => false);
 
@@ -274,6 +280,61 @@ final class OAuthPageDataTest extends TestCase
 		$this->assertSame(['blog'], $reach['readable']);
 		$this->assertSame(['blog'], $reach['writable']);
 		$this->assertSame([], $reach['deleteOnly']);
+	}
+
+	public function testEffectiveReachIgnoresTheGroupGrantOnAnOwnedCollection(): void
+	{
+		// MCP has no per-owner scoping, so on an owned collection the group
+		// grant reads and writes nothing: only public exposure is readable.
+		$bloggerGroup = new AccessGroupData([
+			'id'          => 'blogger',
+			'permissions' => [
+				'collections' => [
+					'operations' => ['create', 'read', 'update', 'delete'],
+					'all'        => false,
+					'allowed'    => ['blog'],
+				],
+			],
+		]);
+		$authority = new UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
+		$this->accessControlService->method('userExists')->willReturn(true);
+		$this->accessControlService->method('authorityFor')->willReturn($authority);
+
+		$reach = $this->effectiveReachForSingleGrant(
+			['cms:read', 'cms:write'],
+			static fn (CollectionData $collection, string $persona): bool => $collection->id === 'blog' && $persona === 'authenticated',
+			blogOwned: true,
+		);
+
+		$this->assertSame([], $reach['readable']);
+		$this->assertSame([], $reach['writable']);
+		$this->assertSame([], $reach['deleteOnly']);
+	}
+
+	public function testEffectiveReachReadsAnOwnedPublicCollectionButNeverWritesIt(): void
+	{
+		$bloggerGroup = new AccessGroupData([
+			'id'          => 'blogger',
+			'permissions' => [
+				'collections' => [
+					'operations' => ['create', 'read', 'update'],
+					'all'        => false,
+					'allowed'    => ['blog'],
+				],
+			],
+		]);
+		$authority = new UserAuthority(isAdmin: false, groups: [$bloggerGroup]);
+		$this->accessControlService->method('userExists')->willReturn(true);
+		$this->accessControlService->method('authorityFor')->willReturn($authority);
+
+		$reach = $this->effectiveReachForSingleGrant(
+			['cms:read', 'cms:write'],
+			static fn (CollectionData $collection, string $persona): bool => $collection->id === 'blog',
+			blogOwned: true,
+		);
+
+		$this->assertSame(['blog'], $reach['readable']);
+		$this->assertSame([], $reach['writable']);
 	}
 
 	public function testEffectiveReachHidesWriteWhenCollectionIsAtTheDefaultMcpAccess(): void

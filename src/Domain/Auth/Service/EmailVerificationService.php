@@ -43,9 +43,13 @@ readonly class EmailVerificationService
 	 * Create an email verification token for a user.
 	 * Invalidates any previous verification token for the same email/collection.
 	 *
+	 * `$redirect` is where the verification link should land instead of the
+	 * login page. It lives on the token, never on the user record; the
+	 * caller has already checked it is same-origin.
+	 *
 	 * @return OperationResult ['token' => string] on success
 	 */
-	public function createVerificationToken(string $email, string $collection): OperationResult
+	public function createVerificationToken(string $email, string $collection, string $redirect = ''): OperationResult
 	{
 		// Check that the user exists. Unlike password reset, we don't need to
 		// hide existence here — this is called immediately after we just created
@@ -66,7 +70,7 @@ readonly class EmailVerificationService
 		$expiryMinutes = (int)($this->config->auth['verificationTokenExpiry'] ?? 1440);
 		$ttl           = $expiryMinutes * 60;
 
-		$result = $this->tokenService->createToken(self::SCOPE, $email, $collection, $ttl);
+		$result = $this->tokenService->createToken(self::SCOPE, $email, $collection, $ttl, self::extra($redirect));
 
 		if (!$result->success) {
 			return OperationResult::failure('Unable to create verification token. Please try again.');
@@ -91,11 +95,14 @@ readonly class EmailVerificationService
 	 * Returns a generic success message regardless of whether the user exists
 	 * or is already active — same anti-enumeration posture as forgot-password.
 	 *
+	 * `$redirect` is stored on the new token exactly as
+	 * createVerificationToken() stores it.
+	 *
 	 * @return OperationResult ['token' => string] on success when the user
 	 *                         exists AND is inactive; ['token' => null] when
 	 *                         the request is silently dropped
 	 */
-	public function resendVerificationToken(string $email, string $collection): OperationResult
+	public function resendVerificationToken(string $email, string $collection, string $redirect = ''): OperationResult
 	{
 		$user = $this->userValidator->findUserByEmail($email, $collection);
 
@@ -126,7 +133,7 @@ readonly class EmailVerificationService
 		$expiryMinutes = (int)($this->config->auth['verificationTokenExpiry'] ?? 1440);
 		$ttl           = $expiryMinutes * 60;
 
-		$result = $this->tokenService->createToken(self::SCOPE, $email, $collection, $ttl);
+		$result = $this->tokenService->createToken(self::SCOPE, $email, $collection, $ttl, self::extra($redirect));
 
 		if (!$result->success) {
 			// Don't surface the failure — same anti-enumeration message.
@@ -146,7 +153,19 @@ readonly class EmailVerificationService
 	}
 
 	/**
-	 * Validate a verification token. Returns email + collection on success.
+	 * The token payload beyond email and collection: the post-verify redirect,
+	 * when the site supplied one.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function extra(string $redirect): array
+	{
+		return $redirect === '' ? [] : ['redirect' => $redirect];
+	}
+
+	/**
+	 * Validate a verification token. Returns email + collection on success,
+	 * plus `redirect` when the token carries one.
 	 */
 	public function validateToken(string $token): OperationResult
 	{

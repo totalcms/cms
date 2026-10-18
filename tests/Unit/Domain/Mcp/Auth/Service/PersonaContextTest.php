@@ -417,32 +417,7 @@ final class PersonaContextTest extends TestCase
 		$this->assertSame("Base.\n\nAvailable collections and filterable properties:", $context->catalogDescription(McpPersona::ADMIN, 'Base.'));
 	}
 
-	public function testCatalogDescriptionOmitsOwnedCollectionsForNonAdmin(): void
-	{
-		$portfolio   = $this->registerOwnedCollection('portfolio', 'public');
-		$collections = ['portfolio' => $portfolio];
-
-		$this->assertSame('Base.', $this->ownedContext($collections, McpPersona::AUTHENTICATED)->catalogDescription(McpPersona::AUTHENTICATED, 'Base.'));
-		$this->assertStringContainsString('- portfolio', $this->ownedContext($collections, McpPersona::ADMIN)->catalogDescription(McpPersona::ADMIN, 'Base.'));
-	}
-
-	public function testAnAuthenticatedPersonaCannotReachAnOwnedCollectionThroughExposedCollectionVisibleCollectionsOrTheCatalog(): void
-	{
-		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
-		$context   = $this->ownedContext(['portfolio' => $portfolio], McpPersona::AUTHENTICATED);
-
-		try {
-			$context->exposedCollection('portfolio');
-			$this->fail('exposedCollection() should refuse an owned collection for an authenticated persona.');
-		} catch (ToolCallException $e) {
-			$this->assertSame('Collection "portfolio" is an owned collection and is available to admin callers only over MCP.', $e->getMessage());
-		}
-
-		$this->assertSame([], $context->visibleCollections([$portfolio]));
-		$this->assertSame('Base.', $context->catalogDescription(McpPersona::AUTHENTICATED, 'Base.'));
-	}
-
-	// ── Owned collections are admin-only over MCP ────────────────────────────
+	// ── Owned collections: non-admin callers read what anonymous ones do ─────
 
 	public static function nonAdminPersonas(): array
 	{
@@ -452,23 +427,85 @@ final class PersonaContextTest extends TestCase
 		];
 	}
 
+	public function testAnOwnedCollectionKeepsItsDeclaredAccessThroughExposedCollection(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
+
+		foreach ([McpPersona::PUBLIC_, McpPersona::AUTHENTICATED, McpPersona::ADMIN] as $persona) {
+			$this->assertSame($portfolio, $this->ownedContext(['portfolio' => $portfolio], $persona)->exposedCollection('portfolio'));
+		}
+	}
+
+	public function testAnOwnedAdminCollectionIsRefusedWithTheOrdinaryMessage(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'admin');
+
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('Collection "portfolio" is not available to the current caller. Use list_collections to see what you can query.');
+
+		$this->ownedContext(['portfolio' => $portfolio], McpPersona::AUTHENTICATED)->exposedCollection('portfolio');
+	}
+
+	public function testAnonymousCallerReadsAnOwnedPublicCollectionButNotItsDrafts(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
+		$context   = $this->ownedContext(['portfolio' => $portfolio], McpPersona::PUBLIC_);
+
+		$this->assertTrue($context->canReadCollection('portfolio'));
+		$this->assertFalse($context->canReadDrafts('portfolio'));
+	}
+
+	public function testAGrantedAuthenticatedCallerOnAnOwnedPublicCollectionReadsLikeAnAnonymousOne(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
+		$context   = $this->ownedContext(['portfolio' => $portfolio], McpPersona::AUTHENTICATED);
+		$context->setAuthority($this->authorityGranting(['portfolio']));
+
+		$this->assertTrue($context->canReadCollection('portfolio'));
+		$this->assertFalse($context->canReadDrafts('portfolio'));
+	}
+
+	public function testAGroupGrantDoesNotOpenAnOwnedCollectionThatIsNotPublic(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'authenticated');
+		$context   = $this->ownedContext(['portfolio' => $portfolio], McpPersona::AUTHENTICATED);
+		$context->setAuthority($this->authorityGranting(['portfolio']));
+
+		$this->assertFalse($context->canReadCollection('portfolio'));
+		$this->assertFalse($context->canReadCollection('portfolio', $portfolio));
+		$this->assertFalse($context->canReadDrafts('portfolio'));
+		$this->assertSame([], $context->visibleCollections([$portfolio]));
+		$this->assertSame('Base.', $context->catalogDescription(McpPersona::AUTHENTICATED, 'Base.'));
+	}
+
+	public function testTheSameGrantStillOpensAnUnownedCollectionThatIsNotPublic(): void
+	{
+		$blog    = $this->registerCollection('blog', 'authenticated');
+		$context = $this->ownedContext(['blog' => $blog], McpPersona::AUTHENTICATED);
+		$context->setAuthority($this->authorityGranting(['blog']));
+
+		$this->assertTrue($context->canReadCollection('blog'));
+		$this->assertTrue($context->canReadDrafts('blog'));
+	}
+
+	public function testAdminSeesAnOwnedCollectionAndItsDrafts(): void
+	{
+		$portfolio = $this->registerOwnedCollection('portfolio', 'authenticated');
+		$context   = $this->ownedContext(['portfolio' => $portfolio], McpPersona::ADMIN);
+
+		$this->assertTrue($context->canReadCollection('portfolio'));
+		$this->assertTrue($context->canReadDrafts('portfolio'));
+		$this->assertSame([$portfolio], $context->visibleCollections([$portfolio]));
+	}
+
 	#[DataProvider('nonAdminPersonas')]
-	public function testExposedCollectionRefusesAnOwnedCollectionForNonAdminPersonas(McpPersona $persona): void
+	public function testAnOwnedPublicCollectionIsVisibleAndCatalogedForNonAdminPersonas(McpPersona $persona): void
 	{
 		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
 		$context   = $this->ownedContext(['portfolio' => $portfolio], $persona);
 
-		$this->expectException(ToolCallException::class);
-		$this->expectExceptionMessage('Collection "portfolio" is an owned collection and is available to admin callers only over MCP.');
-
-		$context->exposedCollection('portfolio');
-	}
-
-	public function testExposedCollectionStillServesAnOwnedCollectionToAdmin(): void
-	{
-		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
-
-		$this->assertSame($portfolio, $this->ownedContext(['portfolio' => $portfolio], McpPersona::ADMIN)->exposedCollection('portfolio'));
+		$this->assertSame([$portfolio], $context->visibleCollections([$portfolio]));
+		$this->assertStringContainsString('- portfolio', $context->catalogDescription($persona, 'Base.'));
 	}
 
 	public function testExposedCollectionServesAnUnownedCollectionToAuthenticated(): void
@@ -476,21 +513,6 @@ final class PersonaContextTest extends TestCase
 		$blog = $this->registerCollection('blog', 'public');
 
 		$this->assertSame($blog, $this->gateContext(['blog' => $blog], McpPersona::AUTHENTICATED)->exposedCollection('blog'));
-	}
-
-	#[DataProvider('nonAdminPersonas')]
-	public function testVisibleCollectionsDropsAnOwnedCollectionForNonAdminPersonas(McpPersona $persona): void
-	{
-		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
-
-		$this->assertSame([], $this->ownedContext(['portfolio' => $portfolio], $persona)->visibleCollections([$portfolio]));
-	}
-
-	public function testVisibleCollectionsKeepsAnOwnedCollectionForAdmin(): void
-	{
-		$portfolio = $this->registerOwnedCollection('portfolio', 'public');
-
-		$this->assertSame([$portfolio], $this->ownedContext(['portfolio' => $portfolio], McpPersona::ADMIN)->visibleCollections([$portfolio]));
 	}
 
 	public function testVisibleCollectionsKeepsAnUnownedCollectionForAuthenticated(): void

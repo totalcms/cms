@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Admin\Form\Builder;
 
 use TotalCMS\Domain\Admin\TotalForm;
+use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\DateData;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -70,6 +71,19 @@ class ObjectForm extends TotalForm
 				$this->duplicateData['id'] = '';
 			}
 		}
+	}
+
+	public function build(string $content = '', string $contentAfter = ''): string
+	{
+		// A registration form that names where the verification link should
+		// land posts it as a hidden field; the register endpoint moves it onto
+		// the verification token. A field, not a bare input: the form script
+		// only submits `.form-field` values.
+		if ($this->register && $this->verifyRedirect !== '' && !$this->refused && $this->collectionData instanceof CollectionData) {
+			$content = $this->field('verifyRedirect', ['field' => 'hidden', 'value' => $this->verifyRedirect]) . $content;
+		}
+
+		return parent::build($content, $contentAfter);
 	}
 
 	/**

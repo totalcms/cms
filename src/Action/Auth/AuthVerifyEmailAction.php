@@ -11,6 +11,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\SameOriginRedirect;
 
 /**
  * Handle email verification link clicks.
@@ -20,6 +21,10 @@ use TotalCMS\Support\Config;
  * Validates the token, activates the user account (sets `active = true`),
  * invalidates the token, and redirects to the login page with a flash
  * message. Single-use — the token cannot be replayed.
+ *
+ * When the site's register form carried a `verifyRedirect`, the token holds
+ * it and the user lands there instead of the login page (same-origin only,
+ * re-checked here). An expired link keeps it on the way to the resend form.
  *
  * No POST counterpart: the token in the URL is the secret, and the user's
  * intent is implicit in the click. No additional confirmation form needed.
@@ -53,6 +58,14 @@ readonly class AuthVerifyEmailAction
 		// re-validate internally, but it consumes the token, so we'd lose the
 		// collection info if we relied solely on that result.
 		$validation = $this->verificationService->validateToken($token);
+		$redirect   = SameOriginRedirect::resolve(
+			(string)($validation->data['redirect'] ?? ''),
+			$request->getUri()->getHost(),
+			'',
+		);
+
+		// An expired token still decodes, so its collection is known even on
+		// failure: the user goes to their own collection's resend form.
 		$collection = (string)($validation->data['collection'] ?? $defaultCollection);
 
 		$result = $this->verificationService->activateUser($token);
@@ -67,6 +80,10 @@ readonly class AuthVerifyEmailAction
 				? $router->urlFor('resend-verification')
 				: $router->urlFor('resend-verification', ['collection' => $collection]);
 
+			if ($redirect !== '') {
+				$resendUrl .= '?' . http_build_query(['redirect' => $redirect]);
+			}
+
 			return $response->withStatus(302)->withHeader('Location', $resendUrl);
 		}
 
@@ -78,6 +95,6 @@ readonly class AuthVerifyEmailAction
 
 		$flash->add('success', $this->translator->trans('flash.email_verified'));
 
-		return $response->withStatus(302)->withHeader('Location', $loginUrl);
+		return $response->withStatus(302)->withHeader('Location', $redirect !== '' ? $redirect : $loginUrl);
 	}
 }

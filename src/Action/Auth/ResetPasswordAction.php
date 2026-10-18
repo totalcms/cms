@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Service\PasswordResetService;
 use TotalCMS\Renderer\TwigRenderer;
+use TotalCMS\Support\SameOriginRedirect;
 
 /**
  * Display the reset password form (validates token first).
@@ -63,7 +64,12 @@ readonly class ResetPasswordAction
 			'token'      => $token,
 			'email'      => $validation->data['email'] ?? '',
 			'collection' => $validation->data['collection'] ?? '',
-			'redirect'   => $queryParams['redirect'] ?? '',
+			// Same-origin only; the submit action checks it again.
+			'redirect'   => SameOriginRedirect::resolve(
+				is_string($queryParams['redirect'] ?? null) ? $queryParams['redirect'] : '',
+				$request->getUri()->getHost(),
+				'',
+			),
 		]);
 	}
 }

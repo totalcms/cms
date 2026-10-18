@@ -200,7 +200,7 @@ final class PromptDiscoveryServiceTest extends TestCase
 		$this->assertSame('admin', $svc->discover()[0]->access);
 	}
 
-	public function testAnOwnedTargetCollectionResolvesToAdminWhateverItsDeclaredAccess(): void
+	public function testAnOwnedTargetCollectionKeepsItsDeclaredAccess(): void
 	{
 		$portfolio                = new CollectionData();
 		$portfolio->id            = 'portfolio';
@@ -212,10 +212,10 @@ final class PromptDiscoveryServiceTest extends TestCase
 			['id' => 'p', 'body' => 'b', 'target' => 'portfolio'],
 		]);
 
-		$this->assertSame('admin', $this->svc->discover()[0]->access);
+		$this->assertSame('public', $this->svc->discover()[0]->access);
 	}
 
-	/** A REAL resolver, so prompts inherit the effective access (owned rule included). */
+	/** A REAL resolver, so prompts inherit the effective access. */
 	private function resolver(CollectionRepository $collections): McpSchemaResolver
 	{
 		return new McpSchemaResolver($this->createStub(SchemaFetcher::class), new McpDescriptionResolver(), $collections);

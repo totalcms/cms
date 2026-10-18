@@ -55,10 +55,14 @@ readonly class CollectionResourceRegistrar
 			return;
 		}
 
-		// Owned collections come back as admin access from forCollection(), so they
-		// stay out of resources/list, templates/list, subscriptions and reads for
-		// every other persona.
-		$access       = McpAccessLevel::fromString($mcp['access'])->value;
+		// An owned collection keeps its declared access, and CollectionResource::read()
+		// narrows non-admin reads through PersonaContext (public only, no drafts).
+		// One that is not public is readable by admin alone, so it is listed at
+		// admin: a group grant must not advertise a resource the read refuses.
+		$access = McpAccessLevel::fromString($mcp['access'])->value;
+		if ($mcp['owned'] && $access !== 'public') {
+			$access = 'admin';
+		}
 		$displayName  = $collection->name !== '' ? $collection->name : ucfirst($collection->id);
 		$sdkName      = $this->toSdkName($collection->id);
 		$desc         = (string)($mcp['description'] ?? '');

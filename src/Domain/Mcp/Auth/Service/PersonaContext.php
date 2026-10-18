@@ -193,6 +193,10 @@ class PersonaContext
 	 *     with the same grant that lets them read the collection's published
 	 *     content at all, rather than being a separate permission a group
 	 *     author has to remember to set.
+	 *     Except on an owned collection (ownerProperty): MCP has no per-owner
+	 *     scoping, so a grant there would expose every member's drafts. A
+	 *     non-ADMIN caller on an owned collection sees what an anonymous one
+	 *     would — never drafts.
 	 *   - Everyone else — public/anonymous callers, or a Bearer request whose
 	 *     authority never resolved — can never see drafts. Unchanged from the
 	 *     legacy "persona !== ADMIN hides drafts" behavior for those callers.
@@ -203,7 +207,7 @@ class PersonaContext
 			return true;
 		}
 
-		return $this->hasReadGrant($collection);
+		return $this->hasReadGrant($collection) && !$this->isOwned($collection);
 	}
 
 	/**
@@ -220,7 +224,10 @@ class PersonaContext
 	 *     gets via QueryCollectionTool's/GetObjectTool's exposure check;
 	 *     authenticating must never SUBTRACT reach.
 	 *   - Otherwise, only an OAuth caller whose resolved UserAuthority grants
-	 *     `read` on $collection.
+	 *     `read` on $collection — and never on an owned collection
+	 *     (ownerProperty): MCP has no per-owner scoping, so a non-ADMIN caller
+	 *     there reads exactly what an anonymous one would (public exposure
+	 *     only), and a group grant does not widen it.
 	 *
 	 * $collectionData is an optional pre-fetched CollectionData for callers
 	 * that already have one in hand (loops over CollectionRepository::
@@ -245,7 +252,7 @@ class PersonaContext
 			return true;
 		}
 
-		return $this->hasReadGrant($collection);
+		return $this->hasReadGrant($collection) && !$this->isOwned($collection, $collectionData);
 	}
 
 	/**
@@ -274,6 +281,18 @@ class PersonaContext
 
 		return $data instanceof CollectionData
 			&& $this->schemaResolver->forCollection($data)['access'] === 'public';
+	}
+
+	/**
+	 * Whether $collection declares an ownerProperty. Only asked once a grant
+	 * has matched, so unowned collections pay no extra lookup; a collection
+	 * that cannot be fetched is left to the tool's own not-found handling.
+	 */
+	private function isOwned(string $collection, ?CollectionData $collectionData = null): bool
+	{
+		$data = $collectionData ?? $this->collectionFetcher->fetchCollection($collection);
+
+		return $data instanceof CollectionData && $this->schemaResolver->forCollection($data)['owned'];
 	}
 
 	private function hasReadGrant(string $collection): bool
@@ -307,15 +326,6 @@ class PersonaContext
 		}
 
 		if (!$this->schemaResolver->isAccessibleTo($collectionData, $this->current()->value)) {
-			// Owned collections are admin-only by McpSchemaResolver::forCollection();
-			// the tailored message only tells the agent why.
-			if ($this->schemaResolver->forCollection($collectionData)['owned']) {
-				throw new ToolCallException(sprintf(
-					'Collection "%s" is an owned collection and is available to admin callers only over MCP.',
-					$collection,
-				));
-			}
-
 			throw new ToolCallException(sprintf(
 				'Collection "%s" is not available to the current caller. Use list_collections to see what you can %s.',
 				$collection,

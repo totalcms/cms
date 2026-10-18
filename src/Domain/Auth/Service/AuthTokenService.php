@@ -44,9 +44,15 @@ readonly class AuthTokenService
 	 * Create a token tied to a user (email + collection) within a scope.
 	 * Invalidates any previous token for the same (scope, email, collection).
 	 *
+	 * `$extra` rides along with the token — the verification flow carries the
+	 * site's post-verify redirect this way — and comes back from
+	 * validateToken() beside email and collection. It never overrides them.
+	 *
+	 * @param array<string,scalar> $extra
+	 *
 	 * @return OperationResult ['token' => string] on success
 	 */
-	public function createToken(string $scope, string $email, string $collection, int $ttlSeconds): OperationResult
+	public function createToken(string $scope, string $email, string $collection, int $ttlSeconds, array $extra = []): OperationResult
 	{
 		$this->invalidatePreviousToken($scope, $email, $collection);
 
@@ -58,6 +64,10 @@ readonly class AuthTokenService
 			'createdAt'  => time(),
 			'expiresAt'  => time() + $ttlSeconds,
 		];
+
+		if ($extra !== []) {
+			$tokenData['extra'] = $extra;
+		}
 
 		$stored = $this->cacheManager->storePasswordResetData(
 			$this->tokenKey($scope, $token),
@@ -93,9 +103,12 @@ readonly class AuthTokenService
 	}
 
 	/**
-	 * Validate a token within a scope. Returns email + collection on success.
+	 * Validate a token within a scope. Returns email + collection (and any
+	 * `$extra` the token was created with) on success. An expired token's
+	 * failure still carries that payload, so a caller can route the user to
+	 * a fresh link without losing where they were headed.
 	 *
-	 * @return OperationResult ['email' => string, 'collection' => string] on success
+	 * @return OperationResult ['email' => string, 'collection' => string, ...extra] on success
 	 */
 	public function validateToken(string $scope, string $token): OperationResult
 	{
@@ -131,12 +144,27 @@ readonly class AuthTokenService
 
 			$this->cacheManager->clearPasswordResetData($this->tokenKey($scope, $token));
 
-			return OperationResult::failure('This token has expired. Please request a new one.');
+			return OperationResult::failure('This token has expired. Please request a new one.', null, $this->payload($tokenData));
 		}
 
-		return OperationResult::success('Token is valid.', [
-			'email'      => $tokenData['email'],
-			'collection' => $tokenData['collection'],
+		return OperationResult::success('Token is valid.', $this->payload($tokenData));
+	}
+
+	/**
+	 * What a validated token hands back: email and collection, plus the
+	 * token's extras. Email and collection win any key clash.
+	 *
+	 * @param array<string,mixed> $tokenData
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function payload(array $tokenData): array
+	{
+		$extra = is_array($tokenData['extra'] ?? null) ? $tokenData['extra'] : [];
+
+		return array_merge($extra, [
+			'email'      => $tokenData['email'] ?? '',
+			'collection' => $tokenData['collection'] ?? '',
 		]);
 	}
 

@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
+use TotalCMS\Support\SameOriginRedirect;
 
 /**
  * Display the "resend verification email" form.
@@ -16,6 +17,10 @@ use TotalCMS\Support\Config;
  * submission action ({@see ResendVerificationSubmitAction}) returns a generic
  * success regardless of whether the email exists, so this page does not leak
  * account state.
+ *
+ * A `?redirect=` query (set when an expired link carried the site's
+ * post-verify target) rides along as a hidden field, same-origin only, so the
+ * fresh link lands where the first one would have.
  */
 readonly class ResendVerificationAction
 {
@@ -35,8 +40,16 @@ readonly class ResendVerificationAction
 	): ResponseInterface {
 		$collection = $args['collection'] ?? $this->config->auth['collection'] ?? 'auth';
 
+		$query    = $request->getQueryParams();
+		$redirect = SameOriginRedirect::resolve(
+			is_string($query['redirect'] ?? null) ? $query['redirect'] : '',
+			$request->getUri()->getHost(),
+			'',
+		);
+
 		return $this->twigRenderer->template($response, 'admin/resend-verification.twig', [
 			'collection' => $collection,
+			'redirect'   => $redirect,
 		]);
 	}
 }

@@ -18,6 +18,8 @@ use Mcp\Server\Session\InMemorySessionStore;
 use Mcp\Server\Session\Session;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -436,10 +438,16 @@ final class SavedQueryToolTest extends TestCase
 		return ['authenticated' => [McpPersona::AUTHENTICATED], 'public' => [McpPersona::PUBLIC_]];
 	}
 
-	#[DataProvider('nonAdminPersonas')]
-	public function testRefusesAnOwnedCollectionForNonAdminPersonas(McpPersona $persona): void
+	/**
+	 * A saved-query tool on an owned collection, run over a REAL
+	 * McpSchemaResolver and a PersonaContext whose authority grants read on
+	 * it. Returns the params the index query received, or the refusal.
+	 *
+	 * @return array<string,string>|ToolCallException
+	 */
+	private function runOwnedTool(McpPersona $persona, string $access): array|ToolCallException
 	{
-		$def = SavedQueryToolDefinition::fromArray('portfolio', 'public', [
+		$def = SavedQueryToolDefinition::fromArray('portfolio', $access, [
 			'name'        => 'find_all',
 			'description' => 'All.',
 		]);
@@ -447,30 +455,74 @@ final class SavedQueryToolTest extends TestCase
 		$portfolio                = new CollectionData();
 		$portfolio->id            = 'portfolio';
 		$portfolio->schema        = 'portfolio';
-		$portfolio->mcp           = ['access' => 'public'];
+		$portfolio->mcp           = ['access' => $access];
 		$portfolio->ownerProperty = 'owner';
 
-		$collectionRepo = $this->createMock(CollectionRepository::class);
+		$collectionRepo = $this->createStub(CollectionRepository::class);
 		$collectionRepo->method('fetchCollection')->willReturn($portfolio);
+		$fetcher = $this->createStub(CollectionFetcher::class);
+		$fetcher->method('fetchCollection')->willReturn($portfolio);
 
-		$indexQuery = $this->createMock(IndexQueryService::class);
-		$indexQuery->expects($this->never())->method('query');
+		$resolver = new McpSchemaResolver($this->createStub(SchemaFetcher::class), new McpDescriptionResolver(), $collectionRepo);
+		$context  = new PersonaContext($fetcher, $resolver);
+		$context->set($persona);
+		$context->setAuthority(new UserAuthority(isAdmin: false, groups: [new AccessGroupData([
+			'id'          => 'members',
+			'permissions' => ['collections' => ['operations' => ['read'], 'all' => false, 'allowed' => ['portfolio']]],
+		])]));
+
+		$captured   = [];
+		$indexQuery = $this->createStub(IndexQueryService::class);
+		$indexQuery->method('query')->willReturnCallback(
+			function (string $coll, array $params) use (&$captured): QueryResult {
+				$captured = $params;
+
+				return new QueryResult(items: [], total: 0, limit: 20, offset: 0);
+			},
+		);
 
 		$tool = new SavedQueryTool(
 			definition: $def,
 			indexQueryService: $indexQuery,
 			filterValueResolver: new FilterValueResolver(),
-			personaContext: $this->makePersonaContext($persona),
-			shaper: new McpObjectShaper($this->createMock(McpSchemaResolver::class), $this->createMock(ContentRenderer::class), $this->createMock(ObjectUrlBuilder::class)),
+			personaContext: $context,
+			shaper: new McpObjectShaper($this->createStub(McpSchemaResolver::class), $this->createStub(ContentRenderer::class), $this->createStub(ObjectUrlBuilder::class)),
 			collectionRepository: $collectionRepo,
 			resultFormatter: new CollectionQueryResultFormatter(),
-			// A REAL resolver: forCollection() is what makes an owned collection admin-only.
-			schemaResolver: new McpSchemaResolver($this->createStub(SchemaFetcher::class), new McpDescriptionResolver(), $collectionRepo),
+			schemaResolver: $resolver,
 		);
 
-		$this->expectException(ToolCallException::class);
-		$this->expectExceptionMessage('Collection "portfolio" is an owned collection and is available to admin callers only over MCP.');
+		try {
+			$tool->handle([]);
+		} catch (ToolCallException $e) {
+			return $e;
+		}
 
-		$tool->handle([]);
+		return $captured;
+	}
+
+	#[DataProvider('nonAdminPersonas')]
+	public function testAnOwnedPublicCollectionServesNonAdminPersonasWithoutDrafts(McpPersona $persona): void
+	{
+		$params = $this->runOwnedTool($persona, 'public');
+
+		$this->assertIsArray($params);
+		$this->assertStringContainsString('draft:true', $params['exclude'] ?? '');
+	}
+
+	public function testAGrantDoesNotOpenAnOwnedCollectionThatIsNotPublic(): void
+	{
+		$result = $this->runOwnedTool(McpPersona::AUTHENTICATED, 'authenticated');
+
+		$this->assertInstanceOf(ToolCallException::class, $result);
+		$this->assertSame("Your account's groups do not grant read on 'portfolio'.", $result->getMessage());
+	}
+
+	public function testAdminSeesDraftsOnAnOwnedCollection(): void
+	{
+		$params = $this->runOwnedTool(McpPersona::ADMIN, 'authenticated');
+
+		$this->assertIsArray($params);
+		$this->assertStringNotContainsString('draft:true', $params['exclude'] ?? '');
 	}
 }

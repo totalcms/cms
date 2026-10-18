@@ -304,7 +304,7 @@ final class SchemaToolRegistrarTest extends TestCase
 		$this->assertNotContains('stale_id', $toolNames);
 	}
 
-	public function testOwnedCollectionToolsAreAdminOnlyWhateverTheCollectionAccess(): void
+	public function testOwnedCollectionToolsKeepTheCollectionsDeclaredAccess(): void
 	{
 		$collection = $this->makeCollection('portfolio', [
 			'access' => 'public',
@@ -317,8 +317,10 @@ final class SchemaToolRegistrarTest extends TestCase
 
 		$registrar->register($registry);
 
-		$this->assertSame([], $registry->forPersona(McpPersona::PUBLIC_));
-		$this->assertSame([], $registry->forPersona(McpPersona::AUTHENTICATED));
+		// Registered at public; the tool's handler narrows non-admin reads
+		// through PersonaContext (published objects only).
+		$this->assertCount(1, $registry->forPersona(McpPersona::PUBLIC_));
+		$this->assertCount(1, $registry->forPersona(McpPersona::AUTHENTICATED));
 		$this->assertCount(1, $registry->forPersona(McpPersona::ADMIN));
 	}
 }

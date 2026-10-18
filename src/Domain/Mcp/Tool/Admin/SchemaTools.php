@@ -109,7 +109,7 @@ readonly class SchemaTools
 
 		$registry->register(new McpToolDefinition(
 			name: 'create_schema',
-			description: 'Create a new schema. Requires id + properties. Errors if the id collides with an existing or reserved schema. Use update_schema to modify an existing schema. Pass seedObjects to populate the new collection with initial content — the call emits SSE progress notifications while seeding so callers can track multi-step progress.',
+			description: 'Create a new schema. Requires id + properties. Errors if the id collides with an existing or reserved schema. Use update_schema to modify an existing schema. Pass seedObjects to populate the new collection with initial content (refused if a collection with that id already exists) — the call emits SSE progress notifications while seeding so callers can track multi-step progress.',
 			access: 'admin',
 			handler: $this->createHandler(...),
 			inputSchema: $this->createInputSchema(),
@@ -263,22 +263,24 @@ readonly class SchemaTools
 			// Checkpoint 1: schema is on disk, about to seed objects.
 			$ctx?->getClientGateway()->progress(50.0, 100.0, 'schema persisted');
 
-			// Ensure the collection exists before writing objects. Try to
-			// fetch first (reserved or already-created custom), then create
-			// a new custom collection tied to this schema if not found.
-			if (!$this->collectionFetcher->collectionExists($id)) {
-				try {
-					$this->collectionSaver->saveCollection([
-						'id'     => $id,
-						'schema' => $id,
-					]);
-				} catch (\DomainException) {
-					// Already exists — either reserved schema's auto-collection or a
-					// concurrent create. Other CollectionSaver failures (storage error,
-					// permission, etc.) propagate so ObjectSaver doesn't run against an
-					// invalid state.
-				}
+			// Seeding fills the collection THIS call creates for the new schema,
+			// never an existing one: writing into an existing collection here
+			// would bypass create_object's checks (owned collections, protected
+			// fields, MCP exposure). Applies to every caller, admin included;
+			// existing collections are written through create_object.
+			if ($this->collectionFetcher->collectionExists($id)) {
+				throw new ToolCallException(sprintf(
+					'create_schema: schema "%s" was created, but seedObjects was skipped — collection "%s" already exists. '
+					. 'Seed objects can only be written into the new collection this call creates; use create_object for an existing collection.',
+					$id,
+					$id,
+				));
 			}
+
+			$this->collectionSaver->saveCollection([
+				'id'     => $id,
+				'schema' => $id,
+			]);
 
 			foreach ($seedObjects as $objectData) {
 				if (!is_array($objectData)) {
@@ -406,7 +408,7 @@ readonly class SchemaTools
 
 		$base['properties']['seedObjects'] = [
 			'type'        => 'array',
-			'description' => 'Optional list of objects to create in the new collection immediately after the schema is saved. When provided, the call emits SSE progress notifications (checkpoint 1: schema persisted; checkpoint 2: seed objects created). Each entry is a plain object whose keys match the schema properties.',
+			'description' => 'Optional list of objects to create in the new collection immediately after the schema is saved. Only for a collection this call creates: if a collection with this id already exists the schema is still saved but seeding is refused (use create_object). When provided, the call emits SSE progress notifications (checkpoint 1: schema persisted; checkpoint 2: seed objects created). Each entry is a plain object whose keys match the schema properties.',
 			'items'       => [
 				'type'                 => 'object',
 				'additionalProperties' => true,

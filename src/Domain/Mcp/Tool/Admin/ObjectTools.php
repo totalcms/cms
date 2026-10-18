@@ -85,7 +85,9 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * grant could otherwise flip a forced or admin-only property, or claim an
  * owned object. `requireExposed()` therefore refuses every non-ADMIN write
  * to a collection where `AuthFieldPolicy::protectedFieldsFor()` is not
- * empty (protected, forced or owner rules) — fail closed.
+ * empty (protected, forced or owner rules) — fail closed. An owned collection
+ * (ownerProperty) is refused by name first: MCP has no per-owner scoping, so
+ * reads there follow its declared access but writes stay admin-only.
  *
  * **Non-exposed properties are stripped from every write response.** Each
  * handler returns the saved/patched object, which previously came back as a
@@ -407,8 +409,13 @@ readonly class ObjectTools
 			throw new ToolCallException($toolName . ': ' . lcfirst($e->getMessage()), $e->getCode(), $e);
 		}
 
-		if ($this->personaContext->current() !== McpPersona::ADMIN && $this->fieldPolicy->protectedFieldsFor($collection) !== []) {
-			throw new ToolCallException(sprintf('Collection "%s" has protected properties and accepts writes from admin callers only over MCP.', $collection));
+		if ($this->personaContext->current() !== McpPersona::ADMIN) {
+			if ($this->schemaResolver->forCollection($collectionData)['owned']) {
+				throw new ToolCallException(sprintf('Collection "%s" is an owned collection and accepts writes from admin callers only over MCP.', $collection));
+			}
+			if ($this->fieldPolicy->protectedFieldsFor($collection) !== []) {
+				throw new ToolCallException(sprintf('Collection "%s" has protected properties and accepts writes from admin callers only over MCP.', $collection));
+			}
 		}
 
 		return $collectionData;

@@ -24,6 +24,16 @@ describe('ResendVerificationAction', function (): void {
 		$response = get('/admin/resend-verification/members');
 		expect($response->getStatusCode())->toBe(200);
 	});
+
+	it('carries a same-origin redirect as a hidden field', function (): void {
+		$html = (string)get('/admin/resend-verification/members?redirect=%2Fwelcome')->getBody();
+		expect($html)->toContain('<input type="hidden" name="redirect" value="/welcome">');
+	});
+
+	it('renders no redirect field for an off-site redirect or none at all', function (): void {
+		expect((string)get('/admin/resend-verification?redirect=https%3A%2F%2Fevil.example')->getBody())->not->toContain('name="redirect"')
+			->and((string)get('/admin/resend-verification')->getBody())->not->toContain('name="redirect"');
+	});
 });
 
 describe('ResendVerificationSubmitAction', function (): void {

@@ -60,6 +60,9 @@ final class ObjectToolsTest extends TestCase
 	/** The persona PersonaContext::current() reports (see note above). */
 	private McpPersona $persona = McpPersona::ADMIN;
 
+	/** Whether the collection exposedCollection() returns is owned (ownerProperty set). */
+	private bool $owned = false;
+
 	protected function setUp(): void
 	{
 		$this->saver         = $this->createMock(ObjectSaver::class);
@@ -89,9 +92,17 @@ final class ObjectToolsTest extends TestCase
 				throw new ToolCallException(sprintf('Collection "%s" is not available to the current caller. Use list_collections to see what you can %s.', $collection, $hint));
 			}
 
-			return new CollectionData();
+			$collectionData = new CollectionData();
+			if ($this->owned) {
+				$collectionData->ownerProperty = 'owner';
+			}
+
+			return $collectionData;
 		});
 		$this->schemaResolver = $this->createMock(McpSchemaResolver::class);
+		$this->schemaResolver->method('forCollection')->willReturnCallback(
+			static fn (CollectionData $c): array => ['access' => 'authenticated', 'owned' => $c->ownerProperty !== '', 'description' => null, 'resource' => false, 'titleProperty' => ''],
+		);
 		$this->schemaResolver->method('isAccessibleTo')
 			->willReturnCallback(fn (): bool => $this->exposureAccessible);
 		$this->schemaResolver->method('nonExposedProperties')
@@ -1091,6 +1102,41 @@ final class ObjectToolsTest extends TestCase
 				$this->assertStringContainsString('has protected properties and accepts writes from admin callers only over MCP', $e->getMessage());
 			}
 		}
+	}
+
+	// ─── Owned collections (MCP has no per-owner scoping) ──────────────────
+
+	public function testAuthenticatedPersonaCannotWriteAnOwnedCollectionEvenWithoutProtectedFields(): void
+	{
+		$this->persona = McpPersona::AUTHENTICATED;
+		$this->owned   = true;
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($this->textOnlySchema());
+		$this->saver->expects($this->never())->method('saveObject');
+		$this->patcher->expects($this->never())->method('patchObject');
+
+		foreach (['createHandler', 'updateHandler', 'patchHandler'] as $handler) {
+			try {
+				if ($handler === 'createHandler') {
+					$this->tool->createHandler(collection: 'portfolio', data: ['title' => 'Hi']);
+				} else {
+					$this->tool->{$handler}(collection: 'portfolio', id: 'post-1', data: ['title' => 'Hi']);
+				}
+				$this->fail("$handler wrote to an owned collection");
+			} catch (ToolCallException $e) {
+				$this->assertSame('Collection "portfolio" is an owned collection and accepts writes from admin callers only over MCP.', $e->getMessage());
+			}
+		}
+	}
+
+	public function testAdminPersonaWritesAnOwnedCollection(): void
+	{
+		$this->owned = true;
+		$this->schemaFetcher->method('fetchSchemaForCollection')->willReturn($this->textOnlySchema());
+		$this->saver->expects($this->once())->method('saveObject')->willReturn($this->blogObject('post-1'));
+		$this->patcher->expects($this->once())->method('patchObject')->willReturn($this->blogObject('post-1'));
+
+		$this->tool->createHandler(collection: 'portfolio', data: ['title' => 'Hi']);
+		$this->tool->patchHandler(collection: 'portfolio', id: 'post-1', data: ['title' => 'Hi']);
 	}
 
 	public function testAuthenticatedPersonaStillWritesAnUnprotectedCollection(): void

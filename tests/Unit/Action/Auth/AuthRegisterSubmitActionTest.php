@@ -8,6 +8,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UriInterface;
 use Psr\Log\NullLogger;
 use Slim\Exception\HttpForbiddenException;
 use TotalCMS\Action\Auth\AuthRegisterSubmitAction;
@@ -445,6 +446,101 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		$this->assertSame($jsonResponse, $result);
 	}
 
+	public function testVerifyRedirectReachesTheTokenAndIsNeverSavedOnTheUser(): void
+	{
+		$this->withCollection('members', requireVerification: true);
+
+		$saved = (new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor();
+		$this->objectSaver->expects($this->once())
+			->method('saveObject')
+			->with('members', $this->callback(static function (array $d): bool {
+				expect($d)->not->toHaveKey('verifyRedirect'); // the token's, not the user's
+
+				return true;
+			}))
+			->willReturn($saved);
+
+		$this->verificationService->expects($this->once())
+			->method('createVerificationToken')
+			->with('a@b.test', 'members', '/welcome')
+			->willReturn(OperationResult::failure('skip the email'));
+
+		$this->renderer->method('jsonItem')->willReturn($this->createMock(ResponseInterface::class));
+
+		($this->action)(
+			$this->createRequest(['email' => 'a@b.test', 'password' => 'sekret123', 'verifyRedirect' => '/welcome']),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	public function testSameHostAbsoluteVerifyRedirectIsKept(): void
+	{
+		$this->withCollection('members', requireVerification: true);
+
+		$this->objectSaver->method('saveObject')
+			->willReturn((new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor());
+
+		$this->verificationService->expects($this->once())
+			->method('createVerificationToken')
+			->with('a@b.test', 'members', 'https://example.test/welcome')
+			->willReturn(OperationResult::failure('skip the email'));
+
+		$this->renderer->method('jsonItem')->willReturn($this->createMock(ResponseInterface::class));
+
+		($this->action)(
+			$this->createRequest(['email' => 'a@b.test', 'password' => 'sekret123', 'verifyRedirect' => 'https://example.test/welcome']),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	public function testOffSiteVerifyRedirectIsDropped(): void
+	{
+		$this->withCollection('members', requireVerification: true);
+
+		$saved = (new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor();
+		$this->objectSaver->expects($this->once())
+			->method('saveObject')
+			->with('members', $this->callback(static fn (array $d): bool => !array_key_exists('verifyRedirect', $d)))
+			->willReturn($saved);
+
+		// Off-site target: the token gets no redirect, so the link lands on the
+		// login page exactly as it does without one.
+		$this->verificationService->expects($this->once())
+			->method('createVerificationToken')
+			->with('a@b.test', 'members', '')
+			->willReturn(OperationResult::failure('skip the email'));
+
+		$this->renderer->method('jsonItem')->willReturn($this->createMock(ResponseInterface::class));
+
+		($this->action)(
+			$this->createRequest(['email' => 'a@b.test', 'password' => 'sekret123', 'verifyRedirect' => 'https://evil.example/phish']),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	public function testVerifyRedirectIsStrippedEvenWithoutVerification(): void
+	{
+		$this->withCollection('members', requireVerification: false);
+
+		$saved = (new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor();
+		$this->objectSaver->expects($this->once())
+			->method('saveObject')
+			->with('members', $this->callback(static fn (array $d): bool => !array_key_exists('verifyRedirect', $d)))
+			->willReturn($saved);
+
+		$this->loginService->method('authenticate')->willReturn(['id' => 'alice']);
+		$this->renderer->method('jsonItem')->willReturn($this->createMock(ResponseInterface::class));
+
+		($this->action)(
+			$this->createRequest(['email' => 'a@b.test', 'password' => 'sekret123', 'verifyRedirect' => '/welcome']),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
 	public function testToggleOnlyCollectionRegisters(): void
 	{
 		// Not in the config allow-list: the collection's own toggle opens it.
@@ -532,10 +628,14 @@ final class AuthRegisterSubmitActionTest extends TestCase
 	/**
 	 * @param array<string,mixed> $body
 	 */
-	private function createRequest(array $body): ServerRequestInterface
+	private function createRequest(array $body, string $host = 'example.test'): ServerRequestInterface
 	{
+		$uri = $this->createMock(UriInterface::class);
+		$uri->method('getHost')->willReturn($host);
+
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getParsedBody')->willReturn($body);
+		$request->method('getUri')->willReturn($uri);
 
 		return $request;
 	}

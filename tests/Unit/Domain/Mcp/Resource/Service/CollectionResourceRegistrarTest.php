@@ -90,6 +90,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'public',
+			'owned'       => false,
 			'description' => null,
 			'resource'    => true,
 		]);
@@ -116,6 +117,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'admin',
+			'owned'       => false,
 			'description' => null,
 			'resource'    => false,
 		]);
@@ -134,6 +136,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'admin',
+			'owned'       => false,
 			'description' => null,
 			'resource'    => true,
 		]);
@@ -157,6 +160,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'authenticated',
+			'owned'       => false,
 			'description' => null,
 			'resource'    => true,
 		]);
@@ -180,6 +184,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'public',
+			'owned'       => false,
 			'description' => null,
 			'resource'    => true,
 		]);
@@ -199,6 +204,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'public',
+			'owned'       => false,
 			'description' => 'Custom desc',
 			'resource'    => true,
 		]);
@@ -222,6 +228,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'public',
+			'owned'       => false,
 			'description' => null,
 			'resource'    => true,
 		]);
@@ -250,6 +257,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'public',
+			'owned'       => false,
 			'description' => null,
 			'resource'    => true,
 		]);
@@ -278,6 +286,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'public',
+			'owned'       => false,
 			'description' => null,
 			'resource'    => true,
 		]);
@@ -313,6 +322,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'public',
+			'owned'       => false,
 			'description' => null,
 			'resource'    => true,
 		]);
@@ -342,6 +352,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$resolver->method('forCollection')->willReturn([
 			'access'      => 'public',
+			'owned'       => false,
 			'description' => null,
 			'resource'    => true,
 		]);
@@ -357,7 +368,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 		$this->assertSame('builder-page-item', $template->name);
 	}
 
-	public function testOwnedCollectionRegistersWithAdminAccessWhateverItsMcpAccess(): void
+	public function testOwnedCollectionRegistersAtItsDeclaredAccess(): void
 	{
 		$collection                = $this->makeCollection('portfolio', 'Portfolio', ['access' => 'public', 'resource' => true]);
 		$collection->ownerProperty = 'owner';
@@ -365,7 +376,31 @@ final class CollectionResourceRegistrarTest extends TestCase
 		$repo = $this->createStub(CollectionRepository::class);
 		$repo->method('listAllCollections')->willReturn([$collection]);
 
-		// A REAL resolver: forCollection() is what makes an owned collection admin-only.
+		// A REAL resolver: forCollection() keeps an owned collection's declared access.
+		$registry  = new ResourceRegistry();
+		$registrar = new CollectionResourceRegistrar(
+			collectionRepository: $repo,
+			schemaResolver: new McpSchemaResolver($this->createStub(SchemaFetcher::class), new McpDescriptionResolver(), $repo),
+			collectionResource: $this->createStub(CollectionResource::class),
+			collectionObjectResource: $this->createStub(CollectionObjectResource::class),
+		);
+
+		$registrar->registerAll($registry);
+
+		$this->assertSame('public', $registry->get('tcms://portfolio/')?->access);
+		$this->assertSame('public', $registry->getTemplate('tcms://portfolio/{id}')?->access);
+	}
+
+	public function testOwnedCollectionThatIsNotPublicRegistersAtAdmin(): void
+	{
+		$collection                = $this->makeCollection('portfolio', 'Portfolio', ['access' => 'authenticated', 'resource' => true]);
+		$collection->ownerProperty = 'owner';
+
+		$repo = $this->createStub(CollectionRepository::class);
+		$repo->method('listAllCollections')->willReturn([$collection]);
+
+		// Only admin can read a non-public owned collection (a group grant does
+		// not widen it), so the listing must not advertise it to anyone else.
 		$registry  = new ResourceRegistry();
 		$registrar = new CollectionResourceRegistrar(
 			collectionRepository: $repo,

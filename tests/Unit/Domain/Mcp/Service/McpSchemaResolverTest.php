@@ -130,7 +130,7 @@ final class McpSchemaResolverTest extends TestCase
 		$this->assertSame('', $result['titleProperty']);
 	}
 
-	public function testExposesAnOwnedCollectionToAdminOnly(): void
+	public function testAnOwnedCollectionKeepsItsDeclaredAccessAndIsMarkedOwned(): void
 	{
 		$collection                = $this->collection(['access' => 'public']);
 		$collection->id            = 'portfolio';
@@ -138,11 +138,21 @@ final class McpSchemaResolverTest extends TestCase
 		$collection->ownerProperty = 'owner';
 
 		$mcp = $this->resolver->forCollection($collection);
+		$this->assertSame('public', $mcp['access']);
+		$this->assertTrue($mcp['owned']);
+		$this->assertTrue($this->resolver->isAccessibleTo($collection, 'public'));
+		$this->assertTrue($this->resolver->isAccessibleTo($collection, 'authenticated'));
+		$this->assertTrue($this->resolver->isAccessibleTo($collection, 'admin'));
+	}
+
+	public function testAnOwnedCollectionWithNoDeclaredAccessStaysAdmin(): void
+	{
+		$collection                = $this->collection([]);
+		$collection->ownerProperty = 'owner';
+
+		$mcp = $this->resolver->forCollection($collection);
 		$this->assertSame('admin', $mcp['access']);
 		$this->assertTrue($mcp['owned']);
-		$this->assertFalse($this->resolver->isAccessibleTo($collection, 'public'));
-		$this->assertFalse($this->resolver->isAccessibleTo($collection, 'authenticated'));
-		$this->assertTrue($this->resolver->isAccessibleTo($collection, 'admin'));
 	}
 
 	public function testLeavesAnOrdinaryCollectionAtItsDeclaredAccess(): void

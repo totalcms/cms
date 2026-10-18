@@ -68,7 +68,8 @@ final class SchemaToolRegistrar
 				continue;
 			}
 
-			// Effective access: owned collections resolve to admin.
+			// Effective access (normalised declared value). An owned collection
+			// keeps its declared access; PersonaContext narrows non-admin reads.
 			$access = $this->schemaResolver->forCollection($collection)['access'];
 
 			// Two accepted shapes (see McpToolsValidator::validate):
