@@ -13,6 +13,7 @@ use TotalCMS\Domain\Collection\Service\OwnerPropertyKind;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Feed\Service\PodcastCategories;
+use TotalCMS\Domain\Locale\CountryNames;
 use TotalCMS\Domain\Locale\LocaleRegistry;
 use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 use TotalCMS\Domain\Template\Service\TemplateLister;
@@ -371,6 +372,17 @@ final readonly class FormOptionSources
 	public function localeList(): array
 	{
 		return LocaleRegistry::options();
+	}
+
+	/**
+	 * Every country, ISO 3166-1 alpha-2 code as the value and its name in the
+	 * site's locale as the label — feeds `propertyOptions: "countries"`.
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function countryList(): array
+	{
+		return CountryNames::options($this->services->config->locale !== '' ? $this->services->config->locale : null);
 	}
 
 	/**

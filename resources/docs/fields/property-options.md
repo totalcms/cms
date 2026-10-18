@@ -33,6 +33,7 @@ Instead of `true` (scan the current collection), set `propertyOptions` to a name
 | `"pages"` | Site Builder page templates (files in `tcms-data/builder/pages/`). |
 | `"pageMiddleware"` | Names of all registered page middleware (built-in and extension-provided). |
 | `"locales"` | Available locale codes (BCP 47), as value/label pairs. |
+| `"countries"` | Every country: the ISO 3166-1 alpha-2 code (`US`) as the value and its name in the site's locale as the label. Show the stored code as a name with the [`country_name`](docs/twig/localization#country-names) filter. |
 
 ```json
 {

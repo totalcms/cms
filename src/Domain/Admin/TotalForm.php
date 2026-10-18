@@ -1373,6 +1373,17 @@ class TotalForm implements \Stringable
 	}
 
 	/**
+	 * Return every country as `{value, label}` options — feeds
+	 * `propertyOptions: "countries"`.
+	 *
+	 * @return list<array{value: string, label: string}>
+	 */
+	public function countryList(): array
+	{
+		return $this->optionSources()->countryList();
+	}
+
+	/**
 	 * Return the core event names as `{value, label}` options — feeds
 	 * `propertyOptions: "events"` (e.g. automation event triggers).
 	 *

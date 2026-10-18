@@ -209,6 +209,14 @@ Currencies are formatted with proper symbols and decimal placement:
 {# ja_JP: "アメリカ合衆国" #}
 ```
 
+Pass a locale to override the site's: `{{ 'US'|country_name('fr') }}` gives "États-Unis". A value that isn't an ISO 3166-1 alpha-2 code comes back unchanged, and an empty one as an empty string.
+
+The other filters on this page need the PHP `intl` extension; `country_name` works without it: the names come from data bundled with Total CMS, and without `intl` they are in English unless you pass a locale. That makes it the way to display a field filled from [`propertyOptions: "countries"`](docs/fields/property-options#sources), which stores the code:
+
+```twig
+{{ member.country|country_name }}
+```
+
 ### Language Names
 
 ```twig

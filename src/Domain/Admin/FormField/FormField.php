@@ -682,6 +682,7 @@ class FormField
 			'navItems'            => $this->form->adminNavItemList(),
 			'schemaProperties'    => $this->form->schemaPropertyKeys(),
 			'locales'             => $this->form->localeList(),
+			'countries'           => $this->form->countryList(),
 			'events'              => $this->form->eventsList(),
 			'podcastCategories'   => TotalForm::podcastCategoryOptions(),
 			default               => null,
