@@ -381,7 +381,7 @@ Operations that unauthenticated users can perform on this collection via the API
 
 **Security considerations:**
 - Only enable what's necessary
-- `create` without authentication can lead to spam
+- `create` without authentication can lead to spam; [`requireBotProtection`](#requirebotprotection) turns naive bots away
 - `update` and `delete` are rarely appropriate for public access
 - Consider rate limiting for public endpoints
 - Public counters (likes, "was this helpful") are not a collection operation: set `publicIncrement: true` on the number field instead — see [Number and Range Fields](docs/fields/number-range)
@@ -398,6 +398,25 @@ Operations that unauthenticated users can perform on this collection via the API
 // Fully protected (admin-only)
 {"publicOperations": []}
 ```
+
+---
+
+### requireBotProtection
+
+**Type:** `boolean`
+**Required:** No
+**Default:** `false`
+
+Public registrations and public creates must pass the form's [bot protection](docs/forms/options#bot-protection) (a honeypot and a signed time trap). A submission without it is answered as a success but nothing is saved. Shown as **Require Bot Protection** in the Access Controls section. Signed-in users and API keys are never checked.
+
+```json
+{
+    "publicOperations": ["create"],
+    "requireBotProtection": true
+}
+```
+
+With it on, the collection's register form, and its new-object forms when public `create` is allowed, include the fields without the `botProtection` option. With it off, only submissions that carry the fields are checked.
 
 ---
 

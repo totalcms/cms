@@ -4,7 +4,7 @@
     "id"          : "collection",
     "type"        : "object",
     "description" : "A schema for a Total CMS Collection meta data file.",
-	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Registration---\npublicRegistration publicRegistration\nregistrationGroups registrationGroups\nrequireEmailVerification requireEmailVerification\n---Access Controls---\npublicOperations publicOperations\n---\ngroups groups\nownerProperty ownerCollection\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
+	"formgrid"    : "name name\nid id\nschema schema\nformat format\ndescription description\nsingleton .\nqueueRebuildOnSave .\n---URL Setup---\nurl url\nprettyUrl prettyUrl\n---Dashboard Setup---\ncategory labelPlural\nsortBy labelSingular\nreverseSort reverseSort\n---Public Registration---\npublicRegistration publicRegistration\nregistrationGroups registrationGroups\nrequireEmailVerification requireEmailVerification\n---Access Controls---\npublicOperations publicOperations\nrequireBotProtection requireBotProtection\n---\ngroups groups\nownerProperty ownerCollection\n---SEO---\nseo seo\n---Sitemap---\nsitemap sitemap\n---RSS Feed---\nfeed feed\n---MCP Server---\nmcp mcp\n---Overrides---\nformSettings formSettings\nmanualSort manualSort\nproperties properties\ncustomProperties customProperties\n---\ntotalObjects count\nlastUpdated lastUpdated",
     "properties"  : {
         "name": {
 			"type"        : "string",
@@ -146,6 +146,13 @@
 				"toggleAll" : false
 			}
 		},
+        "requireBotProtection": {
+			"type"    : "boolean",
+			"label"   : "Require Bot Protection",
+			"help"    : "Turn away public registrations and creates that arrive without the form's bot check.",
+			"field"   : "toggle",
+			"default" : false
+        },
         "groups": {
 			"$ref"     : "https://www.totalcms.co/schemas/properties/list.json",
 			"label"    : "File Access Groups",

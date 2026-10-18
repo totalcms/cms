@@ -259,7 +259,7 @@ readonly class CollectionTwigAdapter
 			return [];
 		}
 
-		return $object->toArray();
+		return $object->toArrayWithoutPasswords();
 	}
 
 	/**

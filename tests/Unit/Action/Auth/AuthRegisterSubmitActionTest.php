@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Action\Auth;
 
+use Odan\Session\SessionInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -11,7 +12,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Log\NullLogger;
 use Slim\Exception\HttpForbiddenException;
+use Slim\Psr7\Response;
 use TotalCMS\Action\Auth\AuthRegisterSubmitAction;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Auth\Service\AuthMailer;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
@@ -25,10 +28,14 @@ use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Mailer\Service\EmailSender;
 use TotalCMS\Domain\Mailer\Service\EmailService;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\Object\Service\ObjectFactory;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Security\BotProtection;
+use TotalCMS\Domain\Security\BotSubmissionGate;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
@@ -49,6 +56,9 @@ final class AuthRegisterSubmitActionTest extends TestCase
 	private MockObject $emailSender;
 	private MockObject $twigEngine;
 	private Config $config;
+	private MockObject $objectFactory;
+	private AuthFieldPolicy $authFieldPolicy;
+	private SchemaFetcher $schemaFetcher;
 
 	protected function setUp(): void
 	{
@@ -89,7 +99,9 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		$policyLoggerFactory->method('channelLogger')->willReturn(new NullLogger());
 		$ownerProperties = $this->createMock(OwnerPropertyResolver::class);
 		$ownerProperties->method('resolve')->willReturn('');
-		$authFieldPolicy = new AuthFieldPolicy(
+		$this->schemaFetcher   = $schemaFetcher;
+		$this->objectFactory   = $this->createMock(ObjectFactory::class);
+		$this->authFieldPolicy = new AuthFieldPolicy(
 			$schemaFetcher,
 			$this->createMock(UserValidationService::class),
 			$this->createMock(ObjectFetcher::class),
@@ -98,12 +110,23 @@ final class AuthRegisterSubmitActionTest extends TestCase
 			$policyLoggerFactory,
 		);
 
-		$this->action = new AuthRegisterSubmitAction(
+		$this->action = $this->makeAction();
+	}
+
+	/** The action, with a real BotSubmissionGate over the given session (null: anonymous). */
+	private function makeAction(?SessionInterface $session = null): AuthRegisterSubmitAction
+	{
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
+		$apiKeys = $this->createMock(ApiKeyAuthenticator::class);
+		$apiKeys->method('hasApiKeyHeader')->willReturn(false);
+
+		return new AuthRegisterSubmitAction(
 			$this->renderer,
 			$this->objectSaver,
 			$this->loginService,
 			$this->sessionLogin,
-			$authFieldPolicy,
+			$this->authFieldPolicy,
 			$this->collectionFetcher,
 			$this->verificationService,
 			new AuthMailer($this->emailService, $this->emailSender, $this->twigEngine, $this->createMock(UserValidationService::class), $this->config),
@@ -111,7 +134,16 @@ final class AuthRegisterSubmitActionTest extends TestCase
 			// RegistrationCollections is final, so it cannot be mocked: a real one
 			// over the same Config and fetcher mock. The gate and the groups then
 			// follow `$this->config->auth` and the collection built by withCollection().
-			new RegistrationCollections($this->config, $this->collectionFetcher, $schemaFetcher),
+			new RegistrationCollections($this->config, $this->collectionFetcher, $this->schemaFetcher),
+			new BotSubmissionGate(
+				new BotProtection('test-key'),
+				$this->collectionFetcher,
+				$this->objectFactory,
+				$this->createMock(ObjectFetcher::class),
+				$apiKeys,
+				$session,
+				$loggerFactory,
+			),
 		);
 	}
 
@@ -608,10 +640,210 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		);
 	}
 
+	// -------------------------------------------------------------------
+	// Bot protection (honeypot + time trap)
+	// -------------------------------------------------------------------
+
+	public function testValidBotTokenRegistersAndTheBotFieldsAreNotSaved(): void
+	{
+		$this->withCollection('members', requireVerification: false, requireBotProtection: true);
+
+		$saved = (new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor();
+		$this->objectSaver->expects($this->once())
+			->method('saveObject')
+			->with('members', $this->callback(static function (array $d): bool {
+				expect($d)->not->toHaveKey(BotProtection::HONEYPOT_FIELD);
+				expect($d)->not->toHaveKey(BotProtection::TIMESTAMP_FIELD);
+				expect($d['email'])->toBe('a@b.test');
+
+				return true;
+			}))
+			->willReturn($saved);
+		$this->objectFactory->expects($this->never())->method('generateObject');
+
+		$this->loginService->method('authenticate')->willReturn(['id' => 'alice']);
+		$jsonResponse = $this->createMock(ResponseInterface::class);
+		$this->renderer->expects($this->once())
+			->method('jsonItem')
+			->with($this->anything(), $saved, $this->isInstanceOf(ObjectMetaTransformer::class))
+			->willReturn($jsonResponse);
+
+		$result = ($this->action)(
+			$this->createRequest($this->botBody(time() - 10)),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+
+		$this->assertSame($jsonResponse, $result);
+	}
+
+	public function testFilledHoneypotGetsAFakeVerificationSuccessWithNoSaveAndNoEmail(): void
+	{
+		$this->withCollection('members', requireVerification: false);
+		$this->expectFakeSuccess();
+
+		($this->action)(
+			$this->createRequest($this->botBody(time() - 10, honeypot: 'https://spam.example')),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	public function testFakeSuccessCarriesTheVerificationFlagWhenTheCollectionVerifies(): void
+	{
+		$this->withCollection('members', requireVerification: true);
+		$this->expectFakeSuccess(verification: true);
+
+		($this->action)(
+			$this->createRequest($this->botBody(time() - 10, honeypot: 'https://spam.example')),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	public function testExpiredTokenGetsAVisible422AndNothingIsSaved(): void
+	{
+		$this->withCollection('members', requireVerification: true);
+
+		$this->objectSaver->expects($this->never())->method('saveObject');
+		$this->objectFactory->expects($this->never())->method('generateObject');
+		$this->verificationService->expects($this->never())->method('createVerificationToken');
+		$this->renderer->expects($this->never())->method('jsonItem');
+
+		$result = ($this->action)(
+			$this->createRequest($this->botBody(time() - BotProtection::MAX_AGE_SECONDS - 60)),
+			new Response(),
+			['collection' => 'members'],
+		);
+
+		$this->assertSame(422, $result->getStatusCode());
+		$this->assertSame(['error' => ['message' => BotSubmissionGate::EXPIRED_MESSAGE]], json_decode((string)$result->getBody(), true));
+	}
+
+	public function testTooFastSubmissionGetsAFakeSuccess(): void
+	{
+		$this->withCollection('members', requireVerification: false);
+		$this->expectFakeSuccess();
+
+		($this->action)(
+			$this->createRequest($this->botBody(time())),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	public function testNoBotFieldsRegistersWhenTheCollectionDoesNotRequireThem(): void
+	{
+		$this->withCollection('members', requireVerification: false);
+
+		$saved = (new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor();
+		$this->objectSaver->expects($this->once())->method('saveObject')->willReturn($saved);
+		$this->objectFactory->expects($this->never())->method('generateObject');
+		$this->loginService->method('authenticate')->willReturn(['id' => 'alice']);
+		$this->renderer->expects($this->once())
+			->method('jsonItem')
+			->with($this->anything(), $saved, $this->isInstanceOf(ObjectMetaTransformer::class))
+			->willReturn($this->createMock(ResponseInterface::class));
+
+		($this->action)(
+			$this->createRequest(['email' => 'a@b.test', 'password' => 'sekret123']),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	public function testNoBotFieldsGetsAFakeSuccessWhenTheCollectionRequiresThem(): void
+	{
+		$this->withCollection('members', requireVerification: false, requireBotProtection: true);
+		$this->expectFakeSuccess();
+
+		($this->action)(
+			$this->createRequest(['email' => 'a@b.test', 'password' => 'sekret123']),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	public function testSignedInSessionSkipsBotProtectionEvenWhenRequired(): void
+	{
+		$this->withCollection('members', requireVerification: false, requireBotProtection: true);
+
+		$session = $this->createMock(SessionInterface::class);
+		$session->method('get')->willReturnCallback(static fn (string $key): ?string => $key === SessionKeys::AUTH_USER ? 'admin-user' : null);
+		$action = $this->makeAction($session);
+
+		$saved = (new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor();
+		$this->objectSaver->expects($this->once())
+			->method('saveObject')
+			->with('members', $this->callback(static fn (array $d): bool => !array_key_exists(BotProtection::HONEYPOT_FIELD, $d)))
+			->willReturn($saved);
+		$this->objectFactory->expects($this->never())->method('generateObject');
+		$this->loginService->method('authenticate')->willReturn(['id' => 'alice']);
+		$this->renderer->method('jsonItem')->willReturn($this->createMock(ResponseInterface::class));
+
+		// No timestamp, and a filled honeypot that is still stripped.
+		$action(
+			$this->createRequest(['email' => 'a@b.test', 'password' => 'sekret123', BotProtection::HONEYPOT_FIELD => 'x']),
+			$this->createMock(ResponseInterface::class),
+			['collection' => 'members'],
+		);
+	}
+
+	/**
+	 * Fake success: the decoy object goes out with requiresVerification,
+	 * built from the stripped data with active forced off; nothing is saved,
+	 * no one is logged in, no email is sent.
+	 */
+	private function expectFakeSuccess(bool $verification = false): void
+	{
+		$decoy = (new \ReflectionClass(ObjectData::class))->newInstanceWithoutConstructor();
+		$this->objectFactory->expects($this->once())
+			->method('generateObject')
+			->with('members', $this->callback(static function (array $d) use ($verification): bool {
+				expect($d)->not->toHaveKey(BotProtection::HONEYPOT_FIELD);
+				expect($d)->not->toHaveKey(BotProtection::TIMESTAMP_FIELD);
+				expect($d['active'])->toBe(!$verification); // as a real signup would store it
+				expect($d['groups'])->toBe([]);
+
+				return true;
+			}))
+			->willReturn($decoy);
+
+		$this->objectSaver->expects($this->never())->method('saveObject');
+		$this->loginService->expects($this->never())->method('authenticate');
+		$this->sessionLogin->expects($this->never())->method('establish');
+		$this->verificationService->expects($this->never())->method('createVerificationToken');
+		$this->emailSender->expects($this->never())->method('send');
+		$this->emailService->expects($this->never())->method('sendEmail');
+
+		// The same response a real signup gets: the verification flag only
+		// when the collection verifies.
+		$this->renderer->expects($this->once())
+			->method('jsonItem')
+			->willReturnCallback(function (ResponseInterface $response, object $item, object $transformer, array $meta = []) use ($decoy, $verification): ResponseInterface {
+				$this->assertSame($decoy, $item);
+				$this->assertInstanceOf(ObjectMetaTransformer::class, $transformer);
+				$this->assertSame($verification ? ['requiresVerification' => true] : [], $meta);
+
+				return $this->createMock(ResponseInterface::class);
+			});
+	}
+
+	/** @return array<string,mixed> */
+	private function botBody(int $issuedAt, string $honeypot = ''): array
+	{
+		return [
+			'email'                        => 'a@b.test',
+			'password'                     => 'sekret123',
+			BotProtection::HONEYPOT_FIELD  => $honeypot,
+			BotProtection::TIMESTAMP_FIELD => (new BotProtection('test-key'))->issue('members', 'register', $issuedAt),
+		];
+	}
+
 	/**
 	 * @param list<string> $registrationGroups
 	 */
-	private function withCollection(string $id, bool $requireVerification, bool $publicRegistration = false, array $registrationGroups = []): void
+	private function withCollection(string $id, bool $requireVerification, bool $publicRegistration = false, array $registrationGroups = [], bool $requireBotProtection = false): void
 	{
 		$collection                           = new CollectionData();
 		$collection->id                       = $id;
@@ -619,6 +851,7 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		$collection->requireEmailVerification = $requireVerification;
 		$collection->publicRegistration       = $publicRegistration;
 		$collection->registrationGroups       = $registrationGroups;
+		$collection->requireBotProtection     = $requireBotProtection;
 
 		$this->collectionFetcher->method('fetchCollection')
 			->with($id)

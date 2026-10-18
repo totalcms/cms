@@ -168,6 +168,17 @@
 	&.field-hidden {
 		display : none !important;
 	}
+	// Bot-protection honeypot: off-screen, not display:none — some bots skip
+	// fields they can tell are hidden. Absolutely positioned, so it takes no
+	// cell in a formgrid.
+	&.bot-field {
+		position : absolute;
+		left     : -10000px;
+		top      : auto;
+		width    : 1px;
+		height   : 1px;
+		overflow : hidden;
+	}
 	&.field-disabled {
 		opacity        : 0.55;
 		pointer-events : none;

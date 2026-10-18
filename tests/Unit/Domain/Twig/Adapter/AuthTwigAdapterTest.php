@@ -115,7 +115,7 @@ describe('AuthTwigAdapter', function (): void {
 			// not reshape or filter the record — any silent transformation here
 			// would show the wrong person's details on the page.
 			$record = ['id' => 'joe', 'name' => 'Joe Workman', 'groups' => ['admin']];
-			$this->accessManager->method('userData')->willReturn($record);
+			$this->accessManager->method('publicUserData')->willReturn($record);
 
 			expect($this->adapter->userData())->toBe($record);
 		});
@@ -123,7 +123,7 @@ describe('AuthTwigAdapter', function (): void {
 		test('returns an empty array for an anonymous visitor', function (): void {
 			// Empty (not null) matters: templates do `cms.auth.userData() is empty`
 			// and a null would fatal on property access in strict Twig setups.
-			$this->accessManager->method('userData')->willReturn([]);
+			$this->accessManager->method('publicUserData')->willReturn([]);
 
 			expect($this->adapter->userData())->toBe([]);
 		});

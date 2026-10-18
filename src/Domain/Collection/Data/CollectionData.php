@@ -68,6 +68,9 @@ class CollectionData
 	/** @var array<string> */
 	public array $publicOperations = [];  // operations allowed publicly (create, read, update, delete)
 
+	/** Public registrations and public creates must pass the form's bot check (honeypot + signed time trap); a body without it is turned away. See BotSubmissionGate. */
+	public bool $requireBotProtection = false;
+
 	/** @var array<string,array<string,mixed>> */
 	public array $properties = [];        // Rules for fields defined in schemaToMetaProps
 
@@ -119,6 +122,7 @@ class CollectionData
 			'labelSingular'            => $labelSingular,
 			'groups'                   => $this->groups,
 			'publicOperations'         => $this->publicOperations,
+			'requireBotProtection'     => $this->requireBotProtection,
 			'sortBy'                   => $this->sortBy,
 			'reverseSort'              => $this->reverseSort,
 			'prettyUrl'                => $this->prettyUrl,

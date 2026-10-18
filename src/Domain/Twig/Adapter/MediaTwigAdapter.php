@@ -617,7 +617,7 @@ class MediaTwigAdapter
 			return $this->dataCache[$key] = '';
 		}
 
-		$data = $object->toArray();
+		$data = $object->toArrayWithoutPasswords();
 
 		if (array_key_exists($property, $data)) {
 			return $this->dataCache[$key] = $data[$property];

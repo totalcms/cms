@@ -8,7 +8,10 @@ use TotalCMS\Domain\Admin\TotalForm;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\DateData;
+use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
+use TotalCMS\Domain\Security\BotProtection;
+use TotalCMS\Domain\Security\BotSubmissionGate;
 
 /**
  * Total Form Builder.
@@ -83,7 +86,71 @@ class ObjectForm extends TotalForm
 			$content = $this->field('verifyRedirect', ['field' => 'hidden', 'value' => $this->verifyRedirect]) . $content;
 		}
 
+		if ($this->wantsBotProtection()) {
+			$content = $this->botFields() . $content;
+		}
+
 		return parent::build($content, $contentAfter);
+	}
+
+	/**
+	 * Bot protection is for anonymous create forms: the `botProtection`
+	 * option, or a collection with Require Bot Protection on a register form
+	 * or a create form the public may create through. Never for an edit form
+	 * (the POST check), and never for a signed-in visitor, whom the endpoints
+	 * skip too.
+	 */
+	private function wantsBotProtection(): bool
+	{
+		if ($this->refused || !$this->collectionData instanceof CollectionData || strtoupper($this->method) !== 'POST') {
+			return false;
+		}
+
+		if (BotSubmissionGate::sessionSignedIn($this->services->session)) {
+			return false;
+		}
+
+		if ($this->botProtection) {
+			return true;
+		}
+
+		if (!$this->collectionData->requireBotProtection) {
+			return false;
+		}
+
+		return $this->register
+			|| in_array('create', array_map(strtolower(...), $this->collectionData->publicOperations), true);
+	}
+
+	/**
+	 * The honeypot (an empty text field hidden off-screen and from assistive
+	 * tech) and the signed time-trap token. Both are `.form-field`s, since
+	 * the form script only submits those.
+	 */
+	private function botFields(): string
+	{
+		$id       = 'field-' . bin2hex(random_bytes(6));
+		$honeypot = HTMLUtils::element(
+			'div',
+			HTMLUtils::element('label', 'Leave this field empty', ['for' => $id])
+				. HTMLUtils::element('div', HTMLUtils::inlineElement('input', [
+					'type'         => 'text',
+					'id'           => $id,
+					'name'         => BotProtection::HONEYPOT_FIELD,
+					'tabindex'     => '-1',
+					'autocomplete' => 'off',
+					// Password managers: 1Password, LastPass, Bitwarden, Dashlane.
+					'data-1p-ignore'  => '',
+					'data-lpignore'   => 'true',
+					'data-bwignore'   => '',
+					'data-form-type'  => 'other',
+				]), ['class' => 'form-group']),
+			['class' => 'form-field text-field bot-field', 'data-type' => 'text', 'aria-hidden' => 'true'],
+		);
+
+		$token = (new BotProtection())->issue($this->collection, $this->register ? 'register' : 'create');
+
+		return $honeypot . $this->field(BotProtection::TIMESTAMP_FIELD, ['field' => 'hidden', 'value' => $token]);
 	}
 
 	/**

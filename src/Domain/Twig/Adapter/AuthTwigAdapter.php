@@ -70,7 +70,7 @@ readonly class AuthTwigAdapter
 	/** @return array<string,mixed> */
 	public function userData(): array
 	{
-		return $this->accessManager->userData();
+		return $this->accessManager->publicUserData();
 	}
 
 	public function userLoggedIn(string $collection = ''): bool

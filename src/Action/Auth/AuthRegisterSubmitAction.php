@@ -17,6 +17,7 @@ use TotalCMS\Domain\Auth\Service\SessionLogin;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Object\Service\ObjectSaver;
+use TotalCMS\Domain\Security\BotSubmissionGate;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Support\Config;
 use TotalCMS\Support\SameOriginRedirect;
@@ -48,10 +49,12 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
  *    login.
  *
  * Security caveats the operator owns:
- *  - Anyone who reaches this endpoint can create a user record. Add a CAPTCHA
- *    or rate limit even with email verification enabled — verification stops
- *    a bot from logging in, but it doesn't stop them from filling the user
- *    table with junk records.
+ *  - Anyone who reaches this endpoint can create a user record. The form
+ *    builder's `botProtection` option (honeypot + signed time trap, see
+ *    {@see BotSubmissionGate}) turns away naive bots with a decoy success —
+ *    no record, no email; turn on the collection's Require Bot Protection
+ *    to refuse posts that skip it. A determined bot that renders the form
+ *    still gets through: verification stops it logging in, not signing up.
  *  - New users land in the global `publicRegistrationGroup` plus the
  *    collection's Registration Groups. If those groups reach gated content,
  *    every signup (including bot signups) gains that access once they verify.
@@ -59,6 +62,11 @@ use TotalCMS\Transformer\ObjectMetaTransformer;
  */
 readonly class AuthRegisterSubmitAction
 {
+	/**
+	 * @SuppressWarnings("PHPMD.ExcessiveParameterList") one collaborator per
+	 * concern of a public signup: save, sign-in, field policy, verification
+	 * mail, registration gate and bot check.
+	 */
 	public function __construct(
 		private JsonRenderer $renderer,
 		private ObjectSaver $objectSaver,
@@ -70,6 +78,7 @@ readonly class AuthRegisterSubmitAction
 		private AuthMailer $mailer,
 		private Config $config,
 		private RegistrationCollections $registrationCollections,
+		private BotSubmissionGate $botGate,
 	) {
 	}
 
@@ -102,6 +111,14 @@ readonly class AuthRegisterSubmitAction
 		);
 		unset($data['verifyRedirect']);
 
+		// Honeypot + time trap. Checked before anything is saved; the two bot
+		// fields leave $data whether or not the check ran.
+		// An expired token is a real form left open too long: say so.
+		[$data, $botReason] = $this->botGate->screen($request, $data, $collection, 'register');
+		if (BotSubmissionGate::expired($botReason)) {
+			return $this->botGate->expiredResponse($request, $response);
+		}
+
 		// A public registrant may NEVER set privileged fields (groups, active,
 		// expiration, maxLoginCount, passkeys) — strip them, then assign our own
 		// server-side defaults below. Without this, anyone could self-register as
@@ -123,6 +140,10 @@ readonly class AuthRegisterSubmitAction
 		// the collection's Registration Groups. Neither set => no groups, so a
 		// registrant gains no group-gated access until an operator grants it.
 		$data['groups'] = $this->registrationCollections->groupsFor($collection);
+
+		if ($botReason !== '') {
+			return $this->botDecoy($response, $collection, $data, $requiresVerification);
+		}
 
 		// Save the user record. Errors (validation, duplicate id, etc.) bubble
 		// up to Slim's error handler — same as ObjectSaveAction.
@@ -162,6 +183,22 @@ readonly class AuthRegisterSubmitAction
 		}
 
 		return $this->renderer->jsonItem($response, $user, new ObjectMetaTransformer());
+	}
+
+	/**
+	 * A bot gets the response a real signup gets — the user it sent, with the
+	 * "check your email" flag when the collection verifies — but nothing is
+	 * saved, no one is signed in and no email goes out.
+	 *
+	 * @param array<string,mixed> $data
+	 */
+	private function botDecoy(ResponseInterface $response, string $collection, array $data, bool $requiresVerification): ResponseInterface
+	{
+		$decoy = $this->botGate->decoy($collection, $data);
+
+		return $requiresVerification
+			? $this->renderer->jsonItem($response, $decoy, new ObjectMetaTransformer(), ['requiresVerification' => true])
+			: $this->renderer->jsonItem($response, $decoy, new ObjectMetaTransformer());
 	}
 
 	/**

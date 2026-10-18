@@ -536,7 +536,7 @@ class TotalCMS
 	/** @return array<string,mixed> */
 	public function userData(): array
 	{
-		return $this->access->userData();
+		return $this->access->publicUserData();
 	}
 
 	/**

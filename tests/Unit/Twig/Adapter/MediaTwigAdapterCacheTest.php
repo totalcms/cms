@@ -40,6 +40,7 @@ final class MediaTwigAdapterCacheTest extends TestCase
 	{
 		$object = $this->createMock(ObjectData::class);
 		$object->method('toArray')->willReturn($data);
+		$object->method('toArrayWithoutPasswords')->willReturn($data);
 
 		return $object;
 	}

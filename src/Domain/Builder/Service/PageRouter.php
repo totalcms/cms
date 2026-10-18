@@ -271,7 +271,7 @@ readonly class PageRouter
 
 		return new RouteMatch(
 			template: $templatePath,
-			pageData: $object->toArray(),
+			pageData: $object->toArrayWithoutPasswords(),
 			params: $params,
 			collection: $collection->id,
 		);
@@ -399,7 +399,7 @@ readonly class PageRouter
 
 		try {
 			$object = $this->objectFetcher->fetchObject($collectionId, $page->id);
-			$merged = array_merge($page->toArray(), $object->toArray());
+			$merged = array_merge($page->toArray(), $object->toArrayWithoutPasswords());
 
 			return new PageData($merged);
 		} catch (\Throwable) {

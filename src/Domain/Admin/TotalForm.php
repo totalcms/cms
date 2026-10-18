@@ -344,6 +344,7 @@ class TotalForm implements \Stringable
 	protected bool $addOnly;
 	protected bool $register;
 	protected string $verifyRedirect;
+	protected bool $botProtection;
 	protected ?FormActionRegistry $formActionRegistry;
 	protected ?\Closure $translator;
 	protected string $formgrid;
@@ -392,6 +393,7 @@ class TotalForm implements \Stringable
 		$this->addOnly            = $options->addOnly;
 		$this->register           = $options->register;
 		$this->verifyRedirect     = $options->verifyRedirect;
+		$this->botProtection      = $options->botProtection;
 		$this->formActionRegistry = $options->formActionRegistry;
 		$this->translator         = $options->translator;
 		$this->formgrid           = $options->formgrid;

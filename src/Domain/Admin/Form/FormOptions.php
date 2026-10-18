@@ -66,6 +66,12 @@ final readonly class FormOptions
 		// the endpoint keeps it on the verification token (never on the user)
 		// and drops anything that is not same-origin.
 		public string $verifyRedirect = '',
+		// Add a honeypot field and a signed time trap (BotProtection) to a
+		// register or create form; the register endpoint and public creates
+		// check them. Never rendered for a signed-in visitor. A collection
+		// with Require Bot Protection gets them on its register and public
+		// create forms without this flag.
+		public bool $botProtection = false,
 		public ?FormActionRegistry $formActionRegistry = null,
 		// Admin-catalog translator, supplied by TotalFormFactory as
 		// TranslationService::trans(...). Optional: a form built directly

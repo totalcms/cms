@@ -172,6 +172,28 @@ describe('TotalForm.focusFirstInput', () => {
 		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
 	});
 
+	// Mirrors ObjectForm::botFields(): the honeypot sits off-screen in a 1px box
+	// that still has a rect, so it must be excluded by markup, not geometry.
+	const honeypot = `<div class="form-field text-field bot-field" data-type="text" aria-hidden="true">
+		<label>Leave this field empty</label>
+		<div class="form-group"><input type="text" name="extra_reference_code" tabindex="-1" autocomplete="off"></div>
+	</div>`;
+
+	test('skips the bot-protection honeypot even when it is placed first', () => {
+		const form = formWithHtml(proxyField('image', 'photo') + honeypot + textField('title'));
+		place('extra_reference_code', -10000, -10000, 1);
+		place('title', 100);
+
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
+	});
+
+	test('skips any input taken out of the tab order', () => {
+		const form = formWithHtml(`<div class="form-field"><input name="skip" tabindex="-1"></div>` + textField('title'));
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
+	});
+
 	test('a proxy is still a valid target for error reporting', () => {
 		// Skipping proxies on form open must NOT make them unreportable — a deck
 		// anchors its native error bubble on exactly this input, which is why it is

@@ -276,6 +276,6 @@ readonly class DataTwigAdapter
 			return [];
 		}
 
-		return $object->toArray();
+		return $object->toArrayWithoutPasswords();
 	}
 }

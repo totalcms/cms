@@ -574,10 +574,13 @@ export default class TotalForm {
 		// gallery, file and depot fields (FormField::proxyInput). They're real
 		// inputs the user never types into, collapsed to zero size by CSS — landing
 		// the cursor there puts it in an invisible box.
-		const selector   = 'input:not([type="hidden"]):not([readonly]):not([disabled]):not([data-proxy]), textarea:not([readonly]):not([disabled]), select:not([disabled])';
+		// [tabindex="-1"] and .bot-field skip the bot-protection honeypot: an
+		// off-screen 1px box that still has a rect, so the geometry pass below
+		// would otherwise pick it when an image or deck field comes first.
+		const selector   = 'input:not([type="hidden"]):not([readonly]):not([disabled]):not([data-proxy]):not([tabindex="-1"]), textarea:not([readonly]):not([disabled]):not([tabindex="-1"]), select:not([disabled]):not([tabindex="-1"])';
 		const candidates = Array.from(this.form.querySelectorAll(selector));
 		// Skip inputs nested in <dialog> elements — those belong to image/file/deck-item edit modals
-		const eligible = candidates.filter(input => !input.closest('dialog'));
+		const eligible = candidates.filter(input => !input.closest('dialog') && !input.closest('.bot-field'));
 
 		// First on screen, not first in the markup: the formgrid places fields by
 		// grid area, so a toggle rendered early in the DOM can sit below the ID

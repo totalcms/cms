@@ -38,6 +38,7 @@ All Total CMS form methods accept `formSettings` to control form behavior, appea
     addOnly: true,                 # Security: Only allow creating new objects, never editing (bool, default: false)
     register: true,                # Retarget the form at /admin/register/{collection} so the new user is also auto-logged-in (bool, default: false)
     verifyRedirect: '/welcome',    # Register mode with email verification: where the verification link lands instead of the admin login (string, default: '')
+    botProtection: true,           # Add a honeypot and a time trap that turn away naive bots on register and public create forms (bool, default: false)
 }) }}
 ```
 
@@ -189,10 +190,34 @@ Verification-related config (in `config/tcms.php` under `auth`):
 
 **Security caveats the operator owns:**
 
-- Anyone who reaches the registration endpoint can create a user record. Verification stops a bot from logging in, but it doesn't stop them from filling the user table with junk records — gate the form with a CAPTCHA or rate limit even when verification is on.
+- Anyone who reaches the registration endpoint can create a user record. Verification stops a bot from logging in, but it doesn't stop them from filling the user table with junk records — turn on [Bot Protection](#bot-protection) even when verification is on.
 - New users receive the global `publicRegistrationGroup` plus the collection's Registration Groups (never `admin`). If those groups reach gated content, every verified signup gains that access.
 - Password validation (minimum length etc.) is the schema's responsibility, not the endpoint's.
 - The verification flow assumes the auth schema has an `email` field. If your custom schema doesn't, the verification email cannot be sent — the account is still created (inactive) but stays in limbo unless an admin activates it manually.
+
+### Bot Protection
+
+`botProtection: true` adds two hidden fields to a register form or a public create form, with no CAPTCHA for visitors to solve:
+
+```twig
+{{ cms.form.builder('members', {register: true, botProtection: true}) }}
+{{ cms.form.builder('enquiries', {addOnly: true, botProtection: true}) }}
+```
+
+- **A honeypot**: a text field moved off-screen and hidden from screen readers and the keyboard. A person never fills it; a bot that fills every field does.
+- **A time trap**: a token holding the time the form was rendered, signed with the site's key, the collection and the form type. A submission sent less than 3 seconds after the form rendered, more than a day later, or with a forged token fails. A token from one form does not work on another.
+
+A submission that fails is answered as if it succeeded, so the bot learns nothing: a register form gets the response a real signup gets (with `meta.requiresVerification: true` when the collection requires email verification) and a create form gets the usual saved-object response. Nothing is saved, no one is signed in and no email is sent. The access log records each one at info level with the reason (`honeypot`, `missing`, `too_fast`, `expired` or `bad_signature`).
+
+The exception is an expired token: the form genuinely came from your site and was left open for more than a day, so the visitor gets a `422` with "This form has expired. Reload the page and try again."
+
+Do not put a bot-protected form inside `{% cache %}`: a cached token expires and visitors see the reload message.
+
+Signed-in visitors never see the fields and are never checked. With authentication disabled, public creates are not checked (the register endpoint still is).
+
+The endpoints check only submissions that carry the fields, so a form without `botProtection` keeps working. To refuse posts that skip the check altogether, a bot posting straight to the endpoint, switch on **Require Bot Protection** in the collection's Access Controls ([`requireBotProtection`](docs/collections/settings#requirebotprotection)). The collection's register form, and its new-object forms when it allows public `create`, then include the fields without the option. A public clone is checked like a create, so on such a collection an anonymous clone is answered with a decoy and nothing is copied.
+
+Bot protection stops naive bots. A bot that loads the form in a real browser and waits gets through, so keep email verification on where accounts reach anything of value.
 
 ## Actions
 

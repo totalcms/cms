@@ -124,6 +124,23 @@ final class PageRouterTest extends TestCase
 		$this->assertSame('pages/privacy.twig', $match->template);
 	}
 
+	public function testHydrationNeverReadsPasswordHashes(): void
+	{
+		$this->setupPagesCollection([
+			['id' => 'home', 'title' => 'Home', 'route' => '/', 'template' => 'index', 'layout' => 'default'],
+		]);
+
+		$mockObject = $this->createMock(ObjectData::class);
+		$mockObject->expects($this->never())->method('toArray');
+		$mockObject->method('toArrayWithoutPasswords')->willReturn(['id' => 'home', 'title' => 'Home']);
+		$this->objectFetcher->method('fetchObject')->willReturn($mockObject);
+
+		$match = $this->router->match('/');
+
+		$this->assertInstanceOf(RouteMatch::class, $match);
+		$this->assertArrayNotHasKey('password', $match->pageData);
+	}
+
 	public function testHydratesDataFromFullObjectOnMatch(): void
 	{
 		$this->setupPagesCollection([
@@ -131,7 +148,7 @@ final class PageRouterTest extends TestCase
 		]);
 
 		$mockObject = $this->createMock(ObjectData::class);
-		$mockObject->method('toArray')->willReturn([
+		$mockObject->method('toArrayWithoutPasswords')->willReturn([
 			'id'       => 'home',
 			'title'    => 'Home',
 			'route'    => '/',
@@ -176,7 +193,7 @@ final class PageRouterTest extends TestCase
 			});
 
 		$mockObject = $this->createMock(ObjectData::class);
-		$mockObject->method('toArray')->willReturn([
+		$mockObject->method('toArrayWithoutPasswords')->willReturn([
 			'id'    => 'hello',
 			'title' => 'Hello',
 		]);
@@ -199,7 +216,7 @@ final class PageRouterTest extends TestCase
 		]);
 
 		$mockObject = $this->createMock(ObjectData::class);
-		$mockObject->method('toArray')->willReturn([
+		$mockObject->method('toArrayWithoutPasswords')->willReturn([
 			'id'       => 'not-found',
 			'title'    => '404',
 			'route'    => '/404',
@@ -293,7 +310,7 @@ final class PageRouterTest extends TestCase
 		]);
 
 		$mockObject = $this->createMock(ObjectData::class);
-		$mockObject->method('toArray')->willReturn([
+		$mockObject->method('toArrayWithoutPasswords')->willReturn([
 			'id'       => 'gone',
 			'title'    => 'Gone',
 			'route'    => '/gone',
@@ -557,7 +574,7 @@ final class PageRouterTest extends TestCase
 		$this->urlBuilder->method('isTemplateUrl')->willReturn(false);
 
 		$object = $this->createMock(ObjectData::class);
-		$object->method('toArray')->willReturn(['id' => 'my-post', 'title' => 'My Post']);
+		$object->method('toArrayWithoutPasswords')->willReturn(['id' => 'my-post', 'title' => 'My Post']);
 		$this->objectFetcher->method('fetchObject')->with('blog', 'my-post')->willReturn($object);
 
 		$match = $this->router->match('/blog/my-post');

@@ -135,7 +135,8 @@ final class BuilderPreviewServiceTest extends TestCase
 			]));
 
 		$obj = $this->createMock(ObjectData::class);
-		$obj->method('toArray')->willReturn(['id' => 'about', 'title' => 'About', 'template' => 'about']);
+		$obj->expects($this->never())->method('toArray');
+		$obj->method('toArrayWithoutPasswords')->willReturn(['id' => 'about', 'title' => 'About', 'template' => 'about']);
 		$this->objectFetcher->method('fetchObject')->willReturn($obj);
 
 		$this->twig->expects($this->once())
@@ -156,7 +157,7 @@ final class BuilderPreviewServiceTest extends TestCase
 	public function testExplicitPageIdResolvesByObjectFetch(): void
 	{
 		$obj = $this->createMock(ObjectData::class);
-		$obj->method('toArray')->willReturn([
+		$obj->method('toArrayWithoutPasswords')->willReturn([
 			'id'       => 'about',
 			'title'    => 'About From Fetch',
 			'template' => 'about',
@@ -192,7 +193,7 @@ final class BuilderPreviewServiceTest extends TestCase
 		]));
 
 		$obj = $this->createMock(ObjectData::class);
-		$obj->method('toArray')->willReturn(['id' => 'about', 'title' => 'About']);
+		$obj->method('toArrayWithoutPasswords')->willReturn(['id' => 'about', 'title' => 'About']);
 		$this->objectFetcher->expects($this->once())
 			->method('fetchObject')
 			->with('builder-pages', 'about')

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 use Odan\Session\PhpSession;
+use TotalCMS\Domain\Security\BotProtection;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Support\Config;
 
@@ -185,4 +186,81 @@ it('keeps registration closed when a grantee sends a string false or a string gr
 		'email'    => 'pat@example.test',
 		'password' => 'Correct-Horse-Battery-9',
 	])->assertStatus(403);
+});
+
+it('answers a bot with a plain signup success and stores no user nor signs anyone in', function (): void {
+	signOutRegistration($this->app);
+
+	$response = postJson('/admin/register/members', [
+		'name'                                                => 'Spam Bot',
+		'email'                                               => 'bot@example.test',
+		'password'                                            => 'Correct-Horse-Battery-9',
+		BotProtection::HONEYPOT_FIELD                         => 'https://spam.example',
+		BotProtection::TIMESTAMP_FIELD                        => (new BotProtection())->issue('members', 'register', time() - 10),
+	]);
+
+	$response->assertOk();
+	$body = json_decode((string)$response->getBody(), true);
+	// `members` does not verify email: a real signup gets no meta either.
+	expect($body)->not->toHaveKey('meta');
+	expect($body['data']['email'])->toBe('bot@example.test');
+	expect($body['data']['active'])->toBeTrue();
+	expect($body['data'])->not->toHaveKey('password');
+	expect(storedMembers())->toBe([]);
+
+	/** @var PhpSession $session */
+	$session = $this->app->getContainer()->get(PhpSession::class);
+	expect($session->get(SessionKeys::AUTH_USER))->toBeNull();
+});
+
+it('answers a bot with a check-your-email success when the collection verifies', function (): void {
+	patchJson('/api/collections/members', ['requireEmailVerification' => true])->assertOk();
+	signOutRegistration($this->app);
+
+	$response = postJson('/admin/register/members', [
+		'name'                         => 'Spam Bot',
+		'email'                        => 'bot@example.test',
+		'password'                     => 'Correct-Horse-Battery-9',
+		BotProtection::HONEYPOT_FIELD  => 'https://spam.example',
+		BotProtection::TIMESTAMP_FIELD => (new BotProtection())->issue('members', 'register', time() - 10),
+	]);
+
+	$response->assertOk();
+	$body = json_decode((string)$response->getBody(), true);
+	expect($body['meta']['requiresVerification'])->toBeTrue();
+	expect($body['data']['active'])->toBeFalse();
+	expect(storedMembers())->toBe([]);
+});
+
+it('tells a person whose form expired to reload, and stores no user', function (): void {
+	signOutRegistration($this->app);
+
+	$response = postJson('/admin/register/members', [
+		'name'                         => 'Pat Member',
+		'email'                        => 'pat@example.test',
+		'password'                     => 'Correct-Horse-Battery-9',
+		BotProtection::HONEYPOT_FIELD  => '',
+		BotProtection::TIMESTAMP_FIELD => (new BotProtection())->issue('members', 'register', time() - BotProtection::MAX_AGE_SECONDS - 60),
+	]);
+
+	expect($response->getStatusCode())->toBe(422);
+	expect(json_decode((string)$response->getBody(), true)['error']['message'])->toBe('This form has expired. Reload the page and try again.');
+	expect(storedMembers())->toBe([]);
+});
+
+it('registers a person whose form carries a valid bot token', function (): void {
+	signOutRegistration($this->app);
+
+	postJson('/admin/register/members', [
+		'name'                                                => 'Pat Member',
+		'email'                                               => 'pat@example.test',
+		'password'                                            => 'Correct-Horse-Battery-9',
+		BotProtection::HONEYPOT_FIELD                         => '',
+		BotProtection::TIMESTAMP_FIELD                        => (new BotProtection())->issue('members', 'register', time() - 10),
+	])->assertOk();
+
+	$users = storedMembers();
+	expect($users)->toHaveCount(1);
+	expect($users[0])->not->toHaveKey(BotProtection::HONEYPOT_FIELD);
+	expect($users[0])->not->toHaveKey(BotProtection::TIMESTAMP_FIELD);
 });

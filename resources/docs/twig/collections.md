@@ -81,8 +81,7 @@ Get all objects from a collection. Takes the collection id and nothing else — 
 ```
 
 ### object()
-
-Get a single object by collection and ID. Returns the **full record** — every property, indexed or not — or an empty array if not found.
+Get a single object by collection and ID. Returns the **full record** — every property, indexed or not — or an empty array if not found. `password` properties are never included: stored hashes do not reach templates.
 
 ```twig
 {% set post = cms.collection.object('blog', 'my-post') %}

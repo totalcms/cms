@@ -1047,7 +1047,7 @@
         {
             "name": "cms.collection.object",
             "signature": "object(string $collection, ?string $id): array",
-            "description": "Get a single object by collection and ID. Returns the **full record** \u2014 every property, indexed or not \u2014 or an empty array if not found.",
+            "description": "Get a single object by collection and ID. Returns the **full record** \u2014 every property, indexed or not \u2014 or an empty array if not found. `password` properties are never included: stored hashes do not reach templates.",
             "examples": [
                 "{% set post = cms.collection.object('blog', 'my-post') %}\n{% if post %}\n    <h1>{{ post.title }}</h1>\n    {{ post.content|markdown }}\n{% endif %}"
             ],
@@ -3858,6 +3858,17 @@
             "examples": [
                 "{\n    \"publicOperations\": [\"read\"]\n}",
                 "// Public read-only (blog, portfolio)\n{\"publicOperations\": [\"read\"]}\n\n// Public form submissions (contact forms)\n{\"publicOperations\": [\"create\"]}\n\n\n// Fully protected (admin-only)\n{\"publicOperations\": []}"
+            ],
+            "url": "https://docs.totalcms.co/collections/settings/"
+        },
+        {
+            "key": "requireBotProtection",
+            "type": "boolean",
+            "required": false,
+            "default": "false",
+            "description": "Public registrations and public creates must pass the form's [bot protection](docs/forms/options#bot-protection) (a honeypot and a signed time trap). A submission without it is answered as a success but nothing is saved. Shown as **Require Bot Protection** in the Access Controls section. Signed-in users and API keys are never checked.",
+            "examples": [
+                "{\n    \"publicOperations\": [\"create\"],\n    \"requireBotProtection\": true\n}"
             ],
             "url": "https://docs.totalcms.co/collections/settings/"
         },

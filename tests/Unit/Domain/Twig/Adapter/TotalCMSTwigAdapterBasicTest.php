@@ -484,11 +484,13 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 
 	public function testDepotAccessor(): void
 	{
-		$mockObject = $this->createMock(ObjectData::class);
-		$mockObject->method('toArray')->willReturn([
+		$depotData  = [
 			'id'    => 'test-id',
 			'depot' => [['name' => 'file.pdf']],
-		]);
+		];
+		$mockObject = $this->createMock(ObjectData::class);
+		$mockObject->method('toArray')->willReturn($depotData);
+		$mockObject->method('toArrayWithoutPasswords')->willReturn($depotData);
 
 		$objectFetcher = $this->createMock(ObjectFetcher::class);
 		$objectFetcher->method('fetchObject')->willReturn($mockObject);
