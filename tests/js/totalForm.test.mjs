@@ -261,3 +261,48 @@ describe('TotalForm.afterSave', () => {
 		expect(idAtFlush).toBe('new-123');
 	});
 });
+
+//-----------------------------------------------
+// Field events are debounced (TotalDispatcher, 300ms). A failed validation
+// leaves the form in "error"; the field-change from the member's correction
+// only arrives 300ms later. Saving inside that window used to pass
+// validate() and then refuse in save() on the stale "error" state ("Error in
+// form, cannot save"); the next click worked. validate() now flushes pending
+// field events first, so the state reflects every edit already made.
+//-----------------------------------------------
+import TotalDispatcher from '../../javascript/totalform/dispatcher.js';
+
+function wiredForm() {
+	const form = Object.create(TotalForm.prototype);
+	form.form = document.createElement('form');
+	form.method = 'POST';
+	form.states = ['unsaved', 'success', 'error', 'processing'];
+	form.state = null;
+	form.autosave = false;
+	form.eventListeners();
+	return form;
+}
+
+function pendingField(form) {
+	const container = document.createElement('div');
+	form.form.appendChild(container);
+	const dispatcher = new TotalDispatcher(container);
+	return { container, dispatcher, validate: () => true, isVisible: () => true };
+}
+
+describe('TotalForm.validate flushes pending field events', () => {
+	test('a correction typed just before saving clears the stale error state', () => {
+		vi.useFakeTimers();
+		const form = wiredForm();
+		const fixed = pendingField(form);
+		form.fields = [fixed];
+
+		form.changeState('error');                                 // the earlier failed attempt
+		fixed.dispatcher.dispatchEvent('field-change', { field: fixed }); // the correction, still debounced
+
+		expect(form.validate()).toBe(true);
+		expect(form.isError()).toBe(false);
+		expect(form.state).toBe('unsaved');
+		vi.useRealTimers();
+	});
+});

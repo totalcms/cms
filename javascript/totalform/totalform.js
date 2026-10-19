@@ -384,6 +384,12 @@ export default class TotalForm {
     }
 
 	validate() {
+		// Field events are debounced (TotalDispatcher). Deliver any still
+		// pending first: otherwise a correction made just before saving has not
+		// yet moved the form out of a previous "error" state, and save() refuses
+		// with "Error in form, cannot save" although every field is now valid.
+		this.fields.forEach(field => field.dispatcher?.flush?.());
+
 		let isValid = true;
 
 		this.fields.forEach(field => {

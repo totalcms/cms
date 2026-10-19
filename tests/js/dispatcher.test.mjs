@@ -55,4 +55,32 @@ describe('TotalDispatcher', () => {
 		expect(detail).toEqual({ field: 'x' });
 		vi.useRealTimers();
 	});
+
+	test('flush() fires pending events now, once, with their latest detail', () => {
+		vi.useFakeTimers();
+		const el = document.createElement('div');
+		const dispatcher = new TotalDispatcher(el);
+		const seen = [];
+		el.addEventListener('field-change', (e) => seen.push(e.detail.n));
+
+		dispatcher.dispatchEvent('field-change', { n: 1 });
+		dispatcher.dispatchEvent('field-change', { n: 2 });
+		dispatcher.flush();
+		expect(seen).toEqual([2]);
+
+		// The debounced timer was cancelled: nothing fires a second time.
+		vi.advanceTimersByTime(300);
+		expect(seen).toEqual([2]);
+		vi.useRealTimers();
+	});
+
+	test('flush() with nothing pending does nothing', () => {
+		const el = document.createElement('div');
+		const dispatcher = new TotalDispatcher(el);
+		let count = 0;
+		el.addEventListener('field-change', () => { count += 1; });
+		dispatcher.flush();
+		expect(count).toBe(0);
+	});
 });
+
