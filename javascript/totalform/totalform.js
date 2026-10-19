@@ -365,6 +365,36 @@ export default class TotalForm {
 		TotalForm.fieldTypes[type] = ctor;
 	}
 
+	// An extension type built on a core one: `extend` maps the core class to
+	// the subclass (Base => class extends Base {…}). admin.js has every core
+	// class on the page, so the subclass is made and registered now; forms.js
+	// holds heavy classes as loaders, so the subclass is made when a form
+	// first builds the field and the base class's module arrives.
+	static extendFieldType(type, baseType, extend) {
+		if (typeof extend !== 'function') {
+			throw new TypeError(`extendFieldType('${type}'): expected a function from the ${baseType} class to its subclass`);
+		}
+		const base = TotalForm.builtInFieldTypes[baseType];
+		if (typeof base === 'function') {
+			TotalForm.registerFieldType(type, extend(base));
+			return;
+		}
+		TotalForm.fieldTypes[type] = {
+			lazy: () => TotalForm.fieldClass(baseType).then(Base => extend(Base)),
+		};
+	}
+
+	// The class for a built-in type, loading its module first if need be.
+	static fieldClass(type) {
+		const entry = TotalForm.builtInFieldTypes[type];
+		if (typeof entry === 'function') return Promise.resolve(entry);
+		if (entry && typeof entry.lazy === 'function') {
+			entry.promise ??= entry.lazy();
+			return entry.promise.then(module => module.default ?? module);
+		}
+		return Promise.reject(new Error(`No built-in field type "${type}" to extend`));
+	}
+
     //-------------------------
     // Submit functions
     //-------------------------

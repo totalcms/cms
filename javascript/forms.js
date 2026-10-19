@@ -33,6 +33,7 @@ window.TotalCMS = Object.assign(window.TotalCMS ?? {}, {
 	TotalForm,
 	TotalField,
 	registerFieldType: (type, ctor) => TotalForm.registerFieldType(type, ctor),
+	extendFieldType: (type, baseType, extend) => TotalForm.extendFieldType(type, baseType, extend),
 });
 
 // A customer admin page can carry both helpers. admin.js boots the form

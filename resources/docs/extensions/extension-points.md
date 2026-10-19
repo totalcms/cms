@@ -333,7 +333,7 @@ class ColorPickerField extends TotalField {
 registerFieldType('colorpicker', ColorPickerField);
 ```
 
-`window.TotalCMS` carries `TotalForm`, `TotalField` and `registerFieldType`.
+`window.TotalCMS` carries `TotalForm`, `TotalField`, `registerFieldType` and `extendFieldType`.
 Register at the module's top level: core admin scripts render before
 extension admin scripts, and module scripts run in document order, so the
 surface exists by the time your module runs and the registry is consulted
@@ -344,6 +344,31 @@ wins before the registry is asked. `TotalField` is the base every core field
 extends: `this.container` is the field's wrapper, `this.input` its control,
 `getValue()` / `setValue()` / `clearValue()` / `validate()` are the methods a
 subclass overrides, and `this.changed()` marks the form unsaved.
+
+#### Building on a core field
+
+To add to a core field rather than start from `TotalField` — an image field
+with an extra button, say — subclass the core class with `extendFieldType()`.
+On the PHP side extend the matching `FormField` class (`ImageField`, …) and
+pass the core property type as `addFieldType()`'s third argument, so the value
+is stored, uploaded and served exactly as the core field's is. The field's
+wrapper class comes from its name (`screenshot-field`), so add the core one
+too in `init()` to keep the core styles: `$this->class = trim($this->class . ' image-field');`.
+
+```js
+window.TotalCMS.extendFieldType('screenshot', 'image', ImageField => class extends ImageField {
+	constructor(container, settings) {
+		super(container, settings);
+		// … your additions
+	}
+});
+```
+
+Pass a function from the core class to your subclass rather than the class
+itself: on a public page the heavy field classes load only when a form shows
+them, so the core class may not exist yet when your script runs. In the admin
+the subclass is made at once; on a public page it is made when a form first
+builds the field.
 
 ## Event Listeners
 

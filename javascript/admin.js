@@ -37,7 +37,7 @@ globalThis.JSONField = JSONField;
 // the class for the field type its PHP side declared with addFieldType(), and
 // the form factory builds it. It hangs off the TotalCMS global the line above
 // publishes (assigning a fresh object there would be overwritten by it), and
-// forms.js publishes the same three names on a public page. Core admin
+// forms.js publishes the same names on a public page. Core admin
 // scripts render ahead of extension admin scripts and module scripts run in
 // document order, so a module's top level can register. Distinct from
 // `window.totalcms`, the options object.
@@ -45,6 +45,7 @@ Object.assign(globalThis.TotalCMS, {
 	TotalForm,
 	TotalField,
 	registerFieldType: (type, ctor) => TotalForm.registerFieldType(type, ctor),
+	extendFieldType: (type, baseType, extend) => TotalForm.extendFieldType(type, baseType, extend),
 });
 
 // Idempotency guard: a page can end up including this bundle twice with
