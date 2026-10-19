@@ -570,6 +570,14 @@ export default class TotalForm {
 	}
 
 	focusFirstInput() {
+		// On a public page the form is one element among many: never take focus
+		// from a field the page already focused or marked autofocus (a register
+		// form beside a login form took the cursor from the login email).
+		const active = document.activeElement;
+		if (active && active !== document.body && !this.form.contains(active) && active.matches('input, textarea, select, [contenteditable="true"]')) return;
+		const autofocus = document.querySelector('[autofocus]');
+		if (autofocus && !this.form.contains(autofocus)) return;
+
 		// [data-proxy] skips the value/validity carriers behind deck, card, image,
 		// gallery, file and depot fields (FormField::proxyInput). They're real
 		// inputs the user never types into, collapsed to zero size by CSS — landing
@@ -590,6 +598,9 @@ export default class TotalForm {
 			.map(input => ({ input, rect: input.getBoundingClientRect() }))
 			.filter(({ rect }) => rect.width > 0 || rect.height > 0)
 			.sort((a, b) => (a.rect.top - b.rect.top) || (a.rect.left - b.rect.left));
+
+		// Never scroll the page on load to reach a form below the first screen.
+		if (placed[0] && placed[0].rect.top > window.innerHeight) return;
 
 		(placed[0]?.input ?? eligible[0])?.focus();
 	}

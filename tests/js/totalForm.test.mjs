@@ -201,6 +201,46 @@ describe('TotalForm.focusFirstInput', () => {
 		const form = formWithHtml(proxyField('deck', 'items', 'items'));
 		expect(form.isFocusable(document.querySelector('[name="items"]'))).toBe(true);
 	});
+
+	// On a public page the form is one element among many. A register form
+	// beside a login form took the cursor from the login email the page had
+	// marked autofocus, and on a phone scrolled the page down to itself.
+	test('leaves focus alone when another field on the page already has it', () => {
+		const form = formWithHtml(textField('title'));
+		const other = document.createElement('input');
+		other.name = 'email';
+		document.body.prepend(other);
+		other.focus();
+
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(other);
+	});
+
+	test('leaves focus alone when the page marks another field autofocus', () => {
+		const form = formWithHtml(textField('title'));
+		const other = document.createElement('input');
+		other.setAttribute('autofocus', '');
+		document.body.prepend(other);
+
+		form.focusFirstInput();
+		expect(document.activeElement).not.toBe(document.querySelector('[name="title"]'));
+	});
+
+	test('does not scroll the page to a form below the first screen', () => {
+		const form = formWithHtml(textField('title'));
+		place('title', window.innerHeight + 200);
+
+		form.focusFirstInput();
+		expect(document.activeElement).not.toBe(document.querySelector('[name="title"]'));
+	});
+
+	test('still focuses a form whose first field is on screen', () => {
+		const form = formWithHtml(textField('title'));
+		place('title', 120);
+
+		form.focusFirstInput();
+		expect(document.activeElement).toBe(document.querySelector('[name="title"]'));
+	});
 });
 
 describe('TotalForm.afterSave', () => {
