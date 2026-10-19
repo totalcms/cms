@@ -35,11 +35,10 @@ class ObjectForm extends TotalForm
 		$this->route = "/collections/{$this->collection}";
 
 		// Retarget the form at the public registration endpoint. `data-api`
-		// drops the `/api` prefix because `/admin/register` lives at the
-		// config base, not under the API prefix — same convention as the
-		// admin-routed forms in TotalFormFactory::totalform().
+		// stays the REST base: the JS resolves /admin routes against the site
+		// base (TotalCMS::buildApiQuery), and the form's other calls — the id
+		// "taken?" check, the mailer action — need /api.
 		if ($this->register) {
-			$this->api   = $this->services->config->api;
 			$this->route = "/admin/register/{$this->collection}";
 		}
 

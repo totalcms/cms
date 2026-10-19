@@ -285,6 +285,13 @@ export default class TotalCMS {
     // Build a URL with a query string
 	buildApiQuery(api, params) {
 		let baseUrl = this.options.url || '';
+		// The base is the REST API (`{site}/api`), but /admin/... routes live
+		// at the site base, outside /api — a register form posts to
+		// /admin/register/{collection}. Resolve those against the site base so
+		// data-api can always be the REST base for the form's other calls.
+		if (/^\/admin(\/|$)/.test(api)) {
+			baseUrl = baseUrl.replace(/\/api\/?$/, '');
+		}
 		if (!baseUrl.includes(window.location.origin)) {
 			baseUrl = window.location.origin + baseUrl;
 		}

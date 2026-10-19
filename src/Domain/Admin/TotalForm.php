@@ -1336,7 +1336,8 @@ class TotalForm implements \Stringable
 	/**
 	 * Base URL with no `/api` suffix — for admin-routed iframes (`/admin/...`)
 	 * and any other URL that lives outside the `/api/...` surface that
-	 * `$this->api` points at. Mirrors the dispatch in TotalFormFactory::totalform().
+	 * `$this->api` points at. Server-side counterpart of the JS rule in
+	 * TotalCMS::buildApiQuery(), which resolves /admin routes the same way.
 	 */
 	public function baseApi(): string
 	{

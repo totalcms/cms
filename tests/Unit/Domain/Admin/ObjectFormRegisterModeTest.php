@@ -61,6 +61,8 @@ final class ObjectFormRegisterModeTest extends TestCase
 
 		$defaults = [
 			'register'   => false,
+			// A real form always has its REST base from the constructor.
+			'api'        => '/rest',
 			'addOnly'    => false,
 			'id'         => '',
 			'collection' => 'members',
@@ -166,16 +168,18 @@ final class ObjectFormRegisterModeTest extends TestCase
 		$this->assertSame('/admin/register/members', $this->read($form, 'route'));
 	}
 
-	public function testRegistrationDropsTheApiPrefix(): void
+	public function testRegistrationKeepsTheRestBase(): void
 	{
-		// /admin/register lives at the config base, not under the API prefix.
-		// Getting this wrong posts the form at /api/admin/register/... and it
-		// 404s for every visitor.
+		// data-api stays the REST base: the JS resolves the /admin/register
+		// route against the site base itself (TotalCMS::buildApiQuery), and
+		// the form's other calls — the id check, the mailer action — need
+		// /api. Swapping in the site base broke those (a 404 on every handle
+		// check, so every handle looked free).
 		$form = $this->form(['register' => true]);
 
 		$this->init($form);
 
-		$this->assertSame('/api', $this->read($form, 'api'));
+		$this->assertSame('/rest', $this->read($form, 'api'));
 	}
 
 	// ── The ordinary admin form is unchanged ─────────────────────────────────
