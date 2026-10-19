@@ -74,8 +74,14 @@
 .choices__input:focus {
 	border: none;
 }
+// Square the right side only where the field icon sits beside the select,
+// as text inputs do. A field rendered with icon: false keeps full corners.
+.choices:has(~ .form-group-icon) .choices__inner {
+	border-top-right-radius    : 0;
+	border-bottom-right-radius : 0;
+}
 .choices__inner {
-	border-radius : var(--totalform-radius) 0 0 var(--totalform-radius);
+	border-radius : var(--totalform-radius);
 	box-shadow    : inset 0 1px 2px oklch(var(--totalform-shadow));
 	transition    : box-shadow .5s, border-color .25s ease-in-out;
 }

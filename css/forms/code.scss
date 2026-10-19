@@ -16,8 +16,16 @@
 // TotalForm code editor wrapper
 .totalform-code-editor {
 	border: 1px solid oklch(var(--totalform-border-color));
-	border-radius : var(--totalform-radius) 0 0 var(--totalform-radius)!important;
+	border-radius : var(--totalform-radius) !important;
 	overflow: hidden;
+
+	// Square the right side only where the field icon sits against it, as
+	// text inputs do. A field rendered with icon: false keeps full corners.
+	&:has(~ .form-group-icon) {
+		border-top-right-radius    : 0 !important;
+		border-bottom-right-radius : 0 !important;
+	}
+
 	flex: 1;
 	width: 100%;
 	max-width: 100%;
