@@ -626,7 +626,7 @@ class TotalForm implements \Stringable
 		// be empty and still mean "no grid" — a SchemaData with no formgrid falls
 		// back to one field per row, as it always has.
 		$hasSchemaData = $this->schemaData instanceof SchemaData;
-		$rawFormgrid   = $hasSchemaData ? $this->schemaData->formgrid : $this->formgrid;
+		$rawFormgrid   = $this->activeFormgrid();
 
 		if ($this->useFormGrid && ($hasSchemaData || $rawFormgrid !== '')) {
 			$formgrid = $rawFormgrid;
@@ -715,6 +715,20 @@ class TotalForm implements \Stringable
 		}
 
 		return $formStyleTag . $form . $contentAfter;
+	}
+
+	/**
+	 * The grid this form lays out with: the `formgrid` option when given, so
+	 * a front-end form can arrange a subset of a schema's fields without
+	 * changing the admin's layout; otherwise the schema's own.
+	 */
+	protected function activeFormgrid(): string
+	{
+		if ($this->formgrid !== '') {
+			return $this->formgrid;
+		}
+
+		return $this->schemaData instanceof SchemaData ? $this->schemaData->formgrid : '';
 	}
 
 	public function layout2Columns(string $col1, string $col2): string
@@ -1057,8 +1071,8 @@ class TotalForm implements \Stringable
 		$content = '';
 		$root    = null;
 
-		if ($this->schemaData instanceof SchemaData && $this->schemaData->formgrid !== '' && $this->useFormGrid) {
-			$root = new FormGridBuilder($this->schemaData->formgrid);
+		if ($this->schemaData instanceof SchemaData && $this->activeFormgrid() !== '' && $this->useFormGrid) {
+			$root = new FormGridBuilder($this->activeFormgrid());
 			$content .= $root->buildGridSectionHtml();
 		}
 
