@@ -128,7 +128,8 @@ export default class TotalFormManager {
 				if (!form.classList.contains("no-status-banner")) {
 					this.startProcessing();
 				}
-				totalform.save().catch(() => {});
+				// A click always sends, even after a failed save (the retry).
+				totalform.save({ explicit: true }).catch(() => {});
 			});
 		};
 

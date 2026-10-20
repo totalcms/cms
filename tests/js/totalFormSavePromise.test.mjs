@@ -68,3 +68,35 @@ describe('TotalForm.save() returns its outcome', () => {
 		expect(form.error).toHaveBeenCalledWith('Cannot save: bad JSON');
 	});
 });
+
+describe('TotalForm.save() after a failed save', () => {
+	test('a save the user did not ask for is refused while the form is in its error state', async () => {
+		const form = formUnderTest();
+		form.isError.mockReturnValue(true);
+
+		await expect(form.save()).rejects.toThrow(/Error in form/);
+
+		expect(form.api.postAPI).not.toHaveBeenCalled();
+	});
+
+	test('a clicked save (explicit) sends anyway: the click is the retry', async () => {
+		const form = formUnderTest();
+		form.isError.mockReturnValue(true);
+		form.api.postAPI.mockResolvedValue({ data: { id: 'hello' } });
+
+		await expect(form.save({ explicit: true })).resolves.toEqual({ data: { id: 'hello' } });
+
+		expect(form.api.postAPI).toHaveBeenCalledTimes(1);
+		expect(form.afterSave).toHaveBeenCalled();
+	});
+
+	test('an explicit save still validates first', async () => {
+		const form = formUnderTest();
+		form.isError.mockReturnValue(true);
+		form.validate.mockReturnValue(false);
+
+		await expect(form.save({ explicit: true })).rejects.toThrow(/validation/i);
+
+		expect(form.api.postAPI).not.toHaveBeenCalled();
+	});
+});

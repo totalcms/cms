@@ -641,9 +641,17 @@ export default class TotalForm {
 		(placed[0]?.input ?? eligible[0])?.focus();
 	}
 
-	save() {
+	/**
+	 * @param {object} [options]
+	 * @param {boolean} [options.explicit] - The user asked for this save by
+	 *   clicking the form's Save button. It always sends (after validation),
+	 *   even while the form is in its error state: a failed request leaves
+	 *   the form there until a field changes, and a click is the retry.
+	 *   Cmd+S and autosave keep the guard.
+	 */
+	save({ explicit = false } = {}) {
 		// A field whose module is still loading has no value yet: wait for it.
-		if (this.pending?.size > 0) return this.whenReady().then(() => this.save());
+		if (this.pending?.size > 0) return this.whenReady().then(() => this.save({ explicit }));
 
 		// Defensive prune: drop any fields whose container was detached from the
 		// DOM. refreshFields() handles the normal case, but external mutations
@@ -661,7 +669,7 @@ export default class TotalForm {
 			this.error(message);
 			return Promise.reject(new Error(message));
 		}
-		if (this.isError()) {
+		if (!explicit && this.isError()) {
 			const message = 'Error in form, cannot save.';
 			this.error(message);
 			return Promise.reject(new Error(message));
