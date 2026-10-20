@@ -45,6 +45,8 @@ class AutomationsProcessCommand extends BaseCommand
 	 */
 	protected function renderHuman(InputInterface $input, OutputInterface $output, array $data): void
 	{
-		$output->writeln(sprintf('Fired %d automation(s).', (int)($data['count'] ?? 0)));
+		// Two counts: queued event jobs (object saves, extension jobs) run
+		// first, then due schedules fire.
+		$output->writeln(sprintf('Ran %d queued job(s). Fired %d scheduled automation(s).', (int)($data['drained'] ?? 0), (int)($data['count'] ?? 0)));
 	}
 }
