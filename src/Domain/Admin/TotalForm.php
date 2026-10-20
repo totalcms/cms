@@ -347,7 +347,7 @@ class TotalForm implements \Stringable
 	protected bool $botProtection;
 	protected ?FormActionRegistry $formActionRegistry;
 	protected ?\Closure $translator;
-	protected string $formgrid;
+	protected string $formgrid = '';
 	protected bool $fieldIcons;
 	/** @var array<string,string> */
 	protected array $attributes;
