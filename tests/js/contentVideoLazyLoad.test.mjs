@@ -47,3 +47,21 @@ test('lazy-loads the legacy shape where cms-video-embed is on the iframe itself'
     const iframe = document.querySelector('iframe');
     expect(iframe.src).toBe('https://example.com/embed-c');
 });
+
+test('leaves a form field\'s link-tool iframe for the field to load', () => {
+    // An image field's dialog: the field sets src when the dialog opens. On a
+    // public page it is an admin tool a member is denied, so loading it on
+    // page load only produced a 403.
+    document.body.innerHTML = `
+        <form class="totalform">
+            <dialog><iframe class="cms-iframe" data-src="/admin/imageworks?collection=users&property=image"></iframe></dialog>
+        </form>
+        <iframe class="cms-iframe" data-src="https://example.com/embed-d"></iframe>
+    `;
+
+    fireDomContentLoaded();
+
+    const [fieldTool, embed] = document.querySelectorAll('iframe');
+    expect(fieldTool.getAttribute('src')).toBeNull();
+    expect(embed.src).toBe('https://example.com/embed-d');
+});
