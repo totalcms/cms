@@ -7,6 +7,7 @@ namespace Tests\Unit\Twig\Adapter;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Factory\LoggerFactory;
@@ -53,7 +54,7 @@ final class MediaTwigAdapterCacheTest extends TestCase
 		// Config has public defaults; skip the constructor rather than mocking it.
 		$config = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
 
-		return new MediaTwigAdapter($fetcher, $config, $loggerFactory);
+		return new MediaTwigAdapter($fetcher, $config, $this->createMock(ImageGenerator::class), $loggerFactory);
 	}
 
 	public function testRepeatedLookupsForTheSameObjectFetchOnlyOnce(): void

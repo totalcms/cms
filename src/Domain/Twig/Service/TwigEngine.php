@@ -6,6 +6,7 @@ use Cake\Chronos\Chronos;
 use Cake\I18n\I18n;
 use Cake\I18n\RelativeTimeFormatter;
 use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
+use TotalCMS\Domain\Builder\Exception\PageRedirectException;
 use TotalCMS\Domain\Builder\Service\BuilderTemplatePaths;
 use TotalCMS\Domain\Cache\FragmentCache;
 use TotalCMS\Domain\Cache\Service\DevModeManager;
@@ -147,6 +148,12 @@ readonly class TwigEngine
 			$notFound = PageNotFoundException::find($e);
 			if ($notFound instanceof PageNotFoundException) {
 				throw $notFound;
+			}
+
+			// Nor is a redirect (`cms.redirect()`): the middleware answers it.
+			$redirect = PageRedirectException::find($e);
+			if ($redirect instanceof PageRedirectException) {
+				throw $redirect;
 			}
 
 			return sprintf(

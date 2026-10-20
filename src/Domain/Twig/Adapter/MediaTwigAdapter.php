@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Twig\Adapter;
 
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\ImageWorks\Service\GlideFactory;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Security\Encryption\Cipher;
 use TotalCMS\Factory\LogChannel;
@@ -42,6 +43,7 @@ class MediaTwigAdapter
 	public function __construct(
 		private readonly ObjectFetcher $objectFetcher,
 		private readonly Config $config,
+		private readonly ImageGenerator $imageGenerator,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::Twig);
@@ -102,6 +104,68 @@ class MediaTwigAdapter
 		}
 
 		return self::buildImageworksAPI($this->config->api, $idOrObject, $image, $imageworks, $options);
+	}
+
+	/**
+	 * The largest render imageDataUri() embeds, in bytes. A data: URI is
+	 * shipped inline with every copy of the page or file it sits in, so it is
+	 * for thumbnails, not photos.
+	 */
+	public const DATA_URI_MAX_BYTES = 65536;
+
+	/**
+	 * An image property rendered by ImageWorks and returned as a `data:` URI,
+	 * for a file that cannot load anything from outside itself — an SVG
+	 * served as an <img>, an email. Takes the same arguments as imagePath();
+	 * pass a small `w`/`h`. Top-level image properties only.
+	 *
+	 * Returns '' when there is no image, the render fails, or it is larger
+	 * than DATA_URI_MAX_BYTES, so the caller can fall back to something else.
+	 *
+	 * @param string|array<string,mixed>|null $idOrObject Object array or object ID string
+	 * @param array<string,string|int> $imageworks
+	 * @param array<string,mixed> $options
+	 */
+	public function imageDataUri(string|array|null $idOrObject, array $imageworks = [], array $options = []): string
+	{
+		$options = array_merge([
+			'collection' => 'image',
+			'property'   => 'image',
+		], $options);
+
+		$collection = (string)$options['collection'];
+		$property   = (string)$options['property'];
+		if (in_array($idOrObject, [null, '', []], true) || str_contains($property, '.')) {
+			return '';
+		}
+
+		$id    = is_array($idOrObject) ? (string)($idOrObject['id'] ?? '') : $idOrObject;
+		$image = is_array($idOrObject) ? ($idOrObject[$property] ?? null) : $this->fetchData($collection, $id, $property);
+		if ($id === '' || !is_array($image) || ($image['size'] ?? 0) === 0) {
+			return '';
+		}
+
+		try {
+			$response = $this->imageGenerator->generateImage($collection, $id, $property, $this->resolvePresetFormat($imageworks));
+		} catch (\Throwable $e) {
+			$this->logger->warning(sprintf('imageDataUri: %s/%s/%s did not render: %s', $collection, $id, $property, $e->getMessage()));
+
+			return '';
+		}
+
+		$type = strtolower(trim(explode(';', $response->getHeaderLine('Content-Type'))[0]));
+		$body = (string)$response->getBody();
+		if ($response->getStatusCode() !== 200 || !str_starts_with($type, 'image/') || $body === '') {
+			return '';
+		}
+
+		if (strlen($body) > self::DATA_URI_MAX_BYTES) {
+			$this->logger->warning(sprintf('imageDataUri: %s/%s/%s renders to %d bytes, over the %d-byte cap; pass a smaller w/h', $collection, $id, $property, strlen($body), self::DATA_URI_MAX_BYTES));
+
+			return '';
+		}
+
+		return 'data:' . $type . ';base64,' . base64_encode($body);
 	}
 
 	/**

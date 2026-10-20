@@ -55,6 +55,9 @@ Live on the filesystem under `tcms-data/builder/`:
   visitor's URL, for any path that matches nothing. Collection URLs match drafts too, so a
   detail template that should not serve a record calls `cms.notFound()` — same answer,
   rendering stops. Not `cms.collection.redirectIfNotFound()`, which answers 302.
+- A forwarding URL whose target depends on data calls `cms.redirect(url, status = 302)`:
+  the router answers with the status and `Location`, nothing else renders. A fixed redirect
+  belongs on the page record (`redirectTo`).
 
 ## SEO in layouts and detail pages
 

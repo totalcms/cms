@@ -11,6 +11,7 @@ use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
+use TotalCMS\Domain\Builder\Exception\PageRedirectException;
 use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
@@ -340,6 +341,47 @@ final class PageRouterMiddlewareTest extends TestCase
 		$this->assertSame(404, $response->getStatusCode());
 		$this->assertFalse($response->hasHeader('Location'));
 		$this->assertStringContainsString('Custom 404', (string)$response->getBody());
+	}
+
+	public function testTemplateRedirectAnswersWithLocation(): void
+	{
+		// A forwarding page (a badge link) called cms.redirect(): the answer is
+		// the redirect itself, no body, with the query string kept as given.
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/badges/davide');
+		$handler = $this->createHandler(404);
+
+		$this->pageRouter->method('match')->willReturn(new RouteMatch(
+			template: 'pages/badge-link.twig',
+			pageData: ['id' => 'badge-link'],
+			params: ['handle' => 'davide'],
+		));
+		$this->pageRouter->expects($this->never())->method('fallback404');
+		$this->twigEngine->method('render')->willThrowException(new PageRedirectException('/@davide?mtm_campaign=badge'));
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(302, $response->getStatusCode());
+		$this->assertSame('/@davide?mtm_campaign=badge', $response->getHeaderLine('Location'));
+		$this->assertSame('', (string)$response->getBody());
+	}
+
+	public function testTemplateRedirectThroughTwigWrapping(): void
+	{
+		$request = (new ServerRequestFactory())->createServerRequest('GET', '/old');
+		$handler = $this->createHandler(404);
+
+		$this->pageRouter->method('match')->willReturn(new RouteMatch(
+			template: 'pages/old.twig',
+			pageData: ['id' => 'old'],
+			params: [],
+		));
+		$wrapped = new RuntimeError('An exception has been thrown during the rendering of a template', -1, null, new RuntimeError('inner', -1, null, new PageRedirectException('https://example.com/new', 301)));
+		$this->twigEngine->method('render')->willThrowException($wrapped);
+
+		$response = $this->middleware->process($request, $handler);
+
+		$this->assertSame(301, $response->getStatusCode());
+		$this->assertSame('https://example.com/new', $response->getHeaderLine('Location'));
 	}
 
 	public function testTemplateNotFoundWithoutFallbackPageReturnsPlain404(): void

@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Twig\Adapter;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Property\Data\PasswordData;
 use TotalCMS\Domain\Property\Data\StringData;
@@ -27,7 +28,7 @@ final class MediaTwigAdapterPasswordTest extends TestCase
 			'password' => new PasswordData('secret-pass'),
 		]));
 
-		$adapter = new MediaTwigAdapter($objectFetcher, $this->createMock(Config::class), $loggerFactory);
+		$adapter = new MediaTwigAdapter($objectFetcher, $this->createMock(Config::class), $this->createMock(ImageGenerator::class), $loggerFactory);
 		$method  = new \ReflectionMethod($adapter, 'fetchData');
 
 		expect($method->invoke($adapter, 'auth', 'admin', 'password'))->toBe('');

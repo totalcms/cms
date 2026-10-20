@@ -1997,6 +1997,15 @@
             "url": "https://docs.totalcms.co/twig/media/"
         },
         {
+            "name": "cms.media.imageDataUri",
+            "signature": "imageDataUri(string|array|null $idOrObject, array $imageworks = [], array $options = []): string",
+            "description": "An image property rendered by ImageWorks and returned as a `data:` URI, for a file that cannot load anything from outside itself \u2014 an SVG served as an <img>, an email. Takes the same arguments as imagePath(); pass a small `w`/`h`. Top-level image properties only.",
+            "examples": [
+                "{# A 68px square avatar inside an SVG, falling back to an initial #}\n{% set photo = cms.media.imageDataUri(member, {w: 68, h: 68, fit: 'crop', fm: 'webp'}, {collection: 'users'}) %}\n{% if photo %}<image href=\"{{ photo }}\" width=\"34\" height=\"34\"/>{% else %}<text>{{ member.name|first }}</text>{% endif %}"
+            ],
+            "url": "https://docs.totalcms.co/twig/media/"
+        },
+        {
             "name": "cms.media.imagePath",
             "signature": "imagePath(string|array|null $idOrObject, array $imageworks = [], array $options = []): string",
             "description": "Get the image path for an image property.",
@@ -2034,6 +2043,13 @@
             "name": "cms.notFound",
             "signature": "notFound(): never",
             "description": "Stop rendering and answer the request as a 404: the site's not-found page, at the visitor's own URL, with the 404 status a crawler or link checker needs. For a page template that discovers it has nothing to show \u2014 a draft reached through a collection URL, a record marked not to render, an empty lookup. Nothing after the call is rendered.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/totalcms/"
+        },
+        {
+            "name": "cms.redirect",
+            "signature": "redirect(string $url, int $status = 302): never",
+            "description": "Stop rendering and answer the request with a redirect to `$url`. For a forwarding page whose target depends on data \u2014 a page record's `redirectTo` covers the fixed ones. Nothing after the call is rendered.",
             "examples": [],
             "url": "https://docs.totalcms.co/twig/totalcms/"
         },

@@ -14,6 +14,7 @@ use Slim\Psr7\Response;
 use TotalCMS\Domain\Builder\Data\PageData;
 use TotalCMS\Domain\Builder\Data\RouteMatch;
 use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
+use TotalCMS\Domain\Builder\Exception\PageRedirectException;
 use TotalCMS\Domain\Builder\Service\PageInspectorRenderer;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRunner;
 use TotalCMS\Domain\Builder\Service\PageReloadInjectorRenderer;
@@ -168,6 +169,15 @@ readonly class PageRouterMiddleware implements MiddlewareInterface
 		try {
 			return $this->renderMatch($request, $match, $path);
 		} catch (\Throwable $throwable) {
+			// The template answered with a redirect (`cms.redirect()`): a
+			// forwarding URL whose target it worked out from data.
+			$redirect = PageRedirectException::find($throwable);
+			if ($redirect instanceof PageRedirectException) {
+				$this->logger->info(sprintf('%d: %s %s → %s', $redirect->status, $method, $path, $redirect->url));
+
+				return (new Response())->withStatus($redirect->status)->withHeader('Location', $redirect->url);
+			}
+
 			// The template declined to render the URL (`cms.notFound()`: a
 			// draft behind a collection URL, a record it will not serve).
 			// Answer exactly as an unmatched URL is answered above — the

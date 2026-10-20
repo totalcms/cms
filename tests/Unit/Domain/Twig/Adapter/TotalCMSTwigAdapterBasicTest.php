@@ -26,6 +26,7 @@ use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Object\Data\ObjectData;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
@@ -502,7 +503,7 @@ final class TotalCMSTwigAdapterBasicTest extends TestCase
 		$config      = $this->createMock(Config::class);
 		$config->api = '';
 
-		$adapter = new MediaTwigAdapter($objectFetcher, $config, $loggerFactory);
+		$adapter = new MediaTwigAdapter($objectFetcher, $config, $this->createMock(ImageGenerator::class), $loggerFactory);
 
 		$result = $adapter->depot('test-id');
 		expect($result)->toBe([['name' => 'file.pdf']]);

@@ -48,6 +48,18 @@ Get the ImageWorks API URL for an image. Use this when you need just the URL (no
 
 For available ImageWorks parameters, see the [ImageWorks Reference](docs/twig/imageworks).
 
+### imageDataUri()
+
+The image rendered by ImageWorks and returned as a `data:` URI, embedded rather than linked. Use it where a file cannot load anything from outside itself: an SVG served as an `<img>` (a badge other sites embed), or an email whose client blocks remote images. Same arguments as `imagePath()`; top-level image properties only.
+
+```twig
+{# A 68px square avatar inside an SVG, falling back to an initial #}
+{% set photo = cms.media.imageDataUri(member, {w: 68, h: 68, fit: 'crop', fm: 'webp'}, {collection: 'users'}) %}
+{% if photo %}<image href="{{ photo }}" width="34" height="34"/>{% else %}<text>{{ member.name|first }}</text>{% endif %}
+```
+
+It returns an empty string when there is no image, when the render fails, or when the result is larger than 64 KB, so a template can always fall back. A data URI ships inside every copy of the file that holds it, so keep `w` and `h` small: it is for thumbnails, not photos.
+
 ### Nested images (cards and decks)
 
 Images stored inside a `card` or `deck` field are addressed through the `property` option using a **dot-notation path**. The first segment is the parent property; subsequent segments walk down to the image.

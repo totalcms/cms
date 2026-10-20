@@ -6,6 +6,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Action\XmlRpc\XmlRpcDiscoveryAction;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
+use TotalCMS\Domain\Builder\Exception\PageRedirectException;
 use TotalCMS\Domain\License\Service\LicenseStatus;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Twig\Data\FrontendAsset;
@@ -124,6 +125,24 @@ class TotalCMSTwigAdapter
 	public function notFound(): never
 	{
 		throw new PageNotFoundException();
+	}
+
+	/**
+	 * Stop rendering and answer the request with a redirect to `$url`. For a
+	 * forwarding page whose target depends on data — a page record's
+	 * `redirectTo` covers the fixed ones. Nothing after the call is rendered.
+	 *
+	 * The status is one of 301, 302, 303, 307 or 308; anything else becomes
+	 * 302. A URL that is empty or holds a line break is refused, so a value
+	 * built from the request can never add a header of its own.
+	 */
+	public function redirect(string $url, int $status = 302): never
+	{
+		if ($url === '' || strpbrk($url, "\r\n") !== false) {
+			throw new \InvalidArgumentException('cms.redirect() needs a URL without line breaks.');
+		}
+
+		throw new PageRedirectException($url, in_array($status, [301, 302, 303, 307, 308], true) ? $status : 302);
 	}
 
 	/**

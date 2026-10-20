@@ -24,6 +24,7 @@ use TotalCMS\Domain\JobQueue\Service\JobManager;
 use TotalCMS\Domain\JobQueue\Service\JobQueueHealth;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\License\Service\LicenseStatus;
+use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Service\SchemaLister;
 use TotalCMS\Domain\Template\Service\TemplateLister;
@@ -364,6 +365,7 @@ final class TotalCMSTwigAdapterStaticTest extends TestCase
 		$fullAdapter = new MediaTwigAdapter(
 			$this->createMock(ObjectFetcher::class),
 			$config,
+			$this->createMock(ImageGenerator::class),
 			$loggerFactory,
 		);
 
