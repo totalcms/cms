@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Twig\Environment;
-use Twig\Loader\ArrayLoader;
 use TotalCMS\Domain\Admin\TotalFormFactory;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
 use TotalCMS\Domain\Twig\Extension\TotalCMSTwigExtension;
 use TotalCMS\Domain\Twig\Service\TwigEngine;
+use Twig\Environment;
+use Twig\Loader\ArrayLoader;
 
 /**
  * `propertyOptions: "countries"` fills a select with every country, and the

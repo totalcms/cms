@@ -30,8 +30,8 @@ it('lists every country as code/name options sorted by name in the locale', func
 	if (!class_exists(Collator::class)) {
 		return;
 	}
-	$labels = array_column($options, 'label');
-	$sorted = $labels;
+	$labels   = array_column($options, 'label');
+	$sorted   = $labels;
 	$collator = new Collator('de');
 	$collator->sort($sorted);
 	expect($labels)->toBe($sorted);
