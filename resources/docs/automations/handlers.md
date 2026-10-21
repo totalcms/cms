@@ -84,6 +84,7 @@ The handler is stored in its own `.php` file next to the automation object (an *
 | Property | What it is |
 |----------|------------|
 | `$ctx->mailer` | Send a [Mailer](docs/notifications/mailer) email — `sendEmail($mailerId, $data)` |
+| `$ctx->publicHttp` | GET a URL someone else typed — `get($url, $options)` returns `statusCode` and `body`. Public addresses only (see below) |
 | `$ctx->config` | Core configuration |
 | `$ctx->logger` | PSR-3 logger writing to `jobs.log` (channel `automations`) |
 | `$ctx->trigger` | The trigger row that fired this run (e.g. `$ctx->trigger['type']`) |
@@ -92,6 +93,31 @@ The handler is stored in its own `.php` file next to the automation object (an *
 | `$ctx->request` | The PSR-7 request — webhook triggers only |
 
 `$ctx->request` and `$ctx->event` are `null` for schedule runs.
+
+## Fetching a URL from content
+
+When the URL comes from content (a member's website, a feed someone added, a link in a form), fetch it with `$ctx->publicHttp`, not curl or Guzzle directly. A URL like that can point at your own server: `http://localhost/`, a private network address, or the cloud metadata service at `169.254.169.254`. `publicHttp` refuses all of them:
+
+- The host must resolve only to public addresses, and the request connects to the address that was checked, so DNS cannot be switched between the check and the request.
+- Redirects are followed one at a time, and each one is checked the same way.
+- Only `http` and `https`, with no username or password in the URL.
+- A 10 second timeout, and the body is read up to 2 MB; the rest is dropped.
+
+```php
+return function ($ctx) {
+    try {
+        $response = $ctx->publicHttp->get($url, ['timeout' => 8, 'max_bytes' => 1_000_000]);
+    } catch (\RuntimeException $e) {
+        return ['unreachable' => $e->getMessage()];   // refused, or the site is down
+    }
+    if (!$response->isSuccess()) {
+        return ['status' => $response->statusCode];
+    }
+    // $response->body is the page
+};
+```
+
+Options: `timeout` (seconds), `max_bytes`, `max_redirects` (default 3), `user_agent` and `headers` (name => value).
 
 ## Example: digest email on a schedule
 
