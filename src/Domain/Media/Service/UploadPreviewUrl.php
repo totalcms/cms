@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Media\Service;
 
 use TotalCMS\Domain\Admin\FormField\ImageField;
+use TotalCMS\Domain\ImageWorks\Service\ImageworksUrl;
 use TotalCMS\Domain\Object\Data\ObjectData;
-use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 
 /**
  * The admin-preview ImageWorks URL for an image that was just saved —
@@ -44,7 +44,7 @@ final class UploadPreviewUrl
 					return '';
 				}
 
-				return MediaTwigAdapter::buildImageworksGalleryAPI($api, $id, (string)$image['name'], $image, $imageworks, [
+				return ImageworksUrl::buildImageworksGalleryAPI($api, $id, (string)$image['name'], $image, $imageworks, [
 					'collection' => $collection,
 					'property'   => $property,
 				]);
@@ -63,7 +63,7 @@ final class UploadPreviewUrl
 				return '';
 			}
 
-			return MediaTwigAdapter::buildImageworksAPI($api, $id, $image, $imageworks, [
+			return ImageworksUrl::buildImageworksAPI($api, $id, $image, $imageworks, [
 				'collection' => $collection,
 				'property'   => $propertyPath,
 			]);

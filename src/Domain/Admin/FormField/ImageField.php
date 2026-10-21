@@ -2,8 +2,8 @@
 
 namespace TotalCMS\Domain\Admin\FormField;
 
+use TotalCMS\Domain\ImageWorks\Service\ImageworksUrl;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
-use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 
 class ImageField extends UploadField
 {
@@ -23,7 +23,7 @@ class ImageField extends UploadField
 		$options      = ['collection' => $this->form->collection, 'property' => $this->propertyPath()];
 		$id           = $this->form->id;
 
-		$imagePath = MediaTwigAdapter::buildImageworksAPI($api, $id, $imageData, $imageworks, $options);
+		$imagePath = ImageworksUrl::buildImageworksAPI($api, $id, $imageData, $imageworks, $options);
 
 		$previewAttrs = ['class' => 'image-preview'];
 		if ($imageData['featured'] ?? false) {

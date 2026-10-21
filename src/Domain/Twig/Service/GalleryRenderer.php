@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Twig\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Collection\Utilities\CollectionSorter;
 use TotalCMS\Domain\ImageWorks\Service\ImageDimensionCalculator;
+use TotalCMS\Domain\ImageWorks\Service\ImageworksUrl;
 use TotalCMS\Domain\Query\Service\ObjectFilter;
 use TotalCMS\Domain\Query\Service\ObjectSearcher;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
@@ -455,7 +456,7 @@ class GalleryRenderer
 	{
 		$imageworks = $this->media->resolvePresetFormat($imageworks);
 
-		return MediaTwigAdapter::buildImageworksGalleryAPI($this->config->api, $id, $image['name'] ?? '', $image, $imageworks, $options);
+		return ImageworksUrl::buildImageworksGalleryAPI($this->config->api, $id, $image['name'] ?? '', $image, $imageworks, $options);
 	}
 
 	/**
