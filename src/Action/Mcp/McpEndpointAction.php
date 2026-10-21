@@ -11,6 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
+use TotalCMS\Domain\Mcp\Service\McpActiveSession;
 use TotalCMS\Domain\Mcp\Service\McpListeningStream;
 use TotalCMS\Domain\Mcp\Service\McpRequestAuthorizer;
 use TotalCMS\Domain\Mcp\Service\McpRequestBody;
@@ -51,6 +52,7 @@ readonly class McpEndpointAction
 		private JsonRenderer $renderer,
 		private Config $config,
 		private PersonaContext $personaContext,
+		private McpActiveSession $activeSession,
 	) {
 	}
 
@@ -77,6 +79,10 @@ readonly class McpEndpointAction
 		if ($persona instanceof ResponseInterface) {
 			return $persona;
 		}
+
+		// Spares this request's own session when a tool call it makes changes
+		// the tool surface and McpSessionInvalidator drops the others.
+		$this->activeSession->set($request->getHeaderLine('Mcp-Session-Id'));
 
 		// Read the client's self-reported identity from the initialize handshake.
 		// It drives two things: the mcp-activity log line, and the tools-only
@@ -131,7 +137,7 @@ readonly class McpEndpointAction
 			&& str_contains($request->getHeaderLine('Accept'), 'text/event-stream')
 			&& (bool)($this->config->mcp['listeningStream'] ?? true)
 		) {
-			if (!McpTransportSecurity::originAllowed($request, $allowedOrigins)) {
+			if (!McpTransportSecurity::originAllowed($request, $allowedOrigins, $this->config->url)) {
 				$message = $request->getHeaderLine('Origin') !== ''
 					? 'Forbidden: Invalid Origin header.'
 					: 'Forbidden: Invalid Host header.';
@@ -210,7 +216,8 @@ readonly class McpEndpointAction
 		$middleware = [];
 		if (!McpTransportSecurity::isOpen($allowedOrigins)) {
 			$middleware[] = new DnsRebindingProtectionMiddleware(
-				McpTransportSecurity::allowedHosts($allowedOrigins, $request->getUri()->getHost()),
+				allowedHosts: McpTransportSecurity::allowedHosts($allowedOrigins, $request->getUri()->getHost()),
+				allowedOrigins: McpTransportSecurity::allowedOrigins($allowedOrigins, $this->config->url, $request),
 			);
 		}
 

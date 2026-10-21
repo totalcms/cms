@@ -209,7 +209,7 @@ final class McpServerFactoryTest extends TestCase
 	{
 		// If this fails after updating the SDK, the factory + discovery JSON
 		// both need to advertise the new version in lockstep.
-		$this->assertSame('2025-11-25', $this->factory()->protocolVersion());
+		$this->assertSame('2026-07-28', $this->factory()->protocolVersion());
 	}
 
 	public function testBuildReturnsSdkServerInstance(): void

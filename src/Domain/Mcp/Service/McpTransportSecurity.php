@@ -19,9 +19,10 @@ use Psr\Http\Message\ServerRequestInterface;
  *    restriction — any client works out of the box, exactly as the CORS layer
  *    already allows.
  *  - **Restricted** mode (explicit origins) enforces the MCP spec's
- *    403-on-invalid-Origin: only the server's own host plus the configured
- *    origins are accepted. The server's own host is always included so
- *    same-origin admin requests and server-to-server calls are never blocked.
+ *    403-on-invalid-Origin: the Host must be the server's own or a configured
+ *    origin's, and an Origin must be one of the configured origins or the
+ *    site's own. The site's own is always included so same-origin admin
+ *    requests and server-to-server calls are never blocked.
  */
 final class McpTransportSecurity
 {
@@ -68,39 +69,83 @@ final class McpTransportSecurity
 	}
 
 	/**
+	 * Origin allowlist for DnsRebindingProtectionMiddleware, which from
+	 * mcp/sdk 0.9 checks an Origin against full origins (scheme, host, port)
+	 * rather than against the host list: the configured origins plus the
+	 * site's own. The SDK accepts a same-origin request by comparing against
+	 * the request URI, but that reads `http` behind a proxy that terminates
+	 * TLS, so the site's own origin is listed under both schemes, as well as
+	 * the one config `url` names.
+	 *
+	 * @param array<mixed> $allowedOrigins
+	 *
+	 * @return list<string>
+	 */
+	public static function allowedOrigins(array $allowedOrigins, string $siteUrl, ServerRequestInterface $request): array
+	{
+		$uri       = $request->getUri();
+		$authority = $uri->getHost() . ($uri->getPort() !== null ? ':' . $uri->getPort() : '');
+		$own       = $uri->getHost() !== '' ? ['https://' . $authority, 'http://' . $authority] : [];
+
+		$origins = [];
+		foreach ([$siteUrl, ...$own, ...self::normalize($allowedOrigins)] as $url) {
+			$origin = self::origin($url);
+			if ($origin !== null) {
+				$origins[] = $origin;
+			}
+		}
+
+		return array_values(array_unique($origins));
+	}
+
+	/**
 	 * Origin/Host validation for callers that bypass the SDK's transport-level
 	 * DnsRebindingProtectionMiddleware — currently the GET "listening stream"
 	 * short-circuit in McpEndpointAction, which returns before
 	 * StreamableHttpTransport (and its middleware stack) is ever constructed.
-	 * Mirrors DnsRebindingProtectionMiddleware::process()'s own precedence:
-	 * Origin wins when present, else Host, else allow (no signal to check).
+	 * Mirrors DnsRebindingProtectionMiddleware::process(): the Host must be
+	 * allowed (a missing one is not), and an Origin, when sent, must be an
+	 * allowed origin.
 	 *
 	 * @param array<mixed> $allowedOrigins
 	 */
-	public static function originAllowed(ServerRequestInterface $request, array $allowedOrigins): bool
+	public static function originAllowed(ServerRequestInterface $request, array $allowedOrigins, string $siteUrl): bool
 	{
 		if (self::isOpen($allowedOrigins)) {
 			return true;
 		}
 
-		$hosts  = self::allowedHosts($allowedOrigins, $request->getUri()->getHost());
-		$origin = $request->getHeaderLine('Origin');
-		if ($origin !== '') {
-			$host = parse_url($origin, PHP_URL_HOST);
-
-			return is_string($host) && $host !== '' && in_array(strtolower($host), $hosts, true);
-		}
-
 		$host = $request->getHeaderLine('Host');
-		if ($host === '') {
-			return true;
-		}
-
 		$name = str_starts_with($host, '[')
 			? substr($host, 0, (int)strpos($host, ']') + 1)
 			: explode(':', $host, 2)[0];
+		if ($name === '' || !in_array(strtolower($name), self::allowedHosts($allowedOrigins, $request->getUri()->getHost()), true)) {
+			return false;
+		}
 
-		return in_array(strtolower($name), $hosts, true);
+		$origin = $request->getHeaderLine('Origin');
+
+		return $origin === '' || in_array(self::origin($origin), self::allowedOrigins($allowedOrigins, $siteUrl, $request), true);
+	}
+
+	/**
+	 * `scheme://host[:port]` the way a browser sends it in an Origin header:
+	 * lowercase, no path or trailing slash, no default port. Null for anything
+	 * that is not an absolute URL.
+	 */
+	private static function origin(string $url): ?string
+	{
+		$parts = parse_url(strtolower(trim($url)));
+		if (!is_array($parts) || !isset($parts['scheme'], $parts['host'])) {
+			return null;
+		}
+
+		$port = $parts['port'] ?? null;
+		if (($parts['scheme'] === 'https' && $port === 443) || ($parts['scheme'] === 'http' && $port === 80)) {
+			$port = null;
+		}
+
+		return $parts['scheme'] . '://' . $parts['host'] . ($port !== null ? ':' . $port : '');
 	}
 
 	/**

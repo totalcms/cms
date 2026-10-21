@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\OAuth\Service;
 
-use Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata;
 use TotalCMS\Domain\OAuth\Data\OAuthScopeData;
 use TotalCMS\Support\Config;
 
@@ -67,24 +66,39 @@ final readonly class OAuthDiscoveryProvider
 	 * endpoint's `WWW-Authenticate: ... resource_metadata="..."` challenge, so a
 	 * client that hits a 401 can discover which authorization server protects this
 	 * resource. T3 is its own authorization server, so `authorization_servers`
-	 * lists this issuer. Returned as the SDK value object so serialization
-	 * tracks the spec; `bearer_methods_supported` rides in `extra`.
+	 * lists this issuer.
+	 *
+	 * Built here, like metadata(), rather than through the MCP SDK's
+	 * ProtectedResourceMetadata: from mcp/sdk 0.9 that object refuses a
+	 * plain-http resource or issuer outside loopback (so dev and test installs
+	 * on http://*.test could not serve it at all) and drops
+	 * `bearer_methods_supported`.
 	 *
 	 * `$resource` lets callers override the advertised resource identifier —
 	 * used by the RFC 9728 §3 path-suffixed well-known route, whose clients
 	 * verify the returned `resource` matches the identifier they queried.
 	 * Defaults to T3's own API root when omitted.
 	 */
-	public function protectedResourceMetadata(?string $resource = null): ProtectedResourceMetadata
+	/**
+	 * @return array<string,mixed>
+	 */
+	public function protectedResourceMetadata(?string $resource = null): array
 	{
 		$resource ??= rtrim($this->config->url, '/') . rtrim($this->config->api, '/');
 
-		return new ProtectedResourceMetadata(
-			authorizationServers: [$this->resolveIssuer()],
-			scopesSupported: array_map(fn (OAuthScopeData $s): string => $s->identifier, $this->scopes->all()),
-			resource: $resource,
-			extra: ['bearer_methods_supported' => ['header']],
-		);
+		$meta = [
+			'bearer_methods_supported' => ['header'],
+			'authorization_servers'    => [$this->resolveIssuer()],
+		];
+
+		$scopes = array_values(array_unique(array_map(fn (OAuthScopeData $s): string => $s->identifier, $this->scopes->all())));
+		if ($scopes !== []) {
+			$meta['scopes_supported'] = $scopes;
+		}
+
+		$meta['resource'] = $resource;
+
+		return $meta;
 	}
 
 	private function resolveIssuer(): string

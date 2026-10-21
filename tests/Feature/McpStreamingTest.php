@@ -6,7 +6,6 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ResponseInterface;
 use Slim\App;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Support\Config;
 
 /**
  * SSE streaming verification tests for the T3 MCP endpoint.
@@ -169,65 +168,43 @@ function streamingMcpRequest(
 }
 
 /**
- * Trigger the CallbackStream body execution (to run seeding side-effects).
+ * Run the SSE CallbackStream body (which resumes the tool's Fiber and runs its
+ * seeding side-effects) and return everything it streamed.
  *
- * The SDK's CallbackStream uses ob_flush() internally which sends content
- * through the outer output buffer rather than into the captured string. We
- * nest two output buffers so that flush lands in the outer buffer instead of
- * the test runner's terminal (the same layout as drainStreamedBody() in
- * Pest.php). Callers should not rely on captured output for assertions; use
- * session-file reads or disk-artifact checks for content verification.
+ * The SDK's CallbackStream echoes each frame and calls ob_flush(), so the
+ * output is captured with two nested buffers: the flush moves the inner
+ * buffer into the outer one rather than out to the test runner's terminal
+ * (the same layout as drainStreamedBody() in Pest.php).
  */
-function triggerSseBody(ResponseInterface $response): void
+function triggerSseBody(ResponseInterface $response): string
 {
 	ob_start();
 	ob_start();
-	// Call __toString() explicitly (not a `(string)` cast) for its side effect:
-	// it reads the whole PSR-7 body, which drives the SSE CallbackStream and runs
-	// the tool's seeding loop. A discarded cast looks pointless to Rector's
-	// dead-code rules and gets stripped; an explicit method call is left alone.
-	$response->getBody()->__toString();
-	ob_end_clean();
-	ob_end_clean();
+	$returned = $response->getBody()->__toString();
+	$inner    = (string)ob_get_clean();
+	$outer    = (string)ob_get_clean();
+
+	return $outer . $inner . $returned;
 }
 
 /**
- * Read the MCP session file and return the _mcp.outgoing_queue entries whose
- * message JSON contains the given method string.
+ * The JSON-RPC messages in an SSE body whose `method` is $method, in order.
  *
- * @param string $tmpdir    Value of Config::$tmpdir
- * @param string $sessionId Session UUID
- * @param string $method    JSON-RPC method to filter on (e.g. 'notifications/progress')
+ * From mcp/sdk 0.9 a call's notifications are queued per transport and
+ * written into its own SSE response, not into the session file, so the
+ * stream is the place to look for them.
  *
  * @return list<array<string,mixed>>
  */
-function readQueuedMcpMessages(string $tmpdir, string $sessionId, string $method): array
+function streamedMcpMessages(string $sse, string $method): array
 {
-	$file = $tmpdir . '/mcp-sessions/' . $sessionId;
-	if (!file_exists($file)) {
-		return [];
-	}
-
-	$decoded = json_decode((string)file_get_contents($file), true);
-	if (!is_array($decoded)) {
-		return [];
-	}
-
-	// Session::set() uses dot-notation keys; on-disk JSON is nested:
-	// { "_mcp": { "outgoing_queue": [ { "message": "<json>", "context": {} } ] } }
-	$queue = $decoded['_mcp']['outgoing_queue'] ?? [];
-	if (!is_array($queue)) {
-		return [];
-	}
-
 	$matches = [];
-	foreach ($queue as $entry) {
-		$encoded = is_array($entry) ? ($entry['message'] ?? null) : null;
-		$msg     = is_string($encoded) ? json_decode($encoded, true) : null;
-		if (!is_array($msg)) {
+	foreach (preg_split('/\R/', $sse) ?: [] as $line) {
+		if (!str_starts_with($line, 'data:')) {
 			continue;
 		}
-		if (($msg['method'] ?? null) === $method) {
+		$msg = json_decode(trim(substr($line, 5)), true);
+		if (is_array($msg) && ($msg['method'] ?? null) === $method) {
 			$matches[] = $msg;
 		}
 	}
@@ -314,7 +291,7 @@ describe('McpStreaming — SSE upgrade verification', function (): void {
 		@unlink(schemaPath('notoken-schema'));
 	});
 
-	it('notifications/progress is queued in session outbox before body execution', function (): void {
+	it('notifications/progress is streamed ahead of the tool result', function (): void {
 		$sessionId = streamingMcpInit($this->app);
 
 		if ($sessionId === '') {
@@ -344,21 +321,18 @@ describe('McpStreaming — SSE upgrade verification', function (): void {
 		expect($response->getStatusCode())->toBe(200);
 		expect($response->getHeaderLine('Content-Type'))->toContain('text/event-stream');
 
-		// The first notifications/progress is queued into the session BEFORE the
-		// HTTP response body is read — the Protocol saves the session right after
-		// the fiber suspends and before returning to the test.
-		$tmpdir   = $this->app->getContainer()->get(Config::class)->tmpdir;
-		$queued   = readQueuedMcpMessages($tmpdir, $sessionId, 'notifications/progress');
+		$sse    = triggerSseBody($response);
+		$queued = streamedMcpMessages($sse, 'notifications/progress');
 
 		expect($queued)->not()->toBeEmpty();
 		expect($queued[0]['method'])->toBe('notifications/progress');
 		expect($queued[0]['params']['message'])->toBe('schema persisted');
-		// JSON round-trip via session file may decode 50.0 as int 50 — use == not ===.
+		// JSON may decode 50.0 as int 50 — compare as floats.
 		expect((float)$queued[0]['params']['progress'])->toBe(50.0);
 		expect((float)$queued[0]['params']['total'])->toBe(100.0);
 
-		// Trigger body to complete the remaining seeding work.
-		triggerSseBody($response);
+		// A call's notifications go out before its response.
+		expect(strpos($sse, 'schema persisted'))->toBeLessThan(strpos($sse, '"result"'));
 
 		// Cleanup
 		@unlink(schemaPath('outbox-check-schema'));
@@ -402,18 +376,15 @@ describe('McpStreaming — schema_create progress notifications', function (): v
 		expect($response->getStatusCode())->toBe(200);
 		expect($response->getHeaderLine('Content-Type'))->toContain('text/event-stream');
 
-		$tmpdir = $this->app->getContainer()->get(Config::class)->tmpdir;
-		$queued = readQueuedMcpMessages($tmpdir, $sessionId, 'notifications/progress');
+		$queued = streamedMcpMessages(triggerSseBody($response), 'notifications/progress');
 
 		expect($queued)->not()->toBeEmpty();
 		$first = $queued[0];
 		expect($first['params']['progressToken'])->toBe('progress-values-token');
 		expect($first['params']['message'])->toBe('schema persisted');
-		// JSON round-trip via session file may decode 50.0 as int 50 — use float cast.
+		// JSON may decode 50.0 as int 50 — compare as floats.
 		expect((float)$first['params']['progress'])->toBe(50.0);
 		expect((float)$first['params']['total'])->toBe(100.0);
-
-		triggerSseBody($response);
 
 		// Cleanup
 		@unlink(schemaPath('progress-values-schema'));
@@ -553,7 +524,7 @@ describe('McpStreaming — schema_create progress notifications', function (): v
 		@unlink(schemaPath('no-seed-schema'));
 	});
 
-	it('second progress checkpoint "seed objects created" is queued after body executes', function (): void {
+	it('second progress checkpoint "seed objects created" is streamed after the seeding runs', function (): void {
 		$sessionId = streamingMcpInit($this->app);
 
 		if ($sessionId === '') {
@@ -561,8 +532,6 @@ describe('McpStreaming — schema_create progress notifications', function (): v
 
 			return;
 		}
-
-		$tmpdir = $this->app->getContainer()->get(Config::class)->tmpdir;
 
 		$response = streamingMcpRequest(
 			$this->app,
@@ -585,26 +554,11 @@ describe('McpStreaming — schema_create progress notifications', function (): v
 		expect($response->getStatusCode())->toBe(200);
 		expect($response->getHeaderLine('Content-Type'))->toContain('text/event-stream');
 
-		// First checkpoint is already queued (schema persisted) — assert the message string.
-		$beforeBody = readQueuedMcpMessages($tmpdir, $sessionId, 'notifications/progress');
-		expect($beforeBody)->not()->toBeEmpty();
-		expect($beforeBody[0]['params']['message'])->toBe('schema persisted');
+		// Reading the body resumes the Fiber, runs the seeding and streams both
+		// checkpoints ahead of the result.
+		$queued = streamedMcpMessages(triggerSseBody($response), 'notifications/progress');
 
-		// Trigger body — this flushes the first notification, resumes the Fiber,
-		// runs seeding, queues and flushes the second notification.
-		triggerSseBody($response);
-
-		// NOTE: The second progress checkpoint ('seed objects created') cannot be
-		// asserted via readQueuedMcpMessages() after body execution because
-		// Protocol::consumeOutgoingMessages() is a pop-and-clear operation — the
-		// SDK flushes each queued message to the SSE stream and immediately clears
-		// the queue in the session file. The message is emitted via ob_flush() to
-		// the SSE stream, not stored for later inspection.
-		//
-		// Proof that the second checkpoint code was reached: the seeding loop runs
-		// BEFORE $ctx->progress(100.0, …, 'seed objects created') is called — so
-		// if the seed object exists on disk, the handler ran all the way through
-		// that checkpoint. This is the strongest verifiable invariant available.
+		expect(array_column(array_column($queued, 'params'), 'message'))->toBe(['schema persisted', 'seed objects created']);
 		expect(file_exists(objectPath('second-checkpoint-schema', 'sc-obj-1')))->toBeTrue();
 
 		// Cleanup

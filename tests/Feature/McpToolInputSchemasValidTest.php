@@ -441,9 +441,13 @@ describe('MCP tool inputSchemas — Assertion B: SDK SchemaValidator round-trip'
 		);
 	});
 
-	it('empty PHP array [] is treated equivalently to empty stdClass by the SchemaValidator', function (): void {
-		// The SDK converts empty array to stdClass internally, so both inputs
-		// should produce the same validation outcome against a no-required schema.
+	it('the SchemaValidator reads stdClass as an object and [] as an array', function (): void {
+		// Since mcp/sdk 0.9 the SchemaValidator no longer reads an empty PHP
+		// array as an object — `[]` is a JSON array to it. CallToolHandler
+		// turns empty top-level arguments into stdClass before validating, so
+		// a call sending `{}` (decoded as `[]`) still passes — the HTTP tests
+		// calling tools with `'arguments' => []` (McpAuthPersonaScopesTest and
+		// others) cover that half.
 		$validator      = new SchemaValidator();
 		$noParamsSchema = [
 			'type'                 => 'object',
@@ -451,11 +455,8 @@ describe('MCP tool inputSchemas — Assertion B: SDK SchemaValidator round-trip'
 			'additionalProperties' => false,
 		];
 
-		$errorsWithStdClass = $validator->validateAgainstJsonSchema(new stdClass(), $noParamsSchema);
-		$errorsWithEmptyArr = $validator->validateAgainstJsonSchema([], $noParamsSchema);
-
-		expect($errorsWithStdClass)->toBe([], 'stdClass{} should pass a no-params schema');
-		expect($errorsWithEmptyArr)->toBe([], '[] should pass a no-params schema (SDK normalises empty array)');
+		expect($validator->validateAgainstJsonSchema(new stdClass(), $noParamsSchema))->toBe([], 'stdClass{} should pass a no-params schema');
+		expect($validator->validateAgainstJsonSchema([], $noParamsSchema))->not->toBe([], '[] is an array to the validator');
 	});
 });
 

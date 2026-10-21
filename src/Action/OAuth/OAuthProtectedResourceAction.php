@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Action\OAuth;
 
-use Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadataHandler;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -22,10 +21,9 @@ use TotalCMS\Domain\OAuth\Service\OAuthDiscoveryProvider;
  * `WWW-Authenticate: ... resource_metadata="..."` pointer here to learn which
  * authorization server protects the resource.
  *
- * Serving is delegated to the SDK's ProtectedResourceMetadataHandler so the
- * response shape tracks the spec; what stays ours is the metadata content
- * (OAuthDiscoveryProvider) and the edition gate — mirrors OAuthDiscoveryAction's
- * non-Pro behavior: 404 when the OAuth server feature is unavailable.
+ * The document comes from OAuthDiscoveryProvider; the edition gate mirrors
+ * OAuthDiscoveryAction's non-Pro behavior: 404 when the OAuth server feature
+ * is unavailable.
  */
 readonly class OAuthProtectedResourceAction
 {
@@ -55,12 +53,11 @@ readonly class OAuthProtectedResourceAction
 			$resource = rtrim($uri->getScheme() . '://' . $uri->getAuthority(), '/') . '/' . ltrim($path, '/');
 		}
 
-		$handler = new ProtectedResourceMetadataHandler(
-			$this->provider->protectedResourceMetadata($resource),
-			$this->responseFactory,
-			$this->streamFactory,
-		);
+		$json = json_encode($this->provider->protectedResourceMetadata($resource), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
 
-		return $handler->handle($request);
+		return $this->responseFactory
+			->createResponse(200)
+			->withHeader('Content-Type', 'application/json')
+			->withBody($this->streamFactory->createStream($json));
 	}
 }

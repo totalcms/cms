@@ -260,11 +260,16 @@ readonly class CollectionSaver
 	 * Two collections with equal config subsets differ only in content
 	 * activity, which must not move the settings timestamp.
 	 *
+	 * Both sides are normalized, so a stored record that predates a
+	 * normalization (an `mcp` block without `tools`, say) does not read as a
+	 * settings change when the metadata cascade rewrites it in normal form —
+	 * that made the next object save drop every live MCP session.
+	 *
 	 * @return array<string,mixed>
 	 */
 	private function configSubset(CollectionData $collection): array
 	{
-		$config = $collection->toArray();
+		$config = $this->normalizeSubmittedData($collection->toArray());
 		unset($config['count'], $config['totalObjects'], $config['lastUpdated'], $config['updated']);
 
 		return $config;

@@ -52,6 +52,7 @@ All notable changes to Total CMS will be documented in this file.
 - **Verification and reset emails state their expiry in hours** when the lifetime is whole hours
 - **The JumpStart utility sorts collections by name**, not id
 - **Front-end libraries updated**, among them Tiptap 3.32, CodeMirror, marked 18, Mermaid 12 and Choices 11.2.4. The list field's drag-to-reorder now works on the official Choices release, using Sortable's pointer-based dragging in every browser. The data visualizer keeps its dagre layout and classic look under Mermaid 12
+- **MCP server on mcp/sdk 0.9.** Parallel calls in one session keep their own answers and progress, a server-sent notification no longer rides inside a response as a JSON array (which current clients reject), and an unreachable session store answers 503 instead of "session not found". `/.well-known/mcp.json` now advertises `2026-07-28`. A tool's `structuredContent` is now checked against its `outputSchema`, and a mismatch reaches the client as a tool error instead of the bad value — an extension tool whose output drifted from its schema now fails visibly. Return `new \stdClass()`, not `[]`, for an empty object
 
 ### Removed
 
@@ -59,6 +60,9 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Fixed
 
+- **An MCP call that changes the tool surface keeps its own session.** Creating a schema or collection over MCP drops every connected client's session so they reload the tool list; the calling client's session went too, so a `create_schema` reporting progress failed with an internal error
+- **A content save no longer drops MCP sessions on a collection saved before a setting existed.** A record missing a later-added default (an `mcp` block without `tools`, say) read as a settings change the first time an object save rewrote it
+- **Restricted MCP origins accept the site's own page over https behind a proxy.** With `mcp.allowedOrigins` set, a configured origin is matched in full (scheme, host, port), and the site's own origin is accepted whether the proxy hands T3 the request as http or https
 - **The automation form's code editor stops growing at 600px.** A long handler made the PHP editor as tall as its code; it now scrolls inside a 600px box, as the template, data view and mailer editors do
 - **A Site Builder page that serves an image no longer opens a session.** A page whose URL ends in an image extension (a badge at `/badges/pill.svg`, an OG card) started a PHP session on every request, so an image embedded on other sites opened a session file, held its lock and sent a `PHPSESSID` cookie on every view of every page it sat on — and the `Set-Cookie` kept any CDN from caching it. Front-end URLs ending in `.svg`, `.png`, `.jpg`, `.gif`, `.webp`, `.avif` or `.ico` now run without a session, like ImageWorks and asset URLs; admin and API URLs keep theirs
 - **A 404 no longer resets OPcache.** The default error handler reset the pool-wide bytecode cache on every exception it answered, so each bot probing `/wp-login.php` and the like recompiled the whole site on the next request — and on a shared pool, every co-located site with it. The reset exists so a fixed file takes effect right after a fault; it now runs only for a real fault, never for an HTTP exception, and the `X-OPcache-Cleared` header is sent only when a reset actually happened
