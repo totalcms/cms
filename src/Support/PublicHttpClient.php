@@ -34,13 +34,13 @@ final readonly class PublicHttpClient
 	 */
 	public function __construct(?\Closure $resolver = null, ?\Closure $transport = null)
 	{
-		$this->resolver  = $resolver ?? self::resolve(...);
-		$this->transport = $transport ?? self::curl(...);
+		$this->resolver  = $resolver ?? $this->resolve(...);
+		$this->transport = $transport ?? $this->curl(...);
 	}
 
 	/**
 	 * @param array{timeout?: int, max_bytes?: int, max_redirects?: int, user_agent?: string, headers?: array<string,string>} $options
-	 *   Defaults: 10 second timeout, 2 MB, 3 redirects.
+	 *   Defaults: 10 second timeout, 2 MB, 3 redirects
 	 *
 	 * @throws \RuntimeException when the URL, a redirect or its address is refused, or the request fails
 	 */
@@ -60,7 +60,7 @@ final readonly class PublicHttpClient
 			$reply         = ($this->transport)($url, $host, $port, $ip, $opts);
 
 			if ($reply['status'] >= 300 && $reply['status'] < 400 && $reply['location'] !== '') {
-				$url = self::absolute($reply['location'], $url);
+				$url = $this->absolute($reply['location'], $url);
 
 				continue;
 			}
@@ -127,7 +127,7 @@ final readonly class PublicHttpClient
 	/**
 	 * @return list<string>
 	 */
-	private static function resolve(string $host): array
+	private function resolve(string $host): array
 	{
 		$v4 = gethostbynamel($host) ?: [];
 		$v6 = [];
@@ -147,7 +147,7 @@ final readonly class PublicHttpClient
 	 *
 	 * @return array{status: int, location: string, body: string}
 	 */
-	private static function curl(string $url, string $host, int $port, string $ip, array $opts): array
+	private function curl(string $url, string $host, int $port, string $ip, array $opts): array
 	{
 		$body     = '';
 		$maxBytes = (int)$opts['max_bytes'];
@@ -183,7 +183,7 @@ final readonly class PublicHttpClient
 		]);
 
 		curl_exec($ch);
-		$status   = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+		$status   = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 		$location = (string)curl_getinfo($ch, CURLINFO_REDIRECT_URL);
 		$errno    = curl_errno($ch);
 		$error    = curl_error($ch);
@@ -199,7 +199,7 @@ final readonly class PublicHttpClient
 	/**
 	 * A Location header made absolute against the URL it came from.
 	 */
-	private static function absolute(string $location, string $base): string
+	private function absolute(string $location, string $base): string
 	{
 		if (preg_match('{^[a-z][a-z0-9+.-]*:}i', $location) === 1) {
 			return $location;

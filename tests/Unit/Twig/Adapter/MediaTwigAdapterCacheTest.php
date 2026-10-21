@@ -6,8 +6,8 @@ namespace Tests\Unit\Twig\Adapter;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
-use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\ImageWorks\Service\ImageGenerator;
+use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Twig\Adapter\MediaTwigAdapter;
 use TotalCMS\Factory\LoggerFactory;
