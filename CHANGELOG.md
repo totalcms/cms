@@ -81,6 +81,8 @@ All notable changes to Total CMS will be documented in this file.
 - **An air-gapped site with a rejected offline license file says so**, with the reason and the `domain` fix, instead of a misleading "DNS verification required"
 - **Gallery reordering no longer throws** when part of the field failed to build, and admin API errors show the server's message instead of "Unknown error"
 - **No more "mkdir(): File exists"** when a web request and `jobs:process` create the same directory at once
+- **A form with a field named `style` loads.** Conditional visibility wrote to the form's inline style, and a browser resolves `form.style` to a field of that name, so the form threw "removeProperty is not a function" on load
+- **A styled markdown field's toolbar leaves out buttons it cannot run.** A `toolbarConfig` naming a styled text button such as Indent, Underline or an alignment showed it, and clicking it threw, since the markdown editor has no such command
 
 ### Documentation
 

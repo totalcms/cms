@@ -104,6 +104,20 @@
 				// password, which must never reach Sentry.
 				if (errorName === 'SecurityError' && message.includes("on 'History'")) return null;
 
+				// Ignore a script poking a cross-origin frame (an embed, an ad, an
+				// extension): Total CMS never reaches into another window, and the
+				// browser reports these with no stack to trace.
+				if (errorName === 'SecurityError' && message.includes('cross-origin frame')) return null;
+
+				// Ignore Outlook/Defender's link scanner, which opens emailed links
+				// (password reset, verification) in an embedded browser and rejects
+				// a promise of its own: "Object Not Found Matching Id:1, MethodName:update".
+				if (message.includes('Object Not Found Matching Id')) return null;
+
+				// Ignore Firefox's report of a script that threw `undefined`: there is
+				// no error, message or stack to act on.
+				if (message === 'uncaught exception: undefined') return null;
+
 				// Ignore auth errors (session expired, user needs to re-login)
 				if (message === 'Authentication required') return null;
 

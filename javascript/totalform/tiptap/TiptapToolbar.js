@@ -85,6 +85,14 @@ const BUTTON_DEFS = {
 	preview:         { command: 'togglePreview',             label: 'Preview' },
 };
 
+// Commands that need to be handled by TiptapEditor (not direct editor commands)
+const DELEGATED_COMMANDS = [
+	'toggleCodeView', 'openLinkDialog', 'openImageDialog',
+	'openVideoDialog', 'openFileDialog', 'insertTable',
+	'setColor', 'setHighlight', 'setFontFamily', 'toggleFullscreen',
+	'openAnchorDialog', 'openBlockAttributesDialog', 'togglePreview',
+];
+
 const DEFAULT_HEADING_LEVELS = [2, 3, 4];
 
 const ALIGN_OPTIONS = [
@@ -199,6 +207,10 @@ export default class TiptapToolbar {
 
 				const def = BUTTON_DEFS[buttonName];
 				if (!def) continue;
+				// A toolbarConfig can name a button whose extension this editor
+				// does not load (indent or underline on a styled markdown field);
+				// clicking it would call a command that does not exist.
+				if (!DELEGATED_COMMANDS.includes(def.command) && !this.editor.commands[def.command]) continue;
 
 				const btn = this.createButton(buttonName, def);
 				groupEl.appendChild(btn);
@@ -798,15 +810,7 @@ export default class TiptapToolbar {
 
 		const { command, args } = def;
 
-		// Commands that need to be handled by TiptapEditor (not direct editor commands)
-		const delegatedCommands = [
-			'toggleCodeView', 'openLinkDialog', 'openImageDialog',
-			'openVideoDialog', 'openFileDialog', 'insertTable',
-			'setColor', 'setHighlight', 'setFontFamily', 'toggleFullscreen',
-			'openAnchorDialog', 'openBlockAttributesDialog', 'togglePreview',
-		];
-
-		if (delegatedCommands.includes(command)) {
+		if (DELEGATED_COMMANDS.includes(command)) {
 			// Try direct command first, otherwise dispatch event for TiptapEditor
 			if (this.editor.commands[command]) {
 				this.editor.commands[command](args);

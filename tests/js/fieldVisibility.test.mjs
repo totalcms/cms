@@ -121,6 +121,25 @@ describe('FieldVisibility.updateSections', () => {
 });
 
 //-----------------------------------------------
+// collapseTrailingRows() writes to the grid's inline style. The grid is often
+// the <form> itself, and a form field named "style" shadows form.style.
+//-----------------------------------------------
+
+describe('FieldVisibility.collapseTrailingRows', () => {
+	test('works on a form grid that has a field named "style"', () => {
+		const form = document.createElement('form');
+		form.className = 'formgrid';
+		form.setAttribute('style', '--collapsed-row-gap: 24px');
+		form.innerHTML = '<input name="style" value="dark">';
+		// Browsers resolve form.style to the field; jsdom does not, so mimic it.
+		Object.defineProperty(form, 'style', { value: form.querySelector('input') });
+
+		expect(() => Object.create(FieldVisibility.prototype).collapseTrailingRows(form)).not.toThrow();
+		expect(form.getAttribute('style') || '').not.toContain('--collapsed-row-gap');
+	});
+});
+
+//-----------------------------------------------
 // updateGroups() does the same for fieldsets and accordions. They hold their
 // own fields, so there is no list to consult.
 //-----------------------------------------------

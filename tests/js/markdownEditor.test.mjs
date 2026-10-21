@@ -129,6 +129,15 @@ describe('the markdown toolbar', () => {
 		}
 	});
 
+	test('a toolbarConfig naming a styled text button leaves out what this editor cannot run', () => {
+		const { md } = mount('', {
+			toolbarConfig: [{ name: 'paragraph', buttons: ['bold', 'underline', 'outdent', 'indent', 'alignCenter', 'link'] }],
+		});
+		const commands = [...md.container.querySelectorAll('.ste-toolbar-btn[data-command]')].map((b) => b.dataset.command);
+
+		expect(commands).toEqual(['toggleBold', 'openLinkDialog']);
+	});
+
 	test('the schema has no nodes or marks markdown cannot write', () => {
 		const { md } = mount('');
 		const { marks, nodes } = md.editor.schema;

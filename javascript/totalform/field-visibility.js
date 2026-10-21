@@ -2,6 +2,9 @@
 // Field Visibility Manager
 // Handles conditional field visibility for forms
 //-----------------------------------------------
+// HTMLElement's own `style` getter, immune to a form field named "style".
+const STYLE_GETTER = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style').get;
+
 export default class FieldVisibility {
 
 	constructor(formElement, fields) {
@@ -231,10 +234,14 @@ export default class FieldVisibility {
 			let empty = 0;
 			while (empty < rows.length - 1 && parseFloat(rows[rows.length - 1 - empty]) === 0) empty++;
 
+			// The grid is often the <form> itself, and a form's named fields
+			// shadow its properties: a field called "style" makes grid.style
+			// that input. Read the declaration through the prototype instead.
+			const inline = STYLE_GETTER.call(grid);
 			if (empty > 0 && gap > 0) {
-				grid.style.setProperty('--collapsed-row-gap', `${empty * gap}px`);
+				inline.setProperty('--collapsed-row-gap', `${empty * gap}px`);
 			} else {
-				grid.style.removeProperty('--collapsed-row-gap');
+				inline.removeProperty('--collapsed-row-gap');
 			}
 		});
 	}
