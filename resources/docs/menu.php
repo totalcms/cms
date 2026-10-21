@@ -157,6 +157,7 @@ $menu = [
 					['title' => 'Edition Helpers', 'path' => 'twig/edition'],
 					['title' => 'Barcodes',        'path' => 'twig/barcodes'],
 					['title' => 'QR Codes',        'path' => 'twig/qrcodes'],
+					['title' => 'Badges',          'path' => 'twig/badges'],
 				],
 			],
 			[

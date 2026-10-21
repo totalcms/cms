@@ -198,6 +198,7 @@ use TotalCMS\Domain\Template\Service\TemplateLister;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Domain\Twig\Adapter\AdminTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\AuthTwigAdapter;
+use TotalCMS\Domain\Twig\Adapter\BadgeTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\BuilderTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\CollectionTwigAdapter;
 use TotalCMS\Domain\Twig\Adapter\DataTwigAdapter;
@@ -612,6 +613,7 @@ return [
 		new LocaleTwigAdapter($container->get(TranslationService::class), $container->get(Config::class)),
 		new UtilsTwigAdapter(),
 		$container->get(SeoTwigAdapter::class),
+		new BadgeTwigAdapter(),
 		// Lazy: the engine's `cms` global is this adapter.
 		fn (): TwigEngine => $container->get(TwigEngine::class),
 	),

@@ -890,6 +890,41 @@
             "url": "https://docs.totalcms.co/auth/twig/"
         },
         {
+            "name": "cms.badge.earned",
+            "signature": "earned(string $handle, array $options = []): string",
+            "description": "\"Total CMS designer\" with the member's approved sites and extensions, linking to their profile on totalcms.co. The count is drawn by totalcms.co, so it stays current.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.badge.pill",
+            "signature": "pill(array $options = []): string",
+            "description": "\"Built with Total CMS\" on one line.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.badge.profile",
+            "signature": "profile(string $handle, array $options = []): string",
+            "description": "The member's profile card: photo, \"Total CMS designer\" and @handle, linking to their profile on totalcms.co. An invalid handle gives the pill, as totalcms.co does for a profile it cannot show.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.badge.stacked",
+            "signature": "stacked(array $options = []): string",
+            "description": "\"BUILT WITH\" over \"Total CMS\", beside the flame.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
+            "name": "cms.badge.text",
+            "signature": "text(array $options = []): string",
+            "description": "\"Powered by Total CMS\" as inline text in the host's own text colour, for a footer line.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/twig/"
+        },
+        {
             "name": "cms.builder.asset",
             "signature": "asset(string $path): string",
             "description": "Resolve an asset URL with cache busting. Checks the manifest first (for hashed filenames), then falls back to file mtime for cache busting, then returns the raw path.",

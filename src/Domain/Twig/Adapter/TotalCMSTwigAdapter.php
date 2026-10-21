@@ -69,6 +69,7 @@ class TotalCMSTwigAdapter
 		public LocaleTwigAdapter $locale,
 		public UtilsTwigAdapter $utils,
 		public SeoTwigAdapter $seo,
+		public BadgeTwigAdapter $badge,
 		private readonly ?\Closure $twigEngineFactory = null,
 	) {
 		$this->logger     = $this->loggerFactory->channelLogger(LogChannel::Twig);
