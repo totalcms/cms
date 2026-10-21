@@ -51,6 +51,7 @@ All notable changes to Total CMS will be documented in this file.
 - **`automations:process` reports the queued jobs it ran**, not only the scheduled automations it fired, so a run that drained the queue no longer says "Fired 0"
 - **Verification and reset emails state their expiry in hours** when the lifetime is whole hours
 - **The JumpStart utility sorts collections by name**, not id
+- **Front-end libraries updated**, among them Tiptap 3.32, CodeMirror, marked 18, Mermaid 12 and Choices 11.2.4. The list field's drag-to-reorder now works on the official Choices release, using Sortable's pointer-based dragging in every browser. The data visualizer keeps its dagre layout and classic look under Mermaid 12
 
 ### Removed
 

@@ -1,7 +1,6 @@
 const esbuild            = require('esbuild');
 const copy               = require('esbuild-plugin-copy');
 const { clean }          = require('esbuild-plugin-clean');
-const { globPlugin }     = require('esbuild-plugin-glob');
 const { sassPlugin }     = require("esbuild-sass-plugin");
 
 // Production mode optimizations
@@ -72,7 +71,6 @@ esbuild.build({
 		".svg"   : "file",
 	},
     plugins     : [
-        globPlugin(),
 		copy.default({assets: {
             from : "node_modules/lightgallery/fonts/*",
             to   : "gallery"
@@ -87,6 +85,9 @@ esbuild.build({
         }}),
         // Sass includes
         sassPlugin({
+            // Compile with the sass-embedded devDependency (native Dart Sass),
+            // not the plugin's own bundled `sass`.
+            embedded: true,
             loadPaths: [
                 "node_modules/dropzone/src/",
 				// "node_modules/lightgallery/scss/",
