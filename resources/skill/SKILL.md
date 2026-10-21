@@ -1,6 +1,6 @@
 ---
 name: totalcms
-description: Use when building, editing, or managing a Total CMS (T3) site — Site Builder pages and SEO, collections, schemas and field choice, objects and imports, forms and public registration, access groups, automations, Data Views, search, feeds, the MCP server, the tcms CLI, the frontend/Vite pipeline, push/pull to production, or writing a T3 extension. Covers the local build workflow end to end.
+description: Use when building, editing, or managing a Total CMS (T3) site — Site Builder pages and SEO, collections, schemas and field choice, objects and imports, forms and public registration, access groups, automations, Data Views, search, feeds, the MCP server, the tcms CLI, the frontend/Vite pipeline, push/pull to production, writing a T3 extension, or troubleshooting a problem and reporting a Total CMS bug. Covers the local build workflow end to end.
 ---
 
 # Building a Total CMS (T3) site
@@ -172,6 +172,15 @@ Two rules prevent the two worst mistakes:
   design — never re-import them over live data. Use `pull`/`push` (dry-run
   first; filters are exclusive). Details: `references/going-live.md`.
 
+## When something looks like a Total CMS bug
+
+Do not tell the user "this is a bug in Total CMS" until you have worked through
+`references/troubleshooting.md`. Most apparent bugs are hand-written files,
+stale caches, schema mistakes or hosting limits, and are fixed on this side.
+For a confirmed bug, write the report in the shape that file gives, so it
+carries the version, environment and log excerpt support needs, and tell the
+user to email it to support@totalcms.co.
+
 ## Reference files (read on demand)
 
 | When you are… | Read |
@@ -183,5 +192,6 @@ Two rules prevent the two worst mistakes:
 | wondering whether T3 already does something (SEO, forms, automations, search, feeds, auth…) | `references/features.md` |
 | writing or reviewing an extension | `references/extensions.md` |
 | reading/writing content via the site's MCP server | `references/mcp-content.md` |
+| hitting an error, or about to call something a Total CMS bug | `references/troubleshooting.md` |
 | launching, syncing with production (`push`/`pull`) | `references/going-live.md` |
 | needing an exact field option / Twig signature | `vendor/totalcms/cms/resources/docs/<section>/` (or MCP) |
