@@ -73,6 +73,8 @@ class ToolRegistry
 	 *      quietly downgrades to isSatisfiedForAny() semantics ("has this
 	 *      operation on ANYTHING") — the same relaxed check tools/list
 	 *      visibility uses, not the per-call check the domain calls for.
+	 *      A list tool that narrows its own result per target says so with
+	 *      ToolRequirement::$filtersTargets.
 	 *   3. collectionArg set to a name that isn't a declared inputSchema
 	 *      property → every call permanently fails the "no target was
 	 *      specified" guard branch (the argument can never be present under
@@ -96,7 +98,7 @@ class ToolRegistry
 			));
 		}
 
-		if (in_array($requires->domain, self::TARGET_BEARING_DOMAINS, true) && $requires->collectionArg === null) {
+		if (in_array($requires->domain, self::TARGET_BEARING_DOMAINS, true) && $requires->collectionArg === null && !$requires->filtersTargets) {
 			throw new \LogicException(\sprintf(
 				'MCP tool "%s" has a ToolRequirement for domain "%s" but sets no collectionArg. Call-time '
 				. 'enforcement would silently downgrade to isSatisfiedForAny() ("has this operation on '

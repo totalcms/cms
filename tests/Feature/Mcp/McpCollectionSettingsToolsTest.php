@@ -196,3 +196,66 @@ test('an OAuth member whose group grants collection settings update gets update_
 		mcpAuthSetCollectionAccess($this->app, 'blog', 'admin');
 	}
 });
+
+test('an OAuth member whose group grants every schema operation can update and delete a schema', function (): void {
+	// schema-editor: schemas create/read/update/delete on every schema.
+	mcpAuthSetupOAuthKeys($this->app);
+	mcpAuthSeedAccessGroups();
+	mcpAuthSeedUser('schema-editor-user-test-com');
+
+	$token     = mcpAuthIssueToken($this->app, 'mcp-schema-edit-' . uniqid('', true), 'secret', ['cms:read', 'cms:admin', 'mcp:tools'], 'schema-editor-user-test-com');
+	$sessionId = mcpAuthInitSession($this->app, $token);
+	expect($token)->not->toBe('')->and($sessionId)->not->toBe('');
+
+	$id   = 'mcp-schema-edit-' . bin2hex(random_bytes(4));
+	$call = fn (int $n, string $tool, array $arguments): array => json_decode((string)mcpAuthRequest($this->app, $token, [
+		'jsonrpc' => '2.0',
+		'id'      => $n,
+		'method'  => 'tools/call',
+		'params'  => ['name' => $tool, 'arguments' => $arguments],
+	], $sessionId)->getBody(), true);
+
+	$created = $call(1, 'create_schema', ['id' => $id, 'properties' => ['name' => ['field' => 'text', 'label' => 'Name']]]);
+	expect($created)->toHaveKey('result')->and($created['result']['isError'] ?? true)->toBeFalse();
+
+	$updated = $call(2, 'update_schema', ['id' => $id, 'properties' => ['name' => ['field' => 'text', 'label' => 'Name'], 'price' => ['field' => 'number', 'label' => 'Price']]]);
+	expect($updated)->toHaveKey('result')->and($updated['result']['isError'] ?? true)->toBeFalse();
+
+	$fetched = $call(3, 'get_schema', ['id' => $id]);
+	expect(array_keys($fetched['result']['structuredContent']['properties'] ?? []))->toContain('price');
+
+	$deleted = $call(4, 'delete_schema', ['id' => $id]);
+	expect($deleted)->toHaveKey('result')->and($deleted['result']['isError'] ?? true)->toBeFalse();
+});
+
+test('an OAuth member whose group only reads some schemas cannot change them and lists only those', function (): void {
+	// editor: schemas read on blog and news only (no news schema exists here).
+	mcpAuthSetupOAuthKeys($this->app);
+	mcpAuthSeedAccessGroups();
+	mcpAuthSeedUser('editor-user-test-com');
+
+	$token     = mcpAuthIssueToken($this->app, 'mcp-schema-read-' . uniqid('', true), 'secret', ['cms:read', 'cms:admin', 'mcp:tools'], 'editor-user-test-com');
+	$sessionId = mcpAuthInitSession($this->app, $token);
+	expect($token)->not->toBe('')->and($sessionId)->not->toBe('');
+
+	$list  = json_decode((string)mcpAuthRequest($this->app, $token, ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'], $sessionId)->getBody(), true);
+	$names = array_column($list['result']['tools'] ?? [], 'name');
+	expect($names)->toContain('list_schemas')->toContain('get_schema')
+		->not->toContain('update_schema')->not->toContain('delete_schema');
+
+	$listed = json_decode((string)mcpAuthRequest($this->app, $token, [
+		'jsonrpc' => '2.0',
+		'id'      => 2,
+		'method'  => 'tools/call',
+		'params'  => ['name' => 'list_schemas', 'arguments' => []],
+	], $sessionId)->getBody(), true);
+	expect(array_column($listed['result']['structuredContent']['schemas'] ?? [], 'id'))->toBe(['blog']);
+
+	$refused = json_decode((string)mcpAuthRequest($this->app, $token, [
+		'jsonrpc' => '2.0',
+		'id'      => 3,
+		'method'  => 'tools/call',
+		'params'  => ['name' => 'delete_schema', 'arguments' => ['id' => 'blog']],
+	], $sessionId)->getBody(), true);
+	expect(($refused['result']['isError'] ?? false) || isset($refused['error']))->toBeTrue();
+});

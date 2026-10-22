@@ -43,6 +43,7 @@ All notable changes to Total CMS will be documented in this file.
 
 ### Changed
 
+- **`list_schemas` and `get_schema` follow the schemas read grant over MCP.** They were admin only. Now, as with the REST schema reads, an OAuth member whose groups grant schema read, or an API key whose endpoints name `/schemas` or `/schemas/{id}`, reads the schemas it may, and `list_schemas` lists only those. Changing schemas stays admin only for keys.
 - **The Article headline and breadcrumb leaf are the record's title, not the browser title.** Both used the resolved page title, so a record with an authored SEO title (`Making a PHP app legible to AI agents — Total CMS`) declared that whole string as its headline — the site suffix included — while its H1 said otherwise. They now use the record's own `title`, falling back to the page title only when there is none; `<title>` and `og:title` are unchanged
 - **The WebPage node's `datePublished` is the record's `date`, else `created`** — the same choice the Article node has always made, instead of `created` alone. A post dated 1 October and created on the 5th reported both dates on one page, one per node
 - **A card in the collection table shows its first text field.** An indexed card's cell joined every scalar sub-field, so an SEO card read as "About Us, Who we are, 1, 1". It now leads with the first text field in the card schema's order (skipping `id`, hidden fields, styled text, code, SVG, JSON and passwords); a card with none, or with it empty, shows its first two values. Decks still show their item count

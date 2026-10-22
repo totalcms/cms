@@ -247,8 +247,8 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | Tool | Access | What it does |
 |---|---|---|
 | `get_site_info` | admin | Site name, version, edition, PHP version, installed extensions. Smoke test for "am I connected to the right site?" No group-permission analogue — stays admin-only. |
-| `list_schemas` | admin | List every schema (id + description + category). |
-| `get_schema` | admin | Fetch one schema as JSON — the same shape an operator writes into a schema file. |
+| `list_schemas` | admin‡ | List the schemas the caller may read (id + description + category): every schema for an admin. |
+| `get_schema` | admin‡ | Fetch one schema as JSON — the same shape an operator writes into a schema file. Needs read on that schema. |
 | `create_schema` | admin‡ | Save a new schema. Errors on reserved ids and id collisions. `seedObjects` fills the new collection the call creates; if a collection with that id already exists, the schema is saved and seeding is refused (use `create_object`). |
 | `update_schema` | admin‡ | Replace an existing schema definition. Idempotent (same input → same final state). |
 | `delete_schema` | admin‡ | **Destructive.** Refuses to delete reserved schemas, inherited schemas, or schemas still used by a collection. |
@@ -264,7 +264,7 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | `get_template` | admin‡ | Fetch one template's raw Twig source plus the read layer it resolved from. Read-only. See *Site Builder templates* below. |
 | `clear_cache` | admin‡ | **Destructive.** Flush every available cache backend. Returns per-backend status. |
 
-‡ Not admin-only in practice: each of these carries a group requirement that **extends** the base admin gate — an AUTHENTICATED caller whose access groups grant the matching operation (`objects` create/update for the object-write tools, `schemas` for the schema tools, `collectionsMeta` for `create_collection`, the `cache` util for `clear_cache`, the `builder` page permission for the template tools) sees and can call the tool too, scoped to the collections/schemas their groups actually cover. The call-time guard re-checks the specific target on every call — `tools/list` visibility is a convenience, not the enforcement. `list_schemas`, `get_schema`, and `list_extensions` stay plain admin-only (no requirement declared).
+‡ Not admin-only in practice: each of these carries a group requirement that **extends** the base admin gate — an AUTHENTICATED caller whose access groups grant the matching operation (`objects` create/update for the object-write tools, `schemas` for the schema tools, `collectionsMeta` for `create_collection`, the `cache` util for `clear_cache`, the `builder` page permission for the template tools) sees and can call the tool too, scoped to the collections/schemas their groups actually cover. The call-time guard re-checks the specific target on every call — `tools/list` visibility is a convenience, not the enforcement. `list_schemas` and `get_schema` follow the `schemas` read grant, and `list_schemas` lists only the schemas the caller may read; `list_extensions` stays plain admin-only (no requirement declared).
 
 #### Binary fields on the object write tools
 

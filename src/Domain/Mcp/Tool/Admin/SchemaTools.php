@@ -31,9 +31,11 @@ use TotalCMS\Domain\Schema\Service\SchemaSaver;
  * `delete_schema` carries the appropriate annotation so MCP hosts can surface
  * it with extra confirmation.
  *
- * `list_schemas` and `get_schema` require admin persona — even reads are
- * operator work (inspecting schema definitions, not content) and shouldn't
- * surface to anonymous AI callers. `create_schema`, `update_schema`, and
+ * `list_schemas` and `get_schema` are never for anonymous callers — schema
+ * definitions are operator work, not content — but like the REST schema
+ * reads they follow the schemas read grant: an OAuth member whose groups
+ * grant it, or an API key whose endpoints name `/schemas`, reads the schemas
+ * it may, and list_schemas lists only those. `create_schema`, `update_schema`, and
  * `delete_schema` keep `access: 'admin'` but ALSO carry a `ToolRequirement`
  * (Phase 4): the requirement doesn't loosen the base persona gate (an
  * ADMIN-only tool stays hidden from AUTHENTICATED unless requires is
@@ -79,6 +81,7 @@ readonly class SchemaTools
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'schemas', operation: 'read', filtersTargets: true),
 		));
 
 		$registry->register(new McpToolDefinition(
@@ -105,6 +108,7 @@ readonly class SchemaTools
 				idempotentHint: true,
 				openWorldHint: false,
 			),
+			requires: new ToolRequirement(domain: 'schemas', operation: 'read', collectionArg: 'id'),
 		));
 
 		$registry->register(new McpToolDefinition(
@@ -174,8 +178,14 @@ readonly class SchemaTools
 	 */
 	public function listHandler(): array
 	{
+		// A caller other than an admin lists only the schemas it may read.
+		$authority = $this->personaContext->current() === McpPersona::ADMIN ? null : $this->personaContext->getAuthority();
+
 		$schemas = [];
 		foreach ($this->lister->listAllSchemas() as $schema) {
+			if ($authority instanceof UserAuthority && !$authority->canSchema('read', $schema->id)) {
+				continue;
+			}
 			$schemas[] = [
 				'id'          => $schema->id,
 				'description' => $schema->description,

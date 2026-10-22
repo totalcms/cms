@@ -166,3 +166,52 @@ test('a key without DELETE gets no delete_object, and a call is refused', functi
 	expect($refused->getStatusCode() !== 200 || isset($body['error']) || ($body['result']['isError'] ?? false))->toBeTrue()
 		->and(is_file(cmsDataDir() . 'blog/key-stays.json'))->toBeTrue();
 });
+
+test('a key naming /schemas with every method gets no schema write tools', function (): void {
+	file_put_contents(cmsDataDir() . '.system/apikeys.json', (string)json_encode([
+		'apikeys' => [[
+			'id'       => 'schema-key-id',
+			'name'     => 'Schemas',
+			'key'      => LIMITED_API_KEY,
+			'created'  => '2026-01-01T00:00:00Z',
+			'lastUsed' => null,
+			'scopes'   => ['methods' => ['GET', 'POST', 'PUT', 'DELETE'], 'paths' => ['/mcp', '/schemas', '/collections/blog']],
+		]],
+	], JSON_PRETTY_PRINT));
+
+	$response = mcpStatelessCall($this->app, 'tools/list', [], ['X-API-Key' => LIMITED_API_KEY], '203.0.113.134');
+	$names    = array_column(json_decode((string)$response->getBody(), true)['result']['tools'] ?? [], 'name');
+
+	expect($names)->toContain('patch_object')
+		->not->toContain('create_schema')
+		->not->toContain('update_schema')
+		->not->toContain('delete_schema');
+
+	$refused = mcpStatelessCall($this->app, 'tools/call', ['name' => 'delete_schema', 'arguments' => ['id' => 'blog']], ['X-API-Key' => LIMITED_API_KEY], '203.0.113.135');
+	$body    = json_decode((string)$refused->getBody(), true);
+	expect($refused->getStatusCode() !== 200 || isset($body['error']) || ($body['result']['isError'] ?? false))->toBeTrue();
+});
+
+test('a key naming one schema lists and reads that schema only', function (): void {
+	file_put_contents(cmsDataDir() . '.system/apikeys.json', (string)json_encode([
+		'apikeys' => [[
+			'id'       => 'one-schema-key-id',
+			'name'     => 'Blog schema',
+			'key'      => LIMITED_API_KEY,
+			'created'  => '2026-01-01T00:00:00Z',
+			'lastUsed' => null,
+			'scopes'   => ['methods' => ['GET'], 'paths' => ['/mcp', '/schemas/blog']],
+		]],
+	], JSON_PRETTY_PRINT));
+
+	$listed = limitedKeyCall($this->app, 'list_schemas', [], '203.0.113.136');
+	expect($listed['result']['isError'] ?? false)->toBeFalse()
+		->and(array_column($listed['result']['structuredContent']['schemas'] ?? [], 'id'))->toBe(['blog']);
+
+	$blog = limitedKeyCall($this->app, 'get_schema', ['id' => 'blog'], '203.0.113.137');
+	expect($blog['result']['isError'] ?? false)->toBeFalse()
+		->and($blog['result']['structuredContent']['id'] ?? null)->toBe('blog');
+
+	$auth = limitedKeyCall($this->app, 'get_schema', ['id' => 'auth'], '203.0.113.138');
+	expect(($auth['result']['isError'] ?? false) || isset($auth['error']))->toBeTrue();
+});

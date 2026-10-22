@@ -50,6 +50,7 @@ final class SchemaToolsTest extends TestCase
 		// entirely — assertCanSeed() no-ops in that shape (see its docblock).
 		// Individual seedObjects tests below override this.
 		$this->personaContext->method('isResolved')->willReturn(false);
+		$this->personaContext->method('current')->willReturn(McpPersona::ADMIN);
 
 		$this->tool = new SchemaTools(
 			$this->lister,
@@ -118,11 +119,13 @@ final class SchemaToolsTest extends TestCase
 			$this->assertSame($collectionArg, $requires->collectionArg, "Tool $name requirement collectionArg");
 		}
 
-		// list_schemas/get_schema deliberately have NO requirement (brief
-		// scoped the schemas ToolRequirement treatment to create/update/delete
-		// only) — pin that too so a future change doesn't silently widen it.
-		$this->assertNull($registry->get('list_schemas')->requires);
-		$this->assertNull($registry->get('get_schema')->requires);
+		// The reads follow the schemas read grant, as the REST schema reads
+		// do: get_schema checks the schema asked for, list_schemas lists only
+		// the readable ones.
+		$get = $registry->get('get_schema')->requires;
+		$this->assertSame(['schemas', 'read', 'id'], [$get?->domain, $get?->operation, $get?->collectionArg]);
+		$list = $registry->get('list_schemas')->requires;
+		$this->assertSame(['schemas', 'read', null, true], [$list?->domain, $list?->operation, $list?->collectionArg, $list?->filtersTargets]);
 	}
 
 	public function testReadToolsAreMarkedReadOnlyIdempotent(): void
