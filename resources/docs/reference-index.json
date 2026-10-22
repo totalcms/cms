@@ -4008,7 +4008,7 @@
             "default": "{}",
             "description": "Override schema property attributes for this collection. Allows customizing field labels, help text, options, and settings without modifying the schema itself.",
             "examples": [
-                "{\n    \"properties\": {\n        \"title\": {\n            \"label\": \"Headline\",\n            \"placeholder\": \"Enter a compelling headline...\"\n        },\n        \"categories\": {\n            \"options\": [\n                {\"label\": \"News\", \"value\": \"news\"},\n                {\"label\": \"Tutorial\", \"value\": \"tutorial\"},\n                {\"label\": \"Review\", \"value\": \"review\"}\n            ]\n        },\n        \"featured\": {\n            \"help\": \"Featured articles appear on the homepage carousel.\"\n        }\n    }\n}"
+                "{\n    \"properties\": {\n        \"title\": {\n            \"field\": \"text\",\n            \"label\": \"Headline\",\n            \"placeholder\": \"Enter a compelling headline...\"\n        },\n        \"categories\": {\n            \"field\": \"select\",\n            \"options\": [\n                {\"label\": \"News\", \"value\": \"news\"},\n                {\"label\": \"Tutorial\", \"value\": \"tutorial\"},\n                {\"label\": \"Review\", \"value\": \"review\"}\n            ]\n        },\n        \"featured\": {\n            \"field\": \"toggle\",\n            \"help\": \"Featured articles appear on the homepage carousel.\"\n        }\n    }\n}"
             ],
             "url": "https://docs.totalcms.co/collections/settings/"
         },

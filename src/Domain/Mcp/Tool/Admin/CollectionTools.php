@@ -57,7 +57,7 @@ readonly class CollectionTools
 	{
 		$registry->register(new McpToolDefinition(
 			name: 'create_collection',
-			description: 'Create a new collection. Required: id (slug) + schema (existing schema id). Optional extra: name, url, description, category, prettyUrl, sortBy, reverseSort, groups, publicOperations, mcp settings; publicRegistration and registrationGroups: admin callers only. Errors if the id already exists.',
+			description: 'Create a new collection. Required: id (slug) + schema (existing schema id). Optional extra: name, url, description, category, prettyUrl, sortBy, reverseSort, groups, publicOperations, mcp settings, properties (field overrides keyed by property name, e.g. {"price": {"label": "Cost"}}); publicRegistration and registrationGroups: admin callers only. Errors if the id already exists. Change settings later with update_collection.',
 			access: 'admin',
 			handler: $this->createHandler(...),
 			inputSchema: [
@@ -86,7 +86,7 @@ readonly class CollectionTools
 							['type' => 'object'],
 							['type' => 'array', 'maxItems' => 0],
 						],
-						'description' => 'Optional additional collection fields: name (display label), url (pattern with {id} placeholders), description, category, prettyUrl (bool), sortBy, reverseSort (bool), groups (array), publicOperations (array), mcp (object); publicRegistration (bool) and registrationGroups (array): admin callers only.',
+						'description' => 'Optional additional collection fields: name (display label), url (pattern with {id} placeholders), description, category, prettyUrl (bool), sortBy, reverseSort (bool), groups (array), publicOperations (array), mcp (object), properties (object: field overrides keyed by property name); publicRegistration (bool) and registrationGroups (array): admin callers only.',
 						'default'     => new \stdClass(),
 					],
 				],

@@ -4,6 +4,7 @@
         "create_collection",
         "create_object",
         "create_schema",
+        "delete_collection",
         "delete_object",
         "delete_schema",
         "describe_collection",
@@ -29,6 +30,7 @@
         "search",
         "search_collection",
         "search_collections",
+        "update_collection",
         "update_object",
         "update_schema"
     ],

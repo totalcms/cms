@@ -119,12 +119,14 @@ use TotalCMS\Domain\Mcp\Subscription\Service\ResourceNotifier;
 use TotalCMS\Domain\Mcp\Subscription\Service\SubscriptionIndex;
 use TotalCMS\Domain\Mcp\Tool\Admin\CacheTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\CollectionTools;
+use TotalCMS\Domain\Mcp\Tool\Admin\DeleteCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Admin\DeleteObjectTool;
 use TotalCMS\Domain\Mcp\Tool\Admin\ExtensionTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\ObjectTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SchemaTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SiteInfoTool;
 use TotalCMS\Domain\Mcp\Tool\Admin\TemplateTools;
+use TotalCMS\Domain\Mcp\Tool\Admin\UpdateCollectionTool;
 use TotalCMS\Domain\Mcp\Tool\Compat\FetchTool;
 use TotalCMS\Domain\Mcp\Tool\Compat\SearchTool;
 use TotalCMS\Domain\Mcp\Tool\Content\GetObjectTool;
@@ -978,6 +980,8 @@ return [
 		$container->get(CacheTools::class)->register($registry);
 		$container->get(ExtensionTools::class)->register($registry);
 		$container->get(CollectionTools::class)->register($registry);
+		$container->get(UpdateCollectionTool::class)->register($registry);
+		$container->get(DeleteCollectionTool::class)->register($registry);
 		$container->get(ObjectTools::class)->register($registry);
 		$container->get(DeleteObjectTool::class)->register($registry);
 		// Read-only: list_templates / get_template. No save tool — writing

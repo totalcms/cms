@@ -636,10 +636,12 @@ Override schema property attributes for this collection. Allows customizing fiel
 {
     "properties": {
         "title": {
+            "field": "text",
             "label": "Headline",
             "placeholder": "Enter a compelling headline..."
         },
         "categories": {
+            "field": "select",
             "options": [
                 {"label": "News", "value": "news"},
                 {"label": "Tutorial", "value": "tutorial"},
@@ -647,17 +649,20 @@ Override schema property attributes for this collection. Allows customizing fiel
             ]
         },
         "featured": {
+            "field": "toggle",
             "help": "Featured articles appear on the homepage carousel."
         }
     }
 }
 ```
 
+Every override carries the property's `field` (its field type, as in the schema), even when it changes only the label: the collection fails validation without it. The admin's override editor fills it in, and so does MCP's `update_collection`.
+
 **Overridable attributes:**
 - `label` - Field label
 - `help` - Help text
 - `placeholder` - Placeholder text
-- `field` - Field type
+- `field` - Field type (required, see above)
 - `options` - Select/checkbox options
 - `settings` - Field-specific settings
 

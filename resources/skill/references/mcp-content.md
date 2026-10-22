@@ -54,6 +54,17 @@ object you fetched rather than just the changed fields:
    Binary fields may stay as fetched; only their descriptive keys can change.
 4. Send it to `patch_object` or `update_object`.
 
+## Collection settings
+
+`update_collection { id, settings }` changes a collection after it exists.
+Send only what changes: settings maps (`properties`, `mcp`, `seo`, `sitemap`,
+`feed`, `formSettings`) merge key by key, and field overrides merge attribute
+by attribute — `{"properties": {"price": {"label": "Cost"}}}` relabels one
+field and keeps its other overrides; `null` removes one. The override's
+`field` type is filled in from the schema. `delete_collection` removes the
+settings only — objects stay, and `create_collection` with the same id (pass
+the returned settings as `extra`) brings them back. Confirm before deleting.
+
 **`delete_object`** deletes one object (`collection` + `id`). Confirm with the
 user first. The record goes to the backup history (restorable with
 `tcms backup:restore`), but its uploaded files are deleted for good; the
