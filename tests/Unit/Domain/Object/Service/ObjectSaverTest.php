@@ -56,6 +56,7 @@ final class ObjectSaverTest extends TestCase
 			$this->eventDispatcher,
 			$this->createMock(CollectionFetcher::class),
 			$this->createMock(IndexRepository::class),
+			systemWriteGate(),
 		);
 	}
 

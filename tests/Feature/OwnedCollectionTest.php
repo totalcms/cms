@@ -553,9 +553,8 @@ describe('other write paths on an own object', function (): void {
 test('the container wires the owner check into FormServices', function (): void {
 	$services = $this->app->getContainer()->get(FormServices::class);
 
-	expect($services->session)->not->toBeNull()
-		->and($services->userValidation)->not->toBeNull()
-		->and($services->ownerProperties)->not->toBeNull();
+	expect($services->guard)->not->toBeNull()
+		->and($services->actors)->not->toBeNull();
 });
 
 test('saving a collection whose ownerProperty is not in its schema is rejected', function (): void {

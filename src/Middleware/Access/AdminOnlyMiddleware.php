@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
 
 /**
  * Admin Only Middleware.
@@ -19,14 +20,10 @@ readonly class AdminOnlyMiddleware extends BaseAccessMiddleware
 {
 	protected const RESOURCE_NAME = 'admin resource';
 
-	/**
-	 * Check if the user has permission.
-	 * Since admins bypass this in BaseAccessMiddleware, reaching here means user is NOT an admin.
-	 * Operation and request parameters are not used for admin-only checks.
-	 */
-	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
+	protected function checkPermission(Actor $actor, string $operation, ServerRequestInterface $request): bool
 	{
-		// If we reach here, user is not a super admin (admins bypass in base class)
+		// Trusted actors (super admins) pass in BaseAccessMiddleware; reaching
+		// here means the actor is not one.
 		return false;
 	}
 

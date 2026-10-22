@@ -9,7 +9,7 @@ use TotalCMS\Domain\Schema\Data\PropertyDefinition;
 /**
  * Which schema properties can hold an owner, and in what shape. The one rule
  * shared by the ownerProperty picker (FormOptionSources), the save-time check
- * (CollectionSaver) and the owner stamp (AuthFieldPolicy), so the picker never
+ * (CollectionSaver) and the owner stamp (AccessGuard), so the picker never
  * offers a property the saver rejects or the stamp would corrupt.
  */
 final class OwnerPropertyKind

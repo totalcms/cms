@@ -9,12 +9,12 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use TotalCMS\Domain\AccessGroup\Service\AccessGroupLister;
 use TotalCMS\Domain\Admin\Nav\AdminNavRegistry;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Builder\Service\PageMiddlewareRegistry;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Service\CollectionEditionService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Index\Service\IndexFilter;
@@ -41,8 +41,8 @@ use TotalCMS\Support\Config;
  * setters, because the constructor was already full. A form built without
  * them (tests, extensions) answers their option lists with an empty array.
  *
- * The session, user validation and owner resolver feed ObjectForm's owner
- * check; a form built without all three skips that check.
+ * The guard and actor context feed the owner check on edit forms; a form
+ * built without both skips that check. The session feeds the bot check.
  *
  * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  */
@@ -71,8 +71,8 @@ final readonly class FormServices
 		public ?AdminNavRegistry $navRegistry = null,
 		public ?DataViewLister $dataViewLister = null,
 		public ?SessionInterface $session = null,
-		public ?UserValidationService $userValidation = null,
-		public ?OwnerPropertyResolver $ownerProperties = null,
+		public ?AccessGuard $guard = null,
+		public ?ActorContext $actors = null,
 		public ?MailerFetcher $mailers = null,
 	) {
 		$this->logger = $logger ?? new NullLogger();

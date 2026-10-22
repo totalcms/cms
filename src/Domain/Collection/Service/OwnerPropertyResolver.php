@@ -8,10 +8,9 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 /**
- * Answers "which property owns the objects of this collection?" for the two
- * places that enforce ownership: CollectionAccessMiddleware (scoping reads and
- * writes to the actor's own objects) and AuthFieldPolicy (stamping the owner on
- * create, reverting it on update).
+ * Answers "which property owns the objects of this collection?" for
+ * AccessGuard, which scopes reads and writes to the actor's own objects,
+ * stamps the owner on create and reverts it on update.
  *
  * A collection is owned when its `ownerProperty` setting names a property the
  * flattened schema defines. An `ownerProperty` the schema lacks is treated as

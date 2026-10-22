@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace TotalCMS\Middleware\Access;
 
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
-use TotalCMS\Domain\Auth\Data\UserAuthority;
-use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
-use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
@@ -46,19 +45,18 @@ readonly class CollectionMetaAccessMiddleware extends BaseAccessMiddleware
 	private const REGISTRATION_KEYS = ['publicRegistration', 'registrationGroups'];
 
 	public function __construct(
-		UserValidationService $userValidation,
-		AccessControlService $accessControl,
-		SessionInterface $session,
+		ActorResolver $actorResolver,
+		ActorContext $actors,
 		JsonRenderer $jsonRenderer,
 		TwigRenderer $twigRenderer,
 		ResponseFactoryInterface $responseFactory,
 		Config $config,
 		OperationDetector $operationDetector,
 		LoggerFactory $loggerFactory,
-		OAuthActivityLogger $oauthActivityLogger,
+		AccessDenials $denials,
 		private CollectionFetcher $collectionFetcher,
 	) {
-		parent::__construct($userValidation, $accessControl, $session, $jsonRenderer, $twigRenderer, $responseFactory, $config, $operationDetector, $loggerFactory, $oauthActivityLogger);
+		parent::__construct($actorResolver, $actors, $jsonRenderer, $twigRenderer, $responseFactory, $config, $operationDetector, $loggerFactory, $denials);
 	}
 
 	/**
@@ -66,7 +64,7 @@ readonly class CollectionMetaAccessMiddleware extends BaseAccessMiddleware
 	 * Everyone reaching here is a non-super-admin, so a write that changes the
 	 * registration settings is refused whatever the group grants.
 	 */
-	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
+	protected function checkPermission(Actor $actor, string $operation, ServerRequestInterface $request): bool
 	{
 		if ($this->changesRegistration($operation, $request)) {
 			return false;
@@ -82,27 +80,14 @@ readonly class CollectionMetaAccessMiddleware extends BaseAccessMiddleware
 
 		$collection = $route->getArgument('collection');
 
-		// OAuth Bearer callers: no PHP session to derive groups from — use the
-		// UserAuthority resolved from the token by BaseAccessMiddleware.
-		$authority = $request->getAttribute('accessAuthority');
-		if ($authority instanceof UserAuthority) {
-			return $collection
-				? $authority->canCollectionMeta($operation, $collection)
-				: $authority->canCollectionsMetaOperation($operation);
-		}
-
-		// Check access permissions
-		if ($collection) {
-			// Specific collection - check access to that collection's metadata
-			return $this->accessControl->canAccessCollectionMeta($userId, $collection, $operation);
-		}
-
-		// No specific collection (e.g., GET /collections, POST /collections) - check general collection meta operation permission
-		return $this->accessControl->canAccessCollectionsMetaOperation($userId, $operation);
+		// A specific collection's metadata, or collections in general (GET /collections, POST /collections).
+		return $collection
+			? $actor->authority()->canCollectionMeta($operation, $collection)
+			: $actor->authority()->canCollectionsMetaOperation($operation);
 	}
 
 	/** @return array<string,mixed> */
-	protected function denialContext(ServerRequestInterface $request, string $userId, string $operation): array
+	protected function denialContext(ServerRequestInterface $request, Actor $actor, string $operation): array
 	{
 		return $this->changesRegistration($operation, $request) ? ['reason' => 'protected'] : [];
 	}

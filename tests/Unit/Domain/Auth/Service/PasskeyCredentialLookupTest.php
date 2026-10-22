@@ -56,6 +56,7 @@ final class PasskeyCredentialLookupTest extends TestCase
 			$this->objectPatcher,
 			$this->indexReader,
 			$loggerFactory,
+			systemActors(),
 		);
 	}
 

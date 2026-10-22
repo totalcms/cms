@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
 
 /**
  * Mailer Access Middleware.
@@ -19,8 +20,8 @@ readonly class MailerAccessMiddleware extends BaseAccessMiddleware
 	 * Check if the user has permission to access mailer.
 	 * Mailer doesn't have operation-based permissions, just boolean access.
 	 */
-	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
+	protected function checkPermission(Actor $actor, string $operation, ServerRequestInterface $request): bool
 	{
-		return $this->accessControl->canAccessMailer($userId);
+		return $actor->authority()->canMailer();
 	}
 }

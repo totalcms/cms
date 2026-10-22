@@ -41,6 +41,7 @@ final class FirstLoginCheckerTest extends TestCase
 			$this->indexReader,
 			$this->config,
 			$this->accessGroupManager,
+			systemActors(),
 		);
 	}
 

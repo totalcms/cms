@@ -9,8 +9,7 @@ use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
@@ -115,25 +114,23 @@ final class ObjectToolsTest extends TestCase
 			$this->objectFetcher,
 			$this->personaContext,
 			$this->schemaResolver,
-			$this->fieldPolicy(),
+			$this->guard(),
 		);
 	}
 
 	/**
-	 * The field policy is final, so it runs for real over the same stubbed
-	 * schemaFetcher the handlers read: a schema with a `protected` property
-	 * makes the collection protected.
+	 * The guard runs for real over the same stubbed schemaFetcher the handlers
+	 * read: a schema with a `protected` property makes the collection protected.
 	 */
-	private function fieldPolicy(): AuthFieldPolicy
+	private function guard(): AccessGuard
 	{
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
 		$owners = $this->createMock(OwnerPropertyResolver::class);
 		$owners->method('resolve')->willReturn('');
 
-		return new AuthFieldPolicy(
+		return new AccessGuard(
 			$this->schemaFetcher,
-			$this->createMock(UserValidationService::class),
 			$this->objectFetcher,
 			$owners,
 			(new \ReflectionClass(Config::class))->newInstanceWithoutConstructor(),

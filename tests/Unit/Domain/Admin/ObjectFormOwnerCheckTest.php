@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Admin;
 
-use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Admin\Form\Builder\ObjectForm;
 use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormServices;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
@@ -19,7 +17,7 @@ use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
-use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
@@ -40,7 +38,7 @@ final class ObjectFormOwnerCheckTest extends TestCase
 	 * @param string $actor      session user id ('' for anonymous)
 	 * @param bool   $superAdmin
 	 * @param string $ownerProp  resolver result ('' = not owned)
-	 * @param bool   $withChecks false builds the form without the three owner services
+	 * @param bool   $withChecks false builds the form without the owner-check services
 	 * @param bool   $authOn     false switches authentication off for the install
 	 * @param string $ownerCollection resolver ownerCollection() result ('' = any auth collection)
 	 * @param string $actorCollection session auth collection ('' = the default `auth`)
@@ -86,24 +84,12 @@ final class ObjectFormOwnerCheckTest extends TestCase
 		];
 
 		if ($withChecks) {
-			$session = $this->createMock(SessionInterface::class);
-			$session->method('get')->willReturnCallback(
-				static fn (string $key): mixed => match ($key) {
-					SessionKeys::AUTH_USER       => $actor === '' ? null : $actor,
-					SessionKeys::AUTH_COLLECTION => $actor === '' ? null : $actorCollection,
-					default                      => null,
-				}
-			);
-			$validation = $this->createMock(UserValidationService::class);
-			$validation->method('isSuperAdmin')->willReturn($superAdmin);
 			$resolver = $this->createMock(OwnerPropertyResolver::class);
 			$resolver->method('resolve')->willReturn($ownerProp);
 			$resolver->method('ownerCollection')->willReturn($ownerCollection);
 			$resolver->method('isOutsider')->willReturnCallback(static fn (string $collection, string $actorCollection, string $default): bool => $ownerCollection !== '' && ($actorCollection !== '' ? $actorCollection : $default) !== $ownerCollection);
 
-			$overrides['session']         = $session;
-			$overrides['userValidation']  = $validation;
-			$overrides['ownerProperties'] = $resolver;
+			$overrides += formOwnerServices($actor, $superAdmin, $actorCollection, $resolver, $objectFetcher, $config, $this->createMock(LoggerFactory::class));
 		}
 
 		return formServices($overrides);
@@ -113,7 +99,7 @@ final class ObjectFormOwnerCheckTest extends TestCase
 	 * @param string $actor      session user id ('' for anonymous)
 	 * @param bool   $superAdmin
 	 * @param string $ownerProp  resolver result ('' = not owned)
-	 * @param bool   $withChecks false builds the form without the three owner services
+	 * @param bool   $withChecks false builds the form without the owner-check services
 	 * @param bool   $authOn     false switches authentication off for the install
 	 * @param string $ownerCollection resolver ownerCollection() result ('' = any auth collection)
 	 * @param string $actorCollection session auth collection ('' = the default `auth`)

@@ -15,7 +15,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\AccessManager;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\LoginRedirector;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
@@ -65,7 +65,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		private PropertyMetaResolver $propertyMeta,
 		private SessionActivityTracker $activity,
 		private LoginRedirector $redirector,
-		private AuthFieldPolicy $policy,
+		private AccessGuard $guard,
 		LoggerFactory $loggerFactory,
 	) {
 		$this->logger = $loggerFactory->channelLogger(LogChannel::DualAuth);
@@ -298,7 +298,7 @@ readonly class DualAuthMiddleware implements MiddlewareInterface
 		// Neither is public: the request authenticates normally, and
 		// CollectionAccess refuses both for every non-admin.
 		if ((string)$route->getName() === 'object-clone') {
-			if ($this->policy->protectedFieldsFor($collectionId) !== []) {
+			if ($this->guard->protectedFieldsFor($collectionId) !== []) {
 				return false;
 			}
 			if (CollectionAccessMiddleware::cloneTargetsOtherCollection($request, $collectionId)) {

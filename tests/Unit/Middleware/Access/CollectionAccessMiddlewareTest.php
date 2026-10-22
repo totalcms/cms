@@ -16,13 +16,15 @@ use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
-use TotalCMS\Domain\Auth\Data\AccessActor;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
-use TotalCMS\Domain\Auth\Service\ForcedValueContext;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
@@ -50,7 +52,6 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 	beforeEach(function (): void {
 		$this->accessControl     = $this->createMock(AccessControlService::class);
 		$this->session           = $this->createMock(SessionInterface::class);
-		$this->userValidation    = $this->createMock(UserValidationService::class);
 		$this->operationDetector = $this->createMock(OperationDetector::class);
 
 		$this->config             = Config::init();
@@ -95,28 +96,24 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 		// No protected properties: the field policy never refuses here.
 		$schemaFetcher = $this->createMock(SchemaFetcher::class);
 		$schemaFetcher->method('fetchSchemaForCollection')->willReturn(new SchemaData());
-		$policy = new AuthFieldPolicy($schemaFetcher, $this->userValidation, $this->createMock(ObjectFetcher::class), $ownerProperties, $this->config, $this->loggerFactory);
+		$guard  = new AccessGuard($schemaFetcher, $this->createMock(ObjectFetcher::class), $ownerProperties, $this->config, $this->loggerFactory);
 
+		$this->actors     = new ActorContext();
 		$this->middleware = new CollectionAccessMiddleware(
-			$this->userValidation,
-			$this->accessControl,
-			$this->session,
+			new ActorResolver($this->session, $this->accessControl, $this->config),
+			$this->actors,
 			$jsonRenderer,
 			$twigRenderer,
 			$responseFactory,
 			$this->config,
 			$this->operationDetector,
 			$this->loggerFactory,
-			new OAuthActivityLogger(new NullLogger()),
-			$ownerProperties,
-			$this->createMock(ObjectFetcher::class),
-			$policy,
-			new ForcedValueContext(),
+			new AccessDenials($this->loggerFactory, new OAuthActivityLogger(new NullLogger()), new EventDispatcher(new NullLogger())),
+			$guard,
 		);
 
 		// A request already through routing, carrying collection + id args.
-		// Attributes set with withAttribute() are kept, so the AccessActor the
-		// base middleware attaches is what the carve-out reads.
+		// Attributes set with withAttribute() are kept.
 		$this->requestFor = function (string $collection, string $id, array $attributes = []): ServerRequestInterface {
 			$route = $this->createMock(RouteInterface::class);
 			$route->method('getName')->willReturn('object-update');
@@ -159,9 +156,8 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 					default                      => null,
 				},
 			);
-			$this->userValidation->method('isSuperAdmin')->willReturn(false);
 			$this->operationDetector->method('detectOperation')->willReturn('update');
-			$this->accessControl->method('canAccessCollection')->willReturn(false);
+			$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		};
 	});
 
@@ -184,25 +180,15 @@ describe('CollectionAccessMiddleware self-profile carve-out', function (): void 
 	it('a default-login session user can still update their own profile', function (): void {
 		$this->config->auth = ['enable' => true, 'collection' => 'users'];
 		($this->signInAs)('alex', '');
-		$this->accessControl->expects($this->never())->method('canAccessCollection');
 
-		$handled = new \ArrayObject();
-		$handler = $this->createMock(RequestHandlerInterface::class);
-		$handler->method('handle')->willReturnCallback(function (ServerRequestInterface $request) use ($handled): ResponseInterface {
-			$handled[] = $request;
-
-			return $this->allowed;
-		});
-
-		$response = $this->middleware->process(($this->requestFor)('users', 'alex'), $handler);
+		$response = $this->middleware->process(($this->requestFor)('users', 'alex'), $this->handler);
 
 		// Allowed by the carve-out, before the group check: the actor's empty
 		// collection resolves to the configured default `users`.
 		expect($response)->toBe($this->allowed);
-		$actor = $handled[0]->getAttribute('accessActor');
-		expect($actor)->toBeInstanceOf(AccessActor::class);
+		$actor = $this->actors->current();
 		expect($actor->userId)->toBe('alex');
-		expect($actor->collection)->toBe('');
+		expect($actor->authCollection)->toBe('users');
 	});
 
 	it('still refuses a write to someone elses record', function (): void {

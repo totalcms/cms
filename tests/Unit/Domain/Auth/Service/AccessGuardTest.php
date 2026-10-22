@@ -7,8 +7,9 @@ namespace Tests\Unit\Domain\Auth\Service;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -17,9 +18,13 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
-final class AuthFieldPolicyTest extends TestCase
+final class AccessGuardTest extends TestCase
 {
 	private LoggerInterface $logger;
+
+	private AccessGuard $guard;
+
+	private bool $isSuperAdmin = false;
 
 	protected function setUp(): void
 	{
@@ -38,7 +43,7 @@ final class AuthFieldPolicyTest extends TestCase
 	 * @param list<string>                     $inheritFrom
 	 * @param array<string,mixed>|null          $existing    stored record, or null when it doesn't exist
 	 */
-	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'loginCount', 'lastlogin', 'created', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = [], bool $authEnabled = true, array $definitions = [], string $ownerProperty = '', ?SchemaFetcher $schemaFetcher = null, string $ownerCollection = ''): AuthFieldPolicy
+	private function makePolicy(bool $isSuperAdmin, ?array $existing = null, array $props = ['groups', 'active', 'expiration', 'maxLoginCount', 'passkeys', 'loginCount', 'lastlogin', 'created', 'name', 'email'], string $schemaId = 'auth', array $inheritFrom = [], bool $authEnabled = true, array $definitions = [], string $ownerProperty = '', ?SchemaFetcher $schemaFetcher = null, string $ownerCollection = ''): self
 	{
 		$schema              = new SchemaData();
 		$schema->id          = $schemaId;
@@ -50,8 +55,7 @@ final class AuthFieldPolicyTest extends TestCase
 			$schemaFetcher->method('fetchSchemaForCollection')->willReturn($schema);
 		}
 
-		$userValidation = $this->createMock(UserValidationService::class);
-		$userValidation->method('isSuperAdmin')->willReturn($isSuperAdmin);
+		$this->isSuperAdmin = $isSuperAdmin;
 
 		$objectFetcher = $this->createMock(ObjectFetcher::class);
 		$objectFetcher->method('existsObject')->willReturn($existing !== null);
@@ -72,7 +76,61 @@ final class AuthFieldPolicyTest extends TestCase
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('channelLogger')->willReturn($this->logger);
 
-		return new AuthFieldPolicy($schemaFetcher, $userValidation, $objectFetcher, $ownerProperties, $config, $loggerFactory);
+		$this->guard = new AccessGuard($schemaFetcher, $objectFetcher, $ownerProperties, $config, $loggerFactory);
+
+		return $this;
+	}
+
+	/**
+	 * The guard's write path for a signed-in user (Admin when the policy was
+	 * made with a super admin, Member otherwise) or anonymous ('').
+	 *
+	 * @param array<string,mixed> $incoming
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function enforce(string $actorId, string $collection, string $objectId, array $incoming, string $actorCollection = ''): array
+	{
+		return $this->guard->applyWrite($this->actor($actorId, $actorCollection), $collection, $objectId, $incoming);
+	}
+
+	private function canWriteProperty(string $actorId, string $collection, string $property): bool
+	{
+		return $this->guard->canWriteProperty($this->actor($actorId), $collection, $property);
+	}
+
+	/**
+	 * @param array<string,mixed> $data
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function stripProtected(string $collection, array $data): array
+	{
+		return $this->guard->stripProtected($collection, $data);
+	}
+
+	/** @return list<string> */
+	private function protectedFieldsFor(string $collection): array
+	{
+		return $this->guard->protectedFieldsFor($collection);
+	}
+
+	private function forgetRules(): void
+	{
+		$this->guard->forgetRules();
+	}
+
+	private function actor(string $actorId, string $actorCollection = ''): Actor
+	{
+		if ($actorId === '') {
+			return Actor::anonymous();
+		}
+
+		return new Actor(
+			kind: $this->isSuperAdmin ? ActorKind::Admin : ActorKind::Member,
+			userId: $actorId,
+			authCollection: $actorCollection !== '' ? $actorCollection : 'auth',
+		);
 	}
 
 	/** Collects log records so tests can assert on the audit trail. */

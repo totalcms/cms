@@ -590,23 +590,4 @@ final class ObjectPatcherTest extends TestCase
 
 		return $mock;
 	}
-
-	public function testPatchObjectPropertyWritesExtraFieldsInTheSameSave(): void
-	{
-		$existingObject = $this->createMockObjectData([
-			'id'    => 'test-id',
-			'draft' => false,
-			'meta'  => ['author' => 'Old'],
-		]);
-
-		$this->objectFetcher->method('fetchObject')->willReturn($existingObject);
-
-		$this->objectUpdater
-			->expects($this->once())
-			->method('updateObject')
-			->with('posts', 'test-id', ['id' => 'test-id', 'draft' => true, 'meta' => ['author' => 'New']])
-			->willReturn($existingObject);
-
-		$this->patcher->patchObjectProperty('posts', 'test-id', 'meta', ['author' => 'New'], ['draft' => true]);
-	}
 }

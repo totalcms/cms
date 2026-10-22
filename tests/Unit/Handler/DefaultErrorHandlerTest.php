@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Psr\Http\Message\ResponseFactoryInterface;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Psr7\Factory\ServerRequestFactory;
+use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Handler\DefaultErrorHandler;
@@ -49,4 +50,13 @@ test('a real fault still resets OPcache and says so', function (): void {
 
 	expect($response->getStatusCode())->toBe(500)
 		->and($response->getHeaderLine('X-OPcache-Cleared'))->toBe('true');
+});
+
+test('a write the storage layer refused is a 403, not a fault', function (): void {
+	$this->opcache->expects($this->never())->method('clear');
+
+	$response = ($this->handler)($this->request, new AccessDeniedException('You may not update object "a" in "b".'), false, false);
+
+	expect($response->getStatusCode())->toBe(403)
+		->and($response->hasHeader('X-OPcache-Cleared'))->toBeFalse();
 });

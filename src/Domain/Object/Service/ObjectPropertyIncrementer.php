@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Object\Service;
 
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 
 readonly class ObjectPropertyIncrementer
@@ -12,6 +14,7 @@ readonly class ObjectPropertyIncrementer
 		private ObjectFetcher $objectFetcher,
 		private ObjectUpdater $objectUpdater,
 		private SchemaFetcher $schemaFetcher,
+		private ActorContext $actors,
 	) {
 	}
 
@@ -119,8 +122,13 @@ readonly class ObjectPropertyIncrementer
 		$data             = $object->toArray();
 		$data[$property]  = $newValue;
 
-		// Save the object
-		$this->objectUpdater->updateObject($collection, $id, $data);
+		// Save as the system: a tick is not a content edit, so it must not
+		// re-apply the caller's forced values (a member liking an approved
+		// object would unapprove it). Who may tick is the entry point's
+		// decision — group, owner and protected-counter checks, or the
+		// counter's publicIncrement setting — and this write carries nothing
+		// but the value computed above.
+		$this->actors->runAs(Actor::system(), fn () => $this->objectUpdater->updateObject($collection, $id, $data));
 
 		// Return just the property and value
 		return [

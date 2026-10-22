@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Exception\HttpException;
+use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
 use TotalCMS\Domain\Builder\Exception\PageNotFoundException;
 use TotalCMS\Domain\Cache\Service\OPcacheService;
 use TotalCMS\Domain\Template\Exception\TemplatesLockedException;
@@ -65,8 +66,10 @@ readonly class DefaultErrorHandler
 		// fixed, the fix takes effect immediately. An HTTP exception is not a
 		// fault: a routing 404 is the normal answer to a bot probing
 		// /wp-login.php, and resetting the pool-wide bytecode cache on every
-		// such hit would recompile the whole site each time.
+		// such hit would recompile the whole site each time. Nor is a write
+		// the storage layer refused the current actor.
 		$opcacheCleared = !$exception instanceof HttpException
+			&& !$exception instanceof AccessDeniedException
 			&& $this->opcacheService->isAvailable()
 			&& $this->opcacheService->clear();
 
@@ -198,6 +201,12 @@ readonly class DefaultErrorHandler
 		if ($exception instanceof \DomainException || $exception instanceof \InvalidArgumentException || $exception instanceof \UnexpectedValueException) {
 			// Bad request
 			$statusCode = StatusCodeInterface::STATUS_BAD_REQUEST;
+		}
+
+		if ($exception instanceof AccessDeniedException) {
+			// The storage layer refused the current actor a write the entry
+			// point let through (see ObjectWriteGate).
+			$statusCode = StatusCodeInterface::STATUS_FORBIDDEN;
 		}
 
 		if ($exception instanceof TemplatesLockedException) {

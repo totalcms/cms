@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
 use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
-use TotalCMS\Domain\Auth\Data\UserAuthority;
 
 /**
  * Utils Access Middleware.
@@ -21,7 +21,7 @@ readonly class UtilsAccessMiddleware extends BaseAccessMiddleware
 	/**
 	 * Check if the user has permission to access the requested utils page.
 	 */
-	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
+	protected function checkPermission(Actor $actor, string $operation, ServerRequestInterface $request): bool
 	{
 		// Get page from route
 		$routeContext = RouteContext::fromRequest($request);
@@ -33,26 +33,9 @@ readonly class UtilsAccessMiddleware extends BaseAccessMiddleware
 
 		$page = $route->getArgument('page');
 
-		// OAuth Bearer callers: no PHP session to derive groups from — use the
-		// UserAuthority resolved from the token by BaseAccessMiddleware. Added
-		// as part of the Task 8 fix round (cache access review) — this class
-		// previously had no Bearer branch at all, meaning a Bearer request
-		// would fall through to the session-coupled accessControl calls below
-		// and read from an absent session.
-		$authority = $request->getAttribute('accessAuthority');
-		if ($authority instanceof UserAuthority) {
-			return $page
-				? $authority->canUtil($page)
-				: $authority->canAnyUtil();
-		}
-
-		// Check access permissions
-		if ($page) {
-			// Specific page - check access to that page (boolean, no operations)
-			return $this->accessControl->canAccessUtils($userId, $page);
-		}
-
-		// No specific page (e.g., GET /utils) - check if user has ANY utils access
-		return $this->accessControl->canAccessAnyUtils($userId);
+		// A specific page (boolean, no operations), or any utils page at all (GET /utils).
+		return $page
+			? $actor->authority()->canUtil($page)
+			: $actor->authority()->canAnyUtil();
 	}
 }

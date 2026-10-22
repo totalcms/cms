@@ -1,5 +1,12 @@
 <?php
 
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
+use TotalCMS\Domain\Object\Service\ObjectWriteGate;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use DI\Container;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -174,9 +181,60 @@ function bootstrap()
 	$container = $app->getContainer();
 	if ($container instanceof Container) {
 		$container->set(HttpClientInterface::class, new OfflineHttpClient());
+
+		// Setup code that calls services directly (seeding users, objects)
+		// acts as the operator, like the CLI. An HTTP request made through the
+		// app resets the actor at its start, so requests are enforced as
+		// whoever they authenticate as.
+		$container->get(ActorContext::class)->set(Actor::system());
 	}
 
 	return $app;
+}
+
+/**
+ * An actor context already holding the system actor: what a service built by
+ * hand in a unit test runs as, like the CLI.
+ */
+function systemActors(): ActorContext
+{
+	$actors = new ActorContext();
+	$actors->set(Actor::system());
+
+	return $actors;
+}
+
+/**
+ * A write gate that lets everything through, for unit tests of the storage
+ * services that are not about access. The system actor never reaches the
+ * guard's collaborators, so a bare guard is enough.
+ */
+function systemWriteGate(?ActorContext $actors = null): ObjectWriteGate
+{
+	return new ObjectWriteGate($actors ?? systemActors(), (new ReflectionClass(AccessGuard::class))->newInstanceWithoutConstructor(), (new ReflectionClass(AccessDenials::class))->newInstanceWithoutConstructor());
+}
+
+/**
+ * The `guard` and `actors` form services for an owner-check test: a real
+ * guard over the given owner resolver and object fetcher, and the actor a
+ * session for `$userId` would resolve to ('' = anonymous).
+ *
+ * @return array{guard: AccessGuard, actors: ActorContext}
+ */
+function formOwnerServices(string $userId, bool $superAdmin, string $authCollection, OwnerPropertyResolver $owners, ObjectFetcher $objects, Config $config, LoggerFactory $loggerFactory): array
+{
+	$actors = new ActorContext();
+	if ($userId !== '') {
+		$actors->set(new Actor($superAdmin ? ActorKind::Admin : ActorKind::Member, $userId, $authCollection !== '' ? $authCollection : (string)($config->auth['collection'] ?? '')));
+	}
+
+	// The owner check never reads a schema.
+	$schemas = (new ReflectionClass(SchemaFetcher::class))->newInstanceWithoutConstructor();
+
+	return [
+		'guard'  => new AccessGuard($schemas, $objects, $owners, $config, $loggerFactory),
+		'actors' => $actors,
+	];
 }
 
 /**

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\CLI;
 
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Data\Actor;
 use Sentry\State\Scope;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\ConsoleEvents;
@@ -70,6 +72,10 @@ class CliApplication
 			exit(1);
 		}
 		$totalcms->disableCache();
+
+		// Commands are the operator's own hand: every write they make (and
+		// every job or automation they drain) runs as the system actor.
+		$totalcms->container()->get(ActorContext::class)->set(Actor::system());
 
 		$app = new Application('Total CMS', Version::number());
 

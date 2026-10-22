@@ -17,15 +17,16 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
-use TotalCMS\Domain\Auth\Data\AccessActor;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
-use TotalCMS\Domain\Auth\Service\ForcedValueContext;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -53,7 +54,6 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 	beforeEach(function (): void {
 		$this->accessControl     = $this->createMock(AccessControlService::class);
 		$this->session           = $this->createMock(SessionInterface::class);
-		$this->userValidation    = $this->createMock(UserValidationService::class);
 		$this->operationDetector = $this->createMock(OperationDetector::class);
 		$this->ownerProperties   = $this->createMock(OwnerPropertyResolver::class);
 		// The real outsider rule over whatever ownerCollection() a test stubs.
@@ -106,8 +106,8 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		$this->loggerFactory = $this->createMock(LoggerFactory::class);
 		$this->loggerFactory->method('channelLogger')->willReturn($this->accessLogger);
 
-		// The field policy is final, so it runs for real over a stubbed schema.
-		// Tests that need protected properties replace the definitions here.
+		// The guard runs for real over a stubbed schema. Tests that need
+		// protected properties replace the definitions here.
 		$this->schemaProperties = new \ArrayObject(['title' => [], 'owner' => []]);
 		$schemaFetcher          = $this->createMock(SchemaFetcher::class);
 		$schemaFetcher->method('fetchSchemaForCollection')->willReturnCallback(function (): SchemaData {
@@ -117,27 +117,20 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 
 			return $schema;
 		});
-		$policy = new AuthFieldPolicy($schemaFetcher, $this->userValidation, $this->objectFetcher, $this->ownerProperties, $this->config, $this->loggerFactory);
+		$guard = new AccessGuard($schemaFetcher, $this->objectFetcher, $this->ownerProperties, $this->config, $this->loggerFactory);
 
-		// Filled by scopeRequest() for an allowed non-admin write; read by
-		// ObjectUpdater::updateObject() in the running app.
-		$this->forcedValues = new ForcedValueContext();
-
+		$this->actors     = new ActorContext();
 		$this->middleware = new CollectionAccessMiddleware(
-			$this->userValidation,
-			$this->accessControl,
-			$this->session,
+			new ActorResolver($this->session, $this->accessControl, $this->config),
+			$this->actors,
 			$jsonRenderer,
 			$twigRenderer,
 			$responseFactory,
 			$this->config,
 			$this->operationDetector,
 			$this->loggerFactory,
-			new OAuthActivityLogger(new NullLogger()),
-			$this->ownerProperties,
-			$this->objectFetcher,
-			$policy,
-			$this->forcedValues,
+			new AccessDenials($this->loggerFactory, new OAuthActivityLogger(new NullLogger()), new EventDispatcher(new NullLogger())),
+			$guard,
 		);
 
 		// A routed request. Attributes set with withAttribute() are kept, so the
@@ -188,9 +181,8 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 					default                      => null,
 				},
 			);
-			$this->userValidation->method('isSuperAdmin')->willReturn(false);
 			$this->operationDetector->method('detectOperation')->willReturn($operation);
-			$this->accessControl->method('canAccessCollection')->willReturn(true);
+			$this->accessControl->method('authorityOf')->willReturn(($this->bearerAuthority)());
 		};
 
 		$this->owned = function (string $property = 'owner'): void {
@@ -306,7 +298,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		($this->owned)();
 		$this->operationDetector->method('detectOperation')->willReturn('update');
 		($this->storedObject)(['id' => 'anon', 'owner' => '']);
-		$this->accessControl->method('authorityFor')->willReturn(($this->bearerAuthority)());
+		$this->accessControl->method('authorityOf')->willReturn(($this->bearerAuthority)());
 
 		$request = ($this->requestFor)('object-update', 'showcase', 'anon', 'PUT', [
 			'authMethod'    => 'oauth_bearer',
@@ -369,9 +361,8 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 
 	/*
 	 * A write naming a missing id is denied: the property savers (file, image,
-	 * gallery, depot) create the object through ObjectSaver, outside the field
-	 * policy, so it would carry no owner stamp and squat the id. Members create
-	 * through object-save.
+	 * gallery, depot) would create the object as a side effect of an upload,
+	 * squatting the id. Members create through object-save.
 	 */
 	it('denies an update of a missing object on a property route, with reason owner', function (): void {
 		($this->owned)();
@@ -454,7 +445,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		}
 	});
 
-	it('allows object-save without a scope — the field policy stamps the owner', function (): void {
+	it('allows object-save without a scope — the storage layer stamps the owner', function (): void {
 		($this->owned)();
 		($this->signInAs)('alex', 'create');
 
@@ -472,7 +463,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		expect($this->middleware->process(($this->requestFor)('object-bulk-delete', 'showcase', null, 'POST'), $this->handler))->toBe($this->forbidden);
 		expect($this->middleware->process(($this->requestFor)('collection-reindex', 'showcase', null, 'PUT'), $this->handler))->toBe($this->forbidden);
 		// Even the actor's OWN object cannot be cloned: the copy would carry an
-		// owner the policy never stamped.
+		// owner the guard never stamped.
 		expect($this->middleware->process(($this->requestFor)('object-clone', 'showcase', 'site-1', 'POST'), $this->handler))->toBe($this->forbidden);
 		expect($this->logged[2]['context']['reason'])->toBe('owner');
 	});
@@ -497,26 +488,27 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 				default                      => null,
 			},
 		);
-		$this->userValidation->method('isSuperAdmin')->willReturn(true);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: true, groups: []));
 		$this->objectFetcher->expects($this->never())->method('existsObject');
 
 		expect($this->middleware->process(($this->requestFor)('object-update', 'showcase', 'site-2', 'PUT'), $this->handler))->toBe($this->allowed);
 		expect($this->middleware->process(($this->requestFor)('collection-query', 'showcase'), $this->handler))->toBe($this->allowed);
 		expect($this->handled[1]->getAttribute('ownerScope'))->toBeNull();
-		// The actor is attached before the super-admin bypass.
-		expect($this->handled[0]->getAttribute('accessActor'))->toEqual(new AccessActor('root', ''));
+		// The actor is set before the super-admin bypass.
+		expect($this->actors->current()->userId)->toBe('root');
+		expect($this->actors->current()->authCollection)->toBe('auth');
 	});
 
-	it('attaches the token actor to an admin bearer request it passes through', function (): void {
+	it('makes the token user the actor of an admin bearer request it passes through', function (): void {
 		($this->owned)();
-		$this->accessControl->method('authorityFor')->willReturn(new UserAuthority(isAdmin: true, groups: []));
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: true, groups: []));
 		$this->objectFetcher->expects($this->never())->method('existsObject');
 
 		$request = ($this->requestFor)('object-update', 'showcase', 'site-2', 'PUT', ['authMethod' => 'oauth_bearer', 'oauth_user_id' => 'members:root']);
 
 		expect($this->middleware->process($request, $this->handler))->toBe($this->allowed);
-		expect($this->handled[0]->getAttribute('accessActor'))->toEqual(new AccessActor('root', 'members'));
-		expect($this->handled[0]->getAttribute('accessAuthority'))->toBeNull();
+		expect($this->actors->current()->userId)->toBe('root');
+		expect($this->actors->current()->authCollection)->toBe('members');
 	});
 
 	it('scopes a non-admin editor of the default auth collection', function (): void {
@@ -530,9 +522,8 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 				default                      => null,
 			},
 		);
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->operationDetector->method('detectOperation')->willReturn('update');
-		$this->accessControl->method('canAccessCollection')->willReturn(true);
+		$this->accessControl->method('authorityOf')->willReturn(($this->bearerAuthority)());
 		($this->storedObject)(['id' => 'site-2', 'owner' => 'sam']);
 
 		expect($this->middleware->process(($this->requestFor)('object-update', 'showcase', 'site-2', 'PUT'), $this->handler))->toBe($this->forbidden);
@@ -542,7 +533,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		($this->owned)();
 		$this->operationDetector->method('detectOperation')->willReturn('read');
 		($this->storedObject)(['id' => 'site-1', 'owner' => 'alex']);
-		$this->accessControl->method('authorityFor')->willReturn(($this->bearerAuthority)());
+		$this->accessControl->method('authorityOf')->willReturn(($this->bearerAuthority)());
 
 		$own   = ($this->requestFor)('object-fetch', 'showcase', 'site-1', 'GET', ['authMethod' => 'oauth_bearer', 'oauth_user_id' => 'members:alex']);
 		$other = ($this->requestFor)('object-fetch', 'showcase', 'site-1', 'GET', ['authMethod' => 'oauth_bearer', 'oauth_user_id' => 'members:sam']);
@@ -560,9 +551,8 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 				default                      => null,
 			},
 		);
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->operationDetector->method('detectOperation')->willReturn('delete');
-		$this->accessControl->method('canAccessCollection')->willReturn(false);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		($this->storedObject)(['id' => 'site-1', 'owner' => 'alex']);
 
 		$response = $this->middleware->process(($this->requestFor)('object-delete', 'showcase', 'site-1', 'DELETE'), $this->handler);
@@ -616,8 +606,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 			($this->owned)();
 			$this->operationDetector->method('detectOperation')->willReturn('update');
 			($this->storedObject)(['id' => 'site-1', 'owner' => 'alex']);
-			$this->accessControl->method('authorityFor')->willReturn(($this->bearerAuthority)());
-			$this->userValidation->method('isSuperAdmin')->willReturn(false);
+			$this->accessControl->method('authorityOf')->willReturn(($this->bearerAuthority)());
 
 			$request = ($this->requestFor)('upload-post', 'showcase', 'site-1', 'POST', ['authMethod' => 'oauth_bearer', 'oauth_user_id' => 'members:alex', '__property' => 'gallery']);
 
@@ -634,7 +623,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 					default                      => null,
 				},
 			);
-			$this->userValidation->method('isSuperAdmin')->willReturn(true);
+			$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: true, groups: []));
 
 			$response = $this->middleware->process(($this->requestFor)('deck-item-create', 'showcase', 'site-1', 'POST', ['__property' => 'gallery']), $this->handler);
 
@@ -731,7 +720,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 			expect($this->logged)->toHaveCount(0);
 		});
 
-		// Imports upsert whole objects with no field policy, so on a collection
+		// Imports upsert whole objects past the field rules, so on a collection
 		// with protected, forced or owner rules they are admin-only.
 		it('refuses an import on a non-owned collection with a forced field, with reason protected', function (): void {
 			($this->signInAs)('alex', 'create');
@@ -756,80 +745,6 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 
 			expect($response)->toBe($this->allowed);
 			expect($this->logged)->toHaveCount(0);
-		});
-
-		// A counter tick is not a content edit: it must not send an approved
-		// object back to draft. propertyAllows() still guards a protected counter.
-		it('remembers nothing for a counter increment or decrement on the members own object', function (): void {
-			($this->owned)();
-			($this->signInAs)('alex', 'update');
-			($this->storedObject)(['id' => 'alex-site', 'owner' => 'alex', 'draft' => false]);
-
-			foreach (['property-increment', 'property-decrement'] as $routeName) {
-				$this->forcedValues->clear();
-				$response = $this->middleware->process(($this->requestFor)($routeName, 'showcase', 'alex-site', 'POST', ['__property' => 'shots']), $this->handler);
-
-				expect($response)->toBe($this->allowed, "route: $routeName");
-				expect($this->forcedValues->forcedFor('showcase', 'alex-site'))->toBe([], "route: $routeName");
-			}
-		});
-
-		it('remembers the forced values for an upload to the members own object', function (): void {
-			($this->owned)();
-			($this->signInAs)('alex', 'update');
-			($this->storedObject)(['id' => 'alex-site', 'owner' => 'alex', 'draft' => false]);
-
-			$response = $this->middleware->process(($this->requestFor)('upload-post', 'showcase', 'alex-site', 'POST', ['__property' => 'shots']), $this->handler);
-
-			expect($response)->toBe($this->allowed);
-			expect($this->forcedValues->forcedFor('showcase', 'alex-site'))->toBe(['draft' => true]);
-		});
-
-		it('remembers them on deck-item-create and property-delete too', function (): void {
-			($this->owned)();
-			($this->signInAs)('alex', 'update');
-			($this->storedObject)(['id' => 'alex-site', 'owner' => 'alex', 'draft' => false]);
-
-			foreach (['deck-item-create' => 'POST', 'property-delete' => 'DELETE'] as $routeName => $method) {
-				$this->forcedValues->clear();
-				$response = $this->middleware->process(($this->requestFor)($routeName, 'showcase', 'alex-site', $method, ['__property' => 'shots']), $this->handler);
-
-				expect($response)->toBe($this->allowed, "route: $routeName");
-				expect($this->forcedValues->forcedFor('showcase', 'alex-site'))->toBe(['draft' => true], "route: $routeName");
-			}
-		});
-
-		it('remembers nothing for a read', function (): void {
-			($this->owned)();
-			($this->signInAs)('alex', 'read');
-			($this->storedObject)(['id' => 'alex-site', 'owner' => 'alex', 'draft' => false]);
-
-			$response = $this->middleware->process(($this->requestFor)('object-fetch', 'showcase', 'alex-site'), $this->handler);
-
-			expect($response)->toBe($this->allowed);
-			expect($this->forcedValues->forcedFor('showcase', 'alex-site'))->toBe([]);
-		});
-
-		it('remembers nothing for a denied request', function (): void {
-			($this->owned)();
-			($this->signInAs)('alex', 'update');
-			($this->storedObject)(['id' => 'sam-site', 'owner' => 'sam', 'draft' => false]);
-
-			$response = $this->middleware->process(($this->requestFor)('upload-post', 'showcase', 'sam-site', 'POST', ['__property' => 'shots']), $this->handler);
-
-			expect($response)->toBe($this->forbidden);
-			expect($this->forcedValues->forcedFor('showcase', 'sam-site'))->toBe([]);
-		});
-
-		it('remembers nothing for object-save, which has no id', function (): void {
-			($this->owned)();
-			($this->signInAs)('alex', 'create');
-			($this->storedObject)(null);
-
-			$response = $this->middleware->process(($this->requestFor)('object-save', 'showcase', null, 'POST'), $this->handler);
-
-			expect($response)->toBe($this->allowed);
-			expect($this->forcedValues->forcedFor('showcase', ''))->toBe([]);
 		});
 	});
 
@@ -869,9 +784,8 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 						default                      => null,
 					},
 				);
-				$this->userValidation->method('isSuperAdmin')->willReturn(false);
 				$this->operationDetector->method('detectOperation')->willReturn($operation);
-				$this->accessControl->method('canAccessCollection')->willReturn(true);
+				$this->accessControl->method('authorityOf')->willReturn(($this->bearerAuthority)());
 			};
 		});
 
@@ -884,7 +798,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 			$response = $this->middleware->process(($this->requestFor)('object-update', 'showcase', 'site-1', 'PUT'), $this->handler);
 
 			expect($response)->toBe($this->allowed);
-			expect($this->handled[0]->getAttribute('accessActor'))->toEqual(new AccessActor('alex', 'members'));
+			expect($this->actors->current()->authCollection)->toBe('members');
 		});
 
 		it('scopes the list routes for a member of the owner collection', function (): void {

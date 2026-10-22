@@ -10,7 +10,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
 use Slim\Exception\HttpNotFoundException;
-use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
 use TotalCMS\Domain\Admin\Table\CardSummary;
 use TotalCMS\Domain\Admin\Table\InlineEditable;
 use TotalCMS\Domain\Admin\TotalFormFactory;
@@ -50,7 +49,6 @@ readonly class AdminCellAction
 		private RawRenderer $rawRenderer,
 		private ObjectFetcher $objectFetcher,
 		private ObjectPatcher $patcher,
-		private PrivilegedFieldGuard $guard,
 		private PropertyMetaResolver $propertyMeta,
 		private TotalFormFactory $forms,
 		private AccessControlService $accessControl,
@@ -123,8 +121,7 @@ readonly class AdminCellAction
 		}
 
 		$this->fetch($request, $collection, $id); // 404 before we try to write
-		$patch = $this->guard->guard($request, $collection, $id, [$property => $data[$property]]);
-		$this->patcher->patchObject($collection, $id, $patch);
+		$this->patcher->patchObject($collection, $id, [$property => $data[$property]]);
 	}
 
 	private function fetch(ServerRequestInterface $request, string $collection, string $id): ObjectData

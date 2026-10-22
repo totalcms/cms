@@ -5691,6 +5691,20 @@
                 "payload": {
                     "success": "bool"
                 }
+            },
+            {
+                "name": "access.denied",
+                "description": "Fired when the access checks refuse a request, or when the storage layer refuses a write the request's own checks let through. Who was refused is the payload's `actor`. An unauthenticated request to a page that needs a login does not fire it.",
+                "payload": {
+                    "resource": "string",
+                    "operation": "string",
+                    "reason": "string",
+                    "collection": "string",
+                    "id": "string",
+                    "route": "string",
+                    "method": "string",
+                    "path": "string"
+                }
             }
         ],
         "permissions": [

@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Admin;
 
-use Odan\Session\SessionInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Admin\Form\FormOptions;
 use TotalCMS\Domain\Admin\Form\FormOptionSources;
@@ -13,10 +12,11 @@ use TotalCMS\Domain\Admin\Form\Layout\FormGridBuilder;
 use TotalCMS\Domain\Admin\FormField\DeleteButton;
 use TotalCMS\Domain\Admin\FormField\FormField;
 use TotalCMS\Domain\Admin\FormField\SaveButton;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Auth\Data\Decision;
+use TotalCMS\Domain\Auth\Data\Operation;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
-use TotalCMS\Domain\Collection\Data\OwnerScope;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Extension\Data\FormAction;
 use TotalCMS\Domain\Extension\Service\FormActionRegistry;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -25,7 +25,6 @@ use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Rendering\Utilities\HTMLUtils;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
-use TotalCMS\Domain\Session\SessionKeys;
 
 /**
  * Total Form Builder.
@@ -548,49 +547,21 @@ class TotalForm implements \Stringable
 	private array $autoFieldOptions = [];
 
 	/**
-	 * True when the collection is owned, the actor is neither the owner of
-	 * object `$this->id` nor a super admin (or belongs to an auth collection
-	 * other than the collection's `ownerCollection`), and so must not be
-	 * shown it.
-	 * Skipped (false) when the form was built without the owner services, and
-	 * when authentication is off for the install (there is no actor then, and
-	 * every edit form on an owned collection would refuse). The caller checks
-	 * that the object exists first.
+	 * True when the current actor may not edit object `$this->id`: on an owned
+	 * collection, anyone but its owner or a trusted actor (see
+	 * {@see AccessGuard::ownerDecision()}). Skipped (false) when the form was
+	 * built without the access services. The caller checks that the object
+	 * exists first.
 	 */
 	protected function ownerForbids(): bool
 	{
-		$session    = $this->services->session;
-		$validation = $this->services->userValidation;
-		$resolver   = $this->services->ownerProperties;
-		if (!$session instanceof SessionInterface || !$validation instanceof UserValidationService || !$resolver instanceof OwnerPropertyResolver) {
+		$guard  = $this->services->guard;
+		$actors = $this->services->actors;
+		if (!$guard instanceof AccessGuard || !$actors instanceof ActorContext) {
 			return false;
 		}
 
-		if (!$this->services->config->authEnabled()) {
-			return false;
-		}
-
-		$owner = $resolver->resolve($this->collection);
-		if ($owner === '') {
-			return false;
-		}
-
-		$actor           = (string)($session->get(SessionKeys::AUTH_USER) ?? '');
-		$actorCollection = (string)($session->get(SessionKeys::AUTH_COLLECTION) ?? '');
-		if ($validation->isSuperAdmin($actor, $actorCollection)) {
-			return false;
-		}
-
-		// A member of an auth collection other than the one `ownerCollection`
-		// names owns nothing here. The session's empty collection (a login at
-		// the plain /admin/login route) is the default auth collection.
-		if ($resolver->isOutsider($this->collection, $actorCollection, (string)($this->services->config->auth['collection'] ?? ''))) {
-			return true;
-		}
-
-		$object = $this->services->objectFetcher->fetchObject($this->collection, $this->id);
-
-		return $actor === '' || !(new OwnerScope($owner, $actor))->matches($object->toArray());
+		return $guard->ownerDecision($actors->current(), $this->collection, Operation::Update, $this->id) !== Decision::Allow;
 	}
 
 	/**

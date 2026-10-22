@@ -16,11 +16,16 @@ use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
@@ -40,7 +45,6 @@ describe('CollectionMetaAccessMiddleware registration settings', function (): vo
 	beforeEach(function (): void {
 		$this->accessControl     = $this->createMock(AccessControlService::class);
 		$this->session           = $this->createMock(SessionInterface::class);
-		$this->userValidation    = $this->createMock(UserValidationService::class);
 		$this->operationDetector = $this->createMock(OperationDetector::class);
 
 		$this->config        = Config::init();
@@ -88,16 +92,15 @@ describe('CollectionMetaAccessMiddleware registration settings', function (): vo
 		$fetcher->method('fetchCollection')->willReturnCallback(fn (string $id): ?CollectionData => $id === 'members' ? $this->stored : null);
 
 		$this->middleware = new CollectionMetaAccessMiddleware(
-			$this->userValidation,
-			$this->accessControl,
-			$this->session,
+			new ActorResolver($this->session, $this->accessControl, $this->config),
+			new ActorContext(),
 			$jsonRenderer,
 			$twigRenderer,
 			$responseFactory,
 			$this->config,
 			$this->operationDetector,
 			$loggerFactory,
-			new OAuthActivityLogger(new NullLogger()),
+			new AccessDenials($loggerFactory, new OAuthActivityLogger(new NullLogger()), new EventDispatcher(new NullLogger())),
 			$fetcher,
 		);
 
@@ -139,10 +142,10 @@ describe('CollectionMetaAccessMiddleware registration settings', function (): vo
 					default                      => null,
 				},
 			);
-			$this->userValidation->method('isSuperAdmin')->willReturn(false);
 			$this->operationDetector->method('detectOperation')->willReturn($operation);
-			$this->accessControl->method('canAccessCollectionMeta')->willReturn(true);
-			$this->accessControl->method('canAccessCollectionsMetaOperation')->willReturn(true);
+			$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: [
+				new AccessGroupData(['id' => 'meta', 'permissions' => ['collectionsMeta' => ['all' => true, 'operations' => ['create', 'read', 'update', 'delete']]]]),
+			]));
 		};
 	});
 
@@ -235,9 +238,8 @@ describe('CollectionMetaAccessMiddleware registration settings', function (): vo
 		$this->session->method('get')->willReturnCallback(
 			static fn (string $key) => $key === SessionKeys::AUTH_USER ? 'sam' : null,
 		);
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
 		$this->operationDetector->method('detectOperation')->willReturn('update');
-		$this->accessControl->method('canAccessCollectionMeta')->willReturn(false);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 
 		$response = $this->middleware->process(($this->requestFor)('collection-patch', 'members', ['name' => 'X']), $this->handler);
 

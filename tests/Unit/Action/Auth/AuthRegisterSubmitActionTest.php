@@ -15,7 +15,9 @@ use Slim\Exception\HttpForbiddenException;
 use Slim\Psr7\Response;
 use TotalCMS\Action\Auth\AuthRegisterSubmitAction;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Auth\Service\AuthMailer;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\LoginService;
@@ -57,7 +59,8 @@ final class AuthRegisterSubmitActionTest extends TestCase
 	private MockObject $twigEngine;
 	private Config $config;
 	private MockObject $objectFactory;
-	private AuthFieldPolicy $authFieldPolicy;
+	private AccessGuard $guard;
+	private ActorContext $actors;
 	private SchemaFetcher $schemaFetcher;
 
 	protected function setUp(): void
@@ -83,7 +86,7 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		$this->config->url = 'https://example.test';
 		$this->config->api = '/api';
 
-		// Real AuthFieldPolicy: the 'members' schema carries the privileged
+		// Real AccessGuard: the 'members' schema carries the privileged
 		// fields so stripProtected() actually removes them.
 		$schema             = new SchemaData();
 		$schema->id         = 'auth';
@@ -101,9 +104,9 @@ final class AuthRegisterSubmitActionTest extends TestCase
 		$ownerProperties->method('resolve')->willReturn('');
 		$this->schemaFetcher   = $schemaFetcher;
 		$this->objectFactory   = $this->createMock(ObjectFactory::class);
-		$this->authFieldPolicy = new AuthFieldPolicy(
+		$this->actors          = new ActorContext();
+		$this->guard           = new AccessGuard(
 			$schemaFetcher,
-			$this->createMock(UserValidationService::class),
 			$this->createMock(ObjectFetcher::class),
 			$ownerProperties,
 			$this->config,
@@ -126,7 +129,8 @@ final class AuthRegisterSubmitActionTest extends TestCase
 			$this->objectSaver,
 			$this->loginService,
 			$this->sessionLogin,
-			$this->authFieldPolicy,
+			$this->guard,
+			$this->actors,
 			$this->collectionFetcher,
 			$this->verificationService,
 			new AuthMailer($this->emailService, $this->emailSender, $this->twigEngine, $this->createMock(UserValidationService::class), $this->config),
@@ -224,7 +228,13 @@ final class AuthRegisterSubmitActionTest extends TestCase
 
 				return true;
 			}))
-			->willReturn($saved);
+			// The save runs as the system actor: the storage layer must not
+			// strip the groups and active state the action just forced.
+			->willReturnCallback(function () use ($saved): ObjectData {
+				expect($this->actors->current()->kind)->toBe(ActorKind::System);
+
+				return $saved;
+			});
 
 		$this->loginService->method('authenticate')->willReturn(['id' => 'alice']);
 		$this->renderer->method('jsonItem')->willReturn($this->createMock(ResponseInterface::class));

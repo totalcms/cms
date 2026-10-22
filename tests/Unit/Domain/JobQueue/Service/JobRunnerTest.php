@@ -93,6 +93,7 @@ function jobRunnerFrom(array $m, array $smtp = []): JobRunner
 		$m['searchReindexJob'],
 		$m['indexNowJob'],
 		$config,
+		systemActors(),
 		$loggerFactory,
 	);
 }

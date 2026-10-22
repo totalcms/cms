@@ -2,7 +2,6 @@
 
 namespace TotalCMS\Domain\Object\Service;
 
-use TotalCMS\Domain\Auth\Service\ForcedValueContext;
 use TotalCMS\Domain\Event\Data\CoreEvent;
 use TotalCMS\Domain\Event\Payload\ObjectEventPayload;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
@@ -22,7 +21,7 @@ readonly class ObjectUpdater
 		private ObjectFactory $factory,
 		private PropertyDataProcessorInterface $propertyProcessor,
 		private EventDispatcher $eventDispatcher,
-		private ForcedValueContext $forcedValues,
+		private ObjectWriteGate $gate,
 	) {
 	}
 
@@ -41,17 +40,15 @@ readonly class ObjectUpdater
 	 */
 	public function updateObject(string $collection, string $id, ObjectData|array $object, bool $silent = false, bool $preserveDates = false): ObjectData
 	{
-		// Forced values from the field policy (protected: {value: X}),
-		// remembered by the access middleware for this request's non-admin
-		// write. Laid over every save so no write path can skip them.
-		$forced = $this->forcedValues->forcedFor($collection, $id);
-		if ($forced !== []) {
-			$data   = $object instanceof ObjectData ? $object->toArray() : $object;
-			$object = array_replace($data, $forced);
-		}
-
-		if (!$object instanceof ObjectData) {
-			$object = $this->factory->generateObject($collection, $object);
+		// Every update funnels through here (property, file, deck, upload and
+		// meta writes included), so this is where the current actor's access
+		// rules apply: they must own the object, protected fields revert, and
+		// forced fields take their configured value. A no-op for trusted
+		// actors and unprotected collections.
+		$data    = $object instanceof ObjectData ? $object->toArray() : $object;
+		$guarded = $this->gate->beforeUpdate($collection, $id, $data);
+		if (!$object instanceof ObjectData || $guarded !== $data) {
+			$object = $this->factory->generateObject($collection, $guarded);
 		}
 
 		if ($object->id !== $id) {
@@ -96,11 +93,10 @@ readonly class ObjectUpdater
 
 	/**
 	 * @param array<string,mixed> $newData
-	 * @param array<string,mixed> $extra   top-level fields written in the same save, e.g. forced values from AuthFieldPolicy
 	 *
 	 * @SuppressWarnings("PHPMD.BooleanArgumentFlag")
 	 */
-	public function updateObjectProperty(string $collection, string $id, string $property, array $newData, bool $silent = false, array $extra = []): ObjectData
+	public function updateObjectProperty(string $collection, string $id, string $property, array $newData, bool $silent = false): ObjectData
 	{
 		$object = $this->objectFetcher->fetchObject($collection, $id);
 
@@ -109,7 +105,6 @@ readonly class ObjectUpdater
 
 		$objectData            = $object->toArray();
 		$objectData[$property] = $newData;
-		$objectData            = array_replace($objectData, $extra);
 
 		return $this->updateObject($collection, $id, $objectData, $silent);
 	}

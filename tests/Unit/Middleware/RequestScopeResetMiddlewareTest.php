@@ -4,76 +4,85 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Middleware;
 
+use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
-use TotalCMS\Domain\Auth\Service\ForcedValueContext;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
+use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Middleware\RequestScopeResetMiddleware;
 use TotalCMS\Support\Config;
 
 /**
- * A long-lived worker serves many requests from one process, so forced
- * values remembered in one request must be gone before the next starts.
+ * A long-lived worker serves many requests from one process, so the actor
+ * and the guard's memoised rules from one request must be gone before the
+ * next starts.
  */
 final class RequestScopeResetMiddlewareTest extends TestCase
 {
-	public function testClearsTheContextBeforeTheRequestIsHandled(): void
+	private Config $config;
+
+	protected function setUp(): void
 	{
-		$context = new ForcedValueContext();
-		$context->remember('showcase', 'site-1', ['draft' => true]);
-
-		$request  = $this->createMock(ServerRequestInterface::class);
-		$response = $this->createMock(ResponseInterface::class);
-
-		$seenDuringHandle = null;
-		$handler          = $this->createMock(RequestHandlerInterface::class);
-		$handler->expects($this->once())
-			->method('handle')
-			->with($this->identicalTo($request))
-			->willReturnCallback(function () use ($context, $response, &$seenDuringHandle): ResponseInterface {
-				$seenDuringHandle = $context->forcedFor('showcase', 'site-1');
-
-				return $response;
-			});
-
-		$result = (new RequestScopeResetMiddleware($context, $this->makePolicy($this->createMock(SchemaFetcher::class))))->process($request, $handler);
-
-		$this->assertSame($response, $result);
-		$this->assertSame([], $seenDuringHandle);
-		$this->assertSame([], $context->forcedFor('showcase', 'site-1'));
+		$this->config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$this->config->auth = ['enable' => true, 'collection' => 'auth'];
 	}
 
-	public function testLeavesValuesRememberedDuringTheRequestForItsOwnSaves(): void
+	public function testDropsThePreviousRequestsActor(): void
 	{
-		// Clearing happens on the way in only: the request's own entries must
-		// stay readable for every save it makes.
-		$context = new ForcedValueContext();
+		$actors = new ActorContext();
+		$actors->set(Actor::system());
 
+		$seen    = null;
 		$handler = $this->createMock(RequestHandlerInterface::class);
-		$handler->method('handle')->willReturnCallback(function () use ($context): ResponseInterface {
-			$context->remember('showcase', 'site-1', ['draft' => true]);
+		$handler->method('handle')->willReturnCallback(function () use ($actors, &$seen): ResponseInterface {
+			$seen = $actors->current()->kind;
 
 			return $this->createMock(ResponseInterface::class);
 		});
 
-		(new RequestScopeResetMiddleware($context, $this->makePolicy($this->createMock(SchemaFetcher::class))))->process($this->createMock(ServerRequestInterface::class), $handler);
+		$this->middleware($actors, $this->sessionFor(null))->process($this->createMock(ServerRequestInterface::class), $handler);
 
-		$this->assertSame(['draft' => true], $context->forcedFor('showcase', 'site-1'));
+		$this->assertSame(ActorKind::Anonymous, $seen);
 	}
 
-	public function testForgetsTheMemoisedFieldPolicyRules(): void
+	public function testTheSessionUserBecomesTheActorWhenFirstRead(): void
 	{
-		// AuthFieldPolicy is final, so use the real one and count schema fetches:
-		// the memo makes the second read free, the reset makes the third a fetch.
+		$actors = new ActorContext();
+
+		$accessControl = $this->createMock(AccessControlService::class);
+		$accessControl->expects($this->once())->method('authorityOf')->with('alex', 'auth')->willReturn(new UserAuthority(isAdmin: false, groups: []));
+
+		$seen    = null;
+		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler->method('handle')->willReturnCallback(function () use ($actors, &$seen): ResponseInterface {
+			$seen = $actors->current();
+
+			return $this->createMock(ResponseInterface::class);
+		});
+
+		$this->middleware($actors, $this->sessionFor('alex'), $accessControl)->process($this->createMock(ServerRequestInterface::class), $handler);
+
+		$this->assertSame(ActorKind::Member, $seen?->kind);
+		$this->assertSame('alex', $seen?->userId);
+	}
+
+	public function testForgetsTheMemoisedGuardRules(): void
+	{
+		// The memo makes the second read free, the reset makes the third a fetch.
 		$schema             = new SchemaData();
 		$schema->id         = 'notes';
 		$schema->properties = ['title' => []];
@@ -81,32 +90,45 @@ final class RequestScopeResetMiddlewareTest extends TestCase
 		$fetcher = $this->createMock(SchemaFetcher::class);
 		$fetcher->expects($this->exactly(2))->method('fetchSchemaForCollection')->willReturn($schema);
 
-		$policy = $this->makePolicy($fetcher);
-		$policy->protectedFieldsFor('notes');
-		$policy->protectedFieldsFor('notes');
+		$guard = $this->guard($fetcher);
+		$guard->protectedFieldsFor('notes');
+		$guard->protectedFieldsFor('notes');
 
 		$handler = $this->createMock(RequestHandlerInterface::class);
 		$handler->expects($this->once())->method('handle')->willReturn($this->createMock(ResponseInterface::class));
 
-		(new RequestScopeResetMiddleware(new ForcedValueContext(), $policy))->process($this->createMock(ServerRequestInterface::class), $handler);
+		$this->middleware(new ActorContext(), $this->sessionFor(null), null, $guard)->process($this->createMock(ServerRequestInterface::class), $handler);
 
-		$policy->protectedFieldsFor('notes');
+		$guard->protectedFieldsFor('notes');
 	}
 
-	private function makePolicy(SchemaFetcher $schemaFetcher): AuthFieldPolicy
+	private function middleware(ActorContext $actors, SessionInterface $session, ?AccessControlService $accessControl = null, ?AccessGuard $guard = null): RequestScopeResetMiddleware
 	{
-		$config       = (new \ReflectionClass(Config::class))->newInstanceWithoutConstructor();
-		$config->auth = ['enable' => true, 'collection' => 'auth'];
+		return new RequestScopeResetMiddleware(
+			$actors,
+			new ActorResolver($session, $accessControl ?? $this->createMock(AccessControlService::class), $this->config),
+			$guard ?? $this->guard($this->createMock(SchemaFetcher::class)),
+		);
+	}
 
+	private function sessionFor(?string $userId): SessionInterface
+	{
+		$session = $this->createMock(SessionInterface::class);
+		$session->method('get')->willReturnCallback(static fn (string $key): ?string => $key === SessionKeys::AUTH_USER ? $userId : null);
+
+		return $session;
+	}
+
+	private function guard(SchemaFetcher $schemaFetcher): AccessGuard
+	{
 		$loggerFactory = $this->createMock(LoggerFactory::class);
 		$loggerFactory->method('channelLogger')->willReturn($this->createMock(LoggerInterface::class));
 
-		return new AuthFieldPolicy(
+		return new AccessGuard(
 			$schemaFetcher,
-			$this->createMock(UserValidationService::class),
 			$this->createMock(ObjectFetcher::class),
 			$this->createMock(OwnerPropertyResolver::class),
-			$config,
+			$this->config,
 			$loggerFactory,
 		);
 	}

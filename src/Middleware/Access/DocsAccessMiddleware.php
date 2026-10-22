@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Middleware\Access;
 
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\Auth\Data\Actor;
 
 /**
  * Docs Access Middleware.
@@ -19,8 +20,8 @@ readonly class DocsAccessMiddleware extends BaseAccessMiddleware
 	 * Check if the user has permission to access documentation.
 	 * Docs don't have operation-based permissions, just boolean access.
 	 */
-	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
+	protected function checkPermission(Actor $actor, string $operation, ServerRequestInterface $request): bool
 	{
-		return $this->accessControl->canAccessDocs($userId);
+		return $actor->authority()->canDocs();
 	}
 }

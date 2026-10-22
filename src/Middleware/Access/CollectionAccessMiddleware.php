@@ -4,147 +4,95 @@ declare(strict_types=1);
 
 namespace TotalCMS\Middleware\Access;
 
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
-use TotalCMS\Domain\Auth\Data\UserAuthority;
-use TotalCMS\Domain\Auth\Service\AccessControlService;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
-use TotalCMS\Domain\Auth\Service\ForcedValueContext;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\Decision;
+use TotalCMS\Domain\Auth\Data\Operation;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
-use TotalCMS\Domain\Collection\Data\OwnerScope;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
-use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
-use TotalCMS\Domain\Object\Service\ObjectFetcher;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Renderer\TwigRenderer;
 use TotalCMS\Support\Config;
 
 /**
- * Collection Access Middleware.
+ * Collection Access Middleware: the REST adapter for {@see AccessGuard}.
  *
- * Enforces access group permissions for collection operations, and on an
- * owned collection (one whose `ownerProperty` names a property the schema
- * defines) limits every non-super-admin to the objects they own:
+ * It translates a collection route into the guard's terms — collection,
+ * {@see Operation}, object id, property — and refuses with a 403 when the
+ * guard says no. Every rule lives in the guard; what lives here is only the
+ * mapping from route names onto operations:
  *
- *   - an empty actor id is denied outright, and so is a member of an auth
- *     collection other than the one the collection's `ownerCollection`
- *     names (when set);
- *   - routes with an `{id}` deny unless the object's owner is the actor; a
- *     missing object passes for a read only (the action 404s);
- *   - `collection-query` / `collection-fetch-index` are handed an
- *     `ownerScope` request attribute that the actions apply as a filter;
- *   - `object-bulk-delete`, `collection-reindex` and `object-clone` are
- *     refused — bulk and reindex cannot be scoped, clone would copy
- *     another object's owner (clone is also refused on any collection with
- *     protected fields; see below);
- *   - `admin-collection-post` with a `duplicate` field (admin clone) is refused;
- *   - the admin pseudo-pages (`admin-collection` / `admin-collection-post`
- *     with an id starting `-`: export, import, factory, sitemap, feeds) are
- *     refused;
- *   - id-less routes are an allow-list: only `object-save` (AuthFieldPolicy
- *     stamps the owner on create), the two list routes and `admin-collection`
- *     pass. Export, report and import routes are refused.
+ *   - `object-bulk-delete`, `collection-reindex`, `object-clone` and the
+ *     `import-*` routes are their own operations;
+ *   - the admin page's pseudo-objects (`-export`, `-import`, `-factory`,
+ *     `-sitemap`, `-feeds`) read across every object: Export;
+ *   - the admin add form posting a `duplicate` field is a Clone;
+ *   - `object-save` and the admin `add` form are a Create without an id;
+ *   - the two list routes and the admin collection page are a List;
+ *   - any other route without an `{id}` (exports, reports) is an Export;
+ *   - everything else is the CRUD operation OperationDetector found.
  *
- * On EVERY collection, owned or not, a write route that names a `{property}`
- * (property delete, deck items, files, folders, meta, counters, uploads) is
- * refused when {@see AuthFieldPolicy::canWriteProperty()} says the actor may
- * not write that property: a protected property is admin-only on every route.
- * Likewise `object-clone` is refused (`reason: protected`) on any collection
- * with a protected, forced or owner rule: a clone copies values the actor
- * could not write. On an owned collection the owner check refuses it first.
- * A clone whose body names a target `collection` other than the route's is
- * refused too: only the route collection is access-checked. The collection
- * imports (`import-*`) are refused (`reason: protected`) on the same
- * collections: they upsert whole objects and no field policy runs on them.
+ * Checks run in this order, and the reason of the first refusal is logged:
+ * the access groups, the field policy on a `{property}` write route (a
+ * protected property is admin-only on every route), ownership, then the
+ * clone and import refusals on collections with protected fields. A clone
+ * whose body names a target `collection` other than the route's is refused
+ * too: only the route collection is access-checked.
  *
- * After allowing a create, update or delete on a route that names both a
- * `{collection}` and an `{id}` (other than a counter increment or decrement,
- * which is not a content edit), it remembers in {@see ForcedValueContext}
- * what AuthFieldPolicy forces on that object (`protected: {"value": X}`).
- * ObjectUpdater::updateObject() lays those values over every save of the
- * object in this request, so deck items, files, uploads, meta writes and
- * property deletes cannot skip them.
- *
- * Super admins, API keys and admin bearer tokens exit BaseAccessMiddleware
- * before any of this. The group check runs first and neither ownership nor
- * the field policy ever grants what the group did not.
- *
- * @SuppressWarnings("PHPMD.ExcessiveParameterList") the base already takes
- * ten container services; the four added here are the owner lookups, the
- * field policy and the forced-value context.
- * @SuppressWarnings("PHPMD.CouplingBetweenObjects") the owner scope value
- * object is the twenty-first type; every dependency is a container service
- * or data type this one access decision needs.
+ * The list routes are handed the actor's {@see OWNER_SCOPE_ATTRIBUTE}, which
+ * IndexQueryAction and IndexGetAction apply as a filter. Protected and
+ * forced fields need nothing from here: the storage layer applies them to
+ * every write ({@see \TotalCMS\Domain\Object\Service\ObjectWriteGate}).
  */
 readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 {
 	protected const RESOURCE_NAME = 'collection';
 
 	/**
-	 * Request attribute carrying an {@see OwnerScope} for the list actions,
-	 * which keep only the items whose owner property equals the actor's id
-	 * exactly.
+	 * Request attribute carrying the actor's {@see \TotalCMS\Domain\Collection\Data\OwnerScope}
+	 * for the list actions, which keep only the items it matches.
 	 */
 	public const OWNER_SCOPE_ATTRIBUTE = 'ownerScope';
 
-	/** Operations that cannot be limited to the actor's own objects. */
-	private const OWNER_DENIED_ROUTES = ['object-bulk-delete', 'collection-reindex', 'object-clone'];
+	/** Routes that are an operation of their own rather than plain CRUD. */
+	private const ROUTE_OPERATIONS = [
+		'object-bulk-delete' => Operation::BulkDelete,
+		'collection-reindex' => Operation::Reindex,
+		'object-clone'       => Operation::Clone,
+	];
 
-	/**
-	 * The only id-less routes a scoped actor may use: object-save (the field
-	 * policy stamps the owner), the two list routes (scoped by the ownerScope
-	 * attribute) and the admin collection page (it loads its rows through the
-	 * scoped collection-query). Every other route without an {id} (export,
-	 * report, import, ...) reads or writes across owners and is refused.
-	 */
-	private const OWNER_ALLOWED_IDLESS_ROUTES = ['object-save', 'collection-query', 'collection-fetch-index', 'admin-collection'];
-
-	/**
-	 * Counter routes: a tick is not a content edit, so it does not re-apply
-	 * forced values (an approved object stays approved). propertyAllows()
-	 * still refuses a protected counter.
-	 */
-	private const COUNTER_ROUTES = ['property-increment', 'property-decrement'];
+	/** Id-less routes that list the collection (scoped to the actor's own objects). */
+	private const LIST_ROUTES = ['collection-query', 'collection-fetch-index', 'admin-collection'];
 
 	/** List routes whose actions apply the owner scope themselves. */
 	private const OWNER_SCOPED_LIST_ROUTES = ['collection-query', 'collection-fetch-index'];
 
-	/**
-	 * Write operations: their `{property}` routes write the named property,
-	 * and their `{id}` routes remember the object's forced values.
-	 */
+	/** Operations whose `{property}` routes write the named property. */
 	private const PROPERTY_WRITE_OPERATIONS = ['create', 'update', 'delete'];
 
 	public function __construct(
-		UserValidationService $userValidation,
-		AccessControlService $accessControl,
-		SessionInterface $session,
+		ActorResolver $actorResolver,
+		ActorContext $actors,
 		JsonRenderer $jsonRenderer,
 		TwigRenderer $twigRenderer,
 		ResponseFactoryInterface $responseFactory,
 		Config $config,
 		OperationDetector $operationDetector,
 		LoggerFactory $loggerFactory,
-		OAuthActivityLogger $oauthActivityLogger,
-		private OwnerPropertyResolver $ownerProperties,
-		private ObjectFetcher $objectFetcher,
-		private AuthFieldPolicy $policy,
-		private ForcedValueContext $forcedValues,
+		AccessDenials $denials,
+		private AccessGuard $guard,
 	) {
-		parent::__construct($userValidation, $accessControl, $session, $jsonRenderer, $twigRenderer, $responseFactory, $config, $operationDetector, $loggerFactory, $oauthActivityLogger);
+		parent::__construct($actorResolver, $actors, $jsonRenderer, $twigRenderer, $responseFactory, $config, $operationDetector, $loggerFactory, $denials);
 	}
 
-	/**
-	 * Check if the user has permission to access the requested collection:
-	 * the group check, then the protected-property check, then on an owned
-	 * collection the owner check.
-	 */
-	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
+	protected function checkPermission(Actor $actor, string $operation, ServerRequestInterface $request): bool
 	{
 		$route = $this->routeOf($request);
 		if (!$route instanceof RouteInterface) {
@@ -152,51 +100,105 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 			return true;
 		}
 
-		if (!$this->groupAllows($userId, $operation, $request, $route)) {
-			return false;
-		}
-
-		if (!$this->propertyAllows($userId, $operation, $request, $route)) {
-			return false;
-		}
-
-		if (!$this->ownerAllows($userId, $operation, $request, $route)) {
-			return false;
-		}
-
-		if (!$this->cloneAllows($request, $route)) {
-			return false;
-		}
-
-		return $this->importAllows($route);
+		return $this->decide($actor, $operation, $request, $route) === Decision::Allow;
 	}
 
 	/**
-	 * Whether `object-clone` may run: refused when the body names a target
-	 * collection other than the route's (only the route collection is
-	 * access-checked), and on any collection with a protected, forced or
-	 * owner rule, because the copy would carry values the actor could not
-	 * write. True for every other route.
+	 * The guard's verdict for this route, the first refusal winning. NotFound
+	 * (a read of a missing object) counts as allowed: the action answers 404.
 	 */
-	private function cloneAllows(ServerRequestInterface $request, RouteInterface $route): bool
+	private function decide(Actor $actor, string $operation, ServerRequestInterface $request, RouteInterface $route): Decision
 	{
-		if ((string)$route->getName() !== 'object-clone') {
-			return true;
-		}
-
 		$collection = (string)$route->getArgument('collection', '');
-		if (self::cloneTargetsOtherCollection($request, $collection)) {
-			return false;
+		$objectId   = (string)$route->getArgument('id', '');
+
+		if (!$this->guard->groupAllows($actor, $collection, $operation, $objectId)) {
+			return Decision::DenyGroup;
 		}
 
-		return $this->policy->protectedFieldsFor($collection) === [];
+		$property = (string)$route->getArgument('property', '');
+		if ($collection !== '' && $property !== '' && in_array($operation, self::PROPERTY_WRITE_OPERATIONS, true)
+			&& !$this->guard->canWriteProperty($actor, $collection, $property)) {
+			return Decision::DenyProtected;
+		}
+
+		[$domainOperation, $id] = $this->operationOf($operation, $request, $route, $objectId);
+
+		if (!$this->guard->ownerDecision($actor, $collection, $domainOperation, $id)->passes()) {
+			return Decision::DenyOwner;
+		}
+
+		if ($domainOperation === Operation::Clone && self::cloneTargetsOtherCollection($request, $collection)) {
+			return Decision::DenyProtected;
+		}
+
+		return $this->guard->copyAllows($actor, $collection, $domainOperation) ? Decision::Allow : Decision::DenyProtected;
+	}
+
+	/**
+	 * The domain operation a route performs, and the object id it names (''
+	 * for the admin page's `add` keyword and pseudo-objects, which name none).
+	 *
+	 * @return array{0: Operation, 1: string}
+	 */
+	private function operationOf(string $operation, ServerRequestInterface $request, RouteInterface $route, string $objectId): array
+	{
+		$routeName = (string)$route->getName();
+
+		if (isset(self::ROUTE_OPERATIONS[$routeName])) {
+			return [self::ROUTE_OPERATIONS[$routeName], $objectId];
+		}
+
+		if (str_starts_with($routeName, 'import-')) {
+			return [Operation::Import, ''];
+		}
+
+		if ($routeName === 'admin-collection' || $routeName === 'admin-collection-post') {
+			$adminOperation = $this->adminPageOperation($routeName, $objectId, $request);
+			if ($adminOperation instanceof Operation) {
+				return [$adminOperation, ''];
+			}
+		}
+
+		if ($objectId === '') {
+			return match (true) {
+				$routeName === 'object-save'                    => [Operation::Create, ''],
+				in_array($routeName, self::LIST_ROUTES, true)   => [Operation::List, ''],
+				default                                         => [Operation::Export, ''],
+			};
+		}
+
+		return [Operation::tryFrom($operation) ?? Operation::Export, $objectId];
+	}
+
+	/**
+	 * What an admin collection page request does when it is not a plain
+	 * object page: a pseudo-object works across every object, the `add`
+	 * keyword creates, and a `duplicate` field on the add form clones (any
+	 * string value, even "0", which is what AdminCollectionAction acts on).
+	 * Null for an ordinary object page.
+	 */
+	private function adminPageOperation(string $routeName, string $objectId, ServerRequestInterface $request): ?Operation
+	{
+		if (str_starts_with($objectId, '-')) {
+			return Operation::Export;
+		}
+
+		if ($routeName === 'admin-collection-post') {
+			$body = (array)$request->getParsedBody();
+			if (isset($body['duplicate']) && is_string($body['duplicate'])) {
+				return Operation::Clone;
+			}
+		}
+
+		return $objectId === 'add' && $routeName === 'admin-collection-post' ? Operation::Create : null;
 	}
 
 	/**
 	 * Whether a clone request's body names a target `collection` that is not
-	 * identical to the route collection (any non-null value, of any type). ObjectCloneAction copies into the body's
-	 * collection when one is given. Shared with DualAuthMiddleware's public
-	 * path.
+	 * identical to the route collection (any non-null value, of any type).
+	 * ObjectCloneAction copies into the body's collection when one is given.
+	 * Shared with DualAuthMiddleware's public path.
 	 */
 	public static function cloneTargetsOtherCollection(ServerRequestInterface $request, string $routeCollection): bool
 	{
@@ -210,305 +212,31 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 	}
 
 	/**
-	 * Whether a collection import (`import-csv`, `import-json`,
-	 * `import-deck-csv`, `import-deck-json`, `import-factory`) may run:
-	 * imports upsert whole objects and no field policy runs on them, so they
-	 * are refused on any collection with a protected, forced or owner rule.
-	 * True for every other route.
+	 * Hand the two list routes of an owned collection the actor's owner scope;
+	 * every other request passes untouched.
 	 */
-	private function importAllows(RouteInterface $route): bool
-	{
-		if (!str_starts_with((string)$route->getName(), 'import-')) {
-			return true;
-		}
-
-		return $this->policy->protectedFieldsFor((string)$route->getArgument('collection', '')) === [];
-	}
-
-	/**
-	 * The field-policy decision for a write route that names a `{property}`.
-	 * Only property-update/-patch apply the policy in their action; every other
-	 * property route (delete, deck items, files, folders, meta, counters,
-	 * uploads) writes the property with no check of its own, so the refusal
-	 * lives here, once, for all of them. True for every route without a
-	 * property and for reads.
-	 */
-	private function propertyAllows(string $userId, string $operation, ServerRequestInterface $request, RouteInterface $route): bool
-	{
-		if (!in_array($operation, self::PROPERTY_WRITE_OPERATIONS, true)) {
-			return true;
-		}
-
-		$collection = (string)$route->getArgument('collection', '');
-		$property   = (string)$route->getArgument('property', '');
-		if ($collection === '' || $property === '') {
-			return true;
-		}
-
-		return $this->policy->canWriteProperty($userId, $collection, $property, $this->actorOf($request)->collection);
-	}
-
-	/**
-	 * The access-group decision, exactly as before owned collections existed.
-	 */
-	private function groupAllows(string $userId, string $operation, ServerRequestInterface $request, RouteInterface $route): bool
-	{
-		$collection = $route->getArgument('collection');
-		$objectId   = $route->getArgument('id');
-
-		// OAuth Bearer callers: there is no PHP session to derive groups from,
-		// so use the UserAuthority resolved from the token by BaseAccessMiddleware.
-		// This MUST run before the self-profile carve-out below: the carve-out
-		// gates on the actor's auth collection, not on auth method, so a Bearer
-		// request that ALSO carries an active session cookie (browser-originated
-		// token use) could otherwise hit the carve-out and update the auth
-		// record — bypassing the group check on exactly the record that holds
-		// `groups`. Returning here unconditionally for any accessAuthority-
-		// bearing (i.e. Bearer) request closes that off.
-		$authority = $request->getAttribute('accessAuthority');
-		if ($authority instanceof UserAuthority) {
-			return $collection
-				? $authority->canCollection($operation, $collection)
-				: $authority->canCollectionsOperation($operation);
-		}
-
-		// Allow users to update their own profile (self-profile update).
-		// Users should always be able to update their own record in their auth
-		// collection. Only reachable for session callers — Bearer requests
-		// always return above via the accessAuthority branch.
-		//
-		// AUTH_COLLECTION is empty for anyone who logged in at the plain
-		// `/admin/login` route, which has no `{collection}` argument — i.e.
-		// almost everyone (AuthLoginSubmitAction: `$args['collection'] ?? ''`).
-		// AccessActor::authCollection() resolves that empty value to the default
-		// auth collection before comparing. Comparing the raw value made this
-		// carve-out dead for every default-login user: their own profile save
-		// fell through to the group check and 403'd.
-		if ($operation === 'update' && $collection && $objectId) {
-			if ($collection === $this->actorOf($request)->authCollection((string)$this->config->auth['collection']) && $objectId === $userId) {
-				return true;
-			}
-		}
-
-		// Check access permissions
-		if ($collection) {
-			// Specific collection - check access to that collection
-			return $this->accessControl->canAccessCollection($userId, $collection, $operation);
-		}
-
-		// No specific collection (e.g., GET /collections, POST /collections) - check general collection operation permission
-		return $this->accessControl->canAccessCollectionsOperation($userId, $operation);
-	}
-
-	/**
-	 * The owner decision for a non-super-admin on an owned collection. True
-	 * for every route on an ordinary collection.
-	 */
-	private function ownerAllows(string $userId, string $operation, ServerRequestInterface $request, RouteInterface $route): bool
-	{
-		$collection = (string)$route->getArgument('collection', '');
-		if ($collection === '') {
-			return true;
-		}
-
-		$ownerProperty = $this->ownerProperties->resolve($collection);
-		if ($ownerProperty === '') {
-			return true;
-		}
-
-		// The collection's settings could not be read, so nothing on it can be scoped: deny every route for a scoped actor.
-		if ($ownerProperty === OwnerPropertyResolver::UNRESOLVED) {
-			return false;
-		}
-
-		// An empty actor id (a bearer subject that parsed to nothing) must never
-		// match an object whose owner is empty, nor receive a list scope.
-		if ($userId === '') {
-			return false;
-		}
-
-		// A member of another auth collection than the one named in
-		// `ownerCollection` owns nothing here: treated like an empty actor.
-		if ($this->isOwnerOutsider($request, $collection)) {
-			return false;
-		}
-
-		$routeName = (string)$route->getName();
-		if (in_array($routeName, self::OWNER_DENIED_ROUTES, true)) {
-			return false;
-		}
-
-		$objectId = (string)$route->getArgument('id', '');
-		if ($objectId === '') {
-			// Allow-list: only the routes that are safe without an object to compare.
-			return in_array($routeName, self::OWNER_ALLOWED_IDLESS_ROUTES, true);
-		}
-
-		if ($this->adminRouteDeniesOwner($routeName, $objectId, $request)) {
-			return false;
-		}
-
-		if (!$this->objectFetcher->existsObject($collection, $objectId)) {
-			return $this->missingObjectAllows($operation, $routeName, $objectId);
-		}
-
-		$object = $this->objectFetcher->fetchObject($collection, $objectId)->toArray();
-
-		return (new OwnerScope($ownerProperty, $userId))->matches($object);
-	}
-
-	/**
-	 * The admin page routes a scoped actor may not use even with an object id.
-	 */
-	private function adminRouteDeniesOwner(string $routeName, string $objectId, ServerRequestInterface $request): bool
-	{
-		if ($routeName !== 'admin-collection' && $routeName !== 'admin-collection-post') {
-			return false;
-		}
-
-		// Admin pseudo-pages (-export, -import, -factory, -sitemap, -feeds)
-		// work across every object; -export lists every object id.
-		if (str_starts_with($objectId, '-')) {
-			return true;
-		}
-
-		// Admin-side clone: POST .../add with a `duplicate` field copies
-		// another object. Same condition AdminCollectionAction acts on, so
-		// any string value (even "0") is refused for a scoped actor.
-		$body = (array)$request->getParsedBody();
-
-		return $routeName === 'admin-collection-post' && isset($body['duplicate']) && is_string($body['duplicate']);
-	}
-
-	/**
-	 * A missing object passes only for a read, so the action returns its
-	 * usual 404 (this tells a scoped actor whether an id exists: 404 here,
-	 * 403 for someone else's object; the spec accepts that, since ids are
-	 * slugs and the content stays unreadable). A create, update or delete is
-	 * denied: the property savers (file, image, gallery, depot) create a
-	 * missing object through ObjectSaver, outside the field policy, so it
-	 * would carry no owner stamp and no forced values. Members create through
-	 * `object-save`. The admin add form (`admin-collection-post` on the
-	 * `add` keyword) only renders a page.
-	 */
-	private function missingObjectAllows(string $operation, string $routeName, string $objectId): bool
-	{
-		return $operation === 'read'
-			|| ($routeName === 'admin-collection-post' && $objectId === 'add');
-	}
-
-	/**
-	 * Hand the list actions the scope to apply, and remember the forced values
-	 * for an allowed write. Only the two list routes get the scope; everything
-	 * else passes untouched.
-	 */
-	protected function scopeRequest(ServerRequestInterface $request, string $userId, string $operation): ServerRequestInterface
+	protected function scopeRequest(ServerRequestInterface $request, Actor $actor, string $operation): ServerRequestInterface
 	{
 		$route = $this->routeOf($request);
-		if (!$route instanceof RouteInterface) {
+		if (!$route instanceof RouteInterface || !in_array((string)$route->getName(), self::OWNER_SCOPED_LIST_ROUTES, true)) {
 			return $request;
 		}
 
-		$scoped = $this->withOwnerScope($request, $route, $userId);
-		$this->rememberForcedValues($request, $route, $userId, $operation);
+		$scope = $this->guard->readScope($actor, (string)$route->getArgument('collection', ''));
 
-		return $scoped;
+		return $scope === null ? $request : $request->withAttribute(self::OWNER_SCOPE_ATTRIBUTE, $scope);
 	}
 
 	/**
-	 * The request with an `ownerScope` attribute on the two list routes of an
-	 * owned collection; unchanged otherwise.
-	 */
-	private function withOwnerScope(ServerRequestInterface $request, RouteInterface $route, string $userId): ServerRequestInterface
-	{
-		if (!in_array((string)$route->getName(), self::OWNER_SCOPED_LIST_ROUTES, true)) {
-			return $request;
-		}
-
-		$ownerProperty = $this->ownerProperties->resolve((string)$route->getArgument('collection', ''));
-		// No scope for an unowned collection, nor for an unresolved one (the
-		// request was denied before reaching here; kept explicit).
-		if ($ownerProperty === '' || $ownerProperty === OwnerPropertyResolver::UNRESOLVED || $userId === '') {
-			return $request;
-		}
-
-		// No scope for an outsider either (also denied before reaching here).
-		if ($this->isOwnerOutsider($request, (string)$route->getArgument('collection', ''))) {
-			return $request;
-		}
-
-		return $request->withAttribute(self::OWNER_SCOPE_ATTRIBUTE, new OwnerScope($ownerProperty, $userId));
-	}
-
-	/**
-	 * Whether the collection's `ownerCollection` is set and the actor belongs
-	 * to a different auth collection. The actor's empty collection (a login
-	 * at the plain `/admin/login` route) resolves to the default auth
-	 * collection first.
-	 */
-	private function isOwnerOutsider(ServerRequestInterface $request, string $collection): bool
-	{
-		$default = (string)$this->config->auth['collection'];
-
-		return $this->ownerProperties->isOutsider($collection, $this->actorOf($request)->authCollection($default), $default);
-	}
-
-	/**
-	 * Remember what the field policy forces on the object an allowed
-	 * non-admin write names, for ObjectUpdater::updateObject() to apply on
-	 * every save in this request. Enforcing an empty write on an existing
-	 * object yields exactly the forced values. Not wrapped in a catch: a
-	 * failure here must not let the write through without them.
-	 */
-	private function rememberForcedValues(ServerRequestInterface $request, RouteInterface $route, string $userId, string $operation): void
-	{
-		if (!in_array($operation, self::PROPERTY_WRITE_OPERATIONS, true)) {
-			return;
-		}
-
-		if (in_array((string)$route->getName(), self::COUNTER_ROUTES, true)) {
-			return;
-		}
-
-		$collection = (string)$route->getArgument('collection', '');
-		$objectId   = (string)$route->getArgument('id', '');
-		if ($collection === '' || $objectId === '') {
-			return;
-		}
-
-		$this->forcedValues->remember(
-			$collection,
-			$objectId,
-			$this->policy->enforce($userId, $collection, $objectId, [], $this->actorOf($request)->collection),
-		);
-	}
-
-	/**
-	 * Which check refused, in checkPermission()'s order: `group` when the
-	 * group did not grant the operation, `protected` when the field policy
-	 * refused the named property, `owner` when the owner check refused, and
-	 * `protected` for a clone or import refused by the clone or import check
-	 * (a protected collection, or a clone into another collection). Re-runs the
-	 * decisions only on the denial path.
+	 * Which check refused: `group`, `protected` or `owner`.
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function denialContext(ServerRequestInterface $request, string $userId, string $operation): array
+	protected function denialContext(ServerRequestInterface $request, Actor $actor, string $operation): array
 	{
 		$route = $this->routeOf($request);
-		if (!$route instanceof RouteInterface) {
-			return [];
-		}
 
-		if (!$this->groupAllows($userId, $operation, $request, $route)) {
-			return ['reason' => 'group'];
-		}
-
-		if (!$this->propertyAllows($userId, $operation, $request, $route)) {
-			return ['reason' => 'protected'];
-		}
-
-		return ['reason' => $this->ownerAllows($userId, $operation, $request, $route) ? 'protected' : 'owner'];
+		return $route instanceof RouteInterface ? ['reason' => $this->decide($actor, $operation, $request, $route)->reason()] : [];
 	}
 
 	/**

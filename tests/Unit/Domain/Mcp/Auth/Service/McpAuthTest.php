@@ -484,12 +484,13 @@ final class McpAuthTest extends TestCase
 	{
 		$this->sessionUser('admin-user-test-com', true);
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
-		$this->authenticator->method('authenticate')->willReturn($this->createStub(ApiKeyData::class));
+		$this->authenticator->method('authenticate')->willReturn($this->makeApiKey());
 
 		$caller = $this->auth()->resolveCaller($this->sessionRequest());
 
 		self::assertSame(McpPersona::ADMIN, $caller->persona);
 		self::assertSame(McpCallerKind::ApiKey, $caller->kind);
+		self::assertSame('k1', $caller->apiKeyId);
 	}
 
 	public function testBearerBeatsSessionEvenWhenOAuthIsNotLicensed(): void

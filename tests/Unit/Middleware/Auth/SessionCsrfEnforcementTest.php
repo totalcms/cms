@@ -15,13 +15,12 @@ use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\AccessManager;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
 use TotalCMS\Domain\Auth\Service\LoginRedirector;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\SessionActivityTracker;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
@@ -141,9 +140,8 @@ function makeDualAuthMiddleware(PhpSession $session, CSRFTokenManager $csrfManag
 		test()->createMock(PropertyMetaResolver::class),
 		new SessionActivityTracker($session, csrfTestConfig(), test()->createMock(PersistentLoginService::class)),
 		new LoginRedirector($session, new ResponseFactory()),
-		new AuthFieldPolicy(
+		new AccessGuard(
 			test()->createMock(SchemaFetcher::class),
-			test()->createMock(UserValidationService::class),
 			test()->createMock(ObjectFetcher::class),
 			test()->createMock(OwnerPropertyResolver::class),
 			csrfTestConfig(),

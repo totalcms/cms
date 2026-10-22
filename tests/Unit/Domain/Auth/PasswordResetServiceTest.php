@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Domain\Auth;
 
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -42,6 +43,7 @@ final class PasswordResetServiceTest extends TestCase
 			$this->userValidator,
 			$this->objectUpdater,
 			$this->config,
+			new ActorContext(),
 			$this->loggerFactory
 		);
 	}

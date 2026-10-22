@@ -6,7 +6,8 @@ namespace TotalCMS\Domain\Mcp\Tool\Admin;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
+use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -84,7 +85,7 @@ use TotalCMS\Domain\Schema\Service\SchemaFetcher;
  * ObjectPatcher apply no field policy, so a non-admin persona with a group
  * grant could otherwise flip a forced or admin-only property, or claim an
  * owned object. `requireExposed()` therefore refuses every non-ADMIN write
- * to a collection where `AuthFieldPolicy::protectedFieldsFor()` is not
+ * to a collection where `AccessGuard::protectedFieldsFor()` is not
  * empty (protected, forced or owner rules) — fail closed. An owned collection
  * (ownerProperty) is refused by name first: MCP has no per-owner scoping, so
  * reads there follow its declared access but writes stay admin-only.
@@ -116,7 +117,7 @@ readonly class ObjectTools
 		private ObjectFetcher $objectFetcher,
 		private PersonaContext $personaContext,
 		private McpSchemaResolver $schemaResolver,
-		private AuthFieldPolicy $fieldPolicy,
+		private AccessGuard $guard,
 	) {
 	}
 
@@ -272,7 +273,7 @@ readonly class ObjectTools
 
 		try {
 			$object = $this->saver->saveObject($collection, $data);
-		} catch (\DomainException|\UnexpectedValueException $e) {
+		} catch (\DomainException|\UnexpectedValueException|AccessDeniedException $e) {
 			throw new ToolCallException(sprintf(
 				'Could not create object in "%s": %s',
 				$collection,
@@ -352,7 +353,7 @@ readonly class ObjectTools
 
 		try {
 			$object = $this->patcher->patchObject($collection, $id, $data);
-		} catch (\DomainException|\UnexpectedValueException $e) {
+		} catch (\DomainException|\UnexpectedValueException|AccessDeniedException $e) {
 			throw new ToolCallException(sprintf(
 				'Could not %s object "%s/%s": %s',
 				$toolName === 'update_object' ? 'update' : 'patch',
@@ -413,7 +414,7 @@ readonly class ObjectTools
 			if ($this->schemaResolver->forCollection($collectionData)['owned']) {
 				throw new ToolCallException(sprintf('Collection "%s" is an owned collection and accepts writes from admin callers only over MCP.', $collection));
 			}
-			if ($this->fieldPolicy->protectedFieldsFor($collection) !== []) {
+			if ($this->guard->protectedFieldsFor($collection) !== []) {
 				throw new ToolCallException(sprintf('Collection "%s" has protected properties and accepts writes from admin callers only over MCP.', $collection));
 			}
 		}

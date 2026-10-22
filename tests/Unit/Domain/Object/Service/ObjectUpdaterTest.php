@@ -8,7 +8,6 @@ use Illuminate\Support\Collection;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
-use TotalCMS\Domain\Auth\Service\ForcedValueContext;
 use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Repository\ObjectRepository;
@@ -27,7 +26,6 @@ final class ObjectUpdaterTest extends TestCase
 	private MockObject $factory;
 	private MockObject $propertyProcessor;
 	private EventDispatcher $eventDispatcher;
-	private ForcedValueContext $forcedValues;
 
 	/** @var array<string,mixed>|null */
 	private ?array $dispatchedPayload = null;
@@ -39,7 +37,6 @@ final class ObjectUpdaterTest extends TestCase
 		$this->factory           = $this->createMock(ObjectFactory::class);
 		$this->propertyProcessor = $this->createMock(PropertyDataProcessorInterface::class);
 		$this->eventDispatcher   = new EventDispatcher(new NullLogger());
-		$this->forcedValues      = new ForcedValueContext();
 
 		$this->eventDispatcher->listen('object.updated', function (array $payload): void {
 			$this->dispatchedPayload = $payload;
@@ -51,7 +48,7 @@ final class ObjectUpdaterTest extends TestCase
 			$this->factory,
 			$this->propertyProcessor,
 			$this->eventDispatcher,
-			$this->forcedValues,
+			systemWriteGate(),
 		);
 	}
 
@@ -513,56 +510,9 @@ final class ObjectUpdaterTest extends TestCase
 		};
 	}
 
-	public function testUpdateObjectPropertyWritesExtraFieldsInTheSameSave(): void
-	{
-		$existingObject = $this->createMockObjectDataWithToArray('test-id', [
-			'id'    => 'test-id',
-			'title' => 'Old',
-			'draft' => false,
-		]);
-
-		$this->objectFetcher->method('fetchObject')->willReturn($existingObject);
-
-		$this->factory
-			->expects($this->once())
-			->method('generateObject')
-			->with('posts', ['id' => 'test-id', 'title' => ['value' => 'New'], 'draft' => true])
-			->willReturn($this->createMockObjectData('test-id', []));
-
-		$this->updater->updateObjectProperty('posts', 'test-id', 'title', ['value' => 'New'], false, ['draft' => true]);
-	}
-
-	// Forced values remembered by the access middleware for this request are
-	// laid over every save of that object, whatever route reached updateObject().
-	public function testUpdateObjectAppliesRememberedForcedValuesToArrayInput(): void
-	{
-		$this->forcedValues->remember('blog', 'post-1', ['draft' => true]);
-
-		$this->factory
-			->expects($this->once())
-			->method('generateObject')
-			->with('blog', ['id' => 'post-1', 'title' => 'x', 'draft' => true])
-			->willReturn($this->createMockObjectData('post-1', []));
-
-		$this->updater->updateObject('blog', 'post-1', ['id' => 'post-1', 'title' => 'x', 'draft' => false]);
-	}
-
-	public function testUpdateObjectAppliesRememberedForcedValuesToObjectDataInput(): void
-	{
-		$this->forcedValues->remember('blog', 'post-1', ['draft' => true]);
-
-		$input = $this->createMockObjectDataWithToArray('post-1', ['id' => 'post-1', 'title' => 'x', 'draft' => false]);
-
-		$this->factory
-			->expects($this->once())
-			->method('generateObject')
-			->with('blog', ['id' => 'post-1', 'title' => 'x', 'draft' => true])
-			->willReturn($this->createMockObjectData('post-1', []));
-
-		$this->updater->updateObject('blog', 'post-1', $input);
-	}
-
-	public function testUpdateObjectLeavesTheObjectAloneWhenNothingWasRemembered(): void
+	// The gate hands back the payload unchanged for a trusted actor, so an
+	// ObjectData input is saved as-is rather than regenerated.
+	public function testUpdateObjectLeavesTheObjectAloneWhenTheGateChangesNothing(): void
 	{
 		$input = $this->createMockObjectDataWithToArray('post-1', ['id' => 'post-1', 'draft' => false]);
 
@@ -570,18 +520,5 @@ final class ObjectUpdaterTest extends TestCase
 		$this->repository->expects($this->once())->method('saveObject')->with('blog', $input);
 
 		expect($this->updater->updateObject('blog', 'post-1', $input))->toBe($input);
-	}
-
-	public function testForcedValuesForAnotherIdDoNotLeak(): void
-	{
-		$this->forcedValues->remember('blog', 'post-2', ['draft' => true]);
-
-		$this->factory
-			->expects($this->once())
-			->method('generateObject')
-			->with('blog', ['id' => 'post-1', 'draft' => false])
-			->willReturn($this->createMockObjectData('post-1', []));
-
-		$this->updater->updateObject('blog', 'post-1', ['id' => 'post-1', 'draft' => false]);
 	}
 }

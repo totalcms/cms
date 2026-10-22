@@ -16,12 +16,16 @@ use Slim\Interfaces\RouteInterface;
 use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
-use TotalCMS\Domain\Auth\Data\AccessActor;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
-use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
+use TotalCMS\Domain\Event\Data\CoreEvent;
+use TotalCMS\Domain\Event\Service\EventDispatcher;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LoggerFactory;
@@ -31,7 +35,6 @@ use TotalCMS\Support\Config;
 
 describe('BaseAccessMiddleware', function (): void {
 	beforeEach(function (): void {
-		$this->userValidation     = $this->createMock(UserValidationService::class);
 		$this->accessControl      = $this->createMock(AccessControlService::class);
 		$this->session            = $this->createMock(SessionInterface::class);
 		$this->jsonRenderer       = $this->createMock(JsonRenderer::class);
@@ -43,6 +46,8 @@ describe('BaseAccessMiddleware', function (): void {
 		// OAuthActivityLogger is final readonly — construct a real instance
 		// backed by a NullLogger instead of createMock().
 		$this->oauthActivityLogger = new OAuthActivityLogger(new NullLogger());
+		$this->actors              = new ActorContext();
+		$this->events              = new EventDispatcher(new NullLogger(), $this->actors);
 
 		$this->handler = $this->createMock(RequestHandlerInterface::class);
 
@@ -50,21 +55,20 @@ describe('BaseAccessMiddleware', function (): void {
 		$this->handler->method('handle')->willReturn($this->passthroughResponse);
 
 		// Config fields the middleware reads
-		$this->config->auth  = ['enable' => true];
+		$this->config->auth  = ['enable' => true, 'collection' => 'auth'];
 		$this->config->env   = 'prod';
 		$this->config->debug = false;
 
 		$this->make = (fn (?\Closure $checkPermission = null): TestableAccessMiddleware => new TestableAccessMiddleware(
-			$this->userValidation,
-			$this->accessControl,
-			$this->session,
+			new ActorResolver($this->session, $this->accessControl, $this->config),
+			$this->actors,
 			$this->jsonRenderer,
 			$this->twigRenderer,
 			$this->responseFactory,
 			$this->config,
 			$this->operationDetector,
 			$this->loggerFactory,
-			$this->oauthActivityLogger,
+			new AccessDenials($this->loggerFactory, $this->oauthActivityLogger, $this->events),
 			$checkPermission ?? (fn (): bool => true),
 		));
 
@@ -113,15 +117,14 @@ describe('BaseAccessMiddleware', function (): void {
 
 		$this->handler->expects($this->once())->method('handle');
 		$this->operationDetector->expects($this->never())->method('detectOperation');
-		$this->userValidation->expects($this->never())->method('isSuperAdmin');
+		$this->accessControl->expects($this->never())->method('authorityOf');
 
 		$response = ($this->make)()->process($request, $this->handler);
 		expect($response)->toBe($this->passthroughResponse);
 	});
 
-	test('an anonymous public submission carries no actor', function (): void {
+	test('an anonymous public submission sets the anonymous actor', function (): void {
 		$request = $this->createMock(ServerRequestInterface::class);
-		$request->expects($this->never())->method('withAttribute');
 		$request->method('getAttribute')->willReturnMap([
 			['publicSubmission', null, true],
 			['authMethod', null, null],
@@ -129,15 +132,13 @@ describe('BaseAccessMiddleware', function (): void {
 		$this->session->method('get')->willReturn(null);
 
 		($this->make)()->process($request, $this->handler);
+
+		expect($this->actors->current()->kind)->toBe(ActorKind::Anonymous);
 	});
 
-	test('a public submission by a signed-in session user carries that user as the actor', function (): void {
-		// PrivilegedFieldGuard reads the actor to stamp the owner on create.
+	test('a public submission by a signed-in session user makes that user the actor', function (): void {
+		// The storage layer reads the actor to stamp the owner on create.
 		$request = $this->createMock(ServerRequestInterface::class);
-		$request->expects($this->once())
-			->method('withAttribute')
-			->with('accessActor', $this->equalTo(new AccessActor('alex', 'members')))
-			->willReturnSelf();
 		$request->method('getAttribute')->willReturnMap([
 			['publicSubmission', null, true],
 			['authMethod', null, null],
@@ -149,9 +150,15 @@ describe('BaseAccessMiddleware', function (): void {
 				default                      => null,
 			},
 		);
+		$this->accessControl->method('authorityOf')->with('alex', 'members')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		$this->operationDetector->expects($this->never())->method('detectOperation');
 
 		($this->make)()->process($request, $this->handler);
+
+		$actor = $this->actors->current();
+		expect($actor->kind)->toBe(ActorKind::Member)
+			->and($actor->userId)->toBe('alex')
+			->and($actor->authCollection)->toBe('members');
 	});
 
 	test('API key auth bypasses group checks', function (): void {
@@ -167,6 +174,8 @@ describe('BaseAccessMiddleware', function (): void {
 		$this->operationDetector->expects($this->never())->method('detectOperation');
 
 		($this->make)()->process($request, $this->handler);
+
+		expect($this->actors->current()->kind)->toBe(ActorKind::ApiKey);
 	});
 
 	// ────────────────────────────────────────────────────────────────────
@@ -174,11 +183,6 @@ describe('BaseAccessMiddleware', function (): void {
 	// ────────────────────────────────────────────────────────────────────
 
 	test('bearer request resolving to an admin authority bypasses the group check entirely', function (): void {
-		// OAuthUserRef::parse() evaluates the default-collection fallback
-		// argument regardless of whether the composite sub supplies its own
-		// prefix — restore the key beforeEach's wholesale auth overwrite drops.
-		$this->config->auth['collection'] = 'auth';
-
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('withAttribute')->willReturnSelf();
 		$request->method('getUri')->willReturn($this->createMock(UriInterface::class));
@@ -186,12 +190,13 @@ describe('BaseAccessMiddleware', function (): void {
 			['publicSubmission', null, null],
 			['authMethod', null, 'oauth_bearer'],
 			['oauth_user_id', '', 'auth:admin-user-id'],
+			['oauth_scopes', null, ['cms:write']],
 		]);
 
 		$this->accessControl
 			->expects($this->once())
-			->method('authorityFor')
-			->with($this->callback(fn (OAuthUserRef $ref): bool => $ref->userId === 'admin-user-id' && $ref->collection === 'auth'))
+			->method('authorityOf')
+			->with('admin-user-id', 'auth')
 			->willReturn(new UserAuthority(isAdmin: true, groups: []));
 
 		$wasCalled = false;
@@ -209,15 +214,10 @@ describe('BaseAccessMiddleware', function (): void {
 
 		expect($wasCalled)->toBeFalse();
 		expect($response)->toBe($this->passthroughResponse);
+		expect($this->actors->current()->scopes)->toBe(['cms:write']);
 	});
 
-	test('bearer request with missing/empty oauth_user_id resolves to a denied authority and fails closed', function (): void {
-		// beforeEach overwrites $this->config->auth wholesale (['enable' => true]),
-		// dropping the 'collection' key OAuthUserRef::parse() falls back to —
-		// restore it so both the code under test and this assertion agree on
-		// the default auth collection.
-		$this->config->auth['collection'] = 'auth';
-
+	test('bearer request with missing/empty oauth_user_id is anonymous and fails closed', function (): void {
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getUri')->willReturn($this->createMock(UriInterface::class));
 		$request->method('getAttribute')->willReturnMap([
@@ -229,21 +229,14 @@ describe('BaseAccessMiddleware', function (): void {
 		]);
 		$request->method('withAttribute')->willReturnSelf();
 
-		// Pin OAuthUserRef::parse('', defaultCollection) → collection defaults,
-		// userId stays empty — and that authorityFor() resolves it to a
-		// non-admin (denied) authority rather than throwing or bypassing.
-		$this->accessControl
-			->expects($this->once())
-			->method('authorityFor')
-			->with($this->callback(fn (OAuthUserRef $ref): bool => $ref->userId === '' && $ref->collection === $this->config->auth['collection']))
-			->willReturn(UserAuthority::denied());
-
-		$this->operationDetector->method('detectOperation')->willReturn('read');
-
+		$this->accessControl->expects($this->never())->method('authorityOf');
 		$this->handler->expects($this->never())->method('handle');
-		$this->jsonRenderer->expects($this->once())->method('json');
+		$this->jsonRenderer
+			->expects($this->once())
+			->method('json')
+			->with($this->anything(), $this->callback(fn (array $body): bool => $body['error']['message'] === 'Authentication required'));
 
-		($this->make)(fn (): bool => false)->process($request, $this->handler);
+		($this->make)(fn (): bool => true)->process($request, $this->handler);
 	});
 
 	test('missing session user returns 403 with "Authentication required"', function (): void {
@@ -264,7 +257,7 @@ describe('BaseAccessMiddleware', function (): void {
 		$this->session->method('get')->willReturnCallback(
 			static fn (string $key): mixed => $key === SessionKeys::AUTH_USER ? 'admin-id' : null,
 		);
-		$this->userValidation->method('isSuperAdmin')->with('admin-id')->willReturn(true);
+		$this->accessControl->method('authorityOf')->with('admin-id')->willReturn(new UserAuthority(isAdmin: true, groups: []));
 
 		$wasCalled = false;
 		$check     = function () use (&$wasCalled): bool {
@@ -282,8 +275,8 @@ describe('BaseAccessMiddleware', function (): void {
 	});
 
 	test('failed operation detection denies access (no logging in prod)', function (): void {
-		$this->session->method('get')->willReturn('user-1');
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->session->method('get')->willReturnCallback(static fn (string $key): ?string => $key === SessionKeys::AUTH_USER ? 'user-1' : null);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		$this->operationDetector->method('detectOperation')->willReturn(null);
 
 		$this->loggerFactory->expects($this->never())->method('channelLogger');
@@ -295,8 +288,8 @@ describe('BaseAccessMiddleware', function (): void {
 	test('failed operation detection logs in dev mode', function (): void {
 		$this->config->env = 'dev';
 
-		$this->session->method('get')->willReturn('user-1');
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->session->method('get')->willReturnCallback(static fn (string $key): ?string => $key === SessionKeys::AUTH_USER ? 'user-1' : null);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		$this->operationDetector->method('detectOperation')->willReturn(null);
 
 		// The dev-mode logger path reads the request's route context
@@ -327,8 +320,8 @@ describe('BaseAccessMiddleware', function (): void {
 	});
 
 	test('checkPermission returning false returns 403', function (): void {
-		$this->session->method('get')->willReturn('user-1');
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->session->method('get')->willReturnCallback(static fn (string $key): ?string => $key === SessionKeys::AUTH_USER ? 'user-1' : null);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		$this->operationDetector->method('detectOperation')->willReturn('read');
 
 		$this->handler->expects($this->never())->method('handle');
@@ -337,17 +330,33 @@ describe('BaseAccessMiddleware', function (): void {
 		($this->make)(fn (): bool => false)->process(($this->requestFor)(), $this->handler);
 	});
 
+	test('a refusal fires access.denied naming the refused actor', function (): void {
+		$this->session->method('get')->willReturnCallback(static fn (string $key): ?string => $key === SessionKeys::AUTH_USER ? 'user-1' : null);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
+		$this->operationDetector->method('detectOperation')->willReturn('update');
+		$denials = [];
+		$this->events->listen(CoreEvent::ACCESS_DENIED, function (array $payload) use (&$denials): void {
+			$denials[] = $payload;
+		});
+
+		($this->make)(fn (): bool => false)->process(($this->requestFor)(), $this->handler);
+
+		expect($denials)->toHaveCount(1)
+			->and($denials[0])->toMatchArray(['operation' => 'update', 'path' => '/api/collections/blog'])
+			->and($denials[0]['actor'])->toMatchArray(['kind' => 'member', 'userId' => 'user-1']);
+	});
+
 	test('checkPermission returning true lets the request through', function (): void {
-		$this->session->method('get')->willReturn('user-1');
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->session->method('get')->willReturnCallback(static fn (string $key): ?string => $key === SessionKeys::AUTH_USER ? 'user-1' : null);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		$this->operationDetector->method('detectOperation')->willReturn('read');
 
 		$this->handler->expects($this->once())->method('handle');
 		$this->jsonRenderer->expects($this->never())->method('json');
 
 		$receivedArgs = [];
-		$check        = function (string $userId, string $op) use (&$receivedArgs): bool {
-			$receivedArgs = [$userId, $op];
+		$check        = function (Actor $actor, string $op) use (&$receivedArgs): bool {
+			$receivedArgs = [$actor->userId, $op];
 
 			return true;
 		};
@@ -358,8 +367,8 @@ describe('BaseAccessMiddleware', function (): void {
 	});
 
 	test('forbidden /admin/ requests get an HTML response via TwigRenderer', function (): void {
-		$this->session->method('get')->willReturn('user-1');
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->session->method('get')->willReturnCallback(static fn (string $key): ?string => $key === SessionKeys::AUTH_USER ? 'user-1' : null);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		$this->operationDetector->method('detectOperation')->willReturn('read');
 
 		$this->twigRenderer
@@ -373,8 +382,8 @@ describe('BaseAccessMiddleware', function (): void {
 	});
 
 	test('forbidden non-admin requests get a JSON response', function (): void {
-		$this->session->method('get')->willReturn('user-1');
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->session->method('get')->willReturnCallback(static fn (string $key): ?string => $key === SessionKeys::AUTH_USER ? 'user-1' : null);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		$this->operationDetector->method('detectOperation')->willReturn('read');
 
 		$this->jsonRenderer->expects($this->once())->method('json');
@@ -386,8 +395,8 @@ describe('BaseAccessMiddleware', function (): void {
 	test('error message includes the resource name in dev mode', function (): void {
 		$this->config->env = 'dev';
 
-		$this->session->method('get')->willReturn('user-1');
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->session->method('get')->willReturnCallback(static fn (string $key): ?string => $key === SessionKeys::AUTH_USER ? 'user-1' : null);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		$this->operationDetector->method('detectOperation')->willReturn('read');
 
 		$this->jsonRenderer
@@ -402,8 +411,8 @@ describe('BaseAccessMiddleware', function (): void {
 	});
 
 	test('error message is generic "Access denied" in prod mode', function (): void {
-		$this->session->method('get')->willReturn('user-1');
-		$this->userValidation->method('isSuperAdmin')->willReturn(false);
+		$this->session->method('get')->willReturnCallback(static fn (string $key): ?string => $key === SessionKeys::AUTH_USER ? 'user-1' : null);
+		$this->accessControl->method('authorityOf')->willReturn(new UserAuthority(isAdmin: false, groups: []));
 		$this->operationDetector->method('detectOperation')->willReturn('read');
 
 		$this->jsonRenderer

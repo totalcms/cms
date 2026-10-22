@@ -68,7 +68,7 @@
 | Feature | Doc | The one thing to know |
 |---|---|---|
 | Automations (schedule / webhook / event triggers) | `automations/overview.md`, `automations/triggers.md`, `automations/handlers.md`, `automations/webhooks.md` | Handlers are PHP code fields; `automations:process` runs the queue; guard rails limit runtime. Fetch a URL that came from content with `$ctx->publicHttp->get($url)`, never curl/Guzzle: it refuses private and internal addresses. |
-| Event system (20 core events) | `extensions/events.md` | `object.created`/`updated` are suppressed during imports — subscribe to `import.*` for those. |
+| Event system (21 core events) | `extensions/events.md` | `object.created`/`updated` are suppressed during imports — subscribe to `import.*` for those. Every payload carries `actor` (who caused it); `access.denied` fires on every refusal. |
 | REST API, index filters | `apis/rest-api.md`, `apis/index-filter.md`, `apis/openapi.html` | Query endpoints filter **indexed** properties only. |
 | API keys / OAuth | `apis/api-keys.md`, `apis/oauth.md` | API key = admin persona for MCP and REST; `oauth:setup` generates the signing key. |
 | PHP API | `apis/php-api.md` | For custom PHP pages outside Site Builder. |

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Middleware\Access;
 
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
-use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Middleware\Access\BaseAccessMiddleware;
 use TotalCMS\Renderer\JsonRenderer;
@@ -30,23 +30,22 @@ readonly class TestableAccessMiddleware extends BaseAccessMiddleware
 	protected const RESOURCE_NAME = 'widget';
 
 	public function __construct(
-		UserValidationService $userValidation,
-		AccessControlService $accessControl,
-		SessionInterface $session,
+		ActorResolver $actorResolver,
+		ActorContext $actors,
 		JsonRenderer $jsonRenderer,
 		TwigRenderer $twigRenderer,
 		ResponseFactoryInterface $responseFactory,
 		Config $config,
 		OperationDetector $operationDetector,
 		LoggerFactory $loggerFactory,
-		OAuthActivityLogger $oauthActivityLogger,
+		AccessDenials $denials,
 		private \Closure $checkPermissionCallback,
 	) {
-		parent::__construct($userValidation, $accessControl, $session, $jsonRenderer, $twigRenderer, $responseFactory, $config, $operationDetector, $loggerFactory, $oauthActivityLogger);
+		parent::__construct($actorResolver, $actors, $jsonRenderer, $twigRenderer, $responseFactory, $config, $operationDetector, $loggerFactory, $denials);
 	}
 
-	protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool
+	protected function checkPermission(Actor $actor, string $operation, ServerRequestInterface $request): bool
 	{
-		return ($this->checkPermissionCallback)($userId, $operation, $request);
+		return ($this->checkPermissionCallback)($actor, $operation, $request);
 	}
 }

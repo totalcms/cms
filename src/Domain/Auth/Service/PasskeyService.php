@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Auth\Service;
 
+use TotalCMS\Domain\Auth\Data\Actor;
 use Odan\Session\SessionInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Psr\Log\LoggerInterface;
@@ -48,6 +49,7 @@ class PasskeyService
 		private readonly ObjectPatcher $objectPatcher,
 		private readonly IndexReader $indexReader,
 		private readonly LoggerFactory $loggerFactory,
+		private readonly ActorContext $actors,
 	) {
 		$this->logger = $this->loggerFactory->channelLogger(LogChannel::Passkey);
 
@@ -180,7 +182,7 @@ class PasskeyService
 		}
 		$passkeys[] = $passkey;
 
-		$this->objectPatcher->patchObject($collection, $userId, ['passkeys' => $passkeys]);
+		$this->writePasskeys(fn () => $this->objectPatcher->patchObject($collection, $userId, ['passkeys' => $passkeys]));
 
 		$this->logger->info("Passkey registered for user {$collection}/{$userId}: {$passkey['name']}");
 
@@ -329,7 +331,7 @@ class PasskeyService
 
 		$filtered = array_values(array_filter($passkeys, fn (mixed $passkey): bool => is_array($passkey) && ($passkey['credentialId'] ?? '') !== $credentialId));
 
-		$this->objectPatcher->patchObject($collection, $userId, ['passkeys' => $filtered]);
+		$this->writePasskeys(fn () => $this->objectPatcher->patchObject($collection, $userId, ['passkeys' => $filtered]));
 
 		$this->logger->info("Passkey deleted for user {$collection}/{$userId}: {$credentialId}");
 	}
@@ -451,7 +453,19 @@ class PasskeyService
 		}
 
 		if ($updated) {
-			$this->objectPatcher->patchObject($collection, (string)$user['id'], ['passkeys' => $passkeys]);
+			$this->writePasskeys(fn () => $this->objectPatcher->patchObject($collection, (string)$user['id'], ['passkeys' => $passkeys]));
 		}
+	}
+
+	/**
+	 * `passkeys` is privileged: only the system may write it. Every write here
+	 * follows a WebAuthn ceremony this service verified for the signed-in
+	 * user (or the sign-in itself), which is the authority, not the actor.
+	 *
+	 * @param \Closure(): mixed $write
+	 */
+	private function writePasskeys(\Closure $write): void
+	{
+		$this->actors->runAs(Actor::system(), $write);
 	}
 }

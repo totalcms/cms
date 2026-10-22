@@ -8,7 +8,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Exception\HttpForbiddenException;
 use TotalCMS\Action\Object\ObjectSaveAction;
-use TotalCMS\Domain\Auth\Service\AuthFieldPolicy;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Auth\Service\AuthMailer;
 use TotalCMS\Domain\Auth\Service\EmailVerificationService;
 use TotalCMS\Domain\Auth\Service\LoginService;
@@ -72,7 +74,8 @@ readonly class AuthRegisterSubmitAction
 		private ObjectSaver $objectSaver,
 		private LoginService $loginService,
 		private SessionLogin $sessionLogin,
-		private AuthFieldPolicy $authFieldPolicy,
+		private AccessGuard $guard,
+		private ActorContext $actors,
 		private CollectionFetcher $collectionFetcher,
 		private EmailVerificationService $verificationService,
 		private AuthMailer $mailer,
@@ -123,7 +126,7 @@ readonly class AuthRegisterSubmitAction
 		// expiration, maxLoginCount, passkeys) — strip them, then assign our own
 		// server-side defaults below. Without this, anyone could self-register as
 		// `groups:['admin']` + `active:true`.
-		$data = $this->authFieldPolicy->stripProtected($collection, $data);
+		$data = $this->guard->stripProtected($collection, $data);
 
 		// Branch on the collection's verification flag. We must fetch the
 		// collection BEFORE saving so we know whether to force-disable the
@@ -145,9 +148,9 @@ readonly class AuthRegisterSubmitAction
 			return $this->botDecoy($response, $collection, $data, $requiresVerification);
 		}
 
-		// Save the user record. Errors (validation, duplicate id, etc.) bubble
-		// up to Slim's error handler — same as ObjectSaveAction.
-		$user = $this->objectSaver->saveObject($collection, $data);
+		// Saved as the system: `active` and `groups` are server values the
+		// anonymous registrant may not write. Errors bubble to Slim's handler.
+		$user = $this->actors->runAs(Actor::system(), fn () => $this->objectSaver->saveObject($collection, $data));
 
 		if ($requiresVerification) {
 			$email = trim((string)($data['email'] ?? ''));

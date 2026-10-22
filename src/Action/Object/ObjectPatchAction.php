@@ -4,7 +4,6 @@ namespace TotalCMS\Action\Object;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Action\Object\Support\PrivilegedFieldGuard;
 use TotalCMS\Domain\Object\Service\ObjectPatcher;
 use TotalCMS\Renderer\JsonRenderer;
 use TotalCMS\Transformer\ObjectMetaTransformer;
@@ -14,7 +13,6 @@ readonly class ObjectPatchAction
 	public function __construct(
 		private JsonRenderer $renderer,
 		private ObjectPatcher $objectPatcher,
-		private PrivilegedFieldGuard $guard,
 		private FragmentResponder $fragments,
 	) {
 	}
@@ -23,7 +21,6 @@ readonly class ObjectPatchAction
 	public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
 	{
 		$data   = (array)$request->getParsedBody();
-		$data   = $this->guard->guard($request, $args['collection'], $args['id'], $data);
 		$object = $this->objectPatcher->patchObject($args['collection'], $args['id'], $data);
 
 		if ($this->fragments->wants($request)) {

@@ -151,7 +151,7 @@ readonly class SchemaLinter
 	}
 
 	/**
-	 * `protected` is read by AuthFieldPolicy on every non-admin write: `true`
+	 * `protected` is read by AccessGuard on every non-trusted write: `true`
 	 * makes the property admin-only, `{"value": X}` also forces X. The policy
 	 * ignores any other shape rather than failing writes, so this is the only
 	 * place a misspelt flag is ever reported.

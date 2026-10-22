@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Admin;
 
-use Odan\Session\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Admin\Form\Builder\DeckItemForm;
 use TotalCMS\Domain\Admin\Form\Builder\ObjectForm;
 use TotalCMS\Domain\Admin\Form\FormOptions;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
@@ -19,7 +17,7 @@ use TotalCMS\Domain\Property\Service\PropertyMetaResolver;
 use TotalCMS\Domain\Schema\Data\SchemaData;
 use TotalCMS\Domain\Schema\Service\SchemaFetcher;
 use TotalCMS\Domain\Security\CSRF\CSRFTokenManager;
-use TotalCMS\Domain\Session\SessionKeys;
+use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Support\Config;
 
 /**
@@ -40,7 +38,7 @@ final class DeckItemFormOwnerCheckTest extends TestCase
 	 * @param string $actor      session user id ('' for anonymous)
 	 * @param bool   $superAdmin
 	 * @param string $ownerProp  resolver result ('' = not owned)
-	 * @param bool   $withChecks false builds the form without the three owner services
+	 * @param bool   $withChecks false builds the form without the owner-check services
 	 */
 	private function form(string $actor, bool $superAdmin, string $ownerProp, bool $withChecks = true): DeckItemForm
 	{
@@ -86,22 +84,10 @@ final class DeckItemFormOwnerCheckTest extends TestCase
 		];
 
 		if ($withChecks) {
-			$session = $this->createMock(SessionInterface::class);
-			$session->method('get')->willReturnCallback(
-				static fn (string $key): mixed => match ($key) {
-					SessionKeys::AUTH_USER       => $actor === '' ? null : $actor,
-					SessionKeys::AUTH_COLLECTION => $actor === '' ? null : 'members',
-					default                      => null,
-				}
-			);
-			$validation = $this->createMock(UserValidationService::class);
-			$validation->method('isSuperAdmin')->willReturn($superAdmin);
 			$resolver = $this->createMock(OwnerPropertyResolver::class);
 			$resolver->method('resolve')->willReturn($ownerProp);
 
-			$overrides['session']         = $session;
-			$overrides['userValidation']  = $validation;
-			$overrides['ownerProperties'] = $resolver;
+			$overrides += formOwnerServices($actor, $superAdmin, 'members', $resolver, $objectFetcher, $config, $this->createMock(LoggerFactory::class));
 		}
 
 		// The ids arrive from the URL, as on a front-end deck edit page.

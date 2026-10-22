@@ -45,7 +45,8 @@ use TotalCMS\Domain\ApiKey\Repository\ApiKeyRepository;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
 use TotalCMS\Domain\Auth\Service\ImpersonationService;
 use TotalCMS\Domain\Auth\Service\ImpersonationServiceInterface;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Automation\Service\AutomationActivityLogger;
 use TotalCMS\Domain\Automation\Service\AutomationEventSubscriber;
 use TotalCMS\Domain\Backup\Listener\ObjectBackupListener;
@@ -63,7 +64,6 @@ use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionFormatConverter;
 use TotalCMS\Domain\Collection\Service\CollectionLister;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
-use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewDependencyResolver;
 use TotalCMS\Domain\DataView\Service\DataViewFilter;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
@@ -589,8 +589,8 @@ return [
 		navRegistry             : $container->get(AdminNavRegistry::class),
 		dataViewLister          : $container->get(DataViewLister::class),
 		session                 : $container->get(SessionInterface::class),
-		userValidation          : $container->get(UserValidationService::class),
-		ownerProperties         : $container->get(OwnerPropertyResolver::class),
+		guard                   : $container->get(AccessGuard::class),
+		actors                  : $container->get(ActorContext::class),
 		mailers                 : $container->get(MailerFetcher::class),
 	),
 
@@ -666,6 +666,7 @@ return [
 		$extLevel   = LoggerFactory::resolveLevel((string)($container->get(Config::class)->extensions['logLevel'] ?? 'info'), Level::Info);
 		$dispatcher = new EventDispatcher(
 			$container->get(LoggerFactory::class)->channelLogger(LogChannel::Events, $extLevel),
+			$container->get(ActorContext::class),
 		);
 
 		// Register internal listeners with lazy resolution to avoid circular deps.

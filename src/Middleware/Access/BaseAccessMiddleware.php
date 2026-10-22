@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TotalCMS\Middleware\Access;
 
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,13 +11,13 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Interfaces\RouteInterface;
 use Slim\Routing\RouteContext;
-use TotalCMS\Domain\Auth\Data\AccessActor;
-use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Service\AccessDenials;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
 use TotalCMS\Domain\Auth\Service\OperationDetector;
-use TotalCMS\Domain\Auth\Service\UserValidationService;
-use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
-use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
-use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Factory\LogChannel;
 use TotalCMS\Factory\LoggerFactory;
 use TotalCMS\Renderer\ForbiddenRenderer;
@@ -29,9 +28,12 @@ use TotalCMS\Support\Config;
 /**
  * Base Access Middleware.
  *
- * Provides common access control logic for all resource-specific middleware.
- * Enforces access group permissions with HTML/JSON error responses.
- * API keys bypass access group checks (trust model).
+ * Resolves who is calling into an {@see Actor} — from the API key, the OAuth
+ * token or the session — and makes it the request's current actor in
+ * {@see ActorContext}, where the storage layer and every later check read it.
+ * Trusted actors (API keys, super admins, admin tokens) pass; everyone else
+ * goes through the resource-specific {@see checkPermission()}, which asks the
+ * actor's access-group authority. Answers a refusal with an HTML or JSON 403.
  */
 abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 {
@@ -41,27 +43,16 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	 */
 	protected const RESOURCE_NAME = 'resource';
 
-	/**
-	 * Request attribute carrying the {@see AccessActor}: the acting user id and
-	 * auth collection, resolved once here and read by every later layer.
-	 * Attached for bearer and session requests before the admin bypass, and for
-	 * a public submission made by a signed-in session user (so AuthFieldPolicy
-	 * still stamps them as owner); API-key, anonymous public-submission and
-	 * auth-disabled requests carry none.
-	 */
-	public const ACTOR_ATTRIBUTE = 'accessActor';
-
 	public function __construct(
-		protected UserValidationService $userValidation,
-		protected AccessControlService $accessControl,
-		protected SessionInterface $session,
+		protected ActorResolver $actorResolver,
+		protected ActorContext $actors,
 		protected JsonRenderer $jsonRenderer,
 		protected TwigRenderer $twigRenderer,
 		protected ResponseFactoryInterface $responseFactory,
 		protected Config $config,
 		protected OperationDetector $operationDetector,
 		protected LoggerFactory $loggerFactory,
-		protected OAuthActivityLogger $oauthActivityLogger,
+		protected AccessDenials $denials,
 	) {
 	}
 
@@ -72,55 +63,23 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 			return $handler->handle($request);
 		}
 
-		// Public submissions bypass access control (already validated by DualAuthMiddleware)
+		$actor = $this->resolveActor($request);
+		$this->actors->set($actor);
+
+		// Public submissions bypass access control (already validated by
+		// DualAuthMiddleware). The actor is still set: a signed-in user making
+		// one is stamped as the owner and held to the field policy.
 		if ($request->getAttribute('publicSubmission') === true) {
-			return $handler->handle($this->withSessionActor($request));
-		}
-
-		$authMethod = $request->getAttribute('authMethod');
-
-		// API keys bypass group checks entirely (trust model).
-		if ($authMethod === 'apikey') {
 			return $handler->handle($request);
 		}
 
-		$isOAuthBearer = $authMethod === 'oauth_bearer';
+		// API keys, super admins and admin tokens pass every check.
+		if ($actor->isTrusted()) {
+			return $handler->handle($request);
+		}
 
-		if ($isOAuthBearer) {
-			// OAuth Bearer requests were already scope-checked by OAuthRestScopeMiddleware
-			// before reaching here. There is no PHP session for Bearer requests, so the
-			// caller's identity + access groups are resolved from the token's `sub` claim
-			// via AccessControlService::authorityFor() (session-free) instead of the
-			// session-coupled lookups the rest of this class uses. Admins get the same
-			// unrestricted bypass session-authenticated admins get; everyone else falls
-			// through to the SAME per-operation checkPermission() session users go
-			// through, with $userId resolved from the token and the resolved
-			// UserAuthority threaded through via the `accessAuthority` request
-			// attribute so checkPermission() implementations can use it instead of
-			// re-deriving groups from the (absent) session.
-			$ref       = OAuthUserRef::parse((string)$request->getAttribute('oauth_user_id', ''), (string)$this->config->auth['collection']);
-			$request   = $request->withAttribute(self::ACTOR_ATTRIBUTE, new AccessActor($ref->userId, $ref->collection));
-			$authority = $this->accessControl->authorityFor($ref);
-			if ($authority->isAdmin) {
-				return $handler->handle($request);
-			}
-
-			$userId  = $ref->userId;
-			$request = $request->withAttribute('accessAuthority', $authority);
-		} else {
-			// Get user ID from session
-			$sessionUserId = $this->session->get(SessionKeys::AUTH_USER);
-			if (!$sessionUserId) {
-				return $this->forbiddenResponse($request, 'Authentication required');
-			}
-			$userId         = (string)$sessionUserId;
-			$userCollection = (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '');
-			$request        = $request->withAttribute(self::ACTOR_ATTRIBUTE, new AccessActor($userId, $userCollection));
-
-			// Super admins bypass all access checks
-			if ($this->userValidation->isSuperAdmin($userId, $userCollection)) {
-				return $handler->handle($request);
-			}
+		if ($actor->kind === ActorKind::Anonymous) {
+			return $this->forbiddenResponse($request, 'Authentication required');
 		}
 
 		// Detect CRUD operation for permission checking
@@ -128,78 +87,73 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 		if (!$operation) {
 			// Unable to detect operation, deny access and log in dev/debug mode
 			if ($this->config->env === 'dev' || $this->config->debug) {
-				$logger       = $this->loggerFactory->channelLogger(LogChannel::Access);
-				$routeContext = RouteContext::fromRequest($request);
-				$route        = $routeContext->getRoute();
-				$routeName    = $route instanceof RouteInterface ? $route->getName() : 'unknown';
+				$route = $request->getAttribute(RouteContext::ROUTE);
 
-				$logger->warning('Operation detection failed', [
+				$this->loggerFactory->channelLogger(LogChannel::Access)->warning('Operation detection failed', [
 					'resource'   => static::RESOURCE_NAME,
-					'route_name' => $routeName,
+					'route_name' => $route instanceof RouteInterface ? $route->getName() : 'unknown',
 					'path'       => $request->getUri()->getPath(),
 					'method'     => $request->getMethod(),
-					'user_id'    => $userId,
+					'user_id'    => $actor->userId,
 				]);
 			}
 
-			if ($isOAuthBearer) {
-				$this->logGroupRejection($request, $userId, 'unknown');
+			if ($actor->isBearer()) {
+				$this->denials->groupRejected($request, $actor, 'unknown');
 			}
 
 			return $this->forbiddenResponse($request, $this->getErrorMessage());
 		}
 
-		// Check resource-specific permissions (implemented by concrete classes)
-		$hasAccess = $this->checkPermission($userId, $operation, $request);
-
-		if ($hasAccess === false) {
-			if ($isOAuthBearer) {
-				$this->logGroupRejection($request, $userId, $operation);
+		if (!$this->checkPermission($actor, $operation, $request)) {
+			if ($actor->isBearer()) {
+				$this->denials->groupRejected($request, $actor, $operation);
 			}
 
-			$this->logDenial($request, $userId, $operation, $isOAuthBearer, $this->denialContext($request, $userId, $operation));
+			$this->denials->request($request, $actor, static::RESOURCE_NAME, $operation, $this->denialContext($request, $actor, $operation));
 
 			return $this->forbiddenResponse($request, $this->getErrorMessage());
 		}
 
-		return $handler->handle($this->scopeRequest($request, $userId, $operation));
+		return $handler->handle($this->scopeRequest($request, $actor, $operation));
 	}
 
 	/**
-	 * A public submission skips access control, but a signed-in session user
-	 * making one is still the actor PrivilegedFieldGuard applies the field
-	 * policy for: attach them when there is one, and nothing when the caller
-	 * is anonymous.
+	 * The caller, by the credential the auth middleware recognized: an API
+	 * key, an OAuth token (OAuthRestScopeMiddleware has already checked its
+	 * scopes), or the session.
 	 */
-	private function withSessionActor(ServerRequestInterface $request): ServerRequestInterface
+	private function resolveActor(ServerRequestInterface $request): Actor
 	{
-		$userId = (string)($this->session->get(SessionKeys::AUTH_USER) ?? '');
-		if ($userId === '') {
-			return $request;
-		}
-
-		return $request->withAttribute(self::ACTOR_ATTRIBUTE, new AccessActor($userId, (string)($this->session->get(SessionKeys::AUTH_COLLECTION) ?? '')));
+		return match ($request->getAttribute('authMethod')) {
+			'apikey'       => Actor::apiKey(self::apiKeyIdOf($request)),
+			'oauth_bearer' => $this->actorResolver->fromBearer(
+				(string)$request->getAttribute('oauth_user_id', ''),
+				ActorResolver::scopeIds($request->getAttribute('oauth_scopes')),
+				(string)$request->getAttribute('oauth_client_id', ''),
+			),
+			default => $this->actorResolver->fromSession(),
+		};
 	}
 
 	/**
-	 * The acting user resolved by process(), or an anonymous actor when the
-	 * request carries none.
+	 * The id of the API key the auth middleware validated, for the record.
 	 */
-	protected function actorOf(ServerRequestInterface $request): AccessActor
+	private static function apiKeyIdOf(ServerRequestInterface $request): string
 	{
-		$actor = $request->getAttribute(self::ACTOR_ATTRIBUTE);
+		$apiKey = $request->getAttribute('apiKey');
 
-		return $actor instanceof AccessActor ? $actor : new AccessActor('', '');
+		return $apiKey instanceof ApiKeyData ? $apiKey->id : '';
 	}
 
 	/**
 	 * Hook for a subclass to narrow an allowed request before the action runs,
 	 * e.g. by attaching a request attribute the action applies as a filter.
 	 * The default passes the request through untouched. Only called once
-	 * checkPermission() has allowed the request; super admins, API keys and
-	 * disabled auth never reach it.
+	 * checkPermission() has allowed the request; trusted actors and disabled
+	 * auth never reach it.
 	 */
-	protected function scopeRequest(ServerRequestInterface $request, string $userId, string $operation): ServerRequestInterface
+	protected function scopeRequest(ServerRequestInterface $request, Actor $actor, string $operation): ServerRequestInterface
 	{
 		return $request;
 	}
@@ -210,74 +164,20 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function denialContext(ServerRequestInterface $request, string $userId, string $operation): array
+	protected function denialContext(ServerRequestInterface $request, Actor $actor, string $operation): array
 	{
 		return [];
 	}
 
 	/**
-	 * Record every access-group denial to the access log.
+	 * Whether this signed-in, non-admin actor may perform $operation on the
+	 * requested resource. Implementations ask `$actor->authority()`, which
+	 * holds the actor's access-group grants whether they arrived by session or
+	 * by OAuth token.
 	 *
-	 * The response deliberately says only "Access denied" (or a slightly fuller
-	 * sentence in dev), so without this there is NO server-side record of who was
-	 * refused what: logGroupRejection() below covers only OAuth Bearer callers,
-	 * leaving session users — i.e. everyone using the admin — completely silent.
-	 * Diagnosing "my editor cannot save their own profile" then means reading the
-	 * session off disk to work out which comparison failed. Route name and
-	 * operation are the two facts that identify the check that refused.
-	 *
-	 * @param array<string,mixed> $extra subclass-supplied context, e.g. the reason
-	 */
-	private function logDenial(ServerRequestInterface $request, string $userId, string $operation, bool $isOAuthBearer, array $extra = []): void
-	{
-		// Read the route attribute directly rather than through
-		// RouteContext::fromRequest(), which throws when routing metadata is
-		// absent. This runs on the denial path: a throw here would turn a clean
-		// 403 into a 500, which is a worse outcome than an unnamed log line.
-		$route     = $request->getAttribute(RouteContext::ROUTE);
-		$routeName = $route instanceof RouteInterface ? (string)$route->getName() : 'unknown';
-
-		$this->loggerFactory->channelLogger(LogChannel::Access)->warning('Access denied', array_merge([
-			'resource'    => static::RESOURCE_NAME,
-			'operation'   => $operation,
-			'user_id'     => $userId === '' ? '(none)' : $userId,
-			'auth_method' => $isOAuthBearer ? 'oauth_bearer' : 'session',
-			'route_name'  => $routeName,
-			'method'      => $request->getMethod(),
-			'path'        => $request->getUri()->getPath(),
-		], $extra));
-	}
-
-	/**
-	 * Record a group-layer denial to the oauth-activity log, distinct from
-	 * OAuthRestScopeMiddleware's scopeRejected() which fires earlier for
-	 * tokens whose scopes don't cover the operation at all.
-	 */
-	private function logGroupRejection(ServerRequestInterface $request, string $userId, string $operation): void
-	{
-		$clientId = (string)$request->getAttribute('oauth_client_id', '');
-		$this->oauthActivityLogger->groupRejected($clientId, $operation, $userId);
-	}
-
-	/**
-	 * Check if the user has permission to access the requested resource.
-	 * Implemented by concrete middleware classes.
-	 *
-	 * For OAuth Bearer callers, $userId is the token's subject (not a
-	 * session user) and $request carries a resolved `accessAuthority`
-	 * (TotalCMS\Domain\Auth\Data\UserAuthority) attribute — implementations
-	 * that need per-collection/schema group data should prefer that
-	 * attribute over AccessControlService's session-coupled canAccessX()
-	 * methods when present, since there is no PHP session to read from on
-	 * a Bearer request.
-	 *
-	 * @param string $userId User ID from session (or OAuth token subject)
 	 * @param string $operation CRUD operation (create, read, update, delete)
-	 * @param ServerRequestInterface $request HTTP request
-	 *
-	 * @return bool True if access allowed, false otherwise
 	 */
-	abstract protected function checkPermission(string $userId, string $operation, ServerRequestInterface $request): bool;
+	abstract protected function checkPermission(Actor $actor, string $operation, ServerRequestInterface $request): bool;
 
 	/**
 	 * Resolve the CRUD operation for this request. The default maps the
@@ -296,8 +196,9 @@ abstract readonly class BaseAccessMiddleware implements MiddlewareInterface
 	 */
 	protected function forbiddenResponse(ServerRequestInterface $request, string $message): ResponseInterface
 	{
+		$userId  = $this->actors->current()->userId;
 		$details = $this->config->env === 'dev'
-			? sprintf("Path: %s\nMethod: %s\nUser: %s", $request->getUri()->getPath(), $request->getMethod(), $this->session->get(SessionKeys::AUTH_USER) ?? 'none')
+			? sprintf("Path: %s\nMethod: %s\nUser: %s", $request->getUri()->getPath(), $request->getMethod(), $userId !== '' ? $userId : 'none')
 			: null;
 
 		return (new ForbiddenRenderer($this->twigRenderer, $this->jsonRenderer, $this->responseFactory))

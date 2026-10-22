@@ -6,13 +6,15 @@ namespace TotalCMS\Domain\Mcp\Service;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Auth\Service\AccessControlService;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Service\ActorContext;
+use TotalCMS\Domain\Auth\Service\ActorResolver;
+use TotalCMS\Domain\Mcp\Auth\Data\McpCaller;
 use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
 use TotalCMS\Domain\Mcp\Auth\Service\McpAuth;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
-use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
 use TotalCMS\Domain\OAuth\Service\OAuthActivityLogger;
 use TotalCMS\Domain\OAuth\Service\OAuthScopeEvaluator;
 use TotalCMS\Renderer\JsonRenderer;
@@ -20,9 +22,11 @@ use TotalCMS\Support\Config;
 
 /**
  * Everything /mcp does between the edition gate and building the server:
- * resolve the caller's persona (401 with WWW-Authenticate on failure), stash
- * it and the Bearer token's scopes / client id / user id / authority in
- * PersonaContext for the tool handlers, and enforce the AUTHENTICATED
+ * resolve the caller's persona (401 with WWW-Authenticate on failure), make
+ * the caller the request's current {@see Actor} (so the storage layer applies
+ * their access rules to every write a tool makes), stash the persona and the
+ * Bearer token's scopes / client id / user id / authority in PersonaContext
+ * for the tool handlers, and enforce the AUTHENTICATED
  * persona's scope gate (403 with insufficient_scope). Returns the persona
  * to proceed with, or the finished error response.
  */
@@ -34,8 +38,8 @@ final readonly class McpRequestAuthorizer
 		private OAuthScopeEvaluator $scopeEvaluator,
 		private OAuthActivityLogger $activityLogger,
 		private McpUrlBuilder $urlBuilder,
-		private AccessControlService $accessControl,
-		private Config $config,
+		private ActorResolver $actorResolver,
+		private ActorContext $actors,
 		private JsonRenderer $renderer,
 	) {
 	}
@@ -64,6 +68,8 @@ final readonly class McpRequestAuthorizer
 		}
 
 		$persona = $caller->persona;
+		$actor   = $this->actorFor($caller, $request);
+		$this->actors->set($actor);
 
 		// Stash the persona so individual tool handlers can read it during
 		// dispatch. Must happen before build() since the SDK invokes handlers
@@ -79,9 +85,7 @@ final readonly class McpRequestAuthorizer
 			$this->personaContext->setScopes(McpAuth::SESSION_SCOPES);
 			$this->personaContext->setClientId('webmcp');
 			$this->personaContext->setUserId($caller->userRef);
-			$this->personaContext->setAuthority($this->accessControl->authorityFor(
-				OAuthUserRef::parse($caller->userRef, (string)$this->config->auth['collection']),
-			));
+			$this->personaContext->setAuthority($actor->authority());
 		}
 
 		// For Bearer / OAuth requests capture the validated scopes into
@@ -91,33 +95,20 @@ final readonly class McpRequestAuthorizer
 		// default empty array.
 		$oauthScopes = $request->getAttribute('oauth_scopes');
 		if (is_array($oauthScopes)) {
-			/** @var list<string> $scopes */
-			$scopes = array_values(array_map(
-				static fn (mixed $s): string => is_object($s) && method_exists($s, 'getIdentifier')
-					? (string)$s->getIdentifier()
-					: (string)$s,
-				$oauthScopes,
-			));
-			$this->personaContext->setScopes($scopes);
+			$this->personaContext->setScopes(ActorResolver::scopeIds($oauthScopes));
 
 			// Client id, for oauth-activity log attribution when Task 7's
 			// call-time guard denies a tools/call — same request attribute
 			// BaseAccessMiddleware reads for the REST equivalent.
 			$this->personaContext->setClientId((string)$request->getAttribute('oauth_client_id', ''));
 
-			// Resolve the caller's UserAuthority for this Bearer request so
-			// ToolRegistry::forPersona() (via McpServerFactory) can show
-			// requirement-gated tools (McpToolDefinition::$requires,
-			// introduced Phase 4 Task 6) to callers whose access-group grants
-			// satisfy them, and so Task 7's call-time guard can re-check
-			// per invocation. Session-free — mirrors BaseAccessMiddleware's
-			// OAuth Bearer branch. Non-Bearer paths (API key / anonymous)
-			// leave PersonaContext's authority at its default null.
-			$userId = $request->getAttribute('oauth_user_id');
-			if (is_string($userId) && $userId !== '') {
-				$this->personaContext->setUserId($userId);
-				$ref = OAuthUserRef::parse($userId, (string)$this->config->auth['collection']);
-				$this->personaContext->setAuthority($this->accessControl->authorityFor($ref));
+			// The caller's access-group authority, so ToolRegistry::forPersona()
+			// (via McpServerFactory) can show requirement-gated tools to callers
+			// whose grants satisfy them, and so the call-time guard can re-check
+			// per invocation. API key and anonymous callers leave it null.
+			if ($actor->userId !== '') {
+				$this->personaContext->setUserId((string)$request->getAttribute('oauth_user_id'));
+				$this->personaContext->setAuthority($actor->authority());
 			}
 		}
 
@@ -155,5 +146,23 @@ final readonly class McpRequestAuthorizer
 		}
 
 		return $persona;
+	}
+
+	/**
+	 * The caller as an {@see Actor}: an API key, the OAuth token's user, the
+	 * browser session's user (WebMCP), or anonymous.
+	 */
+	private function actorFor(McpCaller $caller, ServerRequestInterface $request): Actor
+	{
+		return match ($caller->kind) {
+			McpCallerKind::ApiKey    => Actor::apiKey($caller->apiKeyId),
+			McpCallerKind::OAuth     => $this->actorResolver->fromBearer(
+				(string)$request->getAttribute('oauth_user_id', ''),
+				ActorResolver::scopeIds($request->getAttribute('oauth_scopes')),
+				(string)$request->getAttribute('oauth_client_id', ''),
+			),
+			McpCallerKind::Session   => $this->actorResolver->fromBearer($caller->userRef, McpAuth::SESSION_SCOPES, 'webmcp'),
+			McpCallerKind::Anonymous => Actor::anonymous(),
+		};
 	}
 }
