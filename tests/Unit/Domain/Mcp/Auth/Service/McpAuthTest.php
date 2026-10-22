@@ -158,6 +158,11 @@ final class McpAuthTest extends TestCase
 		$this->auth()->resolvePersona($request);
 	}
 
+	public function testAnUnlimitedKeyCarriesNoLimits(): void
+	{
+		$this->assertNull($this->keyCaller($this->makeApiKey(['*']))->limitedKey);
+	}
+
 	public function testAnUnlimitedKeyResolvesToAdmin(): void
 	{
 		// authenticate() returns ApiKeyData when the key is valid AND its
@@ -248,9 +253,7 @@ final class McpAuthTest extends TestCase
 
 		$this->assertSame(McpPersona::AUTHENTICATED, $caller->persona);
 		$this->assertSame(McpCallerKind::ApiKey, $caller->kind);
-		$this->assertNotNull($caller->keyAuthority);
-		$this->assertTrue($caller->keyAuthority->canCollection('update', 'blog'));
-		$this->assertFalse($caller->keyAuthority->canCollection('read', 'auth'));
+		$this->assertSame('k1', $caller->limitedKey?->id);
 	}
 
 	public function testAnMcpOnlyKeyReachesNoContent(): void
@@ -258,8 +261,7 @@ final class McpAuthTest extends TestCase
 		$caller = $this->keyCaller($this->makeApiKey(['/mcp']));
 
 		$this->assertSame(McpPersona::AUTHENTICATED, $caller->persona);
-		$this->assertNotNull($caller->keyAuthority);
-		$this->assertFalse($caller->keyAuthority->canCollectionsOperation('read'));
+		$this->assertSame('k1', $caller->limitedKey?->id);
 	}
 
 	public function testKeyWithoutMcpScopeIsRejected(): void

@@ -960,7 +960,7 @@ return [
 	'api_keys.schemas_readonly'      => 'Schemas (Nur Lesen)',
 	'api_keys.all_collections_ep'    => 'Alle Collections',
 	'api_keys.all_dataviews_ep'      => 'Alle Data Views',
-	'api_keys.mcp_ep'                => 'MCP (mit den unten gewählten Sammlungen)',
+	'api_keys.mcp_ep'                => 'MCP (unten auswählen)',
 	'api_keys.choose_collections'    => 'Bestimmte Collections auswählen',
 	'api_keys.choose_dataviews'      => 'Bestimmte Data Views auswählen',
 	'api_keys.select_endpoints'      => 'Endpunkte auswählen',

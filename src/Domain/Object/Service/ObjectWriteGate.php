@@ -16,7 +16,8 @@ use TotalCMS\Domain\Auth\Service\ActorContext;
  * ObjectRemover call it on every write with the current actor from
  * {@see ActorContext}, so an entry point that forgets its own check (a new
  * route, an MCP tool, an extension) still cannot claim another member's
- * object or set a protected field.
+ * object, set a protected field, or let an API key limited to some
+ * collections write to another.
  *
  * Entry points still check first: they answer with a proper refusal, while
  * a refusal here is an {@see AccessDeniedException} (403) that means the
@@ -43,6 +44,8 @@ final readonly class ObjectWriteGate
 	 */
 	public function beforeCreate(string $collection, array $data): array
 	{
+		$this->requireReach($collection, (string)($data['id'] ?? ''), Operation::Create);
+
 		return $this->guard->applyWrite($this->actors->current(), $collection, (string)($data['id'] ?? ''), $data);
 	}
 
@@ -56,6 +59,7 @@ final readonly class ObjectWriteGate
 	 */
 	public function beforeUpdate(string $collection, string $id, array $data): array
 	{
+		$this->requireReach($collection, $id, Operation::Update);
 		$this->requireOwner($collection, $id, Operation::Update);
 
 		return $this->guard->applyWrite($this->actors->current(), $collection, $id, $data);
@@ -66,7 +70,26 @@ final readonly class ObjectWriteGate
 	 */
 	public function beforeDelete(string $collection, string $id): void
 	{
+		$this->requireReach($collection, $id, Operation::Delete);
 		$this->requireOwner($collection, $id, Operation::Delete);
+	}
+
+	/**
+	 * Refuse a write by an API key whose paths do not cover the collection
+	 * ({@see \TotalCMS\Domain\Auth\Data\Actor::reaches()}). Every other
+	 * actor reaches every collection here; its groups are the entry point's
+	 * check.
+	 */
+	private function requireReach(string $collection, string $id, Operation $operation): void
+	{
+		$actor = $this->actors->current();
+		if ($actor->reaches($collection, $operation->groupOperation())) {
+			return;
+		}
+
+		$this->denials->write($actor, $collection, $id, $operation, Decision::DenyGroup);
+
+		throw new AccessDeniedException(sprintf('This API key may not %s objects in "%s".', $operation->value, $collection));
 	}
 
 	private function requireOwner(string $collection, string $id, Operation $operation): void

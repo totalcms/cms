@@ -75,6 +75,16 @@ final class ApiKeyGrantsTest extends TestCase
 		$this->assertFalse($authority->canAnyUtil());
 	}
 
+	public function testViewPathsGrantThoseViews(): void
+	{
+		$this->assertTrue(ApiKeyGrants::reachesView($this->key(['/api/dataviews/sales/data']), 'sales'));
+		$this->assertTrue(ApiKeyGrants::reachesView($this->key(['/dataviews/sales']), 'sales'));
+		$this->assertFalse(ApiKeyGrants::reachesView($this->key(['/dataviews/sales/data']), 'payroll'));
+		$this->assertTrue(ApiKeyGrants::reachesView($this->key(['/dataviews']), 'payroll'));
+		$this->assertTrue(ApiKeyGrants::reachesView($this->key(['*']), 'payroll'));
+		$this->assertFalse(ApiKeyGrants::reachesView($this->key(['/mcp', '/collections']), 'sales'));
+	}
+
 	public function testMethodsDoNotNarrowTheGrant(): void
 	{
 		// Over MCP every call is a POST: the key's methods say nothing there.

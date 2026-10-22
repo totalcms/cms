@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Auth\Service;
 
 use Mcp\Exception\ToolCallException;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Auth\Data\Decision;
 use TotalCMS\Domain\Auth\Data\Operation;
 use TotalCMS\Domain\Auth\Data\ReadScope;
@@ -51,6 +52,8 @@ class PersonaContext
 	private string $clientId = '';
 
 	private string $userId = '';
+
+	private ?ApiKeyData $limitedKey = null;
 
 	private McpCallerKind $callerKind = McpCallerKind::Anonymous;
 
@@ -176,6 +179,21 @@ class PersonaContext
 	public function callerKind(): McpCallerKind
 	{
 		return $this->callerKind;
+	}
+
+	/**
+	 * The API key of this request when it is limited to some collections or
+	 * views; null for every other caller, an All endpoints key included. Set
+	 * on every request so one caller's key never outlives its request.
+	 */
+	public function setLimitedKey(?ApiKeyData $apiKey): void
+	{
+		$this->limitedKey = $apiKey;
+	}
+
+	public function getLimitedKey(): ?ApiKeyData
+	{
+		return $this->limitedKey;
 	}
 
 	/**
@@ -329,7 +347,7 @@ class PersonaContext
 			));
 		}
 
-		if (!$this->schemaResolver->isAccessibleTo($collectionData, $this->current()->value)) {
+		if (!$this->schemaResolver->isAccessibleTo($collectionData, $this->current()->value, $this->limitedKey instanceof ApiKeyData)) {
 			throw new ToolCallException(sprintf(
 				'Collection "%s" is not available to the current caller. Use list_collections to see what you can %s.',
 				$collection,
@@ -355,7 +373,7 @@ class PersonaContext
 		$visible = [];
 
 		foreach ($collections as $collection) {
-			if ($this->schemaResolver->isAccessibleTo($collection, $persona) && $this->canReadCollection($collection->id, $collection)) {
+			if ($this->schemaResolver->isAccessibleTo($collection, $persona, $this->limitedKey instanceof ApiKeyData) && $this->canReadCollection($collection->id, $collection)) {
 				$visible[] = $collection;
 			}
 		}
@@ -375,6 +393,7 @@ class PersonaContext
 			$persona,
 			McpSchemaResolver::DEFAULT_CATALOG_CAP,
 			fn (CollectionData $c): bool => $this->canReadCollection($c->id, $c),
+			$this->limitedKey instanceof ApiKeyData,
 		);
 
 		return $catalog === '' ? $baseDescription : $baseDescription . "\n\n" . $catalog;

@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Mcp\Auth\Data;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
@@ -24,6 +25,9 @@ final class McpAccessLevelTest extends TestCase
 		yield 'authenticated denies anonymous'    => [McpAccessLevel::AUTHENTICATED, McpPersona::PUBLIC_, false];
 		yield 'authenticated lets authenticated'  => [McpAccessLevel::AUTHENTICATED, McpPersona::AUTHENTICATED, true];
 		yield 'authenticated lets admin'          => [McpAccessLevel::AUTHENTICATED, McpPersona::ADMIN, true];
+		yield 'apikey denies anonymous'           => [McpAccessLevel::API_KEY, McpPersona::PUBLIC_, false];
+		yield 'apikey denies a signed-in member'  => [McpAccessLevel::API_KEY, McpPersona::AUTHENTICATED, false];
+		yield 'apikey lets admin'                 => [McpAccessLevel::API_KEY, McpPersona::ADMIN, true];
 		yield 'admin denies anonymous'            => [McpAccessLevel::ADMIN, McpPersona::PUBLIC_, false];
 		yield 'admin denies authenticated'        => [McpAccessLevel::ADMIN, McpPersona::AUTHENTICATED, false];
 		yield 'admin lets admin'                  => [McpAccessLevel::ADMIN, McpPersona::ADMIN, true];
@@ -40,6 +44,30 @@ final class McpAccessLevelTest extends TestCase
 		$this->assertSame(McpAccessLevel::PUBLIC_, McpAccessLevel::fromString('public'));
 		$this->assertSame(McpAccessLevel::AUTHENTICATED, McpAccessLevel::fromString('authenticated'));
 		$this->assertSame(McpAccessLevel::ADMIN, McpAccessLevel::fromString('admin'));
+		$this->assertSame(McpAccessLevel::API_KEY, McpAccessLevel::fromString('apikey'));
+	}
+
+	public function testALimitedKeyIsLetInFromApikeyUpButNeverAtAdmin(): void
+	{
+		$this->assertFalse(McpAccessLevel::ADMIN->allows(McpPersona::AUTHENTICATED, apiKey: true));
+		$this->assertTrue(McpAccessLevel::API_KEY->allows(McpPersona::AUTHENTICATED, apiKey: true));
+		$this->assertTrue(McpAccessLevel::AUTHENTICATED->allows(McpPersona::AUTHENTICATED, apiKey: true));
+		$this->assertTrue(McpAccessLevel::PUBLIC_->allows(McpPersona::AUTHENTICATED, apiKey: true));
+	}
+
+	public function testALimitedKeySeesOnlyTheViewsItNamesUnlessPublic(): void
+	{
+		$key = new ApiKeyData([
+			'id' => 'k1', 'name' => 'Views', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
+			'scopes' => ['methods' => ['GET'], 'paths' => ['/mcp', '/dataviews/sales/data']],
+		]);
+
+		$this->assertTrue(McpAccessLevel::API_KEY->allowsView(McpPersona::AUTHENTICATED, $key, 'sales'));
+		$this->assertFalse(McpAccessLevel::API_KEY->allowsView(McpPersona::AUTHENTICATED, $key, 'payroll'));
+		$this->assertFalse(McpAccessLevel::AUTHENTICATED->allowsView(McpPersona::AUTHENTICATED, $key, 'payroll'));
+		$this->assertTrue(McpAccessLevel::PUBLIC_->allowsView(McpPersona::AUTHENTICATED, $key, 'payroll'));
+		$this->assertFalse(McpAccessLevel::ADMIN->allowsView(McpPersona::AUTHENTICATED, $key, 'sales'));
+		$this->assertTrue(McpAccessLevel::AUTHENTICATED->allowsView(McpPersona::AUTHENTICATED, null, 'payroll'));
 	}
 
 	public function testUnknownValuesFailClosedToAdminNotToNobody(): void

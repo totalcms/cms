@@ -84,7 +84,7 @@ readonly class DescribeCollectionTool
 				'id'            => ['type' => 'string'],
 				'description'   => ['type' => ['string', 'null'], 'description' => 'Collection-level mcp.description, falling back to the schema description.'],
 				'url_pattern'   => ['type' => 'string', 'description' => 'URL template for objects, e.g. "/blog/{id}". Empty string when no pattern is configured.'],
-				'access'        => ['type' => 'string', 'enum' => ['admin', 'public', 'authenticated'], 'description' => 'Persona that can query this collection.'],
+				'access'        => ['type' => 'string', 'enum' => ['admin', 'apikey', 'authenticated', 'public'], 'description' => 'Persona that can query this collection.'],
 				'total_objects' => ['type' => 'integer'],
 				'ownership'     => ['type' => ['string', 'null'], 'description' => 'Set when the collection limits the caller to their own objects, or has fields only the site sets: what the caller sees and may change.'],
 				'properties'    => [

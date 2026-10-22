@@ -64,11 +64,10 @@ readonly class GetViewTool
 		// quiet about unused params.
 		unset($format, $locale);
 
-		$persona = $this->personaContext->current();
-		$view    = $this->fetchView($id);
+		$view = $this->fetchView($id);
 
 		$level  = McpAccessLevel::fromString((string)($view['mcp']['access'] ?? 'admin'));
-		if (!$level->allows($persona)) {
+		if (!$level->allowsView($this->personaContext->current(), $this->personaContext->getLimitedKey(), $id)) {
 			throw new ToolCallException(sprintf(
 				'View "%s" is not accessible to the current caller. Use list_views to see what you can fetch.',
 				$id,

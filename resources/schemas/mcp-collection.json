@@ -33,13 +33,14 @@
 		"access": {
 			"type"        : "string",
 			"label"       : "MCP Access",
-			"help"        : "Controls who can call MCP content tools (query_collection, get_object, search_collection, describe_collection) against this collection. <strong>Admin</strong>: only callers with a valid API key. <strong>Authenticated</strong>: callers presenting an OAuth Bearer token with an <code>mcp:*</code> scope (Pro edition). <strong>Public</strong>: anonymous AI agents can read this collection.",
+			"help"        : "Controls who can reach this over MCP. <strong>Admin</strong>: admins only (an All endpoints API key, or a super admin). <strong>API keys</strong>: admins, plus API keys whose endpoints name it. <strong>Authenticated</strong>: all of those, plus signed-in members over OAuth or the site's own pages whose access groups grant it (Pro edition). <strong>Public</strong>: anyone, including anonymous AI agents.",
 			"field"       : "select",
 			"placeholder" : "Admin only",
 			"default"     : "admin",
 			"options"     : [
-				{ "value" : "admin",         "label" : "Admin only (API key required)" },
-				{ "value" : "authenticated", "label" : "Authenticated (OAuth Bearer token with mcp:* scope)" },
+				{ "value" : "admin",         "label" : "Admin only" },
+				{ "value" : "apikey",        "label" : "API keys (keys whose endpoints name it)" },
+				{ "value" : "authenticated", "label" : "Authenticated (signed-in members and API keys)" },
 				{ "value" : "public",        "label" : "Public (anonymous AI agents can read)" }
 			]
 		},

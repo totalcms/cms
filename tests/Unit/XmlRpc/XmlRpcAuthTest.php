@@ -93,7 +93,9 @@ it('makes the key the actor for the writes the call makes', function (): void {
 
 	$auth->authenticate(['blog', 'joe', 'tcms_testkey']);
 
-	expect($actors->current()->kind)->toBe(ActorKind::ApiKey);
+	expect($actors->current()->kind)->toBe(ActorKind::ApiKey)
+		->and($actors->current()->reaches('blog', 'create'))->toBeTrue()
+		->and($actors->current()->reaches('auth', 'update'))->toBeFalse();
 });
 
 it('leaves the actor anonymous when the key is refused', function (): void {

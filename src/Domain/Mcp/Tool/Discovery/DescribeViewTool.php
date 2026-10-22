@@ -66,7 +66,7 @@ readonly class DescribeViewTool
 
 		$level  = McpAccessLevel::fromString((string)($view['mcp']['access'] ?? 'admin'));
 		$access = $level->value;
-		if (!$level->allows($persona)) {
+		if (!$level->allowsView($persona, $this->personaContext->getLimitedKey(), $id)) {
 			throw new ToolCallException(sprintf(
 				'View "%s" is not accessible to the current caller. Use list_views to see what you can describe.',
 				$id,
@@ -154,7 +154,7 @@ readonly class DescribeViewTool
 				'name'         => ['type' => 'string'],
 				'description'  => ['type' => 'string'],
 				'last_built'   => ['type' => 'string'],
-				'access'       => ['type' => 'string', 'enum' => ['admin', 'public', 'authenticated']],
+				'access'       => ['type' => 'string', 'enum' => ['admin', 'apikey', 'authenticated', 'public']],
 				'total_items'  => ['type' => 'integer'],
 				'output_shape' => [
 					'type'        => 'array',

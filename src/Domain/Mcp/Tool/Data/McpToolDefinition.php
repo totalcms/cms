@@ -112,13 +112,13 @@ readonly class McpToolDefinition
 	 * objects+read+public tool still applies its own mcp.access exposure
 	 * check exactly as it always has.
 	 */
-	public function isVisibleTo(McpPersona $persona, ?UserAuthority $authority = null): bool
+	public function isVisibleTo(McpPersona $persona, ?UserAuthority $authority = null, bool $limitedKey = false): bool
 	{
 		$level = McpAccessLevel::fromString($this->access);
 
 		return match ($persona) {
 			McpPersona::ADMIN         => true,
-			McpPersona::AUTHENTICATED => $level->allows($persona)
+			McpPersona::AUTHENTICATED => $level->allows($persona, $limitedKey)
 				|| ($this->requires instanceof ToolRequirement && $authority instanceof UserAuthority && $this->requires->isSatisfiedForAny($authority)),
 			McpPersona::PUBLIC_       => $level->allows($persona) && $this->isPublicReadRequirement(),
 		};

@@ -161,7 +161,7 @@ readonly class McpServerFactory
 		// access groups grant `read` on, so resources/list matches the
 		// call-time gate CollectionResource::read() enforces.
 		$visibleUris = [];
-		foreach ($this->resourceRegistry->forPersona($persona, $this->personaContext->getAuthority()) as $resource) {
+		foreach ($this->resourceRegistry->forPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey()) as $resource) {
 			$visibleUris[] = $resource->uri;
 			$builder->addResource(
 				handler: $resource->handler,
@@ -188,7 +188,7 @@ readonly class McpServerFactory
 			$builder->setNotificationBus(new PersonaNotificationBus($this->notificationBus, $visibleUris));
 		}
 
-		foreach ($this->resourceRegistry->templatesForPersona($persona, $this->personaContext->getAuthority()) as $template) {
+		foreach ($this->resourceRegistry->templatesForPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey()) as $template) {
 			$builder->addResourceTemplate(
 				handler: $template->handler,
 				uriTemplate: $template->uriTemplate,
@@ -232,7 +232,7 @@ readonly class McpServerFactory
 	 */
 	public function registrableTools(McpPersona $persona): array
 	{
-		$tools = $this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority());
+		$tools = $this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey() !== null);
 		if (!$this->personaContext->isReadOnly()) {
 			return $tools;
 		}

@@ -91,7 +91,7 @@ readonly class ListCollectionsTool
 							'schema'        => ['type' => 'string', 'description' => 'Schema id this collection uses.'],
 							'description'   => ['type' => ['string', 'null'], 'description' => 'Resolved mcp.description, falling back to the schema description.'],
 							'url_pattern'   => ['type' => 'string', 'description' => 'URL template for objects, e.g. "/blog/{id}". Empty string when no pattern is configured.'],
-							'access'        => ['type' => 'string', 'enum' => ['admin', 'public', 'authenticated']],
+							'access'        => ['type' => 'string', 'enum' => ['admin', 'apikey', 'authenticated', 'public']],
 							'total_objects' => ['type' => 'integer'],
 						],
 					],

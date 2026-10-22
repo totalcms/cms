@@ -6,6 +6,8 @@ namespace TotalCMS\Domain\Mcp\Service;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyGrants;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Auth\Service\ActorResolver;
@@ -97,7 +99,8 @@ final readonly class McpRequestAuthorizer
 		// A key limited to some collections works like an OAuth grant over
 		// them: every scope (its methods do not apply over MCP, where every
 		// call is a POST) and the grants its paths name.
-		if ($caller->kind === McpCallerKind::ApiKey && $persona === McpPersona::AUTHENTICATED) {
+		$this->personaContext->setLimitedKey($caller->limitedKey);
+		if ($caller->limitedKey instanceof ApiKeyData) {
 			$this->personaContext->setScopes(self::KEY_SCOPES);
 			$this->personaContext->setClientId('apikey:' . $caller->apiKeyId);
 			$this->personaContext->setAuthority($actor->authority());
@@ -170,7 +173,7 @@ final readonly class McpRequestAuthorizer
 	private function actorFor(McpCaller $caller, ServerRequestInterface $request): Actor
 	{
 		return match ($caller->kind) {
-			McpCallerKind::ApiKey    => Actor::apiKey($caller->apiKeyId, $caller->keyAuthority),
+			McpCallerKind::ApiKey    => Actor::apiKey($caller->apiKeyId, $caller->limitedKey instanceof ApiKeyData ? ApiKeyGrants::authority($caller->limitedKey) : null),
 			McpCallerKind::OAuth     => $this->actorResolver->fromBearer(
 				(string)$request->getAttribute('oauth_user_id', ''),
 				ActorResolver::scopeIds($request->getAttribute('oauth_scopes')),

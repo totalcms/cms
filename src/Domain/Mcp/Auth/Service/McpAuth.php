@@ -199,7 +199,7 @@ readonly class McpAuth
 			return new McpCaller(McpPersona::ADMIN, McpCallerKind::ApiKey, apiKeyId: $apiKey->id);
 		}
 
-		return new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::ApiKey, apiKeyId: $apiKey->id, keyAuthority: ApiKeyGrants::authority($apiKey));
+		return new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::ApiKey, apiKeyId: $apiKey->id, limitedKey: $apiKey);
 	}
 
 	/**

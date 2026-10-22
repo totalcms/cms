@@ -23,7 +23,8 @@ readonly class McpResourceDefinition extends AbstractMcpResource
 		string $access,
 		\Closure $handler,
 		?string $collectionId = null,
+		?string $viewId = null,
 	) {
-		parent::__construct($name, $description, $mimeType, $access, $handler, $collectionId);
+		parent::__construct($name, $description, $mimeType, $access, $handler, $collectionId, $viewId);
 	}
 }

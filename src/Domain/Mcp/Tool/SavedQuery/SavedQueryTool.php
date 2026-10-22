@@ -108,7 +108,7 @@ final readonly class SavedQueryTool
 				));
 			}
 
-			if (!$this->schemaResolver->isAccessibleTo($collection, $persona->value)) {
+			if (!$this->schemaResolver->isAccessibleTo($collection, $persona->value, $this->personaContext->getLimitedKey() !== null)) {
 				throw new ToolCallException(sprintf(
 					'Collection "%s" is not available to the current caller. Use list_collections to see what you can query.',
 					$this->definition->collectionName,
@@ -150,7 +150,7 @@ final readonly class SavedQueryTool
 
 	private function personaCanAccess(McpPersona $persona): bool
 	{
-		return McpAccessLevel::fromString($this->definition->access)->allows($persona);
+		return McpAccessLevel::fromString($this->definition->access)->allows($persona, $this->personaContext->getLimitedKey() !== null);
 	}
 
 	/**

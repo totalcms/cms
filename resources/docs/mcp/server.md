@@ -40,7 +40,7 @@ The same `/mcp` URL serves three personas; the tool surface scales per caller:
 
 | Persona | How they authenticate | What they see |
 |---|---|---|
-| **Developer / operator** (`admin`) | `X-API-Key: <admin-key>` header on every request | Every tool — including the admin write tools. Same surface as the admin UI. |
+| **Developer / operator** (`admin`) | `X-API-Key: <admin-key>` header on every request, with an All endpoints (`*`) key | Every tool — including the admin write tools. Same surface as the admin UI. A key limited to some collections is not an admin: see [API key authorization](#api-key-authorization). |
 | **Authenticated consumer** (`authenticated`) | `Authorization: Bearer <oauth-token>` header with at least one `mcp:*` scope | The **intersection** of what the token's scopes consent to and what the approving user's access groups grant — not every `mcp.access: 'authenticated'` collection. A blogger-group user's token can read/write the collections their groups say `blogger` can touch, plus anything marked `mcp.access: 'public'`; nothing else. Used by "Connect Claude" / "Connect Cursor" style flows where an end-user grants a third-party AI client scoped access to their content. See [The three-layer rule](#the-three-layer-rule-scope-group-exposure) and [OAuth Server](docs/apis/oauth) for setup. A token approved by an **admin-group** user and carrying the `cms:admin` scope elevates to the admin persona — see [Required scopes for MCP](#required-scopes-for-mcp). |
 | **Public AI agent** (`public`) | No credentials (anonymous) | Only tools marked `access: public` AND only collections with `mcp.access: 'public'`. Drafts are auto-hidden. |
 
@@ -66,7 +66,7 @@ Every authenticated (OAuth) call to a collection or object has to clear three in
 
 1. **Scope** — did the person who approved the connection consent to this class of action? Reading needs `cms:read`, writing needs `cms:write`, schema/collection/cache work needs `cms:admin`.
 2. **Group** — do that person's **access groups** actually grant this operation on this collection? The same groups you already manage under **Admin → Access Groups** for the dashboard.
-3. **Exposure** — is the collection turned on for MCP at all (`mcp.access: 'authenticated'` or `'public'`)? A collection left at the default `mcp.access: 'admin'` is invisible to every OAuth caller regardless of scope or group.
+3. **Exposure** — is the collection turned on for MCP at all (`mcp.access: 'authenticated'` or `'public'`)? A collection left at the default `mcp.access: 'admin'`, or set to `'apikey'`, is invisible to every OAuth caller regardless of scope or group.
 
 All three have to pass. Concretely:
 
@@ -321,9 +321,20 @@ Operators control AI exposure via two layers of MCP config — one per **collect
 
 | Field | Default | Meaning |
 |---|---|---|
-| `access` | `"admin"` | Who can call `query_collection` / `search_collection` / `get_object` against this collection. `"admin"` requires an API key; `"public"` allows anonymous AI agents. |
+| `access` | `"admin"` | Who can reach this collection over MCP. See the levels below. |
 | `description` | empty | AI-targeted description shown in `list_collections` and the dynamic tool-description catalog. Falls back to the collection's general description if blank. |
 | `resource` | `false` | When true, the collection is exposed as a `tcms://{collection}/` resource and its objects via the `tcms://{collection}/{id}` template. Off unless you turn it on — resources are a second way to reach data the tools already serve, so a collection stays out of `resources/list` until you ask for it. |
+
+The access levels, each including everything above it:
+
+| `access` | Who reaches the collection or view |
+|---|---|
+| `"admin"` | Admins only: an All endpoints (`*`) API key, a super admin over OAuth with `cms:admin`, a super admin's own browser session. |
+| `"apikey"` | Admins, plus API keys limited to some collections or views whose endpoints name this one. |
+| `"authenticated"` | All of the above, plus OAuth members and signed-in browser sessions whose access groups grant it. |
+| `"public"` | Everyone, including anonymous AI agents. |
+
+Use `"apikey"` to give an integration a key for one collection without opening it to signed-in members.
 
 The same `mcp` card lives on each **data view** (in the dataviews editor) with identical fields. A view marked `mcp.access: 'public'` shows up in `list_views` for anonymous callers and is fetchable at `tcms://view/{id}`.
 
@@ -417,7 +428,7 @@ Data views are different — each view IS independently named, so each gets its 
 
 ### Data views are the exception to the group rule
 
-`tcms://view/{id}` — and the `get_view` / `query_view` tools behind it — check only the view's own `mcp.access` field (`public` / `authenticated` / `admin`, set on the dataviews editor's MCP card), the same three-level persona check every tool used before the group rule shipped. They do **not** consult access groups at all, even though the view's underlying Twig definition may read from a collection the caller's groups can't touch directly.
+`tcms://view/{id}` — and the `get_view` / `query_view` tools behind it — check only the view's own `mcp.access` field (`public` / `authenticated` / `apikey` / `admin`, set on the dataviews editor's MCP card), the same three-level persona check every tool used before the group rule shipped. They do **not** consult access groups at all (an API key limited to some views is the one caller held to the views it names), even though the view's underlying Twig definition may read from a collection the caller's groups can't touch directly.
 
 This matters operationally: an `authenticated`-exposed view built over a group-denied collection is a legitimate, working read path around the group rule — not a bug, but a gap operators need to know about. If a view surfaces data from a collection you don't want a given caller reading, don't mark that view `mcp.access: 'authenticated'` (or `'public'`) — group-gating views is out of scope for this release; the view's own `access` field is the only lever.
 
@@ -501,7 +512,7 @@ MCP reads a key's endpoint list the same way REST does: a key reaches the conten
 
 - **`paths: ["*"]`** (the default "All endpoints" choice) is the operator's admin key: the ADMIN persona, every tool, every collection.
 - **Any other key needs `/mcp`** in its paths to reach the endpoint. `/mcp` opens the door and grants no content.
-- **Its content comes from its other paths**, read as an access group: `/collections` grants every collection, `/collections/{id}` that one; `/schemas` and `/schemas/{id}` the schema tools; `/templates` the Site Builder template tools. Such a key is an AUTHENTICATED caller with those grants, like an OAuth member, so it also sees only collections whose MCP access is `authenticated` or `public`. A key with only `/mcp` reaches no content.
+- **Its content comes from its other paths**, read as an access group: `/collections` grants every collection, `/collections/{id}` that one; `/schemas` and `/schemas/{id}` the schema tools; `/templates` the Site Builder template tools. `/dataviews` grants every data view and `/dataviews/{id}/data` that one. Such a key is an AUTHENTICATED caller with those grants. It reaches a collection or view only when that one's MCP access is `apikey`, `authenticated` or `public`: an `admin` collection stays closed to it even when its paths name it. A key with only `/mcp` reaches no content.
 - **Methods do not narrow it over MCP.** Every MCP call is a POST, so within the collections it names a key may read and write. REST and XML-RPC keep checking the key's methods.
 - **Within its collections a key is trusted**: it sees drafts and every owner's objects, and may set protected fields, as on REST.
 

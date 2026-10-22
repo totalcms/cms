@@ -80,6 +80,7 @@ readonly class DataViewResourceRegistrar
 				mimeType: 'application/json',
 				access: $access,
 				handler: static fn (): array => $resource->read($id),
+				viewId: $id,
 			));
 		}
 	}

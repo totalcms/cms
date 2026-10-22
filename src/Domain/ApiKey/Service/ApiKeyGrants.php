@@ -18,6 +18,8 @@ use TotalCMS\Domain\Auth\Data\UserAuthority;
  *     (its objects and its settings);
  *   - `schemas` grants every schema, `schemas/{id}` that one;
  *   - `templates` grants the Site Builder;
+ *   - `dataviews` grants every data view, `dataviews/{id}` (or the REST
+ *     route `dataviews/{id}/data`) that one ({@see reachesView()});
  *   - any other path (`mcp`, `cron/...`) grants no content.
  *
  * The key's methods are not applied: over MCP the method is always POST, so
@@ -31,6 +33,19 @@ final readonly class ApiKeyGrants
 	public static function isUnlimited(ApiKeyData $apiKey): bool
 	{
 		return in_array('*', self::paths($apiKey), true);
+	}
+
+	/**
+	 * Whether the key's paths name data view $viewId.
+	 */
+	public static function reachesView(ApiKeyData $apiKey, string $viewId): bool
+	{
+		$paths = self::paths($apiKey);
+		if (in_array('*', $paths, true) || in_array('dataviews', $paths, true)) {
+			return true;
+		}
+
+		return in_array($viewId, self::targets($paths, 'dataviews')['allowed'], true);
 	}
 
 	/**

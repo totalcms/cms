@@ -150,11 +150,11 @@ class ToolRegistry
 	 *
 	 * @return list<McpToolDefinition>
 	 */
-	public function forPersona(McpPersona $persona, ?UserAuthority $authority = null): array
+	public function forPersona(McpPersona $persona, ?UserAuthority $authority = null, bool $limitedKey = false): array
 	{
 		$visible = array_values(array_filter(
 			$this->tools,
-			static fn (McpToolDefinition $tool): bool => $tool->isVisibleTo($persona, $authority),
+			static fn (McpToolDefinition $tool): bool => $tool->isVisibleTo($persona, $authority, $limitedKey),
 		));
 
 		usort($visible, static fn (McpToolDefinition $a, McpToolDefinition $b): int => strcmp($a->name, $b->name));

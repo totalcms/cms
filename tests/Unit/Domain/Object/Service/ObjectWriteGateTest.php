@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyGrants;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Exception\AccessDeniedException;
@@ -109,4 +111,23 @@ test('a refusal fires access.denied naming the actor before it throws', function
 	expect($denials)->toHaveCount(1)
 		->and($denials[0])->toMatchArray(['resource' => 'object', 'operation' => 'delete', 'reason' => 'owner', 'collection' => 'showcase', 'id' => 'site-1'])
 		->and($denials[0]['actor'])->toMatchArray(['kind' => 'member', 'userId' => 'sam', 'authCollection' => 'auth']);
+});
+
+test('an API key writes only to the collections its paths name', function (): void {
+	$key = Actor::apiKey('k1', ApiKeyGrants::authority(new ApiKeyData([
+		'id' => 'k1', 'name' => 'Blog', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
+		'scopes' => ['methods' => ['POST'], 'paths' => ['/xmlrpc.php', '/collections/blog']],
+	])));
+	$this->actors->set($key);
+
+	expect(fn () => $this->gate->beforeCreate('showcase', ['id' => 'new', 'title' => 'X']))->toThrow(AccessDeniedException::class, 'This API key may not create objects in "showcase"');
+	expect(fn () => $this->gate->beforeUpdate('showcase', 'site-1', ['title' => 'X']))->toThrow(AccessDeniedException::class);
+	expect(fn () => $this->gate->beforeDelete('showcase', 'site-1'))->toThrow(AccessDeniedException::class);
+	expect($this->gate->beforeCreate('blog', ['id' => 'post', 'title' => 'X']))->toBe(['id' => 'post', 'title' => 'X']);
+});
+
+test('an API key without limits of its own writes anywhere: REST checks its paths itself', function (): void {
+	$this->actors->set(Actor::apiKey('k1'));
+
+	expect($this->gate->beforeCreate('showcase', ['id' => 'new', 'title' => 'X', 'owner' => 'sam']))->toBe(['id' => 'new', 'title' => 'X', 'owner' => 'sam']);
 });

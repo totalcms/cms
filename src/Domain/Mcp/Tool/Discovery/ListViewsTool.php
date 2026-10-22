@@ -66,12 +66,8 @@ readonly class ListViewsTool
 
 			$level  = McpAccessLevel::fromString((string)($entry['mcp']['access'] ?? 'admin'));
 			$access = $level->value;
-			if (!$level->allows($persona)) {
-				continue;
-			}
-
-			$id = (string)($entry['id'] ?? '');
-			if ($id === '') {
+			$id     = (string)($entry['id'] ?? '');
+			if ($id === '' || !$level->allowsView($persona, $this->personaContext->getLimitedKey(), $id)) {
 				continue;
 			}
 
@@ -137,7 +133,7 @@ readonly class ListViewsTool
 							'name'        => ['type' => 'string'],
 							'description' => ['type' => 'string'],
 							'last_built'  => ['type' => 'string', 'description' => 'ISO 8601 timestamp of the last successful build, empty string when never built.'],
-							'access'      => ['type' => 'string', 'enum' => ['admin', 'public', 'authenticated']],
+							'access'      => ['type' => 'string', 'enum' => ['admin', 'apikey', 'authenticated', 'public']],
 						],
 					],
 				],

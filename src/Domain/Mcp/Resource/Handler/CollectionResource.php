@@ -71,7 +71,7 @@ readonly class CollectionResource
 		}
 
 		$persona = $this->personaContext->current();
-		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value)) {
+		if (!$this->schemaResolver->isAccessibleTo($collectionData, $persona->value, $this->personaContext->getLimitedKey() !== null)) {
 			throw new ToolCallException(\sprintf(
 				'Resource tcms://%s/ is not accessible to this caller. Use list_collections to see available collections.',
 				$collection,
