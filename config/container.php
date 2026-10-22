@@ -1118,6 +1118,7 @@ return [
 		$container->get(OAuthScopeRegistry::class),
 		$container->get(OAuthActivityLogger::class),
 		$container->get(NotificationBusInterface::class),
+		$container->get(EditionFeatureService::class),
 	),
 
 	// Subscription storage: reverse URI→sessionIds index at

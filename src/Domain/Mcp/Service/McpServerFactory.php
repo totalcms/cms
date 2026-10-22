@@ -16,6 +16,8 @@ use Mcp\Server\Subscription\NotificationBusInterface;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Prompt\Data\PromptData;
@@ -66,6 +68,7 @@ readonly class McpServerFactory
 		private OAuthScopeRegistry $scopeRegistry,
 		private OAuthActivityLogger $activityLogger,
 		private NotificationBusInterface $notificationBus,
+		private EditionFeatureService $editionFeatures,
 	) {
 	}
 
@@ -162,6 +165,9 @@ readonly class McpServerFactory
 		// call-time gate CollectionResource::read() enforces.
 		$visibleUris = [];
 		foreach ($this->resourceRegistry->forPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey()) as $resource) {
+			if (!$this->licensed($resource->edition)) {
+				continue;
+			}
 			$visibleUris[] = $resource->uri;
 			$builder->addResource(
 				handler: $resource->handler,
@@ -189,6 +195,9 @@ readonly class McpServerFactory
 		}
 
 		foreach ($this->resourceRegistry->templatesForPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey()) as $template) {
+			if (!$this->licensed($template->edition)) {
+				continue;
+			}
 			$builder->addResourceTemplate(
 				handler: $template->handler,
 				uriTemplate: $template->uriTemplate,
@@ -232,7 +241,10 @@ readonly class McpServerFactory
 	 */
 	public function registrableTools(McpPersona $persona): array
 	{
-		$tools = $this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey() !== null);
+		$tools = array_values(array_filter(
+			$this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey() !== null),
+			fn (McpToolDefinition $tool): bool => $this->licensed($tool->edition),
+		));
 		if (!$this->personaContext->isReadOnly()) {
 			return $tools;
 		}
@@ -542,5 +554,15 @@ readonly class McpServerFactory
 		}
 
 		return max(0.25, min(30.0, (float)$configured));
+	}
+
+	/**
+	 * Whether the license includes $feature. A tool or resource that names
+	 * one (the data view surface) is left out for every caller without it, as
+	 * REST's edition middleware refuses its routes.
+	 */
+	private function licensed(?EditionFeature $feature): bool
+	{
+		return !$feature instanceof EditionFeature || $this->editionFeatures->can($feature);
 	}
 }

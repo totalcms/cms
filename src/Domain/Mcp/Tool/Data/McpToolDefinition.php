@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Data;
 use Closure;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
@@ -51,6 +52,12 @@ readonly class McpToolDefinition
 	 *                                                      UserAuthority satisfies the requirement for at least one
 	 *                                                      target (see isVisibleTo()). Task 7 adds the corresponding
 	 *                                                      call-time enforcement; Task 8 sets this on the shipped tools.
+	 * @param EditionFeature|null       $edition            The edition feature the tool belongs to. McpServerFactory
+	 *                                                      leaves the tool out entirely, for every caller, when the
+	 *                                                      license does not include it (the data view tools).
+	 *
+	 * @SuppressWarnings("PHPMD.ExcessiveParameterList") A value object built
+	 * with named arguments; every parameter but the first four is optional.
 	 */
 	public function __construct(
 		public string $name,
@@ -63,6 +70,7 @@ readonly class McpToolDefinition
 		public ?array $outputSchema = null,
 		public bool $exemptFromPrefix = false,
 		public ?ToolRequirement $requires = null,
+		public ?EditionFeature $edition = null,
 	) {
 	}
 

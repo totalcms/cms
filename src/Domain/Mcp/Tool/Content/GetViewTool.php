@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Content;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\DataView\Service\DataViewFetcher;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -50,6 +51,7 @@ readonly class GetViewTool
 				openWorldHint: false,
 			),
 			outputSchema: $this->outputSchema(),
+			edition: EditionFeature::DATA_VIEWS,
 		));
 	}
 
@@ -67,7 +69,7 @@ readonly class GetViewTool
 		$view = $this->fetchView($id);
 
 		$level  = McpAccessLevel::fromString((string)($view['mcp']['access'] ?? 'admin'));
-		if (!$level->allowsView($this->personaContext->current(), $this->personaContext->getLimitedKey(), $id)) {
+		if (!$level->allowsView($this->personaContext->current(), $this->personaContext->getLimitedKey(), $id, $this->personaContext->getAuthority())) {
 			throw new ToolCallException(sprintf(
 				'View "%s" is not accessible to the current caller. Use list_views to see what you can fetch.',
 				$id,

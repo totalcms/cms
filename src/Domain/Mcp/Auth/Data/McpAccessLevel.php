@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Auth\Data;
 
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyGrants;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 
 /**
  * The `mcp.access` level a collection, data view, prompt or tool is exposed
@@ -57,15 +58,25 @@ enum McpAccessLevel: string
 
 	/**
 	 * Whether data view $viewId, exposed at this level, is open to the
-	 * caller: the level must let it in, and a limited key ($limitedKey) must
-	 * name the view in its paths unless the view is public.
+	 * caller: the level must let it in, a limited key ($limitedKey) must
+	 * name the view in its paths, and an OAuth member's groups must grant
+	 * data views ($authority), as on REST. A public view needs neither.
+	 *
+	 * A view's data is built with full trust, so the per-collection grants
+	 * and ownership that narrow a member's collection reads do not apply to
+	 * it: the data views grant is the whole gate.
 	 */
-	public function allowsView(McpPersona $persona, ?ApiKeyData $limitedKey, string $viewId): bool
+	public function allowsView(McpPersona $persona, ?ApiKeyData $limitedKey, string $viewId, ?UserAuthority $authority): bool
 	{
 		if (!$this->allows($persona, $limitedKey instanceof ApiKeyData)) {
 			return false;
 		}
+		if ($this === self::PUBLIC_ || $persona !== McpPersona::AUTHENTICATED) {
+			return true;
+		}
 
-		return !$limitedKey instanceof ApiKeyData || $this === self::PUBLIC_ || ApiKeyGrants::reachesView($limitedKey, $viewId);
+		return $limitedKey instanceof ApiKeyData
+			? ApiKeyGrants::reachesView($limitedKey, $viewId)
+			: $authority instanceof UserAuthority && $authority->canDataViews();
 	}
 }

@@ -18,6 +18,8 @@ use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
 use TotalCMS\Domain\Index\Service\IndexFilter;
+use TotalCMS\Domain\License\Data\EditionFeature;
+use TotalCMS\Domain\License\Service\EditionFeatureService;
 use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
@@ -58,7 +60,7 @@ final class McpServerFactoryTest extends TestCase
 		$this->logger            = new NullLogger();
 	}
 
-	private function factory(?PersonaContext $context = null): McpServerFactory
+	private function factory(?PersonaContext $context = null, bool $dataViews = true): McpServerFactory
 	{
 		// SessionSubscriptionManager is the SDK default — fine as a stand-in
 		// for tests since they don't exercise subscription dispatch.
@@ -117,7 +119,35 @@ final class McpServerFactoryTest extends TestCase
 			// subscriptions/listen stream, so an in-memory bus is enough — it
 			// only has to exist for the builder to accept it.
 			new InMemoryNotificationBus(),
+			$this->editions($dataViews),
 		);
+	}
+
+	/** An edition that includes Data Views, or one that includes nothing. */
+	private function editions(bool $dataViews): EditionFeatureService
+	{
+		$editions = $this->createStub(EditionFeatureService::class);
+		$editions->method('can')->willReturn($dataViews);
+
+		return $editions;
+	}
+
+	public function testToolsOfAnEditionFeatureTheLicenseLacksAreLeftOutForEveryone(): void
+	{
+		$this->registry->register($this->tool('plain_tool'));
+		$this->registry->register(new McpToolDefinition(
+			name: 'get_view',
+			description: 'a view',
+			access: 'public',
+			handler: static fn (): array => [],
+			edition: EditionFeature::DATA_VIEWS,
+		));
+
+		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
+		$context->set(McpPersona::ADMIN);
+
+		self::assertSame(['get_view', 'plain_tool'], $this->toolNames($this->factory($context), McpPersona::ADMIN));
+		self::assertSame(['plain_tool'], $this->toolNames($this->factory($context, dataViews: false), McpPersona::ADMIN));
 	}
 
 	private function tool(string $name, string $access = 'public'): McpToolDefinition

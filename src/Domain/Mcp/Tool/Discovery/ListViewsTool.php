@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Tool\Discovery;
 
 use Mcp\Schema\ToolAnnotations;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -48,6 +49,7 @@ readonly class ListViewsTool
 				openWorldHint: false,
 			),
 			outputSchema: $this->outputSchema(),
+			edition: EditionFeature::DATA_VIEWS,
 		));
 	}
 
@@ -67,7 +69,7 @@ readonly class ListViewsTool
 			$level  = McpAccessLevel::fromString((string)($entry['mcp']['access'] ?? 'admin'));
 			$access = $level->value;
 			$id     = (string)($entry['id'] ?? '');
-			if ($id === '' || !$level->allowsView($persona, $this->personaContext->getLimitedKey(), $id)) {
+			if ($id === '' || !$level->allowsView($persona, $this->personaContext->getLimitedKey(), $id, $this->personaContext->getAuthority())) {
 				continue;
 			}
 

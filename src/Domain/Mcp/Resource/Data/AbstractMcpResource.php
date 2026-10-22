@@ -6,6 +6,7 @@ namespace TotalCMS\Domain\Mcp\Resource\Data;
 
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\Mcp\Auth\Data\McpAccessLevel;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 
@@ -32,6 +33,8 @@ abstract readonly class AbstractMcpResource
 	 * @param string|null $viewId       Data view this resource reads, set by DataViewResourceRegistrar:
 	 *                                  an API key limited to some views sees it only when its paths
 	 *                                  name the view, unless $access is 'public'.
+	 * @param EditionFeature|null $edition The edition feature the resource belongs to; McpServerFactory
+	 *                                  leaves it out for every caller when the license lacks it.
 	 */
 	public function __construct(
 		public string $name,
@@ -41,6 +44,7 @@ abstract readonly class AbstractMcpResource
 		public \Closure $handler,
 		public ?string $collectionId = null,
 		public ?string $viewId = null,
+		public ?EditionFeature $edition = null,
 	) {
 	}
 
@@ -48,7 +52,7 @@ abstract readonly class AbstractMcpResource
 	{
 		$level   = McpAccessLevel::fromString($this->access);
 		$allowed = $this->viewId !== null
-			? $level->allowsView($persona, $limitedKey, $this->viewId)
+			? $level->allowsView($persona, $limitedKey, $this->viewId, $authority)
 			: $level->allows($persona, $limitedKey instanceof ApiKeyData);
 		if (!$allowed) {
 			return false;

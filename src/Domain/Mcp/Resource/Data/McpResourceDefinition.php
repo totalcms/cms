@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TotalCMS\Domain\Mcp\Resource\Data;
 
+use TotalCMS\Domain\License\Data\EditionFeature;
+
 /**
  * A single MCP resource with a concrete `tcms://...` (or extension-scheme)
  * URI. Registered in ResourceRegistry, persona-filtered, and handed to the
@@ -24,7 +26,8 @@ readonly class McpResourceDefinition extends AbstractMcpResource
 		\Closure $handler,
 		?string $collectionId = null,
 		?string $viewId = null,
+		?EditionFeature $edition = null,
 	) {
-		parent::__construct($name, $description, $mimeType, $access, $handler, $collectionId, $viewId);
+		parent::__construct($name, $description, $mimeType, $access, $handler, $collectionId, $viewId, $edition);
 	}
 }

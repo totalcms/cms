@@ -58,7 +58,7 @@ The public persona works everywhere, so any Total CMS site can expose collection
 
 That gate is enforced where the persona is decided, not only where credentials are issued. A key or token that outlives the licence which created it — after a trial lapses, a downgrade, or a restored backup — is treated as absent rather than honoured: the caller falls through to anonymous and still gets whatever is genuinely public.
 
-Two things degrade naturally below Pro rather than erroring: Data Views are a Pro feature, so `list_views` and `query_view` come back empty; and custom schemas are Pro, so only built-in schemas are exposed.
+Two things are reduced below Pro: Data Views are a Pro feature, so the view tools and `tcms://view/{id}` resources are not offered at all; and custom schemas are Pro, so only built-in schemas are exposed.
 
 ### The three-layer rule (scope, group, exposure)
 
@@ -240,7 +240,7 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | `get_resource` | public\* | Resolve a `tcms://{collection}/{id}` URI to its underlying object. Sibling to the SDK's `resources/read` transport method — same data, different access path. |
 
 \* For an AUTHENTICATED (OAuth) caller, reachable collections are the intersection of scope, access group, and `mcp.access` exposure described in [The three-layer rule](#the-three-layer-rule-scope-group-exposure) — this is narrower than every `mcp.access: 'authenticated'` collection. Anonymous callers are unaffected: `access: public` still means "readable by everyone" for `mcp.access: 'public'` collections.
-† `query_view` / `get_view` do **not** follow access groups at all — see [Data views are the exception](#data-views-are-the-exception-to-the-group-rule) below.
+† `query_view` / `get_view` follow the `dataviews` permission, not per-collection grants — see [Data views follow the data views grant](#data-views-follow-the-data-views-grant) below.
 
 ### Admin
 
@@ -339,7 +339,7 @@ The access levels, each including everything above it:
 
 Use `"apikey"` to give an integration a key for one collection without opening it to signed-in members.
 
-The same `mcp` card lives on each **data view** (in the dataviews editor) with identical fields. A view marked `mcp.access: 'public'` shows up in `list_views` for anonymous callers and is fetchable at `tcms://view/{id}`.
+The same `mcp` card lives on each **data view** (in the dataviews editor) with identical fields. A view marked `mcp.access: 'public'` shows up in `list_views` for anonymous callers and is fetchable at `tcms://view/{id}`. At `authenticated`, an OAuth member also needs the `dataviews` permission.
 
 ### Property-level (MCP Details accordion on each property)
 
@@ -429,11 +429,15 @@ A site with 50k blog posts does NOT register 50k resource entries. `resources/li
 
 Data views are different — each view IS independently named, so each gets its own concrete `tcms://view/{id}` entry in `resources/list`. The shared template still appears in `resources/templates/list` for admin agents.
 
-### Data views are the exception to the group rule
+### Data views follow the data views grant
 
-`tcms://view/{id}` — and the `get_view` / `query_view` tools behind it — check only the view's own `mcp.access` field (`public` / `authenticated` / `apikey` / `admin`, set on the dataviews editor's MCP card), the same three-level persona check every tool used before the group rule shipped. They do **not** consult access groups at all (an API key limited to some views is the one caller held to the views it names), even though the view's underlying Twig definition may read from a collection the caller's groups can't touch directly.
+`tcms://view/{id}` and the view tools (`list_views`, `describe_view`, `get_view`, `query_view`) use the same two gates as the REST data view routes, plus the view's own `mcp.access` field (`public` / `authenticated` / `apikey` / `admin`, set on the dataviews editor's MCP card):
 
-This matters operationally: an `authenticated`-exposed view built over a group-denied collection is a legitimate, working read path around the group rule — not a bug, but a gap operators need to know about. If a view surfaces data from a collection you don't want a given caller reading, don't mark that view `mcp.access: 'authenticated'` (or `'public'`) — group-gating views is out of scope for this release; the view's own `access` field is the only lever.
+- **Edition.** Data Views are a Pro feature. On an edition without them, the view tools and resources are not offered at all, to any caller, public views included.
+- **Data views grant.** A signed-in OAuth member reaches a view at `authenticated` or `apikey` only when one of their access groups has the `dataviews` permission. An API key limited to some views reaches the ones its endpoints name. Admins reach every view.
+- **Public views** are open to every caller, including members without the grant, so a member never gets less than an anonymous caller.
+
+The grant is all or nothing. A view is built on a schedule with full access, so its result can include objects from any collection its Twig reads, drafts and other members' objects among them. Per-collection grants and ownership do not narrow it. Give the `dataviews` permission only to groups that may see every view open to signed-in callers, and keep a view at `admin` (the default) when its output is not meant for them.
 
 ---
 
@@ -662,7 +666,7 @@ Before submitting your site to Anthropic's Connector Directory, walk through:
 ## Security considerations
 
 - **Anonymous content is opt-in.** `mcp.publicAccess` defaults to `true`, so anonymous callers can open a session, but `mcp.access` defaults to `admin` on every collection, so a fresh install never leaks content until the operator opts a collection in. Set `mcp.publicAccess: false` to turn anonymous callers away with a 401.
-- **Drafts are server-filtered.** Public/anonymous callers can never see `draft:true` items regardless of caller intent — `query_collection`, `search_collection`, and `get_object` enforce this server-side. AUTHENTICATED (OAuth) callers see drafts only in collections where their access groups grant `read` — public `mcp.access` exposure by itself does not unlock drafts, even though it unlocks published content. `get_view` / `query_view` are the one exception: they follow the view's own `mcp.access` field, not group grants — see [Data views are the exception](#data-views-are-the-exception-to-the-group-rule).
+- **Drafts are server-filtered.** Public/anonymous callers can never see `draft:true` items regardless of caller intent — `query_collection`, `search_collection`, and `get_object` enforce this server-side. AUTHENTICATED (OAuth) callers see drafts only in collections where their access groups grant `read` — public `mcp.access` exposure by itself does not unlock drafts, even though it unlocks published content. `get_view` / `query_view` are the one exception: a view's result is built with full access, drafts included, and is gated by the `dataviews` permission as a whole — see [Data views follow the data views grant](#data-views-follow-the-data-views-grant).
 - **Public registration carries automatic login.** Forms that use the public registration endpoint auto-log the new user in; gate them with CAPTCHA / rate limit / email verification when the access group new users land in reaches sensitive content. (Unrelated to MCP directly, but worth flagging — the same operator who exposes a collection to MCP might also be running public registration.)
 - **API keys are scoped.** A key scoped only to `/collections/blog` does NOT unlock MCP; the operator must explicitly include `/mcp` (or `*`) in the scope.
 - **No prompt-injection mitigation at the tool layer.** Content stored in `styledtext` fields is returned to the agent verbatim (after format conversion). Operators with untrusted user-generated content should sanitize at write time, not rely on MCP-side filtering.
