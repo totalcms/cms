@@ -67,6 +67,12 @@ Rules that bite:
 - **Safety review.** Sideloaded code containing high-risk patterns is
   disabled until the operator reviews it; a new capability added in an
   update arrives switched **off**. Do not design around either.
+- **Extend a core field, do not rebuild it.** A custom field type that adds to
+  a core one (an image field with a capture button) subclasses it with
+  `window.TotalCMS.extendFieldType()` instead of starting from `TotalField`.
+- **MCP `outputSchema` is enforced.** A tool result that does not match it
+  reaches the client as a tool error; return `new \stdClass()`, not `[]`, for
+  an empty object.
 - **Edition gating is route-level.** If a core route your extension calls is
   refused, check the edition before debugging.
 

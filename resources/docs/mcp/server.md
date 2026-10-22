@@ -371,7 +371,7 @@ Settings live in **Admin → Settings → MCP Server** and serialize to `mcp.*` 
 |---|---|---|
 | `mcp.enabled` | `true` | Master switch. When `false`, `POST /mcp` returns 404 and discovery reports `disabled: true`. |
 | `mcp.publicAccess` | `true` | Master switch for anonymous callers. When `true`, they resolve to the public persona and see only collections marked `mcp.access: 'public'` (none by default). When `false`, requests without an API key get 401 + `WWW-Authenticate: Bearer realm="MCP", error="login_required"`. |
-| `mcp.allowedOrigins` | `[]` | CORS origin allow-list for **browser-rendered** AI clients. Empty = browsers blocked. See [CORS and browser AI clients](#cors-and-browser-ai-clients) below. |
+| `mcp.allowedOrigins` | `[]` | CORS origin allow-list for **browser-rendered** AI clients. Empty = any origin, the same as `*`; list origins to restrict. See [CORS and browser AI clients](#cors-and-browser-ai-clients) below. |
 | `mcp.publicIpPerMinute` | `60` | Per-IP rate limit on anonymous requests, 60-second window. API key callers bypass. Set to `0` to disable. |
 | `mcp.toolPrefix` | `""` | Optional snake_case prefix prepended to every tool name (`bistro` → `bistro_list_collections`). Useful when an agent connects to multiple T3 sites simultaneously. |
 | `mcp.subscriptionsEnabled` | `true` | Master switch for resource subscriptions. When `false`, `resources/subscribe` still succeeds at the protocol level but T3 won't push `notifications/resources/updated` when content changes, and `subscriptions/listen` is refused outright. See [Resource subscriptions](#resource-subscriptions). |
@@ -481,7 +481,7 @@ The settings UI ships clickable presets for the well-known browser AI clients (C
 Admin → Settings → MCP Server → CORS Allowed Origins
 ```
 
-**Default-deny.** Empty list = no `Access-Control-Allow-Origin` header sent = browsers block. Adding an origin echoes it back on matching requests. The wildcard (`*`) echoes the request's `Origin` for any caller — use with caution on sites that have any non-public MCP collections, since it opens your public MCP surface to any website's JavaScript.
+**Open by default.** An empty list is the same as the wildcard (`*`): the request's `Origin` is echoed back, so browser-based AI clients work out of the box. That is safe because T3 never sends `Access-Control-Allow-Credentials` and the session cookie is `SameSite=Lax`, so another site's JavaScript can read only your *public* MCP surface, never a signed-in visitor's view. List specific origins to restrict browser access, which is worth doing when public collections hold anything you would rather other sites could not read. A listed origin is matched in full, scheme, host and port, so `https://claude.ai` does not admit `http://claude.ai`. The site's own origin always passes, over http or https, so a page on the site still reaches `/mcp` behind a TLS-terminating proxy.
 
 Preflight `OPTIONS` requests short-circuit to a 204 with the standard handshake headers; the rate limiter doesn't see them so a single browser tab can perform a normal session without burning the public-IP quota on preflights.
 

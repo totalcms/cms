@@ -2,7 +2,7 @@
 
 All notable changes to Total CMS will be documented in this file.
 
-## [3.6.3] - 2026-10-21
+## [3.6.3] - 2026-10-22
 
 ### Security
 
@@ -94,6 +94,7 @@ All notable changes to Total CMS will be documented in this file.
 - **Sharing Sessions.** A new Operations page explains how to share `$_SESSION` with other PHP apps on the site since 3.6 moved sessions to `<datadir>/.system/sessions`, the split-session symptoms, and how to confirm them. See [Sharing Sessions](resources/docs/operations/sharing-sessions.md)
 - **Reference groups sort themselves.** Operations, Field Types and Bundled Extensions list their pages alphabetically
 - **The licensing page explains the domain-match requirement** for offline license files
+- **The MCP CORS docs match the code.** An empty `mcp.allowedOrigins` allows any origin, as the settings help already said; the MCP page claimed it blocked browsers. A listed origin is matched in full, and the extension docs say `outputSchema` is now enforced. See [MCP Server](resources/docs/mcp/server.md)
 
 ## [3.6.2] - 2026-10-05
 
