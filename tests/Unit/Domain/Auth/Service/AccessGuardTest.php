@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyGrants;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Data\ReadScope;
@@ -893,6 +895,21 @@ final class AccessGuardTest extends TestCase
 		])] : [];
 
 		return new Actor(ActorKind::Member, $id, $collection, new UserAuthority(isAdmin: false, groups: $groups));
+	}
+
+	public function testALimitedKeyReachesOnlyItsCollections(): void
+	{
+		$this->makePolicy(false, ownerProperty: 'owner');
+		$key = Actor::apiKey('k1', ApiKeyGrants::authority(new ApiKeyData([
+			'id' => 'k1', 'name' => 'Blog', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
+			'scopes' => ['methods' => ['GET'], 'paths' => ['/mcp', '/collections/showcase']],
+		])));
+
+		$this->assertTrue($this->guard->groupAllows($key, 'showcase', 'update'));
+		$this->assertFalse($this->guard->groupAllows($key, 'auth', 'read'));
+		$this->assertTrue($this->guard->readScope($key, 'showcase')->isAll());
+		$this->assertEquals(ReadScope::none(), $this->guard->readScope($key, 'auth'));
+		$this->assertEquals(ReadScope::publishedOnly(), $this->guard->readScope($key, 'auth', publicRead: true));
 	}
 
 	public function testReadScopeIsEverythingForATrustedActor(): void

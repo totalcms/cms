@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Mcp\Auth\Service;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\ApiKey\Service\ApiKeyAuthenticator;
+use TotalCMS\Domain\ApiKey\Service\ApiKeyGrants;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\License\Data\EditionFeature;
@@ -168,6 +169,15 @@ readonly class McpAuth
 			return new McpCaller(McpPersona::PUBLIC_, McpCallerKind::Anonymous);
 		}
 
+		return $this->apiKeyCaller($request);
+	}
+
+	/**
+	 * The API key caller, or an McpAuthException when the key is invalid or
+	 * does not open `/mcp`.
+	 */
+	private function apiKeyCaller(ServerRequestInterface $request): McpCaller
+	{
 		// authenticate() handles extract + repo lookup + method/path scope check
 		// in one pass. Null means: invalid key, OR a valid key whose scopes don't
 		// permit the request method/path. We collapse both into the same error
@@ -181,7 +191,15 @@ readonly class McpAuth
 			);
 		}
 
-		return new McpCaller(McpPersona::ADMIN, McpCallerKind::ApiKey, apiKeyId: $apiKey->id);
+		// A key with `*` in its paths is the operator's admin key. Any other
+		// key reaches only the collections, schemas and templates its paths
+		// name, as an authenticated caller with those grants: `/mcp` in its
+		// paths opens the endpoint, not the content.
+		if (ApiKeyGrants::isUnlimited($apiKey)) {
+			return new McpCaller(McpPersona::ADMIN, McpCallerKind::ApiKey, apiKeyId: $apiKey->id);
+		}
+
+		return new McpCaller(McpPersona::AUTHENTICATED, McpCallerKind::ApiKey, apiKeyId: $apiKey->id, keyAuthority: ApiKeyGrants::authority($apiKey));
 	}
 
 	/**

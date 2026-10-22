@@ -14,6 +14,7 @@ use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessManager;
 use TotalCMS\Domain\License\Data\EditionFeature;
 use TotalCMS\Domain\License\Service\EditionFeatureService;
+use TotalCMS\Domain\Mcp\Auth\Data\McpCaller;
 use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
 use TotalCMS\Domain\Mcp\Auth\Exception\McpAuthException;
@@ -98,15 +99,27 @@ final class McpAuthTest extends TestCase
 		return $request;
 	}
 
-	private function makeApiKey(): ApiKeyData
+	/**
+	 * @param list<string> $paths
+	 */
+	private function makeApiKey(array $paths = ['*']): ApiKeyData
 	{
 		return new ApiKeyData([
 			'id'      => 'k1',
 			'name'    => 'Test',
 			'key'     => 'tcms_valid',
 			'created' => '2025-01-01T00:00:00Z',
-			'scopes'  => ['methods' => ['POST'], 'paths' => ['/mcp']],
+			'scopes'  => ['methods' => ['POST'], 'paths' => $paths],
 		]);
+	}
+
+	private function keyCaller(ApiKeyData $apiKey): McpCaller
+	{
+		$request = $this->createMock(ServerRequestInterface::class);
+		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
+		$this->authenticator->method('authenticate')->willReturn($apiKey);
+
+		return $this->auth()->resolveCaller($request);
 	}
 
 	public function testNoKeyAndPublicAccessOnReturnsPublicPersona(): void
@@ -145,11 +158,11 @@ final class McpAuthTest extends TestCase
 		$this->auth()->resolvePersona($request);
 	}
 
-	public function testValidKeyWithMcpScopeResolvesToAdmin(): void
+	public function testAnUnlimitedKeyResolvesToAdmin(): void
 	{
 		// authenticate() returns ApiKeyData when the key is valid AND its
-		// scopes cover the actual request method + path. McpAuth treats that
-		// as proof of admin authority — no further checks.
+		// scopes cover the actual request method + path. A key whose paths
+		// include `*` is the operator's admin key.
 		$request = $this->createMock(ServerRequestInterface::class);
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
 		$this->authenticator->method('authenticate')->with($request)->willReturn($this->makeApiKey());
@@ -227,6 +240,26 @@ final class McpAuthTest extends TestCase
 		$this->expectExceptionMessage('insufficient permissions for MCP access');
 
 		$this->auth()->resolvePersona($request);
+	}
+
+	public function testAKeyLimitedToCollectionsIsAuthenticatedWithThoseGrants(): void
+	{
+		$caller = $this->keyCaller($this->makeApiKey(['/mcp', '/collections/blog']));
+
+		$this->assertSame(McpPersona::AUTHENTICATED, $caller->persona);
+		$this->assertSame(McpCallerKind::ApiKey, $caller->kind);
+		$this->assertNotNull($caller->keyAuthority);
+		$this->assertTrue($caller->keyAuthority->canCollection('update', 'blog'));
+		$this->assertFalse($caller->keyAuthority->canCollection('read', 'auth'));
+	}
+
+	public function testAnMcpOnlyKeyReachesNoContent(): void
+	{
+		$caller = $this->keyCaller($this->makeApiKey(['/mcp']));
+
+		$this->assertSame(McpPersona::AUTHENTICATED, $caller->persona);
+		$this->assertNotNull($caller->keyAuthority);
+		$this->assertFalse($caller->keyAuthority->canCollectionsOperation('read'));
 	}
 
 	public function testKeyWithoutMcpScopeIsRejected(): void

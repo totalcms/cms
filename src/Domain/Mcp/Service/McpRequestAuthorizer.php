@@ -32,6 +32,12 @@ use TotalCMS\Support\Config;
  */
 final readonly class McpRequestAuthorizer
 {
+	/**
+	 * A limited API key's scopes over MCP: all of them. What it may touch is
+	 * decided by its grants, not its scopes.
+	 */
+	public const KEY_SCOPES = ['cms:read', 'cms:write', 'cms:admin', 'mcp:tools', 'mcp:resources', 'mcp:prompts'];
+
 	public function __construct(
 		private McpAuth $mcpAuth,
 		private PersonaContext $personaContext,
@@ -85,6 +91,15 @@ final readonly class McpRequestAuthorizer
 			$this->personaContext->setScopes(McpAuth::SESSION_SCOPES);
 			$this->personaContext->setClientId('webmcp');
 			$this->personaContext->setUserId($caller->userRef);
+			$this->personaContext->setAuthority($actor->authority());
+		}
+
+		// A key limited to some collections works like an OAuth grant over
+		// them: every scope (its methods do not apply over MCP, where every
+		// call is a POST) and the grants its paths name.
+		if ($caller->kind === McpCallerKind::ApiKey && $persona === McpPersona::AUTHENTICATED) {
+			$this->personaContext->setScopes(self::KEY_SCOPES);
+			$this->personaContext->setClientId('apikey:' . $caller->apiKeyId);
 			$this->personaContext->setAuthority($actor->authority());
 		}
 
@@ -155,7 +170,7 @@ final readonly class McpRequestAuthorizer
 	private function actorFor(McpCaller $caller, ServerRequestInterface $request): Actor
 	{
 		return match ($caller->kind) {
-			McpCallerKind::ApiKey    => Actor::apiKey($caller->apiKeyId),
+			McpCallerKind::ApiKey    => Actor::apiKey($caller->apiKeyId, $caller->keyAuthority),
 			McpCallerKind::OAuth     => $this->actorResolver->fromBearer(
 				(string)$request->getAttribute('oauth_user_id', ''),
 				ActorResolver::scopeIds($request->getAttribute('oauth_scopes')),

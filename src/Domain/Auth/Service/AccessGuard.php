@@ -124,8 +124,13 @@ final class AccessGuard
 	 */
 	public function groupAllows(Actor $actor, string $collection, string $operation, string $objectId = ''): bool
 	{
-		if ($actor->isTrusted() || $this->authDisabled()) {
+		if ($this->authDisabled()) {
 			return true;
+		}
+
+		// An API key is trusted within the collections its paths cover.
+		if ($actor->isTrusted()) {
+			return $actor->reaches($collection, $operation);
 		}
 
 		if (!$actor->isBearer() && $operation === 'update' && $collection !== '' && $objectId !== ''
@@ -211,7 +216,8 @@ final class AccessGuard
 	 * published objects are then visible too, so signing in never shows a
 	 * member less than an anonymous visitor sees.
 	 *
-	 *   - trusted actors: everything;
+	 *   - trusted actors: everything (an API key: within the collections its
+	 *     paths cover);
 	 *   - no group grant to read: published objects when $publicRead, else none;
 	 *   - a grant on an unowned collection: everything, drafts included;
 	 *   - a grant on an owned collection: their own objects, drafts included,
@@ -226,11 +232,11 @@ final class AccessGuard
 	 */
 	public function readScope(Actor $actor, string $collection, bool $publicRead = false): ReadScope
 	{
+		$others = $publicRead ? ReadScope::publishedOnly() : ReadScope::none();
 		if ($actor->isTrusted()) {
-			return ReadScope::all();
+			return $actor->reaches($collection, 'read') ? ReadScope::all() : $others;
 		}
 
-		$others = $publicRead ? ReadScope::publishedOnly() : ReadScope::none();
 		if ($collection === '' || !$actor->authority()->canCollection('read', $collection)) {
 			return $others;
 		}

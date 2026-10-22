@@ -497,13 +497,15 @@ Preflight `OPTIONS` requests short-circuit to a 204 with the standard handshake 
 
 ## API key authorization
 
-MCP uses Total CMS's existing API key scope model — no parallel auth axis.
+MCP reads a key's endpoint list the same way REST does: a key reaches the content its paths name, and nothing else.
 
-- **`paths: ["*"]`** (the default "All endpoints" choice) grants MCP automatically.
-- **`paths: ["/mcp"]`** ("All MCP" sidebar option) grants MCP only.
-- **Specifically-scoped keys** (e.g. `paths: ["/collections/blog"]`) must be edited to include `/mcp` — secure-by-default for any existing key.
+- **`paths: ["*"]`** (the default "All endpoints" choice) is the operator's admin key: the ADMIN persona, every tool, every collection.
+- **Any other key needs `/mcp`** in its paths to reach the endpoint. `/mcp` opens the door and grants no content.
+- **Its content comes from its other paths**, read as an access group: `/collections` grants every collection, `/collections/{id}` that one; `/schemas` and `/schemas/{id}` the schema tools; `/templates` the Site Builder template tools. Such a key is an AUTHENTICATED caller with those grants, like an OAuth member, so it also sees only collections whose MCP access is `authenticated` or `public`. A key with only `/mcp` reaches no content.
+- **Methods do not narrow it over MCP.** Every MCP call is a POST, so within the collections it names a key may read and write. REST and XML-RPC keep checking the key's methods.
+- **Within its collections a key is trusted**: it sees drafts and every owner's objects, and may set protected fields, as on REST.
 
-Existing wildcard keys created before MCP shipped work unchanged.
+A key that listed `/mcp` with some collection paths reached every collection before 3.6.3; it now reaches only the collections it names.
 
 ---
 

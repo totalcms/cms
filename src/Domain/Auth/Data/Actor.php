@@ -50,9 +50,32 @@ final readonly class Actor
 		return new self(ActorKind::Anonymous);
 	}
 
-	public static function apiKey(string $apiKeyId = ''): self
+	/**
+	 * An API key. $authority is the key's path list as grants
+	 * ({@see \TotalCMS\Domain\ApiKey\Service\ApiKeyGrants}) where the
+	 * surface limits the key that way (MCP); null leaves it unlimited, as on
+	 * REST, which checks the key's paths itself.
+	 */
+	public static function apiKey(string $apiKeyId = '', ?UserAuthority $authority = null): self
 	{
-		return new self(ActorKind::ApiKey, apiKeyId: $apiKeyId);
+		return new self(ActorKind::ApiKey, apiKeyId: $apiKeyId, authority: $authority);
+	}
+
+	/**
+	 * Whether the actor reaches $collection at all: anyone for an actor
+	 * without limits of its own, otherwise the grant for $operation ('' =
+	 * collections in general). Only an API key with grants is limited here;
+	 * every other kind answers through its groups elsewhere.
+	 */
+	public function reaches(string $collection, string $operation): bool
+	{
+		if ($this->kind !== ActorKind::ApiKey || !$this->authority instanceof UserAuthority) {
+			return true;
+		}
+
+		return $collection !== ''
+			? $this->authority->canCollection($operation, $collection)
+			: $this->authority->canCollectionsOperation($operation);
 	}
 
 	public function isTrusted(): bool
