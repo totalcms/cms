@@ -597,10 +597,10 @@ final class AccessGroupAnalyzerTest extends TestCase
 
 	/**
 	 * 'delete' must never appear in a non-super-admin group's mcp ops, even
-	 * with a full collections.all grant across all four operations — MCP
-	 * ships no delete tool.
+	 * with a full collections.all grant across all four operations: delete
+	 * shows as delete_object, and `all` stays false.
 	 */
-	public function testDeleteNeverAppearsInMcpOpsForNonSuperAdmin(): void
+	public function testDeleteAppearsInMcpOpsWhenGranted(): void
 	{
 		$this->collectionLister->method('listAllCollections')->willReturn([
 			$this->makeCollection('blog', 'public'),
@@ -625,11 +625,10 @@ final class AccessGroupAnalyzerTest extends TestCase
 		$mcp = $this->makeAnalyzer()->analyze()[0]['dimensions']['mcp'];
 
 		foreach ($mcp as $id => $entry) {
-			$this->assertNotContains('delete', $entry['ops'], "'delete' must never appear for mcp:{$id}");
 			$this->assertFalse($entry['all'], "mcp:{$id} 'all' must never be true for a non-super-admin group");
 		}
-		$this->assertSame(['read', 'create', 'update'], $mcp['blog']['ops']);
-		$this->assertSame(['read', 'create', 'update'], $mcp['team']['ops']);
+		$this->assertSame(['read', 'create', 'update', 'delete'], $mcp['blog']['ops']);
+		$this->assertSame(['read', 'create', 'update', 'delete'], $mcp['team']['ops']);
 	}
 
 	/**

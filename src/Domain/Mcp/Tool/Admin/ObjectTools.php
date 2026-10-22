@@ -324,7 +324,7 @@ readonly class ObjectTools
 		$this->refuseIfPayloadWritesVideoPoster($collection, $toolName, $data, $schema);
 
 		if (!$this->objectFetcher->existsObject($collection, $id)
-			|| !$this->personaContext->mayUpdateObject($collection, $id)) {
+			|| !$this->personaContext->mayChangeObject($collection, $id)) {
 			throw new ToolCallException(sprintf(
 				'%s: object "%s/%s" not found. Use query_collection to discover ids, or create_object to create it.',
 				$toolName,

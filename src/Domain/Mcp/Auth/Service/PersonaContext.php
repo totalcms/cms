@@ -292,13 +292,14 @@ class PersonaContext
 	}
 
 	/**
-	 * Whether the current caller may update object $id of $collection: their
-	 * own object on an owned collection, any object elsewhere. A caller that
-	 * may not is told the object is not found, the way REST answers.
+	 * Whether the current caller may update or delete ($operation) object $id
+	 * of $collection: their own object on an owned collection, any object
+	 * elsewhere. A caller that may not is told the object is not found, the
+	 * way REST answers.
 	 */
-	public function mayUpdateObject(string $collection, string $id): bool
+	public function mayChangeObject(string $collection, string $id, Operation $operation = Operation::Update): bool
 	{
-		return $this->guard->ownerDecision($this->actors->current(), $collection, Operation::Update, $id) === Decision::Allow;
+		return $this->guard->ownerDecision($this->actors->current(), $collection, $operation, $id) === Decision::Allow;
 	}
 
 	/**

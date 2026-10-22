@@ -1022,8 +1022,6 @@ return [
 	'oauth_grants.reach_full_admin'        => 'Full administrative access',
 	'oauth_grants.reach_read_label'        => 'Can read:',
 	'oauth_grants.reach_write_label'       => 'Can write:',
-	'oauth_grants.reach_delete_only_label' => 'Can delete only (REST):',
-	'oauth_grants.reach_delete_only_hint'  => '(no AI tool can do this)',
 	'oauth_grants.reach_more'              => '+{n} more',
 	'oauth_grants.reach_none'              => 'No collection access',
 	'oauth_grants.reach_user_missing'      => 'User no longer exists — this grant is inert',

@@ -119,6 +119,7 @@ use TotalCMS\Domain\Mcp\Subscription\Service\ResourceNotifier;
 use TotalCMS\Domain\Mcp\Subscription\Service\SubscriptionIndex;
 use TotalCMS\Domain\Mcp\Tool\Admin\CacheTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\CollectionTools;
+use TotalCMS\Domain\Mcp\Tool\Admin\DeleteObjectTool;
 use TotalCMS\Domain\Mcp\Tool\Admin\ExtensionTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\ObjectTools;
 use TotalCMS\Domain\Mcp\Tool\Admin\SchemaTools;
@@ -978,6 +979,7 @@ return [
 		$container->get(ExtensionTools::class)->register($registry);
 		$container->get(CollectionTools::class)->register($registry);
 		$container->get(ObjectTools::class)->register($registry);
+		$container->get(DeleteObjectTool::class)->register($registry);
 		// Read-only: list_templates / get_template. No save tool — writing
 		// Twig is a larger authority grant than writing content and is a
 		// separate decision.

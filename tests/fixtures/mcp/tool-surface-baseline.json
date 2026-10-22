@@ -4,6 +4,7 @@
         "create_collection",
         "create_object",
         "create_schema",
+        "delete_object",
         "delete_schema",
         "describe_collection",
         "describe_view",

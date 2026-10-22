@@ -29,7 +29,7 @@ For Total CMS specifically, MCP gives agents:
 - **Discovery** — `list_collections`, `describe_collection`, `list_views`, `describe_view` map the site's content shape and pre-computed views.
 - **Read** — `query_collection`, `search_collection`, `get_object`, `query_view`, `get_view` fetch content with the same filter/sort syntax as the REST API.
 - **Resources** — `tcms://{collection}/`, `tcms://{collection}/{id}`, and `tcms://view/{id}` URIs the agent can address by URI, subscribe to, and re-fetch across sessions.
-- **Content writes (group-gated)** — `create_object`, `update_object`, `patch_object` let an agent write content on behalf of whoever connected it — an OAuth caller can create/update objects in any collection their access groups grant `create`/`update` on, no admin API key required. See [The three-layer rule](#the-three-layer-rule-scope-group-exposure).
+- **Content writes (group-gated)** — `create_object`, `update_object`, `patch_object` and `delete_object` let an agent write content on behalf of whoever connected it — an OAuth caller can create, update or delete objects in any collection their access groups grant `create`/`update`/`delete` on, no admin API key required. See [The three-layer rule](#the-three-layer-rule-scope-group-exposure).
 - **Structural admin (admin-group or group-granted)** — `create_schema`, `update_schema`, `delete_schema`, `create_collection`, `clear_cache`, `list_extensions`, `get_site_info` for operator-driven workflows from inside the agent. Schema, collection, and cache tools are reachable by a non-admin caller whose groups grant the matching `schemas` / `collectionsMeta` / `utils` permission; `get_site_info` stays admin-only.
 
 ---
@@ -256,6 +256,7 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 | `create_object` | admin‡ | Create a content object in a collection. Runs the same `ObjectSaver` path as the admin form — schema validation, slug generation, events. See *Binary fields* below. |
 | `update_object` | admin‡ | Update a content object by id. Idempotent. Merges like `patch_object`: omitted fields keep their values. See *Binary fields* below. |
 | `patch_object` | admin‡ | Merge a subset of fields into an existing object — omitted fields keep their current values, so no get/round-trip is needed. Containers (card/deck/list) replace whole. The safer default for targeted agent edits. See *Binary fields* below. |
+| `delete_object` | admin‡ | **Destructive.** Delete one object by id, as the admin's delete button does. Needs the `delete` grant (an API key: the DELETE method). The record stays in the [backup history](docs/operations/backups) when backups are on, but its uploaded files are deleted permanently; the result lists the fields that held files and whether a backup was kept. Marked destructive, so clients ask before calling it. |
 | `list_extensions` | admin | Every installed extension with id, name, enabled flag, capabilities. |
 | `list_templates` | admin‡ | List the Site Builder Twig templates (builder templates only — reserved admin templates are never listed). Read-only. See *Site Builder templates* below. |
 | `get_template` | admin‡ | Fetch one template's raw Twig source plus the read layer it resolved from. Read-only. See *Site Builder templates* below. |

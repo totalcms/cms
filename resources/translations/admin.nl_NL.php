@@ -1022,8 +1022,6 @@ return [
 	'oauth_grants.reach_full_admin'        => 'Volledige beheerderstoegang',
 	'oauth_grants.reach_read_label'        => 'Kan lezen:',
 	'oauth_grants.reach_write_label'       => 'Kan schrijven:',
-	'oauth_grants.reach_delete_only_label' => 'Kan alleen verwijderen (REST):',
-	'oauth_grants.reach_delete_only_hint'  => '(geen AI-tool kan dit)',
 	'oauth_grants.reach_more'              => '+{n} meer',
 	'oauth_grants.reach_none'              => 'Geen toegang tot collecties',
 	'oauth_grants.reach_user_missing'      => 'Gebruiker bestaat niet meer – deze autorisatie is inactief',

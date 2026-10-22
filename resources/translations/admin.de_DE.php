@@ -1022,8 +1022,6 @@ return [
 	'oauth_grants.reach_full_admin'        => 'Vollständiger administrativer Zugriff',
 	'oauth_grants.reach_read_label'        => 'Kann lesen:',
 	'oauth_grants.reach_write_label'       => 'Kann schreiben:',
-	'oauth_grants.reach_delete_only_label' => 'Kann nur löschen (REST):',
-	'oauth_grants.reach_delete_only_hint'  => '(kein KI-Tool kann das)',
 	'oauth_grants.reach_more'              => '+{n} weitere',
 	'oauth_grants.reach_none'              => 'Kein Zugriff auf Collections',
 	'oauth_grants.reach_user_missing'      => 'Benutzer existiert nicht mehr – diese Berechtigung ist wirkungslos',

@@ -111,7 +111,7 @@ final class ObjectToolsTest extends TestCase
 		// The owner check runs for real: the guard over the stubbed fetchers,
 		// for whichever actor the test signed in.
 		$guard = $this->guard();
-		$this->personaContext->method('mayUpdateObject')->willReturnCallback(
+		$this->personaContext->method('mayChangeObject')->willReturnCallback(
 			fn (string $collection, string $id): bool => $guard->ownerDecision($this->actors->current(), $collection, Operation::Update, $id) === Decision::Allow,
 		);
 		$this->schemaResolver = $this->createMock(McpSchemaResolver::class);

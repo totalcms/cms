@@ -54,6 +54,12 @@ object you fetched rather than just the changed fields:
    Binary fields may stay as fetched; only their descriptive keys can change.
 4. Send it to `patch_object` or `update_object`.
 
+**`delete_object`** deletes one object (`collection` + `id`). Confirm with the
+user first. The record goes to the backup history (restorable with
+`tcms backup:restore`), but its uploaded files are deleted for good; the
+result lists the fields that held files. It needs the `delete` grant, or an
+API key with the DELETE method.
+
 After any write, the response echoes the saved object — verify your change is
 in it. Page caches invalidate automatically via the `object.updated` event —
 do not call `clear_cache` for content edits.

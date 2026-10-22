@@ -1022,8 +1022,6 @@ return [
 	'oauth_grants.reach_full_admin'        => 'Acceso administrativo completo',
 	'oauth_grants.reach_read_label'        => 'Puede leer:',
 	'oauth_grants.reach_write_label'       => 'Puede escribir:',
-	'oauth_grants.reach_delete_only_label' => 'Solo puede eliminar (REST):',
-	'oauth_grants.reach_delete_only_hint'  => '(ninguna herramienta de IA puede hacer esto)',
 	'oauth_grants.reach_more'              => '+{n} más',
 	'oauth_grants.reach_none'              => 'Sin acceso a colecciones',
 	'oauth_grants.reach_user_missing'      => 'El usuario ya no existe: esta autorización está inactiva',

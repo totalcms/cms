@@ -188,7 +188,7 @@ final readonly class OAuthPageData implements UtilsPageData
 	 * @param  array<CollectionData>                                      $allCollections
 	 * @param  array<string,array{exists: bool, authority: UserAuthority}> $authorityCache
 	 *
-	 * @return array{fullAdmin: bool, userMissing: bool, noAccess: bool, readable: list<string>, readableOverflow: int, writable: list<string>, writableOverflow: int, deleteOnly: list<string>, deleteOnlyOverflow: int}
+	 * @return array{fullAdmin: bool, userMissing: bool, noAccess: bool, readable: list<string>, readableOverflow: int, writable: list<string>, writableOverflow: int}
 	 */
 	private function effectiveReachForGrant(
 		OAuthGrantData $grant,
@@ -204,8 +204,6 @@ final readonly class OAuthPageData implements UtilsPageData
 			'readableOverflow'   => 0,
 			'writable'           => [],
 			'writableOverflow'   => 0,
-			'deleteOnly'         => [],
-			'deleteOnlyOverflow' => 0,
 		];
 
 		$ref    = OAuthUserRef::parse($grant->userId, $authCollection);
@@ -239,7 +237,6 @@ final readonly class OAuthPageData implements UtilsPageData
 
 		$readable   = [];
 		$writable   = [];
-		$deleteOnly = [];
 
 		foreach ($allCollections as $collection) {
 			// Read mirrors PersonaContext::canReadCollection(): public exposure
@@ -261,33 +258,27 @@ final readonly class OAuthPageData implements UtilsPageData
 			// never set it — practically every collection on a fresh site —
 			// so a group write grant alone overstates reach without this gate.
 			if (!$owned && $hasWriteScope && $this->mcpSchemaResolver->isAccessibleTo($collection, 'authenticated')) {
-				// create_object/update_object need create/update; MCP has no
-				// delete tool. A group that only grants delete (no create or
-				// update) can still delete over REST but can't be handed
-				// anything an AI assistant would call "write" — list it
-				// separately rather than folding it into the write badge.
-				if ($authority->canCollection('create', $collection->id) || $authority->canCollection('update', $collection->id)) {
+				// create_object, update_object/patch_object and delete_object
+				// each need their own grant; any one of them is a write.
+				if ($authority->canCollection('create', $collection->id)
+					|| $authority->canCollection('update', $collection->id)
+					|| $authority->canCollection('delete', $collection->id)) {
 					$writable[] = $collection->id;
-				} elseif ($authority->canCollection('delete', $collection->id)) {
-					$deleteOnly[] = $collection->id;
 				}
 			}
 		}
 
 		sort($readable);
 		sort($writable);
-		sort($deleteOnly);
 
 		return [
 			'fullAdmin'          => false,
 			'userMissing'        => false,
-			'noAccess'           => $readable === [] && $writable === [] && $deleteOnly === [],
+			'noAccess'           => $readable === [] && $writable === [],
 			'readable'           => array_slice($readable, 0, self::EFFECTIVE_REACH_BADGE_CAP),
 			'readableOverflow'   => max(0, count($readable) - self::EFFECTIVE_REACH_BADGE_CAP),
 			'writable'           => array_slice($writable, 0, self::EFFECTIVE_REACH_BADGE_CAP),
 			'writableOverflow'   => max(0, count($writable) - self::EFFECTIVE_REACH_BADGE_CAP),
-			'deleteOnly'         => array_slice($deleteOnly, 0, self::EFFECTIVE_REACH_BADGE_CAP),
-			'deleteOnlyOverflow' => max(0, count($deleteOnly) - self::EFFECTIVE_REACH_BADGE_CAP),
 		];
 	}
 }

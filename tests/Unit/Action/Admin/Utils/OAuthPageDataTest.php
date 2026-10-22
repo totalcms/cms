@@ -279,7 +279,6 @@ final class OAuthPageDataTest extends TestCase
 		$this->assertFalse($reach['noAccess']);
 		$this->assertSame(['blog'], $reach['readable']);
 		$this->assertSame(['blog'], $reach['writable']);
-		$this->assertSame([], $reach['deleteOnly']);
 	}
 
 	public function testEffectiveReachIgnoresTheGroupGrantOnAnOwnedCollection(): void
@@ -308,7 +307,6 @@ final class OAuthPageDataTest extends TestCase
 
 		$this->assertSame([], $reach['readable']);
 		$this->assertSame([], $reach['writable']);
-		$this->assertSame([], $reach['deleteOnly']);
 	}
 
 	public function testEffectiveReachReadsAnOwnedPublicCollectionButNeverWritesIt(): void
@@ -365,7 +363,6 @@ final class OAuthPageDataTest extends TestCase
 
 		$this->assertSame(['blog'], $reach['readable']);
 		$this->assertSame([], $reach['writable']);
-		$this->assertSame([], $reach['deleteOnly']);
 	}
 
 	public function testEffectiveReachHidesWriteWhenTheGrantLacksTheWriteScope(): void
@@ -395,7 +392,6 @@ final class OAuthPageDataTest extends TestCase
 
 		$this->assertSame(['blog'], $reach['readable']);
 		$this->assertSame([], $reach['writable']);
-		$this->assertSame([], $reach['deleteOnly']);
 	}
 
 	public function testEffectiveReachListsAPublicCollectionAsReadableEvenWithoutTheReadScope(): void

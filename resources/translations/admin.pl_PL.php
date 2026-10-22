@@ -1022,8 +1022,6 @@ return [
 	'oauth_grants.reach_full_admin'        => 'Pełny dostęp administracyjny',
 	'oauth_grants.reach_read_label'        => 'Może odczytywać:',
 	'oauth_grants.reach_write_label'       => 'Może zapisywać:',
-	'oauth_grants.reach_delete_only_label' => 'Może tylko usuwać (REST):',
-	'oauth_grants.reach_delete_only_hint'  => '(żadne narzędzie AI tego nie potrafi)',
 	'oauth_grants.reach_more'              => '+{n} więcej',
 	'oauth_grants.reach_none'              => 'Brak dostępu do kolekcji',
 	'oauth_grants.reach_user_missing'      => 'Użytkownik już nie istnieje — to uprawnienie jest nieaktywne',

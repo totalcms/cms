@@ -198,22 +198,19 @@ readonly class AccessGroupAnalyzer
 	 *                {@see ObjectTools::requireExposed()}
 	 *                applies before every write tool call.
 	 *   - `update` → same rule as `create`.
+	 *   - `delete` → same rule as `create` (delete_object).
 	 *   - On an owned collection (ownerProperty) a non-super-admin group gets
 	 *                `read` only when the collection is public and never
 	 *                `create`/`update`: MCP has no per-owner scoping, so
 	 *                {@see PersonaContext::canReadCollection()} ignores the
 	 *                grant there and {@see ObjectTools::requireExposed()}
 	 *                refuses non-admin writes.
-	 *   - `delete` → NEVER set. MCP ships no delete tool at all
-	 *                (create_object/update_object/patch_object are the only
-	 *                write tools) — a permanently-absent D is honest.
 	 *
 	 * `all` is deliberately never derived from the group's own config for a
 	 * non-super-admin row, even when `collections.all: true` with every
-	 * operation granted — the presenter's `ALL` cell sentinel would imply
-	 * delete is possible too, which MCP can never grant. Only the
-	 * super-admin path below uses it, consistent with every other dimension's
-	 * super-admin treatment.
+	 * operation granted: only collections MCP exposes are listed, so `ALL`
+	 * would overstate reach. Only the super-admin path below uses it,
+	 * consistent with every other dimension's super-admin treatment.
 	 *
 	 * @param array<string, array{access: string, owned: bool}> $mcpExposure collection id → mcp.access and ownership, MCP-exposed collections only
 	 *
@@ -245,6 +242,9 @@ readonly class AccessGroupAnalyzer
 			}
 			if ($hasGrant && isset($opsSet['update'])) {
 				$ops[] = 'update';
+			}
+			if ($hasGrant && isset($opsSet['delete'])) {
+				$ops[] = 'delete';
 			}
 
 			$result[$id] = ['ops' => $ops, 'all' => false];

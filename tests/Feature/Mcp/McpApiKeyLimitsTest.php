@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use TotalCMS\Domain\Object\Service\ObjectSaver;
+
 require_once __DIR__ . '/McpAuthHelpers.php';
 
 // An API key limited to some collections reaches only those over MCP, and
@@ -116,8 +118,51 @@ test('a GET-only key connects read-only: no write tools, and writes are refused'
 	expect($names)->toContain('query_collection')
 		->not->toContain('create_object')
 		->not->toContain('patch_object')
-		->not->toContain('update_object');
+		->not->toContain('update_object')
+		->not->toContain('delete_object');
 
 	$blog = limitedKeyCall($this->app, 'query_collection', ['collection' => 'blog'], '203.0.113.128');
 	expect($blog['result']['isError'] ?? false)->toBeFalse();
+});
+
+test('a key with DELETE deletes objects in the collections it names, and nowhere else', function (): void {
+	$saver = $this->app->getContainer()->get(ObjectSaver::class);
+	$saver->saveObject('blog', ['id' => 'key-delete-me', 'title' => 'Delete me']);
+	$saver->saveObject('text', ['id' => 'key-keep-me', 'text' => 'Keep me']);
+
+	$response = mcpStatelessCall($this->app, 'tools/list', [], ['X-API-Key' => LIMITED_API_KEY], '203.0.113.129');
+	expect(array_column(json_decode((string)$response->getBody(), true)['result']['tools'] ?? [], 'name'))->toContain('delete_object');
+
+	$deleted = limitedKeyCall($this->app, 'delete_object', ['collection' => 'blog', 'id' => 'key-delete-me'], '203.0.113.130');
+	expect($deleted['result']['isError'] ?? false)->toBeFalse()
+		->and($deleted['result']['structuredContent']['deleted'] ?? null)->toBeTrue()
+		->and(is_file(cmsDataDir() . 'blog/key-delete-me.json'))->toBeFalse();
+
+	$refused = limitedKeyCall($this->app, 'delete_object', ['collection' => 'text', 'id' => 'key-keep-me'], '203.0.113.131');
+	expect(($refused['result']['isError'] ?? false) || isset($refused['error']))->toBeTrue()
+		->and(is_file(cmsDataDir() . 'text/key-keep-me.json'))->toBeTrue();
+});
+
+test('a key without DELETE gets no delete_object, and a call is refused', function (): void {
+	file_put_contents(cmsDataDir() . '.system/apikeys.json', (string)json_encode([
+		'apikeys' => [[
+			'id'       => 'nodelete-key-id',
+			'name'     => 'No delete',
+			'key'      => LIMITED_API_KEY,
+			'created'  => '2026-01-01T00:00:00Z',
+			'lastUsed' => null,
+			'scopes'   => ['methods' => ['GET', 'POST', 'PUT'], 'paths' => ['/mcp', '/collections/blog']],
+		]],
+	], JSON_PRETTY_PRINT));
+	$this->app->getContainer()->get(ObjectSaver::class)->saveObject('blog', ['id' => 'key-stays', 'title' => 'Stays']);
+
+	$response = mcpStatelessCall($this->app, 'tools/list', [], ['X-API-Key' => LIMITED_API_KEY], '203.0.113.132');
+	expect(array_column(json_decode((string)$response->getBody(), true)['result']['tools'] ?? [], 'name'))
+		->toContain('patch_object')
+		->not->toContain('delete_object');
+
+	$refused = mcpStatelessCall($this->app, 'tools/call', ['name' => 'delete_object', 'arguments' => ['collection' => 'blog', 'id' => 'key-stays']], ['X-API-Key' => LIMITED_API_KEY], '203.0.113.133');
+	$body    = json_decode((string)$refused->getBody(), true);
+	expect($refused->getStatusCode() !== 200 || isset($body['error']) || ($body['result']['isError'] ?? false))->toBeTrue()
+		->and(is_file(cmsDataDir() . 'blog/key-stays.json'))->toBeTrue();
 });
