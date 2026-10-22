@@ -121,7 +121,7 @@ This key can access blog, news, and events collections, but not products, galler
 | `/collections` | All collections | Access to all collection data |
 | `/api/collections/blog` | Blog collection only | Blog-specific integration |
 | `/api/settings` | Settings API | Configuration management |
-| `/schemas` | Schema management | Schema editor integration |
+| `/schemas` | Schema reads | Reading schemas (creating, changing and deleting schemas needs an admin login, not a key) |
 
 ### Combining Scopes
 
@@ -144,7 +144,7 @@ Scopes work together - both HTTP methods AND paths must match for a request to b
 
 ### Keys over MCP
 
-Add `/mcp` to a key's paths to let it reach the [MCP server](docs/mcp/server#api-key-authorization). `/mcp` opens the endpoint only; what the key reaches there comes from its other paths. A key limited to `/api/collections/blog` reaches the blog collection and nothing else, and only while blog's MCP access is **API keys** or wider: a collection or data view left at **Admin only** stays closed to limited keys. Data views work the same way through `/dataviews/{id}/data`. The key's HTTP methods decide which MCP tools it gets, as they decide what it may do over REST: GET to read, POST to create, PUT or PATCH to update. A GET-only key is a read-only MCP key; it needs no POST to connect, although every MCP call is a POST. Only an All endpoints (`*`) key with every method is an admin over MCP.
+Add `/mcp` to a key's paths to let it reach the [MCP server](docs/mcp/server#api-key-authorization). `/mcp` opens the endpoint only; what the key reaches there comes from its other paths. A key limited to `/api/collections/blog` reaches the blog collection and nothing else, and only while blog's MCP access is **API keys** or wider: a collection or data view left at **Admin only** stays closed to limited keys. Data views work the same way through `/dataviews/{id}/data`. The key's HTTP methods decide which MCP tools it gets, as they decide what it may do over REST: GET to read, POST to create, PUT or PATCH to update. Schemas and collection settings stay read-only to a limited key whatever its methods, as they are over REST. A GET-only key is a read-only MCP key; it needs no POST to connect, although every MCP call is a POST. Only an All endpoints (`*`) key with every method is an admin over MCP.
 
 ## Using API Keys
 

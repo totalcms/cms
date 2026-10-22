@@ -23,9 +23,11 @@ use TotalCMS\Domain\Auth\Data\UserAuthority;
  *     `dataviews/{id}/data`) that one ({@see reachesView()});
  *   - any other path (`mcp`, `cron/...`) reaches no content.
  *
- * Methods say what it may do there, as on REST: GET reads, POST creates,
- * PUT or PATCH updates, DELETE deletes. A key with `*` and every operation is
- * the operator's admin key ({@see isUnlimited()}).
+ * Methods say what it may do with content, as on REST: GET reads, POST
+ * creates, PUT or PATCH updates, DELETE deletes. Structure — schemas and
+ * collection settings — is read-only to a limited key whatever its methods,
+ * as REST's structure routes take no API key at all. A key with `*` and every
+ * operation is the operator's admin key ({@see isUnlimited()}).
  */
 final readonly class ApiKeyGrants
 {
@@ -67,15 +69,15 @@ final readonly class ApiKeyGrants
 
 		$paths       = self::paths($apiKey);
 		$operations  = self::operations($apiKey);
-		$collections = self::targets($paths, 'collections', $operations);
+		$readOnly    = array_values(array_intersect($operations, ['read']));
 		$everything  = in_array('*', $paths, true);
 
 		return new UserAuthority(isAdmin: false, groups: [new AccessGroupData([
 			'id'          => 'apikey:' . $apiKey->id,
 			'permissions' => [
-				'collections'     => $collections,
-				'collectionsMeta' => $collections,
-				'schemas'         => self::targets($paths, 'schemas', $operations),
+				'collections'     => self::targets($paths, 'collections', $operations),
+				'collectionsMeta' => self::targets($paths, 'collections', $readOnly),
+				'schemas'         => self::targets($paths, 'schemas', $readOnly),
 				'builder'         => ($everything || in_array('templates', $paths, true)) && in_array('read', $operations, true),
 				'mailer'          => false,
 				'playground'      => false,

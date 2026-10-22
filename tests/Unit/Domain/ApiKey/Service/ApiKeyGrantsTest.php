@@ -73,9 +73,20 @@ final class ApiKeyGrantsTest extends TestCase
 		$authority = $this->authority(['/collections', '/schemas', '/templates']);
 
 		$this->assertTrue($authority->canCollection('update', 'anything'));
-		$this->assertTrue($authority->canSchema('update', 'anything'));
+		$this->assertTrue($authority->canSchema('read', 'anything'));
 		$this->assertTrue($authority->canBuilder());
 		$this->assertFalse($authority->isAdmin);
+	}
+
+	public function testStructureIsReadOnlyWhateverTheMethods(): void
+	{
+		$authority = $this->authority(['/collections', '/schemas']);
+
+		$this->assertTrue($authority->canCollectionMeta('read', 'blog'));
+		foreach (['create', 'update', 'delete'] as $operation) {
+			$this->assertFalse($authority->canCollectionMeta($operation, 'blog'), $operation);
+			$this->assertFalse($authority->canSchema($operation, 'blog'), $operation);
+		}
 	}
 
 	public function testAnMcpOnlyKeyGrantsNoContent(): void
