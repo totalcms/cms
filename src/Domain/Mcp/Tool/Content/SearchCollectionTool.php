@@ -30,7 +30,7 @@ use TotalCMS\Domain\Search\Service\SearchServiceInterface;
  *      cheap pre-filter TextSearchProvider can make with only the persona
  *      string it's handed).
  *   2. ObjectSearcher::search on the pre-filtered items.
- *   3. A post-filter here using PersonaContext::canReadDrafts($collection) —
+ *   3. A post-filter here using PersonaContext::readScope() —
  *      TextSearchProvider has no notion of per-collection access-group
  *      grants, so an AUTHENTICATED caller's matches still need this
  *      authority check before drafts reach the response.
@@ -131,7 +131,7 @@ readonly class SearchCollectionTool
 
 		// TextSearchProvider's pre-filter only excludes drafts for the PUBLIC
 		// persona; an AUTHENTICATED caller's per-collection authority still
-		// has to be checked — see PersonaContext::canReadDrafts(). Computed
+		// has to be checked — see PersonaContext::readScope(). Computed
 		// BEFORE the search call (not just as a post-filter below) so a
 		// caller without read authority never has drafts occupying slots in
 		// the pre-filter's limit window in the first place — otherwise
@@ -140,14 +140,14 @@ readonly class SearchCollectionTool
 		// "drafts outrank you here" signal. The post-filter stays as an
 		// authoritative backstop: an extension-registered SearchProvider may
 		// ignore `persona` entirely.
-		$canReadDrafts = $this->personaContext->canReadDrafts($collection);
+		$readScope = $this->personaContext->readScope($collection, $collectionData);
 
 		$cappedLimit = max(1, min(self::LIMIT_CAP, $limit));
 		$results     = $this->searchService->search(new SearchQuery(
 			text: $query,
 			collection: $collection,
 			limit: $cappedLimit,
-			persona: $canReadDrafts ? $persona->value : 'public',
+			persona: $readScope->seesDrafts() ? $persona->value : 'public',
 			// Rank by term coverage (best partial match first) rather than the
 			// all-or-nothing AND filter, so descriptive multi-word queries from
 			// an agent return useful results instead of nothing.
@@ -165,7 +165,7 @@ readonly class SearchCollectionTool
 
 		$shaped = [];
 		foreach ($matches as $item) {
-			if (!$canReadDrafts && ($item['draft'] ?? false) === true) {
+			if (!$readScope->matches($item)) {
 				continue;
 			}
 			$shaped[] = $this->shaper->shape($item, $collectionData, $format);

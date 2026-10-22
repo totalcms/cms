@@ -8,7 +8,9 @@
 Three access levels: anonymous (public read-only, drafts hidden), OAuth
 (scoped by grants), and `X-API-Key` header (admin — write tools, schema tools,
 all collections). If a write tool is missing from your tool list, you are not
-connected as admin.
+connected as admin. On an owned collection an OAuth member reads their own
+objects plus published ones and edits only their own; `describe_collection`
+reports that, and any fields the site sets itself, in `ownership`.
 
 ## Discovery, then read
 

@@ -11,6 +11,7 @@ use Slim\Routing\RouteContext;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\Decision;
 use TotalCMS\Domain\Auth\Data\Operation;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Auth\Service\AccessDenials;
 use TotalCMS\Domain\Auth\Service\ActorContext;
@@ -46,7 +47,7 @@ use TotalCMS\Support\Config;
  * whose body names a target `collection` other than the route's is refused
  * too: only the route collection is access-checked.
  *
- * The list routes are handed the actor's {@see OWNER_SCOPE_ATTRIBUTE}, which
+ * The list routes are handed the actor's {@see READ_SCOPE_ATTRIBUTE}, which
  * IndexQueryAction and IndexGetAction apply as a filter. Protected and
  * forced fields need nothing from here: the storage layer applies them to
  * every write ({@see \TotalCMS\Domain\Object\Service\ObjectWriteGate}).
@@ -56,10 +57,11 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 	protected const RESOURCE_NAME = 'collection';
 
 	/**
-	 * Request attribute carrying the actor's {@see \TotalCMS\Domain\Collection\Data\OwnerScope}
-	 * for the list actions, which keep only the items it matches.
+	 * Request attribute carrying the actor's {@see ReadScope} for the list
+	 * actions, which keep only the items it matches. Absent when the actor
+	 * may read everything.
 	 */
-	public const OWNER_SCOPE_ATTRIBUTE = 'ownerScope';
+	public const READ_SCOPE_ATTRIBUTE = 'readScope';
 
 	/** Routes that are an operation of their own rather than plain CRUD. */
 	private const ROUTE_OPERATIONS = [
@@ -222,9 +224,11 @@ readonly class CollectionAccessMiddleware extends BaseAccessMiddleware
 			return $request;
 		}
 
+		// A public read never reaches this middleware (DualAuthMiddleware
+		// marks it a public submission), so no published objects are added.
 		$scope = $this->guard->readScope($actor, (string)$route->getArgument('collection', ''));
 
-		return $scope === null ? $request : $request->withAttribute(self::OWNER_SCOPE_ATTRIBUTE, $scope);
+		return $scope->isAll() ? $request : $request->withAttribute(self::READ_SCOPE_ATTRIBUTE, $scope);
 	}
 
 	/**

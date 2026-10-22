@@ -391,7 +391,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 		$this->assertSame('public', $registry->getTemplate('tcms://portfolio/{id}')?->access);
 	}
 
-	public function testOwnedCollectionThatIsNotPublicRegistersAtAdmin(): void
+	public function testOwnedCollectionThatIsNotPublicRegistersAtItsDeclaredAccessToo(): void
 	{
 		$collection                = $this->makeCollection('portfolio', 'Portfolio', ['access' => 'authenticated', 'resource' => true]);
 		$collection->ownerProperty = 'owner';
@@ -399,8 +399,8 @@ final class CollectionResourceRegistrarTest extends TestCase
 		$repo = $this->createStub(CollectionRepository::class);
 		$repo->method('listAllCollections')->willReturn([$collection]);
 
-		// Only admin can read a non-public owned collection (a group grant does
-		// not widen it), so the listing must not advertise it to anyone else.
+		// A member reads their own objects there (the read is scoped), so the
+		// resource is listed at the declared access like any other.
 		$registry  = new ResourceRegistry();
 		$registrar = new CollectionResourceRegistrar(
 			collectionRepository: $repo,
@@ -411,7 +411,7 @@ final class CollectionResourceRegistrarTest extends TestCase
 
 		$registrar->registerAll($registry);
 
-		$this->assertSame('admin', $registry->get('tcms://portfolio/')?->access);
-		$this->assertSame('admin', $registry->getTemplate('tcms://portfolio/{id}')?->access);
+		$this->assertSame('authenticated', $registry->get('tcms://portfolio/')?->access);
+		$this->assertSame('authenticated', $registry->getTemplate('tcms://portfolio/{id}')?->access);
 	}
 }

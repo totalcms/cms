@@ -7,9 +7,13 @@ namespace Tests\Unit\Domain\Auth\Service;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Data\ReadScope;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Object\Service\ObjectFetcher;
@@ -877,5 +881,77 @@ final class AccessGuardTest extends TestCase
 
 		$policy->forgetRules();
 		$policy->protectedFieldsFor('c');
+	}
+
+	// ─── readScope ─────────────────────────────────────────────────────────
+
+	private function member(string $id, bool $grantsRead, string $collection = 'auth'): Actor
+	{
+		$groups = $grantsRead ? [new AccessGroupData([
+			'id'          => 'members',
+			'permissions' => ['collections' => ['operations' => ['read'], 'all' => false, 'allowed' => ['showcase']]],
+		])] : [];
+
+		return new Actor(ActorKind::Member, $id, $collection, new UserAuthority(isAdmin: false, groups: $groups));
+	}
+
+	public function testReadScopeIsEverythingForATrustedActor(): void
+	{
+		$this->makePolicy(false, ownerProperty: 'owner');
+
+		$this->assertTrue($this->guard->readScope(Actor::system(), 'showcase')->isAll());
+		$this->assertTrue($this->guard->readScope(Actor::apiKey('k1'), 'showcase')->isAll());
+	}
+
+	public function testReadScopeWithoutAGrantIsPublishedOnlyWhenPublicElseNothing(): void
+	{
+		$this->makePolicy(false);
+
+		$this->assertEquals(ReadScope::publishedOnly(), $this->guard->readScope(Actor::anonymous(), 'showcase', publicRead: true));
+		$this->assertEquals(ReadScope::none(), $this->guard->readScope($this->member('alex', false), 'showcase'));
+	}
+
+	public function testReadScopeIsEverythingForAGrantOnAnUnownedCollection(): void
+	{
+		$this->makePolicy(false);
+
+		$this->assertTrue($this->guard->readScope($this->member('alex', true), 'showcase')->isAll());
+	}
+
+	public function testReadScopeOnAnOwnedCollectionIsOwnPlusPublishedWhenPublic(): void
+	{
+		$this->makePolicy(false, ownerProperty: 'owner');
+
+		$scope = $this->guard->readScope($this->member('alex', true), 'showcase', publicRead: true);
+
+		$this->assertEquals(new ReadScope(new OwnerScope('owner', 'alex'), published: true, drafts: false), $scope);
+	}
+
+	public function testReadScopeOnAnOwnedCollectionIsOwnOnlyWhenNotPublic(): void
+	{
+		$this->makePolicy(false, ownerProperty: 'owner');
+
+		$scope = $this->guard->readScope($this->member('alex', true), 'showcase');
+
+		$this->assertEquals(new ReadScope(new OwnerScope('owner', 'alex'), published: false, drafts: false), $scope);
+	}
+
+	public function testReadScopeTreatsAnOutsiderOrAnUnresolvedOwnerAsNoGrant(): void
+	{
+		$this->makePolicy(false, ownerProperty: 'owner', ownerCollection: 'users');
+		$this->assertEquals(ReadScope::publishedOnly(), $this->guard->readScope($this->member('alex', true, 'auth'), 'showcase', publicRead: true));
+		$this->assertEquals(new ReadScope(new OwnerScope('owner', 'alex'), published: false, drafts: false), $this->guard->readScope($this->member('alex', true, 'users'), 'showcase'));
+
+		$this->makePolicy(false, ownerProperty: OwnerPropertyResolver::UNRESOLVED);
+		$this->assertEquals(ReadScope::none(), $this->guard->readScope($this->member('alex', true), 'showcase'));
+	}
+
+	public function testReadScopeIgnoresTheAuthSwitch(): void
+	{
+		// MCP authenticates its own callers, so an anonymous MCP read must stay
+		// draft-free on an install that turned site authentication off.
+		$this->makePolicy(false, authEnabled: false);
+
+		$this->assertEquals(ReadScope::publishedOnly(), $this->guard->readScope(Actor::anonymous(), 'showcase', publicRead: true));
 	}
 }

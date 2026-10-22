@@ -23,7 +23,7 @@ use TotalCMS\Domain\Search\Service\SearchServiceInterface;
  * per-collection (TextSearchProvider does not support cross-collection queries)
  * so the safety filter is applied inside the provider before ObjectSearcher
  * runs — drafts can never leak to public callers even when crossing collection
- * boundaries. A caller-side post-filter (PersonaContext::canReadDrafts())
+ * boundaries. A caller-side post-filter (PersonaContext::readScope())
  * additionally hides drafts an AUTHENTICATED caller's access groups don't
  * grant `read` on — TextSearchProvider's own pre-filter only ever excludes
  * drafts for the PUBLIC persona.
@@ -142,7 +142,7 @@ readonly class SearchCollectionsTool
 			// TextSearchProvider's pre-filter only excludes drafts for the
 			// PUBLIC persona; an AUTHENTICATED caller's per-collection
 			// authority still has to be checked — see
-			// PersonaContext::canReadDrafts(). Computed BEFORE the search call
+			// PersonaContext::readScope(). Computed BEFORE the search call
 			// (not just as a post-filter below) so a caller without read
 			// authority never has drafts occupying slots in the pre-filter's
 			// limit window in the first place — otherwise drafts could crowd
@@ -151,7 +151,7 @@ readonly class SearchCollectionsTool
 			// you here" signal. The post-filter stays as an authoritative
 			// backstop: an extension-registered SearchProvider may ignore
 			// `persona` entirely.
-			$canReadDrafts = $this->personaContext->canReadDrafts($collection->id);
+			$readScope = $this->personaContext->readScope($collection->id, $collection);
 
 			// SearchService routes to TextSearchProvider which applies the
 			// persona-based safety filter PER COLLECTION before ObjectSearcher
@@ -161,7 +161,7 @@ readonly class SearchCollectionsTool
 				text: $query,
 				collection: $collection->id,
 				limit: $cappedLimit,
-				persona: $canReadDrafts ? $persona->value : 'public',
+				persona: $readScope->seesDrafts() ? $persona->value : 'public',
 				// Rank by term coverage (best partial match first) rather than
 				// the all-or-nothing AND filter, so descriptive multi-word
 				// queries from an agent return useful results instead of nothing.
@@ -178,7 +178,7 @@ readonly class SearchCollectionsTool
 				}
 				$item = $this->objectFetcher->fetchObject($collection->id, $result->id)->toArray();
 
-				if (!$canReadDrafts && ($item['draft'] ?? false) === true) {
+				if (!$readScope->matches($item)) {
 					continue;
 				}
 

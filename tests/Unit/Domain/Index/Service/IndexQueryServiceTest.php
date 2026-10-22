@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Index\Service;
 
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Cache\CacheManager;
 use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Index\Data\IndexData;
@@ -71,7 +72,7 @@ final class IndexQueryServiceTest extends TestCase
 
 	public function testTheOwnerScopeNarrowsTheIndexBeforeTheQuery(): void
 	{
-		$result = $this->service()->query('showcase', [], new OwnerScope('owner', 'alex'));
+		$result = $this->service()->query('showcase', [], new ReadScope(new OwnerScope('owner', 'alex'), published: false, drafts: false));
 
 		expect($this->ids($result->items))->toBe(['alex-site', 'alex-draft']);
 		expect($result->total)->toBe(2);
@@ -79,14 +80,14 @@ final class IndexQueryServiceTest extends TestCase
 
 	public function testIdsCannotWidenAScopedQuery(): void
 	{
-		$result = $this->service()->query('showcase', ['ids' => 'sam-site,alex-site'], new OwnerScope('owner', 'alex'));
+		$result = $this->service()->query('showcase', ['ids' => 'sam-site,alex-site'], new ReadScope(new OwnerScope('owner', 'alex'), published: false, drafts: false));
 
 		expect($this->ids($result->items))->toBe(['alex-site']);
 	}
 
 	public function testCallerIncludeStillNarrowsWithinTheScope(): void
 	{
-		$result = $this->service()->query('showcase', ['include' => 'draft:false'], new OwnerScope('owner', 'alex'));
+		$result = $this->service()->query('showcase', ['include' => 'draft:false'], new ReadScope(new OwnerScope('owner', 'alex'), published: false, drafts: false));
 
 		expect($this->ids($result->items))->toBe(['alex-site']);
 	}
@@ -97,8 +98,8 @@ final class IndexQueryServiceTest extends TestCase
 		// scoped users must not share one.
 		$service = $this->service();
 		$service->query('showcase', []);
-		$service->query('showcase', [], new OwnerScope('owner', 'alex'));
-		$service->query('showcase', [], new OwnerScope('owner', 'sam'));
+		$service->query('showcase', [], new ReadScope(new OwnerScope('owner', 'alex'), published: false, drafts: false));
+		$service->query('showcase', [], new ReadScope(new OwnerScope('owner', 'sam'), published: false, drafts: false));
 
 		expect($this->cachePrefixes)->toHaveCount(3);
 		expect(count(array_unique($this->cachePrefixes)))->toBe(3);
@@ -109,14 +110,14 @@ final class IndexQueryServiceTest extends TestCase
 	{
 		// The include grammar is case-insensitive, so `owner:alex` used to
 		// return Alex's objects too. The scope is exact, as the open check is.
-		$result = $this->service()->query('showcase', [], new OwnerScope('owner', 'alex'));
+		$result = $this->service()->query('showcase', [], new ReadScope(new OwnerScope('owner', 'alex'), published: false, drafts: false));
 
 		expect($this->ids($result->items))->not->toContain('other-alex');
 	}
 
 	public function testAScopedQueryUsesADistinctCachePrefix(): void
 	{
-		$scope = new OwnerScope('owner', 'alex');
+		$scope = new ReadScope(new OwnerScope('owner', 'alex'), published: false, drafts: false);
 		$this->service()->query('showcase', [], $scope);
 
 		expect($this->cachePrefixes)->toBe(['collection-query:showcase:' . $scope->cacheKey()]);

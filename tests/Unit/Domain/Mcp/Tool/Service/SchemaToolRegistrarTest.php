@@ -7,6 +7,7 @@ namespace Tests\Unit\Domain\Mcp\Tool\Service;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -76,7 +77,7 @@ final class SchemaToolRegistrarTest extends TestCase
 			// This file never invokes a built tool's handler — only registration
 			// behavior — so PersonaContext's Task 10b constructor deps never
 			// matter; plain stubs satisfy the type.
-			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
+			PersonaContext::class                 => new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext()),
 			ObjectUrlBuilder::class               => $this->createMock(ObjectUrlBuilder::class),
 			McpSchemaResolver::class              => $this->createMock(McpSchemaResolver::class),
 			CollectionRepository::class           => $this->createMock(CollectionRepository::class),

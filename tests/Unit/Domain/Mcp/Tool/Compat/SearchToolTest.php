@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Mcp\Tool\Compat;
 
 use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
@@ -105,6 +106,7 @@ final class SearchToolTest extends TestCase
 		// aggregate-cap behavior under test isn't masked by an unconfigured
 		// mock defaulting to false (which would zero out every result).
 		$persona->method('canReadCollection')->willReturn(true);
+		$persona->method('readScope')->willReturn(ReadScope::publishedOnly());
 		$persona->method('visibleCollections')->willReturnCallback(static fn (iterable $c): array => is_array($c) ? array_values($c) : iterator_to_array($c, false));
 
 		$schemaResolver = $this->createMock(McpSchemaResolver::class);
@@ -156,6 +158,7 @@ final class SearchToolTest extends TestCase
 		$persona->method('current')->willReturn(McpPersona::PUBLIC_);
 		// Task 10b: see the aggregate-cap test's identical comment.
 		$persona->method('canReadCollection')->willReturn(true);
+		$persona->method('readScope')->willReturn(ReadScope::publishedOnly());
 		$persona->method('visibleCollections')->willReturnCallback(static fn (iterable $c): array => is_array($c) ? array_values($c) : iterator_to_array($c, false));
 
 		$schemaResolver = $this->createMock(McpSchemaResolver::class);

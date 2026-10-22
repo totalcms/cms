@@ -7,6 +7,8 @@ namespace Tests\Unit\Domain\Mcp\Tool\Content;
 use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Data\ReadScope;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
@@ -42,7 +44,7 @@ final class QueryCollectionToolTest extends TestCase
 		// canReadCollection() call — the objects+read group gate is enforced
 		// entirely by McpServerFactory::guardHandler(), which this unit test
 		// (calling ->handler() directly) never exercises.
-		$this->persona = new PersonaContext($this->collections, $this->resolver);
+		$this->persona = new PersonaContext($this->collections, $this->resolver, mcpGuard($this), new ActorContext());
 
 		$this->tool = new QueryCollectionTool(
 			$this->indexQuery,
@@ -186,50 +188,32 @@ final class QueryCollectionToolTest extends TestCase
 		}
 	}
 
-	// ─── Handler: persona safety filter (public persona → exclude draft) ─────
+	// ─── Handler: read scope (public persona → no drafts) ─────────────────────
 
-	public function testPublicPersonaMergesDraftTrueIntoExclude(): void
+	public function testPublicPersonaQueriesWithAScopeThatHidesDraftsAndKeepsTheCallersExclude(): void
 	{
 		// Public callers can never see drafts. This is content moderation —
-		// server-side, not caller preference. Tests the *exact wire* the
-		// QueryPipeline ends up consuming so a regression in the merge would
-		// produce a different params shape.
+		// server-side, not caller preference: the scope is applied before the
+		// caller's own filters, which pass through untouched.
 		$this->persona->set(McpPersona::PUBLIC_);
 		$blog = $this->collection('blog');
 		$this->collections->method('fetchCollection')->willReturn($blog);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
 		$this->resolver->method('nonExposedProperties')->willReturn([]);
+		$this->resolver->method('forCollection')->willReturn(['access' => 'public', 'owned' => false, 'description' => null, 'resource' => false, 'titleProperty' => '']);
 
 		$this->indexQuery->expects($this->once())
 			->method('query')
 			->with(
 				'blog',
-				$this->callback(
-					// Caller's exclude is preserved AND draft:true is appended.
-					static fn (array $params): bool => ($params['exclude'] ?? '') === 'category:internal,draft:true'
-				),
+				$this->callback(static fn (array $params): bool => ($params['exclude'] ?? '') === 'category:internal'),
+				$this->callback(static fn (ReadScope $scope): bool => !$scope->seesDrafts()
+					&& $scope->matches(['id' => 'live', 'draft' => false])
+					&& !$scope->matches(['id' => 'hidden', 'draft' => true])),
 			)
 			->willReturn(new QueryResult(items: [], total: 0, limit: 10, offset: 0));
 
 		$this->tool->handler(collection: 'blog', exclude: 'category:internal');
-	}
-
-	public function testPublicPersonaAddsDraftWhenExcludeIsEmpty(): void
-	{
-		$this->persona->set(McpPersona::PUBLIC_);
-		$this->collections->method('fetchCollection')->willReturn($this->collection('blog'));
-		$this->resolver->method('isAccessibleTo')->willReturn(true);
-		$this->resolver->method('nonExposedProperties')->willReturn([]);
-
-		$this->indexQuery->expects($this->once())
-			->method('query')
-			->with(
-				'blog',
-				$this->callback(static fn (array $params): bool => ($params['exclude'] ?? '') === 'draft:true'),
-			)
-			->willReturn(new QueryResult(items: [], total: 0, limit: 10, offset: 0));
-
-		$this->tool->handler(collection: 'blog');
 	}
 
 	public function testAdminPersonaLeavesExcludeUntouched(): void
@@ -247,6 +231,7 @@ final class QueryCollectionToolTest extends TestCase
 			->with(
 				'blog',
 				$this->callback(static fn (array $params): bool => !isset($params['exclude'])),
+				$this->callback(static fn (ReadScope $scope): bool => $scope->isAll()),
 			)
 			->willReturn(new QueryResult(items: [], total: 0, limit: 10, offset: 0));
 

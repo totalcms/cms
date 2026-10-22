@@ -1,6 +1,8 @@
 <?php
 
+use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\Auth\Data\ActorKind;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessDenials;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
@@ -212,6 +214,39 @@ function systemActors(): ActorContext
 function systemWriteGate(?ActorContext $actors = null): ObjectWriteGate
 {
 	return new ObjectWriteGate($actors ?? systemActors(), (new ReflectionClass(AccessGuard::class))->newInstanceWithoutConstructor(), (new ReflectionClass(AccessDenials::class))->newInstanceWithoutConstructor());
+}
+
+/**
+ * A real AccessGuard for MCP tests. `$owned` maps a collection to its owner
+ * property; every other collection is unowned. Auth is on.
+ *
+ * @param array<string,string> $owned
+ */
+function mcpGuard(TestCase $test, array $owned = []): AccessGuard
+{
+	// Closure::call() binds to the test so its protected createStub() is reachable.
+	return (function () use ($owned): AccessGuard {
+		$owners = $this->createStub(OwnerPropertyResolver::class);
+		$owners->method('resolve')->willReturnCallback(static fn (string $collection): string => $owned[$collection] ?? '');
+		$owners->method('isOutsider')->willReturn(false);
+
+		$config       = (new ReflectionClass(Config::class))->newInstanceWithoutConstructor();
+		$config->auth = ['enable' => true, 'collection' => 'auth'];
+
+		return new AccessGuard($this->createStub(SchemaFetcher::class), $this->createStub(ObjectFetcher::class), $owners, $config, $this->createStub(LoggerFactory::class));
+	})->call($test);
+}
+
+/**
+ * An actor context holding a member of the `auth` collection with the given
+ * group grants, as McpRequestAuthorizer sets one for an OAuth caller.
+ */
+function memberActors(UserAuthority $authority, string $userId = 'member-1'): ActorContext
+{
+	$actors = new ActorContext();
+	$actors->set(new Actor(ActorKind::Member, $userId, 'auth', $authority, []));
+
+	return $actors;
 }
 
 /**

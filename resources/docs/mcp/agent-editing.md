@@ -57,6 +57,16 @@ Three merge rules to know:
 - **Binary fields are untouchable.** Image, file, gallery, and depot fields
   always keep their current values; a payload that sets one is refused.
 
+### Owned collections and site-set fields
+
+On a collection with an [owner property](docs/collections/settings#ownerproperty),
+a signed-in member works on their own objects: reads return theirs (drafts
+included) plus published ones, `create_object` records them as the owner
+whatever the payload says, and writing to someone else's object answers
+"not found". Fields the site sets itself — protected fields and the owner —
+keep the site's value whatever the agent sends. `describe_collection` returns
+both limits in its `ownership` field, so check it before planning edits.
+
 ## update_object
 
 **`update_object` merges exactly like `patch_object`.** Fields in `data` are

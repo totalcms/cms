@@ -8,6 +8,7 @@ use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\CollectionSaver;
@@ -26,7 +27,7 @@ final class CollectionToolsTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->saver   = $this->createMock(CollectionSaver::class);
-		$this->persona = new PersonaContext($this->createMock(CollectionFetcher::class), $this->createMock(McpSchemaResolver::class));
+		$this->persona = new PersonaContext($this->createMock(CollectionFetcher::class), $this->createMock(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
 		$this->persona->set(McpPersona::ADMIN);
 		$this->tool = new CollectionTools($this->saver, $this->persona);
 	}

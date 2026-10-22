@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Mcp\Resource\Handler;
 
 use Mcp\Exception\ToolCallException;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\Actor;
+use TotalCMS\Domain\Auth\Data\ActorKind;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -32,6 +34,8 @@ final class CollectionResourceTest extends TestCase
 	private MockObject $schemaResolver;
 	private MockObject $urlBuilder;
 	private PersonaContext $personaContext;
+
+	private ActorContext $actors;
 	private CollectionResource $resource;
 
 	protected function setUp(): void
@@ -50,7 +54,8 @@ final class CollectionResourceTest extends TestCase
 		// it's supplied only to satisfy the constructor. schemaResolver's
 		// forCollection() IS invoked (see below) to resolve the collection's
 		// mcp.access.
-		$this->personaContext = new PersonaContext($this->collectionFetcher, $this->schemaResolver);
+		$this->actors         = new ActorContext();
+		$this->personaContext = new PersonaContext($this->collectionFetcher, $this->schemaResolver, mcpGuard($this), $this->actors);
 		// Derives 'access' from whatever mcp.access the test's CollectionData
 		// carries, so canReadCollection()'s public-collection carve-out
 		// reflects each test's actual fixture instead of a hardcoded default.
@@ -295,7 +300,7 @@ final class CollectionResourceTest extends TestCase
 		// on this collection behaves like ADMIN for draft visibility — drafts
 		// are kept unless explicitly excluded by the caller.
 		$this->personaContext->set(McpPersona::AUTHENTICATED);
-		$this->personaContext->setAuthority($this->authorityGranting(['blog']));
+		$this->grant($this->authorityGranting(['blog']));
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection());
 		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
 		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
@@ -328,7 +333,7 @@ final class CollectionResourceTest extends TestCase
 		// 'public' default) so this deny case is isolated from the Task 10b
 		// public-collection carve-out proven below.
 		$this->personaContext->set(McpPersona::AUTHENTICATED);
-		$this->personaContext->setAuthority($this->authorityGranting(['other-collection']));
+		$this->grant($this->authorityGranting(['other-collection']));
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection('blog', 'authenticated'));
 		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
 
@@ -361,7 +366,7 @@ final class CollectionResourceTest extends TestCase
 		// already had (the two tests above prove the opposite case: a
 		// non-public collection still denies without a grant).
 		$this->personaContext->set(McpPersona::AUTHENTICATED);
-		$this->personaContext->setAuthority($this->authorityGranting(['other-collection']));
+		$this->grant($this->authorityGranting(['other-collection']));
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection('blog', 'public'));
 		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
 		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
@@ -382,7 +387,7 @@ final class CollectionResourceTest extends TestCase
 	{
 		// Baseline allow-path: authority grants read on the exact collection.
 		$this->personaContext->set(McpPersona::AUTHENTICATED);
-		$this->personaContext->setAuthority($this->authorityGranting(['blog']));
+		$this->grant($this->authorityGranting(['blog']));
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->collection());
 		$this->schemaResolver->method('isAccessibleTo')->willReturn(true);
 		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
@@ -476,10 +481,11 @@ final class CollectionResourceTest extends TestCase
 
 	// ─── Owned collections: non-admin callers read what anonymous ones do ────
 
-	/** @return array<string,array{McpPersona}> */
-	public static function nonAdminPersonas(): array
+	/** Give the caller these grants on the persona context and as the request's member actor. */
+	private function grant(UserAuthority $authority): void
 	{
-		return ['authenticated' => [McpPersona::AUTHENTICATED], 'public' => [McpPersona::PUBLIC_]];
+		$this->personaContext->setAuthority($authority);
+		$this->actors->set(new Actor(ActorKind::Member, 'member-1', 'auth', $authority, []));
 	}
 
 	private function ownedCollection(string $access = 'public'): CollectionData
@@ -502,7 +508,8 @@ final class CollectionResourceTest extends TestCase
 			new McpDescriptionResolver(),
 			$this->createStub(CollectionRepository::class),
 		);
-		$context = new PersonaContext($this->collectionFetcher, $realResolver);
+		$actors = $persona === McpPersona::AUTHENTICATED && $authority instanceof UserAuthority ? memberActors($authority) : new ActorContext();
+		$context = new PersonaContext($this->collectionFetcher, $realResolver, mcpGuard($this, ['blog' => 'owner']), $actors);
 		$context->set($persona);
 		$context->setAuthority($authority);
 
@@ -515,30 +522,47 @@ final class CollectionResourceTest extends TestCase
 		);
 	}
 
-	#[DataProvider('nonAdminPersonas')]
-	public function testReadServesAnOwnedPublicCollectionWithoutDraftsToNonAdminPersonas(McpPersona $persona): void
+	public function testReadServesAnOwnedPublicCollectionWithoutDraftsToAnAnonymousCaller(): void
 	{
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->ownedCollection());
 		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
 		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([['id' => 'a'], ['id' => 'b', 'draft' => true]]));
 		$this->urlBuilder->method('buildUrl')->willReturn('/blog/a');
 
-		// Even a group grant on the collection does not reveal drafts: MCP has
-		// no per-owner scoping, so non-admins read what anonymous callers do.
-		$payload = json_decode((string)$this->ownedResource($persona, $this->authorityGranting(['blog']))->read('blog')['text'], true);
+		$payload = json_decode((string)$this->ownedResource(McpPersona::PUBLIC_)->read('blog')['text'], true);
 
 		$this->assertSame(['a'], array_column($payload['items'], 'id'));
 	}
 
-	public function testReadRefusesAGrantedAuthenticatedCallerOnAnOwnedCollectionThatIsNotPublic(): void
+	public function testReadServesAMemberTheirOwnDraftsAndOthersPublishedOnAnOwnedPublicCollection(): void
+	{
+		$this->collectionFetcher->method('fetchCollection')->willReturn($this->ownedCollection());
+		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
+		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([
+			['id' => 'theirs', 'owner' => 'sam'],
+			['id' => 'their-draft', 'owner' => 'sam', 'draft' => true],
+			['id' => 'my-draft', 'owner' => 'member-1', 'draft' => true],
+		]));
+		$this->urlBuilder->method('buildUrl')->willReturn('/blog/a');
+
+		$payload = json_decode((string)$this->ownedResource(McpPersona::AUTHENTICATED, $this->authorityGranting(['blog']))->read('blog')['text'], true);
+
+		$this->assertSame(['theirs', 'my-draft'], array_column($payload['items'], 'id'));
+	}
+
+	public function testReadServesAMemberOnlyTheirOwnOnAnOwnedCollectionThatIsNotPublic(): void
 	{
 		$this->collectionFetcher->method('fetchCollection')->willReturn($this->ownedCollection('authenticated'));
-		$this->indexReader->expects($this->never())->method('fetchIndex');
+		$this->schemaResolver->method('nonExposedProperties')->willReturn([]);
+		$this->indexReader->method('fetchIndex')->willReturn(new IndexData([
+			['id' => 'theirs', 'owner' => 'sam'],
+			['id' => 'mine', 'owner' => 'member-1'],
+		]));
+		$this->urlBuilder->method('buildUrl')->willReturn('/blog/a');
 
-		$this->expectException(ToolCallException::class);
-		$this->expectExceptionMessage('Resource tcms://blog/ is not accessible to this caller.');
+		$payload = json_decode((string)$this->ownedResource(McpPersona::AUTHENTICATED, $this->authorityGranting(['blog']))->read('blog')['text'], true);
 
-		$this->ownedResource(McpPersona::AUTHENTICATED, $this->authorityGranting(['blog']))->read('blog');
+		$this->assertSame(['mine'], array_column($payload['items'], 'id'));
 	}
 
 	public function testReadServesAnOwnedCollectionWithDraftsToAdmin(): void

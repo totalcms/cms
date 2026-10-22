@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Domain\Auth\Data\Decision;
 use TotalCMS\Domain\Auth\Data\Operation;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyKind;
 use TotalCMS\Domain\Collection\Service\OwnerPropertyResolver;
@@ -54,6 +55,9 @@ use TotalCMS\Support\Config;
  *                                                every entry point asks;
  *                                                splitting it would bring back
  *                                                a copy of the rules per surface
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity") for the same reason: the
+ *                                                rules are one policy, and its
+ *                                                branches are the rules
  */
 // Not `readonly`: the per-request rules memo below is mutable state.
 final class AccessGuard
@@ -201,23 +205,46 @@ final class AccessGuard
 	}
 
 	/**
-	 * The filter a list or query must apply for this actor: the actor's own
-	 * objects on an owned collection, null (everything) otherwise. Also null
-	 * for actors {@see ownerDecision()} denies outright; the entry point has
-	 * already refused them.
+	 * Which objects of $collection the actor may read ({@see ReadScope}).
+	 * $publicRead says whether the surface asking makes the collection
+	 * readable without signing in (MCP `mcp.access: public`); others'
+	 * published objects are then visible too, so signing in never shows a
+	 * member less than an anonymous visitor sees.
+	 *
+	 *   - trusted actors: everything;
+	 *   - no group grant to read: published objects when $publicRead, else none;
+	 *   - a grant on an unowned collection: everything, drafts included;
+	 *   - a grant on an owned collection: their own objects, drafts included,
+	 *     plus others' published ones when $publicRead. An actor who can own
+	 *     nothing there (no id, outside the `ownerCollection`, or an owner
+	 *     property that no longer resolves) is treated as having no grant.
+	 *
+	 * Unlike the other layers it does not stand down when the install switches
+	 * authentication off: MCP authenticates its callers itself, so an
+	 * anonymous MCP caller must still not see drafts. REST asks only while
+	 * authentication is on (the access middleware is skipped otherwise).
 	 */
-	public function readScope(Actor $actor, string $collection): ?OwnerScope
+	public function readScope(Actor $actor, string $collection, bool $publicRead = false): ReadScope
 	{
-		if ($actor->isTrusted() || $this->authDisabled() || $actor->userId === '') {
-			return null;
+		if ($actor->isTrusted()) {
+			return ReadScope::all();
+		}
+
+		$others = $publicRead ? ReadScope::publishedOnly() : ReadScope::none();
+		if ($collection === '' || !$actor->authority()->canCollection('read', $collection)) {
+			return $others;
 		}
 
 		$ownerProperty = $this->ownerProperties->resolve($collection);
-		if ($ownerProperty === '' || $ownerProperty === OwnerPropertyResolver::UNRESOLVED || $this->isOutsider($actor, $collection)) {
-			return null;
+		if ($ownerProperty === '') {
+			return ReadScope::all();
 		}
 
-		return new OwnerScope($ownerProperty, $actor->userId);
+		if ($ownerProperty === OwnerPropertyResolver::UNRESOLVED || $actor->userId === '' || $this->isOutsider($actor, $collection)) {
+			return $others;
+		}
+
+		return new ReadScope(new OwnerScope($ownerProperty, $actor->userId), published: $publicRead, drafts: false);
 	}
 
 	/**

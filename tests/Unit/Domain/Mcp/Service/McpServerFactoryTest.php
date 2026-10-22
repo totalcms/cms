@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Extension\Service\ExtensionManager;
@@ -109,7 +110,7 @@ final class McpServerFactoryTest extends TestCase
 			// (`requires:` unset throughout), so guardHandler()'s objects+read
 			// canReadCollection() branch is unreachable here — plain stubs
 			// satisfy PersonaContext's Task 10b constructor deps only.
-			$context ?? new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class)),
+			$context ?? new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext()),
 			new OAuthScopeRegistry(),
 			new OAuthActivityLogger(new NullLogger()),
 			// Modern-era notification bus. Nothing in this file opens a
@@ -168,7 +169,7 @@ final class McpServerFactoryTest extends TestCase
 			annotations: new ToolAnnotations(title: 'Partial', destructiveHint: true),
 		));
 
-		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
+		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
 		$context->set(McpPersona::ADMIN);
 		$context->setCallerKind(McpCallerKind::Session);
 
@@ -197,7 +198,7 @@ final class McpServerFactoryTest extends TestCase
 			annotations: new ToolAnnotations(title: 'Partial', destructiveHint: true),
 		));
 
-		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
+		$context = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
 		$context->set(McpPersona::ADMIN);
 		$context->setCallerKind(McpCallerKind::ApiKey);
 

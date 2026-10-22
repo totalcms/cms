@@ -16,10 +16,11 @@ use Mcp\Schema\Tool;
 use Mcp\Server\Handler\Request\CallToolHandler;
 use Mcp\Server\Session\InMemorySessionStore;
 use Mcp\Server\Session\Session;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -54,7 +55,7 @@ final class SavedQueryToolTest extends TestCase
 		// check is never reached (access:'admin' denies earlier; collection-
 		// missing denies earlier), so a fixed 'public' is consistent with every
 		// reachable scenario here.
-		$ctx = new PersonaContext($this->createStub(CollectionFetcher::class), $this->accessResolver());
+		$ctx = new PersonaContext($this->createStub(CollectionFetcher::class), $this->accessResolver(), mcpGuard($this), new ActorContext());
 		$ctx->set($persona);
 
 		return $ctx;
@@ -432,20 +433,13 @@ final class SavedQueryToolTest extends TestCase
 		$this->assertStringContainsString('admin access', $result->content[0]->text);
 	}
 
-	/** @return array<string,array{McpPersona}> */
-	public static function nonAdminPersonas(): array
-	{
-		return ['authenticated' => [McpPersona::AUTHENTICATED], 'public' => [McpPersona::PUBLIC_]];
-	}
-
 	/**
 	 * A saved-query tool on an owned collection, run over a REAL
 	 * McpSchemaResolver and a PersonaContext whose authority grants read on
-	 * it. Returns the params the index query received, or the refusal.
-	 *
-	 * @return array<string,string>|ToolCallException
+	 * it, for member `member-1`. Returns the read scope the index query
+	 * received, or the refusal.
 	 */
-	private function runOwnedTool(McpPersona $persona, string $access): array|ToolCallException
+	private function runOwnedTool(McpPersona $persona, string $access): ReadScope|ToolCallException
 	{
 		$def = SavedQueryToolDefinition::fromArray('portfolio', $access, [
 			'name'        => 'find_all',
@@ -464,18 +458,20 @@ final class SavedQueryToolTest extends TestCase
 		$fetcher->method('fetchCollection')->willReturn($portfolio);
 
 		$resolver = new McpSchemaResolver($this->createStub(SchemaFetcher::class), new McpDescriptionResolver(), $collectionRepo);
-		$context  = new PersonaContext($fetcher, $resolver);
-		$context->set($persona);
-		$context->setAuthority(new UserAuthority(isAdmin: false, groups: [new AccessGroupData([
+		$authority = new UserAuthority(isAdmin: false, groups: [new AccessGroupData([
 			'id'          => 'members',
 			'permissions' => ['collections' => ['operations' => ['read'], 'all' => false, 'allowed' => ['portfolio']]],
-		])]));
+		])]);
+		$actors = $persona === McpPersona::PUBLIC_ ? new ActorContext() : memberActors($authority);
+		$context = new PersonaContext($fetcher, $resolver, mcpGuard($this, ['portfolio' => 'owner']), $actors);
+		$context->set($persona);
+		$context->setAuthority($authority);
 
-		$captured   = [];
+		$captured   = null;
 		$indexQuery = $this->createStub(IndexQueryService::class);
 		$indexQuery->method('query')->willReturnCallback(
-			function (string $coll, array $params) use (&$captured): QueryResult {
-				$captured = $params;
+			function (string $coll, array $params, ?ReadScope $scope = null) use (&$captured): QueryResult {
+				$captured = $scope;
 
 				return new QueryResult(items: [], total: 0, limit: 20, offset: 0);
 			},
@@ -498,31 +494,43 @@ final class SavedQueryToolTest extends TestCase
 			return $e;
 		}
 
+		$this->assertInstanceOf(ReadScope::class, $captured);
+
 		return $captured;
 	}
 
-	#[DataProvider('nonAdminPersonas')]
-	public function testAnOwnedPublicCollectionServesNonAdminPersonasWithoutDrafts(McpPersona $persona): void
+	public function testAnAnonymousCallerOnAnOwnedPublicCollectionSeesNoDrafts(): void
 	{
-		$params = $this->runOwnedTool($persona, 'public');
+		$scope = $this->runOwnedTool(McpPersona::PUBLIC_, 'public');
 
-		$this->assertIsArray($params);
-		$this->assertStringContainsString('draft:true', $params['exclude'] ?? '');
+		$this->assertInstanceOf(ReadScope::class, $scope);
+		$this->assertFalse($scope->seesDrafts());
 	}
 
-	public function testAGrantDoesNotOpenAnOwnedCollectionThatIsNotPublic(): void
+	public function testAMemberOnAnOwnedPublicCollectionSeesTheirOwnDraftsAndOthersPublished(): void
 	{
-		$result = $this->runOwnedTool(McpPersona::AUTHENTICATED, 'authenticated');
+		$scope = $this->runOwnedTool(McpPersona::AUTHENTICATED, 'public');
 
-		$this->assertInstanceOf(ToolCallException::class, $result);
-		$this->assertSame("Your account's groups do not grant read on 'portfolio'.", $result->getMessage());
+		$this->assertInstanceOf(ReadScope::class, $scope);
+		$this->assertTrue($scope->matches(['owner' => 'member-1', 'draft' => true]));
+		$this->assertTrue($scope->matches(['owner' => 'sam', 'draft' => false]));
+		$this->assertFalse($scope->matches(['owner' => 'sam', 'draft' => true]));
+	}
+
+	public function testAMemberOnAnOwnedCollectionThatIsNotPublicSeesOnlyTheirOwn(): void
+	{
+		$scope = $this->runOwnedTool(McpPersona::AUTHENTICATED, 'authenticated');
+
+		$this->assertInstanceOf(ReadScope::class, $scope);
+		$this->assertTrue($scope->matches(['owner' => 'member-1', 'draft' => true]));
+		$this->assertFalse($scope->matches(['owner' => 'sam', 'draft' => false]));
 	}
 
 	public function testAdminSeesDraftsOnAnOwnedCollection(): void
 	{
-		$params = $this->runOwnedTool(McpPersona::ADMIN, 'authenticated');
+		$scope = $this->runOwnedTool(McpPersona::ADMIN, 'authenticated');
 
-		$this->assertIsArray($params);
-		$this->assertStringNotContainsString('draft:true', $params['exclude'] ?? '');
+		$this->assertInstanceOf(ReadScope::class, $scope);
+		$this->assertTrue($scope->isAll());
 	}
 }

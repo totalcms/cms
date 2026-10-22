@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace TotalCMS\Domain\Mcp\Auth\Service;
 
 use Mcp\Exception\ToolCallException;
+use TotalCMS\Domain\Auth\Data\Decision;
+use TotalCMS\Domain\Auth\Data\Operation;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
+use TotalCMS\Domain\Auth\Service\AccessGuard;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Mcp\Auth\Data\McpCallerKind;
@@ -52,6 +57,8 @@ class PersonaContext
 	public function __construct(
 		private readonly CollectionFetcher $collectionFetcher,
 		private readonly McpSchemaResolver $schemaResolver,
+		private readonly AccessGuard $guard,
+		private readonly ActorContext $actors,
 	) {
 	}
 
@@ -181,36 +188,6 @@ class PersonaContext
 	}
 
 	/**
-	 * Whether the current caller may see draft objects in $collection.
-	 *
-	 * Single home for the draft-visibility rule so every content tool
-	 * (query_collection, get_object, search_collection(s), fetch, and
-	 * schema-defined saved-query tools) agrees on it:
-	 *
-	 *   - ADMIN always can — unrestricted, same as every other admin check.
-	 *   - An OAuth caller with a resolved UserAuthority can when their access
-	 *     groups grant `read` on $collection — draft visibility rides along
-	 *     with the same grant that lets them read the collection's published
-	 *     content at all, rather than being a separate permission a group
-	 *     author has to remember to set.
-	 *     Except on an owned collection (ownerProperty): MCP has no per-owner
-	 *     scoping, so a grant there would expose every member's drafts. A
-	 *     non-ADMIN caller on an owned collection sees what an anonymous one
-	 *     would — never drafts.
-	 *   - Everyone else — public/anonymous callers, or a Bearer request whose
-	 *     authority never resolved — can never see drafts. Unchanged from the
-	 *     legacy "persona !== ADMIN hides drafts" behavior for those callers.
-	 */
-	public function canReadDrafts(string $collection): bool
-	{
-		if ($this->isResolved() && $this->current() === McpPersona::ADMIN) {
-			return true;
-		}
-
-		return $this->hasReadGrant($collection) && !$this->isOwned($collection);
-	}
-
-	/**
 	 * Whether the current caller may read $collection's PUBLISHED content at
 	 * all — the "objects"+"read" ToolRequirement rule (Task 10b), and the
 	 * single home for the public-collection carve-out that closes the
@@ -224,10 +201,9 @@ class PersonaContext
 	 *     gets via QueryCollectionTool's/GetObjectTool's exposure check;
 	 *     authenticating must never SUBTRACT reach.
 	 *   - Otherwise, only an OAuth caller whose resolved UserAuthority grants
-	 *     `read` on $collection — and never on an owned collection
-	 *     (ownerProperty): MCP has no per-owner scoping, so a non-ADMIN caller
-	 *     there reads exactly what an anonymous one would (public exposure
-	 *     only), and a group grant does not widen it.
+	 *     `read` on $collection. On an owned collection that read is scoped to
+	 *     their own objects (plus published ones when exposed publicly): every
+	 *     read tool filters through {@see readScope()}.
 	 *
 	 * $collectionData is an optional pre-fetched CollectionData for callers
 	 * that already have one in hand (loops over CollectionRepository::
@@ -236,11 +212,8 @@ class PersonaContext
 	 * fetches it itself (CollectionFetcher request-caches, so a second lookup
 	 * for the same id in the same request is cheap).
 	 *
-	 * Deliberately NOT reused by canReadDrafts(): drafts always require the
-	 * real access-group GRANT, never mere public exposure — see canReadDrafts()'s
-	 * own docblock. Both methods share the same hasReadGrant() building block
-	 * so the "does this caller's authority grant read" sub-check can never
-	 * drift between the two rules.
+	 * Which objects the caller then sees is {@see readScope()}'s answer:
+	 * reading a collection does not mean reading every object in it.
 	 */
 	public function canReadCollection(string $collection, ?CollectionData $collectionData = null): bool
 	{
@@ -252,7 +225,7 @@ class PersonaContext
 			return true;
 		}
 
-		return $this->hasReadGrant($collection) && !$this->isOwned($collection, $collectionData);
+		return $this->hasReadGrant($collection);
 	}
 
 	/**
@@ -284,15 +257,46 @@ class PersonaContext
 	}
 
 	/**
-	 * Whether $collection declares an ownerProperty. Only asked once a grant
-	 * has matched, so unowned collections pay no extra lookup; a collection
-	 * that cannot be fetched is left to the tool's own not-found handling.
+	 * Which of $collection's objects the current caller may read: everything
+	 * for ADMIN, otherwise the guard's {@see ReadScope} for the request's
+	 * actor, with others' published objects included when the collection is
+	 * exposed publicly. Every read tool filters through this, so a member on
+	 * an owned collection sees their own objects, drafts included, and never
+	 * another member's draft.
 	 */
-	private function isOwned(string $collection, ?CollectionData $collectionData = null): bool
+	public function readScope(string $collection, ?CollectionData $collectionData = null): ReadScope
 	{
-		$data = $collectionData ?? $this->collectionFetcher->fetchCollection($collection);
+		if ($this->isResolved() && $this->current() === McpPersona::ADMIN) {
+			return ReadScope::all();
+		}
 
-		return $data instanceof CollectionData && $this->schemaResolver->forCollection($data)['owned'];
+		return $this->guard->readScope($this->actors->current(), $collection, $this->isCollectionExposedPublic($collection, $collectionData));
+	}
+
+	/**
+	 * Whether the current caller may update object $id of $collection: their
+	 * own object on an owned collection, any object elsewhere. A caller that
+	 * may not is told the object is not found, the way REST answers.
+	 */
+	public function mayUpdateObject(string $collection, string $id): bool
+	{
+		return $this->guard->ownerDecision($this->actors->current(), $collection, Operation::Update, $id) === Decision::Allow;
+	}
+
+	/**
+	 * The fields of $collection the current caller cannot set: the protected,
+	 * forced-value and owner fields the site fills in itself. Empty for ADMIN
+	 * and trusted actors, who may set them.
+	 *
+	 * @return list<string>
+	 */
+	public function fieldsSetBySite(string $collection): array
+	{
+		if (($this->isResolved() && $this->current() === McpPersona::ADMIN) || $this->actors->current()->isTrusted()) {
+			return [];
+		}
+
+		return $this->guard->protectedFieldsFor($collection);
 	}
 
 	private function hasReadGrant(string $collection): bool

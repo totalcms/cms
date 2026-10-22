@@ -60,11 +60,11 @@ readonly class McpSchemaResolver
 			$access = 'admin';
 		}
 
-		// Owned collections (ownerProperty) scope members to their own objects over
-		// REST; MCP applies no such scoping. Access stays the declared value: a
-		// non-admin caller reads an owned collection exactly as an anonymous one
-		// would (PersonaContext::canReadCollection()/canReadDrafts()), and writes
-		// to it are admin-only (ObjectTools::requireExposed()). Declared setting,
+		// Owned collections (ownerProperty) scope members to their own objects,
+		// over MCP as over REST: every read tool filters through
+		// PersonaContext::readScope(), and the storage layer stamps the owner and
+		// refuses another member's object on write. Access stays the declared
+		// value. `owned` is descriptive, for describe_collection. Declared setting,
 		// not OwnerPropertyResolver: CollectionSaver refuses an ownerProperty the
 		// schema lacks, so the two agree, and this class is built without the
 		// resolver in several places.

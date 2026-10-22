@@ -17,6 +17,7 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
 use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\Auth\Service\AccessGuard;
@@ -42,7 +43,7 @@ use TotalCMS\Support\Config;
 /*
  * Owned collections. When a collection names an ownerProperty, every actor
  * who is not a super admin is limited to the objects they own: object routes
- * 403 on a mismatch, the two list routes are handed an `ownerScope` attribute
+ * 403 on a mismatch, the two list routes are handed a `readScope` attribute
  * to filter by, and the operations that cannot be scoped (bulk delete,
  * reindex, clone) are refused. Super admins never reach checkPermission(), so
  * nothing here can touch them.
@@ -333,7 +334,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		($this->signInAs)('alex', 'read');
 
 		expect($this->middleware->process(($this->requestFor)('admin-collection', 'showcase'), $this->handler))->toBe($this->allowed);
-		expect($this->handled[0]->getAttribute('ownerScope'))->toBeNull();
+		expect($this->handled[0]->getAttribute('readScope'))->toBeNull();
 	});
 
 	it('refuses admin-side duplicate but passes a plain admin add', function (): void {
@@ -426,7 +427,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		expect($this->handled)->toHaveCount(0);
 	});
 
-	it('hands the two list routes an ownerScope attribute', function (): void {
+	it('hands the two list routes a readScope attribute', function (): void {
 		($this->owned)();
 		($this->signInAs)('alex', 'read');
 
@@ -438,10 +439,11 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 
 		expect($this->handled)->toHaveCount(2);
 		foreach ($this->handled as $request) {
-			$scope = $request->getAttribute('ownerScope');
-			expect($scope)->toBeInstanceOf(OwnerScope::class);
-			expect($scope->property)->toBe('owner');
-			expect($scope->value)->toBe('alex');
+			$scope = $request->getAttribute('readScope');
+			expect($scope)->toBeInstanceOf(ReadScope::class);
+			expect($scope->owner)->toBeInstanceOf(OwnerScope::class);
+			expect($scope->owner->property)->toBe('owner');
+			expect($scope->owner->value)->toBe('alex');
 		}
 	});
 
@@ -452,7 +454,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		$response = $this->middleware->process(($this->requestFor)('object-save', 'showcase', null, 'POST'), $this->handler);
 
 		expect($response)->toBe($this->allowed);
-		expect($this->handled[0]->getAttribute('ownerScope'))->toBeNull();
+		expect($this->handled[0]->getAttribute('readScope'))->toBeNull();
 	});
 
 	it('refuses bulk delete, reindex and clone outright', function (): void {
@@ -476,7 +478,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 		expect($this->middleware->process(($this->requestFor)('object-update', 'blog', 'post-1', 'PUT'), $this->handler))->toBe($this->allowed);
 		expect($this->middleware->process(($this->requestFor)('object-bulk-delete', 'blog', null, 'POST'), $this->handler))->toBe($this->allowed);
 		expect($this->middleware->process(($this->requestFor)('collection-query', 'blog'), $this->handler))->toBe($this->allowed);
-		expect($this->handled[2]->getAttribute('ownerScope'))->toBeNull();
+		expect($this->handled[2]->getAttribute('readScope'))->toBeNull();
 	});
 
 	it('does not scope a super admin', function (): void {
@@ -493,7 +495,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 
 		expect($this->middleware->process(($this->requestFor)('object-update', 'showcase', 'site-2', 'PUT'), $this->handler))->toBe($this->allowed);
 		expect($this->middleware->process(($this->requestFor)('collection-query', 'showcase'), $this->handler))->toBe($this->allowed);
-		expect($this->handled[1]->getAttribute('ownerScope'))->toBeNull();
+		expect($this->handled[1]->getAttribute('readScope'))->toBeNull();
 		// The actor is set before the super-admin bypass.
 		expect($this->actors->current()->userId)->toBe('root');
 		expect($this->actors->current()->authCollection)->toBe('auth');
@@ -807,7 +809,7 @@ describe('CollectionAccessMiddleware owner scoping', function (): void {
 			($this->signInFrom)('alex', 'members', 'read');
 
 			expect($this->middleware->process(($this->requestFor)('collection-query', 'showcase'), $this->handler))->toBe($this->allowed);
-			expect($this->handled[0]->getAttribute('ownerScope'))->toBeInstanceOf(OwnerScope::class);
+			expect($this->handled[0]->getAttribute('readScope'))->toBeInstanceOf(ReadScope::class);
 		});
 
 		it('denies an outsider on their own object, the list route and object-save, with reason owner', function (): void {

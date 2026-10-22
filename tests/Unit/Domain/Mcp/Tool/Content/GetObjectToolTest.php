@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\Collection\Service\ObjectUrlBuilder;
@@ -44,7 +45,7 @@ final class GetObjectToolTest extends TestCase
 		// actually invoked from that path — reused only to satisfy the
 		// constructor. $this->resolver IS invoked (via forCollection(), stubbed
 		// below) since it's the one PersonaContext actually consults.
-		$this->persona = new PersonaContext($this->collections, $this->resolver);
+		$this->persona = new PersonaContext($this->collections, $this->resolver, mcpGuard($this), new ActorContext());
 		$this->resolver->method('forCollection')->willReturnCallback(
 			static fn (CollectionData $c): array => [
 				'access'        => (string)($c->mcp['access'] ?? 'admin'),

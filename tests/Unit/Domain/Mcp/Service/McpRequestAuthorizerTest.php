@@ -57,6 +57,8 @@ final class McpRequestAuthorizerTest extends TestCase
 		$this->personaContext = new PersonaContext(
 			$this->createStub(CollectionFetcher::class),
 			$this->createStub(McpSchemaResolver::class),
+			mcpGuard($this),
+			new ActorContext(),
 		);
 		$this->urlBuilder     = $this->createMock(McpUrlBuilder::class);
 		$this->urlBuilder->method('protectedResourceMetadataUrl')->willReturn('https://site.test/.well-known/oauth-protected-resource');

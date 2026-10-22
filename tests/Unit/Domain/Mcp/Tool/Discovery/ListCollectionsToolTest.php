@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Mcp\Tool\Discovery;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -48,7 +49,7 @@ final class ListCollectionsToolTest extends TestCase
 		$personaSchemaResolver->method('isAccessibleTo')->willReturnCallback(
 			fn (CollectionData $c, string $p): bool => $this->resolver->isAccessibleTo($c, $p),
 		);
-		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $personaSchemaResolver);
+		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $personaSchemaResolver, mcpGuard($this), new ActorContext());
 
 		$this->tool = new ListCollectionsTool(
 			$this->collections,

@@ -4,7 +4,7 @@ namespace TotalCMS\Action\Collection\Index;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TotalCMS\Domain\Collection\Data\OwnerScope;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexFilter;
 use TotalCMS\Domain\Index\Service\IndexReader;
@@ -51,8 +51,8 @@ readonly class IndexGetAction
 		// A non-admin on an owned collection is limited to their own objects.
 		// CollectionAccessMiddleware attaches the scope; it is applied after the
 		// caller's own filters, by exact match, so they can only narrow further.
-		$scope = $request->getAttribute(CollectionAccessMiddleware::OWNER_SCOPE_ATTRIBUTE);
-		if ($scope instanceof OwnerScope) {
+		$scope = $request->getAttribute(CollectionAccessMiddleware::READ_SCOPE_ATTRIBUTE);
+		if ($scope instanceof ReadScope) {
 			$index = new IndexData($scope->filter($index->objects->all()));
 		}
 

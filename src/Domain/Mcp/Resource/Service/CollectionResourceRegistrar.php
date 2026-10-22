@@ -55,14 +55,9 @@ readonly class CollectionResourceRegistrar
 			return;
 		}
 
-		// An owned collection keeps its declared access, and CollectionResource::read()
-		// narrows non-admin reads through PersonaContext (public only, no drafts).
-		// One that is not public is readable by admin alone, so it is listed at
-		// admin: a group grant must not advertise a resource the read refuses.
+		// An owned collection keeps its declared access: CollectionResource::read()
+		// narrows a member's read to their own objects through PersonaContext.
 		$access = McpAccessLevel::fromString($mcp['access'])->value;
-		if ($mcp['owned'] && $access !== 'public') {
-			$access = 'admin';
-		}
 		$displayName  = $collection->name !== '' ? $collection->name : ucfirst($collection->id);
 		$sdkName      = $this->toSdkName($collection->id);
 		$desc         = (string)($mcp['description'] ?? '');

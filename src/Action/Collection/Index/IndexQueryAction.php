@@ -7,7 +7,7 @@ namespace TotalCMS\Action\Collection\Index;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\QueryActionRenderer;
-use TotalCMS\Domain\Collection\Data\OwnerScope;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Index\Service\IndexQueryService;
 use TotalCMS\Middleware\Access\CollectionAccessMiddleware;
 use TotalCMS\Support\Config;
@@ -42,9 +42,9 @@ readonly class IndexQueryAction
 		// A non-admin on an owned collection sees only their own objects.
 		// CollectionAccessMiddleware attaches the scope; the service applies it
 		// before `ids`/`filter`/`search` so none of them can widen the result.
-		$scope = $request->getAttribute(CollectionAccessMiddleware::OWNER_SCOPE_ATTRIBUTE);
+		$scope = $request->getAttribute(CollectionAccessMiddleware::READ_SCOPE_ATTRIBUTE);
 
-		$result  = $this->queryService->query($collection, $params, $scope instanceof OwnerScope ? $scope : null);
+		$result  = $this->queryService->query($collection, $params, $scope instanceof ReadScope ? $scope : null);
 		$baseUrl = $this->config->api . '/api/collections/' . $collection . '/query';
 
 		// Pass collection name for table format rendering

@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TotalCMS\Action\Collection\Index\IndexGetAction;
+use TotalCMS\Domain\Auth\Data\ReadScope;
 use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Index\Data\IndexData;
 use TotalCMS\Domain\Index\Service\IndexFilter;
@@ -222,7 +223,7 @@ final class IndexGetActionTest extends TestCase
 	}
 
 	// -----------------------------------------------------------------------
-	// Owner scope. CollectionAccessMiddleware attaches an OwnerScope for a
+	// Owner scope. CollectionAccessMiddleware attaches a ReadScope for a
 	// non-admin on an owned collection; the action applies it, by exact
 	// match, after the caller's own filters, so those can only narrow further.
 	// -----------------------------------------------------------------------
@@ -238,7 +239,7 @@ final class IndexGetActionTest extends TestCase
 
 		$this->request->method('getQueryParams')->willReturn([]);
 		$this->request->method('getAttribute')->willReturnCallback(
-			static fn (string $name, $default = null) => $name === 'ownerScope' ? new OwnerScope('owner', 'alex') : $default,
+			static fn (string $name, $default = null) => $name === 'readScope' ? new ReadScope(new OwnerScope('owner', 'alex'), published: false, drafts: false) : $default,
 		);
 		$this->indexFilter->method('extractFilterOptions')->willReturn([]);
 		$this->indexReader->expects($this->once())->method('fetchIndex')->with('showcase')->willReturn($indexData);
@@ -261,7 +262,7 @@ final class IndexGetActionTest extends TestCase
 
 		$this->request->method('getQueryParams')->willReturn($params);
 		$this->request->method('getAttribute')->willReturnCallback(
-			static fn (string $name, $default = null) => $name === 'ownerScope' ? new OwnerScope('owner', 'alex') : $default,
+			static fn (string $name, $default = null) => $name === 'readScope' ? new ReadScope(new OwnerScope('owner', 'alex'), published: false, drafts: false) : $default,
 		);
 		$this->indexFilter->method('extractFilterOptions')->with($params)->willReturn(['include' => 'draft:false']);
 

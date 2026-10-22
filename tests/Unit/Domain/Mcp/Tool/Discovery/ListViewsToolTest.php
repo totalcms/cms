@@ -6,6 +6,7 @@ namespace Tests\Unit\Domain\Mcp\Tool\Discovery;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
 use TotalCMS\Domain\DataView\Service\DataViewLister;
 use TotalCMS\Domain\Mcp\Auth\Data\McpPersona;
@@ -27,7 +28,7 @@ final class ListViewsToolTest extends TestCase
 		// ListViewsTool never touches canReadCollection()/canReadDrafts() —
 		// PersonaContext's Task 10b constructor deps are unused here; plain
 		// stubs satisfy the type only.
-		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class));
+		$this->persona = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
 		$this->tool    = new ListViewsTool($this->lister, $this->persona);
 	}
 

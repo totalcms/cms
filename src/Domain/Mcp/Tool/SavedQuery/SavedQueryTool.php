@@ -124,7 +124,7 @@ final readonly class SavedQueryTool
 
 			$resolved = $this->resolveFilters($args);
 			$params   = $this->buildQueryParams($resolved);
-			$result   = $this->indexQueryService->query($this->definition->collectionName, $params);
+			$result   = $this->indexQueryService->query($this->definition->collectionName, $params, $this->personaContext->readScope($this->definition->collectionName, $collection));
 
 			$items = [];
 			foreach ($result->items as $object) {
@@ -198,13 +198,9 @@ final readonly class SavedQueryTool
 			$include = trim($include . ',' . implode(',', $includeParts), ',');
 		}
 
-		// Draft-authority safety filter applied last: only ADMIN or a caller
-		// whose access groups grant `read` on this collection sees drafts —
-		// see PersonaContext::canReadDrafts().
+		// Drafts and other members' objects the caller may not read are
+		// removed by the read scope the query service applies first.
 		$exclude = $this->definition->exclude;
-		if (!$this->personaContext->canReadDrafts($this->definition->collectionName)) {
-			$exclude = trim($exclude . ',draft:true', ',');
-		}
 
 		$params = [
 			'limit'  => (string)$this->definition->limit,

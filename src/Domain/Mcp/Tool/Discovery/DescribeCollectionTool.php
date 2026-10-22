@@ -6,6 +6,8 @@ namespace TotalCMS\Domain\Mcp\Tool\Discovery;
 
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
+use TotalCMS\Domain\Collection\Data\CollectionData;
+use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
@@ -82,6 +84,7 @@ readonly class DescribeCollectionTool
 				'url_pattern'   => ['type' => 'string', 'description' => 'URL template for objects, e.g. "/blog/{id}". Empty string when no pattern is configured.'],
 				'access'        => ['type' => 'string', 'enum' => ['admin', 'public', 'authenticated'], 'description' => 'Persona that can query this collection.'],
 				'total_objects' => ['type' => 'integer'],
+				'ownership'     => ['type' => ['string', 'null'], 'description' => 'Set when the collection limits the caller to their own objects, or has fields only the site sets: what the caller sees and may change.'],
 				'properties'    => [
 					'type'        => 'array',
 					'description' => 'One entry per exposed property (mcp.expose:false fields are stripped). Per-property mcp.description is surfaced here when set.',
@@ -124,8 +127,32 @@ readonly class DescribeCollectionTool
 			'url_pattern'   => $collectionData->url,
 			'access'        => $cfg['access'],
 			'total_objects' => max(0, $collectionData->totalObjects),
+			'ownership'     => $this->ownership($collection, $collectionData),
 			'properties'    => $this->schemaResolver->describeProperties($collectionData),
 		];
+	}
+
+	/**
+	 * A sentence telling the agent up front what the caller may see and
+	 * change here, so it does not learn the limits one refusal at a time.
+	 */
+	private function ownership(string $collection, CollectionData $collectionData): ?string
+	{
+		$sentences = [];
+		$scope     = $this->personaContext->readScope($collection, $collectionData);
+		if ($scope->owner instanceof OwnerScope) {
+			$sentences[] = $scope->published
+				? 'You see your own objects (drafts included) and everyone else\'s published ones, and you can edit only your own.'
+				: 'You see and edit only your own objects.';
+			$sentences[] = sprintf('New objects are recorded as yours in "%s".', $scope->owner->property);
+		}
+
+		$siteFields = array_diff($this->personaContext->fieldsSetBySite($collection), [$scope->owner?->property]);
+		if ($siteFields !== []) {
+			$sentences[] = sprintf('The site sets these fields itself; values you send for them are ignored: %s.', implode(', ', $siteFields));
+		}
+
+		return $sentences === [] ? null : implode(' ', $sentences);
 	}
 
 	private function description(): string
