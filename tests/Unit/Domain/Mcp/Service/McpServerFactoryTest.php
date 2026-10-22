@@ -13,6 +13,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use TotalCMS\Domain\AccessGroup\Data\AccessGroupData;
+use TotalCMS\Domain\Auth\Data\UserAuthority;
 use TotalCMS\Domain\Auth\Service\ActorContext;
 use TotalCMS\Domain\Collection\Repository\CollectionRepository;
 use TotalCMS\Domain\Collection\Service\CollectionFetcher;
@@ -30,6 +32,7 @@ use TotalCMS\Domain\Mcp\Resource\Service\ResourceRegistry;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
 use TotalCMS\Domain\Mcp\Service\McpServerFactory;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
+use TotalCMS\Domain\Mcp\Tool\Data\ToolRequirement;
 use TotalCMS\Domain\Mcp\Tool\Service\SavedQueryToolFactory;
 use TotalCMS\Domain\Mcp\Tool\Service\SchemaToolRegistrar;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
@@ -130,6 +133,44 @@ final class McpServerFactoryTest extends TestCase
 		$editions->method('can')->willReturn($dataViews);
 
 		return $editions;
+	}
+
+	public function testASignedInCallerSeesOnlyTheToolsItsScopesCoverAndAnAdminSeesThemAll(): void
+	{
+		$requiring = static fn (string $name, string $operation): McpToolDefinition => new McpToolDefinition(
+			name: $name,
+			description: $name,
+			access: $operation === 'read' ? 'public' : 'admin',
+			handler: static fn (string $collection): array => [],
+			inputSchema: ['type' => 'object', 'properties' => ['collection' => ['type' => 'string']]],
+			requires: new ToolRequirement(domain: 'objects', operation: $operation, collectionArg: 'collection'),
+		);
+		$this->registry->register($requiring('read_thing', 'read'));
+		$this->registry->register($requiring('create_thing', 'create'));
+
+		$writer = new UserAuthority(isAdmin: false, groups: [new AccessGroupData([
+			'id'          => 'writers',
+			'permissions' => ['collections' => ['operations' => ['read', 'create'], 'all' => true, 'allowed' => []]],
+		])]);
+
+		$member = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
+		$member->set(McpPersona::AUTHENTICATED);
+		$member->setAuthority($writer);
+
+		// Read is listed without cms:read: a public collection needs no scope.
+		$member->setScopes(['mcp:tools']);
+		self::assertSame(['read_thing'], $this->toolNames($this->factory($member), McpPersona::AUTHENTICATED));
+
+		$member->setScopes(['cms:read', 'mcp:tools']);
+		self::assertSame(['read_thing'], $this->toolNames($this->factory($member), McpPersona::AUTHENTICATED));
+
+		// cms:admin implies cms:write.
+		$member->setScopes(['cms:admin', 'mcp:tools']);
+		self::assertSame(['create_thing', 'read_thing'], $this->toolNames($this->factory($member), McpPersona::AUTHENTICATED));
+
+		$admin = new PersonaContext($this->createStub(CollectionFetcher::class), $this->createStub(McpSchemaResolver::class), mcpGuard($this), new ActorContext());
+		$admin->set(McpPersona::ADMIN);
+		self::assertSame(['create_thing', 'read_thing'], $this->toolNames($this->factory($admin), McpPersona::ADMIN));
 	}
 
 	public function testToolsOfAnEditionFeatureTheLicenseLacksAreLeftOutForEveryone(): void

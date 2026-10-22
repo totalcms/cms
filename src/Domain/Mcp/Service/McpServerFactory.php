@@ -225,7 +225,9 @@ readonly class McpServerFactory
 
 	/**
 	 * The tools the server built for this request registers: the persona's
-	 * view of the registry, and — for a browser session (WebMCP), which reads
+	 * view of the registry, less any tool whose permission the caller's
+	 * connection was not granted ({@see grantsScopeFor()}), and — for a
+	 * browser session (WebMCP), which reads
 	 * only — nothing that is not readOnlyHint: true. A tool with no
 	 * annotations is read-only by default; an annotations object must
 	 * declare readOnlyHint true (the same effective-annotations rule build()
@@ -243,7 +245,7 @@ readonly class McpServerFactory
 	{
 		$tools = array_values(array_filter(
 			$this->toolRegistry->forPersona($persona, $this->personaContext->getAuthority(), $this->personaContext->getLimitedKey() !== null),
-			fn (McpToolDefinition $tool): bool => $this->licensed($tool->edition),
+			fn (McpToolDefinition $tool): bool => $this->licensed($tool->edition) && $this->grantsScopeFor($persona, $tool),
 		));
 		if (!$this->personaContext->isReadOnly()) {
 			return $tools;
@@ -564,5 +566,28 @@ readonly class McpServerFactory
 	private function licensed(?EditionFeature $feature): bool
 	{
 		return !$feature instanceof EditionFeature || $this->editionFeatures->can($feature);
+	}
+
+	/**
+	 * Whether a signed-in caller's scopes cover the permission $tool needs,
+	 * the same check the call-time guard makes ({@see guardHandler()}): a
+	 * token approved for cms:read only does not see the write tools.
+	 *
+	 * Content read tools stay listed without cms:read, because a public
+	 * collection needs no scope and the guard lets them through there. API
+	 * keys and browser sessions carry fixed scope sets, so the same rule
+	 * covers them.
+	 */
+	private function grantsScopeFor(McpPersona $persona, McpToolDefinition $tool): bool
+	{
+		$requires = $tool->requires;
+		if ($persona !== McpPersona::AUTHENTICATED || !$requires instanceof ToolRequirement) {
+			return true;
+		}
+		if ($requires->domain === 'objects' && $requires->operation === 'read') {
+			return true;
+		}
+
+		return in_array($requires->requiredScope(), $this->scopeRegistry->expand($this->personaContext->getScopes()), true);
 	}
 }

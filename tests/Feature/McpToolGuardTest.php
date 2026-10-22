@@ -382,8 +382,9 @@ describe('McpToolGuard — call-time enforcement', function (): void {
 	});
 
 	// (c) scope denial: blogger authority is fine, but the token lacks
-	// cms:write → handler NOT invoked, error mentions the permission.
-	it('denies with a scope-layer error when the token lacks the required scope', function (): void {
+	// cms:write → the tool is not registered for this connection, so the
+	// call fails and the handler never runs.
+	it('refuses the call when the token lacks the required scope', function (): void {
 		mcpGuardSeedUser('blogger-user-test-com');
 		mcpGuardRegisterTool(
 			$this->app,
@@ -391,10 +392,10 @@ describe('McpToolGuard — call-time enforcement', function (): void {
 			new ToolRequirement(domain: 'objects', operation: 'create', collectionArg: 'collection'),
 		);
 
-		// mcp:tools only — no cms:write. Visibility (isSatisfiedForAny) is
-		// authority-based, not scope-based, so the tool is still registered
-		// for this Bearer session; the call-time guard is what must catch
-		// the missing scope.
+		// mcp:tools only — no cms:write. tools/list leaves out a tool whose
+		// scope the connection lacks (McpServerFactory::grantsScopeFor()), so
+		// the call fails as an unknown tool; the call-time guard's own scope
+		// check stays behind it.
 		$response = mcpGuardCallTool(
 			$this->app,
 			'blogger-user-test-com',
@@ -411,10 +412,9 @@ describe('McpToolGuard — call-time enforcement', function (): void {
 
 		expect($response->getStatusCode())->toBe(200);
 
-		$text = mcpGuardResultText($response);
-		expect($text)->not->toBeNull();
-		expect($text)->toContain('permission');
-		expect($text)->not->toContain('received_collection');
+		$body = json_decode((string)$response->getBody(), true);
+		expect(isset($body['error']) || ($body['result']['isError'] ?? false))->toBeTrue();
+		expect((string)$response->getBody())->not->toContain('received_collection');
 	});
 
 	// (e) missing/empty collectionArg → denied with a clear message, handler

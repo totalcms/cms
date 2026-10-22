@@ -68,7 +68,9 @@ Every authenticated (OAuth) call to a collection or object has to clear three in
 2. **Group** — do that person's **access groups** actually grant this operation on this collection? The same groups you already manage under **Admin → Access Groups** for the dashboard.
 3. **Exposure** — is the collection turned on for MCP at all (`mcp.access: 'authenticated'` or `'public'`)? A collection left at the default `mcp.access: 'admin'`, or set to `'apikey'`, is invisible to every OAuth caller regardless of scope or group.
 
-All three have to pass. Concretely:
+All three have to pass. The tool list follows the first two: an agent is offered only the tools its connection's scopes cover and its groups grant on at least one collection or schema, so a token approved for `cms:read` sees no write tools. Content read tools stay listed without `cms:read`, since public collections need no scope. The admin persona sees every tool. The list cannot narrow a tool to particular collections, so every call is still checked against the collection or schema it names.
+
+Concretely:
 
 - **A blogger** whose access group can create/update the `blog` collection, connecting with a `cms:write mcp:tools` token, can ask Claude to draft and save a blog post — `create_object`/`update_object` succeed on `blog`. The same token gets refused on `products` or `team`, because the blogger's groups don't grant anything there, even though the token's scope would otherwise allow a write.
 - **A viewer** whose access group only grants `read` never gets a working `create_object`/`update_object` call, no matter what scopes their token carries — group is the gate that matters once scope has cleared.

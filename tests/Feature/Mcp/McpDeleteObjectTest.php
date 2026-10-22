@@ -56,7 +56,7 @@ test('a member whose group does not grant delete never sees delete_object', func
 	expect($names)->toBeArray()->not->toContain('delete_object');
 });
 
-test('a member without cms:write is refused delete_object', function (): void {
+test('a member without cms:write is not offered delete_object and cannot call it', function (): void {
 	mcpAuthSeedUser('blogger-user-test-com');
 	$this->app->getContainer()->get(ObjectSaver::class)->saveObject('blog', ['id' => 'member-keeps', 'title' => 'Keeps']);
 
@@ -64,14 +64,16 @@ test('a member without cms:write is refused delete_object', function (): void {
 	$sessionId = mcpAuthInitSession($this->app, $token);
 	expect($token)->not->toBe('')->and($sessionId)->not->toBe('');
 
+	$list = json_decode((string)mcpAuthRequest($this->app, $token, ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'], $sessionId)->getBody(), true);
+	expect(array_column($list['result']['tools'] ?? [], 'name'))->not->toContain('delete_object');
+
 	$call = json_decode((string)mcpAuthRequest($this->app, $token, [
 		'jsonrpc' => '2.0',
-		'id'      => 1,
+		'id'      => 2,
 		'method'  => 'tools/call',
 		'params'  => ['name' => 'delete_object', 'arguments' => ['collection' => 'blog', 'id' => 'member-keeps']],
 	], $sessionId)->getBody(), true);
 
-	expect($call['result']['isError'] ?? false)->toBeTrue()
-		->and(json_encode($call))->toContain('cms:write')
+	expect(isset($call['error']) || ($call['result']['isError'] ?? false))->toBeTrue()
 		->and(is_file(cmsDataDir() . 'blog/member-keeps.json'))->toBeTrue();
 });
