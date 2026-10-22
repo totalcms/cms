@@ -12,6 +12,7 @@ use TotalCMS\Domain\Auth\Exception\InvalidCredentialsException;
 use TotalCMS\Domain\Auth\Service\LoginService;
 use TotalCMS\Domain\Auth\Service\PersistentLoginService;
 use TotalCMS\Domain\Auth\Service\SessionLogin;
+use TotalCMS\Domain\OAuth\Service\OAuthLoginCollection;
 use TotalCMS\Domain\Session\SessionKeys;
 use TotalCMS\Domain\Translation\TranslationService;
 use TotalCMS\Support\Config;
@@ -31,6 +32,7 @@ readonly class AuthLoginSubmitAction
 		private Config $config,
 		private PersistentLoginService $persistentLoginService,
 		private TranslationService $translator,
+		private OAuthLoginCollection $oauthLogin,
 	) {
 	}
 
@@ -83,9 +85,13 @@ readonly class AuthLoginSubmitAction
 		$persistentLogin = !empty($data['persistent_login']);
 		$collection      = $args['collection'] ?? '';
 
+		// On the OAuth login page, mid-way through connecting an AI client,
+		// staff from the default collection can sign in too.
+		$fallback = $this->oauthLogin->fallsBackToDefault($collection, (string)$this->session->get(SessionKeys::REQUEST_ORIGIN_URL, ''));
+
 		$user = null;
 		try {
-			$user = $this->loginService->authenticate($idOrEmail, $password, $collection);
+			$user = $this->loginService->authenticate($idOrEmail, $password, $collection, $fallback);
 		} catch (AccountNotActiveException $e) {
 			// Distinct flag so the login template can surface a "resend
 			// verification email" link inline with the error. The generic

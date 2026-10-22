@@ -676,6 +676,11 @@ $settings['oauth'] = [
 	'authCodeTtl'              => 'PT10M',  // 10 minutes
 	'dynamicRegistration'      => true,     // RFC 7591 self-registration — MCP clients (Claude, ChatGPT, Cursor) need it to connect without manual setup; the consent screen shows where the code goes
 	'dynamicRegistrationLimit' => 60,  // /oauth/register requests per IP per hour; hosted AI clients share backend IPs and re-register per connect attempt. 0 = no limit
+	// The auth collection whose members sign in to connect an AI client. '' = the
+	// default auth collection. When set, a logged-out authorize request goes to that
+	// collection's login page (staff from the default collection can sign in there
+	// too), and sessions from any other auth collection cannot authorize.
+	'loginCollection'          => '',
 	// Scopes granted when a client requests none. Without this, scope-less tokens
 	// authenticate but fail every MCP call with insufficient_scope. '' disables.
 	'defaultScope'        => 'cms:read mcp:tools mcp:resources mcp:prompts',

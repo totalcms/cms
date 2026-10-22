@@ -35,6 +35,7 @@ All notable changes to Total CMS will be documented in this file.
 - **`fieldIcons` on the login form.** `cms.form.loginForm({fieldIcons: false})` drops the icon slots beside email and password, as the form builder already could
 - **The form builder's `formgrid` option lays out schema forms.** `cms.form.builder('users', {formgrid: ...})` was ignored for schema-driven forms; it now wins when given, so a front-end form can arrange a subset of a schema's fields without changing the admin layout
 - **Agent skill: troubleshooting steps and a support report template** for a suspected Total CMS bug
+- **OAuth login collection.** Settings → OAuth Server → Login Collection names the auth collection whose members connect an AI client or authorize an integration, for a site whose members live in their own collection (such as `users`). A signed-out caller is sent to that collection's login page, where staff from the default user collection can also sign in during an OAuth flow. A session from any other auth collection cannot authorize and is logged as `login_collection.rejected`. Unset, OAuth behaves as before. See [OAuth Server](resources/docs/apis/oauth.md#login-collection)
 
 ### Changed
 

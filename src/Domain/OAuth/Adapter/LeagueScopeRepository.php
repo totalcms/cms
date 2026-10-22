@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\OAuth\Adapter;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
+use League\OAuth2\Server\RequestTypes\AuthorizationRequestInterface;
 use TotalCMS\Domain\Auth\Service\AccessControlService;
 use TotalCMS\Domain\OAuth\Data\OAuthClientData;
 use TotalCMS\Domain\OAuth\Data\OAuthUserRef;
@@ -74,21 +75,7 @@ final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 
 		$allowed = $client->scopes;
 
-		$userCanConveyAdmin = false;
-		if (is_string($userIdentifier) && $userIdentifier !== '') {
-			$ref = OAuthUserRef::parse($userIdentifier, (string)$this->config->auth['collection']);
-			// Widened issuance gate (spec refinement): a non-admin user whose
-			// groups grant ANY admin-domain permission (schemas, collectionsMeta,
-			// or a utils allow) can also convey cms:admin — mirrors the same
-			// authority the group layer already grants them elsewhere (e.g. MCP
-			// admin-domain tools gated by ToolRequirement). The group layer still
-			// caps what the resulting token can actually DO — this only widens who
-			// is allowed to REQUEST the scope in the first place. isAdmin() short-
-			// circuits first so the common case never pays for authorityFor()'s
-			// group lookup.
-			$userCanConveyAdmin = $this->accessControl->isAdmin($ref->userId, $ref->collection)
-				|| $this->accessControl->authorityFor($ref)->hasAdminDomainGrants();
-		}
+		$userCanConveyAdmin = is_string($userIdentifier) && $this->userCanConveyAdmin($userIdentifier);
 
 		return array_values(array_filter(
 			$scopes,
@@ -108,5 +95,63 @@ final readonly class LeagueScopeRepository implements ScopeRepositoryInterface
 				return !in_array($id, OAuthScopeRegistry::ADMIN_GATED, true) || $userCanConveyAdmin;
 			},
 		));
+	}
+
+	/**
+	 * Whether the user behind $userIdentifier (`collection:userId`, or a bare
+	 * id in the default collection) may convey the admin-gated scopes. The
+	 * consent screen asks the same question, so it never lists a scope the
+	 * token will not carry.
+	 *
+	 * Widened issuance gate (spec refinement): a non-admin user whose groups
+	 * grant ANY admin-domain permission (schemas, collectionsMeta, or a utils
+	 * allow) can also convey cms:admin — mirrors the same authority the group
+	 * layer already grants them elsewhere (e.g. MCP admin-domain tools gated by
+	 * ToolRequirement). The group layer still caps what the resulting token can
+	 * actually DO — this only widens who is allowed to REQUEST the scope in the
+	 * first place. isAdmin() short-circuits first so the common case never pays
+	 * for authorityFor()'s group lookup.
+	 */
+	public function userCanConveyAdmin(string $userIdentifier): bool
+	{
+		if ($userIdentifier === '') {
+			return false;
+		}
+
+		$ref = OAuthUserRef::parse($userIdentifier, (string)$this->config->auth['collection']);
+
+		return $this->accessControl->isAdmin($ref->userId, $ref->collection)
+			|| $this->accessControl->authorityFor($ref)->hasAdminDomainGrants();
+	}
+
+	/**
+	 * Drop scope labels T3 doesn't define from the parsed request, and when
+	 * nothing known remains substitute the oauth.defaultScope baseline.
+	 *
+	 * MCP clients request labels from their own vocabulary (claude.ai sends
+	 * `scope=claudeai`). getScopeEntityByIdentifier() is tolerant so league
+	 * doesn't reject the request outright; this is where the unknowns are
+	 * actually removed — BEFORE the consent screen renders and BEFORE the
+	 * request is serialized for the approve handler, so the user consents to
+	 * exactly what the token will carry. Without the default substitution an
+	 * unknown-only request would yield a scope-less token that MCP rejects
+	 * with insufficient_scope on every call.
+	 */
+	public function normalizeRequested(AuthorizationRequestInterface $authRequest): void
+	{
+		$known = array_values(array_filter(
+			$authRequest->getScopes(),
+			fn (ScopeEntityInterface $s): bool => $this->registry->has($s->getIdentifier()),
+		));
+
+		if ($known === []) {
+			$default = (string)($this->config->oauth['defaultScope'] ?? 'cms:read mcp:tools mcp:resources mcp:prompts');
+			$known   = array_map(
+				static fn (string $id): LeagueScopeEntity => new LeagueScopeEntity($id),
+				array_values(array_filter(explode(' ', $default), $this->registry->has(...))),
+			);
+		}
+
+		$authRequest->setScopes($known);
 	}
 }

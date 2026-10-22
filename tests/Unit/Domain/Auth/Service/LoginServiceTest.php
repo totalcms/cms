@@ -121,4 +121,68 @@ final class LoginServiceTest extends TestCase
 
 		$this->assertSame('john-doe', $user['id']);
 	}
+
+	// ─── Falling back to the default collection (oauth.loginCollection) ─────
+
+	/**
+	 * A service whose users live in the collections named, keyed by email.
+	 *
+	 * @param array<string,array<string,array<string,mixed>>> $users collection => email => user
+	 */
+	private function serviceWith(array $users): LoginService
+	{
+		$validator = $this->createMock(UserValidationService::class);
+		$validator->method('validateUser')->willReturnCallback(static function (string $email, string $collection) use ($users): array {
+			return $users[$collection][$email] ?? throw new \Exception('User not found');
+		});
+		$validator->method('isSuperAdmin')->willReturn(false);
+
+		$firstLogin = $this->createMock(FirstLoginChecker::class);
+		$firstLogin->method('isNewInstallation')->willReturn(false);
+		$loggerFactory = $this->createMock(LoggerFactory::class);
+		$loggerFactory->method('channelLogger')->willReturn(new NullLogger());
+		$config       = $this->createMock(Config::class);
+		$config->auth = ['collection' => 'auth'];
+
+		return new LoginService($validator, $this->createMock(LastLoginUpdateService::class), $firstLogin, $loggerFactory, $config, new EventDispatcher(new NullLogger()));
+	}
+
+	public function testFallbackSignsInAStaffMemberFromTheDefaultCollection(): void
+	{
+		$service = $this->serviceWith(['auth' => ['john@example.com' => $this->user()]]);
+
+		$user = $service->authenticate('john@example.com', 'correct', 'members', fallbackToDefault: true);
+
+		$this->assertSame('john-doe', $user['id']);
+		$this->assertSame('auth', $user['_authenticated_collection']);
+	}
+
+	public function testWithoutFallbackTheDefaultCollectionIsNotTried(): void
+	{
+		$service = $this->serviceWith(['auth' => ['john@example.com' => $this->user()]]);
+
+		$this->expectException(InvalidCredentialsException::class);
+		$service->authenticate('john@example.com', 'correct', 'members');
+	}
+
+	public function testFallbackPrefersTheRequestedCollection(): void
+	{
+		$service = $this->serviceWith([
+			'members' => ['john@example.com' => $this->user(['id' => 'member-john'])],
+			'auth'    => ['john@example.com' => $this->user()],
+		]);
+
+		$user = $service->authenticate('john@example.com', 'correct', 'members', fallbackToDefault: true);
+
+		$this->assertSame('member-john', $user['id']);
+		$this->assertArrayNotHasKey('_authenticated_collection', $user);
+	}
+
+	public function testFallbackStillRefusesAWrongPassword(): void
+	{
+		$service = $this->serviceWith(['auth' => ['john@example.com' => $this->user()]]);
+
+		$this->expectException(InvalidCredentialsException::class);
+		$service->authenticate('john@example.com', 'wrong', 'members', fallbackToDefault: true);
+	}
 }
