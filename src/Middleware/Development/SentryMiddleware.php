@@ -136,6 +136,9 @@ class SentryMiddleware implements MiddlewareInterface
 			// Server configuration errors
 			'Class "finfo" not found',
 			'No space left on device',
+			// The hosting account's disk quota is full (EDQUOT) — usually first
+			// seen as Monolog failing to write a log line. Same story as above.
+			'Disk quota exceeded',
 			// session_start() returned false: session.save_path is missing,
 			// unwritable, or the account is out of inodes/quota. Seen on shared
 			// hosting where crawler traffic fills the session directory. PHP
