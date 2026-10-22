@@ -178,12 +178,12 @@ readonly class McpAuth
 	 */
 	private function apiKeyCaller(ServerRequestInterface $request): McpCaller
 	{
-		// authenticate() handles extract + repo lookup + method/path scope check
-		// in one pass. Null means: invalid key, OR a valid key whose scopes don't
-		// permit the request method/path. We collapse both into the same error
-		// message — a key that's valid for REST but lacks `/mcp` is functionally
-		// identical to "no MCP access" from the caller's perspective.
-		$apiKey = $this->apiKeyAuthenticator->authenticate($request);
+		// The key must name `/mcp` in its paths. Its methods are not checked
+		// here: every MCP call is a POST, so a GET-only (read-only) key could
+		// never connect. They are applied per operation instead, through the
+		// key's grants. Null means an invalid key or one without `/mcp`; both
+		// get the same error, since either way the key has no MCP access.
+		$apiKey = $this->apiKeyAuthenticator->authenticateIgnoringMethod($request);
 		if (!$apiKey instanceof ApiKeyData) {
 			throw new McpAuthException(
 				'Invalid API key or insufficient permissions for MCP access.',
@@ -191,10 +191,10 @@ readonly class McpAuth
 			);
 		}
 
-		// A key with `*` in its paths is the operator's admin key. Any other
-		// key reaches only the collections, schemas and templates its paths
-		// name, as an authenticated caller with those grants: `/mcp` in its
-		// paths opens the endpoint, not the content.
+		// A key with `*` in its paths and every method is the operator's admin
+		// key. Any other key reaches only what its paths name and does only
+		// what its methods allow, as an authenticated caller with those grants:
+		// `/mcp` in its paths opens the endpoint, not the content.
 		if (ApiKeyGrants::isUnlimited($apiKey)) {
 			return new McpCaller(McpPersona::ADMIN, McpCallerKind::ApiKey, apiKeyId: $apiKey->id);
 		}

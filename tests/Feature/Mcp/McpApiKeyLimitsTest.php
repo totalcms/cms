@@ -24,7 +24,7 @@ beforeEach(function (): void {
 			'key'      => LIMITED_API_KEY,
 			'created'  => '2026-01-01T00:00:00Z',
 			'lastUsed' => null,
-			'scopes'   => ['methods' => ['GET', 'POST'], 'paths' => ['/mcp', '/collections/blog']],
+			'scopes'   => ['methods' => ['GET', 'POST', 'PUT', 'DELETE'], 'paths' => ['/mcp', '/collections/blog']],
 		]],
 	], JSON_PRETTY_PRINT));
 
@@ -96,4 +96,28 @@ test('an OAuth member cannot reach an apikey collection', function (): void {
 	$ids      = array_column(json_decode((string)$response->getBody(), true)['result']['structuredContent']['collections'] ?? [], 'id');
 
 	expect($ids)->not->toContain('blog');
+});
+
+test('a GET-only key connects read-only: no write tools, and writes are refused', function (): void {
+	file_put_contents(cmsDataDir() . '.system/apikeys.json', (string)json_encode([
+		'apikeys' => [[
+			'id'       => 'read-key-id',
+			'name'     => 'Reader',
+			'key'      => LIMITED_API_KEY,
+			'created'  => '2026-01-01T00:00:00Z',
+			'lastUsed' => null,
+			'scopes'   => ['methods' => ['GET'], 'paths' => ['/mcp', '/collections/blog']],
+		]],
+	], JSON_PRETTY_PRINT));
+
+	$response = mcpStatelessCall($this->app, 'tools/list', [], ['X-API-Key' => LIMITED_API_KEY], '203.0.113.127');
+	expect($response->getStatusCode())->toBe(200);
+	$names = array_column(json_decode((string)$response->getBody(), true)['result']['tools'] ?? [], 'name');
+	expect($names)->toContain('query_collection')
+		->not->toContain('create_object')
+		->not->toContain('patch_object')
+		->not->toContain('update_object');
+
+	$blog = limitedKeyCall($this->app, 'query_collection', ['collection' => 'blog'], '203.0.113.128');
+	expect($blog['result']['isError'] ?? false)->toBeFalse();
 });

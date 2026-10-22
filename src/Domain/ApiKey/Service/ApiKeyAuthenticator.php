@@ -65,6 +65,19 @@ readonly class ApiKeyAuthenticator
 	 * Extract API key from request headers.
 	 * Tries Authorization: Bearer first, then falls back to X-API-Key.
 	 */
+	/**
+	 * The key on $request, checked against its path but not its HTTP method:
+	 * for surfaces where every call is one method whatever it does (MCP is
+	 * always POST). The surface applies the key's methods per operation
+	 * instead ({@see ApiKeyGrants}).
+	 */
+	public function authenticateIgnoringMethod(ServerRequestInterface $request): ?ApiKeyData
+	{
+		$apiKey = $this->extractApiKey($request);
+
+		return $apiKey === '' ? null : $this->apiKeyFetcher->validateKeyForPath($apiKey, $this->stripBasePath($request));
+	}
+
 	private function extractApiKey(ServerRequestInterface $request): string
 	{
 		// Try Authorization: Bearer first (standard)

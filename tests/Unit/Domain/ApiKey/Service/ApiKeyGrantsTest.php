@@ -14,7 +14,7 @@ final class ApiKeyGrantsTest extends TestCase
 	/**
 	 * @param list<string> $paths
 	 */
-	private function key(array $paths, array $methods = ['GET']): ApiKeyData
+	private function key(array $paths, array $methods = ['GET', 'POST', 'PUT', 'DELETE']): ApiKeyData
 	{
 		return new ApiKeyData([
 			'id'      => 'k1',
@@ -25,18 +25,31 @@ final class ApiKeyGrantsTest extends TestCase
 		]);
 	}
 
-	private function authority(array $paths): UserAuthority
+	private function authority(array $paths, array $methods = ['GET', 'POST', 'PUT', 'DELETE']): UserAuthority
 	{
-		$authority = ApiKeyGrants::authority($this->key($paths));
+		$authority = ApiKeyGrants::authority($this->key($paths, $methods));
 		$this->assertInstanceOf(UserAuthority::class, $authority);
 
 		return $authority;
 	}
 
-	public function testAStarKeyIsUnlimited(): void
+	public function testAStarKeyWithEveryOperationIsUnlimited(): void
 	{
 		$this->assertTrue(ApiKeyGrants::isUnlimited($this->key(['*'])));
+		$this->assertTrue(ApiKeyGrants::isUnlimited($this->key(['*'], ['GET', 'POST', 'PATCH', 'DELETE'])));
 		$this->assertNull(ApiKeyGrants::authority($this->key(['/mcp', '*'])));
+	}
+
+	public function testAStarKeyMissingAMethodIsLimitedToItsOperationsEverywhere(): void
+	{
+		$authority = $this->authority(['*'], ['GET']);
+
+		$this->assertFalse(ApiKeyGrants::isUnlimited($this->key(['*'], ['GET'])));
+		$this->assertTrue($authority->canCollection('read', 'anything'));
+		$this->assertFalse($authority->canCollection('update', 'anything'));
+		$this->assertTrue($authority->canSchema('read', 'anything'));
+		$this->assertTrue($authority->canBuilder());
+		$this->assertTrue(ApiKeyGrants::reachesView($this->key(['*'], ['GET']), 'sales'));
 	}
 
 	public function testANamedCollectionGrantsThatCollectionOnly(): void
@@ -85,11 +98,21 @@ final class ApiKeyGrantsTest extends TestCase
 		$this->assertFalse(ApiKeyGrants::reachesView($this->key(['/mcp', '/collections']), 'sales'));
 	}
 
-	public function testMethodsDoNotNarrowTheGrant(): void
+	public function testMethodsDecideTheOperationsAsOnRest(): void
 	{
-		// Over MCP every call is a POST: the key's methods say nothing there.
-		$authority = ApiKeyGrants::authority($this->key(['/collections/blog'], ['GET']));
+		$readOnly = $this->authority(['/collections/blog'], ['GET']);
+		$this->assertTrue($readOnly->canCollection('read', 'blog'));
+		$this->assertFalse($readOnly->canCollection('create', 'blog'));
+		$this->assertFalse($readOnly->canCollection('update', 'blog'));
 
-		$this->assertTrue($authority?->canCollection('update', 'blog'));
+		$noDelete = $this->authority(['/collections/blog'], ['GET', 'POST', 'PATCH']);
+		$this->assertTrue($noDelete->canCollection('create', 'blog'));
+		$this->assertTrue($noDelete->canCollection('update', 'blog'));
+		$this->assertFalse($noDelete->canCollection('delete', 'blog'));
+	}
+
+	public function testAViewNeedsGet(): void
+	{
+		$this->assertFalse(ApiKeyGrants::reachesView($this->key(['/dataviews'], ['POST']), 'sales'));
 	}
 }

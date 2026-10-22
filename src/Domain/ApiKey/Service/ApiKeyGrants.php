@@ -9,43 +9,51 @@ use TotalCMS\Domain\ApiKey\Data\ApiKeyData;
 use TotalCMS\Domain\Auth\Data\UserAuthority;
 
 /**
- * A key's path list read as an access group, for surfaces that cannot use
- * the key's path prefixes directly. MCP is one: every call is a POST to
- * `/mcp`, so the prefixes say nothing about which collection a tool touches.
+ * A key's paths and methods read as an access group, for surfaces that
+ * cannot use them directly. MCP is one: every call is a POST to `/mcp`, so
+ * neither the method nor the path says what a tool does or touches.
  *
- *   - `*` is unlimited: the key has no authority to consult;
- *   - `collections` grants every collection, `collections/{id}` that one
- *     (its objects and its settings);
- *   - `schemas` grants every schema, `schemas/{id}` that one;
- *   - `templates` grants the Site Builder;
- *   - `dataviews` grants every data view, `dataviews/{id}` (or the REST
- *     route `dataviews/{id}/data`) that one ({@see reachesView()});
- *   - any other path (`mcp`, `cron/...`) grants no content.
+ * Paths say what the key reaches:
+ *   - `*` reaches everything;
+ *   - `collections` every collection, `collections/{id}` that one (its
+ *     objects and its settings);
+ *   - `schemas` every schema, `schemas/{id}` that one;
+ *   - `templates` the Site Builder;
+ *   - `dataviews` every data view, `dataviews/{id}` (or the REST route
+ *     `dataviews/{id}/data`) that one ({@see reachesView()});
+ *   - any other path (`mcp`, `cron/...`) reaches no content.
  *
- * The key's methods are not applied: over MCP the method is always POST, so
- * within the collections it covers a key may read and write. REST and XML-RPC
- * keep checking the key's own methods and prefixes.
+ * Methods say what it may do there, as on REST: GET reads, POST creates,
+ * PUT or PATCH updates, DELETE deletes. A key with `*` and every operation is
+ * the operator's admin key ({@see isUnlimited()}).
  */
 final readonly class ApiKeyGrants
 {
-	private const OPERATIONS = ['read', 'create', 'update', 'delete'];
+	private const METHOD_OPERATIONS = ['GET' => 'read', 'POST' => 'create', 'PUT' => 'update', 'PATCH' => 'update', 'DELETE' => 'delete'];
 
+	/**
+	 * Whether the key is an admin: every path and every operation.
+	 */
 	public static function isUnlimited(ApiKeyData $apiKey): bool
 	{
-		return in_array('*', self::paths($apiKey), true);
+		return in_array('*', self::paths($apiKey), true) && count(self::operations($apiKey)) === 4;
 	}
 
 	/**
-	 * Whether the key's paths name data view $viewId.
+	 * Whether the key may read data view $viewId.
 	 */
 	public static function reachesView(ApiKeyData $apiKey, string $viewId): bool
 	{
+		if (!in_array('read', self::operations($apiKey), true)) {
+			return false;
+		}
+
 		$paths = self::paths($apiKey);
 		if (in_array('*', $paths, true) || in_array('dataviews', $paths, true)) {
 			return true;
 		}
 
-		return in_array($viewId, self::targets($paths, 'dataviews')['allowed'], true);
+		return in_array($viewId, self::targets($paths, 'dataviews', ['read'])['allowed'], true);
 	}
 
 	/**
@@ -57,16 +65,18 @@ final readonly class ApiKeyGrants
 			return null;
 		}
 
-		$collections = self::targets(self::paths($apiKey), 'collections');
-		$schemas     = self::targets(self::paths($apiKey), 'schemas');
+		$paths       = self::paths($apiKey);
+		$operations  = self::operations($apiKey);
+		$collections = self::targets($paths, 'collections', $operations);
+		$everything  = in_array('*', $paths, true);
 
 		return new UserAuthority(isAdmin: false, groups: [new AccessGroupData([
 			'id'          => 'apikey:' . $apiKey->id,
 			'permissions' => [
 				'collections'     => $collections,
 				'collectionsMeta' => $collections,
-				'schemas'         => $schemas,
-				'builder'         => in_array('templates', self::paths($apiKey), true),
+				'schemas'         => self::targets($paths, 'schemas', $operations),
+				'builder'         => ($everything || in_array('templates', $paths, true)) && in_array('read', $operations, true),
 				'mailer'          => false,
 				'playground'      => false,
 				'dataviews'       => false,
@@ -80,26 +90,45 @@ final readonly class ApiKeyGrants
 	}
 
 	/**
-	 * The grant section for `$section` (`collections`, `schemas`): all of them
-	 * for the bare path, the named ones for `section/{id}`.
+	 * The grant section for `$section` (`collections`, `schemas`, `dataviews`):
+	 * all of them for `*` or the bare path, the named ones for `section/{id}`.
 	 *
 	 * @param list<string> $paths
+	 * @param list<string> $operations
 	 *
 	 * @return array{operations: list<string>, all: bool, allowed: list<string>}
 	 */
-	private static function targets(array $paths, string $section): array
+	private static function targets(array $paths, string $section, array $operations): array
 	{
 		$allowed = [];
 		foreach ($paths as $path) {
-			if ($path === $section) {
-				return ['operations' => self::OPERATIONS, 'all' => true, 'allowed' => []];
+			if ($path === '*' || $path === $section) {
+				return ['operations' => $operations, 'all' => true, 'allowed' => []];
 			}
 			if (str_starts_with($path, $section . '/')) {
 				$allowed[] = explode('/', substr($path, strlen($section) + 1))[0];
 			}
 		}
 
-		return ['operations' => $allowed === [] ? [] : self::OPERATIONS, 'all' => false, 'allowed' => array_values(array_unique($allowed))];
+		return ['operations' => $allowed === [] ? [] : $operations, 'all' => false, 'allowed' => array_values(array_unique($allowed))];
+	}
+
+	/**
+	 * The operations the key's methods allow.
+	 *
+	 * @return list<string>
+	 */
+	private static function operations(ApiKeyData $apiKey): array
+	{
+		$operations = [];
+		foreach ((array)($apiKey->scopes['methods'] ?? []) as $method) {
+			$operation = self::METHOD_OPERATIONS[strtoupper((string)$method)] ?? null;
+			if ($operation !== null) {
+				$operations[$operation] = $operation;
+			}
+		}
+
+		return array_values($operations);
 	}
 
 	/**

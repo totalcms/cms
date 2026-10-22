@@ -902,7 +902,7 @@ final class AccessGuardTest extends TestCase
 		$this->makePolicy(false, ownerProperty: 'owner');
 		$key = Actor::apiKey('k1', ApiKeyGrants::authority(new ApiKeyData([
 			'id' => 'k1', 'name' => 'Blog', 'key' => 'tcms_k1', 'created' => '2026-01-01T00:00:00Z',
-			'scopes' => ['methods' => ['GET'], 'paths' => ['/mcp', '/collections/showcase']],
+			'scopes' => ['methods' => ['GET', 'PUT'], 'paths' => ['/mcp', '/collections/showcase']],
 		])));
 
 		$this->assertTrue($this->guard->groupAllows($key, 'showcase', 'update'));

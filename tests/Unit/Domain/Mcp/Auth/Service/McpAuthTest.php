@@ -102,14 +102,14 @@ final class McpAuthTest extends TestCase
 	/**
 	 * @param list<string> $paths
 	 */
-	private function makeApiKey(array $paths = ['*']): ApiKeyData
+	private function makeApiKey(array $paths = ['*'], array $methods = ['GET', 'POST', 'PUT', 'DELETE']): ApiKeyData
 	{
 		return new ApiKeyData([
 			'id'      => 'k1',
 			'name'    => 'Test',
 			'key'     => 'tcms_valid',
 			'created' => '2025-01-01T00:00:00Z',
-			'scopes'  => ['methods' => ['POST'], 'paths' => $paths],
+			'scopes'  => ['methods' => $methods, 'paths' => $paths],
 		]);
 	}
 
@@ -117,7 +117,7 @@ final class McpAuthTest extends TestCase
 	{
 		$request = $this->createMock(ServerRequestInterface::class);
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
-		$this->authenticator->method('authenticate')->willReturn($apiKey);
+		$this->authenticator->method('authenticateIgnoringMethod')->willReturn($apiKey);
 
 		return $this->auth()->resolveCaller($request);
 	}
@@ -158,6 +158,14 @@ final class McpAuthTest extends TestCase
 		$this->auth()->resolvePersona($request);
 	}
 
+	public function testAStarKeyWithoutEveryMethodIsNotAnAdmin(): void
+	{
+		$caller = $this->keyCaller($this->makeApiKey(['*'], ['GET']));
+
+		$this->assertSame(McpPersona::AUTHENTICATED, $caller->persona);
+		$this->assertSame('k1', $caller->limitedKey?->id);
+	}
+
 	public function testAnUnlimitedKeyCarriesNoLimits(): void
 	{
 		$this->assertNull($this->keyCaller($this->makeApiKey(['*']))->limitedKey);
@@ -170,7 +178,7 @@ final class McpAuthTest extends TestCase
 		// include `*` is the operator's admin key.
 		$request = $this->createMock(ServerRequestInterface::class);
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
-		$this->authenticator->method('authenticate')->with($request)->willReturn($this->makeApiKey());
+		$this->authenticator->method('authenticateIgnoringMethod')->with($request)->willReturn($this->makeApiKey());
 
 		$persona = $this->auth()->resolvePersona($request);
 
@@ -191,7 +199,7 @@ final class McpAuthTest extends TestCase
 		$request = $this->createMock(ServerRequestInterface::class);
 		// A genuinely valid key: the authenticator would happily accept it.
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
-		$this->authenticator->method('authenticate')->willReturn($this->makeApiKey());
+		$this->authenticator->method('authenticateIgnoringMethod')->willReturn($this->makeApiKey());
 
 		$persona = $this->auth(denied: [EditionFeature::API_KEYS])->resolvePersona($request);
 
@@ -205,7 +213,7 @@ final class McpAuthTest extends TestCase
 		$this->config->mcp = ['publicAccess' => false];
 		$request           = $this->createMock(ServerRequestInterface::class);
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
-		$this->authenticator->method('authenticate')->willReturn($this->makeApiKey());
+		$this->authenticator->method('authenticateIgnoringMethod')->willReturn($this->makeApiKey());
 
 		// No persona is available to this caller at all: the key cannot grant
 		// ADMIN on this edition, and anonymous access is switched off.
@@ -227,7 +235,7 @@ final class McpAuthTest extends TestCase
 		// The control for the two above: nothing changes on Pro.
 		$request = $this->createMock(ServerRequestInterface::class);
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
-		$this->authenticator->method('authenticate')->willReturn($this->makeApiKey());
+		$this->authenticator->method('authenticateIgnoringMethod')->willReturn($this->makeApiKey());
 
 		$this->assertSame(McpPersona::ADMIN, $this->auth()->resolvePersona($request));
 	}
@@ -239,7 +247,7 @@ final class McpAuthTest extends TestCase
 		// they're functionally identical for the caller.
 		$request = $this->createMock(ServerRequestInterface::class);
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
-		$this->authenticator->method('authenticate')->with($request)->willReturn(null);
+		$this->authenticator->method('authenticateIgnoringMethod')->with($request)->willReturn(null);
 
 		$this->expectException(McpAuthException::class);
 		$this->expectExceptionMessage('insufficient permissions for MCP access');
@@ -271,7 +279,7 @@ final class McpAuthTest extends TestCase
 		// fails inside the standard pipeline.
 		$request = $this->createMock(ServerRequestInterface::class);
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
-		$this->authenticator->method('authenticate')->with($request)->willReturn(null);
+		$this->authenticator->method('authenticateIgnoringMethod')->with($request)->willReturn(null);
 
 		$this->expectException(McpAuthException::class);
 
@@ -300,7 +308,7 @@ final class McpAuthTest extends TestCase
 	{
 		$request = $this->createMock(ServerRequestInterface::class);
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
-		$this->authenticator->method('authenticate')->with($request)->willReturn(null);
+		$this->authenticator->method('authenticateIgnoringMethod')->with($request)->willReturn(null);
 
 		try {
 			$this->auth()->resolvePersona($request);
@@ -316,7 +324,7 @@ final class McpAuthTest extends TestCase
 		$this->config->mcp = ['publicAccess' => false];
 		$request           = $this->createMock(ServerRequestInterface::class);
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
-		$this->authenticator->method('authenticate')->with($request)->willReturn($this->makeApiKey());
+		$this->authenticator->method('authenticateIgnoringMethod')->with($request)->willReturn($this->makeApiKey());
 
 		$persona = $this->auth()->resolvePersona($request);
 
@@ -519,7 +527,7 @@ final class McpAuthTest extends TestCase
 	{
 		$this->sessionUser('admin-user-test-com', true);
 		$this->authenticator->method('hasApiKeyHeader')->willReturn(true);
-		$this->authenticator->method('authenticate')->willReturn($this->makeApiKey());
+		$this->authenticator->method('authenticateIgnoringMethod')->willReturn($this->makeApiKey());
 
 		$caller = $this->auth()->resolveCaller($this->sessionRequest());
 

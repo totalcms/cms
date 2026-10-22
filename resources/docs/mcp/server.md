@@ -510,10 +510,10 @@ Preflight `OPTIONS` requests short-circuit to a 204 with the standard handshake 
 
 MCP reads a key's endpoint list the same way REST does: a key reaches the content its paths name, and nothing else.
 
-- **`paths: ["*"]`** (the default "All endpoints" choice) is the operator's admin key: the ADMIN persona, every tool, every collection.
+- **`paths: ["*"]`** (the default "All endpoints" choice) **with every method** is the operator's admin key: the ADMIN persona, every tool, every collection. A `*` key missing a method is limited like any other key: it reaches everything its methods allow, but not Admin only collections.
 - **Any other key needs `/mcp`** in its paths to reach the endpoint. `/mcp` opens the door and grants no content.
 - **Its content comes from its other paths**, read as an access group: `/collections` grants every collection, `/collections/{id}` that one; `/schemas` and `/schemas/{id}` the schema tools; `/templates` the Site Builder template tools. `/dataviews` grants every data view and `/dataviews/{id}/data` that one. Such a key is an AUTHENTICATED caller with those grants. It reaches a collection or view only when that one's MCP access is `apikey`, `authenticated` or `public`: an `admin` collection stays closed to it even when its paths name it. A key with only `/mcp` reaches no content.
-- **Methods do not narrow it over MCP.** Every MCP call is a POST, so within the collections it names a key may read and write. REST and XML-RPC keep checking the key's methods.
+- **Methods decide the tools, as on REST.** GET reads, POST creates, PUT or PATCH updates, DELETE deletes. MCP checks a key's paths but not its method when it connects, since every MCP call is a POST, so a GET-only key connects and gets read tools only. A key without PUT or PATCH gets no `update_object` or `patch_object`; one without POST no `create_object`. The storage layer refuses those writes as well.
 - **Within its collections a key is trusted**: it sees drafts and every owner's objects, and may set protected fields, as on REST.
 
 A key that listed `/mcp` with some collection paths reached every collection before 3.6.3; it now reaches only the collections it names.
