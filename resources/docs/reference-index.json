@@ -4363,6 +4363,37 @@
             "since": "3.5.0"
         },
         {
+            "name": "collection:update",
+            "description": "Change some of an existing collection's settings, keeping the rest. The save validates the result as the collection form does and fires `collection.updated`, which editing `.meta.json` by hand skips.",
+            "arguments": [
+                {
+                    "name": "id",
+                    "required": true,
+                    "description": "Collection ID"
+                },
+                {
+                    "name": "file",
+                    "required": false,
+                    "description": "JSON file holding the settings to change, or `-` for stdin"
+                }
+            ],
+            "options": [
+                {
+                    "name": "--set key=value",
+                    "description": "Set one setting; a dot reaches into a map. Repeatable"
+                },
+                {
+                    "name": "--json",
+                    "description": "Print the saved settings"
+                }
+            ],
+            "examples": [
+                "tcms collection:update recipes --set ownerProperty=author\ntcms collection:update blog --set url=/blog/{id} --set sortBy=date --set reverseSort=true\ntcms collection:update blog --set mcp.access=authenticated\ntcms collection:update products --set properties.price.label=Cost\necho '{\"seo\":{\"titleTemplate\":\"{title} | Recipes\"}}' | tcms collection:update recipes -"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
             "name": "collection:query",
             "description": "Query a collection's index with filtering, searching, sorting, and pagination.",
             "arguments": [
@@ -4488,6 +4519,51 @@
             ],
             "examples": [
                 "tcms collection:convert docs --to=markdown\ntcms collection:convert docs --to=markdown --dry-run\ntcms collection:convert docs --to=json --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "access-group:list",
+            "description": "List every group with what it grants on collection content.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "tcms access-group:list\ntcms access-group:list --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "access-group:get",
+            "description": "Show one group. With `--json` it prints the full definition, the shape `access-group:set` takes.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "tcms access-group:get editor\ntcms access-group:get editor --json"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "access-group:set",
+            "description": "Create a group, or replace one, from a full JSON definition (a file, or `-` for stdin). Any permission section left out grants nothing.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "tcms access-group:set authors authors.json\ntcms access-group:get editor --json | tcms access-group:set editor-copy -",
+                "{\n  \"description\": \"Writes blog posts\",\n  \"permissions\": {\n    \"collections\":     {\"operations\": [\"create\", \"read\", \"update\"], \"all\": false, \"allowed\": [\"blog\"]},\n    \"collectionsMeta\": {\"operations\": [\"read\"], \"all\": true},\n    \"schemas\":         {\"operations\": [\"read\"], \"all\": true},\n    \"utils\":           {\"all\": false, \"allowed\": [\"cache\"]},\n    \"settings\":        {\"all\": false, \"allowed\": []},\n    \"extensions\":      {\"all\": true},\n    \"dataviews\": false, \"builder\": false, \"mailer\": false,\n    \"playground\": false, \"docs\": true, \"inlineEdit\": true\n  }\n}"
+            ],
+            "url": "https://docs.totalcms.co/extensions/cli/",
+            "since": "3.5.0"
+        },
+        {
+            "name": "access-group:patch",
+            "description": "Change part of an existing group. Each permission section merges key by key, so send only what changes; a list (`operations`, `allowed`) is replaced by the list sent.",
+            "arguments": [],
+            "options": [],
+            "examples": [
+                "echo '{\"permissions\":{\"collections\":{\"allowed\":[\"blog\",\"news\"]}}}' | tcms access-group:patch editor -\necho '{\"permissions\":{\"dataviews\":true}}' | tcms access-group:patch analysts -"
             ],
             "url": "https://docs.totalcms.co/extensions/cli/",
             "since": "3.5.0"

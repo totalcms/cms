@@ -112,6 +112,51 @@ abstract class BaseCommand extends Command
 	}
 
 	/**
+	 * Read one JSON object from a file, or from stdin when $filePath is "-".
+	 * Each problem is reported before null is returned: a missing file, no
+	 * input, invalid JSON, or a JSON array ($listError says what to use).
+	 *
+	 * @return array<string,mixed>|null null when the input was rejected and the
+	 *                                  error has already been reported
+	 */
+	protected function readJsonObject(InputInterface $input, OutputInterface $output, string $filePath, string $listError): ?array
+	{
+		if ($filePath === '-') {
+			$content = stream_get_contents(STDIN);
+		} else {
+			if (!file_exists($filePath)) {
+				$this->outputError($input, $output, "File not found: {$filePath}");
+
+				return null;
+			}
+			$content = file_get_contents($filePath);
+		}
+
+		if ($content === false || trim($content) === '') {
+			$this->outputError($input, $output, 'No JSON input provided.');
+
+			return null;
+		}
+
+		$data = json_decode($content, true);
+
+		if (!is_array($data)) {
+			$this->outputError($input, $output, 'Invalid JSON: expected an object of fields to merge.');
+
+			return null;
+		}
+
+		if (array_is_list($data) && $data !== []) {
+			$this->outputError($input, $output, $listError);
+
+			return null;
+		}
+
+		/** @var array<string,mixed> $data */
+		return $data;
+	}
+
+	/**
 	 * Write an error message to stderr.
 	 */
 	protected function outputError(InputInterface $input, OutputInterface $output, string $message): int

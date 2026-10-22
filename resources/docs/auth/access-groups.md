@@ -60,6 +60,8 @@ Access groups are defined in `tcms-data/.system/access-groups.json`:
 }
 ```
 
+Manage groups in **Utilities → Access Groups**, or from the command line with `tcms access-group:list`, `access-group:get`, `access-group:set` and `access-group:patch` — see [CLI](docs/extensions/cli#access-group-commands). Don't edit the file by hand: a misspelled section or operation saves a group that quietly grants nothing, which the CLI refuses.
+
 ## CRUD Operations
 
 Total CMS uses CRUD (Create, Read, Update, Delete) operations for fine-grained permission control:

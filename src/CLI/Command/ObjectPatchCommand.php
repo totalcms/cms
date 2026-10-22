@@ -83,7 +83,7 @@ HELP);
 			);
 		}
 
-		$patchData = $this->readJson($input, $output, $filePath);
+		$patchData = $this->readJsonObject($input, $output, $filePath, 'Input is a JSON array — object:patch takes one object. Use collection:import for arrays.');
 		if (!is_array($patchData)) {
 			return Command::FAILURE;
 		}
@@ -111,52 +111,5 @@ HELP);
 		$output->writeln("<info>Patched{$target} on '{$objectId}' in '{$collectionId}': {$fields}</info>");
 
 		return Command::SUCCESS;
-	}
-
-	/**
-	 * Read the patch document from a file or stdin.
-	 *
-	 * @return array<string,mixed>|null null when the input was rejected and the
-	 *                                  error has already been reported
-	 */
-	private function readJson(InputInterface $input, OutputInterface $output, string $filePath): ?array
-	{
-		if ($filePath === '-') {
-			$content = stream_get_contents(STDIN);
-		} else {
-			if (!file_exists($filePath)) {
-				$this->outputError($input, $output, "File not found: {$filePath}");
-
-				return null;
-			}
-			$content = file_get_contents($filePath);
-		}
-
-		if ($content === false || trim($content) === '') {
-			$this->outputError($input, $output, 'No JSON input provided.');
-
-			return null;
-		}
-
-		$data = json_decode($content, true);
-
-		if (!is_array($data)) {
-			$this->outputError($input, $output, 'Invalid JSON: expected an object of fields to merge.');
-
-			return null;
-		}
-
-		if (array_is_list($data)) {
-			$this->outputError(
-				$input,
-				$output,
-				'Input is a JSON array — object:patch takes one object. Use collection:import for arrays.'
-			);
-
-			return null;
-		}
-
-		/** @var array<string,mixed> $data */
-		return $data;
 	}
 }

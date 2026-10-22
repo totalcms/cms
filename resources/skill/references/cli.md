@@ -47,6 +47,20 @@ vendor/bin/tcms collection:list --json | jq -r '.[].id'
 - `collection:export <id>` — export to JSON, CSV, or ZIP
 - `collection:import <id> <file>` — import objects from JSON or CSV
 - `collection:convert <id> --to=markdown` — switch a collection's object storage format (`--dry-run` first)
+- `collection:create <id>` — create one collection (`--schema=…` unless the id is reserved)
+- `collection:update <id> --set key=value` — change some settings, keep the rest; a dot
+  reaches into a map (`--set mcp.access=authenticated`, `--set properties.price.label=Cost`),
+  or pass JSON (`-` for stdin). Maps (`properties`, `mcp`, `seo`, …) merge key by key, null removes
+
+### Access groups
+`.system/access-groups.json` is not a collection — never edit it by hand.
+- `access-group:list` / `access-group:get <id> [--json]` — the groups and one group's definition
+- `access-group:set <id> <file>` — create or replace a group from a full definition; a section
+  left out grants nothing
+- `access-group:patch <id> <file>` — change part of a group; each section merges key by key
+- Sections: `collections` (content), `collectionsMeta`, `schemas` take `{operations, all, allowed}`;
+  `utils`, `settings`, `extensions` take `{all, allowed}`; `dataviews`, `builder`, `mailer`,
+  `playground`, `docs`, `inlineEdit` are true/false. Unknown keys and operations are refused
 
 ### Objects
 - `object:list <collection>` — list object IDs

@@ -55,6 +55,8 @@ the admin does:**
 | load many objects | `vendor/bin/tcms collection:import <collection> file.json` |
 | add or change a schema | `vendor/bin/tcms schema:import schema.json`, then `schema:lint <id> --strict` |
 | create a collection | `vendor/bin/tcms collection:create …` |
+| change a collection's settings | `vendor/bin/tcms collection:update <id> --set ownerProperty=author` (or JSON on stdin) |
+| add or change an access group | `vendor/bin/tcms access-group:set <id> -` / `access-group:patch <id> -` |
 | seed structure + content together | `vendor/bin/tcms jumpstart:import file.json` |
 
 A save through the CLI validates the object against its schema, fills in what

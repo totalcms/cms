@@ -38,6 +38,33 @@ final readonly class McpToolsValidator
 	}
 
 	/**
+	 * Why a change to a collection's settings carries `mcp.tools` that the
+	 * REST endpoints would refuse, or null when it carries none or they pass.
+	 * For callers outside an HTTP request (the CLI, MCP tools); REST uses
+	 * ValidatesMcpToolsTrait for its translated messages.
+	 *
+	 * @param array<string,mixed> $settings     the settings being changed
+	 * @param string              $storedAccess the collection's current mcp.access
+	 */
+	public function settingsError(string $collectionId, array $settings, string $storedAccess): ?string
+	{
+		$mcp = $settings['mcp'] ?? null;
+		if (!is_array($mcp) || !array_key_exists('tools', $mcp)) {
+			return null;
+		}
+
+		$result = $this->validate($collectionId, (string)($mcp['access'] ?? $storedAccess), $mcp['tools']);
+		if ($result->isInvalidJson()) {
+			return 'mcp.tools must be a list of tool definitions.';
+		}
+		if ($result->isValidationFailed()) {
+			return sprintf('mcp.tools item %d is invalid: %s', $result->failedIndex + 1, $result->failedMessage);
+		}
+
+		return null;
+	}
+
+	/**
 	 * Validate and normalise `mcp.tools`.
 	 *
 	 * @param  string              $collectionId collection ID (used in validation messages)

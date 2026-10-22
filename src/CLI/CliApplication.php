@@ -125,6 +125,13 @@ class CliApplication
 		$app->addCommand(new Command\CollectionExportCommand($totalcms));
 		$app->addCommand(new Command\CollectionImportCommand($totalcms));
 		$app->addCommand(new Command\CollectionConvertCommand($totalcms));
+		$app->addCommand(new Command\CollectionUpdateCommand($totalcms));
+
+		// Access group commands
+		$app->addCommand(new Command\AccessGroup\AccessGroupListCommand($totalcms));
+		$app->addCommand(new Command\AccessGroup\AccessGroupGetCommand($totalcms));
+		$app->addCommand(new Command\AccessGroup\AccessGroupSetCommand($totalcms));
+		$app->addCommand(new Command\AccessGroup\AccessGroupPatchCommand($totalcms));
 
 		// Object commands
 		$app->addCommand(new Command\ObjectListCommand($totalcms));
