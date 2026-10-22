@@ -1022,6 +1022,8 @@ return [
 	'oauth_grants.reach_full_admin'        => 'Volledige beheerderstoegang',
 	'oauth_grants.reach_read_label'        => 'Kan lezen:',
 	'oauth_grants.reach_write_label'       => 'Kan schrijven:',
+	'oauth_grants.reach_own'               => 'eigen',
+	'oauth_grants.reach_own_title'         => 'Alleen de objecten van deze gebruiker',
 	'oauth_grants.reach_more'              => '+{n} meer',
 	'oauth_grants.reach_none'              => 'Geen toegang tot collecties',
 	'oauth_grants.reach_user_missing'      => 'Gebruiker bestaat niet meer – deze autorisatie is inactief',

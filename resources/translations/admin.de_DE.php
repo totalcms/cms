@@ -1022,6 +1022,8 @@ return [
 	'oauth_grants.reach_full_admin'        => 'Vollständiger administrativer Zugriff',
 	'oauth_grants.reach_read_label'        => 'Kann lesen:',
 	'oauth_grants.reach_write_label'       => 'Kann schreiben:',
+	'oauth_grants.reach_own'               => 'eigene',
+	'oauth_grants.reach_own_title'         => 'Nur die Objekte, die diesem Benutzer gehören',
 	'oauth_grants.reach_more'              => '+{n} weitere',
 	'oauth_grants.reach_none'              => 'Kein Zugriff auf Collections',
 	'oauth_grants.reach_user_missing'      => 'Benutzer existiert nicht mehr – diese Berechtigung ist wirkungslos',

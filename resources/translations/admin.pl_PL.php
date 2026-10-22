@@ -1022,6 +1022,8 @@ return [
 	'oauth_grants.reach_full_admin'        => 'Pełny dostęp administracyjny',
 	'oauth_grants.reach_read_label'        => 'Może odczytywać:',
 	'oauth_grants.reach_write_label'       => 'Może zapisywać:',
+	'oauth_grants.reach_own'               => 'własne',
+	'oauth_grants.reach_own_title'         => 'Tylko obiekty należące do tego użytkownika',
 	'oauth_grants.reach_more'              => '+{n} więcej',
 	'oauth_grants.reach_none'              => 'Brak dostępu do kolekcji',
 	'oauth_grants.reach_user_missing'      => 'Użytkownik już nie istnieje — to uprawnienie jest nieaktywne',

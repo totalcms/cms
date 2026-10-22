@@ -199,12 +199,12 @@ readonly class AccessGroupAnalyzer
 	 *                applies before every write tool call.
 	 *   - `update` → same rule as `create`.
 	 *   - `delete` → same rule as `create` (delete_object).
-	 *   - On an owned collection (ownerProperty) a non-super-admin group gets
-	 *                `read` only when the collection is public and never
-	 *                `create`/`update`: MCP has no per-owner scoping, so
-	 *                {@see PersonaContext::canReadCollection()} ignores the
-	 *                grant there and {@see ObjectTools::requireExposed()}
-	 *                refuses non-admin writes.
+	 *   - On an owned collection (ownerProperty) the same ops show, but over
+	 *                MCP they reach each member's own objects only
+	 *                ({@see \TotalCMS\Domain\Auth\Service\AccessGuard}).
+	 *                The matrix shows what the group may do, not whose
+	 *                objects; the OAuth Grants page marks owned reach per
+	 *                user.
 	 *
 	 * `all` is deliberately never derived from the group's own config for a
 	 * non-super-admin row, even when `collections.all: true` with every
@@ -230,8 +230,7 @@ readonly class AccessGroupAnalyzer
 
 		$result = [];
 		foreach ($mcpExposure as $id => $exposure) {
-			// Owned: the grant counts for nothing over MCP (no per-owner scoping).
-			$hasGrant = !$exposure['owned'] && $granted($id);
+			$hasGrant = $granted($id);
 			$ops      = [];
 
 			if ($exposure['access'] === 'public' || ($hasGrant && isset($opsSet['read']))) {

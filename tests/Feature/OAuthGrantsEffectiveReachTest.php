@@ -68,16 +68,16 @@ function seedOauthGrantForReachTest(App $app, string $userId, array $scopes): vo
 	));
 }
 
-it('renders the read badge but hides the write badge for a blogger grant when blog is still at the default mcp.access', function (): void {
+it('renders no reach for a blogger grant while blog is still at the default mcp.access', function (): void {
 	// The blogger access group (tests/tcms-data-fixtures/.system/access-groups.json)
 	// grants full CRUD on the 'blog' collection specifically — that collection
 	// has to actually exist for the Effective Reach computation to find it.
 	// 'blog' is a reserved schema, so it's provisioned via fetchOrCreateReserved()
 	// rather than SchemaSaver (which rejects reserved schema ids). Left at the
 	// DEFAULT mcp.access ('admin') here — the exact "Joe hit this in
-	// production" case: every MCP write tool refuses it via
-	// ObjectTools::requireExposed(), so the page must not claim it's writable
-	// even though the group grants create/update/delete.
+	// production" case: every MCP tool, read or write, refuses it
+	// (PersonaContext::exposedCollection()), so the page must not claim any
+	// reach even though the group grants create/read/update/delete.
 	$this->app->getContainer()->get(CollectionFetcher::class)->fetchOrCreateReserved('blog');
 
 	seedOauthGrantForReachTest($this->app, 'blogger-user-test-com', ['cms:read', 'cms:write']);
@@ -86,10 +86,10 @@ it('renders the read badge but hides the write badge for a blogger grant when bl
 
 	expect($response->getStatusCode())->toBeIn([200, 401, 403]);
 	if ($response->getStatusCode() === 200) {
-		$response->assertSee('dash-badge accent sm">blog<');
+		$response->assertDontSee('dash-badge accent sm">blog<');
 		$response->assertDontSee('dash-badge warning sm">blog<');
 		$response->assertDontSee('Full administrative access');
-		$response->assertDontSee('No collection access');
+		$response->assertSee('No collection access');
 	}
 });
 

@@ -1022,6 +1022,8 @@ return [
 	'oauth_grants.reach_full_admin'        => 'Acceso administrativo completo',
 	'oauth_grants.reach_read_label'        => 'Puede leer:',
 	'oauth_grants.reach_write_label'       => 'Puede escribir:',
+	'oauth_grants.reach_own'               => 'propios',
+	'oauth_grants.reach_own_title'         => 'Solo los objetos de este usuario',
 	'oauth_grants.reach_more'              => '+{n} más',
 	'oauth_grants.reach_none'              => 'Sin acceso a colecciones',
 	'oauth_grants.reach_user_missing'      => 'El usuario ya no existe: esta autorización está inactiva',

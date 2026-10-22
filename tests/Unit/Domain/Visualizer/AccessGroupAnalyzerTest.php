@@ -510,12 +510,11 @@ final class AccessGroupAnalyzerTest extends TestCase
 	}
 
 	/**
-	 * Owned collections (ownerProperty) keep their declared MCP access, but a
-	 * group grant counts for nothing there (MCP has no per-owner scoping): an
-	 * owned public collection is read-only (public exposure), an owned
-	 * authenticated one gives a granted group nothing. Uses the real resolver.
+	 * Owned collections (ownerProperty) show the group's grant like any other
+	 * exposed collection: over MCP it reaches each member's own objects.
+	 * Uses the real resolver.
 	 */
-	public function testOwnedCollectionsIgnoreTheGroupGrantInMcpDimension(): void
+	public function testOwnedCollectionsShowTheGroupGrantInMcpDimension(): void
 	{
 		$owned                    = $this->makeCollection('portfolio', 'public');
 		$owned->ownerProperty     = 'owner';
@@ -558,8 +557,8 @@ final class AccessGroupAnalyzerTest extends TestCase
 		);
 		$mcp = $analyzer->analyze()[0]['dimensions']['mcp'];
 
-		$this->assertSame(['ops' => ['read'], 'all' => false], $mcp['portfolio']);
-		$this->assertSame(['ops' => [], 'all' => false], $mcp['drafts']);
+		$this->assertSame(['ops' => ['read', 'create', 'update'], 'all' => false], $mcp['portfolio']);
+		$this->assertSame(['ops' => ['read', 'create', 'update'], 'all' => false], $mcp['drafts']);
 		$this->assertSame(['ops' => ['read', 'create', 'update'], 'all' => false], $mcp['news']);
 	}
 

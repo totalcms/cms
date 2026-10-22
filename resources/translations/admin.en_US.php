@@ -1022,6 +1022,8 @@ return [
 	'oauth_grants.reach_full_admin'        => 'Full administrative access',
 	'oauth_grants.reach_read_label'        => 'Can read:',
 	'oauth_grants.reach_write_label'       => 'Can write:',
+	'oauth_grants.reach_own'               => 'own',
+	'oauth_grants.reach_own_title'         => 'Only the objects this user owns',
 	'oauth_grants.reach_more'              => '+{n} more',
 	'oauth_grants.reach_none'              => 'No collection access',
 	'oauth_grants.reach_user_missing'      => 'User no longer exists — this grant is inert',
