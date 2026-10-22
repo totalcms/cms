@@ -10,8 +10,10 @@ use TotalCMS\Domain\Collection\Data\CollectionData;
 use TotalCMS\Domain\Collection\Data\OwnerScope;
 use TotalCMS\Domain\Mcp\Auth\Service\PersonaContext;
 use TotalCMS\Domain\Mcp\Service\McpSchemaResolver;
+use TotalCMS\Domain\Mcp\Tool\Admin\MediaMetaEdit;
 use TotalCMS\Domain\Mcp\Tool\Data\McpToolDefinition;
 use TotalCMS\Domain\Mcp\Tool\Service\ToolRegistry;
+use TotalCMS\Domain\Property\Service\MediaMetaPolicy;
 
 /**
  * `describe_collection(collection)` — the detail layer in the three-step
@@ -128,8 +130,29 @@ readonly class DescribeCollectionTool
 			'access'        => $cfg['access'],
 			'total_objects' => max(0, $collectionData->totalObjects),
 			'ownership'     => $this->ownership($collection, $collectionData),
-			'properties'    => $this->schemaResolver->describeProperties($collectionData),
+			'properties'    => array_map(self::withMediaHint(...), $this->schemaResolver->describeProperties($collectionData)),
 		];
+	}
+
+	/**
+	 * An image, file, gallery or depot property says how to edit its
+	 * metadata over MCP, since its file cannot be written.
+	 *
+	 * @param array<string,mixed> $property
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function withMediaHint(array $property): array
+	{
+		$type = (string)($property['type'] ?? '');
+		if (MediaMetaPolicy::editableKeys($type) === []) {
+			return $property;
+		}
+
+		$hint                    = 'Files cannot be uploaded over MCP; edit the uploaded file\'s metadata with patch_object as ' . MediaMetaEdit::hint($type) . '.';
+		$property['description'] = trim((string)($property['description'] ?? '') . ' ' . $hint);
+
+		return $property;
 	}
 
 	/**

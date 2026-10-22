@@ -37,8 +37,10 @@ Rules that prevent wasted calls:
 fields keep their current values, so there is no round-trip and nothing to
 lose. Rules: containers (card/deck/list) replace WHOLE (send the complete
 container to change or remove any part); clearing is explicit (`""` / `[]`);
-omitting never clears; binary fields (image/file/gallery/depot) can't be
-written and always survive.
+omitting never clears; files (image/file/gallery/depot) can't be uploaded and
+always survive, but their metadata can be edited: `{"alt": "…"}` for an image,
+`[{"name": "x.jpg", "alt": "…"}]` for a gallery, `[{"path": "dir/x.pdf",
+"comments": "…"}]` for a depot (`describe_collection` lists the keys).
 
 **`update_object` merges exactly like `patch_object`** — omitted fields keep
 their values (it was a full replace in older versions). If you write back an
@@ -49,7 +51,7 @@ object you fetched rather than just the changed fields:
    the original HTML.
 2. Edit the fields you need in the returned object.
 3. **Delete the decorated `url` key** (and any other keys not in the schema),
-   and strip binary fields — a payload that sets one is refused.
+   Binary fields may stay as fetched; only their descriptive keys can change.
 4. Send it to `patch_object` or `update_object`.
 
 After any write, the response echoes the saved object — verify your change is

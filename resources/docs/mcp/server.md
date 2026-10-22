@@ -265,14 +265,22 @@ All tool descriptions are also visible to the AI client at runtime via `tools/li
 
 #### Binary fields on the object write tools
 
-Image, file, gallery, and depot fields can't be written through MCP — they need an upload pipeline (multipart bodies, storage handles) that a JSON tool call doesn't carry. `create_object`, `update_object`, and `patch_object` all handle this at the **payload level**, not the schema level:
+Files can't be uploaded through MCP — that needs an upload pipeline (multipart bodies, storage handles) that a JSON tool call doesn't carry. What an agent *can* do is describe a file that is already uploaded: alt text, tags, a focal point, a download label.
 
 - A collection that merely *contains* a binary field is fully writable — just **omit** those fields from your payload. On `create_object` they're left unset; on `update_object` and `patch_object` they keep their current value (a write never wipes an image you didn't touch).
-- If the payload actually sets a non-empty value on a binary field, the call is refused with an error naming the offending fields. Drop them and retry, or edit those fields in the admin UI.
+- `create_object` refuses a value in an image, file, gallery or depot field: there is no uploaded file to describe yet.
+- `update_object` and `patch_object` take a **metadata edit** there, merged over the stored value:
 
-This means content-rich collections (blog posts with an optional hero image, etc.) work end-to-end from an agent. Set binary fields afterward in the admin UI, or via the admin clone feature.
+| Field | Send | Editable keys |
+|---|---|---|
+| image | `{"alt": "Team photo", "focalpoint": {"x": 40, "y": 30}}` | `alt`, `link`, `tags`, `featured`, `focalpoint`, `exif` |
+| gallery | `[{"name": "stage.jpg", "alt": "Main stage"}]` — matched by `name` | as image |
+| file | `{"download": "Brochure (PDF)", "comments": "…"}` | `download`, `comments`, `tags` |
+| depot | `[{"path": "docs/guide.pdf", "comments": "…"}]` — matched by `path` | as file |
 
-> Reading objects with `get_object` / `query_collection` returns binary fields too. If you fetch an object, edit a text field, and send the whole thing back, strip the binary fields first (or blank them) — otherwise the call is refused. Sending only the fields you changed sidesteps the issue.
+`exif` and `focalpoint` merge one level deep; other keys replace. Gallery images and depot files cannot be added, removed or reordered, and naming one that is not stored is refused with the list that is. Keys that identify the file — `name`, `size`, `mime`, `width`, `height`, `hash`, `palette`, `uploadDate`, `count` — and a file's `password` / `protected` setting cannot change; echoing their stored values back is fine. `describe_collection` lists the editable keys on each media property. Video posters are uploads and stay refused.
+
+> Reading objects with `get_object` / `query_collection` returns binary fields too. Writing a fetched object back works as long as the media values are unchanged or only their editable keys changed. Sending only the fields you changed is simpler.
 
 #### Site Builder templates
 

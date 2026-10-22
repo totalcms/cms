@@ -167,7 +167,8 @@ Two rules prevent the two worst mistakes:
   server, use `patch_object` with just the changed fields. `update_object`
   merges the same way (omitted fields keep their values). If you write back a
   fetched record, fetch it with `format: "html"` and strip the decorated `url`
-  key and binary fields first. Details: `references/mcp-content.md`.
+  key first. Media fields take metadata edits only (alt text, tags). Details:
+  `references/mcp-content.md`.
 - **After launch, the server owns content.** Local seed files go stale by
   design — never re-import them over live data. Use `pull`/`push` (dry-run
   first; filters are exclusive). Details: `references/going-live.md`.

@@ -133,6 +133,45 @@ final class ObjectToolsTest extends TestCase
 		);
 	}
 
+	/**
+	 * The fetcher returns $stored for every object.
+	 *
+	 * @param array<string,mixed> $stored
+	 */
+	private function storedObject(array $stored): void
+	{
+		$obj = $this->createStub(ObjectData::class);
+		$obj->method('toArray')->willReturn($stored);
+		$this->objectFetcher->method('fetchObject')->willReturn($obj);
+	}
+
+	/**
+	 * Patch $edit into a `media` field of $type whose stored value is
+	 * $stored; returns what reached the patcher for that field.
+	 *
+	 * @param array<mixed> $stored
+	 * @param array<mixed> $edit
+	 *
+	 * @return array<mixed>
+	 */
+	private function patchMedia(string $type, array $stored, array $edit): array
+	{
+		$this->schemaFetcher->method('fetchSchemaForCollection')
+			->willReturn($this->schema(['id' => ['field' => 'id'], 'media' => ['field' => $type]]));
+		$this->storedObject(['id' => 'home', 'media' => $stored]);
+
+		$written = [];
+		$this->patcher->method('patchObject')->willReturnCallback(function (string $c, string $id, array $data) use (&$written): ObjectData {
+			$written = $data['media'] ?? [];
+
+			return $this->blogObject('home');
+		});
+
+		$this->tool->patchHandler(collection: 'blog', id: 'home', data: ['media' => $edit]);
+
+		return $written;
+	}
+
 	/** Every object the fetcher returns is owned by $owner. */
 	private function storedObjectsOwnedBy(string $owner): void
 	{
@@ -799,17 +838,17 @@ final class ObjectToolsTest extends TestCase
 		$this->tool->updateHandler(collection: 'blog', id: 'my-post', data: ['title' => 'New', 'thumbnail' => '']);
 	}
 
-	public function testUpdateRefusesWhenPayloadSetsBinaryField(): void
+	public function testUpdateRefusesAFileValueInABinaryField(): void
 	{
-		// Trying to write a binary value through update is still refused.
+		// A file name is an upload, not a metadata edit: still refused.
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->schema([
 				'id'        => ['field' => 'id'],
 				'thumbnail' => ['field' => 'image'],
 			]));
+		$this->storedObject(['id' => 'home', 'thumbnail' => ['name' => 'old.jpg', 'alt' => '']]);
 
 		$this->patcher->expects($this->never())->method('patchObject');
-		$this->objectFetcher->expects($this->never())->method('fetchObject');
 
 		try {
 			$this->tool->updateHandler(collection: 'blog', id: 'home', data: ['thumbnail' => 'new.jpg']);
@@ -897,13 +936,14 @@ final class ObjectToolsTest extends TestCase
 		$this->tool->patchHandler(collection: 'blog', id: 'my-post', data: ['id' => 'other-post', 'title' => 'X']);
 	}
 
-	public function testPatchRefusesWhenPayloadSetsBinaryField(): void
+	public function testPatchRefusesAFileValueInABinaryField(): void
 	{
 		$this->schemaFetcher->method('fetchSchemaForCollection')
 			->willReturn($this->schema([
 				'id'        => ['field' => 'id'],
 				'thumbnail' => ['field' => 'image'],
 			]));
+		$this->storedObject(['id' => 'home', 'thumbnail' => ['name' => 'old.jpg', 'alt' => '']]);
 
 		$this->patcher->expects($this->never())->method('patchObject');
 
@@ -1161,5 +1201,97 @@ final class ObjectToolsTest extends TestCase
 
 		$this->tool->createHandler(collection: 'portfolio', data: ['title' => 'Hi']);
 		$this->tool->patchHandler(collection: 'portfolio', id: 'post-1', data: ['title' => 'Hi']);
+	}
+
+	// ─── Media metadata edits ───────────────────────────────────────────────
+
+	public function testPatchMergesImageMetadataOverTheUploadedFile(): void
+	{
+		$written = $this->patchMedia(
+			'image',
+			['name' => 'team.jpg', 'size' => 900, 'alt' => '', 'exif' => ['title' => 'Old', 'make' => 'Sony'], 'focalpoint' => ['x' => 50, 'y' => 50]],
+			['alt' => 'Team photo, 2026 offsite', 'exif' => ['title' => 'Offsite'], 'focalpoint' => ['x' => 40]],
+		);
+
+		$this->assertSame('team.jpg', $written['name']);
+		$this->assertSame(900, $written['size']);
+		$this->assertSame('Team photo, 2026 offsite', $written['alt']);
+		$this->assertSame(['title' => 'Offsite', 'make' => 'Sony'], $written['exif']);
+		$this->assertSame(['x' => 40, 'y' => 50], $written['focalpoint']);
+	}
+
+	public function testPatchAcceptsAnEchoedIdentityKeyButRefusesChangingOne(): void
+	{
+		$written = $this->patchMedia('image', ['name' => 'team.jpg', 'alt' => ''], ['name' => 'team.jpg', 'alt' => 'Team']);
+		$this->assertSame('Team', $written['alt']);
+
+		try {
+			$this->patchMedia('image', ['name' => 'team.jpg', 'alt' => ''], ['name' => 'other.jpg']);
+			$this->fail('Expected ToolCallException for a renamed file.');
+		} catch (ToolCallException $e) {
+			$this->assertStringContainsString('cannot change [name]', $e->getMessage());
+		}
+	}
+
+	public function testPatchRefusesFileProtectionOverMcp(): void
+	{
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('cannot change [protected]');
+
+		$this->patchMedia('file', ['name' => 'brochure.pdf', 'protected' => false], ['protected' => true]);
+	}
+
+	public function testPatchRefusesMetadataForAFieldWithNoUpload(): void
+	{
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('has no uploaded file to describe yet');
+
+		$this->patchMedia('image', [], ['alt' => 'Nothing here']);
+	}
+
+	public function testPatchEditsGalleryImagesByNameAndKeepsTheRest(): void
+	{
+		$written = $this->patchMedia(
+			'gallery',
+			[['name' => 'a.jpg', 'alt' => ''], ['name' => 'stage.jpg', 'alt' => ''], ['name' => 'c.jpg', 'alt' => 'C']],
+			[['name' => 'stage.jpg', 'alt' => 'Main stage']],
+		);
+
+		$this->assertSame(['a.jpg', 'stage.jpg', 'c.jpg'], array_column($written, 'name'));
+		$this->assertSame(['', 'Main stage', 'C'], array_column($written, 'alt'));
+	}
+
+	public function testPatchRefusesAGalleryImageThatIsNotStored(): void
+	{
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('has no image named "new.jpg"; images here: a.jpg');
+
+		$this->patchMedia('gallery', [['name' => 'a.jpg']], [['name' => 'new.jpg', 'alt' => 'X']]);
+	}
+
+	public function testPatchEditsADepotFileByItsPath(): void
+	{
+		$written = $this->patchMedia(
+			'depot',
+			['protected' => false, 'files' => [
+				['name' => 'top.pdf', 'mime' => 'application/pdf', 'comments' => ''],
+				['name' => 'docs', 'mime' => 'folder', 'files' => [
+					['name' => 'guide.pdf', 'mime' => 'application/pdf', 'comments' => ''],
+				]],
+			]],
+			[['path' => 'docs/guide.pdf', 'comments' => 'The 2026 guide']],
+		);
+
+		$this->assertSame('', $written['files'][0]['comments']);
+		$this->assertSame('The 2026 guide', $written['files'][1]['files'][0]['comments']);
+		$this->assertSame('guide.pdf', $written['files'][1]['files'][0]['name']);
+	}
+
+	public function testPatchRefusesADepotPathThatIsNotStored(): void
+	{
+		$this->expectException(ToolCallException::class);
+		$this->expectExceptionMessage('has no file at "docs/missing.pdf"');
+
+		$this->patchMedia('depot', ['files' => [['name' => 'docs', 'mime' => 'folder', 'files' => []]]], [['path' => 'docs/missing.pdf', 'comments' => 'X']]);
 	}
 }

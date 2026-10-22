@@ -4,8 +4,10 @@ namespace TotalCMS\Domain\Object\Service;
 
 use TotalCMS\Domain\Object\Data\ObjectData;
 use TotalCMS\Domain\Property\Data\DepotData;
+use TotalCMS\Domain\Property\Data\FileData;
 use TotalCMS\Domain\Property\Data\PropertyData;
 use TotalCMS\Domain\Property\Service\DepotPropertyManager;
+use TotalCMS\Domain\Property\Service\MediaMetaPolicy;
 
 readonly class ObjectPatcher
 {
@@ -100,17 +102,23 @@ readonly class ObjectPatcher
 
 		$patch = $propertyData->transform();
 
+		// Only descriptive keys and file protection change here: the admin's
+		// edit dialogs send every field back, read-only ones included, and a
+		// name, size or hash sent with them keeps its stored value.
 		if ($propertyData instanceof DepotData) {
 			// Update a depot because they are different - **this mutates $property**
 			$depotUpdater = new DepotPropertyManager($propertyData);
-			$depotUpdater->patchMeta($name, $newData, $subpath);
+			$file         = $depotUpdater->fetchFile($name, $subpath);
+			if ($file instanceof FileData) {
+				$depotUpdater->patchMeta($name, MediaMetaPolicy::merge('depot', $file->transform(), $newData, protection: true), $subpath);
+			}
 
 			$patch = $propertyData->transform();
 		} else {
-			// Update a normal property
+			// Update a gallery image
 			foreach ($patch as $index => $child) {
 				if ($child['name'] === $name) {
-					$patch[$index] = array_merge($child, $newData);
+					$patch[$index] = MediaMetaPolicy::merge('gallery', $child, $newData);
 					break;
 				}
 			}

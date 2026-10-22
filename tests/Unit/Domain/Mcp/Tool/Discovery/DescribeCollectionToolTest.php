@@ -273,4 +273,22 @@ final class DescribeCollectionToolTest extends TestCase
 
 		$this->assertNull($this->tool->handler(collection: 'blog')['ownership']);
 	}
+
+	public function testAMediaPropertySaysHowToEditItsMetadata(): void
+	{
+		$this->persona->set(McpPersona::ADMIN);
+		$this->collections->method('fetchCollection')->willReturn($this->collection('team'));
+		$this->resolver->method('isAccessibleTo')->willReturn(true);
+		$this->resolver->method('forCollection')->willReturn(['access' => 'public', 'owned' => false, 'description' => null, 'resource' => true]);
+		$this->resolver->method('describeProperties')->willReturn([
+			['name' => 'photo', 'type' => 'image', 'description' => 'Headshot', 'indexed' => false, 'filterable' => false, 'sortable' => false],
+			['name' => 'name', 'type' => 'text', 'description' => 'Name', 'indexed' => true, 'filterable' => true, 'sortable' => true],
+		]);
+
+		$properties = $this->tool->handler(collection: 'team')['properties'];
+
+		$this->assertStringStartsWith('Headshot Files cannot be uploaded over MCP', $properties[0]['description']);
+		$this->assertStringContainsString('alt, link, tags', $properties[0]['description']);
+		$this->assertSame('Name', $properties[1]['description']);
+	}
 }
