@@ -36,6 +36,12 @@ What core then does for every user who is not a super admin:
 Do not re-implement any of this in templates. A template check like
 `item.owner == me.id` is for what to *show*. It is not the security.
 
+**Leave public operations at `create` at most.** Public requests skip access
+control entirely, ownership included: a public `read`, `update` or `delete`
+on a member collection lets anyone read, change or delete any member's
+object. Members are signed in, so they need no public operations at all;
+public `create` is only for a form anonymous visitors submit.
+
 ## 3. Review: protect the flags
 
 Make the moderation flags protected in the schema (`schemas/validation.md`):
@@ -105,6 +111,8 @@ A Data View of drafts, newest first, gives the admin one list to work
 through, and over MCP an agent can read it too. Keep it admin-only
 (`mcp.access: admin`, the default): a view is built with full access, so
 ownership does not narrow it, and any member it admits sees every draft.
+Over MCP an OAuth member reaches a non-public view only with the `dataviews`
+permission, so do not put that grant in the members' access group.
 Docs: `collections/data-views.md`.
 
 ## 8. Members' own AI clients (optional)

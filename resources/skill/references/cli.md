@@ -82,7 +82,7 @@ Every save keeps the version it replaced; every delete keeps the final state
 ### Schemas
 - `schema:list` — list all schemas
 - `schema:get <id>` — schema details
-- `schema:export <id> <file>` — export a schema to JSON
+- `schema:export <id> [-o file]` — export a schema to JSON (stdout without `-o`)
 - `schema:import <file>` — import a schema from JSON
 - `schema:get totalcms --json` — the reference schema: every field type with settings
   and help text, to copy from
@@ -113,9 +113,9 @@ Every save keeps the version it replaced; every delete keeps the final state
 - `oauth:gc` — prune expired grants and stale self-registered clients
 
 ### Maintenance
-- `repair:index <collection>` — rebuild `.index.json` + count from objects on disk
+- `repair:index <collection>` — rebuild `.index.json` + count from objects on disk (`--all` for every collection)
 - `repair:files` — rebuild blanked file/image/gallery metadata from files on disk
-- `search:reindex` — re-index against the active search provider
+- `search:reindex [collection]` — re-index against the active search provider (`--all` site-wide)
 - `jobs:process` / `automations:process` — process queued jobs / fire due automations
 - `update:check` / `update:apply` / `update:rollback`
 - `pull` / `push` — sync schemas + templates with the production server

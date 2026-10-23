@@ -40,6 +40,7 @@
 | `{% cache %}` fragment tag | `twig/cache-tag.md` | Tag with collection ids to auto-invalidate; bypassed for logged-in users unless `shared=true`. |
 | Template Designer (edit Twig blocks in the admin) | `twig/templates.md` | `{% templatedesigner %}` blocks sync between local and production. |
 | Colors (OKLCH manipulation) | `twig/colors.md` | Color fields store hex and OKLCH; filters adjust lightness/chroma/hue. |
+| Grids of objects (`{% cmsgrid %}`) | `twig/cmsgrid-tag.md` | `{% cmsgrid objects from 'blog' with 'blog compact' %}` renders a styled grid from a collection's objects with built-in layouts; reach for it before hand-writing card markup. |
 | "Built with Total CMS" badges | `twig/badges.md` | `cms.badge.pill()` / `.stacked()` / `.text()`, or a designer's `.profile(handle)` / `.earned(handle)`; images come from totalcms.co so they stay current. `me: true` on a designer's own site adds `rel="me"`. |
 | Barcodes and QR codes | `twig/barcodes.md`, `twig/qrcodes.md` | Edition-gated. |
 | Localization | `twig/locale.md`, `twig/localization.md` | Localized field types are Pro; full i18n routing is planned, not shipped. `"propertyOptions": "countries"` fills a select with ISO codes (`fields/property-options.md`); `\|country_name` shows a stored code as its name. |
@@ -56,6 +57,8 @@
 | Feature | Doc | The one thing to know |
 |---|---|---|
 | Form builder (`cms.form.builder()` and per-field helpers) | `forms/overview.md`, `forms/builder.md`, `forms/patterns.md` | Forms post to the same API the admin uses; `publicOperations` on the collection decides what anonymous visitors may do. |
+| What happens after a save (redirect, refresh, webhook, mailer) | `collections/form-settings.md` | The collection's `formSettings` holds `newActions` / `editActions` / `deleteActions`; `continue: true` keeps a failed action from failing the save. Set it with `collection:update`. |
+| Password reset | `auth/password-reset.md` | Built in: `/forgot-password[/{collection}]` and `/reset-password/{token}`, single-use tokens, no user enumeration; `auth.forgotPasswordMailerId` swaps the email. Link to it from a member login page rather than building one. |
 | Bot protection for public forms | `forms/options.md` | `botProtection: true` on a register or public create form adds a honeypot and a signed time trap (no CAPTCHA); a bot gets a success-shaped reply with nothing saved. **Require Bot Protection** on the collection (or a Mailer template) refuses anonymous posts without the fields. Put it on every public register/create form. |
 | Public registration | `forms/options.md` | Opt-in per auth-schema collection with **Allow Public Registration** (Public Registration section); **Registration Groups** add to the global `publicRegistrationGroup` (never `admin`; only super admins and API keys may change either setting); registrants are auto-logged-in, so gate with CAPTCHA/verification when groups reach protected content. |
 | Auth in Twig, login/logout, member content | `auth/twig.md`, `auth/auth.md` | `cms.auth.userLoggedIn('members')`, `cms.auth.login('members')`, `cms.auth.userHasAccess(group, collection)`. |
@@ -75,6 +78,7 @@
 | WordPress XML-RPC publishing (MarsEdit, Ulysses) | `apis/wordpress-publishing.md` | **Off by default**; enable in config. Credential is an API key. |
 | MCP server (agents reading/writing the site) | `mcp/connect.md`, `mcp/agent-editing.md`, `mcp/saved-query-tools.md`, `mcp/prompts.md` | See `references/mcp-content.md`. Property help text is the agent-facing catalog. |
 | Extensions | `extensions/overview.md`, `extensions/extension-points.md`, `extensions/manifest.md` | See `references/extensions.md`. Install from zip on the Extensions page / `extension:install`. |
+| Bundled extensions | `extensions/bundled.md` | Already shipped, off until enabled — check before building one: A/B split testing, geo redirect, per-page maintenance mode, passcode-protected pages, scheduled (time-window) pages, Pushover notifications, Algolia search, podcasts, WebMCP, docs tools. `extension:enable totalcms/<name>`. |
 
 ## Operations
 
@@ -86,4 +90,5 @@
 | Sync (`push`/`pull`) | `operations/sync.md` | See `references/going-live.md`. Only schemas, templates, pages, settings and objects of allow-listed collections travel. |
 | Shared data folder | `operations/shared-data.md` | Several installs on one tcms-data; `siteId` gives one its own settings overlay. |
 | Updates | `operations/updates.md` | `update:check` / `update:apply` / `update:rollback` for zip installs; Composer installs update via Composer. |
-| Security, impersonation, licences | `operations/security.md`, `operations/impersonation.md`, `operations/licenses.md` | Edition gating is enforced at the route level; a feature missing from the API is usually an edition, not a bug. |
+| White label (admin branding) | `admin/whitelabel.md` | Builder templates in the `whitelabel/` category inject content into the login, password and admin pages; Standard covers login/reset pages, Pro adds logo, home page and head injection. |
+| Security, impersonation, licenses | `operations/security.md`, `operations/impersonation.md`, `operations/licenses.md` | Edition gating is enforced at the route level; a feature missing from the API is usually an edition, not a bug. |

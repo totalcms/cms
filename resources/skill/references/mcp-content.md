@@ -5,12 +5,20 @@
 > the live site immediately. For full tool docs see
 > `vendor/totalcms/cms/resources/docs/mcp/`.
 
-Three access levels: anonymous (public read-only, drafts hidden), OAuth
-(scoped by grants), and `X-API-Key` header (admin — write tools, schema tools,
-all collections). If a write tool is missing from your tool list, you are not
-connected as admin. On an owned collection an OAuth member reads their own
-objects plus published ones and edits only their own; `describe_collection`
-reports that, and any fields the site sets itself, in `ownership`.
+**Your tool list is what this connection may do.** Plan around it rather
+than treating a missing tool as an error:
+
+- **Anonymous:** read-only, public collections only, drafts hidden.
+- **OAuth:** the token's scopes, the member's access groups and each
+  collection's MCP access, all three. A read-only token gets no write tools.
+- **API key:** an all-endpoints (`*`) key is the admin — every tool, every
+  collection. A key limited to some endpoints reaches only those, and its HTTP
+  methods decide its tools (GET-only = read-only).
+
+On an owned collection an OAuth member reads their own objects plus published
+ones and edits only their own; `describe_collection` reports that, and any
+fields the site sets itself, in `ownership`. If the tool you need is missing,
+tell the user which access it takes; do not edit files instead.
 
 ## Discovery, then read
 
@@ -64,6 +72,8 @@ field and keeps its other overrides; `null` removes one. The override's
 `field` type is filled in from the schema. `delete_collection` removes the
 settings only — objects stay, and `create_collection` with the same id (pass
 the returned settings as `extra`) brings them back. Confirm before deleting.
+On the command line, `tcms collection:update <id> --set key=value` does the
+same merge.
 
 **`delete_object`** deletes one object (`collection` + `id`). Confirm with the
 user first. The record goes to the backup history (restorable with
@@ -78,6 +88,14 @@ do not call `clear_cache` for content edits.
 `create_object` takes the complete-body shape. For hand-authored data the
 same schema gotchas apply as local JSON: decks are dictionaries keyed by item
 `id` (underscores only), and every object needs its `id`.
+
+## Data Views
+
+`list_views`, `describe_view`, `get_view` and `query_view` read saved
+cross-collection queries. They need the Data Views edition, and an OAuth
+member also needs the `dataviews` permission unless the view is public. A
+view is built with full access, so it can hold drafts and other members'
+objects: do not widen a view's `mcp.access` without checking what it returns.
 
 ## Site-specific tools and prompts
 

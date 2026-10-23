@@ -35,6 +35,7 @@ vendor/bin/tcms push --schemas=blog     # exclusive: ONLY these schemas move
 vendor/bin/tcms push --pages            # Site Builder pages
 vendor/bin/tcms push --pages=home,about # just those two
 vendor/bin/tcms push --collections=blog # collection SETTINGS (not objects)
+vendor/bin/tcms push --automations      # also --dataviews, --mailer, --mcp-prompts (=id,id for some)
 vendor/bin/tcms push --objects=blog     # seed blog OBJECTS to production
 ```
 
