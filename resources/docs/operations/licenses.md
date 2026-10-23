@@ -43,6 +43,8 @@ Rehoming removes the license's testing subdomains, so add them again on the new 
 
 When you hand a finished site to its owner, the license can be transferred to them at no charge, as long as the site stays on the same domain. [Contact us](https://totalcms.co/support) and we will move it.
 
+For the rest of the handoff, the [freelancer kit](https://totalcms.co/freelancers) has proposal language, pricing and a handoff checklist you can copy.
+
 ## Development Domains
 
 Total CMS is free to use, with every Pro feature, on domains that can only exist on your own computer. No trial, registration, or license key is needed. These domains count as development domains:
