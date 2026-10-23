@@ -59,6 +59,13 @@ the admin does:**
 | add or change an access group | `vendor/bin/tcms access-group:set <id> -` / `access-group:patch <id> -` |
 | seed structure + content together | `vendor/bin/tcms jumpstart:import file.json` |
 
+**Mailer templates, automations and Data Views are collections too**
+(`mailer`, `automations`, `dataviews`), so the same `object:*` commands read and
+change them: `vendor/bin/tcms object:patch mailer <id> -` edits one mailer field
+and leaves the rest. Run `vendor/bin/tcms collection:list` to see every
+collection, the reserved ones included, before deciding that something has no
+command.
+
 A save through the CLI validates the object against its schema, fills in what
 the schema derives (default types, autogen ids, `created`/`updated`
 timestamps, image and video metadata), updates the collection's `.index.json`
@@ -135,8 +142,11 @@ Prefer looking things up over guessing; training data is often stale on exact si
 It demonstrates every field type with the settings and help text that go with it.
 Pick fields by the shape of the value (`date`, `toggle`, `select`, `number`, `image`…);
 `text` is the last resort. Write every `help` and `description` as a brief to a
-writer who cannot see the site — agents read them through MCP. Rules, the
-five meanings of "category", and the SEO card: `references/data-model.md`.
+writer who cannot see the site — agents read them through MCP. **Do not add a
+`sort` or `order` number field** to put a list in order: sort by the properties
+the data already has, rank a property's values with `manualSort`, and only then
+add a property named for why an item moves (`featured`, `weight`). Rules, the
+five meanings of "category", ordering, and the SEO card: `references/data-model.md`.
 
 The admin enforces these for you. They only bite when you author JSON that the
 CLI then imports — JumpStart files, `collection:import` payloads, API bodies —
@@ -191,7 +201,8 @@ user to email it to support@totalcms.co.
 | running any `tcms` command / scripting with `--json` | `references/cli.md` |
 | editing builder templates, routes, or page records | `references/site-builder.md` |
 | setting up or building frontend assets | `references/frontend.md` |
-| modeling data — collections, schemas, field choice, descriptions | `references/data-model.md` |
+| modeling data — collections, schemas, field choice, descriptions, ordering a list | `references/data-model.md` |
+| letting signed-in members add and edit their own content (ownership, review, account pages) | `references/member-content.md` |
 | wondering whether T3 already does something (SEO, forms, automations, search, feeds, auth…) | `references/features.md` |
 | writing or reviewing an extension | `references/extensions.md` |
 | reading/writing content via the site's MCP server | `references/mcp-content.md` |
