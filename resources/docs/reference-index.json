@@ -491,6 +491,13 @@
             "url": "https://docs.totalcms.co/admin/twig/"
         },
         {
+            "name": "cms.admin.extensionsNeedingAttention",
+            "signature": "extensionsNeedingAttention(): array",
+            "description": "Extensions the system disabled on its own (risky update, quarantine), for the warning every admin page shows.",
+            "examples": [],
+            "url": "https://docs.totalcms.co/admin/twig/"
+        },
+        {
             "name": "cms.admin.inaccessibleCollections",
             "signature": "inaccessibleCollections(): array",
             "description": "Get collections that are inaccessible due to edition restrictions.",

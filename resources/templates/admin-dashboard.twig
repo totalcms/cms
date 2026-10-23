@@ -162,6 +162,18 @@
         </aside>
         <section class="dash-content">
 
+			{# Extensions the system turned off by itself (an update added risky
+			   code, or repeated crashes) happen on a request nobody watches, so
+			   every admin page says so until someone re-enables or disables it.
+			   The extension pages show their own banners. #}
+			{% if cms.auth.isAdmin() and url.page|default('') != 'extensions' %}
+				{% for notice in cms.admin.extensionsNeedingAttention() %}
+				<div class="warning-box extension-attention" role="alert">
+					<p>{{ notice.message }} <a href="{{ notice.link }}">Review</a></p>
+				</div>
+				{% endfor %}
+			{% endif %}
+
         	{% block dashcontent %}{% endblock %}
 
         </section>

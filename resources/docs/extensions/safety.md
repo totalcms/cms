@@ -40,9 +40,11 @@ In **Development**, the error is logged loudly so the extension's author can see
 
 ### Auto-quarantine
 
-If an extension crashes **repeatedly** on a Production site (by default, 5 times within 5 minutes), Total CMS disables it for you — the site heals itself rather than serving broken pages. You'll see a banner on the Extensions page:
+If an extension crashes **repeatedly** on a Production site (by default, 5 times within 5 minutes), Total CMS disables it for you — the site heals itself rather than serving broken pages. Every admin page shows admins a warning naming the extension and its last error, and the Extensions page shows:
 
 > **Auto-disabled for stability.** Total CMS disabled this extension after it crashed repeatedly. **[Re-enable]**
+
+The warning stays until you re-enable the extension or disable it yourself.
 
 Re-enabling clears the quarantine and gives the extension a fresh start. This only happens in Production — in Development, a crashing extension stays enabled and loud so you can debug it.
 
@@ -106,7 +108,7 @@ When a sideloaded extension's version changes, Total CMS runs the static source 
 
 The scan is compared with what you approved. When you enable an extension, Total CMS remembers the risky patterns its review showed you, by pattern and file (`curl_exec @ src/Client.php`). An update is measured against that list, not against zero:
 
-- **If the new code adds a risky pattern you have not approved** (a new call, or a known one in a new file), the extension is **disabled** until you review it. You'll see a banner listing just the new findings, with a **Review & re-enable** button that walks you through the review screen for the new version. Re-enabling approves the new version's findings in turn. The risky new code never runs until you say so.
+- **If the new code adds a risky pattern you have not approved** (a new call, or a known one in a new file), the extension is **disabled** until you review it. Every admin page shows admins a warning naming the extension and the new findings, until you re-enable it or disable it yourself. Its settings page lists them too, with a **Review & re-enable** button that walks you through the review screen for the new version. Re-enabling approves the new version's findings in turn. The risky new code never runs until you say so.
 - **If it adds none**, the extension keeps working, including when it still has the patterns you approved. An HTTP client you accepted at 1.0 does not disable the extension at 1.1. Any **new capability** the update introduces is turned **off by default**. It appears in the extension's settings as a toggle you can opt into. The extension doesn't silently start using a new privilege you didn't grant.
 
 Updates that add no new risky code and no capabilities install with no interruption at all. An extension enabled before Total CMS 3.6.3 has no approved list yet; its next update takes the findings it has then as approved, rather than disabling it once more.

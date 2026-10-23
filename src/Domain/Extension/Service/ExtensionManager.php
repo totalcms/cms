@@ -419,6 +419,11 @@ class ExtensionManager
 		if ($state instanceof ExtensionState) {
 			$state->enabled = false;
 			$state->error   = null;
+			// An operator turning it off has seen it and decided: the
+			// "disabled after an update" and quarantine warnings have done
+			// their job. Re-enabling still resets the crash counter.
+			$state->clearUpdateDisabled();
+			$state->clearQuarantine();
 			$this->stateRepository->saveState($extensionId, $state);
 			$this->dispatchEvent(CoreEvent::EXTENSION_DISABLED, new ExtensionEventPayload($extensionId));
 		}

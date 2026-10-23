@@ -317,6 +317,45 @@ readonly class DashboardRenderer
 	}
 
 	/**
+	 * Extensions the system disabled on its own: after an update added risky
+	 * code it had not been approved for, or quarantined after repeated
+	 * crashes. Each stays listed until an operator re-enables it or disables
+	 * it themselves (either clears the marker), so it cannot go unnoticed.
+	 *
+	 * @return list<array{id:string,kind:string,message:string,link:string}>
+	 */
+	public function extensionsNeedingAttention(): array
+	{
+		$notices = [];
+		foreach ($this->extensionStateRepository->loadAll() as $extId => $state) {
+			$link = 'extensions/' . $extId . '/settings';
+			if ($state->isUpdateDisabled()) {
+				$new       = $state->updateDisabled['newFindings'] ?? [];
+				$notices[] = [
+					'id'      => $extId,
+					'kind'    => 'update',
+					'message' => "Extension {$extId} was disabled after an update"
+						. ($new !== [] ? ' added risky code: ' . implode(', ', $new) : ' added risky code')
+						. '. Review it to turn it back on.',
+					'link'    => $link,
+				];
+			} elseif ($state->isQuarantined()) {
+				$lastError = $state->quarantine['lastError'] ?? '';
+				$notices[] = [
+					'id'      => $extId,
+					'kind'    => 'quarantine',
+					'message' => "Extension {$extId} was disabled after it failed repeatedly"
+						. ($lastError !== '' ? ': ' . $lastError : '')
+						. '.',
+					'link'    => $link,
+				];
+			}
+		}
+
+		return $notices;
+	}
+
+	/**
 	 * Aggregated dashboard alerts — one entry per actionable condition.
 	 *
 	 * Returns `[]` when everything is healthy (all-clear). Each entry:

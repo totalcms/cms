@@ -172,6 +172,19 @@ readonly class AdminTwigAdapter
 	}
 
 	/**
+	 * Extensions the system disabled on its own (risky update, quarantine),
+	 * for the warning every admin page shows.
+	 *
+	 * Usage in Twig: {% for notice in cms.admin.extensionsNeedingAttention() %}
+	 *
+	 * @return list<array{id:string,kind:string,message:string,link:string}>
+	 */
+	public function extensionsNeedingAttention(): array
+	{
+		return $this->dashboard->extensionsNeedingAttention();
+	}
+
+	/**
 	 * Dashboard automation list — all enabled automations combined with their
 	 * latest run status.
 	 *
