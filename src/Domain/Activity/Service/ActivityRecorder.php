@@ -7,6 +7,7 @@ namespace TotalCMS\Domain\Activity\Service;
 use Psr\Log\LoggerInterface;
 use TotalCMS\Domain\Activity\Data\ActivityEntry;
 use TotalCMS\Domain\Activity\Repository\ActivityRepository;
+use TotalCMS\Domain\Auth\Data\Actor;
 use TotalCMS\Support\Config;
 
 /**
@@ -39,7 +40,7 @@ class ActivityRecorder
 	}
 
 	/**
-	 * @param array<string,mixed> $actor  {@see \TotalCMS\Domain\Auth\Data\Actor::toArray()}
+	 * @param array<string,mixed> $actor  {@see Actor::toArray()}
 	 * @param array{level?: string, userId?: string, authCollection?: string, collection?: string, objectId?: string, summary?: string, detail?: array<string,mixed>} $fields
 	 */
 	public function record(string $event, array $actor, array $fields = []): void
@@ -58,7 +59,7 @@ class ActivityRecorder
 			authCollection: $fields['authCollection'] ?? (string)($actor['authCollection'] ?? ''),
 			clientId: (string)($actor['clientId'] ?? ''),
 			apiKeyId: (string)($actor['apiKeyId'] ?? ''),
-			initiator: $initiator === null ? '' : trim((string)($initiator['kind'] ?? '') . ':' . (string)($initiator['userId'] ?? ''), ':'),
+			initiator: $initiator === null ? '' : trim(($initiator['kind'] ?? '') . ':' . ($initiator['userId'] ?? ''), ':'),
 			collection: $fields['collection'] ?? '',
 			objectId: $fields['objectId'] ?? '',
 			summary: mb_substr($fields['summary'] ?? '', 0, 500),

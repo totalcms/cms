@@ -203,9 +203,7 @@ final readonly class ExtensionEnrollment
 				// findings as the approved set, once, instead of disabling an
 				// extension the operator has been running. From here on only
 				// code beyond what they accepted disables it.
-				if ($state->approvedFindings === null) {
-					$state->approvedFindings = DangerousCodeScanner::fingerprints($findings);
-				}
+				$state->approvedFindings ??= DangerousCodeScanner::fingerprints($findings);
 
 				$added = DangerousCodeScanner::unapproved($findings, $state->approvedFindings);
 				if ($added !== []) {

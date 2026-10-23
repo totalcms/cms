@@ -189,7 +189,7 @@ class ActivityRepository
 			$params[':from'] = (int)strtotime($filter->from . ' 00:00:00');
 		}
 		if ($filter->to !== '') {
-			$clauses[]    = 'createdAt <= :to';
+			$clauses[]     = 'createdAt <= :to';
 			$params[':to'] = (int)strtotime($filter->to . ' 23:59:59');
 		}
 

@@ -171,7 +171,7 @@ describe('ExtensionInstaller update', function (): void {
 
 	test('an update carrying only the risky code already approved stays enabled', function (): void {
 		['installer' => $installer, 'states' => $states] = installerHarness();
-		$first = $installer->install(thingZip('1.0.0', true));
+		$first                                           = $installer->install(thingZip('1.0.0', true));
 		expect($first->findings)->toBeGreaterThan(0);
 
 		// The operator enabled 1.0.0 with its findings, as ExtensionManager::enable() records them.
