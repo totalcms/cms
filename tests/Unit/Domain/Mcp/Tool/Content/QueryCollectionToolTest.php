@@ -246,6 +246,7 @@ final class QueryCollectionToolTest extends TestCase
 		$blog = $this->collection('blog');
 		$this->collections->method('fetchCollection')->willReturn($blog);
 		$this->resolver->method('isAccessibleTo')->willReturn(true);
+		$this->resolver->method('forCollection')->willReturn(['access' => 'public', 'owned' => false, 'description' => null, 'resource' => false, 'titleProperty' => '']);
 		$this->resolver->method('nonExposedProperties')->willReturn([]);
 
 		$item = ['id' => 'hello', 'title' => 'Hello'];
